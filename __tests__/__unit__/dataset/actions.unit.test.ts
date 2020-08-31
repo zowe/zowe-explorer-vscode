@@ -54,7 +54,7 @@ async function createGlobalMocks() {
         mvsApi: null,
         defaultProfileManagerInstance: null,
         defaultProfile: null
-    }
+    };
 
     Object.defineProperty(vscode.window, "withProgress", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe, "Upload", { value: jest.fn(), configurable: true });
@@ -87,13 +87,17 @@ async function createGlobalMocks() {
     Object.defineProperty(vscode, "ProgressLocation", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "createWebviewPanel", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.env, "clipboard", { value: clipboard, configurable: true });
-    
+
     // Mocking Default Profile Manager
     globalMocks.defaultProfileManagerInstance = await DefaultProfileManager.createInstance(Logger.getAppLogger());
     await Profiles.createInstance(Logger.getAppLogger());
     globalMocks.defaultProfile = DefaultProfileManager.getInstance().getDefaultProfile("zosmf");
-    Object.defineProperty(DefaultProfileManager, "getInstance", { value: jest.fn(() => globalMocks.defaultProfileManagerInstance), configurable: true });
-    Object.defineProperty(globalMocks.defaultProfileManagerInstance, "getDefaultProfile", { value: jest.fn(() => globalMocks.defaultProfile), configurable: true });
+    Object.defineProperty(DefaultProfileManager,
+                          "getInstance",
+                          { value: jest.fn(() => globalMocks.defaultProfileManagerInstance), configurable: true });
+    Object.defineProperty(globalMocks.defaultProfileManagerInstance,
+                          "getDefaultProfile",
+                          { value: jest.fn(() => globalMocks.defaultProfile), configurable: true });
 
     // MVS API mocks
     globalMocks.mvsApi = ZoweExplorerApiRegister.getMvsApi(globalMocks.testProfile);

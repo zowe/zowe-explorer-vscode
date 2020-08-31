@@ -49,7 +49,7 @@ async function createGlobalMocks() {
                 Notification: 15
             };
         })
-    }
+    };
 
     globalMocks.mvsApi = ZoweExplorerApiRegister.getMvsApi(globalMocks.profileOne);
     globalMocks.mockInstance = {
@@ -77,8 +77,12 @@ async function createGlobalMocks() {
     globalMocks.defaultProfileManagerInstance = await DefaultProfileManager.createInstance(Logger.getAppLogger());
     await Profiles.createInstance(Logger.getAppLogger());
     globalMocks.defaultProfile = DefaultProfileManager.getInstance().getDefaultProfile("zosmf");
-    Object.defineProperty(DefaultProfileManager, "getInstance", { value: jest.fn(() => globalMocks.defaultProfileManagerInstance), configurable: true });
-    Object.defineProperty(globalMocks.defaultProfileManagerInstance, "getDefaultProfile", { value: jest.fn(() => globalMocks.defaultProfile), configurable: true });
+    Object.defineProperty(DefaultProfileManager,
+                          "getInstance",
+                          { value: jest.fn(() => globalMocks.defaultProfileManagerInstance), configurable: true });
+    Object.defineProperty(globalMocks.defaultProfileManagerInstance,
+                          "getDefaultProfile",
+                          { value: jest.fn(() => globalMocks.defaultProfile), configurable: true });
 
     // USS API mocks
     globalMocks.mvsApi = ZoweExplorerApiRegister.getUssApi(globalMocks.testProfile);
@@ -119,7 +123,8 @@ describe("Unit Tests (Jest)", () => {
         const globalMocks = await createGlobalMocks();
 
         // Creating a rootNode
-        const rootNode = new ZoweDatasetNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, globalMocks.session, undefined, undefined, globalMocks.profileOne);
+        const rootNode = new ZoweDatasetNode("root", vscode.TreeItemCollapsibleState.Collapsed,
+                                             null, globalMocks.session, undefined, undefined, globalMocks.profileOne);
         rootNode.dirty = true;
         rootNode.contextValue = DS_SESSION_CONTEXT;
         rootNode.pattern = "SAMPLE, SAMPLE.PUBLIC, SAMPLE";
@@ -132,8 +137,10 @@ describe("Unit Tests (Jest)", () => {
                 undefined, globalMocks.profileOne),
             new ZoweDatasetNode("BRTVS99.CA11.SPFTEMP0.CNTL", vscode.TreeItemCollapsibleState.Collapsed,
                                 rootNode, null, undefined, undefined, globalMocks.profileOne),
-            new ZoweDatasetNode("BRTVS99.DDIR", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null, undefined, undefined, globalMocks.profileOne),
-            new ZoweDatasetNode("BRTVS99.VS1", vscode.TreeItemCollapsibleState.None, rootNode, null, VSAM_CONTEXT, undefined, globalMocks.profileOne)
+            new ZoweDatasetNode("BRTVS99.DDIR", vscode.TreeItemCollapsibleState.Collapsed, rootNode,
+                                null, undefined, undefined, globalMocks.profileOne),
+            new ZoweDatasetNode("BRTVS99.VS1", vscode.TreeItemCollapsibleState.None, rootNode,
+                                null, VSAM_CONTEXT, undefined, globalMocks.profileOne)
         ];
         sampleChildren[0].command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [sampleChildren[0]] };
 
@@ -148,7 +155,8 @@ describe("Unit Tests (Jest)", () => {
         expect(rootChildren).toEqual(sampleChildren);
 
         // Check that error is thrown when label is blank
-        const errorNode = new ZoweDatasetNode("", vscode.TreeItemCollapsibleState.Collapsed, null, globalMocks.session, undefined, undefined, globalMocks.profileOne);
+        const errorNode = new ZoweDatasetNode("", vscode.TreeItemCollapsibleState.Collapsed,
+                                              null, globalMocks.session, undefined, undefined, globalMocks.profileOne);
         errorNode.dirty = true;
         await expect(errorNode.getChildren()).rejects.toEqual(Error("Invalid node"));
 
@@ -166,10 +174,12 @@ describe("Unit Tests (Jest)", () => {
         const globalMocks = await createGlobalMocks();
 
         // Creating a rootNode
-        const rootNode = new ZoweDatasetNode("root", vscode.TreeItemCollapsibleState.None, null, globalMocks.session, undefined, undefined, globalMocks.profileOne);
+        const rootNode = new ZoweDatasetNode("root", vscode.TreeItemCollapsibleState.None,
+                                             null, globalMocks.session, undefined, undefined, globalMocks.profileOne);
         rootNode.contextValue = DS_SESSION_CONTEXT;
         rootNode.dirty = true;
-        const subNode = new ZoweDatasetNode("sub", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null, undefined, undefined, globalMocks.profileOne);
+        const subNode = new ZoweDatasetNode("sub", vscode.TreeItemCollapsibleState.Collapsed, rootNode,
+                                            null, undefined, undefined, globalMocks.profileOne);
         subNode.dirty = true;
         const subChildren = await subNode.getChildren();
 
@@ -194,7 +204,8 @@ describe("Unit Tests (Jest)", () => {
 
             globalMocks.showErrorMessage.mockReset();
             // Creating a rootNode
-            const rootNode = new ZoweDatasetNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, globalMocks.session, undefined, undefined, globalMocks.profileOne);
+            const rootNode = new ZoweDatasetNode("root", vscode.TreeItemCollapsibleState.Collapsed,
+                                                 null, globalMocks.session, undefined, undefined, globalMocks.profileOne);
             rootNode.contextValue = DS_SESSION_CONTEXT;
             rootNode.pattern = "THROW ERROR";
             rootNode.dirty = true;
@@ -229,7 +240,8 @@ describe("Unit Tests (Jest)", () => {
         const globalMocks = await createGlobalMocks();
 
         // Creating a rootNode
-        const rootNode = new ZoweDatasetNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, globalMocks.session, undefined, undefined, globalMocks.profileOne);
+        const rootNode = new ZoweDatasetNode("root", vscode.TreeItemCollapsibleState.Collapsed,
+                                             null, globalMocks.session, undefined, undefined, globalMocks.profileOne);
         const infoChild = new ZoweDatasetNode("Use the search button to display datasets", vscode.TreeItemCollapsibleState.None, rootNode, null,
             INFORMATION_CONTEXT, undefined, globalMocks.profileOne);
         rootNode.contextValue = DS_SESSION_CONTEXT;
@@ -244,7 +256,8 @@ describe("Unit Tests (Jest)", () => {
         const globalMocks = await createGlobalMocks();
 
         // Creating a rootNode
-        const rootNode = new ZoweDatasetNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, globalMocks.session, undefined, undefined, globalMocks.profileOne);
+        const rootNode = new ZoweDatasetNode("root", vscode.TreeItemCollapsibleState.Collapsed,
+                                             null, globalMocks.session, undefined, undefined, globalMocks.profileOne);
         const infoChild = new ZoweDatasetNode("Use the search button to display datasets", vscode.TreeItemCollapsibleState.None, rootNode, null,
             INFORMATION_CONTEXT, undefined, globalMocks.profileOne);
         rootNode.contextValue = DS_SESSION_CONTEXT;
@@ -258,7 +271,8 @@ describe("Unit Tests (Jest)", () => {
         const globalMocks = await createGlobalMocks();
 
         // Creating a rootNode
-        const rootNode = new ZoweDatasetNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, globalMocks.session, undefined, undefined, globalMocks.profileOne);
+        const rootNode = new ZoweDatasetNode("root", vscode.TreeItemCollapsibleState.Collapsed,
+                                             null, globalMocks.session, undefined, undefined, globalMocks.profileOne);
         rootNode.contextValue = DS_SESSION_CONTEXT;
         const subNode = new ZoweDatasetNode(DS_PDS_CONTEXT, vscode.TreeItemCollapsibleState.Collapsed, rootNode, null,
             undefined, undefined, globalMocks.profileOne);
@@ -273,7 +287,8 @@ describe("Unit Tests (Jest)", () => {
         const globalMocks = await createGlobalMocks();
 
         // Creating a rootNode
-        const rootNode = new ZoweDatasetNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, globalMocks.session, undefined, undefined, globalMocks.profileOne);
+        const rootNode = new ZoweDatasetNode("root", vscode.TreeItemCollapsibleState.Collapsed,
+                                             null, globalMocks.session, undefined, undefined, globalMocks.profileOne);
         rootNode.dirty = true;
         rootNode.contextValue = DS_DS_CONTEXT;
         expect(await rootNode.getChildren()).toHaveLength(0);
@@ -289,7 +304,8 @@ describe("Unit Tests (Jest)", () => {
         const globalMocks = await createGlobalMocks();
 
         // Creating a rootNode
-        const rootNode = new ZoweDatasetNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, globalMocks.session, undefined, undefined, globalMocks.profileOne);
+        const rootNode = new ZoweDatasetNode("root", vscode.TreeItemCollapsibleState.Collapsed,
+                                             null, globalMocks.session, undefined, undefined, globalMocks.profileOne);
         rootNode.children = [new ZoweDatasetNode("onestep", vscode.TreeItemCollapsibleState.Collapsed,
                                                  null, globalMocks.session, undefined, undefined, globalMocks.profileOne)];
         rootNode.dirty = false;

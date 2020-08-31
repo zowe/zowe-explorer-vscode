@@ -89,8 +89,12 @@ async function createGlobalMocks() {
     globalMocks.defaultProfileManagerInstance = await DefaultProfileManager.createInstance(Logger.getAppLogger());
     await Profiles.createInstance(Logger.getAppLogger());
     globalMocks.defaultProfile = DefaultProfileManager.getInstance().getDefaultProfile("zosmf");
-    Object.defineProperty(DefaultProfileManager, "getInstance", { value: jest.fn(() => globalMocks.defaultProfileManagerInstance), configurable: true });
-    Object.defineProperty(globalMocks.defaultProfileManagerInstance, "getDefaultProfile", { value: jest.fn(() => globalMocks.defaultProfile), configurable: true });
+    Object.defineProperty(DefaultProfileManager,
+                          "getInstance",
+                          { value: jest.fn(() => globalMocks.defaultProfileManagerInstance), configurable: true });
+    Object.defineProperty(globalMocks.defaultProfileManagerInstance,
+                          "getDefaultProfile",
+                          { value: jest.fn(() => globalMocks.defaultProfile), configurable: true });
 
     // Jes API mocks
     globalMocks.jesApi = ZoweExplorerApiRegister.getJesApi(globalMocks.imperativeProfile);

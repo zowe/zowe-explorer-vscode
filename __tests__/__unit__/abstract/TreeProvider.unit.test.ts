@@ -85,8 +85,12 @@ async function createGlobalMocks() {
     globalMocks.defaultProfileManagerInstance = await DefaultProfileManager.createInstance(Logger.getAppLogger());
     await Profiles.createInstance(Logger.getAppLogger());
     globalMocks.defaultProfile = DefaultProfileManager.getInstance().getDefaultProfile("zosmf");
-    Object.defineProperty(DefaultProfileManager, "getInstance", { value: jest.fn(() => globalMocks.defaultProfileManagerInstance), configurable: true });
-    Object.defineProperty(globalMocks.defaultProfileManagerInstance, "getDefaultProfile", { value: jest.fn(() => globalMocks.defaultProfile), configurable: true });
+    Object.defineProperty(DefaultProfileManager,
+                          "getInstance",
+                          { value: jest.fn(() => globalMocks.defaultProfileManagerInstance), configurable: true });
+    Object.defineProperty(globalMocks.defaultProfileManagerInstance,
+                          "getDefaultProfile",
+                          { value: jest.fn(() => globalMocks.defaultProfile), configurable: true });
 
     // Common API mocks
     globalMocks.commonApi = ZoweExplorerApiRegister.getCommonApi(globalMocks.testProfile);
@@ -99,7 +103,7 @@ async function createGlobalMocks() {
     globalMocks.mockGetJesApi.mockReturnValue(globalMocks.jesApi);
     Object.defineProperty(globalMocks.jesApi, "getValidSession", { value: jest.fn(() => globalMocks.testSession), configurable: true });
     ZoweExplorerApiRegister.getJesApi = globalMocks.mockGetJesApi.bind(ZoweExplorerApiRegister);
-    
+
     // USS API mocks
     globalMocks.ussApi = ZoweExplorerApiRegister.getUssApi(globalMocks.testProfile);
     globalMocks.mockGetUssApi.mockReturnValue(globalMocks.ussApi);

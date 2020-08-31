@@ -51,7 +51,7 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
         if (profileType === "zosmf") {
             const validateSession = await (this.getValidSession(validateProfile,
                                                                 validateProfile.name,
-                                                                DefaultProfileManager.getInstance().getDefaultProfile("base").profile,
+                                                                DefaultProfileManager.getInstance().getDefaultProfile("base"),
                                                                 false));
             let sessionStatus;
             if (validateSession) { sessionStatus = await zowe.CheckStatus.getZosmfInfo(validateSession); }
@@ -66,10 +66,10 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
         }
     }
 
-    public async getValidSession(serviceProfile: IProfileLoaded, profileName: string, baseProfile?: IProfile, prompt?: boolean) {
+    public async getValidSession(serviceProfile: IProfileLoaded, profileName: string, baseProfile?: IProfileLoaded, prompt?: boolean) {
         // Retrieve baseProfile
         if (!baseProfile) {
-            baseProfile = DefaultProfileManager.getInstance().getDefaultProfile("base").profile;
+            baseProfile = DefaultProfileManager.getInstance().getDefaultProfile("base");
         }
 
         // If user exists in serviceProfile, use serviceProfile to login because it has precedence over baseProfile
@@ -77,10 +77,10 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
             if (prompt) {
                 // Select for prompting only fields which are not defined
                 const schemaArray = [];
-                if (!serviceProfile.profile.password && (baseProfile && !baseProfile.password)) { schemaArray.push("password"); }
-                if (!serviceProfile.profile.host && (baseProfile && !baseProfile.host)) {
+                if (!serviceProfile.profile.password && (baseProfile && !baseProfile.profile.password)) { schemaArray.push("password"); }
+                if (!serviceProfile.profile.host && (baseProfile && !baseProfile.profile.host)) {
                     schemaArray.push("host");
-                    if (!serviceProfile.profile.port && (baseProfile && !baseProfile.port)) { schemaArray.push("port"); }
+                    if (!serviceProfile.profile.port && (baseProfile && !baseProfile.profile.port)) { schemaArray.push("port"); }
                     if (!serviceProfile.profile.basePath) { schemaArray.push("basePath"); }
                 }
 
@@ -97,17 +97,17 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
             // baseProfile exists, so APIML login is possible
             const sessCfg = {
                 rejectUnauthorized: serviceProfile.profile.rejectUnauthorized ? serviceProfile.profile.rejectUnauthorized :
-                                                                                baseProfile.rejectUnauthorized,
+                                                                                baseProfile.profile.rejectUnauthorized,
                 basePath: serviceProfile.profile.basePath,
-                hostname: serviceProfile.profile.host ? serviceProfile.profile.host : baseProfile.host,
-                port: serviceProfile.profile.port ? serviceProfile.profile.port : baseProfile.port,
+                hostname: serviceProfile.profile.host ? serviceProfile.profile.host : baseProfile.profile.host,
+                port: serviceProfile.profile.port ? serviceProfile.profile.port : baseProfile.profile.port,
             };
 
             const cmdArgs: ICommandArguments = {
                 $0: "zowe",
                 _: [""],
                 tokenType: SessConstants.TOKEN_TYPE_APIML,
-                tokenValue: baseProfile.tokenValue
+                tokenValue: baseProfile.profile.tokenValue
             };
 
             try {
@@ -363,9 +363,7 @@ export class ZosmfMvsApi extends ZosmfApiCommon implements ZoweExplorerApi.IMvs 
 
     public async dataSet(filter: string, options?: zowe.IListOptions
         ): Promise<zowe.IZosFilesResponse>{
-        let a = await this.getSession();
-        let response = zowe.List.dataSet(a, filter, options);
-        return response;
+        return zowe.List.dataSet(await this.getSession(), filter, options);
     }
 
     public async allMembers(dataSetName: string, options?: zowe.IListOptions

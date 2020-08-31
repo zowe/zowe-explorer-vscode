@@ -16,9 +16,9 @@ import * as globals from "./globals";
 import * as os from "os";
 import * as path from "path";
 import { ISession, IProfile, ImperativeConfig } from "@zowe/imperative";
-// import { Profiles } from "./Profiles";
 import { IZoweTreeNode } from "./api/IZoweTreeNode";
 import * as nls from "vscode-nls";
+import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
@@ -45,20 +45,7 @@ export function errorHandling(errorDetails: any, label?: string, moreInfo?: stri
                 label = label.substring(0, label.indexOf(" ["));
             }
 
-            if (globals.ISTHEIA) {
-                vscode.window.showErrorMessage(errMsg);
-                // const profileInstance = Profiles.getInstance();
-                // const profileLoaded = profileInstance.loadNamedProfile(label.trim());
-                // profileInstance.getValidSession(profileLoaded, label.trim(), null, true);
-            } else {
-                vscode.window.showErrorMessage(errMsg, "Check Credentials").then(async (selection) => {
-                    if (selection) {
-                        // const profileInstance = Profiles.getInstance();
-                        // const profileLoaded = profileInstance.loadNamedProfile(label.trim());
-                        // await profileInstance.getValidSession(profileLoaded, label.trim(), null, true);
-                    }
-                });
-            }
+            vscode.window.showErrorMessage(errMsg);
             break;
         default:
             if (moreInfo === undefined) {

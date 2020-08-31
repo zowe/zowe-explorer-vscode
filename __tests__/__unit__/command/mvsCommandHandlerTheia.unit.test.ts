@@ -14,11 +14,10 @@ jest.mock("Session");
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import * as profileLoader from "../../../src/Profiles";
-import { Session } from "@zowe/imperative";
+import { Session, Logger } from "@zowe/imperative";
 import { MvsCommandHandler } from "../../../src/command/MvsCommandHandler";
 import * as globals from "../../../src/globals";
 import * as utils from "../../../src/utils";
-import { Logger } from "@zowe/imperative";
 import { DefaultProfileManager } from "../../../src/profiles/DefaultProfileManager";
 import { ZoweExplorerApiRegister } from "../../../src/api/ZoweExplorerApiRegister";
 import { createValidIProfile, createIProfile } from "../../../__mocks__/mockCreators/shared";
@@ -69,7 +68,7 @@ async function createGlobalMocks() {
             success: true,
             commandResponse: "d iplinfo.."
         },
-    }
+    };
 
     Object.defineProperty(vscode.window, "showErrorMessage", {value: globalMocks.showErrorMessage});
     Object.defineProperty(vscode.window, "showInputBox", {value: globalMocks.showInputBox});
@@ -85,8 +84,12 @@ async function createGlobalMocks() {
     globalMocks.defaultProfileManagerInstance = await DefaultProfileManager.createInstance(Logger.getAppLogger());
     await profileLoader.Profiles.createInstance(Logger.getAppLogger());
     globalMocks.defaultProfile = DefaultProfileManager.getInstance().getDefaultProfile("zosmf");
-    Object.defineProperty(DefaultProfileManager, "getInstance", { value: jest.fn(() => globalMocks.defaultProfileManagerInstance), configurable: true });
-    Object.defineProperty(globalMocks.defaultProfileManagerInstance, "getDefaultProfile", { value: jest.fn(() => globalMocks.defaultProfile), configurable: true });
+    Object.defineProperty(DefaultProfileManager,
+                          "getInstance",
+                          { value: jest.fn(() => globalMocks.defaultProfileManagerInstance), configurable: true });
+    Object.defineProperty(globalMocks.defaultProfileManagerInstance,
+                          "getDefaultProfile",
+                          { value: jest.fn(() => globalMocks.defaultProfile), configurable: true });
 
     // Common API mocks
     globalMocks.commonApi = ZoweExplorerApiRegister.getCommonApi(globalMocks.testProfile);

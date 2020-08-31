@@ -115,8 +115,6 @@ class MockUssApi2 implements ZoweExplorerApi.IUss {
 
 describe("ZoweExplorerApiRegister unit testing", () => {
     const log = Logger.getAppLogger();
-    const mockRefresh = jest.fn(async (): Promise<void> => {return;});
-    const profilesForValidation = {status: "active", name: "fake"};
     const mockProfileManagerInstance = createDefaultProfileManager();
     const registry = ZoweExplorerApiRegister.getInstance();
 

@@ -40,9 +40,13 @@ describe("ZoweExplorerExtender unit tests", () => {
         newMocks.defaultProfileManagerInstance = await DefaultProfileManager.createInstance(Logger.getAppLogger());
         newMocks.profiles = await Profiles.createInstance(Logger.getAppLogger());
         newMocks.defaultProfile = DefaultProfileManager.getInstance().getDefaultProfile("zosmf");
-        Object.defineProperty(DefaultProfileManager, "getInstance", { value: jest.fn(() => newMocks.defaultProfileManagerInstance), configurable: true });
-        Object.defineProperty(newMocks.defaultProfileManagerInstance, "getDefaultProfile", { value: jest.fn(() => newMocks.defaultProfile), configurable: true });
-    
+        Object.defineProperty(DefaultProfileManager,
+                            "getInstance",
+                            { value: jest.fn(() => newMocks.defaultProfileManagerInstance), configurable: true });
+        Object.defineProperty(newMocks.defaultProfileManagerInstance,
+                            "getDefaultProfile",
+                            { value: jest.fn(() => newMocks.defaultProfile), configurable: true });
+
         // USS API mocks
         newMocks.mvsApi = ZoweExplorerApiRegister.getMvsApi(newMocks.imperativeProfile);
         newMocks.mockGetMvsApi.mockReturnValue(newMocks.mvsApi);

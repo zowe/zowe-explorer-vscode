@@ -219,7 +219,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                                      (await ZoweExplorerApiRegister.getCommonApi(zosmfProfile)
                                                                    .getValidSession(zosmfProfile,
                                                                                     zosmfProfile.name,
-                                                                                    DefaultProfileManager.getInstance().getDefaultProfile("base").profile,
+                                                                                    DefaultProfileManager.getInstance().getDefaultProfile("base"),
                                                                                     false)),
                                      new JobDetail(nodeName),
                                      zosmfProfile);
@@ -233,7 +233,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                         (await ZoweExplorerApiRegister.getCommonApi(zosmfProfile)
                                                       .getValidSession(zosmfProfile,
                                                                        zosmfProfile.name,
-                                                                       DefaultProfileManager.getInstance().getDefaultProfile("base").profile,
+                                                                       DefaultProfileManager.getInstance().getDefaultProfile("base"),
                                                                        false)),
                         null, zosmfProfile
                     );
@@ -590,7 +590,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 session = await ZoweExplorerApiRegister.getCommonApi(profileLoaded)
                                                        .getValidSession(profileLoaded,
                                                                         profileLoaded.name,
-                                                                        DefaultProfileManager.getInstance().getDefaultProfile("base").profile,
+                                                                        DefaultProfileManager.getInstance().getDefaultProfile("base"),
                                                                         false);
             } catch (error) {
                 // When no password is entered, we should silence the error message for not providing it

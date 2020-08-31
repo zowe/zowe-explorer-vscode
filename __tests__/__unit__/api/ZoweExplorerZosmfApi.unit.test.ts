@@ -11,7 +11,14 @@
 
 import { ZosmfUssApi, ZosmfMvsApi } from "../../../src/api/ZoweExplorerZosmfApi";
 import * as zowe from "@zowe/cli";
-import { AbstractSession } from "@zowe/imperative";
+import * as globals from "../../../src/globals";
+import * as vscode from "vscode";
+import { AbstractSession, Logger } from "@zowe/imperative";
+import { ZoweExplorerApiRegister } from "../../../src/api/ZoweExplorerApiRegister";
+import { DefaultProfileManager } from "../../../src/profiles/DefaultProfileManager";
+import { Profiles } from "../../../src/Profiles";
+import { createISession, createISessionWithoutCredentials, createValidBaseProfile, createValidIProfile, createInstanceOfProfile } from "../../../__mocks__/mockCreators/shared";
+import { createProfileManager } from "../../../__mocks__/mockCreators/profiles";
 
 export declare enum TaskStage {
     IN_PROGRESS = 0,
@@ -100,5 +107,264 @@ describe("Zosmf API tests", () => {
             encoding: 285
         });
     });
+});
 
+describe("Profiles Unit Tests - Function getValidProfile", () => {
+    async function createBlockMocks() {
+        const newMocks = {
+            profiles: null,
+            sessionNoCredentials: createISessionWithoutCredentials(),
+            profileInstance: null,
+            mockGetDefaultProfile: jest.fn(),
+            mockCollectProfileDetails: jest.fn(),
+            baseProfile: createValidBaseProfile(),
+            serviceProfile: createValidIProfile(),
+            mockShowInputBox: jest.fn(),
+            mockGetConfiguration: jest.fn(),
+            mockCreateQuickPick: jest.fn(),
+            mockShowQuickPick: jest.fn(),
+            mockShowInformationMessage: jest.fn(),
+            mockGetInstance: jest.fn(),
+            mockShowErrorMessage: jest.fn(),
+            mockCreateInputBox: jest.fn(),
+            mockLog: jest.fn(),
+            mockDebug: jest.fn(),
+            defaultProfileManagerInstance: null,
+            defaultProfile: null,
+            testSession: createISession(),
+            mockError: jest.fn(),
+            commonApi: null,
+            mockGetCommonApi: jest.fn(),
+            mockGetValidSession: jest.fn(),
+            mockConfigurationTarget: jest.fn(),
+            mockCreateBasicZosmfSession: jest.fn(),
+            mockAddPropsOrPrompt: jest.fn(),
+            addPropsOrPromptSpy: null,
+            mockCliProfileManager: createProfileManager(),
+        };
+
+        // Mocking Default Profile Manager
+        newMocks.defaultProfileManagerInstance = await DefaultProfileManager.createInstance(Logger.getAppLogger());
+        newMocks.profiles = await Profiles.createInstance(Logger.getAppLogger());
+        newMocks.defaultProfile = DefaultProfileManager.getInstance().getDefaultProfile("zosmf");
+        Object.defineProperty(DefaultProfileManager,
+                            "getInstance",
+                            { value: jest.fn(() => newMocks.defaultProfileManagerInstance), configurable: true });
+        Object.defineProperty(newMocks.defaultProfileManagerInstance,
+                            "getDefaultProfile",
+                            { value: jest.fn(() => newMocks.defaultProfile), configurable: true });
+
+        // Common API mocks
+        newMocks.commonApi = ZoweExplorerApiRegister.getCommonApi(newMocks.defaultProfile);
+        newMocks.mockGetCommonApi.mockReturnValue(newMocks.commonApi);
+        newMocks.mockGetValidSession.mockReturnValue(newMocks.testSession);
+        ZoweExplorerApiRegister.getCommonApi = newMocks.mockGetCommonApi.bind(ZoweExplorerApiRegister);
+
+        Object.defineProperty(vscode.window, "showInformationMessage", { value: newMocks.mockShowInformationMessage, configurable: true });
+        Object.defineProperty(vscode.window, "showInputBox", { value: newMocks.mockShowInputBox, configurable: true });
+        Object.defineProperty(vscode.window, "showErrorMessage", { value: newMocks.mockShowErrorMessage, configurable: true });
+        Object.defineProperty(vscode.window, "showQuickPick", { value: newMocks.mockShowQuickPick, configurable: true });
+        Object.defineProperty(vscode.window, "createQuickPick", { value: newMocks.mockCreateQuickPick, configurable: true });
+        Object.defineProperty(Profiles, "getInstance", { value: newMocks.mockGetInstance, configurable: true });
+        Object.defineProperty(Profiles, "collectProfileDetails", { value: newMocks.mockCollectProfileDetails, configurable: true });
+        Object.defineProperty(globals, "LOG", { value: newMocks.mockLog, configurable: true });
+        Object.defineProperty(vscode.window, "createInputBox", { value: newMocks.mockCreateInputBox, configurable: true });
+        Object.defineProperty(globals.LOG, "debug", { value: newMocks.mockDebug, configurable: true });
+        Object.defineProperty(zowe.ZosmfSession, "createBasicZosmfSession", { value: newMocks.mockCreateBasicZosmfSession });
+        Object.defineProperty(globals.LOG, "error", { value: newMocks.mockError, configurable: true });
+        Object.defineProperty(globals, "ISTHEIA", { get: () => false, configurable: true });
+        Object.defineProperty(vscode.window, "createTreeView", { value: jest.fn(), configurable: true });
+        Object.defineProperty(vscode.workspace, "getConfiguration", { value: newMocks.mockGetConfiguration, configurable: true });
+        Object.defineProperty(vscode, "ConfigurationTarget", { value: newMocks.mockConfigurationTarget, configurable: true });
+
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles, newMocks.sessionNoCredentials);
+        newMocks.mockGetDefaultProfile.mockResolvedValue(newMocks.baseProfile);
+        Object.defineProperty(newMocks.commonApi, "collectProfileDetails", {value: newMocks.mockCollectProfileDetails, configurable: true});
+        newMocks.mockGetInstance.mockReturnValue(newMocks.profileInstance);
+
+        return newMocks;
+    }
+
+    it("Tests that getValidProfile tries to retrieve the baseProfile immediately, if it is not passed in", async () => {
+        const blockMocks = await createBlockMocks();
+
+        const getDefaultSpy = jest.spyOn(blockMocks.defaultProfileManagerInstance, "getDefaultProfile");
+        await ZoweExplorerApiRegister.getCommonApi(blockMocks.serviceProfile).getValidSession(blockMocks.serviceProfile, "sestest");
+
+        expect(getDefaultSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it("Tests that getValidProfile prompts for password if prompting = true", async () => {
+        const blockMocks = await createBlockMocks();
+
+        blockMocks.serviceProfile.profile.password = null;
+        blockMocks.baseProfile.profile.password = null;
+
+        await ZoweExplorerApiRegister.getCommonApi(blockMocks.serviceProfile)
+                                     .getValidSession(blockMocks.serviceProfile, "sestest", blockMocks.baseProfile, true);
+
+        expect(blockMocks.mockCollectProfileDetails).toHaveBeenCalledTimes(1);
+        expect(blockMocks.mockCollectProfileDetails).toHaveBeenCalledWith(["password"]);
+    });
+
+    it("Tests that getValidProfile prompts for host if prompting = true", async () => {
+        const blockMocks = await createBlockMocks();
+
+        blockMocks.serviceProfile.profile.host = null;
+        blockMocks.baseProfile.profile.host = null;
+        blockMocks.serviceProfile.profile.basePath = "test";
+        blockMocks.baseProfile.profile.basePath = "test";
+
+        await ZoweExplorerApiRegister.getCommonApi(blockMocks.serviceProfile)
+                                     .getValidSession(blockMocks.serviceProfile, "sestest", blockMocks.baseProfile, true);
+
+        expect(blockMocks.mockCollectProfileDetails).toHaveBeenCalledTimes(1);
+        expect(blockMocks.mockCollectProfileDetails).toHaveBeenCalledWith(["host"]);
+    });
+
+    it("Tests that getValidProfile prompts for port if prompting = true", async () => {
+        const blockMocks = await createBlockMocks();
+
+        blockMocks.serviceProfile.profile.port = null;
+        blockMocks.baseProfile.profile.port = null;
+        blockMocks.serviceProfile.profile.host = null;
+        blockMocks.baseProfile.profile.host = null;
+        blockMocks.serviceProfile.profile.basePath = "test";
+        blockMocks.baseProfile.profile.basePath = "test";
+
+        await ZoweExplorerApiRegister.getCommonApi(blockMocks.serviceProfile)
+                                     .getValidSession(blockMocks.serviceProfile, "sestest", blockMocks.baseProfile, true);
+
+        expect(blockMocks.mockCollectProfileDetails).toHaveBeenCalledTimes(1);
+        expect(blockMocks.mockCollectProfileDetails).toHaveBeenCalledWith(["host", "port"]);
+    });
+
+    it("Tests that getValidProfile prompts for basePath if prompting = true", async () => {
+        const blockMocks = await createBlockMocks();
+
+        blockMocks.serviceProfile.profile.basePath = null;
+        blockMocks.baseProfile.profile.basePath = null;
+        blockMocks.serviceProfile.profile.host = null;
+        blockMocks.baseProfile.profile.host = null;
+
+        await ZoweExplorerApiRegister.getCommonApi(blockMocks.serviceProfile)
+                                     .getValidSession(blockMocks.serviceProfile, "sestest", blockMocks.baseProfile, true);
+
+        expect(blockMocks.mockCollectProfileDetails).toHaveBeenCalledTimes(1);
+        expect(blockMocks.mockCollectProfileDetails).toHaveBeenCalledWith(["host", "basePath"]);
+    });
+
+    it("Tests that getValidProfile successfully returns an array of new profile details", async () => {
+        const blockMocks = await createBlockMocks();
+
+        blockMocks.serviceProfile.profile.password = null;
+        blockMocks.baseProfile.profile.password = null;
+        blockMocks.serviceProfile.profile.host = null;
+        blockMocks.baseProfile.profile.host = null;
+        blockMocks.serviceProfile.profile.port = null;
+        blockMocks.baseProfile.profile.port = null;
+        blockMocks.serviceProfile.profile.basePath = null;
+        blockMocks.baseProfile.profile.basePath = null;
+        blockMocks.mockCollectProfileDetails.mockResolvedValue({
+            host: "testHostNew",
+            port: 1234,
+            password: "testPassNew",
+            basePath: "testBasePathNew"
+        });
+
+        await ZoweExplorerApiRegister.getCommonApi(blockMocks.serviceProfile)
+                                     .getValidSession(blockMocks.serviceProfile, "sestest", blockMocks.baseProfile, true);
+
+        expect(blockMocks.mockCollectProfileDetails).toHaveBeenCalledTimes(1);
+        expect(blockMocks.mockCollectProfileDetails).toHaveBeenCalledWith(["password", "host", "port", "basePath"]);
+    });
+
+    it("Tests that getValidProfile throws an error if prompting fails", async () => {
+        const blockMocks = await createBlockMocks();
+
+        blockMocks.mockCollectProfileDetails.mockImplementation(() => { throw new Error("Test error!"); });
+        await ZoweExplorerApiRegister.getCommonApi(blockMocks.serviceProfile)
+                                     .getValidSession(blockMocks.serviceProfile, "sestest", blockMocks.baseProfile, true);
+
+        expect(blockMocks.mockCollectProfileDetails).toThrowError("Test error!");
+    });
+
+    it("Tests that getValidProfile removes the 'password' key from the service profile if password is null", async () => {
+        const blockMocks = await createBlockMocks();
+
+        blockMocks.defaultProfile.profile.password = null;
+        const defaultProfileNoPassword = blockMocks.defaultProfile;
+        delete defaultProfileNoPassword.profile.password;
+
+        await ZoweExplorerApiRegister.getCommonApi(blockMocks.defaultProfile)
+                                     .getValidSession(blockMocks.defaultProfile, "sestest", blockMocks.baseProfile);
+
+        expect(blockMocks.mockCreateBasicZosmfSession).toBeCalledWith(defaultProfileNoPassword.profile);
+    });
+
+    it("Tests that getValidProfile successfully returns a connected Session when not using the baseProfile (non-token auth)", async () => {
+        const blockMocks = await createBlockMocks();
+
+        blockMocks.mockCreateBasicZosmfSession.mockReturnValue(blockMocks.testSession);
+
+        const newSession = await ZoweExplorerApiRegister.getCommonApi(blockMocks.defaultProfile)
+                                     .getValidSession(blockMocks.defaultProfile, "sestest");
+
+        expect(newSession).toBe(blockMocks.testSession);
+    });
+
+    it("Tests that getValidProfile throws an error if generating a Session fails when not using the baseProfile (non-token auth)", async () => {
+        const blockMocks = await createBlockMocks();
+
+        blockMocks.mockCreateBasicZosmfSession.mockImplementation(() => { throw new Error("Test error!"); });
+
+        let error;
+        try {
+            await ZoweExplorerApiRegister.getCommonApi(blockMocks.defaultProfile)
+                                         .getValidSession(blockMocks.defaultProfile, "sestest", blockMocks.baseProfile);
+        } catch (err) {
+            error = err;
+        }
+
+        expect(error.message).toEqual("Test error!");
+    });
+
+    it("Tests that getValidProfile successfully returns a connected Session when prompting = true (token auth)", async () => {
+        const blockMocks = await createBlockMocks();
+
+        blockMocks.mockCreateBasicZosmfSession.mockReturnValue(blockMocks.testSession);
+
+        const newSession = await ZoweExplorerApiRegister.getCommonApi(blockMocks.defaultProfile)
+                                                        .getValidSession(blockMocks.defaultProfile, "sestest", blockMocks.baseProfile, true);
+
+        expect(newSession).toBe(blockMocks.testSession);
+    });
+
+    it("Tests that getValidProfile successfully returns a connected Session when prompting = false (token auth)", async () => {
+        const blockMocks = await createBlockMocks();
+
+        blockMocks.mockCreateBasicZosmfSession.mockReturnValue(blockMocks.testSession);
+
+        const newSession = await ZoweExplorerApiRegister.getCommonApi(blockMocks.defaultProfile)
+                                                        .getValidSession(blockMocks.defaultProfile, "sestest", blockMocks.baseProfile, false);
+
+        expect(newSession).toBe(blockMocks.testSession);
+    });
+
+    it("Tests that getValidProfile throws an error if baseProfile and serviceProfile.user are both missing", async () => {
+        const blockMocks = await createBlockMocks();
+
+        blockMocks.defaultProfile.profile.user = null;
+        Object.defineProperty(blockMocks.defaultProfileManagerInstance, "getDefaultProfile", { value: jest.fn(() => null), configurable: true });
+
+        let error;
+        try {
+            await ZoweExplorerApiRegister.getCommonApi(blockMocks.defaultProfile)
+                                         .getValidSession(blockMocks.defaultProfile, "sestest", null);
+        } catch (err) {
+            error = err;
+        }
+
+        expect(error.message).toEqual("Profile sestest is invalid. Please check your login details and try again.");
+    });
 });

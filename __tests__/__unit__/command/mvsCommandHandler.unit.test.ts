@@ -85,7 +85,7 @@ async function createGlobalMocks() {
             success: true,
             commandResponse: "d iplinfo.."
         },
-    }
+    };
 
     Object.defineProperty(vscode.window, "showErrorMessage", {value: globalMocks.showErrorMessage, configurable: true});
     Object.defineProperty(vscode.window, "showInputBox", {value: globalMocks.showInputBox, configurable: true});
@@ -103,8 +103,12 @@ async function createGlobalMocks() {
     globalMocks.defaultProfileManagerInstance = await DefaultProfileManager.createInstance(Logger.getAppLogger());
     globalMocks.profileInstance = await profileLoader.Profiles.createInstance(Logger.getAppLogger());
     globalMocks.defaultProfile = DefaultProfileManager.getInstance().getDefaultProfile("zosmf");
-    Object.defineProperty(DefaultProfileManager, "getInstance", { value: jest.fn(() => globalMocks.defaultProfileManagerInstance), configurable: true });
-    Object.defineProperty(globalMocks.defaultProfileManagerInstance, "getDefaultProfile", { value: jest.fn(() => globalMocks.defaultProfile), configurable: true });
+    Object.defineProperty(DefaultProfileManager,
+                          "getInstance",
+                          { value: jest.fn(() => globalMocks.defaultProfileManagerInstance), configurable: true });
+    Object.defineProperty(globalMocks.defaultProfileManagerInstance,
+                          "getDefaultProfile",
+                          { value: jest.fn(() => globalMocks.defaultProfile), configurable: true });
 
     // Common API mocks
     globalMocks.commonApi = ZoweExplorerApiRegister.getCommonApi(globalMocks.testProfile);
@@ -173,7 +177,8 @@ describe("mvsCommandActions unit testing", () => {
                     validateProfiles: jest.fn(),
                     validProfile: profileLoader.ValidProfileEnum.VALID
                 };
-            }), configurable: true});
+            }),
+            configurable: true});
 
         globalMocks.showQuickPick.mockReturnValueOnce("firstName");
         globalMocks.showInputBox.mockReturnValueOnce("/d iplinfo1");
@@ -216,7 +221,8 @@ describe("mvsCommandActions unit testing", () => {
                     validateProfiles: jest.fn(),
                     validProfile: profileLoader.ValidProfileEnum.VALID
                 };
-            }), configurable: true});
+            }),
+            configurable: true});
 
         globalMocks.showQuickPick.mockReturnValueOnce("firstName");
         globalMocks.showInputBox.mockReturnValueOnce("d iplinfo0");
@@ -257,7 +263,8 @@ describe("mvsCommandActions unit testing", () => {
                     validateProfiles: jest.fn(),
                     validProfile: profileLoader.ValidProfileEnum.VALID
                 };
-            }), configurable: true});
+            }),
+            configurable: true});
 
         globalMocks.showQuickPick.mockReturnValueOnce("firstName");
         globalMocks.showInputBox.mockReturnValueOnce("/d iplinfo3");
@@ -297,7 +304,8 @@ describe("mvsCommandActions unit testing", () => {
                     validateProfiles: jest.fn(),
                     validProfile: profileLoader.ValidProfileEnum.VALID
                 };
-            }), configurable: true});
+            }),
+            configurable: true});
 
         globalMocks.showQuickPick.mockReturnValueOnce("firstName");
         jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
@@ -334,7 +342,8 @@ describe("mvsCommandActions unit testing", () => {
                     validateProfiles: jest.fn(),
                     validProfile: profileLoader.ValidProfileEnum.VALID
                 };
-            }), configurable: true});
+            }),
+            configurable: true});
 
         globalMocks.showQuickPick.mockReturnValueOnce("firstName");
         globalMocks.showInputBox.mockReturnValueOnce(undefined);
@@ -373,7 +382,8 @@ describe("mvsCommandActions unit testing", () => {
                     validateProfiles: jest.fn(),
                     validProfile: profileLoader.ValidProfileEnum.VALID
                 };
-            }), configurable: true});
+            }),
+            configurable: true});
 
         globalMocks.createQuickPick.mockReturnValueOnce({
             placeholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
@@ -426,7 +436,8 @@ describe("mvsCommandActions unit testing", () => {
                     validateProfiles: jest.fn(),
                     validProfile: profileLoader.ValidProfileEnum.VALID,
                 };
-            }), configurable: true});
+            }),
+            configurable: true});
 
         await globalMocks.mvsActions.issueMvsCommand();
         expect(globalMocks.showInformationMessage.mock.calls[0][0]).toEqual("No profiles available");
@@ -450,7 +461,8 @@ describe("mvsCommandActions unit testing", () => {
                     }),
                     validateProfiles: jest.fn(),
                 };
-            }), configurable: true});
+            }),
+            configurable: true});
 
         globalMocks.showQuickPick.mockReturnValueOnce("firstName");
         globalMocks.showInputBox.mockReturnValueOnce("fake");
@@ -491,7 +503,8 @@ describe("mvsCommandActions unit testing", () => {
                     }),
                     validateProfiles: jest.fn(),
                 };
-            }), configurable: true});
+            }),
+            configurable: true});
 
         globalMocks.showQuickPick.mockReturnValueOnce("firstName");
         globalMocks.showInputBox.mockReturnValueOnce("fake");
@@ -527,7 +540,8 @@ describe("mvsCommandActions unit testing", () => {
                         return profileLoader.ValidProfileEnum.INVALID;
                     }),
                 };
-            }), configurable: true});
+            }),
+            configurable: true});
 
         globalMocks.showQuickPick.mockReturnValueOnce("firstName");
         globalMocks.showInputBox.mockReturnValueOnce("fake");
@@ -555,7 +569,8 @@ describe("mvsCommandActions unit testing", () => {
                     checkCurrentProfile: jest.fn(),
                     zosmfProfile: globalMocks.mockLoadNamedProfile
                 };
-            }), configurable: true});
+            }),
+            configurable: true});
 
         globalMocks.showQuickPick.mockReturnValueOnce(undefined);
 
@@ -578,7 +593,8 @@ describe("mvsCommandActions unit testing", () => {
                     checkCurrentProfile: jest.fn(),
                     zosmfProfile: globalMocks.mockLoadNamedProfile
                 };
-            }), configurable: true});
+            }),
+            configurable: true});
 
         globalMocks.showInputBox.mockReturnValueOnce("/d iplinfo1");
         globalMocks.issueSimple.mockReturnValueOnce({commandResponse: "fake response"});

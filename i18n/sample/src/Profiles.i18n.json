@@ -1,6 +1,5 @@
 {
     "checkCurrentProfile.error": "Error encountered in {0}",
-    "getValidSession.loginImpossible": "Profile {0} is invalid. Please check your login details and try again.",
     "loadNamedProfile.error.profileName": "Could not find profile named: {0}.",
     "addSession.quickPickOption": "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the USS Explorer",
     "enterPattern.pattern": "No selection made.",

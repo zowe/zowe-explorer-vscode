@@ -118,14 +118,20 @@ export function createValidIProfile(): imperative.IProfileLoaded {
     };
 }
 
-export function createValidBaseProfile(): imperative.IProfile {
+export function createValidBaseProfile(): imperative.IProfileLoaded {
     return {
-        host: "test",
-        port: 60004,
-        tokenType: "apimlAuthenticationToken",
-        tokenValue: "testToken",
-        rejectUnauthorized: false,
-        name: "testName"
+        name: "sestest",
+        profile: {
+            host: "test",
+            port: 60004,
+            tokenType: "apimlAuthenticationToken",
+            tokenValue: "testToken",
+            rejectUnauthorized: false,
+            name: "testName"
+        },
+        type: "zosmf",
+        message: "",
+        failNotFound: false
     };
 }
 
