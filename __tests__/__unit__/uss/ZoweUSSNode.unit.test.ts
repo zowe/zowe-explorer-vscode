@@ -278,9 +278,9 @@ describe("ZoweUSSNode Unit Tests - Function node.setBinary()", () => {
     it("Tests that node.setBinary() works", async () => {
         const globalMocks = await createGlobalMocks();
 
-        const rootNode = new ZoweUSSNode(globals.FAVORITE_CONTEXT, vscode.TreeItemCollapsibleState.Collapsed, null,
+        const rootNode = new ZoweUSSNode("favProfileNode", vscode.TreeItemCollapsibleState.Collapsed, null,
             globalMocks.session, null, false, globalMocks.profileOne.name, undefined);
-        rootNode.contextValue = globals.FAVORITE_CONTEXT;
+        rootNode.contextValue = globals.FAV_PROFILE_CONTEXT;
         const subNode = new ZoweUSSNode(
             "binaryFile", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null, null, true, globalMocks.profileOne.name, undefined);
         const child = new ZoweUSSNode(
@@ -595,9 +595,14 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
             null, globalMocks.session, null, false, globalMocks.profileOne.name);
         favoriteSession.contextValue = globals.FAVORITE_CONTEXT;
 
-        // Set up favorited nodes (directly under Favorites)
+        // Set up profile grouping node (directly under Favorites)
+        const favProfileNode = new ZoweUSSNode(globalMocks.profileOne.name, vscode.TreeItemCollapsibleState.Collapsed,
+                favoriteSession, globalMocks.session, "", false, globalMocks.profileOne.name);
+        favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
+
+        // Set up favorited nodes (directly under profile grouping node)
         const favoriteFile = new ZoweUSSNode("favFile", vscode.TreeItemCollapsibleState.None,
-            favoriteSession, globalMocks.session, "/", false, globalMocks.profileOne.name);
+            favProfileNode, globalMocks.session, "/", false, globalMocks.profileOne.name);
         favoriteFile.contextValue = globals.DS_TEXT_FILE_CONTEXT + globals.FAV_SUFFIX;
 
         // For each node, make sure that code below the log.debug statement is execute
