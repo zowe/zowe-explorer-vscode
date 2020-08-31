@@ -233,7 +233,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             this.contextValue = globals.DS_TEXT_FILE_CONTEXT;
             delete this.getSessionNode().binaryFiles[this.fullPath];
         }
-        if (this.getParent() && contextually.isFavoriteContext(this.getParent())) {
+        if (this.getParent() && this.getParent().contextValue === globals.FAV_PROFILE_CONTEXT) {
             this.binary ? this.contextValue = globals.DS_BINARY_FILE_CONTEXT + globals.FAV_SUFFIX :
                 this.contextValue = globals.DS_TEXT_FILE_CONTEXT + globals.FAV_SUFFIX;
         }
