@@ -21,12 +21,13 @@ import * as path from "path";
 import * as globals from "../../../src/globals";
 import * as sharedUtils from "../../../src/shared/utils";
 import * as zowe from "@zowe/cli";
-import { IProfileLoaded } from "@zowe/imperative";
+import { Logger, IProfileLoaded } from "@zowe/imperative";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
 import * as isbinaryfile from "isbinaryfile";
 import * as fs from "fs";
+import { DefaultProfileManager } from "../../../src/profiles/DefaultProfileManager";
 
-function createGlobalMocks() {
+async function createGlobalMocks() {
     const globalMocks = {
         renameUSSFile: jest.fn(),
         showQuickPick: jest.fn(),
@@ -54,6 +55,10 @@ function createGlobalMocks() {
         Utilities: jest.fn(),
         isFileTagBinOrAscii: jest.fn(),
         theia: false,
+        defaultProfileManagerInstance: null,
+        defaultProfile: null,
+        mockGetUssApi: jest.fn(),
+        ussApi: null,
         testSession: createISession(),
         testProfile: createIProfile(),
         ProgressLocation: jest.fn().mockImplementation(() => {
@@ -119,6 +124,19 @@ function createGlobalMocks() {
         })
     });
 
+    // Mocking Default Profile Manager
+    globalMocks.defaultProfileManagerInstance = await DefaultProfileManager.createInstance(Logger.getAppLogger());
+    await Profiles.createInstance(Logger.getAppLogger());
+    globalMocks.defaultProfile = DefaultProfileManager.getInstance().getDefaultProfile("zosmf");
+    Object.defineProperty(DefaultProfileManager, "getInstance", { value: jest.fn(() => globalMocks.defaultProfileManagerInstance), configurable: true });
+    Object.defineProperty(globalMocks.defaultProfileManagerInstance, "getDefaultProfile", { value: jest.fn(() => globalMocks.defaultProfile), configurable: true });
+
+    // USS API mocks
+    globalMocks.ussApi = ZoweExplorerApiRegister.getUssApi(globalMocks.testProfile);
+    globalMocks.mockGetUssApi.mockReturnValue(globalMocks.ussApi);
+    Object.defineProperty(globalMocks.ussApi, "getValidSession", { value: jest.fn(() => globalMocks.testSession), configurable: true });
+    ZoweExplorerApiRegister.getUssApi = globalMocks.mockGetUssApi.bind(ZoweExplorerApiRegister);
+
     return globalMocks;
 }
 
@@ -135,7 +153,7 @@ describe("USS Action Unit Tests - Function createUSSNodeDialog", () => {
     }
 
     it("Tests if createUSSNode is executed successfully", async () => {
-        const globalMocks = createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
         globalMocks.showQuickPick.mockResolvedValueOnce("File");
@@ -160,7 +178,7 @@ describe("USS Action Unit Tests - Function createUSSNode", () => {
     }
 
     it("Tests that createUSSNode is executed successfully", async () => {
-        const globalMocks = createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
         globalMocks.showInputBox.mockReturnValueOnce("USSFolder");
@@ -171,7 +189,7 @@ describe("USS Action Unit Tests - Function createUSSNode", () => {
     });
 
     it("Tests that createUSSNode does not execute if node name was not entered", async () => {
-        const globalMocks = createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
         globalMocks.showInputBox.mockReturnValueOnce("");
@@ -182,7 +200,7 @@ describe("USS Action Unit Tests - Function createUSSNode", () => {
     });
 
     it("Tests that only the child node is refreshed when createUSSNode() is called on a child node", async () => {
-        const globalMocks = createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
         globalMocks.showInputBox.mockReturnValueOnce("USSFolder");
@@ -208,7 +226,7 @@ describe("USS Action Unit Tests - Function refreshAllUSS", () => {
     }
 
     it("Tests that refreshAllUSS() is executed successfully", async () => {
-        const globalMocks = createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
         const profilesForValidation = { status: "active", name: "fake" };
 
@@ -293,7 +311,7 @@ describe("USS Action Unit Tests - Function copyPath", () => {
     }
 
     it("should copy the node's full path to the system clipboard", async () => {
-        const globalMocks = createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
         globalMocks.theia = false;
@@ -302,7 +320,7 @@ describe("USS Action Unit Tests - Function copyPath", () => {
     });
 
     it("should not copy the node's full path to the system clipboard if theia", async () => {
-        const globalMocks = createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
         globalMocks.theia = false;
@@ -334,7 +352,7 @@ describe("USS Action Unit Tests - Function saveUSSFile", () => {
     }
 
     it("Testing that saveUSSFile is executed successfully", async () => {
-        const globalMocks = createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
         globalMocks.withProgress.mockImplementation((progLocation, callback) => callback());
@@ -355,7 +373,7 @@ describe("USS Action Unit Tests - Function saveUSSFile", () => {
     });
 
     it("Tests that saveUSSFile fails when save fails", async () => {
-        const globalMocks = createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
         globalMocks.withProgress.mockImplementation((progLocation, callback) => callback());
@@ -372,7 +390,7 @@ describe("USS Action Unit Tests - Function saveUSSFile", () => {
     });
 
     it("Tests that saveUSSFile fails when error occurs", async () => {
-        const globalMocks = createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
         globalMocks.withProgress.mockImplementation((progLocation, callback) => callback());
@@ -386,7 +404,7 @@ describe("USS Action Unit Tests - Function saveUSSFile", () => {
     });
 
     it("Tests that saveUSSFile fails when HTTP error occurs", async () => {
-        const globalMocks = createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
         globalMocks.withProgress.mockImplementation((progLocation, callback) => callback());
@@ -427,7 +445,7 @@ describe("USS Action Unit Tests - Functions uploadDialog & uploadFile", () => {
     }
 
     it("Tests that uploadDialog() works for non-binary file", async () => {
-        const globalMocks = createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
         globalMocks.openTextDocument.mockResolvedValue(blockMocks.testDoc);
@@ -442,7 +460,7 @@ describe("USS Action Unit Tests - Functions uploadDialog & uploadFile", () => {
     });
 
     it("Tests that uploadDialog() works for binary file", async () => {
-        const globalMocks = createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
         globalMocks.openTextDocument.mockResolvedValue(blockMocks.testDoc);
@@ -456,7 +474,7 @@ describe("USS Action Unit Tests - Functions uploadDialog & uploadFile", () => {
     });
 
     it("Tests that uploadDialog() throws an error successfully", async () => {
-        const globalMocks = createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
         globalMocks.openTextDocument.mockResolvedValue(blockMocks.testDoc);
@@ -501,7 +519,7 @@ describe("USS Action Unit Tests - Function changeFileType", () => {
     }
 
     it("Tests that changeFileType() runs successfully", async () => {
-        const globalMocks = createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
         const node = new ZoweUSSNode("node", vscode.TreeItemCollapsibleState.None, blockMocks.ussNode, null, null);
 
@@ -539,7 +557,7 @@ describe("USS Action Unit Tests - function uploadFile", () => {
     }
 
     it("Tests upload file works with old API method", async () => {
-        const globalMocks = createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
         const putContents = jest.fn();
         ZoweExplorerApiRegister.getUssApi = jest.fn
@@ -555,7 +573,7 @@ describe("USS Action Unit Tests - function uploadFile", () => {
     });
 
     it("Tests upload file works with new API method", async () => {
-        const globalMocks = createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
         const putContent = jest.fn();
         ZoweExplorerApiRegister.getUssApi = jest.fn

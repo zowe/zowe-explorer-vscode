@@ -95,11 +95,11 @@ async function createGlobalMocks() {
     Object.defineProperty(DefaultProfileManager, "getInstance", { value: jest.fn(() => globalMocks.defaultProfileManagerInstance), configurable: true });
     Object.defineProperty(globalMocks.defaultProfileManagerInstance, "getDefaultProfile", { value: jest.fn(() => globalMocks.defaultProfile), configurable: true });
 
-    // USS API mocks
+    // MVS API mocks
     globalMocks.mvsApi = ZoweExplorerApiRegister.getMvsApi(globalMocks.testProfile);
     globalMocks.mockGetMvsApi.mockReturnValue(globalMocks.mvsApi);
     Object.defineProperty(globalMocks.mvsApi, "getValidSession", { value: jest.fn(() => globalMocks.testSession), configurable: true });
-    ZoweExplorerApiRegister.getUssApi = globalMocks.mockGetMvsApi.bind(ZoweExplorerApiRegister);
+    ZoweExplorerApiRegister.getMvsApi = globalMocks.mockGetMvsApi.bind(ZoweExplorerApiRegister);
 
     return globalMocks;
 }

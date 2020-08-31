@@ -18,6 +18,8 @@ import { createISession, createAltTypeIProfile, createTreeView, createIProfile }
 import { createDatasetSessionNode, createDatasetTree } from "../../__mocks__/mockCreators/datasets";
 import { createUSSSessionNode, createUSSTree } from "../../__mocks__/mockCreators/uss";
 import { createJobsTree, createIJobObject } from "../../__mocks__/mockCreators/jobs";
+import { DefaultProfileManager } from "../../src/profiles/DefaultProfileManager";
+import { ZoweExplorerApiRegister } from "../../src/api/ZoweExplorerApiRegister";
 ​
 describe("ZoweExplorerExtender unit tests", () => {
     async function createBlockMocks() {
@@ -29,17 +31,28 @@ describe("ZoweExplorerExtender unit tests", () => {
             treeView: createTreeView(),
             instTest: ZoweExplorerExtender.getInstance(),
             profiles: null,
+            defaultProfileManagerInstance: null,
+            defaultProfile: null,
+            mvsApi: null,
+            mockGetMvsApi: jest.fn(),
         };
+        // Mocking Default Profile Manager
+        newMocks.defaultProfileManagerInstance = await DefaultProfileManager.createInstance(Logger.getAppLogger());
+        newMocks.profiles = await Profiles.createInstance(Logger.getAppLogger());
+        newMocks.defaultProfile = DefaultProfileManager.getInstance().getDefaultProfile("zosmf");
+        Object.defineProperty(DefaultProfileManager, "getInstance", { value: jest.fn(() => newMocks.defaultProfileManagerInstance), configurable: true });
+        Object.defineProperty(newMocks.defaultProfileManagerInstance, "getDefaultProfile", { value: jest.fn(() => newMocks.defaultProfile), configurable: true });
+    
+        // USS API mocks
+        newMocks.mvsApi = ZoweExplorerApiRegister.getMvsApi(newMocks.imperativeProfile);
+        newMocks.mockGetMvsApi.mockReturnValue(newMocks.mvsApi);
+        Object.defineProperty(newMocks.mvsApi, "getValidSession", { value: jest.fn(() => newMocks.session), configurable: true });
+        ZoweExplorerApiRegister.getMvsApi = newMocks.mockGetMvsApi.bind(ZoweExplorerApiRegister);
 ​
-        newMocks.profiles = await Profiles.createInstance(newMocks.log);
         Object.defineProperty(vscode.window, "createTreeView", { value: jest.fn(), configurable: true });
 ​
         return newMocks;
     }
-​
-    afterEach(async () => {
-        jest.resetAllMocks();
-    });
 ​
     it("calls DatasetTree addSession when extender profiles are reloaded", async () => {
         const blockMocks = await createBlockMocks();

@@ -21,6 +21,7 @@ import * as globals from "../../src/globals";
 import { Profiles, ValidProfileEnum } from "../../src/Profiles";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import { createIProfile, createTreeView } from "../../__mocks__/mockCreators/shared";
+import { DefaultProfileManager } from "../../src/profiles/DefaultProfileManager";
 
 jest.mock("vscode");
 jest.mock("fs");
@@ -179,6 +180,14 @@ async function createGlobalMocks() {
         ]
     };
 
+    // Profile instance mocks
+    globalMocks.defaultProfileManagerInstance = await DefaultProfileManager.createInstance(imperative.Logger.getAppLogger());
+    await Profiles.createInstance(imperative.Logger.getAppLogger());
+    globalMocks.defaultProfile = DefaultProfileManager.getInstance().getDefaultProfile("zosmf");
+    Object.defineProperty(DefaultProfileManager, "getInstance", { value: jest.fn(() => globalMocks.defaultProfileManagerInstance), configurable: true });
+    Object.defineProperty(globalMocks.defaultProfileManagerInstance, "getDefaultProfile", { value: jest.fn(() => globalMocks.defaultProfile), configurable: true });
+
+
     Object.defineProperty(fs, "mkdirSync", { value: globalMocks.mockMkdirSync, configurable: true });
     Object.defineProperty(imperative, "CliProfileManager", { value: globalMocks.mockCliProfileManager, configurable: true });
     Object.defineProperty(vscode.window, "createTreeView", { value: globalMocks.mockCreateTreeView, configurable: true });
@@ -266,7 +275,7 @@ describe("Extension Unit Tests", () => {
         globalMocks.mockReaddirSync.mockReturnValue([]);
         globalMocks.mockIsFile.mockReturnValueOnce(true);
         globalMocks.mockIsFile.mockReturnValueOnce(false);
-        globalMocks.mockGetConfiguration.mockReturnValue({
+        globalMocks.mockGetConfiguration.mockReturnValueOnce({
             persistence: true,
             get: (setting: string) => [
                 "[test]: /u/myUser{directory}",
