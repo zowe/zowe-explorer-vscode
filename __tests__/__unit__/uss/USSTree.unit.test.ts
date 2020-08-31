@@ -689,7 +689,9 @@ describe("USSTree Unit Tests - Functions USSTree.addFavorite()", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         await globalMocks.testTree.addFavorite(blockMocks.parentDir);
-        expect(globalMocks.testTree.mFavorites[0].fullPath).toEqual(blockMocks.parentDir.fullPath);
+        const favProfileNode = globalMocks.testTree.mFavorites[0];
+
+        expect(favProfileNode.children[0].fullPath).toEqual(blockMocks.parentDir.fullPath);
     });
 
     it("Tests that addFavorite() works for files", async () => {
@@ -697,7 +699,9 @@ describe("USSTree Unit Tests - Functions USSTree.addFavorite()", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         await globalMocks.testTree.addFavorite(blockMocks.childFile);
-        expect(globalMocks.testTree.mFavorites[0].fullPath).toEqual(blockMocks.childFile.fullPath);
+        const favProfileNode = globalMocks.testTree.mFavorites[0];
+
+        expect(favProfileNode.children[0].fullPath).toEqual(blockMocks.childFile.fullPath);
     });
 
     it("Tests that addFavorite() doesn't add duplicates", async () => {
