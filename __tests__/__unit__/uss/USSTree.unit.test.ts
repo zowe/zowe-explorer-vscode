@@ -297,7 +297,10 @@ describe("USSTree Unit Tests - Function USSTree.removeFavorite()", () => {
             testDir: new ZoweUSSNode("testDir", vscode.TreeItemCollapsibleState.Collapsed,
                 globalMocks.testTree.mSessionNodes[1], null, "/")
         };
-        globalMocks.testTree.mFavorites = [newMocks.testDir];
+        await globalMocks.testTree.addFavorite(newMocks.testDir);
+        const favProfileNode = globalMocks.testTree.mFavorites[0];
+        favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
+        favProfileNode.mProfileName = globalMocks.testProfile.name;
 
         return newMocks;
     }
@@ -305,12 +308,13 @@ describe("USSTree Unit Tests - Function USSTree.removeFavorite()", () => {
     it("Tests that removeFavorite() works properly", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
+        const favProfileNode = globalMocks.testTree.mFavorites[0];
 
         // Checking that favorites are set successfully before test
-        expect(globalMocks.testTree.mFavorites[0].fullPath).toEqual(blockMocks.testDir.fullPath);
+        expect(favProfileNode.children[0].fullPath).toEqual(blockMocks.testDir.fullPath);
 
-        await globalMocks.testTree.removeFavorite(globalMocks.testTree.mFavorites[0]);
-        expect(globalMocks.testTree.mFavorites).toEqual([]);
+        await globalMocks.testTree.removeFavorite(blockMocks.testDir);
+        expect(favProfileNode.children).toEqual([]);
     });
 });
 
@@ -721,6 +725,9 @@ describe("USSTree Unit Tests - Function USSTree.removeFavorite()", () => {
         };
         globalMocks.testTree.mFavorites = [];
         await globalMocks.testTree.addFavorite(newMocks.testDir);
+        const favProfileNode = globalMocks.testTree.mFavorites[0];
+        favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
+        favProfileNode.mProfileName = globalMocks.testProfile.name;
 
         return newMocks;
     }
@@ -728,12 +735,14 @@ describe("USSTree Unit Tests - Function USSTree.removeFavorite()", () => {
     it("Tests that removeFavorite() works properly", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
+        const favProfileNode = globalMocks.testTree.mFavorites[0];
 
         // Checking that favorites are set successfully before test
-        expect(globalMocks.testTree.mFavorites[0].fullPath).toEqual(blockMocks.testDir.fullPath);
+        expect(favProfileNode.children[0].fullPath).toEqual(blockMocks.testDir.fullPath);
 
-        await globalMocks.testTree.removeFavorite(globalMocks.testTree.mFavorites[0]);
-        expect(globalMocks.testTree.mFavorites).toEqual([]);
+        await globalMocks.testTree.removeFavorite(blockMocks.testDir);
+
+        expect(favProfileNode.children).toEqual([]);
     });
 });
 
