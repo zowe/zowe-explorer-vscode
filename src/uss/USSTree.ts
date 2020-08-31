@@ -524,6 +524,9 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 session = ZoweExplorerApiRegister.getUssApi(profile).getSession();
                 parentNode.setProfileToChoice(profile);
                 parentNode.setSessionToChoice(session);
+                // Set mProfileName for the getProfileName function, but after initialization of child fav nodes.
+                // This way, it won't try to load profile in constructor for child fav nodes too early.
+                parentNode.mProfileName = profileName;
             } catch(error) {
                 const errMessage: string =
                 localize("initializeUSSFavorites.error.profile1",
