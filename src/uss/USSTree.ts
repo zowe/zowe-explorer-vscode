@@ -195,11 +195,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      */
     public deleteSession(node: IZoweUSSTreeNode) {
         this.mSessionNodes = this.mSessionNodes.filter((tempNode) => tempNode.label.trim() !== node.label.trim());
-        let revisedLabel =  node.label;
-        if (revisedLabel.includes("[")) {
-            revisedLabel = revisedLabel.substring(0, revisedLabel.indexOf(" ["));
-        }
-        this.mHistory.removeSession(revisedLabel);
+        this.mHistory.removeSession(node.label);
         this.refresh();
     }
 
