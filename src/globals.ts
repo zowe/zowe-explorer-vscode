@@ -47,6 +47,7 @@ export const JOBS_SPOOL_CONTEXT = "spool";
 export const VSAM_CONTEXT = "vsam";
 export const INACTIVE_CONTEXT = CONTEXT_PREFIX + "Inactive";
 export const ACTIVE_CONTEXT = CONTEXT_PREFIX + "Active";
+export const UNVERIFIED_CONTEXT = CONTEXT_PREFIX + "Unverified";
 export const ICON_STATE_OPEN = "open";
 export const ICON_STATE_CLOSED = "closed";
 export const THEIA = "Eclipse Theia";

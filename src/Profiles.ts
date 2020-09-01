@@ -45,6 +45,7 @@ interface IValidationSetting {
 
 let InputBoxOptions: vscode.InputBoxOptions;
 export enum ValidProfileEnum {
+    UNVERIFIED = 1,
     VALID = 0,
     INVALID = -1
 }
@@ -88,6 +89,7 @@ export class Profiles {
         }
 
         if (profileStatus.status === "unverified") {
+            this.validProfile = ValidProfileEnum.UNVERIFIED;
             return profileStatus;
         }
 
@@ -229,7 +231,7 @@ export class Profiles {
 
     public async enableValidationContext(node: IZoweNodeType) {
         if (node.contextValue.includes(`${globals.VALIDATE_SUFFIX}false`)) {
-            node.contextValue = node.contextValue.replace(/(_validate=false)/g, "");
+            node.contextValue = node.contextValue.replace(/(_validate=false)/g, "").replace(/(_Unverified)/g, "");
             node.contextValue = node.contextValue + `${globals.VALIDATE_SUFFIX}true`;
         } else if (node.contextValue.includes(`${globals.VALIDATE_SUFFIX}true`)){
             return node;

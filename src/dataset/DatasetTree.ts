@@ -80,7 +80,8 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      */
     public async rename(node: IZoweDatasetTreeNode) {
         await Profiles.getInstance().checkCurrentProfile(node.getProfile());
-        if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
+        if ((Profiles.getInstance().validProfile === ValidProfileEnum.VALID) ||
+        (Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED)) {
             return contextually.isDsMember(node) ? this.renameDataSetMember(node) : this.renameDataSet(node);
         }
     }
@@ -228,6 +229,8 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         // Loads profile associated with passed sessionName, default if none passed
         if (sessionName) {
             const profile: IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
+            // Call to get validation setting from settings.json
+            validate = await Profiles.getInstance().checkProfileValidationSetting(profile);
             if (profile) {
                 this.addSingleSession(profile);
             }
@@ -246,15 +249,15 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     }
                 }
             }
-            for (const node of this.mSessionNodes) {
-                if (validate) {
-                    Profiles.getInstance().enableValidationContext(node);
-                } else {
-                    Profiles.getInstance().disableValidationContext(node);
-                }
-            }
             if (this.mSessionNodes.length === 1) {
                 this.addSingleSession(Profiles.getInstance().getDefaultProfile(profileType));
+            }
+        }
+        for (const node of this.mSessionNodes) {
+            if (validate) {
+                Profiles.getInstance().enableValidationContext(node);
+            } else {
+                Profiles.getInstance().disableValidationContext(node);
             }
         }
         this.refresh();
@@ -555,7 +558,8 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         let pattern: string;
         await this.checkCurrentProfile(node);
 
-        if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
+        if ((Profiles.getInstance().validProfile === ValidProfileEnum.VALID) ||
+        (Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED)) {
             if (contextually.isSessionNotFav(node)) {
                 if (this.mHistory.getSearchHistory().length > 0) {
                     const createPick = new FilterDescriptor(DatasetTree.defaultDialogText);

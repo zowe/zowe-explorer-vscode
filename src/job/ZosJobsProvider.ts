@@ -163,6 +163,8 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         // Loads profile associated with passed sessionName, default if none passed
         if (sessionName) {
             const theProfile: IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
+            // Call to get validation setting from settings.json
+            validate = await Profiles.getInstance().checkProfileValidationSetting(theProfile);
             if (theProfile) {
                 this.addSingleSession(theProfile);
             }
@@ -184,12 +186,12 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             if (this.mSessionNodes.length === 1) {
                 this.addSingleSession(Profiles.getInstance().getDefaultProfile(profileType));
             }
-            for (const node of this.mSessionNodes) {
-                if (validate) {
-                    Profiles.getInstance().enableValidationContext(node);
-                } else {
-                    Profiles.getInstance().disableValidationContext(node);
-                }
+        }
+        for (const node of this.mSessionNodes) {
+            if (validate) {
+                Profiles.getInstance().enableValidationContext(node);
+            } else {
+                Profiles.getInstance().disableValidationContext(node);
             }
         }
         this.refresh();
@@ -315,7 +317,8 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             sesNamePrompt = node.label;
         }
         await this.checkCurrentProfile(node);
-        if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
+        if ((Profiles.getInstance().validProfile === ValidProfileEnum.VALID) ||
+        (Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED)) {
             if (contextually.isSessionNotFav(node)) { // This is the profile object context
                 if (hasHistory) { // Check if user has created some history
                     const items: vscode.QuickPickItem[] = this.mHistory.getSearchHistory().map((element) => new FilterItem(element));

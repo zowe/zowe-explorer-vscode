@@ -162,6 +162,8 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         // Loads profile associated with passed sessionName, persisted profiles or default if none passed
         if (sessionName) {
             const profile: IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
+            // Call to get validation setting from settings.json
+            validate = await Profiles.getInstance().checkProfileValidationSetting(profile);
             if (profile) {
                 this.addSingleSession(profile);
             }
@@ -183,12 +185,12 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             if (this.mSessionNodes.length === 1) {
                 this.addSingleSession(Profiles.getInstance().getDefaultProfile(profileType));
             }
-            for (const node of this.mSessionNodes) {
-                if (validate) {
-                    Profiles.getInstance().enableValidationContext(node);
-                } else {
-                    Profiles.getInstance().disableValidationContext(node);
-                }
+        }
+        for (const node of this.mSessionNodes) {
+            if (validate) {
+                Profiles.getInstance().enableValidationContext(node);
+            } else {
+                Profiles.getInstance().disableValidationContext(node);
             }
         }
         this.refresh();
@@ -252,6 +254,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         temp.fullPath = node.fullPath;
         temp.label = temp.tooltip = label;
         temp.contextValue = globals.USS_SESSION_CONTEXT + globals.FAV_SUFFIX;
+        await this.checkCurrentProfile(node);
         const icon = getIconByNode(temp);
         if (icon) {
             temp.iconPath = icon.path;
@@ -335,7 +338,8 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         let sessionNode = node.getSessionNode();
         let remotepath: string;
         await this.checkCurrentProfile(node);
-        if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
+        if ((Profiles.getInstance().validProfile === ValidProfileEnum.VALID) ||
+        (Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED)) {
             if (contextually.isSessionNotFav(node)) {
                 if (this.mHistory.getSearchHistory().length > 0) {
 

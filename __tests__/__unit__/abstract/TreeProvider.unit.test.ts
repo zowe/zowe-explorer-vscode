@@ -39,6 +39,7 @@ async function createGlobalMocks() {
         testResponse: createFileResponse({items: []}),
         testUSSTree: null,
         testSessionNode: null,
+        mockGetProfileSetting: jest.fn(),
         ProgressLocation: jest.fn().mockImplementation(() => {
             return {
                 Notification: 15
@@ -70,7 +71,8 @@ async function createGlobalMocks() {
                 editSession: globalMocks.mockEditSession,
                 checkProfileValidationSetting: globalMocks.mockValidationSetting,
                 disableValidationContext: globalMocks.mockDisableValidationContext,
-                enableValidationContext: globalMocks.mockEnableValidationContext
+                enableValidationContext: globalMocks.mockEnableValidationContext,
+                getProfileSetting: globalMocks.mockGetProfileSetting.mockReturnValue({name: globalMocks.testProfile.name, status: "valid"})
             };
         }),
         configurable: true
