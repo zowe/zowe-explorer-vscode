@@ -750,7 +750,7 @@
           "group": "5_workspace@3"
         },
         {
-          "when": "view == zowe.explorer && viewItem =~ /^(member|ds|pds).*/",
+          "when": "view == zowe.explorer && viewItem =~ /^(ds|pds).*/",
           "command": "zowe.allocateLike",
           "group": "6_cutCopyPaste@0"
         },
