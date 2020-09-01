@@ -25,6 +25,8 @@ import { IProfileLoaded } from "@zowe/imperative";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
 import * as isbinaryfile from "isbinaryfile";
 import * as fs from "fs";
+import * as utils from "../../../src/utils";
+import { createUssApi, bindUssApi } from "../../../__mocks__/mockCreators/api";
 
 function createGlobalMocks() {
     const globalMocks = {
@@ -148,9 +150,13 @@ describe("USS Action Unit Tests - Function createUSSNodeDialog", () => {
 
 describe("USS Action Unit Tests - Function createUSSNode", () => {
     async function createBlockMocks(globalMocks) {
+        const ussApi = createUssApi(globalMocks.testProfile);
+        bindUssApi(ussApi);
+
         const newMocks = {
             testUSSTree: null,
-            ussNode: createUSSNode(globalMocks.testSession, createIProfile())
+            ussNode: createUSSNode(globalMocks.testSession, createIProfile()),
+            ussApi
         };
         newMocks.testUSSTree = createUSSTree([createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile)],
             [newMocks.ussNode], createTreeView());
@@ -191,6 +197,44 @@ describe("USS Action Unit Tests - Function createUSSNode", () => {
         await ussNodeActions.createUSSNode(blockMocks.ussNode, blockMocks.testUSSTree, "folder", isTopLevel);
         expect(blockMocks.testUSSTree.refreshElement).toHaveBeenCalled();
         expect(ussNodeActions.refreshAllUSS).not.toHaveBeenCalled();
+    });
+    it("Tests that the error is handled if createUSSNode is unsuccessful", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        globalMocks.showInputBox.mockReturnValueOnce("USSFolder");
+        const isTopLevel = false;
+        const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
+
+        // Simulate unsuccessful api call
+        Object.defineProperty(blockMocks.ussApi, "create", {
+            value: jest.fn(() => {
+                throw new Error();
+            })
+        });
+
+        await expect(ussNodeActions.createUSSNode(blockMocks.ussNode, blockMocks.testUSSTree, "folder", isTopLevel)).rejects.toThrow();
+        expect(errorHandlingSpy).toHaveBeenCalledTimes(1);
+    });
+});
+
+describe("USS Action Unit Tests - Function refreshUSSInTree", () => {
+    async function createBlockMocks(globalMocks) {
+        const newMocks = {
+            testUSSTree: null,
+            ussNode: createUSSNode(globalMocks.testSession, createIProfile())
+        };
+        newMocks.testUSSTree = createUSSTree([createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile)],
+            [newMocks.ussNode], createTreeView());
+
+        return newMocks;
+    }
+    it("should make the call to refresh the specified node within the USS tree", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        await ussNodeActions.refreshUSSInTree(blockMocks.ussNode, blockMocks.testUSSTree);
+
+        expect (blockMocks.testUSSTree.refreshElement).toHaveBeenCalledWith(blockMocks.ussNode);
     });
 });
 
