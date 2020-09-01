@@ -90,7 +90,7 @@ export async function allocateLike(datasetProvider: IZoweTree<IZoweDatasetTreeNo
     } else {
         // User called allocateLike by right-clicking a node
         profile = node.getProfile();
-        likeDSName = node.label;
+        likeDSName = node.label.replace(/\[.*\]: /g, "");
     }
 
     // Get new data set name
