@@ -261,6 +261,36 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
         await expect(childNode.refreshUSS()).rejects.toThrow();
         expect(showErrorMessageSpy).toBeCalledTimes(1);
     });
+    it("Tests that node.refreshUSS() works correctly for files under directories", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        blockMocks.ussNode.contextValue = globals.USS_DIR_CONTEXT;
+        globalMocks.ussFile.mockResolvedValueOnce(globalMocks.response);
+        globalMocks.isDirtyInEditor.mockReturnValueOnce(false);
+        globalMocks.isDirtyInEditor.mockReturnValueOnce(false);
+
+        await blockMocks.node.refreshUSS();
+
+        expect(globalMocks.ussFile.mock.calls.length).toBe(1);
+        expect(globalMocks.showTextDocument.mock.calls.length).toBe(0);
+        expect(globalMocks.executeCommand.mock.calls.length).toBe(1);
+        expect(blockMocks.node.downloaded).toBe(true);
+    });
+    it("Tests that node.refreshUSS() works correctly for favorited files/directories", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        blockMocks.ussNode.contextValue = globals.FAV_PROFILE_CONTEXT;
+        globalMocks.ussFile.mockResolvedValueOnce(globalMocks.response);
+        globalMocks.isDirtyInEditor.mockReturnValueOnce(false);
+        globalMocks.isDirtyInEditor.mockReturnValueOnce(false);
+
+        await blockMocks.node.refreshUSS();
+
+        expect(globalMocks.ussFile.mock.calls.length).toBe(1);
+        expect(globalMocks.showTextDocument.mock.calls.length).toBe(0);
+        expect(globalMocks.executeCommand.mock.calls.length).toBe(1);
+        expect(blockMocks.node.downloaded).toBe(true);
+    });
 });
 
 describe("ZoweUSSNode Unit Tests - Function node.getEtag()", () => {
