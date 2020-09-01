@@ -583,23 +583,19 @@ export async function deleteDataset(node: IZoweTreeNode, datasetProvider: IZoweT
     let label = "";
     let fav = false;
     try {
-        switch (node.getParent().contextValue) {
-            case (globals.FAVORITE_CONTEXT):
-                label = node.label.substring(node.label.indexOf(":") + 1).trim();
-                fav = true;
-                break;
-            case (globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX):
-                label = node.getParent().getLabel().substring(node.getParent().getLabel().indexOf(":") + 1).trim() + "(" + node.getLabel()+ ")";
-                fav = true;
-                break;
-            case (globals.DS_SESSION_CONTEXT):
-                label = node.getLabel();
-                break;
-            case (globals.DS_PDS_CONTEXT):
-                label = node.getParent().getLabel()+ "(" + node.getLabel()+ ")";
-                break;
-            default:
-                throw Error(localize("deleteDataSet.invalidNode.error", "deleteDataSet() called from invalid node."));
+        const parentContext = node.getParent().contextValue;
+        if (parentContext.includes(globals.FAVORITE_CONTEXT)) {
+            label = node.label.substring(node.label.indexOf(":") + 1).trim();
+            fav = true;
+        } else if (parentContext.includes(globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX)) {
+            label = node.getParent().getLabel().substring(node.getParent().getLabel().indexOf(":") + 1).trim() + "(" + node.getLabel() + ")";
+            fav = true;
+        } else if (parentContext.includes(globals.DS_SESSION_CONTEXT)) {
+            label = node.getLabel();
+        } else if (parentContext.includes(globals.DS_PDS_CONTEXT)) {
+            label = node.getParent().getLabel() + "(" + node.getLabel() + ")";
+        } else {
+            throw Error(localize("deleteDataSet.invalidNode.error", "deleteDataSet() called from invalid node."));
         }
         await datasetProvider.checkCurrentProfile(node);
         if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
