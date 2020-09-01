@@ -880,6 +880,19 @@ describe("USSTree Unit Tests - Function USSTree.deleteSession()", () => {
         const dirChildren = await globalMocks.testTree.getChildren(directory);
         expect(dirChildren[0].label).toEqual(sampleChildren[0].label);
     });
+    it("Testing that getChildren() gets profile-loaded favorites for profile node in Favorites section", async () => {
+        const globalMocks = await createGlobalMocks();
+        const log = Logger.getAppLogger();
+        const favProfileNode = new ZoweUSSNode("sestest", vscode.TreeItemCollapsibleState.Collapsed,
+            globalMocks.testTree.mFavoriteSession, null, undefined, undefined);
+        favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
+        globalMocks.testTree.mFavorites.push(favProfileNode);
+        const loadProfilesForFavoritesSpy= jest.spyOn(globalMocks.testTree, "loadProfilesForFavorites");
+
+        await globalMocks.testTree.getChildren(favProfileNode);
+
+        expect(loadProfilesForFavoritesSpy).toHaveBeenCalledWith(log, favProfileNode);
+    });
 });
 
 describe("USSTree Unit Tests - Function USSTree.editSession()", () => {
