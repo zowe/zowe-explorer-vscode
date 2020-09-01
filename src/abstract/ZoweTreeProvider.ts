@@ -143,25 +143,27 @@ export class ZoweTreeProvider {
         const profile = node.getProfile();
         const profileName = node.getProfileName();
         // Check what happens if inactive
-        await Profiles.getInstance().checkCurrentProfile(profile, true);
-        await Profiles.getInstance().editSession(profile, profileName);
+        const newProfile = await Profiles.getInstance().editSession(profile, profileName);
         const EditSession = await ZoweExplorerApiRegister.getCommonApi(node.getProfile())
                                                          .getValidSession(node.getProfile(),
                                                                           profileName,
                                                                           null,
                                                                           false);
         if (EditSession) {
-            node.getProfile().profile = EditSession as IProfile;
-            await setProfile(node, EditSession as IProfile);
+            node.getProfile().profile = newProfile as IProfile;
+            await setProfile(node, newProfile as IProfile);
             if (node.getSession()) {
-                await setSession(node, EditSession as ISession);
+                await setSession(node, newProfile as ISession);
             } else {
                 this.deleteSessionByLabel(node.label);
                 zoweFileProvider.addSession(node.getProfileName());
             }
-            
             this.refresh();
         }
+        await Profiles.getInstance().checkCurrentProfile(profile, false);
+        node.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+        node.dirty = true;
+        zoweFileProvider.refreshElement(node);
     }
 
     public async checkCurrentProfile(node: IZoweTreeNode, prompt?: boolean) {
@@ -179,10 +181,10 @@ export class ZoweTreeProvider {
                 }
             }
 
-            await errorHandling(localize("validateProfiles.invalid1", "Profile Name ") +
+            await errorHandling(new Error(localize("validateProfiles.invalid1", "Profile Name ") +
                 (profile.name) +
                 localize("validateProfiles.invalid2",
-                " is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct."));
+                " is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct.")));
             this.log.debug(localize("validateProfiles.invalid1", "Profile Name ") +
                 (node.getProfileName()) +
                 localize("validateProfiles.invalid2",

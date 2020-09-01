@@ -460,7 +460,7 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
             await blockMocks.childNode.getChildren();
             expect(globalMocks.showErrorMessage.mock.calls.length).toEqual(1);
             expect(globalMocks.showErrorMessage.mock.calls[0][0]).toEqual(
-                "Retrieving response from uss-file-list Error: Throwing an error to check error handling for unit tests!");
+                "Throwing an error to check error handling for unit tests!");
         });
 
     it("Tests that when bright.List returns an unsuccessful response, " +
@@ -478,7 +478,7 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
             await subNode.getChildren();
             expect(globalMocks.showErrorMessage.mock.calls.length).toEqual(1);
             expect(globalMocks.showErrorMessage.mock.calls[0][0]).toEqual(
-                "Retrieving response from uss-file-list Error: Throwing an error to check error handling for unit tests!");
+                "Throwing an error to check error handling for unit tests!");
         });
 
     it("Tests that when passing a globalMocks.session node that is not dirty the node.getChildren() method is exited early", async () => {
@@ -607,7 +607,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
         expect(globalMocks.openTextDocument.mock.calls[0][0]).toBe(child.getUSSDocumentFilePath());
         expect(globalMocks.showTextDocument.mock.calls.length).toBe(1);
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(1);
-        expect(globalMocks.showErrorMessage.mock.calls[0][0]).toBe("testError Error: testError");
+        expect(globalMocks.showErrorMessage.mock.calls[0][0]).toBe("testError");
     });
 
     it("Tests that node.openUSS() executes successfully for favorited file", async () => {
@@ -696,6 +696,5 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
         expect(globalMocks.ussFile.mock.calls.length).toBe(0);
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(2);
         expect(globalMocks.showErrorMessage.mock.calls[0][0]).toBe("open() called from invalid node.");
-        expect(globalMocks.showErrorMessage.mock.calls[1][0]).toBe("open() called from invalid node. Error: open() called from invalid node.");
     });
 });

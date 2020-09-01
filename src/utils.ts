@@ -30,25 +30,8 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  * @param {label} - additional information such as profile name, credentials, messageID etc
  * @param {moreInfo} - additional/customized error messages
  *************************************************************************************************************/
-export function errorHandling(errorDetails: any, label?: string, moreInfo?: string) {
-    let httpErrCode = null;
-    const errMsg = localize("errorHandling.invalid.credentials", "Invalid Credentials. Please ensure the username and password for {0} are valid or this may lead to a lock-out.", label);
-
-    if (errorDetails.mDetails !== undefined) {
-        httpErrCode = errorDetails.mDetails.errorCode;
-    }
-
-    switch(httpErrCode) {
-        // tslint:disable-next-line: no-magic-numbers
-        case 401:
-            if (label.includes("[")) {
-                label = label.substring(0, label.indexOf(" ["));
-            }
-            break;
-        default:
-            vscode.window.showErrorMessage(errMsg);
-            break;
-    }
+export function errorHandling(errorDetails: Error, label?: string, moreInfo?: string) {
+    vscode.window.showErrorMessage(errorDetails.message);
     return;
 }
 
@@ -89,7 +72,7 @@ export function getZoweDir(): string {
  * Function to update the node profile information
  */
 export async function setProfile(node: IZoweTreeNode, profile: IProfile) {
-    node.getProfile().profile= profile;
+    node.getProfile().profile = profile;
 }
 
 /**

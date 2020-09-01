@@ -19,6 +19,7 @@ import { DefaultProfileManager } from "../../../src/profiles/DefaultProfileManag
 import { Profiles } from "../../../src/Profiles";
 import { createISession, createISessionWithoutCredentials, createValidBaseProfile, createValidIProfile, createInstanceOfProfile } from "../../../__mocks__/mockCreators/shared";
 import { createProfileManager } from "../../../__mocks__/mockCreators/profiles";
+import * as utils from "../../../src/utils";
 
 export declare enum TaskStage {
     IN_PROGRESS = 0,
@@ -317,16 +318,12 @@ describe("Profiles Unit Tests - Function getValidProfile", () => {
         const blockMocks = await createBlockMocks();
 
         blockMocks.mockCreateBasicZosmfSession.mockImplementation(() => { throw new Error("Test error!"); });
+        const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
 
-        let error;
-        try {
-            await ZoweExplorerApiRegister.getCommonApi(blockMocks.defaultProfile)
-                                         .getValidSession(blockMocks.defaultProfile, "sestest", blockMocks.baseProfile);
-        } catch (err) {
-            error = err;
-        }
+        await ZoweExplorerApiRegister.getCommonApi(blockMocks.defaultProfile)
+                                     .getValidSession(blockMocks.defaultProfile, "sestest", blockMocks.baseProfile);
 
-        expect(error.message).toEqual("Test error!");
+        expect(errorHandlingSpy).toBeCalledWith(new Error("Test error!"));
     });
 
     it("Tests that getValidProfile successfully returns a connected Session when prompting = true (token auth)", async () => {

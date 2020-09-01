@@ -404,7 +404,6 @@ describe("USS Action Unit Tests - Function saveUSSFile", () => {
 
         await ussNodeActions.saveUSSFile(blockMocks.testDoc, blockMocks.testUSSTree);
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(1);
-        expect(globalMocks.showErrorMessage.mock.calls[0][0]).toBe("Test Error Error: Test Error");
     });
 
     it("Tests that saveUSSFile fails when HTTP error occurs", async () => {

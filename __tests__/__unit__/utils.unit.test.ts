@@ -50,31 +50,8 @@ describe("Utils Unit Tests - Function errorHandling", () => {
         mocked(vscode.window.showErrorMessage).mockResolvedValueOnce({ title: "Check Credentials" });
         const label = "invalidCred";
 
-        await utils.errorHandling({ mDetails: { errorCode: 401 } }, label);
+        await utils.errorHandling(new Error("Test Error"), label);
 
-        expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(`Invalid Credentials. Please ensure the username and password for ${label} are valid or this may lead to a lock-out.`);
-    });
-    it("Checking USS error handling", async () => {
-        createGlobalMocks();
-
-        mocked(vscode.window.showErrorMessage).mockResolvedValueOnce({ title: "Check Credentials" });
-        const label = "invalidCred [/tmp]";
-
-        await utils.errorHandling({ mDetails: { errorCode: 401 } }, label);
-
-        expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(`Invalid Credentials. Please ensure the username and password for ${label} are valid or this may lead to a lock-out.`);
-    });
-    it("Checking common error handling - Theia", async () => {
-        const globalMocks = createGlobalMocks();
-        const blockMocks = createBlockMocks();
-
-        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
-        mocked(vscode.window.showErrorMessage).mockResolvedValueOnce({ title: "Check Credentials" });
-        globalMocks.isTheia.mockReturnValue(true);
-        const label = "invalidCred";
-
-        await utils.errorHandling({ mDetails: { errorCode: 401 } }, label);
-
-        expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(`Invalid Credentials. Please ensure the username and password for ${label} are valid or this may lead to a lock-out.`);
+        expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(`Test Error`);
     });
 });

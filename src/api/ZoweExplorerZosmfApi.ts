@@ -87,14 +87,13 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
                 try {
                     const newDetails = await this.collectProfileDetails(schemaArray);
                     for (const detail of schemaArray) { serviceProfile.profile[detail] = newDetails[detail]; }
-                } catch (error) { await errorHandling(error.message); }
+                } catch (error) { await errorHandling(error); }
             }
-            // if (!serviceProfile.profile.user) { delete serviceProfile.profile.user; }
             if (!serviceProfile.profile.password) { delete serviceProfile.profile.password; }
             try { return zowe.ZosmfSession.createBasicZosmfSession(serviceProfile.profile); }
             catch (error) {
                 if (prompt) {
-                    await errorHandling(error.message);
+                    await errorHandling(error);
                     // When no password is entered, we should silence the error message for not providing it
                     // since password is optional in Zowe Explorer
                 } else if (error.message !== "Must have user & password OR base64 encoded credentials") { await errorHandling(error); }
@@ -130,7 +129,7 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
 
                 return new Session(connectableSessCfg);
             } catch (error) {
-                await errorHandling(error.message); }
+                await errorHandling(error); }
         } else {
             // No baseProfile exists, nor a user in serviceProfile. It is impossible to login with the currently-provided information.
             throw new Error(localize("getValidSession.loginImpossible",

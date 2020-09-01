@@ -481,7 +481,6 @@ describe("Jobs Actions Unit Tests - Function getSpoolContent", () => {
 
         expect(mocked(vscode.workspace.openTextDocument)).not.toBeCalled();
         expect(mocked(vscode.window.showTextDocument)).not.toBeCalled();
-        expect(mocked(vscode.window.showErrorMessage)).toBeCalledWith("Test Error: Test");
     });
     it("Checking opening of Spool Content with credentials prompt", async () => {
         const globalMocks = await createGlobalMocks();
@@ -508,7 +507,6 @@ describe("Jobs Actions Unit Tests - Function getSpoolContent", () => {
 
         expect(mocked(vscode.workspace.openTextDocument)).not.toBeCalled();
         expect(mocked(vscode.window.showTextDocument)).not.toBeCalled();
-        expect(mocked(vscode.window.showErrorMessage)).toBeCalledWith("Test Error: Test");
     });
 });
 

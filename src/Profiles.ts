@@ -9,7 +9,7 @@
 *                                                                                 *
 */
 
-import { IProfileLoaded, Logger, CliProfileManager, IProfile, IUpdateProfile } from "@zowe/imperative";
+import { IProfileLoaded, Logger, CliProfileManager, IProfile, IUpdateProfile, Session } from "@zowe/imperative";
 import * as path from "path";
 import { URL } from "url";
 import * as vscode from "vscode";
@@ -241,15 +241,16 @@ export class Profiles {
         }
     }
 
-    public async editSession(profileLoaded: IProfileLoaded, profileName: string) {
+    public async editSession(profileLoaded: IProfileLoaded, profileName: string): Promise<IProfile | void> {
         const updSchemaValues = await this.collectProfileDetails();
         updSchemaValues.name = profileName;
         Object.keys(updSchemaValues).forEach((key) => {
             profileLoaded.profile[key] = updSchemaValues[key];
         });
 
-        await this.updateProfile({ profile: profileLoaded.profile, name: profileName, type: profileLoaded.type });
+        const newProfile = await this.updateProfile({ profile: profileLoaded.profile, name: profileName, type: profileLoaded.type });
         vscode.window.showInformationMessage(localize("editConnection.success", "Profile was successfully updated"));
+        return newProfile;
     }
 
     public async getProfileType(): Promise<string> {
@@ -305,7 +306,7 @@ export class Profiles {
             vscode.window.showInformationMessage("Profile " + newProfileDetails.name + " was created.");
             return newProfileDetails.name;
         } catch (error) {
-            await errorHandling(error.message);
+            await errorHandling(error);
         }
     }
 
@@ -576,7 +577,7 @@ export class Profiles {
 
                             const defValue = await vscode.window.showInputBox(defaultOptions);
 
-                            if (defValue === "") { schemaValues[profileDetail] = null }
+                            if (defValue === "") { schemaValues[profileDetail] = null; }
                             else {
                                 schemaValues[profileDetail] = defValue;
                                 break;
@@ -826,7 +827,7 @@ export class Profiles {
 
     // ** Functions that Calls Get CLI Profile Manager  */
 
-    private async updateProfile(ProfileInfo, rePrompt?: boolean) {
+    private async updateProfile(ProfileInfo, rePrompt?: boolean): Promise<IProfile | void> {
         if (ProfileInfo.type !== undefined) {
             const profileManager = await this.getCliProfileManager(ProfileInfo.type);
             this.loadedProfile = (await profileManager.load({ name: ProfileInfo.name}));
@@ -842,15 +843,8 @@ export class Profiles {
 
         const profileArray = Object.keys(this.loadedProfile.profile);
         for (const value of profileArray) {
-            if (value === "user" || value === "password") {
-                if (!rePrompt) {
-                    OrigProfileInfo.user = NewProfileInfo.user;
-                    OrigProfileInfo.password = NewProfileInfo.password;
-                }
-            } else { OrigProfileInfo[value] = NewProfileInfo[value]; }
-            if (!NewProfileInfo[value]) {
-                delete OrigProfileInfo[value];
-            }
+            OrigProfileInfo[value] = NewProfileInfo[value];
+            if (!NewProfileInfo[value]) { delete OrigProfileInfo[value]; }
         }
 
         const updateParms: IUpdateProfile = {
@@ -858,8 +852,10 @@ export class Profiles {
             merge: false,
             profile: OrigProfileInfo as IProfile
         };
-        try { (await this.getCliProfileManager(this.loadedProfile.type)).update(updateParms); }
-        catch (error) {
+        try {
+            const updatedProfile = await (await this.getCliProfileManager(this.loadedProfile.type)).update(updateParms);
+            return updatedProfile.profile;
+        } catch (error) {
             // When no password is entered, we should silence the error message for not providing it
             // since password is optional in Zowe Explorer
             if (!error.message.includes("Must have user & password OR base64 encoded credentials")) {

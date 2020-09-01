@@ -283,27 +283,17 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile name was not supplied. Operation Cancelled");
     });
 
-    it("Tests that createNewConnection fails if profileType is missing", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        blockMocks.profileInstance.getProfileType = jest.fn(() => new Promise((resolve) => { resolve(undefined); }));
-
-        await globalMocks.profiles.createNewConnection(blockMocks.imperativeProfile.name);
-        expect(globalMocks.mockShowErrorMessage.mock.calls.length).toBe(1);
-        expect(globalMocks.mockShowErrorMessage.mock.calls[0][0]).toBe("Error: No profile type was chosen. Operation Cancelled");
-    });
-
     it("Tests that createNewConnection fails if zOSMF URL is missing", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
         blockMocks.profileInstance.getSchema.mockResolvedValueOnce(blockMocks.testSchemas[0]);
         globalMocks.mockShowInputBox.mockResolvedValueOnce(undefined);
+        const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
 
         await globalMocks.profiles.createNewConnection(blockMocks.imperativeProfile.name);
-        expect(globalMocks.mockShowErrorMessage.mock.calls.length).toBe(1);
-        expect(globalMocks.mockShowErrorMessage.mock.calls[0][0]).toBe("Error: No valid value for z/OS URL. Operation Cancelled");
+
+        expect(errorHandlingSpy).toBeCalledWith(new Error("No valid value for z/OS URL. Operation Cancelled"));
     });
 
     it("Tests that createNewConnection fails if rejectUnauthorized is missing", async () => {
@@ -316,9 +306,11 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
         globalMocks.mockShowInputBox.mockResolvedValueOnce(undefined);
+        const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
 
         await globalMocks.profiles.createNewConnection(blockMocks.imperativeProfile.name);
-        expect(globalMocks.mockShowErrorMessage.mock.calls[0][0]).toBe("Error: No certificate option selected. Operation Cancelled");
+
+        expect(errorHandlingSpy).toBeCalledWith(new Error("No certificate option selected. Operation Cancelled"));
     });
 
     it("Tests that createNewConnection fails if profileName is a duplicate", async () => {
@@ -459,12 +451,13 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
 
         blockMocks.profileInstance.getProfileType = jest.fn(() => new Promise((resolve) => { resolve("alternate"); }));
         blockMocks.profileInstance.getSchema.mockResolvedValueOnce(blockMocks.testSchemas[1]);
-        globalMocks.mockShowInputBox.mockResolvedValueOnce("https://fake");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("https://fake.com");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
 
         await globalMocks.profiles.createNewConnection("fake");
-        expect(globalMocks.mockShowErrorMessage.mock.calls.length).toBe(1);
-        expect(globalMocks.mockShowErrorMessage.mock.calls[0][0]).toBe("Error: Invalid Port number provided or operation was cancelled");
+
+        expect(errorHandlingSpy).toBeCalledWith(new Error("Invalid Port number provided or operation was cancelled"));
     });
 
     it("Tests that createNewConnection fails to create an alternate profile if aBoolean is invalid", async () => {
@@ -477,10 +470,11 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         globalMocks.mockShowInputBox.mockResolvedValueOnce("143");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce(undefined);
+        const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
 
         await globalMocks.profiles.createNewConnection("fake");
-        expect(globalMocks.mockShowErrorMessage.mock.calls.length).toBe(1);
-        expect(globalMocks.mockShowErrorMessage.mock.calls[0][0]).toBe("Error: No boolean selected. Operation Cancelled");
+
+        expect(errorHandlingSpy).toBeCalledWith(new Error("No valid value for z/OS URL. Operation Cancelled"));
     });
 
     it("Tests that createNewConnection creates an alternate profile with an optional port", async () => {
@@ -753,8 +747,14 @@ describe("Profiles Unit Tests - Function editSession", () => {
         blockMocks.profileInstance.getSchema.mockResolvedValueOnce(blockMocks.testSchemas[0]);
         globalMocks.mockShowQuickPick.mockResolvedValueOnce(undefined);
 
-        await globalMocks.profiles.editSession(blockMocks.imperativeProfile, blockMocks.imperativeProfile.name);
-        expect(globalMocks.mockShowErrorMessage.mock.calls[0][0]).toBe("Error: No valid value for z/OS URL. Operation Cancelled");
+        let error;
+        try {
+            await globalMocks.profiles.editSession(blockMocks.imperativeProfile, blockMocks.imperativeProfile.name);
+        } catch (err) {
+            error = err;
+        }
+
+        expect(error.message).toBe("No valid value for z/OS URL. Operation Cancelled");
     });
 
     it("Tests that editSession fails with invalid rejectUnauthorized value supplied", async () => {
@@ -769,8 +769,14 @@ describe("Profiles Unit Tests - Function editSession", () => {
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce(undefined);
 
-        await globalMocks.profiles.editSession(blockMocks.imperativeProfile, blockMocks.imperativeProfile.name);
-        expect(globalMocks.mockShowErrorMessage.mock.calls[0][0]).toBe("Error: No certificate option selected. Operation Cancelled");
+        let error;
+        try {
+            await globalMocks.profiles.editSession(blockMocks.imperativeProfile, blockMocks.imperativeProfile.name);
+        } catch (err) {
+            error = err;
+        }
+
+        expect(error.message).toBe("No certificate option selected. Operation Cancelled");
     });
 
     it("Tests that editSession fails with invalid aBoolean value supplied on alternate profile type", async () => {
@@ -785,8 +791,14 @@ describe("Profiles Unit Tests - Function editSession", () => {
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce(undefined);
 
-        await globalMocks.profiles.editSession(blockMocks.imperativeProfile, blockMocks.imperativeProfile.name);
-        expect(globalMocks.mockShowErrorMessage.mock.calls[0][0]).toBe("Error: No boolean selected. Operation Cancelled");
+        let error;
+        try {
+            await globalMocks.profiles.editSession(blockMocks.imperativeProfile, blockMocks.imperativeProfile.name);
+        } catch (err) {
+            error = err;
+        }
+
+        expect(error.message).toBe("No boolean selected. Operation Cancelled");
     });
 
     it("Tests that editSession fails with invalid port value supplied", async () => {
@@ -798,8 +810,14 @@ describe("Profiles Unit Tests - Function editSession", () => {
         globalMocks.mockShowInputBox.mockResolvedValueOnce("https://fake");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("bad");
 
-        await globalMocks.profiles.editSession(blockMocks.imperativeProfile, blockMocks.imperativeProfile.name);
-        expect(globalMocks.mockShowErrorMessage.mock.calls[0][0]).toBe("Error: Invalid Port number provided or operation was cancelled");
+        let error;
+        try {
+            await globalMocks.profiles.editSession(blockMocks.imperativeProfile, blockMocks.imperativeProfile.name);
+        } catch (err) {
+            error = err;
+        }
+
+        expect(error.message).toBe("Invalid Port number provided or operation was cancelled");
     });
 });
 

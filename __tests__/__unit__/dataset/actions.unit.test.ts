@@ -182,7 +182,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
         } catch (err) {
         }
 
-        expect(mocked(vscode.window.showErrorMessage)).toBeCalledWith("Unable to create member: test Error: test");
+        expect(mocked(vscode.window.showErrorMessage)).toBeCalledWith("test");
     });
     it("Checking of attempt to create member without name", async () => {
         const globalMocks = await createGlobalMocks();
@@ -330,7 +330,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
 
         mocked(vscode.workspace.openTextDocument).mockResolvedValueOnce({ isDirty: true } as any);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        mocked(zowe.Download.dataSet).mockRejectedValueOnce(Error(""));
+        mocked(zowe.Download.dataSet).mockRejectedValueOnce(Error("Test"));
 
         await dsActions.refreshPS(child);
 
@@ -342,7 +342,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
                 returnEtag: true
             }
         );
-        expect(mocked(vscode.window.showErrorMessage)).toBeCalledWith(" Error");
+        expect(mocked(vscode.window.showErrorMessage)).toBeCalledWith("Test");
     });
     it("Checking favorite empty PDS refresh", async () => {
         globals.defineGlobals("");
@@ -505,10 +505,10 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         mocked(fs.existsSync).mockReturnValueOnce(true);
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Delete" as any);
         const deleteSpy = jest.spyOn(globalMocks.mvsApi, "deleteDataSet");
-        deleteSpy.mockRejectedValueOnce(Error(""));
+        deleteSpy.mockRejectedValueOnce(Error("Test"));
 
-        await expect(dsActions.deleteDataset(node, blockMocks.testDatasetTree)).rejects.toEqual(Error(""));
-        expect(mocked(vscode.window.showErrorMessage)).toBeCalledWith(" Error");
+        await expect(dsActions.deleteDataset(node, blockMocks.testDatasetTree)).rejects.toEqual(Error("Test"));
+        expect(mocked(vscode.window.showErrorMessage)).toBeCalledWith("Test");
     });
     it("Checking PS deletion attempt which was rejected by user in the process", async () => {
         globals.defineGlobals("");
@@ -1213,7 +1213,7 @@ describe("Dataset Actions Unit Tests - Function showDSAttributes", () => {
 
         await expect(dsActions.showDSAttributes(node, blockMocks.testDatasetTree)).rejects.toEqual(
             Error("No matching data set names found for query: AUSER.A1557332.A996850.TEST1"));
-        expect(mocked(vscode.window.showErrorMessage)).toBeCalledWith("Unable to list attributes: No matching data set names found for query: AUSER.A1557332.A996850.TEST1 Error: No matching data set names found for query: AUSER.A1557332.A996850.TEST1");
+        expect(mocked(vscode.window.showErrorMessage)).toBeCalledWith("No matching data set names found for query: AUSER.A1557332.A996850.TEST1");
         expect(mocked(vscode.window.createWebviewPanel)).not.toBeCalled();
     });
 });
@@ -1815,7 +1815,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
             // do nothing
         }
 
-        expect(mocked(vscode.window.showErrorMessage)).toHaveBeenCalledWith("Error encountered when creating data set! Generic Error Error: Generic Error");
+        expect(mocked(vscode.window.showErrorMessage)).toHaveBeenCalledWith("Generic Error");
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("Zowe-Default-Datasets-PS");
         expect(createDataSetSpy).toHaveBeenCalledWith(zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, "TEST", undefined);
     });
@@ -1938,7 +1938,7 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
             // do nothing
         }
 
-        expect(mocked(vscode.window.showErrorMessage)).toBeCalledWith("testError Error: testError");
+        expect(mocked(vscode.window.showErrorMessage)).toBeCalledWith("testError");
     });
     it("Checking of opening for PDS Member", async () => {
         globals.defineGlobals("");
