@@ -250,6 +250,17 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
         expect(globalMocks.executeCommand.mock.calls.length).toBe(1);
         expect(blockMocks.node.downloaded).toBe(false);
     });
+    it("Tests that node.refreshUSS() throws an error when context value is invalid", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        const badContextValueParent = new ZoweUSSNode("test-parent", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.ussNode, null, "/");
+        badContextValueParent.contextValue = globals.DS_PDS_CONTEXT;
+        const childNode = new ZoweUSSNode("test-node", vscode.TreeItemCollapsibleState.None, badContextValueParent, null, "/");
+        const showErrorMessageSpy = jest.spyOn(vscode.window, "showErrorMessage");
+
+        await expect(childNode.refreshUSS()).rejects.toThrow();
+        expect(showErrorMessageSpy).toBeCalledTimes(1);
+    });
 });
 
 describe("ZoweUSSNode Unit Tests - Function node.getEtag()", () => {

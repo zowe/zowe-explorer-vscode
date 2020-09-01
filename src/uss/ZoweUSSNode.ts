@@ -474,7 +474,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             case (contextually.isUssDirectory(this.getParent())):
                 label = this.fullPath;
                 break;
-            // For opening favorited and non-favorited files
+            // For favorited and non-favorited files
             case (this.getParent().contextValue === globals.FAV_PROFILE_CONTEXT):
             case (contextually.isUssSession(this.getParent())):
                 label = this.label;
