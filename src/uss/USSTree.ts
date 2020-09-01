@@ -445,7 +445,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         this.log.debug(localize("initializeFavorites.log.debug", "Initializing profiles with USS favorites."));
         const lines: string[] = this.mHistory.readFavorites();
         if (lines.length === 0) {
-            this.log.debug(localize("initializeFavorites.no.favorites", "No data set favorites found."));
+            this.log.debug(localize("initializeFavorites.no.favorites", "No USS favorites found."));
             return;
         }
         lines.forEach(async (line) => {
@@ -466,8 +466,8 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
     /**
      * Creates an individual favorites node WITHOUT profiles or sessions, to be added to the specified profile node in Favorites during activation.
      * This allows label and contextValue to be passed into these child nodes.
-     * @param label The favorited data set's label
-     * @param contextValue The favorited data set's context value
+     * @param label The favorited file/folder's label
+     * @param contextValue The favorited file/folder's context value
      * @param parentNode The profile node in this.mFavorites that the favorite belongs to
      * @returns IZoweUssTreeNode
      */

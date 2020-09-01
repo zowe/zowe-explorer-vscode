@@ -606,7 +606,7 @@ describe("USSTree Unit Tests - Function USSTree.saveSearch()", () => {
         testNode.fullPath = "/a1234";
 
         await globalMocks.testTree.addFavorite(testNode);
-        const favProfileNode = globalMocks.testTree.mFavorites[0]
+        const favProfileNode = globalMocks.testTree.mFavorites[0];
 
         testNode.fullPath = "/r1234";
         await globalMocks.testTree.addFavorite(testNode);
