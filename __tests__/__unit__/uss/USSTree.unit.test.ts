@@ -337,10 +337,16 @@ describe("USSTree Unit Tests - Function USSTree.openItemFromPath()", () => {
         const globalMocks = await createGlobalMocks();
         globalMocks.withProgress.mockReturnValue(globalMocks.testResponse);
 
-        const file = new ZoweUSSNode("c.txt", vscode.TreeItemCollapsibleState.Collapsed, globalMocks.testTree.mSessionNodes[0], null, "/a/b");
-        spyOn(globalMocks.testTree, "getChildren").and.returnValue(Promise.resolve([file]));
+        const file = new ZoweUSSNode("c.txt", vscode.TreeItemCollapsibleState.None, globalMocks.testTree.mSessionNodes[1], null, "/a/b");
+        globalMocks.testTree.mSessionNodes[1].children.push(file);
+        Object.defineProperty(globalMocks.testTree.mSessionNodes[1], "getChildren", {
+            value: jest.fn(() => {
+                return Promise.resolve([file]);
+            })
+        });
 
         await globalMocks.testTree.openItemFromPath("/a/b/c.txt", globalMocks.testTree.mSessionNodes[1]);
+
         expect(globalMocks.testTree.getSearchHistory().includes("[sestest]: /a/b/c.txt")).toBe(true);
     });
 
