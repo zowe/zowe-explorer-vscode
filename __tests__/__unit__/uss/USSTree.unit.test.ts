@@ -132,8 +132,8 @@ async function createGlobalMocks() {
     return globalMocks;
 }
 
-describe("USSTree Unit Tests - Function USSTree.initialize()", () => {
-    it("Tests that initialize() is executed successfully", async () => {
+describe("USSTree Unit Tests - Function USSTree.initializeFavorites()", () => {
+    it("Tests that initializeFavorites() is executed successfully", async () => {
         const globalMocks = await createGlobalMocks();
         const testTree1 = await createUSSTree(Logger.getAppLogger());
         const favProfileNode = testTree1.mFavorites[0];
@@ -159,13 +159,26 @@ describe("USSTree Unit Tests - Function USSTree.initialize()", () => {
     });
 });
 
-describe("USSTree Unit Tests - Function initializeUSSTree()", () => {
-    it("Tests if initializeUSSTree() is executed successfully", async () => {
+describe("USSTree Unit Tests - Function initializeFavChildNodeForProfile()", () => {
+    it("Tests initializeFavChildNodeForProfile() for favorited search", async () => {
+        createGlobalMocks();
         const testTree1 = await createUSSTree(Logger.getAppLogger());
         const favProfileNode = testTree1.mFavorites[0];
-        expect(favProfileNode.children.length).toBe(2);
-        expect(favProfileNode.children[0].fullPath).toEqual("/u/aDir");
-        expect(favProfileNode.children[1].label).toEqual("myFile.txt");
+        const label = "/u/fakeuser";
+        const line = "[test]: /u/fakeuser{ussSession}";
+        const expectedFavSearchNode = new ZoweUSSNode("/u/fakeuser", vscode.TreeItemCollapsibleState.None, favProfileNode,
+            null, null, false, null);
+        expectedFavSearchNode.contextValue = globals.USS_SESSION_CONTEXT + globals.FAV_SUFFIX;
+        expectedFavSearchNode.fullPath = label;
+        expectedFavSearchNode.label = expectedFavSearchNode.tooltip = label;
+        expectedFavSearchNode.command = { command: "zowe.uss.fullPath", title: "", arguments: [expectedFavSearchNode] };
+        const targetIcon = getIconByNode(expectedFavSearchNode);
+        if (targetIcon) {
+            expectedFavSearchNode.iconPath = targetIcon.path;
+        }
+        const favSearchNode = await testTree1.initializeFavChildNodeForProfile(label, line, favProfileNode);
+
+        expect(favSearchNode).toEqual(expectedFavSearchNode);
     });
 });
 
