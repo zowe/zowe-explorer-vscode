@@ -44,14 +44,9 @@ export function errorHandling(errorDetails: any, label?: string, moreInfo?: stri
             if (label.includes("[")) {
                 label = label.substring(0, label.indexOf(" ["));
             }
-
-            vscode.window.showErrorMessage(errMsg);
             break;
         default:
-            if (moreInfo === undefined) {
-                moreInfo = "Error:";
-            }
-            vscode.window.showErrorMessage(moreInfo + " " +  errorDetails);
+            vscode.window.showErrorMessage(errMsg);
             break;
     }
     return;

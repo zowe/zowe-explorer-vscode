@@ -20,6 +20,7 @@ import { setProfile, setSession, errorHandling } from "../utils";
 import { IZoweTreeNode, IZoweDatasetTreeNode, IZoweNodeType } from "../api/IZoweTreeNode";
 import { IZoweTree } from "../api/IZoweTree";
 import * as nls from "vscode-nls";
+import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
@@ -138,34 +139,29 @@ export class ZoweTreeProvider {
         return undefined;
     }
 
-    public async editSession(node: IZoweTreeNode) {
+    public async editSession(node: IZoweTreeNode, zoweFileProvider: IZoweTree<IZoweNodeType>) {
         const profile = node.getProfile();
         const profileName = node.getProfileName();
         // Check what happens if inactive
         await Profiles.getInstance().checkCurrentProfile(profile, true);
-        const EditSession = await Profiles.getInstance().editSession(profile, profileName);
+        await Profiles.getInstance().editSession(profile, profileName);
+        const EditSession = await ZoweExplorerApiRegister.getCommonApi(node.getProfile())
+                                                         .getValidSession(node.getProfile(),
+                                                                          profileName,
+                                                                          null,
+                                                                          false);
         if (EditSession) {
             node.getProfile().profile = EditSession as IProfile;
             await setProfile(node, EditSession as IProfile);
-            await setSession(node, EditSession as ISession);
+            if (node.getSession()) {
+                await setSession(node, EditSession as ISession);
+            } else {
+                this.deleteSessionByLabel(node.label);
+                zoweFileProvider.addSession(node.getProfileName());
+            }
+            
             this.refresh();
         }
-        try {
-            // refresh profilesForValidation to check the profile status again
-            Profiles.getInstance().profilesForValidation.forEach((checkProfile, index) => {
-                if (index === 0) {
-                    Profiles.getInstance().profilesForValidation = [];
-                }
-                if (checkProfile.name === profileName) {
-                    Profiles.getInstance().profilesForValidation.splice(index,1);
-                }
-            });
-
-            await this.checkCurrentProfile(node, true);
-        } catch (error) {
-            await errorHandling(error);
-        }
-
     }
 
     public async checkCurrentProfile(node: IZoweTreeNode, prompt?: boolean) {
@@ -222,5 +218,4 @@ export class ZoweTreeProvider {
         this.mHistory.removeSession(revisedLabel);
         this.refresh();
     }
-
 }

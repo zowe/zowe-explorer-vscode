@@ -92,7 +92,13 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
             // if (!serviceProfile.profile.user) { delete serviceProfile.profile.user; }
             if (!serviceProfile.profile.password) { delete serviceProfile.profile.password; }
             try { return zowe.ZosmfSession.createBasicZosmfSession(serviceProfile.profile); }
-            catch (error) { throw new Error(error.message); }
+            catch (error) {
+                if (prompt) {
+                    await errorHandling(error.message);
+                    // When no password is entered, we should silence the error message for not providing it
+                    // since password is optional in Zowe Explorer
+                } else if (error.message !== "Must have user & password OR base64 encoded credentials") { await errorHandling(error); }
+            }
         } else if (baseProfile) {
             // baseProfile exists, so APIML login is possible
             const sessCfg = {
@@ -140,7 +146,7 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
         let newRU: boolean;
         const schemaValues: any = {};
 
-        const profileType = await this.getProfileTypeName();
+        const profileType = "zosmf";
         if (!profileType) { throw new Error(localize("collectProfileDetails.profileTypeMissing",
                                                      "No profile type was chosen. Operation Cancelled")); }
         schemaValues.type = profileType;

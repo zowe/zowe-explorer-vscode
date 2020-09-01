@@ -25,7 +25,7 @@ import {
     createISession, createISessionWithoutCredentials, createQuickPickContent,
     createTreeView, createWorkspaceConfiguration, createValidIProfile
 } from "../../../__mocks__/mockCreators/shared";
-import { createDatasetSessionNode } from "../../../__mocks__/mockCreators/datasets";
+import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
 import { bindMvsApi, createMvsApi } from "../../../__mocks__/mockCreators/api";
 import * as workspaceUtils from "../../../src/utils/workspace";
 import { ZoweExplorerApiRegister } from "../../../src/api/ZoweExplorerApiRegister";
@@ -862,10 +862,12 @@ describe("Dataset Tree Unit Tests - Function editSession", () => {
         const imperativeProfile = createIProfile();
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        const datasetProvider = createDatasetTree(datasetSessionNode, treeView);
         const profile = createInstanceOfProfile(imperativeProfile, session);
 
         return {
             session,
+            datasetProvider,
             datasetSessionNode,
             treeView,
             profile
@@ -884,7 +886,7 @@ describe("Dataset Tree Unit Tests - Function editSession", () => {
         const node = new ZoweDatasetNode("EditSession", vscode.TreeItemCollapsibleState.Collapsed,
             testTree.mSessionNodes[1], null);
 
-        await testTree.editSession(node);
+        await testTree.editSession(node, blockMocks.datasetProvider);
 
         expect(node.getProfile().profile).toBe("testProfile");
     });

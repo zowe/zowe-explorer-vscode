@@ -9,7 +9,7 @@
 *                                                                                 *
 */
 
-import { IProfileLoaded, Logger, CliProfileManager, IProfile, IUpdateProfileFromCliArgs } from "@zowe/imperative";
+import { IProfileLoaded, Logger, CliProfileManager, IProfile, IUpdateProfile } from "@zowe/imperative";
 import * as path from "path";
 import { URL } from "url";
 import * as vscode from "vscode";
@@ -241,20 +241,15 @@ export class Profiles {
         }
     }
 
-    public async editSession(profileLoaded: IProfileLoaded, profileName: string): Promise<any| undefined> {
-        try {
-            const updSchemaValues = await this.collectProfileDetails();
-            updSchemaValues.name = profileName;
+    public async editSession(profileLoaded: IProfileLoaded, profileName: string) {
+        const updSchemaValues = await this.collectProfileDetails();
+        updSchemaValues.name = profileName;
+        Object.keys(updSchemaValues).forEach((key) => {
+            profileLoaded.profile[key] = updSchemaValues[key];
+        });
 
-            const updSession = await ZoweExplorerApiRegister.getCommonApi(profileLoaded).getValidSession(updSchemaValues, profileName, null, true);
-            updSchemaValues.base64EncodedAuth = updSession.ISession.base64EncodedAuth;
-            await this.updateProfile({profile: updSchemaValues, name: profileName, type: profileLoaded.type});
-            vscode.window.showInformationMessage(localize("editConnection.success", "Profile was successfully updated"));
-
-            return updSchemaValues;
-        } catch (error) {
-            await errorHandling(error.message);
-        }
+        await this.updateProfile({ profile: profileLoaded.profile, name: profileName, type: profileLoaded.type });
+        vscode.window.showInformationMessage(localize("editConnection.success", "Profile was successfully updated"));
     }
 
     public async getProfileType(): Promise<string> {
@@ -372,7 +367,7 @@ export class Profiles {
                         throw new Error(localize("collectProfileDetails.zosmfURL", "No valid value for z/OS URL. Operation Cancelled"));
                     } else {
                         newUrl = new URL(newUrl);
-                        schemaValues[profileDetail] = (newUrl.host ? newUrl.host : newUrl.host.substring(0, (newUrl.host.indexOf(`:`))));
+                        schemaValues[profileDetail] = newUrl.host.replace(/'/g, "").substring(0, newUrl.host.indexOf(":"));
                         if (newUrl.port !== 0) { schemaValues.port = Number(newUrl.port); }
                     }
                     break;
@@ -433,6 +428,10 @@ export class Profiles {
 
                     newUser = await vscode.window.showInputBox(userOptions);
                     if (!newUser) {
+                        if (newUser === undefined) {
+                            throw new Error(localize("collectProfileDetails.undefined.user",
+                                                     "Invalid user provided or operation was cancelled"));
+                        }
                         vscode.window.showInformationMessage(localize("collectProfileDetails.undefined.username", "No username defined."));
                         newUser = null;
                     }
@@ -453,6 +452,10 @@ export class Profiles {
 
                     newPass = await vscode.window.showInputBox(passOptions);
                     if (!newPass) {
+                        if (newPass === undefined) {
+                            throw new Error(localize("collectProfileDetails.undefined.pass",
+                                                     "Invalid password provided or operation was cancelled"));
+                        }
                         vscode.window.showInformationMessage(localize("collectProfileDetails.undefined.password", "No password defined."));
                         newPass = null;
                     }
@@ -573,7 +576,7 @@ export class Profiles {
 
                             const defValue = await vscode.window.showInputBox(defaultOptions);
 
-                            if (defValue === "") { break; }
+                            if (defValue === "") { schemaValues[profileDetail] = null }
                             else {
                                 schemaValues[profileDetail] = defValue;
                                 break;
@@ -841,24 +844,28 @@ export class Profiles {
         for (const value of profileArray) {
             if (value === "user" || value === "password") {
                 if (!rePrompt) {
-                        OrigProfileInfo.user = NewProfileInfo.user;
-                        OrigProfileInfo.password = NewProfileInfo.password;
+                    OrigProfileInfo.user = NewProfileInfo.user;
+                    OrigProfileInfo.password = NewProfileInfo.password;
                 }
             } else { OrigProfileInfo[value] = NewProfileInfo[value]; }
-
+            if (!NewProfileInfo[value]) {
+                delete OrigProfileInfo[value];
+            }
         }
 
-        // Using `IUpdateProfileFromCliArgs` here instead of `IUpdateProfile` is
-        // kind of a hack, but necessary to support storing secure credentials
-        // until this is fixed: https://github.com/zowe/imperative/issues/379
-        const updateParms: IUpdateProfileFromCliArgs = {
+        const updateParms: IUpdateProfile = {
             name: this.loadedProfile.name,
-            merge: true,
-            // profile: OrigProfileInfo as IProfile
-            args: OrigProfileInfo as any
+            merge: false,
+            profile: OrigProfileInfo as IProfile
         };
         try { (await this.getCliProfileManager(this.loadedProfile.type)).update(updateParms); }
-        catch (error) { vscode.window.showErrorMessage(error.message); }
+        catch (error) {
+            // When no password is entered, we should silence the error message for not providing it
+            // since password is optional in Zowe Explorer
+            if (!error.message.includes("Must have user & password OR base64 encoded credentials")) {
+                errorHandling(error);
+            }
+        }
     }
 
     private async saveProfile(ProfileInfo, ProfileName, ProfileType) {
