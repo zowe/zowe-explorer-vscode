@@ -516,7 +516,7 @@ describe("USSTree Unit Tests - Function USSTree.filterPrompt()", () => {
         const sessionNoCred = createISessionWithoutCredentials();
         globalMocks.createBasicZosmfSession.mockReturnValue(sessionNoCred);
         const dsNode = new ZoweUSSNode(
-            "[ussTestSess2]: /u/myFile.txt", vscode.TreeItemCollapsibleState.Expanded, null, sessionNoCred, null, false, "ussTestSess2");
+            "/u/myFile.txt", vscode.TreeItemCollapsibleState.Expanded, null, sessionNoCred, null, false, "ussTestSess2");
         dsNode.mProfileName = "ussTestSess2";
         dsNode.getSession().ISession.user = "";
         dsNode.getSession().ISession.password = "";
@@ -584,33 +584,33 @@ describe("USSTree Unit Tests - Function USSTree.saveSearch()", () => {
         expect(globalMocks.testTree.mFavorites.length).toEqual(1);
     });
 
-    it("Testing that saveSearch() works properly for a file", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        globalMocks.testTree.mSessionNodes[1].fullPath = "/z1234";
-        await globalMocks.testTree.saveSearch(globalMocks.testTree.mSessionNodes[1]);
-        expect(globalMocks.testTree.mFavorites.length).toEqual(1);
-    });
-
     it("Testing that saveSearch() works properly for a session", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
+        const ussNodeToSave = blockMocks.file;
+        const expectedNode = ussNodeToSave;
 
-        globalMocks.testTree.mSessionNodes[1].fullPath = "/z1234";
-        await globalMocks.testTree.saveSearch(globalMocks.testTree.mSessionNodes[1]);
-        expect(globalMocks.testTree.mFavorites.length).toEqual(1);
+        expectedNode.label = expectedNode.fullPath;
+        expectedNode.tooltip = expectedNode.fullPath;
+        expectedNode.contextValue = globals.USS_SESSION_CONTEXT + globals.FAV_SUFFIX;
+
+        await globalMocks.testTree.saveSearch(ussNodeToSave);
+
+        expect(ussNodeToSave).toEqual(expectedNode);
     });
 
     it("Testing that saveSearch() works properly on the same session, different path", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
+        const testNode = globalMocks.testTree.mSessionNodes[1];
+        testNode.fullPath = "/a1234";
 
-        globalMocks.testTree.mSessionNodes[1].fullPath = "/a1234";
-        await globalMocks.testTree.saveSearch(globalMocks.testTree.mSessionNodes[1]);
-        globalMocks.testTree.mSessionNodes[1].fullPath = "/r1234";
-        await globalMocks.testTree.saveSearch(globalMocks.testTree.mSessionNodes[1]);
-        expect(globalMocks.testTree.mFavorites.length).toEqual(2);
+        await globalMocks.testTree.addFavorite(testNode);
+        const favProfileNode = globalMocks.testTree.mFavorites[0]
+
+        testNode.fullPath = "/r1234";
+        await globalMocks.testTree.addFavorite(testNode);
+        expect(favProfileNode.children.length).toEqual(2);
     });
 });
 
