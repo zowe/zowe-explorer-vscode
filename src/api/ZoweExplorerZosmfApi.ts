@@ -137,7 +137,7 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
         }
     }
 
-    public async collectProfileDetails(detailsToGet?: string[]): Promise<any> {
+    public async collectProfileDetails(detailsToGet?: string[], oldDetails?: any, schema?: any): Promise<any> {
         let newUrl: any;
         let newPort: number;
         let newUser: string;
@@ -148,6 +148,7 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
         const profileType = "zosmf";
         if (!profileType) { throw new Error(localize("collectProfileDetails.profileTypeMissing",
                                                      "No profile type was chosen. Operation Cancelled")); }
+        if (!detailsToGet) { detailsToGet = Object.keys(schema); }
         schemaValues.type = profileType;
 
         // Go through array of schema for input values
@@ -156,6 +157,7 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
                 case "host" :
                     const hostOptions: vscode.InputBoxOptions = {
                         ignoreFocusOut: true,
+                        value: oldDetails[profileDetail] ? oldDetails[profileDetail] : null,
                         placeHolder: localize("collectProfileDetails.option.prompt.url.placeholder", "Optional: https://url:port"),
                         prompt: localize("collectProfileDetails.option.prompt.url", "Enter a z/OS URL in the format 'https://url:port'."),
                         validateInput: (value) => {
@@ -193,20 +195,38 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
                         throw new Error(localize("collectProfileDetails.zosmfURL", "No valid value for z/OS URL. Operation Cancelled"));
                     } else {
                         newUrl = new URL(newUrl);
-                        schemaValues[profileDetail] = (newUrl.host ? newUrl.host : newUrl.host.substring(0, (newUrl.host.indexOf(`:`))));
+                        newUrl.host = newUrl.host.replace(/'/g, "").replace(/https:\/\//g, "");
+                        schemaValues[profileDetail] = newUrl.port ? newUrl.host.substring(0, newUrl.host.indexOf(":")) : newUrl.host;
                         if (newUrl.port !== 0) { schemaValues.port = Number(newUrl.port); }
                     }
                     break;
                 case "port" :
                     if (schemaValues[profileDetail] === 0) {
-                        const portOptions: vscode.InputBoxOptions = {
+                        let portOptions: vscode.InputBoxOptions = {
                             ignoreFocusOut: true,
+                            value: oldDetails[profileDetail] ? oldDetails[profileDetail] : null,
                             validateInput: (value) => {
                                 if (Number.isNaN(Number(value))) {
                                     return localize("collectProfileDetails.invalidPort", "Please enter a valid port number");
                                 } else { return null; }
                             }
                         };
+
+                        // Use as default value the port number from the profile type's default schema
+                        // (default is defined for each profile type in ...node_modules\@zowe\cli\lib\imperative.js)
+                        if (schema[profileDetail].optionDefinition.hasOwnProperty("defaultValue")){
+                            // Default value defined in schema
+                            portOptions = {
+                                prompt: schema[profileDetail].optionDefinition.description.toString(),
+                                value: schema[profileDetail].optionDefinition.defaultValue.toString()
+                            };
+                        } else {
+                            // No default value defined
+                            portOptions = {
+                                placeHolder: localize("collectProfileDetails.option.prompt.port.placeholder", "Port Number"),
+                                prompt: schema[profileDetail].optionDefinition.description.toString(),
+                            };
+                        }
 
                         let port;
                         const portFromUser = await vscode.window.showInputBox(portOptions);
@@ -215,7 +235,10 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
                                                      "Invalid Port number provided or operation was cancelled"));
                         } else { port = Number(portFromUser); }
 
-                        if (schemaValues.host === "") { port = 0; }
+                        // Use default from schema if user entered 0 as port number
+                        if (port === 0 && schema[profileDetail].optionDefinition.hasOwnProperty("defaultValue")) {
+                            port = Number(schema[profileDetail].optionDefinition.defaultValue.toString());
+                        } else if (schemaValues.host === "") { port = 0; }
 
                         schemaValues[profileDetail] = newPort = port;
                         break;
@@ -226,6 +249,7 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
                         placeHolder: localize("collectProfileDetails.option.prompt.username.placeholder", "Optional: User Name"),
                         prompt: localize("collectProfileDetails.option.prompt.username", "Enter the user name for the connection."),
                         ignoreFocusOut: true,
+                        value: oldDetails[profileDetail] ? oldDetails[profileDetail] : null,
                         validateInput: (value) => {
                             if (value === undefined || value.trim() === undefined) {
                                 return localize("collectProfileDetails.invalidUser", "Please enter a valid username");
@@ -235,6 +259,10 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
 
                     newUser = await vscode.window.showInputBox(userOptions);
                     if (!newUser) {
+                        if (newUser === undefined) {
+                            throw new Error(localize("collectProfileDetails.undefined.user",
+                                                     "Invalid user provided or operation was cancelled"));
+                        }
                         vscode.window.showInformationMessage(localize("collectProfileDetails.undefined.username", "No username defined."));
                         newUser = null;
                     }
@@ -246,6 +274,7 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
                         prompt: localize("collectProfileDetails.option.prompt.password", "Enter the password for the connection."),
                         password: true,
                         ignoreFocusOut: true,
+                        value: oldDetails[profileDetail] ? oldDetails[profileDetail] : null,
                         validateInput: (value) => {
                             if (value === undefined || value.trim() === undefined) {
                                 return localize("collectProfileDetails.invalidUser", "Please enter a valid password");
@@ -255,6 +284,10 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
 
                     newPass = await vscode.window.showInputBox(passOptions);
                     if (!newPass) {
+                        if (newPass === undefined) {
+                            throw new Error(localize("collectProfileDetails.undefined.pass",
+                                                     "Invalid password provided or operation was cancelled"));
+                        }
                         vscode.window.showInformationMessage(localize("collectProfileDetails.undefined.password", "No password defined."));
                         newPass = null;
                     }
@@ -279,6 +312,109 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
 
                     schemaValues[profileDetail] = newRU;
                     break;
+                default:
+                    let defaultOptions: vscode.InputBoxOptions;
+                    let responseDescription: string;
+
+                    const isTrue = Array.isArray(schema[profileDetail].type);
+                    let index: number;
+                    let schemaType;
+                    if (isTrue) {
+                        if (schema[profileDetail].type.includes("boolean")) {
+                            index = schema[profileDetail].type.indexOf("boolean");
+                            schemaType = schema[profileDetail].type[index];
+                        }
+                        if (schema[profileDetail].type.includes("number")) {
+                            index = schema[profileDetail].type.indexOf("number");
+                            schemaType = schema[profileDetail].type[index];
+                        }
+                        if (schema[profileDetail].type.includes("string")) {
+                            index = schema[profileDetail].type.indexOf("string");
+                            schemaType = schema[profileDetail].type[index];
+                        }
+                    } else { schemaType = schema[profileDetail].type; }
+
+                    switch (schemaType) {
+                        case "number":
+                            let numberOptions: vscode.InputBoxOptions;
+                            responseDescription = schema[profileDetail].optionDefinition.description.toString();
+
+                            // Use the default value from the schema in the prompt
+                            // (defaults are defined in ...node_modules\@zowe\cli\lib\imperative.js)
+                            if (schema[profileDetail].optionDefinition.hasOwnProperty("defaultValue")){
+                                // A default value is defined
+                                numberOptions = {
+                                    prompt: responseDescription,
+                                    value: schema[profileDetail].optionDefinition.defaultValue
+                                };
+                            } else {
+                                // No default value is defined
+                                numberOptions = {
+                                    placeHolder: responseDescription,
+                                    prompt: responseDescription
+                                };
+                            }
+
+                            const userInput = await vscode.window.showInputBox(numberOptions);
+
+                            // Validate numerical input
+                            if (!Number.isNaN(Number(userInput))) { schemaValues[profileDetail] = Number(userInput); }
+                            else {
+                                // Input is invalid, either use default value form schema or leave undefined
+                                if (schema[profileDetail].optionDefinition.hasOwnProperty("defaultValue")){
+                                    schemaValues[profileDetail] = schema[profileDetail].optionDefinition.defaultValue;
+                                } else { schemaValues[profileDetail] = undefined; }
+                            }
+                            break;
+                        case "boolean" :
+                            let boolVal: boolean;
+                            const selectBoolean = ["True", "False"];
+                            const booleanOptions: vscode.QuickPickOptions = {
+                                placeHolder: schema[profileDetail].optionDefinition.description.toString(),
+                                ignoreFocusOut: true,
+                                canPickMany: false
+                            };
+
+                            const chosenValue = await vscode.window.showQuickPick(selectBoolean, booleanOptions);
+
+                            if (chosenValue === selectBoolean[0]) { boolVal = true; }
+                            else if (chosenValue === selectBoolean[1]) { boolVal = false; }
+                            else { boolVal = undefined; }
+
+                            if (boolVal === undefined) {
+                                throw new Error(localize("collectProfileDetails.booleanValue", "No boolean selected. Operation Cancelled"));
+                            } else {
+                                schemaValues[profileDetail] = boolVal;
+                                break;
+                            }
+                        default :
+                            responseDescription = schema[profileDetail].optionDefinition.description.toString();
+
+                            // Use the default value from the schema in the prompt
+                            // (defaults are defined in ...node_modules\@zowe\cli\lib\imperative.js)
+                            if (schema[profileDetail].optionDefinition.hasOwnProperty("defaultValue")){
+                                // A default value is defined
+                                defaultOptions = {
+                                    prompt: responseDescription,
+                                    value: schema[profileDetail].optionDefinition.defaultValue
+                                };
+                            } else {
+                                // No default value is defined
+                                defaultOptions = {
+                                    placeHolder: responseDescription,
+                                    prompt: responseDescription,
+                                    value: oldDetails[profileDetail] ? oldDetails[profileDetail] : null,
+                                };
+                            }
+
+                            const defValue = await vscode.window.showInputBox(defaultOptions);
+
+                            if (defValue === "") { schemaValues[profileDetail] = null; }
+                            else {
+                                schemaValues[profileDetail] = defValue;
+                                break;
+                            }
+                    }
             }
         }
 

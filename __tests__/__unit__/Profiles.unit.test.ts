@@ -287,7 +287,7 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        blockMocks.profileInstance.getSchema.mockResolvedValueOnce(blockMocks.testSchemas[0]);
+        globalMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[0]); });
         globalMocks.mockShowInputBox.mockResolvedValueOnce(undefined);
         const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
 
@@ -300,7 +300,7 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        blockMocks.profileInstance.getSchema.mockResolvedValueOnce(blockMocks.testSchemas[0]);
+        globalMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[0]); });
         globalMocks.mockShowInputBox.mockResolvedValueOnce("https://fake:143");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("143");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
@@ -317,7 +317,7 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        blockMocks.profileInstance.getSchema.mockResolvedValueOnce(blockMocks.testSchemas[0]);
+        globalMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[0]); });
         globalMocks.mockShowInputBox.mockResolvedValueOnce("https://fake:143");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("143");
         globalMocks.mockShowInputBox.mockResolvedValue("fake");
@@ -332,7 +332,7 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        blockMocks.profileInstance.getSchema.mockResolvedValueOnce(blockMocks.testSchemas[0]);
+        globalMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[0]); });
         globalMocks.mockShowInputBox.mockResolvedValueOnce("https://fake:143");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("143");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
@@ -347,7 +347,7 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        blockMocks.profileInstance.getSchema.mockResolvedValueOnce(blockMocks.testSchemas[1]);
+        globalMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[1]); });
         globalMocks.mockShowInputBox.mockResolvedValueOnce("https://fake:143");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("");
@@ -364,7 +364,7 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        blockMocks.profileInstance.getSchema.mockResolvedValueOnce(blockMocks.testSchemas[0]);
+        globalMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[0]); });
         globalMocks.mockShowInputBox.mockResolvedValueOnce("https://fake:143");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("143");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake1");
@@ -393,7 +393,7 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         blockMocks.profileInstance.getProfileType = jest.fn(() => new Promise((resolve) => { resolve("alternate"); }));
-        blockMocks.profileInstance.getSchema.mockResolvedValueOnce(blockMocks.testSchemas[1]);
+        globalMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[1]); });
         globalMocks.mockShowInputBox.mockResolvedValueOnce("https://fake:234");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("234");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
@@ -412,7 +412,7 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         blockMocks.profileInstance.getProfileType = jest.fn(() => new Promise((resolve) => { resolve("alternate"); }));
-        blockMocks.profileInstance.getSchema.mockResolvedValueOnce(blockMocks.testSchemas[1]);
+        globalMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[1]); });
         globalMocks.mockShowInputBox.mockResolvedValueOnce("https://fake:234");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("234");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
@@ -431,7 +431,7 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         blockMocks.profileInstance.getProfileType = jest.fn(() => new Promise((resolve) => { resolve("alternate"); }));
-        blockMocks.profileInstance.getSchema.mockResolvedValueOnce(blockMocks.testSchemas[1]);
+        globalMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[1]); });
         globalMocks.mockShowInputBox.mockResolvedValueOnce("https://fake");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("0");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
@@ -450,7 +450,7 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         blockMocks.profileInstance.getProfileType = jest.fn(() => new Promise((resolve) => { resolve("alternate"); }));
-        blockMocks.profileInstance.getSchema.mockResolvedValueOnce(blockMocks.testSchemas[1]);
+        globalMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[1]); });
         globalMocks.mockShowInputBox.mockResolvedValueOnce("https://fake.com");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
         const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
@@ -465,7 +465,7 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         blockMocks.profileInstance.getProfileType = jest.fn(() => new Promise((resolve) => { resolve("alternate"); }));
-        blockMocks.profileInstance.getSchema.mockResolvedValueOnce(blockMocks.testSchemas[1]);
+        globalMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[1]); });
         globalMocks.mockShowInputBox.mockResolvedValueOnce("https://fake:143");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("143");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
@@ -482,7 +482,7 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         blockMocks.profileInstance.getProfileType = jest.fn(() => new Promise((resolve) => { resolve("alternate"); }));
-        blockMocks.profileInstance.getSchema.mockResolvedValueOnce(blockMocks.testSchemas[2]);
+        globalMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[2]); });
         globalMocks.mockShowInputBox.mockResolvedValueOnce("https://fake");
         globalMocks.mockShowInputBox.mockResolvedValueOnce(Number("143"));
 
@@ -635,7 +635,7 @@ describe("Profiles Unit Tests - Function editSession", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         globalMocks.profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
-        blockMocks.profileInstance.getSchema.mockResolvedValueOnce(blockMocks.testSchemas[0]);
+        globalMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[0]); });
         globalMocks.mockShowInputBox.mockResolvedValueOnce("https://fake:143");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("143");
         globalMocks.mockShowInputBox.mockResolvedValue("fake");
@@ -652,7 +652,7 @@ describe("Profiles Unit Tests - Function editSession", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         globalMocks.profiles.getProfileType = () => new Promise((resolve) => { resolve("alternate"); });
-        blockMocks.profileInstance.getSchema.mockResolvedValueOnce(blockMocks.testSchemas[1]);
+        globalMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[1]); });
         globalMocks.mockShowInputBox.mockResolvedValueOnce("https://fake:143");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("143");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
@@ -672,7 +672,7 @@ describe("Profiles Unit Tests - Function editSession", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         globalMocks.profiles.getProfileType = () => new Promise((resolve) => { resolve("alternate"); });
-        blockMocks.profileInstance.getSchema.mockResolvedValueOnce(blockMocks.testSchemas[1]);
+        globalMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[1]); });
         globalMocks.mockShowInputBox.mockResolvedValueOnce("https://fake");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("143");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
@@ -692,7 +692,7 @@ describe("Profiles Unit Tests - Function editSession", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         globalMocks.profiles.getProfileType = () => new Promise((resolve) => { resolve("alternate"); });
-        blockMocks.profileInstance.getSchema.mockResolvedValueOnce(blockMocks.testSchemas[1]);
+        globalMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[1]); });
         globalMocks.mockShowInputBox.mockResolvedValueOnce("https://fake:143");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("143");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
@@ -712,7 +712,7 @@ describe("Profiles Unit Tests - Function editSession", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         globalMocks.profiles.getProfileType = () => new Promise((resolve) => { resolve("alternate"); });
-        blockMocks.profileInstance.getSchema.mockResolvedValueOnce(blockMocks.testSchemas[2]);
+        globalMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[2]); });
         globalMocks.mockShowInputBox.mockResolvedValueOnce("https://fake:143");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("143");
         globalMocks.mockShowInputBox.mockResolvedValueOnce(undefined);
@@ -728,7 +728,7 @@ describe("Profiles Unit Tests - Function editSession", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         globalMocks.profiles.getProfileType = () => new Promise((resolve) => { resolve("alternate"); });
-        blockMocks.profileInstance.getSchema.mockResolvedValueOnce(blockMocks.testSchemas[2]);
+        globalMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[2]); });
         globalMocks.mockShowInputBox.mockResolvedValueOnce("https://fake:143");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("123");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("");
@@ -744,7 +744,7 @@ describe("Profiles Unit Tests - Function editSession", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         globalMocks.profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
-        blockMocks.profileInstance.getSchema.mockResolvedValueOnce(blockMocks.testSchemas[0]);
+        globalMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[0]); });
         globalMocks.mockShowQuickPick.mockResolvedValueOnce(undefined);
 
         let error;
@@ -762,7 +762,7 @@ describe("Profiles Unit Tests - Function editSession", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         globalMocks.profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
-        blockMocks.profileInstance.getSchema.mockResolvedValueOnce(blockMocks.testSchemas[0]);
+        globalMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[0]); });
         globalMocks.mockShowInputBox.mockResolvedValueOnce("https://fake:143");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("143");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
@@ -784,7 +784,7 @@ describe("Profiles Unit Tests - Function editSession", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         globalMocks.profiles.getProfileType = () => new Promise((resolve) => { resolve("alternate"); });
-        blockMocks.profileInstance.getSchema.mockResolvedValueOnce(blockMocks.testSchemas[1]);
+        globalMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[1]); });
         globalMocks.mockShowInputBox.mockResolvedValueOnce("https://fake:143");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("143");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
@@ -806,7 +806,7 @@ describe("Profiles Unit Tests - Function editSession", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         globalMocks.profiles.getProfileType = () => new Promise((resolve) => { resolve("alternate"); });
-        blockMocks.profileInstance.getSchema.mockResolvedValueOnce(blockMocks.testSchemas[1]);
+        globalMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[1]); });
         globalMocks.mockShowInputBox.mockResolvedValueOnce("https://fake");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("bad");
 

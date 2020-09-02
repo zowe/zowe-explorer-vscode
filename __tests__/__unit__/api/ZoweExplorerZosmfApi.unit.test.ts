@@ -167,7 +167,6 @@ describe("Profiles Unit Tests - Function getValidProfile", () => {
         Object.defineProperty(vscode.window, "showQuickPick", { value: newMocks.mockShowQuickPick, configurable: true });
         Object.defineProperty(vscode.window, "createQuickPick", { value: newMocks.mockCreateQuickPick, configurable: true });
         Object.defineProperty(Profiles, "getInstance", { value: newMocks.mockGetInstance, configurable: true });
-        Object.defineProperty(Profiles, "collectProfileDetails", { value: newMocks.mockCollectProfileDetails, configurable: true });
         Object.defineProperty(globals, "LOG", { value: newMocks.mockLog, configurable: true });
         Object.defineProperty(vscode.window, "createInputBox", { value: newMocks.mockCreateInputBox, configurable: true });
         Object.defineProperty(globals.LOG, "debug", { value: newMocks.mockDebug, configurable: true });

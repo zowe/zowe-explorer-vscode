@@ -220,12 +220,6 @@ export async function createFile(node: IZoweDatasetTreeNode, datasetProvider: IZ
         localize("createFile.dataSetPartitioned", "Data Set Partitioned"),
         localize("createFile.dataSetSequential", "Data Set Sequential")
     ];
-    // let sesNamePrompt: string;
-    // if (node.contextValue.endsWith(globals.FAV_SUFFIX)) {
-    //     sesNamePrompt = node.label.substring(1, node.label.indexOf("]"));
-    // } else {
-    //     sesNamePrompt = node.label;
-    // }
 
     datasetProvider.checkCurrentProfile(node);
     if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {

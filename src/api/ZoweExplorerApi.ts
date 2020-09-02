@@ -75,7 +75,7 @@ export namespace ZoweExplorerApi {
          * @param {string[]} detailsToGet
          *      array of missing profile details
          */
-        collectProfileDetails?(detailsToGet?: string[]): Promise<any>;
+        collectProfileDetails?(detailsToGet?: string[], oldDetails?: any, schema?: any): Promise<any>;
     }
 
     /**
