@@ -292,7 +292,7 @@ export class Profiles {
             const newProfileDetails = await ZoweExplorerApiRegister.getCommonApi(profileLoaded)
                                                                    .collectProfileDetails(null,
                                                                                           profileLoaded.profile,
-                                                                                          this.getSchema("zosmf"));
+                                                                                          await this.getSchema("zosmf"));
             newProfileDetails.name = newProfileName;
             if (!newProfileDetails.user) { delete newProfileDetails.user; }
             if (!newProfileDetails.password) { delete newProfileDetails.password; }

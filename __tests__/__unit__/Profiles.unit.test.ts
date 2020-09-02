@@ -278,7 +278,7 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        await globalMocks.profiles.createNewConnection("");
+        await globalMocks.profiles.createNewConnection(blockMocks.imperativeProfile, "");
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile name was not supplied. Operation Cancelled");
     });
@@ -291,7 +291,7 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         globalMocks.mockShowInputBox.mockResolvedValueOnce(undefined);
         const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
 
-        await globalMocks.profiles.createNewConnection(blockMocks.imperativeProfile.name);
+        await globalMocks.profiles.createNewConnection(blockMocks.imperativeProfile, blockMocks.imperativeProfile.name);
 
         expect(errorHandlingSpy).toBeCalledWith(new Error("No valid value for z/OS URL. Operation Cancelled"));
     });
@@ -308,7 +308,7 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         globalMocks.mockShowInputBox.mockResolvedValueOnce(undefined);
         const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
 
-        await globalMocks.profiles.createNewConnection(blockMocks.imperativeProfile.name);
+        await globalMocks.profiles.createNewConnection(blockMocks.imperativeProfile, blockMocks.imperativeProfile.name);
 
         expect(errorHandlingSpy).toBeCalledWith(new Error("No certificate option selected. Operation Cancelled"));
     });
@@ -323,7 +323,7 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         globalMocks.mockShowInputBox.mockResolvedValue("fake");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("False - Accept connections with self-signed certificates");
 
-        await globalMocks.profiles.createNewConnection(blockMocks.imperativeProfile.name);
+        await globalMocks.profiles.createNewConnection(blockMocks.imperativeProfile, blockMocks.imperativeProfile.name);
         expect(globalMocks.mockShowErrorMessage.mock.calls.length).toBe(1);
         expect(globalMocks.mockShowErrorMessage.mock.calls[0][0]).toBe("Profile name already exists. Please create a profile using a different name");
     });
@@ -339,7 +339,7 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("False - Accept connections with self-signed certificates");
 
-        await globalMocks.profiles.createNewConnection("fake");
+        await globalMocks.profiles.createNewConnection(blockMocks.imperativeProfile, "fake");
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile fake was created.");
     });
 
@@ -354,7 +354,7 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("True");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("False - Accept connections with self-signed certificates");
 
-        await globalMocks.profiles.createNewConnection("fake");
+        await globalMocks.profiles.createNewConnection(blockMocks.imperativeProfile, "fake");
         // tslint:disable-next-line: no-magic-numbers
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(3);
         expect(globalMocks.mockShowInformationMessage.mock.calls[2][0]).toBe("Profile fake was created.");
@@ -371,7 +371,7 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake1");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("False - Accept connections with self-signed certificates");
 
-        await globalMocks.profiles.createNewConnection("fake1");
+        await globalMocks.profiles.createNewConnection(blockMocks.imperativeProfile, "fake1");
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile fake1 was created.");
 
@@ -383,7 +383,7 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake2");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("True - Reject connections with self-signed certificates");
 
-        await globalMocks.profiles.createNewConnection("fake2");
+        await globalMocks.profiles.createNewConnection(blockMocks.imperativeProfile, "fake2");
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile fake2 was created.");
     });
@@ -402,7 +402,7 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("False");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("13");
 
-        await globalMocks.profiles.createNewConnection("alternate");
+        await globalMocks.profiles.createNewConnection(blockMocks.imperativeProfile, "alternate");
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile alternate was created.");
     });
@@ -421,7 +421,7 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("False");
         globalMocks.mockShowInputBox.mockResolvedValueOnce(undefined);
 
-        await globalMocks.profiles.createNewConnection("alternate");
+        await globalMocks.profiles.createNewConnection(blockMocks.imperativeProfile, "alternate");
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile alternate was created.");
     });
@@ -440,7 +440,7 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("True");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("126");
 
-        await globalMocks.profiles.createNewConnection("alternate");
+        await globalMocks.profiles.createNewConnection(blockMocks.imperativeProfile, "alternate");
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile alternate was created.");
     });
@@ -455,7 +455,7 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
         const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
 
-        await globalMocks.profiles.createNewConnection("fake");
+        await globalMocks.profiles.createNewConnection(blockMocks.imperativeProfile, "fake");
 
         expect(errorHandlingSpy).toBeCalledWith(new Error("Invalid Port number provided or operation was cancelled"));
     });
@@ -472,9 +472,9 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         globalMocks.mockShowQuickPick.mockResolvedValueOnce(undefined);
         const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
 
-        await globalMocks.profiles.createNewConnection("fake");
+        await globalMocks.profiles.createNewConnection(blockMocks.imperativeProfile, "fake");
 
-        expect(errorHandlingSpy).toBeCalledWith(new Error("No valid value for z/OS URL. Operation Cancelled"));
+        expect(errorHandlingSpy).toBeCalledWith(new Error("No boolean selected. Operation Cancelled"));
     });
 
     it("Tests that createNewConnection creates an alternate profile with an optional port", async () => {
@@ -486,7 +486,7 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         globalMocks.mockShowInputBox.mockResolvedValueOnce("https://fake");
         globalMocks.mockShowInputBox.mockResolvedValueOnce(Number("143"));
 
-        await globalMocks.profiles.createNewConnection("fake");
+        await globalMocks.profiles.createNewConnection(blockMocks.imperativeProfile, "fake");
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile fake was created.");
     });
