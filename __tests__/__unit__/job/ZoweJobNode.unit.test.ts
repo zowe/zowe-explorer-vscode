@@ -56,6 +56,7 @@ async function createGlobalMocks() {
         mockValidationSetting: jest.fn(),
         mockDisableValidationContext: jest.fn(),
         mockEnableValidationContext: jest.fn(),
+        mockCheckProfileValidationSetting: jest.fn(),
         withProgress: jest.fn().mockImplementation((progLocation, callback) => {
             return callback();
         }),
@@ -154,6 +155,19 @@ describe("ZoweJobNode unit tests - Function addSession", () => {
 
         globalMocks.testJobsProvider.mSessionNodes.pop();
 
+        await globalMocks.testJobsProvider.addSession("sestest");
+
+        expect(globalMocks.testJobsProvider.mSessionNodes[1]).toBeDefined();
+        expect(globalMocks.testJobsProvider.mSessionNodes[1].label).toEqual("sestest");
+        expect(globalMocks.testJobsProvider.mSessionNodes[1].tooltip).toEqual("sestest - owner: fake prefix: *");
+    });
+
+    it("Tests that addSession adds the session to the tree with disabled global setting", async () => {
+        const globalMocks = await createGlobalMocks();
+
+
+        globalMocks.testJobsProvider.mSessionNodes.pop();
+        globalMocks.mockProfileInstance.checkProfileValidationSetting = globalMocks.mockValidationSetting.mockReturnValueOnce(false);
         await globalMocks.testJobsProvider.addSession("sestest");
 
         expect(globalMocks.testJobsProvider.mSessionNodes[1]).toBeDefined();

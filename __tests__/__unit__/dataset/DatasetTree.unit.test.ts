@@ -367,29 +367,29 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
             mockDefaultProfile: jest.fn(),
             mockLoadNamedProfile: jest.fn(),
             mockCheckCurrentProfile: jest.fn(),
-            mockAddSingleSession: jest.fn()
+            mockValidationSetting: jest.fn(),
+            mockAddSingleSession: jest.fn(),
+            mockDisableValidationContext: jest.fn(),
+            mockEnableValidationContext: jest.fn(),
+            mockLoadDefaultProfile: jest.fn(),
+            mockProfileInstance: null,
         };
         newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
         newMocks.profile = await Profiles.createInstance(newMocks.log);
 
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    allProfiles: [newMocks.imperativeProfile, { name: "firstName" }, { name: "secondName" }],
-                    getDefaultProfile: newMocks.mockDefaultProfile,
-                    validProfile: ValidProfileEnum.VALID,
-                    checkCurrentProfile: newMocks.mockCheckCurrentProfile.mockReturnValue({name: newMocks.imperativeProfile.name, status: "active"}),
-                    validateProfiles: jest.fn(),
-                    loadNamedProfile: newMocks.mockLoadNamedProfile.mockReturnValue(newMocks.imperativeProfile),
-                    checkProfileValidationSetting: newMocks.mockCheckProfileValidationSetting.mockReturnValue(true)
-                };
-            }),
-            configurable: true
-        });
+        // Profile instance mocks
+        newMocks.mockProfileInstance = createInstanceOfProfile(newMocks.imperativeProfile);
+        newMocks.mockLoadNamedProfile.mockReturnValue(newMocks.imperativeProfile);
+        newMocks.mockProfileInstance.loadNamedProfile = newMocks.mockLoadNamedProfile;
+        newMocks.mockLoadDefaultProfile.mockReturnValue(newMocks.imperativeProfile);
+        newMocks.mockProfileInstance.getDefaultProfile = newMocks.mockLoadDefaultProfile;
+        newMocks.mockProfileInstance.checkProfileValidationSetting = newMocks.mockValidationSetting.mockReturnValue(true);
+        newMocks.mockProfileInstance.enableValidationContext = newMocks.mockEnableValidationContext;
+        newMocks.mockProfileInstance.disableValidationContext = newMocks.mockDisableValidationContext;
+        newMocks.mockProfileInstance.validProfile = ValidProfileEnum.VALID;
 
         return newMocks;
     }
-
     it("Checking successful adding of session", async () => {
         await createGlobalMocks();
         const blockMocks = await createBlockMocks();
@@ -397,6 +397,20 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+
+        testTree.addSession(blockMocks.imperativeProfile.name);
+        expect(testTree.mSessionNodes[1].label).toBe(blockMocks.imperativeProfile.name);
+    });
+
+    it("Checking successful adding of session with disabled validation", async () => {
+        await createGlobalMocks();
+        const blockMocks = await createBlockMocks();
+
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+
+        blockMocks.mockProfileInstance.checkProfileValidationSetting = blockMocks.mockValidationSetting.mockReturnValueOnce(false);
 
         testTree.addSession(blockMocks.imperativeProfile.name);
         expect(testTree.mSessionNodes[1].label).toBe(blockMocks.imperativeProfile.name);
