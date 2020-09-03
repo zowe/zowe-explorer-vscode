@@ -529,7 +529,27 @@ describe("USSTree Unit Tests - Function USSTree.filterPrompt()", () => {
         expect(globalMocks.showInformationMessage.mock.calls[0][0]).toBe("No selection made.");
     });
 
-    it("Tests that filter() works correctly for favorites", async () => {
+    it("Tests that filter() works correctly for favorited search nodes with credentials", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const sessionWithCred = createISession();
+        globalMocks.createBasicZosmfSession.mockReturnValue(sessionWithCred);
+        const dsNode = new ZoweUSSNode(
+            "/u/myFile.txt", vscode.TreeItemCollapsibleState.Expanded, null, sessionWithCred, null, false, "ussTestSess2");
+        dsNode.mProfileName = "ussTestSess2";
+        dsNode.contextValue = globals.USS_SESSION_CONTEXT + globals.FAV_SUFFIX;
+        globalMocks.testTree.mSessionNodes.push(dsNode);
+
+        await globalMocks.testTree.filterPrompt(dsNode);
+        globalMocks.testTree.mSessionNodes.forEach((sessionNode) => {
+            if (sessionNode === dsNode) {
+                expect(sessionNode.fullPath).toEqual("/u/myFile.txt");
+            }
+        });
+    });
+
+    it("Tests that filter() works correctly for favorited search nodes without credentials", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
