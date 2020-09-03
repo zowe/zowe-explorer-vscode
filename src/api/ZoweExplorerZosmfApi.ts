@@ -10,7 +10,7 @@
 */
 
 import * as zowe from "@zowe/cli";
-import { SessConstants, ICommandArguments, ConnectionPropsForSessCfg, IProfile, ISession, Session, IProfileLoaded, ITaskWithStatus } from "@zowe/imperative";
+import { SessConstants, ICommandArguments, ConnectionPropsForSessCfg, ISession, Session, IProfileLoaded, ITaskWithStatus } from "@zowe/imperative";
 import { ZoweExplorerApi } from "./ZoweExplorerApi";
 import * as nls from "vscode-nls";
 import * as vscode from "vscode";
@@ -77,7 +77,11 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
             if (prompt) {
                 // Select for prompting only fields which are not defined
                 const schemaArray = [];
-                if (!serviceProfile.profile.password && (baseProfile && !baseProfile.profile.password)) { schemaArray.push("password"); }
+                if (!serviceProfile.profile.password && (baseProfile && !baseProfile.profile.password)) {
+                    if (baseProfile && !baseProfile.profile.tokenValue) {
+                        schemaArray.push("password");
+                    }
+                }
                 if (!serviceProfile.profile.host && (baseProfile && !baseProfile.profile.host)) {
                     schemaArray.push("host");
                     if (!serviceProfile.profile.port && (baseProfile && !baseProfile.profile.port)) { schemaArray.push("port"); }
@@ -89,8 +93,20 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
                     for (const detail of schemaArray) { serviceProfile.profile[detail] = newDetails[detail]; }
                 } catch (error) { await errorHandling(error); }
             }
-            if (!serviceProfile.profile.password) { delete serviceProfile.profile.password; }
-            try { return zowe.ZosmfSession.createBasicZosmfSession(serviceProfile.profile); }
+            const cmdArgs: ICommandArguments = {
+                $0: "zowe",
+                _: [""],
+                host: serviceProfile.profile.host ? serviceProfile.profile.host : baseProfile.profile.host,
+                port: serviceProfile.profile.port ? serviceProfile.profile.port : baseProfile.profile.port,
+                basePath: serviceProfile.profile.basePath ? serviceProfile.profile.basePath : baseProfile.profile.basePath,
+                rejectUnauthorized: serviceProfile.profile.rejectUnauthorized ?
+                                    serviceProfile.profile.rejectUnauthorized : baseProfile.profile.rejectUnauthorized,
+                user: serviceProfile.profile.user ? serviceProfile.profile.user : baseProfile.profile.user,
+                password: serviceProfile.profile.password ? serviceProfile.profile.password : baseProfile.profile.password,
+                tokenType: "apimlAuthenticationToken",
+                tokenValue: baseProfile.profile.tokenValue
+            };
+            try { return zowe.ZosmfSession.createBasicZosmfSessionFromArguments(cmdArgs); }
             catch (error) {
                 if (prompt) {
                     await errorHandling(error);
@@ -111,19 +127,21 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
             const cmdArgs: ICommandArguments = {
                 $0: "zowe",
                 _: [""],
-                tokenType: SessConstants.TOKEN_TYPE_APIML,
+                tokenType: "apimlAuthenticationToken",
                 tokenValue: baseProfile.profile.tokenValue
             };
 
             try {
                 let connectableSessCfg: ISession;
                 if (prompt) {
-                    connectableSessCfg = await ConnectionPropsForSessCfg.addPropsOrPrompt<ISession>(sessCfg, cmdArgs,
+                    connectableSessCfg = await ConnectionPropsForSessCfg.addPropsOrPrompt<ISession>(sessCfg,
+                                                                                                    cmdArgs,
                                                                                                     { requestToken: false,
                                                                                                       doPrompting: prompt,
                                                                                                       getValuesBack: this.collectProfileDetails });
                 } else {
-                    connectableSessCfg = await ConnectionPropsForSessCfg.addPropsOrPrompt<ISession>(sessCfg, cmdArgs,
+                    connectableSessCfg = await ConnectionPropsForSessCfg.addPropsOrPrompt<ISession>(sessCfg,
+                                                                                                    cmdArgs,
                                                                                                     { requestToken: false, doPrompting: false });
                 }
 
@@ -133,7 +151,7 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
         } else {
             // No baseProfile exists, nor a user in serviceProfile. It is impossible to login with the currently-provided information.
             throw new Error(localize("getValidSession.loginImpossible",
-                                     "Profile {0} is invalid. Please check your login details and try again.", profileName));
+                "Profile {0} is invalid. Please check your login details and try again.", profileName));
         }
     }
 
@@ -158,8 +176,8 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
                     const hostOptions: vscode.InputBoxOptions = {
                         ignoreFocusOut: true,
                         value: oldDetails[profileDetail] ? oldDetails[profileDetail] : null,
-                        placeHolder: localize("collectProfileDetails.option.prompt.url.placeholder", "Optional: https://url:port"),
-                        prompt: localize("collectProfileDetails.option.prompt.url", "Enter a z/OS URL in the format 'https://url:port'."),
+                        placeHolder: localize("collectProfileDetails.option.prompt.url.placeholder", "Optional: url:port"),
+                        prompt: localize("collectProfileDetails.option.prompt.url", "Enter a z/OS URL in the format 'url:port'."),
                         validateInput: (value) => {
                             const validationResult = {
                                 valid: false,
@@ -169,8 +187,11 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
                             };
 
                             // Check that the URL is valid
-                            try { newUrl = new URL(value); }
-                            catch (error) { return localize("collectProfileDetails.invalidzosURL", "Please enter a valid host URL in the format 'https://url:port'."); }
+                            try {
+                                newUrl = value.replace(/https:\/\//g, "");
+                                newUrl = new URL("https://" + value);
+                            } catch (error) { return localize("collectProfileDetails.invalidzosURL",
+                                                              "Please enter a valid host URL in the format 'url:port'."); }
 
                             if (value === "https://") {
                                 // User did not enter a host/port
@@ -194,8 +215,9 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
                     if (!newUrl) {
                         throw new Error(localize("collectProfileDetails.zosmfURL", "No valid value for z/OS URL. Operation Cancelled"));
                     } else {
-                        newUrl = new URL(newUrl);
-                        newUrl.host = newUrl.host.replace(/'/g, "").replace(/https:\/\//g, "");
+                        newUrl = newUrl.replace(/https:\/\//g, "");
+                        newUrl = new URL("https://" + newUrl);
+                        newUrl.host = newUrl.host.replace(/'/g, "");
                         schemaValues[profileDetail] = newUrl.port ? newUrl.host.substring(0, newUrl.host.indexOf(":")) : newUrl.host;
                         if (newUrl.port !== 0) { schemaValues.port = Number(newUrl.port); }
                     }
@@ -218,7 +240,8 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
                             // Default value defined in schema
                             portOptions = {
                                 prompt: schema[profileDetail].optionDefinition.description.toString(),
-                                value: schema[profileDetail].optionDefinition.defaultValue.toString()
+                                value: oldDetails[profileDetail] ?
+                                       oldDetails[profileDetail] : schema[profileDetail].optionDefinition.defaultValue.toString()
                             };
                         } else {
                             // No default value defined

@@ -56,8 +56,8 @@ export function createISessionWithoutCredentials() {
     });
 }
 
-export function createBasicZosmfSession(profile: imperative.IProfileLoaded) {
-    return zowe.ZosmfSession.createBasicZosmfSession(profile.profile);
+export function createBasicZosmfSessionFromArguments(args: imperative.ICommandArguments) {
+    return zowe.ZosmfSession.createBasicZosmfSessionFromArguments(args);
 }
 
 export function removeNodeFromArray(badNode, array) {

@@ -516,7 +516,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             let session;
             try {
                 // Uses loaded profile to create a session with the USS API
-                session = ZoweExplorerApiRegister.getCommonApi(profileLoaded).getValidSession(profileLoaded,
+                session = await ZoweExplorerApiRegister.getCommonApi(profileLoaded).getValidSession(profileLoaded,
                                                                                               profileLoaded.name,
                                                                                               DefaultProfileManager.getInstance().getDefaultProfile("base"),
                                                                                               false);

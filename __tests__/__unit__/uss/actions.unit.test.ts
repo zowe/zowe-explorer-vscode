@@ -164,7 +164,6 @@ describe("USS Action Unit Tests - Function createUSSNodeDialog", () => {
         globalMocks.showInputBox.mockReturnValueOnce("USSFolder");
 
         await ussNodeActions.createUSSNodeDialog(blockMocks.ussNode, blockMocks.testUSSTree);
-        expect(blockMocks.testUSSTree.refreshElement).not.toHaveBeenCalled();
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(0);
     });
 });

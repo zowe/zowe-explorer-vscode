@@ -152,7 +152,7 @@ export class ZoweTreeProvider {
         if (EditSession) {
             node.getProfile().profile = newProfile as IProfile;
             await setProfile(node, newProfile as IProfile);
-            if (node.getSession()) {
+            if (await node.getSession()) {
                 await setSession(node, newProfile as ISession);
             } else {
                 this.deleteSessionByLabel(node.label);

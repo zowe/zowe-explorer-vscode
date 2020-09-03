@@ -1,9 +1,9 @@
 {
     "getValidSession.loginImpossible": "Profile {0} is invalid. Please check your login details and try again.",
     "collectProfileDetails.profileTypeMissing": "No profile type was chosen. Operation Cancelled",
-    "collectProfileDetails.option.prompt.url.placeholder": "Optional: https://url:port",
-    "collectProfileDetails.option.prompt.url": "Enter a z/OS URL in the format 'https://url:port'.",
-    "collectProfileDetails.invalidzosURL": "Please enter a valid host URL in the format 'https://url:port'.",
+    "collectProfileDetails.option.prompt.url.placeholder": "Optional: url:port",
+    "collectProfileDetails.option.prompt.url": "Enter a z/OS URL in the format 'url:port'.",
+    "collectProfileDetails.invalidzosURL": "Please enter a valid host URL in the format 'url:port'.",
     "collectProfileDetails.zosmfURL": "No valid value for z/OS URL. Operation Cancelled",
     "collectProfileDetails.invalidPort": "Please enter a valid port number",
     "collectProfileDetails.option.prompt.port.placeholder": "Port Number",

@@ -11,7 +11,7 @@
 
 import {
     createISessionWithoutCredentials, createTreeView, createIProfile, createInstanceOfProfile,
-    createQuickPickItem, createQuickPickContent, createInputBox, createBasicZosmfSession,
+    createQuickPickItem, createQuickPickContent, createInputBox, createBasicZosmfSessionFromArguments,
     createPersistentConfig, createInvalidIProfile, createValidIProfile, createISession
 } from "../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../__mocks__/mockCreators/datasets";

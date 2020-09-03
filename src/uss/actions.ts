@@ -48,11 +48,11 @@ export async function createUSSNode(node: IZoweUSSTreeNode, ussFileProvider: IZo
         try {
             const filePath = `${node.fullPath}/${name}`;
             await ZoweExplorerApiRegister.getUssApi(node.getProfile()).create(filePath, nodeType);
-            if (isTopLevel) {
-                refreshAllUSS(ussFileProvider);
-            } else {
-                ussFileProvider.refreshElement(node);
-            }
+
+            // Refresh USS tree
+            node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+            await ussFileProvider.getTreeView().reveal(node, {select: true, focus: true, expand: false});
+            ussFileProvider.refreshElement(node);
         } catch (err) {
             errorHandling(err, node.mProfileName, localize("createUSSNode.error.create", "Unable to create node: ") + err.message);
             throw (err);

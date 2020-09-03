@@ -66,7 +66,7 @@ export class Profiles {
                                                                                 null,
                                                                                 prompt));
 
-            if ((!profileLoaded.profile.user || !profileLoaded.profile.password) && !validSession) {
+            if (!validSession) {
                 // Credentials are invalid
                 this.validProfile = ValidProfileEnum.INVALID;
                 return { status: "inactive", name: profileLoaded.name, session: null };
