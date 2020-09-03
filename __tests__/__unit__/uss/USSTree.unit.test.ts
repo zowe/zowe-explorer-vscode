@@ -183,6 +183,40 @@ describe("USSTree Unit Tests - Function initializeFavChildNodeForProfile()", () 
     });
 });
 
+describe("USSTree Unit Tests - Function USSTree.createProfileNodeForFavs()", () => {
+    it("Tests that profile grouping node is created correctly", async () => {
+        const globalMocks = await createGlobalMocks();
+        const expectedFavProfileNode = new ZoweUSSNode("testProfile", vscode.TreeItemCollapsibleState.Collapsed,
+            globalMocks.testTree.mFavoriteSession, null, undefined, undefined);
+        expectedFavProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
+
+        const createdFavProfileNode = await globalMocks.testTree.createProfileNodeForFavs("testProfile");
+
+        expect(createdFavProfileNode).toEqual(expectedFavProfileNode);
+    });
+    it("Tests that profile grouping node is created correctly if icon is defined", async () => {
+        const globalMocks = await createGlobalMocks();
+        const expectedFavProfileNode = new ZoweUSSNode("testProfile", vscode.TreeItemCollapsibleState.Collapsed,
+            globalMocks.testTree.mFavoriteSession, null, undefined, undefined);
+        expectedFavProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
+        const icons = require("../../../src/generators/icons");
+        const folderIcon = require("../../../src/generators/icons/items/folder").default;
+        const savedIconsProperty = Object.getOwnPropertyDescriptor(icons, "getIconByNode");
+        Object.defineProperty(icons, "getIconByNode", {
+            value: jest.fn(() => {
+                return folderIcon;
+            })
+        });
+
+        const createdFavProfileNode = await globalMocks.testTree.createProfileNodeForFavs("testProfile");
+
+        expect(createdFavProfileNode).toEqual(expectedFavProfileNode);
+
+        // Reset getIconByNode to its original functionality
+        Object.defineProperty(icons, "getIconByNode", savedIconsProperty);
+    });
+});
+
 describe("USSTree Unit Tests - Function USSTree.rename()", () => {
     it("Tests that USSTree.rename() is executed successfully", async () => {
         const globalMocks = await createGlobalMocks();
