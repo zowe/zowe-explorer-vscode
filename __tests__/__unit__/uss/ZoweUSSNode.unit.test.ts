@@ -11,6 +11,7 @@
 
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
+import * as ussActions from "../../../src/uss/actions";
 import { Profiles, ValidProfileEnum } from "../../../src/Profiles";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
 import { createISession, createISessionWithoutCredentials, createIProfile,
@@ -127,7 +128,24 @@ describe("ZoweUSSNode Unit Tests - Initialization of class", () => {
             return callback();
         });
         const testNode = new ZoweUSSNode(
-            "/u", vscode.TreeItemCollapsibleState.None, null, globalMocks.session, null, false, globalMocks.profileOne.name, undefined);
+            "/u", vscode.TreeItemCollapsibleState.None, null, globalMocks.session, null, false, globalMocks.profileOne.name);
+        testNode.contextValue = globals.USS_SESSION_CONTEXT;
+
+        expect(testNode.label).toBeDefined();
+        expect(testNode.collapsibleState).toBeDefined();
+        expect(testNode.label).toBeDefined();
+        expect(testNode.getParent()).toBeDefined();
+        expect(testNode.getSession()).toBeDefined();
+    });
+
+    it("Tests that creating a new binary USS node initializes all methods and properties", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        globalMocks.withProgress.mockImplementation((progLocation, callback) => {
+            return callback();
+        });
+        const testNode = new ZoweUSSNode(
+            "/u", vscode.TreeItemCollapsibleState.None, null, globalMocks.session, null, true, globalMocks.profileOne.name);
         testNode.contextValue = globals.USS_SESSION_CONTEXT;
 
         expect(testNode.label).toBeDefined();
@@ -341,6 +359,53 @@ describe("ZoweUSSNode Unit Tests - Function node.setEtag()", () => {
         expect(rootNode.getEtag() === "123");
         rootNode.setEtag("ABC");
         expect(rootNode.getEtag() === "ABC");
+    });
+});
+
+describe("ZoweUSSNode Unit Tests - Function node.refreshAndReopen()", () => {
+    it("Tests that refreshAndReopen() refreshes a directory", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        const refreshAllSpy = jest.spyOn(vscode.commands, "executeCommand");
+
+        const rootNode = new ZoweUSSNode(
+            "gappy", vscode.TreeItemCollapsibleState.Collapsed, null, globalMocks.session, null, false, globalMocks.profileOne.name, "123");
+        rootNode.contextValue = globals.USS_DIR_CONTEXT;
+
+        await rootNode.refreshAndReopen();
+
+        expect(refreshAllSpy).toHaveBeenCalledWith("zowe.uss.refreshAll");
+        refreshAllSpy.mockClear();
+    });
+
+    it("Tests that refreshAndReopen() refreshes a file", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        const refreshAllSpy = jest.spyOn(vscode.commands, "executeCommand");
+
+        const rootNode = new ZoweUSSNode(
+            "gappy", vscode.TreeItemCollapsibleState.Collapsed, null, globalMocks.session, null, false, globalMocks.profileOne.name, "123");
+        rootNode.contextValue = globals.DS_TEXT_FILE_CONTEXT;
+
+        await rootNode.refreshAndReopen();
+
+        expect(refreshAllSpy).toHaveBeenCalledWith("zowe.uss.refreshUSSInTree", rootNode);
+        refreshAllSpy.mockClear();
+    });
+
+    it("Tests that refreshAndReopen() opens a file if asked to refresh a closed file", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        const refreshAllSpy = jest.spyOn(vscode.commands, "executeCommand");
+
+        const rootNode = new ZoweUSSNode(
+            "gappy", vscode.TreeItemCollapsibleState.Collapsed, null, globalMocks.session, null, false, globalMocks.profileOne.name, "123");
+        rootNode.contextValue = globals.DS_TEXT_FILE_CONTEXT;
+
+        await rootNode.refreshAndReopen(true);
+
+        expect(refreshAllSpy).toHaveBeenCalledWith("zowe.uss.ZoweUSSNode.open", rootNode);
+        refreshAllSpy.mockClear();
     });
 });
 

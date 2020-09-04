@@ -286,6 +286,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         const hasClosedInstance = await closeOpenedTextFile(currentFilePath);
         this.fullPath = newFullPath;
         this.shortLabel = newFullPath.split("/").pop();
+        if (contextually.isFavorite(this)) { this.shortLabel = `[${this.getProfileName()}]: ${this.shortLabel}`; }
         this.label = this.shortLabel;
         this.tooltip = injectAdditionalDataToTooltip(this, newFullPath);
 

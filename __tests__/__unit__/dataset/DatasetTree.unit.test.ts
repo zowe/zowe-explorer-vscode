@@ -991,6 +991,7 @@ describe("Dataset Tree Unit Tests - Function findNonFavoritedNode", () => {
         expect(foundNode).toBe(node);
     });
 });
+
 describe("Dataset Tree Unit Tests - Function openItemFromPath", () => {
     function createBlockMocks() {
         const session = createISession();
@@ -1021,6 +1022,7 @@ describe("Dataset Tree Unit Tests - Function openItemFromPath", () => {
 
         expect(testTree.getSearchHistory()).toEqual([node.label]);
     });
+
     it("Checking opening of PDS Member", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
@@ -1040,6 +1042,120 @@ describe("Dataset Tree Unit Tests - Function openItemFromPath", () => {
         expect(testTree.getSearchHistory()).toEqual([`${parent.label}(${child.label})`]);
     });
 });
+
+describe("Dataset Tree Unit Tests - Function renameNode", () => {
+    function createBlockMocks() {
+        const session = createISession();
+        const imperativeProfile = createIProfile();
+        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        const node = new ZoweDatasetNode("TEST.PDS", vscode.TreeItemCollapsibleState.Collapsed, datasetSessionNode, null);
+        const testTree = new DatasetTree();
+
+        datasetSessionNode.children.push(node);
+        testTree.mSessionNodes.push(datasetSessionNode);
+        spyOn(datasetSessionNode, "getChildren").and.returnValue(Promise.resolve([datasetSessionNode]));
+
+        return {
+            imperativeProfile,
+            node,
+            datasetSessionNode,
+            testTree
+        };
+    }
+
+    it("Checking opening of PS Dataset", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        await blockMocks.testTree.renameNode(blockMocks.imperativeProfile.name, blockMocks.node.label, "newLabel");
+
+        expect(blockMocks.node.label).toEqual("newLabel");
+    });
+});
+
+describe("Dataset Tree Unit Tests - Function createFilterString", () => {
+    function createBlockMocks() {
+        const session = createISession();
+        const imperativeProfile = createIProfile();
+        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        const node = new ZoweDatasetNode("HLQ.TEST.RENAME.NODE", vscode.TreeItemCollapsibleState.None, datasetSessionNode, session);
+        const testTree = new DatasetTree();
+        const historySpy = jest.spyOn(testTree, "getSearchHistory");
+
+        node.pattern = "filter1,filter2";
+        datasetSessionNode.children.push(node);
+        testTree.mSessionNodes.push(datasetSessionNode);
+        jest.spyOn(datasetSessionNode, "getChildren").mockReturnValue(Promise.resolve([node]));
+        historySpy.mockReturnValue(["filter1, filter2"]);
+
+        return {
+            imperativeProfile,
+            node,
+            testTree,
+            historySpy
+        };
+    }
+
+    it("Tests that createFilterString() creates a new filter from a string and a node's old filter", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        const newFilterString = await blockMocks.testTree.createFilterString("newFilter", blockMocks.node);
+
+        expect(newFilterString).toEqual("filter1,filter2,newFilter");
+    });
+
+    it("Tests that createFilterString() doesn't add a filter twice", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        const newFilterString = await blockMocks.testTree.createFilterString("filter2", blockMocks.node);
+
+        expect(newFilterString).toEqual("filter1,filter2");
+    });
+
+    it("Tests that createFilterString() works if the node has no filter applied", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        blockMocks.node.pattern = "";
+        blockMocks.historySpy.mockReturnValue([]);
+
+        const newFilterString = await blockMocks.testTree.createFilterString("newFilter", blockMocks.node);
+
+        expect(newFilterString).toEqual("newFilter");
+    });
+});
+
+describe("Dataset Tree Unit Tests - Function renameFavorite", () => {
+    function createBlockMocks() {
+        const session = createISession();
+        const imperativeProfile = createIProfile();
+        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        const favoriteNode = new ZoweDatasetNode("[sestest]: TEST.PDS", vscode.TreeItemCollapsibleState.Collapsed, null, null);
+        favoriteNode.contextValue = globals.DS_FAV_CONTEXT;
+        const testTree = new DatasetTree();
+
+        testTree.mFavorites.push(favoriteNode);
+        testTree.mSessionNodes.push(datasetSessionNode);
+        spyOn(datasetSessionNode, "getChildren").and.returnValue(Promise.resolve([datasetSessionNode]));
+
+        return {
+            imperativeProfile,
+            favoriteNode,
+            testTree
+        };
+    }
+
+    it("Tests that renameFavorite() renames a favorited node", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        await blockMocks.testTree.renameFavorite(blockMocks.favoriteNode, "newLabel");
+
+        expect(blockMocks.favoriteNode.label).toEqual("[sestest]: newLabel");
+    });
+});
+
 describe("Dataset Tree Unit Tests - Function rename", () => {
     function createBlockMocks() {
         const session = createISession();
@@ -1059,7 +1175,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         };
     }
 
-    it("Checking function with PS Dataset", async () => {
+    it("Tests that rename() renames a node", async () => {
         globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
@@ -1099,6 +1215,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
+
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(workspaceUtils.closeOpenedTextFile).mockResolvedValueOnce(false);
         mocked(vscode.window.showInputBox).mockResolvedValueOnce("HLQ.TEST.RENAME.NODE.NEW");
@@ -1108,6 +1225,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         const node = new ZoweDatasetNode(`[${blockMocks.datasetSessionNode.label}]: HLQ.TEST.RENAME.NODE`,
             vscode.TreeItemCollapsibleState.None, testTree.mSessionNodes[1], blockMocks.session);
         node.contextValue = "ds_fav";
+        testTree.mSessionNodes[1].children.push(node);
         const renameDataSetSpy = jest.spyOn(blockMocks.mvsApi, "renameDataSet");
 
         await testTree.rename(node);

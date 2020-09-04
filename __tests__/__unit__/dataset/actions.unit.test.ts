@@ -29,7 +29,7 @@ import * as globals from "../../../src/globals";
 import * as path from "path";
 import * as fs from "fs";
 import * as sharedUtils from "../../../src/shared/utils";
-import { Profiles } from "../../../src/Profiles";
+import { Profiles, ValidProfileEnum } from "../../../src/Profiles";
 import * as utils from "../../../src/utils";
 
 // Missing the definition of path module, because I need the original logic for tests
@@ -807,12 +807,13 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-        const node = new ZoweDatasetNode("HLQ.TEST.AFILE", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode,
-            null, undefined, undefined, blockMocks.imperativeProfile);
         const favoriteNode = new ZoweDatasetNode("[TestSessionName]: HLQ.TEST.AFILE", vscode.TreeItemCollapsibleState.None,
             blockMocks.datasetSessionNode, null, undefined, undefined, blockMocks.imperativeProfile);
+        const node = new ZoweDatasetNode("HLQ.TEST.AFILE", vscode.TreeItemCollapsibleState.None, favoriteNode,
+            null, undefined, undefined, blockMocks.imperativeProfile);
         favoriteNode.contextValue = globals.DS_DS_CONTEXT + globals.FAV_SUFFIX;
-        blockMocks.datasetSessionNode.children.push(node);
+        node.contextValue = globals.DS_DS_CONTEXT + globals.FAV_SUFFIX;
+        favoriteNode.children.push(node);
         blockMocks.testDatasetTree.mFavorites.push(favoriteNode);
 
         mocked(sharedUtils.concatChildNodes).mockReturnValueOnce([node]);
@@ -843,7 +844,6 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         await dsActions.saveFile(testDocument, blockMocks.testDatasetTree);
 
         expect(mocked(sharedUtils.concatChildNodes)).toBeCalled();
-        expect(mockSetEtag).toHaveBeenCalledWith("123");
         expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith("success");
     });
     it("Checking favorite PDS Member saving", async () => {
@@ -1513,7 +1513,7 @@ describe("Dataset Actions Unit Tests - Function hMigrateDataSet", () => {
 
     afterAll(() => jest.restoreAllMocks());
 
-    it("Checking PS dataset migrate", async () => {
+    it("Checking that hMigrateDataSet successfully migrates a data set", async () => {
         globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
@@ -1534,6 +1534,21 @@ describe("Dataset Actions Unit Tests - Function hMigrateDataSet", () => {
 
         expect(migrateSpy).toHaveBeenCalledWith("HLQ.TEST.TO.NODE");
         expect(mocked(vscode.window.showInformationMessage)).toHaveBeenCalled();
+    });
+
+    it("Checking that hMigrateDataSet throws an error if the user is invalid", async () => {
+        globals.defineGlobals("");
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        blockMocks.profileInstance.validProfile = ValidProfileEnum.INVALID;
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        const node = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
+        node.contextValue = globals.DS_DS_CONTEXT;
+
+        await dsActions.hMigrateDataSet(node);
+
+        expect(mocked(vscode.window.showErrorMessage)).toHaveBeenCalled();
     });
 });
 
@@ -1966,5 +1981,22 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
         expect(mocked(fs.existsSync)).toBeCalledWith(path.join(globals.DS_DIR,
             blockMocks.imperativeProfile.name, child.label));
         expect(mocked(vscode.workspace.openTextDocument)).toBeCalledWith(sharedUtils.getDocumentFilePath(child.label, child));
+    });
+    it("Checks that openPS fails if called from an invalid node", async () => {
+        globals.defineGlobals("");
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        const node = new ZoweDatasetNode("parent", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode,
+            null, undefined, undefined, blockMocks.imperativeProfile);
+        blockMocks.datasetSessionNode.contextValue = "aieieiieeeeooooo";
+
+        try {
+            await dsActions.openPS(node, true, blockMocks.testDatasetTree);
+            // tslint:disable-next-line:no-empty
+        } catch (err) { }
+
+        expect(mocked(vscode.window.showErrorMessage)).toBeCalledWith("openPS() called from invalid node.");
     });
 });
