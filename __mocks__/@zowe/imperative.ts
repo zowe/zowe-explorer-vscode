@@ -36,6 +36,11 @@ export interface ISessionOptions {
     type: string;
 }
 
+export interface ICommandArguments {
+    $0: string;
+    _: string[];
+    [key: string]: any;
+}
 
 export class BrightProfile {
     constructor(public profile: Profile) { }

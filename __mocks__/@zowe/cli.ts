@@ -27,6 +27,19 @@ export namespace ZosmfSession {
             port: 2,
         };
     }
+
+    export function createBasicZosmfSessionFromArguments(args: imperative.ICommandArguments) {
+        return {
+            type: "basic",
+            user: "fake",
+            password: "fake",
+            hostname: "fake",
+            protocol: "https",
+            base64EncodedAuth: "",
+            rejectUnauthorized: false,
+            port: 2,
+        };
+    }
 }
 
 export namespace CheckStatus {
