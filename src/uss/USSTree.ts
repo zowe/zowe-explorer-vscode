@@ -85,18 +85,36 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         }
 
         // Get new label & path
-        const originalFullPath = originalNode.fullPath;
-        const parentPath = originalNode.fullPath.substr(0, originalNode.fullPath.indexOf(originalNode.label));
-        const newName = await vscode.window.showInputBox({ value: originalNode.label.replace(/^\[.+\]:\s/, "") });
+        let originalFullPath;
+        let originalName;
+        let parentPath;
+        if (originalNode) {
+            originalFullPath = originalNode.fullPath;
+            originalName = originalNode.label.replace(/\[.*?\]: /, "");
+            parentPath = originalNode.fullPath.substr(0, originalNode.fullPath.indexOf(originalNode.label));
+        } else {
+            // Tree is not expanded, so original node cannot be found
+            originalFullPath = oldFavorite.fullPath;
+            originalName = oldFavorite.label.replace(/\[.*?\]: /, "");
+            parentPath = oldFavorite.fullPath.substr(0, oldFavorite.fullPath.indexOf(originalName));
+        }
+        const newName = await vscode.window.showInputBox({ value: originalName });
         let newNamePath = path.join(parentPath + newName);
         newNamePath = newNamePath.replace(/\\/g, "/"); // Added to cover Windows backslash issue
 
-        if (newName && newNamePath !== originalNode.fullPath) {
+        if (newName && newNamePath !== originalFullPath) {
             try {
                 // Rename original node
-                const hasClosedTab = await originalNode.rename(newNamePath);
-                await ZoweExplorerApiRegister.getUssApi(originalNode.getProfile()).rename(originalFullPath, newNamePath);
-                await originalNode.refreshAndReopen(hasClosedTab);
+                if (originalNode) {
+                    const hasClosedTab = await originalNode.rename(newNamePath);
+                    await ZoweExplorerApiRegister.getUssApi(originalNode.getProfile()).rename(originalFullPath, newNamePath);
+                    await originalNode.refreshAndReopen(hasClosedTab);
+                } else {
+                    // Tree is not expanded, so original node cannot be found
+                    const hasClosedTab = await oldFavorite.rename(newNamePath);
+                    await ZoweExplorerApiRegister.getUssApi(oldFavorite.getProfile()).rename(originalFullPath, newNamePath);
+                    await oldFavorite.refreshAndReopen(hasClosedTab);
+                }
 
                 // Rename favorite, if available
                 if (oldFavorite) {

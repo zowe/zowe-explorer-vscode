@@ -585,6 +585,22 @@ describe("USSTree Unit Tests - Function USSTree.rename()", () => {
         expect(addFavorite.mock.calls.length).toBe(1);
     });
 
+    it("Tests that USSTree.rename() is executed successfully for a favorited USS file, when tree is not expanded", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        const ussFavNode = createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile);
+        globalMocks.testTree.mFavorites.push(ussFavNode);
+        const removeFavorite = jest.spyOn(globalMocks.testTree, "removeFavorite");
+        const addFavorite = jest.spyOn(globalMocks.testTree, "addFavorite");
+        globalMocks.showInputBox.mockReturnValueOnce("new name");
+
+        await globalMocks.testTree.rename(ussFavNode);
+        expect(globalMocks.showErrorMessage.mock.calls.length).toBe(0);
+        expect(globalMocks.renameUSSFile.mock.calls.length).toBe(1);
+        expect(removeFavorite.mock.calls.length).toBe(1);
+        expect(addFavorite.mock.calls.length).toBe(1);
+    });
+
     it("Tests that USSTree.rename() exits when blank input is provided", async () => {
         const globalMocks = await createGlobalMocks();
 
