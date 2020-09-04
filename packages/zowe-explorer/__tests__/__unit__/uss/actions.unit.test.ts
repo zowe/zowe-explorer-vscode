@@ -302,6 +302,25 @@ describe("USS Action Unit Tests - Function createUSSNodeDialog", () => {
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(0);
     });
 
+    it("Tests that createUSSNode uses the fullPath from the node if it is not a session node", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const testProfile = createIProfile();
+        const ussApi = ZoweExplorerApiRegister.getUssApi(testProfile);
+        const getUssApiMock = jest.fn().mockReturnValue(ussApi);
+        ZoweExplorerApiRegister.getUssApi = getUssApiMock.bind(ZoweExplorerApiRegister);
+        const createSpy = jest.spyOn(ussApi, "create");
+
+        blockMocks.ussNode.contextValue = globals.DS_BINARY_FILE_CONTEXT;
+        blockMocks.ussNode.fullPath = "/test/path";
+
+        globalMocks.showInputBox.mockReturnValueOnce("testFile");
+
+        await ussNodeActions.createUSSNode(blockMocks.ussNode, blockMocks.testUSSTree, "file");
+        expect(createSpy).toBeCalledWith("/test/path/testFile", "file");
+    });
+
     it("Tests that createUSSNode does not execute if node name was not entered", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
