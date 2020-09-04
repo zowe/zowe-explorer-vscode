@@ -71,7 +71,7 @@ async function createGlobalMocks() {
     Object.defineProperty(vscode.workspace, "openTextDocument", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showTextDocument", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe, "ZosmfSession", { value: jest.fn(), configurable: true });
-    Object.defineProperty(zowe.ZosmfSession, "createBasicZosmfSession", { value: jest.fn(), configurable: true });
+    Object.defineProperty(zowe.ZosmfSession, "createBasicZosmfSessionFromArguments", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "activeTextEditor", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showQuickPick", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window.activeTextEditor, "document", {
@@ -286,7 +286,7 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
     it("Checking submit of active text editor content as JCL", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks: any = createBlockMocks(globalMocks);
-        mocked(zowe.ZosmfSession.createBasicZosmfSession).mockReturnValue(globalMocks.sessionNoCreds);
+        mocked(zowe.ZosmfSession.createBasicZosmfSessionFromArguments).mockReturnValue(globalMocks.sessionNoCreds);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(vscode.window.showQuickPick).mockReturnValueOnce(new Promise((resolve) => {
             resolve(blockMocks.datasetSessionNode.label);
@@ -310,7 +310,7 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
     it("Checking failed attempt to submit of active text editor content as JCL", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
-        mocked(zowe.ZosmfSession.createBasicZosmfSession).mockReturnValue(globalMocks.session);
+        mocked(zowe.ZosmfSession.createBasicZosmfSessionFromArguments).mockReturnValue(globalMocks.session);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce(null); // Here we imitate the case when no profile was selected
         blockMocks.testDatasetTree.getChildren.mockResolvedValueOnce([
@@ -531,7 +531,7 @@ describe("Jobs Actions Unit Tests - Function refreshJobsServer", () => {
         const job = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, null,
             globalMocks.sessionNoCreds, globalMocks.iJob, globalMocks.imperativeProfile);
         job.contextValue = globals.JOBS_SESSION_CONTEXT;
-        mocked(zowe.ZosmfSession.createBasicZosmfSession).mockReturnValueOnce(globalMocks.sessionNoCreds);
+        mocked(zowe.ZosmfSession.createBasicZosmfSessionFromArguments).mockReturnValueOnce(globalMocks.sessionNoCreds);
 
         await jobActions.refreshJobsServer(job, globalMocks.testJobsTree);
 
@@ -546,7 +546,7 @@ describe("Jobs Actions Unit Tests - Function refreshJobsServer", () => {
         const job = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, null,
             globalMocks.sessionNoCreds, globalMocks.iJob, globalMocks.imperativeProfile);
         job.contextValue = globals.JOBS_SESSION_CONTEXT;
-        mocked(zowe.ZosmfSession.createBasicZosmfSession).mockReturnValueOnce(globalMocks.sessionNoCreds);
+        mocked(zowe.ZosmfSession.createBasicZosmfSessionFromArguments).mockReturnValueOnce(globalMocks.sessionNoCreds);
         globalMocks.testJobsTree.checkCurrentProfile.mockImplementationOnce(() => {
             throw Error("test");
         });
@@ -568,7 +568,7 @@ describe("Jobs Actions Unit Tests - Function refreshJobsServer", () => {
         const job = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, null,
             globalMocks.sessionNoCreds, globalMocks.iJob, globalMocks.imperativeProfile);
         job.contextValue = globals.JOBS_SESSION_CONTEXT;
-        mocked(zowe.ZosmfSession.createBasicZosmfSession).mockReturnValueOnce(globalMocks.sessionNoCreds);
+        mocked(zowe.ZosmfSession.createBasicZosmfSessionFromArguments).mockReturnValueOnce(globalMocks.sessionNoCreds);
 
         await jobActions.refreshJobsServer(job, globalMocks.testJobsTree);
 
@@ -584,7 +584,7 @@ describe("Jobs Actions Unit Tests - Function refreshJobsServer", () => {
         const job = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, null,
             globalMocks.sessionNoCreds, globalMocks.iJob, globalMocks.imperativeProfile);
         job.contextValue = globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX;
-        mocked(zowe.ZosmfSession.createBasicZosmfSession).mockReturnValueOnce(globalMocks.sessionNoCreds);
+        mocked(zowe.ZosmfSession.createBasicZosmfSessionFromArguments).mockReturnValueOnce(globalMocks.sessionNoCreds);
 
         await jobActions.refreshJobsServer(job, globalMocks.testJobsTree);
 

@@ -46,7 +46,7 @@ async function createGlobalMocks() {
         createQuickPick: jest.fn(),
         getConfiguration: jest.fn(),
         ZosmfSession: jest.fn(),
-        createBasicZosmfSession: jest.fn(),
+        mockCreateBasicZosmfSessionFromArguments: jest.fn(),
         withProgress: jest.fn(),
         closeOpenedTextFile: jest.fn(),
         defaultProfileManagerInstance: null,
@@ -81,8 +81,8 @@ async function createGlobalMocks() {
         value: globalMocks.showInformationMessage,
         configurable: true
     });
-    Object.defineProperty(globalMocks.ZosmfSession, "createBasicZosmfSession",
-        { value: globalMocks.createBasicZosmfSession, configurable: true });
+    Object.defineProperty(globalMocks.ZosmfSession, "mockCreateBasicZosmfSessionFromArguments",
+        { value: globalMocks.mockCreateBasicZosmfSessionFromArguments, configurable: true });
     Object.defineProperty(zowe, "ZosmfSession", { value: globalMocks.ZosmfSession, configurable: true });
     Object.defineProperty(globalMocks.filters, "getFilters", { value: globalMocks.getFilters, configurable: true });
     Object.defineProperty(vscode.window, "createQuickPick", { value: globalMocks.createQuickPick, configurable: true });
@@ -546,7 +546,7 @@ describe("USSTree Unit Tests - Function USSTree.filterPrompt()", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         const sessionNoCred = createISessionWithoutCredentials();
-        globalMocks.createBasicZosmfSession.mockReturnValue(sessionNoCred);
+        globalMocks.mockCreateBasicZosmfSessionFromArguments.mockReturnValue(sessionNoCred);
         const dsNode = new ZoweUSSNode(
             "[ussTestSess2]: /u/myFile.txt", vscode.TreeItemCollapsibleState.Expanded, null, sessionNoCred, null, false, "ussTestSess2");
         dsNode.mProfileName = "ussTestSess2";

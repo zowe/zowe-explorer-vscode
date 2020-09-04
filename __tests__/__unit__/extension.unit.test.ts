@@ -52,7 +52,7 @@ async function createGlobalMocks() {
         mockShowErrorMessage: jest.fn(),
         mockShowWarningMessage: jest.fn(),
         mockZosmfSession: jest.fn(),
-        mockCreateBasicZosmfSession: jest.fn(),
+        mockCreateBasicZosmfSessionFromArguments: jest.fn(),
         mockUtilities: jest.fn(),
         mockShowInformationMessage: jest.fn(),
         mockGetConfiguration: jest.fn(),
@@ -212,8 +212,8 @@ async function createGlobalMocks() {
     Object.defineProperty(vscode.window, "showErrorMessage", { value: globalMocks.mockShowErrorMessage, configurable: true });
     Object.defineProperty(vscode.window, "showWarningMessage", { value: globalMocks.mockShowWarningMessage, configurable: true });
     Object.defineProperty(zowe, "ZosmfSession", { value: globalMocks.mockZosmfSession, configurable: true });
-    Object.defineProperty(globalMocks.mockZosmfSession, "createBasicZosmfSession",
-                         { value: globalMocks.mockCreateBasicZosmfSession, configurable: true });
+    Object.defineProperty(globalMocks.mockZosmfSession, "mockCreateBasicZosmfSessionFromArguments",
+                         { value: globalMocks.mockCreateBasicZosmfSessionFromArguments, configurable: true });
     Object.defineProperty(vscode.window, "showInformationMessage", { value: globalMocks.mockShowInformationMessage, configurable: true });
     Object.defineProperty(zowe, "Utilities", { value: globalMocks.mockUtilities, configurable: true });
     Object.defineProperty(vscode.workspace, "registerTextDocumentContentProvider",
@@ -242,7 +242,7 @@ async function createGlobalMocks() {
     globalMocks.mockExtension = new mockExtensionCreator();
 
     globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.testProfile);
-    globalMocks.mockCreateBasicZosmfSession.mockReturnValue(globalMocks.testSession);
+    globalMocks.mockCreateBasicZosmfSessionFromArguments.mockReturnValue(globalMocks.testSession);
     globalMocks.mockCreateTreeView.mockReturnValue(createTreeView());
     globalMocks.mockReadFileSync.mockReturnValue("");
     globalMocks.testProfileOps.getDefaultProfile = globalMocks.mockLoadNamedProfile;

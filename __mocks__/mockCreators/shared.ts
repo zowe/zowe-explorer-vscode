@@ -17,7 +17,6 @@ import * as vscode from "vscode";
 import { ValidProfileEnum } from "../../src/Profiles";
 import * as utils from "../../src/utils";
 import * as zowe from "@zowe/cli";
-import { createTestSchemas } from "./profiles";
 
 export function createPersistentConfig() {
     return {
@@ -56,8 +55,8 @@ export function createISessionWithoutCredentials() {
     });
 }
 
-export function createBasicZosmfSessionFromArguments(args: imperative.ICommandArguments) {
-    return zowe.ZosmfSession.createBasicZosmfSessionFromArguments(args);
+export function createBasicZosmfSession(profile: imperative.IProfileLoaded) {
+    return zowe.ZosmfSession.createBasicZosmfSession(profile.profile);
 }
 
 export function removeNodeFromArray(badNode, array) {

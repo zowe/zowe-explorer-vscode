@@ -49,7 +49,7 @@ async function createGlobalMocks() {
         Delete: jest.fn(),
         Utilities: jest.fn(),
         withProgress: jest.fn(),
-        createBasicZosmfSession: jest.fn(),
+        mockCreateBasicZosmfSessionFromArguments: jest.fn(),
         mockGetValidSession: jest.fn(),
         ZosmfSession: jest.fn(),
         getUssApiMock: jest.fn(),
@@ -99,8 +99,8 @@ async function createGlobalMocks() {
     Object.defineProperty(vscode.window, "showInputBox", { value: globalMocks.showInputBox, configurable: true });
     Object.defineProperty(vscode.window, "createTreeView", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe, "ZosmfSession", { value: globalMocks.ZosmfSession, configurable: true });
-    Object.defineProperty(globalMocks.ZosmfSession, "createBasicZosmfSession",
-        { value: globalMocks.createBasicZosmfSession, configurable: true });
+    Object.defineProperty(globalMocks.ZosmfSession, "mockCreateBasicZosmfSessionFromArguments",
+        { value: globalMocks.mockCreateBasicZosmfSessionFromArguments, configurable: true });
     Object.defineProperty(zowe, "Download", { value: globalMocks.Download, configurable: true });
     Object.defineProperty(zowe, "Utilities", { value: globalMocks.Utilities, configurable: true });
     Object.defineProperty(globalMocks.Download, "ussFile", { value: globalMocks.ussFile, configurable: true });
@@ -515,7 +515,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
             "testSess", vscode.TreeItemCollapsibleState.Expanded, newMocks.ussNode, createISessionWithoutCredentials(), null);
 
         newMocks.testUSSTree.getTreeView.mockReturnValue(createTreeView());
-        globalMocks.createBasicZosmfSession.mockReturnValue(globalMocks.session);
+        globalMocks.mockCreateBasicZosmfSessionFromArguments.mockReturnValue(globalMocks.session);
         globalMocks.ussFile.mockReturnValue(globalMocks.response);
         globalMocks.withProgress.mockReturnValue(globalMocks.response);
         globalMocks.openTextDocument.mockResolvedValue("test.doc");

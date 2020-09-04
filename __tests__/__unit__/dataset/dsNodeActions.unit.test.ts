@@ -34,7 +34,7 @@ const showInformationMessage = jest.fn();
 const showQuickPick = jest.fn();
 const getConfiguration = jest.fn();
 const existsSync = jest.fn();
-const createBasicZosmfSession = jest.fn();
+const mockCreateBasicZosmfSessionFromArguments = jest.fn();
 const refreshAll = jest.fn();
 const mockcreateZoweSession = jest.fn();
 const mockaddSearchHistory  = jest.fn();
@@ -153,7 +153,7 @@ describe("dsNodeActions", () => {
     Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
     Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
     Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
-    Object.defineProperty(zowe.ZosmfSession, "createBasicZosmfSession", { value: createBasicZosmfSession});
+    Object.defineProperty(zowe.ZosmfSession, "createBasicZosmfSessionFromArguments", { value: mockCreateBasicZosmfSessionFromArguments});
 
     beforeEach(() => {
         showErrorMessage.mockReset();
