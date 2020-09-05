@@ -421,6 +421,7 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
                                        globalMocks.testSessionNoCred, globalMocks.testIJob, globalMocks.testProfile),
             qpItem: globalMocks.testJobsProvider.createOwner,
             theia: false,
+            mockCheckCurrentProfile: jest.fn(),
             qpContent: createQuickPickContent("", [globalMocks.testJobsProvider.createOwner, globalMocks.testJobsProvider.createId],
                                               "Select a filter")
         };
@@ -506,6 +507,31 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
         await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
 
         expect(globalMocks.testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT + "_Active");
+        expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("*");
+        expect(globalMocks.testJobsProvider.mSessionNodes[1].prefix).toEqual("STO*");
+        expect(globalMocks.testJobsProvider.mSessionNodes[1].searchId).toEqual("");
+    });
+
+    it("Testing that searchPrompt is successfully executed when searching by prefix, VSCode route with Unverified profile", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        await createBlockMocks(globalMocks);
+
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    checkCurrentProfile: blockMocks.mockCheckCurrentProfile.mockReturnValueOnce({name: globalMocks.testProfile.name, status: "unverified"}),
+                    validProfile: ValidProfileEnum.UNVERIFIED
+                };
+            })
+        });
+
+        globalMocks.mockShowInputBox.mockReturnValueOnce("");
+        globalMocks.mockShowInputBox.mockReturnValueOnce("STO*");
+
+        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
+
+        expect(globalMocks.testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT + "_Unverified");
         expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("*");
         expect(globalMocks.testJobsProvider.mSessionNodes[1].prefix).toEqual("STO*");
         expect(globalMocks.testJobsProvider.mSessionNodes[1].searchId).toEqual("");

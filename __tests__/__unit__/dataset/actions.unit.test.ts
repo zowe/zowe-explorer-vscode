@@ -1768,6 +1768,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
         const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
         const mvsApi = createMvsApi(imperativeProfile);
+        const mockCheckCurrentProfile = jest.fn();
         bindMvsApi(mvsApi);
 
         return {
@@ -1779,7 +1780,8 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
             datasetSessionNode,
             mvsApi,
             profileInstance,
-            testDatasetTree
+            testDatasetTree,
+            mockCheckCurrentProfile
         };
     }
 
@@ -1916,9 +1918,18 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("Zowe-Default-Datasets-PS");
         expect(createDataSetSpy).toHaveBeenCalledWith(zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, "TEST", undefined);
     });
-    it("Checking PS dataset errored creation", async () => {
+    it("Checking PS dataset errored creation with Unverified profile", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
+
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    checkCurrentProfile: blockMocks.mockCheckCurrentProfile.mockReturnValueOnce({name: blockMocks.imperativeProfile.name, status: "unverified"}),
+                    validProfile: ValidProfileEnum.UNVERIFIED
+                };
+            })
+        });
 
         blockMocks.testDatasetTree.createFilterString.mockResolvedValue("test");
         blockMocks.testDatasetTree.getSearchHistory.mockReturnValue([]);
@@ -1941,6 +1952,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("Zowe-Default-Datasets-PS");
         expect(createDataSetSpy).toHaveBeenCalledWith(zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, "TEST", undefined);
     });
+    
     it("Checking dataset attempt of creation with empty type", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
