@@ -371,7 +371,7 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
             treeView: createTreeView(),
             datasetSessionNode: null,
             profile: null,
-            mockCheckProfileValidationSetting: jest.fn(),
+            mockResetValidation: jest.fn(),
             mockDefaultProfile: jest.fn(),
             mockLoadNamedProfile: jest.fn(),
             mockValidationSetting: jest.fn(),
@@ -379,7 +379,7 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
             mockDisableValidationContext: jest.fn(),
             mockEnableValidationContext: jest.fn(),
             mockLoadDefaultProfile: jest.fn(),
-            mockProfileInstance: null,
+            mockProfileInstance: null
         };
         newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
         newMocks.profile = await Profiles.createInstance(newMocks.log);
@@ -393,6 +393,7 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
         newMocks.mockProfileInstance.enableValidationContext = newMocks.mockEnableValidationContext;
         newMocks.mockProfileInstance.disableValidationContext = newMocks.mockDisableValidationContext;
         newMocks.mockProfileInstance.validProfile = ValidProfileEnum.VALID;
+        newMocks.mockProfileInstance.allProfiles = jest.fn().mockReturnValue([newMocks.imperativeProfile]);
 
         return newMocks;
     }
@@ -421,6 +422,19 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
         testTree.addSession(blockMocks.imperativeProfile.name);
         expect(testTree.mSessionNodes[1].label).toBe(blockMocks.imperativeProfile.name);
     });
+
+    it("Checking successful adding of session without sessname passed", async () => {
+        await createGlobalMocks();
+        const blockMocks = await createBlockMocks();
+
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+
+        testTree.addSession();
+        expect(testTree.mSessionNodes[1].label).toBe(blockMocks.imperativeProfile.name);
+    });
+
     it("Checking failed attempt to add a session due to the missing profile", async () => {
         await createGlobalMocks();
         const blockMocks = await createBlockMocks();
