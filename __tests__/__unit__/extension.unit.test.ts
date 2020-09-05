@@ -21,6 +21,7 @@ import * as globals from "../../src/globals";
 import { Profiles, ValidProfileEnum } from "../../src/Profiles";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import { createIProfile, createTreeView } from "../../__mocks__/mockCreators/shared";
+import { PersistentFilters } from "../../src/PersistentFilters";
 
 jest.mock("vscode");
 jest.mock("fs");
@@ -94,11 +95,12 @@ async function createGlobalMocks() {
             validProfile: ValidProfileEnum.VALID,
             checkCurrentProfile: jest.fn(),
             usesSecurity: jest.fn().mockReturnValue(true),
-            checkProfileValidationSetting: jest.fn().mockReturnValue(true),
+            getProfileSetting: jest.fn(),
             disableValidation: jest.fn(),
             enableValidation: jest.fn(),
             disableValidationContext: jest.fn(),
-            enableValidationContext: jest.fn()
+            enableValidationContext: jest.fn(),
+            validationArraySetup: jest.fn()
         },
         mockExtension: null,
         appName: vscode.env.appName,
@@ -229,6 +231,13 @@ async function createGlobalMocks() {
     });
     Object.defineProperty(Profiles, "getInstance", {
         value: jest.fn(() => globalMocks.testProfileOps)
+    });
+    Object.defineProperty(PersistentFilters, "getDirectValue", {
+        value: jest.fn(() => {
+            return {
+                "Zowe-Automatic-Validation": true
+            };
+        })
     });
 
     // Create a mocked extension context

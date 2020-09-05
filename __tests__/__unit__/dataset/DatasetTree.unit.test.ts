@@ -28,6 +28,7 @@ import {
 import { createDatasetSessionNode } from "../../../__mocks__/mockCreators/datasets";
 import { bindMvsApi, createMvsApi } from "../../../__mocks__/mockCreators/api";
 import * as workspaceUtils from "../../../src/utils/workspace";
+import { PersistentFilters } from "../../../src/PersistentFilters";
 
 jest.mock("fs");
 jest.mock("util");
@@ -73,6 +74,13 @@ function createGlobalMocks() {
             return callback();
         }),
         configurable: true
+    });
+    Object.defineProperty(PersistentFilters, "getDirectValue", {
+        value: jest.fn(() => {
+            return {
+                "Zowe-Automatic-Validation": true
+            };
+        })
     });
 
     return {
@@ -366,7 +374,6 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
             mockCheckProfileValidationSetting: jest.fn(),
             mockDefaultProfile: jest.fn(),
             mockLoadNamedProfile: jest.fn(),
-            mockCheckCurrentProfile: jest.fn(),
             mockValidationSetting: jest.fn(),
             mockAddSingleSession: jest.fn(),
             mockDisableValidationContext: jest.fn(),
@@ -383,7 +390,6 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
         newMocks.mockProfileInstance.loadNamedProfile = newMocks.mockLoadNamedProfile;
         newMocks.mockLoadDefaultProfile.mockReturnValue(newMocks.imperativeProfile);
         newMocks.mockProfileInstance.getDefaultProfile = newMocks.mockLoadDefaultProfile;
-        newMocks.mockProfileInstance.checkProfileValidationSetting = newMocks.mockValidationSetting.mockReturnValue(true);
         newMocks.mockProfileInstance.enableValidationContext = newMocks.mockEnableValidationContext;
         newMocks.mockProfileInstance.disableValidationContext = newMocks.mockDisableValidationContext;
         newMocks.mockProfileInstance.validProfile = ValidProfileEnum.VALID;
@@ -698,9 +704,9 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
             treeView: createTreeView(),
             mockLoadNamedProfile: jest.fn(),
             datasetSessionNode: null,
+            mockResetValidationSettings: jest.fn(),
             profile: null,
             qpPlaceholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
-            mockCheckProfileValidationSetting: jest.fn(),
             mockEnableValidationContext: jest.fn()
         };
 
@@ -711,16 +717,13 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
                 return {
                     allProfiles: [newMocks.imperativeProfile, { name: "firstName" }, { name: "secondName" }],
                     getDefaultProfile: newMocks.mockDefaultProfile,
-                    loadNamedProfile: newMocks.mockLoadNamedProfile,
+                    loadNamedProfile: newMocks.mockLoadNamedProfile.mockReturnValueOnce(newMocks.imperativeProfile),
                     validProfile: ValidProfileEnum.VALID,
                     enableValidationContext: newMocks.mockEnableValidationContext,
                     checkCurrentProfile: newMocks.mockCheckCurrentProfile.mockReturnValue({name: newMocks.imperativeProfile.name, status: "active"}),
                     validateProfiles: jest.fn(),
-                    checkProfileValidationSetting: newMocks.mockCheckProfileValidationSetting.mockReturnValue({
-                        name: newMocks.imperativeProfile.name,
-                        setting: true
-                    }),
                     getProfileSetting: newMocks.mockGetProfileSetting.mockReturnValue({name: newMocks.imperativeProfile.name, status: "active"}),
+                    resetValidationSettings: newMocks.mockResetValidationSettings.mockReturnValue(newMocks.datasetSessionNode)
                 };
             }),
         });

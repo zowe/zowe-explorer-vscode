@@ -20,6 +20,7 @@ import { createUSSTree } from "../../../src/uss/USSTree";
 import { createIJobObject } from "../../../__mocks__/mockCreators/jobs";
 import { Job } from "../../../src/job/ZoweJobNode";
 import { createJobsTree } from "../../../src/job/ZosJobsProvider";
+import { PersistentFilters } from "../../../src/PersistentFilters";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -29,7 +30,6 @@ async function createGlobalMocks() {
         createTreeView: jest.fn(),
         mockAffects: jest.fn(),
         mockEditSession: jest.fn(),
-        mockValidationSetting: jest.fn(),
         mockDisableValidationContext: jest.fn(),
         mockEnableValidationContext: jest.fn(),
         getConfiguration: jest.fn(),
@@ -40,6 +40,8 @@ async function createGlobalMocks() {
         testUSSTree: null,
         testSessionNode: null,
         mockGetProfileSetting: jest.fn(),
+        mockProfilesForValidation: jest.fn(),
+        mockProfilesValidationSetting: jest.fn(),
         ProgressLocation: jest.fn().mockImplementation(() => {
             return {
                 Notification: 15
@@ -65,17 +67,25 @@ async function createGlobalMocks() {
                 allProfiles: [globalMocks.testProfile, { name: "firstName" }, { name: "secondName" }],
                 getDefaultProfile: globalMocks.mockDefaultProfile,
                 validProfile: ValidProfileEnum.VALID,
-                checkCurrentProfile: jest.fn(),
                 validateProfiles: jest.fn(),
                 loadNamedProfile: globalMocks.mockLoadNamedProfile,
                 editSession: globalMocks.mockEditSession,
-                checkProfileValidationSetting: globalMocks.mockValidationSetting,
                 disableValidationContext: globalMocks.mockDisableValidationContext,
                 enableValidationContext: globalMocks.mockEnableValidationContext,
-                getProfileSetting: globalMocks.mockGetProfileSetting.mockReturnValue({name: globalMocks.testProfile.name, status: "valid"})
+                getProfileSetting: globalMocks.mockGetProfileSetting.mockReturnValue({name: globalMocks.testProfile.name, status: "active"}),
+                profilesForValidation: globalMocks.mockProfilesForValidation.mockReturnValue({name: globalMocks.testProfile.name, status: "active"}),
+                // tslint:disable-next-line:max-line-length
+                profileValidationSetting: globalMocks.mockProfilesValidationSetting.mockReturnValue({name: globalMocks.testProfile.name, setting: true})
             };
         }),
         configurable: true
+    });
+    Object.defineProperty(PersistentFilters, "getDirectValue", {
+        value: jest.fn(() => {
+            return {
+                "Zowe-Automatic-Validation": true
+            };
+        })
     });
 
     globalMocks.mockAffects.mockReturnValue(true);
@@ -88,7 +98,6 @@ async function createGlobalMocks() {
     globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.testProfile);
     globalMocks.mockDefaultProfile.mockReturnValue(globalMocks.testProfile);
     globalMocks.mockEditSession.mockReturnValue(globalMocks.testProfile);
-    globalMocks.mockValidationSetting.mockReturnValue(true);
     globalMocks.getConfiguration.mockReturnValue({
         get: (setting: string) => [
             "[test]: /u/aDir{directory}",
