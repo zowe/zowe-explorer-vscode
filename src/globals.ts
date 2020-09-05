@@ -67,7 +67,9 @@ export enum PersistenceSchemaEnum {
 export function defineGlobals(tempPath: string | undefined) {
     // Set app name
     const appName: string = vscode.env.appName;
-    if (appName && appName === this.THEIA) { this.ISTHEIA = true; }
+    if (appName && appName !== 'Visual Studio Code' && appName !== 'VSCodium') {
+        this.ISTHEIA = true;
+    }
 
     // Set temp path & folder paths
     tempPath !== "" && tempPath !== undefined ?
