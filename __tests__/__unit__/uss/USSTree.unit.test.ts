@@ -48,6 +48,7 @@ async function createGlobalMocks() {
         mockValidationSetting: jest.fn(),
         mockDisableValidationContext: jest.fn(),
         mockEnableValidationContext: jest.fn(),
+        mockCheckCurrentProfile: jest.fn(),
         withProgress: jest.fn(),
         closeOpenedTextFile: jest.fn(),
         ProgressLocation: jest.fn().mockImplementation(() => {
@@ -430,6 +431,26 @@ describe("USSTree Unit Tests - Function USSTree.filterPrompt()", () => {
     it("Tests that filter() works properly when user enters path", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.qpValue = "/U/HARRY";
+        globalMocks.showInputBox.mockReturnValueOnce("/U/HARRY");
+
+        await globalMocks.testTree.filterPrompt(globalMocks.testTree.mSessionNodes[1]);
+        expect(globalMocks.testTree.mSessionNodes[1].fullPath).toEqual("/U/HARRY");
+    });
+
+    it("Tests that filter() works properly when user enters path with Unverified profile", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    checkCurrentProfile: globalMocks.mockCheckCurrentProfile.mockReturnValueOnce({name: globalMocks.testProfile.name, status: "unverified"}),
+                    validProfile: ValidProfileEnum.UNVERIFIED
+                };
+            })
+        });
 
         blockMocks.qpValue = "/U/HARRY";
         globalMocks.showInputBox.mockReturnValueOnce("/U/HARRY");

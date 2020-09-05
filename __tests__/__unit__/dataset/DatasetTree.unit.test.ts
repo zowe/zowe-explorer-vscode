@@ -837,6 +837,29 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         expect(testTree.mSessionNodes[1].contextValue).toEqual(globals.DS_SESSION_CONTEXT + globals.ACTIVE_CONTEXT);
         expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD1.STUFF");
     });
+    it("Checking adding of new filter with Unverified profile", async () => {
+        await createGlobalMocks();
+        const blockMocks = await createBlockMocks();
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    checkCurrentProfile: blockMocks.mockCheckCurrentProfile.mockReturnValueOnce({name: blockMocks.imperativeProfile.name, status: "unverified"}),
+                    validProfile: ValidProfileEnum.UNVERIFIED
+                };
+            })
+        });
+
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce(new utils.FilterDescriptor("\uFF0B " + "Create a new filter"));
+        mocked(vscode.window.showInputBox).mockResolvedValueOnce("HLQ.PROD1.STUFF");
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+
+        await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+
+        expect(testTree.mSessionNodes[1].contextValue).toEqual(globals.DS_SESSION_CONTEXT + globals.UNVERIFIED_CONTEXT);
+        expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD1.STUFF");
+    });
     it("Checking cancelled attempt to add a filter", async () => {
         await createGlobalMocks();
         const blockMocks = await createBlockMocks();
@@ -1123,6 +1146,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
         const mvsApi = createMvsApi(imperativeProfile);
+        const mockCheckCurrentProfile = jest.fn();
         bindMvsApi(mvsApi);
 
         return {
@@ -1130,7 +1154,9 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
             datasetSessionNode,
             treeView,
             mvsApi,
-            profileInstance
+            profileInstance,
+            mockCheckCurrentProfile,
+            imperativeProfile
         };
     }
 
@@ -1139,6 +1165,32 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        mocked(workspaceUtils.closeOpenedTextFile).mockResolvedValueOnce(false);
+        mocked(vscode.window.showInputBox).mockResolvedValueOnce("HLQ.TEST.RENAME.NODE.NEW");
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        const node = new ZoweDatasetNode("HLQ.TEST.RENAME.NODE", vscode.TreeItemCollapsibleState.None, testTree.mSessionNodes[1], blockMocks.session);
+        const renameDataSetSpy = jest.spyOn(blockMocks.mvsApi, "renameDataSet");
+
+        await testTree.rename(node);
+
+        expect(renameDataSetSpy).toHaveBeenLastCalledWith("HLQ.TEST.RENAME.NODE", "HLQ.TEST.RENAME.NODE.NEW");
+    });
+
+    it("Checking function with PS Dataset using Unverified profile", async () => {
+        globals.defineGlobals("");
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    checkCurrentProfile: blockMocks.mockCheckCurrentProfile.mockReturnValueOnce({name: blockMocks.imperativeProfile.name, status: "unverified"}),
+                    validProfile: ValidProfileEnum.UNVERIFIED
+                };
+            })
+        });
         mocked(workspaceUtils.closeOpenedTextFile).mockResolvedValueOnce(false);
         mocked(vscode.window.showInputBox).mockResolvedValueOnce("HLQ.TEST.RENAME.NODE.NEW");
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
