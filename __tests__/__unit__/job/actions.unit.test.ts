@@ -24,7 +24,7 @@ import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import * as dsActions from "../../../src/dataset/actions";
 import * as globals from "../../../src/globals";
 import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
-import { Profiles } from "../../../src/Profiles";
+import { Profiles, ValidProfileEnum } from "../../../src/Profiles";
 
 const activeTextEditorDocument = jest.fn();
 
@@ -313,7 +313,17 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         const textDocument = createTextDocument("HLQ.TEST.AFILE(mem)", datasetSessionNode);
         const profileInstance = createInstanceOfProfile(imperativeProfile);
         const jesApi = createJesApi(imperativeProfile);
+        const mockCheckCurrentProfile = jest.fn();
         bindJesApi(jesApi);
+
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    checkCurrentProfile: mockCheckCurrentProfile.mockReturnValueOnce({name: imperativeProfile.name, status: "unverified"}),
+                    validProfile: ValidProfileEnum.UNVERIFIED
+                };
+            })
+        });
 
         return {
             session,
@@ -324,11 +334,36 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
             testDatasetTree: createDatasetTree(datasetSessionNode, treeView),
             textDocument,
             profileInstance,
-            jesApi
+            jesApi,
+            mockCheckCurrentProfile
         };
     }
 
     it("Checking submit of active text editor content as JCL", async () => {
+        createGlobalMocks();
+        const blockMocks: any = createBlockMocks();
+        mocked(zowe.ZosmfSession.createBasicZosmfSession).mockReturnValue(blockMocks.session);
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        mocked(vscode.window.showQuickPick).mockReturnValueOnce(new Promise((resolve) => {
+            resolve(blockMocks.datasetSessionNode.label);
+        }));
+        blockMocks.testDatasetTree.getChildren.mockResolvedValueOnce([
+            new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null),
+            blockMocks.datasetSessionNode
+        ]);
+        activeTextEditorDocument.mockReturnValue(blockMocks.textDocument);
+        const submitJclSpy = jest.spyOn(blockMocks.jesApi, "submitJcl");
+        submitJclSpy.mockClear();
+        submitJclSpy.mockResolvedValueOnce(blockMocks.iJob);
+        await dsActions.submitJcl(blockMocks.testDatasetTree);
+
+        expect(submitJclSpy).toBeCalled();
+        expect(mocked(vscode.window.showInformationMessage)).toBeCalled();
+        expect(mocked(vscode.window.showInformationMessage).mock.calls.length).toBe(1);
+        expect(mocked(vscode.window.showInformationMessage).mock.calls[0][0]).toEqual("Job submitted [JOB1234](command:zowe.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)");
+    });
+
+    it("Checking submit of active text editor content as JCL with Unverified Profile", async () => {
         createGlobalMocks();
         const blockMocks: any = createBlockMocks();
         mocked(zowe.ZosmfSession.createBasicZosmfSession).mockReturnValue(blockMocks.session);
@@ -382,6 +417,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
         const profileInstance = createInstanceOfProfile(imperativeProfile);
         const jesApi = createJesApi(imperativeProfile);
+        const mockCheckCurrentProfile = jest.fn();
         bindJesApi(jesApi);
 
         return {
@@ -390,7 +426,8 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
             imperativeProfile,
             datasetSessionNode,
             profileInstance,
-            jesApi
+            jesApi,
+            mockCheckCurrentProfile
         };
     }
 
@@ -398,6 +435,33 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        const subNode = new ZoweDatasetNode("dataset", vscode.TreeItemCollapsibleState.Collapsed,
+            blockMocks.datasetSessionNode, null);
+        subNode.contextValue = globals.DS_PDS_CONTEXT;
+        const member = new ZoweDatasetNode("member", vscode.TreeItemCollapsibleState.None, subNode, null);
+        member.contextValue = globals.DS_MEMBER_CONTEXT;
+        const submitJobSpy = jest.spyOn(blockMocks.jesApi, "submitJob");
+        submitJobSpy.mockResolvedValueOnce(blockMocks.iJob);
+
+        await dsActions.submitMember(member);
+        expect(submitJobSpy).toBeCalled();
+        expect(submitJobSpy.mock.calls[0][0]).toEqual("dataset(member)");
+        expect(mocked(vscode.window.showInformationMessage)).toBeCalled();
+        expect(mocked(vscode.window.showInformationMessage).mock.calls[0][0]).toEqual(
+            "Job submitted [JOB1234](command:zowe.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)");
+    });
+    it("Checking Submit Job for PDS Member content with Unverified Profile", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    checkCurrentProfile: blockMocks.mockCheckCurrentProfile.mockReturnValueOnce({name: blockMocks.imperativeProfile.name, status: "unverified"}),
+                    validProfile: ValidProfileEnum.UNVERIFIED
+                };
+            })
+        });
         const subNode = new ZoweDatasetNode("dataset", vscode.TreeItemCollapsibleState.Collapsed,
             blockMocks.datasetSessionNode, null);
         subNode.contextValue = globals.DS_PDS_CONTEXT;

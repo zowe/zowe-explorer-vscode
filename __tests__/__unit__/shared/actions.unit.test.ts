@@ -291,12 +291,14 @@ describe("Shared Actions Unit Tests - Function returnIconState", () => {
             imperativeProfile: createIProfile(),
             profileInstance: null,
             datasetSessionNode: null,
+            mockGetIconByNode: jest.fn()
         };
 
         newMocks.profileInstance = createInstanceOfProfile(newMocks.imperativeProfile);
         mocked(Profiles.getInstance).mockReturnValue(newMocks.profileInstance);
         newMocks.dsNode = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.Collapsed, newMocks.datasetSessionNode, null);
         newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
+        newMocks.mockGetIconByNode.mockReturnValue(IconId.sessionActive);
 
         return newMocks;
     }
@@ -320,11 +322,11 @@ describe("Shared Actions Unit Tests - Function returnIconState", () => {
         const resultNode: IZoweNodeType = blockMocks.datasetSessionNode;
         const resultIcon = getIconById(IconId.session);
         resultNode.iconPath = resultIcon.path;
-
         const testNode: IZoweNodeType = blockMocks.datasetSessionNode;
         const sessionIcon = getIconById(IconId.sessionInactive);
         testNode.iconPath = sessionIcon.path;
 
+        blockMocks.mockGetIconByNode.mockReturnValueOnce(IconId.sessionInactive);
         const response = await sharedActions.returnIconState(testNode);
         expect(getIconByNode(response)).toEqual(getIconByNode(resultNode));
     });
