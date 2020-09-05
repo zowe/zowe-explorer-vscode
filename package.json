@@ -1245,7 +1245,7 @@
         "Zowe-Automatic-Validation": {
           "type": "boolean",
           "default": true,
-          "description": "A global setting to allow automatic validation of profiles.",
+          "description": "%Zowe-Automatic-Validation%",
           "scope": "window"
         },
         "Zowe-Environment": {

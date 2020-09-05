@@ -20,7 +20,6 @@ import { errorHandling, getZoweDir, FilterDescriptor, FilterItem, resolveQuickPi
 import { IZoweTree } from "./api/IZoweTree";
 import { IZoweNodeType, IZoweUSSTreeNode, IZoweDatasetTreeNode, IZoweJobTreeNode, IZoweTreeNode } from "./api/IZoweTreeNode";
 import * as nls from "vscode-nls";
-import { PersistentFilters } from "./PersistentFilters";
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
@@ -40,7 +39,7 @@ interface IProfileValidation {
 
 interface IValidationSetting {
     name: string;
-    setting?: boolean;
+    setting: boolean;
 }
 
 let InputBoxOptions: vscode.InputBoxOptions;
@@ -82,7 +81,6 @@ export class Profiles {
 
     public async checkCurrentProfile(theProfile: IProfileLoaded) {
         const profileStatus: IProfileValidation = await this.getProfileSetting(theProfile);
-
         if (profileStatus.status === "inactive") {
             this.validProfile = ValidProfileEnum.INVALID;
             return profileStatus;
@@ -156,37 +154,14 @@ export class Profiles {
         return profileStatus;
     }
 
-    public async disableValidation(datasetTree: IZoweTree<IZoweDatasetTreeNode>, ussTree: IZoweTree<IZoweUSSTreeNode>,
-                                   jobsProvider: IZoweTree<IZoweJobTreeNode>, node?: IZoweNodeType): Promise<IZoweNodeType>{
-        // Check and set profilesForValidation setting value
-        const theProfile: IProfileLoaded = node.getProfile();
-        await this.validationArraySetup(theProfile, false);
-
-        // Disable validation for profile in uss tree
-        ussTree.mSessionNodes.forEach((sessNode) => {
-            if (sessNode.getProfileName() === theProfile.name) {
-                this.disableValidationContext(sessNode);
-                ussTree.refresh();
-            }
-        });
-        // Disable validation for profile in data set tree
-        datasetTree.mSessionNodes.forEach((sessNode) => {
-            if (sessNode.getProfileName() === theProfile.name) {
-                this.disableValidationContext(sessNode);
-                datasetTree.refresh();
-            }
-        });
-        // Disable validation for profile in jobs tree
-        jobsProvider.mSessionNodes.forEach((sessNode) => {
-            if (sessNode.getProfileName() === theProfile.name) {
-                this.disableValidationContext(sessNode);
-                jobsProvider.refresh();
-            }
-        });
+    public async disableValidation(node: IZoweNodeType): Promise<IZoweNodeType>{
+        this.disableValidationContext(node);
         return node;
     }
 
     public async disableValidationContext(node: IZoweNodeType) {
+        const theProfile: IProfileLoaded = node.getProfile();
+        this.validationArraySetup(theProfile, false);
         if (node.contextValue.includes(`${globals.VALIDATE_SUFFIX}true`)) {
             node.contextValue = node.contextValue.replace(/(_validate=true)/g, "").replace(/(_Active)/g, "").replace(/(_Inactive)/g, "");
             node.contextValue = node.contextValue + `${globals.VALIDATE_SUFFIX}false`;
@@ -195,41 +170,17 @@ export class Profiles {
         } else {
             node.contextValue = node.contextValue + `${globals.VALIDATE_SUFFIX}false`;
         }
-
         return node;
     }
 
-    public async enableValidation(datasetTree: IZoweTree<IZoweDatasetTreeNode>, ussTree: IZoweTree<IZoweUSSTreeNode>,
-                                  jobsProvider: IZoweTree<IZoweJobTreeNode>, node?: IZoweNodeType): Promise<IZoweNodeType>{
-        const theProfile: IProfileLoaded = node.getProfile();
-
-        await this.validationArraySetup(theProfile, true);
-
-        // Disable validation for profile in uss tree
-        ussTree.mSessionNodes.forEach((sessNode) => {
-            if (sessNode.getProfileName() === theProfile.name) {
-                this.enableValidationContext(sessNode);
-                ussTree.refresh();
-            }
-        });
-        // Disable validation for profile in data set tree
-        datasetTree.mSessionNodes.forEach((sessNode) => {
-            if (sessNode.getProfileName() === theProfile.name) {
-                this.enableValidationContext(sessNode);
-                datasetTree.refresh();
-            }
-        });
-        // Disable validation for profile in jobs tree
-        jobsProvider.mSessionNodes.forEach((sessNode) => {
-            if (sessNode.getProfileName() === theProfile.name) {
-                this.enableValidationContext(sessNode);
-                jobsProvider.refresh();
-            }
-        });
+    public async enableValidation(node: IZoweNodeType): Promise<IZoweNodeType>{
+        this.enableValidationContext(node);
         return node;
     }
 
     public async enableValidationContext(node: IZoweNodeType) {
+        const theProfile: IProfileLoaded = node.getProfile();
+        this.validationArraySetup(theProfile, true);
         if (node.contextValue.includes(`${globals.VALIDATE_SUFFIX}false`)) {
             node.contextValue = node.contextValue.replace(/(_validate=false)/g, "").replace(/(_Unverified)/g, "");
             node.contextValue = node.contextValue + `${globals.VALIDATE_SUFFIX}true`;
@@ -240,16 +191,6 @@ export class Profiles {
         }
 
         return node;
-    }
-
-    public async checkProfileValidationSetting(theProfile: IProfileLoaded): Promise<boolean> {
-        // Gets global validation settings from settings.json
-        let profileSetting: IValidationSetting;
-        const globalSetting = PersistentFilters.getDirectValue("Zowe-Automatic-Validation") as boolean;
-
-        profileSetting = await this.validationArraySetup(theProfile, globalSetting);
-
-        return profileSetting.setting;
     }
 
     public async validationArraySetup(theProfile: IProfileLoaded, validationSetting: boolean): Promise<IValidationSetting> {

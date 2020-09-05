@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import * as globals from "../globals";
 import * as dsActions from "./actions";
-import { IProfileLoaded, Logger, IProfile, ISession } from "@zowe/imperative";
+import { IProfileLoaded, Logger } from "@zowe/imperative";
 import { Profiles, ValidProfileEnum } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 import { FilterDescriptor, FilterItem, resolveQuickPickHelper, errorHandling } from "../utils";
@@ -26,6 +26,8 @@ import * as fs from "fs";
 import * as contextually from "../shared/context";
 import { closeOpenedTextFile } from "../utils/workspace";
 import * as nls from "vscode-nls";
+import { resetValidationSettings } from "../shared/actions";
+import { PersistentFilters } from "../PersistentFilters";
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
@@ -225,20 +227,22 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * @param {string} [sessionName] - optional; loads default profile if not passed
      */
     public async addSession(sessionName?: string, profileType?: string) {
-        let validate: boolean;
+        const setting = PersistentFilters.getDirectValue("Zowe-Automatic-Validation") as boolean;
         // Loads profile associated with passed sessionName, default if none passed
         if (sessionName) {
             const profile: IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
-            // Call to get validation setting from settings.json
-            validate = await Profiles.getInstance().checkProfileValidationSetting(profile);
             if (profile) {
                 this.addSingleSession(profile);
             }
+            for (const node of this.mSessionNodes) {
+                const name = node.getProfileName();
+                if (name === profile.name){
+                    await resetValidationSettings(node, setting);
+                 }
+             }
         } else {
             const profiles: IProfileLoaded[] = Profiles.getInstance().allProfiles;
             for (const theProfile of profiles) {
-                // Call to get validation setting from settings.json
-                validate = await Profiles.getInstance().checkProfileValidationSetting(theProfile);
                 // If session is already added, do nothing
                 if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === theProfile.name)) {
                     continue;
@@ -246,18 +250,17 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 for (const session of this.mHistory.getSessions()) {
                     if (session === theProfile.name) {
                         this.addSingleSession(theProfile);
+                        for (const node of this.mSessionNodes) {
+                            const name = node.getProfileName();
+                            if (name === theProfile.name){
+                                await resetValidationSettings(node, setting);
+                            }
+                        }
                     }
                 }
             }
             if (this.mSessionNodes.length === 1) {
                 this.addSingleSession(Profiles.getInstance().getDefaultProfile(profileType));
-            }
-        }
-        for (const node of this.mSessionNodes) {
-            if (validate) {
-                Profiles.getInstance().enableValidationContext(node);
-            } else {
-                Profiles.getInstance().disableValidationContext(node);
             }
         }
         this.refresh();

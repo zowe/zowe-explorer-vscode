@@ -25,6 +25,8 @@ import { getIconByNode } from "../generators/icons";
 import * as contextually from "../shared/context";
 
 import * as nls from "vscode-nls";
+import { resetValidationSettings } from "../shared/actions";
+import { PersistentFilters } from "../PersistentFilters";
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
@@ -158,20 +160,22 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      * @param {string} [sessionName] - optional; loads persisted profiles or default if not passed
      */
     public async addSession(sessionName?: string, profileType?: string) {
-        let validate: boolean;
+        const setting = PersistentFilters.getDirectValue("Zowe-Automatic-Validation") as boolean;
         // Loads profile associated with passed sessionName, persisted profiles or default if none passed
         if (sessionName) {
             const profile: IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
-            // Call to get validation setting from settings.json
-            validate = await Profiles.getInstance().checkProfileValidationSetting(profile);
             if (profile) {
                 this.addSingleSession(profile);
+            }
+            for (const node of this.mSessionNodes) {
+                const name = node.getProfileName();
+                if (name === profile.name){
+                    await resetValidationSettings(node, setting);
+                }
             }
         } else {
             const allProfiles: IProfileLoaded[] = Profiles.getInstance().allProfiles;
             for (const theProfile of allProfiles) {
-                // Call to get validation setting from settings.json
-                validate = await Profiles.getInstance().checkProfileValidationSetting(theProfile);
                 // If session is already added, do nothing
                 if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === theProfile.name)) {
                     continue;
@@ -179,18 +183,17 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 for (const session of this.mHistory.getSessions()) {
                     if (session === theProfile.name) {
                         this.addSingleSession(theProfile);
+                        for (const node of this.mSessionNodes) {
+                            const name = node.getProfileName();
+                            if (name === theProfile.name){
+                                await resetValidationSettings(node, setting);
+                            }
+                        }
                     }
                 }
             }
             if (this.mSessionNodes.length === 1) {
                 this.addSingleSession(Profiles.getInstance().getDefaultProfile(profileType));
-            }
-        }
-        for (const node of this.mSessionNodes) {
-            if (validate) {
-                Profiles.getInstance().enableValidationContext(node);
-            } else {
-                Profiles.getInstance().disableValidationContext(node);
             }
         }
         this.refresh();

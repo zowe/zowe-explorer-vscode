@@ -1600,55 +1600,7 @@ describe("Profiles Unit Tests - Function checkCurrentProfile", () => {
         expect(theProfiles.validProfile).toBe(ValidProfileEnum.INVALID);
     });
 });
-describe("Profiles Unit Tests - Function checkProfileValidationSetting", () => {
-    async function createBlockMocks(globalMocks) {
-        const newMocks = {
-            log: Logger.getAppLogger(),
-            profiles: null,
-            imperativeProfile: createIProfile(),
-            profileInstance: null,
-            session: null,
-            mockValidationSetting: null
-        };
-        newMocks.profiles = await Profiles.createInstance(newMocks.log);
-        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
-        globalMocks.mockGetInstance.mockReturnValue(newMocks.profiles);
 
-        return newMocks;
-    }
-
-    it("Tests that checkProfileValidationSetting returns correct validation when global setting is true", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        const theProfiles = await Profiles.createInstance(blockMocks.log);
-        Object.defineProperty(PersistentFilters, "getDirectValue", {
-            value: jest.fn(() => {
-                return true;
-            }),
-        });
-
-        const response = await theProfiles.checkProfileValidationSetting(blockMocks.imperativeProfile);
-        expect(response).toEqual(true);
-
-    });
-
-    it("Tests that checkProfileValidationSetting returns correct validation when global setting is false", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        const theProfiles = await Profiles.createInstance(blockMocks.log);
-        Object.defineProperty(PersistentFilters, "getDirectValue", {
-            value: jest.fn(() => {
-                return false;
-            }),
-        });
-
-        const response = await theProfiles.checkProfileValidationSetting(blockMocks.imperativeProfile);
-        expect(response).toEqual(false);
-
-    });
-});
 
 describe("Profiles Unit Tests - Function getProfileSetting", () => {
     async function createBlockMocks(globalMocks) {
@@ -1774,7 +1726,7 @@ describe("Profiles Unit Tests - Function disableValidation", () => {
         const theProfiles = await Profiles.createInstance(blockMocks.log);
 
         // tslint:disable-next-line:max-line-length
-        const response = await theProfiles.disableValidation(blockMocks.testDatasetTree, ussTree, blockMocks.testJobTree, blockMocks.datasetSessionNode);
+        const response = await theProfiles.disableValidation(blockMocks.datasetSessionNode);
         expect(response.contextValue).toContain(`${globals.VALIDATE_SUFFIX}false`);
         expect(response.contextValue).not.toContain(`${globals.VALIDATE_SUFFIX}true`);
     });
@@ -1790,7 +1742,7 @@ describe("Profiles Unit Tests - Function disableValidation", () => {
         const theProfiles = await Profiles.createInstance(blockMocks.log);
 
         // tslint:disable-next-line:max-line-length
-        const response = await theProfiles.disableValidation(blockMocks.testDatasetTree, ussTree, blockMocks.testJobTree, resultNode);
+        const response = await theProfiles.disableValidation(resultNode);
         expect(response.contextValue).toContain(`${globals.VALIDATE_SUFFIX}false`);
         expect(response.contextValue).not.toContain(`${globals.VALIDATE_SUFFIX}true`);
     });
@@ -1845,7 +1797,7 @@ describe("Profiles Unit Tests - Function enableValidation", () => {
         const theProfiles = await Profiles.createInstance(blockMocks.log);
 
         // tslint:disable-next-line:max-line-length
-        const response = await theProfiles.enableValidation(blockMocks.testDatasetTree, ussTree, blockMocks.testJobTree, resultNode);
+        const response = await theProfiles.enableValidation(resultNode);
         expect(response.contextValue).toContain(`${globals.VALIDATE_SUFFIX}true`);
         expect(response.contextValue).not.toContain(`${globals.VALIDATE_SUFFIX}false`);
     });

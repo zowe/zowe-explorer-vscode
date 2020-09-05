@@ -28,13 +28,15 @@ import { ZosJobsProvider, createJobsTree } from "./job/ZosJobsProvider";
 import { createUSSTree, USSTree } from "./uss/USSTree";
 import { MvsCommandHandler } from "./command/MvsCommandHandler";
 import { Profiles } from "./Profiles";
-import { errorHandling, FilterDescriptor, FilterItem, resolveQuickPickHelper, getZoweDir } from "./utils";
+import { errorHandling, FilterDescriptor, FilterItem, resolveQuickPickHelper, getZoweDir, refreshTree } from "./utils";
 import SpoolProvider from "./SpoolProvider";
 import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import { KeytarCredentialManager } from "./KeytarCredentialManager";
 import { linkProfileDialog } from "./utils/profileLink";
 import * as nls from "vscode-nls";
+import { PersistentFilters } from "./PersistentFilters";
+import { labelRefresh } from "./shared/utils";
 declare const __webpack_require__: typeof require;
 declare const __non_webpack_require__: typeof require;
 
@@ -126,7 +128,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     context.subscriptions.push(spoolProvider, providerRegistration);
 
     // Register functions & event listeners
-    vscode.workspace.onDidChangeConfiguration((e) => {
+    vscode.workspace.onDidChangeConfiguration(async (e) => {
         // If the temp folder location has been changed, update current temp folder preference
         if (e.affectsConfiguration("Zowe-Temp-Folder-Location")) {
             const updatedPreferencesTempPath: string = vscode.workspace.getConfiguration()
@@ -135,7 +137,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             moveTempFolder(preferencesTempPath, updatedPreferencesTempPath);
             preferencesTempPath = updatedPreferencesTempPath;
         }
+        if (e.affectsConfiguration("Zowe-Automatic-Validation")) {
+            await dsActions.refreshAll(datasetProvider);
+            await ussActions.refreshAllUSS(ussFileProvider);
+            await jobActions.refreshAllJobs(jobsProvider);
+        }
     });
+
     if (datasetProvider) {
         initDatasetProvider(context, datasetProvider);
     }
@@ -176,23 +184,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             Profiles.getInstance().deleteProfile(datasetProvider, ussFileProvider, jobsProvider, node));
         vscode.commands.registerCommand("zowe.jobs.deleteProfile", async (node) =>
             Profiles.getInstance().deleteProfile(datasetProvider, ussFileProvider, jobsProvider, node));
-        vscode.commands.registerCommand("zowe.disableValidation", async (node) =>
-            Profiles.getInstance().disableValidation(datasetProvider, ussFileProvider, jobsProvider, node));
-        vscode.commands.registerCommand("zowe.enableValidation", async (node) =>
-            Profiles.getInstance().enableValidation(datasetProvider, ussFileProvider, jobsProvider, node));
-        vscode.commands.registerCommand("zowe.uss.disableValidation", async (node) =>
-            Profiles.getInstance().disableValidation(datasetProvider, ussFileProvider, jobsProvider, node));
-        vscode.commands.registerCommand("zowe.uss.enableValidation", async (node) =>
-            Profiles.getInstance().enableValidation(datasetProvider, ussFileProvider, jobsProvider, node));
-        vscode.commands.registerCommand("zowe.jobs.disableValidation", async (node) =>
-            Profiles.getInstance().disableValidation(datasetProvider, ussFileProvider, jobsProvider, node));
-        vscode.commands.registerCommand("zowe.jobs.enableValidation", async (node) =>
-            Profiles.getInstance().enableValidation(datasetProvider, ussFileProvider, jobsProvider, node));
-        vscode.workspace.onDidChangeConfiguration(async (e) => {
-            await dsActions.refreshAll(datasetProvider);
-            await ussActions.refreshAllUSS(ussFileProvider);
-            await jobActions.refreshAllJobs(jobsProvider);
-        });
     }
 
     ZoweExplorerExtender.createInstance(datasetProvider, ussFileProvider, jobsProvider);
@@ -228,6 +219,8 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
     vscode.commands.registerCommand("zowe.renameDataSetMember", (node) => datasetProvider.rename(node));
     vscode.commands.registerCommand("zowe.hMigrateDataSet", (node) => dsActions.hMigrateDataSet(node));
     vscode.commands.registerCommand("zowe.hRecallDataSet", (node) => dsActions.hRecallDataSet(node));
+    vscode.commands.registerCommand("zowe.disableValidation", async (node) => Profiles.getInstance().disableValidation(node));
+    vscode.commands.registerCommand("zowe.enableValidation", async (node) => Profiles.getInstance().enableValidation(node));
     vscode.workspace.onDidChangeConfiguration((e) => {
         datasetProvider.onDidChangeConfiguration(e);
     });
@@ -259,6 +252,8 @@ function initUSSProvider(context: vscode.ExtensionContext, ussFileProvider: IZow
     vscode.commands.registerCommand("zowe.uss.editFile", (node: IZoweUSSTreeNode) => node.openUSS(false, false, ussFileProvider));
     vscode.commands.registerCommand("zowe.uss.saveSearch", async (node: IZoweUSSTreeNode) => ussFileProvider.saveSearch(node));
     vscode.commands.registerCommand("zowe.uss.removeSavedSearch", async (node: IZoweUSSTreeNode) => ussFileProvider.removeFavorite(node));
+    vscode.commands.registerCommand("zowe.uss.disableValidation", async (node) => Profiles.getInstance().disableValidation(node));
+    vscode.commands.registerCommand("zowe.uss.enableValidation", async (node) => Profiles.getInstance().enableValidation(node));
     vscode.workspace.onDidChangeConfiguration((e) => {
         ussFileProvider.onDidChangeConfiguration(e);
     });
@@ -296,6 +291,8 @@ function initJobsProvider(context: vscode.ExtensionContext, jobsProvider: IZoweT
     vscode.commands.registerCommand("zowe.jobs.removeFavorite", async (node) => jobsProvider.removeFavorite(node));
     vscode.commands.registerCommand("zowe.jobs.saveSearch", async (node) => jobsProvider.saveSearch(node));
     vscode.commands.registerCommand("zowe.jobs.removeSearchFavorite", async (node) => jobsProvider.removeFavorite(node));
+    vscode.commands.registerCommand("zowe.jobs.disableValidation", async (node) => Profiles.getInstance().disableValidation(node));
+    vscode.commands.registerCommand("zowe.jobs.enableValidation", async (node) => Profiles.getInstance().enableValidation(node));
     vscode.workspace.onDidChangeConfiguration((e) => {
         jobsProvider.onDidChangeConfiguration(e);
     });

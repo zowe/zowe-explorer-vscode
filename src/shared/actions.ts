@@ -12,7 +12,6 @@
 
 import * as vscode from "vscode";
 import * as globals from "../globals";
-import { IProfileLoaded } from "@zowe/imperative";
 import { openPS } from "../dataset/actions";
 import { IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweNodeType } from "../api/IZoweTreeNode";
 import { IZoweTree } from "../api/IZoweTree";
@@ -207,13 +206,11 @@ export async function returnIconState(node: IZoweNodeType) {
     return node;
 }
 
-export async function resetValidationSettings(node: IZoweNodeType) {
-    const profile: IProfileLoaded = node.getProfile();
-    const setting = await Profiles.getInstance().checkProfileValidationSetting(profile);
+export async function resetValidationSettings(node: IZoweNodeType, setting: boolean) {
     if (setting){
-        Profiles.getInstance().enableValidationContext(node);
+        await Profiles.getInstance().enableValidationContext(node);
     } else {
-        Profiles.getInstance().disableValidationContext(node);
+        await Profiles.getInstance().disableValidationContext(node);
     }
     return node;
 }
