@@ -27,7 +27,7 @@ import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { DatasetTree } from "./DatasetTree";
 import * as contextually from "../shared/context";
 import { returnIconState, resetValidationSettings } from "../shared/actions";
-import { closeOpenedTextFile, setFileSaved } from "../utils/workspace";
+import { setFileSaved } from "../utils/workspace";
 
 import * as nls from "vscode-nls";
 import { PersistentFilters } from "../PersistentFilters";

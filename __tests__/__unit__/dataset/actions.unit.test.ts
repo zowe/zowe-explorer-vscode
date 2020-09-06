@@ -1952,7 +1952,6 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("Zowe-Default-Datasets-PS");
         expect(createDataSetSpy).toHaveBeenCalledWith(zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, "TEST", undefined);
     });
-    
     it("Checking dataset attempt of creation with empty type", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
