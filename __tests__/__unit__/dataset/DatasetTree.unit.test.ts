@@ -23,9 +23,9 @@ import {
     createInstanceOfProfile,
     createIProfile,
     createISession, createISessionWithoutCredentials, createQuickPickContent,
-    createTreeView, createWorkspaceConfiguration
+    createTreeView, createWorkspaceConfiguration, createPersistentConfig
 } from "../../../__mocks__/mockCreators/shared";
-import { createDatasetSessionNode } from "../../../__mocks__/mockCreators/datasets";
+import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
 import { bindMvsApi, createMvsApi } from "../../../__mocks__/mockCreators/api";
 import * as workspaceUtils from "../../../src/utils/workspace";
 import { PersistentFilters } from "../../../src/PersistentFilters";
@@ -369,6 +369,7 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
             session: createISession(),
             imperativeProfile: createIProfile(),
             treeView: createTreeView(),
+            testDatasetTree: null,
             datasetSessionNode: null,
             profile: null,
             mockResetValidation: jest.fn(),
@@ -379,10 +380,14 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
             mockDisableValidationContext: jest.fn(),
             mockEnableValidationContext: jest.fn(),
             mockLoadDefaultProfile: jest.fn(),
-            mockProfileInstance: null
+            mockProfileInstance: null,
+            mockMHistory: PersistentFilters,
+            mockGetConfiguration: jest.fn(),
+            mockPersistenceSchema: createPersistentConfig()
         };
+
         newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
-        newMocks.profile = await Profiles.createInstance(newMocks.log);
+        newMocks.testDatasetTree = createDatasetTree(newMocks.datasetSessionNode, newMocks.treeView);
 
         // Profile instance mocks
         newMocks.mockProfileInstance = createInstanceOfProfile(newMocks.imperativeProfile);
@@ -414,10 +419,15 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
         const blockMocks = await createBlockMocks();
 
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
-        const testTree = new DatasetTree();
+        const testTree = createDatasetTree(blockMocks.datasetSessionNode, blockMocks.treeView);
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        Object.defineProperty(testTree.mHistory, "getSessions", {
+            value: jest.fn(() => {
+                return ["sestest", "profile1", "profile2"];
+            })
+        });
 
-        blockMocks.mockProfileInstance.checkProfileValidationSetting = blockMocks.mockValidationSetting.mockReturnValueOnce(false);
+        blockMocks.mockProfileInstance.validationSetting = blockMocks.mockValidationSetting.mockReturnValueOnce(false);
 
         testTree.addSession(blockMocks.imperativeProfile.name);
         expect(testTree.mSessionNodes[1].label).toBe(blockMocks.imperativeProfile.name);
@@ -428,8 +438,9 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
         const blockMocks = await createBlockMocks();
 
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
-        const testTree = new DatasetTree();
+        const testTree = createDatasetTree(blockMocks.datasetSessionNode, blockMocks.treeView);
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        testTree.mHistory.push(blockMocks.imperativeProfile.name);
 
         testTree.addSession();
         expect(testTree.mSessionNodes[1].label).toBe(blockMocks.imperativeProfile.name);
