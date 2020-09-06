@@ -81,7 +81,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             oldFavorite = originalNode;
             originalNode = this.findNonFavoritedNode(originalNode);
         } else {
-            oldFavorite = this.mFavorites.find((temp) => temp.fullPath.includes(originalNode.label));
+            oldFavorite = this.findFavoritedNode(originalNode);
         }
 
         // Get new label & path
@@ -90,12 +90,12 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         let parentPath;
         if (originalNode) {
             originalFullPath = originalNode.fullPath;
-            originalName = originalNode.label.replace(/\[.*?\]: /, "");
+            originalName = originalNode.label;
             parentPath = originalNode.fullPath.substr(0, originalNode.fullPath.indexOf(originalNode.label));
         } else {
             // Tree is not expanded, so original node cannot be found
             originalFullPath = oldFavorite.fullPath;
-            originalName = oldFavorite.label.replace(/\[.*?\]: /, "");
+            originalName = oldFavorite.label;
             parentPath = oldFavorite.fullPath.substr(0, oldFavorite.fullPath.indexOf(originalName));
         }
         const newName = await vscode.window.showInputBox({ value: originalName });
@@ -149,16 +149,31 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
     public uploadDialog(node: IZoweUSSTreeNode) {
         throw new Error("Method not implemented.");
     }
+
+    /**
+     * Finds the equivalent node as a favorite.
+     * Used to ensure functions like delete, rename are synced between non-favorite nodes and their favorite equivalents.
+     *
+     * @param node
+     */
+    public findFavoritedNode(node: IZoweUSSTreeNode) {
+        // Get node's profile node in favorites
+        const profileName = node.getProfileName();
+        const profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profileName);
+        return profileNodeInFavorites.children.find(
+            (temp) => (temp.label === node.getLabel()) && (temp.contextValue.includes(node.contextValue))
+        );
+    }
+
     /**
      * Finds the equivalent node not as a favorite
      *
      * @param node
      */
     public findNonFavoritedNode(node: IZoweUSSTreeNode): IZoweUSSTreeNode {
-        const profileLabel = node.label.substring(1, node.label.indexOf("]"));
-        const nodeLabel = node.label.match(/(?<=\[(.*)\]: )(.*)/)[0];
-        const sessionNode = this.mSessionNodes.find((session) => session.label.includes(profileLabel));
-        return sessionNode.children.find((temp) => temp.label === nodeLabel);
+        const profileName = node.getProfileName();
+        const sessionNode = this.mSessionNodes.find((session) => session.label.trim() === profileName);
+        return sessionNode.children.find((temp) => temp.label === node.label);
     }
 
     /**
