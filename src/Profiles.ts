@@ -58,13 +58,9 @@ export class Profiles {
     private profileManagerByType= new Map<string, CliProfileManager>();
     private constructor(private log: Logger) {}
 
-    public async checkCurrentProfile(profileLoaded: IProfileLoaded, prompt?: boolean) {
+    public async checkCurrentProfile(profileLoaded: IProfileLoaded, prompt?: boolean): Promise<any> {
         try {
-            const validSession = await (ZoweExplorerApiRegister.getCommonApi(profileLoaded)
-                                                               .getValidSession(profileLoaded,
-                                                                                profileLoaded.name,
-                                                                                null,
-                                                                                prompt));
+            const validSession = await ZoweExplorerApiRegister.getCommonApi(profileLoaded).getValidSession(profileLoaded, profileLoaded.name, null, prompt);
 
             if (!validSession) {
                 // Credentials are invalid
@@ -72,8 +68,15 @@ export class Profiles {
                 return { status: "inactive", name: profileLoaded.name, session: null };
             } else {
                 // Credentials are valid
-                this.validProfile = ValidProfileEnum.VALID;
-                return { status: "active", name: profileLoaded.name, session: validSession };
+                const validStatus = await ZoweExplorerApiRegister.getCommonApi(profileLoaded).getStatus(profileLoaded, profileLoaded.type);
+                if (validStatus === "inactive") {
+                    // Connection details are invalid
+                    this.validProfile = ValidProfileEnum.INVALID;
+                    return { status: "inactive", name: profileLoaded.name, session: null };
+                } else {
+                    this.validProfile = ValidProfileEnum.VALID;
+                    return { status: "active", name: profileLoaded.name, session: validSession };
+                }
             }
         } catch (error) {
             errorHandling(error, profileLoaded.name,
@@ -294,6 +297,7 @@ export class Profiles {
                                                                                           profileLoaded.profile,
                                                                                           await this.getSchema("zosmf"));
             newProfileDetails.name = newProfileName;
+            newProfileDetails.type = "zosmf";
             if (!newProfileDetails.user) { delete newProfileDetails.user; }
             if (!newProfileDetails.password) { delete newProfileDetails.password; }
 
@@ -564,10 +568,10 @@ export class Profiles {
         const OrigProfileInfo = this.loadedProfile.profile;
         const NewProfileInfo = ProfileInfo.profile;
 
-        const profileArray = Object.keys(this.loadedProfile.profile);
+        const profileArray = Object.keys(NewProfileInfo);
         for (const value of profileArray) {
             OrigProfileInfo[value] = NewProfileInfo[value];
-            if (!NewProfileInfo[value]) { delete OrigProfileInfo[value]; }
+            if (NewProfileInfo[value] == null) { delete OrigProfileInfo[value]; }
         }
 
         const updateParms: IUpdateProfile = {

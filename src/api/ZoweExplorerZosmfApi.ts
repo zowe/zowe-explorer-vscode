@@ -49,10 +49,10 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
     public async getStatus(validateProfile?: IProfileLoaded, profileType?: string): Promise<string> {
         // This API call is specific for z/OSMF profiles
         if (profileType === "zosmf") {
-            const validateSession = await (this.getValidSession(validateProfile,
+            const validateSession = await this.getValidSession(validateProfile,
                                                                 validateProfile.name,
                                                                 DefaultProfileManager.getInstance().getDefaultProfile("base"),
-                                                                false));
+                                                                false);
             let sessionStatus;
             if (validateSession) { sessionStatus = await zowe.CheckStatus.getZosmfInfo(validateSession); }
 
@@ -66,17 +66,25 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
         }
     }
 
-    public async getValidSession(serviceProfile: IProfileLoaded, profileName: string, baseProfile?: IProfileLoaded, prompt?: boolean) {
+    public async getValidSession(serviceProfile: IProfileLoaded,
+                                 profileName: string,
+                                 baseProfile?: IProfileLoaded,
+                                 prompt?: boolean): Promise<Session | null> {
         // Retrieve baseProfile
         if (!baseProfile) {
             baseProfile = DefaultProfileManager.getInstance().getDefaultProfile("base");
         }
 
         // If user exists in serviceProfile, use serviceProfile to login because it has precedence over baseProfile
-        if (serviceProfile.profile.user) {
+        if (serviceProfile.profile.user || !baseProfile.profile.tokenValue) {
             if (prompt) {
                 // Select for prompting only fields which are not defined
                 const schemaArray = [];
+                if (!serviceProfile.profile.user && (baseProfile && !baseProfile.profile.user)) {
+                    if (baseProfile && !baseProfile.profile.tokenValue) {
+                        schemaArray.push("user");
+                    }
+                }
                 if (!serviceProfile.profile.password && (baseProfile && !baseProfile.profile.password)) {
                     if (baseProfile && !baseProfile.profile.tokenValue) {
                         schemaArray.push("password");
@@ -150,8 +158,8 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
                 await errorHandling(error); }
         } else {
             // No baseProfile exists, nor a user in serviceProfile. It is impossible to login with the currently-provided information.
-            throw new Error(localize("getValidSession.loginImpossible",
-                "Profile {0} is invalid. Please check your login details and try again.", profileName));
+            // throw new Error(localize("getValidSession.loginImpossible",
+            //     "Profile {0} is invalid. Please check your login details and try again.", profileName));
         }
     }
 
@@ -175,7 +183,7 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
                 case "host" :
                     const hostOptions: vscode.InputBoxOptions = {
                         ignoreFocusOut: true,
-                        value: oldDetails[profileDetail] ? oldDetails[profileDetail] : null,
+                        value: oldDetails && oldDetails[profileDetail] ? oldDetails[profileDetail] : null,
                         placeHolder: localize("collectProfileDetails.option.prompt.url.placeholder", "Optional: url:port"),
                         prompt: localize("collectProfileDetails.option.prompt.url", "Enter a z/OS URL in the format 'url:port'."),
                         validateInput: (value) => {
@@ -226,7 +234,7 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
                     if (schemaValues[profileDetail] === 0) {
                         let portOptions: vscode.InputBoxOptions = {
                             ignoreFocusOut: true,
-                            value: oldDetails[profileDetail] ? oldDetails[profileDetail] : null,
+                            value: oldDetails && oldDetails[profileDetail] ? oldDetails[profileDetail] : null,
                             validateInput: (value) => {
                                 if (Number.isNaN(Number(value))) {
                                     return localize("collectProfileDetails.invalidPort", "Please enter a valid port number");
@@ -240,7 +248,7 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
                             // Default value defined in schema
                             portOptions = {
                                 prompt: schema[profileDetail].optionDefinition.description.toString(),
-                                value: oldDetails[profileDetail] ?
+                                value: oldDetails && oldDetails[profileDetail] ?
                                        oldDetails[profileDetail] : schema[profileDetail].optionDefinition.defaultValue.toString()
                             };
                         } else {
@@ -272,8 +280,8 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
                         placeHolder: localize("collectProfileDetails.option.prompt.username.placeholder", "Optional: User Name"),
                         prompt: localize("collectProfileDetails.option.prompt.username", "Enter the user name for the connection."),
                         ignoreFocusOut: true,
-                        value: oldDetails[profileDetail] ? oldDetails[profileDetail] : null,
-                        validateInput: (value) => {
+                        value: oldDetails && oldDetails[profileDetail] ? oldDetails[profileDetail] : null,
+                        validateInput: async (value) => {
                             if (value === undefined || value.trim() === undefined) {
                                 return localize("collectProfileDetails.invalidUser", "Please enter a valid username");
                             } else { return null; }
@@ -297,7 +305,7 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
                         prompt: localize("collectProfileDetails.option.prompt.password", "Enter the password for the connection."),
                         password: true,
                         ignoreFocusOut: true,
-                        value: oldDetails[profileDetail] ? oldDetails[profileDetail] : null,
+                        value: oldDetails && oldDetails[profileDetail] ? oldDetails[profileDetail] : null,
                         validateInput: (value) => {
                             if (value === undefined || value.trim() === undefined) {
                                 return localize("collectProfileDetails.invalidUser", "Please enter a valid password");
@@ -426,7 +434,7 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
                                 defaultOptions = {
                                     placeHolder: responseDescription,
                                     prompt: responseDescription,
-                                    value: oldDetails[profileDetail] ? oldDetails[profileDetail] : null,
+                                    value: oldDetails && oldDetails[profileDetail] ? oldDetails[profileDetail] : null,
                                 };
                             }
 

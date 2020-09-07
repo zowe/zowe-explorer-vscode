@@ -160,7 +160,23 @@ export class ZoweTreeProvider {
             }
             this.refresh();
         }
-        await Profiles.getInstance().checkCurrentProfile(profile, false);
+        const profileStatus = await Profiles.getInstance().checkCurrentProfile(profile, false);
+
+        // Set node to proper status in tree
+        let newIcon;
+        if (profileStatus.status === "inactive") {
+            node.contextValue = node.contextValue + globals.INACTIVE_CONTEXT;
+            newIcon = getIconById(IconId.sessionInactive);
+        } else {
+            node.contextValue = node.contextValue + globals.ACTIVE_CONTEXT;
+            newIcon = getIconById(IconId.sessionActive);
+        }
+
+        // Get proper icon for node
+        if (newIcon) {
+            node.iconPath = newIcon.path;
+        }
+
         node.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
         node.dirty = true;
         zoweFileProvider.refreshElement(node);

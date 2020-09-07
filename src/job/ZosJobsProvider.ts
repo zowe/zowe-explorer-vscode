@@ -120,9 +120,6 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
     public uploadDialog(node: IZoweJobTreeNode) {
         throw new Error("Method not implemented.");
     }
-    public filterPrompt(node: IZoweJobTreeNode) {
-        return this.searchPrompt(node);
-    }
 
     /**
      * Takes argument of type IZoweJobTreeNode and retrieves all of the first level children
@@ -139,8 +136,8 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             if (contextually.isFavoriteContext(element)) {
                 return this.mFavorites;
             }
-            await Profiles.getInstance().checkCurrentProfile(element.getProfile(), true);
-            return element.getChildren();
+            const newSession = await Profiles.getInstance().checkCurrentProfile(element.getProfile());
+            if (newSession) { return element.getChildren(); }
         }
         return this.mSessionNodes;
     }
@@ -307,7 +304,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      * @param {IZoweJobTreeNode} node - The session node
      * @returns {Promise<void>}
      */
-    public async searchPrompt(node: IZoweJobTreeNode) {
+    public async filterPrompt(node: IZoweJobTreeNode) {
         let choice: vscode.QuickPickItem;
         let searchCriteria: string = "";
         const hasHistory = this.mHistory.getSearchHistory().length > 0;

@@ -140,7 +140,7 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
     uploadDialog(node: IZoweDatasetTreeNode): any;
 
     // TODO replace with filterPrompt
-    // datasetFilterPrompt(node: IZoweNodeType): any;
+    // filterPrompt(node: IZoweNodeType): any;
     // filterPrompt(node: IZoweUSSTreeNode): any;
     // searchPrompt(node: IZoweJobTreeNode): any;
     /**

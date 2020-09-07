@@ -690,7 +690,7 @@ describe("Dataset Tree Unit Tests - Function flipState", () => {
         expect(JSON.stringify(testTree.mSessionNodes[1].iconPath)).toContain("pattern.svg");
     });
 });
-describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
+describe("Dataset Tree Unit Tests - Function filterPrompt", () => {
     function createBlockMocks() {
         const session = createISession();
         const imperativeProfile = createIProfile();
@@ -721,7 +721,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
 
-        await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+        await testTree.filterPrompt(testTree.mSessionNodes[1]);
 
         expect(testTree.mSessionNodes[1].contextValue).toEqual(globals.DS_SESSION_CONTEXT + globals.ACTIVE_CONTEXT);
         expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD1.STUFF");
@@ -738,7 +738,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
 
-        await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+        await testTree.filterPrompt(testTree.mSessionNodes[1]);
 
         expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith("You must enter a pattern.");
     });
@@ -755,7 +755,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
         testTree.addSearchHistory("test");
 
-        await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+        await testTree.filterPrompt(testTree.mSessionNodes[1]);
 
         expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD1.STUFF");
     });
@@ -771,7 +771,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
         testTree.addSearchHistory("test");
 
-        await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+        await testTree.filterPrompt(testTree.mSessionNodes[1]);
 
         expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith("No selection made.");
     });
@@ -788,7 +788,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
             vscode.TreeItemCollapsibleState.None, testTree.mSessionNodes[1], blockMocks.session, undefined, undefined, blockMocks.imperativeProfile);
         favoriteSearch.contextValue = globals.DS_SESSION_CONTEXT + globals.FAV_SUFFIX;
 
-        await testTree.datasetFilterPrompt(favoriteSearch);
+        await testTree.filterPrompt(favoriteSearch);
 
         expect(addSessionSpy).toHaveBeenLastCalledWith(blockMocks.datasetSessionNode.label.trim());
     });
@@ -803,7 +803,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
 
-        await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+        await testTree.filterPrompt(testTree.mSessionNodes[1]);
 
         expect(testTree.mSessionNodes[1].contextValue).toEqual(globals.DS_SESSION_CONTEXT + globals.ACTIVE_CONTEXT);
         expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD1.STUFF");
@@ -819,7 +819,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
 
-        await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+        await testTree.filterPrompt(testTree.mSessionNodes[1]);
 
         expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith("You must enter a pattern.");
     });
@@ -840,7 +840,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
         testTree.addSearchHistory("test");
 
-        await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+        await testTree.filterPrompt(testTree.mSessionNodes[1]);
 
         expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD1.STUFF");
     });
@@ -859,7 +859,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
         testTree.addSearchHistory("test");
 
-        await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+        await testTree.filterPrompt(testTree.mSessionNodes[1]);
 
         expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith("No selection made.");
     });

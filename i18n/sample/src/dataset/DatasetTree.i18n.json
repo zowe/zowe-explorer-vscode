@@ -14,7 +14,7 @@
     "searchHistory.options.prompt": "Select a filter",
     "enterPattern.pattern": "No selection made.",
     "enterPattern.options.prompt": "Search data sets by entering patterns: use a comma to separate multiple patterns",
-    "datasetFilterPrompt.enterPattern": "You must enter a pattern.",
+    "filterPrompt.enterPattern": "You must enter a pattern.",
     "renameDataSet.cancelled": "Rename operation cancelled.",
     "renameDataSet.log.debug": "Renaming data set ",
     "renameDataSet.log.error": "Error encountered when renaming data set! ",

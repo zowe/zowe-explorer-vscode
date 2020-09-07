@@ -111,9 +111,6 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     public uploadDialog(node: IZoweDatasetTreeNode) {
         throw new Error("Method not implemented.");
     }
-    public filterPrompt(node: IZoweDatasetTreeNode) {
-        return this.datasetFilterPrompt(node);
-    }
 
     /**
      * Takes argument of type IZoweDatasetTreeNode and retrieves all of the first level children
@@ -126,8 +123,8 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             if (contextually.isFavoriteContext(element)) {
                 return this.mFavorites;
             }
-            await Profiles.getInstance().checkCurrentProfile(element.getProfile(), true);
-            return element.getChildren();
+            const newSession = await Profiles.getInstance().checkCurrentProfile(element.getProfile());
+            if (newSession) { return element.getChildren(); }
         }
         return this.mSessionNodes;
     }
@@ -542,10 +539,10 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         return loadedItems;
     }
 
-    public async datasetFilterPrompt(node: IZoweDatasetTreeNode) {
+    public async filterPrompt(node: IZoweDatasetTreeNode) {
         this.log.debug(localize("enterPattern.log.debug.prompt", "Prompting the user for a data set pattern"));
         let pattern: string;
-        await this.checkCurrentProfile(node, true);
+        const profileStatus = await this.checkCurrentProfile(node, true);
 
         if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
             if (contextually.isSessionNotFav(node)) {
@@ -588,7 +585,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 // get user input
                 pattern = await vscode.window.showInputBox(options2);
                 if (!pattern) {
-                    vscode.window.showInformationMessage(localize("datasetFilterPrompt.enterPattern", "You must enter a pattern."));
+                    vscode.window.showInformationMessage(localize("filterPrompt.enterPattern", "You must enter a pattern."));
                     return;
                 }
             } else {
