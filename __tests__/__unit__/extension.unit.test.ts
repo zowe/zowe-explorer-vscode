@@ -339,7 +339,7 @@ describe("Extension Unit Tests", () => {
         const globalMocks = await createGlobalMocks();
 
         Object.defineProperty(vscode.env, "appName", { value: "Eclipse Theia" });
-        Object.defineProperty(vscode.env, "uiKind", { value: 2 })
+        Object.defineProperty(vscode.env, "uiKind", { value: 2 });
         globalMocks.mockExistsSync.mockReset();
         globalMocks.mockReaddirSync.mockReset();
         globalMocks.mockExistsSync.mockReturnValueOnce(true);
