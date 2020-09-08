@@ -107,7 +107,7 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
                 host: serviceProfile.profile.host ? serviceProfile.profile.host : baseProfile.profile.host,
                 port: serviceProfile.profile.port ? serviceProfile.profile.port : baseProfile.profile.port,
                 basePath: serviceProfile.profile.basePath ? serviceProfile.profile.basePath : baseProfile.profile.basePath,
-                rejectUnauthorized: serviceProfile.profile.rejectUnauthorized ?
+                rejectUnauthorized: serviceProfile.profile.rejectUnauthorized != null ?
                                     serviceProfile.profile.rejectUnauthorized : baseProfile.profile.rejectUnauthorized,
                 user: serviceProfile.profile.user ? serviceProfile.profile.user : baseProfile.profile.user,
                 password: serviceProfile.profile.password ? serviceProfile.profile.password : baseProfile.profile.password,
@@ -555,7 +555,7 @@ export class ZosmfMvsApi extends ZosmfApiCommon implements ZoweExplorerApi.IMvs 
 
     public async createDataSet(dataSetType: zowe.CreateDataSetTypeEnum, dataSetName: string, options?: Partial<zowe.ICreateDataSetOptions>
         ): Promise<zowe.IZosFilesResponse> {
-        return zowe.Create.dataSet(await this.getSession(), dataSetType, dataSetName, options);
+        return zowe.Create.dataSet(await (this.getSession()), dataSetType, dataSetName, options);
     }
 
     public async createDataSetMember(dataSetName: string, options?: zowe.IUploadOptions
