@@ -1220,6 +1220,17 @@ describe("Dataset Tree Unit Tests - Function findFavoritedNode", () => {
 
         expect(foundNode).toBe(favoriteNode);
     });
+    it("Checking that function does not error when there is no favorite or matching profile node in Favorites", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        const node = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.datasetSessionNode, null);
+
+        expect(() => {testTree.findFavoritedNode(node);}).not.toThrow();
+    });
 });
 describe("Dataset Tree Unit Tests - Function findNonFavoritedNode", () => {
     function createBlockMocks() {
