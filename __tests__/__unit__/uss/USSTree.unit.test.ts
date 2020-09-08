@@ -572,7 +572,8 @@ describe("USSTree Unit Tests - Function USSTree.findFavoritedNode()", async () =
         globalMocks.testUSSNode.contextValue = globals.DS_TEXT_FILE_CONTEXT;
 
         const ussFavNode = createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile);
-        const ussFavNodeParent = new ZoweUSSNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, globalMocks.testSession, null, false, globalMocks.testProfile.name);
+        const ussFavNodeParent = new ZoweUSSNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null,
+            globalMocks.testSession, null, false, globalMocks.testProfile.name);
         ussFavNodeParent.children.push(ussFavNode);
         globalMocks.testTree.mFavorites.push(ussFavNodeParent);
 
@@ -594,7 +595,8 @@ describe("USSTree Unit Tests - Function USSTree.findNonFavoritedNode()", () => {
     it("Testing that findNonFavoritedNode() returns the non-favorite from a favorite node", async () => {
         const globalMocks = await createGlobalMocks();
         const ussFavNode = createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile);
-        const ussFavNodeParent = new ZoweUSSNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, globalMocks.testSession, null, false, globalMocks.testProfile.name);
+        const ussFavNodeParent = new ZoweUSSNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null,
+            globalMocks.testSession, null, false, globalMocks.testProfile.name);
         ussFavNodeParent.children.push(ussFavNode);
         globalMocks.testTree.mFavorites.push(ussFavNodeParent);
         globalMocks.testTree.mSessionNodes[1].children.push(globalMocks.testUSSNode);
@@ -669,17 +671,18 @@ describe("USSTree Unit Tests - Function USSTree.rename()", () => {
         globalMocks.testUSSNode.contextValue = globals.DS_TEXT_FILE_CONTEXT;
 
         const ussFavNode = createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile);
-        const ussFavNodeParent = new ZoweUSSNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, globalMocks.testSession, null, false, globalMocks.testProfile.name);
+        const ussFavNodeParent = new ZoweUSSNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null,
+            globalMocks.testSession, null, false, globalMocks.testProfile.name);
         ussFavNodeParent.children.push(ussFavNode);
         globalMocks.testTree.mFavorites.push(ussFavNodeParent);
 
         const newMocks = {
             ussFavNode,
             ussFavNodeParent
-        }
+        };
 
         return newMocks;
-    };
+    }
 
     it("Tests that USSTree.rename() is executed successfully for non-favorited node that is also in Favorites", async () => {
         const globalMocks = await createGlobalMocks();
