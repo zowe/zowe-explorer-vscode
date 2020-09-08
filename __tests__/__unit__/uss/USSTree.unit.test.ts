@@ -640,18 +640,31 @@ describe("USSTree Unit Tests - Function USSTree.saveSearch()", () => {
 });
 
 describe("USSTree Unit Tests - Function USSTree.rename()", () => {
+    function createBlockMocks(globalMocks) {
+        globalMocks.testUSSNode.contextValue = globals.DS_TEXT_FILE_CONTEXT;
+
+        const ussFavNode = createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile);
+        const ussFavNodeParent = new ZoweUSSNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, globalMocks.testSession, null, false, globalMocks.testProfile.name);
+        ussFavNodeParent.children.push(ussFavNode);
+        globalMocks.testTree.mFavorites.push(ussFavNodeParent);
+
+        const newMocks = {
+            ussFavNode,
+            ussFavNodeParent
+        }
+
+        return newMocks;
+    };
+
     it("Tests that USSTree.rename() is executed successfully", async () => {
         const globalMocks = await createGlobalMocks();
+        createBlockMocks(globalMocks);
         globalMocks.testUSSNode.fullPath = globalMocks.testUSSNode.fullPath + "/usstest";
-        const ussFavNode = createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile);
+        globalMocks.testTree.mSessionNodes[1].children.push(globalMocks.testUSSNode);
         const renameNode = jest.spyOn(globalMocks.testUSSNode, "rename");
         const removeFavorite = jest.spyOn(globalMocks.testTree, "removeFavorite");
         const addFavorite = jest.spyOn(globalMocks.testTree, "addFavorite");
         renameNode.mockResolvedValue(false);
-        globalMocks.testTree.mSessionNodes[1].children.push(globalMocks.testUSSNode);
-        const ussFavNodeParent = new ZoweUSSNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, globalMocks.testSession, null, false, globalMocks.testProfile.name);
-        ussFavNodeParent.children.push(ussFavNode);
-        globalMocks.testTree.mFavorites.push(ussFavNodeParent);
 
         globalMocks.showInputBox.mockReturnValueOnce("new name");
 
@@ -664,18 +677,14 @@ describe("USSTree Unit Tests - Function USSTree.rename()", () => {
 
     it("Tests that USSTree.rename() is executed successfully for a favorited USS file", async () => {
         const globalMocks = await createGlobalMocks();
-        globalMocks.testUSSNode.contextValue = globals.DS_TEXT_FILE_CONTEXT;
-
-        const ussFavNode = createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile);
+        const blockMocks = createBlockMocks(globalMocks);
         globalMocks.testTree.mSessionNodes[1].children.push(globalMocks.testUSSNode);
-        const ussFavNodeParent = new ZoweUSSNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, globalMocks.testSession, null, false, globalMocks.testProfile.name);
-        ussFavNodeParent.children.push(ussFavNode);
-        globalMocks.testTree.mFavorites.push(ussFavNodeParent);
         const removeFavorite = jest.spyOn(globalMocks.testTree, "removeFavorite");
         const addFavorite = jest.spyOn(globalMocks.testTree, "addFavorite");
         globalMocks.showInputBox.mockReturnValueOnce("new name");
 
-        await globalMocks.testTree.rename(ussFavNode);
+        await globalMocks.testTree.rename(blockMocks.ussFavNode);
+
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(0);
         expect(globalMocks.renameUSSFile.mock.calls.length).toBe(1);
         expect(removeFavorite.mock.calls.length).toBe(1);
@@ -684,16 +693,13 @@ describe("USSTree Unit Tests - Function USSTree.rename()", () => {
 
     it("Tests that USSTree.rename() is executed successfully for a favorited USS file, when tree is not expanded", async () => {
         const globalMocks = await createGlobalMocks();
-
-        const ussFavNode = createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile);
-        const ussFavNodeParent = new ZoweUSSNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, globalMocks.testSession, null, false, globalMocks.testProfile.name);
-        ussFavNodeParent.children.push(ussFavNode);
-        globalMocks.testTree.mFavorites.push(ussFavNodeParent);
+        const blockMocks = createBlockMocks(globalMocks);
         const removeFavorite = jest.spyOn(globalMocks.testTree, "removeFavorite");
         const addFavorite = jest.spyOn(globalMocks.testTree, "addFavorite");
         globalMocks.showInputBox.mockReturnValueOnce("new name");
 
-        await globalMocks.testTree.rename(ussFavNode);
+        await globalMocks.testTree.rename(blockMocks.ussFavNode);
+
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(0);
         expect(globalMocks.renameUSSFile.mock.calls.length).toBe(1);
         expect(removeFavorite.mock.calls.length).toBe(1);
@@ -702,11 +708,12 @@ describe("USSTree Unit Tests - Function USSTree.rename()", () => {
 
     it("Tests that USSTree.rename() exits when blank input is provided", async () => {
         const globalMocks = await createGlobalMocks();
-
+        createBlockMocks(globalMocks);
         const refreshSpy = jest.spyOn(globalMocks.testTree, "refreshElement");
         globalMocks.showInputBox.mockReturnValueOnce("");
 
         await globalMocks.testTree.rename(globalMocks.testUSSNode);
+
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(0);
         expect(globalMocks.renameUSSFile.mock.calls.length).toBe(0);
         expect(refreshSpy).not.toHaveBeenCalled();
@@ -714,7 +721,7 @@ describe("USSTree Unit Tests - Function USSTree.rename()", () => {
 
     it("Tests that USSTree.rename() fails when error is thrown", async () => {
         const globalMocks = await createGlobalMocks();
-
+        createBlockMocks(globalMocks);
         globalMocks.showInputBox.mockReturnValueOnce("new name");
         globalMocks.renameUSSFile.mockRejectedValueOnce(Error("testError"));
 
@@ -726,21 +733,6 @@ describe("USSTree Unit Tests - Function USSTree.rename()", () => {
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(1);
     });
 });
-
-// describe("USSTree Unit Tests - Function USSTree.rename()", () => {
-//     function blockMocks(globalMocks) {
-//         globalMocks.testUSSNode.label = "";
-//         globalMocks.testUSSNode.shortLabel = "";
-//         globalMocks.testTree.mSessionNodes[1].children.push(globalMocks.testUSSNode);
-        
-
-//         const newMocks = {
-//             testUSSNode: globalMocks.testUSSNode
-//         }
-
-//         return newMocks;
-//     };
-// });
 
 describe("USSTree Unit Tests - Functions USSTree.addFileHistory() & USSTree.getFileHistory()", () => {
     it("Tests that addFileHistory() & getFileHistory() are executed successfully", async () => {
