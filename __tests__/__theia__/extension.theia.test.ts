@@ -257,7 +257,7 @@ describe("Delete Profile", () => {
         await driver.sleep(SLEEPP);
         // tslint:disable-next-line: max-line-length
         const delmsg = (await driver.wait(until.elementLocated(By.xpath("/html/body/div[3]/div/div[1]/div/div/div/div/div[2]/span")), WAITTIME)).getText();
-        console.log("delete msg : "+ delmsg);
+        // console.log("delete msg : "+ delmsg);
         // expect(delmsg).to.equal("Profile DeleteDSProfile was deleted.");
     });
     it("Should Delete Profile from USS", async () => {
