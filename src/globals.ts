@@ -48,7 +48,7 @@ export const INACTIVE_CONTEXT = CONTEXT_PREFIX + "Inactive";
 export const ACTIVE_CONTEXT = CONTEXT_PREFIX + "Active";
 export const ICON_STATE_OPEN = "open";
 export const ICON_STATE_CLOSED = "closed";
-export const VSCODE_APPNAME: string[] = ['Visual Studio Code', 'VSCodium'];
+export const VSCODE_APPNAME: string[] = ["Visual Studio Code", "VSCodium"];
 export const ROOTPATH = path.join(__dirname, "..", "..");
 
 /**
