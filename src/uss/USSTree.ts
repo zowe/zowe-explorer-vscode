@@ -160,6 +160,9 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         // Get node's profile node in favorites
         const profileName = node.getProfileName();
         const profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profileName);
+        if (!profileNodeInFavorites){
+            return;
+        }
         return profileNodeInFavorites.children.find(
             (temp) => (temp.label === node.getLabel()) && (temp.contextValue.includes(node.contextValue))
         );
