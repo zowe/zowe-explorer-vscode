@@ -48,7 +48,7 @@ export const INACTIVE_CONTEXT = CONTEXT_PREFIX + "Inactive";
 export const ACTIVE_CONTEXT = CONTEXT_PREFIX + "Active";
 export const ICON_STATE_OPEN = "open";
 export const ICON_STATE_CLOSED = "closed";
-export const THEIA = "Eclipse Theia";
+export const VSCODE_APPNAME: string[] = ['Visual Studio Code', 'VSCodium'];
 export const ROOTPATH = path.join(__dirname, "..", "..");
 
 /**
@@ -67,7 +67,8 @@ export enum PersistenceSchemaEnum {
 export function defineGlobals(tempPath: string | undefined) {
     // Set app name
     const appName: string = vscode.env.appName;
-    if (appName && appName !== 'Visual Studio Code' && appName !== 'VSCodium') {
+    // A value of 2 for vscode.env.uiKind means Zowe Explorer is running from a web app.
+    if (appName && !this.VSCODE_APPNAME.includes(appName) && vscode.env.uiKind === 2) {
         this.ISTHEIA = true;
     }
 
