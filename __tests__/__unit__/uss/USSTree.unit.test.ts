@@ -566,12 +566,37 @@ describe("USSTree Unit Tests - Function USSTree.searchInLoadedItems()", () => {
     });
 });
 
+describe("USSTree Unit Tests - Function USSTree.findFavoritedNode()", async () => {
+    it("Testing that findFavoritedNode() returns the favorite of a non-favorited node", async () => {
+        const globalMocks = await createGlobalMocks();
+        globalMocks.testUSSNode.contextValue = globals.DS_TEXT_FILE_CONTEXT;
+
+        const ussFavNode = createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile);
+        const ussFavNodeParent = new ZoweUSSNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, globalMocks.testSession, null, false, globalMocks.testProfile.name);
+        ussFavNodeParent.children.push(ussFavNode);
+        globalMocks.testTree.mFavorites.push(ussFavNodeParent);
+
+        const foundNode = await globalMocks.testTree.findFavoritedNode(globalMocks.testUSSNode);
+
+        expect(foundNode).toStrictEqual(ussFavNode);
+    });
+    it("Tests that findFavoritedNode() does not error when there is no favorite or matching profile node in Favorites", async () => {
+        const globalMocks = await createGlobalMocks();
+        globalMocks.testTree.mSessionNodes[1].children.push(globalMocks.testUSSNode);
+
+        const node = createUSSNode(globalMocks.testSession, globalMocks.testProfile);
+
+        expect(() => {globalMocks.testTree.findFavoritedNode(node);}).not.toThrow();
+    });
+});
+
 describe("USSTree Unit Tests - Function USSTree.findNonFavoritedNode()", () => {
     it("Testing that findNonFavoritedNode() returns the non-favorite from a favorite node", async () => {
         const globalMocks = await createGlobalMocks();
-
         const ussFavNode = createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile);
-        globalMocks.testTree.mFavorites.push(ussFavNode);
+        const ussFavNodeParent = new ZoweUSSNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, globalMocks.testSession, null, false, globalMocks.testProfile.name);
+        ussFavNodeParent.children.push(ussFavNode);
+        globalMocks.testTree.mFavorites.push(ussFavNodeParent);
         globalMocks.testTree.mSessionNodes[1].children.push(globalMocks.testUSSNode);
 
         const nonFaveNode = await globalMocks.testTree.findNonFavoritedNode(ussFavNode);
