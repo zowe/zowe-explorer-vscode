@@ -175,7 +175,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      */
     public findNonFavoritedNode(node: IZoweUSSTreeNode): IZoweUSSTreeNode {
         const profileName = node.getProfileName();
-        const sessionNode = this.mSessionNodes.find((session) => session.label.trim() === profileName);
+        const sessionNode = this.mSessionNodes.find((session) => session.label.includes(profileName));
         return sessionNode.children.find((temp) => temp.label === node.label);
     }
 
