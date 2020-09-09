@@ -623,7 +623,10 @@ describe("USSTree Unit Tests - Function USSTree.rename()", () => {
         globalMocks.testUSSNode.label = "";
         globalMocks.testUSSNode.shortLabel = "";
 
+        jest.spyOn(globalMocks.testTree, "findNonFavoritedNode").mockReturnValue(globalMocks.testUSSNode);
         const ussFavNode = createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile);
+        ussFavNode.contextValue = globals.USS_DIR_CONTEXT + globals.FAV_SUFFIX;
+        globalMocks.testUSSNode.contextValue = globals.USS_DIR_CONTEXT;
         globalMocks.testTree.mFavorites.push(ussFavNode);
         const removeFavorite = jest.spyOn(globalMocks.testTree, "removeFavorite");
         const addFavorite = jest.spyOn(globalMocks.testTree, "addFavorite");
