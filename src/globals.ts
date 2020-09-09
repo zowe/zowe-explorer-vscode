@@ -21,7 +21,7 @@ export let USS_DIR;
 export let DS_DIR;
 export let ISTHEIA: boolean = false; // set during activate
 export let LOG: Logger;
-export const COMMAND_COUNT = 77;
+export const COMMAND_COUNT = 78;
 export const CONTEXT_PREFIX = "_";
 export const FAV_SUFFIX = CONTEXT_PREFIX + "fav";
 export const RC_SUFFIX = CONTEXT_PREFIX + "rc=";

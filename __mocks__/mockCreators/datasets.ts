@@ -44,7 +44,7 @@ export function createDatasetTree(sessionNode: ZoweDatasetNode, treeView: any): 
         createFilterString: jest.fn(),
         setItem: jest.fn(),
         getTreeView: jest.fn().mockImplementation(() => treeView),
-        searchInLoadedItems: jest.fn(),
+        getAllLoadedItems: jest.fn(),
         removeFavorite: jest.fn(),
         deleteSession: jest.fn(),
         removeFileHistory: jest.fn(),
