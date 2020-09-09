@@ -11,6 +11,8 @@
 
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
+import * as imperative from "@zowe/imperative";
+import * as shared from "../../../src/shared/actions";
 import {
     createBasicZosmfSession, createInstanceOfProfile,
     createIProfile,
@@ -30,7 +32,8 @@ import * as globals from "../../../src/globals";
 import * as path from "path";
 import * as fs from "fs";
 import * as sharedUtils from "../../../src/shared/utils";
-import { Profiles } from "../../../src/Profiles";
+import { Profiles, ValidProfileEnum } from "../../../src/Profiles";
+import { PersistentFilters } from "../../../src/PersistentFilters";
 import * as utils from "../../../src/utils";
 
 // Missing the definition of path module, because I need the original logic for tests
@@ -83,6 +86,63 @@ function createGlobalMocks() {
 // Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/master/src/util/testing.ts
 const mocked = <T extends (...args: any[]) => any>(fn: T): jest.Mock<ReturnType<T>> => fn as any;
 
+describe("Dataset Actions Unit Tests - Function refreshAll", () => {
+    function createBlockMocks() {
+        const session = createISession();
+        const imperativeProfile = createIProfile();
+        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        const treeView = createTreeView();
+        const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
+        const refreshAll = jest.fn();
+        const refreshTree = jest.fn();
+        const resetValidationSettings = jest.fn();
+        const returnIconState = jest.fn();
+
+        Profiles.createInstance(imperative.Logger.getAppLogger());
+        datasetSessionNode.contextValue = globals.DS_SESSION_CONTEXT;
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    refresh: jest.fn(),
+                    getProfiles: jest.fn().mockReturnValue(
+                        [{name: imperativeProfile.name, profile: imperativeProfile},
+                        {name: imperativeProfile.name, profile: imperativeProfile}]
+                    )
+                };
+            })
+        });
+        Object.defineProperty(PersistentFilters, "getDirectValue", {
+            value: jest.fn(() => {
+                return {
+                    "Zowe-Automatic-Validation": true
+                };
+            })
+        });
+
+        return {
+            session,
+            imperativeProfile,
+            datasetSessionNode,
+            refreshTree,
+            resetValidationSettings,
+            returnIconState,
+            treeView,
+            testDatasetTree,
+            refreshAll
+        };
+    }
+    afterAll(() => jest.restoreAllMocks());
+
+    it("Call refreshAll", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const response = new Promise(() => {
+            return {};
+        });
+        blockMocks.testDatasetTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        expect(dsActions.refreshAll(blockMocks.testDatasetTree)).toEqual(response);
+    });
+});
 describe("Dataset Actions Unit Tests - Function createMember", () => {
     function createBlockMocks() {
         const session = createISession();
@@ -382,6 +442,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
         const profileInstance = createInstanceOfProfile(imperativeProfile);
         const mvsApi = createMvsApi(imperativeProfile);
+        const mockCheckCurrentProfile = jest.fn();
         bindMvsApi(mvsApi);
 
         return {
@@ -392,7 +453,8 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
             datasetSessionNode,
             profileInstance,
             mvsApi,
-            testDatasetTree
+            testDatasetTree,
+            mockCheckCurrentProfile
         };
     }
 
@@ -403,6 +465,34 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        const node = new ZoweDatasetNode("HLQ.TEST.NODE", vscode.TreeItemCollapsibleState.None,
+            blockMocks.datasetSessionNode, null, undefined, undefined, blockMocks.imperativeProfile);
+
+        mocked(fs.existsSync).mockReturnValueOnce(true);
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Delete" as any);
+        const deleteSpy = jest.spyOn(blockMocks.mvsApi, "deleteDataSet");
+
+        await dsActions.deleteDataset(node, blockMocks.testDatasetTree);
+
+        expect(deleteSpy).toBeCalledWith(node.label);
+        expect(mocked(fs.existsSync)).toBeCalledWith(path.join(globals.DS_DIR,
+            node.getSessionNode().label, node.label));
+        expect(mocked(fs.unlinkSync)).toBeCalledWith(path.join(globals.DS_DIR,
+            node.getSessionNode().label, node.label));
+    });
+    it("Checking common PS dataset deletion with Unverified profile", async () => {
+        globals.defineGlobals("");
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    checkCurrentProfile: blockMocks.mockCheckCurrentProfile.mockReturnValueOnce({name: blockMocks.imperativeProfile.name, status: "unverified"}),
+                    validProfile: ValidProfileEnum.UNVERIFIED
+                };
+            })
+        });
         const node = new ZoweDatasetNode("HLQ.TEST.NODE", vscode.TreeItemCollapsibleState.None,
             blockMocks.datasetSessionNode, null, undefined, undefined, blockMocks.imperativeProfile);
 
@@ -1059,6 +1149,41 @@ describe("Dataset Actions Unit Tests - Function showDSAttributes", () => {
         expect(datasetListSpy).toBeCalledWith(node.label, { attributes: true });
         expect(mocked(vscode.window.createWebviewPanel)).toBeCalled();
     });
+    it("Checking PS dataset attributes showing with Unverified Profile", async () => {
+        globals.defineGlobals("");
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    validProfile: ValidProfileEnum.UNVERIFIED
+                };
+            })
+        });
+        const node = new ZoweDatasetNode("AUSER.A1557332.A996850.TEST1", vscode.TreeItemCollapsibleState.None,
+            blockMocks.datasetSessionNode, null);
+        node.contextValue = globals.DS_DS_CONTEXT;
+
+        mocked(vscode.window.createWebviewPanel).mockReturnValueOnce({
+            webview: {
+                html: ""
+            }
+        } as any);
+        const datasetListSpy = jest.spyOn(blockMocks.mvsApi, "dataSet");
+        datasetListSpy.mockResolvedValueOnce({
+            success: true,
+            commandResponse: "",
+            apiResponse: {
+                items: [createDatasetAttributes(node.label, node.contextValue)]
+            }
+        });
+
+        await dsActions.showDSAttributes(node, blockMocks.testDatasetTree);
+
+        expect(datasetListSpy).toBeCalledWith(node.label, { attributes: true });
+        expect(mocked(vscode.window.createWebviewPanel)).toBeCalled();
+    });
     it("Checking PDS dataset attributes showing", async () => {
         globals.defineGlobals("");
         createGlobalMocks();
@@ -1279,6 +1404,7 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
         const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
         const mvsApi = createMvsApi(imperativeProfile);
+        const mockCheckCurrentProfile = jest.fn();
         bindMvsApi(mvsApi);
 
         return {
@@ -1290,7 +1416,8 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
             datasetSessionNode,
             mvsApi,
             profileInstance,
-            testDatasetTree
+            testDatasetTree,
+            mockCheckCurrentProfile
         };
     }
 
@@ -1301,6 +1428,41 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        const node = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode,
+            null, undefined, undefined, blockMocks.imperativeProfile);
+        node.contextValue = globals.DS_DS_CONTEXT;
+
+        const copySpy = jest.spyOn(blockMocks.mvsApi, "copyDataSetMember");
+        copySpy.mockResolvedValueOnce({
+            success: true,
+            commandResponse: "",
+            apiResponse: {}
+        });
+        clipboard.writeText(JSON.stringify({
+            dataSetName: "HLQ.TEST.BEFORE.NODE",
+            profileName: blockMocks.imperativeProfile.name
+        }));
+
+        await dsActions.pasteDataSet(node, blockMocks.testDatasetTree);
+
+        expect(copySpy).toHaveBeenCalledWith(
+            { dataSetName: "HLQ.TEST.BEFORE.NODE" },
+            { dataSetName: "HLQ.TEST.TO.NODE" }
+        );
+    });
+    it("Should call zowe.Copy.dataSet when pasting to sequential data set of Unverified profile", async () => {
+        globals.defineGlobals("");
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    checkCurrentProfile: blockMocks.mockCheckCurrentProfile.mockReturnValueOnce({name: blockMocks.imperativeProfile.name, status: "unverified"}),
+                    validProfile: ValidProfileEnum.UNVERIFIED
+                };
+            })
+        });
         const node = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode,
             null, undefined, undefined, blockMocks.imperativeProfile);
         node.contextValue = globals.DS_DS_CONTEXT;
@@ -1499,6 +1661,7 @@ describe("Dataset Actions Unit Tests - Function hMigrateDataSet", () => {
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
         const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
         const mvsApi = createMvsApi(imperativeProfile);
+        const mockCheckCurrentProfile = jest.fn();
         bindMvsApi(mvsApi);
 
         return {
@@ -1510,7 +1673,8 @@ describe("Dataset Actions Unit Tests - Function hMigrateDataSet", () => {
             datasetSessionNode,
             mvsApi,
             profileInstance,
-            testDatasetTree
+            testDatasetTree,
+            mockCheckCurrentProfile
         };
     }
 
@@ -1521,6 +1685,37 @@ describe("Dataset Actions Unit Tests - Function hMigrateDataSet", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        const node = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
+        node.contextValue = globals.DS_DS_CONTEXT;
+
+        const migrateSpy = jest.spyOn(blockMocks.mvsApi, "hMigrateDataSet");
+        migrateSpy.mockResolvedValueOnce({
+            success: true,
+            commandResponse: "",
+            apiResponse: {
+                items: []
+            }
+        });
+
+        await dsActions.hMigrateDataSet(node);
+
+        expect(migrateSpy).toHaveBeenCalledWith("HLQ.TEST.TO.NODE");
+        expect(mocked(vscode.window.showInformationMessage)).toHaveBeenCalled();
+    });
+
+    it("Checking PS dataset migrate for Unverified Profile", async () => {
+        globals.defineGlobals("");
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    checkCurrentProfile: blockMocks.mockCheckCurrentProfile.mockReturnValueOnce({name: blockMocks.imperativeProfile.name, status: "unverified"}),
+                    validProfile: ValidProfileEnum.UNVERIFIED
+                };
+            })
+        });
         const node = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
         node.contextValue = globals.DS_DS_CONTEXT;
 
@@ -1551,6 +1746,7 @@ describe("Dataset Actions Unit Tests - Function hRecallDataSet", () => {
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
         const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
         const mvsApi = createMvsApi(imperativeProfile);
+        const mockCheckCurrentProfile = jest.fn();
         bindMvsApi(mvsApi);
 
         return {
@@ -1562,7 +1758,8 @@ describe("Dataset Actions Unit Tests - Function hRecallDataSet", () => {
             datasetSessionNode,
             mvsApi,
             profileInstance,
-            testDatasetTree
+            testDatasetTree,
+            mockCheckCurrentProfile
         };
     }
 
@@ -1573,6 +1770,37 @@ describe("Dataset Actions Unit Tests - Function hRecallDataSet", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        const node = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
+        node.contextValue = globals.DS_DS_CONTEXT;
+
+        const recallSpy = jest.spyOn(blockMocks.mvsApi, "hRecallDataSet");
+        recallSpy.mockResolvedValueOnce({
+            success: true,
+            commandResponse: "",
+            apiResponse: {
+                items: []
+            }
+        });
+
+        await dsActions.hRecallDataSet(node);
+
+        expect(recallSpy).toHaveBeenCalledWith("HLQ.TEST.TO.NODE");
+        expect(mocked(vscode.window.showInformationMessage)).toHaveBeenCalled();
+    });
+
+    it("Checking PS dataset recall for Unverified profile", async () => {
+        globals.defineGlobals("");
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    checkCurrentProfile: blockMocks.mockCheckCurrentProfile.mockReturnValueOnce({name: blockMocks.imperativeProfile.name, status: "unverified"}),
+                    validProfile: ValidProfileEnum.UNVERIFIED
+                };
+            })
+        });
         const node = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
         node.contextValue = globals.DS_DS_CONTEXT;
 
@@ -1603,6 +1831,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
         const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
         const mvsApi = createMvsApi(imperativeProfile);
+        const mockCheckCurrentProfile = jest.fn();
         bindMvsApi(mvsApi);
 
         return {
@@ -1614,7 +1843,8 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
             datasetSessionNode,
             mvsApi,
             profileInstance,
-            testDatasetTree
+            testDatasetTree,
+            mockCheckCurrentProfile
         };
     }
 
@@ -1751,9 +1981,18 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("Zowe-Default-Datasets-PS");
         expect(createDataSetSpy).toHaveBeenCalledWith(zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, "TEST", undefined);
     });
-    it("Checking PS dataset errored creation", async () => {
+    it("Checking PS dataset errored creation with Unverified profile", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
+
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    checkCurrentProfile: blockMocks.mockCheckCurrentProfile.mockReturnValueOnce({name: blockMocks.imperativeProfile.name, status: "unverified"}),
+                    validProfile: ValidProfileEnum.UNVERIFIED
+                };
+            })
+        });
 
         blockMocks.testDatasetTree.createFilterString.mockResolvedValue("test");
         blockMocks.testDatasetTree.getSearchHistory.mockReturnValue([]);
@@ -1880,6 +2119,36 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
             node.getSessionNode().label.trim(), node.label));
         expect(mocked(vscode.workspace.openTextDocument)).toBeCalledWith(sharedUtils.getDocumentFilePath(node.label, node));
     });
+
+    it("Checking of opening for common dataset with unverified profile", async () => {
+        globals.defineGlobals("");
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(vscode.window.withProgress).mockResolvedValueOnce({
+            success: true,
+            commandResponse: null,
+            apiResponse: {
+                etag: "123"
+            }
+        });
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    validProfile: ValidProfileEnum.UNVERIFIED
+                };
+            })
+        });
+        const node = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
+
+        await dsActions.openPS(node, true, blockMocks.testDatasetTree);
+
+        expect(mocked(fs.existsSync)).toBeCalledWith(path.join(globals.DS_DIR,
+            node.getSessionNode().label.trim(), node.label));
+        expect(mocked(vscode.workspace.openTextDocument)).toBeCalledWith(sharedUtils.getDocumentFilePath(node.label, node));
+    });
+
     it("Checking of failed attempt to open dataset", async () => {
         globals.defineGlobals("");
         createGlobalMocks();

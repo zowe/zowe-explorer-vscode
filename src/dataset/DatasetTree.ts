@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import * as globals from "../globals";
 import * as dsActions from "./actions";
-import { IProfileLoaded, Logger, IProfile, ISession } from "@zowe/imperative";
+import { IProfileLoaded, Logger } from "@zowe/imperative";
 import { Profiles, ValidProfileEnum } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 import { FilterDescriptor, FilterItem, resolveQuickPickHelper, errorHandling } from "../utils";
@@ -26,7 +26,8 @@ import * as fs from "fs";
 import * as contextually from "../shared/context";
 import { closeOpenedTextFile } from "../utils/workspace";
 import * as nls from "vscode-nls";
-import { ZoweTreeNode } from "../abstract/ZoweTreeNode";
+import { resetValidationSettings } from "../shared/actions";
+import { PersistentFilters } from "../PersistentFilters";
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
@@ -81,7 +82,8 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      */
     public async rename(node: IZoweDatasetTreeNode) {
         await Profiles.getInstance().checkCurrentProfile(node.getProfile());
-        if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
+        if ((Profiles.getInstance().validProfile === ValidProfileEnum.VALID) ||
+        (Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED)) {
             return contextually.isDsMember(node) ? this.renameDataSetMember(node) : this.renameDataSet(node);
         }
     }
@@ -225,22 +227,35 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * @param {string} [sessionName] - optional; loads default profile if not passed
      */
     public async addSession(sessionName?: string, profileType?: string) {
+        const setting = PersistentFilters.getDirectValue("Zowe-Automatic-Validation") as boolean;
         // Loads profile associated with passed sessionName, default if none passed
         if (sessionName) {
-            const zosmfProfile: IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
-            if (zosmfProfile) {
-                this.addSingleSession(zosmfProfile);
+            const profile: IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
+            if (profile) {
+                this.addSingleSession(profile);
             }
+            for (const node of this.mSessionNodes) {
+                const name = node.getProfileName();
+                if (name === profile.name){
+                    await resetValidationSettings(node, setting);
+                 }
+             }
         } else {
             const profiles: IProfileLoaded[] = Profiles.getInstance().allProfiles;
-            for (const zosmfProfile of profiles) {
+            for (const theProfile of profiles) {
                 // If session is already added, do nothing
-                if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === zosmfProfile.name)) {
+                if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === theProfile.name)) {
                     continue;
                 }
                 for (const session of this.mHistory.getSessions()) {
-                    if (session === zosmfProfile.name) {
-                        this.addSingleSession(zosmfProfile);
+                    if (session === theProfile.name) {
+                        this.addSingleSession(theProfile);
+                        for (const node of this.mSessionNodes) {
+                            const name = node.getProfileName();
+                            if (name === theProfile.name){
+                                await resetValidationSettings(node, setting);
+                            }
+                        }
                     }
                 }
             }
@@ -546,7 +561,8 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         let pattern: string;
         await this.checkCurrentProfile(node);
 
-        if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
+        if ((Profiles.getInstance().validProfile === ValidProfileEnum.VALID) ||
+        (Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED)) {
             if (contextually.isSessionNotFav(node)) {
                 if (this.mHistory.getSearchHistory().length > 0) {
                     const createPick = new FilterDescriptor(DatasetTree.defaultDialogText);
