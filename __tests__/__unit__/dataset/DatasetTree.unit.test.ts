@@ -1443,8 +1443,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
             treeView,
             mvsApi,
             profileInstance,
-            mockCheckCurrentProfile,
-            imperativeProfile
+            mockCheckCurrentProfile
         };
     }
 
