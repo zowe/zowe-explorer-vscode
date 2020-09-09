@@ -271,6 +271,16 @@ export function isSessionFavorite(node: TreeItem): boolean {
 }
 
 /**
+ * Helper function which identifies if the node belongs to the job tree
+ * @param node
+ * @return true if session belongs to job tree, false otherwise
+ */
+export function isJobTreeNode(node: TreeItem): boolean {
+    return new RegExp("^(" + globals.JOBS_SESSION_CONTEXT + "|" + globals.JOBS_JOB_CONTEXT + "|"
+                        + globals.JOBS_SPOOL_CONTEXT + ")").test(node.contextValue);
+}
+
+/**
  * Helper function which identifies if the node is Vsam
  * @param node
  * @return true if a vsam file, false otherwise
