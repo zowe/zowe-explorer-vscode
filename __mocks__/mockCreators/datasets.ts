@@ -23,7 +23,14 @@ export function createDatasetSessionNode(session: imperative.Session, profile: i
     return datasetNode;
 }
 
-export function createDatasetTree(sessionNode: ZoweDatasetNode, treeView: any): any {
+export function createDatasetFavoritesNode() {
+    const datasetNode = new ZoweDatasetNode("Favorites", vscode.TreeItemCollapsibleState.Collapsed, null, null, null);
+    datasetNode.contextValue = globals.FAVORITE_CONTEXT;
+
+    return datasetNode;
+}
+
+export function createDatasetTree(sessionNode: ZoweDatasetNode, treeView: any, favoritesNode?: ZoweDatasetNode): any {
     const testDatasetTree = {
         mSessionNodes: [sessionNode],
         mFavorites: [],
@@ -63,11 +70,16 @@ export function createDatasetTree(sessionNode: ZoweDatasetNode, treeView: any): 
     };
     testDatasetTree.addFavorite.mockImplementation((newFavorite) => testDatasetTree.mFavorites.push(newFavorite));
     testDatasetTree.addFileHistory.mockImplementation((newFile) => testDatasetTree.mFileHistory.push(newFile));
-    testDatasetTree.removeFileHistory.mockImplementation((badFile) => testDatasetTree.mFileHistory.splice(testDatasetTree.mFileHistory.indexOf(badFile), 1));
-    testDatasetTree.getFileHistory.mockImplementation(() => { return testDatasetTree.mFileHistory });
+    testDatasetTree.removeFileHistory.mockImplementation((badFile) => testDatasetTree.mFileHistory.splice(
+        testDatasetTree.mFileHistory.indexOf(badFile), 1
+    ));
+    testDatasetTree.getFileHistory.mockImplementation(() => testDatasetTree.mFileHistory);
     testDatasetTree.deleteSession.mockImplementation((badSession) => removeNodeFromArray(badSession, testDatasetTree.mSessionNodes));
     testDatasetTree.removeFavorite.mockImplementation((badFavorite) => removeNodeFromArray(badFavorite, testDatasetTree.mFavorites));
-
+    if (!favoritesNode) {
+        return testDatasetTree;
+    }
+    testDatasetTree.mSessionNodes.push(favoritesNode);
     return testDatasetTree;
 }
 
