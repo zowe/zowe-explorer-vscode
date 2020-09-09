@@ -125,7 +125,7 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
         } else if (baseProfile) {
             // baseProfile exists, so APIML login is possible
             const sessCfg = {
-                rejectUnauthorized: serviceProfile.profile.rejectUnauthorized ? serviceProfile.profile.rejectUnauthorized :
+                rejectUnauthorized: serviceProfile.profile.rejectUnauthorized != null ? serviceProfile.profile.rejectUnauthorized :
                                                                                 baseProfile.profile.rejectUnauthorized,
                 basePath: serviceProfile.profile.basePath,
                 hostname: serviceProfile.profile.host ? serviceProfile.profile.host : baseProfile.profile.host,
