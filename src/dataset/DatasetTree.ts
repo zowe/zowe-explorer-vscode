@@ -822,8 +822,6 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 } else {
                     this.renameFavorite(node, afterDataSetName);
                 }
-                if (nodeAsFavorite) { this.refreshElement(nodeAsFavorite); }
-                this.refreshElement(nodeAsNonFavorite);
 
                 // Rename the node that was clicked on
                 node.label = afterDataSetName;
