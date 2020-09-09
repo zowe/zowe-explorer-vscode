@@ -315,7 +315,7 @@ describe("USS Action Unit Tests - Function createUSSNodeDialog", () => {
         blockMocks.ussNode.contextValue = globals.DS_BINARY_FILE_CONTEXT;
         blockMocks.ussNode.fullPath = "/test/path";
 
-        globalMocks.showInputBox.mockReturnValueOnce("testFile");
+        globalMocks.mockShowInputBox.mockReturnValueOnce("testFile");
 
         await ussNodeActions.createUSSNode(blockMocks.ussNode, blockMocks.testUSSTree, "file");
         expect(createSpy).toBeCalledWith("/test/path/testFile", "file");
