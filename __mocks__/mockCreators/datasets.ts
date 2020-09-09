@@ -28,6 +28,7 @@ export function createDatasetTree(sessionNode: ZoweDatasetNode, treeView: any): 
         mSessionNodes: [sessionNode],
         mFavorites: [],
         mFileHistory: [],
+        mHistory: [],
         treeView,
         addSession: jest.fn(),
         addSearchHistory: jest.fn(),

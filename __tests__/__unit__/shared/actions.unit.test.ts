@@ -13,7 +13,7 @@ import * as vscode from "vscode";
 import {
     createInstanceOfProfile,
     createIProfile,
-    createISessionWithoutCredentials, createQuickPickContent, createQuickPickItem, createTreeView
+    createISessionWithoutCredentials, createQuickPickContent, createQuickPickItem, createTreeView, createValidIProfile
 } from "../../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
 import { Profiles } from "../../../src/Profiles";
@@ -291,12 +291,14 @@ describe("Shared Actions Unit Tests - Function returnIconState", () => {
             imperativeProfile: createIProfile(),
             profileInstance: null,
             datasetSessionNode: null,
+            mockGetIconByNode: jest.fn()
         };
 
         newMocks.profileInstance = createInstanceOfProfile(newMocks.imperativeProfile);
         mocked(Profiles.getInstance).mockReturnValue(newMocks.profileInstance);
         newMocks.dsNode = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.Collapsed, newMocks.datasetSessionNode, null);
         newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
+        newMocks.mockGetIconByNode.mockReturnValue(IconId.sessionActive);
 
         return newMocks;
     }
@@ -320,12 +322,71 @@ describe("Shared Actions Unit Tests - Function returnIconState", () => {
         const resultNode: IZoweNodeType = blockMocks.datasetSessionNode;
         const resultIcon = getIconById(IconId.session);
         resultNode.iconPath = resultIcon.path;
-
         const testNode: IZoweNodeType = blockMocks.datasetSessionNode;
         const sessionIcon = getIconById(IconId.sessionInactive);
         testNode.iconPath = sessionIcon.path;
 
+        blockMocks.mockGetIconByNode.mockReturnValueOnce(IconId.sessionInactive);
         const response = await sharedActions.returnIconState(testNode);
         expect(getIconByNode(response)).toEqual(getIconByNode(resultNode));
+    });
+});
+
+describe("Shared Actions Unit Tests - Function resetValidationSettings", () => {
+    function createBlockMocks() {
+        const newMocks = {
+            session: createISessionWithoutCredentials(),
+            treeView: createTreeView(),
+            dsNode: null,
+            imperativeProfile: createValidIProfile(),
+            profileInstance: null,
+            datasetSessionNode: null,
+            mockEnableValidationContext: jest.fn(),
+            mockDisableValidationContext: jest.fn(),
+            mockCheckProfileValidationSetting: jest.fn()
+        };
+
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.imperativeProfile);
+        mocked(Profiles.getInstance).mockReturnValue(newMocks.profileInstance);
+        newMocks.dsNode = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.Collapsed, newMocks.datasetSessionNode, null);
+        newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
+
+        return newMocks;
+    }
+
+    it("Tests that resetValidationSettings resets contextValue to false upon global change", async () => {
+        const blockMocks = createBlockMocks();
+        const testNode: IZoweNodeType = blockMocks.datasetSessionNode;
+        testNode.contextValue = `${globals.DS_SESSION_CONTEXT}${globals.VALIDATE_SUFFIX}true`;
+        const mockNode: IZoweNodeType = blockMocks.datasetSessionNode;
+        mockNode.contextValue = `${globals.DS_SESSION_CONTEXT}${globals.VALIDATE_SUFFIX}false`;
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    disableValidationContext: blockMocks.mockDisableValidationContext.mockReturnValue(mockNode),
+                    checkProfileValidationSetting: blockMocks.mockCheckProfileValidationSetting.mockReturnValue(false)
+                };
+            }),
+        });
+        const response = await sharedActions.resetValidationSettings(testNode, false);
+        expect(response.contextValue).toContain(`${globals.VALIDATE_SUFFIX}false`);
+    });
+
+    it("Tests that resetValidationSettings resets contextValue to true upon global change", async () => {
+        const blockMocks = createBlockMocks();
+        const testNode: IZoweNodeType = blockMocks.datasetSessionNode;
+        testNode.contextValue = `${globals.DS_SESSION_CONTEXT}${globals.VALIDATE_SUFFIX}false`;
+        const mockNode: IZoweNodeType = blockMocks.datasetSessionNode;
+        mockNode.contextValue = `${globals.DS_SESSION_CONTEXT}${globals.VALIDATE_SUFFIX}true`;
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    enableValidationContext: blockMocks.mockEnableValidationContext.mockReturnValue(mockNode),
+                    checkProfileValidationSetting: blockMocks.mockCheckProfileValidationSetting.mockReturnValue(true)
+                };
+            }),
+        });
+        const response = await sharedActions.resetValidationSettings(testNode, true);
+        expect(response.contextValue).toContain(`${globals.VALIDATE_SUFFIX}true`);
     });
 });
