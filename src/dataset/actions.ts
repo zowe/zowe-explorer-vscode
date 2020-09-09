@@ -380,11 +380,7 @@ export async function showDSAttributes(parent: IZoweDatasetTreeNode, datasetProv
     await datasetProvider.checkCurrentProfile(parent);
     if ((Profiles.getInstance().validProfile === ValidProfileEnum.VALID) ||
     (Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED)) {
-        let label = parent.label.trim();
-        if (contextually.isFavoritePds(parent) || contextually.isFavoriteDs(parent)) {
-            label = parent.label.trim().substring(parent.label.trim().indexOf(":") + 2);
-        }
-
+        const label = parent.label.trim();
         globals.LOG.debug(localize("showDSAttributes.debug", "showing attributes of data set ") + label);
         let attributes: any;
         try {
