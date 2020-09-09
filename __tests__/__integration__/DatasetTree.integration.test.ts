@@ -20,7 +20,7 @@ import * as testConst from "../../resources/testProfileData";
 import * as sinon from "sinon";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
-import { DS_SESSION_CONTEXT } from "../../src/globals";
+import { DS_SESSION_CONTEXT, FAV_PROFILE_CONTEXT } from "../../src/globals";
 
 declare var it: any;
 
@@ -196,42 +196,54 @@ describe("DatasetTree Integration Tests", async () => {
     }).timeout(TIMEOUT);
 
     describe("addFavorite()", () => {
+        beforeEach(() => {
+            const favProfileNode = new ZoweDatasetNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded, null,
+                session, FAV_PROFILE_CONTEXT, undefined, testProfile);
+            testTree.mFavorites.push(favProfileNode);
+        });
+        afterEach(() => {
+            testTree.mFavorites = [];
+        });
         it("should add the selected data set to the treeView", async () => {
             const favoriteNode = new ZoweDatasetNode(pattern + ".TPDS", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
-            const len = testTree.mFavorites.length;
             await testTree.addFavorite(favoriteNode);
-            const filtered = testTree.mFavorites.filter((temp) => temp.label ===
-                `[${favoriteNode.getSessionNode().label}]: ${favoriteNode.label}`);
+            const filtered = testTree.mFavorites[0].children.filter((temp) => temp.label === `${favoriteNode.label}`);
             expect(filtered.length).toEqual(1);
             expect(filtered[0].label).toContain(pattern + ".TPDS");
             // TODO confirm in settings.json too
-            testTree.mFavorites = [];
         });
 
         it("should add a favorite search", async () => {
             await testTree.addFavorite(sessNode);
-            const filtered = testTree.mFavorites.filter((temp) => temp.label === `[${sessNode.label}]: ${sessNode.pattern}`);
+            const filtered = testTree.mFavorites[0].children.filter((temp) => temp.label === `${sessNode.pattern}`);
             expect(filtered.length).toEqual(1);
-            expect(filtered[0].label).toContain(`[${sessNode.label}]: ${sessNode.pattern}`);
-            testTree.mFavorites = [];
+            expect(filtered[0].label).toContain(`${sessNode.pattern}`);
         });
     });
 
     describe("removeFavorite()", () => {
-        it("should remove the selected favorite data set from the treeView", () => {
+        beforeEach(() => {
+            const favProfileNode = new ZoweDatasetNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded, null,
+                session, FAV_PROFILE_CONTEXT, undefined, testProfile);
+            testTree.mFavorites.push(favProfileNode);
+        });
+        afterEach(() => {
+            testTree.mFavorites = [];
+        });
+        it("should remove the selected favorite data set from the treeView", async () => {
             const favoriteNode = new ZoweDatasetNode(pattern + ".TPDS",
                 vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
-            testTree.addFavorite(favoriteNode);
-            const len = testTree.mFavorites.length;
-            testTree.removeFavorite(testTree.mFavorites[len - 1]);
-            expect(testTree.mFavorites.length).toEqual(len - 1);
+            await testTree.addFavorite(favoriteNode);
+            const len = testTree.mFavorites[0].children.length;
+            await testTree.removeFavorite(testTree.mFavorites[0].children[len - 1]);
+            expect(testTree.mFavorites[0].children.length).toEqual(len - 1);
         });
 
-        it("should remove the selected favorite search from the treeView", () => {
-            testTree.addFavorite(sessNode);
-            const len = testTree.mFavorites.length;
-            testTree.removeFavorite(testTree.mFavorites[len - 1]);
-            expect(testTree.mFavorites.length).toEqual(len - 1);
+        it("should remove the selected favorite search from the treeView", async () => {
+            await testTree.addFavorite(sessNode);
+            const len = testTree.mFavorites[0].children.length;
+            await testTree.removeFavorite(testTree.mFavorites[0].children[len - 1]);
+            expect(testTree.mFavorites[0].children.length).toEqual(len - 1);
         });
     });
 
@@ -330,6 +342,12 @@ describe("DatasetTree Integration Tests", async () => {
                         new Buffer("abc"),
                         `${beforeDataSetName}(mem1)`
                     );
+                    const favProfileNode = new ZoweDatasetNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded, null,
+                        session, FAV_PROFILE_CONTEXT, undefined, testProfile);
+                    testTree.mFavorites.push(favProfileNode);
+                });
+                afterEach(() => {
+                    testTree.mFavorites = [];
                 });
                 it("should rename a data set member", async () => {
                     let error;
