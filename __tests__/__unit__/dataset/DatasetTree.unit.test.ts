@@ -1514,28 +1514,34 @@ describe("Dataset Tree Unit Tests - Function renameFavorite", () => {
         const session = createISession();
         const imperativeProfile = createIProfile();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
-        const favoriteNode = new ZoweDatasetNode("[sestest]: TEST.PDS", vscode.TreeItemCollapsibleState.Collapsed, null, null);
-        favoriteNode.contextValue = globals.DS_FAV_CONTEXT;
-        const testTree = new DatasetTree();
-
-        testTree.mFavorites.push(favoriteNode);
-        testTree.mSessionNodes.push(datasetSessionNode);
-        spyOn(datasetSessionNode, "getChildren").and.returnValue(Promise.resolve([datasetSessionNode]));
 
         return {
+            session,
             imperativeProfile,
-            favoriteNode,
-            testTree
+            datasetSessionNode
         };
     }
 
-    it("Tests that renameFavorite() renames a favorited node", async () => {
+    it("Checking common run of function", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
+        const testTree = new DatasetTree();
+        const nodeFromSession = new ZoweDatasetNode("TO.RENAME", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.datasetSessionNode,
+            blockMocks.session, globals.DS_PDS_CONTEXT, undefined, blockMocks.imperativeProfile);
+        // Parent is normally a profile node in Favorites section, but is null here because it does not matter for this test
+        const matchingFavNode = new ZoweDatasetNode("TO.RENAME", vscode.TreeItemCollapsibleState.Collapsed, null,
+            blockMocks.session, globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX, undefined, blockMocks.imperativeProfile);
+        const expectedMatchingFavNodeResult = new ZoweDatasetNode("RENAMED", vscode.TreeItemCollapsibleState.Collapsed, null,
+            blockMocks.session, globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX, undefined, blockMocks.imperativeProfile);
+        Object.defineProperty(testTree, "findFavoritedNode", {
+            value: jest.fn( () => {
+                return matchingFavNode;
+            }),
+        });
 
-        await blockMocks.testTree.renameFavorite(blockMocks.favoriteNode, "newLabel");
+        await testTree.renameFavorite(nodeFromSession, "RENAMED");
 
-        expect(blockMocks.favoriteNode.label).toEqual("[sestest]: newLabel");
+        expect(matchingFavNode).toEqual(expectedMatchingFavNodeResult);
     });
 });
 

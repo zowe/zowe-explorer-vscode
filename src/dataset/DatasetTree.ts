@@ -144,7 +144,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * @returns {IZoweDatasetTreeNode | undefined} Returns matching profile node if found. Otherwise, returns undefined.
      */
     public findMatchingProfileInArray(datasetProvider: IZoweDatasetTreeNode[], profileName: string): IZoweDatasetTreeNode|undefined {
-        return datasetProvider.find((treeNode) => treeNode.label === profileName );
+        return datasetProvider.find((treeNode) => treeNode.label.includes(profileName) );
     }
 
     /**
