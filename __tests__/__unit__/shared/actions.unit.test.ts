@@ -82,8 +82,8 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
         const testNode = new ZoweDatasetNode("HLQ.PROD2.STUFF", null,
             blockMocks.datasetSessionNode, blockMocks.session, globals.DS_PDS_CONTEXT);
         testNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
-        blockMocks.testDatasetTree.searchInLoadedItems.mockResolvedValueOnce([testNode]);
-        blockMocks.testUssTree.searchInLoadedItems.mockResolvedValueOnce([]);
+        blockMocks.testDatasetTree.getAllLoadedItems.mockResolvedValueOnce([testNode]);
+        blockMocks.testUssTree.getAllLoadedItems.mockResolvedValueOnce([]);
         blockMocks.testDatasetTree.getChildren.mockImplementation((arg) => {
             if (arg) {
                 return Promise.resolve([testNode]);
@@ -115,8 +115,8 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
         blockMocks.testDatasetTree.getChildren.mockReturnValue([blockMocks.datasetSessionNode]);
 
         jest.spyOn(dsActions, "openPS").mockResolvedValueOnce(null);
-        blockMocks.testDatasetTree.searchInLoadedItems.mockResolvedValueOnce([testMember]);
-        blockMocks.testUssTree.searchInLoadedItems.mockResolvedValueOnce([]);
+        blockMocks.testDatasetTree.getAllLoadedItems.mockResolvedValueOnce([testMember]);
+        blockMocks.testUssTree.getAllLoadedItems.mockResolvedValueOnce([]);
         blockMocks.testDatasetTree.getChildren.mockImplementation((arg) => {
             if (arg === testNode) {
                 return Promise.resolve([testMember]);
@@ -142,8 +142,8 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
         const folder = new ZoweUSSNode("folder", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.ussSessionNode, null, "/");
         blockMocks.testDatasetTree.getChildren.mockReturnValue([blockMocks.ussSessionNode]);
 
-        blockMocks.testDatasetTree.searchInLoadedItems.mockResolvedValueOnce([]);
-        blockMocks.testUssTree.searchInLoadedItems.mockResolvedValueOnce([folder]);
+        blockMocks.testDatasetTree.getAllLoadedItems.mockResolvedValueOnce([]);
+        blockMocks.testUssTree.getAllLoadedItems.mockResolvedValueOnce([folder]);
         jest.spyOn(folder, "getProfileName").mockImplementationOnce(() => "firstName");
         jest.spyOn(blockMocks.ussSessionNode, "getChildren").mockResolvedValueOnce([folder]);
 
@@ -166,8 +166,8 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
         const file = new ZoweUSSNode("file", vscode.TreeItemCollapsibleState.None, folder, null, "/folder");
         blockMocks.testDatasetTree.getChildren.mockReturnValue([blockMocks.ussSessionNode]);
 
-        blockMocks.testDatasetTree.searchInLoadedItems.mockResolvedValueOnce([]);
-        blockMocks.testUssTree.searchInLoadedItems.mockResolvedValueOnce([file]);
+        blockMocks.testDatasetTree.getAllLoadedItems.mockResolvedValueOnce([]);
+        blockMocks.testUssTree.getAllLoadedItems.mockResolvedValueOnce([file]);
         jest.spyOn(blockMocks.ussSessionNode, "getChildren").mockResolvedValueOnce([folder]);
         jest.spyOn(folder, "getChildren").mockResolvedValueOnce([file]);
 
@@ -187,8 +187,8 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
-        blockMocks.testDatasetTree.searchInLoadedItems.mockResolvedValueOnce([]);
-        blockMocks.testUssTree.searchInLoadedItems.mockResolvedValueOnce([]);
+        blockMocks.testDatasetTree.getAllLoadedItems.mockResolvedValueOnce([]);
+        blockMocks.testUssTree.getAllLoadedItems.mockResolvedValueOnce([]);
         const qpItem = null;
         const quickPickContent = createQuickPickContent(qpItem, qpItem, globalMocks.qpPlaceholder);
         quickPickContent.placeholder = "Select a filter";

@@ -17,7 +17,8 @@ import {
     createBasicZosmfSession, createInstanceOfProfile,
     createIProfile,
     createISession, createISessionWithoutCredentials, createTextDocument,
-    createTreeView
+    createTreeView,
+    createQuickPickContent
 } from "../../../__mocks__/mockCreators/shared";
 import {
     createDatasetAttributes,
@@ -58,6 +59,7 @@ function createGlobalMocks() {
     Object.defineProperty(vscode.workspace, "getConfiguration", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showTextDocument", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showQuickPick", { value: jest.fn(), configurable: true });
+    Object.defineProperty(vscode.window, "createQuickPick", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.commands, "executeCommand", { value: jest.fn(), configurable: true });
     Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
     Object.defineProperty(globals.LOG, "debug", { value: jest.fn(), configurable: true });
@@ -68,6 +70,7 @@ function createGlobalMocks() {
     Object.defineProperty(zowe.Delete, "dataSet", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe, "Create", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe.Create, "dataSet", { value: jest.fn(), configurable: true });
+    Object.defineProperty(zowe.Create, "dataSetLike", { value: jest.fn(), configurable: true });
     Object.defineProperty(fs, "unlinkSync", { value: jest.fn(), configurable: true });
     Object.defineProperty(fs, "existsSync", { value: jest.fn(), configurable: true });
     Object.defineProperty(sharedUtils, "concatChildNodes", { value: jest.fn(), configurable: true });
@@ -2234,5 +2237,115 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
         expect(mocked(fs.existsSync)).toBeCalledWith(path.join(globals.DS_DIR,
             blockMocks.imperativeProfile.name, child.label));
         expect(mocked(vscode.workspace.openTextDocument)).toBeCalledWith(sharedUtils.getDocumentFilePath(child.label, child));
+    });
+});
+
+describe("Dataset Actions Unit Tests - Function allocateLike", () => {
+    function createBlockMocks() {
+        const session = createISession();
+        const imperativeProfile = createIProfile();
+        const treeView = createTreeView();
+        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
+        const testNode = new ZoweDatasetNode("nodePDS", vscode.TreeItemCollapsibleState.None, datasetSessionNode, null);
+        const testSDSNode = new ZoweDatasetNode("nodeSDS", vscode.TreeItemCollapsibleState.None, datasetSessionNode, null);
+        const profileInstance = createInstanceOfProfile(imperativeProfile);
+        const mvsApi = createMvsApi(imperativeProfile);
+        const quickPickItem = new utils.FilterDescriptor(datasetSessionNode.label);
+        const quickPickContent = createQuickPickContent("", [quickPickItem], "");
+
+        bindMvsApi(mvsApi);
+        testNode.contextValue = globals.DS_PDS_CONTEXT;
+        testSDSNode.contextValue = globals.DS_DS_CONTEXT;
+
+        mocked(vscode.window.createQuickPick).mockReturnValue(quickPickContent);
+        mocked(Profiles.getInstance).mockReturnValue(profileInstance);
+        mocked(vscode.window.showInputBox).mockResolvedValue("test");
+        jest.spyOn(datasetSessionNode, "getChildren").mockResolvedValue([testNode, testSDSNode]);
+        testDatasetTree.createFilterString.mockResolvedValue("test");
+        jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValue(quickPickItem);
+        jest.spyOn(dsActions, "openPS").mockImplementation(() => null);
+
+        return {
+            session,
+            treeView,
+            testNode,
+            quickPickContent,
+            testSDSNode,
+            quickPickItem,
+            profileInstance,
+            imperativeProfile,
+            datasetSessionNode,
+            mvsApi,
+            testDatasetTree
+        };
+    }
+
+    it("Tests that allocateLike works if called from the command palette", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
+
+        await dsActions.allocateLike(blockMocks.testDatasetTree);
+
+        expect(errorHandlingSpy).toHaveBeenCalledTimes(0);
+        expect(blockMocks.quickPickContent.show).toHaveBeenCalledTimes(1);
+    });
+    it("Tests that allocateLike works if called from the context menu", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
+
+        await dsActions.allocateLike(blockMocks.testDatasetTree, blockMocks.testNode);
+
+        expect(errorHandlingSpy).toHaveBeenCalledTimes(0);
+        expect(blockMocks.quickPickContent.show).toHaveBeenCalledTimes(0);
+    });
+    it("Tests that the dataset filter string is updated on the session, to include the new node's name", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        await dsActions.allocateLike(blockMocks.testDatasetTree, blockMocks.testNode);
+
+        expect(blockMocks.datasetSessionNode.pattern).toEqual("TEST");
+    });
+    it("Tests that allocateLike fails if no profile is selected", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(null);
+
+        await dsActions.allocateLike(blockMocks.testDatasetTree);
+
+        expect(mocked(vscode.window.showInformationMessage)).toHaveBeenCalledWith("You must select a profile.");
+    });
+    it("Tests that allocateLike fails if no new dataset name is provided", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(vscode.window.showInputBox).mockResolvedValueOnce(null);
+
+        await dsActions.allocateLike(blockMocks.testDatasetTree, blockMocks.testNode);
+
+        expect(mocked(vscode.window.showInformationMessage)).toHaveBeenCalledWith("You must enter a new data set name.");
+    });
+    it("Tests that allocateLike fails if error is thrown", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
+        const errorMessage = new Error("Test error");
+        jest.spyOn(blockMocks.mvsApi, "allocateLikeDataSet").mockRejectedValue(errorMessage);
+
+        try {
+            await dsActions.allocateLike(blockMocks.testDatasetTree);
+        } catch (err) {
+            // do nothing
+        }
+
+        expect(errorHandlingSpy).toHaveBeenCalledTimes(1);
+        expect(errorHandlingSpy).toHaveBeenCalledWith(errorMessage, "test", "Unable to create data set: Test error");
     });
 });
