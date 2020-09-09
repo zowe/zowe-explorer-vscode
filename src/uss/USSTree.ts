@@ -23,8 +23,10 @@ import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 import { getIconByNode } from "../generators/icons";
 import * as contextually from "../shared/context";
-
 import * as nls from "vscode-nls";
+import { resetValidationSettings } from "../shared/actions";
+import { PersistentFilters } from "../PersistentFilters";
+
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
@@ -75,35 +77,53 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      * @param {string} filePath
      */
     public async rename(originalNode: IZoweUSSTreeNode) {
-    // Could be a favorite or regular entry always deal with the regular entry
-    const oldLabel = originalNode.label;
-    const parentPath = originalNode.fullPath.substr(0, originalNode.fullPath.indexOf(oldLabel));
-    // Check if an old favorite exists for this node
-    const oldFavorite: IZoweUSSTreeNode = contextually.isFavorite(originalNode) ? originalNode : this.mFavorites.find((temp: ZoweUSSNode) =>
-        (temp.shortLabel === oldLabel) && (temp.fullPath.substr(0, temp.fullPath.indexOf(oldLabel)) === parentPath)
-    );
-    const newName = await vscode.window.showInputBox({value: oldLabel.replace(/^\[.+\]:\s/, "")});
-    if (newName && newName !== oldLabel) {
-        try {
-            let newNamePath = path.join(parentPath + newName);
-            newNamePath = newNamePath.replace(/\\/g, "/"); // Added to cover Windows backslash issue
-            const oldNamePath = originalNode.fullPath;
-
-            const hasClosedTab = await originalNode.rename(newNamePath);
-            await ZoweExplorerApiRegister.getUssApi(
-                originalNode.getProfile()).rename(oldNamePath, newNamePath);
-            await originalNode.refreshAndReopen(hasClosedTab);
-
-            if (oldFavorite) {
-                this.removeFavorite(oldFavorite);
-                oldFavorite.rename(newNamePath);
-                this.addFavorite(oldFavorite);
+        // Could be a favorite or regular entry always deal with the regular entry
+        const oldLabel = originalNode.label;
+        const parentPath = originalNode.fullPath.substr(0, originalNode.fullPath.indexOf(oldLabel));
+        // Check if an old favorite exists for this node
+        const oldFavorite: IZoweUSSTreeNode = contextually.isFavorite(originalNode) ? originalNode : this.mFavorites.find((temp: ZoweUSSNode) =>
+            (temp.shortLabel === oldLabel) && (temp.fullPath.substr(0, temp.fullPath.indexOf(oldLabel)) === parentPath)
+        );
+        const loadedNodes = await this.getAllLoadedItems();
+        const nodeType = contextually.isFolder(originalNode) ? "folder" : "file";
+        const options: vscode.InputBoxOptions = {
+            prompt: localize("renameUSSNode.enterName",
+                "Enter a new name for the {0}", nodeType),
+            value: oldLabel.replace(/^\[.+\]:\s/, ""),
+            ignoreFocusOut: true,
+            validateInput: (value) => {
+                for (const node of loadedNodes) {
+                    if (value === node.label.trim() && contextually.isFolder(node)) {
+                        return localize("renameUSSNode.duplicateName",
+                            "A {0} already exists with this name. Please choose a different one.",
+                            nodeType);
+                    }
+                }
+                return null;
             }
-        } catch (err) {
-            errorHandling(err, originalNode.mProfileName, localize("renameUSSNode.error", "Unable to rename node: ") + err.message);
-            throw (err);
+        };
+        const newName = await vscode.window.showInputBox(options);
+        if (newName && newName !== oldLabel) {
+            try {
+                let newNamePath = path.join(parentPath + newName);
+                newNamePath = newNamePath.replace(/\\/g, "/"); // Added to cover Windows backslash issue
+                const oldNamePath = originalNode.fullPath;
+
+                const hasClosedTab = await originalNode.rename(newNamePath);
+                await ZoweExplorerApiRegister.getUssApi(
+                    originalNode.getProfile()).rename(oldNamePath, newNamePath);
+                await originalNode.refreshAndReopen(hasClosedTab);
+
+                if (oldFavorite) {
+                    this.removeFavorite(oldFavorite);
+                    oldFavorite.rename(newNamePath);
+                    this.addFavorite(oldFavorite);
+                }
+            } catch (err) {
+                errorHandling(err, originalNode.mProfileName, localize("renameUSSNode.error", "Unable to rename node: ") + err.message);
+                throw (err);
+            }
         }
-    }
     }
     public open(node: IZoweUSSTreeNode, preview: boolean) {
         throw new Error("Method not implemented.");
@@ -158,22 +178,35 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      * @param {string} [sessionName] - optional; loads persisted profiles or default if not passed
      */
     public async addSession(sessionName?: string, profileType?: string) {
+        const setting = PersistentFilters.getDirectValue("Zowe-Automatic-Validation") as boolean;
         // Loads profile associated with passed sessionName, persisted profiles or default if none passed
         if (sessionName) {
             const profile: IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
             if (profile) {
                 this.addSingleSession(profile);
             }
+            for (const node of this.mSessionNodes) {
+                const name = node.getProfileName();
+                if (name === profile.name){
+                    await resetValidationSettings(node, setting);
+                }
+            }
         } else {
             const allProfiles: IProfileLoaded[] = Profiles.getInstance().allProfiles;
-            for (const profile of allProfiles) {
+            for (const theProfile of allProfiles) {
                 // If session is already added, do nothing
-                if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === profile.name)) {
+                if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === theProfile.name)) {
                     continue;
                 }
                 for (const session of this.mHistory.getSessions()) {
-                    if (session === profile.name) {
-                        this.addSingleSession(profile);
+                    if (session === theProfile.name) {
+                        this.addSingleSession(theProfile);
+                        for (const node of this.mSessionNodes) {
+                            const name = node.getProfileName();
+                            if (name === theProfile.name){
+                                await resetValidationSettings(node, setting);
+                            }
+                        }
                     }
                 }
             }
@@ -242,6 +275,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         temp.fullPath = node.fullPath;
         temp.label = temp.tooltip = label;
         temp.contextValue = globals.USS_SESSION_CONTEXT + globals.FAV_SUFFIX;
+        await this.checkCurrentProfile(node);
         const icon = getIconByNode(temp);
         if (icon) {
             temp.iconPath = icon.path;
@@ -281,10 +315,10 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
     }
 
     /**
-     * Searches the loaded USS tree for items whose name contains a search string
+     * Fetches an array of all nodes loaded in the tree
      *
      */
-    public async searchInLoadedItems() {
+    public async getAllLoadedItems() {
         if (this.log) {
             this.log.debug(localize("enterPattern.log.debug.prompt", "Prompting the user to choose a member from the filtered list"));
         }
@@ -325,7 +359,8 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         let sessionNode = node.getSessionNode();
         let remotepath: string;
         await this.checkCurrentProfile(node);
-        if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
+        if ((Profiles.getInstance().validProfile === ValidProfileEnum.VALID) ||
+        (Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED)) {
             if (contextually.isSessionNotFav(node)) {
                 if (this.mHistory.getSearchHistory().length > 0) {
 

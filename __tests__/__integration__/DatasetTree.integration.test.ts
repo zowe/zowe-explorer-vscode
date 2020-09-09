@@ -176,14 +176,16 @@ describe("DatasetTree Integration Tests", async () => {
      * Tests the deleteSession() function
      *************************************************************************************************************/
     it("Tests the addSession() function by adding the default history, deleting, then adding a passed session then deleting", async () => {
+        let len: number;
         for (const sess of testTree.mSessionNodes) {
             if (sess.contextValue === DS_SESSION_CONTEXT) {
                 testTree.deleteSession(sess);
             }
         }
-        const len = testTree.mSessionNodes.length;
+        len = testTree.mSessionNodes.length;
         await testTree.addSession();
         expect(testTree.mSessionNodes.length).toBeGreaterThan(len);
+        len = testTree.mSessionNodes.length;
         for (const sess of testTree.mSessionNodes) {
             if (sess.contextValue === DS_SESSION_CONTEXT) {
                 testTree.deleteSession(sess);
