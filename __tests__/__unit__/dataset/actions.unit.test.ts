@@ -34,6 +34,7 @@ import * as fs from "fs";
 import * as sharedUtils from "../../../src/shared/utils";
 import { Profiles, ValidProfileEnum } from "../../../src/Profiles";
 import { PersistentFilters } from "../../../src/PersistentFilters";
+import * as utils from "../../../src/utils";
 
 // Missing the definition of path module, because I need the original logic for tests
 jest.mock("fs");
