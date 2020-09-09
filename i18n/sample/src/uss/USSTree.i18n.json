@@ -1,5 +1,7 @@
 {
     "Favorites": "Favorites",
+    "renameUSSNode.enterName": "Enter a new name for the {0}",
+    "renameUSSNode.duplicateName": "A {0} already exists with this name. Please choose a different one.",
     "renameUSSNode.error": "Unable to rename node: ",
     "enterPattern.log.debug.prompt": "Prompting the user to choose a member from the filtered list",
     "filterPrompt.log.debug.promptUSSPath": "Prompting the user for a USS path",
