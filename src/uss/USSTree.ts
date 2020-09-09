@@ -23,8 +23,8 @@ import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 import { getIconByNode } from "../generators/icons";
 import * as contextually from "../shared/context";
-
 import * as nls from "vscode-nls";
+
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
@@ -82,9 +82,8 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         const oldFavorite: IZoweUSSTreeNode = contextually.isFavorite(originalNode) ? originalNode : this.mFavorites.find((temp: ZoweUSSNode) =>
             (temp.shortLabel === oldLabel) && (temp.fullPath.substr(0, temp.fullPath.indexOf(oldLabel)) === parentPath)
         );
-        const nodeType = contextually.isFolder(originalNode) ? "folder" : "file";
         const loadedNodes = await this.getAllLoadedItems();
-
+        const nodeType = contextually.isFolder(originalNode) ? "folder" : "file";
         const options: vscode.InputBoxOptions = {
             prompt: localize("renameUSSNode.enterName",
                 "Enter a new name for the {0}", nodeType),
