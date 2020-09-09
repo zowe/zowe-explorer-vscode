@@ -78,6 +78,12 @@ async function createGlobalMocks() {
                 WorkspaceFolder: 3
             };
         }),
+        UIKindEnums: jest.fn().mockImplementation(() => {
+            return {
+                Desktop: 1,
+                Web: 2
+            };
+        }),
         testSession: new imperative.Session({
             user: "fake",
             password: "fake",
@@ -213,6 +219,7 @@ async function createGlobalMocks() {
     Object.defineProperty(globalMocks.mockImperativeConfig, "instance", { value: globalMocks.mockIcInstance, configurable: true });
     Object.defineProperty(globalMocks.mockIcInstance, "cliHome", { get: globalMocks.mockCliHome });
     Object.defineProperty(vscode.env, "appName", { value: globalMocks.appName, configurable: true });
+    Object.defineProperty(vscode, "UIKind", { value: globalMocks.UIKindEnums, configurable: true });
     Object.defineProperty(Profiles, "createInstance", {
         value: jest.fn(() => globalMocks.testProfileOps)
     });
@@ -339,7 +346,7 @@ describe("Extension Unit Tests", () => {
         const globalMocks = await createGlobalMocks();
 
         Object.defineProperty(vscode.env, "appName", { value: "Eclipse Theia" });
-        Object.defineProperty(vscode.env, "uiKind", { value: 2 });
+        Object.defineProperty(vscode.env, "uiKind", { value: vscode.UIKind.Web });
         globalMocks.mockExistsSync.mockReset();
         globalMocks.mockReaddirSync.mockReset();
         globalMocks.mockExistsSync.mockReturnValueOnce(true);

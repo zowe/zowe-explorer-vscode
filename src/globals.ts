@@ -67,8 +67,7 @@ export enum PersistenceSchemaEnum {
 export function defineGlobals(tempPath: string | undefined) {
     // Set app name
     const appName: string = vscode.env.appName;
-    // A value of 2 for vscode.env.uiKind means Zowe Explorer is running from a web app.
-    if (appName && !this.VSCODE_APPNAME.includes(appName) && vscode.env.uiKind === 2) {
+    if (appName && !this.VSCODE_APPNAME.includes(appName) && vscode.env.uiKind === vscode.UIKind.Web) {
         this.ISTHEIA = true;
     }
 
