@@ -101,7 +101,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             parentPath = oldFavorite.fullPath.substr(0, oldFavorite.fullPath.indexOf(originalName));
         }
         const loadedNodes = await this.getAllLoadedItems();
-        const nodeType = contextually.isFolder(originalNode) ? "folder" : "file";
+        const nodeType = contextually.isFolder(originalNode || oldFavorite) ? "folder" : "file";
         const options: vscode.InputBoxOptions = {
             prompt: localize("renameUSSNode.enterName",
                 "Enter a new name for the {0}", nodeType),
