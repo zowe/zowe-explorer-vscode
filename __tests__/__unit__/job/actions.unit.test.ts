@@ -490,11 +490,11 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        const favoriteSession = new ZoweDatasetNode("Favorites", vscode.TreeItemCollapsibleState.Collapsed,
+        const favProfileNode = new ZoweDatasetNode("test", vscode.TreeItemCollapsibleState.Collapsed,
             blockMocks.datasetSessionNode, null);
-        favoriteSession.contextValue = globals.FAVORITE_CONTEXT;
-        const favoriteSubNode = new ZoweDatasetNode("[test]: TEST.JCL", vscode.TreeItemCollapsibleState.Collapsed,
-            favoriteSession, null);
+        favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
+        const favoriteSubNode = new ZoweDatasetNode("TEST.JCL", vscode.TreeItemCollapsibleState.Collapsed,
+            favProfileNode, null);
         favoriteSubNode.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
         const favoriteMember = new ZoweDatasetNode(globals.DS_PDS_CONTEXT, vscode.TreeItemCollapsibleState.Collapsed,
             favoriteSubNode, null);
@@ -514,11 +514,11 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        const favoriteSession = new ZoweDatasetNode("Favorites", vscode.TreeItemCollapsibleState.Collapsed,
+        const favProfileNode = new ZoweDatasetNode("test", vscode.TreeItemCollapsibleState.Collapsed,
             blockMocks.datasetSessionNode, null);
-        favoriteSession.contextValue = globals.FAVORITE_CONTEXT;
-        const favoriteDataset = new ZoweDatasetNode("[test]: TEST.JCL", vscode.TreeItemCollapsibleState.Collapsed,
-            favoriteSession, null);
+        favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
+        const favoriteDataset = new ZoweDatasetNode("TEST.JCL", vscode.TreeItemCollapsibleState.Collapsed,
+            favProfileNode, null);
         favoriteDataset.contextValue = globals.DS_DS_CONTEXT + globals.FAV_SUFFIX;
         const submitJobSpy = jest.spyOn(blockMocks.jesApi, "submitJob");
         submitJobSpy.mockClear();

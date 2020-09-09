@@ -865,9 +865,12 @@ export class Profiles {
 
         // Delete from Data Set Favorites
         datasetTree.mFavorites.forEach((favNode) => {
-            const findNode = favNode.label.substring(1, favNode.label.indexOf("]")).trim();
+            const findNode = favNode.label.trim();
+            // const findNode = favNode.label.substring(1, favNode.label.indexOf("]")).trim();
+
             if (findNode === deleteLabel) {
-                datasetTree.removeFavorite(favNode);
+                // datasetTree.removeFavorite(favNode);
+                datasetTree.mFavorites = datasetTree.mFavorites.filter((tempNode) => tempNode.label.trim() !== findNode);
                 favNode.dirty = true;
                 datasetTree.refresh();
             }

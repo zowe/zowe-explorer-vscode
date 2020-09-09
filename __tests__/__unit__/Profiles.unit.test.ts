@@ -1117,20 +1117,22 @@ describe("Profiles Unit Tests - Function deleteProfile", () => {
 
         const startLength = blockMocks.testDatasetTree.mSessionNodes.length;
         const favoriteLength = blockMocks.testDatasetTree.mFavorites.length;
-        const dsNode = new ZoweDatasetNode(
-            "testNode", vscode.TreeItemCollapsibleState.Expanded, null, blockMocks.session, undefined, undefined, blockMocks.imperativeProfile);
-        const dsNodeAsFavorite = new ZoweDatasetNode(`[${blockMocks.datasetSessionNode.label.trim()}]: testNode`,
-                                        vscode.TreeItemCollapsibleState.None, blockMocks.testDatasetTree.mFavoriteSession, blockMocks.session,
-                                        dsNode.contextValue, null, dsNode.getProfile());
-        dsNode.contextValue = globals.DS_SESSION_CONTEXT;
-        blockMocks.testDatasetTree.mSessionNodes.push(dsNode);
-        blockMocks.testDatasetTree.addFavorite(dsNodeAsFavorite);
+        // Use existing test session node
+        const dsNode = blockMocks.testDatasetTree.mSessionNodes[0];
+        // Set up dsNode in Favorites
+        const favedDsNode = dsNode;
+        favedDsNode.contextValue = dsNode.contextValue + globals.FAV_SUFFIX;
+        const dsProfileNodeInFavs = new ZoweDatasetNode(`sestest`, vscode.TreeItemCollapsibleState.None,
+            blockMocks.testDatasetTree.mFavoriteSession, blockMocks.session, globals.FAV_PROFILE_CONTEXT, null, dsNode.getProfile());
+        dsProfileNodeInFavs.children.push(favedDsNode);
+        blockMocks.testDatasetTree.mFavorites.push(dsProfileNodeInFavs);
+
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("Delete");
 
         await blockMocks.profiles.deleteProfile(blockMocks.testDatasetTree, blockMocks.testUSSTree, blockMocks.testJobTree, dsNode);
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile sestest was deleted.");
-        expect(blockMocks.testDatasetTree.mSessionNodes.length).toEqual(startLength);
+        expect(blockMocks.testDatasetTree.mSessionNodes.length).toEqual(startLength - 1);
         expect(blockMocks.testDatasetTree.mFavorites.length).toEqual(favoriteLength);
     });
 
