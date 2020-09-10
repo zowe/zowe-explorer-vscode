@@ -359,6 +359,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         if (!profileNodeInFavorites.children.find((tempNode) => tempNode.label === favJob.label)) {
             profileNodeInFavorites.children.push(favJob);
             sortTreeItems(profileNodeInFavorites.children, globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX);
+            sortTreeItems(this.mFavorites, globals.FAV_PROFILE_CONTEXT);
             await this.updateFavorites();
             this.refreshElement(this.mFavoriteSession);
         }
