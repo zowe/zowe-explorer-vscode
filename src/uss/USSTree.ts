@@ -109,9 +109,12 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             ignoreFocusOut: true,
             validateInput: (value) => {
                 for (const node of loadedNodes) {
-                    if (value === node.label.trim() && contextually.isFolder(node)) {
+                    const testNodeType = contextually.isFolder(node) ? "folder" : "file";
+                    // Check to see if the new name would be a duplicate of an already-existing folder or file
+                    const newFullPath = `${originalFullPath.match(/^(.*\/.*)(?=\/.*)/)[0]}/${value}`;
+                    if (newFullPath === node.fullPath && testNodeType === nodeType) {
                         return localize("renameUSSNode.duplicateName",
-                            "A {0} already exists with this name. Please choose a different one.",
+                            "A {0} already exists with this name. Please choose a different name.",
                             nodeType);
                     }
                 }
