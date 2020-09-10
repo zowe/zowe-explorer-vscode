@@ -60,7 +60,8 @@ export class Profiles {
 
     public async checkCurrentProfile(profileLoaded: IProfileLoaded, prompt?: boolean): Promise<any> {
         try {
-            const validSession = await ZoweExplorerApiRegister.getCommonApi(profileLoaded).getValidSession(profileLoaded, profileLoaded.name, null, prompt);
+            const validSession = await ZoweExplorerApiRegister.getCommonApi(profileLoaded)
+                                                              .getValidSession(profileLoaded, profileLoaded.name, null, prompt);
 
             if (!validSession) {
                 // Credentials are invalid
