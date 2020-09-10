@@ -145,7 +145,7 @@ export class ZoweTreeProvider {
         const profile = node.getProfile();
         const profileName = node.getProfileName();
         // Check what happens is inactive
-        await Profiles.getInstance().validateProfiles(profile);
+        await Profiles.getInstance().getProfileSetting(profile);
         const EditSession = await Profiles.getInstance().editSession(profile, profileName);
         if (EditSession) {
             node.getProfile().profile = EditSession as IProfile;
@@ -203,6 +203,13 @@ export class ZoweTreeProvider {
                 const activeIcon = getIconById(IconId.sessionActive);
                 if (activeIcon) {
                     node.iconPath = activeIcon.path;
+                }
+            }
+        } else if (profileStatus.status === "unverified") {
+            if ((node.contextValue.toLowerCase().includes("session") || node.contextValue.toLowerCase().includes("server"))) {
+                // change contextValue only if the word unverified is not there
+                if (node.contextValue.toLowerCase().indexOf("unverified") === -1) {
+                    node.contextValue = node.contextValue + globals.UNVERIFIED_CONTEXT;
                 }
             }
         }

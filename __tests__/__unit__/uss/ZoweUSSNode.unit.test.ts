@@ -484,6 +484,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
         const newMocks = {
             testUSSTree: null,
             dsNode: null,
+            mockCheckCurrentProfile: jest.fn(),
             ussNode: new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, null,
                 globalMocks.session, null, null, globalMocks.profileOne.name, "123")
         };
@@ -544,6 +545,49 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
         expect(globalMocks.existsSync.mock.calls[0][0]).toBe(path.join(globals.USS_DIR, "/" + node.mProfileName + "/", node.fullPath));
         expect(globalMocks.isFileTagBinOrAscii.mock.calls.length).toBe(1);
         expect(globalMocks.isFileTagBinOrAscii.mock.calls[0][0]).toBe(globalMocks.session);
+        expect(globalMocks.isFileTagBinOrAscii.mock.calls[0][1]).toBe(node.fullPath);
+        expect(globalMocks.withProgress).toBeCalledWith(
+            {
+                location: vscode.ProgressLocation.Notification,
+                title: "Opening USS file..."
+            }, expect.any(Function)
+        );
+
+        // Tests that correct file is opened in editor
+        globalMocks.withProgress(globalMocks.downloadUSSFile);
+        expect(globalMocks.withProgress).toBeCalledWith(globalMocks.downloadUSSFile);
+        expect(globalMocks.openTextDocument.mock.calls.length).toBe(1);
+        expect(globalMocks.openTextDocument.mock.calls[0][0]).toBe(node.getUSSDocumentFilePath());
+        expect(globalMocks.showTextDocument.mock.calls.length).toBe(1);
+        expect(globalMocks.showTextDocument.mock.calls[0][0]).toBe("test.doc");
+    });
+
+    it("Tests that node.openUSS() is executed successfully with Unverified profile", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    loadNamedProfile: globalMocks.mockLoadNamedProfile,
+                    checkCurrentProfile: blockMocks.mockCheckCurrentProfile.mockReturnValueOnce({name: globalMocks.profileOne.name, status: "unverified"}),
+                    validProfile: ValidProfileEnum.UNVERIFIED
+                };
+            })
+        });
+
+        const node = new ZoweUSSNode("node", vscode.TreeItemCollapsibleState.None, blockMocks.ussNode,
+            globalMocks.session, "/", false, globalMocks.profileOne.name);
+
+        const isBinSpy = jest.spyOn(globalMocks.ussApi, "isFileTagBinOrAscii");
+        globalMocks.existsSync.mockReturnValue(null);
+
+        // Tests that correct file is downloaded
+        await node.openUSS(false, true, blockMocks.testUSSTree);
+        expect(globalMocks.existsSync.mock.calls.length).toBe(1);
+        expect(globalMocks.existsSync.mock.calls[0][0]).toBe(path.join(globals.USS_DIR, "/" + node.mProfileName + "/", node.fullPath));
+        expect(globalMocks.isFileTagBinOrAscii.mock.calls.length).toBe(1);
+        expect(globalMocks.isFileTagBinOrAscii.mock.calls[0][0]).toEqual(globalMocks.session);
         expect(globalMocks.isFileTagBinOrAscii.mock.calls[0][1]).toBe(node.fullPath);
         expect(globalMocks.withProgress).toBeCalledWith(
             {
