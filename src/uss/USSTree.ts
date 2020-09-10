@@ -100,7 +100,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             originalName = oldFavorite.label.replace(/\[.*?\]: /, "");
             parentPath = oldFavorite.fullPath.substr(0, oldFavorite.fullPath.indexOf(originalName));
         }
-        const loadedNodes = originalNode ? await originalNode.getParent().getChildren() : await oldFavorite.getParent().getChildren();
+        const loadedNodes = originalNode ? await originalNode.getParent().getChildren() : null;
         const nodeType = contextually.isFolder(originalNode || oldFavorite) ? "folder" : "file";
         const options: vscode.InputBoxOptions = {
             prompt: localize("renameUSSNode.enterName",
@@ -108,15 +108,17 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             value: originalName,
             ignoreFocusOut: true,
             validateInput: (value) => {
-                for (const node of loadedNodes) {
-                    const testNodeType = contextually.isFolder(node) ? "folder" : "file";
-                    // Check to see if the new name would be a duplicate of an already-existing folder or file
-                    const newFullPath = `${originalFullPath.match(/^(.*\/.*)(?=\/.*)/)[0]}/${value}`;
-                    const nodeBeingRenamed = originalNode ? originalNode : oldFavorite;
-                    if (newFullPath === node.fullPath && testNodeType === nodeType && node !== nodeBeingRenamed) {
-                        return localize("renameUSSNode.duplicateName",
-                            "A {0} already exists with this name. Please choose a different name.",
-                            nodeType);
+                if (loadedNodes) {
+                    for (const node of loadedNodes) {
+                        const testNodeType = contextually.isFolder(node) ? "folder" : "file";
+                        // Check to see if the new name would be a duplicate of an already-existing folder or file
+                        const newFullPath = `${originalFullPath.match(/^(.*\/.*)(?=\/.*)/)[0]}/${value}`;
+                        const nodeBeingRenamed = originalNode ? originalNode : oldFavorite;
+                        if (newFullPath === node.fullPath && testNodeType === nodeType && node !== nodeBeingRenamed) {
+                            return localize("renameUSSNode.duplicateName",
+                                "A {0} already exists with this name. Please choose a different name.",
+                                nodeType);
+                        }
                     }
                 }
                 return null;
