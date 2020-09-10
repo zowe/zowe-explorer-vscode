@@ -488,13 +488,16 @@ describe("USSTree Unit Tests - Function USSTree.getAllLoadedItems()", () => {
         const folder = new ZoweUSSNode("folder", vscode.TreeItemCollapsibleState.Collapsed, globalMocks.testTree.mSessionNodes[1], null, "/");
         const file = new ZoweUSSNode("file", vscode.TreeItemCollapsibleState.None, folder, null, "/folder");
         globalMocks.testTree.mSessionNodes[1].children = [folder];
-        folder.children.push(file);
+        folder.children = [file];
 
         const treeGetChildren = jest.spyOn(globalMocks.testTree, "getChildren").mockImplementationOnce(
             () => Promise.resolve([globalMocks.testTree.mSessionNodes[1]])
         );
         const sessionGetChildren = jest.spyOn(globalMocks.testTree.mSessionNodes[1], "getChildren").mockImplementationOnce(
             () => Promise.resolve(globalMocks.testTree.mSessionNodes[1].children)
+        );
+        const folderGetChildren = jest.spyOn(folder, "getChildren").mockImplementationOnce(
+            () => Promise.resolve([file])
         );
 
         const loadedItems = await globalMocks.testTree.getAllLoadedItems();

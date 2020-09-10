@@ -78,10 +78,13 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      */
     public async rename(originalNode: IZoweUSSTreeNode) {
         // Get the favorited & non-favorited versions of the node, if available
-        let oldFavorite;
+        let oldFavorite: IZoweUSSTreeNode;
+        const nonFavoriteSession = this.mSessionNodes.find((node) => node.getProfileName() === originalNode.getProfileName());
+        nonFavoriteSession.fullPath = originalNode.fullPath.match(/^(.*\/.*)(?=\/.*)/)[0];
+        const loadedNodes = await this.getAllLoadedItems();
         if (contextually.isFavorite(originalNode)) {
             oldFavorite = originalNode;
-            originalNode = this.findNonFavoritedNode(originalNode);
+            originalNode = loadedNodes.find((node) => node.fullPath === originalNode.fullPath);
         } else {
             oldFavorite = this.mFavorites.find((temp) => temp.fullPath.includes(originalNode.label));
         }
@@ -100,7 +103,6 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             originalName = oldFavorite.label.replace(/\[.*?\]: /, "");
             parentPath = oldFavorite.fullPath.substr(0, oldFavorite.fullPath.indexOf(originalName));
         }
-        const loadedNodes = originalNode ? await originalNode.getParent().getChildren() : null;
         const nodeType = contextually.isFolder(originalNode || oldFavorite) ? "folder" : "file";
         const options: vscode.InputBoxOptions = {
             prompt: localize("renameUSSNode.enterName",
@@ -371,7 +373,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 const nodes = await session.getChildren();
 
                 const checkForChildren = async (nodeToCheck: IZoweUSSTreeNode) => {
-                    const children = nodeToCheck.children;
+                    const children = await nodeToCheck.getChildren();
                     if (children.length !== 0) {
                         for (const child of children) { await checkForChildren(child); }
                     }
