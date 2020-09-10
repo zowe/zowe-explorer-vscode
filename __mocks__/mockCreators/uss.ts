@@ -63,8 +63,8 @@ export function createUSSSessionNode(session: imperative.Session, profile: imper
 }
 
 export function createFavoriteUSSNode(session, profile) {
-    const ussNodeF = new ZoweUSSNode("[sestest]: usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, profile.name);
     const mParent = new ZoweUSSNode("Favorites", vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, profile.name);
+    const ussNodeF = new ZoweUSSNode("[sestest]: usstest", vscode.TreeItemCollapsibleState.Expanded, mParent, session, null, false, profile.name);
     mParent.contextValue = globals.FAVORITE_CONTEXT;
     ussNodeF.contextValue = globals.DS_TEXT_FILE_CONTEXT + globals.FAV_SUFFIX;
     ussNodeF.fullPath = "/u/myuser/usstest";
