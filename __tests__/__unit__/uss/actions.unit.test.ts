@@ -26,6 +26,7 @@ import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
 import * as isbinaryfile from "isbinaryfile";
 import * as fs from "fs";
 import { DefaultProfileManager } from "../../../src/profiles/DefaultProfileManager";
+import { PersistentFilters } from "../../../src/PersistentFilters";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -148,13 +149,34 @@ describe("USS Action Unit Tests - Function createUSSNodeDialog", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
             testUSSTree: null,
-            ussNode: createUSSNode(globalMocks.testSession, createIProfile())
+            ussNode: createUSSNode(globalMocks.testSession, createIProfile()),
+            mockCheckCurrentProfile: jest.fn()
         };
         newMocks.testUSSTree = createUSSTree([createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile)],
             [newMocks.ussNode], createTreeView());
 
         return newMocks;
     }
+
+    it("Tests if createUSSNode is executed successfully with Unverified profile", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    checkCurrentProfile: blockMocks.mockCheckCurrentProfile.mockReturnValueOnce({name: globalMocks.testProfile.name, status: "unverified"}),
+                    validProfile: ValidProfileEnum.UNVERIFIED
+                };
+            })
+        });
+        globalMocks.showQuickPick.mockResolvedValueOnce("File");
+        globalMocks.showInputBox.mockReturnValueOnce("USSFolder");
+
+        await ussNodeActions.createUSSNodeDialog(blockMocks.ussNode, blockMocks.testUSSTree);
+        expect(blockMocks.testUSSTree.refreshElement).not.toHaveBeenCalled();
+        expect(globalMocks.showErrorMessage.mock.calls.length).toBe(0);
+    });
 
     it("Tests if createUSSNode is executed successfully", async () => {
         const globalMocks = await createGlobalMocks();
@@ -224,6 +246,15 @@ describe("USS Action Unit Tests - Function refreshAllUSS", () => {
         };
         newMocks.testUSSTree = createUSSTree([createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile)],
             [newMocks.ussNode], createTreeView());
+        newMocks.testUSSTree.mSessionNodes.push(newMocks.ussNode);
+
+        Object.defineProperty(PersistentFilters, "getDirectValue", {
+            value: jest.fn(() => {
+                return {
+                    "Zowe-Automatic-Validation": true
+                };
+            })
+        });
 
         return newMocks;
     }
@@ -232,6 +263,9 @@ describe("USS Action Unit Tests - Function refreshAllUSS", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
         const profilesForValidation = { status: "active", name: "fake" };
+        const response = new Promise(() => {
+            return {};
+        });
 
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
@@ -242,10 +276,10 @@ describe("USS Action Unit Tests - Function refreshAllUSS", () => {
                     loadNamedProfile: globalMocks.mockLoadNamedProfile,
                     getValidSession: jest.fn(() => globalMocks.testSession),
                     usesSecurity: true,
-                    getProfiles: jest.fn(() => {
-                        return [{ name: globalMocks.testProfile.name, profile: globalMocks.testProfile },
-                        { name: globalMocks.testProfile.name, profile: globalMocks.testProfile }];
-                    }),
+                    getProfiles: jest.fn().mockReturnValue(
+                        [{ name: globalMocks.testProfile.name, profile: globalMocks.testProfile },
+                        { name: globalMocks.testProfile.name, profile: globalMocks.testProfile }]
+                    ),
                     checkCurrentProfile: jest.fn(() => {
                         return profilesForValidation;
                     }),
@@ -258,6 +292,7 @@ describe("USS Action Unit Tests - Function refreshAllUSS", () => {
 
         ussNodeActions.refreshAllUSS(blockMocks.testUSSTree);
         expect(spy).toHaveBeenCalledTimes(1);
+        expect(ussNodeActions.refreshAllUSS(blockMocks.testUSSTree)).toEqual(response);
     });
 });
 

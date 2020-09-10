@@ -100,10 +100,10 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         }
         // TODO: this should not be necessary if each node gets initialized with the profile reference.
         if (mProfileName) {
-            this.setProfile(Profiles.getInstance().loadNamedProfile(mProfileName));
+            this.setProfileToChoice(Profiles.getInstance().loadNamedProfile(mProfileName));
         } else if (mParent && mParent.mProfileName) {
             this.mProfileName = mParent.mProfileName;
-            this.setProfile(Profiles.getInstance().loadNamedProfile(mParent.mProfileName));
+            this.setProfileToChoice(Profiles.getInstance().loadNamedProfile(mParent.mProfileName));
         }
         this.etag = etag ? etag : "";
         const icon = getIconByNode(this);
@@ -409,7 +409,8 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      */
     public async openUSS(download = false, previewFile: boolean, ussFileProvider?: IZoweTree<IZoweUSSTreeNode>) {
         await ussFileProvider.checkCurrentProfile(this);
-        if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
+        if ((Profiles.getInstance().validProfile === ValidProfileEnum.VALID) ||
+        (Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED)) {
             try {
                 let label: string;
                 switch (true) {

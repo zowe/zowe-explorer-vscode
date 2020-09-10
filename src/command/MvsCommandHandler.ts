@@ -95,7 +95,9 @@ export class MvsCommandHandler {
             zosmfProfile = node.getProfile();
         }
         await Profiles.getInstance().checkCurrentProfile(zosmfProfile, true);
-        if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
+        if ((Profiles.getInstance().validProfile === ValidProfileEnum.VALID) ||
+            (Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED)) {
+            const updProfile = zosmfProfile.profile as ISession;
             session = await ZoweExplorerApiRegister.getCommonApi(zosmfProfile)
                                                    .getValidSession(zosmfProfile,
                                                                     zosmfProfile.name,

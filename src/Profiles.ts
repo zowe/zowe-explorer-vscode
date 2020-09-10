@@ -30,7 +30,14 @@ interface IProfileValidation {
     name: string;
 }
 
+interface IValidationSetting {
+    name: string;
+    setting: boolean;
+}
+
+let InputBoxOptions: vscode.InputBoxOptions;
 export enum ValidProfileEnum {
+    UNVERIFIED = 1,
     VALID = 0,
     INVALID = -1
 }
@@ -47,6 +54,7 @@ export class Profiles {
     private static loader: Profiles;
 
     public profilesForValidation: IProfileValidation[] = [];
+    public profilesValidationSetting: IValidationSetting[] = [];
     public allProfiles: IProfileLoaded[] = [];
     public loadedProfile: IProfileLoaded;
     public validProfile: ValidProfileEnum = ValidProfileEnum.INVALID;
@@ -60,6 +68,11 @@ export class Profiles {
 
     public async checkCurrentProfile(profileLoaded: IProfileLoaded, prompt?: boolean): Promise<any> {
         try {
+            const profileStatus: IProfileValidation = await this.getProfileSetting(profileLoaded);
+            if (profileStatus.status === "inactive") {
+                this.validProfile = ValidProfileEnum.INVALID;
+                return profileStatus;
+            }
             const validSession = await ZoweExplorerApiRegister.getCommonApi(profileLoaded)
                                                               .getValidSession(profileLoaded, profileLoaded.name, null, prompt);
 
@@ -84,6 +97,117 @@ export class Profiles {
                 localize("checkCurrentProfile.error", "Error encountered in {0}", `checkCurrentProfile.optionalProfiles!`));
             return { status: "inactive", name: profileLoaded.name, session: null };
         }
+    }
+
+    public async getProfileSetting(theProfile: IProfileLoaded): Promise<IProfileValidation> {
+        let profileStatus: IProfileValidation;
+        let found: boolean = false;
+        this.profilesValidationSetting.filter(async (instance) => {
+            if ((instance.name === theProfile.name) && (instance.setting === false)) {
+                profileStatus = {
+                    status: "unverified",
+                    name: instance.name,
+                    session: null
+                };
+                if (this.profilesForValidation.length > 0) {
+                    this.profilesForValidation.filter((profile) => {
+                        if ((profile.name === theProfile.name) && (profile.status === "unverified")) {
+                            found = true;
+                        }
+                        if ((profile.name === theProfile.name) && (profile.status !== "unverified")) {
+                            found = true;
+                            const index = this.profilesForValidation.lastIndexOf(profile);
+                            this.profilesForValidation.splice(index, 1, profileStatus);
+                        }
+                    });
+                }
+                if (!found) {
+                    this.profilesForValidation.push(profileStatus);
+                }
+            }
+        });
+        if (profileStatus === undefined) {
+            profileStatus = await this.validateProfiles(theProfile);
+        }
+        return profileStatus;
+    }
+
+    public async disableValidation(node: IZoweNodeType): Promise<IZoweNodeType>{
+        this.disableValidationContext(node);
+        return node;
+    }
+
+    public async disableValidationContext(node: IZoweNodeType) {
+        const theProfile: IProfileLoaded = node.getProfile();
+        this.validationArraySetup(theProfile, false);
+        if (node.contextValue.includes(`${globals.VALIDATE_SUFFIX}true`)) {
+            node.contextValue = node.contextValue.replace(/(_validate=true)/g, "").replace(/(_Active)/g, "").replace(/(_Inactive)/g, "");
+            node.contextValue = node.contextValue + `${globals.VALIDATE_SUFFIX}false`;
+        } else if (node.contextValue.includes(`${globals.VALIDATE_SUFFIX}false`)){
+            return node;
+        } else {
+            node.contextValue = node.contextValue + `${globals.VALIDATE_SUFFIX}false`;
+        }
+        return node;
+    }
+
+    public async enableValidation(node: IZoweNodeType): Promise<IZoweNodeType>{
+        this.enableValidationContext(node);
+        return node;
+    }
+
+    public async enableValidationContext(node: IZoweNodeType) {
+        const theProfile: IProfileLoaded = node.getProfile();
+        this.validationArraySetup(theProfile, true);
+        if (node.contextValue.includes(`${globals.VALIDATE_SUFFIX}false`)) {
+            node.contextValue = node.contextValue.replace(/(_validate=false)/g, "").replace(/(_Unverified)/g, "");
+            node.contextValue = node.contextValue + `${globals.VALIDATE_SUFFIX}true`;
+        } else if (node.contextValue.includes(`${globals.VALIDATE_SUFFIX}true`)){
+            return node;
+        } else {
+            node.contextValue = node.contextValue + `${globals.VALIDATE_SUFFIX}true`;
+        }
+
+        return node;
+    }
+
+    public async validationArraySetup(theProfile: IProfileLoaded, validationSetting: boolean): Promise<IValidationSetting> {
+        let found: boolean = false;
+        let profileSetting: IValidationSetting;
+        if (this.profilesValidationSetting.length > 0) {
+            this.profilesValidationSetting.filter((instance) => {
+                if ((instance.name === theProfile.name) && (instance.setting === validationSetting)) {
+                    found = true;
+                    profileSetting = {
+                        name: instance.name,
+                        setting: instance.setting
+                    };
+                }
+                if ((instance.name === theProfile.name) && (instance.setting !== validationSetting)) {
+                    found = true;
+                    profileSetting = {
+                        name: instance.name,
+                        setting: validationSetting
+                    };
+                    const index = this.profilesValidationSetting.lastIndexOf(instance);
+                    this.profilesValidationSetting.splice(index, 1, profileSetting);
+                }
+            });
+            if (!found) {
+                profileSetting = {
+                    name: theProfile.name,
+                    setting: validationSetting
+                };
+                this.profilesValidationSetting.push(profileSetting);
+            }
+        } else {
+            profileSetting = {
+                name: theProfile.name,
+                setting: validationSetting
+            };
+            this.profilesValidationSetting.push(profileSetting);
+        }
+        return profileSetting;
     }
 
     public loadNamedProfile(name: string, type?: string): IProfileLoaded {
@@ -372,9 +496,12 @@ export class Profiles {
 
         // Delete from Data Set Favorites
         datasetTree.mFavorites.forEach((favNode) => {
-            const findNode = favNode.label.substring(1, favNode.label.indexOf("]")).trim();
+            const findNode = favNode.label.trim();
+            // const findNode = favNode.label.substring(1, favNode.label.indexOf("]")).trim();
+
             if (findNode === deleteLabel) {
-                datasetTree.removeFavorite(favNode);
+                // datasetTree.removeFavorite(favNode);
+                datasetTree.mFavorites = datasetTree.mFavorites.filter((tempNode) => tempNode.label.trim() !== findNode);
                 favNode.dirty = true;
                 datasetTree.refresh();
             }

@@ -59,6 +59,10 @@ async function createGlobalMocks() {
         mockProfileInstance: null,
         defaultProfileManagerInstance: null,
         defaultProfile: null,
+        mockValidationSetting: jest.fn(),
+        mockDisableValidationContext: jest.fn(),
+        mockEnableValidationContext: jest.fn(),
+        mockCheckProfileValidationSetting: jest.fn(),
         withProgress: jest.fn().mockImplementation((progLocation, callback) => {
             return callback();
         }),
@@ -112,6 +116,9 @@ async function createGlobalMocks() {
     globalMocks.mockProfileInstance.loadNamedProfile = globalMocks.mockLoadNamedProfile;
     globalMocks.mockLoadDefaultProfile.mockReturnValue(globalMocks.testProfile);
     globalMocks.mockProfileInstance.getDefaultProfile = globalMocks.mockLoadDefaultProfile;
+    globalMocks.mockProfileInstance.checkProfileValidationSetting = globalMocks.mockValidationSetting.mockReturnValue(true);
+    globalMocks.mockProfileInstance.enableValidationContext = globalMocks.mockEnableValidationContext;
+    globalMocks.mockProfileInstance.disableValidationContext = globalMocks.mockDisableValidationContext;
 
     // Jes API mocks
     globalMocks.jesApi = ZoweExplorerApiRegister.getJesApi(globalMocks.testProfile);
@@ -172,6 +179,19 @@ describe("ZoweJobNode unit tests - Function addSession", () => {
 
         globalMocks.testJobsProvider.mSessionNodes.pop();
 
+        await globalMocks.testJobsProvider.addSession("sestest");
+
+        expect(globalMocks.testJobsProvider.mSessionNodes[1]).toBeDefined();
+        expect(globalMocks.testJobsProvider.mSessionNodes[1].label).toEqual("sestest");
+        expect(globalMocks.testJobsProvider.mSessionNodes[1].tooltip).toEqual("sestest - owner: fake prefix: *");
+    });
+
+    it("Tests that addSession adds the session to the tree with disabled global setting", async () => {
+        const globalMocks = await createGlobalMocks();
+
+
+        globalMocks.testJobsProvider.mSessionNodes.pop();
+        globalMocks.mockProfileInstance.checkProfileValidationSetting = globalMocks.mockValidationSetting.mockReturnValueOnce(false);
         await globalMocks.testJobsProvider.addSession("sestest");
 
         expect(globalMocks.testJobsProvider.mSessionNodes[1]).toBeDefined();
@@ -425,6 +445,7 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
                                        globalMocks.testSessionNoCred, globalMocks.testIJob, globalMocks.testProfile),
             qpItem: globalMocks.testJobsProvider.createOwner,
             theia: false,
+            mockCheckCurrentProfile: jest.fn(),
             qpContent: createQuickPickContent("", [globalMocks.testJobsProvider.createOwner, globalMocks.testJobsProvider.createId],
                                               "Select a filter")
         };
@@ -510,6 +531,31 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
         await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
 
         expect(globalMocks.testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT + "_Active");
+        expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("*");
+        expect(globalMocks.testJobsProvider.mSessionNodes[1].prefix).toEqual("STO*");
+        expect(globalMocks.testJobsProvider.mSessionNodes[1].searchId).toEqual("");
+    });
+
+    it("Testing that searchPrompt is successfully executed when searching by prefix, VSCode route with Unverified profile", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        await createBlockMocks(globalMocks);
+
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    checkCurrentProfile: blockMocks.mockCheckCurrentProfile.mockReturnValueOnce({name: globalMocks.testProfile.name, status: "unverified"}),
+                    validProfile: ValidProfileEnum.UNVERIFIED
+                };
+            })
+        });
+
+        globalMocks.mockShowInputBox.mockReturnValueOnce("");
+        globalMocks.mockShowInputBox.mockReturnValueOnce("STO*");
+
+        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
+
+        expect(globalMocks.testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT + "_Unverified");
         expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("*");
         expect(globalMocks.testJobsProvider.mSessionNodes[1].prefix).toEqual("STO*");
         expect(globalMocks.testJobsProvider.mSessionNodes[1].searchId).toEqual("");
