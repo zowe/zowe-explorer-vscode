@@ -74,7 +74,7 @@ export function createDatasetTree(sessionNode: ZoweDatasetNode, treeView: any, f
         testDatasetTree.mFileHistory.indexOf(badFile), 1
     ));
     testDatasetTree.getFileHistory.mockImplementation(() => testDatasetTree.mFileHistory);
-    testDatasetTree.deleteSession.mockImplementation((badSession) => removeNodeFromArray(badSession, testDatasetTree.mSessionNodes));
+    testDatasetTree.hideSession.mockImplementation((badSession) => removeNodeFromArray(badSession, testDatasetTree.mSessionNodes));
     testDatasetTree.removeFavorite.mockImplementation((badFavorite) => removeNodeFromArray(badFavorite, testDatasetTree.mFavorites));
     if (!favoritesNode) {
         return testDatasetTree;

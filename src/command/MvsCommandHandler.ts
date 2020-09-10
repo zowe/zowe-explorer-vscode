@@ -11,7 +11,7 @@
 
 import * as zowe from "@zowe/cli";
 import * as vscode from "vscode";
-import { IProfileLoaded, Session } from "@zowe/imperative";
+import { IProfileLoaded, Session, ISession } from "@zowe/imperative";
 import * as globals from "../globals";
 import { Profiles, ValidProfileEnum } from "../Profiles";
 import { PersistentFilters } from "../PersistentFilters";

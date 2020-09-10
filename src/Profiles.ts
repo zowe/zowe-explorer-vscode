@@ -28,6 +28,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 interface IProfileValidation {
     status: string;
     name: string;
+    session: Session;
 }
 
 interface IValidationSetting {
@@ -35,7 +36,6 @@ interface IValidationSetting {
     setting: boolean;
 }
 
-let InputBoxOptions: vscode.InputBoxOptions;
 export enum ValidProfileEnum {
     UNVERIFIED = 1,
     VALID = 0,
@@ -126,9 +126,6 @@ export class Profiles {
                 }
             }
         });
-        if (profileStatus === undefined) {
-            profileStatus = await this.validateProfiles(theProfile);
-        }
         return profileStatus;
     }
 

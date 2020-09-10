@@ -27,7 +27,6 @@ import * as contextually from "../shared/context";
 import { closeOpenedTextFile } from "../utils/workspace";
 import * as nls from "vscode-nls";
 import { DefaultProfileManager } from "../profiles/DefaultProfileManager";
-import { Session } from "selenium-webdriver";
 import { resetValidationSettings } from "../shared/actions";
 import { PersistentFilters } from "../PersistentFilters";
 
@@ -260,7 +259,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             // If no profile/session yet, then add session and profile to parent profile node in this.mFavorites array:
             try {
                 profile = Profiles.getInstance().loadNamedProfile(profileName);
-                session = ZoweExplorerApiRegister.getMvsApi(profile).getSession();
+                session = await ZoweExplorerApiRegister.getMvsApi(profile).getSession();
                 parentNode.setProfileToChoice(profile);
                 parentNode.setSessionToChoice(session);
             } catch (error) {
@@ -275,8 +274,6 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 await errorHandling(error, null, errMessage);
             }
         }
-        profile = parentNode.getProfile();
-        session = parentNode.getSession();
         // Pass loaded profile/session to the parent node's favorites children.
         const profileInFavs = this.findMatchingProfileInArray(this.mFavorites, profileName);
         const favsForProfile = profileInFavs.children;

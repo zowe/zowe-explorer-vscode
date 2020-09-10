@@ -20,7 +20,7 @@ import * as child_process from "child_process";
 import { Logger } from "@zowe/imperative";
 import * as globals from "../../src/globals";
 import { Profiles, ValidProfileEnum } from "../../src/Profiles";
-import { ZosmfSession } from "@zowe/cli";
+import { ZosmfSession, CheckStatus } from "@zowe/cli";
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
 import { ZoweExplorerApiRegister } from "../../src/api/ZoweExplorerApiRegister";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
@@ -1371,7 +1371,7 @@ describe("Profiles Unit Tests - Function getProfileSetting", () => {
             mockValidateProfile: jest.fn()
         };
         newMocks.profiles = await Profiles.createInstance(newMocks.log);
-        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles, newMocks.session);
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -1391,7 +1391,7 @@ describe("Profiles Unit Tests - Function getProfileSetting", () => {
         const resultSetting = { status: "unverified", name: "sestest" };
         const theProfiles = await Profiles.createInstance(blockMocks.log);
         theProfiles.profilesValidationSetting = [{name: blockMocks.imperativeProfile.name, setting: false}];
-        theProfiles.profilesForValidation = [{ status: "unverified", name: "sestest" }];
+        theProfiles.profilesForValidation = [{ status: "unverified", name: "sestest", session: null}];
 
         const response = await theProfiles.getProfileSetting(blockMocks.imperativeProfile);
         expect(response).toEqual(resultSetting);
@@ -1403,7 +1403,7 @@ describe("Profiles Unit Tests - Function getProfileSetting", () => {
         const resultSetting = { status: "unverified", name: "sestest" };
         const theProfiles = await Profiles.createInstance(blockMocks.log);
         theProfiles.profilesValidationSetting = [{name: blockMocks.imperativeProfile.name, setting: false}];
-        theProfiles.profilesForValidation = [{ status: "inactive", name: "sestest" }];
+        theProfiles.profilesForValidation = [{ status: "inactive", name: "sestest", session: null}];
 
         const response = await theProfiles.getProfileSetting(blockMocks.imperativeProfile);
         expect(response).toEqual(resultSetting);
@@ -1452,10 +1452,11 @@ describe("Profiles Unit Tests - Function disableValidation", () => {
             mockDisableValidationContext: jest.fn(),
             mockLoadNamedProfile: jest.fn()
         };
+        newMocks.session = createISession();
         newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
         newMocks.mockNode = newMocks.datasetSessionNode;
         newMocks.profiles = await Profiles.createInstance(newMocks.log);
-        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles, newMocks.session);
         newMocks.testDatasetTree = createDatasetTree(newMocks.datasetSessionNode, newMocks.treeView);
         newMocks.testJobTree = createJobsTree(newMocks.session, newMocks.iJob, newMocks.imperativeProfile, newMocks.treeView);
         Object.defineProperty(Profiles, "getInstance", {
@@ -1516,7 +1517,7 @@ describe("Profiles Unit Tests - Function enableValidation", () => {
             profiles: null,
             imperativeProfile: createValidIProfile(),
             profileInstance: null,
-            session: null,
+            session: createISession(),
             mockNode: null,
             mockEnableValidationContext: jest.fn(),
             mockLoadNamedProfile: jest.fn()
@@ -1524,7 +1525,7 @@ describe("Profiles Unit Tests - Function enableValidation", () => {
         newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
         newMocks.mockNode = newMocks.datasetSessionNode;
         newMocks.profiles = await Profiles.createInstance(newMocks.log);
-        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles, newMocks.session);
         newMocks.testDatasetTree = createDatasetTree(newMocks.datasetSessionNode, newMocks.treeView);
         newMocks.testJobTree = createJobsTree(newMocks.session, newMocks.iJob, newMocks.imperativeProfile, newMocks.treeView);
         Object.defineProperty(Profiles, "getInstance", {
@@ -1565,7 +1566,7 @@ describe("Profiles Unit Tests - Function disableValidationContext", () => {
             profiles: null,
             imperativeProfile: createIProfile(),
             profileInstance: null,
-            session: null,
+            session: createISession(),
             datasetSessionNode: null,
             mockNode: null,
             mockDisableValidationContext: jest.fn(),
@@ -1573,7 +1574,7 @@ describe("Profiles Unit Tests - Function disableValidationContext", () => {
         newMocks.mockNode = newMocks.datasetSessionNode;
         newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
         newMocks.profiles = await Profiles.createInstance(newMocks.log);
-        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles, newMocks.session);
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -1627,7 +1628,7 @@ describe("Profiles Unit Tests - Function enableValidationContext", () => {
             profiles: null,
             imperativeProfile: createIProfile(),
             profileInstance: null,
-            session: null,
+            session: createISession(),
             datasetSessionNode: null,
             mockNode: null,
             mockEnableValidationContext: jest.fn(),
@@ -1635,7 +1636,7 @@ describe("Profiles Unit Tests - Function enableValidationContext", () => {
         newMocks.mockNode = newMocks.datasetSessionNode;
         newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
         newMocks.profiles = await Profiles.createInstance(newMocks.log);
-        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles, newMocks.session);
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -1690,7 +1691,7 @@ describe("Profiles Unit Tests - Function validationArraySetup", () => {
             imperativeProfile: createIProfile(),
             validProfile: createValidIProfile(),
             profileInstance: null,
-            session: null,
+            session: createISession(),
             datasetSessionNode: null,
             mockNode: null,
             mockEnableValidationContext: jest.fn(),
@@ -1698,7 +1699,7 @@ describe("Profiles Unit Tests - Function validationArraySetup", () => {
         newMocks.mockNode = newMocks.datasetSessionNode;
         newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
         newMocks.profiles = await Profiles.createInstance(newMocks.log);
-        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles, newMocks.session);
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -1782,12 +1783,13 @@ describe("Profiles Unit Tests - Function validateProfiles", () => {
         const newMocks = {
             log: Logger.getAppLogger(),
             profiles: null,
+            session: createISession(),
             invalidProfile: createInvalidIProfile(),
             validProfile: createValidIProfile(),
             profileInstance: null,
         };
         newMocks.profiles = await Profiles.createInstance(newMocks.log);
-        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles, newMocks.session);
         globalMocks.mockGetInstance.mockReturnValue(newMocks.profiles);
 
         return newMocks;
@@ -1831,7 +1833,7 @@ describe("Profiles Unit Tests - Function refresh", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         const theProfiles = await Profiles.createInstance(blockMocks.log);
-        theProfiles.profilesForValidation.push({ status: "active", name: blockMocks.validProfile.name });
+        theProfiles.profilesForValidation.push({ status: "active", name: blockMocks.validProfile.name, session: null });
         await theProfiles.refresh();
         expect(theProfiles.profilesForValidation.length).toBe(0);
     });

@@ -12,7 +12,6 @@
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import * as imperative from "@zowe/imperative";
-import * as shared from "../../../src/shared/actions";
 import {
     createBasicZosmfSession, createInstanceOfProfile, createIProfile,
     createISession, createISessionWithoutCredentials, createTextDocument,
@@ -31,7 +30,6 @@ import * as globals from "../../../src/globals";
 import * as path from "path";
 import * as fs from "fs";
 import * as sharedUtils from "../../../src/shared/utils";
-import { Logger } from "@zowe/imperative";
 import { ZoweExplorerApiRegister } from "../../../src/api/ZoweExplorerApiRegister";
 import { DefaultProfileManager } from "../../../src/profiles/DefaultProfileManager";
 import { Profiles, ValidProfileEnum } from "../../../src/Profiles";
@@ -94,8 +92,8 @@ async function createGlobalMocks() {
     Object.defineProperty(vscode.env, "clipboard", { value: clipboard, configurable: true });
 
     // Mocking Default Profile Manager
-    globalMocks.defaultProfileManagerInstance = await DefaultProfileManager.createInstance(Logger.getAppLogger());
-    await Profiles.createInstance(Logger.getAppLogger());
+    globalMocks.defaultProfileManagerInstance = await DefaultProfileManager.createInstance(imperative.Logger.getAppLogger());
+    await Profiles.createInstance(imperative.Logger.getAppLogger());
     globalMocks.defaultProfile = DefaultProfileManager.getInstance().getDefaultProfile("zosmf");
     Object.defineProperty(DefaultProfileManager,
                           "getInstance",
@@ -485,9 +483,9 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
         const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
         const profileInstance = createInstanceOfProfile(imperativeProfile, session);
-        //const mvsApi = createMvsApi(imperativeProfile);
+        // const mvsApi = createMvsApi(imperativeProfile);
         const mockCheckCurrentProfile = jest.fn();
-        //bindMvsApi(mvsApi);
+        // bindMvsApi(mvsApi);
 
         return {
             session,
@@ -497,7 +495,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
             datasetSessionNode,
             profileInstance,
             // mvsApi,
-            testDatasetTree
+            testDatasetTree,
             mockCheckCurrentProfile
         };
     }
@@ -526,7 +524,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
     });
     it("Checking common PS dataset deletion with Unverified profile", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         Object.defineProperty(Profiles, "getInstance", {
@@ -542,7 +540,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
 
         mocked(fs.existsSync).mockReturnValueOnce(true);
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Delete" as any);
-        const deleteSpy = jest.spyOn(blockMocks.mvsApi, "deleteDataSet");
+        const deleteSpy = jest.spyOn(globalMocks.mvsApi, "deleteDataSet");
 
         await dsActions.deleteDataset(node, blockMocks.testDatasetTree);
 
@@ -1207,7 +1205,7 @@ describe("Dataset Actions Unit Tests - Function showDSAttributes", () => {
     });
     it("Checking PS dataset attributes showing with Unverified Profile", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         Object.defineProperty(Profiles, "getInstance", {
@@ -1226,7 +1224,7 @@ describe("Dataset Actions Unit Tests - Function showDSAttributes", () => {
                 html: ""
             }
         } as any);
-        const datasetListSpy = jest.spyOn(blockMocks.mvsApi, "dataSet");
+        const datasetListSpy = jest.spyOn(globalMocks.mvsApi, "dataSet");
         datasetListSpy.mockResolvedValueOnce({
             success: true,
             commandResponse: "",
@@ -2326,7 +2324,7 @@ describe("Dataset Actions Unit Tests - Function allocateLike", () => {
         const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
         const testNode = new ZoweDatasetNode("nodePDS", vscode.TreeItemCollapsibleState.None, datasetSessionNode, null);
         const testSDSNode = new ZoweDatasetNode("nodeSDS", vscode.TreeItemCollapsibleState.None, datasetSessionNode, null);
-        const profileInstance = createInstanceOfProfile(imperativeProfile);
+        const profileInstance = createInstanceOfProfile(imperativeProfile, session);
         const mvsApi = createMvsApi(imperativeProfile);
         const quickPickItem = new utils.FilterDescriptor(datasetSessionNode.label);
         const quickPickContent = createQuickPickContent("", [quickPickItem], "");

@@ -605,7 +605,7 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
         newMocks.profile = createInstanceOfProfile(newMocks.imperativeProfile, newMocks.session);
 
         // Profile instance mocks
-        newMocks.mockProfileInstance = createInstanceOfProfile(newMocks.imperativeProfile);
+        newMocks.mockProfileInstance = createInstanceOfProfile(newMocks.imperativeProfile, newMocks.session);
         newMocks.mockLoadNamedProfile.mockReturnValue(newMocks.imperativeProfile);
         newMocks.mockProfileInstance.loadNamedProfile = newMocks.mockLoadNamedProfile;
         newMocks.mockLoadDefaultProfile.mockReturnValue(newMocks.imperativeProfile);
@@ -1090,7 +1090,7 @@ describe("Dataset Tree Unit Tests - Function filterPrompt", () => {
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
 
-        await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+        await testTree.filterPrompt(testTree.mSessionNodes[1]);
 
         expect(testTree.mSessionNodes[1].contextValue).toEqual(globals.DS_SESSION_CONTEXT + globals.UNVERIFIED_CONTEXT);
         expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD1.STUFF");
@@ -1164,7 +1164,7 @@ describe("Dataset Tree Unit Tests - Function editSession", () => {
         };
 
         newMocks.datasetSessionNode = await createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
-        newMocks.profile = await Profiles.createInstance(newMocks.imperativeProfile, newMocks.session);
+        newMocks.profile = await Profiles.createInstance(newMocks.log);
         newMocks.datasetProvider = createDatasetTree(newMocks.datasetSessionNode, newMocks.treeView);
 
         Object.defineProperty(Profiles, "getInstance", {

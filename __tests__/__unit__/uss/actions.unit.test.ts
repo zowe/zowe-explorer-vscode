@@ -159,7 +159,7 @@ describe("USS Action Unit Tests - Function createUSSNodeDialog", () => {
     }
 
     it("Tests if createUSSNode is executed successfully with Unverified profile", async () => {
-        const globalMocks = createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
         Object.defineProperty(Profiles, "getInstance", {

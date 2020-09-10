@@ -158,8 +158,8 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
                 await errorHandling(error); }
         } else {
             // No baseProfile exists, nor a user in serviceProfile. It is impossible to login with the currently-provided information.
-            // throw new Error(localize("getValidSession.loginImpossible",
-            //     "Profile {0} is invalid. Please check your login details and try again.", profileName));
+            throw new Error(localize("getValidSession.loginImpossible",
+                "Profile {0} is invalid. Please check your login details and try again.", profileName));
         }
     }
 
@@ -564,7 +564,7 @@ export class ZosmfMvsApi extends ZosmfApiCommon implements ZoweExplorerApi.IMvs 
     }
 
     public async allocateLikeDataSet(dataSetName: string, likeDataSetName: string): Promise<zowe.IZosFilesResponse> {
-        return zowe.Create.dataSetLike(this.getSession(), dataSetName, likeDataSetName);
+        return zowe.Create.dataSetLike(await this.getSession(), dataSetName, likeDataSetName);
     }
 
     public async copyDataSetMember(

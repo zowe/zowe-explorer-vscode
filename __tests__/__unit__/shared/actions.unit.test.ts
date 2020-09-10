@@ -346,7 +346,7 @@ describe("Shared Actions Unit Tests - Function resetValidationSettings", () => {
             mockCheckProfileValidationSetting: jest.fn()
         };
 
-        newMocks.profileInstance = createInstanceOfProfile(newMocks.imperativeProfile);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.imperativeProfile, newMocks.session);
         mocked(Profiles.getInstance).mockReturnValue(newMocks.profileInstance);
         newMocks.dsNode = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.Collapsed, newMocks.datasetSessionNode, null);
         newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
