@@ -250,16 +250,14 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     public async loadProfilesForFavorites(log: Logger, parentNode: IZoweDatasetTreeNode) {
         const profileName = parentNode.label;
         const updatedFavsForProfile: IZoweDatasetTreeNode[] = [];
-        let profile: IProfileLoaded;
-        let session: Session;
+        let profile: IProfileLoaded = Profiles.getInstance().loadNamedProfile(profileName);
+        let session: Session = await ZoweExplorerApiRegister.getMvsApi(profile).getSession();
         this.log = log;
         this.log.debug(localize("loadProfilesForFavorites.log.debug", "Loading profile: {0} for data set favorites", profileName));
         // Load profile for parent profile node in this.mFavorites array
         if (!parentNode.getProfile() || !parentNode.getSession()) {
             // If no profile/session yet, then add session and profile to parent profile node in this.mFavorites array:
             try {
-                profile = Profiles.getInstance().loadNamedProfile(profileName);
-                session = await ZoweExplorerApiRegister.getMvsApi(profile).getSession();
                 parentNode.setProfileToChoice(profile);
                 parentNode.setSessionToChoice(session);
             } catch (error) {

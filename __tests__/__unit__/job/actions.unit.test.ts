@@ -316,7 +316,7 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
     it("Checking submit of active text editor content as JCL with Unverified Profile", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks: any = createBlockMocks(globalMocks);
-        mocked(zowe.ZosmfSession.createBasicZosmfSession).mockReturnValue(blockMocks.session);
+        mocked(zowe.ZosmfSession.createBasicZosmfSessionFromArguments).mockReturnValue(blockMocks.session);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(vscode.window.showQuickPick).mockReturnValueOnce(new Promise((resolve) => {
             resolve(blockMocks.datasetSessionNode.label);
@@ -328,11 +328,10 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         activeTextEditorDocument.mockReturnValue(blockMocks.textDocument);
         const submitJclSpy = jest.spyOn(blockMocks.jesApi, "submitJcl");
         submitJclSpy.mockClear();
-        submitJclSpy.mockResolvedValueOnce(blockMocks.iJob);
+        submitJclSpy.mockResolvedValueOnce(globalMocks.iJob);
         await dsActions.submitJcl(blockMocks.testDatasetTree);
 
         expect(submitJclSpy).toBeCalled();
-        expect(mocked(vscode.window.showInformationMessage)).toBeCalled();
         expect(mocked(vscode.window.showInformationMessage).mock.calls.length).toBe(1);
         expect(mocked(vscode.window.showInformationMessage).mock.calls[0][0]).toEqual("Job submitted [JOB1234](command:zowe.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)");
     });
@@ -657,7 +656,7 @@ describe("Jobs Actions Unit Tests - Function refreshJobsServer", () => {
         const job = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, null,
             globalMocks.session, globalMocks.iJob, blockMocks.profileInstance);
         job.contextValue = globals.JOBS_SESSION_CONTEXT;
-        mocked(zowe.ZosmfSession.createBasicZosmfSession).mockReturnValueOnce(globalMocks.session);
+        mocked(zowe.ZosmfSession.createBasicZosmfSessionFromArguments).mockReturnValueOnce(globalMocks.session);
 
         await jobActions.refreshJobsServer(job, blockMocks.testJobTree);
 
