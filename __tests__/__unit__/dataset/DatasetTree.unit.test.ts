@@ -1509,36 +1509,6 @@ describe("Dataset Tree Unit Tests - Function createFilterString", () => {
     });
 });
 
-describe("Dataset Tree Unit Tests - Function renameFavorite", () => {
-    function createBlockMocks() {
-        const session = createISession();
-        const imperativeProfile = createIProfile();
-        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
-        const favoriteNode = new ZoweDatasetNode("[sestest]: TEST.PDS", vscode.TreeItemCollapsibleState.Collapsed, null, null);
-        favoriteNode.contextValue = globals.DS_FAV_CONTEXT;
-        const testTree = new DatasetTree();
-
-        testTree.mFavorites.push(favoriteNode);
-        testTree.mSessionNodes.push(datasetSessionNode);
-        spyOn(datasetSessionNode, "getChildren").and.returnValue(Promise.resolve([datasetSessionNode]));
-
-        return {
-            imperativeProfile,
-            favoriteNode,
-            testTree
-        };
-    }
-
-    it("Tests that renameFavorite() renames a favorited node", async () => {
-        createGlobalMocks();
-        const blockMocks = createBlockMocks();
-
-        await blockMocks.testTree.renameFavorite(blockMocks.favoriteNode, "newLabel");
-
-        expect(blockMocks.favoriteNode.label).toEqual("[sestest]: newLabel");
-    });
-});
-
 describe("Dataset Tree Unit Tests - Function rename", () => {
     function createBlockMocks() {
         const session = createISession();
