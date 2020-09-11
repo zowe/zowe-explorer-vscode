@@ -63,27 +63,33 @@ describe("ussNodeActions integration test", async () => {
     });
 
     describe("Initialize USS Favorites", async () => {
-        it("should show an error message and still load other valid-profile favorites when given a favorite with invalid profile name", async () => {
+        it("should still create favorite nodes when given a favorite with invalid profile name", async () => {
+            const log = Logger.getAppLogger();
             const profileName = testConst.profile.name;
             // Reset testTree's favorites to be empty
             testTree.mFavorites = [];
-            // Then, update
+            // Then, update favorites in settings
             const favorites = [`[${profileName}]: /u/tester1{directory}`,
                 `[${profileName}]: /u/tester1/testfile1{textfile}`,
-                `['badProfileName']: /u/tester1{directory}`,
+                `[badProfileName]: /u/tester1{directory}`,
                 `[${profileName}]: /u/tester2{directory}`,
                 `[${profileName}]: /u/tester2/testfile2{textfile}`];
             await vscode.workspace.getConfiguration().update("Zowe-USS-Persistent",
                 {persistence: true, favorites}, vscode.ConfigurationTarget.Global);
-            const showErrorStub = sandbox.spy(vscode.window, "showErrorMessage");
-            await testTree.initialize(Logger.getAppLogger());
-            const ussFavoritesArray = [`[${profileName}]: tester1`,
-                `[${profileName}]: testfile1`,
-                `[${profileName}]: tester2`,
-                `[${profileName}]: testfile2`];
-            const gotCalledOnce = showErrorStub.calledOnce;
-            expect(testTree.mFavorites.map((node) => node.label)).to.deep.equal(ussFavoritesArray);
-            expect(gotCalledOnce).to.equal(true);
+            await testTree.initializeFavorites(Logger.getAppLogger());
+            const initializedFavProfileLabels = [`${profileName}`, "badProfileName"];
+            const goodProfileFavLabels = [
+                "tester1",
+                "testfile1",
+                "tester2",
+                "testfile2"
+            ];
+            const badProfileFavLabels = ["tester1"];
+            // Profile nodes for both valid and invalid profiles should be created in mFavorites. (Error checking happens on expand.)
+            expect(testTree.mFavorites.map((favProfileNode) => favProfileNode.label)).to.deep.equal(initializedFavProfileLabels);
+            // Favorite item nodes should be created for favorite profile nodes of both valid and valid profiles.
+            expect(testTree.mFavorites[0].children.map((node) => node.label)).to.deep.equal(goodProfileFavLabels);
+            expect(testTree.mFavorites[1].children.map((node) => node.label)).to.deep.equal(badProfileFavLabels);
         }).timeout(TIMEOUT);
     });
     describe("Rename USS File", async () => {

@@ -21,7 +21,7 @@ import * as vscode from "vscode";
 import * as testConst from "../../resources/testProfileData";
 import { USSTree } from "../../src/uss/USSTree";
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
-import { USS_SESSION_CONTEXT } from "../../src/globals";
+import { USS_SESSION_CONTEXT, FAV_PROFILE_CONTEXT } from "../../src/globals";
 
 declare var it: any;
 
@@ -205,28 +205,29 @@ describe("USSTree Integration Tests", async () => {
     }).timeout(TIMEOUT);
 
     describe("add USS Favorite for a file and a search", () => {
-        it("should add the selected data set to the treeView", async () => {
-            const log = new Logger(undefined);
-            await testTree.addSession();
-            const favoriteNode = new ZoweUSSNode("file.txt", vscode.TreeItemCollapsibleState.Collapsed,
+        beforeEach(() => {
+            const favProfileNode = new ZoweUSSNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded, null,
+                session, null, null);
+            favProfileNode.contextValue = FAV_PROFILE_CONTEXT;
+            testTree.mFavorites.push(favProfileNode);
+        });
+        afterEach(() => {
+            testTree.mFavorites = [];
+        });
+        it("should add the selected file to the treeView", async () => {
+            const favoriteNode = new ZoweUSSNode("file.txt", vscode.TreeItemCollapsibleState.None,
                 sessNode, null, sessNode.fullPath, testConst.profile.name);
             await testTree.addFavorite(favoriteNode);
-            const filtered = testTree.mFavorites.filter((temp) => temp.label ===
-                `[${favoriteNode.getSessionNode().label}]: ${favoriteNode.label}`);
+            const filtered = testTree.mFavorites[0].children.filter((temp) => temp.label === `${favoriteNode.label}`);
             expect(filtered.length).toEqual(1);
             expect(filtered[0].label).toContain("file.txt");
-            testTree.mFavorites = [];
         }).timeout(TIMEOUT);
 
         it("should add a favorite search", async () => {
-            const log = new Logger(undefined);
-            await testTree.addSession();
-            await testTree.saveSearch(sessNode);
-            const filtered = testTree.mFavorites.filter((temp) =>
-                temp.label === `[${sessNode.label}]: ${sessNode.fullPath}`);
+            await testTree.addFavorite(sessNode);
+            const filtered = testTree.mFavorites[0].children.filter((temp) => temp.label === `${sessNode.fullPath}`);
             expect(filtered.length).toEqual(1);
-            expect(filtered[0].label).toContain(`[${sessNode.label}]: ${sessNode.fullPath}`);
-            testTree.mFavorites = [];
+            expect(filtered[0].label).toContain(`${sessNode.fullPath}`);
         }).timeout(TIMEOUT);
     });
 });

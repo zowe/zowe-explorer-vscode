@@ -955,15 +955,21 @@ describe("Profiles Unit Tests - Function deleteProfile", () => {
 
         const startLength = blockMocks.testUSSTree.mSessionNodes.length;
         const favoriteLength = blockMocks.testUSSTree.mFavorites.length;
+        // Set up session node in USS
         const ussNode = new ZoweUSSNode(
-            "[sestest]: testNode", vscode.TreeItemCollapsibleState.Expanded,
-            null, blockMocks.session, null, false, blockMocks.imperativeProfile.name, null, blockMocks.imperativeProfile);
-        const ussNodeAsFavorite = new ZoweUSSNode("[" + blockMocks.USSSessionNode.label.trim() + "]: testNode", vscode.TreeItemCollapsibleState.None,
+            "testNode", vscode.TreeItemCollapsibleState.Expanded,
             null, blockMocks.session, null, false, blockMocks.imperativeProfile.name, null, blockMocks.imperativeProfile);
         ussNode.contextValue = globals.USS_SESSION_CONTEXT;
         ussNode.profile = blockMocks.imperativeProfile;
         blockMocks.testUSSTree.mSessionNodes.push(ussNode);
-        blockMocks.testUSSTree.mFavorites.push(ussNodeAsFavorite);
+        // Set up favorites
+        const favProfileNode = new ZoweUSSNode("sestest", vscode.TreeItemCollapsibleState.Collapsed,
+            null, null, null);
+        favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
+        const ussNodeAsFavorite = new ZoweUSSNode("testNode", vscode.TreeItemCollapsibleState.None,
+            favProfileNode, blockMocks.session, null, false, blockMocks.imperativeProfile.name, null, blockMocks.imperativeProfile);
+        favProfileNode.children.push(ussNodeAsFavorite);
+        blockMocks.testUSSTree.mFavorites.push(favProfileNode);
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("Delete");
 
         await blockMocks.profiles.deleteProfile(blockMocks.testDatasetTree, blockMocks.testUSSTree, blockMocks.testJobTree, ussNode);
