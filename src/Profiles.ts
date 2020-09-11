@@ -92,6 +92,7 @@ export class Profiles {
 
     public async getProfileSetting(theProfile: IProfileLoaded, prompt?: boolean): Promise<IProfileValidation> {
         let profileStatus: IProfileValidation;
+        let found: boolean = false;
         this.profilesValidationSetting.filter(async (instance) => {
             if ((instance.name === theProfile.name) && (instance.setting === false)) {
                 profileStatus = {
@@ -99,6 +100,21 @@ export class Profiles {
                     name: instance.name,
                     session: undefined
                 };
+                if (this.profilesForValidation.length > 0) {
+                    this.profilesForValidation.filter((profile) => {
+                        if ((profile.name === theProfile.name) && (profile.status === "unverified")) {
+                            found = true;
+                        }
+                        if ((profile.name === theProfile.name) && (profile.status !== "unverified")) {
+                            found = true;
+                            const index = this.profilesForValidation.lastIndexOf(profile);
+                            this.profilesForValidation.splice(index, 1, profileStatus);
+                        }
+                    });
+                }
+                if (!found) {
+                    this.profilesForValidation.push(profileStatus);
+                }
             }
         });
         if (profileStatus === undefined) {
@@ -112,38 +128,53 @@ export class Profiles {
         let profileStatus;
         const getSessStatus = await ZoweExplorerApiRegister.getInstance().getCommonApi(theProfile);
 
+        // Filter profilesForValidation to check if the profile is already validated as active
+        this.profilesForValidation.filter((profile) => {
+            if ((profile.name === theProfile.name) && (profile.status === "active")){
+                filteredProfile = {
+                    status: profile.status,
+                    name: profile.name,
+                    session: profile.session
+                };
+            }
+        });
+
         // If not yet validated or inactive, call getStatus and validate the profile
         // status will be stored in profilesForValidation
-        try {
-            if (getSessStatus.getStatus) {
-                profileStatus = await vscode.window.withProgress({
-                    location: vscode.ProgressLocation.Notification,
-                    title: localize("Profiles.validateProfiles.validationProgress", "Validating {0} Profile.", theProfile.name),
-                    cancellable: true
-                }, async (progress, token) => {
-                    token.onCancellationRequested(() => {
-                        // will be returned as undefined
-                        vscode.window.showInformationMessage(
-                            localize("Profiles.validateProfiles.validationCancelled", "Validating {0} was cancelled.", theProfile.name));
+        if (filteredProfile === undefined) {
+            try {
+                if (getSessStatus.getStatus) {
+                    profileStatus = await vscode.window.withProgress({
+                        location: vscode.ProgressLocation.Notification,
+                        title: localize("Profiles.validateProfiles.validationProgress", "Validating {0} Profile.", theProfile.name),
+                        cancellable: true
+                    }, async (progress, token) => {
+                        token.onCancellationRequested(() => {
+                            // will be returned as undefined
+                            vscode.window.showInformationMessage(
+                                localize("Profiles.validateProfiles.validationCancelled", "Validating {0} was cancelled.", theProfile.name));
+                        });
+                        return getSessStatus.getStatus(theProfile, theProfile.type, prompt);
                     });
-                    return getSessStatus.getStatus(theProfile, theProfile.type, prompt);
-                });
-            } else {
-                profileStatus = "unverified";
-            }
+                } else {
+                    profileStatus = "unverified";
+                }
 
-            filteredProfile = {
-                status: profileStatus.status,
-                name: theProfile.name,
-                session: profileStatus.session
-            };
-        } catch (error) {
-            this.log.debug("Validate Error - Invalid Profile: " + error);
-            filteredProfile = {
-                status: "inactive",
-                name: theProfile.name,
-                session: undefined
-            };
+                filteredProfile = {
+                    status: profileStatus.status,
+                    name: theProfile.name,
+                    session: profileStatus.session
+                };
+                this.profilesForValidation.push(filteredProfile);
+            } catch (error) {
+                this.log.debug("Validate Error - Invalid Profile: " + error);
+                filteredProfile = {
+                    status: "inactive",
+                    name: theProfile.name,
+                    session: undefined
+                };
+                this.profilesForValidation.push(filteredProfile);
+            }
         }
         return filteredProfile;
     }
