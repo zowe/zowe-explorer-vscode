@@ -1,0 +1,70 @@
+/*
+* This program and the accompanying materials are made available under the terms of the *
+* Eclipse Public License v2.0 which accompanies this distribution, and is available at *
+* https://www.eclipse.org/legal/epl-v20.html                                      *
+*                                                                                 *
+* SPDX-License-Identifier: EPL-2.0                                                *
+*                                                                                 *
+* Copyright Contributors to the Zowe Project.                                     *
+*                                                                                 *
+*/
+
+export const TheiaLocator = {
+
+    theiaUrl: "http://localhost:3000",
+
+    zoweExplorerxpath: "shell-tab-plugin-view-container:zowe",
+  };
+
+export const DatasetsLocators = {
+    datasetTabId: "plugin-view-container:zowe--plugin-view:zowe.explorer",
+    datasetTabXpath: "//span[@title='Data Sets']",
+    datasetsPanelId: "plugin-view:zowe.explorer",
+    datasetsAddSessionId: "__plugin.view.title.action.zowe.addSession",
+    emptyInputBoxXpath: "//*[@class='input empty']",
+    defaultDatasetsProfileId: "/1:DefaultProfile",
+    secondDatasetProfileId: "/2:TestSeleniumProfile",
+    favoriteTabId: "/0:Favorites",
+    favoriteProfileInDatasetId: "/0:Favorites/0:[TestSeleniumProfile]: ",
+    addToFavoriteOptionXpath: "/html/body/div[5]/ul/li[3]/div[2]",
+    removeFavoriteProfileFromDatasetsOptionXpath: "//li[@data-command='__plugin.menu.action.zowe.removeSavedSearch']",
+    secondDatasetProfileBeforeDeletingId: "/1:TestSeleniumProfile",
+    deleteProfileFromDatasetsXpath: "(//li[@data-command='__plugin.menu.action.zowe.deleteProfile'])",
+  };
+
+export const UssLocators = {
+    ussTabId: "plugin-view-container:zowe--plugin-view:zowe.uss.explorer",
+    ussTabXpath: "//span[@title='Unix System Services (USS)']",
+    ussPanelId: "plugin-view:zowe.uss.explorer",
+    ussAddSessionId: "__plugin.view.title.action.zowe.uss.addSession",
+    emptyInputBoxXpath: "//*[@class='input empty']",
+    defaultUssProfileXpath: "(//div[@id='/1:DefaultProfile'])[2]",
+    secondUssProfileXpath: "(//div[@id='/2:TestSeleniumProfile'])[2]",
+    favoriteTabXpath: "(//div[@id='/0:Favorites'])[2]",
+    favoriteProfileInUssXpath: "(//div[@id='/0:Favorites/0:[TestSeleniumProfile]: '])[2]",
+    addToFavoriteOptionXpath: "/html/body/div[5]/ul/li[3]/div[2]",
+    favoriteProfileInUssBeforeRemovingXpath: "(//div[@id='/0:Favorites/0:[TestSeleniumProfile]: '])",
+    removeFavoriteProfileFromUssOptionXpath: "//li[@data-command='__plugin.menu.action.zowe.uss.removeSavedSearch']",
+    hideProfileFromUssOptionXpath: "//li[@data-command='__plugin.menu.action.zowe.uss.removeSession']",
+  };
+
+export const JobsLocators = {
+    jobTabId: "plugin-view-container:zowe--plugin-view:zowe.jobs",
+    jobTabXpath: "//span[@title='Jobs']",
+    jobsPanelId: "zowe.jobs",
+    jobsAddSessionId: "__plugin.view.title.action.zowe.addJobsSession",
+    emptyInputBoxXpath: "//*[@class='input empty']",
+    defaultJobsProfileXpath: "(//div[@id='/1:DefaultProfile'])[3]",
+    secondJobsProfileXpath: "(//div[@id='/2:TestSeleniumProfile'])[3]",
+    favoriteTabXpath: "(//div[@id='/0:Favorites'])[3]",
+    favoriteProfileInJobsXpath: "//div[@id='/0:Favorites/0:[TestSeleniumProfile]: Prefix:*']",
+    addToFavoriteOptionXpath: "/html/body/div[5]/ul/li[6]/div[2]",
+    removeFavoriteProfileFromJobsOptionXpath: "//li[@data-command='__plugin.menu.action.zowe.jobs.removeSearchFavorite']",
+    hideProfileFromJobsOptionXpath: "//li[@data-command='__plugin.menu.action.zowe.removeJobsSession']",
+    secondJobsProfileIdBeforeHidingXpath: "(//div[@id='/2:TestSeleniumProfile'])[2]",
+  };
+
+export const TheiaNotificationMessages = {
+    closeTheiaNotificationWarningMsgXpath: "/html/body/div[3]/div/div[1]/div/div/div/div/ul/li",
+    deleteProfileNotificationMsg: "/html/body/div[3]/div/div[1]/div/div/div/div/div[2]/span",
+  };

@@ -16,6 +16,7 @@ import * as firefox from "selenium-webdriver/firefox";
 import * as chrome from "selenium-webdriver/chrome";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
+import { TheiaLocator, DatasetsLocators, UssLocators, JobsLocators, TheiaNotificationMessages } from "../../src/theia/Locators";
 
 const TIMEOUT = 45000;
 const SLEEPTIME = 10000;
@@ -30,70 +31,70 @@ describe("Add Default Profile", () => {
     const driver = new Builder().forBrowser("firefox").setFirefoxOptions(firefoxOptions).build();
 
     before(async () => {
-        await driver.get("http://localhost:3000");
+        await driver.get(TheiaLocator.theiaUrl);
         await driver.sleep(SLEEPTIME);
-        driver.wait(until.elementLocated(By.id("shell-tab-plugin-view-container:zowe"))).click();
+        driver.wait(until.elementLocated(By.id(TheiaLocator.zoweExplorerxpath))).click();
     });
 
     it("should open Zowe Explorer and find the Favorites node", async () => {
-        const favoriteLink = await driver.wait(until.elementLocated(By.id("/0:Favorites")), WAITTIME).getAttribute("title");
+        const favoriteLink = await driver.wait(until.elementLocated(By.id(DatasetsLocators.favoriteTabId)), WAITTIME).getAttribute("title");
         expect(favoriteLink).to.equal("Favorites");
     }).timeout(TIMEOUT);
 
     it("should find the Data Sets node", async () => {
-        await driver.wait(until.elementLocated(By.id("plugin-view-container:zowe--plugin-view:zowe.explorer")), WAITTIME);
-        const datasetLink = await driver.wait(until.elementLocated(By.xpath("//span[@title='Data Sets']")), WAITTIME).getText();
+        await driver.wait(until.elementLocated(By.id(DatasetsLocators.datasetTabId)), WAITTIME);
+        const datasetLink = await driver.wait(until.elementLocated(By.xpath(DatasetsLocators.datasetTabXpath)), WAITTIME).getText();
         expect(datasetLink).to.equal("DATA SETS");
     }).timeout(TIMEOUT);
 
     it("should find the USS node", async () => {
-        await driver.wait(until.elementLocated(By.id("plugin-view-container:zowe--plugin-view:zowe.uss.explorer")), WAITTIME);
-        const ussLink = await driver.wait(until.elementLocated(By.xpath("//span[@title='Unix System Services (USS)']")), WAITTIME).getText();
+        await driver.wait(until.elementLocated(By.id(UssLocators.ussTabId)), WAITTIME);
+        const ussLink = await driver.wait(until.elementLocated(By.xpath(UssLocators.ussTabXpath)), WAITTIME).getText();
         expect(ussLink).to.equal("UNIX SYSTEM SERVICES (USS)");
     }).timeout(TIMEOUT);
 
     it("should find the Jobs node", async () => {
-        await driver.wait(until.elementLocated(By.id("plugin-view-container:zowe--plugin-view:zowe.jobs")), WAITTIME);
-        const jobsLink = await driver.wait(until.elementLocated(By.xpath("//span[@title='Jobs']")), WAITTIME).getText();
+        await driver.wait(until.elementLocated(By.id(JobsLocators.jobTabId)), WAITTIME);
+        const jobsLink = await driver.wait(until.elementLocated(By.xpath(JobsLocators.jobTabXpath)), WAITTIME).getText();
         expect(jobsLink).to.equal("JOBS");
     }).timeout(TIMEOUT);
 
     it("Should Add Default Profile in DATA SETS", async () => {
-        await driver.findElement(By.id("plugin-view:zowe.explorer")).click();
-        await driver.findElement(By.id("__plugin.view.title.action.zowe.addSession")).click();
-        await driver.findElement(By.xpath("//*[@class='input empty']")).sendKeys(Key.ENTER);
-        const datasetProfileName = await driver.wait(until.elementLocated(By.xpath("//*[@class='input empty']")),WAITTIME);
+        await driver.findElement(By.id(DatasetsLocators.datasetsPanelId)).click();
+        await driver.findElement(By.id(DatasetsLocators.datasetsAddSessionId)).click();
+        await driver.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath)).sendKeys(Key.ENTER);
+        const datasetProfileName = await driver.wait(until.elementLocated(By.xpath(DatasetsLocators.emptyInputBoxXpath)),WAITTIME);
         datasetProfileName.sendKeys("DefaultProfile");
         datasetProfileName.sendKeys(Key.ENTER);
-        const zosUrl = await driver.findElement(By.xpath("//*[@class='input empty']"));
+        const zosUrl = await driver.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
         zosUrl.sendKeys("fakehost.net:1003");
         zosUrl.sendKeys(Key.ENTER);
-        const username = await driver.findElement(By.xpath("//*[@class='input empty']"));
+        const username = await driver.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
         username.sendKeys(Key.ENTER);
-        const password = await driver.findElement(By.xpath("//*[@class='input empty']"));
+        const password = await driver.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
         password.sendKeys(Key.ENTER);
-        const authorization = await driver.findElement(By.xpath("//*[@class='input empty']"));
+        const authorization = await driver.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
         authorization.sendKeys("False - Accept connections with self-signed certificates");
         authorization.sendKeys(Key.ENTER);
-        const basepath = await driver.findElement(By.xpath("//*[@class='input empty']"));
+        const basepath = await driver.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
         basepath.sendKeys(Key.ENTER);
-        const datasetProfile = await driver.wait(until.elementLocated(By.id("/1:DefaultProfile")),WAITTIME).getText();
+        const datasetProfile = await driver.wait(until.elementLocated(By.id(DatasetsLocators.defaultDatasetsProfileId)),WAITTIME).getText();
         expect(datasetProfile).to.equal("DefaultProfile");
     });
 
     it("Should Default profile visible in USS", async () => {
         await driver.navigate().refresh();
         await driver.sleep(SLEEPTIME);
-        await driver.findElement(By.xpath("//*[@id='plugin-view-container:zowe--plugin-view:zowe.explorer']/div[1]/span[2]")).click();
-        await driver.findElement(By.id("plugin-view-container:zowe--plugin-view:zowe.uss.explorer")).click();
-        const ussProfile = await driver.wait(until.elementLocated(By.xpath("(//*[@id='/1:DefaultProfile']/div/span)[2]")), WAITTIME).getText();
+        await driver.findElement(By.xpath(DatasetsLocators.datasetTabXpath)).click();
+        await driver.findElement(By.id(UssLocators.ussTabId)).click();
+        const ussProfile = await driver.wait(until.elementLocated(By.xpath(UssLocators.defaultUssProfileXpath)), WAITTIME).getText();
         expect(ussProfile).to.equal("DefaultProfile");
     });
 
     it("Should Default profile visible in JOBS", async () => {
-        await driver.findElement(By.xpath("//*[@id='plugin-view-container:zowe--plugin-view:zowe.uss.explorer']/div[1]/span[2]")).click();
-        await driver.findElement(By.id("plugin-view-container:zowe--plugin-view:zowe.jobs")).click();
-        const jobsProfile = await driver.wait(until.elementLocated(By.xpath("(//*[@id='/1:DefaultProfile']/div/span)[3]")), WAITTIME).getText();
+        await driver.findElement(By.xpath(UssLocators.ussTabXpath)).click();
+        await driver.findElement(By.id(JobsLocators.jobTabId)).click();
+        const jobsProfile = await driver.wait(until.elementLocated(By.xpath(JobsLocators.defaultJobsProfileXpath)), WAITTIME).getText();
         expect(jobsProfile).to.equal("DefaultProfile");
     });
     after(async () => driver.quit());
@@ -105,55 +106,55 @@ describe("Add Profiles", () => {
     const driver = new Builder().forBrowser("firefox").setFirefoxOptions(firefoxOptions).build();
 
     before(async () => {
-        await driver.get("http://localhost:3000");
+        await driver.get(TheiaLocator.theiaUrl);
         await driver.sleep(SLEEPTIME);
-        driver.wait(until.elementLocated(By.id("shell-tab-plugin-view-container:zowe"))).click();
+        driver.wait(until.elementLocated(By.id(TheiaLocator.zoweExplorerxpath))).click();
     });
 
     it("Should Add Profile in DATA SETS", async () => {
-        await driver.findElement(By.id("plugin-view:zowe.explorer")).click();
-        await driver.findElement(By.id("__plugin.view.title.action.zowe.addSession")).click();
-        await driver.findElement(By.xpath("//*[@class='input empty']")).sendKeys(Key.ENTER);
-        const datasetProfileName = await driver.wait(until.elementLocated(By.xpath("//*[@class='input empty']")),WAITTIME);
+        await driver.findElement(By.id(DatasetsLocators.datasetsPanelId)).click();
+        await driver.findElement(By.id(DatasetsLocators.datasetsAddSessionId)).click();
+        await driver.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath)).sendKeys(Key.ENTER);
+        const datasetProfileName = await driver.wait(until.elementLocated(By.xpath(DatasetsLocators.emptyInputBoxXpath)),WAITTIME);
         datasetProfileName.sendKeys("TestSeleniumProfile");
         datasetProfileName.sendKeys(Key.ENTER);
-        const zosUrl = await driver.findElement(By.xpath("//*[@class='input empty']"));
+        const zosUrl = await driver.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
         zosUrl.sendKeys("fakehost.net:1003");
         zosUrl.sendKeys(Key.ENTER);
-        const username = await driver.findElement(By.xpath("//*[@class='input empty']"));
+        const username = await driver.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
         username.sendKeys(Key.ENTER);
-        const password = await driver.findElement(By.xpath("//*[@class='input empty']"));
+        const password = await driver.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
         password.sendKeys(Key.ENTER);
-        const authorization = await driver.findElement(By.xpath("//*[@class='input empty']"));
+        const authorization = await driver.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
         authorization.sendKeys("False - Accept connections with self-signed certificates");
         authorization.sendKeys(Key.ENTER);
-        const basepath = await driver.findElement(By.xpath("//*[@class='input empty']"));
+        const basepath = await driver.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
         basepath.sendKeys(Key.ENTER);
-        const datasetProfile = await driver.wait(until.elementLocated(By.id("/2:TestSeleniumProfile")),WAITTIME).getText();
+        const datasetProfile = await driver.wait(until.elementLocated(By.id(DatasetsLocators.secondDatasetProfileId)),WAITTIME).getText();
         expect(datasetProfile).to.equal("TestSeleniumProfile");
     });
 
     it("Should Add Existing Profile in USS", async () => {
-        await driver.findElement(By.xpath("//*[@id='plugin-view-container:zowe--plugin-view:zowe.explorer']/div[1]/span[2]")).click();
-        await driver.findElement(By.id("plugin-view-container:zowe--plugin-view:zowe.uss.explorer")).click();
-        await driver.findElement(By.id("plugin-view:zowe.uss.explorer")).click();
-        await driver.findElement(By.id("__plugin.view.title.action.zowe.uss.addSession")).click();
-        const ussProfileName = await driver.findElement(By.xpath("//*[@class='input empty']"));
+        await driver.findElement(By.xpath(DatasetsLocators.datasetTabXpath)).click();
+        await driver.findElement(By.id(UssLocators.ussTabId)).click();
+        await driver.findElement(By.id(UssLocators.ussPanelId)).click();
+        await driver.findElement(By.id(UssLocators.ussAddSessionId)).click();
+        const ussProfileName = await driver.findElement(By.xpath(UssLocators.emptyInputBoxXpath));
         ussProfileName.sendKeys("TestSeleniumProfile");
         ussProfileName.sendKeys(Key.ENTER);
-        const ussProfile = await driver.wait(until.elementLocated(By.xpath("(//*[@id='/2:TestSeleniumProfile']/div/span)[2]")), WAITTIME).getText();
+        const ussProfile = await driver.wait(until.elementLocated(By.xpath(UssLocators.secondUssProfileXpath)), WAITTIME).getText();
         expect(ussProfile).to.equal("TestSeleniumProfile");
     });
 
     it("Should Add Existing Profile in JOBS", async () => {
-        await driver.findElement(By.xpath("//*[@id='plugin-view-container:zowe--plugin-view:zowe.uss.explorer']/div[1]/span[2]")).click();
-        await driver.findElement(By.id("plugin-view-container:zowe--plugin-view:zowe.jobs")).click();
-        await driver.findElement(By.id ("zowe.jobs")).click();
-        await driver.findElement(By.id("__plugin.view.title.action.zowe.addJobsSession")).click();
-        const jobsProfileName = await driver.findElement(By.xpath("//*[@class='input empty']"));
+        await driver.findElement(By.xpath(UssLocators.ussTabXpath)).click();
+        await driver.findElement(By.id(JobsLocators.jobTabId)).click();
+        await driver.findElement(By.id (JobsLocators.jobsPanelId)).click();
+        await driver.findElement(By.id(JobsLocators.jobsAddSessionId)).click();
+        const jobsProfileName = await driver.findElement(By.xpath(JobsLocators.emptyInputBoxXpath));
         jobsProfileName.sendKeys("TestSeleniumProfile");
         jobsProfileName.sendKeys(Key.ENTER);
-        const jobsProfile = await driver.wait(until.elementLocated(By.xpath("(//*[@id='/2:TestSeleniumProfile']/div/span)[3]")), WAITTIME).getText();
+        const jobsProfile = await driver.wait(until.elementLocated(By.xpath(JobsLocators.secondJobsProfileXpath)), WAITTIME).getText();
         expect(jobsProfile).to.equal("TestSeleniumProfile");
     });
     after(async () => driver.quit());
@@ -167,45 +168,45 @@ describe("Add Profile to Favorites", () => {
     const driver = new Builder().forBrowser("chrome").setChromeOptions(chromeOptions).build();
 
     before(async () => {
-        await driver.get("http://localhost:3000");
+        await driver.get(TheiaLocator.theiaUrl);
         await driver.sleep(SLEEPTIME);
-        driver.wait(until.elementLocated(By.id("shell-tab-plugin-view-container:zowe"))).click();
+        driver.wait(until.elementLocated(By.id(TheiaLocator.zoweExplorerxpath))).click();
     });
     it("Should Add Profile to Favorites under DATA SETS", async () => {
-        const addTofavorite = await driver.wait(until.elementLocated(By.id("/2:TestSeleniumProfile")),  WAITTIME);
+        const addTofavorite = await driver.wait(until.elementLocated(By.id(DatasetsLocators.secondDatasetProfileId)),  WAITTIME);
         await driver.actions().click(addTofavorite, Button.RIGHT).perform();
-        await driver.wait(until.elementLocated(By.xpath("/html/body/div[5]/ul/li[3]/div[2]")), WAITTIME).click();
-        await driver.wait(until.elementLocated(By.id("/0:Favorites")), WAITTIME).click();
-        const favoriteProfile = await driver.wait(until.elementLocated(By.id("/0:Favorites/0:[TestSeleniumProfile]: ")), WAITTIME).getText();
+        await driver.wait(until.elementLocated(By.xpath(DatasetsLocators.addToFavoriteOptionXpath)), WAITTIME).click();
+        await driver.wait(until.elementLocated(By.id(DatasetsLocators.favoriteTabId)), WAITTIME).click();
+        const favoriteProfile = await driver.wait(until.elementLocated(By.id(DatasetsLocators.favoriteProfileInDatasetId)), WAITTIME).getText();
         expect(favoriteProfile).to.equal("[TestSeleniumProfile]: ");
     });
     it("Should Add Profile to Favorites under USS", async () => {
         await driver.wait(until.elementLocated(
-                                By.xpath("//*[@id='plugin-view-container:zowe--plugin-view:zowe.explorer']/div[1]/span[2]")), WAITTIME).click();
+                                By.xpath(DatasetsLocators.datasetTabXpath)), WAITTIME).click();
         await driver.sleep(SLEEP);
         await driver.wait(until.elementLocated(
-                              By.xpath("//*[@id='plugin-view-container:zowe--plugin-view:zowe.uss.explorer']/div[1]/span[2]")), WAITTIME).click();
+                              By.xpath(UssLocators.ussTabXpath)), WAITTIME).click();
         await driver.sleep(SLEEP);
-        const addTofavorite = await driver.wait(until.elementLocated(By.xpath("(//*[@id='/2:TestSeleniumProfile']/div/span)[2]")), WAITTIME);
+        const addTofavorite = await driver.wait(until.elementLocated(By.xpath(UssLocators.secondUssProfileXpath)), WAITTIME);
         await driver.actions().click(addTofavorite, Button.RIGHT).perform();
-        await driver.wait(until.elementLocated(By.xpath("/html/body/div[5]/ul/li[3]/div[2]")), WAITTIME).click();
-        await driver.wait(until.elementLocated(By.xpath("(//*[@id='/0:Favorites']/div/span)[2]")), WAITTIME).click();
+        await driver.wait(until.elementLocated(By.xpath(UssLocators.addToFavoriteOptionXpath)), WAITTIME).click();
+        await driver.wait(until.elementLocated(By.xpath(UssLocators.favoriteTabXpath)), WAITTIME).click();
         await driver.sleep(SLEEP);
         const favoriteProfile = await driver.wait(until.elementLocated(
-                                                 By.xpath("(//*[@id='/0:Favorites/0:[TestSeleniumProfile]: ']/div/span)[2]")), WAITTIME).getText();
+                                                 By.xpath(UssLocators.favoriteProfileInUssXpath)), WAITTIME).getText();
         expect(favoriteProfile).to.equal("[TestSeleniumProfile]: ");
     });
     it("Should Add Profile to Favorites under JOBS", async () => {
-        await driver.findElement(By.xpath("//*[@id='plugin-view-container:zowe--plugin-view:zowe.uss.explorer']/div[1]/span[2]")).click();
+        await driver.findElement(By.xpath(UssLocators.ussTabXpath)).click();
         await driver.sleep(SLEEP);
-        await driver.findElement(By.id("plugin-view-container:zowe--plugin-view:zowe.jobs")).click();
-        const addTofavorite = await driver.wait(until.elementLocated(By.xpath("(//*[@id='/2:TestSeleniumProfile']/div/span)[3]")),  WAITTIME);
+        await driver.findElement(By.id(JobsLocators.jobTabId)).click();
+        const addTofavorite = await driver.wait(until.elementLocated(By.xpath(JobsLocators.secondJobsProfileXpath)),  WAITTIME);
         await driver.actions().click(addTofavorite, Button.RIGHT).perform();
-        await driver.wait(until.elementLocated(By.xpath("/html/body/div[5]/ul/li[6]/div[2]")), WAITTIME).click();
-        await driver.wait(until.elementLocated(By.xpath("(//*[@id='/0:Favorites']/div/span)[3]")), WAITTIME).click();
+        await driver.wait(until.elementLocated(By.xpath(JobsLocators.addToFavoriteOptionXpath)), WAITTIME).click();
+        await driver.wait(until.elementLocated(By.xpath(JobsLocators.favoriteTabXpath)), WAITTIME).click();
         await driver.sleep(SLEEP);
         const favoriteProfile = await driver.wait(until.elementLocated(
-                                             By.xpath("//*[@id='/0:Favorites/0:[TestSeleniumProfile]: Prefix:*']/div/span")), WAITTIME).getText();
+                                             By.xpath(JobsLocators.favoriteProfileInJobsXpath)), WAITTIME).getText();
         expect(favoriteProfile).to.equal("[TestSeleniumProfile]: Prefix:*");
     });
 
@@ -220,43 +221,41 @@ describe("Remove Profile from Favorites", () => {
     const driver = new Builder().forBrowser("chrome").setChromeOptions(chromeOptions).build();
 
     before(async () => {
-        await driver.get("http://localhost:3000");
+        await driver.get(TheiaLocator.theiaUrl);
         await driver.sleep(SLEEPTIME);
-        driver.wait(until.elementLocated(By.id("shell-tab-plugin-view-container:zowe"))).click();
+        driver.wait(until.elementLocated(By.id(TheiaLocator.zoweExplorerxpath))).click();
     });
     it("Should Remove Profile from Favorites under DATA SETS", async () => {
-        await driver.wait(until.elementLocated(By.id("/0:Favorites")), WAITTIME).click();
-        const removeFromFavorite = await driver.wait(until.elementLocated(By.id("/0:Favorites/0:[TestSeleniumProfile]: ")), WAITTIME);
+        await driver.wait(until.elementLocated(By.id(DatasetsLocators.favoriteTabId)), WAITTIME).click();
+        const removeFromFavorite = await driver.wait(until.elementLocated(By.id(DatasetsLocators.favoriteProfileInDatasetId)), WAITTIME);
         await driver.actions().click(removeFromFavorite, Button.RIGHT).perform();
-        await driver.wait(until.elementLocated(By.xpath("/html/body/div[5]/ul/li/div[2]")), WAITTIME).click();
+        await driver.wait(until.elementLocated(By.xpath(DatasetsLocators.removeFavoriteProfileFromDatasetsOptionXpath)), WAITTIME).click();
         await driver.sleep(SLEEP);
         // expect(removepro).to.equal("");
     });
     it("Should Remove Profile from Favorites under USS", async () => {
-        await driver.findElement(By.xpath("//*[@id='plugin-view-container:zowe--plugin-view:zowe.explorer']/div[1]/span[2]")).click();
+        await driver.findElement(By.xpath(DatasetsLocators.datasetTabXpath)).click();
         await driver.sleep(SLEEP);
-        await driver.wait(until.elementLocated(
-                             By.xpath("//*[@id='plugin-view-container:zowe--plugin-view:zowe.uss.explorer']/div[1]/span[2]")), WAITTIME).click();
+        await driver.wait(until.elementLocated(By.xpath(UssLocators.ussTabXpath)), WAITTIME).click();
         await driver.sleep(SLEEP);
-        await driver.wait(until.elementLocated(By.xpath("(//*[@id='/0:Favorites']/div/span)[2]")), WAITTIME).click();
-        const removeFromFavorite = await driver.wait(until.elementLocated(
-                                                        By.xpath("//*[@id='/0:Favorites/0:[TestSeleniumProfile]: ']/div/span")), WAITTIME);
+        await driver.wait(until.elementLocated(By.xpath(UssLocators.favoriteTabXpath)), WAITTIME).click();
+        const removeFromFavorite = await driver.wait(until.elementLocated(By.xpath(UssLocators.favoriteProfileInUssBeforeRemovingXpath)), WAITTIME);
         await driver.actions().click(removeFromFavorite, Button.RIGHT).perform();
-        await (await driver.wait(until.elementLocated(By.xpath("/html/body/div[5]/ul/li/div[2]")), WAITTIME)).click();
+        await (await driver.wait(until.elementLocated(By.xpath(UssLocators.removeFavoriteProfileFromUssOptionXpath)), WAITTIME)).click();
         await driver.sleep(SLEEP);
         // expect(removepro).to.equal("");
     });
 
     it("Should Remove Profile from Favorites under JOBS", async () => {
-        await driver.findElement(By.xpath("//*[@id='plugin-view-container:zowe--plugin-view:zowe.uss.explorer']/div[1]/span[2]")).click();
+        await driver.findElement(By.xpath(UssLocators.ussTabXpath)).click();
         await driver.sleep(SLEEP);
-        await driver.findElement(By.id("plugin-view-container:zowe--plugin-view:zowe.jobs")).click();
-        await driver.wait(until.elementLocated(By.xpath("(//*[@id='/0:Favorites']/div/span)[3]")), WAITTIME).click();
+        await driver.findElement(By.id(JobsLocators.jobTabId)).click();
+        await driver.wait(until.elementLocated(By.xpath(JobsLocators.favoriteTabXpath)), WAITTIME).click();
         const removeFromFavorite = await driver.wait(until.elementLocated(
-                                                        By.xpath("//*[@id='/0:Favorites/0:[TestSeleniumProfile]: Prefix:*']/div/span")), WAITTIME);
+                                                        By.xpath(JobsLocators.favoriteProfileInJobsXpath)), WAITTIME);
         await driver.actions().click(removeFromFavorite, Button.RIGHT).perform();
         await driver.sleep(SLEEP);
-        await driver.wait(until.elementLocated(By.xpath("/html/body/div[5]/ul/li/div[2]")), WAITTIME).click();
+        await driver.wait(until.elementLocated(By.xpath(JobsLocators.removeFavoriteProfileFromJobsOptionXpath)), WAITTIME).click();
         await driver.sleep(SLEEP);
         // expect(removepro).to.equal("");
     });
@@ -272,29 +271,28 @@ describe("Hide Profile", () => {
     const driver = new Builder().forBrowser("chrome").setChromeOptions(chromeOptions).build();
 
     before(async () => {
-        await driver.get("http://localhost:3000");
+        await driver.get(TheiaLocator.theiaUrl);
         await driver.sleep(SLEEPTIME);
-        driver.wait(until.elementLocated(By.id("shell-tab-plugin-view-container:zowe"))).click();
+        driver.wait(until.elementLocated(By.id(TheiaLocator.zoweExplorerxpath))).click();
     });
 
     it("Should Hide Profile from USS", async () => {
-        await driver.findElement(By.xpath("//*[@id='plugin-view-container:zowe--plugin-view:zowe.explorer']/div[1]/span[2]")).click();
+        await driver.findElement(By.xpath(DatasetsLocators.datasetTabXpath)).click();
         await driver.sleep(SLEEP);
-        await driver.wait(until.elementLocated(
-                            By.xpath("//*[@id='plugin-view-container:zowe--plugin-view:zowe.uss.explorer']/div[1]/span[2]")), WAITTIME).click();
+        await driver.wait(until.elementLocated(By.xpath(UssLocators.ussTabXpath)), WAITTIME).click();
         await driver.sleep(SLEEP);
-        const hideProfileFromUss = await driver.wait(until.elementLocated(By.xpath("(//*[@id='/2:TestSeleniumProfile']/div/span)[2]")), WAITTIME);
+        const hideProfileFromUss = await driver.wait(until.elementLocated(By.xpath(UssLocators.secondUssProfileXpath)), WAITTIME);
         await driver.actions().click(hideProfileFromUss, Button.RIGHT).perform();
-        await driver.wait(until.elementLocated(By.xpath("/html/body/div[5]/ul/li[7]/div[2]")), WAITTIME).click();
+        await driver.wait(until.elementLocated(By.xpath(UssLocators.hideProfileFromUssOptionXpath)), WAITTIME).click();
         await driver.sleep(SLEEP);
     });
     it("Should Hide Profile from JOBS", async () => {
-        await driver.findElement(By.xpath("//*[@id='plugin-view-container:zowe--plugin-view:zowe.uss.explorer']/div[1]/span[2]")).click();
+        await driver.findElement(By.xpath(UssLocators.ussTabXpath)).click();
         await driver.sleep(SLEEP);
-        await driver.findElement(By.id("plugin-view-container:zowe--plugin-view:zowe.jobs")).click();
-        const hideProfileFromJobs = await driver.wait(until.elementLocated(By.xpath("(//*[@id='/2:TestSeleniumProfile']/div/span)[2]")), WAITTIME);
+        await driver.findElement(By.id(JobsLocators.jobTabId)).click();
+        const hideProfileFromJobs = await driver.wait(until.elementLocated(By.xpath(JobsLocators.secondJobsProfileIdBeforeHidingXpath)), WAITTIME);
         await driver.actions().click(hideProfileFromJobs, Button.RIGHT).perform();
-        await driver.wait(until.elementLocated(By.xpath("/html/body/div[5]/ul/li[9]/div[2]")), WAITTIME).click();
+        await driver.wait(until.elementLocated(By.xpath(JobsLocators.hideProfileFromJobsOptionXpath)), WAITTIME).click();
         await driver.sleep(SLEEP);
     });
 
@@ -309,38 +307,36 @@ describe("Delete Profiles", () => {
     const driver = new Builder().forBrowser("chrome").setChromeOptions(chromeOptions).build();
 
     before(async () => {
-        await driver.get("http://localhost:3000");
+        await driver.get(TheiaLocator.theiaUrl);
         await driver.sleep(SLEEPTIME);
-        driver.wait(until.elementLocated(By.id("shell-tab-plugin-view-container:zowe"))).click();
+        driver.wait(until.elementLocated(By.id(TheiaLocator.zoweExplorerxpath))).click();
     });
     it("Should Delete Default Profile from DATA SETS", async () => {
-        (await (await driver).findElement(By.xpath("/html/body/div[3]/div/div[1]/div/div/div/div/ul/li"))).click();
-        const favprofile = await driver.wait(until.elementLocated(By.id("/1:DefaultProfile")), WAITTIME);
+        await driver.findElement(By.xpath(TheiaNotificationMessages.closeTheiaNotificationWarningMsgXpath)).click();
+        const favprofile = await driver.wait(until.elementLocated(By.id(DatasetsLocators.defaultDatasetsProfileId)), WAITTIME);
         await driver.actions().click(favprofile, Button.RIGHT).perform();
-        await driver.wait(until.elementLocated(By.xpath("/html/body/div[5]/ul/li[7]/div[2]")), WAITTIME).click();
+        await driver.wait(until.elementLocated(By.xpath(DatasetsLocators.deleteProfileFromDatasetsXpath)), WAITTIME).click();
         await driver.sleep(SLEEP);
-        const deleteProfile = driver.wait(until.elementLocated(
-                                                By.xpath("/html/body/div[2]/quick-open-container/div/div[2]/div/div/input")), WAITTIME);
+        const deleteProfile = driver.wait(until.elementLocated(By.xpath(DatasetsLocators.emptyInputBoxXpath)), WAITTIME);
         deleteProfile.sendKeys("Delete");
         deleteProfile.sendKeys(Key.ENTER);
         await driver.sleep(SLEEP);
         const deleteConfrmationMsg = await driver.wait(until.elementLocated(
-                                                By.xpath("/html/body/div[3]/div/div[1]/div/div/div/div/div[2]/span")), WAITTIME).getText();
+                                                By.xpath(TheiaNotificationMessages.deleteProfileNotificationMsg)), WAITTIME).getText();
         expect(deleteConfrmationMsg).to.equal("Profile DefaultProfile was deleted.");
     });
     it("Should Delete Profile from DATA SETS", async () => {
-        (await (await driver).findElement(By.xpath("/html/body/div[3]/div/div[1]/div/div/div/div/ul/li"))).click();
-        const favprofile = await driver.wait(until.elementLocated(By.id("/1:TestSeleniumProfile")), WAITTIME);
+        await driver.findElement(By.xpath(TheiaNotificationMessages.closeTheiaNotificationWarningMsgXpath)).click();
+        const favprofile = await driver.wait(until.elementLocated(By.id(DatasetsLocators.secondDatasetProfileBeforeDeletingId)), WAITTIME);
         await driver.actions().click(favprofile, Button.RIGHT).perform();
-        await driver.wait(until.elementLocated(By.xpath("/html/body/div[5]/ul/li[7]/div[2]")), WAITTIME).click();
+        await driver.wait(until.elementLocated(By.xpath(DatasetsLocators.deleteProfileFromDatasetsXpath)), WAITTIME).click();
         await driver.sleep(SLEEP);
-        const deleteProfile = driver.wait(until.elementLocated(
-                                                By.xpath("/html/body/div[2]/quick-open-container/div/div[2]/div/div/input")), WAITTIME);
+        const deleteProfile = driver.wait(until.elementLocated(By.xpath(DatasetsLocators.emptyInputBoxXpath)), WAITTIME);
         deleteProfile.sendKeys("Delete");
         deleteProfile.sendKeys(Key.ENTER);
         await driver.sleep(SLEEP);
         const deleteConfrmationMsg = await driver.wait(until.elementLocated(
-                                                By.xpath("/html/body/div[3]/div/div[1]/div/div/div/div/div[2]/span")), WAITTIME).getText();
+                                                By.xpath(TheiaNotificationMessages.deleteProfileNotificationMsg)), WAITTIME).getText();
         expect(deleteConfrmationMsg).to.equal("Profile TestSeleniumProfile was deleted.");
     });
 
