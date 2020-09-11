@@ -80,14 +80,13 @@ async function createGlobalMocks() {
     newMocks.mockGetValidSession.mockReturnValue(newMocks.testSession);
     ZoweExplorerApiRegister.getCommonApi = newMocks.mockGetCommonApi.bind(ZoweExplorerApiRegister);
     Object.defineProperty(newMocks.commonApi, "getValidSession", { value: newMocks.mockGetValidSession, configurable: true });
-
     Object.defineProperty(vscode.window, "showInformationMessage", { value: newMocks.mockShowInformationMessage, configurable: true });
     Object.defineProperty(vscode.window, "showInputBox", { value: newMocks.mockShowInputBox, configurable: true });
     Object.defineProperty(vscode.window, "showErrorMessage", { value: newMocks.mockShowErrorMessage, configurable: true });
     Object.defineProperty(vscode.window, "showQuickPick", { value: newMocks.mockShowQuickPick, configurable: true });
     Object.defineProperty(vscode.window, "createQuickPick", { value: newMocks.mockCreateQuickPick, configurable: true });
     Object.defineProperty(Profiles, "getInstance", { value: newMocks.mockGetInstance, configurable: true });
-    Object.defineProperty(Profiles, "collectProfileDetails", { value: newMocks.mockCollectProfileDetails, configurable: true });
+    Object.defineProperty(newMocks.mockGetInstance, "collectProfileDetails", { value: newMocks.mockCollectProfileDetails, configurable: true });
     Object.defineProperty(globals, "LOG", { value: newMocks.mockLog, configurable: true });
     Object.defineProperty(vscode.window, "createInputBox", { value: newMocks.mockCreateInputBox, configurable: true });
     Object.defineProperty(globals.LOG, "debug", { value: newMocks.mockDebug, configurable: true });

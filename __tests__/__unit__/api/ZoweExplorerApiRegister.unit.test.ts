@@ -62,9 +62,6 @@ class MockUssApi1 implements ZoweExplorerApi.IUss {
     public getStatus?(profile?: IProfileLoaded): Promise<string> {
         throw new Error("Method not implemented.");
     }
-    public async collectProfileDetails?(detailsToGet?: string[]): Promise<any> {
-        throw new Error("Method not implemented.");
-    }
 }
 
 class MockUssApi2 implements ZoweExplorerApi.IUss {
@@ -106,9 +103,6 @@ class MockUssApi2 implements ZoweExplorerApi.IUss {
         throw new Error("Method not implemented.");
     }
     public getStatus?(profile?: IProfileLoaded): Promise<string> {
-        throw new Error("Method not implemented.");
-    }
-    public async collectProfileDetails?(detailsToGet?: string[]): Promise<any> {
         throw new Error("Method not implemented.");
     }
 }

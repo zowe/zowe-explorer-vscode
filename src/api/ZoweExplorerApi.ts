@@ -68,14 +68,6 @@ export namespace ZoweExplorerApi {
          * @returns {IZosmfInfoResponse} z/OSMF Check Status response
          */
         getValidSession?(serviceProfile: IProfileLoaded, profileName: string, prompt?: boolean): Promise<Session>;
-
-        /**
-         * Prompt the user for profile connection details
-         *
-         * @param {string[]} detailsToGet
-         *      array of missing profile details
-         */
-        collectProfileDetails?(detailsToGet?: string[], oldDetails?: any, schema?: any): Promise<any>;
     }
 
     /**
