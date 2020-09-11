@@ -52,7 +52,7 @@ export const ACTIVE_CONTEXT = CONTEXT_PREFIX + "Active";
 export const UNVERIFIED_CONTEXT = CONTEXT_PREFIX + "Unverified";
 export const ICON_STATE_OPEN = "open";
 export const ICON_STATE_CLOSED = "closed";
-export const THEIA = "Eclipse Theia";
+export const VSCODE_APPNAME: string[] = ["Visual Studio Code", "VSCodium"];
 export const ROOTPATH = path.join(__dirname, "..", "..");
 
 /**
@@ -71,7 +71,9 @@ export enum PersistenceSchemaEnum {
 export function defineGlobals(tempPath: string | undefined) {
     // Set app name
     const appName: string = vscode.env.appName;
-    if (appName && appName === this.THEIA) { this.ISTHEIA = true; }
+    if (appName && !this.VSCODE_APPNAME.includes(appName) && vscode.env.uiKind === vscode.UIKind.Web) {
+        this.ISTHEIA = true;
+    }
 
     // Set temp path & folder paths
     tempPath !== "" && tempPath !== undefined ?
