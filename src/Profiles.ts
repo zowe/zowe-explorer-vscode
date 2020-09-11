@@ -895,9 +895,9 @@ export class Profiles {
 
         // Delete from USS Favorites
         ussTree.mFavorites.forEach((ses) => {
-            const findNode = ses.label.substring(1, ses.label.indexOf("]")).trim();
+            const findNode = ses.label.trim();
             if (findNode === deleteLabel) {
-                ussTree.removeFavorite(ses);
+                ussTree.mFavorites = ussTree.mFavorites.filter((tempNode) => tempNode.label.trim() !== findNode);
                 ses.dirty = true;
                 ussTree.refresh();
             }
