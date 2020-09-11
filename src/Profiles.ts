@@ -434,13 +434,20 @@ export class Profiles {
             return undefined;
         }
 
+        const profileType = requestedProfileType ? requestedProfileType : await this.getProfileType();
+        if (profileType === undefined) {
+            vscode.window.showInformationMessage(localize("createNewConnection.profileType",
+                "No profile type was chosen. Operation Cancelled"));
+            return undefined;
+        }
+
         try {
             const newProfileDetails = await ZoweExplorerApiRegister.getCommonApi(profileLoaded)
                                                                    .collectProfileDetails(null,
                                                                                           profileLoaded.profile,
-                                                                                          await this.getSchema("zosmf"));
+                                                                                          await this.getSchema(profileType));
             newProfileDetails.name = newProfileName;
-            newProfileDetails.type = "zosmf";
+            newProfileDetails.type = profileType;
             if (!newProfileDetails.user) { delete newProfileDetails.user; }
             if (!newProfileDetails.password) { delete newProfileDetails.password; }
 
