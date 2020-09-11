@@ -68,23 +68,20 @@ export class Profiles {
 
     public async checkCurrentProfile(profileLoaded: IProfileLoaded, prompt?: boolean): Promise<any> {
         try {
-            const profileStatus: IProfileValidation = await this.getProfileSetting(profileLoaded, false);
+            const profileStatus: IProfileValidation = await this.getProfileSetting(profileLoaded, prompt);
             if (profileStatus.status === "unverified") {
                 this.validProfile = ValidProfileEnum.UNVERIFIED;
                 return profileStatus;
             }
 
-            const validSession = await ZoweExplorerApiRegister.getCommonApi(profileLoaded)
-                                                              .getValidSession(profileLoaded, profileLoaded.name, null, prompt);
-
-            if (!validSession) {
+            if (!profileStatus.session) {
                 // Credentials are invalid
                 this.validProfile = ValidProfileEnum.INVALID;
-                return { status: "inactive", name: profileLoaded.name, session: undefined };
+                return profileStatus;
             } else {
                 // Credentials are valid
                 this.validProfile = ValidProfileEnum.VALID;
-                return { status: "active", name: profileLoaded.name, session: validSession };
+                return profileStatus;
             }
         } catch (error) {
             errorHandling(error, profileLoaded.name,
@@ -135,29 +132,10 @@ export class Profiles {
                 profileStatus = "unverified";
             }
 
-            switch (profileStatus) {
-                case "active":
-                    filteredProfile = {
-                        status: "active",
-                        name: theProfile.name,
-                        session: undefined
-                    };
-                    break;
-                case "inactive":
-                    filteredProfile = {
-                        status: "inactive",
-                        name: theProfile.name,
-                        session: undefined
-                    };
-                    break;
-                // default will cover "unverified" and undefined
-                default:
-                    filteredProfile = {
-                        status: "unverified",
-                        name: theProfile.name,
-                        session: undefined
-                    };
-                    break;
+            filteredProfile = {
+                status: profileStatus.status,
+                name: theProfile.name,
+                session: profileStatus.session
             }
         } catch (error) {
             this.log.debug("Validate Error - Invalid Profile: " + error);
