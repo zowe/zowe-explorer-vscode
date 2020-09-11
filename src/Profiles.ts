@@ -79,18 +79,11 @@ export class Profiles {
             if (!validSession) {
                 // Credentials are invalid
                 this.validProfile = ValidProfileEnum.INVALID;
-                return { status: "inactive", name: profileLoaded.name, session: null };
+                return { status: "inactive", name: profileLoaded.name, session: undefined };
             } else {
                 // Credentials are valid
-                const validStatus = await ZoweExplorerApiRegister.getCommonApi(profileLoaded).getStatus(profileLoaded, profileLoaded.type);
-                if (validStatus === "inactive") {
-                    // Connection details are invalid
-                    this.validProfile = ValidProfileEnum.INVALID;
-                    return { status: "inactive", name: profileLoaded.name, session: null };
-                } else {
-                    this.validProfile = ValidProfileEnum.VALID;
-                    return { status: "active", name: profileLoaded.name, session: validSession };
-                }
+                this.validProfile = ValidProfileEnum.VALID;
+                return { status: "active", name: profileLoaded.name, session: validSession };
             }
         } catch (error) {
             errorHandling(error, profileLoaded.name,
@@ -101,7 +94,6 @@ export class Profiles {
 
     public async getProfileSetting(theProfile: IProfileLoaded): Promise<IProfileValidation> {
         let profileStatus: IProfileValidation;
-        let found: boolean = false;
         this.profilesValidationSetting.filter(async (instance) => {
             if ((instance.name === theProfile.name) && (instance.setting === false)) {
                 profileStatus = {
@@ -109,24 +101,71 @@ export class Profiles {
                     name: instance.name,
                     session: null
                 };
-                if (this.profilesForValidation.length > 0) {
-                    this.profilesForValidation.filter((profile) => {
-                        if ((profile.name === theProfile.name) && (profile.status === "unverified")) {
-                            found = true;
-                        }
-                        if ((profile.name === theProfile.name) && (profile.status !== "unverified")) {
-                            found = true;
-                            const index = this.profilesForValidation.lastIndexOf(profile);
-                            this.profilesForValidation.splice(index, 1, profileStatus);
-                        }
-                    });
-                }
-                if (!found) {
-                    this.profilesForValidation.push(profileStatus);
-                }
             }
         });
+        if (profileStatus === undefined) {
+            profileStatus = await this.validateProfiles(theProfile);
+        }
         return profileStatus;
+    }
+
+    public async validateProfiles(theProfile: IProfileLoaded) {
+        let filteredProfile: IProfileValidation;
+        let profileStatus;
+        const getSessStatus = await ZoweExplorerApiRegister.getInstance().getCommonApi(theProfile);
+
+        // If not yet validated or inactive, call getStatus and validate the profile
+        // status will be stored in profilesForValidation
+            try {
+                if (getSessStatus.getStatus) {
+                    profileStatus = await vscode.window.withProgress({
+                        location: vscode.ProgressLocation.Notification,
+                        title: localize("Profiles.validateProfiles.validationProgress", "Validating {0} Profile.", theProfile.name),
+                        cancellable: true
+                    }, async (progress, token) => {
+                        token.onCancellationRequested(() => {
+                            // will be returned as undefined
+                            vscode.window.showInformationMessage(localize("Profiles.validateProfiles.validationCancelled", "Validating {0} was cancelled.", theProfile.name));
+                        });
+                        return getSessStatus.getStatus(theProfile, theProfile.type);
+                    });
+                } else {
+                    profileStatus = "unverified";
+                }
+
+                switch (profileStatus) {
+                    case "active":
+                        filteredProfile = {
+                            status: "active",
+                            name: theProfile.name,
+                            session: undefined
+                        };
+                        break;
+                    case "inactive":
+                        filteredProfile = {
+                            status: "inactive",
+                            name: theProfile.name,
+                            session: undefined
+                        };
+                        break;
+                    // default will cover "unverified" and undefined
+                    default:
+                        filteredProfile = {
+                            status: "unverified",
+                            name: theProfile.name,
+                            session: undefined
+                        };
+                        break;
+                }
+            } catch (error) {
+                this.log.debug("Validate Error - Invalid Profile: " + error);
+                filteredProfile = {
+                    status: "inactive",
+                    name: theProfile.name,
+                    session: undefined
+                };
+            }
+        return filteredProfile;
     }
 
     public async disableValidation(node: IZoweNodeType): Promise<IZoweNodeType>{
@@ -222,7 +261,9 @@ export class Profiles {
 
         // Set the default base profile (base is not a type included in registeredApiTypes)
         let profileManager = await this.getCliProfileManager("base");
-        DefaultProfileManager.getInstance().setDefaultProfile("base", (await profileManager.load({ loadDefault: true })));
+        if (profileManager) {
+            DefaultProfileManager.getInstance().setDefaultProfile("base", (await profileManager.load({ loadDefault: true })));
+        }
 
         // Handle all API profiles
         for (const type of ZoweExplorerApiRegister.getInstance().registeredApiTypes()) {
@@ -629,12 +670,16 @@ export class Profiles {
     public async getCliProfileManager(type: string): Promise<CliProfileManager> {
         let profileManager = this.profileManagerByType.get(type);
         if (!profileManager) {
-            profileManager = await new CliProfileManager({
-                profileRootDirectory: path.join(getZoweDir(), "profiles"),
-                type
-            });
-            if (profileManager) { this.profileManagerByType.set(type, profileManager); }
-            else { return undefined; }
+            try {
+                profileManager = await new CliProfileManager({
+                    profileRootDirectory: path.join(getZoweDir(), "profiles"),
+                    type
+                });
+                if (profileManager) { this.profileManagerByType.set(type, profileManager); }
+                else { return undefined; }
+            } catch (err) {
+                return null;
+            }
         }
         return profileManager;
     }

@@ -310,7 +310,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         if (sessionName) {
             const profile: IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
             if (profile) {
-                this.addSingleSession(profile);
+                await this.addSingleSession(profile);
             }
             for (const node of this.mSessionNodes) {
                 const name = node.getProfileName();
@@ -327,7 +327,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 }
                 for (const session of this.mHistory.getSessions()) {
                     if (session === theProfile.name) {
-                        this.addSingleSession(theProfile);
+                        await this.addSingleSession(theProfile);
                         for (const node of this.mSessionNodes) {
                             const name = node.getProfileName();
                             if (name === theProfile.name){

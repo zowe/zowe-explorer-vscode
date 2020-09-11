@@ -105,14 +105,18 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
                 $0: "zowe",
                 _: [""],
                 host: serviceProfile.profile.host ? serviceProfile.profile.host : baseProfile.profile.host,
-                port: serviceProfile.profile.port ? serviceProfile.profile.port : baseProfile.profile.port,
-                basePath: serviceProfile.profile.basePath ? serviceProfile.profile.basePath : baseProfile.profile.basePath,
+                port: serviceProfile.profile.port ? serviceProfile.profile.port :
+                      (baseProfile ? baseProfile.profile.port : 0),
+                basePath: serviceProfile.profile.basePath ? serviceProfile.profile.basePath :
+                          (baseProfile ? baseProfile.profile.basePath : undefined),
                 rejectUnauthorized: serviceProfile.profile.rejectUnauthorized != null ?
                                     serviceProfile.profile.rejectUnauthorized : baseProfile.profile.rejectUnauthorized,
-                user: serviceProfile.profile.user ? serviceProfile.profile.user : baseProfile.profile.user,
-                password: serviceProfile.profile.password ? serviceProfile.profile.password : baseProfile.profile.password,
+                user: serviceProfile.profile.user ? serviceProfile.profile.user :
+                      (baseProfile ? baseProfile.profile.user : undefined),
+                password: serviceProfile.profile.password ? serviceProfile.profile.password :
+                          (baseProfile ? baseProfile.profile.password : undefined),
                 tokenType: "apimlAuthenticationToken",
-                tokenValue: baseProfile.profile.tokenValue
+                tokenValue: baseProfile ? baseProfile.profile.tokenValue : undefined
             };
             try { return zowe.ZosmfSession.createBasicZosmfSessionFromArguments(cmdArgs); }
             catch (error) {
