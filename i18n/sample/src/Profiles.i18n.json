@@ -37,6 +37,7 @@
     "deleteProfile.showQuickPick.cancel": "Cancel",
     "deleteProfile.showQuickPick.log.debug": "User picked Cancel. Cancelling delete of profile",
     "deleteProfile.delete.log.error": "Error encountered when deleting profile! ",
+    "deleteProfile.success.info": "Profile {0} was deleted.",
     "createNewConnection.option.prompt.url.placeholder": "https://url:port",
     "createNewConnection.option.prompt.url": "Enter a z/OS URL in the format 'https://url:port'.",
     "createNewConnection.option.prompt.port.placeholder": "Port Number",

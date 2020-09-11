@@ -1172,16 +1172,23 @@ describe("Profiles Unit Tests - Function deleteProfile", () => {
 
         const startLength = blockMocks.testJobTree.mSessionNodes.length;
         const favoriteLength = blockMocks.testJobTree.mFavorites.length;
-        const jobNode = new Job(
-            "testNode", vscode.TreeItemCollapsibleState.Expanded, null, blockMocks.session, blockMocks.iJob, blockMocks.imperativeProfile);
-        const jobNodeAsFavorite = new Job(`[${blockMocks.datasetSessionNode.label.trim()}]: testNode`, vscode.TreeItemCollapsibleState.Expanded,
-            null, blockMocks.session, blockMocks.iJob, blockMocks.imperativeProfile);
+        // Set up job node
+        const jobNode = new Job("sestest", vscode.TreeItemCollapsibleState.Expanded, null,
+            blockMocks.session, blockMocks.iJob, blockMocks.imperativeProfile);
         jobNode.contextValue = globals.JOBS_SESSION_CONTEXT;
         blockMocks.testJobTree.mSessionNodes.push(jobNode);
-        blockMocks.testJobTree.addFavorite(jobNodeAsFavorite);
+        // Set up jobNode in Favorites
+        const favedJobNode = jobNode;
+        favedJobNode.contextValue = jobNode.contextValue + globals.FAV_SUFFIX;
+        const jobProfileNodeInFavs = new Job(`sestest`, vscode.TreeItemCollapsibleState.Expanded, blockMocks.testJobTree.mFavoriteSession,
+            blockMocks.session, null, blockMocks.imperativeProfile);
+        jobProfileNodeInFavs.contextValue = globals.FAV_PROFILE_CONTEXT;
+        jobProfileNodeInFavs.children.push(favedJobNode);
+        blockMocks.testJobTree.mFavorites.push(jobProfileNodeInFavs);
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("Delete");
 
         await blockMocks.profiles.deleteProfile(blockMocks.testDatasetTree, blockMocks.testUSSTree, blockMocks.testJobTree, jobNode);
+
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile sestest was deleted.");
         expect(blockMocks.testJobTree.mSessionNodes.length).toEqual(startLength);

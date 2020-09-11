@@ -241,6 +241,10 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
  */
 export interface IZoweJobTreeNode extends IZoweTreeNode {
     /**
+     * Use Job-specific tree node for children.
+     */
+    children?: IZoweJobTreeNode[];
+    /**
      * Standard job response document
      * Represents the attributes and status of a z/OS batch job
      * @interface IJob

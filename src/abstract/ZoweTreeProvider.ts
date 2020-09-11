@@ -221,9 +221,6 @@ export class ZoweTreeProvider {
     }
 
     protected deleteSessionByLabel(revisedLabel: string) {
-        if (revisedLabel.includes("[")) {
-            revisedLabel = revisedLabel.substring(0, revisedLabel.indexOf(" ["));
-        }
         this.mHistory.removeSession(revisedLabel);
         this.refresh();
     }
