@@ -68,11 +68,12 @@ export class Profiles {
 
     public async checkCurrentProfile(profileLoaded: IProfileLoaded, prompt?: boolean): Promise<any> {
         try {
-            const profileStatus: IProfileValidation = await this.getProfileSetting(profileLoaded);
-            if (profileStatus.status === "inactive") {
-                this.validProfile = ValidProfileEnum.INVALID;
+            const profileStatus: IProfileValidation = await this.getProfileSetting(profileLoaded, false);
+            if (profileStatus.status === "unverified") {
+                this.validProfile = ValidProfileEnum.UNVERIFIED;
                 return profileStatus;
             }
+
             const validSession = await ZoweExplorerApiRegister.getCommonApi(profileLoaded)
                                                               .getValidSession(profileLoaded, profileLoaded.name, null, prompt);
 
@@ -92,24 +93,24 @@ export class Profiles {
         }
     }
 
-    public async getProfileSetting(theProfile: IProfileLoaded): Promise<IProfileValidation> {
+    public async getProfileSetting(theProfile: IProfileLoaded, prompt?: boolean): Promise<IProfileValidation> {
         let profileStatus: IProfileValidation;
         this.profilesValidationSetting.filter(async (instance) => {
             if ((instance.name === theProfile.name) && (instance.setting === false)) {
                 profileStatus = {
                     status: "unverified",
                     name: instance.name,
-                    session: null
+                    session: undefined
                 };
             }
         });
         if (profileStatus === undefined) {
-            profileStatus = await this.validateProfiles(theProfile);
+            profileStatus = await this.validateProfiles(theProfile, prompt);
         }
         return profileStatus;
     }
 
-    public async validateProfiles(theProfile: IProfileLoaded) {
+    public async validateProfiles(theProfile: IProfileLoaded, prompt?: boolean) {
         let filteredProfile: IProfileValidation;
         let profileStatus;
         const getSessStatus = await ZoweExplorerApiRegister.getInstance().getCommonApi(theProfile);
@@ -128,7 +129,7 @@ export class Profiles {
                         vscode.window.showInformationMessage(
                               localize("Profiles.validateProfiles.validationCancelled", "Validating {0} was cancelled.", theProfile.name));
                     });
-                    return getSessStatus.getStatus(theProfile, theProfile.type);
+                    return getSessStatus.getStatus(theProfile, theProfile.type, prompt);
                 });
             } else {
                 profileStatus = "unverified";

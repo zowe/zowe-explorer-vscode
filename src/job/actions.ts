@@ -158,6 +158,7 @@ export async function modifyCommand(job: Job) {
  */
 export async function stopCommand(job: Job) {
     try {
+        const a = job.getSession();
         const response = await zowe.IssueCommand.issueSimple(job.getSession(), `p ${job.job.jobname}`);
         vscode.window.showInformationMessage(localize("stopCommand.response", "Command response: ") + response.commandResponse);
     } catch (error) {

@@ -46,13 +46,13 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
         return this.session;
     }
 
-    public async getStatus(validateProfile?: IProfileLoaded, profileType?: string): Promise<string> {
+    public async getStatus(validateProfile?: IProfileLoaded, profileType?: string, prompt?: boolean): Promise<string> {
         // This API call is specific for z/OSMF profiles
         if (profileType === "zosmf") {
             const validateSession = await this.getValidSession(validateProfile,
                                                                 validateProfile.name,
                                                                 DefaultProfileManager.getInstance().getDefaultProfile("base"),
-                                                                false);
+                                                                prompt);
             let sessionStatus;
             if (validateSession) { sessionStatus = await zowe.CheckStatus.getZosmfInfo(validateSession); }
 
@@ -76,23 +76,24 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
         }
 
         // If user exists in serviceProfile, use serviceProfile to login because it has precedence over baseProfile
-        if (serviceProfile.profile.user || (baseProfile && !baseProfile.profile.tokenValue)) {
+        if (serviceProfile.profile || (baseProfile && !baseProfile.profile.tokenValue)) {
             if (prompt) {
                 // Select for prompting only fields which are not defined
                 const schemaArray = [];
-                if (!serviceProfile.profile.user && (baseProfile && !baseProfile.profile.user)) {
-                    if (baseProfile && !baseProfile.profile.tokenValue) {
+                if (!serviceProfile.profile.user && (!baseProfile || (baseProfile && !baseProfile.profile.user))) {
+                    if (!baseProfile || (baseProfile && !baseProfile.profile.tokenValue)) {
                         schemaArray.push("user");
                     }
                 }
-                if (!serviceProfile.profile.password && (baseProfile && !baseProfile.profile.password)) {
-                    if (baseProfile && !baseProfile.profile.tokenValue) {
+                if (!serviceProfile.profile.password && (!baseProfile || (baseProfile && !baseProfile.profile.password))) {
+                    if (!baseProfile || (baseProfile && !baseProfile.profile.tokenValue)) {
                         schemaArray.push("password");
                     }
                 }
-                if (!serviceProfile.profile.host && (baseProfile && !baseProfile.profile.host)) {
+                if (!serviceProfile.profile.host &&  (!baseProfile || (baseProfile && !baseProfile.profile.host))) {
                     schemaArray.push("host");
-                    if (!serviceProfile.profile.port && (baseProfile && !baseProfile.profile.port)) { schemaArray.push("port"); }
+                    if (!serviceProfile.profile.port &&  (!baseProfile || (baseProfile && !baseProfile.profile.port)))
+                    { schemaArray.push("port"); }
                     if (!serviceProfile.profile.basePath) { schemaArray.push("basePath"); }
                 }
 
