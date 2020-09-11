@@ -31,9 +31,9 @@ export function createUSSTree(favoriteNodes: ZoweUSSNode[], sessionNodes: ZoweUS
     newTree.removeFavorite = jest.fn().mockImplementation((badFavorite) => removeNodeFromArray(badFavorite, newTree.mFavorites));
     newTree.openItemFromPath = jest.fn();
     newTree.deleteSession = jest.fn().mockImplementation((badSession) => removeNodeFromArray(badSession, newTree.mSessionNodes));
-    newTree.searchInLoadedItems = jest.fn();
+    newTree.getAllLoadedItems = jest.fn();
     newTree.getTreeView = jest.fn().mockImplementation(() => treeView);
-    newTree.getTreeItem = jest.fn().mockImplementation(() => new vscode.TreeItem('test'));
+    newTree.getTreeItem = jest.fn().mockImplementation(() => new vscode.TreeItem("test"));
     newTree.getTreeType = jest.fn().mockImplementation(() => globals.PersistenceSchemaEnum.USS);
     newTree.setItem = jest.fn();
     newTree.addSearchHistory = jest.fn();
@@ -62,10 +62,12 @@ export function createUSSSessionNode(session: imperative.Session, profile: imper
     return zoweUSSNode;
 }
 
+// This is NOT a favorite equivalent of the node created by createdUSSNode.
+// This is a favorited textfile node. createUSSNode creates a USS session node.
 export function createFavoriteUSSNode(session, profile) {
-    const ussNodeF = new ZoweUSSNode("[sestest]: usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, profile.name);
-    const mParent = new ZoweUSSNode("Favorites", vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, profile.name);
-    mParent.contextValue = globals.FAVORITE_CONTEXT;
+    const ussNodeF = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, profile.name);
+    const mParent = new ZoweUSSNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, profile.name);
+    mParent.contextValue = globals.FAV_PROFILE_CONTEXT;
     ussNodeF.contextValue = globals.DS_TEXT_FILE_CONTEXT + globals.FAV_SUFFIX;
     ussNodeF.fullPath = "/u/myuser/usstest";
     ussNodeF.tooltip = "/u/myuser/usstest";

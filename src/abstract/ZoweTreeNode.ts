@@ -84,10 +84,7 @@ export class ZoweTreeNode extends vscode.TreeItem {
      * @returns {string}
      */
     public getProfileName(): string {
-        if (this.profile) {
-            return this.profile.name;
-        }
-        return undefined;
+        return this.getProfile() ? this.getProfile().name : undefined;
     }
 
     /**
@@ -99,12 +96,19 @@ export class ZoweTreeNode extends vscode.TreeItem {
     }
 
     /**
-     * Sets the IProfileLoaded profile for this node.
-     * Only used by ZoweTreeNode and should be refactored out
+     * Sets the IProfileLoaded profile for this node to the one chosen in parameters.
      *
-     * @param {IProfileLoaded}
+     * @param {IProfileLoaded} The profile you will set the node to use
      */
-    protected setProfile(aProfile: IProfileLoaded) {
+    public setProfileToChoice(aProfile: IProfileLoaded) {
         this.profile = aProfile;
+    }
+    /**
+     * Sets the session for this node to the one chosen in parameters.
+     *
+     * @param aSession The session you will set the node to use
+     */
+    public setSessionToChoice(aSession: Session) {
+        this.session = aSession;
     }
 }

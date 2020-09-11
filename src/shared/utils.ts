@@ -300,3 +300,4 @@ export function isZoweUSSTreeNode(node: IZoweDatasetTreeNode | IZoweUSSTreeNode 
 export function isZoweJobTreeNode(node: IZoweDatasetTreeNode | IZoweUSSTreeNode | IZoweJobTreeNode): node is IZoweJobTreeNode {
     return (node as IZoweJobTreeNode).job !== undefined;
 }
+
