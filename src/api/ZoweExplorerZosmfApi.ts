@@ -76,7 +76,7 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
         }
 
         // If user exists in serviceProfile, use serviceProfile to login because it has precedence over baseProfile
-        if (serviceProfile.profile || (baseProfile && !baseProfile.profile.tokenValue)) {
+        if (serviceProfile.profile.user || !baseProfile || (!serviceProfile.profile.user && baseProfile && !baseProfile.profile.tokenValue)) {
             if (prompt) {
                 // Select for prompting only fields which are not defined
                 const schemaArray = [];
