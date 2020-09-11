@@ -116,55 +116,56 @@ export class Profiles {
 
         // If not yet validated or inactive, call getStatus and validate the profile
         // status will be stored in profilesForValidation
-            try {
-                if (getSessStatus.getStatus) {
-                    profileStatus = await vscode.window.withProgress({
-                        location: vscode.ProgressLocation.Notification,
-                        title: localize("Profiles.validateProfiles.validationProgress", "Validating {0} Profile.", theProfile.name),
-                        cancellable: true
-                    }, async (progress, token) => {
-                        token.onCancellationRequested(() => {
-                            // will be returned as undefined
-                            vscode.window.showInformationMessage(localize("Profiles.validateProfiles.validationCancelled", "Validating {0} was cancelled.", theProfile.name));
-                        });
-                        return getSessStatus.getStatus(theProfile, theProfile.type);
+        try {
+            if (getSessStatus.getStatus) {
+                profileStatus = await vscode.window.withProgress({
+                    location: vscode.ProgressLocation.Notification,
+                    title: localize("Profiles.validateProfiles.validationProgress", "Validating {0} Profile.", theProfile.name),
+                    cancellable: true
+                }, async (progress, token) => {
+                    token.onCancellationRequested(() => {
+                        // will be returned as undefined
+                        vscode.window.showInformationMessage(
+                              localize("Profiles.validateProfiles.validationCancelled", "Validating {0} was cancelled.", theProfile.name));
                     });
-                } else {
-                    profileStatus = "unverified";
-                }
-
-                switch (profileStatus) {
-                    case "active":
-                        filteredProfile = {
-                            status: "active",
-                            name: theProfile.name,
-                            session: undefined
-                        };
-                        break;
-                    case "inactive":
-                        filteredProfile = {
-                            status: "inactive",
-                            name: theProfile.name,
-                            session: undefined
-                        };
-                        break;
-                    // default will cover "unverified" and undefined
-                    default:
-                        filteredProfile = {
-                            status: "unverified",
-                            name: theProfile.name,
-                            session: undefined
-                        };
-                        break;
-                }
-            } catch (error) {
-                this.log.debug("Validate Error - Invalid Profile: " + error);
-                filteredProfile = {
-                    status: "inactive",
-                    name: theProfile.name,
-                    session: undefined
-                };
+                    return getSessStatus.getStatus(theProfile, theProfile.type);
+                });
+            } else {
+                profileStatus = "unverified";
             }
+
+            switch (profileStatus) {
+                case "active":
+                    filteredProfile = {
+                        status: "active",
+                        name: theProfile.name,
+                        session: undefined
+                    };
+                    break;
+                case "inactive":
+                    filteredProfile = {
+                        status: "inactive",
+                        name: theProfile.name,
+                        session: undefined
+                    };
+                    break;
+                // default will cover "unverified" and undefined
+                default:
+                    filteredProfile = {
+                        status: "unverified",
+                        name: theProfile.name,
+                        session: undefined
+                    };
+                    break;
+            }
+        } catch (error) {
+            this.log.debug("Validate Error - Invalid Profile: " + error);
+            filteredProfile = {
+                status: "inactive",
+                name: theProfile.name,
+                session: undefined
+            };
+        }
         return filteredProfile;
     }
 
