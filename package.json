@@ -1256,7 +1256,6 @@
   },
   "dependencies": {
     "@zowe/cli": "6.15.0",
-    "chromedriver": "^85.0.0",
     "fs-extra": "8.0.1",
     "isbinaryfile": "4.0.4",
     "js-yaml": "3.13.1",
