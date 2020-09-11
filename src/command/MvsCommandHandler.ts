@@ -93,7 +93,8 @@ export class MvsCommandHandler {
             zosmfProfile = node.getProfile();
         }
         await Profiles.getInstance().checkCurrentProfile(zosmfProfile);
-        if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
+        if ((Profiles.getInstance().validProfile === ValidProfileEnum.VALID) ||
+        (Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED)) {
             const updProfile = zosmfProfile.profile as ISession;
             session = zowe.ZosmfSession.createBasicZosmfSession(updProfile as IProfile);
             let command1: string = command;
