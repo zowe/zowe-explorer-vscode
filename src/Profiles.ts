@@ -66,6 +66,12 @@ export class Profiles {
     private profileManagerByType = new Map<string, CliProfileManager>();
     private constructor(private log: Logger) { }
 
+    /**
+     * Check to see if the current profile is valid, invalid, or unverified (not allowed to be validated)
+     *
+     * @export
+     * @param {boolean} prompt - should the user be prompted for any details missing from the profile?
+     */
     public async checkCurrentProfile(profileLoaded: IProfileLoaded, prompt?: boolean): Promise<any> {
         try {
             const profileStatus: IProfileValidation = await this.getProfileSetting(profileLoaded, prompt);
@@ -90,17 +96,26 @@ export class Profiles {
         }
     }
 
+    /**
+     * Gets the verification setting for a profile...should it be verified or no?
+     * If the profile SHOULD be validated, this function will also call validateProfile to do the validation
+     *
+     * @export
+     * @param {boolean} prompt - should the user be prompted for any details missing from the profile?
+     */
     public async getProfileSetting(theProfile: IProfileLoaded, prompt?: boolean): Promise<IProfileValidation> {
         let profileStatus: IProfileValidation;
         let found: boolean = false;
         this.profilesValidationSetting.filter(async (instance) => {
             if ((instance.name === theProfile.name) && (instance.setting === false)) {
+                // Don't allow validation if the user doesn't want it
                 profileStatus = {
                     status: "unverified",
                     name: instance.name,
                     session: undefined
                 };
                 if (this.profilesForValidation.length > 0) {
+                    // Check to see if the profile has been validated before
                     this.profilesForValidation.filter((profile) => {
                         if ((profile.name === theProfile.name) && (profile.status === "unverified")) {
                             found = true;
@@ -118,11 +133,18 @@ export class Profiles {
             }
         });
         if (profileStatus === undefined) {
+            // If the profile has not been validated, and is allowed to be validated, call validateProfiles
             profileStatus = await this.validateProfiles(theProfile, prompt);
         }
         return profileStatus;
     }
 
+    /**
+     * Handles the validation of a profile by calling getStatus
+     *
+     * @export
+     * @param {boolean} prompt - should the user be prompted for any details missing from the profile?
+     */
     public async validateProfiles(theProfile: IProfileLoaded, prompt?: boolean) {
         let filteredProfile: IProfileValidation;
         let profileStatus;
@@ -273,7 +295,11 @@ export class Profiles {
         // Set the default base profile (base is not a type included in registeredApiTypes)
         let profileManager = await this.getCliProfileManager("base");
         if (profileManager) {
-            DefaultProfileManager.getInstance().setDefaultProfile("base", (await profileManager.load({ loadDefault: true })));
+            try {
+                DefaultProfileManager.getInstance().setDefaultProfile("base", (await profileManager.load({ loadDefault: true })));
+            } catch (err) {
+                vscode.window.showErrorMessage(localize("profiles.refresh", "Error: {0}", err.message));
+            }
         }
 
         // Handle all API profiles
@@ -817,7 +843,7 @@ export class Profiles {
     }
 
     public async deleteProfile(datasetTree: IZoweTree<IZoweDatasetTreeNode>, ussTree: IZoweTree<IZoweUSSTreeNode>,
-        jobsProvider: IZoweTree<IZoweJobTreeNode>, node?: IZoweNodeType) {
+                               jobsProvider: IZoweTree<IZoweJobTreeNode>, node?: IZoweNodeType) {
 
         let deleteLabel: string;
         let deletedProfile: IProfileLoaded;

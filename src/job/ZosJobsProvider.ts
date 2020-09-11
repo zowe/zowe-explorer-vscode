@@ -225,28 +225,24 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             try {
                 const zosmfProfile = Profiles.getInstance().loadNamedProfile(sesName);
                 let favJob: Job;
+
+                // Get valid session
+                let session;
+                const getSessStatus = await ZoweExplorerApiRegister.getInstance().getCommonApi(zosmfProfile);
+                if (getSessStatus.getValidSession) {
+                    session = await ZoweExplorerApiRegister.getCommonApi(zosmfProfile).getValidSession(zosmfProfile, zosmfProfile.name, false);
+                } else {
+                    session = await ZoweExplorerApiRegister.getCommonApi(zosmfProfile).getSession(zosmfProfile);
+                }
+
                 if (line.substring(line.indexOf("{") + 1, line.lastIndexOf("}")).startsWith(globals.JOBS_JOB_CONTEXT)) {
-                    favJob = new Job(line.substring(0, line.indexOf("{")),
-                                     vscode.TreeItemCollapsibleState.Collapsed,
-                                     this.mFavoriteSession,
-                                     (await ZoweExplorerApiRegister.getCommonApi(zosmfProfile)
-                                                                   .getValidSession(zosmfProfile,
-                                                                                    zosmfProfile.name,
-                                                                                    false)),
-                                     new JobDetail(nodeName),
-                                     zosmfProfile);
+                    favJob = new Job(line.substring(0, line.indexOf("{")), vscode.TreeItemCollapsibleState.Collapsed,
+                                     this.mFavoriteSession, session, new JobDetail(nodeName), zosmfProfile);
                     favJob.contextValue = globals.JOBS_JOB_CONTEXT + globals.FAV_SUFFIX;
                     favJob.command = {command: "zowe.zosJobsSelectjob", title: "", arguments: [favJob]};
                 } else { // for search
-                    favJob = new Job(
-                        line.substring(0, line.indexOf("{")),
-                        vscode.TreeItemCollapsibleState.None,
-                        this.mFavoriteSession,
-                        (await ZoweExplorerApiRegister.getCommonApi(zosmfProfile)
-                                                      .getValidSession(zosmfProfile,
-                                                                       zosmfProfile.name,
-                                                                       false)),
-                        null, zosmfProfile
+                    favJob = new Job(line.substring(0, line.indexOf("{")), vscode.TreeItemCollapsibleState.None,
+                                     this.mFavoriteSession, session, null, zosmfProfile
                     );
                     favJob.command = {command: "zowe.jobs.search", title: "", arguments: [favJob]};
                     favJob.contextValue = globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX;

@@ -98,10 +98,17 @@ export class MvsCommandHandler {
         if ((Profiles.getInstance().validProfile === ValidProfileEnum.VALID) ||
             (Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED)) {
             const updProfile = zosmfProfile.profile as ISession;
-            session = await ZoweExplorerApiRegister.getCommonApi(zosmfProfile)
-                                                   .getValidSession(zosmfProfile,
-                                                                    zosmfProfile.name,
-                                                                    true);
+
+            // Get valid session
+            const getSessStatus = await ZoweExplorerApiRegister.getInstance().getCommonApi(zosmfProfile);
+            if (getSessStatus.getValidSession) {
+                   session = await ZoweExplorerApiRegister.getCommonApi(zosmfProfile).getValidSession(zosmfProfile,
+                                                                                                      zosmfProfile.name,
+                                                                                                      false);
+            } else {
+                   session = await ZoweExplorerApiRegister.getCommonApi(zosmfProfile).getSession(zosmfProfile);
+            }
+
             let command1: string = command;
             if (!command) {
                 command1 = await this.getQuickPick(session && session.ISession ? session.ISession.hostname : "unknown");

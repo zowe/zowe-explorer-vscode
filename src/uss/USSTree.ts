@@ -552,9 +552,14 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             let session;
             try {
                 // Uses loaded profile to create a session with the USS API
-                session = await ZoweExplorerApiRegister.getCommonApi(profileLoaded).getValidSession(profileLoaded,
-                                                                                              profileLoaded.name,
-                                                                                              false);
+                const getSessStatus = await ZoweExplorerApiRegister.getInstance().getCommonApi(profileLoaded);
+                if (getSessStatus.getValidSession) {
+                    session = await ZoweExplorerApiRegister.getCommonApi(profileLoaded).getValidSession(profileLoaded,
+                                                                                                            profileLoaded.name,
+                                                                                                            false);
+                } else {
+                    session = await ZoweExplorerApiRegister.getCommonApi(profileLoaded).getSession(profileLoaded);
+                }
             } catch (error) {
                 // When no password is entered, we should silence the error message for not providing it
                 // since password is optional in Zowe Explorer

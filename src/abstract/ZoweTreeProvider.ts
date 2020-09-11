@@ -143,12 +143,22 @@ export class ZoweTreeProvider {
     public async editSession(node: IZoweTreeNode, zoweFileProvider: IZoweTree<IZoweNodeType>) {
         const profile = node.getProfile();
         const profileName = node.getProfileName();
+
         // Check what happens if inactive
         const newProfile = await Profiles.getInstance().editSession(profile, profileName);
-        const EditSession = await ZoweExplorerApiRegister.getCommonApi(node.getProfile())
-                                                         .getValidSession(node.getProfile(),
-                                                                          profileName,
-                                                                          false);
+
+        // Get the active session
+        let EditSession;
+        const getSessStatus = await ZoweExplorerApiRegister.getInstance().getCommonApi(node.getProfile());
+        if (getSessStatus.getValidSession) {
+            EditSession = await ZoweExplorerApiRegister.getCommonApi(node.getProfile())
+                                                    .getValidSession(node.getProfile(),
+                                                                    node.getProfile().name,
+                                                                    false);
+        } else {
+            EditSession = await ZoweExplorerApiRegister.getCommonApi(node.getProfile()).getSession(node.getProfile());
+        }
+
         if (EditSession) {
             node.getProfile().profile = newProfile as IProfile;
             await setProfile(node, newProfile as IProfile);

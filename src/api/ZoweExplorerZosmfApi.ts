@@ -10,10 +10,9 @@
 */
 
 import * as zowe from "@zowe/cli";
-import { SessConstants, ICommandArguments, ConnectionPropsForSessCfg, ISession, Session, IProfileLoaded, ITaskWithStatus } from "@zowe/imperative";
+import { ICommandArguments, ConnectionPropsForSessCfg, ISession, Session, IProfileLoaded, ITaskWithStatus } from "@zowe/imperative";
 import { ZoweExplorerApi } from "./ZoweExplorerApi";
 import * as nls from "vscode-nls";
-import * as vscode from "vscode";
 import { errorHandling } from "../utils";
 import { DefaultProfileManager } from "../profiles/DefaultProfileManager";
 import { Profiles } from "../Profiles";
@@ -146,10 +145,10 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
                 let connectableSessCfg: ISession;
                 if (prompt) {
                     connectableSessCfg = await ConnectionPropsForSessCfg.addPropsOrPrompt<ISession>(sessCfg,
-                                                                                                    cmdArgs,
-                                                                                                    { requestToken: false,
-                                                                                                      doPrompting: prompt,
-                                                                                                      getValuesBack: Profiles.getInstance().collectProfileDetails });
+                        cmdArgs,
+                        { requestToken: false,
+                          doPrompting: prompt,
+                          getValuesBack: Profiles.getInstance().collectProfileDetails });
                 } else {
                     connectableSessCfg = await ConnectionPropsForSessCfg.addPropsOrPrompt<ISession>(sessCfg,
                                                                                                     cmdArgs,
