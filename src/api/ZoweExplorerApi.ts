@@ -67,7 +67,7 @@ export namespace ZoweExplorerApi {
          *      should the user be prompted in the GUI?
          * @returns {IZosmfInfoResponse} z/OSMF Check Status response
          */
-        getValidSession?(serviceProfile: IProfileLoaded, profileName: string, baseProfile?: IProfileLoaded, prompt?: boolean): Promise<Session>;
+        getValidSession?(serviceProfile: IProfileLoaded, profileName: string, prompt?: boolean): Promise<Session>;
 
         /**
          * Prompt the user for profile connection details

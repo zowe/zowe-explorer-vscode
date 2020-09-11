@@ -41,7 +41,7 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
 
     public async getSession(profile?: IProfileLoaded): Promise<Session> {
         if (!this.session) {
-            this.session = await this.getValidSession((profile||this.profile), (profile||this.profile).name, null, false);
+            this.session = await this.getValidSession((profile||this.profile), (profile||this.profile).name, false);
         }
         return this.session;
     }
@@ -51,7 +51,6 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
         if (profileType === "zosmf") {
             const validateSession = await this.getValidSession(validateProfile,
                                                                 validateProfile.name,
-                                                                DefaultProfileManager.getInstance().getDefaultProfile("base"),
                                                                 prompt);
             let sessionStatus;
             if (validateSession) { sessionStatus = await zowe.CheckStatus.getZosmfInfo(validateSession); }
@@ -68,12 +67,9 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
 
     public async getValidSession(serviceProfile: IProfileLoaded,
                                  profileName: string,
-                                 baseProfile?: IProfileLoaded,
                                  prompt?: boolean): Promise<Session | null> {
         // Retrieve baseProfile
-        if (!baseProfile) {
-            baseProfile = DefaultProfileManager.getInstance().getDefaultProfile("base");
-        }
+        const baseProfile = DefaultProfileManager.getInstance().getDefaultProfile("base");
 
         // If user exists in serviceProfile, use serviceProfile to login because it has precedence over baseProfile
         if (serviceProfile.profile.user || !baseProfile || (!serviceProfile.profile.user && baseProfile && !baseProfile.profile.tokenValue)) {
@@ -86,15 +82,12 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
                     }
                 }
                 if (!serviceProfile.profile.password && (!baseProfile || (baseProfile && !baseProfile.profile.password))) {
-                    if (!baseProfile || (baseProfile && !baseProfile.profile.tokenValue)) {
-                        schemaArray.push("password");
-                    }
+                    schemaArray.push("password");
                 }
                 if (!serviceProfile.profile.host &&  (!baseProfile || (baseProfile && !baseProfile.profile.host))) {
                     schemaArray.push("host");
                     if (!serviceProfile.profile.port &&  (!baseProfile || (baseProfile && !baseProfile.profile.port)))
                     { schemaArray.push("port"); }
-                    if (!serviceProfile.profile.basePath) { schemaArray.push("basePath"); }
                 }
 
                 try {
@@ -105,13 +98,15 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
             const cmdArgs: ICommandArguments = {
                 $0: "zowe",
                 _: [""],
-                host: serviceProfile.profile.host ? serviceProfile.profile.host : baseProfile.profile.host,
+                host: serviceProfile.profile.host ? serviceProfile.profile.host :
+                      (baseProfile ? baseProfile.profile.host : undefined),
                 port: serviceProfile.profile.port ? serviceProfile.profile.port :
                       (baseProfile ? baseProfile.profile.port : 0),
                 basePath: serviceProfile.profile.basePath ? serviceProfile.profile.basePath :
                           (baseProfile ? baseProfile.profile.basePath : undefined),
-                rejectUnauthorized: serviceProfile.profile.rejectUnauthorized != null ?
-                                    serviceProfile.profile.rejectUnauthorized : baseProfile.profile.rejectUnauthorized,
+                rejectUnauthorized: serviceProfile.profile.rejectUnauthorized !== null ?
+                                    serviceProfile.profile.rejectUnauthorized :
+                                    (baseProfile ? baseProfile.profile.rejectUnauthorized : true),
                 user: serviceProfile.profile.user ? serviceProfile.profile.user :
                       (baseProfile ? baseProfile.profile.user : undefined),
                 password: serviceProfile.profile.password ? serviceProfile.profile.password :
@@ -119,8 +114,10 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
                 tokenType: "apimlAuthenticationToken",
                 tokenValue: baseProfile ? baseProfile.profile.tokenValue : undefined
             };
-            try { return zowe.ZosmfSession.createBasicZosmfSessionFromArguments(cmdArgs); }
-            catch (error) {
+            const a = 1;
+            try {
+                return zowe.ZosmfSession.createBasicZosmfSessionFromArguments(cmdArgs);
+            } catch (error) {
                 if (prompt) {
                     await errorHandling(error);
                     // When no password is entered, we should silence the error message for not providing it
@@ -162,7 +159,7 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
             } catch (error) {
                 await errorHandling(error); }
         } else {
-            // No baseProfile exists, nor a user in serviceProfile. It is impossible to login with the currently-provided information.
+            // Neither baseProfile nor serviceProfile exists. It is impossible to login with the currently-provided information.
             throw new Error(localize("getValidSession.loginImpossible",
                 "Profile {0} is invalid. Please check your login details and try again.", profileName));
         }

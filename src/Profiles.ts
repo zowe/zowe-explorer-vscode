@@ -136,7 +136,7 @@ export class Profiles {
                 status: profileStatus.status,
                 name: theProfile.name,
                 session: profileStatus.session
-            }
+            };
         } catch (error) {
             this.log.debug("Validate Error - Invalid Profile: " + error);
             filteredProfile = {

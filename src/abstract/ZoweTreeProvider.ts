@@ -148,7 +148,6 @@ export class ZoweTreeProvider {
         const EditSession = await ZoweExplorerApiRegister.getCommonApi(node.getProfile())
                                                          .getValidSession(node.getProfile(),
                                                                           profileName,
-                                                                          null,
                                                                           false);
         if (EditSession) {
             node.getProfile().profile = newProfile as IProfile;
