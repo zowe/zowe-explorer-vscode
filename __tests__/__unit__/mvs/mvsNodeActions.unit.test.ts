@@ -106,25 +106,5 @@ describe("mvsNodeActions", () => {
         expect(testTree.refreshElement).toBeCalledWith(node);
         expect(testTree.refreshElement).toBeCalledWith(nodeAsFavorite);
     });
-    describe("getDatasetLabel", () => {
-        afterEach(() => {
-            jest.resetAllMocks();
-        });
-        it("should return default label for dataset", () => {
-            const labelName = "dataset.test";
-            const node = new ZoweDatasetNode(labelName, vscode.TreeItemCollapsibleState.Collapsed, null, null);
-            const label = dsUtils.getDatasetLabel(node);
-            expect(label).toEqual(labelName);
-        });
-        it("should return default label for dataset", () => {
-            const labelNameWithProfile = "[myProfile123]: dataset.test";
-            const labelName = "dataset.test";
-            const parentNode = new ZoweDatasetNode("Favorites", vscode.TreeItemCollapsibleState.Collapsed, null, null);
-            parentNode.contextValue = FAVORITE_CONTEXT;
-            const node = new ZoweDatasetNode(labelNameWithProfile, vscode.TreeItemCollapsibleState.Collapsed, parentNode, null);
-            const label = dsUtils.getDatasetLabel(node);
-            expect(label).toEqual(labelName);
-        });
-    });
 });
 

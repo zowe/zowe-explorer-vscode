@@ -72,6 +72,30 @@
     ],
     "commands": [
       {
+        "command": "zowe.disableValidation",
+        "title": "%disableValidation%"
+      },
+      {
+        "command": "zowe.uss.disableValidation",
+        "title": "%uss.disableValidation%"
+      },
+      {
+        "command": "zowe.jobs.disableValidation",
+        "title": "%jobs.disableValidation%"
+      },
+      {
+        "command": "zowe.enableValidation",
+        "title": "%enableValidation%"
+      },
+      {
+        "command": "zowe.uss.enableValidation",
+        "title": "%uss.enableValidation%"
+      },
+      {
+        "command": "zowe.jobs.enableValidation",
+        "title": "%jobs.enableValidation%"
+      },
+      {
         "command": "zowe.uss.copyPath",
         "title": "%uss.copyPath%"
       },
@@ -182,6 +206,10 @@
       {
         "command": "zowe.deletePDS",
         "title": "%deletePDS%"
+      },
+      {
+        "command": "zowe.allocateLike",
+        "title": "%allocateLike%"
       },
       {
         "command": "zowe.uploadDialog",
@@ -618,12 +646,22 @@
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)ussSession.*/",
           "command": "zowe.all.profilelink",
-          "group": "5_modification@1"
+          "group": "6_modification@1"
         },
         {
           "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/",
           "command": "zowe.uss.removeSession",
           "group": "6_modification@2"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(?=.*_validate=true.*)ussSession.*/",
+          "command": "zowe.uss.disableValidation",
+          "group": "6_modification@4"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(?=.*_validate=false.*)ussSession.*/",
+          "command": "zowe.uss.enableValidation",
+          "group": "6_modification@5"
         },
         {
           "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav)(member|migr|ds|pds).*/",
@@ -643,7 +681,7 @@
         {
           "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/",
           "command": "zowe.uss.deleteProfile",
-          "group": "6_modification@5"
+          "group": "6_modification@3"
         },
         {
           "when": "view == zowe.explorer && viewItem =~ /^(member.*|ds.*)/",
@@ -746,14 +784,19 @@
           "group": "5_workspace@3"
         },
         {
+          "when": "view == zowe.explorer && viewItem =~ /^(ds|pds).*/",
+          "command": "zowe.allocateLike",
+          "group": "6_cutCopyPaste@0"
+        },
+        {
           "when": "view == zowe.explorer && viewItem =~ /^(member|ds).*/",
           "command": "zowe.copyDataSet",
-          "group": "6_cutCopyPaste@0"
+          "group": "6_cutCopyPaste@1"
         },
         {
           "when": "view == zowe.explorer && viewItem =~ /^(ds.*|^pds.*)/",
           "command": "zowe.pasteDataSet",
-          "group": "6_cutCopyPaste@1"
+          "group": "6_cutCopyPaste@2"
         },
         {
           "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
@@ -804,6 +847,16 @@
           "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
           "command": "zowe.deleteProfile",
           "group": "7_modification@5"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem =~ /^(?=.*_validate=true.*)session.*/",
+          "command": "zowe.jobs.disableValidation",
+          "group": "7_modification@6"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem =~ /^(?=.*_validate=false.*)session.*/",
+          "command": "zowe.jobs.enableValidation",
+          "group": "7_modification@7"
         },
         {
           "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/",
@@ -897,6 +950,16 @@
           "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/",
           "command": "zowe.jobs.deleteProfile",
           "group": "3_modification@2"
+        },
+        {
+          "when": "view == zowe.jobs && viewItem =~ /^(?=.*_validate=true.*)server.*/",
+          "command": "zowe.disableValidation",
+          "group": "3_modification@3"
+        },
+        {
+          "when": "view == zowe.jobs && viewItem =~ /^(?=.*_validate=false.*)server.*/",
+          "command": "zowe.enableValidation",
+          "group": "3_modification@4"
         }
       ],
       "commandPalette": [
@@ -937,6 +1000,9 @@
           "when": "never"
         },
         {
+          "command": "zowe.allocateLike"
+        },
+        {
           "command": "zowe.deleteMember",
           "when": "never"
         },
@@ -946,6 +1012,30 @@
         },
         {
           "command": "zowe.deleteProfile",
+          "when": "never"
+        },
+        {
+          "command": "zowe.disableValidation",
+          "when": "never"
+        },
+        {
+          "command": "zowe.enableValidation",
+          "when": "never"
+        },
+        {
+          "command": "zowe.uss.disableValidation",
+          "when": "never"
+        },
+        {
+          "command": "zowe.uss.enableValidation",
+          "when": "never"
+        },
+        {
+          "command": "zowe.jobs.disableValidation",
+          "when": "never"
+        },
+        {
+          "command": "zowe.jobs.enableValidation",
           "when": "never"
         },
         {
@@ -1164,6 +1254,12 @@
           "description": "%Zowe-Default-Commands-Persistent-Favorites%",
           "scope": "window"
         },
+        "Zowe-Automatic-Validation": {
+          "type": "boolean",
+          "default": true,
+          "description": "%Zowe-Automatic-Validation%",
+          "scope": "window"
+        },
         "Zowe-Environment": {
           "default": {
             "persistence": true,
@@ -1255,7 +1351,7 @@
     "webpack-cli": "^3.3.11"
   },
   "dependencies": {
-    "@zowe/cli": "6.15.0",
+    "@zowe/cli": "^6.20.0",
     "fs-extra": "8.0.1",
     "isbinaryfile": "4.0.4",
     "js-yaml": "3.13.1",

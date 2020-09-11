@@ -171,7 +171,7 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
     /**
      * Lets the user open a dataset by filtering the currently-loaded list
      */
-    searchInLoadedItems?(): Promise<IZoweUSSTreeNode[]>;
+    getAllLoadedItems?(): Promise<IZoweUSSTreeNode[]>;
     /**
      * Retrieves the vscode tree container
      */

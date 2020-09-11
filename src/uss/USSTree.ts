@@ -23,8 +23,10 @@ import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 import { getIconByNode } from "../generators/icons";
 import * as contextually from "../shared/context";
-
 import * as nls from "vscode-nls";
+import { resetValidationSettings } from "../shared/actions";
+import { PersistentFilters } from "../PersistentFilters";
+
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
@@ -214,22 +216,35 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      * @param {string} [sessionName] - optional; loads persisted profiles or default if not passed
      */
     public async addSession(sessionName?: string, profileType?: string) {
+        const setting = PersistentFilters.getDirectValue("Zowe-Automatic-Validation") as boolean;
         // Loads profile associated with passed sessionName, persisted profiles or default if none passed
         if (sessionName) {
             const profile: IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
             if (profile) {
                 this.addSingleSession(profile);
             }
+            for (const node of this.mSessionNodes) {
+                const name = node.getProfileName();
+                if (name === profile.name){
+                    await resetValidationSettings(node, setting);
+                }
+            }
         } else {
             const allProfiles: IProfileLoaded[] = Profiles.getInstance().allProfiles;
-            for (const profile of allProfiles) {
+            for (const theProfile of allProfiles) {
                 // If session is already added, do nothing
-                if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === profile.name)) {
+                if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === theProfile.name)) {
                     continue;
                 }
                 for (const session of this.mHistory.getSessions()) {
-                    if (session === profile.name) {
-                        this.addSingleSession(profile);
+                    if (session === theProfile.name) {
+                        this.addSingleSession(theProfile);
+                        for (const node of this.mSessionNodes) {
+                            const name = node.getProfileName();
+                            if (name === theProfile.name){
+                                await resetValidationSettings(node, setting);
+                            }
+                        }
                     }
                 }
             }
@@ -304,6 +319,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         const fullPathLabel = node.fullPath;
         node.label = node.tooltip = fullPathLabel;
         node.contextValue = globals.USS_SESSION_CONTEXT + globals.FAV_SUFFIX;
+        await this.checkCurrentProfile(node);
         return node;
     }
 
@@ -335,10 +351,10 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
     }
 
     /**
-     * Searches the loaded USS tree for items whose name contains a search string
+     * Fetches an array of all nodes loaded in the tree
      *
      */
-    public async searchInLoadedItems() {
+    public async getAllLoadedItems() {
         if (this.log) {
             this.log.debug(localize("enterPattern.log.debug.prompt", "Prompting the user to choose a member from the filtered list"));
         }
@@ -379,7 +395,8 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         let sessionNode = node.getSessionNode();
         let remotepath: string;
         await this.checkCurrentProfile(node);
-        if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
+        if ((Profiles.getInstance().validProfile === ValidProfileEnum.VALID) ||
+        (Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED)) {
             if (contextually.isSessionNotFav(node)) {
                 if (this.mHistory.getSearchHistory().length > 0) {
 
