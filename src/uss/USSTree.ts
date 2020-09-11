@@ -305,6 +305,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         if (!profileNodeInFavorites.children.find((tempNode) => tempNode.label === temp.label)) {
             profileNodeInFavorites.children.push(temp);
             sortTreeItems(profileNodeInFavorites.children, globals.USS_SESSION_CONTEXT + globals.FAV_SUFFIX);
+            sortTreeItems(this.mFavorites, globals.FAV_PROFILE_CONTEXT);
             await this.updateFavorites();
             this.refreshElement(this.mFavoriteSession);
         }
