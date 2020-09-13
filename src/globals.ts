@@ -35,6 +35,7 @@ export const DS_SESSION_FAV_CONTEXT = "session_fav";
 export const DS_SESSION_CONTEXT = "session";
 export const DS_PDS_CONTEXT = "pds";
 export const DS_DS_CONTEXT = "ds";
+export const MAX_PORT = 65535;
 export const DS_MEMBER_CONTEXT = "member";
 export const DS_TEXT_FILE_CONTEXT = "textFile";
 export const DS_FAV_TEXT_FILE_CONTEXT = "textFile_fav";

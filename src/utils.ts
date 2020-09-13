@@ -15,10 +15,11 @@ import * as vscode from "vscode";
 import * as globals from "./globals";
 import * as os from "os";
 import * as path from "path";
-import { ISession, IProfile, ImperativeConfig } from "@zowe/imperative";
+import { ISession, IProfile, IProfileLoaded, ImperativeConfig } from "@zowe/imperative";
 import { IZoweTreeNode } from "./api/IZoweTreeNode";
 import * as nls from "vscode-nls";
 import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
+import { Profiles } from "./Profiles";
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
@@ -30,8 +31,49 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  * @param {label} - additional information such as profile name, credentials, messageID etc
  * @param {moreInfo} - additional/customized error messages
  *************************************************************************************************************/
-export function errorHandling(errorDetails: Error, label?: string, moreInfo?: string) {
-    vscode.window.showErrorMessage(errorDetails.message);
+export function errorHandling(errorDetails: any, label?: string, moreInfo?: string) {
+    let httpErrCode = null;
+    const errMsg = localize("errorHandling.invalid.credentials", "Invalid Credentials. Please ensure the token or username/password for {0} are valid or this may lead to a lock-out.", label);
+
+    if (errorDetails.mDetails !== undefined) {
+        httpErrCode = errorDetails.mDetails.errorCode;
+    }
+
+    switch(httpErrCode) {
+        // tslint:disable-next-line: no-magic-numbers
+        case 401:
+            let invalidProfile;
+            if (label.includes("[")) {
+                label = label.substring(0, label.indexOf(" ["));
+            }
+            if (label) {
+                label = label.trim();
+                invalidProfile = Profiles.getInstance().loadNamedProfile(label);
+            }
+
+            if (invalidProfile) {
+                if (globals.ISTHEIA) {
+                    vscode.window.showErrorMessage(errMsg);
+                    ZoweExplorerApiRegister.getCommonApi(invalidProfile).getValidSession(invalidProfile, invalidProfile.name, true);
+                } else {
+                    vscode.window.showErrorMessage(errMsg, "Check Credentials").then(async (selection) => {
+                        if (selection) {
+                            delete invalidProfile.profile.user;
+                            delete invalidProfile.profile.password;
+                            await ZoweExplorerApiRegister.getCommonApi(invalidProfile)
+                                  .getValidSession(invalidProfile, invalidProfile.name, true);
+                        }
+                    });
+                }
+            }
+            break;
+        default:
+            if (moreInfo === undefined) {
+                moreInfo = "Error:";
+            }
+            vscode.window.showErrorMessage(moreInfo + " " +  errorDetails);
+            break;
+    }
     return;
 }
 

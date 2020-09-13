@@ -505,7 +505,7 @@ export class Profiles {
                     const hostOptions: vscode.InputBoxOptions = {
                         ignoreFocusOut: true,
                         value: oldDetails && oldDetails[profileDetail] ? oldDetails[profileDetail] : null,
-                        placeHolder: localize("collectProfileDetails.option.prompt.url.placeholder", "Optional: url:port"),
+                        placeHolder: localize("collectProfileDetails.option.prompt.url.placeholder", "url:port"),
                         prompt: localize("collectProfileDetails.option.prompt.url", "Enter a z/OS URL in the format 'url:port'."),
                         validateInput: (value) => {
                             const validationResult = {
@@ -560,6 +560,8 @@ export class Profiles {
                             value: oldDetails && oldDetails[profileDetail] ? oldDetails[profileDetail] : null,
                             validateInput: (value) => {
                                 if (Number.isNaN(Number(value))) {
+                                    return localize("collectProfileDetails.invalidPort", "Please enter a valid port number");
+                                } else if (Number(value) > globals.MAX_PORT) {
                                     return localize("collectProfileDetails.invalidPort", "Please enter a valid port number");
                                 } else { return null; }
                             }

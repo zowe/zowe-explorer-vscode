@@ -114,15 +114,12 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
                 tokenType: "apimlAuthenticationToken",
                 tokenValue: baseProfile ? baseProfile.profile.tokenValue : undefined
             };
-            const a = 1;
             try {
                 return zowe.ZosmfSession.createBasicZosmfSessionFromArguments(cmdArgs);
             } catch (error) {
-                if (prompt) {
-                    await errorHandling(error);
-                    // When no password is entered, we should silence the error message for not providing it
-                    // since password is optional in Zowe Explorer
-                } else if (error.message !== "Must have user & password OR base64 encoded credentials") { await errorHandling(error); }
+                // When no password is entered, we should silence the error message for not providing it
+                // since password is optional in Zowe Explorer
+                if (error.message !== "Must have user & password OR base64 encoded credentials") { await errorHandling(error); }
             }
         } else if (baseProfile) {
             // baseProfile exists, so APIML login is possible
