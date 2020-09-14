@@ -204,7 +204,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      * @returns {IZoweJobTreeNode | undefined} Returns matching profile node if found. Otherwise, returns undefined.
      */
     public findMatchingProfileInArray(jobsProvider: IZoweJobTreeNode[], profileName: string): IZoweJobTreeNode|undefined {
-        return jobsProvider.find((treeNode) => treeNode.label === profileName );
+        return jobsProvider.find((treeNode) => treeNode.label.trim() === profileName );
     }
 
     /**
@@ -287,7 +287,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      * @param parentNode
      */
     public async loadProfilesForFavorites(log: Logger, parentNode: IZoweJobTreeNode ) {
-        const profileName = parentNode.label;
+        const profileName = parentNode.label.trim();
         const updatedFavsForProfile: IZoweJobTreeNode[] = [];
         let profile: IProfileLoaded;
         let session: Session;
