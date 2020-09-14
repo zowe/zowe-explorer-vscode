@@ -30,3 +30,12 @@ export function bindMvsApi(api: ZoweExplorerApi.IMvs) {
     getMvsApiMock.mockReturnValue(api);
     ZoweExplorerApiRegister.getMvsApi = getMvsApiMock.bind(ZoweExplorerApiRegister);
 }
+
+export function createUssApi(profile: imperative.IProfileLoaded) {
+    return ZoweExplorerApiRegister.getUssApi(profile);
+}
+export function bindUssApi(api: ZoweExplorerApi.IUss) {
+    const getUssApiMock = jest.fn();
+    getUssApiMock.mockReturnValue(api);
+    ZoweExplorerApiRegister.getUssApi = getUssApiMock.bind(ZoweExplorerApiRegister);
+}

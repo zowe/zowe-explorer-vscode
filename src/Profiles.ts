@@ -902,9 +902,9 @@ export class Profiles {
 
         // Delete from USS Favorites
         ussTree.mFavorites.forEach((ses) => {
-            const findNode = ses.label.substring(1, ses.label.indexOf("]")).trim();
+            const findNode = ses.label.trim();
             if (findNode === deleteLabel) {
-                ussTree.removeFavorite(ses);
+                ussTree.mFavorites = ussTree.mFavorites.filter((tempNode) => tempNode.label.trim() !== findNode);
                 ses.dirty = true;
                 ussTree.refresh();
             }
@@ -921,9 +921,9 @@ export class Profiles {
 
         // Delete from Jobs Favorites
         jobsProvider.mFavorites.forEach((ses) => {
-            const findNode = ses.label.substring(1, ses.label.indexOf("]")).trim();
+            const findNode = ses.label.trim();
             if (findNode === deleteLabel) {
-                jobsProvider.removeFavorite(ses);
+                jobsProvider.mFavorites = jobsProvider.mFavorites.filter((tempNode) => tempNode.label.trim() !== findNode);
                 ses.dirty = true;
                 jobsProvider.refresh();
             }
@@ -1046,7 +1046,7 @@ export class Profiles {
             throw error;
         }
 
-        vscode.window.showInformationMessage("Profile " + profileName + " was deleted.");
+        vscode.window.showInformationMessage(localize("deleteProfile.success.info", "Profile {0} was deleted.", profileName));
         return profileName;
     }
 
