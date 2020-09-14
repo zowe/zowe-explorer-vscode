@@ -298,7 +298,7 @@ export class Profiles {
             try {
                 DefaultProfileManager.getInstance().setDefaultProfile("base", (await profileManager.load({ loadDefault: true })));
             } catch (err) {
-                if (err.message !== `No default profile set for type "base"`) {
+                if (!err.message.includes(`No default profile set for type "base"`)) {
                     vscode.window.showErrorMessage(localize("profiles.refresh", "Error: {0}", err.message));
                 }
             }
@@ -814,7 +814,7 @@ export class Profiles {
         }
     }
 
-    public async getDeleteProfile() {
+    public async getDeleteProfile():Promise<IProfileLoaded> {
         const allProfiles: IProfileLoaded[] = this.allProfiles;
         const profileNamesList = allProfiles.map((temprofile) => {
             return temprofile.name;
@@ -978,8 +978,8 @@ export class Profiles {
         await vscode.workspace.getConfiguration().update(this.jobsSchema, jobsSetting, vscode.ConfigurationTarget.Global);
 
         // Remove from list of all profiles
-        const index = this.allProfiles.findIndex((deleteItem) => {
-            return deleteItem === deletedProfile;
+        const index = this.allProfiles.findIndex((deleteItem: IProfileLoaded) => {
+            return JSON.stringify(deleteItem) === JSON.stringify(deletedProfile);
         });
         if (index >= 0) { this.allProfiles.splice(index, 1); }
     }

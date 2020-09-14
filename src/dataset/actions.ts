@@ -255,7 +255,7 @@ export async function openPS(node: IZoweDatasetTreeNode, previewMember: boolean,
             if (datasetProvider) { datasetProvider.addFileHistory(`[${node.getProfileName()}]: ${label}`); }
         } catch (err) {
             globals.LOG.error(localize("openPS.log.error.openDataSet", "Error encountered when opening data set! ") + JSON.stringify(err));
-            errorHandling(err, node.getProfileName(), err.message);
+            errorHandling(err, node.getProfileName());
             throw (err);
         }
     }
@@ -599,7 +599,7 @@ export async function deleteDataset(node: IZoweTreeNode, datasetProvider: IZoweT
             vscode.window.showInformationMessage(localize("deleteDataSet.notFound.error1", "Unable to find file: ") + label +
                 localize("deleteDataSet.notFound.error2", " was probably already deleted."));
         } else {
-            errorHandling(err, node.getProfileName(), err.message);
+            errorHandling(err, node.getProfileName());
         }
         throw err;
     }
@@ -686,7 +686,7 @@ export async function refreshPS(node: IZoweDatasetTreeNode) {
             vscode.window.showInformationMessage(localize("refreshPS.file1", "Unable to find file: ") + label +
                 localize("refreshPS.file2", " was probably deleted."));
         } else {
-            errorHandling(err, node.getProfileName(), err.message);
+            errorHandling(err, node.getProfileName());
         }
     }
 }

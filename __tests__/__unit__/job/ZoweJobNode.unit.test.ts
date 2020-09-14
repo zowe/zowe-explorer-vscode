@@ -441,7 +441,7 @@ describe("ZoweJobNode unit tests - Function saveSearch", () => {
     });
 });
 
-describe("ZoweJobNode unit tests - Function searchPrompt", () => {
+describe("ZoweJobNode unit tests - Function filterPrompt", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
             testJobNodeNoCred: new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, globalMocks.jobNode,
@@ -465,7 +465,7 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
         return newMocks;
     }
 
-    it("Testing that prompt credentials is called when searchPrompt is triggered", async () => {
+    it("Testing that prompt credentials is called when filterPrompt is triggered", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
@@ -473,7 +473,7 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
         globalMocks.mockShowInputBox.mockReturnValueOnce("");
         globalMocks.mockShowInputBox.mockReturnValueOnce("");
 
-        await globalMocks.testJobsProvider.searchPrompt(blockMocks.testJobNodeNoCred);
+        await globalMocks.testJobsProvider.filterPrompt(blockMocks.testJobNodeNoCred);
 
         expect(blockMocks.testJobNodeNoCred.contextValue).toEqual(globals.JOBS_SESSION_CONTEXT + "_Active");
         expect(blockMocks.testJobNodeNoCred.owner).toEqual("MYHLQ");
@@ -481,19 +481,19 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
         expect(blockMocks.testJobNodeNoCred.searchId).toEqual("");
     });
 
-    it("Testing searchPrompt is successfully canceled when user enters no credentials", async () => {
+    it("Testing filterPrompt is successfully canceled when user enters no credentials", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
         globalMocks.mockShowInputBox.mockReturnValueOnce(undefined);
 
-        await globalMocks.testJobsProvider.searchPrompt(blockMocks.testJobNodeNoCred);
+        await globalMocks.testJobsProvider.filterPrompt(blockMocks.testJobNodeNoCred);
 
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Search Cancelled");
     });
 
-    it("Testing that prompt credentials is called when searchPrompt is triggered for fav", async () => {
+    it("Testing that prompt credentials is called when filterPrompt is triggered for fav", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
@@ -503,12 +503,12 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
         globalMocks.mockShowInputBox.mockReturnValueOnce("");
         globalMocks.mockShowInputBox.mockReturnValueOnce("");
 
-        await globalMocks.testJobsProvider.searchPrompt(blockMocks.testJobNodeNoCred);
+        await globalMocks.testJobsProvider.filterPrompt(blockMocks.testJobNodeNoCred);
 
         expect(Profiles.getInstance().validProfile).toBe(ValidProfileEnum.VALID);
     });
 
-    it("Testing that searchPrompt is successfully executed when searching by owner, VSCode route", async () => {
+    it("Testing that filterPrompt is successfully executed when searching by owner, VSCode route", async () => {
         const globalMocks = await createGlobalMocks();
         await createBlockMocks(globalMocks);
 
@@ -516,7 +516,7 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
         globalMocks.mockShowInputBox.mockReturnValueOnce("");
         globalMocks.mockShowInputBox.mockReturnValueOnce(""); // need the jobId in this case
 
-        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
+        await globalMocks.testJobsProvider.filterPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
 
         expect(globalMocks.testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT + "_Active");
         expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("MYHLQ");
@@ -524,14 +524,14 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
         expect(globalMocks.testJobsProvider.mSessionNodes[1].searchId).toEqual("");
     });
 
-    it("Testing that searchPrompt is successfully executed when searching by prefix, VSCode route", async () => {
+    it("Testing that filterPrompt is successfully executed when searching by prefix, VSCode route", async () => {
         const globalMocks = await createGlobalMocks();
         await createBlockMocks(globalMocks);
 
         globalMocks.mockShowInputBox.mockReturnValueOnce("");
         globalMocks.mockShowInputBox.mockReturnValueOnce("STO*");
 
-        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
+        await globalMocks.testJobsProvider.filterPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
 
         expect(globalMocks.testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT + "_Active");
         expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("*");
@@ -539,7 +539,7 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
         expect(globalMocks.testJobsProvider.mSessionNodes[1].searchId).toEqual("");
     });
 
-    it("Testing that searchPrompt is successfully executed when searching by prefix, VSCode route with Unverified profile", async () => {
+    it("Testing that filterPrompt is successfully executed when searching by prefix, VSCode route with Unverified profile", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
         await createBlockMocks(globalMocks);
@@ -556,7 +556,7 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
         globalMocks.mockShowInputBox.mockReturnValueOnce("");
         globalMocks.mockShowInputBox.mockReturnValueOnce("STO*");
 
-        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
+        await globalMocks.testJobsProvider.filterPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
 
         expect(globalMocks.testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT + "_Unverified");
         expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("*");
@@ -564,14 +564,14 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
         expect(globalMocks.testJobsProvider.mSessionNodes[1].searchId).toEqual("");
     });
 
-    it("Testing that searchPrompt is successfully executed when searching by owner & prefix, VSCode route", async () => {
+    it("Testing that filterPrompt is successfully executed when searching by owner & prefix, VSCode route", async () => {
         const globalMocks = await createGlobalMocks();
         await createBlockMocks(globalMocks);
 
         globalMocks.mockShowInputBox.mockReturnValueOnce("MYHLQ");
         globalMocks.mockShowInputBox.mockReturnValueOnce("STO*");
 
-        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
+        await globalMocks.testJobsProvider.filterPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
 
         expect(globalMocks.testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT + "_Active");
         expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("MYHLQ");
@@ -579,14 +579,14 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
         expect(globalMocks.testJobsProvider.mSessionNodes[1].searchId).toEqual("");
     });
 
-    it("Testing that searchPrompt is successfully executed when searching by job ID, VSCode route", async () => {
+    it("Testing that filterPrompt is successfully executed when searching by job ID, VSCode route", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
         blockMocks.qpItem = globalMocks.testJobsProvider.createId;
         globalMocks.mockShowInputBox.mockReturnValueOnce("STO12345");
 
-        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
+        await globalMocks.testJobsProvider.filterPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
 
         expect(globalMocks.testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT + "_Active");
         expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("*");
@@ -594,43 +594,43 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
         expect(globalMocks.testJobsProvider.mSessionNodes[1].searchId).toEqual("STO12345");
     });
 
-    it("Testing that searchPrompt is successfully canceled by the user at the owner input box, VSCode route", async () => {
+    it("Testing that filterPrompt is successfully canceled by the user at the owner input box, VSCode route", async () => {
         const globalMocks = await createGlobalMocks();
         await createBlockMocks(globalMocks);
 
         globalMocks.mockShowInputBox.mockReturnValueOnce(undefined);
 
-        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
+        await globalMocks.testJobsProvider.filterPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
 
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Search Cancelled");
     });
 
-    it("Testing that searchPrompt is successfully executed when user selects from the recent searches list, VSCode route", async () => {
+    it("Testing that filterPrompt is successfully executed when user selects from the recent searches list, VSCode route", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
         blockMocks.qpItem = new utils.FilterItem("Owner:fake Prefix:*");
 
-        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
+        await globalMocks.testJobsProvider.filterPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
 
         expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("fake");
         expect(globalMocks.testJobsProvider.mSessionNodes[1].prefix).toEqual("*");
     });
 
-    it("Testing that searchPrompt is successfully canceled by the user at first quick pick selection, VSCode route", async () => {
+    it("Testing that filterPrompt is successfully canceled by the user at first quick pick selection, VSCode route", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
         blockMocks.qpItem = undefined;
 
-        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
+        await globalMocks.testJobsProvider.filterPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
 
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("No selection made.");
     });
 
-    it("Testing that searchPrompt is successfully executed, favorites route", async () => {
+    it("Testing that filterPrompt is successfully executed, favorites route", async () => {
         const globalMocks = await createGlobalMocks();
         await createBlockMocks(globalMocks);
 
@@ -639,13 +639,13 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
         const checkSession = jest.spyOn(globalMocks.testJobsProvider, "addSession");
         expect(checkSession).not.toHaveBeenCalled();
 
-        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobNode);
+        await globalMocks.testJobsProvider.filterPrompt(globalMocks.testJobNode);
 
         expect(checkSession).toHaveBeenCalledTimes(1);
         expect(checkSession).toHaveBeenLastCalledWith("sestest");
     });
 
-    it("Testing that searchPrompt from favorited search can pass session values into node in Sessions", async () => {
+    it("Testing that filterPrompt from favorited search can pass session values into node in Sessions", async () => {
         const globalMocks = await createGlobalMocks();
         await createBlockMocks(globalMocks);
         globalMocks.testJobNode.label = "Owner:stonecc Prefix:*";
@@ -655,14 +655,14 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
         globalMocks.testJobsProvider.mSessionNodes[1].session = sessionNoCreds;
         const sessNodeNoCreds = globalMocks.testJobsProvider.mSessionNodes[1];
 
-        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobNode);
+        await globalMocks.testJobsProvider.filterPrompt(globalMocks.testJobNode);
 
         expect(sessNodeNoCreds.session.ISession.user).toEqual(globalMocks.testJobNode.session.ISession.user);
         expect(sessNodeNoCreds.session.ISession.password).toEqual(globalMocks.testJobNode.session.ISession.password);
         expect(sessNodeNoCreds.session.ISession.base64EncodedAuth).toEqual(globalMocks.testJobNode.session.ISession.base64EncodedAuth);
     });
 
-    it("Testing that searchPrompt is successfully executed when searching by owner, Theia route", async () => {
+    it("Testing that filterPrompt is successfully executed when searching by owner, Theia route", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
@@ -672,7 +672,7 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
         globalMocks.mockShowInputBox.mockReturnValueOnce("");
         globalMocks.mockShowInputBox.mockReturnValueOnce(""); // need the jobId in this case
 
-        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
+        await globalMocks.testJobsProvider.filterPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
 
         expect(globalMocks.testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT + "_Active");
         expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("MYHLQY");
@@ -680,7 +680,7 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
         expect(globalMocks.testJobsProvider.mSessionNodes[1].searchId).toEqual("");
     });
 
-    it("Testing that searchPrompt is successfully executed when searching by prefix, Theia route", async () => {
+    it("Testing that filterPrompt is successfully executed when searching by prefix, Theia route", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
@@ -689,7 +689,7 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
         globalMocks.mockShowInputBox.mockReturnValueOnce("");
         globalMocks.mockShowInputBox.mockReturnValueOnce("STO*");
 
-        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
+        await globalMocks.testJobsProvider.filterPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
 
         expect(globalMocks.testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT + "_Active");
         expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("*");
@@ -697,7 +697,7 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
         expect(globalMocks.testJobsProvider.mSessionNodes[1].searchId).toEqual("");
     });
 
-    it("Testing that searchPrompt is successfully executed when searching by owner & prefix, Theia route", async () => {
+    it("Testing that filterPrompt is successfully executed when searching by owner & prefix, Theia route", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
@@ -706,7 +706,7 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
         globalMocks.mockShowInputBox.mockReturnValueOnce("MYHLQX");
         globalMocks.mockShowInputBox.mockReturnValueOnce("STO*");
 
-        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
+        await globalMocks.testJobsProvider.filterPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
 
         expect(globalMocks.testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT + "_Active");
         expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("MYHLQX");
@@ -714,7 +714,7 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
         expect(globalMocks.testJobsProvider.mSessionNodes[1].searchId).toEqual("");
     });
 
-    it("Testing that searchPrompt is successfully executed when searching by job ID, Theia route", async () => {
+    it("Testing that filterPrompt is successfully executed when searching by job ID, Theia route", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
@@ -723,7 +723,7 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
         globalMocks.mockShowQuickPick.mockReturnValueOnce(blockMocks.qpItem);
         globalMocks.mockShowInputBox.mockReturnValueOnce("STO12345");
 
-        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
+        await globalMocks.testJobsProvider.filterPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
 
         expect(globalMocks.testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT + "_Active");
         expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("*");
@@ -732,7 +732,7 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
 
     });
 
-    it("Testing that searchPrompt is successfully canceled by the user at the owner input box, Theia route", async () => {
+    it("Testing that filterPrompt is successfully canceled by the user at the owner input box, Theia route", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
@@ -740,13 +740,13 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
         globalMocks.mockShowInputBox.mockReturnValueOnce(undefined);
         globalMocks.mockShowQuickPick.mockReturnValueOnce(blockMocks.qpItem);
 
-        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
+        await globalMocks.testJobsProvider.filterPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
 
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Search Cancelled");
     });
 
-    it("Testing that searchPrompt is successfully executed when user selects from the recent searches list, Theia route", async () => {
+    it("Testing that filterPrompt is successfully executed when user selects from the recent searches list, Theia route", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
@@ -754,13 +754,13 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
         blockMocks.qpItem = new utils.FilterItem("Owner:fake Prefix:*");
         globalMocks.mockShowQuickPick.mockReturnValueOnce(blockMocks.qpItem);
 
-        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
+        await globalMocks.testJobsProvider.filterPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
 
         expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("fake");
         expect(globalMocks.testJobsProvider.mSessionNodes[1].prefix).toEqual("*");
     });
 
-    it("Testing that searchPrompt is successfully canceled by the user at first quick pick selection, Theia route", async () => {
+    it("Testing that filterPrompt is successfully canceled by the user at first quick pick selection, Theia route", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
@@ -768,7 +768,7 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
         globalMocks.mockShowQuickPick.mockReturnValueOnce(undefined);
 
         // Assert edge condition user cancels the quick pick
-        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
+        await globalMocks.testJobsProvider.filterPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
 
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("No selection made.");

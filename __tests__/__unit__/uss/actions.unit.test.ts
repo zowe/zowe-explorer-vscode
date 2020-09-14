@@ -273,7 +273,7 @@ describe("USS Action Unit Tests - Function refreshUSSInTree", () => {
         return newMocks;
     }
     it("should make the call to refresh the specified node within the USS tree", async () => {
-        const globalMocks = createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
         await ussNodeActions.refreshUSSInTree(blockMocks.ussNode, blockMocks.testUSSTree);

@@ -242,7 +242,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
         } catch (err) {
         }
 
-        expect(mocked(vscode.window.showErrorMessage)).toBeCalledWith("test");
+        expect(mocked(vscode.window.showErrorMessage)).toBeCalledWith("Unable to create member: test Error: test");
     });
     it("Checking of attempt to create member without name", async () => {
         const globalMocks = await createGlobalMocks();
@@ -402,7 +402,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
                 returnEtag: true
             }
         );
-        expect(mocked(vscode.window.showErrorMessage)).toBeCalledWith("Test");
+        expect(mocked(vscode.window.showErrorMessage)).toBeCalledWith("Error: Test");
     });
     it("Checking favorite empty PDS refresh", async () => {
         globals.defineGlobals("");
@@ -598,7 +598,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         deleteSpy.mockRejectedValueOnce(Error("Test"));
 
         await expect(dsActions.deleteDataset(node, blockMocks.testDatasetTree)).rejects.toEqual(Error("Test"));
-        expect(mocked(vscode.window.showErrorMessage)).toBeCalledWith("Test");
+        expect(mocked(vscode.window.showErrorMessage)).toBeCalledWith("Error: Test");
     });
     it("Checking PS deletion attempt which was rejected by user in the process", async () => {
         globals.defineGlobals("");
@@ -1349,7 +1349,8 @@ describe("Dataset Actions Unit Tests - Function showDSAttributes", () => {
 
         await expect(dsActions.showDSAttributes(node, blockMocks.testDatasetTree)).rejects.toEqual(
             Error("No matching data set names found for query: AUSER.A1557332.A996850.TEST1"));
-        expect(mocked(vscode.window.showErrorMessage)).toBeCalledWith("No matching data set names found for query: AUSER.A1557332.A996850.TEST1");
+        expect(mocked(vscode.window.showErrorMessage))
+        .toBeCalledWith("Unable to list attributes: No matching data set names found for query: AUSER.A1557332.A996850.TEST1 Error: No matching data set names found for query: AUSER.A1557332.A996850.TEST1");
         expect(mocked(vscode.window.createWebviewPanel)).not.toBeCalled();
     });
 });
@@ -2079,7 +2080,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
             // do nothing
         }
 
-        expect(mocked(vscode.window.showErrorMessage)).toHaveBeenCalledWith("Generic Error");
+        expect(mocked(vscode.window.showErrorMessage)).toHaveBeenCalledWith("Error encountered when creating data set! Generic Error Error: Generic Error");
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("Zowe-Default-Datasets-PS");
         expect(createDataSetSpy).toHaveBeenCalledWith(zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, "TEST", undefined);
     });
@@ -2232,7 +2233,7 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
             // do nothing
         }
 
-        expect(mocked(vscode.window.showErrorMessage)).toBeCalledWith("testError");
+        expect(mocked(vscode.window.showErrorMessage)).toBeCalledWith("Error: testError");
     });
     it("Checking of opening for PDS Member", async () => {
         globals.defineGlobals("");

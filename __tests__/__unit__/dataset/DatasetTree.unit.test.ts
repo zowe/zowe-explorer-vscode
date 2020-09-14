@@ -234,14 +234,14 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
     function createBlockMocks() {
         const session = createISession();
         const imperativeProfile = createValidIProfile();
-        const profile = createInstanceOfProfile(imperativeProfile, session);
+        const profileInstance = createInstanceOfProfile(imperativeProfile, session);
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
 
         return {
             imperativeProfile,
             session,
-            profile,
+            profileInstance,
             datasetSessionNode,
             treeView
         };
@@ -270,7 +270,7 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
         await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
-        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
         blockMocks.datasetSessionNode.pattern = "test";
@@ -312,10 +312,13 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
     it("Checking function for profile node in Favorites section", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
+
         const log = Logger.getAppLogger();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const favProfileNode = new ZoweDatasetNode("testProfile", vscode.TreeItemCollapsibleState.None,
-            blockMocks.datasetSessionNode, null);
+            blockMocks.datasetSessionNode, null, null, null, blockMocks.imperativeProfile);
         favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
+        blockMocks.profileInstance.loadNamedProfile.mockReturnValue(blockMocks.imperativeProfile);
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
         testTree.mFavorites.push(favProfileNode);
@@ -329,7 +332,7 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
         await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
-        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
@@ -434,6 +437,8 @@ describe("Dataset Tree Unit Tests - Function loadProfilesForFavorites", () => {
         testTree.mFavorites.push(favProfileNode);
         const expectedFavPdsNode = new ZoweDatasetNode("favoritePds", vscode.TreeItemCollapsibleState.Collapsed, favProfileNode,
             blockMocks.session, globals.PDS_FAV_CONTEXT, undefined, blockMocks.imperativeProfile);
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        blockMocks.profileInstance.loadNamedProfile.mockReturnValue(blockMocks.imperativeProfile);
 
         await testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
         const resultFavPdsNode = testTree.mFavorites[0].children[0];

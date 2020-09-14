@@ -460,7 +460,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
                 await this.initializeFileOpening(documentFilePath, previewFile);
             } catch (err) {
-                await errorHandling(err, this.mProfileName, err.message);
+                await errorHandling(err, this.mProfileName);
                 throw (err);
             }
         }
