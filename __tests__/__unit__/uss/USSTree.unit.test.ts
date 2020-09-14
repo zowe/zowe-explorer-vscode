@@ -195,7 +195,7 @@ describe("USSTree Unit Tests - Function USSTree.initializeFavorites()", () => {
 
 describe("USSTree Unit Tests - Function initializeFavChildNodeForProfile()", () => {
     it("Tests initializeFavChildNodeForProfile() for favorited search", async () => {
-        createGlobalMocks();
+        await createGlobalMocks();
         const testTree1 = await createUSSTree(Logger.getAppLogger());
         const favProfileNode = testTree1.mFavorites[0];
         const label = "/u/fakeuser";

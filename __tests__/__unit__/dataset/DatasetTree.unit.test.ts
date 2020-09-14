@@ -416,14 +416,20 @@ describe("Dataset Tree Unit Tests - Function loadProfilesForFavorites", () => {
             value: jest.fn(() => {
                 return {
                     loadNamedProfile: jest.fn(() => {
-                        throw new Error();
+                        throw new Error("test");
                     }),
                 };
             })
         });
-        await testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
 
-        expect(errorHandlingSpy).toBeCalledTimes(1);
+        let error;
+        try {
+            await testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
+        } catch (err) {
+            error = err;
+        }
+
+        expect(error.message).toBe("test");
     });
     it("Checking that favorite nodes with pre-existing profile/session values continue using those values", async () => {
         await createGlobalMocks();
@@ -979,9 +985,13 @@ describe("Dataset Tree Unit Tests - Function filterPrompt", () => {
                     loadNamedProfile: newMocks.mockLoadNamedProfile.mockReturnValueOnce(newMocks.imperativeProfile),
                     validProfile: ValidProfileEnum.VALID,
                     enableValidationContext: newMocks.mockEnableValidationContext,
-                    checkCurrentProfile: newMocks.mockCheckCurrentProfile.mockReturnValue({name: newMocks.imperativeProfile.name, status: "active"}),
+                    checkCurrentProfile: newMocks.mockCheckCurrentProfile.mockReturnValue({name: newMocks.imperativeProfile.name,
+                                                                                           status: "active",
+                                                                                           session: newMocks.session }),
                     validateProfiles: jest.fn(),
-                    getProfileSetting: newMocks.mockGetProfileSetting.mockReturnValue({name: newMocks.imperativeProfile.name, status: "active"}),
+                    getProfileSetting: newMocks.mockGetProfileSetting.mockReturnValue({ name: newMocks.imperativeProfile.name,
+                                                                                        status: "active",
+                                                                                        session: newMocks.session }),
                     resetValidationSettings: newMocks.mockResetValidationSettings.mockReturnValue(newMocks.datasetSessionNode)
                 };
             }),
@@ -1183,6 +1193,9 @@ describe("Dataset Tree Unit Tests - Function editSession", () => {
                     allProfiles: [newMocks.imperativeProfile, { name: "firstName" }, { name: "secondName" }],
                     getDefaultProfile: newMocks.mockDefaultProfile,
                     validProfile: ValidProfileEnum.VALID,
+                    checkCurrentProfile: jest.fn().mockReturnValue({ status: "active",
+                                                                     name: newMocks.mockDefaultProfile.name,
+                                                                     session: newMocks.session }),
                     getProfileSetting: newMocks.mockGetProfileSetting.mockReturnValue({name: newMocks.imperativeProfile.name, status: "active"}),
                     editSession: newMocks.mockEditSession.mockReturnValueOnce("testProfile"),
 
