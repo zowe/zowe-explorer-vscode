@@ -52,6 +52,6 @@ describe("Utils Unit Tests - Function errorHandling", () => {
 
         await utils.errorHandling(new Error("Test Error"), label);
 
-        expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(`Test Error`);
+        expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(`Error: Test Error`);
     });
 });

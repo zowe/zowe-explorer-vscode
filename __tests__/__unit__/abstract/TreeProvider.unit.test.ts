@@ -264,6 +264,14 @@ describe("ZoweJobNode unit tests - Function checkCurrentProfile", () => {
     it("Tests that checkCurrentProfile is executed successfully with active status ", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    checkCurrentProfile: globalMocks.mockCheckCurrentProfile.mockReturnValueOnce({name: globalMocks.testProfile.name, status: "unverified"}),
+                    validProfile: ValidProfileEnum.UNVERIFIED
+                };
+            })
+        });
         const checkSession = jest.spyOn(blockMocks.testJobsProvider, "checkCurrentProfile");
 
         await blockMocks.testJobsProvider.checkCurrentProfile(blockMocks.jobNode);
@@ -293,6 +301,14 @@ describe("ZoweJobNode unit tests - Function checkCurrentProfile", () => {
         const blockMocks = await createBlockMocks(globalMocks);
         blockMocks.jobNode.contextValue = "SERVER";
         globalMocks.mockCheckCurrentProfile.mockReturnValueOnce({name: globalMocks.testProfile.name, status: "inactive"});
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    checkCurrentProfile: globalMocks.mockCheckCurrentProfile.mockReturnValueOnce({name: globalMocks.testProfile.name, status: "unverified"}),
+                    validProfile: ValidProfileEnum.UNVERIFIED
+                };
+            })
+        });
         const checkSession = jest.spyOn(blockMocks.testJobsProvider, "checkCurrentProfile");
 
         await blockMocks.testJobsProvider.checkCurrentProfile(blockMocks.jobNode);

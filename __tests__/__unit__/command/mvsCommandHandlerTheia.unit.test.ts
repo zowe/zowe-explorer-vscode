@@ -129,7 +129,7 @@ describe("mvsCommandActions unit testing", () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
-                    allProfiles: [{name: "firstName", profile: {user:"firstName", password: "12345"}}, {name: "secondName"}],
+                    allProfiles: [{name: "firstName", type: "zosmf", profile: {user:"firstName", password: "12345"}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
                     zosmfProfile: globalMocks.mockLoadNamedProfile,
                     getValidSession: globalMocks.mockGetValidSession,
