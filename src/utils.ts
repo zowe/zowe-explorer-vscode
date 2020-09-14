@@ -70,7 +70,7 @@ export function errorHandling(errorDetails: any, label?: string, moreInfo?: stri
         default:
             if (moreInfo === undefined) {
                 moreInfo = "";
-            } else { moreInfo += " " }
+            } else { moreInfo += " "; }
             vscode.window.showErrorMessage(moreInfo + errorDetails);
             break;
     }

@@ -18,7 +18,6 @@ import * as moment from "moment";
 import { Session, IProfileLoaded } from "@zowe/imperative";
 import { IZoweUSSTreeNode } from "../api/IZoweTreeNode";
 import { errorHandling } from "../utils";
-import { refreshTree } from "../profiles/utils";
 import { ZoweTreeNode } from "../abstract/ZoweTreeNode";
 import { IZoweTree } from "../api/IZoweTree";
 import { getIconByNode } from "../generators/icons/index";
@@ -28,6 +27,7 @@ import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 import * as contextually from "../shared/context";
 import { closeOpenedTextFile } from "../utils/workspace";
 import * as nls from "vscode-nls";
+import { refreshTree } from "../shared/utils";
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();

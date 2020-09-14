@@ -20,6 +20,7 @@ import { Profiles } from "../../../src/Profiles";
 import { createISession, createISessionWithoutCredentials, createValidBaseProfile, createValidIProfile, createInstanceOfProfile } from "../../../__mocks__/mockCreators/shared";
 import { createProfileManager } from "../../../__mocks__/mockCreators/profiles";
 import * as utils from "../../../src/utils";
+import * as profileUtils from "../../../src/profiles/utils";
 
 export declare enum TaskStage {
     IN_PROGRESS = 0,
@@ -167,6 +168,7 @@ describe("ZosmfApiCommon Unit Tests - Function getValidProfile", () => {
         Object.defineProperty(vscode.window, "showQuickPick", { value: newMocks.mockShowQuickPick, configurable: true });
         Object.defineProperty(vscode.window, "createQuickPick", { value: newMocks.mockCreateQuickPick, configurable: true });
         Object.defineProperty(Profiles, "getInstance", { value: newMocks.mockGetInstance, configurable: true });
+        Object.defineProperty(profileUtils, "collectProfileDetails", { value: newMocks.mockCollectProfileDetails, configurable: true });
         Object.defineProperty(globals, "LOG", { value: newMocks.mockLog, configurable: true });
         Object.defineProperty(vscode.window, "createInputBox", { value: newMocks.mockCreateInputBox, configurable: true });
         Object.defineProperty(globals.LOG, "debug", { value: newMocks.mockDebug, configurable: true });
@@ -180,7 +182,8 @@ describe("ZosmfApiCommon Unit Tests - Function getValidProfile", () => {
 
         newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles, newMocks.sessionNoCredentials);
         newMocks.mockGetDefaultProfile.mockResolvedValue(newMocks.baseProfile);
-        Object.defineProperty(newMocks.commonApi, "collectProfileDetails", {value: newMocks.mockCollectProfileDetails, configurable: true});
+        newMocks.mockCollectProfileDetails.mockReturnValue(newMocks.serviceProfile.profile);
+        // Object.defineProperty(newMocks.commonApi, "collectProfileDetails", {value: newMocks.mockCollectProfileDetails, configurable: true});
         newMocks.mockGetInstance.mockReturnValue(newMocks.profileInstance);
 
         return newMocks;
@@ -199,8 +202,8 @@ describe("ZosmfApiCommon Unit Tests - Function getValidProfile", () => {
         const blockMocks = await createBlockMocks();
 
         blockMocks.serviceProfile.profile.password = null;
-        blockMocks.baseProfile.profile.password = null;
-        blockMocks.baseProfile.profile.tokenValue = null;
+        blockMocks.defaultProfile.profile.password = null;
+        blockMocks.defaultProfile.profile.tokenValue = null;
 
         await ZoweExplorerApiRegister.getCommonApi(blockMocks.serviceProfile)
                                      .getValidSession(blockMocks.serviceProfile, "sestest", true);
@@ -213,9 +216,9 @@ describe("ZosmfApiCommon Unit Tests - Function getValidProfile", () => {
         const blockMocks = await createBlockMocks();
 
         blockMocks.serviceProfile.profile.host = null;
-        blockMocks.baseProfile.profile.host = null;
+        blockMocks.defaultProfile.profile.host = null;
         blockMocks.serviceProfile.profile.basePath = "test";
-        blockMocks.baseProfile.profile.basePath = "test";
+        blockMocks.defaultProfile.profile.basePath = "test";
 
         await ZoweExplorerApiRegister.getCommonApi(blockMocks.serviceProfile)
                                      .getValidSession(blockMocks.serviceProfile, "sestest", true);
@@ -228,11 +231,11 @@ describe("ZosmfApiCommon Unit Tests - Function getValidProfile", () => {
         const blockMocks = await createBlockMocks();
 
         blockMocks.serviceProfile.profile.port = null;
-        blockMocks.baseProfile.profile.port = null;
+        blockMocks.defaultProfile.profile.port = null;
         blockMocks.serviceProfile.profile.host = null;
-        blockMocks.baseProfile.profile.host = null;
+        blockMocks.defaultProfile.profile.host = null;
         blockMocks.serviceProfile.profile.basePath = "test";
-        blockMocks.baseProfile.profile.basePath = "test";
+        blockMocks.defaultProfile.profile.basePath = "test";
 
         await ZoweExplorerApiRegister.getCommonApi(blockMocks.serviceProfile)
                                      .getValidSession(blockMocks.serviceProfile, "sestest", true);
@@ -245,9 +248,9 @@ describe("ZosmfApiCommon Unit Tests - Function getValidProfile", () => {
         const blockMocks = await createBlockMocks();
 
         blockMocks.serviceProfile.profile.basePath = null;
-        blockMocks.baseProfile.profile.basePath = null;
+        blockMocks.defaultProfile.profile.basePath = null;
         blockMocks.serviceProfile.profile.host = null;
-        blockMocks.baseProfile.profile.host = null;
+        blockMocks.defaultProfile.profile.host = null;
 
         await ZoweExplorerApiRegister.getCommonApi(blockMocks.serviceProfile)
                                      .getValidSession(blockMocks.serviceProfile, "sestest", true);
@@ -260,14 +263,14 @@ describe("ZosmfApiCommon Unit Tests - Function getValidProfile", () => {
         const blockMocks = await createBlockMocks();
 
         blockMocks.serviceProfile.profile.password = null;
-        blockMocks.baseProfile.profile.password = null;
-        blockMocks.baseProfile.profile.tokenValue = null;
+        blockMocks.defaultProfile.profile.password = null;
+        blockMocks.defaultProfile.profile.tokenValue = null;
         blockMocks.serviceProfile.profile.host = null;
-        blockMocks.baseProfile.profile.host = null;
+        blockMocks.defaultProfile.profile.host = null;
         blockMocks.serviceProfile.profile.port = null;
-        blockMocks.baseProfile.profile.port = null;
+        blockMocks.defaultProfile.profile.port = null;
         blockMocks.serviceProfile.profile.basePath = null;
-        blockMocks.baseProfile.profile.basePath = null;
+        blockMocks.defaultProfile.profile.basePath = null;
         blockMocks.mockCollectProfileDetails.mockResolvedValue({
             host: "testHostNew",
             port: 1234,
@@ -285,11 +288,17 @@ describe("ZosmfApiCommon Unit Tests - Function getValidProfile", () => {
     it("Tests that getValidProfile throws an error if prompting fails", async () => {
         const blockMocks = await createBlockMocks();
 
-        blockMocks.mockCollectProfileDetails.mockImplementation(() => { throw new Error("Test error!"); });
-        await ZoweExplorerApiRegister.getCommonApi(blockMocks.serviceProfile)
-                                     .getValidSession(blockMocks.serviceProfile, "sestest", true);
+        blockMocks.mockCollectProfileDetails.mockImplementationOnce(() => { throw new Error("Test error!"); });
 
-        expect(blockMocks.mockCollectProfileDetails).toThrowError("Test error!");
+        let error;
+        try {
+            await ZoweExplorerApiRegister.getCommonApi(blockMocks.serviceProfile)
+                                         .getValidSession(blockMocks.serviceProfile, "sestest", true);
+        } catch (err) {
+            error = err;
+        }
+
+        expect(error.message).toBe("Test error!");
     });
 
     it("Tests that getValidProfile removes the 'password' key from the service profile if password is null", async () => {
@@ -325,13 +334,17 @@ describe("ZosmfApiCommon Unit Tests - Function getValidProfile", () => {
     it("Tests that getValidProfile throws an error if generating a Session fails when not using the baseProfile (non-token auth)", async () => {
         const blockMocks = await createBlockMocks();
 
-        blockMocks.mockCreateBasicZosmfSessionFromArguments.mockImplementation(() => { throw new Error("Test error!"); });
-        const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
+        blockMocks.mockCreateBasicZosmfSessionFromArguments.mockImplementationOnce(() => { throw new Error("Test error!"); });
 
-        await ZoweExplorerApiRegister.getCommonApi(blockMocks.defaultProfile)
-                                     .getValidSession(blockMocks.defaultProfile, "sestest");
+        let error;
+        try {
+            await ZoweExplorerApiRegister.getCommonApi(blockMocks.defaultProfile)
+                  .getValidSession(blockMocks.defaultProfile, "sestest");
+        } catch (err) {
+            error = err.message;
+        }
 
-        expect(errorHandlingSpy).toBeCalledWith(new Error("Test error!"));
+        expect(error.message).toBe("Test error!");
     });
 
     it("Tests that getValidProfile successfully returns a connected Session when prompting = true (token auth)", async () => {
@@ -354,22 +367,5 @@ describe("ZosmfApiCommon Unit Tests - Function getValidProfile", () => {
                                                         .getValidSession(blockMocks.defaultProfile, "sestest", false);
 
         expect(newSession).toBe(blockMocks.testSession);
-    });
-
-    it("Tests that getValidProfile throws an error if baseProfile and serviceProfile.user are both missing", async () => {
-        const blockMocks = await createBlockMocks();
-
-        blockMocks.defaultProfile.profile.user = null;
-        Object.defineProperty(blockMocks.defaultProfileManagerInstance, "getDefaultProfile", { value: jest.fn(() => null), configurable: true });
-
-        let error;
-        try {
-            await ZoweExplorerApiRegister.getCommonApi(blockMocks.defaultProfile)
-                                         .getValidSession(blockMocks.defaultProfile, "sestest", null);
-        } catch (err) {
-            error = err;
-        }
-
-        expect(error.message).toEqual("Profile sestest is invalid. Please check your login details and try again.");
     });
 });

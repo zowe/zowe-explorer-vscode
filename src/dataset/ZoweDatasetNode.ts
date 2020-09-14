@@ -14,13 +14,13 @@ import * as vscode from "vscode";
 import * as globals from "../globals";
 import { Session, IProfileLoaded } from "@zowe/imperative";
 import { errorHandling } from "../utils";
-import { refreshTree } from "../profiles/utils";
 import { IZoweDatasetTreeNode } from "../api/IZoweTreeNode";
 import { ZoweTreeNode } from "../abstract/ZoweTreeNode";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 import { getIconByNode } from "../generators/icons";
 import * as contextually from "../shared/context";
 import * as nls from "vscode-nls";
+import { refreshTree } from "../shared/utils";
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
