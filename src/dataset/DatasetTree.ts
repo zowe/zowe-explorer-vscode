@@ -341,7 +341,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 }
             }
             if (this.mSessionNodes.length === 1) {
-                await this.addSingleSession(DefaultProfileManager.getInstance().getDefaultProfile("zosmf"));
+                await this.addSingleSession(DefaultProfileManager.getInstance().getDefaultProfile(profileType));
             }
         }
         this.refresh();

@@ -297,7 +297,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         if (!parentNode.getProfile() || !parentNode.getSession()) {
             try {
                 profile = Profiles.getInstance().loadNamedProfile(profileName);
-                session = ZoweExplorerApiRegister.getJesApi(profile).getSession();
+                session = await ZoweExplorerApiRegister.getJesApi(profile).getSession();
                 parentNode.setProfileToChoice(profile);
                 parentNode.setSessionToChoice(session);
                 parentNode.owner = session.ISession.user;

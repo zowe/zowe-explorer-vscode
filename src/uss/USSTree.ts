@@ -202,6 +202,10 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             if (contextually.isFavoriteContext(element)) {
                 return this.mFavorites;
             }
+            if (element.contextValue && element.contextValue === globals.FAV_PROFILE_CONTEXT){
+                const favsForProfile = this.loadProfilesForFavorites(this.log, element);
+                return favsForProfile;
+            }
             const newSession = await Profiles.getInstance().checkCurrentProfile(element.getProfile());
             if (newSession) { return element.getChildren(); }
         }
@@ -585,7 +589,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
              // If no profile/session yet, then add session and profile to parent profile node in this.mFavorites array:
             try {
                 profile = Profiles.getInstance().loadNamedProfile(profileName);
-                session = ZoweExplorerApiRegister.getUssApi(profile).getSession();
+                session = await ZoweExplorerApiRegister.getUssApi(profile).getSession();
                 parentNode.setProfileToChoice(profile);
                 parentNode.setSessionToChoice(session);
                 // Set mProfileName for the getProfileName function, but after initialization of child fav nodes.

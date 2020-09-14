@@ -306,7 +306,7 @@ export class ZosmfMvsApi extends ZosmfApiCommon implements ZoweExplorerApi.IMvs 
 
     public async renameDataSetMember(dataSetName: string, oldMemberName: string, newMemberName: string,
     ): Promise<zowe.IZosFilesResponse> {
-        return zowe.Rename.dataSetMember(await this.getSession(), currentMemberName, newMemberName, afterMemberName);
+        return zowe.Rename.dataSetMember(await this.getSession(), dataSetName, oldMemberName, newMemberName);
     }
 
     public async hMigrateDataSet(dataSetName: string,

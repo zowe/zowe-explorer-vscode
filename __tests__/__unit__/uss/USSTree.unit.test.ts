@@ -559,7 +559,7 @@ describe("USSTree Unit Tests - Function USSTree.filterPrompt()", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         const sessionWithCred = createISession();
-        globalMocks.createBasicZosmfSession.mockReturnValue(sessionWithCred);
+        globalMocks.mockCreateBasicZosmfSessionFromArguments.mockReturnValue(sessionWithCred);
         const dsNode = new ZoweUSSNode(
             "/u/myFile.txt", vscode.TreeItemCollapsibleState.Expanded, null, sessionWithCred, null, false, "ussTestSess2");
         dsNode.mProfileName = "ussTestSess2";

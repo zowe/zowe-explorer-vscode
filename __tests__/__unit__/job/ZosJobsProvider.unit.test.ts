@@ -90,7 +90,7 @@ async function createGlobalMocks() {
     Object.defineProperty(globalMocks.mockDeleteJobs, "deleteJob", { value: globalMocks.mockDeleteJob, configurable: true });
 
     // Profile instance mocks
-    globalMocks.mockProfileInstance = createInstanceOfProfile(globalMocks.testProfile);
+    globalMocks.mockProfileInstance = createInstanceOfProfile(globalMocks.testProfile, globalMocks.testSession);
     globalMocks.mockGetSpoolFiles.mockReturnValue([globalMocks.mockIJobFile]);
     globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.testProfile);
     globalMocks.mockProfileInstance.loadNamedProfile = globalMocks.mockLoadNamedProfile;
@@ -126,8 +126,8 @@ const mocked = <T extends (...args: any[]) => any>(fn: T): jest.Mock<ReturnType<
 describe("ZosJobsProvider unit tests - Function getChildren", () => {
     function createBlockMocks() {
         const imperativeProfile = createIProfile();
-        const profile = createInstanceOfProfile(imperativeProfile);
         const session = createISession();
+        const profile = createInstanceOfProfile(imperativeProfile, session);
         const jobSessionNode = createJobSessionNode(session, imperativeProfile);
         const jobFavoritesNode = createJobFavoritesNode();
         const treeView = createTreeView();

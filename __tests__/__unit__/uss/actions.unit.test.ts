@@ -243,7 +243,7 @@ describe("USS Action Unit Tests - Function createUSSNode", () => {
         expect(ussNodeActions.refreshAllUSS).not.toHaveBeenCalled();
     });
     it("Tests that the error is handled if createUSSNode is unsuccessful", async () => {
-        const globalMocks = createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
         globalMocks.showInputBox.mockReturnValueOnce("USSFolder");
         const isTopLevel = false;

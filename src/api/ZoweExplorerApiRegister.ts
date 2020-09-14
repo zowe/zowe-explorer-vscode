@@ -252,22 +252,6 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
         return result;
     }
 
-    public async getProfileType(): Promise<string> {
-        let profileType: string;
-        const profTypes = this.registeredApiTypes();
-        const typeOptions = Array.from(profTypes);
-        if (typeOptions.length === 1 && typeOptions[0] === "zosmf") { profileType = typeOptions[0]; }
-        else {
-            const quickPickTypeOptions: vscode.QuickPickOptions = {
-                placeHolder: localize("getProfileType.option.prompt.type.placeholder", "Profile Type"),
-                ignoreFocusOut: true,
-                canPickMany: false
-            };
-            profileType = await vscode.window.showQuickPick(typeOptions, quickPickTypeOptions);
-        }
-        return profileType;
-    }
-
     /**
      * Lookup of the API implementation extender implementation.
      * @returns the instance of the API for the profile provided

@@ -24,7 +24,7 @@ export class DefaultProfileManager {
     public defaultProfileByType = new Map<string, IProfileLoaded>();
     private constructor(private log: Logger) {}
 
-    public getDefaultProfile(type: string): IProfileLoaded { return this.defaultProfileByType.get(type); }
+    public getDefaultProfile(type: string = "zosmf"): IProfileLoaded { return this.defaultProfileByType.get(type); }
 
     public setDefaultProfile(type: string, profile: IProfileLoaded) { this.defaultProfileByType.set(type, profile); }
 }

@@ -298,7 +298,9 @@ export class Profiles {
             try {
                 DefaultProfileManager.getInstance().setDefaultProfile("base", (await profileManager.load({ loadDefault: true })));
             } catch (err) {
-                vscode.window.showErrorMessage(localize("profiles.refresh", "Error: {0}", err.message));
+                if (err.message !== `No default profile set for type "base"`) {
+                    vscode.window.showErrorMessage(localize("profiles.refresh", "Error: {0}", err.message));
+                }
             }
         }
 
@@ -419,9 +421,8 @@ export class Profiles {
             }
             chosenProfile = profileName.trim();
             globals.LOG.debug(localize("addSession.log.debug.createNewProfile", "User created a new profile"));
-            const defaultProfile = DefaultProfileManager.getInstance().getDefaultProfile("zosmf");
 
-            try { newprofile = await Profiles.getInstance().createNewConnection(defaultProfile, chosenProfile); }
+            try { newprofile = await Profiles.getInstance().createNewConnection(chosenProfile); }
             catch (error) { await errorHandling(error, chosenProfile, error.message); }
             if (newprofile) {
                 try { await Profiles.getInstance().refresh(); }
@@ -440,7 +441,7 @@ export class Profiles {
     }
 
     public async editSession(profileLoaded: IProfileLoaded, profileName: string): Promise<IProfile | void> {
-        const schema = await this.getSchema("zosmf");
+        const schema = await this.getSchema(await this.getProfileType());
         const updSchemaValues = await Profiles.getInstance().collectProfileDetails(null,
                 profileLoaded.profile,
                 schema);
@@ -496,7 +497,6 @@ export class Profiles {
                 "No profile type was chosen. Operation Cancelled"));
         }
         if (!detailsToGet) { detailsToGet = Object.keys(schema); }
-        schemaValues.type = profileType;
 
         // Go through array of schema for input values
         for (const profileDetail of detailsToGet) {
@@ -777,7 +777,7 @@ export class Profiles {
         return schemaValues;
     }
 
-    public async createNewConnection(profileLoaded: IProfileLoaded, profileName: string, requestedProfileType?: string): Promise<string | undefined> {
+    public async createNewConnection(profileName: string, requestedProfileType?: string): Promise<string | undefined> {
         const newProfileName = profileName.trim();
         if (newProfileName === undefined || newProfileName === "") {
             vscode.window.showInformationMessage(localize("createNewConnection.profileName",
@@ -793,11 +793,8 @@ export class Profiles {
         }
 
         try {
-            const newProfileDetails = await Profiles.getInstance().collectProfileDetails(null,
-                    profileLoaded.profile,
-                    await this.getSchema(profileType));
+            const newProfileDetails = await Profiles.getInstance().collectProfileDetails(null, null, await this.getSchema(profileType));
             newProfileDetails.name = newProfileName;
-            newProfileDetails.type = profileType;
             if (!newProfileDetails.user) { delete newProfileDetails.user; }
             if (!newProfileDetails.password) { delete newProfileDetails.password; }
             if (!newProfileDetails.basePath) { delete newProfileDetails.basePath; }
@@ -809,7 +806,7 @@ export class Profiles {
                     return undefined;
                 }
             }
-            await this.saveProfile(newProfileDetails, newProfileDetails.name, newProfileDetails.type);
+            await this.saveProfile(newProfileDetails, newProfileDetails.name, profileType);
             vscode.window.showInformationMessage("Profile " + newProfileDetails.name + " was created.");
             return newProfileDetails.name;
         } catch (error) {
