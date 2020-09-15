@@ -147,49 +147,51 @@ export class ZoweTreeProvider {
         // Check what happens if inactive
         const newProfile = await Profiles.getInstance().editSession(profile, profileName);
 
-        // Get the active session
-        let EditSession;
-        const getSessStatus = await ZoweExplorerApiRegister.getInstance().getCommonApi(node.getProfile());
-        if (getSessStatus.getValidSession) {
-            EditSession = await ZoweExplorerApiRegister.getCommonApi(node.getProfile())
-                                                    .getValidSession(node.getProfile(),
-                                                                    node.getProfile().name,
-                                                                    false);
-        } else {
-            EditSession = await ZoweExplorerApiRegister.getCommonApi(node.getProfile()).getSession(node.getProfile());
-        }
-
-        if (EditSession) {
-            node.getProfile().profile = newProfile as IProfile;
-            await setProfile(node, newProfile as IProfile);
-            if (await node.getSession()) {
-                await setSession(node, newProfile as ISession);
+        if (newProfile) {
+            // Get the active session
+            let EditSession;
+            const getSessStatus = await ZoweExplorerApiRegister.getInstance().getCommonApi(node.getProfile());
+            if (getSessStatus.getValidSession) {
+                EditSession = await ZoweExplorerApiRegister.getCommonApi(node.getProfile())
+                                                        .getValidSession(node.getProfile(),
+                                                                        node.getProfile().name,
+                                                                        false);
             } else {
-                this.deleteSessionByLabel(node.label);
-                zoweFileProvider.addSession(node.getProfileName());
+                EditSession = await ZoweExplorerApiRegister.getCommonApi(node.getProfile()).getSession(node.getProfile());
             }
-            this.refresh();
-        }
-        const profileStatus = await Profiles.getInstance().checkCurrentProfile(profile, false);
 
-        // Set node to proper status in tree
-        let newIcon;
-        if (profileStatus.status === "inactive") {
-            node.contextValue = node.contextValue + globals.INACTIVE_CONTEXT;
-            newIcon = getIconById(IconId.sessionInactive);
-        } else {
-            node.contextValue = node.contextValue + globals.ACTIVE_CONTEXT;
-            newIcon = getIconById(IconId.sessionActive);
-        }
+            if (EditSession) {
+                node.getProfile().profile = newProfile as IProfile;
+                await setProfile(node, newProfile as IProfile);
+                if (await node.getSession()) {
+                    await setSession(node, newProfile as ISession);
+                } else {
+                    this.deleteSessionByLabel(node.label);
+                    zoweFileProvider.addSession(node.getProfileName());
+                }
+                this.refresh();
+            }
+            const profileStatus = await Profiles.getInstance().checkCurrentProfile(profile, false);
 
-        // Get proper icon for node
-        if (newIcon) {
-            node.iconPath = newIcon.path;
-        }
+            // Set node to proper status in tree
+            let newIcon;
+            if (profileStatus.status === "inactive") {
+                node.contextValue = node.contextValue + globals.INACTIVE_CONTEXT;
+                newIcon = getIconById(IconId.sessionInactive);
+            } else {
+                node.contextValue = node.contextValue + globals.ACTIVE_CONTEXT;
+                newIcon = getIconById(IconId.sessionActive);
+            }
 
-        node.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
-        node.dirty = true;
-        zoweFileProvider.refreshElement(node);
+            // Get proper icon for node
+            if (newIcon) {
+                node.iconPath = newIcon.path;
+            }
+
+            node.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+            node.dirty = true;
+            zoweFileProvider.refreshElement(node);
+        }
     }
 
     public async checkCurrentProfile(node: IZoweTreeNode, prompt?: boolean) {

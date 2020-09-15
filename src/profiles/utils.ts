@@ -78,14 +78,14 @@ export async function collectProfileDetails(detailsToGet?: string[], oldDetails?
                 };
 
                 newUrl = await vscode.window.showInputBox(hostOptions);
-                if (!newUrl) {
-                    throw new Error(localize("collectProfileDetails.zosmfURL", "No valid value for z/OS URL. Operation Cancelled"));
-                } else {
+                if (newUrl) {
                     newUrl = newUrl.replace(/https:\/\//g, "");
                     newUrl = new URL("https://" + newUrl);
                     newUrl.host = newUrl.host.replace(/'/g, "");
                     schemaValues[profileDetail] = newUrl.port ? newUrl.host.substring(0, newUrl.host.indexOf(":")) : newUrl.host;
                     if (newUrl.port !== 0) { schemaValues.port = Number(newUrl.port); }
+                } else {
+                    return;
                 }
                 break;
             case "port":
@@ -121,7 +121,9 @@ export async function collectProfileDetails(detailsToGet?: string[], oldDetails?
 
                     let port;
                     const portFromUser = await vscode.window.showInputBox(portOptions);
-                    if (Number.isNaN(Number(portFromUser))) {
+                    if (!portFromUser) {
+                        return;
+                    } else if (portFromUser && Number.isNaN(Number(portFromUser))) {
                         throw new Error(localize("collectProfileDetails.undefined.port",
                             "Invalid Port number provided or operation was cancelled"));
                     } else { port = Number(portFromUser); }
@@ -149,11 +151,8 @@ export async function collectProfileDetails(detailsToGet?: string[], oldDetails?
                 };
 
                 newUser = await vscode.window.showInputBox(userOptions);
+                if (newUser === undefined) { return; }
                 if (!newUser) {
-                    if (newUser === undefined) {
-                        throw new Error(localize("collectProfileDetails.undefined.user",
-                            "Invalid user provided or operation was cancelled"));
-                    }
                     vscode.window.showInformationMessage(localize("collectProfileDetails.undefined.username", "No username defined."));
                     newUser = null;
                 }
@@ -174,11 +173,8 @@ export async function collectProfileDetails(detailsToGet?: string[], oldDetails?
                 };
 
                 newPass = await vscode.window.showInputBox(passOptions);
+                if (typeof newPass === "undefined") { return; }
                 if (!newPass) {
-                    if (newPass === undefined) {
-                        throw new Error(localize("collectProfileDetails.undefined.pass",
-                            "Invalid password provided or operation was cancelled"));
-                    }
                     vscode.window.showInformationMessage(localize("collectProfileDetails.undefined.password", "No password defined."));
                     newPass = null;
                 }
@@ -198,7 +194,7 @@ export async function collectProfileDetails(detailsToGet?: string[], oldDetails?
                 if (chosenRU === ruOptions[0]) { newRU = true; }
                 else if (chosenRU === ruOptions[1]) { newRU = false; }
                 else {
-                    throw new Error(localize("collectProfileDetails.rejectUnauthorize", "No certificate option selected. Operation Cancelled"));
+                    return;
                 }
 
                 schemaValues[profileDetail] = newRU;
@@ -273,7 +269,7 @@ export async function collectProfileDetails(detailsToGet?: string[], oldDetails?
                         else { boolVal = undefined; }
 
                         if (boolVal === undefined) {
-                            throw new Error(localize("collectProfileDetails.booleanValue", "No boolean selected. Operation Cancelled"));
+                            return;
                         } else {
                             schemaValues[profileDetail] = boolVal;
                             break;
@@ -300,7 +296,8 @@ export async function collectProfileDetails(detailsToGet?: string[], oldDetails?
 
                         const defValue = await vscode.window.showInputBox(defaultOptions);
 
-                        if (defValue === "") { schemaValues[profileDetail] = null; }
+                        if (typeof defValue === "undefined") { return; }
+                        else if (defValue === "") { schemaValues[profileDetail] = null; }
                         else {
                             schemaValues[profileDetail] = defValue;
                             break;

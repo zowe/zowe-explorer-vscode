@@ -13,7 +13,7 @@
     "createZoweSession.log.debug.selectProfile": "User selected profile ",
     "createZoweSession.log.debug.cancelledSelection": "User cancelled profile selection",
     "editConnection.success": "Profile was successfully updated",
-    "getProfileType.option.prompt.type.placeholder": "Profile Type",
+    "getProfileType.option.prompt.type.placeholder": "Enter the type of this profile",
     "createNewConnection.profileName": "Profile name was not supplied. Operation Cancelled",
     "createNewConnection.profileType": "No profile type was chosen. Operation Cancelled",
     "createNewConnection.duplicateProfileName": "Profile name already exists. Please create a profile using a different name",

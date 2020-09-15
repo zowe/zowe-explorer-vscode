@@ -441,32 +441,46 @@ export class Profiles {
     }
 
     public async editSession(profileLoaded: IProfileLoaded, profileName: string): Promise<IProfile | void> {
-        const schema = await this.getSchema(await this.getProfileType());
+        const schema = await this.getSchema(profileLoaded.type);
         const updSchemaValues = await collectProfileDetails(null,
                 profileLoaded.profile,
                 schema);
-        updSchemaValues.name = profileName;
-        Object.keys(updSchemaValues).forEach((key) => {
-            profileLoaded.profile[key] = updSchemaValues[key];
-        });
+        if (updSchemaValues) {
+            updSchemaValues.name = profileName;
+            Object.keys(updSchemaValues).forEach((key) => {
+                profileLoaded.profile[key] = updSchemaValues[key];
+            });
 
-        const newProfile = await this.updateProfile({ profile: profileLoaded.profile, name: profileName, type: profileLoaded.type });
-        vscode.window.showInformationMessage(localize("editConnection.success", "Profile was successfully updated"));
-        return newProfile;
+            const newProfile = await this.updateProfile({ profile: profileLoaded.profile, name: profileName, type: profileLoaded.type });
+            vscode.window.showInformationMessage(localize("editConnection.success", "Profile was successfully updated"));
+            return newProfile;
+        } else {
+            return null;
+        }
     }
 
-    public async getProfileType(): Promise<string> {
+    public async getProfileType(profileName?: string): Promise<string> {
         let profileType: string;
         const profTypes = ZoweExplorerApiRegister.getInstance().registeredApiTypes();
         const typeOptions = Array.from(profTypes);
         if (typeOptions.length === 1 && typeOptions[0] === "zosmf") { profileType = typeOptions[0]; }
         else {
-            const quickPickTypeOptions: vscode.QuickPickOptions = {
-                placeHolder: localize("getProfileType.option.prompt.type.placeholder", "Profile Type"),
-                ignoreFocusOut: true,
-                canPickMany: false
-            };
-            profileType = await vscode.window.showQuickPick(typeOptions, quickPickTypeOptions);
+            if (profileName) {
+                typeOptions.forEach((type) => {
+                    const typedProfiles = this.profilesByType.get(type);
+                    typedProfiles.forEach((profile) => {
+                        if (profile.name === profileName) { profileType = type; }
+                    });
+                });
+            }
+            if (!profileType) {
+                const quickPickTypeOptions: vscode.QuickPickOptions = {
+                    placeHolder: localize("getProfileType.option.prompt.type.placeholder", "Enter the type of this profile"),
+                    ignoreFocusOut: true,
+                    canPickMany: false
+                };
+                profileType = await vscode.window.showQuickPick(typeOptions, quickPickTypeOptions);
+            }
         }
         return profileType;
     }
