@@ -121,7 +121,7 @@ export async function collectProfileDetails(detailsToGet?: string[], oldDetails?
 
                     let port;
                     const portFromUser = await vscode.window.showInputBox(portOptions);
-                    if (!portFromUser) {
+                    if (typeof portFromUser === "undefined") {
                         return;
                     } else if (portFromUser && Number.isNaN(Number(portFromUser))) {
                         throw new Error(localize("collectProfileDetails.undefined.port",

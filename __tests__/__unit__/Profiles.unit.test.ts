@@ -292,11 +292,10 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         globalMocks.mockGetInstance.mockReturnValue(await Profiles.createInstance(Logger.getAppLogger()));
         globalMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[0]); });
         globalMocks.mockShowInputBox.mockResolvedValueOnce(undefined);
-        const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
 
-        await globalMocks.profiles.createNewConnection(blockMocks.imperativeProfile.name);
+        const newSession = await globalMocks.profiles.createNewConnection(blockMocks.imperativeProfile.name);
 
-        expect(errorHandlingSpy).toBeCalledWith(new Error("No valid value for z/OS URL. Operation Cancelled"));
+        expect(newSession).toBe(undefined);
     });
 
     it("Tests that createNewConnection fails if rejectUnauthorized is missing", async () => {
@@ -310,11 +309,10 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
         globalMocks.mockShowInputBox.mockResolvedValueOnce(undefined);
-        const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
 
-        await globalMocks.profiles.createNewConnection(blockMocks.imperativeProfile.name);
+        const newSession = await globalMocks.profiles.createNewConnection(blockMocks.imperativeProfile.name);
 
-        expect(errorHandlingSpy).toBeCalledWith(new Error("No certificate option selected. Operation Cancelled"));
+        expect(newSession).toBe(undefined);
     });
 
     it("Tests that createNewConnection fails if profileName is a duplicate", async () => {
@@ -358,6 +356,7 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         globalMocks.mockShowInputBox.mockResolvedValueOnce("");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("True");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("False - Accept connections with self-signed certificates");
+        globalMocks.mockShowInputBox.mockResolvedValue("fake");
 
         await globalMocks.profiles.createNewConnection("fake");
         // tslint:disable-next-line: no-magic-numbers
@@ -477,11 +476,10 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         globalMocks.mockShowInputBox.mockResolvedValueOnce("143");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce(undefined);
-        const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
 
-        await globalMocks.profiles.createNewConnection("fake");
+        const newSession = await globalMocks.profiles.createNewConnection("fake");
 
-        expect(errorHandlingSpy).toBeCalledWith(new Error("No boolean selected. Operation Cancelled"));
+        expect(newSession).toBe(undefined);
     });
 
     it("Tests that createNewConnection creates an alternate profile with an optional port", async () => {
@@ -491,7 +489,8 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         blockMocks.profileInstance.getProfileType = jest.fn(() => new Promise((resolve) => { resolve("alternate"); }));
         globalMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[2]); });
         globalMocks.mockShowInputBox.mockResolvedValueOnce("https://fake");
-        globalMocks.mockShowInputBox.mockResolvedValueOnce(Number("143"));
+        globalMocks.mockShowInputBox.mockResolvedValueOnce(null);
+        globalMocks.mockShowInputBox.mockResolvedValue("fake");
 
         await globalMocks.profiles.createNewConnection("fake");
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
@@ -723,7 +722,7 @@ describe("Profiles Unit Tests - Function editSession", () => {
         globalMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[2]); });
         globalMocks.mockShowInputBox.mockResolvedValueOnce("https://fake:143");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("143");
-        globalMocks.mockShowInputBox.mockResolvedValueOnce(undefined);
+        globalMocks.mockShowInputBox.mockResolvedValueOnce(null);
         globalMocks.mockCreateBasicZosmfSessionFromArguments.mockReturnValue(
             { ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" } });
 
@@ -756,14 +755,9 @@ describe("Profiles Unit Tests - Function editSession", () => {
         globalMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[0]); });
         globalMocks.mockShowQuickPick.mockResolvedValueOnce(undefined);
 
-        let error;
-        try {
-            await globalMocks.profiles.editSession(blockMocks.imperativeProfile, blockMocks.imperativeProfile.name);
-        } catch (err) {
-            error = err;
-        }
+        const newSession = await globalMocks.profiles.editSession(blockMocks.imperativeProfile, blockMocks.imperativeProfile.name);
 
-        expect(error.message).toBe("No valid value for z/OS URL. Operation Cancelled");
+        expect(newSession).toBe(null);
     });
 
     it("Tests that editSession fails with invalid rejectUnauthorized value supplied", async () => {
@@ -779,14 +773,9 @@ describe("Profiles Unit Tests - Function editSession", () => {
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce(undefined);
 
-        let error;
-        try {
-            await globalMocks.profiles.editSession(blockMocks.imperativeProfile, blockMocks.imperativeProfile.name);
-        } catch (err) {
-            error = err;
-        }
+        const newSession = await globalMocks.profiles.editSession(blockMocks.imperativeProfile, blockMocks.imperativeProfile.name);
 
-        expect(error.message).toBe("No certificate option selected. Operation Cancelled");
+        expect(newSession).toBe(null);
     });
 
     it("Tests that editSession fails with invalid aBoolean value supplied on alternate profile type", async () => {
@@ -802,14 +791,9 @@ describe("Profiles Unit Tests - Function editSession", () => {
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce(undefined);
 
-        let error;
-        try {
-            await globalMocks.profiles.editSession(blockMocks.imperativeProfile, blockMocks.imperativeProfile.name);
-        } catch (err) {
-            error = err;
-        }
+        const newSession = await globalMocks.profiles.editSession(blockMocks.imperativeProfile, blockMocks.imperativeProfile.name);
 
-        expect(error.message).toBe("No boolean selected. Operation Cancelled");
+        expect(newSession).toBe(null);
     });
 
     it("Tests that editSession fails with invalid port value supplied", async () => {

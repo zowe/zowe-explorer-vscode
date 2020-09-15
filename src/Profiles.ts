@@ -535,21 +535,23 @@ export class Profiles {
 
         try {
             const newProfileDetails = await collectProfileDetails(null, null, await this.getSchema(profileType));
-            newProfileDetails.name = newProfileName;
-            if (!newProfileDetails.user) { delete newProfileDetails.user; }
-            if (!newProfileDetails.password) { delete newProfileDetails.password; }
-            if (!newProfileDetails.basePath) { delete newProfileDetails.basePath; }
+            if (newProfileDetails) {
+                newProfileDetails.name = newProfileName;
+                if (!newProfileDetails.user) { delete newProfileDetails.user; }
+                if (!newProfileDetails.password) { delete newProfileDetails.password; }
+                if (!newProfileDetails.basePath) { delete newProfileDetails.basePath; }
 
-            for (const profile of this.allProfiles) {
-                if (profile.name.toLowerCase() === profileName.toLowerCase()) {
-                    vscode.window.showErrorMessage(localize("createNewConnection.duplicateProfileName",
-                        "Profile name already exists. Please create a profile using a different name"));
-                    return undefined;
+                for (const profile of this.allProfiles) {
+                    if (profile.name.toLowerCase() === profileName.toLowerCase()) {
+                        vscode.window.showErrorMessage(localize("createNewConnection.duplicateProfileName",
+                            "Profile name already exists. Please create a profile using a different name"));
+                        return undefined;
+                    }
                 }
+                await this.saveProfile(newProfileDetails, newProfileDetails.name, profileType);
+                vscode.window.showInformationMessage("Profile " + newProfileDetails.name + " was created.");
+                return newProfileDetails.name;
             }
-            await this.saveProfile(newProfileDetails, newProfileDetails.name, profileType);
-            vscode.window.showInformationMessage("Profile " + newProfileDetails.name + " was created.");
-            return newProfileDetails.name;
         } catch (error) {
             await errorHandling(error);
         }
