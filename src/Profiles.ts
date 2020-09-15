@@ -179,7 +179,10 @@ export class Profiles {
                         return getSessStatus.getStatus(theProfile, theProfile.type, prompt);
                     });
                 } else {
-                    profileStatus = "unverified";
+                    profileStatus = { status: "unverified",
+                                      name: theProfile.name,
+                                      session: theProfile.profile.session
+                                    };
                 }
 
                 filteredProfile = {
