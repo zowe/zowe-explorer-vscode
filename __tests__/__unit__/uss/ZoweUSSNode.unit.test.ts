@@ -531,6 +531,7 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
         };
         newMocks.childNode = new ZoweUSSNode("root", vscode.TreeItemCollapsibleState.Collapsed, null,
             globalMocks.session, "root", false, globalMocks.profileOne.name, undefined);
+        newMocks.childNode.profile = globalMocks.profileOne;
         globalMocks.withProgress.mockImplementation((progLocation, callback) => {
             return callback();
         });

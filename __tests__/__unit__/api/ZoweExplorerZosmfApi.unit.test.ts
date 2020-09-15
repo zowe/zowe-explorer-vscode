@@ -244,21 +244,6 @@ describe("ZosmfApiCommon Unit Tests - Function getValidProfile", () => {
         expect(blockMocks.mockCollectProfileDetails).toHaveBeenCalledWith(["host", "port"]);
     });
 
-    it("Tests that getValidProfile prompts for basePath if prompting = true", async () => {
-        const blockMocks = await createBlockMocks();
-
-        blockMocks.serviceProfile.profile.basePath = null;
-        blockMocks.defaultProfile.profile.basePath = null;
-        blockMocks.serviceProfile.profile.host = null;
-        blockMocks.defaultProfile.profile.host = null;
-
-        await ZoweExplorerApiRegister.getCommonApi(blockMocks.serviceProfile)
-                                     .getValidSession(blockMocks.serviceProfile, "sestest", true);
-
-        expect(blockMocks.mockCollectProfileDetails).toHaveBeenCalledTimes(1);
-        expect(blockMocks.mockCollectProfileDetails).toHaveBeenCalledWith(["host", "basePath"]);
-    });
-
     it("Tests that getValidProfile successfully returns an array of new profile details", async () => {
         const blockMocks = await createBlockMocks();
 
@@ -269,8 +254,6 @@ describe("ZosmfApiCommon Unit Tests - Function getValidProfile", () => {
         blockMocks.defaultProfile.profile.host = null;
         blockMocks.serviceProfile.profile.port = null;
         blockMocks.defaultProfile.profile.port = null;
-        blockMocks.serviceProfile.profile.basePath = null;
-        blockMocks.defaultProfile.profile.basePath = null;
         blockMocks.mockCollectProfileDetails.mockResolvedValue({
             host: "testHostNew",
             port: 1234,
@@ -282,7 +265,7 @@ describe("ZosmfApiCommon Unit Tests - Function getValidProfile", () => {
                                      .getValidSession(blockMocks.serviceProfile, "sestest", true);
 
         expect(blockMocks.mockCollectProfileDetails).toHaveBeenCalledTimes(1);
-        expect(blockMocks.mockCollectProfileDetails).toHaveBeenCalledWith(["password", "host", "port", "basePath"]);
+        expect(blockMocks.mockCollectProfileDetails).toHaveBeenCalledWith(["password", "host", "port"]);
     });
 
     it("Tests that getValidProfile throws an error if prompting fails", async () => {
@@ -344,7 +327,7 @@ describe("ZosmfApiCommon Unit Tests - Function getValidProfile", () => {
             error = err.message;
         }
 
-        expect(error.message).toBe("Test error!");
+        expect(error).toBe("Test error!");
     });
 
     it("Tests that getValidProfile successfully returns a connected Session when prompting = true (token auth)", async () => {

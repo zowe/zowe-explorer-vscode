@@ -619,7 +619,7 @@ describe("USSTree Unit Tests - Function USSTree.getAllLoadedItems()", () => {
     });
 });
 
-describe("USSTree Unit Tests - Function USSTree.findFavoritedNode()", async () => {
+describe("USSTree Unit Tests - Function USSTree.findFavoritedNode()", () => {
     it("Testing that findFavoritedNode() returns the favorite of a non-favorited node", async () => {
         const globalMocks = await createGlobalMocks();
         globalMocks.testUSSNode.contextValue = globals.DS_TEXT_FILE_CONTEXT;
