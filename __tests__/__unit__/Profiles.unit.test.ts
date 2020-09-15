@@ -1101,32 +1101,6 @@ describe("Profiles Unit Tests - Function createInstance", () => {
     });
 });
 
-describe("Profiles Unit Tests - Function getDefaultProfile", () => {
-    async function createBlockMocks(globalMocks) {
-        const newMocks = {
-            log: Logger.getAppLogger(),
-            profiles: null,
-            validProfile: createValidIProfile(),
-            session: createISessionWithoutCredentials(),
-            profileInstance: null
-        };
-
-        newMocks.profiles = await Profiles.createInstance(newMocks.log);
-        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles, newMocks.session);
-        globalMocks.mockGetInstance.mockReturnValue(newMocks.profiles);
-
-        return newMocks;
-    }
-
-    it("Tests that getDefaultProfile returns the default profile", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        const loadedProfiles = globalMocks.defaultProfileManagerInstance.getDefaultProfile();
-        expect(loadedProfiles).toEqual(blockMocks.validProfile);
-    });
-});
-
 describe("Profiles Unit Tests - Function getProfiles", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
@@ -1375,6 +1349,22 @@ describe("Profiles Unit Tests - Function checkCurrentProfile", () => {
         });
         await theProfiles.checkCurrentProfile(blockMocks.invalidProfile);
         expect(theProfiles.validProfile).toBe(ValidProfileEnum.INVALID);
+    });
+
+    it("Tests that checkCurrentProfile marks profiles inactive which throw an error during validation", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const theProfiles = await Profiles.createInstance(blockMocks.log);
+        Object.defineProperty(theProfiles, "getProfileSetting", {
+            value: jest.fn(() => {
+                throw new Error("test error!");
+            })
+        });
+
+        const validationResult = await theProfiles.checkCurrentProfile(blockMocks.validProfile);
+
+        expect(validationResult).toStrictEqual({ status: "inactive", name: blockMocks.validProfile.name, session: null });
     });
 });
 

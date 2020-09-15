@@ -23,6 +23,7 @@ import {
 import * as globals from "../../../src/globals";
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
+import * as sharedActions from "../../../src/shared/actions";
 import { createUSSNode, createFavoriteUSSNode, createUSSSessionNode } from "../../../__mocks__/mockCreators/uss";
 import { getIconByNode } from "../../../src/generators/icons";
 import * as workspaceUtils from "../../../src/utils/workspace";
@@ -47,6 +48,7 @@ async function createGlobalMocks() {
         createQuickPick: jest.fn(),
         getConfiguration: jest.fn(),
         ZosmfSession: jest.fn(),
+        mockResetValidation: jest.fn(),
         mockCreateBasicZosmfSessionFromArguments: jest.fn(),
         mockValidationSetting: jest.fn(),
         mockDisableValidationContext: jest.fn(),
@@ -82,6 +84,7 @@ async function createGlobalMocks() {
         configurable: true
     });
     Object.defineProperty(vscode.window, "showQuickPick", { value: globalMocks.showQuickPick, configurable: true });
+    Object.defineProperty(sharedActions, "resetValidationSettings", { value: globalMocks.mockResetValidation, configurable: true });
     Object.defineProperty(vscode.window, "showInformationMessage", {
         value: globalMocks.showInformationMessage,
         configurable: true
@@ -374,10 +377,22 @@ describe("USSTree Unit Tests - Function USSTree.addSession()", () => {
         const testSessionNode = new ZoweUSSNode("testSessionNode", vscode.TreeItemCollapsibleState.Collapsed,
             null, globalMocks.testSession, null);
         globalMocks.testTree.mSessionNodes.push(testSessionNode);
-        globalMocks.testTree.addSession("testSessionNode");
+        await globalMocks.testTree.addSession("testSessionNode");
 
         const foundNode = globalMocks.testTree.mSessionNodes.includes(testSessionNode);
         expect(foundNode).toEqual(true);
+    });
+
+    it("Tests if addSession causes the validation settings to be reset", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        const testSessionNode = new ZoweUSSNode("testSessionNode", vscode.TreeItemCollapsibleState.Collapsed,
+            null, globalMocks.testSession, null);
+        globalMocks.testTree.mSessionNodes.push(testSessionNode);
+
+        await globalMocks.testTree.addSession("testSessionNode");
+
+        expect(globalMocks.mockResetValidation).toBeCalledTimes(1);
     });
 });
 

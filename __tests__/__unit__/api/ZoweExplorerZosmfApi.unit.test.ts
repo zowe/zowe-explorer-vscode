@@ -183,7 +183,6 @@ describe("ZosmfApiCommon Unit Tests - Function getValidProfile", () => {
         newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles, newMocks.sessionNoCredentials);
         newMocks.mockGetDefaultProfile.mockResolvedValue(newMocks.baseProfile);
         newMocks.mockCollectProfileDetails.mockReturnValue(newMocks.serviceProfile.profile);
-        // Object.defineProperty(newMocks.commonApi, "collectProfileDetails", {value: newMocks.mockCollectProfileDetails, configurable: true});
         newMocks.mockGetInstance.mockReturnValue(newMocks.profileInstance);
 
         return newMocks;
