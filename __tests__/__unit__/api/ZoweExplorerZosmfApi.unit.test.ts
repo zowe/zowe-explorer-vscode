@@ -13,13 +13,13 @@ import { ZosmfUssApi, ZosmfMvsApi } from "../../../src/api/ZoweExplorerZosmfApi"
 import * as zowe from "@zowe/cli";
 import * as globals from "../../../src/globals";
 import * as vscode from "vscode";
-import { AbstractSession, Logger, SessConstants } from "@zowe/imperative";
+import { AbstractSession, Logger } from "@zowe/imperative";
 import { ZoweExplorerApiRegister } from "../../../src/api/ZoweExplorerApiRegister";
 import { DefaultProfileManager } from "../../../src/profiles/DefaultProfileManager";
 import { Profiles } from "../../../src/Profiles";
-import { createISession, createISessionWithoutCredentials, createValidBaseProfile, createValidIProfile, createInstanceOfProfile } from "../../../__mocks__/mockCreators/shared";
+import { createISession, createISessionWithoutCredentials, createValidBaseProfile,
+         createValidIProfile, createInstanceOfProfile } from "../../../__mocks__/mockCreators/shared";
 import { createProfileManager } from "../../../__mocks__/mockCreators/profiles";
-import * as utils from "../../../src/utils";
 import * as profileUtils from "../../../src/profiles/utils";
 
 export declare enum TaskStage {
@@ -349,5 +349,67 @@ describe("ZosmfApiCommon Unit Tests - Function getValidProfile", () => {
                                                         .getValidSession(blockMocks.defaultProfile, "sestest", false);
 
         expect(newSession).toBe(blockMocks.testSession);
+    });
+});
+
+describe("ZosmfApiCommon Unit Tests - Function getStatus", () => {
+    async function createBlockMocks() {
+        const newMocks = {
+            defaultProfile: createValidIProfile(),
+            mockGetValidSession: jest.fn(),
+            testSession: createISession(),
+            commonApi: null,
+            mockGetCommonApi: jest.fn()
+        };
+
+        // Common API mocks
+        newMocks.commonApi = ZoweExplorerApiRegister.getCommonApi(newMocks.defaultProfile);
+        ZoweExplorerApiRegister.getCommonApi = newMocks.mockGetCommonApi.bind(ZoweExplorerApiRegister);
+        newMocks.mockGetCommonApi.mockReturnValue(newMocks.commonApi);
+        newMocks.mockGetValidSession.mockReturnValue(newMocks.testSession);
+        Object.defineProperty(newMocks.commonApi, "getValidSession", { value: newMocks.mockGetValidSession, configurable: true });
+        Object.defineProperty(zowe.CheckStatus, "getZosmfInfo", { value: jest.fn().mockReturnValue(true), configurable: true });
+
+        return newMocks;
+    }
+    it("Tests that getStatus returns Unverified if profileType is not zosmf", async () => {
+        const blockMocks = await createBlockMocks();
+
+        const newStatus = await ZoweExplorerApiRegister.getCommonApi(blockMocks.defaultProfile).getStatus(null, "alternate");
+
+        expect(newStatus.status).toEqual("unverified");
+    });
+
+    it("Tests that getStatus returns Active if a valid session can be retrieved", async () => {
+        const blockMocks = await createBlockMocks();
+
+        const newStatus = await ZoweExplorerApiRegister.getCommonApi(blockMocks.defaultProfile).getStatus(blockMocks.defaultProfile, "zosmf");
+
+        expect(newStatus.status).toEqual("active");
+    });
+
+    it("Tests that getStatus returns Inactive if a valid session cannot be retrieved", async () => {
+        const blockMocks = await createBlockMocks();
+
+        blockMocks.mockGetValidSession.mockReturnValue(null);
+
+        const newStatus = await ZoweExplorerApiRegister.getCommonApi(blockMocks.defaultProfile).getStatus(blockMocks.defaultProfile, "zosmf");
+
+        expect(newStatus.status).toEqual("inactive");
+    });
+
+    it("Tests that getStatus throws an error if getValidSession fails", async () => {
+        const blockMocks = await createBlockMocks();
+
+        blockMocks.mockGetValidSession.mockRejectedValue("Test error");
+
+        let error;
+        try {
+            await ZoweExplorerApiRegister.getCommonApi(blockMocks.defaultProfile).getStatus(blockMocks.defaultProfile, "zosmf");
+        } catch (err) {
+            error = err;
+        }
+
+        expect(error.message).toEqual("Test error");
     });
 });

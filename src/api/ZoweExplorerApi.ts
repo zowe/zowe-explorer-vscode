@@ -51,7 +51,7 @@ export namespace ZoweExplorerApi {
          *      will use the profile the API was retrieved with by default
          * @returns {IZosmfInfoResponse} z/OSMF Check Status response
          */
-        getStatus?(profile: IProfileLoaded, profileType?, prompt?: boolean): Promise<{}>;
+        getStatus?(profile: IProfileLoaded, profileType?, prompt?: boolean): Promise<{status: string, session: Session | null}>;
 
         /**
          * Get a valid session which can be used to connect to z/OS

@@ -17,6 +17,7 @@ import { Logger } from "@zowe/imperative";
 import { DatasetTree } from "../../../src/dataset/DatasetTree";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import * as utils from "../../../src/utils";
+import * as sharedActions from "../../../src/shared/actions";
 import { Profiles, ValidProfileEnum } from "../../../src/Profiles";
 import { getIconByNode } from "../../../src/generators/icons";
 import {
@@ -29,6 +30,7 @@ import * as workspaceUtils from "../../../src/utils/workspace";
 import { DefaultProfileManager } from "../../../src/profiles/DefaultProfileManager";
 import { ZoweExplorerApiRegister } from "../../../src/api/ZoweExplorerApiRegister";
 import { PersistentFilters } from "../../../src/PersistentFilters";
+import { ZosmfUssApi } from "../../../src/api/ZoweExplorerZosmfApi";
 
 jest.mock("fs");
 jest.mock("util");
@@ -47,6 +49,7 @@ async function createGlobalMocks() {
     };
 
     Object.defineProperty(vscode.window, "createTreeView", { value: jest.fn(), configurable: true });
+    Object.defineProperty(sharedActions, "resetValidationSettings", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showInformationMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.workspace, "getConfiguration", { value: jest.fn(), configurable: true });
     Object.defineProperty(Profiles, "getInstance", { value: jest.fn(), configurable: true });
@@ -637,11 +640,12 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
         await createGlobalMocks();
         const blockMocks = await createBlockMocks();
 
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.mockProfileInstance);
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
 
-        testTree.addSession(blockMocks.imperativeProfile.name);
+        await testTree.addSession(blockMocks.imperativeProfile.name);
         expect(testTree.mSessionNodes[1].label).toBe(blockMocks.imperativeProfile.name);
     });
 
@@ -660,7 +664,7 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
 
         blockMocks.mockProfileInstance.validationSetting = blockMocks.mockValidationSetting.mockReturnValueOnce(false);
 
-        testTree.addSession(blockMocks.imperativeProfile.name);
+        await testTree.addSession(blockMocks.imperativeProfile.name);
         expect(testTree.mSessionNodes[1].label).toBe(blockMocks.imperativeProfile.name);
     });
 
@@ -673,7 +677,7 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
         testTree.mHistory.push(blockMocks.imperativeProfile.name);
 
-        testTree.addSession();
+        await testTree.addSession();
         expect(testTree.mSessionNodes[1].label).toBe(blockMocks.imperativeProfile.name);
     });
 
@@ -681,11 +685,11 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
         await createGlobalMocks();
         const blockMocks = await createBlockMocks();
 
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
 
-        testTree.addSession("fake");
-
+        await testTree.addSession("fake");
         expect(testTree.mSessionNodes[1]).not.toBeDefined();
     });
 });
@@ -992,7 +996,6 @@ describe("Dataset Tree Unit Tests - Function filterPrompt", () => {
                     getProfileSetting: newMocks.mockGetProfileSetting.mockReturnValue({ name: newMocks.imperativeProfile.name,
                                                                                         status: "active",
                                                                                         session: newMocks.session }),
-                    resetValidationSettings: newMocks.mockResetValidationSettings.mockReturnValue(newMocks.datasetSessionNode)
                 };
             }),
         });

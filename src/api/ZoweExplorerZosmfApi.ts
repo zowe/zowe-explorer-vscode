@@ -17,6 +17,7 @@ import { DefaultProfileManager } from "../profiles/DefaultProfileManager";
 import { collectProfileDetails } from "../profiles/utils";
 import * as vscode from "vscode";
 import * as globals from "../globals";
+import { errorHandling } from "../utils";
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
@@ -47,19 +48,22 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
         return this.session;
     }
 
-    public async getStatus(validateProfile?: IProfileLoaded, profileType?: string, prompt?: boolean): Promise<{}> {
+    public async getStatus(validateProfile?: IProfileLoaded, profileType?: string, prompt?: boolean): Promise<{status: string,
+                                                                                                               session: Session | null}> {
         // This API call is specific for z/OSMF profiles
         if (profileType === "zosmf") {
-            const validateSession = await this.getValidSession(validateProfile,
-                                                                validateProfile.name,
-                                                                prompt);
-            let sessionStatus;
-            if (validateSession) { sessionStatus = await zowe.CheckStatus.getZosmfInfo(validateSession); }
+            try {
+                const validateSession = await this.getValidSession(validateProfile, validateProfile.name, prompt);
+                let sessionStatus;
+                if (validateSession) { sessionStatus = await zowe.CheckStatus.getZosmfInfo(validateSession); }
 
-            if (sessionStatus) {
-                return {status: "active", session: validateSession};
-            } else {
-                return {status: "inactive", session: undefined};
+                if (sessionStatus) {
+                    return {status: "active", session: validateSession};
+                } else {
+                    return {status: "inactive", session: undefined};
+                }
+            } catch (err) {
+                throw new Error(err);
             }
         } else {
             return {status: "unverified", session: undefined};

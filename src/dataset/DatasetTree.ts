@@ -319,10 +319,12 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 await this.addSingleSession(profile);
             }
             for (const node of this.mSessionNodes) {
-                const name = node.getProfileName();
-                if (name === profile.name){
-                    await resetValidationSettings(node, setting);
-                 }
+                if (node.label !== "Favorites") {
+                    const name = node.getProfileName();
+                    if (name === profile.name){
+                        await resetValidationSettings(node, setting);
+                    }
+                }
              }
         } else {
             const profiles: IProfileLoaded[] = Profiles.getInstance().allProfiles;
@@ -856,9 +858,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     // Uses loaded profile to create a session with the MVS API
                     const getSessStatus = await ZoweExplorerApiRegister.getInstance().getCommonApi(profileLoaded);
                     if (getSessStatus.getValidSession) {
-                        session = await ZoweExplorerApiRegister.getCommonApi(profileLoaded).getValidSession(profileLoaded,
-                                                                                                                profileLoaded.name,
-                                                                                                                false);
+                        session = await ZoweExplorerApiRegister.getCommonApi(profileLoaded).getValidSession(profileLoaded, profileLoaded.name, false);
                     } else {
                         session = await ZoweExplorerApiRegister.getCommonApi(profileLoaded).getSession(profileLoaded);
                     }
