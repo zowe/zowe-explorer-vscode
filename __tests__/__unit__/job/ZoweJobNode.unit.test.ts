@@ -22,6 +22,7 @@ import { Job } from "../../../src/job/ZoweJobNode";
 import { Profiles, ValidProfileEnum } from "../../../src/Profiles";
 import { createIProfile, createISession, createInstanceOfProfile, createISessionWithoutCredentials, createQuickPickContent } from "../../../__mocks__/mockCreators/shared";
 import { ZoweExplorerApiRegister } from "../../../src/api/ZoweExplorerApiRegister";
+import { IZoweJobTreeNode } from "../../../src/api/IZoweTreeNode";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -53,6 +54,10 @@ async function createGlobalMocks() {
         testJobNode: null,
         mockIJobFile: createIJobFile(),
         mockProfileInstance: null,
+        mockValidationSetting: jest.fn(),
+        mockDisableValidationContext: jest.fn(),
+        mockEnableValidationContext: jest.fn(),
+        mockCheckProfileValidationSetting: jest.fn(),
         withProgress: jest.fn().mockImplementation((progLocation, callback) => {
             return callback();
         }),
@@ -95,6 +100,9 @@ async function createGlobalMocks() {
     globalMocks.mockProfileInstance.loadNamedProfile = globalMocks.mockLoadNamedProfile;
     globalMocks.mockLoadDefaultProfile.mockReturnValue(globalMocks.testProfile);
     globalMocks.mockProfileInstance.getDefaultProfile = globalMocks.mockLoadDefaultProfile;
+    globalMocks.mockProfileInstance.checkProfileValidationSetting = globalMocks.mockValidationSetting.mockReturnValue(true);
+    globalMocks.mockProfileInstance.enableValidationContext = globalMocks.mockEnableValidationContext;
+    globalMocks.mockProfileInstance.disableValidationContext = globalMocks.mockDisableValidationContext;
 
     // Jes API mocks
     globalMocks.jesApi = ZoweExplorerApiRegister.getJesApi(globalMocks.testProfile);
@@ -154,6 +162,19 @@ describe("ZoweJobNode unit tests - Function addSession", () => {
         expect(globalMocks.testJobsProvider.mSessionNodes[1].label).toEqual("sestest");
         expect(globalMocks.testJobsProvider.mSessionNodes[1].tooltip).toEqual("sestest - owner: fake prefix: *");
     });
+
+    it("Tests that addSession adds the session to the tree with disabled global setting", async () => {
+        const globalMocks = await createGlobalMocks();
+
+
+        globalMocks.testJobsProvider.mSessionNodes.pop();
+        globalMocks.mockProfileInstance.checkProfileValidationSetting = globalMocks.mockValidationSetting.mockReturnValueOnce(false);
+        await globalMocks.testJobsProvider.addSession("sestest");
+
+        expect(globalMocks.testJobsProvider.mSessionNodes[1]).toBeDefined();
+        expect(globalMocks.testJobsProvider.mSessionNodes[1].label).toEqual("sestest");
+        expect(globalMocks.testJobsProvider.mSessionNodes[1].tooltip).toEqual("sestest - owner: fake prefix: *");
+    });
 });
 
 describe("ZoweJobNode unit tests - Function deleteSession", () => {
@@ -175,6 +196,16 @@ describe("ZoweJobNode unit tests - Function delete", () => {
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toEqual(
             `Job ${globalMocks.testJobNode.job.jobname}(${globalMocks.testJobNode.job.jobid}) deleted`
         );
+    });
+    it("Tests that delete handles an error thrown during job deletion", async () => {
+        const globalMocks = await createGlobalMocks();
+        const badJobNode = new Job("badJobNode",vscode.TreeItemCollapsibleState.Collapsed, null,
+            globalMocks.testSession, null, globalMocks.testProfile);
+        const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
+
+        await globalMocks.testJobsProvider.delete(badJobNode);
+
+        expect(errorHandlingSpy).toBeCalledTimes(1);
     });
 });
 
@@ -295,13 +326,34 @@ describe("ZoweJobNode unit tests - Function addFavorite", () => {
     it("Tests that addFavorite successfully favorites a job", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
-
         globalMocks.testJobsProvider.mFavorites = [];
+        blockMocks.testJobNode.contextValue = globals.JOBS_JOB_CONTEXT;
 
         await globalMocks.testJobsProvider.addFavorite(blockMocks.testJobNode);
 
+        const profileNodeInFavs: IZoweJobTreeNode = globalMocks.testJobsProvider.mFavorites[0];
+        const favoritedNode = profileNodeInFavs.children[0];
+
         expect(globalMocks.testJobsProvider.mFavorites.length).toEqual(1);
-        expect(globalMocks.testJobsProvider.mFavorites[0].label).toEqual("[sestest]: MYHLQ(JOB1283)");
+        expect(profileNodeInFavs.label).toEqual("sestest");
+        expect(profileNodeInFavs.children.length).toEqual(1);
+        expect(favoritedNode.label).toEqual("MYHLQ(JOB1283)");
+        expect(favoritedNode.contextValue).toEqual(globals.JOBS_JOB_CONTEXT + globals.FAV_SUFFIX);
+    });
+    it("Tests that addFavorite successfully favorites a search", async () => {
+        const globalMocks = await createGlobalMocks();
+        await createBlockMocks(globalMocks);
+        globalMocks.testJobsProvider.mFavorites = [];
+        globalMocks.testJobsProvider.mSessionNodes[1].owner = "myHLQ";
+        globalMocks.testJobsProvider.mSessionNodes[1].prefix = "*";
+        globalMocks.testJobsProvider.mSessionNodes[1].contextValue = globals.JOBS_SESSION_CONTEXT;
+
+        await globalMocks.testJobsProvider.addFavorite(globalMocks.testJobsProvider.mSessionNodes[1]);
+        const profileNodeInFavs: IZoweJobTreeNode = globalMocks.testJobsProvider.mFavorites[0];
+
+        expect(profileNodeInFavs.children.length).toEqual(1);
+        expect(profileNodeInFavs.children[0].label).toEqual("Owner:myHLQ Prefix:*");
+        expect(profileNodeInFavs.children[0].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX);
     });
 });
 
@@ -322,75 +374,46 @@ describe("ZoweJobNode unit tests - Function removeFavorite", () => {
         globalMocks.testJobsProvider.mFavorites = [];
 
         await globalMocks.testJobsProvider.addFavorite(blockMocks.testJobNode);
+        const profileNodeInFavs: IZoweJobTreeNode = globalMocks.testJobsProvider.mFavorites[0];
+        const favoritedNode = profileNodeInFavs.children[0];
 
-        expect(globalMocks.testJobsProvider.mFavorites.length).toEqual(1);
+        expect(profileNodeInFavs.children.length).toEqual(1);
 
-        await globalMocks.testJobsProvider.removeFavorite(globalMocks.testJobsProvider.mFavorites[0]);
+        await globalMocks.testJobsProvider.removeFavorite(favoritedNode);
 
-        expect(globalMocks.testJobsProvider.mFavorites.length).toEqual(0);
+        expect(profileNodeInFavs.children.length).toEqual(0);
     });
 });
 
 describe("ZoweJobNode unit tests - Function saveSearch", () => {
     async function createBlockMocks(globalMocks) {
+        const testSession = globalMocks.testJobsProvider.mSessionNodes[1].getSession();
         const newMocks = {
+            testSession,
             testJobNode: new Job("MYHLQ(JOB1283) - Input", vscode.TreeItemCollapsibleState.Collapsed, globalMocks.testJobsProvider.mSessionNodes[1],
-                                 globalMocks.testJobsProvider.mSessionNodes[1].getSession(), globalMocks.testIJob, globalMocks.testProfile)
+                                 testSession, globalMocks.testIJob, globalMocks.testProfile)
         };
 
         globalMocks.testJobsProvider.mFavorites = [];
         globalMocks.testJobNode.label = "MYHLQ(JOB1283) - Input";
-        globalMocks.getConfiguration.mockReturnValue({
-            get: (setting: string) => [
-                "[sestest]: Owner:stonecc Prefix:*{server}",
-                "[sestest]: USER1(JOB30148){job}",
-            ],
-            update: jest.fn(()=>{
-                return {};
-            })
-        });
 
         return newMocks;
     }
 
-    it("Tests that saveSearch is executed successfully when owner is set", async () => {
+    it("Tests that saveSearch is executed successfully", async () => {
         const globalMocks = await createGlobalMocks();
-        await createBlockMocks(globalMocks);
+        const blockMocks = await createBlockMocks(globalMocks);
+        const favJob = blockMocks.testJobNode;
+        favJob.owner = "myHLQ";
+        favJob.prefix = "*";
+        favJob.contextValue = globals.JOBS_SESSION_CONTEXT;
 
-        globalMocks.testJobsProvider.mSessionNodes[1].owner = "myHLQ";
-        globalMocks.testJobsProvider.mSessionNodes[1].prefix = "*";
+        const expectedJob = favJob;
+        expectedJob.contextValue = globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX;
 
-        await globalMocks.testJobsProvider.saveSearch(globalMocks.testJobsProvider.mSessionNodes[1]);
+        const savedFavJob = await globalMocks.testJobsProvider.saveSearch(favJob);
 
-        expect(globalMocks.testJobsProvider.mFavorites.length).toEqual(1);
-        expect(globalMocks.testJobsProvider.mFavorites[0].label).toEqual("[sestest]: Owner:myHLQ Prefix:*");
-    });
-
-    it("Tests that saveSearch is executed successfully when prefix is set", async () => {
-        const globalMocks = await createGlobalMocks();
-        await createBlockMocks(globalMocks);
-
-        globalMocks.testJobsProvider.mSessionNodes[1].owner = "*";
-        globalMocks.testJobsProvider.mSessionNodes[1].prefix = "aH*";
-
-        await globalMocks.testJobsProvider.saveSearch(globalMocks.testJobsProvider.mSessionNodes[1]);
-
-        expect(globalMocks.testJobsProvider.mFavorites.length).toEqual(1);
-        expect(globalMocks.testJobsProvider.mFavorites[0].label).toEqual("[sestest]: Owner:* Prefix:aH*");
-    });
-
-    it("Tests that saveSearch is executed successfully when searchId is set", async () => {
-        const globalMocks = await createGlobalMocks();
-        await createBlockMocks(globalMocks);
-
-        globalMocks.testJobsProvider.mSessionNodes[1].owner = "*";
-        globalMocks.testJobsProvider.mSessionNodes[1].prefix = "*";
-        globalMocks.testJobsProvider.mSessionNodes[1].searchId = "JOB1234";
-
-        await globalMocks.testJobsProvider.saveSearch(globalMocks.testJobsProvider.mSessionNodes[1]);
-
-        expect(globalMocks.testJobsProvider.mFavorites.length).toEqual(1);
-        expect(globalMocks.testJobsProvider.mFavorites[0].label).toEqual("[sestest]: JobId:JOB1234");
+        expect(savedFavJob).toEqual(expectedJob);
     });
 });
 
@@ -401,6 +424,7 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
                                        globalMocks.testSessionNoCred, globalMocks.testIJob, globalMocks.testProfile),
             qpItem: globalMocks.testJobsProvider.createOwner,
             theia: false,
+            mockCheckCurrentProfile: jest.fn(),
             qpContent: createQuickPickContent("", [globalMocks.testJobsProvider.createOwner, globalMocks.testJobsProvider.createId],
                                               "Select a filter")
         };
@@ -491,6 +515,31 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
         expect(globalMocks.testJobsProvider.mSessionNodes[1].searchId).toEqual("");
     });
 
+    it("Testing that searchPrompt is successfully executed when searching by prefix, VSCode route with Unverified profile", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        await createBlockMocks(globalMocks);
+
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    checkCurrentProfile: blockMocks.mockCheckCurrentProfile.mockReturnValueOnce({name: globalMocks.testProfile.name, status: "unverified"}),
+                    validProfile: ValidProfileEnum.UNVERIFIED
+                };
+            })
+        });
+
+        globalMocks.mockShowInputBox.mockReturnValueOnce("");
+        globalMocks.mockShowInputBox.mockReturnValueOnce("STO*");
+
+        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
+
+        expect(globalMocks.testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT + "_Unverified");
+        expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("*");
+        expect(globalMocks.testJobsProvider.mSessionNodes[1].prefix).toEqual("STO*");
+        expect(globalMocks.testJobsProvider.mSessionNodes[1].searchId).toEqual("");
+    });
+
     it("Testing that searchPrompt is successfully executed when searching by owner & prefix, VSCode route", async () => {
         const globalMocks = await createGlobalMocks();
         await createBlockMocks(globalMocks);
@@ -561,8 +610,8 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
         const globalMocks = await createGlobalMocks();
         await createBlockMocks(globalMocks);
 
-        globalMocks.testJobNode.label = "[sestest]: Owner:stonecc Prefix:*";
-        globalMocks.testJobNode.contextValue = globals.DS_SESSION_CONTEXT + globals.FAV_SUFFIX;
+        globalMocks.testJobNode.label = "Owner:stonecc Prefix:*";
+        globalMocks.testJobNode.contextValue = globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX;
         const checkSession = jest.spyOn(globalMocks.testJobsProvider, "addSession");
         expect(checkSession).not.toHaveBeenCalled();
 
@@ -570,6 +619,23 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
 
         expect(checkSession).toHaveBeenCalledTimes(1);
         expect(checkSession).toHaveBeenLastCalledWith("sestest");
+    });
+
+    it("Testing that searchPrompt from favorited search can pass session values into node in Sessions", async () => {
+        const globalMocks = await createGlobalMocks();
+        await createBlockMocks(globalMocks);
+        globalMocks.testJobNode.label = "Owner:stonecc Prefix:*";
+        globalMocks.testJobNode.contextValue = globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX;
+
+        const sessionNoCreds = createISessionWithoutCredentials();
+        globalMocks.testJobsProvider.mSessionNodes[1].session = sessionNoCreds;
+        const sessNodeNoCreds = globalMocks.testJobsProvider.mSessionNodes[1];
+
+        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobNode);
+
+        expect(sessNodeNoCreds.session.ISession.user).toEqual(globalMocks.testJobNode.session.ISession.user);
+        expect(sessNodeNoCreds.session.ISession.password).toEqual(globalMocks.testJobNode.session.ISession.password);
+        expect(sessNodeNoCreds.session.ISession.base64EncodedAuth).toEqual(globalMocks.testJobNode.session.ISession.base64EncodedAuth);
     });
 
     it("Testing that searchPrompt is successfully executed when searching by owner, Theia route", async () => {

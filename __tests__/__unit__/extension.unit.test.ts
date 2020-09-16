@@ -21,6 +21,7 @@ import * as globals from "../../src/globals";
 import { Profiles, ValidProfileEnum } from "../../src/Profiles";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import { createIProfile, createTreeView } from "../../__mocks__/mockCreators/shared";
+import { PersistentFilters } from "../../src/PersistentFilters";
 
 jest.mock("vscode");
 jest.mock("fs");
@@ -39,6 +40,7 @@ async function createGlobalMocks() {
         mockRegisterCommand: jest.fn(),
         mockOnDidSaveTextDocument: jest.fn(),
         mockOnDidChangeSelection: jest.fn(),
+        mockOnDidChangeConfiguration: jest.fn(),
         mockOnDidChangeVisibility: jest.fn(),
         mockOnDidCollapseElement: jest.fn(),
         mockOnDidExpandElement: jest.fn(),
@@ -55,7 +57,6 @@ async function createGlobalMocks() {
         mockUtilities: jest.fn(),
         mockShowInformationMessage: jest.fn(),
         mockGetConfiguration: jest.fn(),
-        mockOnDidChangeConfiguration: jest.fn(),
         mockIsFile: jest.fn(),
         mockLoad: jest.fn(),
         mockRegisterTextDocumentContentProvider: jest.fn(),
@@ -78,6 +79,12 @@ async function createGlobalMocks() {
                 WorkspaceFolder: 3
             };
         }),
+        UIKindEnums: jest.fn().mockImplementation(() => {
+            return {
+                Desktop: 1,
+                Web: 2
+            };
+        }),
         testSession: new imperative.Session({
             user: "fake",
             password: "fake",
@@ -93,7 +100,13 @@ async function createGlobalMocks() {
             loadNamedProfile: null,
             validProfile: ValidProfileEnum.VALID,
             checkCurrentProfile: jest.fn(),
-            usesSecurity: jest.fn().mockReturnValue(true)
+            usesSecurity: jest.fn().mockReturnValue(true),
+            getProfileSetting: jest.fn(),
+            disableValidation: jest.fn(),
+            enableValidation: jest.fn(),
+            disableValidationContext: jest.fn(),
+            enableValidationContext: jest.fn(),
+            validationArraySetup: jest.fn()
         },
         mockExtension: null,
         appName: vscode.env.appName,
@@ -110,6 +123,7 @@ async function createGlobalMocks() {
             "zowe.createMember",
             "zowe.deleteDataset",
             "zowe.deletePDS",
+            "zowe.allocateLike",
             "zowe.uploadDialog",
             "zowe.deleteMember",
             "zowe.editMember",
@@ -126,6 +140,8 @@ async function createGlobalMocks() {
             "zowe.renameDataSetMember",
             "zowe.hMigrateDataSet",
             "zowe.hRecallDataSet",
+            "zowe.disableValidation",
+            "zowe.enableValidation",
             "zowe.uss.addFavorite",
             "zowe.uss.removeFavorite",
             "zowe.uss.addSession",
@@ -148,6 +164,8 @@ async function createGlobalMocks() {
             "zowe.uss.editFile",
             "zowe.uss.saveSearch",
             "zowe.uss.removeSavedSearch",
+            "zowe.uss.disableValidation",
+            "zowe.uss.enableValidation",
             "zowe.zosJobsOpenspool",
             "zowe.deleteJob",
             "zowe.runModifyCommand",
@@ -169,12 +187,14 @@ async function createGlobalMocks() {
             "zowe.jobs.removeFavorite",
             "zowe.jobs.saveSearch",
             "zowe.jobs.removeSearchFavorite",
+            "zowe.jobs.disableValidation",
+            "zowe.jobs.enableValidation",
             "zowe.openRecentMember",
             "zowe.searchInAllLoadedItems",
             "zowe.deleteProfile",
             "zowe.cmd.deleteProfile",
             "zowe.uss.deleteProfile",
-            "zowe.jobs.deleteProfile"
+            "zowe.jobs.deleteProfile",
         ]
     };
 
@@ -213,11 +233,19 @@ async function createGlobalMocks() {
     Object.defineProperty(globalMocks.mockImperativeConfig, "instance", { value: globalMocks.mockIcInstance, configurable: true });
     Object.defineProperty(globalMocks.mockIcInstance, "cliHome", { get: globalMocks.mockCliHome });
     Object.defineProperty(vscode.env, "appName", { value: globalMocks.appName, configurable: true });
+    Object.defineProperty(vscode, "UIKind", { value: globalMocks.UIKindEnums, configurable: true });
     Object.defineProperty(Profiles, "createInstance", {
         value: jest.fn(() => globalMocks.testProfileOps)
     });
     Object.defineProperty(Profiles, "getInstance", {
         value: jest.fn(() => globalMocks.testProfileOps)
+    });
+    Object.defineProperty(PersistentFilters, "getDirectValue", {
+        value: jest.fn(() => {
+            return {
+                "Zowe-Automatic-Validation": true
+            };
+        })
     });
 
     // Create a mocked extension context
@@ -242,7 +270,7 @@ async function createGlobalMocks() {
             selection: [],
             onDidChangeSelection: globalMocks.mockOnDidChangeSelection,
             visible: true,
-            onDidChangeVisibility: globalMocks.mockOnDidChangeVisibility
+            onDidChangeVisibility: globalMocks.mockOnDidChangeVisibility,
         };
     });
 
@@ -339,6 +367,7 @@ describe("Extension Unit Tests", () => {
         const globalMocks = await createGlobalMocks();
 
         Object.defineProperty(vscode.env, "appName", { value: "Eclipse Theia" });
+        Object.defineProperty(vscode.env, "uiKind", { value: vscode.UIKind.Web });
         globalMocks.mockExistsSync.mockReset();
         globalMocks.mockReaddirSync.mockReset();
         globalMocks.mockExistsSync.mockReturnValueOnce(true);
