@@ -5,7 +5,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ## `1.9.0`
 
 - Added the Allocate Like feature. [#904](https://github.com/zowe/vscode-extension-for-zowe/issues/904). Thanks @katelynienaber
-- Added the ability to disable profile validation. [#922](https://github.com/zowe/vscode-extension-for-zowe/issues/922), [#953](https://github.com/zowe/vscode-extension-for-zowe/issues/953). Thanks @JillieBeanSim
+- Added the ability to disable/enable profile validation. [#922](https://github.com/zowe/vscode-extension-for-zowe/issues/922). Thanks @JillieBeanSim
+- Added the ability to access other profiles during profile validation. [#953](https://github.com/zowe/vscode-extension-for-zowe/issues/953). Thanks @JillieBeanSim
 - Grouped Favorites by profile for Datasets, USS, and Jobs. [#168](https://github.com/zowe/vscode-extension-for-zowe/issues/168). Thanks @lauren-li
 - Fixed USS renaming issues. [#911](https://github.com/zowe/vscode-extension-for-zowe/issues/911). Thanks @katelynienaber and @lauren-li
 - Fixed the deletion of datasets issue. [#963](https://github.com/zowe/vscode-extension-for-zowe/issues/963). Thanks @katelynienaber

@@ -35,7 +35,8 @@ More information:
 New features:
 
 * Added the Allocate Like feature.
-* Added the ability to disable profile validation.
+* Added the ability to disable/enable profile validation.
+* Added the ability to access other profiles during profile validation.
 
 Enhancements:
 
