@@ -25,8 +25,9 @@ export const DatasetsLocators = {
     defaultDatasetsProfileId: "/1:DefaultProfile",
     secondDatasetProfileId: "/2:TestSeleniumProfile",
     favoriteTabId: "/0:Favorites",
-    favoriteProfileInDatasetId: "/0:Favorites/0:[TestSeleniumProfile]: ",
+    favoriteProfileInDatasetId: "/0:Favorites/0:TestSeleniumProfile",
     addToFavoriteOptionXpath: "/html/body/div[5]/ul/li[3]/div[2]",
+    searchSymbolInFavoriteXpath: "//*[@id='/0:Favorites/0:TestSeleniumProfile/0:']",
     removeFavoriteProfileFromDatasetsOptionXpath: "//li[@data-command='__plugin.menu.action.zowe.removeSavedSearch']",
     secondDatasetProfileBeforeDeletingId: "/1:TestSeleniumProfile",
     deleteProfileFromDatasetsXpath: "(//li[@data-command='__plugin.menu.action.zowe.deleteProfile'])",
@@ -41,11 +42,12 @@ export const UssLocators = {
     defaultUssProfileXpath: "(//div[@id='/1:DefaultProfile'])[2]",
     secondUssProfileXpath: "(//div[@id='/2:TestSeleniumProfile'])[2]",
     favoriteTabXpath: "(//div[@id='/0:Favorites'])[2]",
-    favoriteProfileInUssXpath: "(//div[@id='/0:Favorites/0:[TestSeleniumProfile]: '])[2]",
+    favoriteProfileInUssXpath: "(//div[@id='/0:Favorites/0:TestSeleniumProfile'])[2]",
     addToFavoriteOptionXpath: "/html/body/div[5]/ul/li[3]/div[2]",
-    favoriteProfileInUssBeforeRemovingXpath: "(//div[@id='/0:Favorites/0:[TestSeleniumProfile]: '])",
+    favoriteProfileInUssBeforeRemovingXpath: "(//div[@id='/0:Favorites/0:TestSeleniumProfile'])",
     removeFavoriteProfileFromUssOptionXpath: "//li[@data-command='__plugin.menu.action.zowe.uss.removeSavedSearch']",
     hideProfileFromUssOptionXpath: "//li[@data-command='__plugin.menu.action.zowe.uss.removeSession']",
+    searchSymbolInFavoriteXpath: "(//*[@id='/0:Favorites/0:TestSeleniumProfile/0:'])",
   };
 
 export const JobsLocators = {
@@ -57,11 +59,15 @@ export const JobsLocators = {
     defaultJobsProfileXpath: "(//div[@id='/1:DefaultProfile'])[3]",
     secondJobsProfileXpath: "(//div[@id='/2:TestSeleniumProfile'])[3]",
     favoriteTabXpath: "(//div[@id='/0:Favorites'])[3]",
-    favoriteProfileInJobsXpath: "//div[@id='/0:Favorites/0:[TestSeleniumProfile]: Prefix:*']",
+    favoriteTabAfterRefreshXpath: "(//div[@id='/0:Favorites'])[2]",
+    favoriteProfileInJobsXpath: "(//div[@id='/0:Favorites/0:TestSeleniumProfile'])[3]",
+    favoriteprofile: "(//div[@id='/0:Favorites/0:TestSeleniumProfile'])",
     addToFavoriteOptionXpath: "/html/body/div[5]/ul/li[6]/div[2]",
+    favoriteProfileInJobsBeforeRemovingXpath: "//div[@id='/0:Favorites/0:TestSeleniumProfile/0:Prefix:*']",
     removeFavoriteProfileFromJobsOptionXpath: "//li[@data-command='__plugin.menu.action.zowe.jobs.removeSearchFavorite']",
     hideProfileFromJobsOptionXpath: "//li[@data-command='__plugin.menu.action.zowe.removeJobsSession']",
     secondJobsProfileIdBeforeHidingXpath: "(//div[@id='/2:TestSeleniumProfile'])[2]",
+    favoriteprofilexpath: "//div[@id='/0:Favorites/0:TestSeleniumProfile']",
   };
 
 export const TheiaNotificationMessages = {

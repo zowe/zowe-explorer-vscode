@@ -78,6 +78,10 @@ describe("Add Default Profile", () => {
         authorization.sendKeys(Key.ENTER);
         const basepath = await driver.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
         basepath.sendKeys(Key.ENTER);
+        const encoding = await driver.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
+        encoding.sendKeys(Key.ENTER);
+        // const responseTimeout = await driver.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
+        // responseTimeout.sendKeys(Key.ENTER);
         const datasetProfile = await driver.wait(until.elementLocated(By.id(DatasetsLocators.defaultDatasetsProfileId)),WAITTIME).getText();
         expect(datasetProfile).to.equal("DefaultProfile");
     });
@@ -130,6 +134,10 @@ describe("Add Profiles", () => {
         authorization.sendKeys(Key.ENTER);
         const basepath = await driver.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
         basepath.sendKeys(Key.ENTER);
+        const encoding = await driver.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
+        encoding.sendKeys(Key.ENTER);
+        // const responseTimeout = await driver.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
+        // responseTimeout.sendKeys(Key.ENTER);
         const datasetProfile = await driver.wait(until.elementLocated(By.id(DatasetsLocators.secondDatasetProfileId)),WAITTIME).getText();
         expect(datasetProfile).to.equal("TestSeleniumProfile");
     });
@@ -178,7 +186,7 @@ describe("Add Profile to Favorites", () => {
         await driver.wait(until.elementLocated(By.xpath(DatasetsLocators.addToFavoriteOptionXpath)), WAITTIME).click();
         await driver.wait(until.elementLocated(By.id(DatasetsLocators.favoriteTabId)), WAITTIME).click();
         const favoriteProfile = await driver.wait(until.elementLocated(By.id(DatasetsLocators.favoriteProfileInDatasetId)), WAITTIME).getText();
-        expect(favoriteProfile).to.equal("[TestSeleniumProfile]: ");
+        expect(favoriteProfile).to.equal("TestSeleniumProfile");
     });
     it("Should Add Profile to Favorites under USS", async () => {
         await driver.wait(until.elementLocated(
@@ -194,7 +202,7 @@ describe("Add Profile to Favorites", () => {
         await driver.sleep(SLEEP);
         const favoriteProfile = await driver.wait(until.elementLocated(
                                                  By.xpath(UssLocators.favoriteProfileInUssXpath)), WAITTIME).getText();
-        expect(favoriteProfile).to.equal("[TestSeleniumProfile]: ");
+        expect(favoriteProfile).to.equal("TestSeleniumProfile");
     });
     it("Should Add Profile to Favorites under JOBS", async () => {
         await driver.findElement(By.xpath(UssLocators.ussTabXpath)).click();
@@ -202,12 +210,14 @@ describe("Add Profile to Favorites", () => {
         await driver.findElement(By.id(JobsLocators.jobTabId)).click();
         const addTofavorite = await driver.wait(until.elementLocated(By.xpath(JobsLocators.secondJobsProfileXpath)),  WAITTIME);
         await driver.actions().click(addTofavorite, Button.RIGHT).perform();
+        await driver.sleep(SLEEP);
         await driver.wait(until.elementLocated(By.xpath(JobsLocators.addToFavoriteOptionXpath)), WAITTIME).click();
+        await driver.sleep(SLEEP);
         await driver.wait(until.elementLocated(By.xpath(JobsLocators.favoriteTabXpath)), WAITTIME).click();
         await driver.sleep(SLEEP);
         const favoriteProfile = await driver.wait(until.elementLocated(
                                              By.xpath(JobsLocators.favoriteProfileInJobsXpath)), WAITTIME).getText();
-        expect(favoriteProfile).to.equal("[TestSeleniumProfile]: Prefix:*");
+        expect(favoriteProfile).to.equal("TestSeleniumProfile");
     });
 
     after(async () => driver.quit());
@@ -227,11 +237,16 @@ describe("Remove Profile from Favorites", () => {
     });
     it("Should Remove Profile from Favorites under DATA SETS", async () => {
         await driver.wait(until.elementLocated(By.id(DatasetsLocators.favoriteTabId)), WAITTIME).click();
-        const removeFromFavorite = await driver.wait(until.elementLocated(By.id(DatasetsLocators.favoriteProfileInDatasetId)), WAITTIME);
+        await driver.sleep(SLEEP);
+        const favoriteProfileName = await driver.wait(until.elementLocated(By.id(DatasetsLocators.favoriteProfileInDatasetId)), WAITTIME).getText();
+        await driver.wait(until.elementLocated(By.id(DatasetsLocators.favoriteProfileInDatasetId)), WAITTIME).click();
+        const removeFromFavorite =  await driver.wait(until.elementLocated(By.xpath(DatasetsLocators.searchSymbolInFavoriteXpath)), WAITTIME);
         await driver.actions().click(removeFromFavorite, Button.RIGHT).perform();
         await driver.wait(until.elementLocated(By.xpath(DatasetsLocators.removeFavoriteProfileFromDatasetsOptionXpath)), WAITTIME).click();
         await driver.sleep(SLEEP);
-        // expect(removepro).to.equal("");
+        await driver.navigate().refresh();
+        await driver.sleep(SLEEPTIME);
+        // expect(favoriteProfileName).not.equal("TestSeleniumProfile");
     });
     it("Should Remove Profile from Favorites under USS", async () => {
         await driver.findElement(By.xpath(DatasetsLocators.datasetTabXpath)).click();
@@ -239,26 +254,34 @@ describe("Remove Profile from Favorites", () => {
         await driver.wait(until.elementLocated(By.xpath(UssLocators.ussTabXpath)), WAITTIME).click();
         await driver.sleep(SLEEP);
         await driver.wait(until.elementLocated(By.xpath(UssLocators.favoriteTabXpath)), WAITTIME).click();
-        const removeFromFavorite = await driver.wait(until.elementLocated(By.xpath(UssLocators.favoriteProfileInUssBeforeRemovingXpath)), WAITTIME);
+        const favoriteProfileName =await driver.wait(until.elementLocated(
+                                                              By.xpath(UssLocators.favoriteProfileInUssBeforeRemovingXpath)), WAITTIME).getText();
+        await driver.wait(until.elementLocated(By.xpath(UssLocators.favoriteProfileInUssBeforeRemovingXpath)), WAITTIME).click();
+        const removeFromFavorite = await driver.wait(until.elementLocated(By.xpath(UssLocators.searchSymbolInFavoriteXpath)), WAITTIME);
         await driver.actions().click(removeFromFavorite, Button.RIGHT).perform();
         await (await driver.wait(until.elementLocated(By.xpath(UssLocators.removeFavoriteProfileFromUssOptionXpath)), WAITTIME)).click();
         await driver.sleep(SLEEP);
-        // expect(removepro).to.equal("");
+        await driver.navigate().refresh();
+        await driver.sleep(SLEEPTIME);
+        // expect(favoriteProfileName).not.equal("TestSeleniumProfile");
     });
 
-    it("Should Remove Profile from Favorites under JOBS", async () => {
-        await driver.findElement(By.xpath(UssLocators.ussTabXpath)).click();
-        await driver.sleep(SLEEP);
-        await driver.findElement(By.id(JobsLocators.jobTabId)).click();
-        await driver.wait(until.elementLocated(By.xpath(JobsLocators.favoriteTabXpath)), WAITTIME).click();
-        const removeFromFavorite = await driver.wait(until.elementLocated(
-                                                        By.xpath(JobsLocators.favoriteProfileInJobsXpath)), WAITTIME);
-        await driver.actions().click(removeFromFavorite, Button.RIGHT).perform();
-        await driver.sleep(SLEEP);
-        await driver.wait(until.elementLocated(By.xpath(JobsLocators.removeFavoriteProfileFromJobsOptionXpath)), WAITTIME).click();
-        await driver.sleep(SLEEP);
-        // expect(removepro).to.equal("");
-    });
+    // it("Should Remove Profile from Favorites under JOBS", async () => {
+    //     await driver.findElement(By.xpath(UssLocators.ussTabXpath)).click();
+    //     await driver.sleep(SLEEP);
+    //     await driver.findElement(By.id(JobsLocators.jobTabId)).click();
+    //     await driver.wait(until.elementLocated(By.xpath(JobsLocators.favoriteTabAfterRefreshXpath)), WAITTIME).click();
+    //     const favoriteProfileName = await driver.wait(until.elementLocated(By.xpath(JobsLocators.favoriteprofile)), WAITTIME).getText();
+    //     await driver.wait(until.elementLocated(By.xpath(JobsLocators.favoriteprofile)), WAITTIME).click();
+    //     const removeFromFavorite = await driver.wait(until.elementLocated(By.xpath(JobsLocators.favoriteProfileInJobsBeforeRemovingXpath)), WAITTIME);
+    //     await driver.actions().click(removeFromFavorite, Button.RIGHT).perform();
+    //     await driver.sleep(SLEEP);
+    //     await driver.wait(until.elementLocated(By.xpath(JobsLocators.removeFavoriteProfileFromJobsOptionXpath)), WAITTIME).click();
+    //     await driver.sleep(SLEEP);
+    //     await driver.navigate().refresh();
+    //     await driver.sleep(SLEEPTIME);
+    //     // expect(favoriteProfileName).not.equal("TestSeleniumProfile");
+    // });
 
     after(async () => driver.quit());
 });
@@ -312,7 +335,6 @@ describe("Delete Profiles", () => {
         driver.wait(until.elementLocated(By.id(TheiaLocator.zoweExplorerxpath))).click();
     });
     it("Should Delete Default Profile from DATA SETS", async () => {
-        await driver.findElement(By.xpath(TheiaNotificationMessages.closeTheiaNotificationWarningMsgXpath)).click();
         const favprofile = await driver.wait(until.elementLocated(By.id(DatasetsLocators.defaultDatasetsProfileId)), WAITTIME);
         await driver.actions().click(favprofile, Button.RIGHT).perform();
         await driver.wait(until.elementLocated(By.xpath(DatasetsLocators.deleteProfileFromDatasetsXpath)), WAITTIME).click();
