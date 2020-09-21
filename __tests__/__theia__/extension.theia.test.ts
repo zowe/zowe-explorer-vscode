@@ -273,7 +273,8 @@ describe("Remove Profile from Favorites", () => {
     //     await driver.wait(until.elementLocated(By.xpath(JobsLocators.favoriteTabAfterRefreshXpath)), WAITTIME).click();
     //     const favoriteProfileName = await driver.wait(until.elementLocated(By.xpath(JobsLocators.favoriteprofile)), WAITTIME).getText();
     //     await driver.wait(until.elementLocated(By.xpath(JobsLocators.favoriteprofile)), WAITTIME).click();
-    //     const removeFromFavorite = await driver.wait(until.elementLocated(By.xpath(JobsLocators.favoriteProfileInJobsBeforeRemovingXpath)), WAITTIME);
+    //     const removeFromFavorite = await driver.wait(until.elementLocated(
+    //             By.xpath(JobsLocators.favoriteProfileInJobsBeforeRemovingXpath)), WAITTIME);
     //     await driver.actions().click(removeFromFavorite, Button.RIGHT).perform();
     //     await driver.sleep(SLEEP);
     //     await driver.wait(until.elementLocated(By.xpath(JobsLocators.removeFavoriteProfileFromJobsOptionXpath)), WAITTIME).click();
