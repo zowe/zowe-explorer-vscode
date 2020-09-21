@@ -23,7 +23,7 @@ More information:
 
 ## Contents
 
-* [What's new in Zowe Explorer 1.7.0](#what's-new-in-zowe-explorer-1.7.0)
+* [What's new in Zowe Explorer 1.9.0](#what's-new-in-zowe-explorer-1.9.0)
 * [Prerequisites](#prerequisites)
 * [Getting Started](#getting-started)
 * [Credentials Security](#credentials-security)
@@ -42,6 +42,7 @@ Enhancements:
 
 * Datasets and members names are displayed in all uppercase letters even if typed in lowercase letters.
 * Grouped Favorites by profile for Datasets, USS, and Jobs.
+* Other profiles can be accessed during profile validation.
 * Updated the environment check for Theia compatibility.
 
 Bug Fixes:
