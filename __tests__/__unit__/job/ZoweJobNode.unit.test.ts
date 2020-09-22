@@ -205,8 +205,6 @@ describe("ZoweJobNode unit tests - Function addSession", () => {
     it("Tests that addSession adds the session to the tree with disabled global setting", async () => {
         const globalMocks = await createGlobalMocks();
 
-
-        globalMocks.testJobsProvider.mSessionNodes.pop();
         globalMocks.mockProfileInstance.checkProfileValidationSetting = globalMocks.mockValidationSetting.mockReturnValueOnce(false);
         await globalMocks.testJobsProvider.addSession("sestest");
 
@@ -460,7 +458,7 @@ describe("ZoweJobNode unit tests - Function filterPrompt", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
             testJobNodeNoCred: new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, globalMocks.jobNode,
-                                       globalMocks.testSessionNoCred, globalMocks.testIJob, globalMocks.testProfile),
+                                       globalMocks.testSession, globalMocks.testIJob, globalMocks.testProfile),
             qpItem: globalMocks.testJobsProvider.createOwner,
             theia: false,
             mockCheckCurrentProfile: jest.fn(),

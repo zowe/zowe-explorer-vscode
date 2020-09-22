@@ -22,8 +22,8 @@ nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFo
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export async function getValidSession(serviceProfile: IProfileLoaded,
-    profileName: string,
-    prompt?: boolean): Promise<Session | null> {
+                                      profileName: string,
+                                      prompt?: boolean): Promise<Session | null> {
 
     // Retrieve baseProfile
     const baseProfile = DefaultProfileManager.getInstance().getDefaultProfile("base");

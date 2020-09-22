@@ -12,7 +12,8 @@
 import { Profiles } from "../../../src/Profiles";
 import { DefaultProfileManager } from "../../../src/profiles/DefaultProfileManager";
 import { createProfileManager } from "../../../__mocks__/mockCreators/profiles";
-import { createISession, createISessionWithoutCredentials, createValidBaseProfile, createValidIProfile } from "../../../__mocks__/mockCreators/shared";
+import { createISession, createISessionWithoutCredentials,
+         createValidBaseProfile, createValidIProfile } from "../../../__mocks__/mockCreators/shared";
 import { Logger, ConnectionPropsForSessCfg } from "@zowe/imperative";
 import * as globals from "../../../src/globals";
 import * as vscode from "vscode";
