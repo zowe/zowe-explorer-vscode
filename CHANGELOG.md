@@ -2,7 +2,19 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
-## '1.8.0'
+## `1.9.0`
+
+- Added the Allocate Like feature. [#904](https://github.com/zowe/vscode-extension-for-zowe/issues/904). Thanks @katelynienaber
+- Added the ability to disable/enable profile validation. [#922](https://github.com/zowe/vscode-extension-for-zowe/issues/922). Thanks @JillieBeanSim
+- Added the ability to access other profiles during profile validation. [#953](https://github.com/zowe/vscode-extension-for-zowe/issues/953). Thanks @JillieBeanSim
+- Grouped Favorites by profile for Datasets, USS, and Jobs. [#168](https://github.com/zowe/vscode-extension-for-zowe/issues/168). Thanks @lauren-li
+- Fixed USS renaming issues. [#911](https://github.com/zowe/vscode-extension-for-zowe/issues/911). Thanks @katelynienaber and @lauren-li
+- Fixed the deletion of datasets issue. [#963](https://github.com/zowe/vscode-extension-for-zowe/issues/963). Thanks @katelynienaber
+- Once entered, datasets and members are displayed in uppercase. [#962](https://github.com/zowe/vscode-extension-for-zowe/issues/962). Thanks @AndrewTwydell and @Pranay154
+- Removed errors in Favorites items caused by profiles that are created by other extensions. [#968](https://github.com/zowe/vscode-extension-for-zowe/issues/968). Thanks @lauren-li
+- Updated the environment check for Theia compatibility. [#1009](https://github.com/zowe/vscode-extension-for-zowe/issues/1009). Thanks @lauren-li
+
+## `1.8.0`
 
 - Webpack working with localization and logging. Thanks @lauren-li
 - Allow extenders to load their saved profile sessions upon their activation. Thanks @lauren-li
@@ -12,9 +24,9 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ## `1.7.1`
 
-- Fix USS save operation. Thanks @JillieBeanSim
-- Add validation information message. Thanks @JillieBeanSim
-- Restructure Readme. Thanks @IgorCATech
+- Fixed USS save operation. Thanks @JillieBeanSim
+- Added validation information message. Thanks @JillieBeanSim
+- Restructured Readme. Thanks @IgorCATech
 
 ## `1.7.0`
 
