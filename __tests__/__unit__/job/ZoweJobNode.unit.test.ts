@@ -124,7 +124,7 @@ async function createGlobalMocks() {
     // Jes API mocks
     globalMocks.jesApi = ZoweExplorerApiRegister.getJesApi(globalMocks.testProfile);
     globalMocks.mockGetJesApi.mockReturnValue(globalMocks.jesApi);
-    Object.defineProperty(globalMocks.jesApi, "getValidSession", { value: jest.fn(() => globalMocks.testSession), configurable: true });
+    Object.defineProperty(Profiles, "getValidSession", { value: jest.fn(() => globalMocks.testSession), configurable: true });
     ZoweExplorerApiRegister.getJesApi = globalMocks.mockGetJesApi.bind(ZoweExplorerApiRegister);
 
     // Common API mocks
@@ -132,12 +132,19 @@ async function createGlobalMocks() {
     globalMocks.mockGetCommonApi.mockReturnValue(globalMocks.commonApi);
     Object.defineProperty(globalMocks.commonApi, "getValidSession", { value: jest.fn(() => globalMocks.testSession), configurable: true });
     ZoweExplorerApiRegister.getCommonApi = globalMocks.mockGetCommonApi.bind(ZoweExplorerApiRegister);
+    Object.defineProperty(globalMocks.commonApi, "getSession", {
+        value: jest.fn(() => {
+            return globalMocks.testSession;
+        }),
+        configurable: true
+    });
 
     globalMocks.mockCreateBasicZosmfSessionFromArguments.mockReturnValue(globalMocks.testSession);
     globalMocks.createTreeView.mockReturnValue("testTreeView");
     globalMocks.mockGetJob.mockReturnValue(globalMocks.testIJob);
     globalMocks.mockGetJobsByOwnerAndPrefix.mockReturnValue([globalMocks.testIJob, globalMocks.testIJobComplete]);
     globalMocks.mockProfileInstance.editSession = jest.fn(() => globalMocks.testProfile);
+    globalMocks.mockProfileInstance.getValidSession = jest.fn(() => globalMocks.testSession);
     globalMocks.testJobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded,
                                       null, globalMocks.testSession, globalMocks.testIJob, globalMocks.testProfile);
     globalMocks.testJobNode.contextValue = "job";

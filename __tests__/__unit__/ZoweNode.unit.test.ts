@@ -35,7 +35,6 @@ async function createGlobalMocks() {
         mockGetValidSession: jest.fn(),
         withProgress: jest.fn(),
         mockCheckCurrentProfile: jest.fn(),
-        getMvsApiMock: jest.fn(),
         mockGetInstance: jest.fn(),
         mvsApi: null,
         mockInstance: null,
@@ -51,7 +50,6 @@ async function createGlobalMocks() {
         })
     };
 
-    globalMocks.mvsApi = ZoweExplorerApiRegister.getMvsApi(globalMocks.profileOne);
     globalMocks.mockInstance = {
         allProfiles: [globalMocks.profileOne, { name: "profile1" }, { name: "secondName" }],
         defaultProfile: jest.fn(() => globalMocks.profileOne),
@@ -70,8 +68,6 @@ async function createGlobalMocks() {
     globalMocks.mockCheckCurrentProfile.mockReturnValue(globalMocks.profilesForValidation);
     globalMocks.mockGetValidSession.mockResolvedValue(globalMocks.session);
     globalMocks.mockGetInstance.mockResolvedValue(globalMocks.mockInstance);
-    globalMocks.getMvsApiMock.mockReturnValue(globalMocks.mvsApi);
-    ZoweExplorerApiRegister.getMvsApi = globalMocks.getMvsApiMock.bind(ZoweExplorerApiRegister);
 
     // Mocking Default Profile Manager
     globalMocks.defaultProfileManagerInstance = await DefaultProfileManager.createInstance(Logger.getAppLogger());
@@ -84,11 +80,10 @@ async function createGlobalMocks() {
                           "getDefaultProfile",
                           { value: jest.fn(() => globalMocks.defaultProfile), configurable: true });
 
-    // USS API mocks
-    globalMocks.mvsApi = ZoweExplorerApiRegister.getUssApi(globalMocks.testProfile);
+    // MVS API mocks
+    globalMocks.mvsApi = ZoweExplorerApiRegister.getMvsApi(globalMocks.profileOne);
     globalMocks.mockGetMvsApi.mockReturnValue(globalMocks.mvsApi);
-    Object.defineProperty(globalMocks.mvsApi, "getValidSession", { value: jest.fn(() => globalMocks.testSession), configurable: true });
-    ZoweExplorerApiRegister.getUssApi = globalMocks.mockGetMvsApi.bind(ZoweExplorerApiRegister);
+    ZoweExplorerApiRegister.getMvsApi = globalMocks.mockGetMvsApi.bind(ZoweExplorerApiRegister);
 
     Object.defineProperty(vscode, "ProgressLocation", {value: globalMocks.ProgressLocation, configurable: true});
     Object.defineProperty(vscode.window, "withProgress", {value: globalMocks.withProgress, configurable: true});
@@ -121,6 +116,12 @@ describe("Unit Tests (Jest)", () => {
      *************************************************************************************************************/
     it("Testing that getChildren returns the correct Thenable<ZoweDatasetNode[]>", async () => {
         const globalMocks = await createGlobalMocks();
+        Object.defineProperty(globalMocks.mvsApi, "getSession", {
+            value: jest.fn(() => {
+                return globalMocks.session;
+            }),
+            configurable: true
+        });
 
         // Creating a rootNode
         const rootNode = new ZoweDatasetNode("root", vscode.TreeItemCollapsibleState.Collapsed,
@@ -172,6 +173,12 @@ describe("Unit Tests (Jest)", () => {
      *************************************************************************************************************/
     it("Testing that getChildren returns the correct Thenable<ZoweDatasetNode[]> for a PO", async () => {
         const globalMocks = await createGlobalMocks();
+        Object.defineProperty(globalMocks.mvsApi, "getSession", {
+            value: jest.fn(() => {
+                return globalMocks.session;
+            }),
+            configurable: true
+        });
 
         // Creating a rootNode
         const rootNode = new ZoweDatasetNode("root", vscode.TreeItemCollapsibleState.None,
@@ -201,6 +208,12 @@ describe("Unit Tests (Jest)", () => {
     it("Checks that when bright.List.dataSet/allMembers() causes an error on the zowe call, " +
         "it throws an error and the catch block is reached", async () => {
             const globalMocks = await createGlobalMocks();
+            Object.defineProperty(globalMocks.mvsApi, "getSession", {
+                value: jest.fn(() => {
+                    return globalMocks.session;
+                }),
+                configurable: true
+            });
 
             globalMocks.showErrorMessage.mockReset();
             // Creating a rootNode
@@ -221,6 +234,12 @@ describe("Unit Tests (Jest)", () => {
     it("Checks that when bright.List.dataSet/allMembers() returns an unsuccessful response, " +
         "it throws an error and the catch block is reached", async () => {
             const globalMocks = await createGlobalMocks();
+            Object.defineProperty(globalMocks.mvsApi, "getSession", {
+                value: jest.fn(() => {
+                    return globalMocks.session;
+                }),
+                configurable: true
+            });
 
             // Creating a rootNode
             const rootNode = new ZoweDatasetNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, globalMocks.session,
@@ -269,6 +288,12 @@ describe("Unit Tests (Jest)", () => {
      *************************************************************************************************************/
     it("Checks that a member can reach its globalMocks.session properly", async () => {
         const globalMocks = await createGlobalMocks();
+        Object.defineProperty(globalMocks.mvsApi, "getSession", {
+            value: jest.fn(() => {
+                return globalMocks.session;
+            }),
+            configurable: true
+        });
 
         // Creating a rootNode
         const rootNode = new ZoweDatasetNode("root", vscode.TreeItemCollapsibleState.Collapsed,
@@ -318,6 +343,12 @@ describe("Unit Tests (Jest)", () => {
      *************************************************************************************************************/
     it("Testing Run with a favorite", async () => {
         const globalMocks = await createGlobalMocks();
+        Object.defineProperty(globalMocks.mvsApi, "getSession", {
+            value: jest.fn(() => {
+                return globalMocks.session;
+            }),
+            configurable: true
+        });
 
         // Creating a rootNode
         const pds = new ZoweDatasetNode("[root]: something", vscode.TreeItemCollapsibleState.Collapsed,

@@ -27,6 +27,7 @@ import * as nls from "vscode-nls";
 import { DefaultProfileManager } from "../profiles/DefaultProfileManager";
 import { resetValidationSettings } from "../shared/actions";
 import { PersistentFilters } from "../PersistentFilters";
+import { getValidSession } from "../profiles/utils";
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
@@ -681,14 +682,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             let session;
             try {
                 // Uses loaded profile to create a session with the USS API
-                const getSessStatus = await ZoweExplorerApiRegister.getInstance().getCommonApi(profileLoaded);
-                if (getSessStatus.getValidSession) {
-                    session = await ZoweExplorerApiRegister.getCommonApi(profileLoaded).getValidSession(profileLoaded,
-                                                                                                            profileLoaded.name,
-                                                                                                            false);
-                } else {
-                    session = await ZoweExplorerApiRegister.getCommonApi(profileLoaded).getSession(profileLoaded);
-                }
+                session = await getValidSession(profileLoaded, profileLoaded.name, false);
             } catch (error) {
                 // When no password is entered, we should silence the error message for not providing it
                 // since password is optional in Zowe Explorer

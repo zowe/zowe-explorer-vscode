@@ -124,7 +124,8 @@ async function createGlobalMocks() {
                 validateProfiles: jest.fn(),
                 loadNamedProfile: globalMocks.mockLoadNamedProfile
             };
-        })
+        }),
+        configurable: true
     });
 
     // Mocking Default Profile Manager
@@ -141,7 +142,6 @@ async function createGlobalMocks() {
     // USS API mocks
     globalMocks.ussApi = ZoweExplorerApiRegister.getUssApi(globalMocks.testProfile);
     globalMocks.mockGetUssApi.mockReturnValue(globalMocks.ussApi);
-    Object.defineProperty(globalMocks.ussApi, "getValidSession", { value: jest.fn(() => globalMocks.testSession), configurable: true });
     ZoweExplorerApiRegister.getUssApi = globalMocks.mockGetUssApi.bind(ZoweExplorerApiRegister);
 
     return globalMocks;
@@ -156,6 +156,13 @@ describe("USS Action Unit Tests - Function createUSSNodeDialog", () => {
         };
         newMocks.testUSSTree = createUSSTree([createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile)],
             [newMocks.ussNode], createTreeView());
+
+        Object.defineProperty(globalMocks.ussApi, "getSession", {
+            value: jest.fn(() => {
+                return globalMocks.session;
+            }),
+            configurable: true
+        });
 
         return newMocks;
     }

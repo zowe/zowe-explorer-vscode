@@ -30,7 +30,6 @@ import * as workspaceUtils from "../../../src/utils/workspace";
 import { DefaultProfileManager } from "../../../src/profiles/DefaultProfileManager";
 import { ZoweExplorerApiRegister } from "../../../src/api/ZoweExplorerApiRegister";
 import { PersistentFilters } from "../../../src/PersistentFilters";
-import { ZosmfUssApi } from "../../../src/api/ZoweExplorerZosmfApi";
 
 jest.mock("fs");
 jest.mock("util");
@@ -398,7 +397,8 @@ describe("Dataset Tree Unit Tests - Function loadProfilesForFavorites", () => {
         Object.defineProperty(blockMocks.mvsApi, "getSession", {
             value: jest.fn(() => {
                 return blockMocks.session;
-            })
+            }),
+            configurable: true
         });
 
         await testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
@@ -1172,7 +1172,7 @@ describe("Dataset Tree Unit Tests - Function filterPrompt", () => {
     });
 });
 describe("Dataset Tree Unit Tests - Function editSession", () => {
-    async function createBlockMocks() {
+    async function createBlockMocks(globalMocks) {
         const newMocks = {
             log: Logger.getAppLogger(),
             session: createISession(),
@@ -1206,12 +1206,19 @@ describe("Dataset Tree Unit Tests - Function editSession", () => {
             }),
         });
 
+        Object.defineProperty(globalMocks.commonApi, "getSession", {
+            value: jest.fn(() => {
+                return globalMocks.testSession;
+            }),
+            configurable: true
+        });
+
         return newMocks;
     }
 
     it("Checking common run of function", async () => {
         const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
 
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();

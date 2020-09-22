@@ -559,10 +559,11 @@ describe("Profiles Unit Tests - Property allProfiles", () => {
         const globalMocks = await createGlobalMocks();
 
         const loadedProfiles = globalMocks.profiles.allProfiles;
-        expect(loadedProfiles).toEqual([{ name: "sestest", profile: {}, type: "zosmf" },
-        { name: "profile1", profile: {}, type: "zosmf" },
-        { name: "profile2", profile: {}, type: "zosmf" }]);
-    });
+        expect(loadedProfiles).toEqual([ globalMocks.defaultProfile,
+                                         { name: "sestest", profile: {}, type: "zosmf" },
+                                         { name: "profile1", profile: {}, type: "zosmf" },
+                                         { name: "profile2", profile: {}, type: "zosmf" }]);
+        });
 });
 
 describe("Profiles Unit Tests - Function updateProfile", () => {

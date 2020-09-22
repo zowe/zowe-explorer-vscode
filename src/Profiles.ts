@@ -9,10 +9,9 @@
 *                                                                                 *
 */
 
-import { ICommandArguments, ConnectionPropsForSessCfg, IProfileLoaded, Logger, CliProfileManager, IProfile, IUpdateProfile, Session, ISession } from "@zowe/imperative";
+import { IProfileLoaded, Logger, CliProfileManager, IProfile, IUpdateProfile, ISession } from "@zowe/imperative";
 import * as path from "path";
 import * as vscode from "vscode";
-import * as zowe from "@zowe/cli";
 import * as globals from "./globals";
 import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
 import { errorHandling, getZoweDir, FilterDescriptor, FilterItem, resolveQuickPickHelper, setProfile, setSession } from "./utils";
@@ -749,153 +748,6 @@ export class Profiles {
             }
         }
         return profileManager;
-    }
-
-    public async getValidSession(serviceProfile: IProfileLoaded,
-                                 profileName: string,
-                                 prompt?: boolean): Promise<Session | null> {
-
-        // Retrieve baseProfile
-        const baseProfile = this.allProfiles.filter((profile) => profile.type === "base")[0];
-
-        // If user exists in serviceProfile, use serviceProfile to login because it has precedence over baseProfile
-        // If no user & no baseProfile, use serviceProfile as default
-        // If no user & no token, use serviceProfile as default
-        if (serviceProfile.profile.user || !baseProfile || (!serviceProfile.profile.user && baseProfile && !baseProfile.profile.tokenValue)) {
-            if (prompt) {
-                // Select for prompting only fields which are not defined
-                const schemaArray = [];
-                if (!serviceProfile.profile.user && (!baseProfile || (baseProfile && !baseProfile.profile.user))) {
-                    if (!baseProfile || (baseProfile && !baseProfile.profile.tokenValue)) {
-                        schemaArray.push("user");
-                    }
-                }
-                if (!serviceProfile.profile.password && (!baseProfile || (baseProfile && !baseProfile.profile.password))) {
-                    schemaArray.push("password");
-                }
-                if (!serviceProfile.profile.host &&  (!baseProfile || (baseProfile && !baseProfile.profile.host))) {
-                    schemaArray.push("host");
-                    if (!serviceProfile.profile.port &&  (!baseProfile || (baseProfile && !baseProfile.profile.port)))
-                    { schemaArray.push("port"); }
-                }
-
-                try {
-                    const newDetails = await collectProfileDetails(schemaArray);
-                    for (const detail of schemaArray) { serviceProfile.profile[detail] = newDetails[detail]; }
-                } catch (error) {
-                    // tslint:disable:no-magic-numbers
-                    if (error.mDetails && error.mDetails.errorCode === 401) {
-                        if (globals.ISTHEIA) {
-                            vscode.window.showErrorMessage(error.message);
-                            this.getValidSession(serviceProfile, serviceProfile.name, true);
-                        } else {
-                            vscode.window.showErrorMessage(error.message, "Check Credentials").then(async (selection) => {
-                                if (selection) {
-                                    delete serviceProfile.profile.user;
-                                    delete serviceProfile.profile.password;
-                                    await this.getValidSession(serviceProfile, serviceProfile.name, true);
-                                }
-                            });
-                        }
-                    } else { throw error; }
-                }
-            }
-            const cmdArgs: ICommandArguments = {
-                $0: "zowe",
-                _: [""],
-                host: serviceProfile.profile.host ? serviceProfile.profile.host :
-                      (baseProfile ? baseProfile.profile.host : undefined),
-                port: serviceProfile.profile.port ? serviceProfile.profile.port :
-                      (baseProfile ? baseProfile.profile.port : 0),
-                basePath: serviceProfile.profile.basePath ? serviceProfile.profile.basePath :
-                          (baseProfile ? baseProfile.profile.basePath : undefined),
-                rejectUnauthorized: serviceProfile.profile.rejectUnauthorized !== null ?
-                                    serviceProfile.profile.rejectUnauthorized :
-                                    (baseProfile ? baseProfile.profile.rejectUnauthorized : true),
-                user: serviceProfile.profile.user ? serviceProfile.profile.user :
-                      (baseProfile ? baseProfile.profile.user : undefined),
-                password: serviceProfile.profile.password ? serviceProfile.profile.password :
-                          (baseProfile ? baseProfile.profile.password : undefined),
-                tokenType: "apimlAuthenticationToken",
-                tokenValue: baseProfile ? baseProfile.profile.tokenValue : undefined
-            };
-            try {
-                return zowe.ZosmfSession.createBasicZosmfSessionFromArguments(cmdArgs);
-            } catch (error) {
-                // When no password is entered, we should silence the error message for not providing it
-                // since password is optional in Zowe Explorer
-                if (error.message !== "Must have user & password OR base64 encoded credentials") {
-                    // tslint:disable:no-magic-numbers
-                    if (error.mDetails && error.mDetails.errorCode === 401) {
-                        if (globals.ISTHEIA) {
-                            vscode.window.showErrorMessage(error.message);
-                            this.getValidSession(serviceProfile, serviceProfile.name, true);
-                        } else {
-                            vscode.window.showErrorMessage(error.message, "Check Credentials").then(async (selection) => {
-                                if (selection) {
-                                    delete serviceProfile.profile.user;
-                                    delete serviceProfile.profile.password;
-                                    await this.getValidSession(serviceProfile, serviceProfile.name, true);
-                                }
-                            });
-                        }
-                    } else { throw error; }
-                }
-            }
-        } else if (baseProfile) {
-            // baseProfile exists, so APIML login is possible
-            const sessCfg = {
-                rejectUnauthorized: serviceProfile.profile.rejectUnauthorized != null ? serviceProfile.profile.rejectUnauthorized :
-                                                                                baseProfile.profile.rejectUnauthorized,
-                basePath: serviceProfile.profile.basePath,
-                hostname: serviceProfile.profile.host ? serviceProfile.profile.host : baseProfile.profile.host,
-                port: serviceProfile.profile.port ? serviceProfile.profile.port : baseProfile.profile.port,
-            };
-
-            const cmdArgs: ICommandArguments = {
-                $0: "zowe",
-                _: [""],
-                tokenType: "apimlAuthenticationToken",
-                tokenValue: baseProfile.profile.tokenValue
-            };
-
-            try {
-                let connectableSessCfg: ISession;
-                if (prompt) {
-                    connectableSessCfg = await ConnectionPropsForSessCfg.addPropsOrPrompt<ISession>(sessCfg,
-                        cmdArgs,
-                        { requestToken: false,
-                          doPrompting: prompt,
-                          getValuesBack: collectProfileDetails });
-                } else {
-                    connectableSessCfg = await ConnectionPropsForSessCfg.addPropsOrPrompt<ISession>(sessCfg,
-                                                                                                    cmdArgs,
-                                                                                                    { requestToken: false, doPrompting: false });
-                }
-
-                return new Session(connectableSessCfg);
-            } catch (error) {
-                // tslint:disable:no-magic-numbers
-                if (error.mDetails && error.mDetails.errorCode === 401) {
-                    if (globals.ISTHEIA) {
-                        vscode.window.showErrorMessage(error.message);
-                        this.getValidSession(serviceProfile, serviceProfile.name, true);
-                    } else {
-                        vscode.window.showErrorMessage(error.message, "Check Credentials").then(async (selection) => {
-                            if (selection) {
-                                delete serviceProfile.profile.user;
-                                delete serviceProfile.profile.password;
-                                await this.getValidSession(serviceProfile, serviceProfile.name, true);
-                            }
-                        });
-                    }
-                } else { throw error; }
-            }
-        } else {
-            // Neither baseProfile nor serviceProfile exists. It is impossible to login with the currently-provided information.
-            throw new Error(localize("getValidSession.loginImpossible",
-                "Profile {0} is invalid. Please check your login details and try again.", profileName));
-        }
     }
 
     private async deletePrompt(deletedProfile: IProfileLoaded) {

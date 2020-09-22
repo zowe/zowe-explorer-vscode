@@ -11,15 +11,14 @@
 
 import * as zowe from "@zowe/cli";
 import * as vscode from "vscode";
-import { IProfileLoaded, Session, ISession } from "@zowe/imperative";
+import { IProfileLoaded, Session, } from "@zowe/imperative";
 import * as globals from "../globals";
 import { Profiles, ValidProfileEnum } from "../Profiles";
 import { PersistentFilters } from "../PersistentFilters";
 import { FilterDescriptor, FilterItem, resolveQuickPickHelper, errorHandling } from "../utils";
 import { IZoweTreeNode } from "../api/IZoweTreeNode";
 import * as nls from "vscode-nls";
-import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
-import { DefaultProfileManager } from "../profiles/DefaultProfileManager";
+import { getValidSession } from "../profiles/utils";
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
@@ -97,15 +96,9 @@ export class MvsCommandHandler {
         await Profiles.getInstance().checkCurrentProfile(zosmfProfile, true);
         if ((Profiles.getInstance().validProfile === ValidProfileEnum.VALID) ||
             (Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED)) {
+
             // Get valid session
-            const getSessStatus = await ZoweExplorerApiRegister.getInstance().getCommonApi(zosmfProfile);
-            if (getSessStatus.getValidSession) {
-                   session = await ZoweExplorerApiRegister.getCommonApi(zosmfProfile).getValidSession(zosmfProfile,
-                                                                                                      zosmfProfile.name,
-                                                                                                      false);
-            } else {
-                   session = await ZoweExplorerApiRegister.getCommonApi(zosmfProfile).getSession(zosmfProfile);
-            }
+            session = await getValidSession(zosmfProfile, zosmfProfile.name, false);
 
             let command1: string = command;
             if (!command) {

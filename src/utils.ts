@@ -15,11 +15,11 @@ import * as vscode from "vscode";
 import * as globals from "./globals";
 import * as os from "os";
 import * as path from "path";
-import { ISession, IProfile, IProfileLoaded, ImperativeConfig } from "@zowe/imperative";
+import { ISession, IProfile, ImperativeConfig } from "@zowe/imperative";
 import { IZoweTreeNode } from "./api/IZoweTreeNode";
 import * as nls from "vscode-nls";
-import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
 import { Profiles } from "./Profiles";
+import { getValidSession } from "./profiles/utils";
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
@@ -52,29 +52,15 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
             }
 
             if (invalidProfile) {
-                const getSessStatus = ZoweExplorerApiRegister.getInstance().getCommonApi(invalidProfile);
-
                 if (globals.ISTHEIA) {
                     vscode.window.showErrorMessage(errMsg);
-                    if (getSessStatus.getValidSession) {
-                        await ZoweExplorerApiRegister.getCommonApi(invalidProfile).getValidSession(invalidProfile,
-                                                                                                   invalidProfile.name,
-                                                                                                   true);
-                    } else {
-                        await ZoweExplorerApiRegister.getCommonApi(invalidProfile).getSession(invalidProfile);
-                    }
+                    await getValidSession(invalidProfile, invalidProfile.name, true);
                 } else {
                     vscode.window.showErrorMessage(errMsg, "Check Credentials").then(async (selection) => {
                         if (selection) {
                             delete invalidProfile.profile.user;
                             delete invalidProfile.profile.password;
-                            if (getSessStatus.getValidSession) {
-                                await ZoweExplorerApiRegister.getCommonApi(invalidProfile).getValidSession(invalidProfile,
-                                                                                                           invalidProfile.name,
-                                                                                                           true);
-                            } else {
-                                await ZoweExplorerApiRegister.getCommonApi(invalidProfile).getSession(invalidProfile);
-                            }
+                            await getValidSession(invalidProfile, invalidProfile.name, true);
                         }
                     });
                 }

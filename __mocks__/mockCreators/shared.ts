@@ -188,7 +188,8 @@ export function createTextDocument(name: string, sessionNode?: ZoweDatasetNode |
 
 export function createInstanceOfProfile(profile: imperative.IProfileLoaded, session: imperative.Session) {
     return {
-        allProfiles: [{ name: "sestest", profile: {}, type: "zosmf" },
+        allProfiles: [{ name: "base", profile: {}, type: "base" },
+                      { name: "sestest", profile: {}, type: "zosmf" },
                       { name: "profile1", profile: {}, type: "zosmf" },
                       { name: "profile2", profile: {}, type: "zosmf" }],
         defaultProfile: { name: "sestest" },
@@ -199,7 +200,6 @@ export function createInstanceOfProfile(profile: imperative.IProfileLoaded, sess
         promptCredentials: jest.fn(),
         collectProfileDetails: jest.fn(() => { return {} }),
         loadNamedProfile: jest.fn(),
-        getValidSession: jest.fn(() => { return session }),
         usesSecurity: true,
         validProfile: ValidProfileEnum.VALID,
         checkCurrentProfile: jest.fn(() => {
