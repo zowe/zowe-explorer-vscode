@@ -13,7 +13,7 @@ import { ZosmfUssApi, ZosmfMvsApi } from "../../../src/api/ZoweExplorerZosmfApi"
 import * as zowe from "@zowe/cli";
 import * as globals from "../../../src/globals";
 import * as vscode from "vscode";
-import { AbstractSession, Logger } from "@zowe/imperative";
+import { AbstractSession, Logger, ConnectionPropsForSessCfg } from "@zowe/imperative";
 import { ZoweExplorerApiRegister } from "../../../src/api/ZoweExplorerApiRegister";
 import { DefaultProfileManager } from "../../../src/profiles/DefaultProfileManager";
 import { Profiles } from "../../../src/Profiles";
@@ -140,8 +140,6 @@ describe("ZosmfApiCommon Unit Tests - Function getValidProfile", () => {
             mockGetValidSession: jest.fn(),
             mockConfigurationTarget: jest.fn(),
             mockCreateBasicZosmfSessionFromArguments: jest.fn(),
-            mockAddPropsOrPrompt: jest.fn(),
-            addPropsOrPromptSpy: null,
             mockCliProfileManager: createProfileManager(),
         };
 
@@ -267,10 +265,108 @@ describe("ZosmfApiCommon Unit Tests - Function getValidProfile", () => {
         expect(blockMocks.mockCollectProfileDetails).toHaveBeenCalledWith(["password", "host", "port"]);
     });
 
-    it("Tests that getValidProfile throws an error if prompting fails", async () => {
+    it("Tests that getValidProfile throws an error if prompting fails due to 401 bad authorization, using service profile", async () => {
+        const blockMocks = await createBlockMocks();
+        Object.defineProperty(globals, "ISTHEIA", { get: () => false, configurable: true });
+
+        const testError = { message: "Test error!", mDetails: { errorCode: 401 } };
+        blockMocks.mockCollectProfileDetails.mockImplementationOnce(() => { throw testError; });
+
+        let error;
+        try {
+            await ZoweExplorerApiRegister.getCommonApi(blockMocks.serviceProfile)
+                                         .getValidSession(blockMocks.serviceProfile, "sestest", true);
+        } catch (err) {
+            error = err;
+        }
+
+        expect(blockMocks.mockShowErrorMessage).toBeCalledWith("Test error!", "Check Credentials");
+    });
+
+    it("Tests that getValidProfile throws an error if prompting fails due to 401 bad authorization, using service profile, Theia route", async () => {
+        const blockMocks = await createBlockMocks();
+        Object.defineProperty(globals, "ISTHEIA", { get: () => true, configurable: true });
+
+        const testError = { message: "Test error!", mDetails: { errorCode: 401 } };
+        blockMocks.mockCollectProfileDetails.mockImplementationOnce(() => { throw testError; });
+
+        let error;
+        try {
+            await ZoweExplorerApiRegister.getCommonApi(blockMocks.serviceProfile)
+                                         .getValidSession(blockMocks.serviceProfile, "sestest", true);
+        } catch (err) {
+            error = err;
+        }
+
+        expect(blockMocks.mockShowErrorMessage).toBeCalledWith("Test error!");
+    });
+
+    it("Tests that getValidProfile throws an error if prompting fails for another reason (not 401 auth error), using service profile", async () => {
         const blockMocks = await createBlockMocks();
 
         blockMocks.mockCollectProfileDetails.mockImplementationOnce(() => { throw new Error("Test error!"); });
+
+        let error;
+        try {
+            await ZoweExplorerApiRegister.getCommonApi(blockMocks.serviceProfile)
+                                         .getValidSession(blockMocks.serviceProfile, "sestest", true);
+        } catch (err) {
+            error = err;
+        }
+
+        expect(error.message).toBe("Test error!");
+    });
+
+    it("Tests that getValidProfile throws an error if prompting fails due to 401 bad authorization, using base profile", async () => {
+        const blockMocks = await createBlockMocks();
+        Object.defineProperty(globals, "ISTHEIA", { get: () => false, configurable: true });
+
+        const testError = { message: "Test error!", mDetails: { errorCode: 401 } };
+        blockMocks.serviceProfile.profile.user = null;
+        blockMocks.defaultProfile.profile.tokenValue = "testToken";
+        Object.defineProperty(ConnectionPropsForSessCfg, "addPropsOrPrompt",
+                                                         { value: jest.fn().mockImplementation(() => { throw testError; }), configurable: true });
+
+        let error;
+        try {
+            await ZoweExplorerApiRegister.getCommonApi(blockMocks.serviceProfile)
+                                         .getValidSession(blockMocks.serviceProfile, "sestest", true);
+        } catch (err) {
+            error = err;
+        }
+
+        expect(blockMocks.mockShowErrorMessage).toBeCalledWith("Test error!", "Check Credentials");
+    });
+
+    it("Tests that getValidProfile throws an error if prompting fails due to 401 bad authorization, using base profile, Theia route", async () => {
+        const blockMocks = await createBlockMocks();
+        Object.defineProperty(globals, "ISTHEIA", { get: () => true, configurable: true });
+
+        const testError = { message: "Test error!", mDetails: { errorCode: 401 } };
+        blockMocks.serviceProfile.profile.user = null;
+        blockMocks.defaultProfile.profile.tokenValue = "testToken";
+        Object.defineProperty(ConnectionPropsForSessCfg, "addPropsOrPrompt",
+                                                         { value: jest.fn().mockImplementation(() => { throw testError; }), configurable: true });
+
+        let error;
+        try {
+            await ZoweExplorerApiRegister.getCommonApi(blockMocks.serviceProfile)
+                                         .getValidSession(blockMocks.serviceProfile, "sestest", true);
+        } catch (err) {
+            error = err;
+        }
+
+        expect(blockMocks.mockShowErrorMessage).toBeCalledWith("Test error!");
+    });
+
+    it("Tests that getValidProfile throws an error if prompting fails for another reason (not 401 auth error), using base profile", async () => {
+        const blockMocks = await createBlockMocks();
+
+        blockMocks.serviceProfile.profile.user = null;
+        blockMocks.defaultProfile.profile.tokenValue = "testToken";
+        Object.defineProperty(ConnectionPropsForSessCfg, "addPropsOrPrompt",
+                                                         { value: jest.fn().mockImplementation(() => { throw new Error("test error!"); }),
+                                                           configurable: true });
 
         let error;
         try {
@@ -377,7 +473,7 @@ describe("ZosmfApiCommon Unit Tests - Function getStatus", () => {
 
         const newStatus = await ZoweExplorerApiRegister.getCommonApi(blockMocks.defaultProfile).getStatus(null, "alternate");
 
-        expect(newStatus.status).toEqual("unverified");
+        expect(newStatus).toEqual("unverified");
     });
 
     it("Tests that getStatus returns Active if a valid session can be retrieved", async () => {
@@ -385,7 +481,7 @@ describe("ZosmfApiCommon Unit Tests - Function getStatus", () => {
 
         const newStatus = await ZoweExplorerApiRegister.getCommonApi(blockMocks.defaultProfile).getStatus(blockMocks.defaultProfile, "zosmf");
 
-        expect(newStatus.status).toEqual("active");
+        expect(newStatus).toEqual("active");
     });
 
     it("Tests that getStatus returns Inactive if a valid session cannot be retrieved", async () => {
@@ -395,7 +491,7 @@ describe("ZosmfApiCommon Unit Tests - Function getStatus", () => {
 
         const newStatus = await ZoweExplorerApiRegister.getCommonApi(blockMocks.defaultProfile).getStatus(blockMocks.defaultProfile, "zosmf");
 
-        expect(newStatus.status).toEqual("inactive");
+        expect(newStatus).toEqual("inactive");
     });
 
     it("Tests that getStatus throws an error if getValidSession fails", async () => {

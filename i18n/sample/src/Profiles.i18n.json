@@ -21,6 +21,7 @@
     "deleteProfile.quickPickOption": "Delete {0}? This will permanently remove it from your system.",
     "deleteProfile.undefined.profilename": "Operation Cancelled",
     "deleteProfile.noSelected": "Operation Cancelled",
+    "getValidSession.loginImpossible": "Profile {0} is invalid. Please check your login details and try again.",
     "deleteProfile.log.debug": "Deleting profile ",
     "deleteProfile.showQuickPick.delete": "Delete",
     "deleteProfile.showQuickPick.cancel": "Cancel",

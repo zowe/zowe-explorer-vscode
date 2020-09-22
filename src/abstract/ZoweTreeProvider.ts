@@ -20,7 +20,6 @@ import { setProfile, setSession, errorHandling } from "../utils";
 import { IZoweTreeNode, IZoweDatasetTreeNode, IZoweNodeType } from "../api/IZoweTreeNode";
 import { IZoweTree } from "../api/IZoweTree";
 import * as nls from "vscode-nls";
-import * as contextually from "../shared/context";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 
 // Set up localization
@@ -218,11 +217,15 @@ export class ZoweTreeProvider {
                 localize("validateProfiles.invalid2",
                 " is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct."));
         } else if (profileStatus.status === "active") {
+            // Attach the valid session to the session node, if possible
             let sessionNode = node;
-            while (sessionNode.getParent()) {
-                sessionNode = sessionNode.getParent();
+            while (sessionNode.getParent()) { sessionNode = sessionNode.getParent(); }
+            if (await sessionNode.getSession()) {
+                await setSession(sessionNode, profile.profile as ISession);
             }
-            Object.defineProperty(sessionNode, "session", { value: profileStatus.session, configurable: true });
+            this.refresh();
+
+            // Update context value of node
             if ((node.contextValue.toLowerCase().includes("session") || node.contextValue.toLowerCase().includes("server"))) {
                 // change contextValue only if the word active is not there
                 if (node.contextValue.toLowerCase().indexOf("active") === -1) {

@@ -664,7 +664,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     public async filterPrompt(node: IZoweDatasetTreeNode) {
         this.log.debug(localize("enterPattern.log.debug.prompt", "Prompting the user for a data set pattern"));
         let pattern: string;
-        const profileStatus = await this.checkCurrentProfile(node, true);
+        await this.checkCurrentProfile(node, true);
 
         if ((Profiles.getInstance().validProfile === ValidProfileEnum.VALID) ||
         (Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED)) {

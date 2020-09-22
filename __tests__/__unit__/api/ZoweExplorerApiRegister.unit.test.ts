@@ -59,7 +59,7 @@ class MockUssApi1 implements ZoweExplorerApi.IUss {
     public getSession(profile?: IProfileLoaded): Promise<Session> {
         throw new Error("Method not implemented.");
     }
-    public getStatus?(profile?: IProfileLoaded): Promise<{status: string, session: Session | null}> {
+    public getStatus?(profile?: IProfileLoaded): Promise<string> {
         throw new Error("Method not implemented.");
     }
 }
@@ -102,7 +102,7 @@ class MockUssApi2 implements ZoweExplorerApi.IUss {
     public getSession(profile?: IProfileLoaded): Promise<Session> {
         throw new Error("Method not implemented.");
     }
-    public getStatus?(profile?: IProfileLoaded): Promise<{status: string, session: Session | null}> {
+    public getStatus?(profile?: IProfileLoaded): Promise<string> {
         throw new Error("Method not implemented.");
     }
 }

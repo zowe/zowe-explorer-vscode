@@ -42,7 +42,7 @@ export async function collectProfileDetails(detailsToGet?: string[], oldDetails?
                     value: oldDetails && oldDetails[profileDetail] ? oldDetails[profileDetail] : null,
                     placeHolder: localize("collectProfileDetails.option.prompt.url.placeholder", "url:port"),
                     prompt: localize("collectProfileDetails.option.prompt.url", "Enter a z/OS URL in the format 'url:port'."),
-                    validateInput: (value) => {
+                    validateInput: (inputValue) => {
                         const validationResult = {
                             valid: false,
                             protocol: null,
@@ -52,14 +52,14 @@ export async function collectProfileDetails(detailsToGet?: string[], oldDetails?
 
                         // Check that the URL is valid
                         try {
-                            newUrl = value.replace(/https:\/\//g, "");
-                            newUrl = new URL("https://" + value);
+                            newUrl = inputValue.replace(/https:\/\//g, "");
+                            newUrl = new URL("https://" + inputValue);
                         } catch (error) {
                             return localize("collectProfileDetails.invalidzosURL",
                                 "Please enter a valid host URL in the format 'url:port'.");
                         }
 
-                        if (value === "https://") {
+                        if (inputValue === "https://") {
                             // User did not enter a host/port
                             validationResult.host = "";
                             validationResult.port = 0;
@@ -143,8 +143,8 @@ export async function collectProfileDetails(detailsToGet?: string[], oldDetails?
                     prompt: localize("collectProfileDetails.option.prompt.username", "Enter the user name for the connection."),
                     ignoreFocusOut: true,
                     value: oldDetails && oldDetails[profileDetail] ? oldDetails[profileDetail] : null,
-                    validateInput: async (value) => {
-                        if (value === undefined || value.trim() === undefined) {
+                    validateInput: async (inputValue) => {
+                        if (inputValue === undefined || inputValue.trim() === undefined) {
                             return localize("collectProfileDetails.invalidUser", "Please enter a valid username");
                         } else { return null; }
                     }
@@ -165,8 +165,8 @@ export async function collectProfileDetails(detailsToGet?: string[], oldDetails?
                     password: true,
                     ignoreFocusOut: true,
                     value: oldDetails && oldDetails[profileDetail] ? oldDetails[profileDetail] : null,
-                    validateInput: (value) => {
-                        if (value === undefined || value.trim() === undefined) {
+                    validateInput: (inputValue) => {
+                        if (inputValue === undefined || inputValue.trim() === undefined) {
                             return localize("collectProfileDetails.invalidUser", "Please enter a valid password");
                         } else { return null; }
                     }

@@ -1404,7 +1404,7 @@ describe("Profiles Unit Tests - Function getProfileSetting", () => {
         const resultSetting = { status: "unverified", name: "sestest" };
         const theProfiles = await Profiles.createInstance(blockMocks.log);
         theProfiles.profilesValidationSetting = [{name: blockMocks.imperativeProfile.name, setting: false}];
-        theProfiles.profilesForValidation = [{ status: "unverified", name: "sestest", session: null}];
+        theProfiles.profilesForValidation = [{ status: "unverified", name: "sestest"}];
 
         const response = await theProfiles.getProfileSetting(blockMocks.imperativeProfile);
         expect(response).toEqual(resultSetting);
@@ -1416,7 +1416,7 @@ describe("Profiles Unit Tests - Function getProfileSetting", () => {
         const resultSetting = { status: "unverified", name: "sestest" };
         const theProfiles = await Profiles.createInstance(blockMocks.log);
         theProfiles.profilesValidationSetting = [{name: blockMocks.imperativeProfile.name, setting: false}];
-        theProfiles.profilesForValidation = [{ status: "inactive", name: "sestest", session: null}];
+        theProfiles.profilesForValidation = [{ status: "inactive", name: "sestest"}];
 
         const response = await theProfiles.getProfileSetting(blockMocks.imperativeProfile);
         expect(response).toEqual(resultSetting);
@@ -1846,7 +1846,7 @@ describe("Profiles Unit Tests - Function refresh", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         const theProfiles = await Profiles.createInstance(blockMocks.log);
-        theProfiles.profilesForValidation.push({ status: "active", name: blockMocks.validProfile.name, session: null });
+        theProfiles.profilesForValidation.push({ status: "active", name: blockMocks.validProfile.name });
         await theProfiles.refresh();
         expect(theProfiles.profilesForValidation.length).toBe(0);
     });
