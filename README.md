@@ -23,25 +23,33 @@ More information:
 
 ## Contents
 
-* [What's new in Zowe Explorer 1.7.0](#what's-new-in-zowe-explorer-1.7.0)
+* [What's new in Zowe Explorer 1.9.0](#what's-new-in-zowe-explorer-1.9.0)
 * [Prerequisites](#prerequisites)
 * [Getting Started](#getting-started)
 * [Credentials Security](#credentials-security)
 * [Usage Tips](#usage-tips)
 * [Extending Zowe Explorer](#extending-zowe-explorer)
 
-## What's new in Zowe Explorer 1.8.0
+## What's new in Zowe Explorer 1.9.0
 
-New features and improvements:
+New features:
 
-* Added a webpack that works with localization and logging.
-* Allowed extenders to load the saved profile sessions upon activation.
-* Added an automatic re-validation for invalid profiles.
+* Added the Allocate Like feature.
+* Added the ability to disable/enable profile validation.
+* Added the ability to access other profiles during profile validation.
+
+Enhancements:
+
+* Datasets and members names are displayed in all uppercase letters even if typed in lowercase letters.
+* Grouped Favorites by profile for Datasets, USS, and Jobs.
+* Other profiles can be accessed during profile validation.
+* Updated the environment check for Theia compatibility.
 
 Bug Fixes:
 
-* Fixed the bug related to saving USS files.
-* Fixed the bug related to the deletion of datasets.
+* Fixed USS renaming issues.
+* Fixed the deletion of datasets issue.
+* Removed errors in Favorites items caused by profiles that are created by other extensions.
 
 For more information, see [Changelog](https://marketplace.visualstudio.com/items/Zowe.vscode-extension-for-zowe/changelog).
 
