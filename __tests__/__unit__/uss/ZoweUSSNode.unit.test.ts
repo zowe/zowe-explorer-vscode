@@ -11,7 +11,6 @@
 
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
-import * as ussActions from "../../../src/uss/actions";
 import { Profiles, ValidProfileEnum } from "../../../src/Profiles";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
 import { createISessionWithoutCredentials, createIProfile,
@@ -19,6 +18,7 @@ import { createISessionWithoutCredentials, createIProfile,
 import { createUSSTree } from "../../../__mocks__/mockCreators/uss";
 import { createDefaultProfileManager } from "../../../__mocks__/mockCreators/profiles";
 import * as fs from "fs";
+import * as profileUtils from "../../../src/profiles/utils";
 import * as path from "path";
 import { Logger } from "@zowe/imperative";
 import * as globals from "../../../src/globals";
@@ -83,7 +83,7 @@ async function createGlobalMocks() {
     globalMocks.profileOps = createInstanceOfProfile(globalMocks.profileOne, globalMocks.session);
     globalMocks.defaultProfileOps = createDefaultProfileManager();
     globalMocks.ussApi = ZoweExplorerApiRegister.getUssApi(globalMocks.profileOne);
-    Object.defineProperty(globalMocks.ussApi, "getValidSession", { value: jest.fn(() => globalMocks.session), configurable: true });
+    Object.defineProperty(profileUtils, "getValidSession", { value: jest.fn(() => globalMocks.session), configurable: true });
     globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.profileOne);
     globalMocks.getUssApiMock.mockReturnValue(globalMocks.ussApi);
     ZoweExplorerApiRegister.getUssApi = globalMocks.getUssApiMock.bind(ZoweExplorerApiRegister);

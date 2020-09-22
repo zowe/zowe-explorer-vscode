@@ -29,7 +29,6 @@ import { createUSSSessionNode, createUSSTree } from "../../__mocks__/mockCreator
 import { createJobsTree, createIJobObject, } from "../../__mocks__/mockCreators/jobs";
 import { DefaultProfileManager } from "../../src/profiles/DefaultProfileManager";
 import { IZoweNodeType } from "../../src/api/IZoweTreeNode";
-import { PersistentFilters } from "../../src/PersistentFilters";
 
 jest.mock("vscode");
 jest.mock("child_process");
@@ -1038,7 +1037,8 @@ describe("Profiles Unit Tests - Function createInstance", () => {
             session: createISessionWithoutCredentials(),
             mockJSONParse: jest.spyOn(JSON, "parse"),
             profileInstance: null,
-            testProfiles: [{ name: "sestest", profile: {}, type: "zosmf" },
+            testProfiles: [{ name: "base", profile: {}, type: "base" },
+            { name: "sestest", profile: {}, type: "zosmf" },
             { name: "profile1", profile: {}, type: "zosmf" },
             { name: "profile2", profile: {}, type: "zosmf" }]
         };

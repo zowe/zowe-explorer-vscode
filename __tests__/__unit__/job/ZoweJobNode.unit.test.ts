@@ -17,14 +17,14 @@ import * as zowe from "@zowe/cli";
 import * as globals from "../../../src/globals";
 import * as utils from "../../../src/utils";
 import { Logger } from "@zowe/imperative";
-import { createIJobFile, createIJobObject } from "../../../__mocks__/mockCreators/jobs";
+import { createIJobFile, createIJobObject, createJobSessionNode } from "../../../__mocks__/mockCreators/jobs";
 import { Job } from "../../../src/job/ZoweJobNode";
 import { Profiles, ValidProfileEnum } from "../../../src/Profiles";
 import { createIProfile, createISession, createInstanceOfProfile, createISessionWithoutCredentials, createQuickPickContent } from "../../../__mocks__/mockCreators/shared";
 import { ZoweExplorerApiRegister } from "../../../src/api/ZoweExplorerApiRegister";
-import { createDefaultProfileManager } from "../../../__mocks__/mockCreators/profiles";
 import { DefaultProfileManager } from "../../../src/profiles/DefaultProfileManager";
 import { IZoweJobTreeNode } from "../../../src/api/IZoweTreeNode";
+import * as profileUtils from "../../../src/profiles/utils";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -51,6 +51,7 @@ async function createGlobalMocks() {
         jesApi: null,
         commonApi: null,
         testSession: createISession(),
+        testSessionNode: null,
         testSessionNoCred: createISessionWithoutCredentials(),
         testProfile: createIProfile(),
         testIJob: createIJobObject(),
@@ -100,6 +101,17 @@ async function createGlobalMocks() {
     Object.defineProperty(vscode.window, "createQuickPick", { value: globalMocks.mockCreateQuickPick, configurable: true });
     Object.defineProperty(globalMocks.mockDeleteJobs, "deleteJob", { value: globalMocks.mockDeleteJob, configurable: true });
 
+    globalMocks.testSessionNode = createJobSessionNode(globalMocks.testSession, globalMocks.testProfile);
+    globalMocks.mockProfileInstance = createInstanceOfProfile(globalMocks.testProfile, globalMocks.testSession);
+    globalMocks.mockGetSpoolFiles.mockReturnValue([globalMocks.mockIJobFile]);
+    globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.testProfile);
+    globalMocks.mockProfileInstance.loadNamedProfile = globalMocks.mockLoadNamedProfile;
+    globalMocks.mockLoadDefaultProfile.mockReturnValue(globalMocks.testProfile);
+    globalMocks.mockProfileInstance.getDefaultProfile = globalMocks.mockLoadDefaultProfile;
+    globalMocks.mockProfileInstance.checkProfileValidationSetting = globalMocks.mockValidationSetting.mockReturnValue(true);
+    globalMocks.mockProfileInstance.enableValidationContext = globalMocks.mockEnableValidationContext;
+    globalMocks.mockProfileInstance.disableValidationContext = globalMocks.mockDisableValidationContext;
+
     // Profile instance mocks
     globalMocks.defaultProfileManagerInstance = await DefaultProfileManager.createInstance(Logger.getAppLogger());
     await Profiles.createInstance(Logger.getAppLogger());
@@ -111,30 +123,24 @@ async function createGlobalMocks() {
                           "getDefaultProfile",
                           { value: jest.fn(() => globalMocks.defaultProfile), configurable: true });
 
-    globalMocks.mockProfileInstance = createInstanceOfProfile(globalMocks.testProfile, globalMocks.testSession);
-    globalMocks.mockGetSpoolFiles.mockReturnValue([globalMocks.mockIJobFile]);
-    globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.testProfile);
-    globalMocks.mockProfileInstance.loadNamedProfile = globalMocks.mockLoadNamedProfile;
-    globalMocks.mockLoadDefaultProfile.mockReturnValue(globalMocks.testProfile);
-    globalMocks.mockProfileInstance.getDefaultProfile = globalMocks.mockLoadDefaultProfile;
-    globalMocks.mockProfileInstance.checkProfileValidationSetting = globalMocks.mockValidationSetting.mockReturnValue(true);
-    globalMocks.mockProfileInstance.enableValidationContext = globalMocks.mockEnableValidationContext;
-    globalMocks.mockProfileInstance.disableValidationContext = globalMocks.mockDisableValidationContext;
-
     // Jes API mocks
     globalMocks.jesApi = ZoweExplorerApiRegister.getJesApi(globalMocks.testProfile);
     globalMocks.mockGetJesApi.mockReturnValue(globalMocks.jesApi);
-    Object.defineProperty(Profiles, "getValidSession", { value: jest.fn(() => globalMocks.testSession), configurable: true });
     ZoweExplorerApiRegister.getJesApi = globalMocks.mockGetJesApi.bind(ZoweExplorerApiRegister);
+    Object.defineProperty(globalMocks.jesApi, "getSession", {
+        value: jest.fn(() => {
+            return globalMocks.testSessionNode;
+        }),
+        configurable: true
+    });
 
     // Common API mocks
     globalMocks.commonApi = ZoweExplorerApiRegister.getCommonApi(globalMocks.testProfile);
     globalMocks.mockGetCommonApi.mockReturnValue(globalMocks.commonApi);
-    Object.defineProperty(globalMocks.commonApi, "getValidSession", { value: jest.fn(() => globalMocks.testSession), configurable: true });
     ZoweExplorerApiRegister.getCommonApi = globalMocks.mockGetCommonApi.bind(ZoweExplorerApiRegister);
     Object.defineProperty(globalMocks.commonApi, "getSession", {
         value: jest.fn(() => {
-            return globalMocks.testSession;
+            return globalMocks.testSessionNode;
         }),
         configurable: true
     });
@@ -144,7 +150,6 @@ async function createGlobalMocks() {
     globalMocks.mockGetJob.mockReturnValue(globalMocks.testIJob);
     globalMocks.mockGetJobsByOwnerAndPrefix.mockReturnValue([globalMocks.testIJob, globalMocks.testIJobComplete]);
     globalMocks.mockProfileInstance.editSession = jest.fn(() => globalMocks.testProfile);
-    globalMocks.mockProfileInstance.getValidSession = jest.fn(() => globalMocks.testSession);
     globalMocks.testJobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded,
                                       null, globalMocks.testSession, globalMocks.testIJob, globalMocks.testProfile);
     globalMocks.testJobNode.contextValue = "job";
@@ -161,7 +166,10 @@ async function createGlobalMocks() {
         })
     });
     globalMocks.testJobsProvider = await createJobsTree(Logger.getAppLogger());
+    const i = globalMocks.testJobsProvider.mSessionNodes.findIndex((node) => node.label === "sestest");
+    globalMocks.testJobsProvider.mSessionNodes[i] = globalMocks.testSessionNode;
     Object.defineProperty(globalMocks.testJobsProvider, "refresh", { value: globalMocks.mockRefresh, configurable: true });
+    Object.defineProperty(profileUtils, "getValidSession", { value: jest.fn(() => globalMocks.testSession), configurable: true });
 
     // Reset getConfiguration because we called it when testJobsProvider was assigned
     globalMocks.getConfiguration.mockClear();

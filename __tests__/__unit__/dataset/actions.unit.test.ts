@@ -23,6 +23,7 @@ import {
     createDatasetFavoritesNode,
     createDatasetTree
 } from "../../../__mocks__/mockCreators/datasets";
+import * as profileUtils from "../../../src/profiles/utils";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import { bindMvsApi, createMvsApi } from "../../../__mocks__/mockCreators/api";
 import * as dsActions from "../../../src/dataset/actions";
@@ -90,6 +91,7 @@ async function createGlobalMocks() {
     Object.defineProperty(vscode, "ProgressLocation", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "createWebviewPanel", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.env, "clipboard", { value: clipboard, configurable: true });
+    Object.defineProperty(profileUtils, "getValidSession", { value: jest.fn(() => globalMocks.testSession), configurable: true });
 
     // Mocking Default Profile Manager
     globalMocks.defaultProfileManagerInstance = await DefaultProfileManager.createInstance(imperative.Logger.getAppLogger());
@@ -105,7 +107,6 @@ async function createGlobalMocks() {
     // MVS API mocks
     globalMocks.mvsApi = ZoweExplorerApiRegister.getMvsApi(globalMocks.testProfile);
     globalMocks.mockGetMvsApi.mockReturnValue(globalMocks.mvsApi);
-    Object.defineProperty(globalMocks.mvsApi, "getValidSession", { value: jest.fn(() => globalMocks.testSession), configurable: true });
     ZoweExplorerApiRegister.getMvsApi = globalMocks.mockGetMvsApi.bind(ZoweExplorerApiRegister);
 
     return globalMocks;

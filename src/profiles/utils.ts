@@ -49,7 +49,7 @@ export async function getValidSession(serviceProfile: IProfileLoaded,
             }
 
             try {
-                const newDetails = await collectProfileDetails(schemaArray);
+                const newDetails = await this.collectProfileDetails(schemaArray);
                 for (const detail of schemaArray) { serviceProfile.profile[detail] = newDetails[detail]; }
             } catch (error) {
                 // tslint:disable:no-magic-numbers
@@ -136,7 +136,7 @@ export async function getValidSession(serviceProfile: IProfileLoaded,
                     {
                         requestToken: false,
                         doPrompting: prompt,
-                        getValuesBack: collectProfileDetails
+                        getValuesBack: this.collectProfileDetails
                     });
             } else {
                 connectableSessCfg = await ConnectionPropsForSessCfg.addPropsOrPrompt<ISession>(sessCfg,

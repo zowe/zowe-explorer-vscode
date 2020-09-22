@@ -23,6 +23,7 @@ import {
 import * as globals from "../../../src/globals";
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
+import * as profileUtils from "../../../src/profiles/utils";
 import * as sharedActions from "../../../src/shared/actions";
 import { createUSSNode, createFavoriteUSSNode, createUSSSessionNode } from "../../../__mocks__/mockCreators/uss";
 import { getIconByNode } from "../../../src/generators/icons";
@@ -112,7 +113,6 @@ async function createGlobalMocks() {
                 allProfiles: [globalMocks.testProfile, { name: "firstName" }, { name: "secondName" }],
                 getDefaultProfile: globalMocks.mockDefaultProfile,
                 validProfile: ValidProfileEnum.VALID,
-                getValidSession: jest.fn(() => globalMocks.testSession),
                 checkCurrentProfile: jest.fn(() => {
                     return globalMocks.profilesForValidation;
                 }),
@@ -141,7 +141,6 @@ async function createGlobalMocks() {
     // USS API mocks
     globalMocks.ussApi = ZoweExplorerApiRegister.getUssApi(globalMocks.testProfile);
     globalMocks.mockGetUssApi.mockReturnValue(globalMocks.ussApi);
-    Object.defineProperty(globalMocks.ussApi, "getValidSession", { value: jest.fn(() => globalMocks.testSession), configurable: true });
     ZoweExplorerApiRegister.getUssApi = globalMocks.mockGetUssApi.bind(ZoweExplorerApiRegister);
 
     globalMocks.withProgress.mockImplementation((progLocation, callback) => callback());
@@ -165,6 +164,7 @@ async function createGlobalMocks() {
     globalMocks.testTree.mSessionNodes.push(ussSessionTestNode);
     globalMocks.testTree.addSearchHistory("/u/myuser");
     globalMocks.profilesForValidation = {status: "active", name: "fake", session: globalMocks.testSession};
+    Object.defineProperty(profileUtils, "getValidSession", { value: jest.fn(() => globalMocks.testSession), configurable: true });
 
     return globalMocks;
 }

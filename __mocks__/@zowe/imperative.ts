@@ -139,7 +139,6 @@ export class ImperativeConfig {
         envVariablePrefix: "ZOWE"
     };
     public cliHome: "./__tests__/.zowe";
-
 }
 
 // tslint:disable-next-line:max-classes-per-file
@@ -168,5 +167,18 @@ export class Logger {
 export class TextUtils {
     public static prettyJson(object: any, options?: any, color?: boolean, append?: string): string {
         return JSON.stringify(object);
+    }
+}
+
+export class ConnectionPropsForSessCfg {
+    public static addPropsOrPrompt(initialSessCfg: {any}, cmdArgs: ICommandArguments, options?: {any}) {
+        return new Session({
+            user: "fake",
+            password: "fake",
+            hostname: "fake",
+            port: 1443,
+            protocol: "https",
+            type: "basic",
+        });
     }
 }
