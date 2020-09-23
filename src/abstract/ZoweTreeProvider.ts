@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as globals from "../globals";
-import { Logger, IProfile, ISession  } from "@zowe/imperative";
+import { Logger, IProfile, ISession, Session } from "@zowe/imperative";
 import { PersistentFilters } from "../PersistentFilters";
 import { OwnerFilterDescriptor } from "../job/utils";
 import { getIconByNode, getIconById, IconId } from "../generators/icons";
@@ -213,8 +213,16 @@ export class ZoweTreeProvider {
             while (sessionNode.getParent()) { sessionNode = sessionNode.getParent(); }
             if (await sessionNode.getSession()) {
                 await setSession(sessionNode, profile.profile as ISession);
+            } else {
+                const newSession = await getValidSession(profile, profile.name, false);
+                const changedProfileIndex = Profiles.getInstance().allProfiles.findIndex((searchedProfile) => searchedProfile.name === profile.name);
+                Profiles.getInstance().allProfiles[changedProfileIndex] = profile;
+                await setProfile(sessionNode, profile.profile);
+                Object.defineProperty(sessionNode, "session", { value: newSession, configurable: true });
+                sessionNode.children = [];
+                sessionNode.dirty = true;
             }
-            this.refresh();
+            await this.refresh();
 
             // Update context value of node
             if ((node.contextValue.toLowerCase().includes("session") || node.contextValue.toLowerCase().includes("server"))) {
