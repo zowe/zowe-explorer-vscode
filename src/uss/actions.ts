@@ -15,7 +15,7 @@ import * as fs from "fs";
 import * as globals from "../globals";
 import * as path from "path";
 import { ZoweUSSNode } from "./ZoweUSSNode";
-import { labelRefresh, refreshTree, concatChildNodes, willForceUpload, uploadContent } from "../shared/utils";
+import { labelRefresh, concatChildNodes, willForceUpload, uploadContent } from "../shared/utils";
 import { errorHandling } from "../utils";
 import { Profiles, ValidProfileEnum } from "../Profiles";
 import { IZoweTree } from "../api/IZoweTree";
@@ -26,7 +26,7 @@ import { Session } from "@zowe/imperative";
 import * as contextually from "../shared/context";
 import { setFileSaved } from "../utils/workspace";
 import * as nls from "vscode-nls";
-import { returnIconState, resetValidationSettings } from "../shared/actions";
+import { returnIconState } from "../shared/actions";
 import { PersistentFilters } from "../PersistentFilters";
 
 // Set up localization
@@ -90,13 +90,10 @@ export async function createUSSNodeDialog(node: IZoweUSSTreeNode, ussFileProvide
 export async function refreshAllUSS(ussFileProvider: IZoweTree<IZoweUSSTreeNode>) {
     await Profiles.getInstance().refresh();
     ussFileProvider.mSessionNodes.forEach(async (sessNode) => {
-        const setting = await PersistentFilters.getDirectValue("Zowe-Automatic-Validation") as boolean;
         if (contextually.isSession(sessNode)) {
             labelRefresh(sessNode);
             sessNode.children = [];
             sessNode.dirty = true;
-            refreshTree(sessNode);
-            resetValidationSettings(sessNode, setting);
             returnIconState(sessNode);
         }
     });

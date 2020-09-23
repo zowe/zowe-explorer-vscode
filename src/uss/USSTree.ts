@@ -25,7 +25,6 @@ import { getIconByNode } from "../generators/icons";
 import * as contextually from "../shared/context";
 import * as nls from "vscode-nls";
 import { DefaultProfileManager } from "../profiles/DefaultProfileManager";
-import { resetValidationSettings } from "../shared/actions";
 import { PersistentFilters } from "../PersistentFilters";
 import { getValidSession } from "../profiles/utils";
 
@@ -229,7 +228,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             for (const node of this.mSessionNodes) {
                 const name = node.getProfileName();
                 if (name === profile.name){
-                    await resetValidationSettings(node, setting);
+                    await Profiles.getInstance().resetValidationSettings(node, setting);
                 }
             }
         } else {
@@ -245,7 +244,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                         for (const node of this.mSessionNodes) {
                             const name = node.getProfileName();
                             if (name === theProfile.name){
-                                await resetValidationSettings(node, setting);
+                                await Profiles.getInstance().resetValidationSettings(node, setting);
                             }
                         }
                     }

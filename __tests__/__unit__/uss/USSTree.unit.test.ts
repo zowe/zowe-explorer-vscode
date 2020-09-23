@@ -85,7 +85,6 @@ async function createGlobalMocks() {
         configurable: true
     });
     Object.defineProperty(vscode.window, "showQuickPick", { value: globalMocks.showQuickPick, configurable: true });
-    Object.defineProperty(sharedActions, "resetValidationSettings", { value: globalMocks.mockResetValidation, configurable: true });
     Object.defineProperty(vscode.window, "showInformationMessage", {
         value: globalMocks.showInformationMessage,
         configurable: true
@@ -112,6 +111,7 @@ async function createGlobalMocks() {
             return {
                 allProfiles: [globalMocks.testProfile, { name: "firstName" }, { name: "secondName" }],
                 getDefaultProfile: globalMocks.mockDefaultProfile,
+                resetValidationSettings: globalMocks.mockResetValidation,
                 validProfile: ValidProfileEnum.VALID,
                 checkCurrentProfile: jest.fn(() => {
                     return globalMocks.profilesForValidation;

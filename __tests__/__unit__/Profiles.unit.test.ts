@@ -65,12 +65,11 @@ async function createGlobalMocks() {
     // Mocking Default Profile Manager
     newMocks.defaultProfileManagerInstance = await DefaultProfileManager.createInstance(Logger.getAppLogger());
     newMocks.profiles = await Profiles.createInstance(Logger.getAppLogger());
+    newMocks.mockGetInstance.mockReturnValue(newMocks.profiles);
     newMocks.defaultProfile = DefaultProfileManager.getInstance().getDefaultProfile("zosmf");
-    Object.defineProperty(DefaultProfileManager,
-                          "getInstance",
+    Object.defineProperty(DefaultProfileManager, "getInstance",
                           { value: jest.fn(() => newMocks.defaultProfileManagerInstance), configurable: true });
-    Object.defineProperty(newMocks.defaultProfileManagerInstance,
-                          "getDefaultProfile",
+    Object.defineProperty(newMocks.defaultProfileManagerInstance, "getDefaultProfile",
                           { value: jest.fn(() => newMocks.defaultProfile), configurable: true });
 
     // Common API mocks
@@ -78,6 +77,7 @@ async function createGlobalMocks() {
     newMocks.mockGetCommonApi.mockReturnValue(newMocks.commonApi);
     newMocks.mockGetValidSession.mockReturnValue(newMocks.testSession);
     ZoweExplorerApiRegister.getCommonApi = newMocks.mockGetCommonApi.bind(ZoweExplorerApiRegister);
+
     Object.defineProperty(newMocks.commonApi, "getValidSession", { value: newMocks.mockGetValidSession, configurable: true });
     Object.defineProperty(vscode.window, "showInformationMessage", { value: newMocks.mockShowInformationMessage, configurable: true });
     Object.defineProperty(vscode.window, "showInputBox", { value: newMocks.mockShowInputBox, configurable: true });
@@ -1404,7 +1404,7 @@ describe("Profiles Unit Tests - Function getProfileSetting", () => {
         const blockMocks = await createBlockMocks(globalMocks);
         const resultSetting = { status: "unverified", name: "sestest" };
         const theProfiles = await Profiles.createInstance(blockMocks.log);
-        theProfiles.profilesValidationSetting = [{name: blockMocks.imperativeProfile.name, setting: false}];
+        theProfiles.profilesValidationSetting = [{name: blockMocks.imperativeProfile.name, setting: false, type: "dataset" }];
         theProfiles.profilesForValidation = [{ status: "unverified", name: "sestest"}];
 
         const response = await theProfiles.getProfileSetting(blockMocks.imperativeProfile);
@@ -1416,7 +1416,7 @@ describe("Profiles Unit Tests - Function getProfileSetting", () => {
         const blockMocks = await createBlockMocks(globalMocks);
         const resultSetting = { status: "unverified", name: "sestest" };
         const theProfiles = await Profiles.createInstance(blockMocks.log);
-        theProfiles.profilesValidationSetting = [{name: blockMocks.imperativeProfile.name, setting: false}];
+        theProfiles.profilesValidationSetting = [{name: blockMocks.imperativeProfile.name, setting: false, type: "dataset" }];
         theProfiles.profilesForValidation = [{ status: "inactive", name: "sestest"}];
 
         const response = await theProfiles.getProfileSetting(blockMocks.imperativeProfile);
@@ -1428,7 +1428,7 @@ describe("Profiles Unit Tests - Function getProfileSetting", () => {
         const blockMocks = await createBlockMocks(globalMocks);
         const resultSetting = { status: "unverified", name: "sestest" };
         const theProfiles = await Profiles.createInstance(blockMocks.log);
-        theProfiles.profilesValidationSetting = [{name: blockMocks.imperativeProfile.name, setting: false}];
+        theProfiles.profilesValidationSetting = [{name: blockMocks.imperativeProfile.name, setting: false, type: "dataset" }];
         theProfiles.profilesForValidation = [];
 
         const response = await theProfiles.getProfileSetting(blockMocks.imperativeProfile);
@@ -1440,7 +1440,7 @@ describe("Profiles Unit Tests - Function getProfileSetting", () => {
         const blockMocks = await createBlockMocks(globalMocks);
         const resultSetting = { status: "inactive", name: "sestest" };
         const theProfiles = await Profiles.createInstance(blockMocks.log);
-        theProfiles.profilesValidationSetting = [{name: blockMocks.imperativeProfile.name, setting: true}];
+        theProfiles.profilesValidationSetting = [{name: blockMocks.imperativeProfile.name, setting: true, type: "dataset" }];
 
         const response = await theProfiles.getProfileSetting(blockMocks.imperativeProfile);
         expect(response).toEqual(resultSetting);
@@ -1495,7 +1495,7 @@ describe("Profiles Unit Tests - Function disableValidation", () => {
         const theProfiles = await Profiles.createInstance(blockMocks.log);
 
         // tslint:disable-next-line:max-line-length
-        const response = await theProfiles.disableValidation(blockMocks.datasetSessionNode);
+        const response = await theProfiles.disableValidation(blockMocks.datasetSessionNode, ussTree);
         expect(response.contextValue).toContain(`${globals.VALIDATE_SUFFIX}false`);
         expect(response.contextValue).not.toContain(`${globals.VALIDATE_SUFFIX}true`);
     });
@@ -1511,9 +1511,59 @@ describe("Profiles Unit Tests - Function disableValidation", () => {
         const theProfiles = await Profiles.createInstance(blockMocks.log);
 
         // tslint:disable-next-line:max-line-length
-        const response = await theProfiles.disableValidation(resultNode);
+        const response = await theProfiles.disableValidation(resultNode, ussTree);
         expect(response.contextValue).toContain(`${globals.VALIDATE_SUFFIX}false`);
         expect(response.contextValue).not.toContain(`${globals.VALIDATE_SUFFIX}true`);
+    });
+});
+
+describe("Shared Actions Unit Tests - Function resetValidationSettings", () => {
+    function createBlockMocks() {
+        const newMocks = {
+            session: createISessionWithoutCredentials(),
+            treeView: createTreeView(),
+            dsNode: null,
+            imperativeProfile: createValidIProfile(),
+            profileInstance: null,
+            datasetSessionNode: null,
+            mockEnableValidationContext: jest.fn(),
+            mockDisableValidationContext: jest.fn(),
+            mockCheckProfileValidationSetting: jest.fn(),
+            testDatasetTree: null
+        };
+
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.imperativeProfile, newMocks.session);
+        newMocks.dsNode = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.Collapsed, newMocks.datasetSessionNode, null);
+        newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
+        newMocks.testDatasetTree = createDatasetTree(newMocks.datasetSessionNode, newMocks.treeView);
+
+        return newMocks;
+    }
+
+    it("Tests that resetValidationSettings resets contextValue to false upon global change", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const testNode: IZoweNodeType = blockMocks.datasetSessionNode;
+        testNode.contextValue = `${globals.DS_SESSION_CONTEXT}${globals.VALIDATE_SUFFIX}true`;
+        const mockNode: IZoweNodeType = blockMocks.datasetSessionNode;
+        mockNode.contextValue = `${globals.DS_SESSION_CONTEXT}${globals.VALIDATE_SUFFIX}false`;
+
+        const response = await Profiles.getInstance().resetValidationSettings(testNode, false);
+
+        expect(response.contextValue).toContain(`${globals.VALIDATE_SUFFIX}false`);
+    });
+
+    it("Tests that resetValidationSettings resets contextValue to true upon global change", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const testNode: IZoweNodeType = blockMocks.datasetSessionNode;
+        testNode.contextValue = `${globals.DS_SESSION_CONTEXT}${globals.VALIDATE_SUFFIX}false`;
+        const mockNode: IZoweNodeType = blockMocks.datasetSessionNode;
+        mockNode.contextValue = `${globals.DS_SESSION_CONTEXT}${globals.VALIDATE_SUFFIX}true`;
+
+        const response = await Profiles.getInstance().resetValidationSettings(testNode, true);
+
+        expect(response.contextValue).toContain(`${globals.VALIDATE_SUFFIX}true`);
     });
 });
 
@@ -1566,7 +1616,7 @@ describe("Profiles Unit Tests - Function enableValidation", () => {
         const theProfiles = await Profiles.createInstance(blockMocks.log);
 
         // tslint:disable-next-line:max-line-length
-        const response = await theProfiles.enableValidation(resultNode);
+        const response = await theProfiles.enableValidation(resultNode, ussTree);
         expect(response.contextValue).toContain(`${globals.VALIDATE_SUFFIX}true`);
         expect(response.contextValue).not.toContain(`${globals.VALIDATE_SUFFIX}false`);
     });
@@ -1710,8 +1760,8 @@ describe("Profiles Unit Tests - Function validationArraySetup", () => {
             mockNode: null,
             mockEnableValidationContext: jest.fn(),
         };
-        newMocks.mockNode = newMocks.datasetSessionNode;
         newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
+        newMocks.mockNode = newMocks.datasetSessionNode;
         newMocks.profiles = await Profiles.createInstance(newMocks.log);
         newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles, newMocks.session);
         Object.defineProperty(Profiles, "getInstance", {
@@ -1731,13 +1781,14 @@ describe("Profiles Unit Tests - Function validationArraySetup", () => {
         const blockMocks = await createBlockMocks(globalMocks);
         const returnedSetting = {
             name: blockMocks.imperativeProfile.name,
-            setting: false
+            setting: false,
+            type: "dataset"
         };
 
         const theProfiles = await Profiles.createInstance(blockMocks.log);
-        theProfiles.profilesValidationSetting = [{name: blockMocks.imperativeProfile.name, setting: false}];
+        theProfiles.profilesValidationSetting = [{name: blockMocks.imperativeProfile.name, setting: false, type: "uss" }];
 
-        const response = await theProfiles.validationArraySetup(blockMocks.imperativeProfile, false);
+        const response = await theProfiles.validationArraySetup(blockMocks.imperativeProfile, false, blockMocks.mockNode);
         expect(response).toEqual(returnedSetting);
     });
 
@@ -1746,15 +1797,16 @@ describe("Profiles Unit Tests - Function validationArraySetup", () => {
         const blockMocks = await createBlockMocks(globalMocks);
         const returnedSetting = {
             name: blockMocks.imperativeProfile.name,
-            setting: false
+            setting: false,
+            type: "dataset"
         };
 
         const theProfiles = await Profiles.createInstance(blockMocks.log);
-        theProfiles.profilesValidationSetting = [{name: blockMocks.imperativeProfile.name, setting: true}];
+        theProfiles.profilesValidationSetting = [{name: blockMocks.imperativeProfile.name, setting: true, type: "dataset" }];
 
-        const response = await theProfiles.validationArraySetup(blockMocks.imperativeProfile, false);
+        const response = await theProfiles.validationArraySetup(blockMocks.imperativeProfile, false, blockMocks.mockNode);
         expect(response).toEqual(returnedSetting);
-        expect(theProfiles.profilesValidationSetting).toEqual([{name: blockMocks.imperativeProfile.name, setting: false}]);
+        expect(theProfiles.profilesValidationSetting).toEqual([{name: blockMocks.imperativeProfile.name, setting: false, type: "dataset"}]);
     });
 
     it("Tests that validationArraySetup returns profileSetting and updates profilesValidationSetting when array empty", async () => {
@@ -1762,15 +1814,16 @@ describe("Profiles Unit Tests - Function validationArraySetup", () => {
         const blockMocks = await createBlockMocks(globalMocks);
         const returnedSetting = {
             name: blockMocks.imperativeProfile.name,
-            setting: false
+            setting: false,
+            type: "dataset"
         };
 
         const theProfiles = await Profiles.createInstance(blockMocks.log);
         theProfiles.profilesValidationSetting = [];
 
-        const response = await theProfiles.validationArraySetup(blockMocks.imperativeProfile, false);
+        const response = await theProfiles.validationArraySetup(blockMocks.imperativeProfile, false, blockMocks.mockNode);
         expect(response).toEqual(returnedSetting);
-        expect(theProfiles.profilesValidationSetting).toEqual([{name: blockMocks.imperativeProfile.name, setting: false}]);
+        expect(theProfiles.profilesValidationSetting).toEqual([{name: blockMocks.imperativeProfile.name, setting: false, type: "dataset"}]);
     });
 
     it("Tests that validationArraySetup returns profileSetting and updates profilesValidationSetting when profile name not found", async () => {
@@ -1779,16 +1832,17 @@ describe("Profiles Unit Tests - Function validationArraySetup", () => {
         blockMocks.validProfile.name = "test2";
         const returnedSetting = {
             name: blockMocks.validProfile.name,
-            setting: false
+            setting: false,
+            type: "dataset"
         };
 
         const theProfiles = await Profiles.createInstance(blockMocks.log);
-        theProfiles.profilesValidationSetting = [{name: blockMocks.imperativeProfile.name, setting: true}];
+        theProfiles.profilesValidationSetting = [{name: blockMocks.imperativeProfile.name, setting: true, type: "uss" }];
 
-        const response = await theProfiles.validationArraySetup(blockMocks.validProfile, false);
+        const response = await theProfiles.validationArraySetup(blockMocks.validProfile, false, blockMocks.mockNode);
         expect(response).toEqual(returnedSetting);
-        expect(theProfiles.profilesValidationSetting).toEqual([{name: blockMocks.imperativeProfile.name, setting: true},
-            {name: blockMocks.validProfile.name, setting: false}]);
+        expect(theProfiles.profilesValidationSetting).toEqual([{name: blockMocks.imperativeProfile.name, setting: true, type: "uss"},
+            {name: blockMocks.validProfile.name, setting: false, type: "dataset"}]);
     });
 });
 

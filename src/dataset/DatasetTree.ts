@@ -27,7 +27,6 @@ import * as contextually from "../shared/context";
 import { closeOpenedTextFile } from "../utils/workspace";
 import * as nls from "vscode-nls";
 import { DefaultProfileManager } from "../profiles/DefaultProfileManager";
-import { resetValidationSettings } from "../shared/actions";
 import { PersistentFilters } from "../PersistentFilters";
 import { getValidSession } from "../profiles/utils";
 
@@ -323,7 +322,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 if (node.label !== "Favorites") {
                     const name = node.getProfileName();
                     if (name === profile.name){
-                        await resetValidationSettings(node, setting);
+                        await Profiles.getInstance().resetValidationSettings(node, setting);
                     }
                 }
              }
@@ -340,7 +339,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                         for (const node of this.mSessionNodes) {
                             const name = node.getProfileName();
                             if (name === theProfile.name){
-                                await resetValidationSettings(node, setting);
+                                await Profiles.getInstance().resetValidationSettings(node, setting);
                             }
                         }
                     }

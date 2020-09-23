@@ -198,6 +198,7 @@ export function createInstanceOfProfile(profile: imperative.IProfileLoaded, sess
         getSchema: jest.fn(),
         createZoweSession: jest.fn(),
         promptCredentials: jest.fn(),
+        resetValidationSettings: jest.fn(),
         loadNamedProfile: jest.fn(),
         usesSecurity: true,
         validProfile: ValidProfileEnum.VALID,

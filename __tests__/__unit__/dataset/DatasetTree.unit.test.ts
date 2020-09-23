@@ -109,13 +109,11 @@ async function createGlobalMocks() {
     // Common API mocks
     globalMocks.commonApi = ZoweExplorerApiRegister.getCommonApi(globalMocks.testProfile);
     globalMocks.mockGetCommonApi.mockReturnValue(globalMocks.commonApi);
-    Object.defineProperty(globalMocks.commonApi, "getValidSession", { value: jest.fn(() => globalMocks.testSession), configurable: true });
     ZoweExplorerApiRegister.getCommonApi = globalMocks.mockGetCommonApi.bind(ZoweExplorerApiRegister);
 
     // MVS API mocks
     globalMocks.mvsApi = ZoweExplorerApiRegister.getMvsApi(globalMocks.testProfile);
     globalMocks.mockGetMvsApi.mockReturnValue(globalMocks.mvsApi);
-    Object.defineProperty(globalMocks.mvsApi, "getValidSession", { value: jest.fn(() => globalMocks.testSession), configurable: true });
     ZoweExplorerApiRegister.getMvsApi = globalMocks.mockGetMvsApi.bind(ZoweExplorerApiRegister);
 
     return globalMocks;
@@ -973,6 +971,7 @@ describe("Dataset Tree Unit Tests - Function filterPrompt", () => {
             treeView: createTreeView(),
             mockLoadNamedProfile: jest.fn(),
             datasetSessionNode: null,
+            resetValidationSettings: jest.fn(),
             mockResetValidationSettings: jest.fn(),
             profile: null,
             qpPlaceholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
@@ -986,8 +985,10 @@ describe("Dataset Tree Unit Tests - Function filterPrompt", () => {
                 return {
                     allProfiles: [newMocks.imperativeProfile, { name: "firstName" }, { name: "secondName" }],
                     getDefaultProfile: newMocks.mockDefaultProfile,
+                    resetValidationSettings: jest.fn(),
                     loadNamedProfile: newMocks.mockLoadNamedProfile.mockReturnValueOnce(newMocks.imperativeProfile),
                     validProfile: ValidProfileEnum.VALID,
+
                     enableValidationContext: newMocks.mockEnableValidationContext,
                     checkCurrentProfile: newMocks.mockCheckCurrentProfile.mockReturnValue({name: newMocks.imperativeProfile.name,
                                                                                            status: "active",

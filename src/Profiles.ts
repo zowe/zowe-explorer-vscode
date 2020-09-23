@@ -13,6 +13,7 @@ import { IProfileLoaded, Logger, CliProfileManager, IProfile, IUpdateProfile, IS
 import * as path from "path";
 import * as vscode from "vscode";
 import * as globals from "./globals";
+import * as contextually from "./shared/context";
 import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
 import { errorHandling, getZoweDir, FilterDescriptor, FilterItem, resolveQuickPickHelper, setProfile, setSession } from "./utils";
 import { IZoweTree } from "./api/IZoweTree";
@@ -20,6 +21,7 @@ import { DefaultProfileManager } from "./profiles/DefaultProfileManager";
 import { IZoweNodeType, IZoweUSSTreeNode, IZoweDatasetTreeNode, IZoweJobTreeNode, IZoweTreeNode } from "./api/IZoweTreeNode";
 import * as nls from "vscode-nls";
 import { collectProfileDetails } from "./profiles/utils";
+import { labelRefresh } from "./shared/utils";
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
@@ -33,6 +35,7 @@ interface IProfileValidation {
 interface IValidationSetting {
     name: string;
     setting: boolean;
+    type: string;
 }
 
 export enum ValidProfileEnum {
@@ -190,14 +193,34 @@ export class Profiles {
         return filteredProfile;
     }
 
-    public async disableValidation(node: IZoweNodeType): Promise<IZoweNodeType> {
-        this.disableValidationContext(node);
+    public async resetValidationSettings(node: IZoweNodeType, setting: boolean) {
+        if (setting){
+            await Profiles.getInstance().enableValidationContext(node);
+        } else {
+            await Profiles.getInstance().disableValidationContext(node);
+        }
+        return node;
+    }
+
+    public async disableValidation(node: IZoweNodeType, treeProvider: IZoweTree<IZoweTreeNode>): Promise<IZoweNodeType> {
+        await this.disableValidationContext(node);
+        // Refresh tree
+        await this.refresh();
+        treeProvider.mSessionNodes.forEach(async (sessNode) => {
+            if (contextually.isSessionNotFav(sessNode)) {
+                labelRefresh(sessNode);
+                sessNode.children = [];
+                sessNode.dirty = true;
+                treeProvider.refreshElement(sessNode);
+            }
+        });
+        treeProvider.refresh();
         return node;
     }
 
     public async disableValidationContext(node: IZoweNodeType) {
         const theProfile: IProfileLoaded = node.getProfile();
-        this.validationArraySetup(theProfile, false);
+        this.validationArraySetup(theProfile, false, node);
         if (node.contextValue.includes(`${globals.VALIDATE_SUFFIX}true`)) {
             node.contextValue = node.contextValue.replace(/(_validate=true)/g, "").replace(/(_Active)/g, "").replace(/(_Inactive)/g, "");
             node.contextValue = node.contextValue + `${globals.VALIDATE_SUFFIX}false`;
@@ -209,14 +232,25 @@ export class Profiles {
         return node;
     }
 
-    public async enableValidation(node: IZoweNodeType): Promise<IZoweNodeType> {
-        this.enableValidationContext(node);
+    public async enableValidation(node: IZoweNodeType, treeProvider: IZoweTree<IZoweTreeNode>): Promise<IZoweNodeType> {
+        await this.enableValidationContext(node);
+        // Refresh tree
+        await this.refresh();
+        treeProvider.mSessionNodes.forEach(async (sessNode) => {
+            if (contextually.isSessionNotFav(sessNode)) {
+                labelRefresh(sessNode);
+                sessNode.children = [];
+                sessNode.dirty = true;
+                treeProvider.refreshElement(sessNode);
+            }
+        });
+        treeProvider.refresh();
         return node;
     }
 
     public async enableValidationContext(node: IZoweNodeType) {
         const theProfile: IProfileLoaded = node.getProfile();
-        this.validationArraySetup(theProfile, true);
+        this.validationArraySetup(theProfile, true, node);
         if (node.contextValue.includes(`${globals.VALIDATE_SUFFIX}false`)) {
             node.contextValue = node.contextValue.replace(/(_validate=false)/g, "").replace(/(_Unverified)/g, "");
             node.contextValue = node.contextValue + `${globals.VALIDATE_SUFFIX}true`;
@@ -225,27 +259,30 @@ export class Profiles {
         } else {
             node.contextValue = node.contextValue + `${globals.VALIDATE_SUFFIX}true`;
         }
-
         return node;
     }
 
-    public async validationArraySetup(theProfile: IProfileLoaded, validationSetting: boolean): Promise<IValidationSetting> {
+    public async validationArraySetup(theProfile: IProfileLoaded, validationSetting: boolean, node: IZoweNodeType): Promise<IValidationSetting> {
         let found: boolean = false;
         let profileSetting: IValidationSetting;
         if (this.profilesValidationSetting.length > 0) {
             this.profilesValidationSetting.filter((instance) => {
-                if ((instance.name === theProfile.name) && (instance.setting === validationSetting)) {
+                if ((instance.name === theProfile.name) && (instance.type === contextually.getNodeCategory(node)) &&
+                    (instance.setting === validationSetting)) {
                     found = true;
                     profileSetting = {
                         name: instance.name,
-                        setting: instance.setting
+                        setting: instance.setting,
+                        type: instance.type
                     };
                 }
-                if ((instance.name === theProfile.name) && (instance.setting !== validationSetting)) {
+                if ((instance.name === theProfile.name) && (instance.type === contextually.getNodeCategory(node)) &&
+                    (instance.setting !== validationSetting)) {
                     found = true;
                     profileSetting = {
                         name: instance.name,
-                        setting: validationSetting
+                        setting: validationSetting,
+                        type: instance.type
                     };
                     const index = this.profilesValidationSetting.lastIndexOf(instance);
                     this.profilesValidationSetting.splice(index, 1, profileSetting);
@@ -254,14 +291,16 @@ export class Profiles {
             if (!found) {
                 profileSetting = {
                     name: theProfile.name,
-                    setting: validationSetting
+                    setting: validationSetting,
+                    type: contextually.getNodeCategory(node)
                 };
                 this.profilesValidationSetting.push(profileSetting);
             }
         } else {
             profileSetting = {
                 name: theProfile.name,
-                setting: validationSetting
+                setting: validationSetting,
+                type: contextually.getNodeCategory(node)
             };
             this.profilesValidationSetting.push(profileSetting);
         }

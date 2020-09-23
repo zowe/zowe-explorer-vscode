@@ -281,6 +281,28 @@ export function isJobTreeNode(node: TreeItem): boolean {
 }
 
 /**
+ * Helper function which identifies if the node belongs to the USS tree
+ * @param node
+ * @return true if session belongs to USS tree, false otherwise
+ */
+export function isUssTreeNode(node: TreeItem): boolean {
+    return new RegExp("^(" + globals.JOBS_JOB_CONTEXT + "|" + globals.USS_DIR_CONTEXT + "|"
+                           + globals.DS_PDS_CONTEXT + "|" + globals.USS_SESSION_CONTEXT + "|"
+                           + globals.USS_DIR_CONTEXT + ")").test(node.contextValue);
+}
+
+/**
+ * Helper function which identifies which tree the node belongs to
+ * @param node
+ * @return "dataset" if dataset tree, "uss" if uss tree, "job" if job tree
+ */
+export function getNodeCategory(node: TreeItem): string {
+    if (this.isJobTreeNode(node)) { return "job"; }
+    else if (this.isUssTreeNode(node)) { return "uss"; }
+    else { return "dataset"; }
+}
+
+/**
  * Helper function which identifies if the node is Vsam
  * @param node
  * @return true if a vsam file, false otherwise

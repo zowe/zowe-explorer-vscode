@@ -19,8 +19,7 @@ import { filterTreeByString } from "../shared/utils";
 import { FilterItem, resolveQuickPickHelper, FilterDescriptor } from "../utils";
 import * as contextually from "../shared/context";
 import * as nls from "vscode-nls";
-import { getIconByNode, getIconById, IconId } from "../generators/icons";
-import { Profiles } from "../Profiles";
+import { getIconById, IconId } from "../generators/icons";
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
@@ -204,15 +203,6 @@ export async function returnIconState(node: IZoweNodeType) {
             if (sessionIcon) {
                 node.iconPath = sessionIcon.path;
             }
-    }
-    return node;
-}
-
-export async function resetValidationSettings(node: IZoweNodeType, setting: boolean) {
-    if (setting){
-        await Profiles.getInstance().enableValidationContext(node);
-    } else {
-        await Profiles.getInstance().disableValidationContext(node);
     }
     return node;
 }
