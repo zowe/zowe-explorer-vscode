@@ -38,7 +38,7 @@ async function createGlobalMocks() {
     return newMocks;
 }
 
-describe("Profiles Unit Tests - Function getDefaultProfile", () => {
+describe("Default Profile Manager Unit Tests - Function getDefaultProfile", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
             log: Logger.getAppLogger(),
@@ -63,11 +63,12 @@ describe("Profiles Unit Tests - Function getDefaultProfile", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         const loadedProfiles = globalMocks.defaultProfileManagerInstance.getDefaultProfile();
-        expect(loadedProfiles).toEqual(blockMocks.validProfile);
+
+        expect(loadedProfiles.profile).toEqual(blockMocks.validProfile.profile);
     });
 });
 
-describe("Profiles Unit Tests - Function setDefaultProfile", () => {
+describe("Default Profile Manager Unit Tests - Function setDefaultProfile", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
             log: Logger.getAppLogger(),

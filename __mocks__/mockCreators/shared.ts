@@ -85,13 +85,13 @@ export function createInvalidIProfile(): imperative.IProfileLoaded {
     return {
         name: "sestest",
         profile: {
-            type: "zosmf",
-            host: null,
+            hostname: null,
             port: 1443,
             user: null,
             password: null,
             rejectUnauthorized: false,
-            name: "testName"
+            name: "testName",
+            base64EncodedAuth: "test"
         },
         type: "zosmf",
         message: "",
@@ -103,13 +103,13 @@ export function createValidIProfile(): imperative.IProfileLoaded {
     return {
         name: "sestest",
         profile: {
-            type : "zosmf",
-            host: "test",
+            hostname: "test",
             port: 1443,
             user: "test",
             password: "test",
             rejectUnauthorized: false,
-            name: "testName"
+            name: "testName",
+            base64EncodedAuth: "test"
         },
         type: "zosmf",
         message: "",
@@ -121,12 +121,13 @@ export function createValidBaseProfile(): imperative.IProfileLoaded {
     return {
         name: "sestest",
         profile: {
-            host: "test",
+            hostname: "test",
             port: 60004,
             tokenType: "apimlAuthenticationToken",
             tokenValue: "testToken",
             rejectUnauthorized: false,
-            name: "testName"
+            name: "testName",
+            base64EncodedAuth: "test"
         },
         type: "zosmf",
         message: "",
@@ -188,10 +189,10 @@ export function createTextDocument(name: string, sessionNode?: ZoweDatasetNode |
 
 export function createInstanceOfProfile(profile: imperative.IProfileLoaded, session: imperative.Session) {
     return {
-        allProfiles: [{ name: "base", profile: {}, type: "base" },
-                      { name: "sestest", profile: {}, type: "zosmf" },
-                      { name: "profile1", profile: {}, type: "zosmf" },
-                      { name: "profile2", profile: {}, type: "zosmf" }],
+        allProfiles: [{ name: "base", profile: profile.profile, type: "base" },
+                      { name: "sestest", profile: profile.profile, type: "zosmf" },
+                      { name: "profile1", profile: profile.profile, type: "zosmf" },
+                      { name: "profile2", profile: profile.profile, type: "zosmf" }],
         defaultProfile: { name: "sestest" },
         getDefaultProfile: jest.fn(),
         getProfileType: jest.fn(() => "zosmf"),

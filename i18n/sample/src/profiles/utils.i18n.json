@@ -3,7 +3,6 @@
     "collectProfileDetails.profileTypeMissing": "No profile type was chosen. Operation Cancelled",
     "collectProfileDetails.option.prompt.url.placeholder": "url:port",
     "collectProfileDetails.option.prompt.url": "Enter a z/OS URL in the format 'url:port'.",
-    "collectProfileDetails.invalidzosURL": "Please enter a valid host URL in the format 'url:port'.",
     "collectProfileDetails.invalidPort": "Please enter a valid port number",
     "collectProfileDetails.option.prompt.port.placeholder": "Port Number",
     "collectProfileDetails.undefined.port": "Invalid Port number provided or operation was cancelled",
@@ -14,5 +13,6 @@
     "collectProfileDetails.option.prompt.password.placeholder": "Optional: Password",
     "collectProfileDetails.option.prompt.password": "Enter the password for the connection.",
     "collectProfileDetails.undefined.password": "No password defined.",
-    "collectProfileDetails.option.prompt.ru.placeholder": "Reject Unauthorized Connections"
+    "collectProfileDetails.option.prompt.ru.placeholder": "Reject Unauthorized Connections",
+    "collectProfileDetails.invalidzosURL": "Please enter a valid host URL in the format 'url:port'."
 }

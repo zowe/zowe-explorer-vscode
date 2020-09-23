@@ -114,8 +114,8 @@ export async function getValidSession(serviceProfile: IProfileLoaded,
     } else if (baseProfile) {
         // baseProfile exists, so APIML login is possible
         const sessCfg = {
-            rejectUnauthorized: serviceProfile.profile.rejectUnauthorized != null ? serviceProfile.profile.rejectUnauthorized :
-                baseProfile.profile.rejectUnauthorized,
+            rejectUnauthorized: (serviceProfile.profile.rejectUnauthorized != null ? serviceProfile.profile.rejectUnauthorized :
+                baseProfile.profile.rejectUnauthorized),
             basePath: serviceProfile.profile.basePath,
             hostname: serviceProfile.profile.host ? serviceProfile.profile.host : baseProfile.profile.host,
             port: serviceProfile.profile.port ? serviceProfile.profile.port : baseProfile.profile.port,
@@ -193,39 +193,7 @@ export async function collectProfileDetails(detailsToGet?: string[], oldDetails?
                     value: oldDetails && oldDetails[profileDetail] ? oldDetails[profileDetail] : null,
                     placeHolder: localize("collectProfileDetails.option.prompt.url.placeholder", "url:port"),
                     prompt: localize("collectProfileDetails.option.prompt.url", "Enter a z/OS URL in the format 'url:port'."),
-                    validateInput: (inputValue) => {
-                        const validationResult = {
-                            valid: false,
-                            protocol: null,
-                            host: null,
-                            port: null
-                        };
-
-                        // Check that the URL is valid
-                        try {
-                            newUrl = inputValue.replace(/https:\/\//g, "");
-                            newUrl = new URL("https://" + inputValue);
-                        } catch (error) {
-                            return localize("collectProfileDetails.invalidzosURL",
-                                "Please enter a valid host URL in the format 'url:port'.");
-                        }
-
-                        if (inputValue === "https://") {
-                            // User did not enter a host/port
-                            validationResult.host = "";
-                            validationResult.port = 0;
-                            validationResult.valid = true;
-                            newUrl = validationResult;
-                        } else {
-                            // User would like to store host/port
-                            validationResult.port = Number(newUrl.port);
-                            validationResult.host = newUrl.hostname;
-                            validationResult.valid = true;
-                            newUrl = validationResult;
-                        }
-
-                        return null;
-                    }
+                    validateInput: (inputValue) => validateHostInput(inputValue, newUrl)
                 };
 
                 newUrl = await vscode.window.showInputBox(hostOptions);
@@ -458,4 +426,38 @@ export async function collectProfileDetails(detailsToGet?: string[], oldDetails?
     }
 
     return schemaValues;
+}
+
+// Validates the user input for host name
+export function validateHostInput(inputValue, validationResult) {
+    validationResult = {
+        valid: false,
+        protocol: null,
+        host: null,
+        port: null
+    };
+
+    // Check that the URL is valid
+    let newInfo;
+    try {
+        newInfo = inputValue.replace(/https:\/\//g, "");
+        newInfo = new URL("https://" + inputValue);
+    } catch (error) {
+        return localize("collectProfileDetails.invalidzosURL",
+            "Please enter a valid host URL in the format 'url:port'.");
+    }
+
+    if (inputValue === "https://") {
+        // User did not enter a host/port
+        validationResult.port = 0;
+        validationResult.host = "";
+        validationResult.valid = true;
+    } else {
+        // User would like to store host/port
+        validationResult.port = Number(newInfo.port);
+        validationResult.host = newInfo.hostname;
+        validationResult.valid = true;
+    }
+
+    return null;
 }

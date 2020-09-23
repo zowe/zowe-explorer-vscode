@@ -11,7 +11,7 @@
 
 import { createISessionWithoutCredentials, createTreeView, createIProfile, createInstanceOfProfile,
          createQuickPickItem, createQuickPickContent, createInputBox, createBasicZosmfSession, createISession,
-         createPersistentConfig, createInvalidIProfile, createValidIProfile, createAltTypeIProfile } from "../../__mocks__/mockCreators/shared";
+         createPersistentConfig, createInvalidIProfile, createValidIProfile } from "../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../__mocks__/mockCreators/datasets";
 import { createProfileManager, createTestSchemas } from "../../__mocks__/mockCreators/profiles";
 import * as vscode from "vscode";
@@ -26,7 +26,7 @@ import { ZoweExplorerApiRegister } from "../../src/api/ZoweExplorerApiRegister";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import { Job } from "../../src/job/ZoweJobNode";
 import { createUSSSessionNode, createUSSTree } from "../../__mocks__/mockCreators/uss";
-import { createJobsTree, createIJobObject, } from "../../__mocks__/mockCreators/jobs";
+import { createJobsTree, createIJobObject, createJobSessionNode } from "../../__mocks__/mockCreators/jobs";
 import { DefaultProfileManager } from "../../src/profiles/DefaultProfileManager";
 import { IZoweNodeType } from "../../src/api/IZoweTreeNode";
 
@@ -1037,12 +1037,14 @@ describe("Profiles Unit Tests - Function createInstance", () => {
             session: createISessionWithoutCredentials(),
             mockJSONParse: jest.spyOn(JSON, "parse"),
             profileInstance: null,
-            testProfiles: [{ name: "base", profile: {}, type: "base" },
-            { name: "sestest", profile: {}, type: "zosmf" },
-            { name: "profile1", profile: {}, type: "zosmf" },
-            { name: "profile2", profile: {}, type: "zosmf" }]
+            mockIProfile: createValidIProfile(),
+            testProfiles: null
         };
 
+        newMocks.testProfiles = [{ name: "base", profile: newMocks.mockIProfile.profile, type: "base" },
+                                 { name: "sestest", profile: newMocks.mockIProfile.profile, type: "zosmf" },
+                                 { name: "profile1", profile: newMocks.mockIProfile.profile, type: "zosmf" },
+                                 { name: "profile2", profile: newMocks.mockIProfile.profile, type: "zosmf" }];
         (child_process.spawnSync as any) = jest.fn((program: string, args: string[], options: any) => {
             const createFakeChildProcess = (status: number, stdout: string, stderr: string) => {
                 return {
@@ -1058,7 +1060,7 @@ describe("Profiles Unit Tests - Function createInstance", () => {
                 return createFakeChildProcess(0, JSON.stringify(newMocks.testProfiles[0]), "");
             }
         });
-        newMocks.profileInstance = createInstanceOfProfile(globalMocks.profiles, newMocks.session);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.mockIProfile, newMocks.session);
         globalMocks.mockGetInstance.mockReturnValue(newMocks.profileInstance);
 
         return newMocks;
@@ -1904,5 +1906,58 @@ describe("Profiles Unit Tests - Function refresh", () => {
         theProfiles.profilesForValidation.push({ status: "active", name: blockMocks.validProfile.name });
         await theProfiles.refresh();
         expect(theProfiles.profilesForValidation.length).toBe(0);
+    });
+});
+
+describe("Profiles Unit Tests - Function refreshTree", () => {
+    async function createBlockMocks() {
+        const newMocks = {
+            datasetSessionNode: null,
+            ussSessionNode: null,
+            jobSessionNode: null,
+            mockIProfile: createValidIProfile(),
+            mockProfileInstance: null,
+            mockDefaultProfileManagerInstance: null,
+            session: null,
+        };
+
+        // Mock the Default Profile Manager
+        newMocks.mockDefaultProfileManagerInstance = await DefaultProfileManager.createInstance(Logger.getAppLogger());
+        Object.defineProperty(DefaultProfileManager, "getInstance",
+                              { value: jest.fn(() => newMocks.mockDefaultProfileManagerInstance), configurable: true });
+        Object.defineProperty(newMocks.mockDefaultProfileManagerInstance, "getDefaultProfile",
+                              { value: jest.fn(() => newMocks.mockIProfile), configurable: true });
+
+        // Use a real Profiles instance because we are running tests on a Profiles instance function
+        newMocks.session = createISession();
+        const mockProfileInstance = await Profiles.createInstance(Logger.getAppLogger());
+        Object.defineProperty(mockProfileInstance, "getProfiles", { value: jest.fn().mockReturnValue([newMocks.mockIProfile]),
+                                                                    configurable: true});
+
+        // Create the test nodes
+        newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.mockIProfile);
+        newMocks.ussSessionNode = createUSSSessionNode(newMocks.session, newMocks.mockIProfile);
+        newMocks.jobSessionNode = createJobSessionNode(newMocks.session, newMocks.mockIProfile);
+
+        return newMocks;
+    }
+
+    it("Tests that disableValidation returns correct node context", async () => {
+        // const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks();
+
+        // Necessary change for testing setSession
+        blockMocks.mockIProfile.profile.user = "newName";
+
+        await Profiles.getInstance().refreshTree(blockMocks.datasetSessionNode);
+
+        // Check that setProfile ran
+        expect(blockMocks.datasetSessionNode.profile.profile).toEqual(blockMocks.mockIProfile.profile);
+
+        // Check that setSession ran
+        expect(blockMocks.datasetSessionNode.session.ISession.user).toEqual(blockMocks.mockIProfile.profile.user);
+
+        // Check that node collapsible state is set (last line)
+        expect(blockMocks.datasetSessionNode.collapsibleState).toEqual(vscode.TreeItemCollapsibleState.Collapsed);
     });
 });

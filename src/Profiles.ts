@@ -532,7 +532,7 @@ export class Profiles {
      * @param {sessNode} IZoweTreeNode
      *************************************************************************************************************/
     public refreshTree(sessNode: IZoweTreeNode) {
-        const allProf = Profiles.getInstance().getProfiles();
+        const allProf = this.getProfiles();
         for (const profNode of allProf) {
             if (sessNode.getProfileName() === profNode.name) {
                 setProfile(sessNode, profNode.profile);

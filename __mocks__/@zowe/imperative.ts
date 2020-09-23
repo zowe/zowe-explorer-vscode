@@ -66,13 +66,13 @@ export class CliProfileManager {
         return {
             name: "sestest",
             profile: {
-                type: "zosmf",
-                host: "test",
+                hostname: "test",
                 port: 1443,
                 user: "test",
                 password: "test",
                 rejectUnauthorized: false,
-                name: "testName"
+                name: "testName",
+                base64EncodedAuth: "test"
             },
             type: "zosmf",
             message: "",

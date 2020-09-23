@@ -22,6 +22,32 @@ import * as profileUtils from "../../../src/profiles/utils";
 
 jest.mock("@zowe/imperative");
 
+describe("Profiles Utils Unit Tests - Function validateHostInput", () => {
+    it("Tests that validateHostInput succeeds with a host and port", async () => {
+        const inputString = "https://www.test.com:123";
+
+        const returnValue = await profileUtils.validateHostInput(inputString, "");
+
+        expect(returnValue).toEqual(null);
+    });
+
+    it("Tests that validateHostInput succeeds with optional host and port", async () => {
+        const inputString = "https://";
+
+        const returnValue = await profileUtils.validateHostInput(inputString, "");
+
+        expect(returnValue).toEqual(null);
+    });
+
+    it("Tests that validateHostInput returns an error message if the inputString is undefined", async () => {
+        const inputString = undefined;
+
+        const returnValue = await profileUtils.validateHostInput(inputString, "");
+
+        expect(returnValue).toEqual("Please enter a valid host URL in the format 'url:port'.");
+    });
+});
+
 describe("ZosmfApiCommon Unit Tests - Function getValidProfile", () => {
     async function createBlockMocks() {
         const newMocks = {
@@ -92,6 +118,8 @@ describe("ZosmfApiCommon Unit Tests - Function getValidProfile", () => {
     it("Tests that getValidProfile prompts for password if prompting = true", async () => {
         const blockMocks = await createBlockMocks();
 
+        blockMocks.serviceProfile.profile.host = blockMocks.serviceProfile.profile.hostname;
+        delete blockMocks.serviceProfile.profile.hostname;
         blockMocks.serviceProfile.profile.password = null;
         blockMocks.baseProfile.profile.password = null;
         blockMocks.baseProfile.profile.tokenValue = null;
@@ -143,7 +171,7 @@ describe("ZosmfApiCommon Unit Tests - Function getValidProfile", () => {
         blockMocks.serviceProfile.profile.port = null;
         blockMocks.baseProfile.profile.port = null;
         blockMocks.collectProfileDetailsSpy.mockResolvedValue({
-            host: "testHostNew",
+            host: "testhostNew",
             port: 1234,
             password: "testPassNew",
             basePath: "testBasePathNew"
@@ -263,6 +291,9 @@ describe("ZosmfApiCommon Unit Tests - Function getValidProfile", () => {
         const blockMocks = await createBlockMocks();
 
         blockMocks.serviceProfile.profile.password = undefined;
+        blockMocks.serviceProfile.profile.host = blockMocks.serviceProfile.profile.hostname;
+        delete blockMocks.serviceProfile.profile.hostname;
+        delete blockMocks.serviceProfile.profile.base64EncodedAuth;
         const serviceProfileNoPassword = blockMocks.serviceProfile;
         serviceProfileNoPassword.profile.basePath = undefined;
         serviceProfileNoPassword.profile.tokenType = "apimlAuthenticationToken";
