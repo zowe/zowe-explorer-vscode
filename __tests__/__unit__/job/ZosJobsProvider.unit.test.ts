@@ -20,10 +20,11 @@ import { Logger } from "@zowe/imperative";
 import { createIJobFile, createIJobObject, createJobFavoritesNode, createJobSessionNode, MockJobDetail } from "../../../__mocks__/mockCreators/jobs";
 import { Job } from "../../../src/job/ZoweJobNode";
 import { Profiles, ValidProfileEnum } from "../../../src/Profiles";
-import { createIProfile, createISession, createInstanceOfProfile, createISessionWithoutCredentials, createQuickPickContent, createTreeView } from "../../../__mocks__/mockCreators/shared";
+import { createIProfile, createISession, createInstanceOfProfile, createISessionWithoutCredentials, createTreeView, createValidIProfile } from "../../../__mocks__/mockCreators/shared";
 import { ZoweExplorerApiRegister } from "../../../src/api/ZoweExplorerApiRegister";
 import { getIconByNode } from "../../../src/generators/icons";
 import { createJesApi } from "../../../__mocks__/mockCreators/api";
+import { DefaultProfileManager } from "../../../src/profiles/DefaultProfileManager";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -37,12 +38,15 @@ async function createGlobalMocks() {
         mockDeleteJobs: jest.fn(),
         mockShowInputBox: jest.fn(),
         mockDeleteJob: jest.fn(),
+        mockValidationSetting: jest.fn(),
         mockGetJobsByOwnerAndPrefix: jest.fn(),
         mockShowInformationMessage: jest.fn(),
         mockLoadNamedProfile: jest.fn(),
         mockCreateQuickPick: jest.fn(),
         mockLoadDefaultProfile: jest.fn(),
         mockGetJesApi: jest.fn(),
+        defaultProfileManagerInstance: null,
+        mockDefaultProfile: null,
         mockShowQuickPick: jest.fn(),
         testJobsProvider: null,
         jesApi: null,
@@ -71,6 +75,15 @@ async function createGlobalMocks() {
             };
         })
     };
+
+    // Default profile manager instance mocks
+    globalMocks.defaultProfileManagerInstance = await DefaultProfileManager.createInstance(Logger.getAppLogger());
+    await Profiles.createInstance(Logger.getAppLogger());
+    globalMocks.mockDefaultProfile = DefaultProfileManager.getInstance().getDefaultProfile("zosmf");
+    Object.defineProperty(DefaultProfileManager, "getInstance",
+                          { value: jest.fn(() => globalMocks.defaultProfileManagerInstance), configurable: true });
+    Object.defineProperty(globalMocks.defaultProfileManagerInstance, "getDefaultProfile",
+                          { value: jest.fn(() => globalMocks.mockDefaultProfile), configurable: true });
 
     Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true });
     Object.defineProperty(vscode.window, "withProgress", { value: globalMocks.withProgress, configurable: true });
@@ -106,6 +119,7 @@ async function createGlobalMocks() {
     globalMocks.mockGetJob.mockReturnValue(globalMocks.testIJob);
     globalMocks.mockGetJobsByOwnerAndPrefix.mockReturnValue([globalMocks.testIJob, globalMocks.testIJobComplete]);
     globalMocks.mockProfileInstance.editSession = jest.fn(() => globalMocks.testProfile);
+    globalMocks.mockProfileInstance.checkProfileValidationSetting = globalMocks.mockValidationSetting.mockReturnValue(true);
 
     globalMocks.mockGetConfiguration.mockReturnValue({
         persistence: true,
@@ -144,9 +158,10 @@ describe("ZosJobsProvider unit tests - Function getChildren", () => {
     }
 
     it("Tests that getChildren returns the Favorites and sessions when called at the root node", async () => {
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
-        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+
+        globalMocks.createTreeView.mockReturnValue(blockMocks.treeView);
         const testTree = new ZosJobsProvider();
         testTree.mSessionNodes.push(blockMocks.jobSessionNode);
         const targetIcon = getIconByNode(blockMocks.jobFavoritesNode);
@@ -161,9 +176,10 @@ describe("ZosJobsProvider unit tests - Function getChildren", () => {
 
     });
     it("Tests that getChildren returns favorites profile node when called on Favorites", async () => {
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
-        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+
+        globalMocks.createTreeView.mockReturnValue(blockMocks.treeView);
 
         const testTree = new ZosJobsProvider();
         const favoriteSessionNode = blockMocks.jobFavoritesNode;
@@ -177,9 +193,10 @@ describe("ZosJobsProvider unit tests - Function getChildren", () => {
         expect(children).toEqual([favProfileNode]);
     });
     it("Tests that getChildren gets profile-loaded favorites for profile node in Favorites section ", async () => {
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
-        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+
+        globalMocks.createTreeView.mockReturnValue(blockMocks.treeView);
 
         const testTree = new ZosJobsProvider();
         const log = Logger.getAppLogger();
@@ -195,10 +212,11 @@ describe("ZosJobsProvider unit tests - Function getChildren", () => {
         expect(loadProfilesForFavoritesSpy).toHaveBeenCalledWith(log, favProfileNode);
     });
     it("Tests that getChildren gets children of a session element", async () => {
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
-        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
-        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+
+        Object.defineProperty(Profiles, "getInstance", { value: jest.fn().mockReturnValue(blockMocks.profile), configurable: true });
+        globalMocks.createTreeView.mockReturnValue(blockMocks.treeView);
 
         const testTree = new ZosJobsProvider();
         testTree.mSessionNodes.push(blockMocks.jobSessionNode);
@@ -389,5 +407,92 @@ describe("ZosJobsProvider unit tests - Function loadProfilesForFavorites", () =>
         const resultFavJobNode = testTree.mFavorites[0].children[0];
 
         expect(resultFavJobNode).toEqual(expectedFavJobNode);
+    });
+});
+
+describe("ZosJobsProvider unit tests - Function addSession", () => {
+    async function createBlockMocks() {
+        const newMocks = {
+            log: Logger.getAppLogger(),
+            session: createISession(),
+            imperativeProfile: createValidIProfile(),
+            jobSessionNode: null,
+            mockProfileInstance: null,
+            mockLoadNamedProfile: jest.fn(),
+            mockDisableValidationContext: jest.fn(),
+            mockEnableValidationContext: jest.fn(),
+            mockLoadDefaultProfile: jest.fn(),
+        };
+
+        newMocks.jobSessionNode = createJobSessionNode(newMocks.session, newMocks.imperativeProfile);
+
+        // Profile instance mocks
+        newMocks.mockProfileInstance = createInstanceOfProfile(newMocks.imperativeProfile, newMocks.session);
+        newMocks.mockLoadNamedProfile.mockReturnValue(newMocks.imperativeProfile);
+        newMocks.mockProfileInstance.loadNamedProfile = newMocks.mockLoadNamedProfile;
+        newMocks.mockLoadDefaultProfile.mockReturnValue(newMocks.imperativeProfile);
+        newMocks.mockProfileInstance.getDefaultProfile = newMocks.mockLoadDefaultProfile;
+        newMocks.mockProfileInstance.enableValidationContext = newMocks.mockEnableValidationContext;
+        newMocks.mockProfileInstance.disableValidationContext = newMocks.mockDisableValidationContext;
+        newMocks.mockProfileInstance.validProfile = ValidProfileEnum.VALID;
+        Object.defineProperty(Profiles, "getInstance", { value: jest.fn().mockReturnValue(newMocks.mockProfileInstance), configurable: true });
+
+        return newMocks;
+    }
+    it("Tests that addSession adds the session to the tree", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        globalMocks.testJobsProvider.mSessionNodes.pop();
+
+        await globalMocks.testJobsProvider.addSession("sestest");
+
+        expect(globalMocks.testJobsProvider.mSessionNodes[1]).toBeDefined();
+        expect(globalMocks.testJobsProvider.mSessionNodes[1].label).toEqual("sestest");
+        expect(globalMocks.testJobsProvider.mSessionNodes[1].tooltip).toEqual("sestest - owner: fake prefix: *");
+    });
+
+    it("Tests that addSession adds the session to the tree with disabled global setting", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        globalMocks.mockProfileInstance.checkProfileValidationSetting = globalMocks.mockValidationSetting.mockReturnValueOnce(false);
+        await globalMocks.testJobsProvider.addSession("sestest");
+
+        expect(globalMocks.testJobsProvider.mSessionNodes[1]).toBeDefined();
+        expect(globalMocks.testJobsProvider.mSessionNodes[1].label).toEqual("sestest");
+        expect(globalMocks.testJobsProvider.mSessionNodes[1].tooltip).toEqual("sestest - owner: fake prefix: *");
+    });
+
+    it("tests that session is added properly from history", async () => {
+        await createGlobalMocks();
+        const blockMocks = await createBlockMocks();
+
+        const testTree = new ZosJobsProvider();
+
+        // Force mHistory to contain the name of the test session
+        await testTree.addSession(blockMocks.imperativeProfile.name, "zosmf");
+
+        // Make sure session nodes array is empty before running the test
+        testTree.mSessionNodes.pop();
+
+        await testTree.addSession();
+
+        expect(testTree.mSessionNodes[1].getSession()).toEqual(blockMocks.jobSessionNode.getSession());
+    });
+
+    it("tests that validation settings are reset for a session added from history", async () => {
+        await createGlobalMocks();
+        const blockMocks = await createBlockMocks();
+
+        const testTree = new ZosJobsProvider();
+
+        // Force mHistory to contain the name of the test session
+        await testTree.addSession(blockMocks.imperativeProfile.name, "zosmf");
+
+        // Make sure session nodes array is empty before running the test
+        testTree.mSessionNodes.pop();
+
+        await testTree.addSession();
+
+        expect(blockMocks.mockProfileInstance.resetValidationSettings).toBeCalled();
     });
 });

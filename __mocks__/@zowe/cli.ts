@@ -16,29 +16,25 @@ import * as imperative from "./imperative";
 // tslint:disable-next-line:no-namespace
 export namespace ZosmfSession {
     export function createBasicZosmfSession(profile: imperative.Profile) {
-        return {
+        return new imperative.Session({
             type: "basic",
             user: "fake",
             password: "fake",
             hostname: "fake",
             protocol: "https",
-            base64EncodedAuth: "",
-            rejectUnauthorized: false,
-            port: 2,
-        };
+            port: 1443,
+        });
     }
 
     export function createBasicZosmfSessionFromArguments(args: imperative.ICommandArguments) {
-        return {
+        return new imperative.Session({
             type: "basic",
             user: "fake",
             password: "fake",
             hostname: "fake",
             protocol: "https",
-            base64EncodedAuth: "",
-            rejectUnauthorized: false,
-            port: 2,
-        };
+            port: 1443,
+        });
     }
 }
 

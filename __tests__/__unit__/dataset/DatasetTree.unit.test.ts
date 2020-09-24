@@ -602,8 +602,7 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
             treeView: createTreeView(),
             testDatasetTree: null,
             datasetSessionNode: null,
-            profile: null,
-            mockResetValidation: jest.fn(),
+            mockProfileInstance: null,
             mockDefaultProfile: jest.fn(),
             mockLoadNamedProfile: jest.fn(),
             mockValidationSetting: jest.fn(),
@@ -611,7 +610,6 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
             mockDisableValidationContext: jest.fn(),
             mockEnableValidationContext: jest.fn(),
             mockLoadDefaultProfile: jest.fn(),
-            mockProfileInstance: null,
             mockMHistory: PersistentFilters,
             mockGetConfiguration: jest.fn(),
             mockPersistenceSchema: createPersistentConfig()
@@ -619,7 +617,6 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
 
         newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
         newMocks.testDatasetTree = createDatasetTree(newMocks.datasetSessionNode, newMocks.treeView);
-        newMocks.profile = createInstanceOfProfile(newMocks.imperativeProfile, newMocks.session);
 
         // Profile instance mocks
         newMocks.mockProfileInstance = createInstanceOfProfile(newMocks.imperativeProfile, newMocks.session);
@@ -630,7 +627,7 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
         newMocks.mockProfileInstance.enableValidationContext = newMocks.mockEnableValidationContext;
         newMocks.mockProfileInstance.disableValidationContext = newMocks.mockDisableValidationContext;
         newMocks.mockProfileInstance.validProfile = ValidProfileEnum.VALID;
-        newMocks.mockProfileInstance.allProfiles = jest.fn().mockReturnValue([newMocks.imperativeProfile]);
+        Object.defineProperty(Profiles, "getInstance", { value: jest.fn().mockReturnValue(newMocks.mockProfileInstance), configurable: true });
 
         return newMocks;
     }
@@ -683,12 +680,48 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
         await createGlobalMocks();
         const blockMocks = await createBlockMocks();
 
-        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
+        blockMocks.mockLoadNamedProfile.mockReturnValue(null);
 
         await testTree.addSession("fake");
         expect(testTree.mSessionNodes[1]).not.toBeDefined();
+    });
+
+    it("tests that session is added properly from history", async () => {
+        await createGlobalMocks();
+        const blockMocks = await createBlockMocks();
+
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+
+        // Force mHistory to contain the name of the test session
+        await testTree.addSession(blockMocks.imperativeProfile.name, "zosmf");
+
+        // Make sure session nodes array is empty before running the test
+        testTree.mSessionNodes.pop();
+
+        await testTree.addSession();
+
+        expect(testTree.mSessionNodes[1].getSession()).toEqual(blockMocks.datasetSessionNode.getSession());
+    });
+
+    it("tests that validation settings are reset for a session added from history", async () => {
+        await createGlobalMocks();
+        const blockMocks = await createBlockMocks();
+
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+
+        // Force mHistory to contain the name of the test session
+        await testTree.addSession(blockMocks.imperativeProfile.name, "zosmf");
+
+        // Make sure session nodes array is empty before running the test
+        testTree.mSessionNodes.pop();
+
+        await testTree.addSession();
+
+        expect(blockMocks.mockProfileInstance.resetValidationSettings).toBeCalled();
     });
 });
 describe("Dataset Tree Unit Tests - Function addFavorite", () => {

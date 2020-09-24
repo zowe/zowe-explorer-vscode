@@ -18,7 +18,7 @@ import {
     createIProfile,
     createISession,
     createISessionWithoutCredentials,
-    createFileResponse
+    createFileResponse, createInstanceOfProfile, createValidIProfile
 } from "../../../__mocks__/mockCreators/shared";
 import * as globals from "../../../src/globals";
 import * as vscode from "vscode";
@@ -371,6 +371,34 @@ describe("USSTree Unit Tests - Function USSTree.openItemFromPath()", () => {
 });
 
 describe("USSTree Unit Tests - Function USSTree.addSession()", () => {
+    async function createBlockMocks() {
+        const newMocks = {
+            log: Logger.getAppLogger(),
+            session: createISession(),
+            imperativeProfile: createValidIProfile(),
+            ussSessionNode: null,
+            mockProfileInstance: null,
+            mockLoadNamedProfile: jest.fn(),
+            mockDisableValidationContext: jest.fn(),
+            mockEnableValidationContext: jest.fn(),
+            mockLoadDefaultProfile: jest.fn(),
+        };
+
+        newMocks.ussSessionNode = createUSSSessionNode(newMocks.session, newMocks.imperativeProfile);
+
+        // Profile instance mocks
+        newMocks.mockProfileInstance = createInstanceOfProfile(newMocks.imperativeProfile, newMocks.session);
+        newMocks.mockLoadNamedProfile.mockReturnValue(newMocks.imperativeProfile);
+        newMocks.mockProfileInstance.loadNamedProfile = newMocks.mockLoadNamedProfile;
+        newMocks.mockLoadDefaultProfile.mockReturnValue(newMocks.imperativeProfile);
+        newMocks.mockProfileInstance.getDefaultProfile = newMocks.mockLoadDefaultProfile;
+        newMocks.mockProfileInstance.enableValidationContext = newMocks.mockEnableValidationContext;
+        newMocks.mockProfileInstance.disableValidationContext = newMocks.mockDisableValidationContext;
+        newMocks.mockProfileInstance.validProfile = ValidProfileEnum.VALID;
+        Object.defineProperty(Profiles, "getInstance", { value: jest.fn().mockReturnValue(newMocks.mockProfileInstance), configurable: true });
+
+        return newMocks;
+    }
     it("Tests if addSession works properly", async () => {
         const globalMocks = await createGlobalMocks();
 
@@ -393,6 +421,40 @@ describe("USSTree Unit Tests - Function USSTree.addSession()", () => {
         await globalMocks.testTree.addSession("testSessionNode");
 
         expect(globalMocks.mockResetValidation).toBeCalledTimes(1);
+    });
+
+    it("tests that session is added properly from history", async () => {
+        await createGlobalMocks();
+        const blockMocks = await createBlockMocks();
+
+        const testTree = new USSTree();
+
+        // Force mHistory to contain the name of the test session
+        await testTree.addSession(blockMocks.imperativeProfile.name, "zosmf");
+
+        // Make sure session nodes array is empty before running the test
+        testTree.mSessionNodes.pop();
+
+        await testTree.addSession();
+
+        expect(testTree.mSessionNodes[1].getSession()).toEqual(blockMocks.ussSessionNode.getSession());
+    });
+
+    it("tests that validation settings are reset for a session added from history", async () => {
+        await createGlobalMocks();
+        const blockMocks = await createBlockMocks();
+
+        const testTree = new USSTree();
+
+        // Force mHistory to contain the name of the test session
+        await testTree.addSession(blockMocks.imperativeProfile.name, "zosmf");
+
+        // Make sure session nodes array is empty before running the test
+        testTree.mSessionNodes.pop();
+
+        await testTree.addSession();
+
+        expect(blockMocks.mockProfileInstance.resetValidationSettings).toBeCalled();
     });
 });
 

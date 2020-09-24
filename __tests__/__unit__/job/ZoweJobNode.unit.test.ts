@@ -189,31 +189,6 @@ describe("ZoweJobNode unit tests - Function createJobsTree", () => {
     });
 });
 
-describe("ZoweJobNode unit tests - Function addSession", () => {
-    it("Tests that addSession adds the session to the tree", async () => {
-        const globalMocks = await createGlobalMocks();
-
-        globalMocks.testJobsProvider.mSessionNodes.pop();
-
-        await globalMocks.testJobsProvider.addSession("sestest");
-
-        expect(globalMocks.testJobsProvider.mSessionNodes[1]).toBeDefined();
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].label).toEqual("sestest");
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].tooltip).toEqual("sestest - owner: fake prefix: *");
-    });
-
-    it("Tests that addSession adds the session to the tree with disabled global setting", async () => {
-        const globalMocks = await createGlobalMocks();
-
-        globalMocks.mockProfileInstance.checkProfileValidationSetting = globalMocks.mockValidationSetting.mockReturnValueOnce(false);
-        await globalMocks.testJobsProvider.addSession("sestest");
-
-        expect(globalMocks.testJobsProvider.mSessionNodes[1]).toBeDefined();
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].label).toEqual("sestest");
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].tooltip).toEqual("sestest - owner: fake prefix: *");
-    });
-});
-
 describe("ZoweJobNode unit tests - Function hideSession", () => {
     it("Tests that hideSession removes the session from the tree", async () => {
         const globalMocks = await createGlobalMocks();
