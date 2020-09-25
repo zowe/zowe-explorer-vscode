@@ -53,6 +53,17 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
                 if (validateSession) { sessionStatus = await zowe.CheckStatus.getZosmfInfo(validateSession); }
 
                 if (sessionStatus) {
+                    // Store the valid connection details in the profile
+                    Object.keys(validateProfile.profile).forEach((profileKey) => {
+                        Object.keys(validateSession.ISession).forEach((sessionKey) => {
+                            if (profileKey === sessionKey && !validateProfile.profile[profileKey]) {
+                                validateProfile.profile[profileKey] = validateSession.ISession[sessionKey];
+                            }
+                            if (profileKey === "host" && sessionKey === "hostname" && !validateProfile.profile[profileKey]) {
+                                validateProfile.profile[profileKey] = validateSession.ISession[sessionKey];
+                            }
+                        });
+                    });
                     return "active";
                 } else {
                     return "inactive";

@@ -127,7 +127,7 @@ describe("ZosmfApiCommon Unit Tests - Function getValidProfile", () => {
         await profileUtils.getValidSession(blockMocks.serviceProfile, "sestest", true);
 
         expect(blockMocks.collectProfileDetailsSpy).toHaveBeenCalledTimes(1);
-        expect(blockMocks.collectProfileDetailsSpy).toHaveBeenCalledWith(["password"]);
+        expect(blockMocks.collectProfileDetailsSpy).toHaveBeenCalledWith(["password"], null, null);
     });
 
     it("Tests that getValidProfile prompts for host if prompting = true", async () => {
@@ -141,7 +141,7 @@ describe("ZosmfApiCommon Unit Tests - Function getValidProfile", () => {
         await profileUtils.getValidSession(blockMocks.serviceProfile, "sestest", true);
 
         expect(blockMocks.collectProfileDetailsSpy).toHaveBeenCalledTimes(1);
-        expect(blockMocks.collectProfileDetailsSpy).toHaveBeenCalledWith(["host"]);
+        expect(blockMocks.collectProfileDetailsSpy).toHaveBeenCalledWith(["hostname"], null, null);
     });
 
     it("Tests that getValidProfile prompts for port if prompting = true", async () => {
@@ -157,7 +157,7 @@ describe("ZosmfApiCommon Unit Tests - Function getValidProfile", () => {
         await profileUtils.getValidSession(blockMocks.serviceProfile, "sestest", true);
 
         expect(blockMocks.collectProfileDetailsSpy).toHaveBeenCalledTimes(1);
-        expect(blockMocks.collectProfileDetailsSpy).toHaveBeenCalledWith(["host", "port"]);
+        expect(blockMocks.collectProfileDetailsSpy).toHaveBeenCalledWith(["hostname", "port"], null, null);
     });
 
     it("Tests that getValidProfile successfully returns an array of new profile details", async () => {
@@ -180,7 +180,7 @@ describe("ZosmfApiCommon Unit Tests - Function getValidProfile", () => {
         await profileUtils.getValidSession(blockMocks.serviceProfile, "sestest", true);
 
         expect(blockMocks.collectProfileDetailsSpy).toHaveBeenCalledTimes(1);
-        expect(blockMocks.collectProfileDetailsSpy).toHaveBeenCalledWith(["password", "host", "port"]);
+        expect(blockMocks.collectProfileDetailsSpy).toHaveBeenCalledWith(["password", "hostname", "port"], null, null);
     });
 
     it("Tests that getValidProfile throws an error if prompting fails due to 401 bad authorization, using service profile", async () => {
@@ -238,6 +238,7 @@ describe("ZosmfApiCommon Unit Tests - Function getValidProfile", () => {
 
         const testError = { message: "Test error!", mDetails: { errorCode: 401 } };
         blockMocks.serviceProfile.profile.user = null;
+        blockMocks.serviceProfile.profile.basePath = "test";
         blockMocks.baseProfile.profile.tokenValue = "testToken";
         jest.spyOn(ConnectionPropsForSessCfg, "addPropsOrPrompt").mockRejectedValueOnce(testError);
 
@@ -257,6 +258,7 @@ describe("ZosmfApiCommon Unit Tests - Function getValidProfile", () => {
 
         const testError = { message: "Test error!", mDetails: { errorCode: 401 } };
         blockMocks.serviceProfile.profile.user = null;
+        blockMocks.serviceProfile.profile.basePath = "test";
         blockMocks.baseProfile.profile.tokenValue = "testToken";
         jest.spyOn(ConnectionPropsForSessCfg, "addPropsOrPrompt").mockRejectedValueOnce(testError);
 
@@ -274,6 +276,7 @@ describe("ZosmfApiCommon Unit Tests - Function getValidProfile", () => {
         const blockMocks = await createBlockMocks();
 
         blockMocks.serviceProfile.profile.user = null;
+        blockMocks.serviceProfile.profile.basePath = "test";
         blockMocks.baseProfile.profile.tokenValue = "testToken";
         jest.spyOn(ConnectionPropsForSessCfg, "addPropsOrPrompt").mockRejectedValueOnce(new Error("Test error!"));
 

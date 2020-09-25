@@ -850,12 +850,12 @@
         },
         {
           "when": "view == zowe.explorer && viewItem =~ /^(?=.*_validate=true.*)session.*/",
-          "command": "zowe.jobs.disableValidation",
+          "command": "zowe.disableValidation",
           "group": "7_modification@6"
         },
         {
           "when": "view == zowe.explorer && viewItem =~ /^(?=.*_validate=false.*)session.*/",
-          "command": "zowe.jobs.enableValidation",
+          "command": "zowe.enableValidation",
           "group": "7_modification@7"
         },
         {
@@ -953,12 +953,12 @@
         },
         {
           "when": "view == zowe.jobs && viewItem =~ /^(?=.*_validate=true.*)server.*/",
-          "command": "zowe.disableValidation",
+          "command": "zowe.jobs.disableValidation",
           "group": "3_modification@3"
         },
         {
           "when": "view == zowe.jobs && viewItem =~ /^(?=.*_validate=false.*)server.*/",
-          "command": "zowe.enableValidation",
+          "command": "zowe.jobs.enableValidation",
           "group": "3_modification@4"
         }
       ],

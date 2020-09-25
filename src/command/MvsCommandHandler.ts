@@ -13,12 +13,14 @@ import * as zowe from "@zowe/cli";
 import * as vscode from "vscode";
 import { IProfileLoaded, Session, } from "@zowe/imperative";
 import * as globals from "../globals";
+import * as contextually from "../shared/context";
 import { Profiles, ValidProfileEnum } from "../Profiles";
 import { PersistentFilters } from "../PersistentFilters";
 import { FilterDescriptor, FilterItem, resolveQuickPickHelper, errorHandling } from "../utils";
 import { IZoweTreeNode } from "../api/IZoweTreeNode";
 import * as nls from "vscode-nls";
 import { getValidSession } from "../profiles/utils";
+import { getIconById, IconId } from "../generators/icons";
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
@@ -93,7 +95,28 @@ export class MvsCommandHandler {
         } else {
             zosmfProfile = node.getProfile();
         }
-        await Profiles.getInstance().checkCurrentProfile(zosmfProfile, true);
+
+        let profileStatus;
+        if (node) {
+            profileStatus = await Profiles.getInstance().checkCurrentProfile(zosmfProfile, contextually.getNodeCategory(node), true);
+            // Set node to proper active status in tree
+            const sessNode = node.getSessionNode();
+            let newIcon;
+            if (profileStatus.status === "inactive") {
+                sessNode.contextValue = sessNode.contextValue + globals.INACTIVE_CONTEXT;
+                newIcon = getIconById(IconId.sessionInactive);
+            } else if (profileStatus.status === "active") {
+                sessNode.contextValue = sessNode.contextValue + globals.ACTIVE_CONTEXT;
+                newIcon = getIconById(IconId.sessionActive);
+            }
+
+            // Get proper icon for node
+            if (newIcon) {
+                sessNode.iconPath = newIcon.path;
+            }
+        } else {
+            profileStatus = await Profiles.getInstance().checkCurrentProfile(zosmfProfile, null, true);
+        }
         if ((Profiles.getInstance().validProfile === ValidProfileEnum.VALID) ||
             (Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED)) {
 

@@ -11,6 +11,7 @@
 
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
+import * as globals from "../globals";
 import { errorHandling } from "../utils";
 import { labelRefresh } from "../shared/utils";
 import { Profiles, ValidProfileEnum } from "../Profiles";
@@ -22,6 +23,7 @@ import * as contextually from "../shared/context";
 import { returnIconState } from "../shared/actions";
 import * as nls from "vscode-nls";
 import { encodeJobFile } from "../SpoolProvider";
+import { getIconById, IconId } from "../generators/icons";
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
@@ -80,7 +82,23 @@ export async function downloadSpool(job: IZoweJobTreeNode){
 export async function getSpoolContent(jobsProvider: IZoweTree<IZoweJobTreeNode>, session: string, spool: zowe.IJobFile) {
     const zosmfProfile = Profiles.getInstance().loadNamedProfile(session);
     // This has a direct access to Profiles checkcurrentProfile() because I am able to get the profile now.
-    await Profiles.getInstance().checkCurrentProfile(zosmfProfile, true);
+    const profileStatus = await Profiles.getInstance().checkCurrentProfile(zosmfProfile, "job", true);
+    // Set node to proper active status in tree
+    const sessionNode = jobsProvider.mSessionNodes.find((node) => node.label.includes(session));
+    // Set node to proper status in tree
+    let newIcon;
+    if (profileStatus.status === "inactive") {
+        sessionNode.contextValue = sessionNode.contextValue + globals.INACTIVE_CONTEXT;
+        newIcon = getIconById(IconId.sessionInactive);
+    } else if (profileStatus.status === "active") {
+        sessionNode.contextValue = sessionNode.contextValue + globals.ACTIVE_CONTEXT;
+        newIcon = getIconById(IconId.sessionActive);
+    }
+
+    // Get proper icon for node
+    if (newIcon) {
+        sessionNode.iconPath = newIcon.path;
+    }
     if ((Profiles.getInstance().validProfile === ValidProfileEnum.VALID) ||
     (Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED)) {
         try {

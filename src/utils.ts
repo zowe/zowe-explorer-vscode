@@ -20,6 +20,7 @@ import { IZoweTreeNode } from "./api/IZoweTreeNode";
 import * as nls from "vscode-nls";
 import { Profiles } from "./Profiles";
 import { getValidSession } from "./profiles/utils";
+import { getIconById, IconId } from "./generators/icons";
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();

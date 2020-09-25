@@ -589,7 +589,10 @@ describe("mvsCommandActions unit testing", () => {
                     defaultProfile: {name: "firstName"},
                     validProfile: profileLoader.ValidProfileEnum.VALID,
                     getValidSession: globalMocks.mockGetValidSession,
-                    checkCurrentProfile: jest.fn(),
+                    checkCurrentProfile: jest.fn().mockReturnValue({
+                        status: "active",
+                        name: "firstName"
+                    }),
                     zosmfProfile: globalMocks.mockLoadNamedProfile
                 };
             }),

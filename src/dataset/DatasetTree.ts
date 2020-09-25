@@ -21,7 +21,7 @@ import { IZoweTree } from "../api/IZoweTree";
 import { IZoweDatasetTreeNode } from "../api/IZoweTreeNode";
 import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
-import { getIconByNode } from "../generators/icons";
+import { getIconById, getIconByNode, IconId } from "../generators/icons";
 import * as fs from "fs";
 import * as contextually from "../shared/context";
 import { closeOpenedTextFile } from "../utils/workspace";
@@ -82,9 +82,24 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * @param node - The node
      */
     public async rename(node: IZoweDatasetTreeNode) {
-        await Profiles.getInstance().checkCurrentProfile(node.getProfile(), true);
+        const profileStatus = await Profiles.getInstance().checkCurrentProfile(node.getProfile(), "dataset", true);
+        // Set node to proper active status in tree
+        const sessNode = node.getSessionNode();
+        let newIcon;
+        if (profileStatus.status === "inactive") {
+            sessNode.contextValue = sessNode.contextValue + globals.INACTIVE_CONTEXT;
+            newIcon = getIconById(IconId.sessionInactive);
+        } else if (profileStatus.status === "active") {
+            sessNode.contextValue = sessNode.contextValue + globals.ACTIVE_CONTEXT;
+            newIcon = getIconById(IconId.sessionActive);
+        }
+
+        // Get proper icon for node
+        if (newIcon) {
+            sessNode.iconPath = newIcon.path;
+        }
         if ((Profiles.getInstance().validProfile === ValidProfileEnum.VALID) ||
-        (Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED)) {
+            (Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED)) {
             return contextually.isDsMember(node) ? this.renameDataSetMember(node) : this.renameDataSet(node);
         }
     }
@@ -129,8 +144,16 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             if (contextually.isFavoriteContext(element)) {
                 return this.mFavorites;
             }
-            const newSession = await Profiles.getInstance().checkCurrentProfile(element.getProfile());
-            if (newSession) { return element.getChildren(); }
+            const newSession = await this.checkCurrentProfile(element, false);
+            if (newSession) {
+                try {
+                    return element.getChildren();
+                } catch (err) {
+                    vscode.window.showErrorMessage(err.message);
+                }
+            }
+            // If there was some error, no children should be returned
+            return [];
         }
         return this.mSessionNodes;
     }

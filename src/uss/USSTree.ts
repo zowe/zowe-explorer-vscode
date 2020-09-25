@@ -21,7 +21,7 @@ import { ZoweUSSNode } from "./ZoweUSSNode";
 import { Profiles, ValidProfileEnum } from "../Profiles";
 import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
-import { getIconByNode } from "../generators/icons";
+import { getIconById, getIconByNode, IconId } from "../generators/icons";
 import * as contextually from "../shared/context";
 import * as nls from "vscode-nls";
 import { DefaultProfileManager } from "../profiles/DefaultProfileManager";
@@ -206,8 +206,16 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 const favsForProfile = this.loadProfilesForFavorites(this.log, element);
                 return favsForProfile;
             }
-            const newSession = await Profiles.getInstance().checkCurrentProfile(element.getProfile());
-            if (newSession) { return element.getChildren(); }
+            const newSession = await this.checkCurrentProfile(element, false);
+            if (newSession) {
+                try {
+                    return element.getChildren();
+                } catch (err) {
+                    vscode.window.showErrorMessage(err.message);
+                }
+            }
+            // If there was some error, no children should be returned
+            return [];
         }
         return this.mSessionNodes;
     }

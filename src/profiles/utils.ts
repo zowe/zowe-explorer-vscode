@@ -31,12 +31,12 @@ export async function getValidSession(serviceProfile: IProfileLoaded,
     // If user exists in serviceProfile, use serviceProfile to login because it has precedence over baseProfile
     // If no user & no baseProfile, use serviceProfile as default
     // If no user & no token, use serviceProfile as default
-    if (serviceProfile.profile.user || !baseProfile || (!serviceProfile.profile.user && baseProfile && !baseProfile.profile.tokenValue)) {
+    if (serviceProfile.profile.user || !baseProfile || (!serviceProfile.profile.user && !serviceProfile.profile.basePath)) {
         if (prompt) {
             // Select for prompting only fields which are not defined
             const schemaArray = [];
             if (!serviceProfile.profile.user && (!baseProfile || (baseProfile && !baseProfile.profile.user))) {
-                if (!baseProfile || (baseProfile && !baseProfile.profile.tokenValue)) {
+                if (!serviceProfile.profile.basePath) {
                     schemaArray.push("user");
                 }
             }
@@ -44,13 +44,16 @@ export async function getValidSession(serviceProfile: IProfileLoaded,
                 schemaArray.push("password");
             }
             if (!serviceProfile.profile.host && (!baseProfile || (baseProfile && !baseProfile.profile.host))) {
-                schemaArray.push("host");
+                schemaArray.push("hostname");
                 if (!serviceProfile.profile.port && (!baseProfile || (baseProfile && !baseProfile.profile.port))) { schemaArray.push("port"); }
             }
 
             try {
-                const newDetails = await this.collectProfileDetails(schemaArray);
-                for (const detail of schemaArray) { serviceProfile.profile[detail] = newDetails[detail]; }
+                const newDetails = await this.collectProfileDetails(schemaArray, null, null);
+                for (const detail of schemaArray) {
+                    if (detail === "hostname") { serviceProfile.profile.host = newDetails[detail]; }
+                    else { serviceProfile.profile[detail] = newDetails[detail]; }
+                }
             } catch (error) {
                 // tslint:disable:no-magic-numbers
                 if (error.mDetails && error.mDetails.errorCode === 401) {
@@ -86,7 +89,7 @@ export async function getValidSession(serviceProfile: IProfileLoaded,
             password: serviceProfile.profile.password ? serviceProfile.profile.password :
                 (baseProfile ? baseProfile.profile.password : undefined),
             tokenType: "apimlAuthenticationToken",
-            tokenValue: baseProfile ? baseProfile.profile.tokenValue : undefined
+            tokenValue: (baseProfile && !serviceProfile.profile.password) ? baseProfile.profile.tokenValue : undefined
         };
         try {
             return zowe.ZosmfSession.createBasicZosmfSessionFromArguments(cmdArgs);
@@ -95,7 +98,7 @@ export async function getValidSession(serviceProfile: IProfileLoaded,
             // since password is optional in Zowe Explorer
             if (error.message !== "Must have user & password OR base64 encoded credentials") {
                 // tslint:disable:no-magic-numbers
-                if (error.mDetails && error.mDetails.errorCode === 401) {
+                if (error.mDetails && error.mDetails.errorCode && error.mDetails.errorCode === 401) {
                     if (globals.ISTHEIA) {
                         vscode.window.showErrorMessage(error.message);
                         this.getValidSession(serviceProfile, serviceProfile.name, true);
@@ -182,12 +185,12 @@ export async function collectProfileDetails(detailsToGet?: string[], oldDetails?
         throw new Error(localize("collectProfileDetails.profileTypeMissing",
             "No profile type was chosen. Operation Cancelled"));
     }
-    if (!detailsToGet) { detailsToGet = Object.keys(schema); }
+    if (!detailsToGet || detailsToGet === []) { detailsToGet = Object.keys(schema); }
 
     // Go through array of schema for input values
     for (const profileDetail of detailsToGet) {
         switch (profileDetail) {
-            case "host":
+            case "hostname":
                 const hostOptions: vscode.InputBoxOptions = {
                     ignoreFocusOut: true,
                     value: oldDetails && oldDetails[profileDetail] ? oldDetails[profileDetail] : null,
@@ -208,7 +211,7 @@ export async function collectProfileDetails(detailsToGet?: string[], oldDetails?
                 }
                 break;
             case "port":
-                if (schemaValues[profileDetail] === 0) {
+                if (!schemaValues[profileDetail] || schemaValues[profileDetail] === 0) {
                     let portOptions: vscode.InputBoxOptions = {
                         ignoreFocusOut: true,
                         value: oldDetails && oldDetails[profileDetail] ? oldDetails[profileDetail] : null,

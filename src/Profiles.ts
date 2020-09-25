@@ -21,7 +21,6 @@ import { DefaultProfileManager } from "./profiles/DefaultProfileManager";
 import { IZoweNodeType, IZoweUSSTreeNode, IZoweDatasetTreeNode, IZoweJobTreeNode, IZoweTreeNode } from "./api/IZoweTreeNode";
 import * as nls from "vscode-nls";
 import { collectProfileDetails } from "./profiles/utils";
-import { labelRefresh } from "./shared/utils";
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
@@ -74,9 +73,9 @@ export class Profiles {
      * @export
      * @param {boolean} prompt - should the user be prompted for any details missing from the profile?
      */
-    public async checkCurrentProfile(profileLoaded: IProfileLoaded, prompt?: boolean): Promise<any> {
+    public async checkCurrentProfile(profileLoaded: IProfileLoaded, nodeType?: string, prompt?: boolean): Promise<any> {
         try {
-            const profileStatus: IProfileValidation = await this.getProfileSetting(profileLoaded, prompt);
+            const profileStatus: IProfileValidation = await this.getProfileSetting(profileLoaded, nodeType, prompt);
             if (profileStatus.status === "unverified") {
                 this.validProfile = ValidProfileEnum.UNVERIFIED;
                 return profileStatus;
@@ -105,11 +104,11 @@ export class Profiles {
      * @export
      * @param {boolean} prompt - should the user be prompted for any details missing from the profile?
      */
-    public async getProfileSetting(theProfile: IProfileLoaded, prompt?: boolean): Promise<IProfileValidation> {
+    public async getProfileSetting(theProfile: IProfileLoaded, nodeType?: string, prompt?: boolean): Promise<IProfileValidation> {
         let profileStatus: IProfileValidation;
         let found: boolean = false;
         this.profilesValidationSetting.filter(async (instance) => {
-            if ((instance.name === theProfile.name) && (instance.setting === false)) {
+            if ((instance.name === theProfile.name) && (nodeType && instance.type === nodeType) && (instance.setting === false)) {
                 // Don't allow validation if the user doesn't want it
                 profileStatus = {
                     status: "unverified",
@@ -204,17 +203,6 @@ export class Profiles {
 
     public async disableValidation(node: IZoweNodeType, treeProvider: IZoweTree<IZoweTreeNode>): Promise<IZoweNodeType> {
         await this.disableValidationContext(node);
-        // Refresh tree
-        await this.refresh();
-        treeProvider.mSessionNodes.forEach(async (sessNode) => {
-            if (contextually.isSessionNotFav(sessNode)) {
-                labelRefresh(sessNode);
-                sessNode.children = [];
-                sessNode.dirty = true;
-                treeProvider.refreshElement(sessNode);
-            }
-        });
-        treeProvider.refresh();
         return node;
     }
 
@@ -234,17 +222,6 @@ export class Profiles {
 
     public async enableValidation(node: IZoweNodeType, treeProvider: IZoweTree<IZoweTreeNode>): Promise<IZoweNodeType> {
         await this.enableValidationContext(node);
-        // Refresh tree
-        await this.refresh();
-        treeProvider.mSessionNodes.forEach(async (sessNode) => {
-            if (contextually.isSessionNotFav(sessNode)) {
-                labelRefresh(sessNode);
-                sessNode.children = [];
-                sessNode.dirty = true;
-                treeProvider.refreshElement(sessNode);
-            }
-        });
-        treeProvider.refresh();
         return node;
     }
 

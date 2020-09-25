@@ -123,7 +123,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     }
 
     public getSessionNode(): IZoweUSSTreeNode {
-        return this.session ? this : this.getParent().getSessionNode();
+        let sessNode = this as IZoweUSSTreeNode;
+        while (sessNode.getParent()) { sessNode = sessNode.getParent(); }
+        return sessNode;
     }
 
     /**

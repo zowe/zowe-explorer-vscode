@@ -11,7 +11,8 @@
 
 import * as vscode from "vscode";
 import * as globals from "../globals";
-import { Logger, IProfile, ISession, Session } from "@zowe/imperative";
+import * as contextually from "../shared/context";
+import { Logger, IProfile, ISession } from "@zowe/imperative";
 import { PersistentFilters } from "../PersistentFilters";
 import { OwnerFilterDescriptor } from "../job/utils";
 import { getIconByNode, getIconById, IconId } from "../generators/icons";
@@ -161,22 +162,7 @@ export class ZoweTreeProvider {
                 }
                 this.refresh();
             }
-            const profileStatus = await Profiles.getInstance().checkCurrentProfile(profile, false);
-
-            // Set node to proper status in tree
-            let newIcon;
-            if (profileStatus.status === "inactive") {
-                node.contextValue = node.contextValue + globals.INACTIVE_CONTEXT;
-                newIcon = getIconById(IconId.sessionInactive);
-            } else {
-                node.contextValue = node.contextValue + globals.ACTIVE_CONTEXT;
-                newIcon = getIconById(IconId.sessionActive);
-            }
-
-            // Get proper icon for node
-            if (newIcon) {
-                node.iconPath = newIcon.path;
-            }
+            const profileStatus = await Profiles.getInstance().checkCurrentProfile(profile, contextually.getNodeCategory(node), false);
 
             node.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
             node.dirty = true;
@@ -184,9 +170,9 @@ export class ZoweTreeProvider {
         }
     }
 
-    public async checkCurrentProfile(node: IZoweTreeNode, prompt?: boolean) {
+    public async checkCurrentProfile(node: IZoweTreeNode, prompt?: boolean): Promise<boolean> {
         const profile = node.getProfile();
-        const profileStatus = await Profiles.getInstance().checkCurrentProfile(profile, prompt);
+        const profileStatus = await Profiles.getInstance().checkCurrentProfile(profile, contextually.getNodeCategory(node), prompt);
         if (profileStatus.status === "inactive") {
             if ((node.contextValue.toLowerCase().includes("session") || node.contextValue.toLowerCase().includes("server"))) {
                 // change contextValue only if the word inactive is not there
@@ -207,6 +193,8 @@ export class ZoweTreeProvider {
                 (node.getProfileName()) +
                 localize("validateProfiles.invalid2",
                 " is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct."));
+
+            return false;
         } else if (profileStatus.status === "active") {
             // Attach the valid session to the session node, if possible
             let sessionNode = node;
@@ -222,19 +210,6 @@ export class ZoweTreeProvider {
                 sessionNode.children = [];
                 sessionNode.dirty = true;
             }
-            await this.refresh();
-
-            // Update context value of node
-            if ((node.contextValue.toLowerCase().includes("session") || node.contextValue.toLowerCase().includes("server"))) {
-                // change contextValue only if the word active is not there
-                if (node.contextValue.toLowerCase().indexOf("active") === -1) {
-                    node.contextValue = node.contextValue + globals.ACTIVE_CONTEXT;
-                }
-                const activeIcon = getIconById(IconId.sessionActive);
-                if (activeIcon) {
-                    node.iconPath = activeIcon.path;
-                }
-            }
         } else if (profileStatus.status === "unverified") {
             if ((node.contextValue.toLowerCase().includes("session") || node.contextValue.toLowerCase().includes("server"))) {
                 // change contextValue only if the word unverified is not there
@@ -243,7 +218,22 @@ export class ZoweTreeProvider {
                 }
             }
         }
-        await this.refresh();
+        // Set node to proper active status in tree
+        const sessNode = node.getSessionNode();
+        let newIcon;
+        if (profileStatus.status === "inactive") {
+            sessNode.contextValue = sessNode.contextValue + globals.INACTIVE_CONTEXT;
+            newIcon = getIconById(IconId.sessionInactive);
+        } else if (profileStatus.status === "active") {
+            sessNode.contextValue = sessNode.contextValue + globals.ACTIVE_CONTEXT;
+            newIcon = getIconById(IconId.sessionActive);
+        }
+
+        // Get proper icon for node
+        if (newIcon) {
+            sessNode.iconPath = newIcon.path;
+        }
+        return true;
     }
 
     public async createZoweSession(zoweFileProvider: IZoweTree<IZoweNodeType>) {

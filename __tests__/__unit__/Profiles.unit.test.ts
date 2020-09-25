@@ -279,7 +279,7 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
     it("Tests that createNewConnection fails if profileName is missing", async () => {
         const globalMocks = await createGlobalMocks();
 
-        await globalMocks.profiles.createNewConnection("");
+        await globalMocks.profiles.createNewConnection("", "zosmf");
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile name was not supplied. Operation Cancelled");
     });
@@ -292,7 +292,7 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         globalMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[0]); });
         globalMocks.mockShowInputBox.mockResolvedValueOnce(undefined);
 
-        const newSession = await globalMocks.profiles.createNewConnection(blockMocks.imperativeProfile.name);
+        const newSession = await globalMocks.profiles.createNewConnection(blockMocks.imperativeProfile.name, "zosmf");
 
         expect(newSession).toBe(undefined);
     });
@@ -309,7 +309,7 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
         globalMocks.mockShowInputBox.mockResolvedValueOnce(undefined);
 
-        const newSession = await globalMocks.profiles.createNewConnection(blockMocks.imperativeProfile.name);
+        const newSession = await globalMocks.profiles.createNewConnection(blockMocks.imperativeProfile.name, "zosmf");
 
         expect(newSession).toBe(undefined);
     });
@@ -324,7 +324,7 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         globalMocks.mockShowInputBox.mockResolvedValue("fake");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("False - Accept connections with self-signed certificates");
 
-        await globalMocks.profiles.createNewConnection(blockMocks.imperativeProfile.name);
+        await globalMocks.profiles.createNewConnection(blockMocks.imperativeProfile.name, "zosmf");
         expect(globalMocks.mockShowErrorMessage.mock.calls.length).toBe(1);
         expect(globalMocks.mockShowErrorMessage.mock.calls[0][0]).toBe("Profile name already exists. Please create a profile using a different name");
     });
@@ -340,7 +340,7 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("False - Accept connections with self-signed certificates");
 
-        await globalMocks.profiles.createNewConnection("fake");
+        await globalMocks.profiles.createNewConnection("fake", "zosmf");
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile fake was created.");
     });
 
@@ -357,7 +357,7 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("False - Accept connections with self-signed certificates");
         globalMocks.mockShowInputBox.mockResolvedValue("fake");
 
-        await globalMocks.profiles.createNewConnection("fake");
+        await globalMocks.profiles.createNewConnection("fake", "zosmf");
         // tslint:disable-next-line: no-magic-numbers
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(3);
         expect(globalMocks.mockShowInformationMessage.mock.calls[2][0]).toBe("Profile fake was created.");
@@ -374,7 +374,7 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake1");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("False - Accept connections with self-signed certificates");
 
-        await globalMocks.profiles.createNewConnection("fake1");
+        await globalMocks.profiles.createNewConnection("fake1", "zosmf");
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile fake1 was created.");
 
@@ -386,7 +386,7 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake2");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("True - Reject connections with self-signed certificates");
 
-        await globalMocks.profiles.createNewConnection("fake2");
+        await globalMocks.profiles.createNewConnection("fake2", "zosmf");
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile fake2 was created.");
     });
@@ -405,7 +405,7 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("False");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("13");
 
-        await globalMocks.profiles.createNewConnection("alternate");
+        await globalMocks.profiles.createNewConnection("alternate", "zosmf");
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile alternate was created.");
     });
@@ -424,7 +424,7 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("False");
         globalMocks.mockShowInputBox.mockResolvedValueOnce(undefined);
 
-        await globalMocks.profiles.createNewConnection("alternate");
+        await globalMocks.profiles.createNewConnection("alternate", "zosmf");
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile alternate was created.");
     });
@@ -443,7 +443,7 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("True");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("126");
 
-        await globalMocks.profiles.createNewConnection("alternate");
+        await globalMocks.profiles.createNewConnection("alternate", "zosmf");
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile alternate was created.");
     });
@@ -459,9 +459,9 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
         const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
 
-        await globalMocks.profiles.createNewConnection("fake");
+        await globalMocks.profiles.createNewConnection("fake", "zosmf");
 
-        expect(errorHandlingSpy).toBeCalledWith(new Error("Invalid Port number provided or operation was cancelled"));
+        expect(errorHandlingSpy).toBeCalledWith(new Error("create connection error"), "fake", "create connection error");
     });
 
     it("Tests that createNewConnection fails to create an alternate profile if aBoolean is invalid", async () => {
@@ -476,7 +476,7 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce(undefined);
 
-        const newSession = await globalMocks.profiles.createNewConnection("fake");
+        const newSession = await globalMocks.profiles.createNewConnection("fake", "zosmf");
 
         expect(newSession).toBe(undefined);
     });
@@ -491,7 +491,7 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         globalMocks.mockShowInputBox.mockResolvedValueOnce(null);
         globalMocks.mockShowInputBox.mockResolvedValue("fake");
 
-        await globalMocks.profiles.createNewConnection("fake");
+        await globalMocks.profiles.createNewConnection("fake", "zosmf");
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile fake was created.");
     });
@@ -1330,7 +1330,7 @@ describe("Profiles Unit Tests - Function checkCurrentProfile", () => {
                 };
             })
         });
-        const response = await theProfiles.checkCurrentProfile(blockMocks.invalidProfile);
+        const response = await theProfiles.checkCurrentProfile(blockMocks.invalidProfile, "dataset");
         expect(response).toEqual({name: blockMocks.invalidProfile.name, status: "unverified"});
     });
 
@@ -1350,7 +1350,7 @@ describe("Profiles Unit Tests - Function checkCurrentProfile", () => {
         blockMocks.profiles.promptCredentials = jest.fn(() => {
             return undefined;
         });
-        await theProfiles.checkCurrentProfile(blockMocks.invalidProfile);
+        await theProfiles.checkCurrentProfile(blockMocks.invalidProfile, "dataset");
         expect(theProfiles.validProfile).toBe(ValidProfileEnum.INVALID);
     });
 
@@ -1365,7 +1365,7 @@ describe("Profiles Unit Tests - Function checkCurrentProfile", () => {
             })
         });
 
-        const validationResult = await theProfiles.checkCurrentProfile(blockMocks.validProfile);
+        const validationResult = await theProfiles.checkCurrentProfile(blockMocks.validProfile, "dataset");
 
         expect(validationResult).toStrictEqual({ status: "inactive", name: blockMocks.validProfile.name, session: null });
     });
@@ -1409,7 +1409,7 @@ describe("Profiles Unit Tests - Function getProfileSetting", () => {
         theProfiles.profilesValidationSetting = [{name: blockMocks.imperativeProfile.name, setting: false, type: "dataset" }];
         theProfiles.profilesForValidation = [{ status: "unverified", name: "sestest"}];
 
-        const response = await theProfiles.getProfileSetting(blockMocks.imperativeProfile);
+        const response = await theProfiles.getProfileSetting(blockMocks.imperativeProfile, "dataset");
         expect(response).toEqual(resultSetting);
     });
 
@@ -1421,7 +1421,7 @@ describe("Profiles Unit Tests - Function getProfileSetting", () => {
         theProfiles.profilesValidationSetting = [{name: blockMocks.imperativeProfile.name, setting: false, type: "dataset" }];
         theProfiles.profilesForValidation = [{ status: "inactive", name: "sestest"}];
 
-        const response = await theProfiles.getProfileSetting(blockMocks.imperativeProfile);
+        const response = await theProfiles.getProfileSetting(blockMocks.imperativeProfile, "dataset");
         expect(response).toEqual(resultSetting);
     });
 
@@ -1433,7 +1433,7 @@ describe("Profiles Unit Tests - Function getProfileSetting", () => {
         theProfiles.profilesValidationSetting = [{name: blockMocks.imperativeProfile.name, setting: false, type: "dataset" }];
         theProfiles.profilesForValidation = [];
 
-        const response = await theProfiles.getProfileSetting(blockMocks.imperativeProfile);
+        const response = await theProfiles.getProfileSetting(blockMocks.imperativeProfile, "dataset");
         expect(response).toEqual(resultSetting);
     });
 
@@ -1444,7 +1444,7 @@ describe("Profiles Unit Tests - Function getProfileSetting", () => {
         const theProfiles = await Profiles.createInstance(blockMocks.log);
         theProfiles.profilesValidationSetting = [{name: blockMocks.imperativeProfile.name, setting: true, type: "dataset" }];
 
-        const response = await theProfiles.getProfileSetting(blockMocks.imperativeProfile);
+        const response = await theProfiles.getProfileSetting(blockMocks.imperativeProfile, "dataset");
         expect(response).toEqual(resultSetting);
     });
 });
@@ -1876,7 +1876,7 @@ describe("Profiles Unit Tests - Function validateProfiles", () => {
             })
         });
 
-        await theProfiles.checkCurrentProfile(blockMocks.validProfile);
+        await theProfiles.checkCurrentProfile(blockMocks.validProfile, "dataset");
         expect(theProfiles.validProfile).toBe(ValidProfileEnum.INVALID);
     });
 });

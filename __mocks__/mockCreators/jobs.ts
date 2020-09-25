@@ -64,7 +64,7 @@ export function createIJobFile(): zowe.IJobFile {
 }
 
 export function createJobsTree(session: imperative.Session, iJob: zowe.IJob, profile: imperative.IProfileLoaded, treeView: any): any {
-    const jobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, null, session, iJob, profile);
+    const jobNode = new Job("[sestest]: jobtest", vscode.TreeItemCollapsibleState.Expanded, null, session, iJob, profile);
     jobNode.contextValue = globals.JOBS_SESSION_CONTEXT;
 
     const testJobsTree = {
