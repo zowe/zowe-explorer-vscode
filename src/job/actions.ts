@@ -20,7 +20,7 @@ import { IZoweJobTreeNode } from "../api/IZoweTreeNode";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 import { Job } from "./ZoweJobNode";
 import * as contextually from "../shared/context";
-import { returnIconState } from "../shared/actions";
+import { getNewNodeIcon, returnIconState } from "../shared/actions";
 import * as nls from "vscode-nls";
 import { encodeJobFile } from "../SpoolProvider";
 import { getIconById, IconId } from "../generators/icons";
@@ -83,22 +83,12 @@ export async function getSpoolContent(jobsProvider: IZoweTree<IZoweJobTreeNode>,
     const zosmfProfile = Profiles.getInstance().loadNamedProfile(session);
     // This has a direct access to Profiles checkcurrentProfile() because I am able to get the profile now.
     const profileStatus = await Profiles.getInstance().checkCurrentProfile(zosmfProfile, "job", true);
+
     // Set node to proper active status in tree
     const sessionNode = jobsProvider.mSessionNodes.find((node) => node.label.includes(session));
-    // Set node to proper status in tree
-    let newIcon;
-    if (profileStatus.status === "inactive") {
-        sessionNode.contextValue = sessionNode.contextValue + globals.INACTIVE_CONTEXT;
-        newIcon = getIconById(IconId.sessionInactive);
-    } else if (profileStatus.status === "active") {
-        sessionNode.contextValue = sessionNode.contextValue + globals.ACTIVE_CONTEXT;
-        newIcon = getIconById(IconId.sessionActive);
-    }
+    const newIcon = getNewNodeIcon(profileStatus.status, sessionNode);
+    if (newIcon) { sessionNode.iconPath = newIcon.path; }
 
-    // Get proper icon for node
-    if (newIcon) {
-        sessionNode.iconPath = newIcon.path;
-    }
     if ((Profiles.getInstance().validProfile === ValidProfileEnum.VALID) ||
     (Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED)) {
         try {

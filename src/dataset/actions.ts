@@ -26,7 +26,7 @@ import { IZoweDatasetTreeNode, IZoweTreeNode, IZoweNodeType } from "../api/IZowe
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { DatasetTree } from "./DatasetTree";
 import * as contextually from "../shared/context";
-import { returnIconState } from "../shared/actions";
+import { getNewNodeIcon, returnIconState } from "../shared/actions";
 import { setFileSaved } from "../utils/workspace";
 
 import * as nls from "vscode-nls";
@@ -484,20 +484,11 @@ export async function submitJcl(datasetProvider: IZoweTree<IZoweDatasetTreeNode>
         return;
     }
     const profileStatus = await Profiles.getInstance().checkCurrentProfile(sessProfile, "dataset", true);
-    // Set node to proper active status in tree
-    let newIcon;
-    if (profileStatus.status === "inactive") {
-        sesNode.contextValue = sesNode.contextValue + globals.INACTIVE_CONTEXT;
-        newIcon = getIconById(IconId.sessionInactive);
-    } else if (profileStatus.status === "active") {
-        sesNode.contextValue = sesNode.contextValue + globals.ACTIVE_CONTEXT;
-        newIcon = getIconById(IconId.sessionActive);
-    }
 
-    // Get proper icon for node
-    if (newIcon) {
-        sesNode.iconPath = newIcon.path;
-    }
+    // Set node to proper active status in tree
+    const newIcon = getNewNodeIcon(profileStatus.status, sesNode);
+    if (newIcon) { sesNode.iconPath = newIcon.path; }
+
     if ((Profiles.getInstance().validProfile === ValidProfileEnum.VALID) ||
         (Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED)){
         try {
@@ -769,21 +760,12 @@ export async function copyDataSet(node: IZoweNodeType) {
  */
 export async function hMigrateDataSet(node: ZoweDatasetNode) {
     const profileStatus = await Profiles.getInstance().checkCurrentProfile(node.getProfile(), "dataset", true);
+
     // Set node to proper active status in tree
     const sessNode = node.getSessionNode();
-    let newIcon;
-    if (profileStatus.status === "inactive") {
-        sessNode.contextValue = sessNode.contextValue + globals.INACTIVE_CONTEXT;
-        newIcon = getIconById(IconId.sessionInactive);
-    } else if (profileStatus.status === "active") {
-        sessNode.contextValue = sessNode.contextValue + globals.ACTIVE_CONTEXT;
-        newIcon = getIconById(IconId.sessionActive);
-    }
+    const newIcon = getNewNodeIcon(profileStatus.status, sessNode);
+    if (newIcon) { sessNode.iconPath = newIcon.path; }
 
-    // Get proper icon for node
-    if (newIcon) {
-        sessNode.iconPath = newIcon.path;
-    }
     if ((Profiles.getInstance().validProfile === ValidProfileEnum.VALID) ||
         (Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED)) {
         const { dataSetName } = dsUtils.getNodeLabels(node);
@@ -804,21 +786,12 @@ export async function hMigrateDataSet(node: ZoweDatasetNode) {
  */
 export async function hRecallDataSet(node: ZoweDatasetNode) {
     const profileStatus = await Profiles.getInstance().checkCurrentProfile(node.getProfile(), "dataset", true);
+
     // Set node to proper active status in tree
     const sessNode = node.getSessionNode();
-    let newIcon;
-    if (profileStatus.status === "inactive") {
-        sessNode.contextValue = sessNode.contextValue + globals.INACTIVE_CONTEXT;
-        newIcon = getIconById(IconId.sessionInactive);
-    } else if (profileStatus.status === "active") {
-        sessNode.contextValue = sessNode.contextValue + globals.ACTIVE_CONTEXT;
-        newIcon = getIconById(IconId.sessionActive);
-    }
+    const newIcon = getNewNodeIcon(profileStatus.status, sessNode);
+    if (newIcon) { sessNode.iconPath = newIcon.path; }
 
-    // Get proper icon for node
-    if (newIcon) {
-        sessNode.iconPath = newIcon.path;
-    }
     if ((Profiles.getInstance().validProfile === ValidProfileEnum.VALID) ||
         (Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED)) {
         const { dataSetName } = dsUtils.getNodeLabels(node);
@@ -846,22 +819,12 @@ export async function pasteDataSet(node: IZoweDatasetTreeNode, datasetProvider: 
     let beforeMemberName;
 
     const profileStatus = await Profiles.getInstance().checkCurrentProfile(node.getProfile(), "dataset", true);
-    // Set node to proper active status in tree
+
     // Set node to proper active status in tree
     const sessNode = node.getSessionNode();
-    let newIcon;
-    if (profileStatus.status === "inactive") {
-        sessNode.contextValue = sessNode.contextValue + globals.INACTIVE_CONTEXT;
-        newIcon = getIconById(IconId.sessionInactive);
-    } else if (profileStatus.status === "active") {
-        sessNode.contextValue = sessNode.contextValue + globals.ACTIVE_CONTEXT;
-        newIcon = getIconById(IconId.sessionActive);
-    }
+    const newIcon = getNewNodeIcon(profileStatus.status, sessNode);
+    if (newIcon) { sessNode.iconPath = newIcon.path; }
 
-    // Get proper icon for node
-    if (newIcon) {
-        sessNode.iconPath = newIcon.path;
-    }
     if ((Profiles.getInstance().validProfile === ValidProfileEnum.VALID) ||
     (Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED)) {
         if (node.contextValue.includes(globals.DS_PDS_CONTEXT)) {

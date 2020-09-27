@@ -331,3 +331,50 @@ describe("Shared Actions Unit Tests - Function returnIconState", () => {
         expect(getIconByNode(response)).toEqual(getIconByNode(resultNode));
     });
 });
+
+// export function getNewNodeIcon(profileStatus: string, sessNode: IZoweTreeNode) {
+//     let newIcon;
+//     if (profileStatus === "inactive") {
+//         sessNode.contextValue = sessNode.contextValue + globals.INACTIVE_CONTEXT;
+//         newIcon = getIconById(IconId.sessionInactive);
+//     } else if (profileStatus === "active") {
+//         sessNode.contextValue = sessNode.contextValue + globals.ACTIVE_CONTEXT;
+//         newIcon = getIconById(IconId.sessionActive);
+//     }
+//     return newIcon;
+// }
+describe("Shared Actions Unit Tests - Function getNewNodeIcon", () => {
+    function createBlockMocks() {
+        const newMocks = {
+            testSession: createISessionWithoutCredentials(),
+            testIProfile: createIProfile(),
+            datasetSessionNode: null
+        };
+
+        newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.testSession, newMocks.testIProfile);
+
+        return newMocks;
+    }
+
+    it("Tests that getNewNodeIcon returns the correct icon for an inactive session", async () => {
+        const blockMocks = createBlockMocks();
+
+        const sessionInactiveIcon = getIconById(IconId.sessionInactive);
+
+        const response = await sharedActions.getNewNodeIcon("inactive", blockMocks.datasetSessionNode);
+
+        expect(blockMocks.datasetSessionNode.contextValue).toEqual(globals.DS_SESSION_CONTEXT + globals.INACTIVE_CONTEXT);
+        expect(response).toEqual(sessionInactiveIcon);
+    });
+
+    it("Tests that getNewNodeIcon returns the correct icon for an active session", async () => {
+        const blockMocks = createBlockMocks();
+
+        const sessionActiveIcon = getIconById(IconId.sessionActive);
+
+        const response = await sharedActions.getNewNodeIcon("active", blockMocks.datasetSessionNode);
+
+        expect(response).toEqual(sessionActiveIcon);
+        expect(blockMocks.datasetSessionNode.contextValue).toEqual(globals.DS_SESSION_CONTEXT + globals.ACTIVE_CONTEXT);
+    });
+});

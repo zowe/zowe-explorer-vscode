@@ -21,6 +21,7 @@ import { IZoweTreeNode } from "../api/IZoweTreeNode";
 import * as nls from "vscode-nls";
 import { getValidSession } from "../profiles/utils";
 import { getIconById, IconId } from "../generators/icons";
+import { getNewNodeIcon } from "../shared/actions";
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
@@ -99,21 +100,11 @@ export class MvsCommandHandler {
         let profileStatus;
         if (node) {
             profileStatus = await Profiles.getInstance().checkCurrentProfile(zosmfProfile, contextually.getNodeCategory(node), true);
+
             // Set node to proper active status in tree
             const sessNode = node.getSessionNode();
-            let newIcon;
-            if (profileStatus.status === "inactive") {
-                sessNode.contextValue = sessNode.contextValue + globals.INACTIVE_CONTEXT;
-                newIcon = getIconById(IconId.sessionInactive);
-            } else if (profileStatus.status === "active") {
-                sessNode.contextValue = sessNode.contextValue + globals.ACTIVE_CONTEXT;
-                newIcon = getIconById(IconId.sessionActive);
-            }
-
-            // Get proper icon for node
-            if (newIcon) {
-                sessNode.iconPath = newIcon.path;
-            }
+            const newIcon = getNewNodeIcon(profileStatus.status, sessNode);
+            if (newIcon) { sessNode.iconPath = newIcon.path; }
         } else {
             profileStatus = await Profiles.getInstance().checkCurrentProfile(zosmfProfile, null, true);
         }

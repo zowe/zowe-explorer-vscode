@@ -22,6 +22,7 @@ import { IZoweTreeNode, IZoweDatasetTreeNode, IZoweNodeType } from "../api/IZowe
 import { IZoweTree } from "../api/IZoweTree";
 import * as nls from "vscode-nls";
 import { getValidSession } from "../profiles/utils";
+import { getNewNodeIcon } from "../shared/actions";
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
@@ -164,6 +165,11 @@ export class ZoweTreeProvider {
             }
             const profileStatus = await Profiles.getInstance().checkCurrentProfile(profile, contextually.getNodeCategory(node), false);
 
+            // Set node to proper active status in tree
+            const sessionNode = node.getSessionNode();
+            const newIcon = getNewNodeIcon(profileStatus.status, sessionNode);
+            if (newIcon) { sessionNode.iconPath = newIcon.path; }
+
             node.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
             node.dirty = true;
             zoweFileProvider.refreshElement(node);
@@ -218,21 +224,12 @@ export class ZoweTreeProvider {
                 }
             }
         }
+
         // Set node to proper active status in tree
         const sessNode = node.getSessionNode();
-        let newIcon;
-        if (profileStatus.status === "inactive") {
-            sessNode.contextValue = sessNode.contextValue + globals.INACTIVE_CONTEXT;
-            newIcon = getIconById(IconId.sessionInactive);
-        } else if (profileStatus.status === "active") {
-            sessNode.contextValue = sessNode.contextValue + globals.ACTIVE_CONTEXT;
-            newIcon = getIconById(IconId.sessionActive);
-        }
+        const newIcon = getNewNodeIcon(profileStatus.status, sessNode);
+        if (newIcon) { sessNode.iconPath = newIcon.path; }
 
-        // Get proper icon for node
-        if (newIcon) {
-            sessNode.iconPath = newIcon.path;
-        }
         return true;
     }
 

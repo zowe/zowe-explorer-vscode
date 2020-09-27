@@ -13,7 +13,7 @@
 import * as vscode from "vscode";
 import * as globals from "../globals";
 import { openPS } from "../dataset/actions";
-import { IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweNodeType } from "../api/IZoweTreeNode";
+import { IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweNodeType, IZoweTreeNode } from "../api/IZoweTreeNode";
 import { IZoweTree } from "../api/IZoweTree";
 import { filterTreeByString } from "../shared/utils";
 import { FilterItem, resolveQuickPickHelper, FilterDescriptor } from "../utils";
@@ -205,4 +205,19 @@ export async function returnIconState(node: IZoweNodeType) {
             }
     }
     return node;
+}
+
+/**
+ * Function to get the new node icon, based on session active state
+ */
+export function getNewNodeIcon(profileStatus: string, sessNode: IZoweTreeNode) {
+    let newIcon;
+    if (profileStatus === "inactive") {
+        sessNode.contextValue = sessNode.contextValue + globals.INACTIVE_CONTEXT;
+        newIcon = getIconById(IconId.sessionInactive);
+    } else if (profileStatus === "active") {
+        sessNode.contextValue = sessNode.contextValue + globals.ACTIVE_CONTEXT;
+        newIcon = getIconById(IconId.sessionActive);
+    }
+    return newIcon;
 }

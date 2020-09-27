@@ -460,6 +460,16 @@ export class Profiles {
 
             const newProfile = await this.updateProfile({ profile: profileLoaded.profile, name: profileName, type: profileLoaded.type });
             vscode.window.showInformationMessage(localize("editConnection.success", "Profile was successfully updated"));
+
+            // Remove any previous validation information for this profile, since it has been edited
+            if (newProfile) {
+                let profileIndex = this.profilesForValidation.findIndex((profile) => profile.name === newProfile.name);
+                while (profileIndex > -1) {
+                    this.profilesForValidation.splice(profileIndex, 1);
+                    profileIndex = this.profilesForValidation.findIndex((profile) => profile.name === newProfile.name);
+                }
+            }
+
             return newProfile;
         } else {
             return null;

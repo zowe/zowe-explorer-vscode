@@ -29,6 +29,7 @@ import * as nls from "vscode-nls";
 import { DefaultProfileManager } from "../profiles/DefaultProfileManager";
 import { PersistentFilters } from "../PersistentFilters";
 import { getValidSession } from "../profiles/utils";
+import { getNewNodeIcon } from "../shared/actions";
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
@@ -83,21 +84,12 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      */
     public async rename(node: IZoweDatasetTreeNode) {
         const profileStatus = await Profiles.getInstance().checkCurrentProfile(node.getProfile(), "dataset", true);
+
         // Set node to proper active status in tree
         const sessNode = node.getSessionNode();
-        let newIcon;
-        if (profileStatus.status === "inactive") {
-            sessNode.contextValue = sessNode.contextValue + globals.INACTIVE_CONTEXT;
-            newIcon = getIconById(IconId.sessionInactive);
-        } else if (profileStatus.status === "active") {
-            sessNode.contextValue = sessNode.contextValue + globals.ACTIVE_CONTEXT;
-            newIcon = getIconById(IconId.sessionActive);
-        }
+        const newIcon = getNewNodeIcon(profileStatus.status, sessNode);
+        if (newIcon) { sessNode.iconPath = newIcon.path; }
 
-        // Get proper icon for node
-        if (newIcon) {
-            sessNode.iconPath = newIcon.path;
-        }
         if ((Profiles.getInstance().validProfile === ValidProfileEnum.VALID) ||
             (Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED)) {
             return contextually.isDsMember(node) ? this.renameDataSetMember(node) : this.renameDataSet(node);
