@@ -115,6 +115,20 @@ describe("ZosmfApiCommon Unit Tests - Function getValidProfile", () => {
         expect(getDefaultSpy).toHaveBeenCalledTimes(1);
     });
 
+    it("Tests that getValidProfile prompts for user if prompting = true", async () => {
+        const blockMocks = await createBlockMocks();
+
+        blockMocks.serviceProfile.profile.user = null;
+        blockMocks.serviceProfile.profile.host = "test";
+        blockMocks.baseProfile.profile.user = null;
+        blockMocks.serviceProfile.profile.basePath = null;
+
+        await profileUtils.getValidSession(blockMocks.serviceProfile, "sestest", true);
+
+        expect(blockMocks.collectProfileDetailsSpy).toHaveBeenCalledTimes(1);
+        expect(blockMocks.collectProfileDetailsSpy).toHaveBeenCalledWith(["user"], null, null);
+    });
+
     it("Tests that getValidProfile prompts for password if prompting = true", async () => {
         const blockMocks = await createBlockMocks();
 
