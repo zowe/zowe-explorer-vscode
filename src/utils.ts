@@ -21,6 +21,7 @@ import * as nls from "vscode-nls";
 import { Profiles } from "./Profiles";
 // import { getValidSession } from "./profiles/utils";
 import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
+import { promptCredentials } from "./profiles/utils";
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
@@ -57,15 +58,18 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
                     vscode.window.showErrorMessage(errMsg);
                     // await getValidSession(invalidProfile, invalidProfile.name, true);
                     // await ZoweExplorerApiRegister.getUssApi(invalidProfile).getSession();
-                    await Profiles.getInstance().promptCredentials(label.trim(), true);
+                    // await Profiles.getInstance().promptCredentials(label.trim(), true);
+                    promptCredentials(invalidProfile);
                 } else {
                     vscode.window.showErrorMessage(errMsg, "Check Credentials").then(async (selection) => {
                         if (selection) {
                             delete invalidProfile.profile.user;
                             delete invalidProfile.profile.password;
+                            // tslint:disable-next-line:no-console
+                            console.log(invalidProfile);
                             // await getValidSession(invalidProfile, invalidProfile.name, true);
                             // await ZoweExplorerApiRegister.getUssApi(invalidProfile).getSession();
-                            await Profiles.getInstance().promptCredentials(label.trim(), true);
+                            promptCredentials(invalidProfile);
                         }
                     });
                 }
