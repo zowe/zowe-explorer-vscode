@@ -301,26 +301,17 @@ describe("USS Action Unit Tests - Function createUSSNodeDialog", () => {
         expect(blockMocks.testUSSTree.refreshElement).not.toHaveBeenCalled();
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(0);
     });
-});
 
-describe("USS Action Unit Tests - Function createUSSNode", () => {
-    async function createBlockMocks(globalMocks) {
-        const ussApi = createUssApi(globalMocks.testProfile);
-        bindUssApi(ussApi);
+    it("Tests that createUSSNode does not execute if node name was not entered", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
 
-        const newMocks = {
-            testUSSTree: null,
-            ussNode: createUSSNode(globalMocks.testSession, createIProfile()),
-            ussApi,
-        };
-        newMocks.testUSSTree = createUSSTree(
-            [createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile)],
-            [newMocks.ussNode],
-            createTreeView()
-        );
+        globalMocks.mockShowInputBox.mockReturnValueOnce("");
 
-        return newMocks;
-    }
+        await ussNodeActions.createUSSNode(blockMocks.ussNode, blockMocks.testUSSTree, "file");
+        expect(blockMocks.testUSSTree.refresh).not.toHaveBeenCalled();
+        expect(globalMocks.showErrorMessage.mock.calls.length).toBe(0);
+    });
 
     it("Tests that createUSSNode is executed successfully", async () => {
         const globalMocks = createGlobalMocks();
