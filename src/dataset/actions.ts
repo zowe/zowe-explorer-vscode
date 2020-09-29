@@ -21,7 +21,7 @@ import { Profiles, ValidProfileEnum } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 import { IZoweTree } from "../api/IZoweTree";
 import { TextUtils, IProfileLoaded, Session } from "@zowe/imperative";
-import { getIconById, getIconByNode, IconId } from "../generators/icons";
+import { getIconByNode } from "../generators/icons";
 import { IZoweDatasetTreeNode, IZoweTreeNode, IZoweNodeType } from "../api/IZoweTreeNode";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { DatasetTree } from "./DatasetTree";
@@ -30,6 +30,7 @@ import { getNewNodeIcon, returnIconState } from "../shared/actions";
 import { setFileSaved } from "../utils/workspace";
 
 import * as nls from "vscode-nls";
+import { PersistentFilters } from "../PersistentFilters";
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
@@ -41,11 +42,13 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  */
 export async function refreshAll(datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
     await Profiles.getInstance().refresh();
+    const setting = await PersistentFilters.getDirectValue("Zowe-Automatic-Validation") as boolean;
     datasetProvider.mSessionNodes.forEach(async (sessNode) => {
         if (contextually.isSessionNotFav(sessNode)) {
             labelRefresh(sessNode);
             sessNode.children = [];
             sessNode.dirty = true;
+            Profiles.getInstance().resetValidationSettings(sessNode, setting);
             returnIconState(sessNode);
         }
     });

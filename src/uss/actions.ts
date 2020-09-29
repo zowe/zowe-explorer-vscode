@@ -89,11 +89,13 @@ export async function createUSSNodeDialog(node: IZoweUSSTreeNode, ussFileProvide
  */
 export async function refreshAllUSS(ussFileProvider: IZoweTree<IZoweUSSTreeNode>) {
     await Profiles.getInstance().refresh();
+    const setting = await PersistentFilters.getDirectValue("Zowe-Automatic-Validation") as boolean;
     ussFileProvider.mSessionNodes.forEach(async (sessNode) => {
         if (contextually.isSession(sessNode)) {
             labelRefresh(sessNode);
             sessNode.children = [];
             sessNode.dirty = true;
+            Profiles.getInstance().resetValidationSettings(sessNode, setting);
             returnIconState(sessNode);
         }
     });

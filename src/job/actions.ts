@@ -24,6 +24,7 @@ import { getNewNodeIcon, returnIconState } from "../shared/actions";
 import * as nls from "vscode-nls";
 import { encodeJobFile } from "../SpoolProvider";
 import { getIconById, IconId } from "../generators/icons";
+import { PersistentFilters } from "../PersistentFilters";
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
@@ -36,11 +37,13 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  */
 export async function refreshAllJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>) {
     await Profiles.getInstance().refresh();
+    const setting = await PersistentFilters.getDirectValue("Zowe-Automatic-Validation") as boolean;
     jobsProvider.mSessionNodes.forEach(async (jobNode) => {
         if (contextually.isSession(jobNode)) {
             labelRefresh(jobNode);
             jobNode.children = [];
             jobNode.dirty = true;
+            Profiles.getInstance().resetValidationSettings(jobNode, setting);
             returnIconState(jobNode);
         }
     });

@@ -92,28 +92,6 @@ export async function getValidSession(serviceProfile: IProfileLoaded,
             tokenValue: (baseProfile && !serviceProfile.profile.password) ? baseProfile.profile.tokenValue : undefined
         };
         return zowe.ZosmfSession.createBasicZosmfSessionFromArguments(cmdArgs);
-        // try {
-        // } catch (error) {
-        //     // When no password is entered, we should silence the error message for not providing it
-        //     // since password is optional in Zowe Explorer
-        //     if (error.message !== "Must have user & password OR base64 encoded credentials") {
-        //         // tslint:disable:no-magic-numbers
-        //         if (error.mDetails && error.mDetails.errorCode && error.mDetails.errorCode === 401) {
-        //             if (globals.ISTHEIA) {
-        //                 vscode.window.showErrorMessage(error.message);
-        //                 this.getValidSession(serviceProfile, serviceProfile.name, true);
-        //             } else {
-        //                 vscode.window.showErrorMessage(error.message, "Check Credentials").then(async (selection) => {
-        //                     if (selection) {
-        //                         delete serviceProfile.profile.user;
-        //                         delete serviceProfile.profile.password;
-        //                         await this.getValidSession(serviceProfile, serviceProfile.name, true);
-        //                     }
-        //                 });
-        //             }
-        //         } else { throw error; }
-        //     }
-        // }
     } else if (baseProfile) {
         // baseProfile exists, so APIML login is possible
         const sessCfg = {
@@ -180,11 +158,6 @@ export async function collectProfileDetails(detailsToGet?: string[], oldDetails?
     let newRU: boolean;
     const schemaValues: any = {};
 
-    const profileType = "zosmf";
-    if (!profileType) {
-        throw new Error(localize("collectProfileDetails.profileTypeMissing",
-            "No profile type was chosen. Operation Cancelled"));
-    }
     if (!detailsToGet || detailsToGet === []) { detailsToGet = Object.keys(schema); }
 
     // Go through array of schema for input values

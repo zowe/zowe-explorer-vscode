@@ -204,7 +204,7 @@ export class ZoweTreeProvider {
         } else if (profileStatus.status === "active") {
             // Attach the valid session to the session node, if possible
             let sessionNode = node;
-            while (sessionNode.getParent()) { sessionNode = sessionNode.getParent(); }
+            while (sessionNode.getParent() && sessionNode.getParent().label !== "Favorites") { sessionNode = sessionNode.getParent(); }
             if (await sessionNode.getSession()) {
                 await setSession(sessionNode, profile.profile as ISession);
             } else {
