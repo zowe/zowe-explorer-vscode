@@ -192,15 +192,6 @@ export class Profiles {
         return filteredProfile;
     }
 
-    public async resetValidationSettings(node: IZoweNodeType, setting: boolean) {
-        if (setting){
-            await Profiles.getInstance().enableValidationContext(node);
-        } else {
-            await Profiles.getInstance().disableValidationContext(node);
-        }
-        return node;
-    }
-
     public async disableValidation(node: IZoweNodeType, treeProvider: IZoweTree<IZoweTreeNode>): Promise<IZoweNodeType> {
         await this.disableValidationContext(node);
         return node;

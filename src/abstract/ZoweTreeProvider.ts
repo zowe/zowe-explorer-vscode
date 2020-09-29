@@ -21,7 +21,7 @@ import { setProfile, setSession, errorHandling } from "../utils";
 import { IZoweTreeNode, IZoweDatasetTreeNode, IZoweNodeType } from "../api/IZoweTreeNode";
 import { IZoweTree } from "../api/IZoweTree";
 import * as nls from "vscode-nls";
-import { getValidSession } from "../profiles/utils";
+// import { getValidSession } from "../profiles/utils";
 import { getNewNodeIcon } from "../shared/actions";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 

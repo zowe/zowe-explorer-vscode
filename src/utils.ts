@@ -19,7 +19,8 @@ import { ISession, IProfile, ImperativeConfig } from "@zowe/imperative";
 import { IZoweTreeNode } from "./api/IZoweTreeNode";
 import * as nls from "vscode-nls";
 import { Profiles } from "./Profiles";
-import { getValidSession } from "./profiles/utils";
+// import { getValidSession } from "./profiles/utils";
+import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
@@ -54,13 +55,15 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
             if (invalidProfile) {
                 if (globals.ISTHEIA) {
                     vscode.window.showErrorMessage(errMsg);
-                    await getValidSession(invalidProfile, invalidProfile.name, true);
+                    // await getValidSession(invalidProfile, invalidProfile.name, true);
+                    await ZoweExplorerApiRegister.getMvsApi(invalidProfile).getSession();
                 } else {
                     vscode.window.showErrorMessage(errMsg, "Check Credentials").then(async (selection) => {
                         if (selection) {
                             delete invalidProfile.profile.user;
                             delete invalidProfile.profile.password;
-                            await getValidSession(invalidProfile, invalidProfile.name, true);
+                            // await getValidSession(invalidProfile, invalidProfile.name, true);
+                            await ZoweExplorerApiRegister.getMvsApi(invalidProfile).getSession();
                         }
                     });
                 }

@@ -13,14 +13,14 @@ import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import * as globals from "../globals";
 import { errorHandling } from "../utils";
-import { labelRefresh } from "../shared/utils";
+import { labelRefresh, refreshTree } from "../shared/utils";
 import { Profiles, ValidProfileEnum } from "../Profiles";
 import { IZoweTree } from "../api/IZoweTree";
 import { IZoweJobTreeNode } from "../api/IZoweTreeNode";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 import { Job } from "./ZoweJobNode";
 import * as contextually from "../shared/context";
-import { getNewNodeIcon, returnIconState } from "../shared/actions";
+import * as shared from "../shared/actions";
 import * as nls from "vscode-nls";
 import { encodeJobFile } from "../SpoolProvider";
 import { getIconById, IconId } from "../generators/icons";
@@ -43,8 +43,9 @@ export async function refreshAllJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>) 
             labelRefresh(jobNode);
             jobNode.children = [];
             jobNode.dirty = true;
-            Profiles.getInstance().resetValidationSettings(jobNode, setting);
-            returnIconState(jobNode);
+            refreshTree(jobNode);
+            shared.resetValidationSettings(jobNode, setting);
+            shared.returnIconState(jobNode);
         }
     });
     await jobsProvider.refresh();
@@ -89,7 +90,7 @@ export async function getSpoolContent(jobsProvider: IZoweTree<IZoweJobTreeNode>,
 
     // Set node to proper active status in tree
     const sessionNode = jobsProvider.mSessionNodes.find((node) => node.label.includes(session));
-    const newIcon = getNewNodeIcon(profileStatus.status, sessionNode);
+    const newIcon = shared.getNewNodeIcon(profileStatus.status, sessionNode);
     if (newIcon) { sessionNode.iconPath = newIcon.path; }
 
     if ((Profiles.getInstance().validProfile === ValidProfileEnum.VALID) ||

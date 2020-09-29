@@ -19,7 +19,7 @@ import { PersistentFilters } from "../PersistentFilters";
 import { FilterDescriptor, FilterItem, resolveQuickPickHelper, errorHandling } from "../utils";
 import { IZoweTreeNode } from "../api/IZoweTreeNode";
 import * as nls from "vscode-nls";
-import { getValidSession } from "../profiles/utils";
+// import { getValidSession } from "../profiles/utils";
 import { getIconById, IconId } from "../generators/icons";
 import { getNewNodeIcon } from "../shared/actions";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";

@@ -27,7 +27,8 @@ import * as contextually from "../shared/context";
 import * as nls from "vscode-nls";
 import { DefaultProfileManager } from "../profiles/DefaultProfileManager";
 import { PersistentFilters } from "../PersistentFilters";
-import { getValidSession } from "../profiles/utils";
+import { resetValidationSettings } from "../shared/actions";
+// import { getValidSession } from "../profiles/utils";
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
@@ -164,7 +165,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             for (const node of this.mSessionNodes) {
                 const name = node.getProfileName();
                 if (name === theProfile.name){
-                    await Profiles.getInstance().resetValidationSettings(node, setting);
+                    resetValidationSettings(node, setting);
                 }
              }
         } else {
@@ -180,7 +181,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                         for (const node of this.mSessionNodes) {
                             const name = node.getProfileName();
                             if (name === sessionProfile.name){
-                                await Profiles.getInstance().resetValidationSettings(node, setting);
+                                resetValidationSettings(node, setting);
                             }
                         }
                     }
@@ -692,7 +693,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             try {
                 // Uses loaded profile to create a zosmf session with Zowe
                 // session = await getValidSession(profileLoaded, profileLoaded.name, false);
-                session = await ZoweExplorerApiRegister.getMvsApi(profileLoaded).getSession();
+                session = await ZoweExplorerApiRegister.getJesApi(profileLoaded).getSession();
             } catch (error) {
                 // When no password is entered, we should silence the error message for not providing it
                 // since password is optional in Zowe Explorer

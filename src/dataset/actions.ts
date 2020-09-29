@@ -16,7 +16,7 @@ import * as zowe from "@zowe/cli";
 import * as globals from "../globals";
 import * as path from "path";
 import { errorHandling, FilterItem, resolveQuickPickHelper } from "../utils";
-import { labelRefresh, getDocumentFilePath, concatChildNodes, checkForAddedSuffix, willForceUpload } from "../shared/utils";
+import { labelRefresh, getDocumentFilePath, concatChildNodes, checkForAddedSuffix, willForceUpload, refreshTree } from "../shared/utils";
 import { Profiles, ValidProfileEnum } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 import { IZoweTree } from "../api/IZoweTree";
@@ -26,7 +26,7 @@ import { IZoweDatasetTreeNode, IZoweTreeNode, IZoweNodeType } from "../api/IZowe
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { DatasetTree } from "./DatasetTree";
 import * as contextually from "../shared/context";
-import { getNewNodeIcon, returnIconState } from "../shared/actions";
+import * as shared from "../shared/actions";
 import { setFileSaved } from "../utils/workspace";
 
 import * as nls from "vscode-nls";
@@ -48,8 +48,9 @@ export async function refreshAll(datasetProvider: IZoweTree<IZoweDatasetTreeNode
             labelRefresh(sessNode);
             sessNode.children = [];
             sessNode.dirty = true;
-            Profiles.getInstance().resetValidationSettings(sessNode, setting);
-            returnIconState(sessNode);
+            refreshTree(sessNode);
+            shared.resetValidationSettings(sessNode, setting);
+            shared.returnIconState(sessNode);
         }
     });
     datasetProvider.refresh();
@@ -489,7 +490,7 @@ export async function submitJcl(datasetProvider: IZoweTree<IZoweDatasetTreeNode>
     const profileStatus = await Profiles.getInstance().checkCurrentProfile(sessProfile, "dataset", true);
 
     // Set node to proper active status in tree
-    const newIcon = getNewNodeIcon(profileStatus.status, sesNode);
+    const newIcon = shared.getNewNodeIcon(profileStatus.status, sesNode);
     if (newIcon) { sesNode.iconPath = newIcon.path; }
 
     if ((Profiles.getInstance().validProfile === ValidProfileEnum.VALID) ||
@@ -766,7 +767,7 @@ export async function hMigrateDataSet(node: ZoweDatasetNode) {
 
     // Set node to proper active status in tree
     const sessNode = node.getSessionNode();
-    const newIcon = getNewNodeIcon(profileStatus.status, sessNode);
+    const newIcon = shared.getNewNodeIcon(profileStatus.status, sessNode);
     if (newIcon) { sessNode.iconPath = newIcon.path; }
 
     if ((Profiles.getInstance().validProfile === ValidProfileEnum.VALID) ||
@@ -792,7 +793,7 @@ export async function hRecallDataSet(node: ZoweDatasetNode) {
 
     // Set node to proper active status in tree
     const sessNode = node.getSessionNode();
-    const newIcon = getNewNodeIcon(profileStatus.status, sessNode);
+    const newIcon = shared.getNewNodeIcon(profileStatus.status, sessNode);
     if (newIcon) { sessNode.iconPath = newIcon.path; }
 
     if ((Profiles.getInstance().validProfile === ValidProfileEnum.VALID) ||
@@ -825,7 +826,7 @@ export async function pasteDataSet(node: IZoweDatasetTreeNode, datasetProvider: 
 
     // Set node to proper active status in tree
     const sessNode = node.getSessionNode();
-    const newIcon = getNewNodeIcon(profileStatus.status, sessNode);
+    const newIcon = shared.getNewNodeIcon(profileStatus.status, sessNode);
     if (newIcon) { sessNode.iconPath = newIcon.path; }
 
     if ((Profiles.getInstance().validProfile === ValidProfileEnum.VALID) ||
