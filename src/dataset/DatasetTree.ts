@@ -871,7 +871,8 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 let session;
                 try {
                     // Uses loaded profile to create a session with the MVS API
-                    session = await getValidSession(profileLoaded, profileLoaded.name, false);
+                    // session = await getValidSession(profileLoaded, profileLoaded.name, false);
+                    session = await ZoweExplorerApiRegister.getMvsApi(profileLoaded).getSession();
                 } catch (error) {
                     // When no password is entered, we should silence the error message for not providing it
                     // since password is optional in Zowe Explorer
