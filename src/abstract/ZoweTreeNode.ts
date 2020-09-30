@@ -84,10 +84,7 @@ export class ZoweTreeNode extends vscode.TreeItem {
      * @returns {string}
      */
     public getProfileName(): string {
-        if (this.profile) {
-            return this.profile.name;
-        }
-        return undefined;
+        return this.getProfile() ? this.getProfile().name : undefined;
     }
 
     /**

@@ -105,12 +105,6 @@ export async function getSpoolContent(jobsProvider: IZoweTree<IZoweJobTreeNode>,
  * @param jobsProvider The tree to which the refreshed node belongs
  */
 export async function refreshJobsServer(node: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>) {
-    let sesNamePrompt: string;
-    if (node.contextValue.endsWith(globals.FAV_SUFFIX)) {
-        sesNamePrompt = node.label.substring(1, node.label.indexOf("]"));
-    } else {
-        sesNamePrompt = node.label;
-    }
     jobsProvider.checkCurrentProfile(node);
     if ((Profiles.getInstance().validProfile === ValidProfileEnum.VALID) ||
     (Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED)) {
@@ -170,6 +164,7 @@ export async function stopCommand(job: Job) {
  * @param job The job to set the owner of
  * @param jobsProvider The tree to which the updated node belongs
  */
+// Is this redundant with the setter in the Job class (ZoweJobNode.ts)?
 export async function setOwner(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>) {
     const newOwner = await vscode.window.showInputBox({ prompt: localize("setOwner.newOwner.prompt.owner", "Owner") });
     job.owner = newOwner;

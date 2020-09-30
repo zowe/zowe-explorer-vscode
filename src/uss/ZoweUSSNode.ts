@@ -88,14 +88,14 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 this.fullPath = this.tooltip = "/" + label;
             }
         }
-        if (mParent && contextually.isFavoriteContext(mParent)) {
-            this.profileName = "[" + mProfileName + "]: ";
+        if (mParent && mParent.contextValue === globals.FAV_PROFILE_CONTEXT) {
+            this.profileName = this.mProfileName = mParent.label.trim();
             this.fullPath = label.trim();
             // File or directory name only (no parent path)
             this.shortLabel = this.fullPath.split("/", this.fullPath.length).pop();
             // Display name for favorited file or directory in tree view
-            this.label = this.profileName + this.shortLabel;
-            this.tooltip = this.profileName + this.fullPath;
+            this.label = this.shortLabel;
+            this.tooltip = this.fullPath;
         }
         // TODO: this should not be necessary if each node gets initialized with the profile reference.
         if (mProfileName) {
@@ -233,7 +233,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             this.contextValue = globals.DS_TEXT_FILE_CONTEXT;
             delete this.getSessionNode().binaryFiles[this.fullPath];
         }
-        if (this.getParent() && contextually.isFavoriteContext(this.getParent())) {
+        if (this.getParent() && this.getParent().contextValue === globals.FAV_PROFILE_CONTEXT) {
             this.binary ? this.contextValue = globals.DS_BINARY_FILE_CONTEXT + globals.FAV_SUFFIX :
                 this.contextValue = globals.DS_TEXT_FILE_CONTEXT + globals.FAV_SUFFIX;
         }
@@ -286,6 +286,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         const hasClosedInstance = await closeOpenedTextFile(currentFilePath);
         this.fullPath = newFullPath;
         this.shortLabel = newFullPath.split("/").pop();
+        if (contextually.isFavorite(this)) { this.shortLabel = `[${this.getProfileName()}]: ${this.shortLabel}`; }
         this.label = this.shortLabel;
         this.tooltip = injectAdditionalDataToTooltip(this, newFullPath);
 
@@ -413,15 +414,14 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             try {
                 let label: string;
                 switch (true) {
-                    case (contextually.isFavoriteContext(this.getParent())):
-                        label = this.label.substring(this.label.indexOf(":") + 1).trim();
+                    // For opening favorited and non-favorited files
+                    case (this.getParent().contextValue === globals.FAV_PROFILE_CONTEXT):
+                    case (contextually.isUssSession(this.getParent())):
+                        label = this.label;
                         break;
                     // Handle file path for files in directories and favorited directories
                     case (contextually.isUssDirectory(this.getParent())):
                         label = this.fullPath;
-                        break;
-                    case (contextually.isUssSession(this.getParent())):
-                        label = this.label;
                         break;
                     default:
                         vscode.window.showErrorMessage(localize("openUSS.error.invalidNode", "open() called from invalid node."));
@@ -476,7 +476,8 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             case (contextually.isUssDirectory(this.getParent())):
                 label = this.fullPath;
                 break;
-            case (contextually.isFavoriteContext(this.getParent())):
+            // For favorited and non-favorited files
+            case (this.getParent().contextValue === globals.FAV_PROFILE_CONTEXT):
             case (contextually.isUssSession(this.getParent())):
                 label = this.label;
                 break;
