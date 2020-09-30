@@ -1,5 +1,6 @@
 {
     "Favorites": "Favorites",
+    "renameUSSNode.enterName": "Enter a new name for the {0}",
     "renameUSSNode.error": "Unable to rename node: ",
     "renameUSSNode.duplicateName": "A {0} already exists with this name. Please choose a different one.",
     "enterPattern.log.debug.prompt": "Prompting the user to choose a member from the filtered list",

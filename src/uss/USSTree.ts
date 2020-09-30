@@ -82,7 +82,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         const parentPath = originalNode.fullPath.substr(0, originalNode.fullPath.indexOf(oldLabel));
         // Check if an old favorite exists for this node
         const oldFavorite: IZoweUSSTreeNode = contextually.isFavorite(originalNode) ? originalNode : this.mFavorites.find((temp: ZoweUSSNode) =>
-            (temp.shortLabel === oldLabel) && (temp.fullPath.substr(0, temp.fullPath.indexOf(oldLabel)) === parentPath)
+            (temp.shortLabel === oldLabel) && (parentPath.includes(temp.fullPath.substr(0, temp.fullPath.indexOf(oldLabel))))
         );
         const loadedNodes = await this.getAllLoadedItems();
         const nodeType = contextually.isFolder(originalNode) ? "folder" : "file";

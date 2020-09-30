@@ -717,6 +717,8 @@ describe("USSTree Unit Tests - Function USSTree.rename()", () => {
         const ussFavNode = createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile);
         const ussFavNodeParent = new ZoweUSSNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null,
             globalMocks.testSession, null, false, globalMocks.testProfile.name);
+        ussFavNodeParent.shortLabel = "usstest";
+        ussFavNodeParent.fullPath = globalMocks.testUSSNode.fullPath;
         ussFavNodeParent.children.push(ussFavNode);
         globalMocks.testTree.mFavorites.push(ussFavNodeParent);
 
@@ -731,16 +733,17 @@ describe("USSTree Unit Tests - Function USSTree.rename()", () => {
     it("Tests that USSTree.rename() is executed successfully for non-favorited node that is also in Favorites", async () => {
         const globalMocks = await createGlobalMocks();
         createBlockMocks(globalMocks);
+
         globalMocks.testUSSNode.fullPath = globalMocks.testUSSNode.fullPath + "/usstest";
         globalMocks.testTree.mSessionNodes[1].children.push(globalMocks.testUSSNode);
         const renameNode = jest.spyOn(globalMocks.testUSSNode, "rename");
         const removeFavorite = jest.spyOn(globalMocks.testTree, "removeFavorite");
         const addFavorite = jest.spyOn(globalMocks.testTree, "addFavorite");
         renameNode.mockResolvedValue(false);
-
         globalMocks.showInputBox.mockReturnValueOnce("new name");
 
         await globalMocks.testTree.rename(globalMocks.testUSSNode);
+
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(0);
         expect(globalMocks.renameUSSFile.mock.calls.length).toBe(1);
         expect(removeFavorite.mock.calls.length).toBe(1);
