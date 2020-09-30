@@ -693,9 +693,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 // session = await getValidSession(profileLoaded, profileLoaded.name, false);
                 session = await ZoweExplorerApiRegister.getUssApi(profileLoaded).getSession();
             } catch (error) {
-                // When no password is entered, we should silence the error message for not providing it
-                // since password is optional in Zowe Explorer
-                if (error.message !== "Must have user & password OR base64 encoded credentials") { await errorHandling(error); }
+                await errorHandling(error);
             }
             // Creates ZoweNode to track new session and pushes it to mSessionNodes
             const node = new ZoweUSSNode(profileLoaded.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, "", false,

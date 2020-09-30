@@ -874,9 +874,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     // session = await getValidSession(profileLoaded, profileLoaded.name, false);
                     session = await ZoweExplorerApiRegister.getMvsApi(profileLoaded).getSession();
                 } catch (error) {
-                    // When no password is entered, we should silence the error message for not providing it
-                    // since password is optional in Zowe Explorer
-                    if (error.message !== "Must have user & password OR base64 encoded credentials") { await errorHandling(error); }
+                    await errorHandling(error);
                 }
                 // Creates ZoweDatasetNode to track new session and pushes it to mSessionNodes
                 const node = new ZoweDatasetNode(

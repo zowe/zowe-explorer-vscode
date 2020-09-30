@@ -13,10 +13,9 @@
 import * as vscode from "vscode";
 import * as nls from "vscode-nls";
 import * as globals from "../globals";
-import * as zowe from "@zowe/cli";
-import { ICommandArguments, ConnectionPropsForSessCfg, IProfileLoaded, Session, ISession } from "@zowe/imperative";
-import { DefaultProfileManager } from "./DefaultProfileManager";
+import { IProfileLoaded } from "@zowe/imperative";
 import { errorHandling } from "../utils";
+import { Profiles } from "../Profiles";
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
@@ -152,33 +151,6 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 //             "Profile {0} is invalid. Please check your login details and try again.", profileName));
 //     }
 // }
-
-export async function promptCredentials(profile: IProfileLoaded) {
-        const schemaArray = [];
-        if (!profile.profile.user) { // && (!baseProfile || (baseProfile && !baseProfile.profile.user))) {
-            schemaArray.push("user");
-        }
-        if (!profile.profile.password) { // && (!baseProfile || (baseProfile && !baseProfile.profile.password))) {
-            schemaArray.push("password");
-        }
-        if (!profile.profile.host) { // && (!baseProfile || (baseProfile && !baseProfile.profile.host))) {
-            schemaArray.push("hostname");
-        }
-        if (!profile.profile.port) { // && (!baseProfile || (baseProfile && !baseProfile.profile.port))) {
-            schemaArray.push("port");
-        }
-
-        try {
-            const newDetails = await collectProfileDetails(schemaArray, null, null);
-            for (const detail of schemaArray) {
-                if (detail === "hostname") { profile.profile.host = newDetails[detail]; }
-                else { profile.profile[detail] = newDetails[detail]; }
-            }
-            return profile;
-        } catch (error) {
-            await errorHandling(error);
-        }
-}
 
 export async function collectProfileDetails(detailsToGet?: string[], oldDetails?: any, schema?: any): Promise<any> {
     let newUrl: any;

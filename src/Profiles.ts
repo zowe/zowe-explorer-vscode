@@ -450,6 +450,8 @@ export class Profiles {
             });
 
             const newProfile = await this.updateProfile({ profile: profileLoaded.profile, name: profileName, type: profileLoaded.type });
+            // tslint:disable-next-line:no-console
+            console.log(newProfile);
             vscode.window.showInformationMessage(localize("editConnection.success", "Profile was successfully updated"));
 
             // Remove any previous validation information for this profile, since it has been edited
@@ -767,6 +769,44 @@ export class Profiles {
         return profileManager;
     }
 
+    public async promptCredentials(profile: IProfileLoaded, rePrompt?: boolean) {
+        const schemaArray = [];
+        if (!profile.profile.user) { // && (!baseProfile || (baseProfile && !baseProfile.profile.user))) {
+            schemaArray.push("user");
+        }
+        if (!profile.profile.password) { // && (!baseProfile || (baseProfile && !baseProfile.profile.password))) {
+            schemaArray.push("password");
+        }
+        if (!profile.profile.host) { // && (!baseProfile || (baseProfile && !baseProfile.profile.host))) {
+            schemaArray.push("hostname");
+        }
+        if (!profile.profile.port) { // && (!baseProfile || (baseProfile && !baseProfile.profile.port))) {
+            schemaArray.push("port");
+        }
+
+        try {
+            const newDetails = await collectProfileDetails(schemaArray, null, null);
+            for (const detail of schemaArray) {
+                if (detail === "hostname") { profile.profile.host = newDetails[detail]; }
+                else { profile.profile[detail] = newDetails[detail]; }
+            }
+            if (rePrompt) {
+            const saveButton = localize("promptCredentials.saveCredentials.button", "Save Credentials");
+            const doNotSaveButton = localize("promptCredentials.doNotSave.button", "Do Not Save");
+            const infoMsg = localize("promptCredentials.saveCredentials.infoMessage", "Save entered credentials for future use with profile: {0}? Saving credentials will update the local yaml file.", profile.name);
+            await vscode.window.showInformationMessage(infoMsg, ...[saveButton, doNotSaveButton]).then((selection) => {
+                if (selection === saveButton) {
+                    rePrompt = false;
+                }
+            });
+            await this.updateProfile(profile, rePrompt);
+            }
+            return profile;
+        } catch (error) {
+            await errorHandling(error);
+        }
+    }
+
     private async deletePrompt(deletedProfile: IProfileLoaded) {
         const profileName = deletedProfile.name;
         this.log.debug(localize("deleteProfile.log.debug", "Deleting profile ") + profileName);
@@ -807,7 +847,7 @@ export class Profiles {
 
     // ** Functions that Calls Get CLI Profile Manager  */
 
-    private async updateProfile(ProfileInfo): Promise<IProfile | void> {
+    private async updateProfile(ProfileInfo, rePrompt?: boolean): Promise<IProfile | void> {
         if (ProfileInfo.type !== undefined) {
             const profileManager = await this.getCliProfileManager(ProfileInfo.type);
             this.loadedProfile = (await profileManager.load({ name: ProfileInfo.name }));
@@ -823,8 +863,15 @@ export class Profiles {
 
         const profileArray = Object.keys(NewProfileInfo);
         for (const value of profileArray) {
+            if (value === "user" || value === "password") {
+                if (!rePrompt) {
+                        OrigProfileInfo.user = NewProfileInfo.user;
+                        OrigProfileInfo.password = NewProfileInfo.password;
+                }
+            } else {
             OrigProfileInfo[value] = NewProfileInfo[value];
             if (NewProfileInfo[value] == null) { delete OrigProfileInfo[value]; }
+            }
         }
 
         const updateParms: IUpdateProfile = {
@@ -834,13 +881,9 @@ export class Profiles {
         };
         try {
             const updatedProfile = await (await this.getCliProfileManager(this.loadedProfile.type)).update(updateParms);
-            return updatedProfile.profile;
+            return updatedProfile;
         } catch (error) {
-            // When no password is entered, we should silence the error message for not providing it
-            // since password is optional in Zowe Explorer
-            if (!error.message.includes("Must have user & password OR base64 encoded credentials")) {
-                errorHandling(error);
-            }
+            errorHandling(error);
         }
     }
 
