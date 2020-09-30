@@ -78,23 +78,20 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      */
     public async rename(originalNode: IZoweUSSTreeNode) {
         // Could be a favorite or regular entry always deal with the regular entry
-        const oldLabel = originalNode.label;
-        const parentPath = originalNode.fullPath.substr(0, originalNode.fullPath.indexOf(oldLabel));
+        const parentPath = originalNode.fullPath.substr(0, originalNode.fullPath.indexOf(originalNode.label));
         // Check if an old favorite exists for this node
-        const oldFavorite: IZoweUSSTreeNode = contextually.isFavorite(originalNode) ? originalNode : this.mFavorites.find((temp: ZoweUSSNode) =>
-            (temp.shortLabel === oldLabel) && (parentPath.includes(temp.fullPath.substr(0, temp.fullPath.indexOf(oldLabel))))
-        );
+        const oldFavorite: IZoweUSSTreeNode = contextually.isFavorite(originalNode) ? originalNode : this.findFavoritedNode(originalNode);
         const loadedNodes = await this.getAllLoadedItems();
         const nodeType = contextually.isFolder(originalNode) ? "folder" : "file";
         const options: vscode.InputBoxOptions = {
             prompt: localize("renameUSSNode.enterName",
                 "Enter a new name for the {0}", nodeType),
-            value: oldLabel.replace(/^\[.+\]:\s/, ""),
+            value: originalNode.label.replace(/^\[.+\]:\s/, ""),
             ignoreFocusOut: true,
-            validateInput: (value) => this.checkDuplicateLabel(value, loadedNodes, nodeType)
+            validateInput: (value) => this.checkDuplicateLabel(parentPath + value, loadedNodes, nodeType)
         };
         const newName = await vscode.window.showInputBox(options);
-        if (newName && newName !== oldLabel) {
+        if (newName && (parentPath + newName) !== originalNode.fullPath) {
             try {
                 let newNamePath = path.join(parentPath + newName);
                 newNamePath = newNamePath.replace(/\\/g, "/"); // Added to cover Windows backslash issue
@@ -107,7 +104,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
 
                 if (oldFavorite) {
                     this.removeFavorite(oldFavorite);
-                    oldFavorite.rename(newNamePath);
+                    await oldFavorite.rename(newNamePath);
                     this.addFavorite(oldFavorite);
                 }
             } catch (err) {
@@ -117,11 +114,10 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         }
     }
 
-    public checkDuplicateLabel(newLabel: string, nodesToCheck: IZoweUSSTreeNode[], newNodeType: string) {
+    public checkDuplicateLabel(newFullPath: string, nodesToCheck: IZoweUSSTreeNode[], newNodeType: string) {
         for (const node of nodesToCheck) {
             const nodeType = contextually.isFolder(node) ? "folder" : "file";
-            newLabel = newLabel.replace(/^\/+/, "");
-            if (newLabel === node.label.trim() && newNodeType === nodeType) {
+            if (newFullPath === node.fullPath.trim() && newNodeType === nodeType) {
                 return localize("renameUSSNode.duplicateName",
                     "A {0} already exists with this name. Please choose a different one.",
                     newNodeType);

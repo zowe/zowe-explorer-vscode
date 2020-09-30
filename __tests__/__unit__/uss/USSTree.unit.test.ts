@@ -236,7 +236,7 @@ describe("USSTree Unit Tests - Function USSTree.checkDuplicateLabel()", () => {
     it("Tests that checkDuplicateLabel() returns an error message if passed a name that's already used for an existing folder", async () => {
         const globalMocks = await createGlobalMocks();
 
-        const returnVal = globalMocks.testTree.checkDuplicateLabel("usstest", [globalMocks.testUSSNode], "file");
+        const returnVal = globalMocks.testTree.checkDuplicateLabel("/u/myuser", [globalMocks.testUSSNode], "file");
         expect(returnVal).toEqual("A file already exists with this name. Please choose a different one.");
     });
 });
@@ -610,7 +610,7 @@ describe("USSTree Unit Tests - Function USSTree.getAllLoadedItems()", () => {
     });
 });
 
-describe("USSTree Unit Tests - Function USSTree.findFavoritedNode()", async () => {
+describe("USSTree Unit Tests - Function USSTree.findFavoritedNode()", () => {
     it("Testing that findFavoritedNode() returns the favorite of a non-favorited node", async () => {
         const globalMocks = await createGlobalMocks();
         globalMocks.testUSSNode.contextValue = globals.DS_TEXT_FILE_CONTEXT;
