@@ -450,8 +450,6 @@ export class Profiles {
             });
 
             const newProfile = await this.updateProfile({ profile: profileLoaded.profile, name: profileName, type: profileLoaded.type });
-            // tslint:disable-next-line:no-console
-            console.log(newProfile);
             vscode.window.showInformationMessage(localize("editConnection.success", "Profile was successfully updated"));
 
             // Remove any previous validation information for this profile, since it has been edited
