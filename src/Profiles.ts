@@ -863,13 +863,13 @@ export class Profiles {
         for (const value of profileArray) {
             if (value === "user" || value === "password") {
                 if (!rePrompt) {
-                        OrigProfileInfo.user = NewProfileInfo.user;
-                        OrigProfileInfo.password = NewProfileInfo.password;
+                    if (NewProfileInfo.user) { OrigProfileInfo.user = NewProfileInfo.user; }
+                    if (NewProfileInfo.password) { OrigProfileInfo.password = NewProfileInfo.password; }
                 }
             } else {
-            OrigProfileInfo[value] = NewProfileInfo[value];
-            if (NewProfileInfo[value] == null) { delete OrigProfileInfo[value]; }
+                OrigProfileInfo[value] = NewProfileInfo[value];
             }
+            if (NewProfileInfo[value] === null ) { delete OrigProfileInfo[value]; }
         }
 
         const updateParms: IUpdateProfile = {
@@ -879,7 +879,7 @@ export class Profiles {
         };
         try {
             const updatedProfile = await (await this.getCliProfileManager(this.loadedProfile.type)).update(updateParms);
-            return updatedProfile;
+            return updatedProfile.profile;
         } catch (error) {
             errorHandling(error);
         }

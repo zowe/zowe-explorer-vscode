@@ -1,5 +1,4 @@
 {
-    "getValidSession.loginImpossible": "Profile {0} is invalid. Please check your login details and try again.",
     "collectProfileDetails.option.prompt.url.placeholder": "url:port",
     "collectProfileDetails.option.prompt.url": "Enter a z/OS URL in the format 'url:port'.",
     "collectProfileDetails.invalidPort": "Please enter a valid port number",

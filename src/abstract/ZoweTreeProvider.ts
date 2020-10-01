@@ -165,7 +165,7 @@ export class ZoweTreeProvider {
                 }
                 this.refresh();
             }
-            const profileStatus = await Profiles.getInstance().checkCurrentProfile(profile, contextually.getNodeCategory(node), false);
+            const profileStatus = await Profiles.getInstance().checkCurrentProfile(node.getProfile(), contextually.getNodeCategory(node), false);
 
             // Set node to proper active status in tree
             const sessionNode = node.getSessionNode();
