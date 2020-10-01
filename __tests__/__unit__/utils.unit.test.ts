@@ -10,24 +10,35 @@
 */
 
 import * as vscode from "vscode";
+// import * as zowe from "@zowe/cli";
 import * as utils from "../../src/utils";
-import * as profileUtils from "../../src/profiles/utils";
+// import * as profileUtils from "../../src/profiles/utils";
 import * as globals from "../../src/globals";
-import { createInstanceOfProfile, createIProfile, createISessionWithoutCredentials } from "../../__mocks__/mockCreators/shared";
+import { createInstanceOfProfile, createIProfile, createISession, createISessionWithoutCredentials, createValidBaseProfile } from "../../__mocks__/mockCreators/shared";
 import { Profiles } from "../../src/Profiles";
+// import { ZoweExplorerApiRegister } from "../../src/api/ZoweExplorerApiRegister";
 
 function createGlobalMocks() {
     const globalMocks = {
         isTheia: false,
         mockGetValidSession: jest.fn(),
-        mockShowErrorMessage: jest.fn()
+        mockShowErrorMessage: jest.fn(),
+        commonApi: null,
+        baseProfile: createValidBaseProfile(),
+        serviceProfile: createIProfile(),
+        mockGetCommonApi: jest.fn(),
+        testSession: createISession(),
+        mockProfileInstance: null,
     };
 
+    globalMocks.mockProfileInstance = createInstanceOfProfile(globalMocks.serviceProfile, globalMocks.testSession);
+    globalMocks.mockProfileInstance.loadNamedProfile.mockReturnValue(globalMocks.serviceProfile);
+
+    Object.defineProperty(Profiles, "getInstance", { value: jest.fn().mockReturnValue(globalMocks.mockProfileInstance), configurable: true });
     Object.defineProperty(vscode.window, "showQuickPick", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "createQuickPick", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showInputBox", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showErrorMessage", { value: globalMocks.mockShowErrorMessage, configurable: true });
-    Object.defineProperty(profileUtils, "getValidSession", { value: globalMocks.mockGetValidSession, configurable: true });
     Object.defineProperty(globals, "ISTHEIA", { get: () => globalMocks.isTheia, configurable: true });
 
     return globalMocks;
@@ -37,24 +48,8 @@ function createGlobalMocks() {
 const mocked = <T extends (...args: any[]) => any>(fn: T): jest.Mock<ReturnType<T>> => fn as any;
 
 describe("Utils Unit Tests - Function errorHandling", () => {
-    function createBlockMocks() {
-        const newMocks = {
-            mockIProfileLoaded: createIProfile(),
-            mockISession: createISessionWithoutCredentials(),
-            mockProfileInstance: null
-        };
-
-        newMocks.mockProfileInstance = createInstanceOfProfile(newMocks.mockIProfileLoaded, newMocks.mockISession);
-        newMocks.mockProfileInstance.loadNamedProfile.mockReturnValue(newMocks.mockIProfileLoaded);
-
-        Object.defineProperty(Profiles, "getInstance", { value: jest.fn().mockReturnValue(newMocks.mockProfileInstance), configurable: true });
-
-        return newMocks;
-    }
-
     it("Checking common error handling (not 401)", async () => {
         const globalMocks = createGlobalMocks();
-        createBlockMocks();
 
         const testError = new Error("Test error!");
         const label = "invalidCred";
@@ -66,11 +61,10 @@ describe("Utils Unit Tests - Function errorHandling", () => {
 
     it("Checking handling of error 401", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = createBlockMocks();
 
         const label = "invalidCred";
         const testError = { message: "Test error!", mDetails: { errorCode: 401 } };
-        const mockIProfileNoCredentials = blockMocks.mockIProfileLoaded;
+        const mockIProfileNoCredentials = globalMocks.serviceProfile;
         delete mockIProfileNoCredentials.profile.user;
         delete mockIProfileNoCredentials.profile.password;
         globalMocks.mockShowErrorMessage.mockResolvedValue(true);
@@ -79,13 +73,12 @@ describe("Utils Unit Tests - Function errorHandling", () => {
 
         expect(globalMocks.mockShowErrorMessage).toHaveBeenCalledWith(`Invalid Credentials. Please ensure the token or username/password for invalidCred are valid or this may lead to a lock-out.`,
                                                                      "Check Credentials");
-        expect(blockMocks.mockIProfileLoaded.profile).toEqual(mockIProfileNoCredentials.profile);
-        expect(globalMocks.mockGetValidSession).toBeCalledWith(blockMocks.mockIProfileLoaded, blockMocks.mockIProfileLoaded.name, true);
+        expect(globalMocks.serviceProfile.profile).toEqual(mockIProfileNoCredentials.profile);
+        expect(globalMocks.mockProfileInstance.promptCredentials).toBeCalledWith(globalMocks.serviceProfile, true);
     });
 
     it("Checking handling of error 401 (Theia)", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = createBlockMocks();
 
         const label = "invalidCred";
         globalMocks.isTheia = true;
@@ -94,6 +87,6 @@ describe("Utils Unit Tests - Function errorHandling", () => {
         await utils.errorHandling(testError, label);
 
         expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(`Invalid Credentials. Please ensure the token or username/password for invalidCred are valid or this may lead to a lock-out.`);
-        expect(globalMocks.mockGetValidSession).toBeCalledWith(blockMocks.mockIProfileLoaded, blockMocks.mockIProfileLoaded.name, true);
+        expect(globalMocks.mockProfileInstance.promptCredentials).toBeCalledWith(globalMocks.serviceProfile, true);
     });
 });

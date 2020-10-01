@@ -48,8 +48,8 @@ async function createGlobalMocks() {
         createTreeView: jest.fn(),
         createQuickPick: jest.fn(),
         getConfiguration: jest.fn(),
+        mockResetValidationSettings: jest.fn(),
         ZosmfSession: jest.fn(),
-        mockResetValidation: jest.fn(),
         mockCreateBasicZosmfSessionFromArguments: jest.fn(),
         mockValidationSetting: jest.fn(),
         mockDisableValidationContext: jest.fn(),
@@ -59,6 +59,7 @@ async function createGlobalMocks() {
         closeOpenedTextFile: jest.fn(),
         defaultProfileManagerInstance: null,
         defaultProfile: null,
+        mockGetValidSession: jest.fn(),
         mockGetUssApi: jest.fn(),
         ussApi: null,
         ProgressLocation: jest.fn().mockImplementation(() => {
@@ -79,6 +80,7 @@ async function createGlobalMocks() {
         configurable: true
     });
     Object.defineProperty(vscode.window, "createTreeView", { value: globalMocks.createTreeView, configurable: true });
+    Object.defineProperty(sharedActions, "resetValidationSettings", { value: globalMocks.mockResetValidationSettings, configurable: true });
     Object.defineProperty(vscode.commands, "executeCommand", { value: globalMocks.executeCommand, configurable: true });
     Object.defineProperty(globalMocks.Utilities, "renameUSSFile", {
         value: globalMocks.renameUSSFile,
@@ -111,7 +113,6 @@ async function createGlobalMocks() {
             return {
                 allProfiles: [globalMocks.testProfile, { name: "firstName" }, { name: "secondName" }],
                 getDefaultProfile: globalMocks.mockDefaultProfile,
-                resetValidationSettings: globalMocks.mockResetValidation,
                 validProfile: ValidProfileEnum.VALID,
                 checkCurrentProfile: jest.fn(() => {
                     return globalMocks.profilesForValidation;
@@ -139,9 +140,12 @@ async function createGlobalMocks() {
                           { value: jest.fn(() => globalMocks.defaultProfile), configurable: true });
 
     // USS API mocks
+    globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.testProfile);
+    globalMocks.mockGetValidSession.mockReturnValue(globalMocks.testSession);
     globalMocks.ussApi = ZoweExplorerApiRegister.getUssApi(globalMocks.testProfile);
     globalMocks.mockGetUssApi.mockReturnValue(globalMocks.ussApi);
     ZoweExplorerApiRegister.getUssApi = globalMocks.mockGetUssApi.bind(ZoweExplorerApiRegister);
+    Object.defineProperty(globalMocks.ussApi, "getValidSession", { value: globalMocks.mockGetValidSession, configurable: true });
 
     globalMocks.withProgress.mockImplementation((progLocation, callback) => callback());
     globalMocks.withProgress.mockReturnValue(globalMocks.testResponse);
@@ -420,7 +424,7 @@ describe("USSTree Unit Tests - Function USSTree.addSession()", () => {
 
         await globalMocks.testTree.addSession("testSessionNode");
 
-        expect(globalMocks.mockResetValidation).toBeCalledTimes(1);
+        expect(globalMocks.mockResetValidationSettings).toBeCalledTimes(1);
     });
 
     it("tests that session is added properly from history", async () => {
@@ -441,7 +445,7 @@ describe("USSTree Unit Tests - Function USSTree.addSession()", () => {
     });
 
     it("tests that validation settings are reset for a session added from history", async () => {
-        await createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks();
 
         const testTree = new USSTree();
@@ -454,7 +458,7 @@ describe("USSTree Unit Tests - Function USSTree.addSession()", () => {
 
         await testTree.addSession();
 
-        expect(blockMocks.mockProfileInstance.resetValidationSettings).toBeCalled();
+        expect(globalMocks.mockResetValidationSettings).toBeCalled();
     });
 });
 

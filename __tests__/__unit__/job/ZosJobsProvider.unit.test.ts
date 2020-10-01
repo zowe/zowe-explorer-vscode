@@ -16,6 +16,7 @@ import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import * as globals from "../../../src/globals";
 import * as utils from "../../../src/utils";
+import * as sharedActions from "../../../src/shared/actions";
 import { Logger } from "@zowe/imperative";
 import { createIJobFile, createIJobObject, createJobFavoritesNode, createJobSessionNode, MockJobDetail } from "../../../__mocks__/mockCreators/jobs";
 import { Job } from "../../../src/job/ZoweJobNode";
@@ -45,6 +46,7 @@ async function createGlobalMocks() {
         mockCreateQuickPick: jest.fn(),
         mockLoadDefaultProfile: jest.fn(),
         mockGetJesApi: jest.fn(),
+        mockResetValidationSettings: jest.fn(),
         defaultProfileManagerInstance: null,
         mockDefaultProfile: null,
         mockShowQuickPick: jest.fn(),
@@ -86,6 +88,7 @@ async function createGlobalMocks() {
                           { value: jest.fn(() => globalMocks.mockDefaultProfile), configurable: true });
 
     Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true });
+    Object.defineProperty(sharedActions, "resetValidationSettings", { value: globalMocks.mockResetValidationSettings, configurable: true });
     Object.defineProperty(vscode.window, "withProgress", { value: globalMocks.withProgress, configurable: true });
     Object.defineProperty(zowe, "GetJobs", { value: globalMocks.mockGetJobs, configurable: true });
     Object.defineProperty(vscode.window, "showInformationMessage", { value: globalMocks.mockShowInformationMessage, configurable: true });
@@ -480,7 +483,7 @@ describe("ZosJobsProvider unit tests - Function addSession", () => {
     });
 
     it("tests that validation settings are reset for a session added from history", async () => {
-        await createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks();
 
         const testTree = new ZosJobsProvider();
@@ -493,6 +496,6 @@ describe("ZosJobsProvider unit tests - Function addSession", () => {
 
         await testTree.addSession();
 
-        expect(blockMocks.mockProfileInstance.resetValidationSettings).toBeCalled();
+        expect(globalMocks.mockResetValidationSettings).toBeCalled();
     });
 });
