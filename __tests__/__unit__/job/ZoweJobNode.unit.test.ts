@@ -129,7 +129,7 @@ async function createGlobalMocks() {
     ZoweExplorerApiRegister.getJesApi = globalMocks.mockGetJesApi.bind(ZoweExplorerApiRegister);
     Object.defineProperty(globalMocks.jesApi, "getSession", {
         value: jest.fn(() => {
-            return globalMocks.testSessionNode;
+            return globalMocks.testSession;
         }),
         configurable: true
     });
@@ -140,7 +140,7 @@ async function createGlobalMocks() {
     ZoweExplorerApiRegister.getCommonApi = globalMocks.mockGetCommonApi.bind(ZoweExplorerApiRegister);
     Object.defineProperty(globalMocks.commonApi, "getSession", {
         value: jest.fn(() => {
-            return globalMocks.testSessionNode;
+            return globalMocks.testSession;
         }),
         configurable: true
     });

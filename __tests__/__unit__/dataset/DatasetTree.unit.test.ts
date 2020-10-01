@@ -42,13 +42,13 @@ async function createGlobalMocks() {
         mockGetMvsApi: jest.fn(),
         mvsApi: null,
         mockGetCommonApi: jest.fn(),
+        mockResetValidationSettings: jest.fn(),
         commonApi: null,
         testProfile: createIProfile(),
         testSession: createISession()
     };
 
     Object.defineProperty(vscode.window, "createTreeView", { value: jest.fn(), configurable: true });
-    Object.defineProperty(sharedActions, "resetValidationSettings", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showInformationMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.workspace, "getConfiguration", { value: jest.fn(), configurable: true });
     Object.defineProperty(Profiles, "getInstance", { value: jest.fn(), configurable: true });
@@ -63,6 +63,7 @@ async function createGlobalMocks() {
     Object.defineProperty(fs, "existsSync", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.commands, "executeCommand", { value: jest.fn(), configurable: true });
     Object.defineProperty(workspaceUtils, "closeOpenedTextFile", { value: jest.fn(), configurable: true });
+    Object.defineProperty(sharedActions, "resetValidationSettings", { value: globalMocks.mockResetValidationSettings, configurable: true });
     Object.defineProperty(vscode, "ProgressLocation", {
         value: jest.fn().mockImplementation(() => {
             return {
@@ -707,7 +708,7 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
     });
 
     it("tests that validation settings are reset for a session added from history", async () => {
-        await createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks();
 
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
@@ -721,7 +722,7 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
 
         await testTree.addSession();
 
-        expect(blockMocks.mockProfileInstance.resetValidationSettings).toBeCalled();
+        expect(globalMocks.mockResetValidationSettings).toBeCalled();
     });
 });
 describe("Dataset Tree Unit Tests - Function addFavorite", () => {

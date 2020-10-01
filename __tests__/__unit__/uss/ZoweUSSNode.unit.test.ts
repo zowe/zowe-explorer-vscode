@@ -19,6 +19,7 @@ import { createUSSTree } from "../../../__mocks__/mockCreators/uss";
 import { createDefaultProfileManager } from "../../../__mocks__/mockCreators/profiles";
 import * as fs from "fs";
 import * as profileUtils from "../../../src/profiles/utils";
+import * as sharedUtils from "../../../src/shared/utils";
 import * as path from "path";
 import { Logger } from "@zowe/imperative";
 import * as globals from "../../../src/globals";
@@ -82,12 +83,15 @@ async function createGlobalMocks() {
 
     globalMocks.profileOps = createInstanceOfProfile(globalMocks.profileOne, globalMocks.session);
     globalMocks.defaultProfileOps = createDefaultProfileManager();
-    globalMocks.ussApi = ZoweExplorerApiRegister.getUssApi(globalMocks.profileOne);
-    Object.defineProperty(profileUtils, "getValidSession", { value: jest.fn(() => globalMocks.session), configurable: true });
+
+    // USS API Mocks
     globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.profileOne);
+    globalMocks.mockGetValidSession.mockReturnValue(globalMocks.session);
+    globalMocks.ussApi = ZoweExplorerApiRegister.getUssApi(globalMocks.profileOne);
     globalMocks.getUssApiMock.mockReturnValue(globalMocks.ussApi);
     ZoweExplorerApiRegister.getUssApi = globalMocks.getUssApiMock.bind(ZoweExplorerApiRegister);
 
+    Object.defineProperty(globalMocks.ussApi, "getValidSession", { value: globalMocks.mockGetValidSession, configurable: true });
     Object.defineProperty(vscode.workspace, "onDidSaveTextDocument", { value: globalMocks.onDidSaveTextDocument, configurable: true });
     Object.defineProperty(vscode.workspace, "getConfiguration", { value: globalMocks.getConfiguration, configurable: true });
     Object.defineProperty(vscode.commands, "executeCommand", { value: globalMocks.executeCommand, configurable: true });
@@ -670,7 +674,6 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
                         return ["fake", "fake", "fake"];
                     }),
                     loadNamedProfile: globalMocks.mockLoadNamedProfile,
-                    getValidSession: globalMocks.mockGetValidSession,
                     usesSecurity: true,
                     validProfile: ValidProfileEnum.VALID,
                     checkCurrentProfile: jest.fn(() => {
