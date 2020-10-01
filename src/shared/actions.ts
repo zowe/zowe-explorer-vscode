@@ -20,6 +20,7 @@ import { FilterItem, resolveQuickPickHelper, FilterDescriptor } from "../utils";
 import * as contextually from "../shared/context";
 import * as nls from "vscode-nls";
 import { getIconById, IconId } from "../generators/icons";
+import { Profiles } from "../Profiles";
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
@@ -206,6 +207,16 @@ export async function returnIconState(node: IZoweNodeType) {
     }
     return node;
 }
+
+export async function resetValidationSettings(node: IZoweNodeType, setting: boolean) {
+    if (setting){
+        await Profiles.getInstance().enableValidationContext(node);
+    } else {
+        await Profiles.getInstance().disableValidationContext(node);
+    }
+    return node;
+}
+
 
 /**
  * Function to get the new node icon, based on session active state

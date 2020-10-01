@@ -29,6 +29,7 @@ import { createUSSSessionNode, createUSSTree } from "../../__mocks__/mockCreator
 import { createJobsTree, createIJobObject, createJobSessionNode } from "../../__mocks__/mockCreators/jobs";
 import { DefaultProfileManager } from "../../src/profiles/DefaultProfileManager";
 import { IZoweNodeType } from "../../src/api/IZoweTreeNode";
+import { resetValidationSettings } from "../../src/shared/actions";
 
 jest.mock("vscode");
 jest.mock("child_process");
@@ -1550,7 +1551,7 @@ describe("Shared Actions Unit Tests - Function resetValidationSettings", () => {
         const mockNode: IZoweNodeType = blockMocks.datasetSessionNode;
         mockNode.contextValue = `${globals.DS_SESSION_CONTEXT}${globals.VALIDATE_SUFFIX}false`;
 
-        const response = await Profiles.getInstance().resetValidationSettings(testNode, false);
+        const response = await resetValidationSettings(testNode, false);
 
         expect(response.contextValue).toContain(`${globals.VALIDATE_SUFFIX}false`);
     });
@@ -1563,7 +1564,7 @@ describe("Shared Actions Unit Tests - Function resetValidationSettings", () => {
         const mockNode: IZoweNodeType = blockMocks.datasetSessionNode;
         mockNode.contextValue = `${globals.DS_SESSION_CONTEXT}${globals.VALIDATE_SUFFIX}true`;
 
-        const response = await Profiles.getInstance().resetValidationSettings(testNode, true);
+        const response = await resetValidationSettings(testNode, true);
 
         expect(response.contextValue).toContain(`${globals.VALIDATE_SUFFIX}true`);
     });

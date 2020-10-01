@@ -21,8 +21,9 @@ import { setProfile, setSession, errorHandling } from "../utils";
 import { IZoweTreeNode, IZoweDatasetTreeNode, IZoweNodeType } from "../api/IZoweTreeNode";
 import { IZoweTree } from "../api/IZoweTree";
 import * as nls from "vscode-nls";
-import { getValidSession } from "../profiles/utils";
+// import { getValidSession } from "../profiles/utils";
 import { getNewNodeIcon } from "../shared/actions";
+import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
@@ -150,7 +151,8 @@ export class ZoweTreeProvider {
 
         if (newProfile) {
             // Get the active session
-            const EditSession = await getValidSession(node.getProfile(), node.getProfile().name, false);
+            // const EditSession = await getValidSession(node.getProfile(), node.getProfile().name, false);
+            const EditSession = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).getSession();
 
             if (EditSession) {
                 node.getProfile().profile = newProfile as IProfile;
@@ -208,7 +210,8 @@ export class ZoweTreeProvider {
             if (await sessionNode.getSession()) {
                 await setSession(sessionNode, profile.profile as ISession);
             } else {
-                const newSession = await getValidSession(profile, profile.name, false);
+                // const newSession = await getValidSession(profile, profile.name, false);
+                const newSession = await ZoweExplorerApiRegister.getMvsApi(profile).getSession();
                 const changedProfileIndex = Profiles.getInstance().allProfiles.findIndex((searchedProfile) => searchedProfile.name === profile.name);
                 Profiles.getInstance().allProfiles[changedProfileIndex] = profile;
                 await setProfile(sessionNode, profile.profile);

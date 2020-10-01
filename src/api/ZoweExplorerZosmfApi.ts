@@ -10,10 +10,13 @@
 */
 
 import * as zowe from "@zowe/cli";
-import { Session, IProfileLoaded, ITaskWithStatus } from "@zowe/imperative";
+import { Session, IProfileLoaded, ITaskWithStatus, ICommandArguments, ISession, ConnectionPropsForSessCfg } from "@zowe/imperative";
 import { ZoweExplorerApi } from "./ZoweExplorerApi";
 import * as nls from "vscode-nls";
-import { getValidSession } from "../profiles/utils";
+// import { getValidSession } from "../profiles/utils";
+import { errorHandling } from "../utils";
+import { DefaultProfileManager } from "../profiles/DefaultProfileManager";
+import { collectProfileDetails } from "../profiles/utils";
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
@@ -39,16 +42,147 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
 
     public async getSession(profile?: IProfileLoaded): Promise<Session> {
         if (!this.session) {
-            this.session = await getValidSession((profile||this.profile), (profile||this.profile).name, false);
+            this.session = await this.getValidSession((profile||this.profile), (profile||this.profile).name, false);
         }
         return this.session;
     }
+
+    public async getValidSession(serviceProfile: IProfileLoaded,
+                                 profileName: string,
+                                 prompt?: boolean): Promise<Session | null> {
+
+        // Retrieve baseProfile
+        const baseProfile = DefaultProfileManager.getInstance().getDefaultProfile("base");
+
+        // If user exists in serviceProfile, use serviceProfile to login because it has precedence over baseProfile
+        // If no user & no baseProfile, use serviceProfile as default
+        // If no user & no token, use serviceProfile as default
+        if (serviceProfile.profile.user || !baseProfile || (!serviceProfile.profile.user && !serviceProfile.profile.basePath)) {
+            if (prompt) {
+                // Select for prompting only fields which are not defined
+                const schemaArray = [];
+                if (!serviceProfile.profile.user && (!baseProfile || (baseProfile && !baseProfile.profile.user))) {
+                    if (!serviceProfile.profile.basePath) {
+                        schemaArray.push("user");
+                    }
+                }
+                if (!serviceProfile.profile.password && (!baseProfile || (baseProfile && !baseProfile.profile.password))) {
+                    schemaArray.push("password");
+                }
+                if (!serviceProfile.profile.host && (!baseProfile || (baseProfile && !baseProfile.profile.host))) {
+                    schemaArray.push("hostname");
+                    if (!serviceProfile.profile.port && (!baseProfile || (baseProfile && !baseProfile.profile.port))) { schemaArray.push("port"); }
+                }
+
+                try {
+                    const newDetails = await collectProfileDetails(schemaArray, null, null);
+                    for (const detail of schemaArray) {
+                        if (detail === "hostname") { serviceProfile.profile.host = newDetails[detail]; }
+                        else { serviceProfile.profile[detail] = newDetails[detail]; }
+                        }
+                } catch (error) {
+// tslint:disable:no-magic-numbers
+// if (error.mDetails && error.mDetails.errorCode === 401) {
+//     if (globals.ISTHEIA) {
+//         vscode.window.showErrorMessage(error.message);
+//         this.getValidSession(serviceProfile, serviceProfile.name, true);
+//     } else {
+//         vscode.window.showErrorMessage(error.message, "Check Credentials").then(async (selection) => {
+//             if (selection) {
+//                 delete serviceProfile.profile.user;
+//                 delete serviceProfile.profile.password;
+//                 await this.getValidSession(serviceProfile, serviceProfile.name, true);
+//             }
+//         });
+//     }
+// } else { throw error; }
+                await errorHandling(error);
+            }
+        }
+            const cmdArgs: ICommandArguments = {
+                $0: "zowe",
+                _: [""],
+                host: serviceProfile.profile.host ? serviceProfile.profile.host :
+                (baseProfile ? baseProfile.profile.host : undefined),
+                port: serviceProfile.profile.port ? serviceProfile.profile.port :
+                (baseProfile ? baseProfile.profile.port : 0),
+                basePath: serviceProfile.profile.basePath ? serviceProfile.profile.basePath :
+                (baseProfile ? baseProfile.profile.basePath : undefined),
+                rejectUnauthorized: serviceProfile.profile.rejectUnauthorized !== null ?
+                serviceProfile.profile.rejectUnauthorized :
+                (baseProfile ? baseProfile.profile.rejectUnauthorized : true),
+                user: serviceProfile.profile.user ? serviceProfile.profile.user :
+                (baseProfile ? baseProfile.profile.user : undefined),
+                password: serviceProfile.profile.password ? serviceProfile.profile.password :
+                (baseProfile ? baseProfile.profile.password : undefined),
+                tokenType: "apimlAuthenticationToken",
+                tokenValue: (baseProfile && !serviceProfile.profile.password) ? baseProfile.profile.tokenValue : undefined
+            };
+            return zowe.ZosmfSession.createBasicZosmfSessionFromArguments(cmdArgs);
+        } else if (baseProfile) {
+            // baseProfile exists, so APIML login is possible
+            const sessCfg = {
+            rejectUnauthorized: (serviceProfile.profile.rejectUnauthorized != null ? serviceProfile.profile.rejectUnauthorized :
+            baseProfile.profile.rejectUnauthorized),
+            basePath: serviceProfile.profile.basePath,
+            hostname: serviceProfile.profile.host ? serviceProfile.profile.host : baseProfile.profile.host,
+            port: serviceProfile.profile.port ? serviceProfile.profile.port : baseProfile.profile.port,
+        };
+
+            const cmdArgs: ICommandArguments = {
+            $0: "zowe",
+            _: [""],
+            tokenType: "apimlAuthenticationToken",
+            tokenValue: baseProfile.profile.tokenValue
+        };
+
+            try {
+            let connectableSessCfg: ISession;
+            if (prompt) {
+                connectableSessCfg = await ConnectionPropsForSessCfg.addPropsOrPrompt<ISession>(sessCfg,
+                cmdArgs,
+            {
+            requestToken: false,
+            doPrompting: prompt,
+            getValuesBack: collectProfileDetails
+            });
+        } else {
+        connectableSessCfg = await ConnectionPropsForSessCfg.addPropsOrPrompt<ISession>(sessCfg,
+        cmdArgs,
+        { requestToken: false, doPrompting: false });
+    }
+
+            return new Session(connectableSessCfg);
+        } catch (error) {
+// tslint:disable:no-magic-numbers
+// if (error.mDetails && error.mDetails.errorCode === 401) {
+//     if (globals.ISTHEIA) {
+//         vscode.window.showErrorMessage(error.message);
+//         this.getValidSession(serviceProfile, serviceProfile.name, true);
+//     } else {
+//         vscode.window.showErrorMessage(error.message, "Check Credentials").then(async (selection) => {
+//             if (selection) {
+//                 delete serviceProfile.profile.user;
+//                 delete serviceProfile.profile.password;
+//                 await this.getValidSession(serviceProfile, serviceProfile.name, true);
+//             }
+//         });
+//     }
+// } else { throw error; }
+        await errorHandling(error);
+        }
+    } else {
+    // Neither baseProfile nor serviceProfile exists. It is impossible to login with the currently-provided information.
+    throw new Error(localize("getValidSession.loginImpossible",
+    "Profile {0} is invalid. Please check your login details and try again.", profileName));
+    }
+}
 
     public async getStatus(validateProfile?: IProfileLoaded, profileType?: string, prompt?: boolean): Promise<string> {
         // This API call is specific for z/OSMF profiles
         if (profileType === "zosmf") {
             try {
-                const validateSession = await getValidSession(validateProfile, validateProfile.name, prompt);
+                const validateSession = await this.getValidSession(validateProfile, validateProfile.name, prompt);
                 let sessionStatus;
                 if (validateSession) { sessionStatus = await zowe.CheckStatus.getZosmfInfo(validateSession); }
 
