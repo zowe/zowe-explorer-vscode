@@ -115,56 +115,26 @@ export class FilterDescriptor implements vscode.QuickPickItem {
  */
 export function getSecurityModules(moduleName): NodeRequire | undefined {
     const isSecure: boolean = vscode.workspace.getConfiguration().get("Zowe Security: Secure Credential Storage");
-    const r = typeof __webpack_require__ === "function" ? __non_webpack_require__ : require;
+
     if (isSecure) {
+        const r = typeof __webpack_require__ === "function" ? __non_webpack_require__ : require;
         // Workaround for Theia issue (https://github.com/eclipse-theia/theia/issues/4935)
         const appRoot = globals.ISTHEIA ? process.cwd() : vscode.env.appRoot;
+
         try {
             return r(`${appRoot}/node_modules/${moduleName}`);
-        } catch (err) { /* Do nothing */
-        }
+        } catch (err) { /* Do nothing */ }
+
         try {
             return r(`${appRoot}/node_modules.asar/${moduleName}`);
-        } catch (err) { /* Do nothing */
-        }
+        } catch (err) { /* Do nothing */ }
+
         vscode.window.showWarningMessage(localize("initialize.module.load",
             "Credentials not managed, unable to load security file: ") + moduleName);
     }
+
     return undefined;
 }
-
-// export function getSecurityModules(moduleName): NodeRequire | undefined {
-//     let imperativeIsSecure: boolean = false;
-//     const r = typeof __webpack_require__ === "function" ? __non_webpack_require__ : require;
-//     try {
-//         const fileName = path.join(getZoweDir(), "settings", "imperative.json");
-//         let settings: any;
-//         if (fs.existsSync(fileName)) {
-//             settings = JSON.parse(fs.readFileSync(fileName).toString());
-//         }
-//         const value1 = settings?.overrides.CredentialManager;
-//         const value2 = settings?.overrides["credential-manager"];
-//         imperativeIsSecure = ((typeof value1 === "string") && (value1.length > 0)) ||
-//             ((typeof value2 === "string") && (value2.length > 0));
-//     } catch (error) {
-//         globals.LOG.warn(localize("profile.init.read.imperative", "Unable to read imperative file. ") + error.message);
-//         vscode.window.showWarningMessage(error.message);
-//         return undefined;
-//     }
-//     if (imperativeIsSecure) {
-//         // Workaround for Theia issue (https://github.com/eclipse-theia/theia/issues/4935)
-//         const appRoot = globals.ISTHEIA ? process.cwd() : vscode.env.appRoot;
-//         try {
-//             return r(`${appRoot}/node_modules/${moduleName}`);
-//         } catch (err) { /* Do nothing */ }
-//         try {
-//             return r(`${appRoot}/node_modules.asar/${moduleName}`);
-//         } catch (err) { /* Do nothing */ }
-//         vscode.window.showWarningMessage(localize("initialize.module.load",
-//             "Credentials not managed, unable to load security file: ") + moduleName);
-//     }
-//     return undefined;
-// }
 
 /**
  * Function to retrieve the home directory. In the situation Imperative has
