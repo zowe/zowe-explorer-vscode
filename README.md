@@ -23,28 +23,33 @@ More information:
 
 ## Contents
 
-* [What's new in Zowe Explorer 1.7.0](#what's-new-in-zowe-explorer-1.7.0)
+* [What's new in Zowe Explorer 1.9.0](#what's-new-in-zowe-explorer-1.9.0)
 * [Prerequisites](#prerequisites)
 * [Getting Started](#getting-started)
 * [Credentials Security](#credentials-security)
 * [Usage Tips](#usage-tips)
 * [Extending Zowe Explorer](#extending-zowe-explorer)
 
-## What's new in Zowe Explorer 1.7.0
+## What's new in Zowe Explorer 1.9.0
 
 New features:
 
-* Added a credentials check feature that allows users to update their credentials if they receive an authorization error.
-* Added a star icon which clearly denotes data sets, USS files, and jobs as favorites.
-* Added a profile validation feature that checks whether a profile is valid. The feature is triggered when any action is performed with the profile. Validated profiles are indicated by a green mark.
-* Disallowed case sensitivity for profiles with same names.
+* Added the Allocate Like feature.
+* Added the ability to disable/enable profile validation.
+* Added the ability to access other profiles during profile validation.
 
-Improvements:
+Enhancements:
 
-* Enabled editing of search filters.
-* Enabled editing of ASCII files in USS.
-* Improved text in confirmation dialogs.
-* Reorganized the Data Sets context menu to match the order of commands recommended by VSCode.
+* Datasets and members names are displayed in all uppercase letters even if typed in lowercase letters.
+* Grouped Favorites by profile for Datasets, USS, and Jobs.
+* Other profiles can be accessed during profile validation.
+* Updated the environment check for Theia compatibility.
+
+Bug Fixes:
+
+* Fixed USS renaming issues.
+* Fixed the deletion of datasets issue.
+* Removed errors in Favorites items caused by profiles that are created by other extensions.
 
 For more information, see [Changelog](https://marketplace.visualstudio.com/items/Zowe.vscode-extension-for-zowe/changelog).
 
