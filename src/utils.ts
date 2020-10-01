@@ -19,7 +19,8 @@ import { ISession, IProfile, ImperativeConfig } from "@zowe/imperative";
 import { IZoweTreeNode } from "./api/IZoweTreeNode";
 import * as nls from "vscode-nls";
 import { Profiles } from "./Profiles";
-import { getValidSession } from "./profiles/utils";
+// import { getValidSession } from "./profiles/utils";
+
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
@@ -35,6 +36,11 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
     let httpErrCode = null;
     const errMsg = localize("errorHandling.invalid.credentials", "Invalid Credentials. Please ensure the token or username/password for {0} are valid or this may lead to a lock-out.", label);
 
+    // When no password is entered, we should silence the error message for not providing it
+    // since password is optional in Zowe Explorer
+    if (errorDetails.message === "Must have user & password OR base64 encoded credentials") {
+        return;
+    }
     if (errorDetails.mDetails !== undefined) {
         httpErrCode = errorDetails.mDetails.errorCode;
     }
@@ -54,13 +60,18 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
             if (invalidProfile) {
                 if (globals.ISTHEIA) {
                     vscode.window.showErrorMessage(errMsg);
-                    await getValidSession(invalidProfile, invalidProfile.name, true);
+                    // await getValidSession(invalidProfile, invalidProfile.name, true);
+                    // await ZoweExplorerApiRegister.getUssApi(invalidProfile).getSession();
+                    // await Profiles.getInstance().promptCredentials(label.trim(), true);
+                    Profiles.getInstance().promptCredentials(invalidProfile, true);
                 } else {
                     vscode.window.showErrorMessage(errMsg, "Check Credentials").then(async (selection) => {
                         if (selection) {
                             delete invalidProfile.profile.user;
                             delete invalidProfile.profile.password;
-                            await getValidSession(invalidProfile, invalidProfile.name, true);
+                            // await getValidSession(invalidProfile, invalidProfile.name, true);
+                            // await ZoweExplorerApiRegister.getUssApi(invalidProfile).getSession();
+                            Profiles.getInstance().promptCredentials(invalidProfile, true);
                         }
                     });
                 }

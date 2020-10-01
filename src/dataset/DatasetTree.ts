@@ -28,8 +28,8 @@ import { closeOpenedTextFile } from "../utils/workspace";
 import * as nls from "vscode-nls";
 import { DefaultProfileManager } from "../profiles/DefaultProfileManager";
 import { PersistentFilters } from "../PersistentFilters";
-import { getValidSession } from "../profiles/utils";
-import { getNewNodeIcon } from "../shared/actions";
+// import { getValidSession } from "../profiles/utils";
+import { getNewNodeIcon, resetValidationSettings } from "../shared/actions";
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
@@ -337,7 +337,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 if (node.label !== "Favorites") {
                     const name = node.getProfileName();
                     if (name === profile.name){
-                        await Profiles.getInstance().resetValidationSettings(node, setting);
+                        resetValidationSettings(node, setting);
                     }
                 }
              }
@@ -354,7 +354,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                         for (const node of this.mSessionNodes) {
                             const name = node.getProfileName();
                             if (name === theProfile.name){
-                                await Profiles.getInstance().resetValidationSettings(node, setting);
+                                resetValidationSettings(node, setting);
                             }
                         }
                     }
@@ -871,11 +871,10 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 let session;
                 try {
                     // Uses loaded profile to create a session with the MVS API
-                    session = await getValidSession(profileLoaded, profileLoaded.name, false);
+                    // session = await getValidSession(profileLoaded, profileLoaded.name, false);
+                    session = await ZoweExplorerApiRegister.getMvsApi(profileLoaded).getSession();
                 } catch (error) {
-                    // When no password is entered, we should silence the error message for not providing it
-                    // since password is optional in Zowe Explorer
-                    if (error.message !== "Must have user & password OR base64 encoded credentials") { await errorHandling(error); }
+                    await errorHandling(error);
                 }
                 // Creates ZoweDatasetNode to track new session and pushes it to mSessionNodes
                 const node = new ZoweDatasetNode(

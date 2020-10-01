@@ -19,9 +19,10 @@ import { PersistentFilters } from "../PersistentFilters";
 import { FilterDescriptor, FilterItem, resolveQuickPickHelper, errorHandling } from "../utils";
 import { IZoweTreeNode } from "../api/IZoweTreeNode";
 import * as nls from "vscode-nls";
-import { getValidSession } from "../profiles/utils";
+// import { getValidSession } from "../profiles/utils";
 import { getIconById, IconId } from "../generators/icons";
 import { getNewNodeIcon } from "../shared/actions";
+import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
@@ -112,7 +113,8 @@ export class MvsCommandHandler {
             (Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED)) {
 
             // Get valid session
-            session = await getValidSession(zosmfProfile, zosmfProfile.name, false);
+            // session = await getValidSession(zosmfProfile, zosmfProfile.name, false);
+            session = await ZoweExplorerApiRegister.getMvsApi(zosmfProfile).getSession();
 
             let command1: string = command;
             if (!command) {
