@@ -1,3 +1,4 @@
 {
+    "getValidSession.loginImpossible": "Profile {0} is invalid. Please check your login details and try again.",
     "api.zosmfUSSApi.putContents": "Uploading USS file"
 }

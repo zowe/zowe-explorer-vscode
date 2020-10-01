@@ -96,11 +96,13 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                     }
                 });
             } else {
+                const sessUser = (await ZoweExplorerApiRegister.getJesApi(this.getProfile()).getSession()).ISession.user;
+                const jobOwner = this._owner ? this._owner : (sessUser ? sessUser : "*");
                 const jobs = await vscode.window.withProgress({
                     location: vscode.ProgressLocation.Notification,
                     title: localize("ZoweJobNode.getJobs.jobs", "Get Jobs command submitted.")
-                }, () => {
-                   return this.getJobs(this._owner, this._prefix, this._searchId);
+                }, async () => {
+                    return this.getJobs(jobOwner, this._prefix, this._searchId);
                 });
                 jobs.forEach((job) => {
                     let nodeTitle: string;
