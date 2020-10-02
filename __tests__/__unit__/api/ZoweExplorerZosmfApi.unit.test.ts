@@ -243,10 +243,10 @@ describe("ZosmfApiCommon Unit Tests - Function getValidSession", () => {
     it("Tests that getValidProfile tries to retrieve the baseProfile immediately, if it is not passed in", async () => {
         const blockMocks = await createBlockMocks();
 
-        const getDefaultSpy = jest.spyOn(blockMocks.baseProfileManagerInstance, "getDefaultProfile");
+        const getBaseSpy = jest.spyOn(profileUtils, "getBaseProfile");
         await blockMocks.commonApi.getValidSession(blockMocks.serviceProfile, "sestest");
 
-        expect(getDefaultSpy).toHaveBeenCalledTimes(1);
+        expect(getBaseSpy).toHaveBeenCalledTimes(1);
     });
 
     it("Tests that getValidProfile prompts for user if prompting = true", async () => {
@@ -374,14 +374,10 @@ describe("ZosmfApiCommon Unit Tests - Function getValidSession", () => {
         blockMocks.serviceProfile.profile.user = null;
         blockMocks.serviceProfile.profile.basePath = "test";
         blockMocks.baseProfile.profile.tokenValue = "testToken";
+        Object.defineProperty(profileUtils, "getBaseProfile", { value: jest.fn().mockReturnValue(blockMocks.baseProfile), configurable: true });
         jest.spyOn(ConnectionPropsForSessCfg, "addPropsOrPrompt").mockRejectedValueOnce(testError);
 
-        let error;
-        try {
-            await blockMocks.commonApi.getValidSession(blockMocks.serviceProfile, "sestest", true);
-        } catch (err) {
-            error = err;
-        }
+        await blockMocks.commonApi.getValidSession(blockMocks.serviceProfile, "sestest", true);
 
         expect(blockMocks.mockErrorHandling).toBeCalledWith(testError);
     });
@@ -394,14 +390,10 @@ describe("ZosmfApiCommon Unit Tests - Function getValidSession", () => {
         blockMocks.serviceProfile.profile.user = null;
         blockMocks.serviceProfile.profile.basePath = "test";
         blockMocks.baseProfile.profile.tokenValue = "testToken";
+        Object.defineProperty(profileUtils, "getBaseProfile", { value: jest.fn().mockReturnValue(blockMocks.baseProfile), configurable: true });
         jest.spyOn(ConnectionPropsForSessCfg, "addPropsOrPrompt").mockRejectedValueOnce(testError);
 
-        let error;
-        try {
-            await blockMocks.commonApi.getValidSession(blockMocks.serviceProfile, "sestest", true);
-        } catch (err) {
-            error = err;
-        }
+        await blockMocks.commonApi.getValidSession(blockMocks.serviceProfile, "sestest", true);
 
         expect(blockMocks.mockErrorHandling).toBeCalledWith(testError);
     });

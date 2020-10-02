@@ -1270,42 +1270,23 @@ describe("Profiles Unit Tests - Function checkCurrentProfile", () => {
         return newMocks;
     }
 
-    it("Tests that checkCurrentProfile is successful for a profile with valid stored credentials", async () => {
+    it("Tests that checkCurrentProfile is successful when promptCredentials returns valid profile", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        Object.defineProperty(globalMocks.profiles, "validateProfiles", {
-            value: jest.fn(() => {
-                return {
-                    status: "active",
-                    name: blockMocks.invalidProfile.name,
-                    session: blockMocks.session
-                };
-            })
+        // Mock other functions so that profile looks to be valid
+        Object.defineProperty(globalMocks.profiles, "promptCredentials", {
+            value: jest.fn().mockReturnValue(blockMocks.validProfile), configurable: true
         });
-
-        await globalMocks.profiles.checkCurrentProfile(blockMocks.validProfile);
-        expect(globalMocks.profiles.validProfile).toBe(ValidProfileEnum.VALID);
-    });
-
-    it("Tests that checkCurrentProfile is successful with invalid profile & valid session", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-        Object.defineProperty(globalMocks.profiles, "validateProfiles", {
-            value: jest.fn(() => {
-                return {
-                    status: "active",
-                    name: blockMocks.invalidProfile.name,
-                    session: blockMocks.session
-                };
-            })
+        Object.defineProperty(globalMocks.profiles, "getProfileSetting", {
+            value: jest.fn().mockReturnValue({status: "active", name: blockMocks.validProfile.name}), configurable: true
         });
 
         await globalMocks.profiles.checkCurrentProfile(blockMocks.invalidProfile);
         expect(globalMocks.profiles.validProfile).toBe(ValidProfileEnum.VALID);
     });
 
-    it("Tests that checkCurrentProfile fails with invalid profile & no valid session", async () => {
+    it("Tests that checkCurrentProfile fails when promptCredentials returns invalid profile", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
@@ -1322,16 +1303,15 @@ describe("Profiles Unit Tests - Function checkCurrentProfile", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        const theProfiles = await Profiles.createInstance(blockMocks.log);
-        Object.defineProperty(theProfiles, "getProfileSetting", {
-            value: jest.fn(() => {
-                return {
-                    status: "unverified",
-                    name: blockMocks.invalidProfile.name
-                };
-            })
+        // Mock other functions so that profile looks to be valid
+        Object.defineProperty(globalMocks.profiles, "promptCredentials", {
+            value: jest.fn().mockReturnValue(blockMocks.invalidProfile), configurable: true
         });
-        const response = await theProfiles.checkCurrentProfile(blockMocks.invalidProfile, "dataset");
+        Object.defineProperty(globalMocks.profiles, "getProfileSetting", {
+            value: jest.fn().mockReturnValue({status: "unverified", name: blockMocks.invalidProfile.name}), configurable: true
+        });
+
+        const response = await globalMocks.profiles.checkCurrentProfile(blockMocks.invalidProfile, "dataset");
         expect(response).toEqual({name: blockMocks.invalidProfile.name, status: "unverified"});
     });
 

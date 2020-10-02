@@ -77,12 +77,13 @@ export class Profiles {
         try {
 
             const baseProfile = await getBaseProfile();
-            if (!baseProfile.profile.tokenValue || (profileLoaded.profile.host && baseProfile.profile.host !== profileLoaded.profile.host)) {
+            if (!baseProfile || !baseProfile.profile.tokenValue ||
+                (profileLoaded.profile.host && baseProfile.profile.host !== profileLoaded.profile.host)) {
                 await this.promptCredentials(profileLoaded);
             } else {
                 const getSessStatus = await ZoweExplorerApiRegister.getInstance().getCommonApi(profileLoaded);
                 if (getSessStatus.getValidSession) {
-                    const session = await getSessStatus.getValidSession(profileLoaded, profileLoaded.name);
+                    await getSessStatus.getValidSession(profileLoaded, profileLoaded.name);
                 }
             }
 
@@ -171,6 +172,16 @@ export class Profiles {
             }
         });
 
+        // Filter profilesForValidation to check if the profile is already validated as inactive
+        this.profilesForValidation.filter((profile) => {
+            if ((profile.name === theProfile.name) && (profile.status === "inactive")){
+                filteredProfile = {
+                    status: profile.status,
+                    name: profile.name
+                };
+            }
+        });
+
         // If not yet validated or inactive, call getStatus and validate the profile
         // status will be stored in profilesForValidation
         if (filteredProfile === undefined) {
@@ -193,10 +204,22 @@ export class Profiles {
                 }
 
                 filteredProfile = { status: profileStatus, name: theProfile.name };
+
+                // Remove the old profile status and replace it with the new one
+                let oldProfileStatusIndex = this.profilesForValidation.findIndex((profile) => profile.name === theProfile.name);
+                while (oldProfileStatusIndex > -1) {
+                    this.profilesForValidation.splice(oldProfileStatusIndex, 1);
+                    oldProfileStatusIndex = this.profilesForValidation.findIndex((profile) => profile.name === theProfile.name);
+                }
                 this.profilesForValidation.push(filteredProfile);
             } catch (error) {
                 this.log.debug("Validate Error - Invalid Profile: " + error);
                 filteredProfile = { status: "inactive", name: theProfile.name };
+                let oldProfileStatusIndex = this.profilesForValidation.findIndex((profile) => profile.name === theProfile.name);
+                while (oldProfileStatusIndex > -1) {
+                    this.profilesForValidation.splice(oldProfileStatusIndex, 1);
+                    oldProfileStatusIndex = this.profilesForValidation.findIndex((profile) => profile.name === theProfile.name);
+                }
                 this.profilesForValidation.push(filteredProfile);
             }
         }
@@ -795,6 +818,19 @@ export class Profiles {
 
         try {
             const newDetails = await collectProfileDetails(schemaArray, null, null);
+            // Remove old validation results and add the new one
+            let oldProfileStatusIndex = this.profilesForValidation.findIndex((prof) => prof.name === profile.name);
+            while (oldProfileStatusIndex > -1) {
+                this.profilesForValidation.splice(oldProfileStatusIndex, 1);
+                oldProfileStatusIndex = this.profilesForValidation.findIndex((prof) => prof.name === profile.name);
+            }
+            if (!newDetails) {
+                this.profilesForValidation.push({
+                    status: "inactive",
+                    name: profile.name
+                });
+                return null;
+            }
             for (const detail of schemaArray) {
                 if (detail === "hostname") { profile.profile.host = newDetails[detail]; }
                 else { profile.profile[detail] = newDetails[detail]; }
