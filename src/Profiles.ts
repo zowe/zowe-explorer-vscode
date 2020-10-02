@@ -20,7 +20,7 @@ import { IZoweTree } from "./api/IZoweTree";
 import { DefaultProfileManager } from "./profiles/DefaultProfileManager";
 import { IZoweNodeType, IZoweUSSTreeNode, IZoweDatasetTreeNode, IZoweJobTreeNode, IZoweTreeNode } from "./api/IZoweTreeNode";
 import * as nls from "vscode-nls";
-import { collectProfileDetails } from "./profiles/utils";
+import { collectProfileDetails, getBaseProfile } from "./profiles/utils";
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
@@ -75,6 +75,17 @@ export class Profiles {
      */
     public async checkCurrentProfile(profileLoaded: IProfileLoaded, nodeType?: string, prompt?: boolean): Promise<any> {
         try {
+
+            const baseProfile = await getBaseProfile();
+            if (!baseProfile.profile.tokenValue || (profileLoaded.profile.host && baseProfile.profile.host !== profileLoaded.profile.host)) {
+                await this.promptCredentials(profileLoaded);
+            } else {
+                const getSessStatus = await ZoweExplorerApiRegister.getInstance().getCommonApi(profileLoaded);
+                if (getSessStatus.getValidSession) {
+                    const session = await getSessStatus.getValidSession(profileLoaded, profileLoaded.name);
+                }
+            }
+
             const profileStatus: IProfileValidation = await this.getProfileSetting(profileLoaded, nodeType, prompt);
             if (profileStatus.status === "unverified") {
                 this.validProfile = ValidProfileEnum.UNVERIFIED;

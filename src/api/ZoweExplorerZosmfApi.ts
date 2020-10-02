@@ -16,7 +16,8 @@ import * as nls from "vscode-nls";
 // import { getValidSession } from "../profiles/utils";
 import { errorHandling } from "../utils";
 import { DefaultProfileManager } from "../profiles/DefaultProfileManager";
-import { collectProfileDetails } from "../profiles/utils";
+import { collectProfileDetails, getBaseProfile } from "../profiles/utils";
+import { Profiles } from "../Profiles";
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
@@ -52,8 +53,9 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
                                  prompt?: boolean): Promise<Session | null> {
 
         // Retrieve baseProfile
-        const baseProfile = DefaultProfileManager.getInstance().getDefaultProfile("base");
+        // const baseProfile = DefaultProfileManager.getInstance().getDefaultProfile("base");
 
+        const baseProfile = await getBaseProfile();
         // If user exists in serviceProfile, use serviceProfile to login because it has precedence over baseProfile
         // If no user & no baseProfile, use serviceProfile as default
         // If no user & no token, use serviceProfile as default
