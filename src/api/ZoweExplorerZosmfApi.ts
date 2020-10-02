@@ -124,38 +124,37 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
         } else if (baseProfile) {
             // baseProfile exists, so APIML login is possible
             const sessCfg = {
-            rejectUnauthorized: (serviceProfile.profile.rejectUnauthorized != null ? serviceProfile.profile.rejectUnauthorized :
-            baseProfile.profile.rejectUnauthorized),
-            basePath: serviceProfile.profile.basePath,
-            hostname: serviceProfile.profile.host ? serviceProfile.profile.host : baseProfile.profile.host,
-            port: serviceProfile.profile.port ? serviceProfile.profile.port : baseProfile.profile.port,
-        };
+                rejectUnauthorized: (serviceProfile.profile.rejectUnauthorized != null ? serviceProfile.profile.rejectUnauthorized :
+                baseProfile.profile.rejectUnauthorized),
+                basePath: serviceProfile.profile.basePath,
+                hostname: serviceProfile.profile.host ? serviceProfile.profile.host : baseProfile.profile.host,
+                port: serviceProfile.profile.port ? serviceProfile.profile.port : baseProfile.profile.port,
+            };
 
             const cmdArgs: ICommandArguments = {
-            $0: "zowe",
-            _: [""],
-            tokenType: "apimlAuthenticationToken",
-            tokenValue: baseProfile.profile.tokenValue
-        };
+                $0: "zowe",
+                _: [""],
+                tokenType: "apimlAuthenticationToken",
+                tokenValue: baseProfile.profile.tokenValue
+            };
 
             try {
-            let connectableSessCfg: ISession;
-            if (prompt) {
-                connectableSessCfg = await ConnectionPropsForSessCfg.addPropsOrPrompt<ISession>(sessCfg,
-                cmdArgs,
-            {
-            requestToken: false,
-            doPrompting: prompt,
-            getValuesBack: collectProfileDetails
-            });
-        } else {
-        connectableSessCfg = await ConnectionPropsForSessCfg.addPropsOrPrompt<ISession>(sessCfg,
-        cmdArgs,
-        { requestToken: false, doPrompting: false });
-    }
-
-            return new Session(connectableSessCfg);
-        } catch (error) {
+                let connectableSessCfg: ISession;
+                if (prompt) {
+                    connectableSessCfg = await ConnectionPropsForSessCfg.addPropsOrPrompt<ISession>(sessCfg,
+                        cmdArgs,
+                        {
+                            requestToken: false,
+                            doPrompting: prompt,
+                            getValuesBack: collectProfileDetails
+                        });
+                } else {
+                    connectableSessCfg = await ConnectionPropsForSessCfg.addPropsOrPrompt<ISession>(sessCfg,
+                        cmdArgs,
+                        { requestToken: false, doPrompting: false });
+                }
+                return new Session(connectableSessCfg);
+            } catch (error) {
 // tslint:disable:no-magic-numbers
 // if (error.mDetails && error.mDetails.errorCode === 401) {
 //     if (globals.ISTHEIA) {
@@ -171,7 +170,7 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
 //         });
 //     }
 // } else { throw error; }
-        await errorHandling(error);
+            await errorHandling(error);
         }
     } else {
     // Neither baseProfile nor serviceProfile exists. It is impossible to login with the currently-provided information.
