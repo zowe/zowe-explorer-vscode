@@ -910,8 +910,8 @@ export class Profiles {
         for (const value of profileArray) {
             if (value === "user" || value === "password") {
                 if (!rePrompt) {
-                    if (NewProfileInfo.user) { OrigProfileInfo.user = NewProfileInfo.user; }
-                    if (NewProfileInfo.password) { OrigProfileInfo.password = NewProfileInfo.password; }
+                    if (NewProfileInfo.user !== undefined) { OrigProfileInfo.user = NewProfileInfo.user; }
+                    if (NewProfileInfo.password !== undefined) { OrigProfileInfo.password = NewProfileInfo.password; }
                 }
             } else {
                 OrigProfileInfo[value] = NewProfileInfo[value];
