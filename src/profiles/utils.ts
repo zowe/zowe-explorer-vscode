@@ -439,3 +439,16 @@ export function validateHostInput(inputValue, validationResult) {
 
     return null;
 }
+
+export function getBaseProfile() {
+    let baseProfile: IProfileLoaded;
+
+    // check if there's a baseprofile first before prompting stuff
+    const allProfiles: IProfileLoaded[] = Profiles.getInstance().allProfiles;
+    for (const baseP of allProfiles) {
+        if (baseP.type === "base") {
+            baseProfile = baseP;
+        }
+    }
+    return baseProfile;
+}
