@@ -82,7 +82,7 @@ export class Profiles {
             } else {
                 const getSessStatus = await ZoweExplorerApiRegister.getInstance().getCommonApi(profileLoaded);
                 if (getSessStatus.getValidSession) {
-                    const session = await getSessStatus.getValidSession(profileLoaded, profileLoaded.name);
+                    await getSessStatus.getValidSession(profileLoaded, profileLoaded.name);
                 }
             }
 
@@ -795,6 +795,7 @@ export class Profiles {
 
         try {
             const newDetails = await collectProfileDetails(schemaArray, null, null);
+            if (!newDetails) { return null; }
             for (const detail of schemaArray) {
                 if (detail === "hostname") { profile.profile.host = newDetails[detail]; }
                 else { profile.profile[detail] = newDetails[detail]; }
