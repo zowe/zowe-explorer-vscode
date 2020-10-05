@@ -21,138 +21,7 @@ import { Profiles } from "../Profiles";
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
-// export async function getValidSession(serviceProfile: IProfileLoaded,
-//                                       profileName: string,
-//                                       prompt?: boolean): Promise<Session | null> {
-
-//     // Retrieve baseProfile
-//     const baseProfile = DefaultProfileManager.getInstance().getDefaultProfile("base");
-
-//     // If user exists in serviceProfile, use serviceProfile to login because it has precedence over baseProfile
-//     // If no user & no baseProfile, use serviceProfile as default
-//     // If no user & no token, use serviceProfile as default
-//     if (serviceProfile.profile.user || !baseProfile || (!serviceProfile.profile.user && !serviceProfile.profile.basePath)) {
-//         if (prompt) {
-//             // Select for prompting only fields which are not defined
-//             const schemaArray = [];
-//             if (!serviceProfile.profile.user && (!baseProfile || (baseProfile && !baseProfile.profile.user))) {
-//                 if (!serviceProfile.profile.basePath) {
-//                     schemaArray.push("user");
-//                 }
-//             }
-//             if (!serviceProfile.profile.password && (!baseProfile || (baseProfile && !baseProfile.profile.password))) {
-//                 schemaArray.push("password");
-//             }
-//             if (!serviceProfile.profile.host && (!baseProfile || (baseProfile && !baseProfile.profile.host))) {
-//                 schemaArray.push("hostname");
-//                 if (!serviceProfile.profile.port && (!baseProfile || (baseProfile && !baseProfile.profile.port))) { schemaArray.push("port"); }
-//             }
-
-//             try {
-//                 const newDetails = await this.collectProfileDetails(schemaArray, null, null);
-//                 for (const detail of schemaArray) {
-//                     if (detail === "hostname") { serviceProfile.profile.host = newDetails[detail]; }
-//                     else { serviceProfile.profile[detail] = newDetails[detail]; }
-//                 }
-//             } catch (error) {
-//                 // tslint:disable:no-magic-numbers
-//                 // if (error.mDetails && error.mDetails.errorCode === 401) {
-//                 //     if (globals.ISTHEIA) {
-//                 //         vscode.window.showErrorMessage(error.message);
-//                 //         this.getValidSession(serviceProfile, serviceProfile.name, true);
-//                 //     } else {
-//                 //         vscode.window.showErrorMessage(error.message, "Check Credentials").then(async (selection) => {
-//                 //             if (selection) {
-//                 //                 delete serviceProfile.profile.user;
-//                 //                 delete serviceProfile.profile.password;
-//                 //                 await this.getValidSession(serviceProfile, serviceProfile.name, true);
-//                 //             }
-//                 //         });
-//                 //     }
-//                 // } else { throw error; }
-//                 await errorHandling(error);
-//             }
-//         }
-//         const cmdArgs: ICommandArguments = {
-//             $0: "zowe",
-//             _: [""],
-//             host: serviceProfile.profile.host ? serviceProfile.profile.host :
-//                 (baseProfile ? baseProfile.profile.host : undefined),
-//             port: serviceProfile.profile.port ? serviceProfile.profile.port :
-//                 (baseProfile ? baseProfile.profile.port : 0),
-//             basePath: serviceProfile.profile.basePath ? serviceProfile.profile.basePath :
-//                 (baseProfile ? baseProfile.profile.basePath : undefined),
-//             rejectUnauthorized: serviceProfile.profile.rejectUnauthorized !== null ?
-//                 serviceProfile.profile.rejectUnauthorized :
-//                 (baseProfile ? baseProfile.profile.rejectUnauthorized : true),
-//             user: serviceProfile.profile.user ? serviceProfile.profile.user :
-//                 (baseProfile ? baseProfile.profile.user : undefined),
-//             password: serviceProfile.profile.password ? serviceProfile.profile.password :
-//                 (baseProfile ? baseProfile.profile.password : undefined),
-//             tokenType: "apimlAuthenticationToken",
-//             tokenValue: (baseProfile && !serviceProfile.profile.password) ? baseProfile.profile.tokenValue : undefined
-//         };
-//         return zowe.ZosmfSession.createBasicZosmfSessionFromArguments(cmdArgs);
-//     } else if (baseProfile) {
-//         // baseProfile exists, so APIML login is possible
-//         const sessCfg = {
-//             rejectUnauthorized: (serviceProfile.profile.rejectUnauthorized != null ? serviceProfile.profile.rejectUnauthorized :
-//                 baseProfile.profile.rejectUnauthorized),
-//             basePath: serviceProfile.profile.basePath,
-//             hostname: serviceProfile.profile.host ? serviceProfile.profile.host : baseProfile.profile.host,
-//             port: serviceProfile.profile.port ? serviceProfile.profile.port : baseProfile.profile.port,
-//         };
-
-//         const cmdArgs: ICommandArguments = {
-//             $0: "zowe",
-//             _: [""],
-//             tokenType: "apimlAuthenticationToken",
-//             tokenValue: baseProfile.profile.tokenValue
-//         };
-
-//         try {
-//             let connectableSessCfg: ISession;
-//             if (prompt) {
-//                 connectableSessCfg = await ConnectionPropsForSessCfg.addPropsOrPrompt<ISession>(sessCfg,
-//                     cmdArgs,
-//                     {
-//                         requestToken: false,
-//                         doPrompting: prompt,
-//                         getValuesBack: this.collectProfileDetails
-//                     });
-//             } else {
-//                 connectableSessCfg = await ConnectionPropsForSessCfg.addPropsOrPrompt<ISession>(sessCfg,
-//                     cmdArgs,
-//                     { requestToken: false, doPrompting: false });
-//             }
-
-//             return new Session(connectableSessCfg);
-//         } catch (error) {
-//             // tslint:disable:no-magic-numbers
-//             // if (error.mDetails && error.mDetails.errorCode === 401) {
-//             //     if (globals.ISTHEIA) {
-//             //         vscode.window.showErrorMessage(error.message);
-//             //         this.getValidSession(serviceProfile, serviceProfile.name, true);
-//             //     } else {
-//             //         vscode.window.showErrorMessage(error.message, "Check Credentials").then(async (selection) => {
-//             //             if (selection) {
-//             //                 delete serviceProfile.profile.user;
-//             //                 delete serviceProfile.profile.password;
-//             //                 await this.getValidSession(serviceProfile, serviceProfile.name, true);
-//             //             }
-//             //         });
-//             //     }
-//             // } else { throw error; }
-//             await errorHandling(error);
-//         }
-//     } else {
-//         // Neither baseProfile nor serviceProfile exists. It is impossible to login with the currently-provided information.
-//         throw new Error(localize("getValidSession.loginImpossible",
-//             "Profile {0} is invalid. Please check your login details and try again.", profileName));
-//     }
-// }
-
-export async function collectProfileDetails(detailsToGet?: string[], oldDetails?: any, schema?: any): Promise<any> {
+export async function collectProfileDetails(detailsToGet?: string[], oldDetails?: any, schema?: any, editing?: boolean): Promise<any> {
     let newUrl: any;
     let newPort: number;
     let newUser: string;
@@ -235,8 +104,14 @@ export async function collectProfileDetails(detailsToGet?: string[], oldDetails?
                 }
                 break;
             case "user":
+                let userPrompt;
+                if (editing) {
+                    userPrompt = localize("collectProfileDetails.option.prompt.username.placeholder", "Optional: User Name");
+                } else {
+                    userPrompt = localize("collectProfileDetails.prompt.username.placeholder", "User Name");
+                }
                 const userOptions = {
-                    placeHolder: localize("collectProfileDetails.option.prompt.username.placeholder", "Optional: User Name"),
+                    placeHolder: userPrompt,
                     prompt: localize("collectProfileDetails.option.prompt.username", "Enter the user name for the connection."),
                     ignoreFocusOut: true,
                     value: oldDetails && oldDetails[profileDetail] ? oldDetails[profileDetail] : null,
@@ -250,14 +125,20 @@ export async function collectProfileDetails(detailsToGet?: string[], oldDetails?
                 newUser = await vscode.window.showInputBox(userOptions);
                 if (newUser === undefined) { return; }
                 if (!newUser) {
-                    vscode.window.showInformationMessage(localize("collectProfileDetails.undefined.username", "No username defined."));
+                    vscode.window.showInformationMessage(localize("collectProfileDetails.undefined.username", "No username stored."));
                     newUser = null;
                 }
                 schemaValues[profileDetail] = newUser;
                 break;
             case "password":
+                let passwordPrompt;
+                if (editing) {
+                    passwordPrompt = localize("collectProfileDetails.option.prompt.password.placeholder", "Optional: Password");
+                } else {
+                    passwordPrompt = localize("collectProfileDetails.prompt.password.placeholder", "Password");
+                }
                 const passOptions = {
-                    placeHolder: localize("collectProfileDetails.option.prompt.password.placeholder", "Optional: Password"),
+                    placeHolder: passwordPrompt,
                     prompt: localize("collectProfileDetails.option.prompt.password", "Enter the password for the connection."),
                     password: true,
                     ignoreFocusOut: true,
@@ -272,7 +153,7 @@ export async function collectProfileDetails(detailsToGet?: string[], oldDetails?
                 newPass = await vscode.window.showInputBox(passOptions);
                 if (typeof newPass === "undefined") { return; }
                 if (!newPass) {
-                    vscode.window.showInformationMessage(localize("collectProfileDetails.undefined.password", "No password defined."));
+                    vscode.window.showInformationMessage(localize("collectProfileDetails.undefined.password", "No password stored."));
                     newPass = null;
                 }
                 schemaValues[profileDetail] = newPass;

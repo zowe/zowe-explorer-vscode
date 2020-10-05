@@ -13,11 +13,8 @@ import * as zowe from "@zowe/cli";
 import { Session, IProfileLoaded, ITaskWithStatus, ICommandArguments, ISession, ConnectionPropsForSessCfg } from "@zowe/imperative";
 import { ZoweExplorerApi } from "./ZoweExplorerApi";
 import * as nls from "vscode-nls";
-// import { getValidSession } from "../profiles/utils";
 import { errorHandling } from "../utils";
-import { DefaultProfileManager } from "../profiles/DefaultProfileManager";
 import { collectProfileDetails, getBaseProfile } from "../profiles/utils";
-import { Profiles } from "../Profiles";
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
@@ -52,10 +49,8 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
                                  profileName: string,
                                  prompt?: boolean): Promise<Session | null> {
 
-        // Retrieve baseProfile
-        // const baseProfile = DefaultProfileManager.getInstance().getDefaultProfile("base");
-
         const baseProfile = await getBaseProfile();
+
         // If user exists in serviceProfile, use serviceProfile to login because it has precedence over baseProfile
         // If no user & no baseProfile, use serviceProfile as default
         // If no user & no token, use serviceProfile as default
@@ -77,30 +72,15 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
                 }
 
                 try {
-                    const newDetails = await collectProfileDetails(schemaArray, null, null);
+                    const newDetails = await collectProfileDetails(schemaArray, null, null, false);
                     for (const detail of schemaArray) {
                         if (detail === "hostname") { serviceProfile.profile.host = newDetails[detail]; }
                         else { serviceProfile.profile[detail] = newDetails[detail]; }
                         }
                 } catch (error) {
-// tslint:disable:no-magic-numbers
-// if (error.mDetails && error.mDetails.errorCode === 401) {
-//     if (globals.ISTHEIA) {
-//         vscode.window.showErrorMessage(error.message);
-//         this.getValidSession(serviceProfile, serviceProfile.name, true);
-//     } else {
-//         vscode.window.showErrorMessage(error.message, "Check Credentials").then(async (selection) => {
-//             if (selection) {
-//                 delete serviceProfile.profile.user;
-//                 delete serviceProfile.profile.password;
-//                 await this.getValidSession(serviceProfile, serviceProfile.name, true);
-//             }
-//         });
-//     }
-// } else { throw error; }
-                await errorHandling(error);
+                    await errorHandling(error);
+                }
             }
-        }
             const cmdArgs: ICommandArguments = {
                 $0: "zowe",
                 _: [""],
@@ -155,29 +135,14 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
                 }
                 return new Session(connectableSessCfg);
             } catch (error) {
-// tslint:disable:no-magic-numbers
-// if (error.mDetails && error.mDetails.errorCode === 401) {
-//     if (globals.ISTHEIA) {
-//         vscode.window.showErrorMessage(error.message);
-//         this.getValidSession(serviceProfile, serviceProfile.name, true);
-//     } else {
-//         vscode.window.showErrorMessage(error.message, "Check Credentials").then(async (selection) => {
-//             if (selection) {
-//                 delete serviceProfile.profile.user;
-//                 delete serviceProfile.profile.password;
-//                 await this.getValidSession(serviceProfile, serviceProfile.name, true);
-//             }
-//         });
-//     }
-// } else { throw error; }
-            await errorHandling(error);
+                await errorHandling(error);
+            }
+        } else {
+            // Neither baseProfile nor serviceProfile exists. It is impossible to login with the currently-provided information.
+            throw new Error(localize("getValidSession.loginImpossible",
+            "Profile {0} is invalid. Please check your login details and try again.", profileName));
         }
-    } else {
-    // Neither baseProfile nor serviceProfile exists. It is impossible to login with the currently-provided information.
-    throw new Error(localize("getValidSession.loginImpossible",
-    "Profile {0} is invalid. Please check your login details and try again.", profileName));
     }
-}
 
     public async getStatus(validateProfile?: IProfileLoaded, profileType?: string, prompt?: boolean): Promise<string> {
         // This API call is specific for z/OSMF profiles

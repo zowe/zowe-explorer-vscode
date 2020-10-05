@@ -476,7 +476,8 @@ export class Profiles {
         const schema = await this.getSchema(profileLoaded.type);
         const updSchemaValues = await collectProfileDetails(null,
                 profileLoaded.profile,
-                schema);
+                schema,
+                true);
         if (updSchemaValues) {
             updSchemaValues.name = profileName;
             Object.keys(updSchemaValues).forEach((key) => {
@@ -573,7 +574,7 @@ export class Profiles {
         }
 
         try {
-            const newProfileDetails = await collectProfileDetails(null, null, await this.getSchema(profileType));
+            const newProfileDetails = await collectProfileDetails(null, null, await this.getSchema(profileType), true);
             if (newProfileDetails) {
                 newProfileDetails.name = newProfileName;
                 if (!newProfileDetails.user) { delete newProfileDetails.user; }
@@ -817,7 +818,7 @@ export class Profiles {
         }
 
         try {
-            const newDetails = await collectProfileDetails(schemaArray, null, null);
+            const newDetails = await collectProfileDetails(schemaArray, null, null, false);
             // Remove old validation results and add the new one
             let oldProfileStatusIndex = this.profilesForValidation.findIndex((prof) => prof.name === profile.name);
             while (oldProfileStatusIndex > -1) {
