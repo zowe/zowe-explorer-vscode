@@ -41,6 +41,9 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
     if (errorDetails.message === "Must have user & password OR base64 encoded credentials") {
         return;
     }
+    if (errorDetails.message.includes("Unable to store the secure field")) {
+        vscode.window.showErrorMessage("If using the Secure Credential Store plugin, user & password values are required for all profiles.");
+    }
     if (errorDetails.mDetails !== undefined) {
         httpErrCode = errorDetails.mDetails.errorCode;
     }

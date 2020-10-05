@@ -580,8 +580,9 @@ export class Profiles {
                         return undefined;
                     }
                 }
-                await this.saveProfile(newProfileDetails, newProfileDetails.name, profileType);
-                vscode.window.showInformationMessage("Profile " + newProfileDetails.name + " was created.");
+                if (await this.saveProfile(newProfileDetails, newProfileDetails.name, profileType)) {
+                    vscode.window.showInformationMessage("Profile " + newProfileDetails.name + " was created.");
+                }
                 return newProfileDetails.name;
             }
         } catch (error) {
@@ -930,8 +931,10 @@ export class Profiles {
         try {
             newProfile = await (await this.getCliProfileManager(ProfileType)).save({ profile: ProfileInfo, name: ProfileName, type: ProfileType });
         } catch (error) {
-            vscode.window.showErrorMessage(error.message);
+            errorHandling(error);
         }
-        return newProfile.profile;
+        if (newProfile) {
+            return newProfile.profile;
+        } else { return null; }
     }
 }
