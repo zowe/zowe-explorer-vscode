@@ -323,7 +323,7 @@ export class Profiles {
                 this.allProfiles.push(baseProfile);
             } catch (err) {
                 if (!err.message.includes(`No default profile set for type "base"`)) {
-                    vscode.window.showErrorMessage(localize("profiles.refresh", "Error: {0}", err.message));
+                    vscode.window.showInformationMessage(err.message);
                 }
             }
         }

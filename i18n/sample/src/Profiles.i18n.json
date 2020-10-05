@@ -3,7 +3,6 @@
     "Profiles.validateProfiles.validationProgress": "Validating {0} Profile.",
     "Profiles.validateProfiles.validationCancelled": "Validating {0} was cancelled.",
     "loadNamedProfile.error.profileName": "Could not find profile named: {0}.",
-    "profiles.refresh": "Error: {0}",
     "addSession.quickPickOption": "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the USS Explorer",
     "enterPattern.pattern": "No selection made.",
     "createZoweSession.option.prompt.profileName.placeholder": "Connection Name",
