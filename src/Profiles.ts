@@ -75,7 +75,6 @@ export class Profiles {
      */
     public async checkCurrentProfile(profileLoaded: IProfileLoaded, nodeType?: string, prompt?: boolean): Promise<any> {
         try {
-
             const baseProfile = await getBaseProfile();
             if (!baseProfile || !baseProfile.profile.tokenValue ||
                 (profileLoaded.profile.host && baseProfile.profile.host !== profileLoaded.profile.host)) {
@@ -204,24 +203,17 @@ export class Profiles {
                 }
 
                 filteredProfile = { status: profileStatus, name: theProfile.name };
-
-                // Remove the old profile status and replace it with the new one
-                let oldProfileStatusIndex = this.profilesForValidation.findIndex((profile) => profile.name === theProfile.name);
-                while (oldProfileStatusIndex > -1) {
-                    this.profilesForValidation.splice(oldProfileStatusIndex, 1);
-                    oldProfileStatusIndex = this.profilesForValidation.findIndex((profile) => profile.name === theProfile.name);
-                }
-                this.profilesForValidation.push(filteredProfile);
             } catch (error) {
                 this.log.debug("Validate Error - Invalid Profile: " + error);
                 filteredProfile = { status: "inactive", name: theProfile.name };
-                let oldProfileStatusIndex = this.profilesForValidation.findIndex((profile) => profile.name === theProfile.name);
-                while (oldProfileStatusIndex > -1) {
-                    this.profilesForValidation.splice(oldProfileStatusIndex, 1);
-                    oldProfileStatusIndex = this.profilesForValidation.findIndex((profile) => profile.name === theProfile.name);
-                }
-                this.profilesForValidation.push(filteredProfile);
             }
+            // Remove the old profile status and replace it with the new one
+            let oldProfileStatusIndex = this.profilesForValidation.findIndex((profile) => profile.name === theProfile.name);
+            while (oldProfileStatusIndex > -1) {
+                this.profilesForValidation.splice(oldProfileStatusIndex, 1);
+                oldProfileStatusIndex = this.profilesForValidation.findIndex((profile) => profile.name === theProfile.name);
+            }
+            this.profilesForValidation.push(filteredProfile);
         }
         return filteredProfile;
     }

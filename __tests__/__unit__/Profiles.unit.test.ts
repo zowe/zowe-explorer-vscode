@@ -11,7 +11,7 @@
 
 import { createISessionWithoutCredentials, createTreeView, createIProfile, createInstanceOfProfile,
          createQuickPickItem, createQuickPickContent, createInputBox, createBasicZosmfSession, createISession,
-         createPersistentConfig, createInvalidIProfile, createValidIProfile } from "../../__mocks__/mockCreators/shared";
+         createPersistentConfig, createInvalidIProfile, createValidIProfile, createValidBaseProfile } from "../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../__mocks__/mockCreators/datasets";
 import { createProfileManager, createTestSchemas } from "../../__mocks__/mockCreators/profiles";
 import * as vscode from "vscode";
@@ -20,6 +20,7 @@ import * as child_process from "child_process";
 import { Logger } from "@zowe/imperative";
 import * as globals from "../../src/globals";
 import { Profiles, ValidProfileEnum } from "../../src/Profiles";
+import * as profileUtils from "../../src/profiles/utils";
 import { ZosmfSession, CheckStatus } from "@zowe/cli";
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
 import { ZoweExplorerApiRegister } from "../../src/api/ZoweExplorerApiRegister";
@@ -54,6 +55,17 @@ async function createGlobalMocks() {
         testSession: createISession(),
         mockError: jest.fn(),
         commonApi: null,
+        mockWithProgress: jest.fn().mockImplementation((progLocation, callback) => {
+            return {
+                success: true,
+                commandResponse: callback()
+            };
+        }),
+        mockProgressLocation: jest.fn().mockImplementation(() => {
+            return {
+                Notification: 15
+            };
+        }),
         mockGetCommonApi: jest.fn(),
         mockGetValidSession: jest.fn(),
         mockConfigurationTarget: jest.fn(),
@@ -80,6 +92,8 @@ async function createGlobalMocks() {
     ZoweExplorerApiRegister.getCommonApi = newMocks.mockGetCommonApi.bind(ZoweExplorerApiRegister);
 
     Object.defineProperty(newMocks.commonApi, "getValidSession", { value: newMocks.mockGetValidSession, configurable: true });
+    Object.defineProperty(vscode.window, "withProgress", { value: newMocks.mockWithProgress, configurable: true });
+    Object.defineProperty(vscode, "ProgressLocation", {value: newMocks.mockProgressLocation, configurable: true});
     Object.defineProperty(vscode.window, "showInformationMessage", { value: newMocks.mockShowInformationMessage, configurable: true });
     Object.defineProperty(vscode.window, "showInputBox", { value: newMocks.mockShowInputBox, configurable: true });
     Object.defineProperty(vscode.window, "showErrorMessage", { value: newMocks.mockShowErrorMessage, configurable: true });
@@ -1260,6 +1274,7 @@ describe("Profiles Unit Tests - Function checkCurrentProfile", () => {
             session: createISessionWithoutCredentials(),
             invalidProfile: createInvalidIProfile(),
             validProfile: createValidIProfile(),
+            baseProfile: createValidBaseProfile(),
             profileInstance: null
         };
 
@@ -1278,6 +1293,21 @@ describe("Profiles Unit Tests - Function checkCurrentProfile", () => {
         Object.defineProperty(globalMocks.profiles, "promptCredentials", {
             value: jest.fn().mockReturnValue(blockMocks.validProfile), configurable: true
         });
+        Object.defineProperty(globalMocks.profiles, "getProfileSetting", {
+            value: jest.fn().mockReturnValue({status: "active", name: blockMocks.validProfile.name}), configurable: true
+        });
+
+        await globalMocks.profiles.checkCurrentProfile(blockMocks.invalidProfile);
+        expect(globalMocks.profiles.validProfile).toBe(ValidProfileEnum.VALID);
+    });
+
+    it("Tests that checkCurrentProfile is successful when getValidSession returns valid profile", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        jest.spyOn(profileUtils, "getBaseProfile").mockReturnValueOnce(blockMocks.baseProfile);
+
+        // Mock other functions so that profile looks to be valid
         Object.defineProperty(globalMocks.profiles, "getProfileSetting", {
             value: jest.fn().mockReturnValue({status: "active", name: blockMocks.validProfile.name}), configurable: true
         });
@@ -1421,9 +1451,11 @@ describe("Profiles Unit Tests - Function getProfileSetting", () => {
     it("Tests that getProfileSetting returns profile status for enabled profile", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
+
         const resultSetting = { status: "inactive", name: "sestest" };
         const theProfiles = await Profiles.createInstance(blockMocks.log);
         theProfiles.profilesValidationSetting = [{name: blockMocks.imperativeProfile.name, setting: true, type: "dataset" }];
+        globalMocks.mockWithProgress.mockReturnValueOnce("inactive");
 
         const response = await theProfiles.getProfileSetting(blockMocks.imperativeProfile, "dataset");
         expect(response).toEqual(resultSetting);
@@ -1846,19 +1878,63 @@ describe("Profiles Unit Tests - Function validateProfiles", () => {
         return newMocks;
     }
 
+    it("Tests that validateProfiles handles active profiles", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const theProfiles = await Profiles.createInstance(blockMocks.log);
+        theProfiles.profilesForValidation.push({ name: blockMocks.validProfile.name, status: "active" });
+
+        const profileStatus = await theProfiles.validateProfiles(blockMocks.validProfile, false);
+        expect(profileStatus).toEqual({ name: blockMocks.validProfile.name, status: "active" });
+    });
+
     it("Tests that validateProfiles handles inactive profiles", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
         const theProfiles = await Profiles.createInstance(blockMocks.log);
-        Object.defineProperty(CheckStatus, "getZosmfInfo", {
-            value: jest.fn(() => {
-                return undefined;
-            })
-        });
+        theProfiles.profilesForValidation.push({ name: blockMocks.validProfile.name, status: "inactive" });
 
-        await theProfiles.checkCurrentProfile(blockMocks.validProfile, "dataset");
-        expect(theProfiles.validProfile).toBe(ValidProfileEnum.INVALID);
+        const profileStatus = await theProfiles.validateProfiles(blockMocks.validProfile, false);
+        expect(profileStatus).toEqual({ name: blockMocks.validProfile.name, status: "inactive" });
+    });
+
+    it("Tests that validateProfiles fetches proper status from getStatus", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        globalMocks.mockWithProgress.mockReturnValue("active");
+
+        const profileStatus = await globalMocks.profiles.validateProfiles(blockMocks.validProfile, false);
+        expect(profileStatus).toEqual({ name: blockMocks.validProfile.name, status: "active" });
+    });
+
+    it("Tests that validateProfiles logs an error when getStatus fails", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        globalMocks.mockWithProgress.mockRejectedValueOnce("Test error!");
+        const debugSpy = jest.spyOn(globalMocks.profiles.log, "debug");
+
+        await globalMocks.profiles.validateProfiles(blockMocks.validProfile, false);
+        expect(debugSpy).toBeCalledWith("Validate Error - Invalid Profile: Test error!");
+    });
+
+    it("Tests that validateProfiles removes old profile statuses for this profile before pushing the new status", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const theProfiles = await Profiles.createInstance(blockMocks.log);
+        globalMocks.mockWithProgress.mockReturnValue("active");
+        theProfiles.profilesForValidation.push({ name: blockMocks.validProfile.name, status: "unverified" });
+        theProfiles.profilesForValidation.push({ name: blockMocks.validProfile.name, status: "unverified" });
+        theProfiles.profilesForValidation.push({ name: blockMocks.validProfile.name, status: "unverified" });
+
+        // tslint:disable-next-line: no-magic-numbers
+        expect(theProfiles.profilesForValidation.length).toEqual(3);
+        await theProfiles.validateProfiles(blockMocks.validProfile, false);
+        expect(theProfiles.profilesForValidation.length).toEqual(1);
     });
 });
 
