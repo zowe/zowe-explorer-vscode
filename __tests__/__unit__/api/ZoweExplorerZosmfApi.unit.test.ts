@@ -260,7 +260,7 @@ describe("ZosmfApiCommon Unit Tests - Function getValidSession", () => {
         await blockMocks.commonApi.getValidSession(blockMocks.serviceProfile, "sestest", true);
 
         expect(blockMocks.mockCollectProfileDetails).toHaveBeenCalledTimes(1);
-        expect(blockMocks.mockCollectProfileDetails).toHaveBeenCalledWith(["user"], null, null);
+        expect(blockMocks.mockCollectProfileDetails).toHaveBeenCalledWith(["user"], null, null, false);
     });
 
     it("Tests that getValidProfile prompts for password if prompting = true", async () => {
@@ -275,7 +275,7 @@ describe("ZosmfApiCommon Unit Tests - Function getValidSession", () => {
         await blockMocks.commonApi.getValidSession(blockMocks.serviceProfile, "sestest", true);
 
         expect(blockMocks.mockCollectProfileDetails).toHaveBeenCalledTimes(1);
-        expect(blockMocks.mockCollectProfileDetails).toHaveBeenCalledWith(["password"], null, null);
+        expect(blockMocks.mockCollectProfileDetails).toHaveBeenCalledWith(["password"], null, null, false);
     });
 
     it("Tests that getValidProfile prompts for host if prompting = true", async () => {
@@ -289,7 +289,7 @@ describe("ZosmfApiCommon Unit Tests - Function getValidSession", () => {
         await blockMocks.commonApi.getValidSession(blockMocks.serviceProfile, "sestest", true);
 
         expect(blockMocks.mockCollectProfileDetails).toHaveBeenCalledTimes(1);
-        expect(blockMocks.mockCollectProfileDetails).toHaveBeenCalledWith(["hostname"], null, null);
+        expect(blockMocks.mockCollectProfileDetails).toHaveBeenCalledWith(["hostname"], null, null, false);
     });
 
     it("Tests that getValidProfile prompts for port if prompting = true", async () => {
@@ -305,7 +305,7 @@ describe("ZosmfApiCommon Unit Tests - Function getValidSession", () => {
         await blockMocks.commonApi.getValidSession(blockMocks.serviceProfile, "sestest", true);
 
         expect(blockMocks.mockCollectProfileDetails).toHaveBeenCalledTimes(1);
-        expect(blockMocks.mockCollectProfileDetails).toHaveBeenCalledWith(["hostname", "port"], null, null);
+        expect(blockMocks.mockCollectProfileDetails).toHaveBeenCalledWith(["hostname", "port"], null, null, false);
     });
 
     it("Tests that getValidProfile successfully returns an array of new profile details", async () => {
@@ -328,7 +328,7 @@ describe("ZosmfApiCommon Unit Tests - Function getValidSession", () => {
         await blockMocks.commonApi.getValidSession(blockMocks.serviceProfile, "sestest", true);
 
         expect(blockMocks.mockCollectProfileDetails).toHaveBeenCalledTimes(1);
-        expect(blockMocks.mockCollectProfileDetails).toHaveBeenCalledWith(["password", "hostname", "port"], null, null);
+        expect(blockMocks.mockCollectProfileDetails).toHaveBeenCalledWith(["password", "hostname", "port"], null, null, false);
     });
 
     it("Tests that getValidProfile throws an error if prompting fails, using service profile", async () => {
