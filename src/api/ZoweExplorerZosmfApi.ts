@@ -103,9 +103,9 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
             return zowe.ZosmfSession.createBasicZosmfSessionFromArguments(cmdArgs);
         } else if (baseProfile) {
             // baseProfile exists, so APIML login is possible
-            const sessCfg = {
+            const sessCfg: ISession = {
                 rejectUnauthorized: (serviceProfile.profile.rejectUnauthorized != null ? serviceProfile.profile.rejectUnauthorized :
-                baseProfile.profile.rejectUnauthorized),
+                                     baseProfile.profile.rejectUnauthorized),
                 basePath: serviceProfile.profile.basePath,
                 hostname: serviceProfile.profile.host ? serviceProfile.profile.host : baseProfile.profile.host,
                 port: serviceProfile.profile.port ? serviceProfile.profile.port : baseProfile.profile.port,
@@ -137,10 +137,6 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
             } catch (error) {
                 await errorHandling(error);
             }
-        } else {
-            // Neither baseProfile nor serviceProfile exists. It is impossible to login with the currently-provided information.
-            throw new Error(localize("getValidSession.loginImpossible",
-            "Profile {0} is invalid. Please check your login details and try again.", profileName));
         }
     }
 
