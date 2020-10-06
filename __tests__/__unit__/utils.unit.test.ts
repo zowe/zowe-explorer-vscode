@@ -89,4 +89,24 @@ describe("Utils Unit Tests - Function errorHandling", () => {
         expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(`Invalid Credentials. Please ensure the token or username/password for invalidCred are valid or this may lead to a lock-out.`);
         expect(globalMocks.mockProfileInstance.promptCredentials).toBeCalledWith(globalMocks.serviceProfile, true);
     });
+
+    it("Tests handling of error 'Must have user & password OR base64 encoded credentials'", async () => {
+        createGlobalMocks();
+
+        const testError = { message: "Must have user & password OR base64 encoded credentials" };
+
+        await utils.errorHandling(testError);
+
+        expect(vscode.window.showErrorMessage).toHaveBeenCalledTimes(0);
+    });
+
+    it("Tests handling of error 'Unable to store the secure field'", async () => {
+        createGlobalMocks();
+
+        const testError = { message: "Unable to store the secure field" };
+
+        await utils.errorHandling(testError);
+
+        expect(vscode.window.showErrorMessage).toHaveBeenCalledWith("If using the Secure Credential Store plugin, user & password values are required for all profiles.");
+    });
 });

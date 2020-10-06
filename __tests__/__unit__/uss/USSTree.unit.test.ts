@@ -1139,6 +1139,19 @@ describe("USSTree Unit Tests - Function USSTree.getChildren()", () => {
 
         expect(loadProfilesForFavoritesSpy).toHaveBeenCalledWith(log, favProfileNode);
     });
+
+    it("Testing that getChildren() successfully handles errors", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        const testDir = new ZoweUSSNode("testDir", vscode.TreeItemCollapsibleState.Collapsed,
+            globalMocks.testTree.mSessionNodes[1], null, "test");
+        jest.spyOn(globalMocks.testTree.mSessionNodes[1], "getChildren").mockImplementationOnce(() => { throw new Error("Test error!"); });
+
+        const sessChildren = await globalMocks.testTree.getChildren(globalMocks.testTree.mSessionNodes[1]);
+
+        expect(globalMocks.showErrorMessage).toBeCalledWith("Test error!");
+        expect(sessChildren).toEqual([]);
+    });
 });
 
 describe("USSTree Unit Tests - Function USSTree.loadProfilesForFavorites", () => {

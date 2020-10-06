@@ -9,15 +9,12 @@
 *                                                                                 *
 */
 
-// import { ZosmfUssApi, ZosmfMvsApi } from "../../../src/api/ZoweExplorerZosmfApi";
 import * as zowe from "@zowe/cli";
 import { Logger, AbstractSession, ConnectionPropsForSessCfg } from "@zowe/imperative";
 import { ZoweExplorerApiRegister } from "../../../src/api/ZoweExplorerApiRegister";
 import { createISession, createISessionWithoutCredentials,
          createValidBaseProfile, createValidIProfile } from "../../../__mocks__/mockCreators/shared";
-// import * as profileUtils from "../../../src/profiles/utils";
 import { ZosmfMvsApi, ZosmfUssApi } from "../../../src/api/ZoweExplorerZosmfApi";
-import { createProfileManager } from "../../../__mocks__/mockCreators/profiles";
 import * as globals from "../../../src/globals";
 import * as vscode from "vscode";
 import * as utils from "../../../src/utils";
@@ -146,6 +143,19 @@ describe("ZosmfApiCommon Unit Tests - Function getStatus", () => {
         const newStatus = await ZoweExplorerApiRegister.getCommonApi(blockMocks.baseProfile).getStatus(blockMocks.baseProfile, "zosmf");
 
         expect(newStatus).toEqual("active");
+    });
+
+    it("Tests that getStatus stores the valid connection details in the Active profile, after verification", async () => {
+        const blockMocks = await createBlockMocks();
+
+        blockMocks.testSession.ISession.user = "testAddConnDetails";
+        blockMocks.baseProfile.profile.user = null;
+        blockMocks.testSession.ISession.hostname = "testAddConnDetailsHostname";
+        blockMocks.baseProfile.profile.host = null;
+
+        await ZoweExplorerApiRegister.getCommonApi(blockMocks.baseProfile).getStatus(blockMocks.baseProfile, "zosmf");
+        expect(blockMocks.baseProfile.profile.user).toEqual("testAddConnDetails");
+        expect(blockMocks.baseProfile.profile.host).toEqual("testAddConnDetailsHostname");
     });
 
     it("Tests that getStatus returns Inactive if a valid session cannot be retrieved", async () => {
@@ -431,7 +441,10 @@ describe("ZosmfApiCommon Unit Tests - Function getValidSession", () => {
     it("Tests that getValidProfile successfully returns a connected Session when prompting = true (token auth)", async () => {
         const blockMocks = await createBlockMocks();
 
-        blockMocks.mockCreateBasicZosmfSessionFromArguments.mockReturnValue(blockMocks.testSession);
+        delete blockMocks.serviceProfile.profile.user;
+        blockMocks.serviceProfile.profile.basePath = "test";
+        jest.spyOn(profileUtils, "getBaseProfile").mockReturnValueOnce(blockMocks.baseProfile);
+        jest.spyOn(ConnectionPropsForSessCfg, "addPropsOrPrompt").mockResolvedValueOnce(blockMocks.testSession.ISession);
 
         const newSession = await blockMocks.commonApi.getValidSession(blockMocks.serviceProfile, "sestest", true);
 
@@ -441,7 +454,10 @@ describe("ZosmfApiCommon Unit Tests - Function getValidSession", () => {
     it("Tests that getValidProfile successfully returns a connected Session when prompting = false (token auth)", async () => {
         const blockMocks = await createBlockMocks();
 
-        blockMocks.mockCreateBasicZosmfSessionFromArguments.mockReturnValue(blockMocks.testSession);
+        delete blockMocks.serviceProfile.profile.user;
+        blockMocks.serviceProfile.profile.basePath = "test";
+        jest.spyOn(profileUtils, "getBaseProfile").mockReturnValueOnce(blockMocks.baseProfile);
+        jest.spyOn(ConnectionPropsForSessCfg, "addPropsOrPrompt").mockResolvedValueOnce(blockMocks.testSession.ISession);
 
         const newSession = await blockMocks.commonApi.getValidSession(blockMocks.serviceProfile, "sestest", false);
 
