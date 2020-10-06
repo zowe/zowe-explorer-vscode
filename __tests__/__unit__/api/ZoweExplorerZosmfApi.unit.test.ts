@@ -201,7 +201,6 @@ describe("ZosmfApiCommon Unit Tests - Function getValidSession", () => {
             mockGetCommonApi: jest.fn(),
             mockConfigurationTarget: jest.fn(),
             mockCreateBasicZosmfSessionFromArguments: jest.fn(),
-            mockCliProfileManager: createProfileManager(),
         };
 
         newMocks.mockCollectProfileDetails.mockResolvedValue(newMocks.serviceProfile.profile);

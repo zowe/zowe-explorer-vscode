@@ -88,13 +88,29 @@ export class CliProfileManager {
         return ["name1", "name2"];
     }
     public save(){
-        return { name: "profile1", profile: {}, type: "zosmf" };
+        return { name: "profile1", profile: {
+            hostname: "test",
+            port: 1443,
+            user: "test",
+            password: "test",
+            rejectUnauthorized: false,
+            name: "testName",
+            base64EncodedAuth: "test"
+        }, type: "zosmf" };
     }
     public update(){
         return { name: "profile1", profile: {}, type: "zosmf" };
     }
     public delete(){
-        return { name: "profile1", profile: {}, type: "zosmf" };
+        return { name: "profile1", profile: {
+            hostname: "test",
+            port: 1443,
+            user: "test",
+            password: "test",
+            rejectUnauthorized: false,
+            name: "testName",
+            base64EncodedAuth: "test"
+        }, type: "zosmf" };
     }
     public get configurations() {
         return [{

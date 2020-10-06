@@ -21,7 +21,7 @@ import { Logger } from "@zowe/imperative";
 import * as globals from "../../src/globals";
 import { Profiles, ValidProfileEnum } from "../../src/Profiles";
 import * as profileUtils from "../../src/profiles/utils";
-import { ZosmfSession, CheckStatus } from "@zowe/cli";
+import { ZosmfSession } from "@zowe/cli";
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
 import { ZoweExplorerApiRegister } from "../../src/api/ZoweExplorerApiRegister";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
@@ -100,7 +100,6 @@ async function createGlobalMocks() {
     Object.defineProperty(vscode.window, "showQuickPick", { value: newMocks.mockShowQuickPick, configurable: true });
     Object.defineProperty(vscode.window, "createQuickPick", { value: newMocks.mockCreateQuickPick, configurable: true });
     Object.defineProperty(Profiles, "getInstance", { value: newMocks.mockGetInstance, configurable: true });
-    Object.defineProperty(newMocks.mockGetInstance, "collectProfileDetails", { value: newMocks.mockCollectProfileDetails, configurable: true });
     Object.defineProperty(globals, "LOG", { value: newMocks.mockLog, configurable: true });
     Object.defineProperty(vscode.window, "createInputBox", { value: newMocks.mockCreateInputBox, configurable: true });
     Object.defineProperty(globals.LOG, "debug", { value: newMocks.mockDebug, configurable: true });
@@ -515,19 +514,33 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
 describe("Profiles Unit Tests - Function getProfileType", () => {
     function createBlockMocks(globalMocks) {
         const newMocks = {
-            mockRegisteredApiTypes: jest.fn(() => ["zosmf"]),
+            mockRegisteredApiTypes: jest.fn(() => ["zosmf", "zftp"]),
             originalRegisteredApiTypes: null
         };
 
         newMocks.originalRegisteredApiTypes = ZoweExplorerApiRegister.getInstance().registeredApiTypes;
         ZoweExplorerApiRegister.getInstance().registeredApiTypes = newMocks.mockRegisteredApiTypes;
+        globalMocks.profiles.profilesByType.set("zftp", [globalMocks.defaultProfile]);
 
         return newMocks;
     }
 
+    it("Tests that getProfileType returns correct profile type when a name is passed in", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const response = await globalMocks.profiles.getProfileType(globalMocks.defaultProfile.name);
+        expect(response).toEqual("zftp");
+
+        ZoweExplorerApiRegister.getInstance().registeredApiTypes = blockMocks.originalRegisteredApiTypes;
+    });
+
     it("Tests that getProfileType returns correct profile type when receiving only one type", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.mockRegisteredApiTypes = jest.fn(() => ["zosmf"]);
+        globalMocks.mockShowQuickPick.mockResolvedValueOnce("zosmf");
 
         const response = await globalMocks.profiles.getProfileType();
         expect(response).toEqual("zosmf");
@@ -640,6 +653,7 @@ describe("Profiles Unit Tests - Function editSession", () => {
             profileInstance: null
         };
 
+        jest.spyOn(globalMocks.profiles, "updateProfile").mockResolvedValueOnce(globalMocks.defaultProfile.profile);
         newMocks.imperativeProfile.name = "profile1";
         newMocks.imperativeProfile.profile.user = "fake";
         newMocks.imperativeProfile.profile.password = "1234";
@@ -829,6 +843,28 @@ describe("Profiles Unit Tests - Function editSession", () => {
         }
 
         expect(error.message).toBe("Invalid Port number provided or operation was cancelled");
+    });
+
+    it("Tests that editSession successfully removes old validation results", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        globalMocks.profiles.getProfileType = () => new Promise((resolve) => { resolve("alternate"); });
+        globalMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[1]); });
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("https://fake:143");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("143");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowQuickPick.mockResolvedValueOnce("False");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("123");
+        globalMocks.mockCreateBasicZosmfSessionFromArguments.mockReturnValue(
+            { ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" } });
+        globalMocks.profiles.profilesForValidation.push({ name: "testName", status: "active" });
+        globalMocks.profiles.profilesForValidation.push({ name: "testName", status: "unverified" });
+
+        await globalMocks.profiles.editSession(blockMocks.imperativeProfile, blockMocks.imperativeProfile.name);
+        expect(globalMocks.profiles.profilesForValidation).toEqual([]);
     });
 });
 
@@ -2016,5 +2052,141 @@ describe("Profiles Unit Tests - Function refreshTree", () => {
 
         // Check that node collapsible state is set (last line)
         expect(blockMocks.datasetSessionNode.collapsibleState).toEqual(vscode.TreeItemCollapsibleState.Collapsed);
+    });
+});
+
+describe("Profiles Unit Tests - Function saveProfile", () => {
+    it("Tests that saveProfile successfully saves the profile", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        const testProfile = {
+            hostname: "test",
+            port: 1443,
+            user: "test",
+            password: "test",
+            rejectUnauthorized: false,
+            name: "testName",
+            base64EncodedAuth: "test"
+        };
+
+        const returnedProfile = await globalMocks.profiles.saveProfile(globalMocks.defaultProfile.profile, globalMocks.defaultProfile.name, "zosmf");
+        expect(returnedProfile).toEqual(testProfile);
+    });
+
+    it("Tests that saveProfile calls errorHandling and doesn't return a profile if error is thrown", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        jest.spyOn(globalMocks.profiles, "getCliProfileManager").mockRejectedValueOnce("Test error!");
+        const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
+
+        const returnedProfile = await globalMocks.profiles.saveProfile(globalMocks.defaultProfile.profile, globalMocks.defaultProfile.name, "zosmf");
+        expect(errorHandlingSpy).toBeCalledWith("Test error!");
+        expect(returnedProfile).toEqual(null);
+    });
+});
+
+describe("Profiles Unit Tests - Function deleteProfileOnDisk", () => {
+    it("Tests that deleteProfileOnDisk successfully deletes the profile", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        const testProfile = {
+            hostname: "test",
+            port: 1443,
+            user: "test",
+            password: "test",
+            rejectUnauthorized: false,
+            name: "testName",
+            base64EncodedAuth: "test"
+        };
+
+        const returnedProfile = await globalMocks.profiles.deleteProfileOnDisk(globalMocks.defaultProfile);
+        expect(returnedProfile).toEqual(testProfile);
+    });
+
+    it("Tests that deleteProfileOnDisk calls errorHandling if error is thrown", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        const testError = new Error("Test error!");
+        jest.spyOn(globalMocks.profiles, "getCliProfileManager").mockRejectedValueOnce(testError);
+
+        const returnedProfile = await globalMocks.profiles.deleteProfileOnDisk(globalMocks.defaultProfile);
+        expect(globalMocks.mockShowErrorMessage).toBeCalledWith(testError.message);
+        expect(returnedProfile).toEqual(null);
+    });
+});
+
+describe("Profiles Unit Tests - Function promptCredentials", () => {
+    it("Tests that promptCredentials successfully prompts for all details, when rePrompt is false", async () => {
+        const globalMocks = await createGlobalMocks();
+        Object.defineProperty(profileUtils, "collectProfileDetails", { value: globalMocks.mockCollectProfileDetails, configurable: true });
+
+        const profileWithDetails = globalMocks.defaultProfile;
+        globalMocks.defaultProfile.profile.user = undefined;
+        globalMocks.defaultProfile.profile.password = undefined;
+        globalMocks.defaultProfile.profile.host = undefined;
+        globalMocks.defaultProfile.profile.port = undefined;
+        globalMocks.mockCollectProfileDetails.mockResolvedValueOnce({
+            user: profileWithDetails.profile.user,
+            password: profileWithDetails.profile.password,
+            hostname: profileWithDetails.profile.hostname,
+            port: profileWithDetails.profile.port
+        });
+
+        const returnedProfile = await globalMocks.profiles.promptCredentials(globalMocks.defaultProfile, false);
+        expect(globalMocks.mockCollectProfileDetails).toBeCalledWith(["user", "password", "hostname", "port"], null, null, false);
+        expect(returnedProfile).toEqual(profileWithDetails);
+    });
+
+    it("Tests that promptCredentials successfully prompts for all details, when rePrompt is true", async () => {
+        const globalMocks = await createGlobalMocks();
+        Object.defineProperty(profileUtils, "collectProfileDetails", { value: globalMocks.mockCollectProfileDetails, configurable: true });
+
+        const profileWithDetails = globalMocks.defaultProfile;
+        globalMocks.defaultProfile.profile.user = undefined;
+        globalMocks.defaultProfile.profile.password = undefined;
+        globalMocks.defaultProfile.profile.host = undefined;
+        globalMocks.defaultProfile.profile.port = undefined;
+        globalMocks.mockCollectProfileDetails.mockResolvedValueOnce({
+            user: profileWithDetails.profile.user,
+            password: profileWithDetails.profile.password,
+            hostname: profileWithDetails.profile.hostname,
+            port: profileWithDetails.profile.port
+        });
+        globalMocks.mockShowInformationMessage.mockResolvedValueOnce("Save Credentials");
+
+        const returnedProfile = await globalMocks.profiles.promptCredentials(globalMocks.defaultProfile, true);
+        expect(globalMocks.mockShowInformationMessage).toBeCalledTimes(1);
+        expect(globalMocks.mockCollectProfileDetails).toBeCalledWith(["user", "password", "hostname", "port"], null, null, false);
+        expect(returnedProfile).toEqual(profileWithDetails);
+    });
+
+    it("Tests that promptCredentials removes the old validation results before adding a new one", async () => {
+        const globalMocks = await createGlobalMocks();
+        Object.defineProperty(profileUtils, "collectProfileDetails", { value: globalMocks.mockCollectProfileDetails, configurable: true });
+
+        globalMocks.defaultProfile.profile.user = undefined;
+        globalMocks.defaultProfile.profile.password = undefined;
+        globalMocks.defaultProfile.profile.host = undefined;
+        globalMocks.defaultProfile.profile.port = undefined;
+        globalMocks.profiles.profilesForValidation.push({ name: globalMocks.defaultProfile.name, status: "active" });
+        globalMocks.profiles.profilesForValidation.push({ name: globalMocks.defaultProfile.name, status: "unverified" });
+
+        await globalMocks.profiles.promptCredentials(globalMocks.defaultProfile, false);
+        expect(globalMocks.profiles.profilesForValidation).toEqual([{ name: globalMocks.defaultProfile.name, status: "inactive" }]);
+    });
+
+    it("Tests that promptCredentials returns null when no values are given by the user", async () => {
+        const globalMocks = await createGlobalMocks();
+        Object.defineProperty(profileUtils, "collectProfileDetails", { value: globalMocks.mockCollectProfileDetails, configurable: true });
+
+        globalMocks.defaultProfile.profile.user = undefined;
+        globalMocks.defaultProfile.profile.password = undefined;
+        globalMocks.defaultProfile.profile.host = undefined;
+        globalMocks.defaultProfile.profile.port = undefined;
+        globalMocks.mockCollectProfileDetails.mockResolvedValueOnce(null);
+
+        const returnedProfile = await globalMocks.profiles.promptCredentials(globalMocks.defaultProfile, true);
+        expect(globalMocks.mockCollectProfileDetails).toBeCalledWith(["user", "password", "hostname", "port"], null, null, false);
+        expect(returnedProfile).toEqual(null);
     });
 });

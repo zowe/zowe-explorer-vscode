@@ -797,16 +797,16 @@ export class Profiles {
 
     public async promptCredentials(profile: IProfileLoaded, rePrompt?: boolean) {
         const schemaArray = [];
-        if (!profile.profile.user) { // && (!baseProfile || (baseProfile && !baseProfile.profile.user))) {
+        if (!profile.profile.user) {
             schemaArray.push("user");
         }
-        if (!profile.profile.password) { // && (!baseProfile || (baseProfile && !baseProfile.profile.password))) {
+        if (!profile.profile.password) {
             schemaArray.push("password");
         }
-        if (!profile.profile.host) { // && (!baseProfile || (baseProfile && !baseProfile.profile.host))) {
+        if (!profile.profile.host) {
             schemaArray.push("hostname");
         }
-        if (!profile.profile.port) { // && (!baseProfile || (baseProfile && !baseProfile.profile.port))) {
+        if (!profile.profile.port) {
             schemaArray.push("port");
         }
 
@@ -830,15 +830,15 @@ export class Profiles {
                 else { profile.profile[detail] = newDetails[detail]; }
             }
             if (rePrompt) {
-            const saveButton = localize("promptCredentials.saveCredentials.button", "Save Credentials");
-            const doNotSaveButton = localize("promptCredentials.doNotSave.button", "Do Not Save");
-            const infoMsg = localize("promptCredentials.saveCredentials.infoMessage", "Save entered credentials for future use with profile: {0}? Saving credentials will update the local yaml file.", profile.name);
-            await vscode.window.showInformationMessage(infoMsg, ...[saveButton, doNotSaveButton]).then((selection) => {
-                if (selection === saveButton) {
-                    rePrompt = false;
-                }
-            });
-            await this.updateProfile(profile, rePrompt);
+                const saveButton = localize("promptCredentials.saveCredentials.button", "Save Credentials");
+                const doNotSaveButton = localize("promptCredentials.doNotSave.button", "Do Not Save");
+                const infoMsg = localize("promptCredentials.saveCredentials.infoMessage", "Save entered credentials for future use with profile: {0}? Saving credentials will update the local yaml file.", profile.name);
+                await vscode.window.showInformationMessage(infoMsg, ...[saveButton, doNotSaveButton]).then((selection) => {
+                    if (selection === saveButton) {
+                        rePrompt = false;
+                    }
+                });
+                await this.updateProfile(profile, rePrompt);
             }
             return profile;
         } catch (error) {
@@ -881,7 +881,8 @@ export class Profiles {
                 .delete({ profile: ProfileInfo, name: ProfileInfo.name, type: ProfileInfo.type });
         } catch (error) { vscode.window.showErrorMessage(error.message); }
 
-        return zosmfProfile.profile;
+        if (zosmfProfile) { return zosmfProfile.profile; }
+        else { return null; }
     }
 
     // ** Functions that Calls Get CLI Profile Manager  */
