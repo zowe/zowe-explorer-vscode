@@ -95,12 +95,14 @@ export async function getFavoritePrfileNameFromJobs(){
 export async function removeFavoriteProfileFromDatasets(){
     const removeFromFavorite =  await driverChrome.wait(until.elementLocated(By.xpath(DatasetsLocators.searchSymbolInFavoriteXpath)), WAITTIME);
     await driverChrome.actions().click(removeFromFavorite, Button.RIGHT).perform();
+    await driverChrome.sleep(SLEEP);
     await driverChrome.wait(until.elementLocated(By.xpath(DatasetsLocators.removeFavoriteProfileFromDatasetsOptionXpath)), WAITTIME).click();
 }
 
 export async function removeFavoriteProfileFromUss(){
     const removeFromFavorite = await driverChrome.wait(until.elementLocated(By.xpath(UssLocators.searchSymbolInFavoriteXpath)), WAITTIME);
     await driverChrome.actions().click(removeFromFavorite, Button.RIGHT).perform();
+    await driverChrome.sleep(SLEEP);
     await driverChrome.wait(until.elementLocated(By.xpath(UssLocators.removeFavoriteProfileFromUssOptionXpath)), WAITTIME).click();
 }
 
@@ -115,18 +117,21 @@ export async function removeFavoriteProfileFromJobs(){
 export async function addProfileToFavoritesInDatasets(){
     const addTofavorite = await driverChrome.wait(until.elementLocated(By.id(DatasetsLocators.secondDatasetProfileId)),  WAITTIME);
     await driverChrome.actions().click(addTofavorite, Button.RIGHT).perform();
+    await driverChrome.sleep(SLEEP);
     await driverChrome.wait(until.elementLocated(By.xpath(DatasetsLocators.addToFavoriteOptionXpath)), WAITTIME).click();
 }
 
 export async function addProfileToFavoritesInUss(){
     const addTofavorite = await driverChrome.wait(until.elementLocated(By.xpath(UssLocators.secondUssProfileXpath)), WAITTIME);
     await driverChrome.actions().click(addTofavorite, Button.RIGHT).perform();
+    await driverChrome.sleep(SLEEP);
     await driverChrome.wait(until.elementLocated(By.xpath(UssLocators.addToFavoriteOptionXpath)), WAITTIME).click();
 }
 
 export async function addProfileToFavoritesInJobs(){
     const addTofavorite = await driverChrome.wait(until.elementLocated(By.xpath(JobsLocators.secondJobsProfileXpath)),  WAITTIME);
     await driverChrome.actions().click(addTofavorite, Button.RIGHT).perform();
+    await driverChrome.sleep(SLEEP);
     await driverChrome.wait(until.elementLocated(By.xpath(JobsLocators.addToFavoriteOptionXpath)), WAITTIME).click();
 }
 
