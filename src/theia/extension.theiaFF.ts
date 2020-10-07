@@ -102,6 +102,9 @@ export async function addProfileDetails(profileName: string){
     const encoding = await driverFF.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
     encoding.sendKeys(Key.ENTER);
     await sleep(SleepForTwoSec);
+    const responseTimeout = await driverFF.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
+    responseTimeout.sendKeys(Key.ENTER);
+    await sleep(SleepForTwoSec);
 }
 
 export async function addProfileDetailsInUss(profileName: string){

@@ -250,7 +250,6 @@ describe("Delete Profiles", () => {
     });
 
     it("Should Delete Default Profile from DATA SETS", async () => {
-        await driverChrome.closeNotificationMessage();
         const deleteConfrmationMsg = await driverChrome.deleteDefaultProfileInDatasets();
         expect(deleteConfrmationMsg).to.equal("Profile DefaultProfile was deleted.");
     });
