@@ -13,7 +13,7 @@ export const TheiaLocator = {
 
     theiaUrl: "http://localhost:3000",
 
-    zoweExplorerxpath: "shell-tab-plugin-view-container:zowe",
+    zoweExplorerxId: "shell-tab-plugin-view-container:zowe",
   };
 
 export const DatasetsLocators = {
@@ -47,7 +47,7 @@ export const UssLocators = {
     favoriteProfileInUssBeforeRemovingXpath: "(//div[@id='/0:Favorites/0:TestSeleniumProfile'])",
     removeFavoriteProfileFromUssOptionXpath: "//li[@data-command='__plugin.menu.action.zowe.uss.removeSavedSearch']",
     hideProfileFromUssOptionXpath: "//li[@data-command='__plugin.menu.action.zowe.uss.removeSession']",
-    searchSymbolInFavoriteXpath: "(//*[@id='/0:Favorites/0:TestSeleniumProfile/0:'])",
+    searchSymbolInFavoriteXpath: "//*[@id='/0:Favorites/0:TestSeleniumProfile/0:']",
   };
 
 export const JobsLocators = {
