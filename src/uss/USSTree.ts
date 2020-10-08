@@ -112,7 +112,8 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 if (originalNode) {
                     const hasClosedTab = await originalNode.rename(newNamePath);
                     await ZoweExplorerApiRegister.getUssApi(originalNode.getProfile()).rename(originalFullPath, newNamePath);
-                    await originalNode.refreshAndReopen(hasClosedTab);
+                    const sessionNode = originalNode.getSessionNode() as IZoweUSSTreeNode;
+                    await sessionNode.refreshAndReopen(hasClosedTab);
                 } else {
                     // Tree is not expanded, so original node cannot be found
                     const hasClosedTab = await oldFavorite.rename(newNamePath);

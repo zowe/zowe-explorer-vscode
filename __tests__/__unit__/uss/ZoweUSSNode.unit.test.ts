@@ -486,7 +486,7 @@ describe("ZoweUSSNode Unit Tests - Function node.deleteUSSNode()", () => {
 
         globalMocks.showQuickPick.mockResolvedValueOnce("Delete");
         await blockMocks.ussNode.deleteUSSNode(blockMocks.testUSSTree, "");
-        expect(blockMocks.testUSSTree.refresh).toHaveBeenCalled();
+        expect(blockMocks.testUSSTree.refreshElement).toHaveBeenCalled();
     });
 
     it("Tests that node is not deleted if user did not verify", async () => {

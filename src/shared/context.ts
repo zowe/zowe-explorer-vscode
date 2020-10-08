@@ -286,8 +286,7 @@ export function isJobTreeNode(node: TreeItem): boolean {
  * @return true if session belongs to USS tree, false otherwise
  */
 export function isUssTreeNode(node: TreeItem): boolean {
-    return new RegExp("^(" + globals.JOBS_JOB_CONTEXT + "|" + globals.USS_DIR_CONTEXT + "|"
-                           + globals.DS_PDS_CONTEXT + "|" + globals.USS_SESSION_CONTEXT + "|"
+    return new RegExp("^(" + globals.DS_TEXT_FILE_CONTEXT + "|" + globals.USS_SESSION_CONTEXT + "|"
                            + globals.USS_DIR_CONTEXT + ")").test(node.contextValue);
 }
 

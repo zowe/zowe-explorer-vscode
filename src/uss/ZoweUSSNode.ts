@@ -350,7 +350,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         // Remove node from the USS Favorites tree
         ussFileProvider.removeFavorite(this);
         ussFileProvider.removeFileHistory(`[${this.getProfileName()}]: ${this.parentPath}/${this.label}`);
-        ussFileProvider.refresh();
+        ussFileProvider.refreshElement(this.getSessionNode());
     }
 
     /**
