@@ -66,15 +66,15 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
                 if (!serviceProfile.profile.password && (!baseProfile || (baseProfile && !baseProfile.profile.password))) {
                     schemaArray.push("password");
                 }
-                if (!serviceProfile.profile.hostname && (!baseProfile || (baseProfile && !baseProfile.profile.hostname))) {
-                    schemaArray.push("hostname");
+                if (!serviceProfile.profile.host && (!baseProfile || (baseProfile && !baseProfile.profile.host))) {
+                    schemaArray.push("host");
                     if (!serviceProfile.profile.port && (!baseProfile || (baseProfile && !baseProfile.profile.port))) { schemaArray.push("port"); }
                 }
 
                 try {
                     const newDetails = await collectProfileDetails(schemaArray, null, null, false);
                     for (const detail of schemaArray) {
-                        if (detail === "hostname") { serviceProfile.profile.hostname = newDetails[detail]; }
+                        if (detail === "host") { serviceProfile.profile.host = newDetails[detail]; }
                         else { serviceProfile.profile[detail] = newDetails[detail]; }
                         }
                 } catch (error) {
@@ -84,8 +84,8 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
             const cmdArgs: ICommandArguments = {
                 $0: "zowe",
                 _: [""],
-                host: serviceProfile.profile.hostname ? serviceProfile.profile.hostname :
-                (baseProfile ? baseProfile.profile.hostname : undefined),
+                host: serviceProfile.profile.host ? serviceProfile.profile.host :
+                (baseProfile ? baseProfile.profile.host : undefined),
                 port: serviceProfile.profile.port ? serviceProfile.profile.port :
                 (baseProfile ? baseProfile.profile.port : 0),
                 basePath: serviceProfile.profile.basePath ? serviceProfile.profile.basePath :
@@ -107,7 +107,7 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
                 rejectUnauthorized: (serviceProfile.profile.rejectUnauthorized != null ? serviceProfile.profile.rejectUnauthorized :
                                      baseProfile.profile.rejectUnauthorized),
                 basePath: serviceProfile.profile.basePath,
-                hostname: serviceProfile.profile.hostname ? serviceProfile.profile.hostname : baseProfile.profile.hostname,
+                hostname: serviceProfile.profile.host ? serviceProfile.profile.host : baseProfile.profile.host,
                 port: serviceProfile.profile.port ? serviceProfile.profile.port : baseProfile.profile.port,
             };
 

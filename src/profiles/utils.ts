@@ -30,12 +30,12 @@ export async function collectProfileDetails(detailsToGet?: string[], oldDetails?
     const schemaValues: any = {};
 
     if (!detailsToGet || detailsToGet === []) { detailsToGet = Object.keys(schema); }
-    if (detailsToGet.indexOf("host") > -1) { detailsToGet[detailsToGet.indexOf("host")] = "hostname"; }
+    if (detailsToGet.indexOf("host") > -1) { detailsToGet[detailsToGet.indexOf("host")] = "host"; }
 
     // Go through array of schema for input values
     for (const profileDetail of detailsToGet) {
         switch (profileDetail) {
-            case "hostname":
+            case "host":
                 const hostOptions: vscode.InputBoxOptions = {
                     ignoreFocusOut: true,
                     value: oldDetails && oldDetails[profileDetail] ? oldDetails[profileDetail] : null,
@@ -315,7 +315,7 @@ export function validateHostInput(inputValue, validationResult) {
     } else {
         // User would like to store host/port
         validationResult.port = Number(newInfo.port);
-        validationResult.host = newInfo.hostname;
+        validationResult.host = newInfo.host;
         validationResult.valid = true;
     }
 

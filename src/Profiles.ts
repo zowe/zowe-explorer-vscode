@@ -79,8 +79,8 @@ export class Profiles {
             if (prompt &&
                 (!baseProfile ||
                 !baseProfile.profile.tokenValue ||
-                (profileLoaded.profile.hostname && baseProfile.profile.hostname &&
-                    baseProfile.profile.hostname !== profileLoaded.profile.hostname))) {
+                (profileLoaded.profile.host && baseProfile.profile.host &&
+                    baseProfile.profile.host !== profileLoaded.profile.host))) {
                 await this.promptCredentials(profileLoaded);
             } else {
                 const getSessStatus = await ZoweExplorerApiRegister.getInstance().getCommonApi(profileLoaded);
@@ -806,8 +806,8 @@ export class Profiles {
         if (!profile.profile.password) {
             schemaArray.push("password");
         }
-        if (!profile.profile.hostname) {
-            schemaArray.push("hostname");
+        if (!profile.profile.host) {
+            schemaArray.push("host");
         }
         if (!profile.profile.port) {
             schemaArray.push("port");
