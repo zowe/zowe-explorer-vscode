@@ -66,7 +66,7 @@ export class CliProfileManager {
         return {
             name: "sestest",
             profile: {
-                hostname: "test",
+                host: "test",
                 port: 1443,
                 user: "test",
                 password: "test",
@@ -89,7 +89,7 @@ export class CliProfileManager {
     }
     public save(){
         return { name: "profile1", profile: {
-            hostname: "test",
+            host: "test",
             port: 1443,
             user: "test",
             password: "test",
@@ -103,7 +103,7 @@ export class CliProfileManager {
     }
     public delete(){
         return { name: "profile1", profile: {
-            hostname: "test",
+            host: "test",
             port: 1443,
             user: "test",
             password: "test",

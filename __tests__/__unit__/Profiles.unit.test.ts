@@ -2060,7 +2060,7 @@ describe("Profiles Unit Tests - Function saveProfile", () => {
         const globalMocks = await createGlobalMocks();
 
         const testProfile = {
-            hostname: "test",
+            host: "test",
             port: 1443,
             user: "test",
             password: "test",
@@ -2090,7 +2090,7 @@ describe("Profiles Unit Tests - Function deleteProfileOnDisk", () => {
         const globalMocks = await createGlobalMocks();
 
         const testProfile = {
-            hostname: "test",
+            host: "test",
             port: 1443,
             user: "test",
             password: "test",
@@ -2128,12 +2128,12 @@ describe("Profiles Unit Tests - Function promptCredentials", () => {
         globalMocks.mockCollectProfileDetails.mockResolvedValueOnce({
             user: profileWithDetails.profile.user,
             password: profileWithDetails.profile.password,
-            hostname: profileWithDetails.profile.hostname,
+            host: profileWithDetails.profile.host,
             port: profileWithDetails.profile.port
         });
 
         const returnedProfile = await globalMocks.profiles.promptCredentials(globalMocks.defaultProfile, false);
-        expect(globalMocks.mockCollectProfileDetails).toBeCalledWith(["user", "password", "hostname", "port"], null, null, false);
+        expect(globalMocks.mockCollectProfileDetails).toBeCalledWith(["user", "password", "host", "port"], null, null, false);
         expect(returnedProfile).toEqual(profileWithDetails);
     });
 
@@ -2149,14 +2149,14 @@ describe("Profiles Unit Tests - Function promptCredentials", () => {
         globalMocks.mockCollectProfileDetails.mockResolvedValueOnce({
             user: profileWithDetails.profile.user,
             password: profileWithDetails.profile.password,
-            hostname: profileWithDetails.profile.hostname,
+            hostname: profileWithDetails.profile.host,
             port: profileWithDetails.profile.port
         });
         globalMocks.mockShowInformationMessage.mockResolvedValueOnce("Save Credentials");
 
         const returnedProfile = await globalMocks.profiles.promptCredentials(globalMocks.defaultProfile, true);
         expect(globalMocks.mockShowInformationMessage).toBeCalledTimes(1);
-        expect(globalMocks.mockCollectProfileDetails).toBeCalledWith(["user", "password", "hostname", "port"], null, null, false);
+        expect(globalMocks.mockCollectProfileDetails).toBeCalledWith(["user", "password", "host", "port"], null, null, false);
         expect(returnedProfile).toEqual(profileWithDetails);
     });
 
@@ -2186,7 +2186,7 @@ describe("Profiles Unit Tests - Function promptCredentials", () => {
         globalMocks.mockCollectProfileDetails.mockResolvedValueOnce(null);
 
         const returnedProfile = await globalMocks.profiles.promptCredentials(globalMocks.defaultProfile, true);
-        expect(globalMocks.mockCollectProfileDetails).toBeCalledWith(["user", "password", "hostname", "port"], null, null, false);
+        expect(globalMocks.mockCollectProfileDetails).toBeCalledWith(["user", "password", "host", "port"], null, null, false);
         expect(returnedProfile).toEqual(null);
     });
 });

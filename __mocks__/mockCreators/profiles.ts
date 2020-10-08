@@ -13,7 +13,7 @@ import { CliProfileManager } from "@zowe/imperative";
 
 export function createTestSchemas() {
     const schema1: {} = {
-        hostname:{type:"string",optionDefinition:{description:"description"}},
+        host:{type:"string",optionDefinition:{description:"description"}},
         port:{type:"number",optionDefinition:{description:"description", defaultValue: 443}},
         user:{type:"string",secure:true,optionDefinition:{description:"description"}},
         password:{type:"string",secure:true,optionDefinition:{description:"description"}},
@@ -21,7 +21,7 @@ export function createTestSchemas() {
         basePath:{type:"string",optionDefinition:{description:"description"}}
     };
     const schema2: {} = {
-        hostname:{type:"string",optionDefinition:{description:"description"}},
+        host:{type:"string",optionDefinition:{description:"description"}},
         port:{type:"number",optionDefinition:{description:"description",defaultValue: 123}},
         user:{type:"string",secure:true,optionDefinition:{description:"description"}},
         password:{type:"string",secure:true,optionDefinition:{description:"description"}},
@@ -30,14 +30,14 @@ export function createTestSchemas() {
         aNumber:{type:"number",optionDefinition:{description:"description",defaultValue: 123}}
     };
     const schema3: {} = {
-        hostname:{type:"string",optionDefinition:{description:"description"}},
+        host:{type:"string",optionDefinition:{description:"description"}},
         port:{type:"number",optionDefinition:{description:"description"}},
         aNumber:{type:["number", "null"],optionDefinition:{description:"description"}},
         aOther:{type:["string", "null"], optionDefinition:{description:"description"}}
     };
     const schema4 = {
         // tslint:disable-next-line:max-line-length
-        hostname:{type:"string",optionDefinition:{name:"hostname",aliases:["H"],description:"The z/OSMF server hostname name.",type:"string",required:true,group:"Zosmf Connection Options"}},
+        host:{type:"string",optionDefinition:{name:"host",aliases:["H"],description:"The z/OSMF server hostname name.",type:"string",required:true,group:"Zosmf Connection Options"}},
         port:{type:"number",optionDefinition:{name:"port",aliases:["P"],description:"The z/OSMF server port.",type:"number",defaultValue:443,group:"Zosmf Connection Options"}},
         user:{type:"string",secure:true,optionDefinition:{name:"user",aliases:["u"],description:"Mainframe (z/OSMF) user name, which can be the same as your TSO login.",type:"string",required:true,group:"Zosmf Connection Options"}},
         password:{type:"string",secure:true,optionDefinition:{name:"password",aliases:["pass","pw"],description:"Mainframe (z/OSMF) password, which can be the same as your TSO password.",type:"string",group:"Zosmf Connection Options",required:true}},
@@ -57,10 +57,10 @@ export function createProfileManager() {
                 title: "z\/OSMF Profile",
                 description: "z\/OSMF Profile",
                 properties: {
-                    hostname: {
+                    host: {
                         type: "string",
                         optionDefinition: {
-                            name: "hostname",
+                            name: "host",
                             aliases: ["H"],
                             description: "The z\/OSMF server hostname name.",
                             type: "string",
@@ -125,18 +125,18 @@ export function createProfileManager() {
                         }
                     }
                 },
-                required: ["hostname"]
+                required: ["host"]
             },
             createProfileExamples: [{
-                options: "zos123 --hostname zos123 --port 1443 --user ibmuser --password myp4ss",
+                options: "zos123 --host zos123 --port 1443 --user ibmuser --password myp4ss",
                 description: "Create a zosmf profile called 'zos123' to connect to z\/OSMF at hostname zos123 and port 1443"
             },
             {
-                options: "zos124 --hostname zos124 --user ibmuser --password myp4ss --reject-unauthorized false",
+                options: "zos124 --host zos124 --user ibmuser --password myp4ss --reject-unauthorized false",
                 description: "Create a zosmf profile called 'zos124' to connect to z\/OSMF at the hostname zos124 (default port - 443) and allow self-signed certificates"
             },
             {
-                options: "zosAPIML --hostname zosAPIML --port 2020 --user ibmuser --password myp4ss --reject-unauthorized false --base-path basePath",
+                options: "zosAPIML --host zosAPIML --port 2020 --user ibmuser --password myp4ss --reject-unauthorized false --base-path basePath",
                 description: "Create a zosmf profile called 'zos124' to connect to z\/OSMF at the hostname zos124 (default port - 443) and allow self-signed certificates"
             }],
             updateProfileExamples: [{

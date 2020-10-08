@@ -85,7 +85,7 @@ export function createInvalidIProfile(): imperative.IProfileLoaded {
     return {
         name: "sestest",
         profile: {
-            hostname: null,
+            host: null,
             port: 1443,
             user: null,
             password: null,
@@ -103,7 +103,7 @@ export function createValidIProfile(): imperative.IProfileLoaded {
     return {
         name: "sestest",
         profile: {
-            hostname: "test",
+            host: "test",
             port: 1443,
             user: "test",
             password: "test",
@@ -121,7 +121,7 @@ export function createValidBaseProfile(): imperative.IProfileLoaded {
     return {
         name: "sestest",
         profile: {
-            hostname: "test",
+            host: "test",
             port: 60004,
             tokenType: "apimlAuthenticationToken",
             tokenValue: "testToken",
