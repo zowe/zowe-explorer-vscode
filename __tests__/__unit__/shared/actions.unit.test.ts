@@ -332,17 +332,6 @@ describe("Shared Actions Unit Tests - Function returnIconState", () => {
     });
 });
 
-// export function getNewNodeIcon(profileStatus: string, sessNode: IZoweTreeNode) {
-//     let newIcon;
-//     if (profileStatus === "inactive") {
-//         sessNode.contextValue = sessNode.contextValue + globals.INACTIVE_CONTEXT;
-//         newIcon = getIconById(IconId.sessionInactive);
-//     } else if (profileStatus === "active") {
-//         sessNode.contextValue = sessNode.contextValue + globals.ACTIVE_CONTEXT;
-//         newIcon = getIconById(IconId.sessionActive);
-//     }
-//     return newIcon;
-// }
 describe("Shared Actions Unit Tests - Function getNewNodeIcon", () => {
     function createBlockMocks() {
         const newMocks = {

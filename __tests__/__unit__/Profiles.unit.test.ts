@@ -1361,7 +1361,7 @@ describe("Profiles Unit Tests - Function checkCurrentProfile", () => {
             return undefined;
         });
 
-        await globalMocks.profiles.checkCurrentProfile(blockMocks.invalidProfile);
+        await globalMocks.profiles.checkCurrentProfile(blockMocks.invalidProfile, null, true);
         expect(globalMocks.profiles.validProfile).toBe(ValidProfileEnum.INVALID);
     });
 

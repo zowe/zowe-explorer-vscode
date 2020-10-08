@@ -38,9 +38,9 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
         return ZosmfUssApi.getProfileTypeName();
     }
 
-    public async getSession(profile?: IProfileLoaded): Promise<Session> {
+    public async getSession(profile?: IProfileLoaded, prompt?: boolean): Promise<Session> {
         if (!this.session) {
-            this.session = await this.getValidSession((profile||this.profile), (profile||this.profile).name, false);
+            this.session = await this.getValidSession((profile||this.profile), (profile||this.profile).name, (prompt||false));
         }
         return this.session;
     }

@@ -21,14 +21,13 @@ import { IZoweTree } from "../api/IZoweTree";
 import { IZoweDatasetTreeNode } from "../api/IZoweTreeNode";
 import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
-import { getIconById, getIconByNode, IconId } from "../generators/icons";
+import { getIconByNode } from "../generators/icons";
 import * as fs from "fs";
 import * as contextually from "../shared/context";
 import { closeOpenedTextFile } from "../utils/workspace";
 import * as nls from "vscode-nls";
 import { DefaultProfileManager } from "../profiles/DefaultProfileManager";
 import { PersistentFilters } from "../PersistentFilters";
-// import { getValidSession } from "../profiles/utils";
 import { getNewNodeIcon, resetValidationSettings } from "../shared/actions";
 
 // Set up localization
@@ -680,7 +679,6 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         this.log.debug(localize("enterPattern.log.debug.prompt", "Prompting the user for a data set pattern"));
         let pattern: string;
         await this.checkCurrentProfile(node, true);
-
         if ((Profiles.getInstance().validProfile === ValidProfileEnum.VALID) ||
         (Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED)) {
             if (contextually.isSessionNotFav(node)) {

@@ -42,7 +42,7 @@ export namespace ZoweExplorerApi {
          *      will use the profile the API was retrieved with by default
          * @returns {Session} a Zowe CLI Session
          */
-        getSession(profile?: IProfileLoaded, baseProfile?: IProfile): Promise<Session>;
+        getSession(profile?: IProfileLoaded, prompt?: boolean): Promise<Session>;
 
         /**
          * Create a session for the specific profile type.

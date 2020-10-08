@@ -21,7 +21,6 @@ import { setProfile, setSession, errorHandling } from "../utils";
 import { IZoweTreeNode, IZoweDatasetTreeNode, IZoweNodeType } from "../api/IZoweTreeNode";
 import { IZoweTree } from "../api/IZoweTree";
 import * as nls from "vscode-nls";
-// import { getValidSession } from "../profiles/utils";
 import { getNewNodeIcon } from "../shared/actions";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 
@@ -151,8 +150,12 @@ export class ZoweTreeProvider {
 
         if (newProfile) {
             // Get the active session
-            // const EditSession = await getValidSession(node.getProfile(), node.getProfile().name, false);
-            const EditSession = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).getSession();
+            let EditSession;
+            try {
+                EditSession = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).getSession(null, false);
+            } catch (err) {
+                await errorHandling(err);
+            }
 
             if (EditSession) {
                 node.getProfile().profile = newProfile as IProfile;
@@ -189,7 +192,10 @@ export class ZoweTreeProvider {
                 }
                 const inactiveIcon = getIconById(IconId.sessionInactive);
                 if (inactiveIcon) {
-                    node.iconPath = inactiveIcon.path;
+                    if (node.iconPath !== inactiveIcon.path) {
+                        node.iconPath = inactiveIcon.path;
+                        this.refreshElement(node);
+                    }
                 }
             }
 

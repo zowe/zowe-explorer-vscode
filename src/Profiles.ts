@@ -76,18 +76,20 @@ export class Profiles {
     public async checkCurrentProfile(profileLoaded: IProfileLoaded, nodeType?: string, prompt?: boolean): Promise<any> {
         try {
             const baseProfile = await getBaseProfile();
-            if (!baseProfile || !baseProfile.profile.tokenValue ||
-                (profileLoaded.profile.hostname &&
-                 baseProfile.profile.hostname && baseProfile.profile.hostname !== profileLoaded.profile.hostname)) {
+            if (prompt &&
+                (!baseProfile ||
+                !baseProfile.profile.tokenValue ||
+                (profileLoaded.profile.hostname && baseProfile.profile.hostname &&
+                    baseProfile.profile.hostname !== profileLoaded.profile.hostname))) {
                 await this.promptCredentials(profileLoaded);
             } else {
                 const getSessStatus = await ZoweExplorerApiRegister.getInstance().getCommonApi(profileLoaded);
                 if (getSessStatus.getValidSession) {
-                    await getSessStatus.getValidSession(profileLoaded, profileLoaded.name);
+                    await getSessStatus.getValidSession(profileLoaded, profileLoaded.name, prompt);
                 }
             }
 
-            const profileStatus: IProfileValidation = await this.getProfileSetting(profileLoaded, nodeType, prompt);
+            const profileStatus = await this.getProfileSetting(profileLoaded, nodeType, prompt);
             if (profileStatus.status === "unverified") {
                 this.validProfile = ValidProfileEnum.UNVERIFIED;
                 return profileStatus;
@@ -804,7 +806,7 @@ export class Profiles {
         if (!profile.profile.password) {
             schemaArray.push("password");
         }
-        if (!profile.profile.host) {
+        if (!profile.profile.hostname) {
             schemaArray.push("hostname");
         }
         if (!profile.profile.port) {
@@ -827,8 +829,7 @@ export class Profiles {
                 return null;
             }
             for (const detail of schemaArray) {
-                if (detail === "hostname") { profile.profile.host = newDetails[detail]; }
-                else { profile.profile[detail] = newDetails[detail]; }
+                profile.profile[detail] = newDetails[detail];
             }
             if (rePrompt) {
                 const saveButton = localize("promptCredentials.saveCredentials.button", "Save Credentials");
