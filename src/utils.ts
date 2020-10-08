@@ -63,17 +63,12 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
             if (invalidProfile) {
                 if (globals.ISTHEIA) {
                     vscode.window.showErrorMessage(errMsg);
-                    // await getValidSession(invalidProfile, invalidProfile.name, true);
-                    // await ZoweExplorerApiRegister.getUssApi(invalidProfile).getSession();
-                    // await Profiles.getInstance().promptCredentials(label.trim(), true);
                     Profiles.getInstance().promptCredentials(invalidProfile, true);
                 } else {
                     vscode.window.showErrorMessage(errMsg, "Check Credentials").then(async (selection) => {
                         if (selection) {
                             delete invalidProfile.profile.user;
                             delete invalidProfile.profile.password;
-                            // await getValidSession(invalidProfile, invalidProfile.name, true);
-                            // await ZoweExplorerApiRegister.getUssApi(invalidProfile).getSession();
                             Profiles.getInstance().promptCredentials(invalidProfile, true);
                         }
                     });

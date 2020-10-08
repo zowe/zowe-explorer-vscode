@@ -77,7 +77,8 @@ export class Profiles {
         try {
             const baseProfile = await getBaseProfile();
             if (!baseProfile || !baseProfile.profile.tokenValue ||
-                (profileLoaded.profile.host && baseProfile.profile.host !== profileLoaded.profile.host)) {
+                (profileLoaded.profile.hostname &&
+                 baseProfile.profile.hostname && baseProfile.profile.hostname !== profileLoaded.profile.hostname)) {
                 await this.promptCredentials(profileLoaded);
             } else {
                 const getSessStatus = await ZoweExplorerApiRegister.getInstance().getCommonApi(profileLoaded);
@@ -905,13 +906,13 @@ export class Profiles {
         for (const value of profileArray) {
             if (value === "user" || value === "password") {
                 if (!rePrompt) {
-                    if (NewProfileInfo.user !== undefined) { OrigProfileInfo.user = NewProfileInfo.user; }
-                    if (NewProfileInfo.password !== undefined) { OrigProfileInfo.password = NewProfileInfo.password; }
+                    if (NewProfileInfo.user) { OrigProfileInfo.user = NewProfileInfo.user; }
+                    if (NewProfileInfo.password) { OrigProfileInfo.password = NewProfileInfo.password; }
                 }
             } else {
                 OrigProfileInfo[value] = NewProfileInfo[value];
             }
-            if (NewProfileInfo[value] === null ) { delete OrigProfileInfo[value]; }
+            if (NewProfileInfo[value] === null || NewProfileInfo[value] === undefined ) { delete OrigProfileInfo[value]; }
         }
 
         const updateParms: IUpdateProfile = {

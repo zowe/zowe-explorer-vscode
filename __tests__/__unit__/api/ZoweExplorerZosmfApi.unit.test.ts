@@ -262,7 +262,7 @@ describe("ZosmfApiCommon Unit Tests - Function getValidSession", () => {
         const blockMocks = await createBlockMocks();
 
         blockMocks.serviceProfile.profile.user = null;
-        blockMocks.serviceProfile.profile.host = "test";
+        blockMocks.serviceProfile.profile.hostname = "test";
         blockMocks.baseProfile.profile.user = null;
         blockMocks.serviceProfile.profile.basePath = null;
 
@@ -275,8 +275,6 @@ describe("ZosmfApiCommon Unit Tests - Function getValidSession", () => {
     it("Tests that getValidProfile prompts for password if prompting = true", async () => {
         const blockMocks = await createBlockMocks();
 
-        blockMocks.serviceProfile.profile.host = blockMocks.serviceProfile.profile.hostname;
-        delete blockMocks.serviceProfile.profile.hostname;
         blockMocks.serviceProfile.profile.password = null;
         blockMocks.baseProfile.profile.password = null;
         blockMocks.baseProfile.profile.tokenValue = null;
@@ -290,8 +288,8 @@ describe("ZosmfApiCommon Unit Tests - Function getValidSession", () => {
     it("Tests that getValidProfile prompts for host if prompting = true", async () => {
         const blockMocks = await createBlockMocks();
 
-        blockMocks.serviceProfile.profile.host = null;
-        blockMocks.baseProfile.profile.host = null;
+        blockMocks.serviceProfile.profile.hostname = null;
+        blockMocks.baseProfile.profile.hostname = null;
         blockMocks.serviceProfile.profile.basePath = "test";
         blockMocks.baseProfile.profile.basePath = "test";
 
@@ -306,8 +304,8 @@ describe("ZosmfApiCommon Unit Tests - Function getValidSession", () => {
 
         blockMocks.serviceProfile.profile.port = null;
         blockMocks.baseProfile.profile.port = null;
-        blockMocks.serviceProfile.profile.host = null;
-        blockMocks.baseProfile.profile.host = null;
+        blockMocks.serviceProfile.profile.hostname = null;
+        blockMocks.baseProfile.profile.hostname = null;
         blockMocks.serviceProfile.profile.basePath = "test";
         blockMocks.baseProfile.profile.basePath = "test";
 
@@ -323,12 +321,12 @@ describe("ZosmfApiCommon Unit Tests - Function getValidSession", () => {
         blockMocks.serviceProfile.profile.password = null;
         blockMocks.baseProfile.profile.password = null;
         blockMocks.baseProfile.profile.tokenValue = null;
-        blockMocks.serviceProfile.profile.host = null;
-        blockMocks.baseProfile.profile.host = null;
+        blockMocks.serviceProfile.profile.hostname = null;
+        blockMocks.baseProfile.profile.hostname = null;
         blockMocks.serviceProfile.profile.port = null;
         blockMocks.baseProfile.profile.port = null;
         blockMocks.mockCollectProfileDetails.mockResolvedValue({
-            host: "testhostNew",
+            hostname: "testhostNew",
             port: 1234,
             password: "testPassNew",
             basePath: "testBasePathNew"

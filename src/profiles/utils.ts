@@ -30,6 +30,7 @@ export async function collectProfileDetails(detailsToGet?: string[], oldDetails?
     const schemaValues: any = {};
 
     if (!detailsToGet || detailsToGet === []) { detailsToGet = Object.keys(schema); }
+    if (detailsToGet.indexOf("host") > -1) { detailsToGet[detailsToGet.indexOf("host")] = "hostname"; }
 
     // Go through array of schema for input values
     for (const profileDetail of detailsToGet) {
