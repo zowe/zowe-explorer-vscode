@@ -34,7 +34,6 @@ interface IProfileValidation {
 interface IValidationSetting {
     name: string;
     setting: boolean;
-    type: string;
 }
 
 export enum ValidProfileEnum {
@@ -73,7 +72,7 @@ export class Profiles {
      * @export
      * @param {boolean} prompt - should the user be prompted for any details missing from the profile?
      */
-    public async checkCurrentProfile(profileLoaded: IProfileLoaded, nodeType?: string, prompt?: boolean): Promise<any> {
+    public async checkCurrentProfile(profileLoaded: IProfileLoaded, prompt?: boolean): Promise<any> {
         try {
             const baseProfile = await getBaseProfile();
             if (prompt &&
@@ -89,7 +88,7 @@ export class Profiles {
                 }
             }
 
-            const profileStatus = await this.getProfileSetting(profileLoaded, nodeType, prompt);
+            const profileStatus = await this.getProfileSetting(profileLoaded, prompt);
             if (profileStatus.status === "unverified") {
                 this.validProfile = ValidProfileEnum.UNVERIFIED;
                 return profileStatus;
@@ -118,11 +117,11 @@ export class Profiles {
      * @export
      * @param {boolean} prompt - should the user be prompted for any details missing from the profile?
      */
-    public async getProfileSetting(theProfile: IProfileLoaded, nodeType?: string, prompt?: boolean): Promise<IProfileValidation> {
+    public async getProfileSetting(theProfile: IProfileLoaded, prompt?: boolean): Promise<IProfileValidation> {
         let profileStatus: IProfileValidation;
         let found: boolean = false;
         this.profilesValidationSetting.filter(async (instance) => {
-            if ((instance.name === theProfile.name) && (nodeType && instance.type === nodeType) && (instance.setting === false)) {
+            if ((instance.name === theProfile.name) && (instance.setting === false)) {
                 // Don't allow validation if the user doesn't want it
                 profileStatus = {
                     status: "unverified",
@@ -228,7 +227,7 @@ export class Profiles {
 
     public async disableValidationContext(node: IZoweNodeType) {
         const theProfile: IProfileLoaded = node.getProfile();
-        this.validationArraySetup(theProfile, false, node);
+        this.validationArraySetup(theProfile, false);
         if (node.contextValue.includes(`${globals.VALIDATE_SUFFIX}true`)) {
             node.contextValue = node.contextValue.replace(/(_validate=true)/g, "").replace(/(_Active)/g, "").replace(/(_Inactive)/g, "");
             node.contextValue = node.contextValue + `${globals.VALIDATE_SUFFIX}false`;
@@ -247,7 +246,7 @@ export class Profiles {
 
     public async enableValidationContext(node: IZoweNodeType) {
         const theProfile: IProfileLoaded = node.getProfile();
-        this.validationArraySetup(theProfile, true, node);
+        this.validationArraySetup(theProfile, true);
         if (node.contextValue.includes(`${globals.VALIDATE_SUFFIX}false`)) {
             node.contextValue = node.contextValue.replace(/(_validate=false)/g, "").replace(/(_Unverified)/g, "");
             node.contextValue = node.contextValue + `${globals.VALIDATE_SUFFIX}true`;
@@ -259,27 +258,25 @@ export class Profiles {
         return node;
     }
 
-    public async validationArraySetup(theProfile: IProfileLoaded, validationSetting: boolean, node: IZoweNodeType): Promise<IValidationSetting> {
+    public async validationArraySetup(theProfile: IProfileLoaded, validationSetting: boolean): Promise<IValidationSetting> {
         let found: boolean = false;
         let profileSetting: IValidationSetting;
         if (this.profilesValidationSetting.length > 0) {
             this.profilesValidationSetting.filter((instance) => {
-                if ((instance.name === theProfile.name) && (instance.type === contextually.getNodeCategory(node)) &&
+                if ((instance.name === theProfile.name) &&
                     (instance.setting === validationSetting)) {
                     found = true;
                     profileSetting = {
                         name: instance.name,
-                        setting: instance.setting,
-                        type: instance.type
+                        setting: instance.setting
                     };
                 }
-                if ((instance.name === theProfile.name) && (instance.type === contextually.getNodeCategory(node)) &&
+                if ((instance.name === theProfile.name) &&
                     (instance.setting !== validationSetting)) {
                     found = true;
                     profileSetting = {
                         name: instance.name,
-                        setting: validationSetting,
-                        type: instance.type
+                        setting: validationSetting
                     };
                     const index = this.profilesValidationSetting.lastIndexOf(instance);
                     this.profilesValidationSetting.splice(index, 1, profileSetting);
@@ -288,16 +285,14 @@ export class Profiles {
             if (!found) {
                 profileSetting = {
                     name: theProfile.name,
-                    setting: validationSetting,
-                    type: contextually.getNodeCategory(node)
+                    setting: validationSetting
                 };
                 this.profilesValidationSetting.push(profileSetting);
             }
         } else {
             profileSetting = {
                 name: theProfile.name,
-                setting: validationSetting,
-                type: contextually.getNodeCategory(node)
+                setting: validationSetting
             };
             this.profilesValidationSetting.push(profileSetting);
         }

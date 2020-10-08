@@ -168,7 +168,7 @@ export class ZoweTreeProvider {
                 }
                 this.refresh();
             }
-            const profileStatus = await Profiles.getInstance().checkCurrentProfile(node.getProfile(), contextually.getNodeCategory(node), false);
+            const profileStatus = await Profiles.getInstance().checkCurrentProfile(node.getProfile(), false);
 
             // Set node to proper active status in tree
             const sessionNode = node.getSessionNode();
@@ -183,7 +183,7 @@ export class ZoweTreeProvider {
 
     public async checkCurrentProfile(node: IZoweTreeNode, prompt?: boolean): Promise<boolean> {
         const profile = node.getProfile();
-        const profileStatus = await Profiles.getInstance().checkCurrentProfile(profile, contextually.getNodeCategory(node), prompt);
+        const profileStatus = await Profiles.getInstance().checkCurrentProfile(profile, prompt);
         if (profileStatus.status === "inactive") {
             if ((node.contextValue.toLowerCase().includes("session") || node.contextValue.toLowerCase().includes("server"))) {
                 // change contextValue only if the word inactive is not there

@@ -100,14 +100,14 @@ export class MvsCommandHandler {
 
         let profileStatus;
         if (node) {
-            profileStatus = await Profiles.getInstance().checkCurrentProfile(zosmfProfile, contextually.getNodeCategory(node), true);
+            profileStatus = await Profiles.getInstance().checkCurrentProfile(zosmfProfile, true);
 
             // Set node to proper active status in tree
             const sessNode = node.getSessionNode();
             const newIcon = getNewNodeIcon(profileStatus.status, sessNode);
             if (newIcon) { sessNode.iconPath = newIcon.path; }
         } else {
-            profileStatus = await Profiles.getInstance().checkCurrentProfile(zosmfProfile, null, true);
+            profileStatus = await Profiles.getInstance().checkCurrentProfile(zosmfProfile, true);
         }
         if ((Profiles.getInstance().validProfile === ValidProfileEnum.VALID) ||
             (Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED)) {
