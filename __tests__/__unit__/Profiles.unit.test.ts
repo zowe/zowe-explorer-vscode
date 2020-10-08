@@ -1453,7 +1453,7 @@ describe("Profiles Unit Tests - Function getProfileSetting", () => {
         const blockMocks = await createBlockMocks(globalMocks);
         const resultSetting = { status: "unverified", name: "sestest" };
         const theProfiles = await Profiles.createInstance(blockMocks.log);
-        theProfiles.profilesValidationSetting = [{name: blockMocks.imperativeProfile.name, setting: false, type: "dataset" }];
+        theProfiles.profilesValidationSetting = [{name: blockMocks.imperativeProfile.name, setting: false }];
         theProfiles.profilesForValidation = [{ status: "unverified", name: "sestest"}];
 
         const response = await theProfiles.getProfileSetting(blockMocks.imperativeProfile);
@@ -1465,7 +1465,7 @@ describe("Profiles Unit Tests - Function getProfileSetting", () => {
         const blockMocks = await createBlockMocks(globalMocks);
         const resultSetting = { status: "unverified", name: "sestest" };
         const theProfiles = await Profiles.createInstance(blockMocks.log);
-        theProfiles.profilesValidationSetting = [{name: blockMocks.imperativeProfile.name, setting: false, type: "dataset" }];
+        theProfiles.profilesValidationSetting = [{name: blockMocks.imperativeProfile.name, setting: false }];
         theProfiles.profilesForValidation = [{ status: "inactive", name: "sestest"}];
 
         const response = await theProfiles.getProfileSetting(blockMocks.imperativeProfile);
@@ -1477,7 +1477,7 @@ describe("Profiles Unit Tests - Function getProfileSetting", () => {
         const blockMocks = await createBlockMocks(globalMocks);
         const resultSetting = { status: "unverified", name: "sestest" };
         const theProfiles = await Profiles.createInstance(blockMocks.log);
-        theProfiles.profilesValidationSetting = [{name: blockMocks.imperativeProfile.name, setting: false, type: "dataset" }];
+        theProfiles.profilesValidationSetting = [{name: blockMocks.imperativeProfile.name, setting: false }];
         theProfiles.profilesForValidation = [];
 
         const response = await theProfiles.getProfileSetting(blockMocks.imperativeProfile);
@@ -1490,7 +1490,7 @@ describe("Profiles Unit Tests - Function getProfileSetting", () => {
 
         const resultSetting = { status: "inactive", name: "sestest" };
         const theProfiles = await Profiles.createInstance(blockMocks.log);
-        theProfiles.profilesValidationSetting = [{name: blockMocks.imperativeProfile.name, setting: true, type: "dataset" }];
+        theProfiles.profilesValidationSetting = [{name: blockMocks.imperativeProfile.name, setting: true }];
         globalMocks.mockWithProgress.mockReturnValueOnce("inactive");
 
         const response = await theProfiles.getProfileSetting(blockMocks.imperativeProfile);
@@ -1832,14 +1832,13 @@ describe("Profiles Unit Tests - Function validationArraySetup", () => {
         const blockMocks = await createBlockMocks(globalMocks);
         const returnedSetting = {
             name: blockMocks.imperativeProfile.name,
-            setting: false,
-            type: "dataset"
+            setting: false
         };
 
         const theProfiles = await Profiles.createInstance(blockMocks.log);
-        theProfiles.profilesValidationSetting = [{name: blockMocks.imperativeProfile.name, setting: false, type: "uss" }];
+        theProfiles.profilesValidationSetting = [{name: blockMocks.imperativeProfile.name, setting: false }];
 
-        const response = await theProfiles.validationArraySetup(blockMocks.imperativeProfile, false, blockMocks.mockNode);
+        const response = await theProfiles.validationArraySetup(blockMocks.imperativeProfile, false);
         expect(response).toEqual(returnedSetting);
     });
 
@@ -1848,16 +1847,15 @@ describe("Profiles Unit Tests - Function validationArraySetup", () => {
         const blockMocks = await createBlockMocks(globalMocks);
         const returnedSetting = {
             name: blockMocks.imperativeProfile.name,
-            setting: false,
-            type: "dataset"
+            setting: false
         };
 
         const theProfiles = await Profiles.createInstance(blockMocks.log);
-        theProfiles.profilesValidationSetting = [{name: blockMocks.imperativeProfile.name, setting: true, type: "dataset" }];
+        theProfiles.profilesValidationSetting = [{name: blockMocks.imperativeProfile.name, setting: true }];
 
-        const response = await theProfiles.validationArraySetup(blockMocks.imperativeProfile, false, blockMocks.mockNode);
+        const response = await theProfiles.validationArraySetup(blockMocks.imperativeProfile, false);
         expect(response).toEqual(returnedSetting);
-        expect(theProfiles.profilesValidationSetting).toEqual([{name: blockMocks.imperativeProfile.name, setting: false, type: "dataset"}]);
+        expect(theProfiles.profilesValidationSetting).toEqual([{name: blockMocks.imperativeProfile.name, setting: false}]);
     });
 
     it("Tests that validationArraySetup returns profileSetting and updates profilesValidationSetting when array empty", async () => {
@@ -1865,16 +1863,15 @@ describe("Profiles Unit Tests - Function validationArraySetup", () => {
         const blockMocks = await createBlockMocks(globalMocks);
         const returnedSetting = {
             name: blockMocks.imperativeProfile.name,
-            setting: false,
-            type: "dataset"
+            setting: false
         };
 
         const theProfiles = await Profiles.createInstance(blockMocks.log);
         theProfiles.profilesValidationSetting = [];
 
-        const response = await theProfiles.validationArraySetup(blockMocks.imperativeProfile, false, blockMocks.mockNode);
+        const response = await theProfiles.validationArraySetup(blockMocks.imperativeProfile, false);
         expect(response).toEqual(returnedSetting);
-        expect(theProfiles.profilesValidationSetting).toEqual([{name: blockMocks.imperativeProfile.name, setting: false, type: "dataset"}]);
+        expect(theProfiles.profilesValidationSetting).toEqual([{name: blockMocks.imperativeProfile.name, setting: false}]);
     });
 
     it("Tests that validationArraySetup returns profileSetting and updates profilesValidationSetting when profile name not found", async () => {
@@ -1883,17 +1880,16 @@ describe("Profiles Unit Tests - Function validationArraySetup", () => {
         blockMocks.validProfile.name = "test2";
         const returnedSetting = {
             name: blockMocks.validProfile.name,
-            setting: false,
-            type: "dataset"
+            setting: false
         };
 
         const theProfiles = await Profiles.createInstance(blockMocks.log);
-        theProfiles.profilesValidationSetting = [{name: blockMocks.imperativeProfile.name, setting: true, type: "uss" }];
+        theProfiles.profilesValidationSetting = [{name: blockMocks.imperativeProfile.name, setting: true }];
 
-        const response = await theProfiles.validationArraySetup(blockMocks.validProfile, false, blockMocks.mockNode);
+        const response = await theProfiles.validationArraySetup(blockMocks.validProfile, false);
         expect(response).toEqual(returnedSetting);
-        expect(theProfiles.profilesValidationSetting).toEqual([{name: blockMocks.imperativeProfile.name, setting: true, type: "uss"},
-            {name: blockMocks.validProfile.name, setting: false, type: "dataset"}]);
+        expect(theProfiles.profilesValidationSetting).toEqual([{name: blockMocks.imperativeProfile.name, setting: true},
+            {name: blockMocks.validProfile.name, setting: false}]);
     });
 });
 
