@@ -105,16 +105,8 @@ describe("KeytarCredentialManager Unit Tests", () => {
         }
         expect(error).toBeDefined();
         expect(error.additionalDetails).toContain("Service = Zowe-Plugin");
-        expect(error.additionalDetails).toContain("Awesome-Service\n  Account = user3");
-
-        try {
-            await credentialMgr.delete("user5");
-        } catch (err) {
-            error = err;
-        }
-        expect(error).toBeDefined();
-        expect(error.additionalDetails).toContain("Service = Zowe-Plugin");
-        expect(error.additionalDetails).toContain("Awesome-Service\n  Account = user5");
+        expect(error.additionalDetails.includes("Awesome-Service")).toBe(true);
+        expect(error.additionalDetails.includes("Account = user3")).toBe(true);
     });
 
     it("Test saving passwords to credential store", async () => {

@@ -71,12 +71,7 @@ export class KeytarCredentialManager extends AbstractCredentialManager {
      * @throws {@link ImperativeError} when keytar.deletePassword returns false.
      */
     protected async deleteCredentials(account: string): Promise<void> {
-        if (!await this.deleteCredentialsHelper(account)) {
-            throw new ImperativeError({
-                msg: localize("errorHandling.deleteCredentials", "Unable to delete credentials."),
-                additionalDetails: this.getMissingEntryMessage(account)
-            });
-        }
+        await this.deleteCredentialsHelper(account);
     }
 
     /**
