@@ -86,7 +86,7 @@ export async function downloadSpool(job: IZoweJobTreeNode){
 export async function getSpoolContent(jobsProvider: IZoweTree<IZoweJobTreeNode>, session: string, spool: zowe.IJobFile) {
     const zosmfProfile = Profiles.getInstance().loadNamedProfile(session);
     // This has a direct access to Profiles checkcurrentProfile() because I am able to get the profile now.
-    const profileStatus = await Profiles.getInstance().checkCurrentProfile(zosmfProfile, "job", true);
+    const profileStatus = await Profiles.getInstance().checkCurrentProfile(zosmfProfile, true);
 
     // Set node to proper active status in tree
     const sessionNode = jobsProvider.mSessionNodes.find((node) => node.label.includes(session));

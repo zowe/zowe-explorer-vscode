@@ -82,7 +82,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * @param node - The node
      */
     public async rename(node: IZoweDatasetTreeNode) {
-        const profileStatus = await Profiles.getInstance().checkCurrentProfile(node.getProfile(), "dataset", true);
+        const profileStatus = await Profiles.getInstance().checkCurrentProfile(node.getProfile(), true);
 
         // Set node to proper active status in tree
         const sessNode = node.getSessionNode();

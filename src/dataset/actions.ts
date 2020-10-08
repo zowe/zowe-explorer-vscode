@@ -487,7 +487,7 @@ export async function submitJcl(datasetProvider: IZoweTree<IZoweDatasetTreeNode>
         globals.LOG.error(localize("submitJcl.log.error.nullSession", "Session for submitting JCL was null or undefined!"));
         return;
     }
-    const profileStatus = await Profiles.getInstance().checkCurrentProfile(sessProfile, "dataset", true);
+    const profileStatus = await Profiles.getInstance().checkCurrentProfile(sessProfile, true);
 
     // Set node to proper active status in tree
     const newIcon = shared.getNewNodeIcon(profileStatus.status, sesNode);
@@ -520,7 +520,7 @@ export async function submitMember(node: IZoweTreeNode) {
     let sesName: string;
     let sessProfile: IProfileLoaded;
     const profiles = Profiles.getInstance();
-    profiles.checkCurrentProfile(node.getProfile(), "dataset", true);
+    profiles.checkCurrentProfile(node.getProfile(), true);
     if ((Profiles.getInstance().validProfile === ValidProfileEnum.VALID) ||
     (Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED)) {
         switch (true) {
@@ -763,7 +763,7 @@ export async function copyDataSet(node: IZoweNodeType) {
  * @param {IZoweDatasetTreeNode} node - The node to paste to
  */
 export async function hMigrateDataSet(node: ZoweDatasetNode) {
-    const profileStatus = await Profiles.getInstance().checkCurrentProfile(node.getProfile(), "dataset", true);
+    const profileStatus = await Profiles.getInstance().checkCurrentProfile(node.getProfile(), true);
 
     // Set node to proper active status in tree
     const sessNode = node.getSessionNode();
@@ -789,7 +789,7 @@ export async function hMigrateDataSet(node: ZoweDatasetNode) {
  * @param {IZoweDatasetTreeNode} node - The node to paste to
  */
 export async function hRecallDataSet(node: ZoweDatasetNode) {
-    const profileStatus = await Profiles.getInstance().checkCurrentProfile(node.getProfile(), "dataset", true);
+    const profileStatus = await Profiles.getInstance().checkCurrentProfile(node.getProfile(), true);
 
     // Set node to proper active status in tree
     const sessNode = node.getSessionNode();
@@ -822,7 +822,7 @@ export async function pasteDataSet(node: IZoweDatasetTreeNode, datasetProvider: 
     let beforeProfileName;
     let beforeMemberName;
 
-    const profileStatus = await Profiles.getInstance().checkCurrentProfile(node.getProfile(), "dataset", true);
+    const profileStatus = await Profiles.getInstance().checkCurrentProfile(node.getProfile(), true);
 
     // Set node to proper active status in tree
     const sessNode = node.getSessionNode();

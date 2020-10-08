@@ -73,7 +73,7 @@ export class Profiles {
      * @export
      * @param {boolean} prompt - should the user be prompted for any details missing from the profile?
      */
-    public async checkCurrentProfile(profileLoaded: IProfileLoaded, nodeType?: string, prompt?: boolean): Promise<any> {
+    public async checkCurrentProfile(profileLoaded: IProfileLoaded, prompt?: boolean): Promise<any> {
         try {
             const baseProfile = await getBaseProfile();
             if (prompt &&
@@ -89,7 +89,7 @@ export class Profiles {
                 }
             }
 
-            const profileStatus = await this.getProfileSetting(profileLoaded, nodeType, prompt);
+            const profileStatus = await this.getProfileSetting(profileLoaded, prompt);
             if (profileStatus.status === "unverified") {
                 this.validProfile = ValidProfileEnum.UNVERIFIED;
                 return profileStatus;
@@ -118,11 +118,11 @@ export class Profiles {
      * @export
      * @param {boolean} prompt - should the user be prompted for any details missing from the profile?
      */
-    public async getProfileSetting(theProfile: IProfileLoaded, nodeType?: string, prompt?: boolean): Promise<IProfileValidation> {
+    public async getProfileSetting(theProfile: IProfileLoaded, prompt?: boolean): Promise<IProfileValidation> {
         let profileStatus: IProfileValidation;
         let found: boolean = false;
         this.profilesValidationSetting.filter(async (instance) => {
-            if ((instance.name === theProfile.name) && (nodeType && instance.type === nodeType) && (instance.setting === false)) {
+            if ((instance.name === theProfile.name) && (instance.setting === false)) {
                 // Don't allow validation if the user doesn't want it
                 profileStatus = {
                     status: "unverified",

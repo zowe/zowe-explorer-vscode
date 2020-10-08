@@ -1361,7 +1361,7 @@ describe("Profiles Unit Tests - Function checkCurrentProfile", () => {
             return undefined;
         });
 
-        await globalMocks.profiles.checkCurrentProfile(blockMocks.invalidProfile, null, true);
+        await globalMocks.profiles.checkCurrentProfile(blockMocks.invalidProfile, true);
         expect(globalMocks.profiles.validProfile).toBe(ValidProfileEnum.INVALID);
     });
 
@@ -1397,7 +1397,7 @@ describe("Profiles Unit Tests - Function checkCurrentProfile", () => {
         blockMocks.profiles.promptCredentials = jest.fn(() => {
             return undefined;
         });
-        await theProfiles.checkCurrentProfile(blockMocks.invalidProfile, "dataset");
+        await theProfiles.checkCurrentProfile(blockMocks.invalidProfile);
         expect(theProfiles.validProfile).toBe(ValidProfileEnum.INVALID);
     });
 
@@ -1412,7 +1412,7 @@ describe("Profiles Unit Tests - Function checkCurrentProfile", () => {
             })
         });
 
-        const validationResult = await theProfiles.checkCurrentProfile(blockMocks.validProfile, "dataset");
+        const validationResult = await theProfiles.checkCurrentProfile(blockMocks.validProfile);
 
         expect(validationResult).toStrictEqual({ status: "inactive", name: blockMocks.validProfile.name, session: null });
     });
@@ -1456,7 +1456,7 @@ describe("Profiles Unit Tests - Function getProfileSetting", () => {
         theProfiles.profilesValidationSetting = [{name: blockMocks.imperativeProfile.name, setting: false, type: "dataset" }];
         theProfiles.profilesForValidation = [{ status: "unverified", name: "sestest"}];
 
-        const response = await theProfiles.getProfileSetting(blockMocks.imperativeProfile, "dataset");
+        const response = await theProfiles.getProfileSetting(blockMocks.imperativeProfile);
         expect(response).toEqual(resultSetting);
     });
 
@@ -1468,7 +1468,7 @@ describe("Profiles Unit Tests - Function getProfileSetting", () => {
         theProfiles.profilesValidationSetting = [{name: blockMocks.imperativeProfile.name, setting: false, type: "dataset" }];
         theProfiles.profilesForValidation = [{ status: "inactive", name: "sestest"}];
 
-        const response = await theProfiles.getProfileSetting(blockMocks.imperativeProfile, "dataset");
+        const response = await theProfiles.getProfileSetting(blockMocks.imperativeProfile);
         expect(response).toEqual(resultSetting);
     });
 
@@ -1480,7 +1480,7 @@ describe("Profiles Unit Tests - Function getProfileSetting", () => {
         theProfiles.profilesValidationSetting = [{name: blockMocks.imperativeProfile.name, setting: false, type: "dataset" }];
         theProfiles.profilesForValidation = [];
 
-        const response = await theProfiles.getProfileSetting(blockMocks.imperativeProfile, "dataset");
+        const response = await theProfiles.getProfileSetting(blockMocks.imperativeProfile);
         expect(response).toEqual(resultSetting);
     });
 
@@ -1493,7 +1493,7 @@ describe("Profiles Unit Tests - Function getProfileSetting", () => {
         theProfiles.profilesValidationSetting = [{name: blockMocks.imperativeProfile.name, setting: true, type: "dataset" }];
         globalMocks.mockWithProgress.mockReturnValueOnce("inactive");
 
-        const response = await theProfiles.getProfileSetting(blockMocks.imperativeProfile, "dataset");
+        const response = await theProfiles.getProfileSetting(blockMocks.imperativeProfile);
         expect(response).toEqual(resultSetting);
     });
 });
