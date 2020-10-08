@@ -119,12 +119,12 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             if (element.owner === "") {
                 return;
             }
-            if (contextually.isFavoriteContext(element)) {
-                return this.mFavorites;
-            }
             if (element.contextValue && element.contextValue === globals.FAV_PROFILE_CONTEXT){
                 const favsForProfile = this.loadProfilesForFavorites(this.log, element);
                 return favsForProfile;
+            }
+            if (contextually.isFavoriteContext(element)) {
+                return this.mFavorites;
             }
             const newSession = await this.checkCurrentProfile(element, false);
             if (newSession) {
@@ -305,7 +305,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         if (!parentNode.getProfile() || !parentNode.getSession()) {
             try {
                 profile = Profiles.getInstance().loadNamedProfile(profileName);
-                session = await ZoweExplorerApiRegister.getJesApi(profile).getSession();
+                session = await ZoweExplorerApiRegister.getJesApi(profile).getSession(null, true);
                 parentNode.setProfileToChoice(profile);
                 parentNode.setSessionToChoice(session);
                 parentNode.owner = session.ISession.user;
