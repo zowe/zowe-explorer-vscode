@@ -181,6 +181,8 @@ describe("Remove Profile from Favorites", () => {
         await sleep(SleepForTwoSec);
         await driverChrome.refreshBrowser();
         await sleep(SLEEPTIME);
+        const favoriteProfile = await driverChrome.verifyRemovedFavoriteProfileInDatasets();
+        expect(favoriteProfile).to.equal(true);
     });
 
     it("Should Remove Profile from Favorites under USS", async () => {
@@ -194,19 +196,23 @@ describe("Remove Profile from Favorites", () => {
         await sleep(SleepForTwoSec);
         await driverChrome.refreshBrowser();
         await sleep(SLEEPTIME);
+        const favoriteProfile = await driverChrome.verifyRemovedFavoriteProfileInUss();
+        expect(favoriteProfile).to.equal(true);
     });
 
     // it("Should Remove Profile from Favorites under JOBS", async () => {
     //     await driverChrome.clickOnUssTabs();
-    //     await sleep(SLEEP);
+    //     await sleep(SleepForTwoSec);
     //     await driverChrome.clickOnJobsTab();
     //     await driverChrome.clickOnFavoriteTabInJobsAfterRefresh();
     //     await driverChrome.clickOnFavoriteTabInJobs();
     //     await driverChrome.clickOnFavoriteProfileInJobs();
     //     await driverChrome.removeFavoriteProfileFromJobs();
-    //     await sleep(SLEEP);
+    //     await sleep(SleepForTwoSec);
     //     await driverChrome.refreshBrowser();
     //     await sleep(SLEEPTIME);
+    //     const favoriteProfile = await driverChrome.verifyRemovedFavoriteProfileInJobs();
+    //     expect(favoriteProfile).to.equal(true);
     // });
 
     after(async () => driverChrome.closeBrowser());
@@ -228,6 +234,8 @@ describe("Hide Profile", () => {
         await sleep(SleepForTwoSec);
         await driverChrome.hideProfileInUss();
         await sleep(SleepForTwoSec);
+        const hiddenProfile = await driverChrome.verifyProfileIsHideInUss();
+        expect(hiddenProfile).to.equal(true);
     });
     it("Should Hide Profile from JOBS", async () => {
         await driverChrome.clickOnUssTabs();
@@ -235,6 +243,8 @@ describe("Hide Profile", () => {
         await driverChrome.clickOnJobsTab();
         await driverChrome.hideProfileInJobs();
         await sleep(SleepForTwoSec);
+        const hiddenProfile = await driverChrome.verifyProfileIsHideInJobs();
+        expect(hiddenProfile).to.equal(true);
     });
 
     after(async () => driverChrome.closeBrowser());

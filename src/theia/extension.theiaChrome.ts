@@ -147,6 +147,25 @@ export async function hideProfileInJobs(){
     await driverChrome.wait(until.elementLocated(By.xpath(JobsLocators.hideProfileFromJobsOptionXpath)), WAITTIME).click();
 }
 
+export async function verifyProfileIsHideInUss(){
+    const hideProfileFromUss = await driverChrome.findElements(By.xpath(UssLocators.secondUssProfileXpath)).then((found) => !!found.length);
+    if(!hideProfileFromUss){
+            return true;
+    }else{
+        return false;
+    }
+}
+
+export async function verifyProfileIsHideInJobs(){
+    const hideProfileFromJobs = await driverChrome.findElements(
+                                By.xpath(JobsLocators.secondJobsProfileIdBeforeHidingXpath)).then((found) => !!found.length);
+    if(!hideProfileFromJobs){
+            return true;
+    }else{
+        return false;
+    }
+}
+
 export async function deleteDefaultProfileInDatasets(){
     const profileName = await driverChrome.wait(until.elementLocated(By.id(DatasetsLocators.defaultDatasetsProfileId)), WAITTIME);
     await driverChrome.actions().click(profileName, Button.RIGHT).perform();
@@ -173,6 +192,33 @@ export async function deleteProfileInDatasets(){
     const deleteConfrmationMsg = await driverChrome.wait(until.elementLocated(
                                                 By.xpath(TheiaNotificationMessages.deleteProfileNotificationMsg)), WAITTIME).getText();
     return deleteConfrmationMsg;
+}
+
+export async function verifyRemovedFavoriteProfileInDatasets(){
+    const favoriteProfile = await driverChrome.findElements(By.id(DatasetsLocators.favoriteProfileInDatasetId)).then((found) => !!found.length);
+    if(!favoriteProfile){
+            return true;
+    }else{
+        return false;
+    }
+}
+
+export async function verifyRemovedFavoriteProfileInUss(){
+    const favoriteProfile = await driverChrome.findElements(By.xpath(UssLocators.favoriteProfileInUssXpath)).then((found) => !!found.length);
+    if(!favoriteProfile){
+            return true;
+    }else{
+        return false;
+    }
+}
+
+export async function verifyRemovedFavoriteProfileInJobs(){
+    const favoriteProfile = await driverChrome.findElements(By.xpath(JobsLocators.favoriteProfileInJobsXpath)).then((found) => !!found.length);
+    if(!favoriteProfile){
+            return true;
+    }else{
+        return false;
+    }
 }
 
 export async function closeNotificationMessage(){
