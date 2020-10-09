@@ -91,7 +91,14 @@ export class Profiles {
         //     return profileStatus;
         // }
 
-        if (!theProfile.profile.tokenValue && (!theProfile.profile.user || !theProfile.profile.password)) {
+        // This step is for prompting of credentials. It will be triggered if it meets the following conditions:
+        // - The service does not have username or password and base profile doesn't exists
+        // - The service does not have username or password and the base profile has a different host and port
+        const baseProfile = await this.getBaseProfile();
+
+        if ((!theProfile.profile.tokenType && (!theProfile.profile.user || !theProfile.profile.password)) ||
+            (baseProfile && (baseProfile.profile.host !== theProfile.profile.host) && baseProfile.profile.port !== theProfile.profile.port)) {
+
             try {
                 const values = await Profiles.getInstance().promptCredentials(theProfile.name);
                 if (values !== undefined) {
@@ -1121,10 +1128,21 @@ export class Profiles {
 
     public async getCombinedSession(serviceProfile: IProfileLoaded, baseProfile: IProfileLoaded) {
 
+        // TODO: This needs to be improved
+        // The idea is to handle all type of ZE Profiles
+
+        // This check will handle service profiles that hase username and password
         if (serviceProfile.profile.user && serviceProfile.profile.password) {
             return serviceProfile;
         }
 
+        // This check is for optional credentials
+        if (baseProfile && serviceProfile.profile.host && serviceProfile.profile.port &&
+            ((baseProfile.profile.host !== serviceProfile.profile.host) && baseProfile.profile.port !== serviceProfile.profile.port)) {
+                return serviceProfile;
+        }
+
+        // This process combines the information from baseprofile to serviceprofile and create a new session
         const cmdArgs: ICommandArguments = {
             $0: "zowe",
             _: [""],
