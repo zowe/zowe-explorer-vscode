@@ -226,8 +226,8 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
 
             if (baseProfile) {
                 try {
-                    const combinedSession = await Profiles.getInstance().getCombinedSession(profile, baseProfile);
-                    profile = combinedSession;
+                    const combinedProfile = await Profiles.getInstance().getCombinedProfile(profile, baseProfile);
+                    profile = combinedProfile;
                 } catch (error) {
                     throw error;
                 }
@@ -235,11 +235,11 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
 
             if (profile) {
                 this.addSingleSession(profile);
-            }
-            for (const node of this.mSessionNodes) {
-                const name = node.getProfileName();
-                if (name === profile.name){
-                    await resetValidationSettings(node, setting);
+                for (const node of this.mSessionNodes) {
+                    const name = node.getProfileName();
+                    if (name === profile.name){
+                        await resetValidationSettings(node, setting);
+                    }
                 }
             }
         } else {

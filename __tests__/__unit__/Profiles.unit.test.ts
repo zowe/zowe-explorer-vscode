@@ -11,16 +11,16 @@
 
 import { createISessionWithoutCredentials, createTreeView, createIProfile, createInstanceOfProfile,
          createQuickPickItem, createQuickPickContent, createInputBox, createBasicZosmfSession,
-         createPersistentConfig, createInvalidIProfile, createValidIProfile, createAltTypeIProfile } from "../../__mocks__/mockCreators/shared";
+         createPersistentConfig, createInvalidIProfile, createValidIProfile } from "../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../__mocks__/mockCreators/datasets";
 import { createProfileManager, createTestSchemas } from "../../__mocks__/mockCreators/profiles";
 import * as vscode from "vscode";
 import * as utils from "../../src/utils";
 import * as child_process from "child_process";
-import { Logger, IProfileLoaded, Session, CliProfileManager } from "@zowe/imperative";
+import { Logger } from "@zowe/imperative";
 import * as globals from "../../src/globals";
 import { Profiles, ValidProfileEnum } from "../../src/Profiles";
-import { ZosmfSession, IJob, CheckStatus } from "@zowe/cli";
+import { ZosmfSession, CheckStatus } from "@zowe/cli";
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
 import { ZoweExplorerApiRegister } from "../../src/api/ZoweExplorerApiRegister";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
@@ -28,7 +28,6 @@ import { Job } from "../../src/job/ZoweJobNode";
 import { createUSSSessionNode, createUSSTree } from "../../__mocks__/mockCreators/uss";
 import { createJobsTree, createIJobObject, } from "../../__mocks__/mockCreators/jobs";
 import { IZoweNodeType } from "../../src/api/IZoweTreeNode";
-import { PersistentFilters } from "../../src/PersistentFilters";
 
 jest.mock("vscode");
 jest.mock("child_process");
@@ -50,10 +49,12 @@ async function createGlobalMocks() {
         mockError: jest.fn(),
         mockConfigurationTarget: jest.fn(),
         mockCreateBasicZosmfSession: jest.fn(),
-        // mockValidationSetting: jest.fn(),
+        testProfile: createValidIProfile(),
         mockCliProfileManager: createProfileManager()
     };
-    Profiles.createInstance(Logger.getAppLogger());
+
+    newMocks.mockGetInstance.mockReturnValue(createInstanceOfProfile(newMocks.testProfile));
+
     Object.defineProperty(vscode.window, "showInformationMessage", { value: newMocks.mockShowInformationMessage, configurable: true });
     Object.defineProperty(vscode.window, "showInputBox", { value: newMocks.mockShowInputBox, configurable: true });
     Object.defineProperty(vscode.window, "showErrorMessage", { value: newMocks.mockShowErrorMessage, configurable: true });
@@ -1230,8 +1231,8 @@ describe("Profiles Unit Tests - Function createInstance", () => {
             log: Logger.getAppLogger(),
             profiles: null,
             mockJSONParse: jest.spyOn(JSON, "parse"),
-            profileInstance: null,
-            testProfiles: [{ name: "sestest", profile: {}, type: "zosmf" },
+            testProfiles: [{ name: "profile1", profile: {}, type: "zosmf" },
+                           { name: "sestest", profile: {}, type: "zosmf" },
                            { name: "profile1", profile: {}, type: "zosmf" },
                            { name: "profile2", profile: {}, type: "zosmf" }]
         };
@@ -1251,7 +1252,6 @@ describe("Profiles Unit Tests - Function createInstance", () => {
             }
         });
         newMocks.profiles = await Profiles.createInstance(newMocks.log);
-        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
         globalMocks.mockGetInstance.mockReturnValue(newMocks.profiles);
 
         return newMocks;
@@ -1296,28 +1296,15 @@ describe("Profiles Unit Tests - Function createInstance", () => {
 });
 
 describe("Profiles Unit Tests - Property allProfiles", () => {
-    async function createBlockMocks(globalMocks) {
-        const newMocks = {
-            log: Logger.getAppLogger(),
-            profiles: null,
-            profileInstance: null
-        };
-        newMocks.profiles = await Profiles.createInstance(newMocks.log);
-        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
-        globalMocks.mockGetInstance.mockReturnValue(newMocks.profiles);
-
-        return newMocks;
-    }
-
     it("Tests that allProfiles contains all profiles", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        await createGlobalMocks();
 
-        const profiles = await Profiles.createInstance(blockMocks.log);
+        const profiles = await Profiles.createInstance(Logger.getAppLogger());
         const loadedProfiles = profiles.allProfiles;
-        expect(loadedProfiles).toEqual([{ name: "sestest", profile: {}, type: "zosmf" },
-                                        { name: "profile1", profile: {}, type: "zosmf" },
-                                        { name: "profile2", profile: {}, type: "zosmf" }]);
+        expect(loadedProfiles).toEqual([{ name: "profile1", profile: {}, type: "zosmf" },
+                                          { name: "sestest", profile: {}, type: "zosmf" },
+                                          { name: "profile1", profile: {}, type: "zosmf" },
+                                          { name: "profile2", profile: {}, type: "zosmf" }]);
     });
 });
 

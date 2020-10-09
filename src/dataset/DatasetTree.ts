@@ -856,7 +856,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
 
             if (baseProfile) {
                 try {
-                    const combinedSession = await Profiles.getInstance().getCombinedSession(profile, baseProfile);
+                    const combinedSession = await Profiles.getInstance().getCombinedProfile(profile, baseProfile);
                     profile = combinedSession;
                 } catch (error) {
                     throw error;

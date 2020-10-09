@@ -158,7 +158,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
 
             if (baseProfile) {
                 try {
-                    const combinedSession = await Profiles.getInstance().getCombinedSession(theProfile, baseProfile);
+                    const combinedSession = await Profiles.getInstance().getCombinedProfile(theProfile, baseProfile);
                     theProfile = combinedSession;
                 } catch (error) {
                     throw error;

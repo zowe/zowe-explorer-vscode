@@ -1126,7 +1126,7 @@ export class Profiles {
         return filteredProfile;
     }
 
-    public async getCombinedSession(serviceProfile: IProfileLoaded, baseProfile: IProfileLoaded) {
+    public async getCombinedProfile(serviceProfile: IProfileLoaded, baseProfile: IProfileLoaded) {
 
         // TODO: This needs to be improved
         // The idea is to handle all type of ZE Profiles

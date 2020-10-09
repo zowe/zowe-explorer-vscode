@@ -47,6 +47,7 @@ async function createGlobalMocks() {
         testJobsProvider: null,
         jesApi: null,
         testSession: createISession(),
+        mockGetBaseProfile: jest.fn(),
         testSessionNoCred: createISessionWithoutCredentials(),
         testProfile: createIProfile(),
         testIJob: createIJobObject(),
@@ -100,8 +101,12 @@ async function createGlobalMocks() {
     globalMocks.mockProfileInstance.loadNamedProfile = globalMocks.mockLoadNamedProfile;
     globalMocks.mockLoadDefaultProfile.mockReturnValue(globalMocks.testProfile);
     globalMocks.mockProfileInstance.getDefaultProfile = globalMocks.mockLoadDefaultProfile;
+    globalMocks.mockGetBaseProfile.mockResolvedValue(globalMocks.testProfile);
+    globalMocks.mockProfileInstance.getValidSession.mockResolvedValue(globalMocks.testSession);
+    globalMocks.mockProfileInstance.getBaseProfile = globalMocks.mockGetBaseProfile;
     globalMocks.mockProfileInstance.checkProfileValidationSetting = globalMocks.mockValidationSetting.mockReturnValue(true);
     globalMocks.mockProfileInstance.enableValidationContext = globalMocks.mockEnableValidationContext;
+    globalMocks.mockProfileInstance.getCombinedProfile.mockResolvedValue(globalMocks.testProfile);
     globalMocks.mockProfileInstance.disableValidationContext = globalMocks.mockDisableValidationContext;
 
     // Jes API mocks
@@ -165,7 +170,6 @@ describe("ZoweJobNode unit tests - Function addSession", () => {
 
     it("Tests that addSession adds the session to the tree with disabled global setting", async () => {
         const globalMocks = await createGlobalMocks();
-
 
         globalMocks.testJobsProvider.mSessionNodes.pop();
         globalMocks.mockProfileInstance.checkProfileValidationSetting = globalMocks.mockValidationSetting.mockReturnValueOnce(false);

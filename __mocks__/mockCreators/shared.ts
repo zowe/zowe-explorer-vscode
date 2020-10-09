@@ -183,6 +183,11 @@ export function createInstanceOfProfile(profile: imperative.IProfileLoaded) {
         }),
         profilesForValidation: [{status: "active", name: "sestest"}],
         validateProfiles: jest.fn(),
+        getBaseProfile: jest.fn(),
+        enableValidationContext: jest.fn(),
+        disableValidationContext: jest.fn(),
+        getCombinedProfile: jest.fn(),
+        getValidSession: jest.fn(),
         editSession: jest.fn(),
         createNewConnection: jest.fn(() => {
             return { newprofile: "fake" };
