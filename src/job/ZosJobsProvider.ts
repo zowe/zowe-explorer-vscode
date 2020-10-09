@@ -153,7 +153,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         if (sessionName) {
             const theProfile: IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
             if (theProfile) {
-                this.addSingleSession(theProfile);
+                await this.addSingleSession(theProfile);
             }
             for (const node of this.mSessionNodes) {
                 const name = node.getProfileName();
@@ -170,7 +170,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 }
                 for (const session of this.mHistory.getSessions()) {
                     if (session === sessionProfile.name) {
-                        this.addSingleSession(sessionProfile);
+                        await this.addSingleSession(sessionProfile);
                         for (const node of this.mSessionNodes) {
                             const name = node.getProfileName();
                             if (name === sessionProfile.name){
