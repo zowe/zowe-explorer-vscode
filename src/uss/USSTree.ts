@@ -219,7 +219,20 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         const setting = PersistentFilters.getDirectValue("Zowe-Automatic-Validation") as boolean;
         // Loads profile associated with passed sessionName, persisted profiles or default if none passed
         if (sessionName) {
-            const profile: IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
+            let profile: IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
+            // If baseProfile exists, combine that information first before adding the session to the tree
+            // TODO: Move addSession to abstract/ZoweTreeProvider (similar to editSession)
+            const baseProfile =  await Profiles.getInstance().getBaseProfile();
+
+            if (baseProfile) {
+                try {
+                    const combinedSession = await Profiles.getInstance().getCombinedSession(profile, baseProfile);
+                    profile = combinedSession;
+                } catch (error) {
+                    throw error;
+                }
+            }
+
             if (profile) {
                 this.addSingleSession(profile);
             }

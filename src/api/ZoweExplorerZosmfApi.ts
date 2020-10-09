@@ -10,10 +10,11 @@
 */
 
 import * as zowe from "@zowe/cli";
-import { Session, IProfileLoaded, ITaskWithStatus, TaskStage } from "@zowe/imperative";
+import { Session, IProfileLoaded, ITaskWithStatus, TaskStage, Logger, ICommandArguments, IProfile } from "@zowe/imperative";
 import { ZoweExplorerApi } from "./ZoweExplorerApi";
 
 import * as nls from "vscode-nls";
+import { errorHandling } from "../utils";
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
@@ -29,6 +30,7 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
     }
 
     private session: Session;
+    private log: Logger;
     constructor(public profile?: IProfileLoaded) {
     }
 
@@ -38,15 +40,55 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
 
     public getSession(profile?: IProfileLoaded): Session {
         if (!this.session) {
-            this.session = zowe.ZosmfSession.createBasicZosmfSession((profile||this.profile).profile);
+            try {
+                if (!this.profile.profile.tokenValue) {
+                    this.session = zowe.ZosmfSession.createBasicZosmfSession((profile||this.profile).profile);
+                } else {
+                    // Why is the Session response different??????
+                    // const X = this.createSessionFromArgs((profile || this.profile).profile);
+                    const serviceProfile = this.profile;
+                    const cmdArgs: ICommandArguments = {
+                        $0: "zowe",
+                        _: [""],
+                        host: serviceProfile.profile.host,
+                        port: serviceProfile.profile.port,
+                        basePath: serviceProfile.profile.basePath,
+                        rejectUnauthorized: serviceProfile.profile.rejectUnauthorized !== null,
+                        tokenType: serviceProfile.profile.tokenType,
+                        tokenValue: serviceProfile.profile.tokenValue
+                    };
+
+                    this.session = zowe.ZosmfSession.createBasicZosmfSessionFromArguments(cmdArgs);
+                }
+            } catch (error) {
+                this.log.debug(error);
+            }
         }
         return this.session;
     }
 
     public async getStatus(validateProfile?: IProfileLoaded, profileType?: string): Promise<string> {
         // This API call is specific for z/OSMF profiles
+        let validateSession: Session;
         if (profileType === "zosmf") {
-            const validateSession = await zowe.ZosmfSession.createBasicZosmfSession(validateProfile.profile);
+            if (validateProfile.profile.tokenValue) {
+                const serviceProfile = validateProfile;
+                const cmdArgs: ICommandArguments = {
+                    $0: "zowe",
+                    _: [""],
+                    host: serviceProfile.profile.host,
+                    port: serviceProfile.profile.port,
+                    basePath: serviceProfile.profile.basePath,
+                    rejectUnauthorized: serviceProfile.profile.rejectUnauthorized !== null,
+                    tokenType: serviceProfile.profile.tokenType,
+                    tokenValue: serviceProfile.profile.tokenValue
+                };
+
+                validateSession = zowe.ZosmfSession.createBasicZosmfSessionFromArguments(cmdArgs);
+            } else {
+                validateSession = await zowe.ZosmfSession.createBasicZosmfSession(validateProfile.profile);
+            }
+
             const sessionStatus= await zowe.CheckStatus.getZosmfInfo(validateSession);
 
             if (sessionStatus) {

@@ -151,7 +151,19 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         const setting = PersistentFilters.getDirectValue("Zowe-Automatic-Validation") as boolean;
         // Loads profile associated with passed sessionName, default if none passed
         if (sessionName) {
-            const theProfile: IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
+            let theProfile: IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
+            // If baseProfile exists, combine that information first before adding the session to the tree
+            // TODO: Move addSession to abstract/ZoweTreeProvider (similar to editSession)
+            const baseProfile =  await Profiles.getInstance().getBaseProfile();
+
+            if (baseProfile) {
+                try {
+                    const combinedSession = await Profiles.getInstance().getCombinedSession(theProfile, baseProfile);
+                    theProfile = combinedSession;
+                } catch (error) {
+                    throw error;
+                }
+            }
             if (theProfile) {
                 this.addSingleSession(theProfile);
             }

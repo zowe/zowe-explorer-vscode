@@ -9,7 +9,7 @@
 *                                                                                 *
 */
 
-import { IProfileLoaded, Logger, CliProfileManager, IProfile, ISession, IUpdateProfileFromCliArgs } from "@zowe/imperative";
+import { IProfileLoaded, Logger, CliProfileManager, IProfile, ISession, IUpdateProfileFromCliArgs, ICommandArguments } from "@zowe/imperative";
 import * as path from "path";
 import { URL } from "url";
 import * as vscode from "vscode";
@@ -86,12 +86,12 @@ export class Profiles {
             return profileStatus;
         }
 
-        if (profileStatus.status === "unverified") {
-            this.validProfile = ValidProfileEnum.UNVERIFIED;
-            return profileStatus;
-        }
+        // if (profileStatus.status === "unverified") {
+        //     this.validProfile = ValidProfileEnum.UNVERIFIED;
+        //     return profileStatus;
+        // }
 
-        if ((!theProfile.profile.user) || (!theProfile.profile.password)) {
+        if (!theProfile.profile.tokenValue && (!theProfile.profile.user || !theProfile.profile.password)) {
             try {
                 const values = await Profiles.getInstance().promptCredentials(theProfile.name);
                 if (values !== undefined) {
@@ -108,15 +108,27 @@ export class Profiles {
                 theProfile.profile.user = this.usrNme;
                 theProfile.profile.password = this.passWrd;
                 theProfile.profile.base64EncodedAuth = this.baseEncd;
-                this.validProfile = ValidProfileEnum.VALID;
+                if (profileStatus.status === "unverified") {
+                    this.validProfile = ValidProfileEnum.UNVERIFIED;
+                } else {
+                    this.validProfile = ValidProfileEnum.VALID;
+                }
                 return profileStatus;
             } else {
                 // return invalid if credentials are not provided
-                this.validProfile = ValidProfileEnum.INVALID;
+                if (profileStatus.status === "unverified") {
+                    this.validProfile = ValidProfileEnum.UNVERIFIED;
+                } else {
+                    this.validProfile = ValidProfileEnum.INVALID;
+                }
                 return profileStatus;
             }
         } else {
-            this.validProfile = ValidProfileEnum.VALID;
+            if (profileStatus.status === "unverified") {
+                this.validProfile = ValidProfileEnum.UNVERIFIED;
+            } else {
+                this.validProfile = ValidProfileEnum.VALID;
+            }
             return profileStatus;
         }
 
@@ -253,6 +265,22 @@ export class Profiles {
     public async refresh(): Promise<void> {
         this.allProfiles = [];
         this.allTypes = [];
+
+        // TODO: Add Base ProfileType in registeredApiTypes
+        // This process retrieves the base profile if there's any and stores it in an array
+        // If base is added in registeredApiType maybe this process can be removed
+        const profileManagerA = await this.getCliProfileManager("base");
+        if (profileManagerA) {
+            try {
+                const baseProfile = await profileManagerA.load({ loadDefault: true });
+                this.allProfiles.push(baseProfile);
+            } catch (err) {
+                if (!err.message.includes(`No default profile set for type "base"`)) {
+                    vscode.window.showInformationMessage(err.message);
+                }
+            }
+        }
+
         for (const type of ZoweExplorerApiRegister.getInstance().registeredApiTypes()) {
             const profileManager = await this.getCliProfileManager(type);
             const profilesForType = (await profileManager.loadAll()).filter((profile) => {
@@ -1089,6 +1117,59 @@ export class Profiles {
             }
         }
         return filteredProfile;
+    }
+
+    public async getCombinedSession(serviceProfile: IProfileLoaded, baseProfile: IProfileLoaded) {
+
+        if (serviceProfile.profile.user && serviceProfile.profile.password) {
+            return serviceProfile;
+        }
+
+        const cmdArgs: ICommandArguments = {
+            $0: "zowe",
+            _: [""],
+            host: serviceProfile.profile.host ? serviceProfile.profile.host :
+            (baseProfile ? baseProfile.profile.host : undefined),
+            port: serviceProfile.profile.port ? serviceProfile.profile.port :
+            (baseProfile ? baseProfile.profile.port : 0),
+            basePath: serviceProfile.profile.basePath ? serviceProfile.profile.basePath :
+            (baseProfile ? baseProfile.profile.basePath : undefined),
+            rejectUnauthorized: serviceProfile.profile.rejectUnauthorized !== null ?
+            serviceProfile.profile.rejectUnauthorized :
+            (baseProfile ? baseProfile.profile.rejectUnauthorized : true),
+            user: serviceProfile.profile.user ? serviceProfile.profile.user :
+            (baseProfile ? baseProfile.profile.user : undefined),
+            password: serviceProfile.profile.password ? serviceProfile.profile.password :
+            (baseProfile ? baseProfile.profile.password : undefined),
+            tokenType: baseProfile.profile.tokenType,
+            tokenValue: (baseProfile && !serviceProfile.profile.password) ? baseProfile.profile.tokenValue : undefined
+        };
+
+        const combinedSession = await zowe.ZosmfSession.createBasicZosmfSessionFromArguments(cmdArgs);
+
+        // For easier debugging, move serviceProfile to updatedServiceProfile and then update it with combinedSession
+        const updatedServiceProfile: IProfileLoaded = serviceProfile;
+        updatedServiceProfile.profile.host = combinedSession.ISession.hostname;
+        updatedServiceProfile.profile.port = combinedSession.ISession.port;
+        updatedServiceProfile.profile.basePath = combinedSession.ISession.basePath;
+        updatedServiceProfile.profile.rejectUnauthorized = combinedSession.ISession.rejectUnauthorized;
+        updatedServiceProfile.profile.tokenType = combinedSession.ISession.tokenType;
+        updatedServiceProfile.profile.tokenValue = combinedSession.ISession.tokenValue;
+        return updatedServiceProfile;
+
+    }
+
+    public async getBaseProfile() {
+        let baseProfile: IProfileLoaded;
+
+        // This functionality will retrieve the saved base profile in the allProfiles array
+        const allProfiles: IProfileLoaded[] = Profiles.getInstance().allProfiles;
+        for (const baseP of allProfiles) {
+            if (baseP.type === "base") {
+                baseProfile = baseP;
+            }
+        }
+        return baseProfile;
     }
 
     private async deletePrompt(deletedProfile: IProfileLoaded) {
