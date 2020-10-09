@@ -317,7 +317,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         const setting = PersistentFilters.getDirectValue("Zowe-Automatic-Validation") as boolean;
         // Loads profile associated with passed sessionName, default if none passed
         if (sessionName) {
-            const profile: IProfileLoaded = await Profiles.getInstance().loadNamedProfile(sessionName);
+            const profile: IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
             if (profile) {
                 this.addSingleSession(profile);
             }
@@ -850,7 +850,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      */
     private async addSingleSession(profile: IProfileLoaded) {
         if (profile) {
-                        // If baseProfile exists, combine that information first before adding the session to the tree
+            // If baseProfile exists, combine that information first before adding the session to the tree
             // TODO: Move addSession to abstract/ZoweTreeProvider (similar to editSession)
             const baseProfile =  await Profiles.getInstance().getBaseProfile();
 

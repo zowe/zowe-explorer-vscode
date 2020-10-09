@@ -151,19 +151,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         const setting = PersistentFilters.getDirectValue("Zowe-Automatic-Validation") as boolean;
         // Loads profile associated with passed sessionName, default if none passed
         if (sessionName) {
-            let theProfile: IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
-            // If baseProfile exists, combine that information first before adding the session to the tree
-            // TODO: Move addSession to abstract/ZoweTreeProvider (similar to editSession)
-            const baseProfile =  await Profiles.getInstance().getBaseProfile();
-
-            if (baseProfile) {
-                try {
-                    const combinedSession = await Profiles.getInstance().getCombinedProfile(theProfile, baseProfile);
-                    theProfile = combinedSession;
-                } catch (error) {
-                    throw error;
-                }
-            }
+            const theProfile: IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
             if (theProfile) {
                 this.addSingleSession(theProfile);
             }
@@ -689,12 +677,24 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      */
     private async addSingleSession(zosmfProfile: IProfileLoaded) {
         if (zosmfProfile) {
+            // If baseProfile exists, combine that information first before adding the session to the tree
+            // TODO: Move addSession to abstract/ZoweTreeProvider (similar to editSession)
+            const baseProfile =  await Profiles.getInstance().getBaseProfile();
+            if (baseProfile) {
+                try {
+                    const combinedSession = await Profiles.getInstance().getCombinedProfile(zosmfProfile, baseProfile);
+                    zosmfProfile = combinedSession;
+                } catch (error) {
+                    throw error;
+                }
+            }
             // If session is already added, do nothing
             if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === zosmfProfile.name)) {
                 return;
             }
             // Uses loaded profile to create a zosmf session with Zowe
-            const session = ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
+            // const session = ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
+            const session = ZoweExplorerApiRegister.getMvsApi(zosmfProfile).getSession();
             // Creates ZoweNode to track new session and pushes it to mSessionNodes
             const node = new Job(zosmfProfile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, null, zosmfProfile);
             node.contextValue = globals.JOBS_SESSION_CONTEXT;
