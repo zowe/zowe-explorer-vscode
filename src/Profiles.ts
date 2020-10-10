@@ -1141,10 +1141,10 @@ export class Profiles {
                 return serviceProfile;
         }
 
-        let combinedSession;
+        let combinedProfile;
         if (!commonApi.getSessionFromCommandArgument) {
             // This is here for extenders
-            combinedSession = ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).getSession();
+            combinedProfile = ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).getSession();
         } else {
             // This process combines the information from baseprofile to serviceprofile and create a new session
             const profSchema = await this.getSchema(serviceProfile.type);
@@ -1179,21 +1179,21 @@ export class Profiles {
             //     tokenType: baseProfile.profile.tokenType,
             //     tokenValue: (baseProfile && !serviceProfile.profile.password) ? baseProfile.profile.tokenValue : undefined
             // };
-            combinedSession = await zowe.ZosmfSession.createBasicZosmfSessionFromArguments(cmdArgs);
+            combinedProfile = await zowe.ZosmfSession.createBasicZosmfSessionFromArguments(cmdArgs);
         }
 
-        // For easier debugging, move serviceProfile to updatedServiceProfile and then update it with combinedSession
+        // For easier debugging, move serviceProfile to updatedServiceProfile and then update it with combinedProfile
         const updatedServiceProfile: IProfileLoaded = serviceProfile;
-        for (const prop of Object.keys(combinedSession.ISession)) {
-            if (prop === "hostname") { updatedServiceProfile.profile.host = combinedSession.ISession[prop]; }
-            else { updatedServiceProfile.profile[prop] = combinedSession.ISession[prop]; }
+        for (const prop of Object.keys(combinedProfile.ISession)) {
+            if (prop === "hostname") { updatedServiceProfile.profile.host = combinedProfile.ISession[prop]; }
+            else { updatedServiceProfile.profile[prop] = combinedProfile.ISession[prop]; }
         }
-        // updatedServiceProfile.profile.host = combinedSession.ISession.hostname;
-        // updatedServiceProfile.profile.port = combinedSession.ISession.port;
-        // updatedServiceProfile.profile.basePath = combinedSession.ISession.basePath;
-        // updatedServiceProfile.profile.rejectUnauthorized = combinedSession.ISession.rejectUnauthorized;
-        // updatedServiceProfile.profile.tokenType = combinedSession.ISession.tokenType;
-        // updatedServiceProfile.profile.tokenValue = combinedSession.ISession.tokenValue;
+        // updatedServiceProfile.profile.host = combinedProfile.ISession.hostname;
+        // updatedServiceProfile.profile.port = combinedProfile.ISession.port;
+        // updatedServiceProfile.profile.basePath = combinedProfile.ISession.basePath;
+        // updatedServiceProfile.profile.rejectUnauthorized = combinedProfile.ISession.rejectUnauthorized;
+        // updatedServiceProfile.profile.tokenType = combinedProfile.ISession.tokenType;
+        // updatedServiceProfile.profile.tokenValue = combinedProfile.ISession.tokenValue;
         return updatedServiceProfile;
     }
 

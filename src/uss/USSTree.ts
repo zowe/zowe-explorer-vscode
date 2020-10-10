@@ -678,8 +678,8 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             const baseProfile =  await Profiles.getInstance().getBaseProfile();
             if (baseProfile) {
                 try {
-                    const combinedSession = await Profiles.getInstance().getCombinedProfile(profile, baseProfile);
-                    profile = combinedSession;
+                    const combinedProfile = await Profiles.getInstance().getCombinedProfile(profile, baseProfile);
+                    profile = combinedProfile;
                 } catch (error) {
                     throw error;
                 }
