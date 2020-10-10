@@ -1073,7 +1073,6 @@ export class Profiles {
         // status will be stored in profilesForValidation
         if (filteredProfile === undefined) {
             try {
-
                 if (getSessStatus.getStatus) {
                     profileStatus = await vscode.window.withProgress({
                         location: vscode.ProgressLocation.Notification,

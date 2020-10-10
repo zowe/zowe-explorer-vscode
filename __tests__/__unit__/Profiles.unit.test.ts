@@ -26,7 +26,7 @@ import { ZoweExplorerApiRegister } from "../../src/api/ZoweExplorerApiRegister";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import { Job } from "../../src/job/ZoweJobNode";
 import { createUSSSessionNode, createUSSTree } from "../../__mocks__/mockCreators/uss";
-import { createJobsTree, createIJobObject, } from "../../__mocks__/mockCreators/jobs";
+import { createJobsTree, createIJobObject, createJobSessionNode, } from "../../__mocks__/mockCreators/jobs";
 import { IZoweNodeType } from "../../src/api/IZoweTreeNode";
 
 jest.mock("vscode");
@@ -50,10 +50,20 @@ async function createGlobalMocks() {
         mockConfigurationTarget: jest.fn(),
         mockCreateBasicZosmfSession: jest.fn(),
         testProfile: createValidIProfile(),
-        mockCliProfileManager: createProfileManager()
+        mockCliProfileManager: createProfileManager(),
+        ProgressLocation: jest.fn().mockImplementation(() => {
+            return {
+                Notification: 15
+            };
+        }),
+        withProgress: null,
+        mockCallback: null
     };
 
     newMocks.mockGetInstance.mockReturnValue(createInstanceOfProfile(newMocks.testProfile));
+    newMocks.withProgress = jest.fn().mockImplementation((progLocation, callback) => {
+        return newMocks.mockCallback;
+    });
 
     Object.defineProperty(vscode.window, "showInformationMessage", { value: newMocks.mockShowInformationMessage, configurable: true });
     Object.defineProperty(vscode.window, "showInputBox", { value: newMocks.mockShowInputBox, configurable: true });
@@ -70,6 +80,8 @@ async function createGlobalMocks() {
     Object.defineProperty(vscode.window, "createTreeView", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.workspace, "getConfiguration", { value: newMocks.mockGetConfiguration, configurable: true });
     Object.defineProperty(vscode, "ConfigurationTarget", { value: newMocks.mockConfigurationTarget, configurable: true });
+    Object.defineProperty(vscode, "ProgressLocation", { value: newMocks.ProgressLocation, configurable: true });
+    Object.defineProperty(vscode.window, "withProgress", { value: newMocks.withProgress, configurable: true });
 
     return newMocks;
 }
@@ -82,20 +94,29 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
             treeView: createTreeView(),
             mockLoadNamedProfile: jest.fn(),
             imperativeProfile: createIProfile(),
-            datasetSessionNode: null,
             quickPickItem: createQuickPickItem(),
             qpPlaceholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
             profiles: null,
+            testJobNode: createIJobObject(),
+            testDatasetSessionNode: null,
+            testUSSSessionNode: null,
+            testJobsSessionNode: null,
             testDatasetTree: null,
+            testUSSTree: null,
+            testJobsTree: null,
             profileInstance: null,
         };
         newMocks.profiles = await Profiles.createInstance(newMocks.log);
         newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
-        newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
-        newMocks.testDatasetTree = createDatasetTree(newMocks.datasetSessionNode, newMocks.treeView);
         newMocks.mockLoadNamedProfile.mockReturnValue(newMocks.imperativeProfile);
         newMocks.profileInstance.loadNamedProfile = newMocks.mockLoadNamedProfile;
         globalMocks.mockGetInstance.mockReturnValue(newMocks.profileInstance);
+        newMocks.testDatasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.profileInstance);
+        newMocks.testUSSSessionNode = createUSSSessionNode(newMocks.session, newMocks.profileInstance);
+        newMocks.testJobsSessionNode = createJobSessionNode(newMocks.session, newMocks.profileInstance);
+        newMocks.testDatasetTree = createDatasetTree(newMocks.testDatasetSessionNode, newMocks.treeView);
+        newMocks.testUSSTree = createUSSTree([], [newMocks.testUSSSessionNode], newMocks.treeView);
+        newMocks.testJobsTree = createJobsTree(newMocks.session, newMocks.testJobNode, newMocks.profileInstance, newMocks.treeView);
 
         return newMocks;
     }
@@ -128,6 +149,54 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
         await blockMocks.profiles.createZoweSession(blockMocks.testDatasetTree);
         expect(blockMocks.testDatasetTree.addSession).toBeCalled();
         expect(blockMocks.testDatasetTree.addSession.mock.calls[0][0]).toEqual({ newprofile: "fake" });
+    });
+
+    it("Tests that createZoweSession correctly gets APIs available for USS tree", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        const entered = undefined;
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+
+        const apiRegisterInstance = ZoweExplorerApiRegister.getInstance();
+        const registeredTypesSpy = jest.spyOn(apiRegisterInstance, "registeredUssApiTypes");
+
+        globalMocks.mockCreateQuickPick.mockReturnValue(createQuickPickContent(entered, [blockMocks.quickPickItem], blockMocks.qpPlaceholder));
+        jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(blockMocks.quickPickItem);
+
+        await blockMocks.profiles.createZoweSession(blockMocks.testUSSTree);
+        expect(registeredTypesSpy).toBeCalled();
+    });
+
+    it("Tests that createZoweSession correctly gets APIs available for dataset tree", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        const entered = undefined;
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+
+        const apiRegisterInstance = ZoweExplorerApiRegister.getInstance();
+        const registeredTypesSpy = jest.spyOn(apiRegisterInstance, "registeredMvsApiTypes");
+
+        globalMocks.mockCreateQuickPick.mockReturnValue(createQuickPickContent(entered, [blockMocks.quickPickItem], blockMocks.qpPlaceholder));
+        jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(blockMocks.quickPickItem);
+
+        await blockMocks.profiles.createZoweSession(blockMocks.testDatasetTree);
+        expect(registeredTypesSpy).toBeCalled();
+    });
+
+    it("Tests that createZoweSession correctly gets APIs available for dataset tree", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        const entered = undefined;
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+
+        const apiRegisterInstance = ZoweExplorerApiRegister.getInstance();
+        const registeredTypesSpy = jest.spyOn(apiRegisterInstance, "registeredJesApiTypes");
+
+        globalMocks.mockCreateQuickPick.mockReturnValue(createQuickPickContent(entered, [blockMocks.quickPickItem], blockMocks.qpPlaceholder));
+        jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(blockMocks.quickPickItem);
+
+        await blockMocks.profiles.createZoweSession(blockMocks.testJobsTree);
+        expect(registeredTypesSpy).toBeCalled();
     });
 
     it("Tests that createZoweSession successfully creates a new session with profile name selected from list by user", async () => {
@@ -1675,6 +1744,7 @@ describe("Profiles Unit Tests - Function getProfileSetting", () => {
         const resultSetting = { status: "inactive", name: "sestest" };
         const theProfiles = await Profiles.createInstance(blockMocks.log);
         theProfiles.profilesValidationSetting = [{name: blockMocks.imperativeProfile.name, setting: true}];
+        globalMocks.mockCallback = "inactive";
 
         const response = await theProfiles.getProfileSetting(blockMocks.imperativeProfile);
         expect(response).toEqual(resultSetting);
@@ -2033,7 +2103,9 @@ describe("Profiles Unit Tests - Function validateProfiles", () => {
             invalidProfile: createInvalidIProfile(),
             validProfile: createValidIProfile(),
             profileInstance: null,
+            commonApi: null
         };
+        newMocks.commonApi = ZoweExplorerApiRegister.getInstance().getCommonApi(newMocks.validProfile);
         newMocks.profiles = await Profiles.createInstance(newMocks.log);
         newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
         globalMocks.mockGetInstance.mockReturnValue(newMocks.profiles);
@@ -2041,19 +2113,37 @@ describe("Profiles Unit Tests - Function validateProfiles", () => {
         return newMocks;
     }
 
+    it("Tests that validateProfiles handles active profiles", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const theProfiles = await Profiles.createInstance(blockMocks.log);
+        globalMocks.mockCallback = "active";
+
+        const returnedValidation = await theProfiles.checkCurrentProfile(blockMocks.validProfile);
+        expect(returnedValidation).toEqual({ status: "active", name: blockMocks.validProfile.name });
+    });
+
     it("Tests that validateProfiles handles inactive profiles", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
         const theProfiles = await Profiles.createInstance(blockMocks.log);
-        Object.defineProperty(CheckStatus, "getZosmfInfo", {
-            value: jest.fn(() => {
-                return undefined;
-            })
-        });
+        globalMocks.mockCallback = "inactive";
 
-        await theProfiles.checkCurrentProfile(blockMocks.validProfile);
-        expect(theProfiles.validProfile).toBe(ValidProfileEnum.INVALID);
+        const returnedValidation = await theProfiles.checkCurrentProfile(blockMocks.validProfile);
+        expect(returnedValidation).toEqual({ status: "inactive", name: blockMocks.validProfile.name });
+    });
+
+    it("Tests that validateProfiles handles unverified profiles", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const theProfiles = await Profiles.createInstance(blockMocks.log);
+        globalMocks.mockCallback = "unverified";
+
+        const returnedValidation = await theProfiles.checkCurrentProfile(blockMocks.validProfile);
+        expect(returnedValidation).toEqual({ status: "unverified", name: blockMocks.validProfile.name });
     });
 });
 
