@@ -1126,11 +1126,10 @@ export class Profiles {
     }
 
     public async getCombinedProfile(serviceProfile: IProfileLoaded, baseProfile: IProfileLoaded) {
-
         // TODO: This needs to be improved
         // The idea is to handle all type of ZE Profiles
 
-        // This check will handle service profiles that hase username and password
+        // This check will handle service profiles that have username and password
         if (serviceProfile.profile.user && serviceProfile.profile.password) {
             return serviceProfile;
         }
@@ -1142,38 +1141,53 @@ export class Profiles {
         }
 
         // This process combines the information from baseprofile to serviceprofile and create a new session
+        const profSchema = await this.getSchema(serviceProfile.type);
         const cmdArgs: ICommandArguments = {
             $0: "zowe",
-            _: [""],
-            host: serviceProfile.profile.host ? serviceProfile.profile.host :
-            (baseProfile ? baseProfile.profile.host : undefined),
-            port: serviceProfile.profile.port ? serviceProfile.profile.port :
-            (baseProfile ? baseProfile.profile.port : 0),
-            basePath: serviceProfile.profile.basePath ? serviceProfile.profile.basePath :
-            (baseProfile ? baseProfile.profile.basePath : undefined),
-            rejectUnauthorized: serviceProfile.profile.rejectUnauthorized !== null ?
-            serviceProfile.profile.rejectUnauthorized :
-            (baseProfile ? baseProfile.profile.rejectUnauthorized : true),
-            user: serviceProfile.profile.user ? serviceProfile.profile.user :
-            (baseProfile ? baseProfile.profile.user : undefined),
-            password: serviceProfile.profile.password ? serviceProfile.profile.password :
-            (baseProfile ? baseProfile.profile.password : undefined),
-            tokenType: baseProfile.profile.tokenType,
-            tokenValue: (baseProfile && !serviceProfile.profile.password) ? baseProfile.profile.tokenValue : undefined
+            _: [""]
         };
+        for (const prop of Object.keys(profSchema)) {
+            cmdArgs[prop] = serviceProfile.profile[prop] ? serviceProfile.profile[prop] : baseProfile.profile[prop];
+        }
+        if (baseProfile) {
+            cmdArgs.tokenType = baseProfile.profile.tokenType;
+            cmdArgs.tokenValue = baseProfile.profile.tokenValue;
+        }
+        // const cmdArgs: ICommandArguments = {
+        //     $0: "zowe",
+        //     _: [""],
+        //     host: serviceProfile.profile.host ? serviceProfile.profile.host :
+        //     (baseProfile ? baseProfile.profile.host : undefined),
+        //     port: serviceProfile.profile.port ? serviceProfile.profile.port :
+        //     (baseProfile ? baseProfile.profile.port : 0),
+        //     basePath: serviceProfile.profile.basePath ? serviceProfile.profile.basePath :
+        //     (baseProfile ? baseProfile.profile.basePath : undefined),
+        //     rejectUnauthorized: serviceProfile.profile.rejectUnauthorized !== null ?
+        //     serviceProfile.profile.rejectUnauthorized :
+        //     (baseProfile ? baseProfile.profile.rejectUnauthorized : true),
+        //     user: serviceProfile.profile.user ? serviceProfile.profile.user :
+        //     (baseProfile ? baseProfile.profile.user : undefined),
+        //     password: serviceProfile.profile.password ? serviceProfile.profile.password :
+        //     (baseProfile ? baseProfile.profile.password : undefined),
+        //     tokenType: baseProfile.profile.tokenType,
+        //     tokenValue: (baseProfile && !serviceProfile.profile.password) ? baseProfile.profile.tokenValue : undefined
+        // };
 
         const combinedSession = await zowe.ZosmfSession.createBasicZosmfSessionFromArguments(cmdArgs);
 
         // For easier debugging, move serviceProfile to updatedServiceProfile and then update it with combinedSession
         const updatedServiceProfile: IProfileLoaded = serviceProfile;
-        updatedServiceProfile.profile.host = combinedSession.ISession.hostname;
-        updatedServiceProfile.profile.port = combinedSession.ISession.port;
-        updatedServiceProfile.profile.basePath = combinedSession.ISession.basePath;
-        updatedServiceProfile.profile.rejectUnauthorized = combinedSession.ISession.rejectUnauthorized;
-        updatedServiceProfile.profile.tokenType = combinedSession.ISession.tokenType;
-        updatedServiceProfile.profile.tokenValue = combinedSession.ISession.tokenValue;
+        for (const prop of Object.keys(combinedSession.ISession)) {
+            if (prop === "hostname") { updatedServiceProfile.profile.host = combinedSession.ISession[prop]; }
+            else { updatedServiceProfile.profile[prop] = combinedSession.ISession[prop]; }
+        }
+        // updatedServiceProfile.profile.host = combinedSession.ISession.hostname;
+        // updatedServiceProfile.profile.port = combinedSession.ISession.port;
+        // updatedServiceProfile.profile.basePath = combinedSession.ISession.basePath;
+        // updatedServiceProfile.profile.rejectUnauthorized = combinedSession.ISession.rejectUnauthorized;
+        // updatedServiceProfile.profile.tokenType = combinedSession.ISession.tokenType;
+        // updatedServiceProfile.profile.tokenValue = combinedSession.ISession.tokenValue;
         return updatedServiceProfile;
-
     }
 
     public async getBaseProfile() {
