@@ -38,6 +38,10 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
         return ZosmfUssApi.getProfileTypeName();
     }
 
+    public getSessionFromCommandArgument(cmdArgs: ICommandArguments): Session{
+        return zowe.ZosmfSession.createBasicZosmfSessionFromArguments(cmdArgs);
+    }
+
     public getSession(profile?: IProfileLoaded): Session {
         if (!this.session) {
             try {
