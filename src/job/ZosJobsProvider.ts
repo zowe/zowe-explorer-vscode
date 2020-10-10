@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import * as jobUtils from "../job/utils";
 import * as globals from "../globals";
-import { ZosmfSession, IJob } from "@zowe/cli";
+import { IJob } from "@zowe/cli";
 import { IProfileLoaded, Logger, Session } from "@zowe/imperative";
 import { Profiles, ValidProfileEnum } from "../Profiles";
 import { Job } from "./ZoweJobNode";

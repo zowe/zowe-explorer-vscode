@@ -17,7 +17,7 @@ import * as zowe from "@zowe/cli";
 import * as globals from "../../../src/globals";
 import * as utils from "../../../src/utils";
 import { Logger } from "@zowe/imperative";
-import { createIJobFile, createIJobObject } from "../../../__mocks__/mockCreators/jobs";
+import { createIJobFile, createIJobObject, createJobSessionNode } from "../../../__mocks__/mockCreators/jobs";
 import { Job } from "../../../src/job/ZoweJobNode";
 import { Profiles, ValidProfileEnum } from "../../../src/Profiles";
 import { createIProfile, createISession, createInstanceOfProfile, createISessionWithoutCredentials, createQuickPickContent } from "../../../__mocks__/mockCreators/shared";
@@ -34,6 +34,7 @@ async function createGlobalMocks() {
         createTreeView: jest.fn(),
         mockCreateBasicZosmfSession: jest.fn(),
         mockGetSpoolFiles: jest.fn(),
+        testSessionNode: null,
         mockDeleteJobs: jest.fn(),
         mockShowInputBox: jest.fn(),
         mockDeleteJob: jest.fn(),
@@ -115,6 +116,7 @@ async function createGlobalMocks() {
     ZoweExplorerApiRegister.getJesApi = globalMocks.mockGetJesApi.bind(ZoweExplorerApiRegister);
 
     globalMocks.mockCreateBasicZosmfSession.mockReturnValue(globalMocks.testSession);
+    globalMocks.testSessionNode = createJobSessionNode(globalMocks.testSession, globalMocks.testProfile);
     globalMocks.createTreeView.mockReturnValue("testTreeView");
     globalMocks.mockGetJob.mockReturnValue(globalMocks.testIJob);
     globalMocks.mockGetJobsByOwnerAndPrefix.mockReturnValue([globalMocks.testIJob, globalMocks.testIJobComplete]);
@@ -135,6 +137,7 @@ async function createGlobalMocks() {
         })
     });
     globalMocks.testJobsProvider = await createJobsTree(Logger.getAppLogger());
+    globalMocks.testJobsProvider.mSessionNodes.push(globalMocks.testSessionNode);
     Object.defineProperty(globalMocks.testJobsProvider, "refresh", { value: globalMocks.mockRefresh, configurable: true });
 
     // Reset getConfiguration because we called it when testJobsProvider was assigned
