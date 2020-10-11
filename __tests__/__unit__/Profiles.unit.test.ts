@@ -11,7 +11,7 @@
 
 import { createISessionWithoutCredentials, createTreeView, createIProfile, createInstanceOfProfile,
          createQuickPickItem, createQuickPickContent, createInputBox, createBasicZosmfSession,
-         createPersistentConfig, createInvalidIProfile, createValidIProfile } from "../../__mocks__/mockCreators/shared";
+         createPersistentConfig, createInvalidIProfile, createValidIProfile, createISession } from "../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../__mocks__/mockCreators/datasets";
 import { createProfileManager, createTestSchemas } from "../../__mocks__/mockCreators/profiles";
 import * as vscode from "vscode";
@@ -45,10 +45,12 @@ async function createGlobalMocks() {
         mockShowErrorMessage: jest.fn(),
         mockCreateInputBox: jest.fn(),
         mockLog: jest.fn(),
+        mockProfileInstance: null,
         mockDebug: jest.fn(),
         mockError: jest.fn(),
         mockConfigurationTarget: jest.fn(),
         mockCreateBasicZosmfSession: jest.fn(),
+        mockCreateBasicZosmfSessionFromArguments: jest.fn(),
         testProfile: createValidIProfile(),
         mockCliProfileManager: createProfileManager(),
         ProgressLocation: jest.fn().mockImplementation(() => {
@@ -60,7 +62,8 @@ async function createGlobalMocks() {
         mockCallback: null
     };
 
-    newMocks.mockGetInstance.mockReturnValue(createInstanceOfProfile(newMocks.testProfile));
+    newMocks.mockProfileInstance = createInstanceOfProfile(newMocks.testProfile);
+    newMocks.mockGetInstance.mockReturnValue(newMocks.mockProfileInstance);
     newMocks.withProgress = jest.fn().mockImplementation((progLocation, callback) => {
         return newMocks.mockCallback;
     });
@@ -75,6 +78,8 @@ async function createGlobalMocks() {
     Object.defineProperty(vscode.window, "createInputBox", { value: newMocks.mockCreateInputBox, configurable: true });
     Object.defineProperty(globals.LOG, "debug", { value: newMocks.mockDebug, configurable: true });
     Object.defineProperty(ZosmfSession, "createBasicZosmfSession", { value: newMocks.mockCreateBasicZosmfSession });
+    Object.defineProperty(ZosmfSession, "createBasicZosmfSessionFromArguments", { value: newMocks.mockCreateBasicZosmfSessionFromArguments,
+                                                                                  configurable: true });
     Object.defineProperty(globals.LOG, "error", { value: newMocks.mockError, configurable: true });
     Object.defineProperty(globals, "ISTHEIA", { get: () => false, configurable: true });
     Object.defineProperty(vscode.window, "createTreeView", { value: jest.fn(), configurable: true });
@@ -2174,3 +2179,75 @@ describe("Profiles Unit Tests - Function refresh", () => {
     });
 });
 
+describe("Profiles Unit Tests - Function getCombinedProfile", () => {
+    async function createBlockMocks(globalMocks) {
+        const newMocks = {
+            testBaseProfile: createValidIProfile(),
+            mockCommonApi: await ZoweExplorerApiRegister.getCommonApi(globalMocks.testProfile),
+            testSchemas: createTestSchemas(),
+            mockProfileInstance: await Profiles.createInstance(Logger.getAppLogger()),
+            testCombinedSession: createISession(),
+            testCombinedProfile: createValidIProfile()
+        };
+
+        newMocks.testBaseProfile.profile.tokenType = "testTokenType";
+        newMocks.testBaseProfile.profile.tokenValue = "testTokenValue";
+        newMocks.testCombinedSession.ISession.tokenType = "testTokenType";
+        newMocks.testCombinedSession.ISession.tokenValue = "testTokenValue";
+        newMocks.testCombinedProfile.profile.tokenType = "testTokenType";
+        newMocks.testCombinedProfile.profile.tokenValue = "testTokenValue";
+        newMocks.testCombinedProfile.profile.user = "fake";
+        newMocks.testCombinedProfile.profile.password = "fake";
+        newMocks.testCombinedProfile.profile.protocol = "https";
+        newMocks.testCombinedProfile.profile.host = "fake";
+        newMocks.testCombinedProfile.profile.type = "basic";
+        globalMocks.mockCreateBasicZosmfSessionFromArguments.mockResolvedValue(newMocks.testCombinedSession);
+        jest.spyOn(newMocks.mockProfileInstance, "getSchema").mockResolvedValue(newMocks.testSchemas[0]);
+
+        // Mock the Common API so that getSession returns the correct value
+        const getCommonApiMock = jest.fn();
+        getCommonApiMock.mockReturnValue(newMocks.mockCommonApi);
+        ZoweExplorerApiRegister.getCommonApi = getCommonApiMock.bind(ZoweExplorerApiRegister);
+        jest.spyOn(newMocks.mockCommonApi, "getSession").mockReturnValue(globalMocks.testSession);
+
+        return newMocks;
+    }
+
+    it("Tests that getCombinedProfile returns the service profile if it contains user/password", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const response = await (await blockMocks.mockProfileInstance).getCombinedProfile(globalMocks.testProfile, blockMocks.testBaseProfile);
+
+        expect(response).toEqual(globalMocks.testProfile);
+    });
+
+    it("Tests that getCombinedProfile returns the service profile if it contains user/password", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.testBaseProfile.profile.host = "testBasePort.com";
+        // tslint:disable-next-line: no-magic-numbers
+        blockMocks.testBaseProfile.profile.port = 999;
+        globalMocks.testProfile.profile.user = null;
+        globalMocks.testProfile.profile.password = null;
+
+        const response = await (await blockMocks.mockProfileInstance).getCombinedProfile(globalMocks.testProfile, blockMocks.testBaseProfile);
+
+        expect(response).toEqual(globalMocks.testProfile);
+    });
+
+    it("Tests that getCombinedProfile returns a combined profile with baseProfile details", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        globalMocks.testProfile.profile.user = null;
+        globalMocks.testProfile.profile.password = null;
+        blockMocks.testBaseProfile.profile.host = globalMocks.testProfile.profile.host;
+        blockMocks.testBaseProfile.profile.port = globalMocks.testProfile.profile.port;
+
+        const response = await (await blockMocks.mockProfileInstance).getCombinedProfile(globalMocks.testProfile, blockMocks.testBaseProfile);
+
+        expect(response).toEqual(blockMocks.testCombinedProfile);
+    });
+});

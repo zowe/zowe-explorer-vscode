@@ -1141,10 +1141,10 @@ export class Profiles {
                 return serviceProfile;
         }
 
-        let combinedProfile;
+        let combinedSession;
         if (!commonApi.getSessionFromCommandArgument) {
             // This is here for extenders
-            combinedProfile = ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).getSession();
+            combinedSession = ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).getSession();
         } else {
             // This process combines the information from baseprofile to serviceprofile and create a new session
             const profSchema = await this.getSchema(serviceProfile.type);
@@ -1160,40 +1160,15 @@ export class Profiles {
                 cmdArgs.tokenType = baseProfile.profile.tokenType;
                 cmdArgs.tokenValue = baseProfile.profile.tokenValue;
             }
-            // const cmdArgs: ICommandArguments = {
-            //     $0: "zowe",
-            //     _: [""],
-            //     host: serviceProfile.profile.host ? serviceProfile.profile.host :
-            //     (baseProfile ? baseProfile.profile.host : undefined),
-            //     port: serviceProfile.profile.port ? serviceProfile.profile.port :
-            //     (baseProfile ? baseProfile.profile.port : 0),
-            //     basePath: serviceProfile.profile.basePath ? serviceProfile.profile.basePath :
-            //     (baseProfile ? baseProfile.profile.basePath : undefined),
-            //     rejectUnauthorized: serviceProfile.profile.rejectUnauthorized !== null ?
-            //     serviceProfile.profile.rejectUnauthorized :
-            //     (baseProfile ? baseProfile.profile.rejectUnauthorized : true),
-            //     user: serviceProfile.profile.user ? serviceProfile.profile.user :
-            //     (baseProfile ? baseProfile.profile.user : undefined),
-            //     password: serviceProfile.profile.password ? serviceProfile.profile.password :
-            //     (baseProfile ? baseProfile.profile.password : undefined),
-            //     tokenType: baseProfile.profile.tokenType,
-            //     tokenValue: (baseProfile && !serviceProfile.profile.password) ? baseProfile.profile.tokenValue : undefined
-            // };
-            combinedProfile = await zowe.ZosmfSession.createBasicZosmfSessionFromArguments(cmdArgs);
+            combinedSession = await zowe.ZosmfSession.createBasicZosmfSessionFromArguments(cmdArgs);
         }
 
         // For easier debugging, move serviceProfile to updatedServiceProfile and then update it with combinedProfile
         const updatedServiceProfile: IProfileLoaded = serviceProfile;
-        for (const prop of Object.keys(combinedProfile.ISession)) {
-            if (prop === "hostname") { updatedServiceProfile.profile.host = combinedProfile.ISession[prop]; }
-            else { updatedServiceProfile.profile[prop] = combinedProfile.ISession[prop]; }
+        for (const prop of Object.keys(combinedSession.ISession)) {
+            if (prop === "hostname") { updatedServiceProfile.profile.host = combinedSession.ISession[prop]; }
+            else { updatedServiceProfile.profile[prop] = combinedSession.ISession[prop]; }
         }
-        // updatedServiceProfile.profile.host = combinedProfile.ISession.hostname;
-        // updatedServiceProfile.profile.port = combinedProfile.ISession.port;
-        // updatedServiceProfile.profile.basePath = combinedProfile.ISession.basePath;
-        // updatedServiceProfile.profile.rejectUnauthorized = combinedProfile.ISession.rejectUnauthorized;
-        // updatedServiceProfile.profile.tokenType = combinedProfile.ISession.tokenType;
-        // updatedServiceProfile.profile.tokenValue = combinedProfile.ISession.tokenValue;
         return updatedServiceProfile;
     }
 
@@ -1252,7 +1227,6 @@ export class Profiles {
     // ** Functions for handling Profile Information */
 
     private async urlInfo(input?) {
-
         let zosURL: string;
 
         const urlInputBox = vscode.window.createInputBox();
