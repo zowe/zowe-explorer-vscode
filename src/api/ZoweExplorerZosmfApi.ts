@@ -48,8 +48,6 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
                 if (!this.profile.profile.tokenValue) {
                     this.session = zowe.ZosmfSession.createBasicZosmfSession((profile||this.profile).profile);
                 } else {
-                    // Why is the Session response different??????
-                    // const X = this.createSessionFromArgs((profile || this.profile).profile);
                     const serviceProfile = this.profile;
                     const cmdArgs: ICommandArguments = {
                         $0: "zowe",

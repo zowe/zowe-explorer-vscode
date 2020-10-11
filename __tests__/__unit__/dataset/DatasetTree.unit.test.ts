@@ -29,6 +29,7 @@ import { createDatasetSessionNode, createDatasetTree, createDatasetFavoritesNode
 import { bindMvsApi, createMvsApi } from "../../../__mocks__/mockCreators/api";
 import * as workspaceUtils from "../../../src/utils/workspace";
 import { PersistentFilters } from "../../../src/PersistentFilters";
+import { ZoweExplorerApiRegister } from "../../../src/api/ZoweExplorerApiRegister";
 
 jest.mock("fs");
 jest.mock("util");
@@ -645,6 +646,103 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
         expect(testTree.mSessionNodes[1]).not.toBeDefined();
     });
 });
+
+describe("USSTree Unit Tests - Function USSTree.addSingleSession()", () => {
+    function createBlockMocks() {
+        const newMocks = {
+            mockProfilesInstance: null,
+            testProfile: createIProfile(),
+            testBaseProfile: createValidIProfile(),
+            testCombinedProfile: createValidIProfile(),
+            testSession: createISession(),
+            testUSSNode: null,
+            testTree: null,
+            profilesForValidation: {status: "active", name: "fake"},
+        };
+
+        newMocks.testBaseProfile.profile.tokenType = "tokenType";
+        newMocks.testBaseProfile.profile.tokenValue = "testTokenValue";
+        newMocks.testCombinedProfile.profile.tokenType = "tokenType";
+        newMocks.testCombinedProfile.profile.tokenValue = "testTokenValue";
+        newMocks.mockProfilesInstance = createInstanceOfProfile(newMocks.testProfile);
+        newMocks.mockProfilesInstance.getBaseProfile.mockResolvedValue(newMocks.testBaseProfile);
+        newMocks.mockProfilesInstance.loadNamedProfile.mockReturnValue(newMocks.testProfile);
+        newMocks.mockProfilesInstance.getCombinedProfile.mockReturnValue(newMocks.testCombinedProfile);
+        newMocks.mockProfilesInstance.allProfiles = [newMocks.testProfile, { name: "firstName" }, { name: "secondName" }];
+        newMocks.testTree = new DatasetTree();
+        const datasetSessionTestNode = createDatasetSessionNode(newMocks.testSession, newMocks.testProfile);
+        newMocks.testTree.mSessionNodes.push(datasetSessionTestNode);
+        mocked(Profiles.getInstance).mockReturnValue(newMocks.mockProfilesInstance);
+
+        return newMocks;
+    }
+    it("Tests if addSingleSession uses the baseProfile to get the combined profile information", async () => {
+        await createGlobalMocks();
+        const blockMocks = await createBlockMocks();
+
+        blockMocks.testTree.mSessionNodes.pop();
+        blockMocks.testSession.ISession.tokenType = blockMocks.testBaseProfile.profile.tokenType;
+        blockMocks.testSession.ISession.tokenValue = blockMocks.testBaseProfile.profile.tokenValue;
+
+        // Mock the USS API so that getSession returns the correct value
+        const mockMvsApi = await ZoweExplorerApiRegister.getMvsApi(blockMocks.testProfile);
+        const getMvsApiMock = jest.fn();
+        getMvsApiMock.mockReturnValue(mockMvsApi);
+        ZoweExplorerApiRegister.getMvsApi = getMvsApiMock.bind(ZoweExplorerApiRegister);
+        jest.spyOn(mockMvsApi, "getSession").mockReturnValue(blockMocks.testSession);
+
+        await blockMocks.testTree.addSingleSession(blockMocks.testProfile);
+
+        expect(blockMocks.testTree.mSessionNodes[1].session.ISession.tokenValue).toEqual("testTokenValue");
+    });
+
+    it("Tests if addSingleSession throws an error if  getCombinedProfile fails", async () => {
+        await createGlobalMocks();
+        const blockMocks = await createBlockMocks();
+
+        jest.spyOn(blockMocks.mockProfilesInstance, "getCombinedProfile").mockRejectedValue("Test error!");
+
+        let error;
+        try {
+            await blockMocks.testTree.addSingleSession(blockMocks.testProfile);
+        } catch (err) {
+            error = err;
+        }
+
+        expect(error).toEqual("Test error!");
+    });
+
+    it("Tests that addSingleSession doesn't add the session again, if it was already added", async () => {
+        await createGlobalMocks();
+        const blockMocks = await createBlockMocks();
+
+        await blockMocks.testTree.addSingleSession(blockMocks.testProfile);
+
+        expect(blockMocks.testTree.mSessionNodes.length).toEqual(2);
+    });
+
+    it("Tests that addSingleSession successfully adds a session", async () => {
+        await createGlobalMocks();
+        const blockMocks = await createBlockMocks();
+
+        blockMocks.testTree.mSessionNodes.pop();
+        blockMocks.testSession.ISession.tokenType = blockMocks.testBaseProfile.profile.tokenType;
+        blockMocks.testSession.ISession.tokenValue = blockMocks.testBaseProfile.profile.tokenValue;
+
+        // Mock the USS API so that getSession returns the correct value
+        const mockMvsApi = await ZoweExplorerApiRegister.getMvsApi(blockMocks.testProfile);
+        const getMvsApiMock = jest.fn();
+        getMvsApiMock.mockReturnValue(mockMvsApi);
+        ZoweExplorerApiRegister.getMvsApi = getMvsApiMock.bind(ZoweExplorerApiRegister);
+        jest.spyOn(mockMvsApi, "getSession").mockReturnValue(blockMocks.testSession);
+
+        await blockMocks.testTree.addSingleSession(blockMocks.testProfile);
+
+        expect(blockMocks.testTree.mSessionNodes.length).toEqual(2);
+        expect(blockMocks.testTree.mSessionNodes[1].profile.name).toEqual(blockMocks.testProfile.name);
+    });
+});
+
 describe("Dataset Tree Unit Tests - Function addFavorite", () => {
     function createBlockMocks() {
         const session = createISession();
