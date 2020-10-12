@@ -33,10 +33,29 @@ describe("Extension Theia Tests", () => {
         await driver.sleep(SLEEPTIME);
         const button = driver.wait(until.elementLocated(By.id("shell-tab-plugin-view-container:zowe")));
         button.click();
-        if (button) {
-            const favoriteLink2 = driver.findElement(By.xpath("/html/body/div[1]/div[2]/div[1]/div[2]/div[2]/div[8]/div/div[1]/div[2]/div[1]/div/div[1]/div/div/div[1]"));
-        }
         const favoriteLink = await driver.findElements(By.className("theia-TreeNodeSegment theia-TreeNodeSegmentGrow"));
+        if (button) {
+            let favoriteLink2 = driver.findElement(By.xpath("/html"));
+            favoriteLink2 = driver.findElement(By.xpath("/html/body"));
+            favoriteLink2 = driver.findElement(By.xpath("/html/body/div[1]"));
+            favoriteLink2 = driver.findElement(By.xpath("/html/body/div[1]/div[2]"));
+            favoriteLink2 = driver.findElement(By.xpath("/html/body/div[1]/div[2]/div[1]"));
+            favoriteLink2 = driver.findElement(By.xpath("/html/body/div[1]/div[2]/div[1]/div[2]"));
+            favoriteLink2 = driver.findElement(By.xpath("/html/body/div[1]/div[2]/div[1]/div[2]/div[2]"));
+            favoriteLink2 = driver.findElement(By.xpath("/html/body/div[1]/div[2]/div[1]/div[2]/div[2]/div[8]"));
+            favoriteLink2 = driver.findElement(By.xpath("/html/body/div[1]/div[2]/div[1]/div[2]/div[2]/div[8]/div"));
+            favoriteLink2 = driver.findElement(By.xpath("/html/body/div[1]/div[2]/div[1]/div[2]/div[2]/div[8]/div/div[1]"));
+            favoriteLink2 = driver.findElement(By.xpath("/html/body/div[1]/div[2]/div[1]/div[2]/div[2]/div[8]/div/div[1]/div[2]"));
+            favoriteLink2 = driver.findElement(By.xpath("/html/body/div[1]/div[2]/div[1]/div[2]/div[2]/div[8]/div/div[1]/div[2]/div[1]"));
+            favoriteLink2 = driver.findElement(By.xpath("/html/body/div[1]/div[2]/div[1]/div[2]/div[2]/div[8]/div/div[1]/div[2]/div[1]/div"));
+            favoriteLink2 = driver.findElement(By.xpath("/html/body/div[1]/div[2]/div[1]/div[2]/div[2]/div[8]/div/div[1]/div[2]/div[1]/div/div[1]"));
+            favoriteLink2 = driver.findElement(
+                By.xpath("/html/body/div[1]/div[2]/div[1]/div[2]/div[2]/div[8]/div/div[1]/div[2]/div[1]/div/div[1]/div"));
+            favoriteLink2 = driver.findElement(
+                By.xpath("/html/body/div[1]/div[2]/div[1]/div[2]/div[2]/div[8]/div/div[1]/div[2]/div[1]/div/div[1]/div/div"));
+            favoriteLink2 = driver.findElement(
+                By.xpath("/html/body/div[1]/div[2]/div[1]/div[2]/div[2]/div[8]/div/div[1]/div[2]/div[1]/div/div[1]/div/div/div[1]"));
+        }
         // const favoriteLink = await driver.wait(until.elementLocated(By.id("/0:Favorites")), WAITTIME).getAttribute("title");
         expect(favoriteLink).to.equal("Favorites");
     }).timeout(TIMEOUT);
