@@ -1168,7 +1168,11 @@ export class Profiles {
                 cmdArgs.tokenType = baseProfile.profile.tokenType;
                 cmdArgs.tokenValue = baseProfile.profile.tokenValue;
             }
-            combinedSession = await zowe.ZosmfSession.createBasicZosmfSessionFromArguments(cmdArgs);
+            if (commonApi.getSessionFromCommandArgument) {
+                combinedSession = await commonApi.getSessionFromCommandArgument(cmdArgs);
+            } else {
+                vscode.window.showErrorMessage(localize("getCombinedProfile.log.debug", "This extension does not support base profiles."));
+            }
         }
 
         // For easier debugging, move serviceProfile to updatedServiceProfile and then update it with combinedProfile

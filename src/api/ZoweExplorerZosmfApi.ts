@@ -60,7 +60,7 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
                         tokenValue: serviceProfile.profile.tokenValue
                     };
 
-                    this.session = zowe.ZosmfSession.createBasicZosmfSessionFromArguments(cmdArgs);
+                    this.session = this.getSessionFromCommandArgument(cmdArgs);
                 }
             } catch (error) {
                 this.log.debug(error);
@@ -86,7 +86,7 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
                     tokenValue: serviceProfile.profile.tokenValue
                 };
 
-                validateSession = zowe.ZosmfSession.createBasicZosmfSessionFromArguments(cmdArgs);
+                validateSession = this.getSessionFromCommandArgument(cmdArgs);
             } else {
                 validateSession = await zowe.ZosmfSession.createBasicZosmfSession(validateProfile.profile);
             }

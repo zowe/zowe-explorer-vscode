@@ -32,6 +32,7 @@
     "deleteProfile.noSelected": "Operation Cancelled",
     "Profiles.validateProfiles.validationProgress": "Validating {0} Profile.",
     "Profiles.validateProfiles.validationCancelled": "Validating {0} was cancelled.",
+    "getCombinedProfile.log.debug": "This extension does not support base profiles.",
     "deleteProfile.log.debug": "Deleting profile ",
     "deleteProfile.showQuickPick.delete": "Delete",
     "deleteProfile.showQuickPick.cancel": "Cancel",
