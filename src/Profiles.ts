@@ -276,16 +276,20 @@ export class Profiles {
         // TODO: Add Base ProfileType in registeredApiTypes
         // This process retrieves the base profile if there's any and stores it in an array
         // If base is added in registeredApiType maybe this process can be removed
-        const profileManagerA = await this.getCliProfileManager("base");
-        if (profileManagerA) {
-            try {
-                const baseProfile = await profileManagerA.load({ loadDefault: true });
-                this.allProfiles.push(baseProfile);
-            } catch (err) {
-                if (!err.message.includes(`No default profile set for type "base"`)) {
-                    vscode.window.showInformationMessage(err.message);
+        try {
+            const profileManagerA = await this.getCliProfileManager("base");
+            if (profileManagerA) {
+                try {
+                    const baseProfile = await profileManagerA.load({ loadDefault: true });
+                    this.allProfiles.push(baseProfile);
+                } catch (err) {
+                    if (!err.message.includes(`No default profile set for type "base"`)) {
+                        vscode.window.showInformationMessage(err.message);
+                    }
                 }
             }
+        } catch (error) {
+            this.log.debug(error);
         }
 
         for (const type of ZoweExplorerApiRegister.getInstance().registeredApiTypes()) {
