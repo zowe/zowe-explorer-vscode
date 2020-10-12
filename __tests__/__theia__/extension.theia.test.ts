@@ -33,7 +33,8 @@ describe("Extension Theia Tests", () => {
         await driver.sleep(SLEEPTIME);
         const button = driver.wait(until.elementLocated(By.id("shell-tab-plugin-view-container:zowe")));
         button.click();
-        const favoriteLink = await driver.wait(until.elementLocated(By.id("/0:Favorites")), WAITTIME).getAttribute("title");
+        const favoriteLink = await driver.wait(until.elementLocated(By.xpath("/html/body/div[1]/div[2]/div[1]/div[2]/div[2]/div[8]/div/div[1]/div[2]/div[1]/div/div[1]/div/div/div[1]")), WAITTIME).getAttribute("title");
+        // const favoriteLink = await driver.wait(until.elementLocated(By.id("/0:Favorites")), WAITTIME).getAttribute("title");
         expect(favoriteLink).to.equal("Favorites");
     }).timeout(TIMEOUT);
 
