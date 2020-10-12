@@ -1149,10 +1149,10 @@ export class Profiles {
                 return serviceProfile;
         }
 
-        let combinedSession;
+        let session;
         if (!commonApi.getSessionFromCommandArgument) {
             // This is here for extenders
-            combinedSession = ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).getSession();
+            session = ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).getSession(serviceProfile);
         } else {
             // This process combines the information from baseprofile to serviceprofile and create a new session
             const profSchema = await this.getSchema(serviceProfile.type);
@@ -1169,7 +1169,7 @@ export class Profiles {
                 cmdArgs.tokenValue = baseProfile.profile.tokenValue;
             }
             if (commonApi.getSessionFromCommandArgument) {
-                combinedSession = await commonApi.getSessionFromCommandArgument(cmdArgs);
+                session = await commonApi.getSessionFromCommandArgument(cmdArgs);
             } else {
                 vscode.window.showErrorMessage(localize("getCombinedProfile.log.debug", "This extension does not support base profiles."));
             }
@@ -1177,9 +1177,9 @@ export class Profiles {
 
         // For easier debugging, move serviceProfile to updatedServiceProfile and then update it with combinedProfile
         const updatedServiceProfile: IProfileLoaded = serviceProfile;
-        for (const prop of Object.keys(combinedSession.ISession)) {
-            if (prop === "hostname") { updatedServiceProfile.profile.host = combinedSession.ISession[prop]; }
-            else { updatedServiceProfile.profile[prop] = combinedSession.ISession[prop]; }
+        for (const prop of Object.keys(session.ISession)) {
+            if (prop === "hostname") { updatedServiceProfile.profile.host = session.ISession[prop]; }
+            else { updatedServiceProfile.profile[prop] = session.ISession[prop]; }
         }
         return updatedServiceProfile;
     }
