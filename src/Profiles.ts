@@ -1041,10 +1041,14 @@ export class Profiles {
     public async getCliProfileManager(type: string): Promise<CliProfileManager> {
         let profileManager = this.profileManagerByType.get(type);
         if (!profileManager) {
-            profileManager = await new CliProfileManager({
-                profileRootDirectory: path.join(getZoweDir(), "profiles"),
-                type
-            });
+            try {
+                profileManager = await new CliProfileManager({
+                    profileRootDirectory: path.join(getZoweDir(), "profiles"),
+                    type
+                });
+            } catch (error) {
+                this.log.debug(error);
+            }
             if (profileManager) {
                 this.profileManagerByType.set(type, profileManager);
             } else {
