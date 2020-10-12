@@ -35,7 +35,9 @@ describe("Extension Theia Tests", () => {
         button.click();
         const favoriteLink = await driver.findElements((element) => element.class && element.class.includes("TreeNodeSegment"));
         let favoriteLink2;
+        let favoriteLink1;
         if (button) {
+            favoriteLink1 = await driver.findElement(By.xpath("/html"));
             favoriteLink2 = await driver.findElement(By.xpath("/html"));
             favoriteLink2 = await driver.findElement(By.xpath("/html/body"));
             favoriteLink2 = await driver.findElement(By.xpath("/html/body/div[1]"));
@@ -57,8 +59,7 @@ describe("Extension Theia Tests", () => {
             favoriteLink2 = await driver.findElement(
                 By.xpath("/html/body/div[1]/div[2]/div[1]/div[2]/div[2]/div[8]/div/div[1]/div[2]/div[1]/div/div[1]/div/div/div[1]"));
         }
-        // const favoriteLink = await driver.wait(until.elementLocated(By.id("/0:Favorites")), WAITTIME).getAttribute("title");
-        expect(favoriteLink2.getAttribute("title")).to.equal("Favorites");
+        expect(favoriteLink2).to.equal(favoriteLink1);
         expect(favoriteLink[0].getAttribute("title")).to.equal("Favorites");
     }).timeout(TIMEOUT * 2);
 
