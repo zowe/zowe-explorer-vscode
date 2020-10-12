@@ -37,7 +37,7 @@ describe("Extension Theia Tests", () => {
         let favoriteLink2;
         let favoriteLink1;
         if (button) {
-            favoriteLink1 = await driver.findElement(By.xpath("/html"));
+            favoriteLink1 = await (await driver).findElement(By.xpath("/html"));
             favoriteLink2 = await driver.findElement(By.xpath("/html"));
             favoriteLink2 = await driver.findElement(By.xpath("/html/body"));
             favoriteLink2 = await driver.findElement(By.xpath("/html/body/div[1]"));
@@ -56,7 +56,7 @@ describe("Extension Theia Tests", () => {
                 By.xpath("/html/body/div[1]/div[2]/div[1]/div[2]/div[2]/div[8]/div/div[1]/div[2]/div[1]/div/div[1]/div"));
             favoriteLink2 = await driver.findElement(
                 By.xpath("/html/body/div[1]/div[2]/div[1]/div[2]/div[2]/div[8]/div/div[1]/div[2]/div[1]/div/div[1]/div/div"));
-            favoriteLink2 = await driver.findElement(
+            favoriteLink2 = await (await driver).findElement(
                 By.xpath("/html/body/div[1]/div[2]/div[1]/div[2]/div[2]/div[8]/div/div[1]/div[2]/div[1]/div/div[1]/div/div/div[1]"));
         }
         expect(favoriteLink2).to.equal(favoriteLink1);
