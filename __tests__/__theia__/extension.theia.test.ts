@@ -33,9 +33,10 @@ describe("Extension Theia Tests", () => {
         await driver.sleep(SLEEPTIME);
         const button = driver.wait(until.elementLocated(By.id("shell-tab-plugin-view-container:zowe")));
         button.click();
-        const favoriteLink = await driver.findElements(By.className("theia-TreeNodeSegment theia-TreeNodeSegmentGrow"));
+        const favoriteLink = await driver.findElements((element) => element.class && element.class.includes("theia-TreeNodeSegment"));
+        let favoriteLink2;
         if (button) {
-            let favoriteLink2 = driver.findElement(By.xpath("/html"));
+            favoriteLink2 = driver.findElement(By.xpath("/html"));
             favoriteLink2 = driver.findElement(By.xpath("/html/body"));
             favoriteLink2 = driver.findElement(By.xpath("/html/body/div[1]"));
             favoriteLink2 = driver.findElement(By.xpath("/html/body/div[1]/div[2]"));
@@ -58,6 +59,7 @@ describe("Extension Theia Tests", () => {
         }
         // const favoriteLink = await driver.wait(until.elementLocated(By.id("/0:Favorites")), WAITTIME).getAttribute("title");
         expect(favoriteLink).to.equal("Favorites");
+        expect(favoriteLink2.getAttribute("title")).to.be("Favorites");
     }).timeout(TIMEOUT);
 
     it("should find the Data Sets node", async () => {
