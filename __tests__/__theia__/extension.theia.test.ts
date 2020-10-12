@@ -58,8 +58,8 @@ describe("Extension Theia Tests", () => {
                 By.xpath("/html/body/div[1]/div[2]/div[1]/div[2]/div[2]/div[8]/div/div[1]/div[2]/div[1]/div/div[1]/div/div/div[1]"));
         }
         // const favoriteLink = await driver.wait(until.elementLocated(By.id("/0:Favorites")), WAITTIME).getAttribute("title");
-        expect(favoriteLink[0].getAttribute("title")).to.equal("Favorites");
         expect(favoriteLink2.getAttribute("title")).to.be("Favorites");
+        expect(favoriteLink[0].getAttribute("title")).to.equal("Favorites");
     }).timeout(TIMEOUT);
 
     it("should find the Data Sets node", async () => {
