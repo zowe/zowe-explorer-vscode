@@ -203,6 +203,7 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
     vscode.commands.registerCommand("zowe.deletePDS", (node) => dsActions.deleteDataset(node, datasetProvider));
     vscode.commands.registerCommand("zowe.allocateLike", (node) => dsActions.allocateLike(datasetProvider, node));
     vscode.commands.registerCommand("zowe.uploadDialog", (node) => dsActions.uploadDialog(node, datasetProvider));
+    vscode.commands.registerCommand("zowe.uploadFromJsonDialog", (node) => dsActions.uploadFromJsonDialog(node, datasetProvider));
     vscode.commands.registerCommand("zowe.deleteMember", (node) => dsActions.deleteDataset(node, datasetProvider));
     vscode.commands.registerCommand("zowe.editMember", (node) => dsActions.openPS(node, false, datasetProvider));
     vscode.commands.registerCommand("zowe.removeSession", async (node) => datasetProvider.deleteSession(node));

@@ -216,6 +216,10 @@
         "title": "%uploadDialog%"
       },
       {
+        "command": "zowe.uploadFromJsonDialog",
+        "title": "%uploadFromJsonDialog%"
+      },
+      {
         "command": "zowe.editMember",
         "title": "%editMember%",
         "icon": {
@@ -726,6 +730,11 @@
         {
           "when": "view == zowe.explorer && viewItem =~ /^pds.*/",
           "command": "zowe.uploadDialog",
+          "group": "1_create@1"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
+          "command": "zowe.uploadFromJsonDialog",
           "group": "1_create@1"
         },
         {

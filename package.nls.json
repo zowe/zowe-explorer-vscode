@@ -23,6 +23,7 @@
     "editMember": "Edit",
     "issueCmd": "Issue Command",
     "uploadDialog": "Upload Member...",
+    "uploadFromJsonDialog": "Upload Data Sets From JSON File...",
     "pattern": "Search Data Sets by Entering Patterns",
     "refreshNode": "Pull from Mainframe",
     "removeFavorite": "Remove Favorite",

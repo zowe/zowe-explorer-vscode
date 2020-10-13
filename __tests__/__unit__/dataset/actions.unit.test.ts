@@ -12,7 +12,6 @@
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import * as imperative from "@zowe/imperative";
-import * as shared from "../../../src/shared/actions";
 import {
     createBasicZosmfSession, createInstanceOfProfile,
     createIProfile,
@@ -57,6 +56,7 @@ function createGlobalMocks() {
     Object.defineProperty(vscode.window, "showInformationMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showWarningMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showInputBox", { value: jest.fn(), configurable: true });
+    Object.defineProperty(vscode.window, "showOpenDialog", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.workspace, "openTextDocument", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.workspace, "getConfiguration", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showTextDocument", { value: jest.fn(), configurable: true });
@@ -82,6 +82,7 @@ function createGlobalMocks() {
     Object.defineProperty(vscode, "ProgressLocation", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "createWebviewPanel", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.env, "clipboard", { value: clipboard, configurable: true });
+    Object.defineProperty(fs, "readFileSync", { value: jest.fn(), configurable: true });
 }
 
 // Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/master/src/util/testing.ts
@@ -2411,5 +2412,128 @@ describe("Dataset Actions Unit Tests - Function allocateLike", () => {
 
         expect(errorHandlingSpy).toHaveBeenCalledTimes(1);
         expect(errorHandlingSpy).toHaveBeenCalledWith(errorMessage, "test", "Unable to create data set: Test error");
+    });
+});
+
+describe("Dataset Actions Unit Tests - Function uploadFromJsonDialog", () => {
+    function createBlockMocks() {
+        const session = createISession();
+        const imperativeProfile = createIProfile();
+        const treeView = createTreeView();
+        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
+        const mockMvsApi = createMvsApi(imperativeProfile);
+        // tslint:disable-next-line: no-object-literal-type-assertion
+        const testFileUri = { fsPath: "/test/path" } as vscode.Uri;
+        const badJsonFile = Buffer.from(`lalala i am jsonnnn`);
+        const dataSetJsonFile = Buffer.from(`{
+                                                "rootNode": [{
+                                                              "type": "Data Set Partitioned",
+                                                              "label": "test.new.pds"
+                                                }]
+                                            }`);
+        const memberJsonFile = Buffer.from(`{
+                                                "rootNode": [{
+                                                            "type": "Member",
+                                                            "label": "testmemb",
+                                                            "parent": "test.new.pds"
+                                                }]
+                                            }`);
+
+        bindMvsApi(mockMvsApi);
+        mocked(vscode.window.showOpenDialog).mockResolvedValue([testFileUri]);
+        mocked(fs.readFileSync).mockReturnValue(dataSetJsonFile);
+
+        return {
+            session,
+            imperativeProfile,
+            datasetSessionNode,
+            mockMvsApi,
+            testDatasetTree,
+            badJsonFile,
+            dataSetJsonFile,
+            memberJsonFile
+        };
+    }
+
+    it("Tests that uploadFromJsonDialog successfully allocates a data set", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        jest.spyOn(blockMocks.mockMvsApi, "createDataSet").mockResolvedValueOnce(null);
+        blockMocks.testDatasetTree.createFilterString.mockReturnValue("TEST.NEW.PDS");
+        const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
+
+        await dsActions.uploadFromJsonDialog(blockMocks.datasetSessionNode, blockMocks.testDatasetTree);
+
+        expect(blockMocks.datasetSessionNode.pattern).toEqual("TEST.NEW.PDS");
+        expect(mocked(vscode.window.showErrorMessage)).toHaveBeenCalledTimes(0);
+        expect(errorHandlingSpy).toHaveBeenCalledTimes(0);
+    });
+
+    it("Tests that uploadFromJsonDialog successfully allocates a member", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(fs.readFileSync).mockReturnValueOnce(blockMocks.memberJsonFile);
+        jest.spyOn(blockMocks.mockMvsApi, "createDataSetMember").mockResolvedValueOnce(null);
+        blockMocks.testDatasetTree.createFilterString.mockReturnValue("TEST.NEW.PDS(TESTMEMB)");
+        const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
+
+        await dsActions.uploadFromJsonDialog(blockMocks.datasetSessionNode, blockMocks.testDatasetTree);
+
+        expect(blockMocks.datasetSessionNode.pattern).toEqual("TEST.NEW.PDS(TESTMEMB)");
+        expect(mocked(vscode.window.showErrorMessage)).toHaveBeenCalledTimes(0);
+        expect(errorHandlingSpy).toHaveBeenCalledTimes(0);
+    });
+
+    it("Tests that uploadFromJsonDialog fails if user doesn't select a file", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(vscode.window.showOpenDialog).mockResolvedValue(null);
+
+        await dsActions.uploadFromJsonDialog(blockMocks.datasetSessionNode, blockMocks.testDatasetTree);
+
+        expect(mocked(vscode.window.showInformationMessage)).toHaveBeenCalledWith("No selection made.");
+    });
+    it("Tests that uploadFromJsonDialog fails if user uploads invalid JSON", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(fs.readFileSync).mockReturnValueOnce(blockMocks.badJsonFile);
+        const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
+
+        await dsActions.uploadFromJsonDialog(blockMocks.datasetSessionNode, blockMocks.testDatasetTree);
+
+        expect(mocked(vscode.window.showErrorMessage)).toHaveBeenCalledWith("Parsing file as JSON failed.");
+        expect(errorHandlingSpy).toHaveBeenCalled();
+    });
+    it("Tests that uploadFromJsonDialog fails if allocating a member fails", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(fs.readFileSync).mockReturnValueOnce(blockMocks.memberJsonFile);
+        jest.spyOn(blockMocks.mockMvsApi, "createDataSetMember").mockRejectedValueOnce(new Error("Test error!"));
+        const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
+        blockMocks.testDatasetTree.createFilterString.mockReturnValue("");
+
+        await dsActions.uploadFromJsonDialog(blockMocks.datasetSessionNode, blockMocks.testDatasetTree);
+
+        expect(mocked(vscode.window.showErrorMessage).mock.calls[0]).toEqual(["Allocating node testmemb failed."]);
+        expect(errorHandlingSpy).toHaveBeenCalled();
+    });
+    it("Tests that uploadFromJsonDialog fails if allocating a data set fails", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        jest.spyOn(blockMocks.mockMvsApi, "createDataSet").mockRejectedValueOnce(new Error("Test error!"));
+        const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
+        blockMocks.testDatasetTree.createFilterString.mockReturnValue("");
+
+        await dsActions.uploadFromJsonDialog(blockMocks.datasetSessionNode, blockMocks.testDatasetTree);
+
+        expect(mocked(vscode.window.showErrorMessage).mock.calls[0]).toEqual(["Allocating node test.new.pds failed."]);
+        expect(errorHandlingSpy).toHaveBeenCalled();
     });
 });

@@ -25,11 +25,16 @@ import { IUploadOptions, IZosFilesResponse } from "@zowe/cli";
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
-export function filterTreeByString(value: string, treeItems: vscode.QuickPickItem[]): vscode.QuickPickItem[] {
+/*************************************************************************************************************
+ * Returns an array of QuickPick items whose labels match a given filter
+ * @param {string} filter - The filter string. May contain *
+ * @param {vscode.QuickPickItem[]} qpItems - The list of QuickPick items that should be filtered
+ */
+export function filterTreeByString(filter: string, qpItems: vscode.QuickPickItem[]): vscode.QuickPickItem[] {
     const filteredArray = [];
-    value = value.toUpperCase().replace(".", "\.").replace(/\*/g, "(.*)");
-    const regex = new RegExp(value);
-    treeItems.forEach((item) => {
+    filter = filter.toUpperCase().replace(".", "\.").replace(/\*/g, "(.*)");
+    const regex = new RegExp(filter);
+    qpItems.forEach((item) => {
         if (item.label.toUpperCase().match(regex)) {
             filteredArray.push(item);
         }
