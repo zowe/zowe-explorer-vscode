@@ -125,6 +125,7 @@ async function createGlobalMocks() {
             "zowe.deletePDS",
             "zowe.allocateLike",
             "zowe.uploadDialog",
+            "zowe.uploadFromJsonDialog",
             "zowe.deleteMember",
             "zowe.editMember",
             "zowe.removeSession",
