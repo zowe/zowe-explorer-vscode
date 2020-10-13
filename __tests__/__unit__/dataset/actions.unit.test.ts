@@ -2443,6 +2443,7 @@ describe("Dataset Actions Unit Tests - Function uploadFromJsonDialog", () => {
         bindMvsApi(mockMvsApi);
         mocked(vscode.window.showOpenDialog).mockResolvedValue([testFileUri]);
         mocked(fs.readFileSync).mockReturnValue(dataSetJsonFile);
+        mocked(utils.errorHandling).mockReset();
 
         return {
             session,
@@ -2462,13 +2463,12 @@ describe("Dataset Actions Unit Tests - Function uploadFromJsonDialog", () => {
 
         jest.spyOn(blockMocks.mockMvsApi, "createDataSet").mockResolvedValueOnce(null);
         blockMocks.testDatasetTree.createFilterString.mockReturnValue("TEST.NEW.PDS");
-        const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
 
         await dsActions.uploadFromJsonDialog(blockMocks.datasetSessionNode, blockMocks.testDatasetTree);
 
         expect(blockMocks.datasetSessionNode.pattern).toEqual("TEST.NEW.PDS");
         expect(mocked(vscode.window.showErrorMessage)).toHaveBeenCalledTimes(0);
-        expect(errorHandlingSpy).toHaveBeenCalledTimes(0);
+        expect(mocked(utils.errorHandling)).toHaveBeenCalledTimes(0);
     });
 
     it("Tests that uploadFromJsonDialog successfully allocates a member", async () => {
@@ -2478,13 +2478,12 @@ describe("Dataset Actions Unit Tests - Function uploadFromJsonDialog", () => {
         mocked(fs.readFileSync).mockReturnValueOnce(blockMocks.memberJsonFile);
         jest.spyOn(blockMocks.mockMvsApi, "createDataSetMember").mockResolvedValueOnce(null);
         blockMocks.testDatasetTree.createFilterString.mockReturnValue("TEST.NEW.PDS(TESTMEMB)");
-        const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
 
         await dsActions.uploadFromJsonDialog(blockMocks.datasetSessionNode, blockMocks.testDatasetTree);
 
         expect(blockMocks.datasetSessionNode.pattern).toEqual("TEST.NEW.PDS(TESTMEMB)");
         expect(mocked(vscode.window.showErrorMessage)).toHaveBeenCalledTimes(0);
-        expect(errorHandlingSpy).toHaveBeenCalledTimes(0);
+        expect(mocked(utils.errorHandling)).toHaveBeenCalledTimes(0);
     });
 
     it("Tests that uploadFromJsonDialog fails if user doesn't select a file", async () => {
@@ -2502,12 +2501,11 @@ describe("Dataset Actions Unit Tests - Function uploadFromJsonDialog", () => {
         const blockMocks = createBlockMocks();
 
         mocked(fs.readFileSync).mockReturnValueOnce(blockMocks.badJsonFile);
-        const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
 
         await dsActions.uploadFromJsonDialog(blockMocks.datasetSessionNode, blockMocks.testDatasetTree);
 
         expect(mocked(vscode.window.showErrorMessage)).toHaveBeenCalledWith("Parsing file as JSON failed.");
-        expect(errorHandlingSpy).toHaveBeenCalled();
+        expect(mocked(utils.errorHandling)).toHaveBeenCalled();
     });
     it("Tests that uploadFromJsonDialog fails if allocating a member fails", async () => {
         createGlobalMocks();
@@ -2515,25 +2513,23 @@ describe("Dataset Actions Unit Tests - Function uploadFromJsonDialog", () => {
 
         mocked(fs.readFileSync).mockReturnValueOnce(blockMocks.memberJsonFile);
         jest.spyOn(blockMocks.mockMvsApi, "createDataSetMember").mockRejectedValueOnce(new Error("Test error!"));
-        const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
         blockMocks.testDatasetTree.createFilterString.mockReturnValue("");
 
         await dsActions.uploadFromJsonDialog(blockMocks.datasetSessionNode, blockMocks.testDatasetTree);
 
         expect(mocked(vscode.window.showErrorMessage).mock.calls[0]).toEqual(["Allocating node testmemb failed."]);
-        expect(errorHandlingSpy).toHaveBeenCalled();
+        expect(mocked(utils.errorHandling)).toHaveBeenCalled();
     });
     it("Tests that uploadFromJsonDialog fails if allocating a data set fails", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         jest.spyOn(blockMocks.mockMvsApi, "createDataSet").mockRejectedValueOnce(new Error("Test error!"));
-        const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
         blockMocks.testDatasetTree.createFilterString.mockReturnValue("");
 
         await dsActions.uploadFromJsonDialog(blockMocks.datasetSessionNode, blockMocks.testDatasetTree);
 
         expect(mocked(vscode.window.showErrorMessage).mock.calls[0]).toEqual(["Allocating node test.new.pds failed."]);
-        expect(errorHandlingSpy).toHaveBeenCalled();
+        expect(mocked(utils.errorHandling)).toHaveBeenCalled();
     });
 });
