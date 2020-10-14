@@ -126,8 +126,7 @@ export async function renameUSSNode(originalNode: IZoweUSSTreeNode, ussFileProvi
             const oldNamePath = originalNode.fullPath;
 
             const hasClosedTab = await originalNode.rename(newNamePath);
-            await ZoweExplorerApiRegister.getUssApi(
-                originalNode.getProfile()).rename(oldNamePath, newNamePath);
+            await ZoweExplorerApiRegister.getUssApi(originalNode.getProfile()).rename(oldNamePath, newNamePath);
             await deleteFromDisk(originalNode, filePath);
             await originalNode.refreshAndReopen(hasClosedTab);
 
