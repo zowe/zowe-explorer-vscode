@@ -15,13 +15,15 @@ import * as globals from "../globals";
 import { Session, IProfileLoaded } from "@zowe/imperative";
 import { IZoweJobTreeNode } from "../api/IZoweTreeNode";
 import { ZoweTreeNode } from "../abstract/ZoweTreeNode";
-import { errorHandling } from "../utils";
+import { errorHandling, refreshTree } from "../utils";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 import { getIconByNode } from "../generators/icons";
 import * as contextually from "../shared/context";
 
 import * as nls from "vscode-nls";
-const localize = nls.config({messageFormat: nls.MessageFormat.file})();
+// Set up localization
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 // tslint:disable-next-line: max-classes-per-file
 export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
@@ -81,9 +83,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                         if (prefix === undefined) {
                             prefix = spool.procstep;
                         }
-                        const sessionName = contextually.isFavorite(this) ?
-                            this.label.substring(1, this.label.lastIndexOf("]")).trim() :
-                            this.getProfileName();
+                        const sessionName = this.getProfileName();
                         const spoolNode = new Spool(`${spool.stepname}:${spool.ddname}(${spool.id})`,
                             vscode.TreeItemCollapsibleState.None, this, this.session, spool, this.job, this);
                         const icon = getIconByNode(spoolNode);
@@ -197,6 +197,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
 
     private async getJobs(owner, prefix, searchId): Promise<zowe.IJob[]> {
         let jobsInternal: zowe.IJob[] = [];
+        const sessNode = this.getSessionNode();
         if (this.searchId.length > 0 ) {
             jobsInternal.push(await ZoweExplorerApiRegister.getJesApi(this.getProfile()).getJob(searchId));
         } else {
@@ -204,6 +205,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                 jobsInternal = await ZoweExplorerApiRegister.getJesApi(this.getProfile()).getJobsByOwnerAndPrefix(owner, prefix);
             } catch (error) {
                 await errorHandling(error, this.label, localize("getChildren.error.response", "Retrieving response from ") + `zowe.GetJobs`);
+                await refreshTree(sessNode);
             }
         }
         return jobsInternal;

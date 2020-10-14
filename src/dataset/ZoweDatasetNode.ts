@@ -13,15 +13,16 @@ import * as zowe from "@zowe/cli";
 import * as vscode from "vscode";
 import * as globals from "../globals";
 import { Session, IProfileLoaded } from "@zowe/imperative";
-import { errorHandling } from "../utils";
+import { errorHandling, refreshTree } from "../utils";
 import { IZoweDatasetTreeNode } from "../api/IZoweTreeNode";
 import { ZoweTreeNode } from "../abstract/ZoweTreeNode";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 import { getIconByNode } from "../generators/icons";
 import * as contextually from "../shared/context";
-
 import * as nls from "vscode-nls";
-const localize = nls.config({messageFormat: nls.MessageFormat.file})();
+// Set up localization
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 /**
  * A type of TreeItem used to represent sessions and data sets
@@ -196,6 +197,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     }
 
     private async getDatasets(): Promise<zowe.IZosFilesResponse[]> {
+        const sessNode = this.getSessionNode();
         const responses: zowe.IZosFilesResponse[] = [];
         try {
             if (contextually.isSessionNotFav(this)) {
@@ -205,15 +207,16 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     responses.push(await ZoweExplorerApiRegister.getMvsApi(this.getProfile()).dataSet(pattern.trim(), {attributes: true}));
                 }
             } else {
-                // Check if node is a favorite
-                let label = this.label.trim();
-                if (this.label.startsWith("[")) {
-                    label = this.label.substring(this.label.indexOf(":") + 1).trim();
-                }
+                const label = this.label.trim();
                 responses.push(await ZoweExplorerApiRegister.getMvsApi(this.getProfile()).allMembers(label, {attributes: true}));
             }
         } catch (err) {
+            try{
             await errorHandling(err, this.label, localize("getChildren.error.response", "Retrieving response from ") + `zowe.List`);
+            await refreshTree(sessNode);
+            } catch (err) {
+                await errorHandling(err, this.label, localize("getChildren.error.response", "Retrieving response from ") + `zowe.List`);
+            }
         }
         return responses;
     }

@@ -13,7 +13,9 @@ import { IMessageItem, MessageCategoryId, MessageContentType, MessageHierarchyTy
 import * as globals from "../../../globals";
 import * as nls from "vscode-nls";
 
-const localize = nls.config({messageFormat: nls.MessageFormat.file})();
+// Set up localization
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 const message: IMessageItem = {
     id: MessageCategoryId.dataset,

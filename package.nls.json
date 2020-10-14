@@ -19,6 +19,7 @@
     "deleteDataset": "Delete Data Set",
     "deleteMember": "Delete Member",
     "deletePDS": "Delete PDS",
+    "allocateLike": "Allocate Like (New File with Same Attributes)",
     "editMember": "Edit",
     "issueCmd": "Issue Command",
     "uploadDialog": "Upload Member...",
@@ -69,6 +70,7 @@
     "Zowe-Default-Commands-Persistent-Favorites": "Toggle if Commands persist locally",
     "Zowe-Environment": "Environment where the extension is running, default is VSCode",
     "Zowe-Welcome-Window-Shown": "Flag which stores if welcome screen was shown",
+    "Zowe-Automatic-Validation": "Allow automatic validation of profiles.",
     "issueMvsCmd" : "Zowe: Issue MVS Command...",
     "deleteProfile" : "Delete Profile",
     "cmd.deleteProfile" : "Zowe: Delete a Profile Permanently...",
@@ -83,4 +85,10 @@
     "profile.configuration.user": "z/OSMF User Name",
     "profile.configuration.ru": "Profile Reject Unauthorize",
     "openWelcomeScreen": "Zowe Explorer: Open Welcome Screen"
+    "disableValidation": "Disable Validation for Profile",
+    "uss.disableValidation": "Disable Validation for Profile",
+    "jobs.disableValidation": "Disable Validation for Profile",
+    "enableValidation": "Enable Validation for Profile",
+    "uss.enableValidation": "Enable Validation for Profile",
+    "jobs.enableValidation": "Enable Validation for Profile"
   }

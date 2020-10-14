@@ -1,0 +1,66 @@
+# Workflow name for GitHub Actions
+name: Theia Zowe Explorer CI
+
+on: [push, pull_request]
+
+jobs:
+
+  theia-build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      # check out source
+      - uses: actions/checkout@v2
+
+      # install dependencies
+      #   equivalent to `npm ci`
+      #   - run: yarn install --frozen-lockfile
+      - run: npm ci
+
+      # copy test data file needed for build :-(
+      - name: Create test data file
+        run: cp resources/testProfileData.example.ts resources/testProfileData.ts
+
+      - name: Create extension install directory
+        run: mkdir -p temp/plugins && chmod -R 777 temp
+
+      - name: Build vsix
+        run: yarn vsce package -o temp/plugins/vscode-extension-for-zowe.vsix
+
+      # Verify vsix
+      - run: ls -la temp/plugins
+
+      - name: Start Theia
+        run: docker run --name theia --init -d -p 3000:3000 -v "${PWD}/temp:/home/theia/.theia" theiaide/theia
+      # NOTE(Kelosky): alternatively, we could run docker via something like this; however, we cannot hot reload 
+      #                hosted VS Code extensions after theia is started (at least at the time this was written).
+      # services:
+      #   theia:
+      #     image: theiaide/theia:next
+      #     ports:
+      #       - 3000:3000
+      #     volumes:
+      #       - temp:/home/theia/.theia
+      #     # --health-cmd "curl --fail http://localhost:3000 || exit 1" --health-interval=5s --health-timeout=5s --health-retries 60 
+      #     options: --init
+
+      - run: yarn lint
+
+      - name: Upload vsix
+        uses: actions/upload-artifact@v1
+        with:
+          name: vscode-extension-for-zowe.vsix
+          path: temp/plugins/vscode-extension-for-zowe.vsix
+
+      - name: Verify plugin loaded
+        run: docker exec -i theia ls -la .theia/plugins
+
+      - name: Verify Theia accessible
+        run: curl --fail http://localhost:3000
+
+      - name: Prep integration test files
+        run: yarn build:integration
+
+      - run: yarn test:theia
+

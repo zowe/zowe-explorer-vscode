@@ -2,7 +2,7 @@
   "name": "vscode-extension-for-zowe",
   "displayName": "%displayName%",
   "description": "%description%",
-  "version": "1.6.0",
+  "version": "1.9.0",
   "publisher": "Zowe",
   "author": "Zowe",
   "license": "EPL-2.0",
@@ -73,6 +73,30 @@
     ],
     "commands": [
       {
+        "command": "zowe.disableValidation",
+        "title": "%disableValidation%"
+      },
+      {
+        "command": "zowe.uss.disableValidation",
+        "title": "%uss.disableValidation%"
+      },
+      {
+        "command": "zowe.jobs.disableValidation",
+        "title": "%jobs.disableValidation%"
+      },
+      {
+        "command": "zowe.enableValidation",
+        "title": "%enableValidation%"
+      },
+      {
+        "command": "zowe.uss.enableValidation",
+        "title": "%uss.enableValidation%"
+      },
+      {
+        "command": "zowe.jobs.enableValidation",
+        "title": "%jobs.enableValidation%"
+      },
+      {
         "command": "zowe.uss.copyPath",
         "title": "%uss.copyPath%"
       },
@@ -94,11 +118,19 @@
       },
       {
         "command": "zowe.addFavorite",
-        "title": "%addFavorite%"
+        "title": "%addFavorite%",
+        "icon": {
+          "dark": "./resources/dark/favorites-open-dark.svg",
+          "light": "./resources/light/favorites-open-light.svg"
+        }
       },
       {
         "command": "zowe.uss.addFavorite",
-        "title": "%uss.addFavorite%"
+        "title": "%uss.addFavorite%",
+        "icon": {
+          "dark": "./resources/dark/favorites-open-dark.svg",
+          "light": "./resources/light/favorites-open-light.svg"
+        }
       },
       {
         "command": "zowe.openWelcomeScreen",
@@ -181,6 +213,10 @@
         "title": "%deletePDS%"
       },
       {
+        "command": "zowe.allocateLike",
+        "title": "%allocateLike%"
+      },
+      {
         "command": "zowe.uploadDialog",
         "title": "%uploadDialog%"
       },
@@ -226,11 +262,19 @@
       },
       {
         "command": "zowe.removeFavorite",
-        "title": "%removeFavorite%"
+        "title": "%removeFavorite%",
+        "icon": {
+          "dark": "./resources/dark/favorites-close-dark.svg",
+          "light": "./resources/light/favorites-close-light.svg"
+        }
       },
       {
         "command": "zowe.uss.removeFavorite",
-        "title": "%uss.removeFavorite%"
+        "title": "%uss.removeFavorite%",
+        "icon": {
+          "dark": "./resources/dark/favorites-close-dark.svg",
+          "light": "./resources/light/favorites-close-light.svg"
+        }
       },
       {
         "command": "zowe.removeSavedSearch",
@@ -354,11 +398,19 @@
       },
       {
         "command": "zowe.jobs.addFavorite",
-        "title": "%addFavorite%"
+        "title": "%addFavorite%",
+        "icon": {
+          "dark": "./resources/dark/favorites-open-dark.svg",
+          "light": "./resources/light/favorites-open-light.svg"
+        }
       },
       {
         "command": "zowe.jobs.removeFavorite",
-        "title": "%removeFavorite%"
+        "title": "%removeFavorite%",
+        "icon": {
+          "dark": "./resources/dark/favorites-close-dark.svg",
+          "light": "./resources/light/favorites-close-light.svg"
+        }
       },
       {
         "command": "zowe.jobs.removeSearchFavorite",
@@ -492,19 +544,29 @@
       ],
       "view/item/context": [
         {
-          "when": "view == zowe.uss.explorer && viewItem =~ /^directory.*/",
-          "command": "zowe.uss.createFile",
-          "group": "1_create"
+          "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/",
+          "command": "zowe.uss.fullPath",
+          "group": "inline"
         },
         {
-          "when": "view == zowe.uss.explorer && viewItem =~ /^directory.*/",
-          "command": "zowe.uss.createFolder",
-          "group": "1_create"
+          "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/",
+          "command": "zowe.uss.createNode",
+          "group": "inline"
         },
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)(textFile.*|binaryFile.*|directory.*)/",
           "command": "zowe.uss.addFavorite",
-          "group": "4_workspace"
+          "group": "inline"
+        },
+        {
+          "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/",
+          "command": "zowe.uss.editSession",
+          "group": "inline"
+        },
+        {
+          "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/",
+          "command": "zowe.all.profilelink",
+          "group": "inline"
         },
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^textFile|binaryFile/",
@@ -512,173 +574,133 @@
           "group": "inline"
         },
         {
-          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(directory|ussSession|favorite))/",
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(directory|ussSession|favorite|profile_fav))/",
           "command": "zowe.uss.refreshUSS",
           "group": "inline"
         },
         {
-          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(directory|ussSession|favorite))/",
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(directory|ussSession|favorite|profile_fav))/",
           "command": "zowe.uss.refreshUSS",
           "group": "0_mainframeInteraction"
         },
         {
-          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(ussSession|favorite|.*_fav))/",
-          "command": "zowe.uss.deleteNode",
-          "group": "6_modification@2"
+          "when": "view == zowe.uss.explorer && viewItem =~ /^directory.*/",
+          "command": "zowe.uss.createFolder",
+          "group": "1_create@0"
         },
         {
-          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(ussSession|favorite))/",
-          "command": "zowe.uss.copyPath",
-          "group": "5_copyPath"
-        },
-        {
-          "when": "view == zowe.uss.explorer && viewItem =~ /^textFile|binaryFile/",
-          "command": "zowe.uss.editFile",
-          "group": "6_modification@0"
-        },
-        {
-          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(ussSession|favorite))/",
-          "command": "zowe.uss.renameNode",
-          "group": "6_modification@1"
-        },
-        {
-          "when": "view == zowe.uss.explorer && viewItem =~ /^textFile.*/",
-          "command": "zowe.uss.binary",
-          "group": "3_systemSpecific"
-        },
-        {
-          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!ussSession.*).*_fav.*/",
-          "command": "zowe.uss.removeFavorite",
-          "group": "4_workspace"
-        },
-        {
-          "when": "view == zowe.uss.explorer && viewItem =~ /^ussSession.*_fav.*/",
-          "command": "zowe.uss.removeSavedSearch",
-          "group": "4_workspace"
-        },
-        {
-          "when": "view == zowe.uss.explorer && viewItem =~ /^binaryFile.*/",
-          "command": "zowe.uss.text",
-          "group": "3_systemSpecific"
+          "when": "view == zowe.uss.explorer && viewItem =~ /^directory.*/",
+          "command": "zowe.uss.createFile",
+          "group": "1_create@1"
         },
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^directory.*/",
           "command": "zowe.uss.uploadDialog",
-          "group": "1_create"
+          "group": "1_create@2"
         },
         {
-          "when": "view == zowe.explorer && viewItem =~ /^(member.*|ds.*)/",
-          "command": "zowe.editMember",
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)ussSession.*/",
+          "command": "zowe.issueMvsCmd",
+          "group": "2_systemSpecific@0"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem =~ /^textFile.*/",
+          "command": "zowe.uss.binary",
+          "group": "2_systemSpecific@1"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(ussSession.*|profile.*)).*_fav.*/",
+          "command": "zowe.uss.removeFavorite",
           "group": "inline"
         },
         {
-          "when": "view == zowe.explorer && viewItem =~ /^(member.*|ds.*)/",
-          "command": "zowe.refreshNode",
-          "group": "inline"
+          "when": "view == zowe.uss.explorer && viewItem =~ /^binaryFile.*/",
+          "command": "zowe.uss.text",
+          "group": "2_systemSpecific@2"
         },
         {
-          "when": "view == zowe.explorer && viewItem =~ /^(member.*|ds.*)/",
-          "command": "zowe.refreshNode",
-          "group": "0_mainframeInteraction"
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)(textFile.*|binaryFile.*|directory.*)/",
+          "command": "zowe.uss.addFavorite",
+          "group": "3_workspace@0"
         },
         {
-          "when": "view == zowe.explorer && viewItem =~ /^member.*/",
-          "command": "zowe.deleteMember",
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(ussSession.*|profile.*)).*_fav.*/",
+          "command": "zowe.uss.removeFavorite",
+          "group": "3_workspace@1"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)ussSession.*/",
+          "command": "zowe.uss.addFavorite",
+          "group": "3_workspace@2"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem =~ /^ussSession.*_fav.*/",
+          "command": "zowe.uss.removeSavedSearch",
+          "group": "3_workspace@3"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(ussSession|favorite|profile_fav))/",
+          "command": "zowe.uss.copyPath",
+          "group": "4_copyPath"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem =~ /^textFile|binaryFile/",
+          "command": "zowe.uss.editFile",
+          "group": "5_modification@0"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)ussSession.*/",
+          "command": "zowe.all.profilelink",
+          "group": "6_modification@1"
+        },
+        {
+          "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/",
+          "command": "zowe.uss.removeSession",
           "group": "6_modification@2"
         },
         {
-          "when": "view == zowe.explorer && viewItem =~ /^ds.*/",
-          "command": "zowe.deleteDataset",
-          "group": "6_modification@2"
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(?=.*_validate=true.*)ussSession.*/",
+          "command": "zowe.uss.disableValidation",
+          "group": "6_modification@4"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(?=.*_validate=false.*)ussSession.*/",
+          "command": "zowe.uss.enableValidation",
+          "group": "6_modification@5"
         },
         {
           "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav)(member|migr|ds|pds).*/",
           "command": "zowe.addFavorite",
-          "group": "4_workspace"
+          "group": "inline"
         },
         {
-          "when": "view == zowe.explorer && viewItem =~ /^member.*/",
-          "command": "zowe.submitMember",
-          "group": "3_systemSpecific"
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(ussSession|favorite|profile_fav))/",
+          "command": "zowe.uss.renameNode",
+          "group": "5_modification@3"
         },
         {
-          "when": "view == zowe.explorer && viewItem =~ /^(member|ds).*/",
-          "command": "zowe.copyDataSet",
-          "group": "9_cutcopypaste"
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(ussSession|favorite|.*_fav))/",
+          "command": "zowe.uss.deleteNode",
+          "group": "5_modification@4"
         },
         {
-          "when": "view == zowe.explorer && viewItem =~ /^(member|ds).*/",
+          "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/",
+          "command": "zowe.uss.deleteProfile",
+          "group": "6_modification@3"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem =~ /^(member.*|ds.*)/",
           "command": "zowe.editMember",
-          "group": "6_modification@0"
+          "group": "inline"
         },
         {
-          "when": "view == zowe.explorer && viewItem =~ /^member.*/",
-          "command": "zowe.renameDataSetMember",
-          "group": "6_modification@2"
-        },
-        {
-          "when": "view == zowe.explorer && viewItem =~ /^ds.*/",
-          "command": "zowe.submitMember",
-          "group": "3_systemSpecific"
-        },
-        {
-          "when": "view == zowe.explorer && viewItem =~ /^ds.*/",
-          "command": "zowe.renameDataSet",
-          "group": "6_modification@2"
-        },
-        {
-          "when": "view == zowe.explorer && viewItem =~ /^(ds.*|^pds.*)/",
-          "command": "zowe.pasteDataSet",
-          "group": "9_cutcopypaste"
-        },
-        {
-          "when": "view == zowe.explorer && viewItem =~ /^(ds.*|^pds.*)/",
-          "command": "zowe.hMigrateDataSet",
-          "group": "7_hsmcommands"
-        },
-        {
-          "when": "view == zowe.explorer && viewItem =~ /^migr.*/",
-          "command": "zowe.hRecallDataSet",
-          "group": "8_hsmcommands"
-        },
-        {
-          "when": "view == zowe.explorer && viewItem =~ /^pds.*/",
-          "command": "zowe.createMember",
-          "group": "1_create"
-        },
-        {
-          "when": "view == zowe.explorer && viewItem =~ /^(pds|migr|ds|vsam).*/",
-          "command": "zowe.showDSAttributes",
-          "group": "2_information"
-        },
-        {
-          "when": "view == zowe.explorer && viewItem =~ /^pds.*/",
-          "command": "zowe.deletePDS",
-          "group": "6_modification@2"
-        },
-        {
-          "when": "view == zowe.explorer && viewItem =~ /^pds.*/",
-          "command": "zowe.uploadDialog",
-          "group": "1_create"
-        },
-        {
-          "when": "view == zowe.explorer && viewItem =~ /^pds.*/",
-          "command": "zowe.renameDataSet",
-          "group": "6_modification@2"
-        },
-        {
-          "when": "view == zowe.explorer && viewItem =~ /^(pds|ds|migr).*_fav.*/",
-          "command": "zowe.removeFavorite",
-          "group": "4_workspace"
-        },
-        {
-          "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
-          "command": "zowe.pattern",
+          "when": "view == zowe.explorer && viewItem =~ /^(member.*|ds.*)/",
+          "command": "zowe.refreshNode",
           "group": "inline"
         },
         {
           "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
-          "command": "zowe.all.profilelink",
+          "command": "zowe.pattern",
           "group": "inline"
         },
         {
@@ -693,72 +715,153 @@
         },
         {
           "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
-          "command": "zowe.deleteProfile",
-          "group": "6_modification@4"
+          "command": "zowe.all.profilelink",
+          "group": "inline"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem =~ /^(member.*|ds.*)/",
+          "command": "zowe.refreshNode",
+          "group": "0_mainframeInteraction"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem =~ /^pds.*/",
+          "command": "zowe.createMember",
+          "group": "1_create@0"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem =~ /^pds.*/",
+          "command": "zowe.uploadDialog",
+          "group": "1_create@1"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem =~ /^(pds|migr|ds|vsam).*/",
+          "command": "zowe.showDSAttributes",
+          "group": "2_information"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem =~ /^ds.*/",
+          "command": "zowe.submitMember",
+          "group": "3_systemSpecific"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem =~ /^member.*/",
+          "command": "zowe.submitMember",
+          "group": "3_systemSpecific"
         },
         {
           "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
-          "command": "zowe.removeSession",
-          "group": "6_modification@3"
+          "command": "zowe.issueMvsCmd",
+          "group": "3_systemSpecific"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem =~ /^(pds|ds|migr).*_fav.*/",
+          "command": "zowe.removeFavorite",
+          "group": "inline"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem =~ /^migr.*/",
+          "command": "zowe.hRecallDataSet",
+          "group": "4_hsmCommands@0"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem =~ /^(ds.*|^pds.*)/",
+          "command": "zowe.hMigrateDataSet",
+          "group": "4_hsmCommands@1"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav)(member|migr|ds|pds).*/",
+          "command": "zowe.addFavorite",
+          "group": "5_workspace@0"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem =~ /^(pds|ds|migr).*_fav.*/",
+          "command": "zowe.removeFavorite",
+          "group": "5_workspace@1"
         },
         {
           "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
           "command": "zowe.saveSearch",
-          "group": "4_workspace"
-        },
-        {
-          "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
-          "command": "zowe.issueMvsCmd",
-          "group": "3_systemSpecific"
+          "group": "5_workspace@2"
         },
         {
           "when": "view == zowe.explorer && viewItem =~ /^session.*_fav.*/",
-          "command": "zowe.removeSavedSearch"
+          "command": "zowe.removeSavedSearch",
+          "group": "5_workspace@3"
         },
         {
-          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)ussSession.*/",
+          "when": "view == zowe.explorer && viewItem =~ /^(ds|pds).*/",
+          "command": "zowe.allocateLike",
+          "group": "6_cutCopyPaste@0"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem =~ /^(member|ds).*/",
+          "command": "zowe.copyDataSet",
+          "group": "6_cutCopyPaste@1"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem =~ /^(ds.*|^pds.*)/",
+          "command": "zowe.pasteDataSet",
+          "group": "6_cutCopyPaste@2"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
           "command": "zowe.all.profilelink",
-          "group": "inline"
+          "group": "7_modification@0"
         },
         {
-          "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/",
-          "command": "zowe.uss.fullPath",
-          "group": "inline"
+          "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
+          "command": "zowe.removeSession",
+          "group": "7_modification@1"
         },
         {
-          "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/",
-          "command": "zowe.uss.createNode",
-          "group": "inline"
+          "when": "view == zowe.explorer && viewItem =~ /^(member|ds).*/",
+          "command": "zowe.editMember",
+          "group": "7_modification@2"
         },
         {
-          "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/",
-          "command": "zowe.uss.editSession",
-          "group": "inline"
+          "when": "view == zowe.explorer && viewItem =~ /^member.*/",
+          "command": "zowe.renameDataSetMember",
+          "group": "7_modification@3"
         },
         {
-          "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/",
-          "command": "zowe.uss.deleteProfile",
-          "group": "6_modification@4"
+          "when": "view == zowe.explorer && viewItem =~ /^ds.*/",
+          "command": "zowe.renameDataSet",
+          "group": "7_modification@3"
         },
         {
-          "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/",
-          "command": "zowe.uss.removeSession",
-          "group": "6_modification@3"
+          "when": "view == zowe.explorer && viewItem =~ /^pds.*/",
+          "command": "zowe.renameDataSet",
+          "group": "7_modification@3"
         },
         {
-          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)ussSession.*/",
-          "command": "zowe.uss.saveSearch",
-          "group": "4_workspace"
+          "when": "view == zowe.explorer && viewItem =~ /^ds.*/",
+          "command": "zowe.deleteDataset",
+          "group": "7_modification@4"
         },
         {
-          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)ussSession.*/",
-          "command": "zowe.issueMvsCmd",
-          "group": "3_systemSpecific"
+          "when": "view == zowe.explorer && viewItem =~ /^member.*/",
+          "command": "zowe.deleteMember",
+          "group": "7_modification@4"
         },
         {
-          "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/",
-          "command": "zowe.all.profilelink",
-          "group": "inline"
+          "when": "view == zowe.explorer && viewItem =~ /^pds.*/",
+          "command": "zowe.deletePDS",
+          "group": "7_modification@4"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
+          "command": "zowe.deleteProfile",
+          "group": "7_modification@5"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem =~ /^(?=.*_validate=true.*)session.*/",
+          "command": "zowe.jobs.disableValidation",
+          "group": "7_modification@6"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem =~ /^(?=.*_validate=false.*)session.*/",
+          "command": "zowe.jobs.enableValidation",
+          "group": "7_modification@7"
         },
         {
           "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/",
@@ -777,8 +880,18 @@
         },
         {
           "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/",
-          "command": "zowe.jobs.deleteProfile",
-          "group": "6_modification@4"
+          "command": "zowe.all.profilelink",
+          "group": "inline"
+        },
+        {
+          "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)job.*/",
+          "command": "zowe.deleteJob",
+          "group": "inline"
+        },
+        {
+          "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)job.*/",
+          "command": "zowe.downloadSpool",
+          "group": "inline"
         },
         {
           "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/",
@@ -789,59 +902,69 @@
           "command": "zowe.setPrefix"
         },
         {
-          "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/",
-          "command": "zowe.removeJobsSession",
-          "group": "6_modification@3"
-        },
-        {
           "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)job.*/",
-          "command": "zowe.deleteJob",
-          "group": "inline"
-        },
-        {
-          "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)job.*/",
-          "command": "zowe.runModifyCommand",
-          "group": "3_systemSpecific"
-        },
-        {
-          "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)job.*/",
-          "command": "zowe.runStopCommand",
-          "group": "3_systemSpecific"
-        },
-        {
-          "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)job.*/",
-          "command": "zowe.downloadSpool",
-          "group": "inline"
-        },
-        {
-          "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)job.*/",
-          "command": "zowe.jobs.addFavorite",
-          "group": "4_workspace"
-        },
-        {
-          "when": "view == zowe.jobs && viewItem =~ /^job.*_fav.*/",
-          "command": "zowe.jobs.removeFavorite",
-          "group": "4_workspace"
-        },
-        {
-          "when": "view == zowe.jobs && viewItem =~ /^server.*_fav.*/",
-          "command": "zowe.jobs.removeSearchFavorite",
-          "group": "4_workspace"
-        },
-        {
-          "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/",
-          "command": "zowe.jobs.saveSearch",
-          "group": "4_workspace"
+          "command": "zowe.getJobJcl",
+          "group": "0_mainframeInteraction"
         },
         {
           "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/",
           "command": "zowe.issueMvsCmd",
-          "group": "3_systemSpecific"
+          "group": "1_systemSpecific@0"
         },
         {
           "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)job.*/",
-          "command": "zowe.getJobJcl",
-          "group": "0_mainframeInteraction"
+          "command": "zowe.runModifyCommand",
+          "group": "1_systemSpecific@1"
+        },
+        {
+          "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)job.*/",
+          "command": "zowe.runStopCommand",
+          "group": "1_systemSpecific@2"
+        },
+        {
+          "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)job.*/",
+          "command": "zowe.jobs.addFavorite",
+          "group": "inline"
+        },
+        {
+          "when": "view == zowe.jobs && viewItem =~ /^job.*_fav.*/",
+          "command": "zowe.jobs.removeFavorite",
+          "group": "inline"
+        },
+        {
+          "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/",
+          "command": "zowe.jobs.addFavorite",
+          "group": "2_workspace@0"
+        },
+        {
+          "when": "view == zowe.jobs && viewItem =~ /^server.*_fav.*/",
+          "command": "zowe.jobs.removeSearchFavorite",
+          "group": "2_workspace@0"
+        },
+        {
+          "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/",
+          "command": "zowe.all.profilelink",
+          "group": "3_modification@0"
+        },
+        {
+          "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/",
+          "command": "zowe.removeJobsSession",
+          "group": "3_modification@1"
+        },
+        {
+          "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/",
+          "command": "zowe.jobs.deleteProfile",
+          "group": "3_modification@2"
+        },
+        {
+          "when": "view == zowe.jobs && viewItem =~ /^(?=.*_validate=true.*)server.*/",
+          "command": "zowe.disableValidation",
+          "group": "3_modification@3"
+        },
+        {
+          "when": "view == zowe.jobs && viewItem =~ /^(?=.*_validate=false.*)server.*/",
+          "command": "zowe.enableValidation",
+          "group": "3_modification@4"
         }
       ],
       "commandPalette": [
@@ -882,6 +1005,9 @@
           "when": "never"
         },
         {
+          "command": "zowe.allocateLike"
+        },
+        {
           "command": "zowe.deleteMember",
           "when": "never"
         },
@@ -891,6 +1017,30 @@
         },
         {
           "command": "zowe.deleteProfile",
+          "when": "never"
+        },
+        {
+          "command": "zowe.disableValidation",
+          "when": "never"
+        },
+        {
+          "command": "zowe.enableValidation",
+          "when": "never"
+        },
+        {
+          "command": "zowe.uss.disableValidation",
+          "when": "never"
+        },
+        {
+          "command": "zowe.uss.enableValidation",
+          "when": "never"
+        },
+        {
+          "command": "zowe.jobs.disableValidation",
+          "when": "never"
+        },
+        {
+          "command": "zowe.jobs.enableValidation",
           "when": "never"
         },
         {
@@ -1109,6 +1259,12 @@
           "description": "%Zowe-Default-Commands-Persistent-Favorites%",
           "scope": "window"
         },
+        "Zowe-Automatic-Validation": {
+          "type": "boolean",
+          "default": true,
+          "description": "%Zowe-Automatic-Validation%",
+          "scope": "window"
+        },
         "Zowe-Environment": {
           "default": {
             "persistence": true,
@@ -1126,8 +1282,9 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run build && npm run lint && npm run update",
-    "build": "gulp build && npm run license && tsc --build --pretty",
+    "vscode:prepublish": "gulp build && npm run license && npm run lint && webpack --mode production --vscode-nls && npm run update",
+    "build": "gulp build && npm run license && webpack --mode development --vscode-nls",
+    "build:integration": "gulp build && npm run license && tsc --build --pretty",
     "postinstall": "node ./node_modules/vscode/bin/install",
     "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
     "test:theia": "mocha ./out/__tests__/__theia__/*.theia.test.js --timeout 50000",
@@ -1137,12 +1294,12 @@
     "update": "node scripts/stringUpdateScript.js",
     "package": "vsce package",
     "license": "node ./scripts/license.js",
-    "watch": "tsc -b --watch --pretty",
+    "watch": "gulp build && webpack --mode development --vscode-nls --watch --info-verbosity verbose",
     "compile": "tsc -b",
     "markdown": "markdownlint CHANGELOG.md README.md",
     "lint": "npm run lint:src && npm run lint:tests  && npm run markdown",
     "lint:src": "tslint --format stylish --exclude [\"**/__tests__/**/*.ts\",\"node_modules/**/*\"] \"src/**/*.ts\"",
-    "lint:tests": "tslint --format stylish \"**/__tests__/**/*.ts\" --exclude \"node_modules/**/*\"",
+    "lint:tests": "tslint --format stylish \"**/__tests__/**/*.ts\" --exclude \"node_modules/**/*\" && eslint \"__tests__/**\"",
     "clean": "gulp clean"
   },
   "engines": {
@@ -1160,11 +1317,15 @@
     "@types/selenium-webdriver": "^3.0.4",
     "@types/vscode": "^1.34.0",
     "@types/yargs": "^11.0.0",
+    "@typescript-eslint/eslint-plugin": "^2.31.0",
+    "@typescript-eslint/parser": "^2.31.0",
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",
     "chalk": "^2.4.1",
     "cross-env": "^5.2.0",
     "del": "^4.1.1",
+    "eslint": "^6.8.0",
+    "eslint-plugin-zowe-explorer": "file:eslint-plugin",
     "event-stream": "^4.0.1",
     "expect": "^24.8.0",
     "geckodriver": "^1.19.1",
@@ -1176,7 +1337,7 @@
     "gulp-sourcemaps": "^2.6.5",
     "gulp-typescript": "^5.0.1",
     "jest": "^25.1.0",
-    "jest-html-reporter": "^2.7.0",
+    "jest-html-reporter": "^3.1.3",
     "jest-junit": "^10.0.0",
     "jest-stare": "^1.26.0",
     "jsdoc": "^3.6.3",
@@ -1189,15 +1350,18 @@
     "selenium-webdriver": "^3.6.0",
     "sinon": "^6.1.0",
     "ts-jest": "^25.3.0",
+    "ts-loader": "^7.0.1",
     "ts-node": "^8.10.1",
     "tslint": "^5.17.0",
     "typescript": "^3.7.2",
     "vsce": "^1.70.0",
     "vscode": "^1.1.36",
-    "vscode-nls-dev": "^3.2.6"
+    "vscode-nls-dev": "^3.2.6",
+    "webpack": "^4.42.1",
+    "webpack-cli": "^3.3.11"
   },
   "dependencies": {
-    "@zowe/cli": "6.13.0",
+    "@zowe/cli": "^6.20.0",
     "fs-extra": "8.0.1",
     "isbinaryfile": "4.0.4",
     "js-yaml": "3.13.1",

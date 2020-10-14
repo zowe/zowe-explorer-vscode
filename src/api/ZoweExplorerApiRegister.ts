@@ -11,17 +11,19 @@
 
 import { IProfileLoaded } from "@zowe/imperative";
 import { ZoweExplorerApi } from "./ZoweExplorerApi";
-import { ZosmfUssApi as ZosmfUssApi, ZosmfMvsApi, ZosmfJesApi } from "./ZoweExplorerZosmfApi";
+import { ZosmfUssApi, ZosmfMvsApi, ZosmfJesApi } from "./ZoweExplorerZosmfApi";
 import { ZoweExplorerExtender } from "../ZoweExplorerExtender";
-
 import * as nls from "vscode-nls";
-const localize = nls.config({messageFormat: nls.MessageFormat.file})();
+// Set up localization
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 /**
  * The Zowe Explorer API Register singleton that gets exposed to other VS Code
  * extensions to contribute their implementations.
  */
 export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClient {
+    public static ZoweExplorerApiRegisterInst: ZoweExplorerApiRegister;
 
     /**
      * Access the singleton instance.
@@ -56,6 +58,15 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
      */
     public static getJesApi(profile: IProfileLoaded): ZoweExplorerApi.IJes {
         return ZoweExplorerApiRegister.getInstance().getJesApi(profile);
+    }
+
+    /**
+     * Static lookup of an API Common interface for a given profile for any of the registries supported.
+     * @param profile {IProfileLoaded} a profile to be used with this instance of the API returned
+     * @returns an instance of the Commin API that uses the profile provided; could be an instance any of its subclasses
+     */
+    public static getCommonApi(profile: IProfileLoaded): ZoweExplorerApi.ICommon {
+        return ZoweExplorerApiRegister.getInstance().getCommonApi(profile);
     }
 
     /**
@@ -219,6 +230,25 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
             throw new Error(
                 localize("getJesApi.error", "Internal error: Tried to call a non-existing JES API in API register: ") + profile.type);
         }
+    }
+
+    public getCommonApi(profile: IProfileLoaded): ZoweExplorerApi.ICommon {
+        let result: ZoweExplorerApi.ICommon;
+        try {
+            result = this.getUssApi(profile);
+        } catch (error) {
+            try {
+                result = this.getMvsApi(profile);
+            } catch (error) {
+                try {
+                result = this.getJesApi(profile);
+                } catch (error) {
+                    throw new Error(
+                        localize("getCommonApi.error", "Internal error: Tried to call a non-existing Common API in API register: ") + profile.type);
+                }
+            }
+        }
+        return result;
     }
 
     /**
