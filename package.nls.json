@@ -84,7 +84,7 @@
     "profile.configuration.url": "z/OSMF URL",
     "profile.configuration.user": "z/OSMF User Name",
     "profile.configuration.ru": "Profile Reject Unauthorize",
-    "openWelcomeScreen": "Zowe Explorer: Open Welcome Screen"
+    "openWelcomeScreen": "Zowe Explorer: Open Welcome Screen",
     "disableValidation": "Disable Validation for Profile",
     "uss.disableValidation": "Disable Validation for Profile",
     "jobs.disableValidation": "Disable Validation for Profile",
