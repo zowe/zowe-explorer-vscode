@@ -2,7 +2,7 @@
   "name": "vscode-extension-for-zowe",
   "displayName": "%displayName%",
   "description": "%description%",
-  "version": "1.6.0",
+  "version": "1.9.0",
   "publisher": "Zowe",
   "author": "Zowe",
   "license": "EPL-2.0",
@@ -71,6 +71,30 @@
       }
     ],
     "commands": [
+      {
+        "command": "zowe.disableValidation",
+        "title": "%disableValidation%"
+      },
+      {
+        "command": "zowe.uss.disableValidation",
+        "title": "%uss.disableValidation%"
+      },
+      {
+        "command": "zowe.jobs.disableValidation",
+        "title": "%jobs.disableValidation%"
+      },
+      {
+        "command": "zowe.enableValidation",
+        "title": "%enableValidation%"
+      },
+      {
+        "command": "zowe.uss.enableValidation",
+        "title": "%uss.enableValidation%"
+      },
+      {
+        "command": "zowe.jobs.enableValidation",
+        "title": "%jobs.enableValidation%"
+      },
       {
         "command": "zowe.uss.copyPath",
         "title": "%uss.copyPath%"
@@ -182,6 +206,10 @@
       {
         "command": "zowe.deletePDS",
         "title": "%deletePDS%"
+      },
+      {
+        "command": "zowe.allocateLike",
+        "title": "%allocateLike%"
       },
       {
         "command": "zowe.uploadDialog",
@@ -541,12 +569,12 @@
           "group": "inline"
         },
         {
-          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(directory|ussSession|favorite))/",
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(directory|ussSession|favorite|profile_fav))/",
           "command": "zowe.uss.refreshUSS",
           "group": "inline"
         },
         {
-          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(directory|ussSession|favorite))/",
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(directory|ussSession|favorite|profile_fav))/",
           "command": "zowe.uss.refreshUSS",
           "group": "0_mainframeInteraction"
         },
@@ -576,7 +604,7 @@
           "group": "2_systemSpecific@1"
         },
         {
-          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!ussSession.*).*_fav.*/",
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(ussSession.*|profile.*)).*_fav.*/",
           "command": "zowe.uss.removeFavorite",
           "group": "inline"
         },
@@ -591,13 +619,13 @@
           "group": "3_workspace@0"
         },
         {
-          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!ussSession.*).*_fav.*/",
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(ussSession.*|profile.*)).*_fav.*/",
           "command": "zowe.uss.removeFavorite",
           "group": "3_workspace@1"
         },
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)ussSession.*/",
-          "command": "zowe.uss.saveSearch",
+          "command": "zowe.uss.addFavorite",
           "group": "3_workspace@2"
         },
         {
@@ -606,7 +634,7 @@
           "group": "3_workspace@3"
         },
         {
-          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(ussSession|favorite))/",
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(ussSession|favorite|profile_fav))/",
           "command": "zowe.uss.copyPath",
           "group": "4_copyPath"
         },
@@ -618,7 +646,7 @@
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)ussSession.*/",
           "command": "zowe.all.profilelink",
-          "group": "5_modification@1"
+          "group": "6_modification@1"
         },
         {
           "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/",
@@ -626,12 +654,22 @@
           "group": "6_modification@2"
         },
         {
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(?=.*_validate=true.*)ussSession.*/",
+          "command": "zowe.uss.disableValidation",
+          "group": "6_modification@4"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(?=.*_validate=false.*)ussSession.*/",
+          "command": "zowe.uss.enableValidation",
+          "group": "6_modification@5"
+        },
+        {
           "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav)(member|migr|ds|pds).*/",
           "command": "zowe.addFavorite",
           "group": "inline"
         },
         {
-          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(ussSession|favorite))/",
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(ussSession|favorite|profile_fav))/",
           "command": "zowe.uss.renameNode",
           "group": "5_modification@3"
         },
@@ -643,7 +681,7 @@
         {
           "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/",
           "command": "zowe.uss.deleteProfile",
-          "group": "6_modification@5"
+          "group": "6_modification@3"
         },
         {
           "when": "view == zowe.explorer && viewItem =~ /^(member.*|ds.*)/",
@@ -746,14 +784,19 @@
           "group": "5_workspace@3"
         },
         {
+          "when": "view == zowe.explorer && viewItem =~ /^(ds|pds).*/",
+          "command": "zowe.allocateLike",
+          "group": "6_cutCopyPaste@0"
+        },
+        {
           "when": "view == zowe.explorer && viewItem =~ /^(member|ds).*/",
           "command": "zowe.copyDataSet",
-          "group": "6_cutCopyPaste@0"
+          "group": "6_cutCopyPaste@1"
         },
         {
           "when": "view == zowe.explorer && viewItem =~ /^(ds.*|^pds.*)/",
           "command": "zowe.pasteDataSet",
-          "group": "6_cutCopyPaste@1"
+          "group": "6_cutCopyPaste@2"
         },
         {
           "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
@@ -804,6 +847,16 @@
           "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
           "command": "zowe.deleteProfile",
           "group": "7_modification@5"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem =~ /^(?=.*_validate=true.*)session.*/",
+          "command": "zowe.jobs.disableValidation",
+          "group": "7_modification@6"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem =~ /^(?=.*_validate=false.*)session.*/",
+          "command": "zowe.jobs.enableValidation",
+          "group": "7_modification@7"
         },
         {
           "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/",
@@ -875,7 +928,7 @@
         },
         {
           "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/",
-          "command": "zowe.jobs.saveSearch",
+          "command": "zowe.jobs.addFavorite",
           "group": "2_workspace@0"
         },
         {
@@ -897,6 +950,16 @@
           "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/",
           "command": "zowe.jobs.deleteProfile",
           "group": "3_modification@2"
+        },
+        {
+          "when": "view == zowe.jobs && viewItem =~ /^(?=.*_validate=true.*)server.*/",
+          "command": "zowe.disableValidation",
+          "group": "3_modification@3"
+        },
+        {
+          "when": "view == zowe.jobs && viewItem =~ /^(?=.*_validate=false.*)server.*/",
+          "command": "zowe.enableValidation",
+          "group": "3_modification@4"
         }
       ],
       "commandPalette": [
@@ -937,6 +1000,9 @@
           "when": "never"
         },
         {
+          "command": "zowe.allocateLike"
+        },
+        {
           "command": "zowe.deleteMember",
           "when": "never"
         },
@@ -946,6 +1012,30 @@
         },
         {
           "command": "zowe.deleteProfile",
+          "when": "never"
+        },
+        {
+          "command": "zowe.disableValidation",
+          "when": "never"
+        },
+        {
+          "command": "zowe.enableValidation",
+          "when": "never"
+        },
+        {
+          "command": "zowe.uss.disableValidation",
+          "when": "never"
+        },
+        {
+          "command": "zowe.uss.enableValidation",
+          "when": "never"
+        },
+        {
+          "command": "zowe.jobs.disableValidation",
+          "when": "never"
+        },
+        {
+          "command": "zowe.jobs.enableValidation",
           "when": "never"
         },
         {
@@ -1164,6 +1254,12 @@
           "description": "%Zowe-Default-Commands-Persistent-Favorites%",
           "scope": "window"
         },
+        "Zowe-Automatic-Validation": {
+          "type": "boolean",
+          "default": true,
+          "description": "%Zowe-Automatic-Validation%",
+          "scope": "window"
+        },
         "Zowe-Environment": {
           "default": {
             "persistence": true,
@@ -1176,8 +1272,9 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run build && npm run lint && npm run update",
-    "build": "gulp build && npm run license && tsc --build --pretty",
+    "vscode:prepublish": "gulp build && npm run license && npm run lint && webpack --mode production --vscode-nls && npm run update",
+    "build": "gulp build && npm run license && webpack --mode development --vscode-nls",
+    "build:integration": "gulp build && npm run license && tsc --build --pretty",
     "postinstall": "node ./node_modules/vscode/bin/install",
     "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
     "test:theia": "mocha ./out/__tests__/__theia__/*.theia.test.js --timeout 50000",
@@ -1187,7 +1284,7 @@
     "update": "node scripts/stringUpdateScript.js",
     "package": "vsce package",
     "license": "node ./scripts/license.js",
-    "watch": "tsc -b --watch --pretty",
+    "watch": "gulp build && webpack --mode development --vscode-nls --watch --info-verbosity verbose",
     "compile": "tsc -b",
     "markdown": "markdownlint CHANGELOG.md README.md",
     "lint": "npm run lint:src && npm run lint:tests  && npm run markdown",
@@ -1199,9 +1296,6 @@
     "vscode": "^1.43.0"
   },
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^2.31.0",
-    "@typescript-eslint/parser": "^2.31.0",
-    "eslint": "^6.8.0",
     "@types/chai": "^4.2.6",
     "@types/chai-as-promised": "^7.1.0",
     "@types/expect": "^1.20.3",
@@ -1213,11 +1307,14 @@
     "@types/selenium-webdriver": "^3.0.4",
     "@types/vscode": "^1.34.0",
     "@types/yargs": "^11.0.0",
+    "@typescript-eslint/eslint-plugin": "^2.31.0",
+    "@typescript-eslint/parser": "^2.31.0",
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",
     "chalk": "^2.4.1",
     "cross-env": "^5.2.0",
     "del": "^4.1.1",
+    "eslint": "^6.8.0",
     "eslint-plugin-zowe-explorer": "file:eslint-plugin",
     "event-stream": "^4.0.1",
     "expect": "^24.8.0",
@@ -1230,7 +1327,7 @@
     "gulp-sourcemaps": "^2.6.5",
     "gulp-typescript": "^5.0.1",
     "jest": "^25.1.0",
-    "jest-html-reporter": "^2.7.0",
+    "jest-html-reporter": "^3.1.3",
     "jest-junit": "^10.0.0",
     "jest-stare": "^1.26.0",
     "jsdoc": "^3.6.3",
@@ -1243,15 +1340,18 @@
     "selenium-webdriver": "^3.6.0",
     "sinon": "^6.1.0",
     "ts-jest": "^25.3.0",
+    "ts-loader": "^7.0.1",
     "ts-node": "^8.10.1",
     "tslint": "^5.17.0",
     "typescript": "^3.7.2",
     "vsce": "^1.70.0",
     "vscode": "^1.1.36",
-    "vscode-nls-dev": "^3.2.6"
+    "vscode-nls-dev": "^3.2.6",
+    "webpack": "^4.42.1",
+    "webpack-cli": "^3.3.11"
   },
   "dependencies": {
-    "@zowe/cli": "6.14.0",
+    "@zowe/cli": "^6.20.0",
     "fs-extra": "8.0.1",
     "isbinaryfile": "4.0.4",
     "js-yaml": "3.13.1",

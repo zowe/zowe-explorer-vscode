@@ -20,8 +20,10 @@ import { setProfile, setSession, errorHandling } from "../utils";
 import { IZoweTreeNode, IZoweDatasetTreeNode, IZoweNodeType } from "../api/IZoweTreeNode";
 import { IZoweTree } from "../api/IZoweTree";
 import * as nls from "vscode-nls";
-const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 
+// Set up localization
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 // tslint:disable-next-line: max-classes-per-file
 export class ZoweTreeProvider {
@@ -110,17 +112,17 @@ export class ZoweTreeProvider {
         }
     }
 
-    public getHistory() {
-        return this.mHistory.getHistory();
+    public getSearchHistory() {
+        return this.mHistory.getSearchHistory();
     }
 
     public getTreeType() {
         return this.persistenceSchema;
     }
 
-    public async addHistory(criteria: string) {
+    public async addSearchHistory(criteria: string) {
         if (criteria) {
-            this.mHistory.addHistory(criteria);
+            this.mHistory.addSearchHistory(criteria);
             this.refresh();
         }
     }
@@ -143,10 +145,10 @@ export class ZoweTreeProvider {
         const profile = node.getProfile();
         const profileName = node.getProfileName();
         // Check what happens is inactive
-        await Profiles.getInstance().validateProfiles(profile);
+        await Profiles.getInstance().getProfileSetting(profile);
         const EditSession = await Profiles.getInstance().editSession(profile, profileName);
         if (EditSession) {
-            node.getProfile().profile= EditSession as IProfile;
+            node.getProfile().profile = EditSession as IProfile;
             await setProfile(node, EditSession as IProfile);
             await setSession(node, EditSession as ISession);
             this.refresh();
@@ -203,6 +205,13 @@ export class ZoweTreeProvider {
                     node.iconPath = activeIcon.path;
                 }
             }
+        } else if (profileStatus.status === "unverified") {
+            if ((node.contextValue.toLowerCase().includes("session") || node.contextValue.toLowerCase().includes("server"))) {
+                // change contextValue only if the word unverified is not there
+                if (node.contextValue.toLowerCase().indexOf("unverified") === -1) {
+                    node.contextValue = node.contextValue + globals.UNVERIFIED_CONTEXT;
+                }
+            }
         }
         await this.refresh();
     }
@@ -212,9 +221,6 @@ export class ZoweTreeProvider {
     }
 
     protected deleteSessionByLabel(revisedLabel: string) {
-        if (revisedLabel.includes("[")) {
-            revisedLabel = revisedLabel.substring(0, revisedLabel.indexOf(" ["));
-        }
         this.mHistory.removeSession(revisedLabel);
         this.refresh();
     }

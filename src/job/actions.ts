@@ -20,10 +20,14 @@ import { IZoweJobTreeNode } from "../api/IZoweTreeNode";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 import { Job } from "./ZoweJobNode";
 import * as contextually from "../shared/context";
-
+import { returnIconState, resetValidationSettings } from "../shared/actions";
 import * as nls from "vscode-nls";
 import { encodeJobFile } from "../SpoolProvider";
-const localize = nls.config({messageFormat: nls.MessageFormat.file})();
+import { PersistentFilters } from "../PersistentFilters";
+
+// Set up localization
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 /**
  * Refresh all jobs in the job tree
@@ -32,12 +36,15 @@ const localize = nls.config({messageFormat: nls.MessageFormat.file})();
  */
 export async function refreshAllJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>) {
     await Profiles.getInstance().refresh();
-    jobsProvider.mSessionNodes.forEach((jobNode) => {
+    jobsProvider.mSessionNodes.forEach(async (jobNode) => {
+        const setting = await PersistentFilters.getDirectValue("Zowe-Automatic-Validation") as boolean;
         if (contextually.isSession(jobNode)) {
             labelRefresh(jobNode);
             jobNode.children = [];
             jobNode.dirty = true;
             refreshTree(jobNode);
+            resetValidationSettings(jobNode, setting);
+            returnIconState(jobNode);
         }
     });
     await jobsProvider.refresh();
@@ -79,7 +86,8 @@ export async function getSpoolContent(jobsProvider: IZoweTree<IZoweJobTreeNode>,
     const zosmfProfile = Profiles.getInstance().loadNamedProfile(session);
     // This has a direct access to Profiles checkcurrentProfile() because I am able to get the profile now.
     await Profiles.getInstance().checkCurrentProfile(zosmfProfile);
-    if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
+    if ((Profiles.getInstance().validProfile === ValidProfileEnum.VALID) ||
+    (Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED)) {
         try {
             const uri = encodeJobFile(session, spool);
             const document = await vscode.workspace.openTextDocument(uri);
@@ -97,14 +105,9 @@ export async function getSpoolContent(jobsProvider: IZoweTree<IZoweJobTreeNode>,
  * @param jobsProvider The tree to which the refreshed node belongs
  */
 export async function refreshJobsServer(node: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>) {
-    let sesNamePrompt: string;
-    if (node.contextValue.endsWith(globals.FAV_SUFFIX)) {
-        sesNamePrompt = node.label.substring(1, node.label.indexOf("]"));
-    } else {
-        sesNamePrompt = node.label;
-    }
     jobsProvider.checkCurrentProfile(node);
-    if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
+    if ((Profiles.getInstance().validProfile === ValidProfileEnum.VALID) ||
+    (Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED)) {
         await jobsProvider.refreshElement(node);
     }
 }
@@ -161,6 +164,7 @@ export async function stopCommand(job: Job) {
  * @param job The job to set the owner of
  * @param jobsProvider The tree to which the updated node belongs
  */
+// Is this redundant with the setter in the Job class (ZoweJobNode.ts)?
 export async function setOwner(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>) {
     const newOwner = await vscode.window.showInputBox({ prompt: localize("setOwner.newOwner.prompt.owner", "Owner") });
     job.owner = newOwner;

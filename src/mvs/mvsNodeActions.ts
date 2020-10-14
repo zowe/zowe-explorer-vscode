@@ -18,7 +18,9 @@ import { IZoweDatasetTreeNode } from "../api/IZoweTreeNode";
 import * as nls from "vscode-nls";
 import * as contextually from "../shared/context";
 
-const localize = nls.config({messageFormat: nls.MessageFormat.file})();
+// Set up localization
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export async function uploadDialog(node: ZoweDatasetNode, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
     const fileOpenOptions = {
@@ -68,7 +70,10 @@ export function getDatasetLabel(node: ZoweDatasetNode) {
 export async function uploadFile(node: ZoweDatasetNode, doc: vscode.TextDocument) {
     try {
         const datasetName = getDatasetLabel(node);
-        await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).putContents(doc.fileName, datasetName);
+        const prof = node.getProfile();
+        await ZoweExplorerApiRegister.getMvsApi(prof).putContents(doc.fileName, datasetName, {
+            encoding: prof.profile.encoding
+        });
     } catch (e) {
         await utils.errorHandling(e, node.getProfileName(), e.message);
     }

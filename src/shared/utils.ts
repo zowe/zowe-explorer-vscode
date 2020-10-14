@@ -19,9 +19,11 @@ import { Profiles } from "../Profiles";
 import { ISession, IProfileLoaded } from "@zowe/imperative";
 import * as nls from "vscode-nls";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
-import { IUploadOptions } from "@zowe/cli";
+import { IUploadOptions, IZosFilesResponse } from "@zowe/cli";
 
-const localize = nls.config({messageFormat: nls.MessageFormat.file})();
+// Set up localization
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export function filterTreeByString(value: string, treeItems: vscode.QuickPickItem[]): vscode.QuickPickItem[] {
     const filteredArray = [];
@@ -42,8 +44,8 @@ export function filterTreeByString(value: string, treeItems: vscode.QuickPickIte
  */
 export function getIconPathInResources(iconFileName: string) {
     return {
-        light: path.join(__dirname, "..", "..", "..", "resources", "light", iconFileName),
-        dark: path.join(__dirname, "..", "..", "..", "resources", "dark", iconFileName)
+        light: path.join(globals.ROOTPATH, "resources", "light", iconFileName),
+        dark: path.join(globals.ROOTPATH, "resources", "dark", iconFileName)
     };
 }
 
@@ -198,6 +200,45 @@ export async function markFileAsDirty(doc: vscode.TextDocument): Promise<void> {
     });
 }
 
+export async function uploadContent(node: IZoweDatasetTreeNode | IZoweUSSTreeNode,
+                                    doc: vscode.TextDocument,
+                                    remotePath: string,
+                                    profile?: IProfileLoaded,
+                                    binary?: boolean,
+                                    etagToUpload?: string,
+                                    returnEtag?: boolean): Promise<IZosFilesResponse> {
+
+    if (isZoweDatasetTreeNode(node)) {
+        // Upload without passing the etag to force upload
+        const uploadOptions: IUploadOptions = {
+            returnEtag: true
+        };
+        const prof = node.getProfile();
+        if (prof.profile.encoding) {
+            uploadOptions.encoding = prof.profile.encoding;
+        }
+        return ZoweExplorerApiRegister.getMvsApi(prof).putContents(doc.fileName,
+            remotePath,
+            uploadOptions);
+    } else {
+
+        // if new api method exists, use it
+        if (ZoweExplorerApiRegister.getUssApi(profile).putContent) {
+            return ZoweExplorerApiRegister.getUssApi(profile).putContent(
+                doc.fileName, remotePath,
+                {
+                    binary,
+                    localEncoding: null,
+                    etag: etagToUpload,
+                    returnEtag,
+                    encoding: profile.profile.encoding
+                });
+        } else {
+            return ZoweExplorerApiRegister.getUssApi(profile).putContents(
+                doc.fileName, remotePath, binary, null, etagToUpload, returnEtag);
+        }
+    }
+}
 
 /**
  * Function that will forcefully upload a file and won't check for matching Etag
@@ -208,10 +249,7 @@ export async function willForceUpload(node: IZoweDatasetTreeNode | IZoweUSSTreeN
                                       profile?: IProfileLoaded,
                                       binary?: boolean,
                                       returnEtag?: boolean): Promise<void> {
-    // Upload without passing the etag to force upload
-    const uploadOptions: IUploadOptions = {
-        returnEtag: true
-    };
+
 
     // setup to handle both cases (dataset & USS)
     let title: string;
@@ -232,14 +270,7 @@ export async function willForceUpload(node: IZoweDatasetTreeNode | IZoweUSSTreeN
                 location: vscode.ProgressLocation.Notification,
                 title
             }, () => {
-                if (isZoweDatasetTreeNode(node)) {
-                    return ZoweExplorerApiRegister.getMvsApi(node ? node.getProfile(): profile).putContents(doc.fileName,
-                        remotePath,
-                        uploadOptions);
-                } else {
-                    return ZoweExplorerApiRegister.getUssApi(profile).putContents(
-                        doc.fileName, remotePath, binary, null, null, returnEtag);
-                    }
+                return uploadContent(node, doc, remotePath, profile, binary, null, returnEtag);
             });
             uploadResponse.then((response) => {
                 if (response.success) {
@@ -269,3 +300,4 @@ export function isZoweUSSTreeNode(node: IZoweDatasetTreeNode | IZoweUSSTreeNode 
 export function isZoweJobTreeNode(node: IZoweDatasetTreeNode | IZoweUSSTreeNode | IZoweJobTreeNode): node is IZoweJobTreeNode {
     return (node as IZoweJobTreeNode).job !== undefined;
 }
+

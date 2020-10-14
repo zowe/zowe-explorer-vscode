@@ -25,11 +25,12 @@ import { injectAdditionalDataToTooltip } from "../uss/utils";
 import { Profiles, ValidProfileEnum } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 import * as contextually from "../shared/context";
-
-import * as nls from "vscode-nls";
 import { closeOpenedTextFile } from "../utils/workspace";
+import * as nls from "vscode-nls";
 
-const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
+// Set up localization
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 /**
  * A type of TreeItem used to represent sessions and USS directories and files
@@ -87,21 +88,21 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 this.fullPath = this.tooltip = "/" + label;
             }
         }
-        if (mParent && contextually.isFavoriteContext(mParent)) {
-            this.profileName = "[" + mProfileName + "]: ";
+        if (mParent && mParent.contextValue === globals.FAV_PROFILE_CONTEXT) {
+            this.profileName = this.mProfileName = mParent.label.trim();
             this.fullPath = label.trim();
             // File or directory name only (no parent path)
             this.shortLabel = this.fullPath.split("/", this.fullPath.length).pop();
             // Display name for favorited file or directory in tree view
-            this.label = this.profileName + this.shortLabel;
-            this.tooltip = this.profileName + this.fullPath;
+            this.label = this.shortLabel;
+            this.tooltip = this.fullPath;
         }
         // TODO: this should not be necessary if each node gets initialized with the profile reference.
         if (mProfileName) {
-            this.setProfile(Profiles.getInstance().loadNamedProfile(mProfileName));
+            this.setProfileToChoice(Profiles.getInstance().loadNamedProfile(mProfileName));
         } else if (mParent && mParent.mProfileName) {
             this.mProfileName = mParent.mProfileName;
-            this.setProfile(Profiles.getInstance().loadNamedProfile(mParent.mProfileName));
+            this.setProfileToChoice(Profiles.getInstance().loadNamedProfile(mParent.mProfileName));
         }
         this.etag = etag ? etag : "";
         const icon = getIconByNode(this);
@@ -232,7 +233,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             this.contextValue = globals.DS_TEXT_FILE_CONTEXT;
             delete this.getSessionNode().binaryFiles[this.fullPath];
         }
-        if (this.getParent() && contextually.isFavoriteContext(this.getParent())) {
+        if (this.getParent() && this.getParent().contextValue === globals.FAV_PROFILE_CONTEXT) {
             this.binary ? this.contextValue = globals.DS_BINARY_FILE_CONTEXT + globals.FAV_SUFFIX :
                 this.contextValue = globals.DS_TEXT_FILE_CONTEXT + globals.FAV_SUFFIX;
         }
@@ -285,6 +286,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         const hasClosedInstance = await closeOpenedTextFile(currentFilePath);
         this.fullPath = newFullPath;
         this.shortLabel = newFullPath.split("/").pop();
+        if (contextually.isFavorite(this)) { this.shortLabel = `[${this.getProfileName()}]: ${this.shortLabel}`; }
         this.label = this.shortLabel;
         this.tooltip = injectAdditionalDataToTooltip(this, newFullPath);
 
@@ -344,7 +346,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
         // Remove node from the USS Favorites tree
         ussFileProvider.removeFavorite(this);
-        ussFileProvider.removeRecall(`[${this.getProfileName()}]: ${this.parentPath}/${this.label}`);
+        ussFileProvider.removeFileHistory(`[${this.getProfileName()}]: ${this.parentPath}/${this.label}`);
         ussFileProvider.refresh();
     }
 
@@ -407,19 +409,19 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      */
     public async openUSS(download = false, previewFile: boolean, ussFileProvider?: IZoweTree<IZoweUSSTreeNode>) {
         await ussFileProvider.checkCurrentProfile(this);
-        if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
+        if ((Profiles.getInstance().validProfile === ValidProfileEnum.VALID) ||
+        (Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED)) {
             try {
                 let label: string;
                 switch (true) {
-                    case (contextually.isFavoriteContext(this.getParent())):
-                        label = this.label.substring(this.label.indexOf(":") + 1).trim();
+                    // For opening favorited and non-favorited files
+                    case (this.getParent().contextValue === globals.FAV_PROFILE_CONTEXT):
+                    case (contextually.isUssSession(this.getParent())):
+                        label = this.label;
                         break;
                     // Handle file path for files in directories and favorited directories
                     case (contextually.isUssDirectory(this.getParent())):
                         label = this.fullPath;
-                        break;
-                    case (contextually.isUssSession(this.getParent())):
-                        label = this.label;
                         break;
                     default:
                         vscode.window.showErrorMessage(localize("openUSS.error.invalidNode", "open() called from invalid node."));
@@ -441,7 +443,8 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                                 fullPath, {
                                     file: documentFilePath,
                                     binary: chooseBinary,
-                                    returnEtag: true
+                                    returnEtag: true,
+                                    encoding: profile.profile.encoding
                                 });
                         }
                     );
@@ -451,7 +454,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 }
 
                 // Add document name to recently-opened files
-                ussFileProvider.addRecall(`[${this.getProfile().name}]: ${this.fullPath}`);
+                ussFileProvider.addFileHistory(`[${this.getProfile().name}]: ${this.fullPath}`);
                 ussFileProvider.getTreeView().reveal(this, { select: true, focus: true, expand: false });
 
                 await this.initializeFileOpening(documentFilePath, previewFile);
@@ -473,7 +476,8 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             case (contextually.isUssDirectory(this.getParent())):
                 label = this.fullPath;
                 break;
-            case (contextually.isFavoriteContext(this.getParent())):
+            // For favorited and non-favorited files
+            case (this.getParent().contextValue === globals.FAV_PROFILE_CONTEXT):
             case (contextually.isUssSession(this.getParent())):
                 label = this.label;
                 break;
@@ -497,10 +501,12 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             }
 
             if ((isDirty && !this.isDirtyInEditor && !wasSaved) || !isDirty) {
-                const response = await ZoweExplorerApiRegister.getUssApi(this.getProfile()).getContents(this.fullPath, {
+                const prof = this.getProfile();
+                const response = await ZoweExplorerApiRegister.getUssApi(prof).getContents(this.fullPath, {
                     file: ussDocumentFilePath,
-                    binary: this.binary,
-                    returnEtag: true
+                    binary: this.binary || await ZoweExplorerApiRegister.getUssApi(this.getProfile()).isFileTagBinOrAscii(this.fullPath),
+                    returnEtag: true,
+                    encoding: prof?.profile.encoding
                 });
                 this.setEtag(response.apiResponse.etag);
                 this.downloaded = true;

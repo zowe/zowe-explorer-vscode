@@ -20,7 +20,7 @@ import * as testConst from "../../resources/testProfileData";
 import * as sinon from "sinon";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
-import { DS_SESSION_CONTEXT } from "../../src/globals";
+import { DS_SESSION_CONTEXT, FAV_PROFILE_CONTEXT } from "../../src/globals";
 
 declare var it: any;
 
@@ -38,7 +38,7 @@ describe("DatasetTree Integration Tests", async () => {
     // Uses loaded profile to create a zosmf session with Zowe
     const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
     const sessNode = new ZoweDatasetNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded,
-                                         null, session, undefined, undefined, testProfile);
+        null, session, undefined, undefined, testProfile);
     sessNode.contextValue = DS_SESSION_CONTEXT;
     const pattern = testConst.normalPattern.toUpperCase();
     sessNode.pattern = pattern + ".PUBLIC";
@@ -92,16 +92,16 @@ describe("DatasetTree Integration Tests", async () => {
         ];
         sampleRChildren[2].dirty = false; // Because getChildren was subsequently called.
 
-        sampleRChildren[0].command = {command: "zowe.ZoweNode.openPS", title: "", arguments: [sampleRChildren[0]]};
-        sampleRChildren[3].command = {command: "zowe.ZoweNode.openPS", title: "", arguments: [sampleRChildren[3]]};
+        sampleRChildren[0].command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [sampleRChildren[0]] };
+        sampleRChildren[3].command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [sampleRChildren[3]] };
 
         const samplePChildren: ZoweDatasetNode[] = [
             new ZoweDatasetNode("TCHILD1", vscode.TreeItemCollapsibleState.None, sampleRChildren[2], null),
             new ZoweDatasetNode("TCHILD2", vscode.TreeItemCollapsibleState.None, sampleRChildren[2], null),
         ];
 
-        samplePChildren[0].command = {command: "zowe.ZoweNode.openPS", title: "", arguments: [samplePChildren[0]]};
-        samplePChildren[1].command = {command: "zowe.ZoweNode.openPS", title: "", arguments: [samplePChildren[1]]};
+        samplePChildren[0].command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [samplePChildren[0]] };
+        samplePChildren[1].command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [samplePChildren[1]] };
         sampleRChildren[2].children = samplePChildren;
 
         // Checking that the rootChildren are what they are expected to be
@@ -176,14 +176,16 @@ describe("DatasetTree Integration Tests", async () => {
      * Tests the deleteSession() function
      *************************************************************************************************************/
     it("Tests the addSession() function by adding the default history, deleting, then adding a passed session then deleting", async () => {
+        let len: number;
         for (const sess of testTree.mSessionNodes) {
             if (sess.contextValue === DS_SESSION_CONTEXT) {
                 testTree.deleteSession(sess);
             }
         }
-        const len = testTree.mSessionNodes.length;
+        len = testTree.mSessionNodes.length;
         await testTree.addSession();
         expect(testTree.mSessionNodes.length).toBeGreaterThan(len);
+        len = testTree.mSessionNodes.length;
         for (const sess of testTree.mSessionNodes) {
             if (sess.contextValue === DS_SESSION_CONTEXT) {
                 testTree.deleteSession(sess);
@@ -194,57 +196,69 @@ describe("DatasetTree Integration Tests", async () => {
     }).timeout(TIMEOUT);
 
     describe("addFavorite()", () => {
+        beforeEach(() => {
+            const favProfileNode = new ZoweDatasetNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded, null,
+                session, FAV_PROFILE_CONTEXT, undefined, testProfile);
+            testTree.mFavorites.push(favProfileNode);
+        });
+        afterEach(() => {
+            testTree.mFavorites = [];
+        });
         it("should add the selected data set to the treeView", async () => {
             const favoriteNode = new ZoweDatasetNode(pattern + ".TPDS", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
-            const len = testTree.mFavorites.length;
             await testTree.addFavorite(favoriteNode);
-            const filtered = testTree.mFavorites.filter((temp) => temp.label ===
-                `[${favoriteNode.getSessionNode().label}]: ${favoriteNode.label}`);
+            const filtered = testTree.mFavorites[0].children.filter((temp) => temp.label === `${favoriteNode.label}`);
             expect(filtered.length).toEqual(1);
             expect(filtered[0].label).toContain(pattern + ".TPDS");
             // TODO confirm in settings.json too
-            testTree.mFavorites = [];
         });
 
         it("should add a favorite search", async () => {
             await testTree.addFavorite(sessNode);
-            const filtered = testTree.mFavorites.filter((temp) => temp.label === `[${sessNode.label}]: ${sessNode.pattern}`);
+            const filtered = testTree.mFavorites[0].children.filter((temp) => temp.label === `${sessNode.pattern}`);
             expect(filtered.length).toEqual(1);
-            expect(filtered[0].label).toContain(`[${sessNode.label}]: ${sessNode.pattern}`);
-            testTree.mFavorites = [];
+            expect(filtered[0].label).toContain(`${sessNode.pattern}`);
         });
     });
 
     describe("removeFavorite()", () => {
-        it("should remove the selected favorite data set from the treeView", () => {
+        beforeEach(() => {
+            const favProfileNode = new ZoweDatasetNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded, null,
+                session, FAV_PROFILE_CONTEXT, undefined, testProfile);
+            testTree.mFavorites.push(favProfileNode);
+        });
+        afterEach(() => {
+            testTree.mFavorites = [];
+        });
+        it("should remove the selected favorite data set from the treeView", async () => {
             const favoriteNode = new ZoweDatasetNode(pattern + ".TPDS",
                 vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
-            testTree.addFavorite(favoriteNode);
-            const len = testTree.mFavorites.length;
-            testTree.removeFavorite(testTree.mFavorites[len - 1]);
-            expect(testTree.mFavorites.length).toEqual(len - 1);
+            await testTree.addFavorite(favoriteNode);
+            const len = testTree.mFavorites[0].children.length;
+            await testTree.removeFavorite(testTree.mFavorites[0].children[len - 1]);
+            expect(testTree.mFavorites[0].children.length).toEqual(len - 1);
         });
 
-        it("should remove the selected favorite search from the treeView", () => {
-            testTree.addFavorite(sessNode);
-            const len = testTree.mFavorites.length;
-            testTree.removeFavorite(testTree.mFavorites[len - 1]);
-            expect(testTree.mFavorites.length).toEqual(len - 1);
+        it("should remove the selected favorite search from the treeView", async () => {
+            await testTree.addFavorite(sessNode);
+            const len = testTree.mFavorites[0].children.length;
+            await testTree.removeFavorite(testTree.mFavorites[0].children[len - 1]);
+            expect(testTree.mFavorites[0].children.length).toEqual(len - 1);
         });
     });
 
     /*************************************************************************************************************
      * Recently-opened member function tests
      *************************************************************************************************************/
-    it("Tests that addRecall adds a recently-opened file to the list", async () => {
-        testTree.addRecall(`[${sessNode.getLabel()}]: ${pattern}.EXT.SAMPLE.PDS(TESTMEMB)`);
-        const recall = testTree.getRecall();
-        expect(recall[0]).toEqual(`[${sessNode.getLabel().toUpperCase()}]: ${pattern}.EXT.SAMPLE.PDS(TESTMEMB)`);
+    it("Tests that addFileHistory adds a recently-opened file to the list", async () => {
+        testTree.addFileHistory(`[${sessNode.getLabel()}]: ${pattern}.EXT.SAMPLE.PDS(TESTMEMB)`);
+        const fileHistory = testTree.getFileHistory();
+        expect(fileHistory[0]).toEqual(`[${sessNode.getLabel().toUpperCase()}]: ${pattern}.EXT.SAMPLE.PDS(TESTMEMB)`);
     });
 
-    it("Tests that removeRecall removes a file from the recall list", async () => {
-        testTree.removeRecall(`[${sessNode.getLabel()}]: ${pattern}.EXT.SAMPLE.PDS`);
-        const patternIndex = testTree.getRecall().findIndex((recall) => recall === `[${sessNode.getLabel()}]: ${pattern}.EXT.SAMPLE.PDS(TESTMEMB)`);
+    it("Tests that removeFileHistory removes a file from the file history list", async () => {
+        testTree.removeFileHistory(`[${sessNode.getLabel()}]: ${pattern}.EXT.SAMPLE.PDS`);
+        const patternIndex = testTree.getFileHistory().findIndex((file) => file === `[${sessNode.getLabel()}]: ${pattern}.EXT.SAMPLE.PDS(TESTMEMB)`);
         expect(patternIndex).toEqual(-1);
     });
 
@@ -291,6 +305,30 @@ describe("DatasetTree Integration Tests", async () => {
                     expectChai(beforeList.apiResponse.returnedRows).to.equal(0);
                     expectChai(afterList.apiResponse.returnedRows).to.equal(1);
                 }).timeout(TIMEOUT);
+                it("should rename a data set in uppercase when given lowercase name", async () => {
+                    let error;
+                    let beforeList;
+                    let afterList;
+
+                    const lowercaseAfterDataSetName = `${pattern}.RENAME.after.TEST`;
+
+                    try {
+                        const testNode = new ZoweDatasetNode(beforeDataSetName, vscode.TreeItemCollapsibleState.None, sessNode, session);
+                        const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
+                        inputBoxStub.returns(lowercaseAfterDataSetName);
+
+                        await testTree.rename(testNode);
+                        beforeList = await zowe.List.dataSet(sessNode.getSession(), beforeDataSetName);
+                        afterList = await zowe.List.dataSet(sessNode.getSession(), afterDataSetName);
+                    } catch (err) {
+                        error = err;
+                    }
+
+                    expectChai(error).to.be.equal(undefined);
+
+                    expectChai(beforeList.apiResponse.returnedRows).to.equal(0);
+                    expectChai(afterList.apiResponse.returnedRows).to.equal(1);
+                }).timeout(TIMEOUT);
             });
             describe("Rename Member", () => {
                 beforeEach(async () => {
@@ -304,8 +342,35 @@ describe("DatasetTree Integration Tests", async () => {
                         new Buffer("abc"),
                         `${beforeDataSetName}(mem1)`
                     );
+                    const favProfileNode = new ZoweDatasetNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded, null,
+                        session, FAV_PROFILE_CONTEXT, undefined, testProfile);
+                    testTree.mFavorites.push(favProfileNode);
+                });
+                afterEach(() => {
+                    testTree.mFavorites = [];
                 });
                 it("should rename a data set member", async () => {
+                    let error;
+                    let list;
+
+                    try {
+                        const parentNode = new ZoweDatasetNode(beforeDataSetName, vscode.TreeItemCollapsibleState.None, sessNode, session);
+                        const childNode = new ZoweDatasetNode("mem1", vscode.TreeItemCollapsibleState.None, parentNode, session);
+                        const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
+                        inputBoxStub.returns("MEM2");
+
+                        await testTree.rename(childNode);
+                        list = await zowe.List.allMembers(sessNode.getSession(), beforeDataSetName);
+                    } catch (err) {
+                        error = err;
+                    }
+
+                    expectChai(error).to.be.equal(undefined);
+
+                    expectChai(list.apiResponse.returnedRows).to.equal(1);
+                    expectChai(list.apiResponse.items[0].member).to.equal("MEM2");
+                }).timeout(TIMEOUT);
+                it("should rename a data set member in uppercase when given lowercase", async () => {
                     let error;
                     let list;
 
@@ -358,6 +423,30 @@ describe("DatasetTree Integration Tests", async () => {
                     expectChai(beforeList.apiResponse.returnedRows).to.equal(0);
                     expectChai(afterList.apiResponse.returnedRows).to.equal(1);
                 }).timeout(TIMEOUT);
+                it("should rename a data set in uppercase when given lowercase name", async () => {
+                    let error;
+                    let beforeList;
+                    let afterList;
+
+                    const lowercaseAfterDataSetName = `${pattern}.RENAME.after.TEST`;
+
+                    try {
+                        const testNode = new ZoweDatasetNode(beforeDataSetName, vscode.TreeItemCollapsibleState.None, sessNode, session);
+                        const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
+                        inputBoxStub.returns(lowercaseAfterDataSetName);
+
+                        await testTree.rename(testNode);
+                        beforeList = await zowe.List.dataSet(sessNode.getSession(), beforeDataSetName);
+                        afterList = await zowe.List.dataSet(sessNode.getSession(), afterDataSetName);
+                    } catch (err) {
+                        error = err;
+                    }
+
+                    expectChai(error).to.be.equal(undefined);
+
+                    expectChai(beforeList.apiResponse.returnedRows).to.equal(0);
+                    expectChai(afterList.apiResponse.returnedRows).to.equal(1);
+                }).timeout(TIMEOUT);
             });
         });
         describe("Failure Scenarios", () => {
@@ -386,7 +475,7 @@ describe("DatasetTree Integration Tests", async () => {
                         const parentNode = new ZoweDatasetNode(beforeDataSetName, vscode.TreeItemCollapsibleState.None, sessNode, session);
                         const childNode = new ZoweDatasetNode("mem1", vscode.TreeItemCollapsibleState.None, parentNode, session);
                         const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
-                        inputBoxStub.returns("mem2");
+                        inputBoxStub.returns("MEM2");
 
                         await testTree.rename(childNode);
                     } catch (err) {

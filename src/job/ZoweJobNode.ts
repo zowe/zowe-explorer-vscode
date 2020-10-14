@@ -21,7 +21,9 @@ import { getIconByNode } from "../generators/icons";
 import * as contextually from "../shared/context";
 
 import * as nls from "vscode-nls";
-const localize = nls.config({messageFormat: nls.MessageFormat.file})();
+// Set up localization
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 // tslint:disable-next-line: max-classes-per-file
 export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
@@ -81,9 +83,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                         if (prefix === undefined) {
                             prefix = spool.procstep;
                         }
-                        const sessionName = contextually.isFavorite(this) ?
-                            this.label.substring(1, this.label.lastIndexOf("]")).trim() :
-                            this.getProfileName();
+                        const sessionName = this.getProfileName();
                         const spoolNode = new Spool(`${spool.stepname}:${spool.ddname}(${spool.id})`,
                             vscode.TreeItemCollapsibleState.None, this, this.session, spool, this.job, this);
                         const icon = getIconByNode(spoolNode);

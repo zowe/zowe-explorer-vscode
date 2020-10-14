@@ -19,7 +19,12 @@ import { filterTreeByString } from "../shared/utils";
 import { FilterItem, resolveQuickPickHelper, FilterDescriptor } from "../utils";
 import * as contextually from "../shared/context";
 import * as nls from "vscode-nls";
-const localize = nls.config({messageFormat: nls.MessageFormat.file})();
+import { getIconByNode, getIconById, IconId } from "../generators/icons";
+import { Profiles } from "../Profiles";
+
+// Set up localization
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 /**
  * Search for matching items loaded in data set or USS tree
@@ -40,11 +45,11 @@ export async function searchInAllLoadedItems(datasetProvider?: IZoweTree<IZoweDa
 
     // Get loaded items from Tree Providers
     if (datasetProvider) {
-        const newItems = await datasetProvider.searchInLoadedItems();
+        const newItems = await datasetProvider.getAllLoadedItems();
         items.push(...newItems);
     }
     if (ussFileProvider) {
-        const newItems = await ussFileProvider.searchInLoadedItems();
+        const newItems = await ussFileProvider.getAllLoadedItems();
         items.push(...newItems);
     }
 
@@ -99,7 +104,7 @@ export async function searchInAllLoadedItems(datasetProvider?: IZoweTree<IZoweDa
 
             if (node.contextValue !== globals.USS_DIR_CONTEXT) {
                 // If selected item is file, open it in workspace
-                ussFileProvider.addHistory(node.fullPath);
+                ussFileProvider.addSearchHistory(node.fullPath);
                 const ussNode: IZoweUSSTreeNode = node;
                 ussNode.openUSS(false, true, ussFileProvider);
             }
@@ -118,7 +123,7 @@ export async function searchInAllLoadedItems(datasetProvider?: IZoweTree<IZoweDa
                 await datasetProvider.getTreeView().reveal(member, {select: true, focus: true, expand: false});
 
                 // Open in workspace
-                datasetProvider.addHistory(`${nodeName}(${memberName})`);
+                datasetProvider.addSearchHistory(`${nodeName}(${memberName})`);
                 openPS(member, true, datasetProvider);
             } else {
                 // PDS & SDS
@@ -126,7 +131,7 @@ export async function searchInAllLoadedItems(datasetProvider?: IZoweTree<IZoweDa
 
                 // If selected node was SDS, open it in workspace
                 if (contextually.isDs(node)) {
-                    datasetProvider.addHistory(nodeName);
+                    datasetProvider.addSearchHistory(nodeName);
                     openPS(node, true, datasetProvider);
                 }
             }
@@ -140,12 +145,12 @@ export async function openRecentMemberPrompt(datasetTree: IZoweTree<IZoweDataset
     }
     let pattern: string;
 
-    const allRecall = [...datasetTree.getRecall(), ...ussTree.getRecall()];
+    const fileHistory = [...datasetTree.getFileHistory(), ...ussTree.getFileHistory()];
 
     // Get user selection
-    if (allRecall.length > 0) {
+    if (fileHistory.length > 0) {
         const createPick = new FilterDescriptor(localize("memberHistory.option.prompt.open", "Select a recent member to open"));
-        const items: vscode.QuickPickItem[] = allRecall.map((element) => new FilterItem(element));
+        const items: vscode.QuickPickItem[] = fileHistory.map((element) => new FilterItem(element));
         if (globals.ISTHEIA) {
             const options1: vscode.QuickPickOptions = {
                 placeHolder: localize("memberHistory.options.prompt", "Select a recent member to open")
@@ -189,4 +194,25 @@ export async function openRecentMemberPrompt(datasetTree: IZoweTree<IZoweDataset
         vscode.window.showInformationMessage(localize("getRecentMembers.empty", "No recent members found."));
         return;
     }
+}
+
+export async function returnIconState(node: IZoweNodeType) {
+    const activePath = getIconById(IconId.sessionActive);
+    const inactivePath = getIconById(IconId.sessionInactive);
+    if ((node.iconPath === activePath.path) || (node.iconPath === inactivePath.path)) {
+            const sessionIcon = getIconById(IconId.session);
+            if (sessionIcon) {
+                node.iconPath = sessionIcon.path;
+            }
+    }
+    return node;
+}
+
+export async function resetValidationSettings(node: IZoweNodeType, setting: boolean) {
+    if (setting){
+        await Profiles.getInstance().enableValidationContext(node);
+    } else {
+        await Profiles.getInstance().disableValidationContext(node);
+    }
+    return node;
 }

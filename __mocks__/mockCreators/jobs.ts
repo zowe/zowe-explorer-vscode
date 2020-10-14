@@ -44,6 +44,25 @@ export function createIJobObject(): zowe.IJob {
     };
 }
 
+export function createIJobFile(): zowe.IJobFile {
+    return {
+        "byte-count": 128,
+        "job-correlator": "correlator",
+        "record-count": 1,
+        "records-url": "fake/records",
+        "class": "A",
+        "ddname": "STDOUT",
+        "id": 101,
+        "jobid": "JOB1234",
+        "jobname": "TESTJOB",
+        "lrecl": 80,
+        "procstep": "",
+        "recfm": "FB",
+        "stepname": "STEP",
+        "subsystem": "SYS"
+    };
+}
+
 export function createJobsTree(session: imperative.Session, iJob: zowe.IJob, profile: imperative.IProfileLoaded, treeView: any): any {
     const jobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, null, session, iJob, profile);
     jobNode.contextValue = globals.JOBS_SESSION_CONTEXT;
@@ -68,9 +87,49 @@ export function createJobsTree(session: imperative.Session, iJob: zowe.IJob, pro
     };
     testJobsTree.mSessionNodes = [];
     testJobsTree.mSessionNodes.push(jobNode);
-    testJobsTree.addFavorite.mockImplementation((newFavorite) => { testJobsTree.mFavorites.push(newFavorite); });
+    testJobsTree.addFavorite.mockImplementation((newFavorite) => {
+        testJobsTree.mFavorites.push(newFavorite);
+    });
     testJobsTree.deleteSession.mockImplementation((badSession) => removeNodeFromArray(badSession, testJobsTree.mSessionNodes));
     testJobsTree.removeFavorite.mockImplementation((badFavorite) => removeNodeFromArray(badFavorite, testJobsTree.mFavorites));
 
     return testJobsTree;
+}
+
+export function createJobSessionNode(session: imperative.Session, profile: imperative.IProfileLoaded) {
+    const jobSessionNode = new Job("sestest", vscode.TreeItemCollapsibleState.Collapsed,
+    null, session, null, profile);
+    jobSessionNode.contextValue = globals.JOBS_SESSION_CONTEXT;
+
+    return jobSessionNode;
+}
+
+export function createJobFavoritesNode() {
+    const jobFavoritesNode = new Job("Favorites", vscode.TreeItemCollapsibleState.Collapsed, null, null, null, null);
+    jobFavoritesNode.contextValue = globals.FAVORITE_CONTEXT;
+
+    return jobFavoritesNode;
+}
+
+// Because the JobDetail class in ZosJobsProvider.ts is not exported:
+export class MockJobDetail implements zowe.IJob {
+    public jobid: string;
+    public jobname: string;
+    public subsystem: string;
+    public owner: string;
+    public status: string;
+    public type: string;
+    public class: string;
+    public retcode: string;
+    public url: string;
+    public "files-url": string;
+    public "job-correlator": string;
+    public phase: number;
+    public "phase-name": string;
+    public "reason-not-running"?: string;
+
+    constructor(combined: string) {
+        this.jobname = combined.substring(0, combined.indexOf("("));
+        this.jobid = combined.substring(combined.indexOf("(") + 1, combined.indexOf(")"));
+    }
 }
