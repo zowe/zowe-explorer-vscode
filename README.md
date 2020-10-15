@@ -62,11 +62,11 @@ Create a profile, review the sample use cases to familiarize yourself with the c
 
 You can now use all the functionalities of the extension.
 
-### Use Base Profiles
+### Use Base Profiles to access API Mediation Layer
 
 Leverage existing base profiles with a token to log in to API Mediation Layer.
 
-Before using the base profiles functionality, ensure that you have [Zowe CLI](https://docs.zowe.org/stable/user-guide/cli-installcli.html) installed.
+Before using the base profile functionality, ensure that you have [Zowe CLI](https://docs.zowe.org/stable/user-guide/cli-installcli.html) v1.13.0 or higher installed.
 
 **Follow these steps:**
 
@@ -76,7 +76,9 @@ Before using the base profiles functionality, ensure that you have [Zowe CLI](ht
    zowe auth login apiml
    ```
 
-2. Follow the instructions and provide all necessary information to create a base profile. 
+2. Follow the instructions to complete the authentication process and provide all necessary information to create a base profile with a token.
+
+**Note:** For more information about the process, see [Token Management](https://docs.zowe.org/stable/user-guide/cli-usingcli.html#how-token-management-works).
 
    You have successfully created a base profile.
   
