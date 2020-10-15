@@ -73,6 +73,8 @@ You can now use all the functionalities of the extension.
 6. Provide only a name for your profile and the base path for your API Mediation Layer instance.  
    You can now use this profile to access z/OSMF via the API Mediation Layer.  
 
+For more information about logging in to the API Mediation Layer, see [Integrating with API Mediation Layer](https://docs.zowe.org/stable/user-guide/cli-usingcli.html#integrating-with-api-mediation-layer).
+
 ### Sample use cases
 
 Review the following use cases to understand how to work with data sets in Zowe Explorer. For the complete list of features including USS and jobs, see [Zowe Explorer Sample Use Cases](https://docs.zowe.org/stable/user-guide/ze-usage.html#sample-use-cases).
