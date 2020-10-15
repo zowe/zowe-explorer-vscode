@@ -276,7 +276,7 @@ describe("USS Action Unit Tests - Function createUSSNode", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         const getUssApiSpy = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockImplementationOnce(() => { throw (Error("Test error")); });
-        globalMocks.showInputBox.mockReturnValueOnce("USSFolder");
+        globalMocks.mockShowInputBox.mockReturnValueOnce("USSFolder");
 
         let testError;
         try { await ussNodeActions.createUSSNode(blockMocks.ussNode, blockMocks.testUSSTree, "file"); }
