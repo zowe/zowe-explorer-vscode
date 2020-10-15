@@ -10,7 +10,7 @@
 */
 
 import * as vscode from "vscode";
-import { getContentForWebView, unifyContentOfHTML } from "../../utils/webView";
+import { getContentForWebView, unifyContentOfHTML } from "../../utils/webview";
 import * as path from "path";
 import * as globals from "../../globals";
 
