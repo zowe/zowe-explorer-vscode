@@ -10,7 +10,7 @@
 */
 
 import * as zowe from "@zowe/cli";
-import { IProfileLoaded, Session } from "@zowe/imperative";
+import { IProfileLoaded, Session, ICommandArguments } from "@zowe/imperative";
 import { TreeItem } from "vscode";
 
 /**
@@ -52,6 +52,16 @@ export namespace ZoweExplorerApi {
          * @returns {IZosmfInfoResponse} z/OSMF Check Status response
          */
         getStatus?(profile: IProfileLoaded, profileType?): Promise<string>;
+
+        /**
+         * Create a session for a set command arguments. The session will be created independent
+         * of a specific profile using a specific API implementation that was created with a
+         * referece profile.
+         *
+         * @param {ICommandArguments} cmdArgs a Zowe CLI ICommandArguments instance
+         * @returns {Session} a Zowe CLI Session
+         */
+        getSessionFromCommandArgument?(cmdArgs: ICommandArguments): Session;
     }
 
     /**

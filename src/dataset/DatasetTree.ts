@@ -319,7 +319,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         if (sessionName) {
             const profile: IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
             if (profile) {
-                this.addSingleSession(profile);
+                await this.addSingleSession(profile);
             }
             for (const node of this.mSessionNodes) {
                 const name = node.getProfileName();
@@ -336,7 +336,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 }
                 for (const session of this.mHistory.getSessions()) {
                     if (session === theProfile.name) {
-                        this.addSingleSession(theProfile);
+                        await this.addSingleSession(theProfile);
                         for (const node of this.mSessionNodes) {
                             const name = node.getProfileName();
                             if (name === theProfile.name){
@@ -848,8 +848,20 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * Adds a single session to the data set tree
      *
      */
-    private addSingleSession(profile: IProfileLoaded) {
+    private async addSingleSession(profile: IProfileLoaded) {
         if (profile) {
+            // If baseProfile exists, combine that information first before adding the session to the tree
+            // TODO: Move addSession to abstract/ZoweTreeProvider (similar to editSession)
+            const baseProfile =  await Profiles.getInstance().getBaseProfile();
+
+            if (baseProfile) {
+                try {
+                    const combinedProfile = await Profiles.getInstance().getCombinedProfile(profile, baseProfile);
+                    profile = combinedProfile;
+                } catch (error) {
+                    throw error;
+                }
+            }
             // If session is already added, do nothing
             if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === profile.name)) {
                 return;
