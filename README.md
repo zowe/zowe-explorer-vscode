@@ -15,7 +15,7 @@ The Zowe Explorer extension modernizes the way developers and system administrat
 * Providing a more streamlined way to access data sets, uss files and jobs.
 * Letting you create, edit, and delete Zowe CLI `zosmf` compatible profiles.
 * Letting you use the Secure Credential Store plug-in to store your credentials securely in the settings.
-* Letting you leverage the token-based authentication of the API Mediation Layer to access z/OSMF.
+* Letting you leverage the API Mediation Layer token-based authentication to access z/OSMF.
 
 More information:
 
@@ -62,16 +62,31 @@ Create a profile, review the sample use cases to familiarize yourself with the c
 
 You can now use all the functionalities of the extension.
 
-### Log in to API Mediation Layer and leverage existing base profile with token
+### Use Base Profiles
 
-1. In your terminal, enter the `zowe auth login apiml` command.  
-2. Provide your username, password, host, and port for the API ML instance.  
-   A local base profile is created that contains your token.  
-3. In Zowe Explorer, click the **+** icon.  
-4. Select the service profile you use with your base profile.  
+Leverage existing base profiles with a token to log in to API Mediation Layer.
+
+Before using the base profiles functionality, ensure that you have [Zowe CLI](https://docs.zowe.org/stable/user-guide/cli-installcli.html) installed.
+
+**Follow these steps:**
+
+1. Open Zowe CLI and run the following command:
+
+   ```
+   zowe auth login apiml
+   ```
+
+2. Follow the instructions and provide all necessary information to create a base profile. 
+
+   You have successfully created a base profile.
+  
+3. Run Zowe Explorer and click the **+** icon.  
+
+4. Select the z/OSMF profile you use with your base profile.  
+
    The profile appears in the tree and you can now use this profile to access z/OSMF via the API Mediation Layer.  
 
-For more information about logging in to the API Mediation Layer, see [Integrating with API Mediation Layer](https://docs.zowe.org/stable/user-guide/cli-usingcli.html#integrating-with-api-mediation-layer).
+For more information, see [Integrating with API Mediation Layer](https://docs.zowe.org/stable/user-guide/cli-usingcli.html#integrating-with-api-mediation-layer).
 
 ### Sample use cases
 
