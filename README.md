@@ -62,16 +62,14 @@ Create a profile, review the sample use cases to familiarize yourself with the c
 
 You can now use all the functionalities of the extension.
 
-### Log in to API Mediation Layer and leverage base profile with token
+### Log in to API Mediation Layer and leverage existing base profile with token
 
 1. In your terminal, enter the `zowe auth login apiml` command.  
 2. Provide your username, password, host, and port for the API ML instance.  
    A local base profile is created that contains your token.  
-3. In Zowe Explorer, hover over **DATA SETS**, **USS**, or **JOBS**.  
-4. Click the **+** icon.  
-5. Select **Create a New Connection to z/OS**.  
-6. Provide only a name for your profile and the base path for your API Mediation Layer instance.  
-   You can now use this profile to access z/OSMF via the API Mediation Layer.  
+3. In Zowe Explorer, click the **+** icon.  
+4. Select the service profile you use with your base profile.  
+   The profile appears in the tree and you can now use this profile to access z/OSMF via the API Mediation Layer.  
 
 For more information about logging in to the API Mediation Layer, see [Integrating with API Mediation Layer](https://docs.zowe.org/stable/user-guide/cli-usingcli.html#integrating-with-api-mediation-layer).
 
