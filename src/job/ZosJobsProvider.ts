@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import * as jobUtils from "../job/utils";
 import * as globals from "../globals";
-import { ZosmfSession, IJob } from "@zowe/cli";
+import { IJob } from "@zowe/cli";
 import { IProfileLoaded, Logger, Session } from "@zowe/imperative";
 import { Profiles, ValidProfileEnum } from "../Profiles";
 import { Job } from "./ZoweJobNode";
@@ -153,7 +153,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         if (sessionName) {
             const theProfile: IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
             if (theProfile) {
-                this.addSingleSession(theProfile);
+                await this.addSingleSession(theProfile);
             }
             for (const node of this.mSessionNodes) {
                 const name = node.getProfileName();
@@ -170,7 +170,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 }
                 for (const session of this.mHistory.getSessions()) {
                     if (session === sessionProfile.name) {
-                        this.addSingleSession(sessionProfile);
+                        await this.addSingleSession(sessionProfile);
                         for (const node of this.mSessionNodes) {
                             const name = node.getProfileName();
                             if (name === sessionProfile.name){
@@ -677,12 +677,24 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      */
     private async addSingleSession(zosmfProfile: IProfileLoaded) {
         if (zosmfProfile) {
+            // If baseProfile exists, combine that information first before adding the session to the tree
+            // TODO: Move addSession to abstract/ZoweTreeProvider (similar to editSession)
+            const baseProfile =  await Profiles.getInstance().getBaseProfile();
+            if (baseProfile) {
+                try {
+                    const combinedProfile = await Profiles.getInstance().getCombinedProfile(zosmfProfile, baseProfile);
+                    zosmfProfile = combinedProfile;
+                } catch (error) {
+                    throw error;
+                }
+            }
             // If session is already added, do nothing
             if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === zosmfProfile.name)) {
                 return;
             }
             // Uses loaded profile to create a zosmf session with Zowe
-            const session = ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
+            // const session = ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
+            const session = ZoweExplorerApiRegister.getMvsApi(zosmfProfile).getSession();
             // Creates ZoweNode to track new session and pushes it to mSessionNodes
             const node = new Job(zosmfProfile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, null, zosmfProfile);
             node.contextValue = globals.JOBS_SESSION_CONTEXT;

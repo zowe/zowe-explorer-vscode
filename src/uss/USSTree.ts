@@ -214,13 +214,14 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         // Loads profile associated with passed sessionName, persisted profiles or default if none passed
         if (sessionName) {
             const profile: IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
+
             if (profile) {
-                this.addSingleSession(profile);
-            }
-            for (const node of this.mSessionNodes) {
-                const name = node.getProfileName();
-                if (name === profile.name){
-                    await resetValidationSettings(node, setting);
+                await this.addSingleSession(profile);
+                for (const node of this.mSessionNodes) {
+                    const name = node.getProfileName();
+                    if (name === profile.name){
+                        await resetValidationSettings(node, setting);
+                    }
                 }
             }
         } else {
@@ -232,7 +233,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 }
                 for (const session of this.mHistory.getSessions()) {
                     if (session === theProfile.name) {
-                        this.addSingleSession(theProfile);
+                        await this.addSingleSession(theProfile);
                         for (const node of this.mSessionNodes) {
                             const name = node.getProfileName();
                             if (name === theProfile.name){
@@ -666,6 +667,17 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      */
     private async addSingleSession(profile: IProfileLoaded) {
         if (profile) {
+            // If baseProfile exists, combine that information first before adding the session to the tree
+            // TODO: Move addSession to abstract/ZoweTreeProvider (similar to editSession)
+            const baseProfile =  await Profiles.getInstance().getBaseProfile();
+            if (baseProfile) {
+                try {
+                    const combinedProfile = await Profiles.getInstance().getCombinedProfile(profile, baseProfile);
+                    profile = combinedProfile;
+                } catch (error) {
+                    throw error;
+                }
+            }
             // If session is already added, do nothing
             if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === profile.name)) {
                 return;
