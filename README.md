@@ -76,11 +76,11 @@ Before using the base profile functionality, ensure that you have [Zowe CLI](htt
    zowe auth login apiml
    ```
 
-2. Follow the instructions to complete the authentication process and provide all necessary information to create a base profile with a token.
+2. Follow the instructions to complete the login and provide all necessary information to create a base profile with a token.
 
 **Note:** For more information about the process, see [Token Management](https://docs.zowe.org/stable/user-guide/cli-usingcli.html#how-token-management-works).
 
-   You have successfully created a base profile.
+   A local base profile is created that contains your token. 
   
 3. Run Zowe Explorer and click the **+** icon.  
 
