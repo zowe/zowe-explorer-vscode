@@ -111,6 +111,7 @@ async function createGlobalMocks() {
         mockExtension: null,
         appName: vscode.env.appName,
         expectedCommands: [
+            "zowe.openWelcomeScreen",
             "zowe.addSession",
             "zowe.addFavorite",
             "zowe.refreshAll",
@@ -351,8 +352,8 @@ describe("Extension Unit Tests", () => {
         globalMocks.mockExistsSync.mockReturnValueOnce(true);
         // tslint:disable-next-line: no-empty
         globalMocks.mockRmdirSync.mockImplementationOnce(() => {});
-        globalMocks.mockGetConfiguration.mockReturnValueOnce({
-            get: (setting: string) => [ "", ],
+        globalMocks.mockGetConfiguration.mockReturnValue({
+            get: (setting: string) => ["",],
             // tslint:disable-next-line: no-empty
             update: jest.fn(()=>{ {} })
         });
@@ -376,8 +377,14 @@ describe("Extension Unit Tests", () => {
         globalMocks.mockUnlinkSync.mockImplementationOnce(() => { return; });
         globalMocks.mockUnlinkSync.mockImplementationOnce(() => { return; });
         globalMocks.mockUnlinkSync.mockImplementationOnce(() => { throw (Error("testError")); });
-        globalMocks.mockGetConfiguration.mockReturnValueOnce({
-            get: (setting: string) => "theia",
+        globalMocks.mockGetConfiguration.mockReturnValue({
+            get: (setting: string) => [
+                "theia",
+                "[test]: /u/myUser{directory}",
+                "[test]: /u/myUser{directory}",
+                "[test]: /u/myUser/file.txt{file}",
+                "[test]: /u{session}",
+            ],
             // tslint:disable-next-line: no-empty
             update: jest.fn(()=>{ {} })
         });

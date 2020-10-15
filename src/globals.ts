@@ -22,7 +22,7 @@ export let DS_DIR;
 export let ISTHEIA: boolean = false; // set during activate
 export let LOG: Logger;
 export let EXT_PATH;
-export const COMMAND_COUNT = 84;
+export const COMMAND_COUNT = 85;
 export const CONTEXT_PREFIX = "_";
 export const FAV_SUFFIX = CONTEXT_PREFIX + "fav";
 export const FAV_PROFILE_CONTEXT = "profile_fav";
