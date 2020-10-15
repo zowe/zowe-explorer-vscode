@@ -62,9 +62,9 @@ Create a profile, review the sample use cases to familiarize yourself with the c
 
 You can now use all the functionalities of the extension.
 
-### Use Base Profiles to access API Mediation Layer
+### Use Base Profile and Token with Existing Profiles
 
-Leverage existing base profiles with a token to log in to API Mediation Layer.
+Leverage existing base profiles with a token to access z/OSMF via the API Mediation Layer.
 
 Before using the base profile functionality, ensure that you have [Zowe CLI](https://docs.zowe.org/stable/user-guide/cli-installcli.html) v1.13.0 or higher installed.
 
