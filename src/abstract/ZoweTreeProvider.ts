@@ -168,7 +168,6 @@ export class ZoweTreeProvider {
         } catch (error) {
             await errorHandling(error);
         }
-
     }
 
     public async checkCurrentProfile(node: IZoweTreeNode) {

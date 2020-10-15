@@ -54,6 +54,24 @@ async function createGlobalMocks() {
     return newVariables;
 }
 
+describe("Shared Utils Unit Tests - Function node.concatChildNodes()", () => {
+    it("Checks that concatChildNodes returns the proper array of children", async () => {
+        const globalMocks = await createGlobalMocks();
+        const rootNode = new ZoweUSSNode(
+            "root", vscode.TreeItemCollapsibleState.Collapsed, null, globalMocks.session, null, false, null, undefined);
+        const childNode1 = new ZoweUSSNode(
+            "child1", vscode.TreeItemCollapsibleState.Collapsed, rootNode, globalMocks.session, null, false, null, undefined);
+        const childNode2 = new ZoweUSSNode(
+            "child2", vscode.TreeItemCollapsibleState.Collapsed, childNode1, globalMocks.session, null, false, null, undefined);
+
+        childNode1.children.push(childNode2);
+        rootNode.children.push(childNode1);
+
+        const returnedArray = sharedUtils.concatChildNodes([rootNode]);
+        expect(returnedArray).toEqual([childNode2, childNode1, rootNode]);
+    });
+});
+
 describe("Shared Utils Unit Tests - Function node.labelRefresh()", () => {
     it("Checks that labelRefresh subtly alters the label", async () => {
         const globalMocks = await createGlobalMocks();

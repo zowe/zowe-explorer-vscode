@@ -29,17 +29,19 @@ async function createGlobalMocks() {
     const globalMocks = {
         ussFile: jest.fn(),
         Download: jest.fn(),
-        isDirtyInEditor: jest.fn(),
+        mockIsDirtyInEditor: jest.fn(),
+        mockTextDocument: {fileName: `/test/path/temp/_U_/sestest//test/node`, isDirty: true},
+        mockTextDocuments: [],
         openedDocumentInstance: jest.fn(),
         onDidSaveTextDocument: jest.fn(),
         showErrorMessage: jest.fn(),
         openTextDocument: jest.fn(),
-        showTextDocument: jest.fn(),
+        mockShowTextDocument: jest.fn(),
         showInformationMessage: jest.fn(),
         getConfiguration: jest.fn(),
         downloadUSSFile: jest.fn(),
         showInputBox: jest.fn(),
-        executeCommand: jest.fn(),
+        mockExecuteCommand: jest.fn(),
         mockLoadNamedProfile: jest.fn(),
         showQuickPick: jest.fn(),
         isFileTagBinOrAscii: jest.fn(),
@@ -62,19 +64,23 @@ async function createGlobalMocks() {
         ussApi: null
     };
 
+    globalMocks.openTextDocument.mockResolvedValue(globalMocks.mockTextDocument);
+    globalMocks.mockTextDocuments.push(globalMocks.mockTextDocument);
     globalMocks.profileOps = createInstanceOfProfile(globalMocks.profileOne);
     globalMocks.ussApi = ZoweExplorerApiRegister.getUssApi(globalMocks.profileOne);
     globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.profileOne);
     globalMocks.getUssApiMock.mockReturnValue(globalMocks.ussApi);
     ZoweExplorerApiRegister.getUssApi = globalMocks.getUssApiMock.bind(ZoweExplorerApiRegister);
 
+    // Object.defineProperty(globalMocks.mockTextDocuments[0], "fileName", { value: `${globals.USS_DIR}/sestest/test/node`, configurable: true });
     Object.defineProperty(vscode.workspace, "onDidSaveTextDocument", { value: globalMocks.onDidSaveTextDocument, configurable: true });
+    Object.defineProperty(vscode.workspace, "textDocuments", { value: globalMocks.mockTextDocuments, configurable: true });
     Object.defineProperty(vscode.workspace, "getConfiguration", { value: globalMocks.getConfiguration, configurable: true });
-    Object.defineProperty(vscode.commands, "executeCommand", { value: globalMocks.executeCommand, configurable: true });
+    Object.defineProperty(vscode.commands, "executeCommand", { value: globalMocks.mockExecuteCommand, configurable: true });
     Object.defineProperty(vscode.window, "showQuickPick", { value: globalMocks.showQuickPick, configurable: true });
     Object.defineProperty(vscode.workspace, "openTextDocument", { value: globalMocks.openTextDocument, configurable: true });
     Object.defineProperty(vscode.window, "showInformationMessage", { value: globalMocks.showInformationMessage, configurable: true });
-    Object.defineProperty(vscode.window, "showTextDocument", { value: globalMocks.showTextDocument, configurable: true });
+    Object.defineProperty(vscode.window, "showTextDocument", { value: globalMocks.mockShowTextDocument, configurable: true });
     Object.defineProperty(vscode.window, "showErrorMessage", { value: globalMocks.showErrorMessage, configurable: true });
     Object.defineProperty(globalMocks.Utilities, "isFileTagBinOrAscii", { value: globalMocks.isFileTagBinOrAscii, configurable: true });
     Object.defineProperty(vscode.window, "showInputBox", { value: globalMocks.showInputBox, configurable: true });
@@ -199,7 +205,7 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
             return callback();
         });
 
-        Object.defineProperty(newMocks.node, "isDirtyInEditor", { get: globalMocks.isDirtyInEditor });
+        Object.defineProperty(newMocks.node, "isDirtyInEditor", { get: globalMocks.mockIsDirtyInEditor });
         Object.defineProperty(newMocks.node, "openedDocumentInstance", { get: globalMocks.openedDocumentInstance });
 
         return newMocks;
@@ -210,14 +216,14 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         globalMocks.ussFile.mockResolvedValue(globalMocks.response);
-        globalMocks.isDirtyInEditor.mockReturnValueOnce(true);
-        globalMocks.isDirtyInEditor.mockReturnValueOnce(false);
+        globalMocks.mockIsDirtyInEditor.mockReturnValueOnce(true);
+        globalMocks.mockIsDirtyInEditor.mockReturnValueOnce(false);
 
         await blockMocks.node.refreshUSS();
 
         expect(globalMocks.ussFile.mock.calls.length).toBe(1);
-        expect(globalMocks.showTextDocument.mock.calls.length).toBe(2);
-        expect(globalMocks.executeCommand.mock.calls.length).toBe(2);
+        expect(globalMocks.mockShowTextDocument.mock.calls.length).toBe(2);
+        expect(globalMocks.mockExecuteCommand.mock.calls.length).toBe(2);
         expect(blockMocks.node.downloaded).toBe(true);
     });
 
@@ -226,14 +232,14 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         globalMocks.ussFile.mockResolvedValueOnce(globalMocks.response);
-        globalMocks.isDirtyInEditor.mockReturnValueOnce(true);
-        globalMocks.isDirtyInEditor.mockReturnValueOnce(true);
+        globalMocks.mockIsDirtyInEditor.mockReturnValueOnce(true);
+        globalMocks.mockIsDirtyInEditor.mockReturnValueOnce(true);
 
         await blockMocks.node.refreshUSS();
 
         expect(globalMocks.ussFile.mock.calls.length).toBe(0);
-        expect(globalMocks.showTextDocument.mock.calls.length).toBe(1);
-        expect(globalMocks.executeCommand.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowTextDocument.mock.calls.length).toBe(1);
+        expect(globalMocks.mockExecuteCommand.mock.calls.length).toBe(1);
         expect(blockMocks.node.downloaded).toBe(false);
     });
 
@@ -242,14 +248,14 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         globalMocks.ussFile.mockResolvedValueOnce(globalMocks.response);
-        globalMocks.isDirtyInEditor.mockReturnValueOnce(false);
-        globalMocks.isDirtyInEditor.mockReturnValueOnce(false);
+        globalMocks.mockIsDirtyInEditor.mockReturnValueOnce(false);
+        globalMocks.mockIsDirtyInEditor.mockReturnValueOnce(false);
 
         await blockMocks.node.refreshUSS();
 
         expect(globalMocks.ussFile.mock.calls.length).toBe(1);
-        expect(globalMocks.showTextDocument.mock.calls.length).toBe(0);
-        expect(globalMocks.executeCommand.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowTextDocument.mock.calls.length).toBe(0);
+        expect(globalMocks.mockExecuteCommand.mock.calls.length).toBe(1);
         expect(blockMocks.node.downloaded).toBe(true);
     });
 
@@ -258,14 +264,14 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         globalMocks.ussFile.mockRejectedValueOnce(Error(""));
-        globalMocks.isDirtyInEditor.mockReturnValueOnce(true);
-        globalMocks.isDirtyInEditor.mockReturnValueOnce(false);
+        globalMocks.mockIsDirtyInEditor.mockReturnValueOnce(true);
+        globalMocks.mockIsDirtyInEditor.mockReturnValueOnce(false);
 
         await blockMocks.node.refreshUSS();
 
         expect(globalMocks.ussFile.mock.calls.length).toBe(1);
-        expect(globalMocks.showTextDocument.mock.calls.length).toBe(1);
-        expect(globalMocks.executeCommand.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowTextDocument.mock.calls.length).toBe(1);
+        expect(globalMocks.mockExecuteCommand.mock.calls.length).toBe(1);
         expect(blockMocks.node.downloaded).toBe(false);
     });
     it("Tests that node.refreshUSS() throws an error when context value is invalid", async () => {
@@ -284,14 +290,14 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
         const blockMocks = await createBlockMocks(globalMocks);
         blockMocks.ussNode.contextValue = globals.USS_DIR_CONTEXT;
         globalMocks.ussFile.mockResolvedValueOnce(globalMocks.response);
-        globalMocks.isDirtyInEditor.mockReturnValueOnce(false);
-        globalMocks.isDirtyInEditor.mockReturnValueOnce(false);
+        globalMocks.mockIsDirtyInEditor.mockReturnValueOnce(false);
+        globalMocks.mockIsDirtyInEditor.mockReturnValueOnce(false);
 
         await blockMocks.node.refreshUSS();
 
         expect(globalMocks.ussFile.mock.calls.length).toBe(1);
-        expect(globalMocks.showTextDocument.mock.calls.length).toBe(0);
-        expect(globalMocks.executeCommand.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowTextDocument.mock.calls.length).toBe(0);
+        expect(globalMocks.mockExecuteCommand.mock.calls.length).toBe(1);
         expect(blockMocks.node.downloaded).toBe(true);
     });
     it("Tests that node.refreshUSS() works correctly for favorited files/directories", async () => {
@@ -299,14 +305,14 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
         const blockMocks = await createBlockMocks(globalMocks);
         blockMocks.ussNode.contextValue = globals.FAV_PROFILE_CONTEXT;
         globalMocks.ussFile.mockResolvedValueOnce(globalMocks.response);
-        globalMocks.isDirtyInEditor.mockReturnValueOnce(false);
-        globalMocks.isDirtyInEditor.mockReturnValueOnce(false);
+        globalMocks.mockIsDirtyInEditor.mockReturnValueOnce(false);
+        globalMocks.mockIsDirtyInEditor.mockReturnValueOnce(false);
 
         await blockMocks.node.refreshUSS();
 
         expect(globalMocks.ussFile.mock.calls.length).toBe(1);
-        expect(globalMocks.showTextDocument.mock.calls.length).toBe(0);
-        expect(globalMocks.executeCommand.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowTextDocument.mock.calls.length).toBe(0);
+        expect(globalMocks.mockExecuteCommand.mock.calls.length).toBe(1);
         expect(blockMocks.node.downloaded).toBe(true);
     });
 });
@@ -693,8 +699,8 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
         expect(globalMocks.withProgress).toBeCalledWith(globalMocks.downloadUSSFile);
         expect(globalMocks.openTextDocument.mock.calls.length).toBe(1);
         expect(globalMocks.openTextDocument.mock.calls[0][0]).toBe(node.getUSSDocumentFilePath());
-        expect(globalMocks.showTextDocument.mock.calls.length).toBe(1);
-        expect(globalMocks.showTextDocument.mock.calls[0][0]).toBe("test.doc");
+        expect(globalMocks.mockShowTextDocument.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowTextDocument.mock.calls[0][0]).toBe("test.doc");
     });
 
     it("Tests that node.openUSS() is executed successfully with Unverified profile", async () => {
@@ -736,8 +742,8 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
         expect(globalMocks.withProgress).toBeCalledWith(globalMocks.downloadUSSFile);
         expect(globalMocks.openTextDocument.mock.calls.length).toBe(1);
         expect(globalMocks.openTextDocument.mock.calls[0][0]).toBe(node.getUSSDocumentFilePath());
-        expect(globalMocks.showTextDocument.mock.calls.length).toBe(1);
-        expect(globalMocks.showTextDocument.mock.calls[0][0]).toBe("test.doc");
+        expect(globalMocks.mockShowTextDocument.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowTextDocument.mock.calls[0][0]).toBe("test.doc");
     });
 
     it ("Tests that node.openUSS() fails when an error is thrown", async () => {
@@ -750,7 +756,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
             null, "/parent", false, globalMocks.profileOne.name);
 
         globalMocks.existsSync.mockReturnValue("exists");
-        globalMocks.showTextDocument.mockRejectedValueOnce(Error("testError"));
+        globalMocks.mockShowTextDocument.mockRejectedValueOnce(Error("testError"));
 
         try {
             await child.openUSS(false, true, blockMocks.testUSSTree);
@@ -760,7 +766,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
         expect(globalMocks.ussFile.mock.calls.length).toBe(0);
         expect(globalMocks.openTextDocument.mock.calls.length).toBe(1);
         expect(globalMocks.openTextDocument.mock.calls[0][0]).toBe(child.getUSSDocumentFilePath());
-        expect(globalMocks.showTextDocument.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowTextDocument.mock.calls.length).toBe(1);
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(1);
         expect(globalMocks.showErrorMessage.mock.calls[0][0]).toBe("testError Error: testError");
     });
@@ -786,7 +792,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
 
         // For each node, make sure that code below the log.debug statement is execute
         await favoriteFile.openUSS(false, true, blockMocks.testUSSTree);
-        expect(globalMocks.showTextDocument.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowTextDocument.mock.calls.length).toBe(1);
     });
 
     it("Tests that node.openUSS() executes successfully for child file of favorited directory", async () => {
@@ -807,8 +813,8 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
         child.contextValue = globals.DS_TEXT_FILE_CONTEXT;
 
         await child.openUSS(false, true, blockMocks.testUSSTree);
-        expect(globalMocks.showTextDocument.mock.calls.length).toBe(1);
-        globalMocks.showTextDocument.mockReset();
+        expect(globalMocks.mockShowTextDocument.mock.calls.length).toBe(1);
+        globalMocks.mockShowTextDocument.mockReset();
     });
 
     it("Tests that node.openUSS() is executed successfully when chtag says binary", async () => {
@@ -836,8 +842,8 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
         globalMocks.withProgress(globalMocks.downloadUSSFile);
         expect(globalMocks.openTextDocument.mock.calls.length).toBe(1);
         expect(globalMocks.openTextDocument.mock.calls[0][0]).toBe(node.getUSSDocumentFilePath());
-        expect(globalMocks.showTextDocument.mock.calls.length).toBe(1);
-        expect(globalMocks.showTextDocument.mock.calls[0][0]).toBe("test.doc");
+        expect(globalMocks.mockShowTextDocument.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowTextDocument.mock.calls[0][0]).toBe("test.doc");
     });
 
     it("Tests that node.openUSS() fails when passed an invalid node", async () => {
@@ -857,5 +863,128 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(2);
         expect(globalMocks.showErrorMessage.mock.calls[0][0]).toBe("open() called from invalid node.");
         expect(globalMocks.showErrorMessage.mock.calls[1][0]).toBe("open() called from invalid node. Error: open() called from invalid node.");
+    });
+});
+
+describe("ZoweUSSNode Unit Tests - Function node.isDirtyInEditor()", () => {
+    it("Tests that node.isDirtyInEditor() returns true if the file is open", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        // Creating a test node
+        const rootNode = new ZoweUSSNode("root", vscode.TreeItemCollapsibleState.Collapsed, null,
+            globalMocks.session, null, false, globalMocks.profileOne.name, undefined);
+        rootNode.contextValue = globals.USS_SESSION_CONTEXT;
+        const testNode = new ZoweUSSNode(globals.DS_PDS_CONTEXT, vscode.TreeItemCollapsibleState.Collapsed,
+            rootNode, null, null, false, globalMocks.profileOne.name, undefined);
+        testNode.fullPath = "test/node";
+
+        const isDirty = testNode.isDirtyInEditor;
+        expect(isDirty).toBeTruthy();
+    });
+
+    it("Tests that node.isDirtyInEditor() returns false if the file is not open", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        globalMocks.mockTextDocuments.pop();
+
+        // Creating a test node
+        const rootNode = new ZoweUSSNode("root", vscode.TreeItemCollapsibleState.Collapsed, null,
+            globalMocks.session, null, false, globalMocks.profileOne.name, undefined);
+        rootNode.contextValue = globals.USS_SESSION_CONTEXT;
+        const testNode = new ZoweUSSNode(globals.DS_PDS_CONTEXT, vscode.TreeItemCollapsibleState.Collapsed,
+            rootNode, null, null, false, globalMocks.profileOne.name, undefined);
+        testNode.fullPath = "test/node";
+
+        const isDirty = testNode.isDirtyInEditor;
+        expect(isDirty).toBeFalsy();
+    });
+});
+
+describe("ZoweUSSNode Unit Tests - Function node.openedDocumentInstance()", () => {
+    it("Tests that node.openedDocumentInstance() returns the document if it is open", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        // Creating a test node
+        const rootNode = new ZoweUSSNode("root", vscode.TreeItemCollapsibleState.Collapsed, null,
+            globalMocks.session, null, false, globalMocks.profileOne.name, undefined);
+        rootNode.contextValue = globals.USS_SESSION_CONTEXT;
+        const testNode = new ZoweUSSNode(globals.DS_PDS_CONTEXT, vscode.TreeItemCollapsibleState.Collapsed,
+            rootNode, null, null, false, globalMocks.profileOne.name, undefined);
+        testNode.fullPath = "test/node";
+
+        const returnedDoc = testNode.openedDocumentInstance;
+        expect(returnedDoc).toEqual(globalMocks.mockTextDocument);
+    });
+
+    it("Tests that node.openedDocumentInstance() returns null if the file is not open", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        globalMocks.mockTextDocuments.pop();
+
+        // Creating a test node
+        const rootNode = new ZoweUSSNode("root", vscode.TreeItemCollapsibleState.Collapsed, null,
+            globalMocks.session, null, false, globalMocks.profileOne.name, undefined);
+        rootNode.contextValue = globals.USS_SESSION_CONTEXT;
+        const testNode = new ZoweUSSNode(globals.DS_PDS_CONTEXT, vscode.TreeItemCollapsibleState.Collapsed,
+            rootNode, null, null, false, globalMocks.profileOne.name, undefined);
+        testNode.fullPath = "test/node";
+
+        const returnedDoc = testNode.openedDocumentInstance;
+        expect(returnedDoc).toBeNull();
+    });
+});
+
+describe("ZoweUSSNode Unit Tests - Function node.initializeFileOpening()", () => {
+    it("Tests that node.initializeFileOpening() successfully handles binary files that should be re-downloaded", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        const errorSelection = "Re-download" as unknown as vscode.MessageItem;
+        jest.spyOn(vscode.workspace, "openTextDocument").mockRejectedValue("Test error!");
+        jest.spyOn(vscode.window, "showErrorMessage").mockResolvedValue(errorSelection);
+
+        // Creating a test node
+        const rootNode = new ZoweUSSNode("root", vscode.TreeItemCollapsibleState.Collapsed, null,
+            globalMocks.session, null, false, globalMocks.profileOne.name, undefined);
+        rootNode.contextValue = globals.USS_SESSION_CONTEXT;
+        const testNode = new ZoweUSSNode(globals.DS_PDS_CONTEXT, vscode.TreeItemCollapsibleState.Collapsed,
+            rootNode, null, null, false, globalMocks.profileOne.name, undefined);
+        testNode.fullPath = "test/node";
+
+        await testNode.initializeFileOpening(testNode.fullPath);
+        expect(globalMocks.mockExecuteCommand).toBeCalledWith("zowe.uss.binary", testNode);
+    });
+
+    it("Tests that node.initializeFileOpening() successfully handles text files that should be previewed", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        jest.spyOn(vscode.workspace, "openTextDocument").mockResolvedValue(globalMocks.mockTextDocument as vscode.TextDocument);
+
+        // Creating a test node
+        const rootNode = new ZoweUSSNode("root", vscode.TreeItemCollapsibleState.Collapsed, null,
+            globalMocks.session, null, false, globalMocks.profileOne.name, undefined);
+        rootNode.contextValue = globals.USS_SESSION_CONTEXT;
+        const testNode = new ZoweUSSNode(globals.DS_PDS_CONTEXT, vscode.TreeItemCollapsibleState.Collapsed,
+            rootNode, null, null, false, globalMocks.profileOne.name, undefined);
+        testNode.fullPath = "test/node";
+
+        await testNode.initializeFileOpening(testNode.fullPath, true);
+        expect(globalMocks.mockShowTextDocument).toBeCalledWith(globalMocks.mockTextDocument);
+    });
+
+    it("Tests that node.initializeFileOpening() successfully handles text files that shouldn't be previewed", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        jest.spyOn(vscode.workspace, "openTextDocument").mockResolvedValue(globalMocks.mockTextDocument as vscode.TextDocument);
+
+        // Creating a test node
+        const rootNode = new ZoweUSSNode("root", vscode.TreeItemCollapsibleState.Collapsed, null,
+            globalMocks.session, null, false, globalMocks.profileOne.name, undefined);
+        rootNode.contextValue = globals.USS_SESSION_CONTEXT;
+        const testNode = new ZoweUSSNode(globals.DS_PDS_CONTEXT, vscode.TreeItemCollapsibleState.Collapsed,
+            rootNode, null, null, false, globalMocks.profileOne.name, undefined);
+        testNode.fullPath = "test/node";
+
+        await testNode.initializeFileOpening(testNode.fullPath, false);
+        expect(globalMocks.mockShowTextDocument).toBeCalledWith(globalMocks.mockTextDocument, { preview: false });
     });
 });

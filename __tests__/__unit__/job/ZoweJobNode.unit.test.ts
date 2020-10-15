@@ -17,7 +17,7 @@ import * as zowe from "@zowe/cli";
 import * as globals from "../../../src/globals";
 import * as utils from "../../../src/utils";
 import { Logger } from "@zowe/imperative";
-import { createIJobFile, createIJobObject } from "../../../__mocks__/mockCreators/jobs";
+import { createIJobFile, createIJobObject, createJobSessionNode } from "../../../__mocks__/mockCreators/jobs";
 import { Job } from "../../../src/job/ZoweJobNode";
 import { Profiles, ValidProfileEnum } from "../../../src/Profiles";
 import { createIProfile, createISession, createInstanceOfProfile, createISessionWithoutCredentials, createQuickPickContent } from "../../../__mocks__/mockCreators/shared";
@@ -34,6 +34,7 @@ async function createGlobalMocks() {
         createTreeView: jest.fn(),
         mockCreateBasicZosmfSession: jest.fn(),
         mockGetSpoolFiles: jest.fn(),
+        testSessionNode: null,
         mockDeleteJobs: jest.fn(),
         mockShowInputBox: jest.fn(),
         mockDeleteJob: jest.fn(),
@@ -47,6 +48,7 @@ async function createGlobalMocks() {
         testJobsProvider: null,
         jesApi: null,
         testSession: createISession(),
+        mockGetBaseProfile: jest.fn(),
         testSessionNoCred: createISessionWithoutCredentials(),
         testProfile: createIProfile(),
         testIJob: createIJobObject(),
@@ -100,8 +102,12 @@ async function createGlobalMocks() {
     globalMocks.mockProfileInstance.loadNamedProfile = globalMocks.mockLoadNamedProfile;
     globalMocks.mockLoadDefaultProfile.mockReturnValue(globalMocks.testProfile);
     globalMocks.mockProfileInstance.getDefaultProfile = globalMocks.mockLoadDefaultProfile;
+    globalMocks.mockGetBaseProfile.mockResolvedValue(globalMocks.testProfile);
+    globalMocks.mockProfileInstance.getValidSession.mockResolvedValue(globalMocks.testSession);
+    globalMocks.mockProfileInstance.getBaseProfile = globalMocks.mockGetBaseProfile;
     globalMocks.mockProfileInstance.checkProfileValidationSetting = globalMocks.mockValidationSetting.mockReturnValue(true);
     globalMocks.mockProfileInstance.enableValidationContext = globalMocks.mockEnableValidationContext;
+    globalMocks.mockProfileInstance.getCombinedProfile.mockResolvedValue(globalMocks.testProfile);
     globalMocks.mockProfileInstance.disableValidationContext = globalMocks.mockDisableValidationContext;
 
     // Jes API mocks
@@ -110,6 +116,7 @@ async function createGlobalMocks() {
     ZoweExplorerApiRegister.getJesApi = globalMocks.mockGetJesApi.bind(ZoweExplorerApiRegister);
 
     globalMocks.mockCreateBasicZosmfSession.mockReturnValue(globalMocks.testSession);
+    globalMocks.testSessionNode = createJobSessionNode(globalMocks.testSession, globalMocks.testProfile);
     globalMocks.createTreeView.mockReturnValue("testTreeView");
     globalMocks.mockGetJob.mockReturnValue(globalMocks.testIJob);
     globalMocks.mockGetJobsByOwnerAndPrefix.mockReturnValue([globalMocks.testIJob, globalMocks.testIJobComplete]);
@@ -130,6 +137,7 @@ async function createGlobalMocks() {
         })
     });
     globalMocks.testJobsProvider = await createJobsTree(Logger.getAppLogger());
+    globalMocks.testJobsProvider.mSessionNodes.push(globalMocks.testSessionNode);
     Object.defineProperty(globalMocks.testJobsProvider, "refresh", { value: globalMocks.mockRefresh, configurable: true });
 
     // Reset getConfiguration because we called it when testJobsProvider was assigned
@@ -165,7 +173,6 @@ describe("ZoweJobNode unit tests - Function addSession", () => {
 
     it("Tests that addSession adds the session to the tree with disabled global setting", async () => {
         const globalMocks = await createGlobalMocks();
-
 
         globalMocks.testJobsProvider.mSessionNodes.pop();
         globalMocks.mockProfileInstance.checkProfileValidationSetting = globalMocks.mockValidationSetting.mockReturnValueOnce(false);
