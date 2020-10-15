@@ -84,7 +84,7 @@ Before using the base profile functionality, ensure that you have [Zowe CLI](htt
   
 3. Run Zowe Explorer and click the **+** icon.  
 
-4. Select the z/OSMF profile you use with your base profile.  
+4. Select the profile you use with your base profile with the token.
 
    The profile appears in the tree and you can now use this profile to access z/OSMF via the API Mediation Layer.  
 
