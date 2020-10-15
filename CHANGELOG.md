@@ -2,6 +2,10 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## `1.10.0`
+
+- Added Base Profile support. [#1037](https://github.com/zowe/vscode-extension-for-zowe/issues/1037). Thanks @katelynienaber, @jellypuno, @JillieBeanSim, @lauren-li, @crawr, @phaumer
+
 ## `1.9.0`
 
 - Added the Allocate Like feature. [#904](https://github.com/zowe/vscode-extension-for-zowe/issues/904). Thanks @katelynienaber
