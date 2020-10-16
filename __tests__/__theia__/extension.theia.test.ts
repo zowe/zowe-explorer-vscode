@@ -11,13 +11,13 @@
 
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
-import * as driverFF from "../../src/theia/extension.theiaFF";
+import * as driverFirefox from "../../src/theia/extension.theiaFirefox";
 import * as driverChrome from "../../src/theia/extension.theiaChrome";
 import { sleep } from "@zowe/cli";
 
 const TIMEOUT = 45000;
 const SLEEPTIME = 10000;
-const SleepForTwoSec = 2000;
+const SHORTSLEEPTIME  = 2000;
 declare var it: any;
 const expect = chai.expect;
 chai.use(chaiAsPromised);
@@ -25,106 +25,106 @@ chai.use(chaiAsPromised);
 describe("Add Default Profile", () => {
 
     before(async () => {
-        await driverFF.openBrowser();
-        await sleep(SleepForTwoSec);
-        await driverFF.OpenTheiaInFF();
+        await driverFirefox.openBrowser();
+        await sleep(SHORTSLEEPTIME);
+        await driverFirefox.OpenTheiaInFirefox();
         await sleep(SLEEPTIME);
-        await driverFF.clickOnZoweExplorer();
+        await driverFirefox.clickOnZoweExplorer();
     });
 
     it("should open Zowe Explorer and find the Favorites node", async () => {
-        const favoriteLink = await driverFF.getFavouritesNode();
+        const favoriteLink = await driverFirefox.getFavouritesNode();
         expect(favoriteLink).to.equal("Favorites");
     }).timeout(TIMEOUT);
 
     it("should find the Data Sets node", async () => {
-        const datasetLink = await driverFF.getDatasetNode();
+        const datasetLink = await driverFirefox.getDatasetNode();
         expect(datasetLink).to.equal("DATA SETS");
     }).timeout(TIMEOUT);
 
     it("should find the USS node", async () => {
-        const ussLink = await driverFF.getUssNode();
+        const ussLink = await driverFirefox.getUssNode();
         expect(ussLink).to.equal("UNIX SYSTEM SERVICES (USS)");
     }).timeout(TIMEOUT);
 
     it("should find the Jobs node", async () => {
-        const jobsLink = await driverFF.getJobsNode();
+        const jobsLink = await driverFirefox.getJobsNode();
         expect(jobsLink).to.equal("JOBS");
     }).timeout(TIMEOUT);
 
     it("Should Add Default Profile in DATA SETS", async () => {
-        await driverFF.clickOnDatasetsPanel();
-        await driverFF.clickOnAddSessionInDatasets();
-        await driverFF.addProfileDetails("DefaultProfile");
-        const datasetProfile = await driverFF.getDatasetsDefaultProfilename();
+        await driverFirefox.clickOnDatasetsPanel();
+        await driverFirefox.clickOnAddSessionInDatasets();
+        await driverFirefox.addProfileDetails("DefaultProfile");
+        const datasetProfile = await driverFirefox.getDatasetsDefaultProfilename();
         expect(datasetProfile).to.equal("DefaultProfile");
     });
 
     it("Should Default profile visible in USS", async () => {
-        await driverFF.refreshBrowser();
+        await driverFirefox.refreshBrowser();
         await sleep(SLEEPTIME);
-        await driverFF.clickOnDatasetsTab();
-        await driverFF.clickOnUssTab();
-        const ussProfile = await driverFF.getUssDefaultProfilename();
+        await driverFirefox.clickOnDatasetsTab();
+        await driverFirefox.clickOnUssTab();
+        const ussProfile = await driverFirefox.getUssDefaultProfilename();
         expect(ussProfile).to.equal("DefaultProfile");
     });
 
     it("Should Default profile visible in JOBS", async () => {
-        await driverFF.clickOnUssTabs();
-        await driverFF.clickOnJobsTab();
-        const jobsProfile = await driverFF.getJobsDefaultProfilename();
+        await driverFirefox.clickOnUssTabs();
+        await driverFirefox.clickOnJobsTab();
+        const jobsProfile = await driverFirefox.getJobsDefaultProfilename();
         expect(jobsProfile).to.equal("DefaultProfile");
     });
 
-    after(async () => driverFF.closeBrowser());
+    after(async () => driverFirefox.closeBrowser());
 });
 
 describe("Add Profiles", () => {
 
     before(async () => {
-        await driverFF.openBrowser();
-        await sleep(SleepForTwoSec);
-        await driverFF.OpenTheiaInFF();
+        await driverFirefox.openBrowser();
+        await sleep(SHORTSLEEPTIME);
+        await driverFirefox.OpenTheiaInFirefox();
         await sleep(SLEEPTIME);
-        await driverFF.clickOnZoweExplorer();
+        await driverFirefox.clickOnZoweExplorer();
     });
 
     it("Should Add Profile in DATA SETS", async () => {
-        await driverFF.clickOnDatasetsPanel();
-        await driverFF.clickOnAddSessionInDatasets();
-        await driverFF.addProfileDetails("TestSeleniumProfile");
-        await sleep(SleepForTwoSec);
-        const datasetProfile = await driverFF.getDatasetsProfilename();
+        await driverFirefox.clickOnDatasetsPanel();
+        await driverFirefox.clickOnAddSessionInDatasets();
+        await driverFirefox.addProfileDetails("TestSeleniumProfile");
+        await sleep(SHORTSLEEPTIME);
+        const datasetProfile = await driverFirefox.getDatasetsProfilename();
         expect(datasetProfile).to.equal("TestSeleniumProfile");
     });
 
     it("Should Add Existing Profile in USS", async () => {
-        await driverFF.clickOnDatasetsTab();
-        await driverFF.clickOnUssTab();
-        await driverFF.clickOnUssPanel();
-        await driverFF.clickOnAddSessionInUss();
-        await driverFF.addProfileDetailsInUss("TestSeleniumProfile");
-        const ussProfile = await driverFF.getUssProfilename();
+        await driverFirefox.clickOnDatasetsTab();
+        await driverFirefox.clickOnUssTab();
+        await driverFirefox.clickOnUssPanel();
+        await driverFirefox.clickOnAddSessionInUss();
+        await driverFirefox.addProfileDetailsInUss("TestSeleniumProfile");
+        const ussProfile = await driverFirefox.getUssProfilename();
         expect(ussProfile).to.equal("TestSeleniumProfile");
     });
 
     it("Should Add Existing Profile in JOBS", async () => {
-        await driverFF.clickOnUssTabs();
-        await driverFF.clickOnJobsTab();
-        await driverFF.clickOnJobsPanel();
-        await driverFF.clickOnAddSessionInJobs();
-        await driverFF.addProfileDetailsInJobs("TestSeleniumProfile");
-        const jobsProfile = await driverFF.getJobsProfilename();
+        await driverFirefox.clickOnUssTabs();
+        await driverFirefox.clickOnJobsTab();
+        await driverFirefox.clickOnJobsPanel();
+        await driverFirefox.clickOnAddSessionInJobs();
+        await driverFirefox.addProfileDetailsInJobs("TestSeleniumProfile");
+        const jobsProfile = await driverFirefox.getJobsProfilename();
         expect(jobsProfile).to.equal("TestSeleniumProfile");
     });
 
-    after(async () => driverFF.closeBrowser());
+    after(async () => driverFirefox.closeBrowser());
 });
 
 describe("Add Profile to Favorites", () => {
     before(async () => {
         await driverChrome.openBrowser();
-        await sleep(SleepForTwoSec);
+        await sleep(SHORTSLEEPTIME);
         await driverChrome.OpenTheiaInChrome();
         await sleep(SLEEPTIME);
         await driverChrome.clickOnZoweExplorer();
@@ -139,24 +139,24 @@ describe("Add Profile to Favorites", () => {
 
     it("Should Add Profile to Favorites under USS", async () => {
         await driverChrome.clickOnDatasetsTab();
-        await sleep(SleepForTwoSec);
+        await sleep(SHORTSLEEPTIME);
         await driverChrome.clickOnUssTabs();
-        await sleep(SleepForTwoSec);
+        await sleep(SHORTSLEEPTIME);
         await driverChrome.addProfileToFavoritesInUss();
         await driverChrome.clickOnFavoriteTabInUss();
-        await sleep(SleepForTwoSec);
+        await sleep(SHORTSLEEPTIME);
         const favoriteProfile = await driverChrome.getFavoritePrfileNameFromUss();
         expect(favoriteProfile).to.equal("TestSeleniumProfile");
     });
 
     it("Should Add Profile to Favorites under JOBS", async () => {
         await driverChrome.clickOnUssTabs();
-        await sleep(SleepForTwoSec);
+        await sleep(SHORTSLEEPTIME);
         await driverChrome.clickOnJobsTab();
         await driverChrome.addProfileToFavoritesInJobs();
-        await sleep(SleepForTwoSec);
+        await sleep(SHORTSLEEPTIME);
         await driverChrome.clickOnFavoriteTabInJobs();
-        await sleep(SleepForTwoSec);
+        await sleep(SHORTSLEEPTIME);
         const favoriteProfile = await driverChrome.getFavoritePrfileNameFromJobs();
         expect(favoriteProfile).to.equal("TestSeleniumProfile");
     });
@@ -167,7 +167,7 @@ describe("Add Profile to Favorites", () => {
 describe("Remove Profile from Favorites", () => {
     before(async () => {
         await driverChrome.openBrowser();
-        await sleep(SleepForTwoSec);
+        await sleep(SHORTSLEEPTIME);
         await driverChrome.OpenTheiaInChrome();
         await sleep(SLEEPTIME);
         await driverChrome.clickOnZoweExplorer();
@@ -175,10 +175,10 @@ describe("Remove Profile from Favorites", () => {
 
     it("Should Remove Profile from Favorites under DATA SETS", async () => {
         await driverChrome.clickOnFavoriteTabInDatasets();
-        await sleep(SleepForTwoSec);
+        await sleep(SHORTSLEEPTIME);
         await driverChrome.clickOnFavoriteProfileInDatasets();
         await driverChrome.removeFavoriteProfileFromDatasets();
-        await sleep(SleepForTwoSec);
+        await sleep(SHORTSLEEPTIME);
         await driverChrome.refreshBrowser();
         await sleep(SLEEPTIME);
         const favoriteProfile = await driverChrome.verifyRemovedFavoriteProfileInDatasets();
@@ -187,33 +187,18 @@ describe("Remove Profile from Favorites", () => {
 
     it("Should Remove Profile from Favorites under USS", async () => {
         await driverChrome.clickOnDatasetsTab();
-        await sleep(SleepForTwoSec);
+        await sleep(SHORTSLEEPTIME);
         await driverChrome.clickOnUssTabs();
-        await sleep(SleepForTwoSec);
+        await sleep(SHORTSLEEPTIME);
         await driverChrome.clickOnFavoriteTabInUss();
         await driverChrome.clickOnFavoriteProfileInUss();
         await driverChrome.removeFavoriteProfileFromUss();
-        await sleep(SleepForTwoSec);
+        await sleep(SHORTSLEEPTIME);
         await driverChrome.refreshBrowser();
         await sleep(SLEEPTIME);
         const favoriteProfile = await driverChrome.verifyRemovedFavoriteProfileInUss();
         expect(favoriteProfile).to.equal(true);
     });
-
-    // it("Should Remove Profile from Favorites under JOBS", async () => {
-    //     await driverChrome.clickOnUssTabs();
-    //     await sleep(SleepForTwoSec);
-    //     await driverChrome.clickOnJobsTab();
-    //     await driverChrome.clickOnFavoriteTabInJobsAfterRefresh();
-    //     await driverChrome.clickOnFavoriteTabInJobs();
-    //     await driverChrome.clickOnFavoriteProfileInJobs();
-    //     await driverChrome.removeFavoriteProfileFromJobs();
-    //     await sleep(SleepForTwoSec);
-    //     await driverChrome.refreshBrowser();
-    //     await sleep(SLEEPTIME);
-    //     const favoriteProfile = await driverChrome.verifyRemovedFavoriteProfileInJobs();
-    //     expect(favoriteProfile).to.equal(true);
-    // });
 
     after(async () => driverChrome.closeBrowser());
 });
@@ -221,7 +206,7 @@ describe("Remove Profile from Favorites", () => {
 describe("Hide Profile", () => {
     before(async () => {
         await driverChrome.openBrowser();
-        await sleep(SleepForTwoSec);
+        await sleep(SHORTSLEEPTIME);
         await driverChrome.OpenTheiaInChrome();
         await sleep(SLEEPTIME);
         await driverChrome.clickOnZoweExplorer();
@@ -229,20 +214,20 @@ describe("Hide Profile", () => {
 
     it("Should Hide Profile from USS", async () => {
         await driverChrome.clickOnDatasetsTab();
-        await sleep(SleepForTwoSec);
+        await sleep(SHORTSLEEPTIME);
         await driverChrome.clickOnUssTabs();
-        await sleep(SleepForTwoSec);
+        await sleep(SHORTSLEEPTIME);
         await driverChrome.hideProfileInUss();
-        await sleep(SleepForTwoSec);
+        await sleep(SHORTSLEEPTIME);
         const hiddenProfile = await driverChrome.verifyProfileIsHideInUss();
         expect(hiddenProfile).to.equal(true);
     });
     it("Should Hide Profile from JOBS", async () => {
         await driverChrome.clickOnUssTabs();
-        await sleep(SleepForTwoSec);
+        await sleep(SHORTSLEEPTIME);
         await driverChrome.clickOnJobsTab();
         await driverChrome.hideProfileInJobs();
-        await sleep(SleepForTwoSec);
+        await sleep(SHORTSLEEPTIME);
         const hiddenProfile = await driverChrome.verifyProfileIsHideInJobs();
         expect(hiddenProfile).to.equal(true);
     });
@@ -253,7 +238,7 @@ describe("Hide Profile", () => {
 describe("Delete Profiles", () => {
     before(async () => {
         await driverChrome.openBrowser();
-        await sleep(SleepForTwoSec);
+        await sleep(SHORTSLEEPTIME);
         await driverChrome.OpenTheiaInChrome();
         await sleep(SLEEPTIME);
         await driverChrome.clickOnZoweExplorer();

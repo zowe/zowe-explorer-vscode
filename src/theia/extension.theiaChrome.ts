@@ -15,7 +15,7 @@ import * as chrome from "selenium-webdriver/chrome";
 import { TheiaLocator, DatasetsLocators, UssLocators, JobsLocators, TheiaNotificationMessages } from "./Locators";
 
 const WAITTIME = 30000;
-const SLEEP = 2000;
+const SHORTSLEEPTIME = 2000;
 let driverChrome: any;
 
 export async function openBrowser(){
@@ -95,14 +95,14 @@ export async function getFavoritePrfileNameFromJobs(){
 export async function removeFavoriteProfileFromDatasets(){
     const removeFromFavorite =  await driverChrome.wait(until.elementLocated(By.xpath(DatasetsLocators.searchSymbolInFavoriteXpath)), WAITTIME);
     await driverChrome.actions().click(removeFromFavorite, Button.RIGHT).perform();
-    await driverChrome.sleep(SLEEP);
+    await driverChrome.sleep(SHORTSLEEPTIME);
     await driverChrome.wait(until.elementLocated(By.xpath(DatasetsLocators.removeFavoriteProfileFromDatasetsOptionXpath)), WAITTIME).click();
 }
 
 export async function removeFavoriteProfileFromUss(){
     const removeFromFavorite = await driverChrome.wait(until.elementLocated(By.xpath(UssLocators.searchSymbolInFavoriteXpath)), WAITTIME);
     await driverChrome.actions().click(removeFromFavorite, Button.RIGHT).perform();
-    await driverChrome.sleep(SLEEP);
+    await driverChrome.sleep(SHORTSLEEPTIME);
     await driverChrome.wait(until.elementLocated(By.xpath(UssLocators.removeFavoriteProfileFromUssOptionXpath)), WAITTIME).click();
 }
 
@@ -110,28 +110,28 @@ export async function removeFavoriteProfileFromJobs(){
     const removeFromFavorite = await driverChrome.wait(until.elementLocated(
                                                 By.xpath(JobsLocators.favoriteProfileInJobsBeforeRemovingXpath)), WAITTIME);
     await driverChrome.actions().click(removeFromFavorite, Button.RIGHT).perform();
-    await driverChrome.sleep(SLEEP);
+    await driverChrome.sleep(SHORTSLEEPTIME);
     await driverChrome.wait(until.elementLocated(By.xpath(JobsLocators.removeFavoriteProfileFromJobsOptionXpath)), WAITTIME).click();
 }
 
 export async function addProfileToFavoritesInDatasets(){
     const addTofavorite = await driverChrome.wait(until.elementLocated(By.id(DatasetsLocators.secondDatasetProfileId)),  WAITTIME);
     await driverChrome.actions().click(addTofavorite, Button.RIGHT).perform();
-    await driverChrome.sleep(SLEEP);
+    await driverChrome.sleep(SHORTSLEEPTIME);
     await driverChrome.wait(until.elementLocated(By.xpath(DatasetsLocators.addToFavoriteOptionXpath)), WAITTIME).click();
 }
 
 export async function addProfileToFavoritesInUss(){
     const addTofavorite = await driverChrome.wait(until.elementLocated(By.xpath(UssLocators.secondUssProfileXpath)), WAITTIME);
     await driverChrome.actions().click(addTofavorite, Button.RIGHT).perform();
-    await driverChrome.sleep(SLEEP);
+    await driverChrome.sleep(SHORTSLEEPTIME);
     await driverChrome.wait(until.elementLocated(By.xpath(UssLocators.addToFavoriteOptionXpath)), WAITTIME).click();
 }
 
 export async function addProfileToFavoritesInJobs(){
     const addTofavorite = await driverChrome.wait(until.elementLocated(By.xpath(JobsLocators.secondJobsProfileXpath)),  WAITTIME);
     await driverChrome.actions().click(addTofavorite, Button.RIGHT).perform();
-    await driverChrome.sleep(SLEEP);
+    await driverChrome.sleep(SHORTSLEEPTIME);
     await driverChrome.wait(until.elementLocated(By.xpath(JobsLocators.addToFavoriteOptionXpath)), WAITTIME).click();
 }
 
@@ -170,11 +170,11 @@ export async function deleteDefaultProfileInDatasets(){
     const profileName = await driverChrome.wait(until.elementLocated(By.id(DatasetsLocators.defaultDatasetsProfileId)), WAITTIME);
     await driverChrome.actions().click(profileName, Button.RIGHT).perform();
     await driverChrome.wait(until.elementLocated(By.xpath(DatasetsLocators.deleteProfileFromDatasetsXpath)), WAITTIME).click();
-    await driverChrome.sleep(SLEEP);
+    await driverChrome.sleep(SHORTSLEEPTIME);
     const deleteProfile = driverChrome.wait(until.elementLocated(By.xpath(DatasetsLocators.emptyInputBoxXpath)), WAITTIME);
     deleteProfile.sendKeys("Delete");
     deleteProfile.sendKeys(Key.ENTER);
-    await driverChrome.sleep(SLEEP);
+    await driverChrome.sleep(SHORTSLEEPTIME);
     const deleteConfrmationMsg = await driverChrome.wait(until.elementLocated(
                                     By.xpath(TheiaNotificationMessages.deleteProfileNotificationMsg)), WAITTIME).getText();
     return deleteConfrmationMsg;
@@ -184,11 +184,11 @@ export async function deleteProfileInDatasets(){
     const favprofile = await driverChrome.wait(until.elementLocated(By.id(DatasetsLocators.secondDatasetProfileBeforeDeletingId)), WAITTIME);
     await driverChrome.actions().click(favprofile, Button.RIGHT).perform();
     await driverChrome.wait(until.elementLocated(By.xpath(DatasetsLocators.deleteProfileFromDatasetsXpath)), WAITTIME).click();
-    await driverChrome.sleep(SLEEP);
+    await driverChrome.sleep(SHORTSLEEPTIME);
     const deleteProfile = driverChrome.wait(until.elementLocated(By.xpath(DatasetsLocators.emptyInputBoxXpath)), WAITTIME);
     deleteProfile.sendKeys("Delete");
     deleteProfile.sendKeys(Key.ENTER);
-    await driverChrome.sleep(SLEEP);
+    await driverChrome.sleep(SHORTSLEEPTIME);
     const deleteConfrmationMsg = await driverChrome.wait(until.elementLocated(
                                                 By.xpath(TheiaNotificationMessages.deleteProfileNotificationMsg)), WAITTIME).getText();
     return deleteConfrmationMsg;
