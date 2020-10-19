@@ -212,15 +212,16 @@ export async function uploadFromJsonDialog(node: ZoweDatasetNode, datasetProvide
         return;
     }
 
-    // Allocate each node by type, and add it to the filter string
+    // Allocate data sets
     let newFilterString = "";
     const nodeArray = fileDataAsJson[Object.keys(fileDataAsJson)[0]];
+    const memberArray = [];
     for (const newNode of nodeArray) {
         newNode.type = newNode.type.toUpperCase();
         try {
             if (newNode.type === "MEMBER") {
-                await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).createDataSetMember(`${newNode.parent}(${newNode.label})`);
-                newFilterString += newFilterString ? `,${newNode.parent}(${newNode.label})` : `${newNode.parent}(${newNode.label})`;
+                // Members should be allocated later, in case their parent is inside the JSON file
+                memberArray.push(newNode);
             } else {
                 const nodeOptions = getDataSetTypeAndOptions(newNode.type);
                 await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).createDataSet(nodeOptions.typeEnum,
@@ -230,6 +231,17 @@ export async function uploadFromJsonDialog(node: ZoweDatasetNode, datasetProvide
             }
         } catch (err) {
             vscode.window.showErrorMessage(localize("selectFile.allocateNode.error", "Allocating node {0} failed.", newNode.label));
+            errorHandling(err);
+        }
+    }
+
+    // Allocate members
+    for (const member of memberArray) {
+        try {
+            await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).createDataSetMember(`${member.parent}(${member.label})`);
+            newFilterString += newFilterString ? `,${member.parent}` : `${member.parent}`;
+        } catch (err) {
+            vscode.window.showErrorMessage(localize("selectFile.allocateNode.error", "Allocating node {0} failed.", member.label));
             errorHandling(err);
         }
     }
