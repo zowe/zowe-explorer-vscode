@@ -22,98 +22,91 @@ import { IZoweTreeNode } from "./IZoweTreeNode";
  * @extends {vscode.TreeItem}
  */
 export class ZoweTreeNode extends vscode.TreeItem {
-    public command: vscode.Command;
-    public fullPath = "";
-    public dirty = false;
-    public children: IZoweTreeNode[] = [];
-    public binaryFiles = {};
-    public binary = false;
-    public shortLabel = "";
+  public command: vscode.Command;
+  public fullPath = "";
+  public dirty = false;
+  public children: IZoweTreeNode[] = [];
+  public binaryFiles = {};
+  public binary = false;
+  public shortLabel = "";
 
-    /**
-     * Creates an instance of ZoweDatasetNode
-     *
-     * @param {string} label - Displayed in the [TreeView]
-     * @param {vscode.TreeItemCollapsibleState} mCollapsibleState - file/folder
-     * @param {IZoweTreeNode} mParent
-     * @param {Session} session
-     * @param {string} etag
-     */
-    constructor(
-        label: string,
-        collapsibleState: vscode.TreeItemCollapsibleState,
-        private mParent: IZoweTreeNode,
-        protected session: Session,
-        protected profile: IProfileLoaded
-    ) {
-        super(label, collapsibleState);
-        // TODO Check this
-        if (!profile && mParent && mParent.getProfile()) {
-            this.profile = mParent.getProfile();
-        }
+  /**
+   * Creates an instance of ZoweDatasetNode
+   *
+   * @param {string} label - Displayed in the [TreeView]
+   * @param {vscode.TreeItemCollapsibleState} mCollapsibleState - file/folder
+   * @param {IZoweTreeNode} mParent
+   * @param {Session} session
+   * @param {string} etag
+   */
+  constructor(
+    label: string,
+    collapsibleState: vscode.TreeItemCollapsibleState,
+    private mParent: IZoweTreeNode,
+    protected session: Session,
+    protected profile: IProfileLoaded
+  ) {
+    super(label, collapsibleState);
+    // TODO Check this
+    if (!profile && mParent && mParent.getProfile()) {
+      this.profile = mParent.getProfile();
     }
+  }
 
-    /**
-     * Retrieves parent node of this IZoweTreeNode
-     *
-     * @returns {Promise<IZoweTreeNode>}
-     */
-    public getParent(): IZoweTreeNode {
-        return this.mParent;
-    }
+  /**
+   * Retrieves parent node of this IZoweTreeNode
+   *
+   * @returns {Promise<IZoweTreeNode>}
+   */
+  public getParent(): IZoweTreeNode {
+    return this.mParent;
+  }
 
-    /**
-     * Returns the [Session] for this node
-     *
-     * @returns {Session}
-     */
-    public getSession(): Session {
-        return (
-            this.session ||
-            (this.getParent() ? this.getParent().getSession() : undefined)
-        );
-    }
+  /**
+   * Returns the [Session] for this node
+   *
+   * @returns {Session}
+   */
+  public getSession(): Session {
+    return this.session || (this.getParent() ? this.getParent().getSession() : undefined);
+  }
 
-    /**
-     * Returns the IProfileLoaded profile for this node
-     *
-     * @returns {IProfileLoaded}
-     */
-    public getProfile(): IProfileLoaded {
-        return this.profile
-            ? this.profile
-            : this.getParent()
-            ? this.getParent().getProfile()
-            : undefined;
-    }
+  /**
+   * Returns the IProfileLoaded profile for this node
+   *
+   * @returns {IProfileLoaded}
+   */
+  public getProfile(): IProfileLoaded {
+    return this.profile ? this.profile : this.getParent() ? this.getParent().getProfile() : undefined;
+  }
 
-    /**
-     * Implements access to profile name
-     *
-     * @returns {string}
-     */
-    public getProfileName(): string {
-        if (this.profile) {
-            return this.profile.name;
-        }
-        return undefined;
+  /**
+   * Implements access to profile name
+   *
+   * @returns {string}
+   */
+  public getProfileName(): string {
+    if (this.profile) {
+      return this.profile.name;
     }
+    return undefined;
+  }
 
-    /**
-     * This is the default was that the label should be accessed as it
-     * automatically trims the value
-     */
-    public getLabel(): string {
-        return this.label.trim();
-    }
+  /**
+   * This is the default was that the label should be accessed as it
+   * automatically trims the value
+   */
+  public getLabel(): string {
+    return this.label.trim();
+  }
 
-    /**
-     * Sets the IProfileLoaded profile for this node.
-     * Only used by ZoweTreeNode and should be refactored out
-     *
-     * @param {IProfileLoaded}
-     */
-    protected setProfile(aProfile: IProfileLoaded) {
-        this.profile = aProfile;
-    }
+  /**
+   * Sets the IProfileLoaded profile for this node.
+   * Only used by ZoweTreeNode and should be refactored out
+   *
+   * @param {IProfileLoaded}
+   */
+  protected setProfile(aProfile: IProfileLoaded) {
+    this.profile = aProfile;
+  }
 }
