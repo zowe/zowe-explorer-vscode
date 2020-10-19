@@ -13,7 +13,7 @@ Developers can install the Visual Studio Code Extension for Zowe, which lets use
 
 You can build the extension (VSIX file) from this source repository and install it to VSC.
 
-**Important!** Follow the [instructions  for creating testProfileData.ts](#run-system-tests) before performing these steps.
+**Important!** Follow the [instructions for creating testProfileData.ts](#run-system-tests) before performing these steps.
 
 ### Build the extension
 
@@ -45,13 +45,13 @@ In your copy of this repository, create a `testProfileData.ts` file in the `reso
 import { IProfile } from "@zowe/imperative";
 
 export const profile: IProfile = {
-    type : "zosmf",
-    host: "",
-    port: 0,
-    user: "",
-    pass: "",
-    rejectUnauthorized: false,
-    name: "" // @NOTE: This profile name must match an existing zowe profile in the ~/.zowe/profiles/zosmf folder
+  type: "zosmf",
+  host: "",
+  port: 0,
+  user: "",
+  pass: "",
+  rejectUnauthorized: false,
+  name: "", // @NOTE: This profile name must match an existing zowe profile in the ~/.zowe/profiles/zosmf folder
 };
 
 export const normalPattern = "";
@@ -87,11 +87,11 @@ The `./scripts` folder contains the following scripts to help you set up the req
 
 1. Issue the following command to install `ts-node` globally:
 
-    `npm install -g ts-node`
+   `npm install -g ts-node`
 
 2. Issue the following command to execute script as if it were a node script.
 
-    `ts-node ./scripts/clean-env.ts` or `ts-node ./scripts/create-env.ts`
+   `ts-node ./scripts/clean-env.ts` or `ts-node ./scripts/create-env.ts`
 
 #### Or pattern
 
@@ -103,13 +103,14 @@ There is no required structure for the mainframe data sets under `orPattern`.
 
 2. From the drop-down next to the green play button, click **Integration Tests Mocha** and click the **Play** button.
 
-  The tests run and the output goes to your VSC debug console.
+The tests run and the output goes to your VSC debug console.
 
 ### Profile notes
 
 - As mentioned in the example test properties file, there must be at least one valid zosmf profile corresponding to the name in your properties file.
 
   **Example:** When your test properties define a profile named `test-vscode-extension`, a corresponding profile should exist in the `.zowe` profiles directory of your `zowe-cli`. The profile definitions **must** be identical to allow your tests to execute properly.
+
 - The tests need at least two profiles to work properly. The second profile does not require valid credentials, however, it must exist on disk.
 
 ## Run Zowe Explorer Regression Tests for Theia
@@ -153,7 +154,7 @@ Disable headless mode to see changes in Firefox while your tests are in progress
 3. Compile the extension.
 4. Run the regression test.
 
-  The tests run and the Firefox browser is launched.
+The tests run and the Firefox browser is launched.
 
 ## Localization
 
@@ -164,18 +165,20 @@ All localized strings must be string literals, you cannot include variables or u
 1. Create a new key for your string. Existing keys follow the convention of including the functions/properties the string is nested in and a short one/two word description of the string.
 
 2. There are two places to localize strings: in the package.json file and in the typescript files in the src directory.
-    - If you want to add a new string to the package.json file, replace the string with your key enclosed by the percent sign as such \% __key__ \% i.e. `"This is a string"` becomes `"%exampleProperty.exDescription%"`. Then go to the package.nls.json file found in the root directory of the repository and include your newly created key and string inside as a json key/value pair.
 
-    - If you want to add a new string to a typescript file, you will need to include the following library in your file (if not already included). `import * as nls from 'vscode-nls';`
-        - You will also need to include the following code:
+   - If you want to add a new string to the package.json file, replace the string with your key enclosed by the percent sign as such \% **key** \% i.e. `"This is a string"` becomes `"%exampleProperty.exDescription%"`. Then go to the package.nls.json file found in the root directory of the repository and include your newly created key and string inside as a json key/value pair.
 
-            ```Typescript
-            // Set up localization
-            nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
-            const localize: nls.LocalizeFunc = nls.loadMessageBundle();
-            ```
+   - If you want to add a new string to a typescript file, you will need to include the following library in your file (if not already included). `import * as nls from 'vscode-nls';`
 
-        - Next wrap your string with the localize function in this format `localize('key', 'string') i.e. localize('addEntry','Successfully called add entry.')`
+     - You will also need to include the following code:
+
+       ```Typescript
+       // Set up localization
+       nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+       const localize: nls.LocalizeFunc = nls.loadMessageBundle();
+       ```
+
+     - Next wrap your string with the localize function in this format `localize('key', 'string') i.e. localize('addEntry','Successfully called add entry.')`
 
 3. After adding/updating/removing any string, run `npm run package`. This will update the sample directory under the i18n folder with the newly added strings. Upload these files to Zanata or email a maintainer to do so.
 
@@ -183,7 +186,7 @@ Maintainers: Evann Wu (evannw@andrew.cmu.edu), Lauren Li (lauren.li@ibm.com), Kr
 
 ### Adding a New Language
 
-1. Navigate to the i18n folder found in the root directory of the repository. Duplicate the sample folder and rename the new folder to the ISO-639-3 code for the language [found here](https://en.wikipedia.org/wiki/Wikipedia:WikiProject_Languages/List_of_ISO_639-3_language_codes_(2019)).
+1. Navigate to the i18n folder found in the root directory of the repository. Duplicate the sample folder and rename the new folder to the ISO-639-3 code for the language [found here](<https://en.wikipedia.org/wiki/Wikipedia:WikiProject_Languages/List_of_ISO_639-3_language_codes_(2019)>).
 
 2. Once the language has been translated, go to the Zowe VS Code Extension project in Zanata, select the most up to date version, select the translated language, and for each file, press the arrow to the left of the filename and select download translated .json.
 
@@ -198,8 +201,9 @@ Maintainers: Evann Wu (evannw@andrew.cmu.edu), Lauren Li (lauren.li@ibm.com), Kr
 1. Click [here](https://translate.zanata.org/?dswid=8786) and follow instructions under the Sign Up heading to sign up to Zanata.
 
 2. Send an email to one of the maintainers with the email heading as ZANATA TRANSLATOR REQUEST and include the following information in the body of the email.
-    1. Zanata username
-    2. Language(s) you wish to translate
-    3. Affiliation with Zowe
+
+   1. Zanata username
+   2. Language(s) you wish to translate
+   3. Affiliation with Zowe
 
 3. You should receive a response within 3 business days and be added to the Zanata Zowe VS Code Extension project. Click [here](http://docs.zanata.org/en/release/user-guide/translator-guide/) for more information about how to use Zanata to translate.

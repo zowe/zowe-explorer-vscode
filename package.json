@@ -37,7 +37,7 @@
     "prepare": "yarn build",
     "lint": "yarn workspaces run lint",
     "lintErrors": "yarn workspaces run lintErrors",
-    "pretty": "yarn workspaces run pretty",
+    "pretty": "prettier --write .",
     "build": "yarn workspaces run build",
     "test": "yarn workspaces run test",
     "package": "yarn workspaces run package",

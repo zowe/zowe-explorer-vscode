@@ -1,77 +1,73 @@
 // See https://go.microsoft.com/fwlink/?LinkId=733558
 // for the documentation about the tasks.json format
 {
-    "version": "2.0.0",
-    "tasks": [
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "npm",
+      "script": "watch",
+      "problemMatcher": "$tsc-watch",
+      "isBackground": true,
+      "presentation": {
+        "panel": "dedicated",
+        "reveal": "never"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "build dev watch",
+      "group": "build",
+      "isBackground": true,
+      "type": "shell",
+      "options": {
+        "cwd": "packages/zowe-explorer"
+      },
+      "command": "yarn",
+      "args": ["watch"],
+      "problemMatcher": [
         {
-            "type": "npm",
-            "script": "watch",
-            "problemMatcher": "$tsc-watch",
-            "isBackground": true,
-            "presentation": {
-                "panel": "dedicated",
-                "reveal": "never"
+          "owner": "typescript",
+          "source": "ts",
+          "applyTo": "closedDocuments",
+          "fileLocation": "absolute",
+          "severity": "error",
+          "pattern": [
+            {
+              "regexp": "\\[tsl\\] ERROR in (.*)?\\((\\d+),(\\d+)\\)",
+              "file": 1,
+              "line": 2,
+              "column": 3
             },
-            "group": {
-                "kind": "build",
-                "isDefault": true
+            {
+              "regexp": "\\s*TS\\d+:\\s*(.*)",
+              "message": 1
             }
-        },
-        {
-            "label": "build dev watch",
-            "group": "build",
-            "isBackground": true,
-            "type":"shell",
-            "options": {
-                "cwd": "packages/zowe-explorer",
+          ],
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": {
+              "regexp": "Compilation (.*?)starting…"
             },
-            "command": "yarn",
-            "args": [
-                "watch"
-            ],
-            "problemMatcher":[
-                {
-                    "owner": "typescript",
-                    "source": "ts",
-                    "applyTo": "closedDocuments",
-                    "fileLocation": "absolute",
-                    "severity": "error",
-                    "pattern": [
-                        {
-                            "regexp": "\\[tsl\\] ERROR in (.*)?\\((\\d+),(\\d+)\\)",
-                            "file": 1,
-                            "line": 2,
-                            "column": 3
-                        },
-                        {
-                            "regexp": "\\s*TS\\d+:\\s*(.*)",
-                            "message": 1
-                        }
-                    ],
-                    "background": {
-                        "activeOnStart": true,
-                        "beginsPattern": {
-                            "regexp": "Compilation (.*?)starting…"
-                        },
-                        "endsPattern": {
-                            "regexp": "Compilation (.*?)finished"
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "label": "Pretest",
-            "group": "build",
-            "isBackground": false,
-            "type": "shell",
-            "options": {
-                "cwd": "packages/zowe-explorer",
-            },
-            "command":"yarn",
-            "args": [
-                "build:integration"
-            ]
+            "endsPattern": {
+              "regexp": "Compilation (.*?)finished"
+            }
+          }
         }
-    ]
+      ]
+    },
+    {
+      "label": "Pretest",
+      "group": "build",
+      "isBackground": false,
+      "type": "shell",
+      "options": {
+        "cwd": "packages/zowe-explorer"
+      },
+      "command": "yarn",
+      "args": ["build:integration"]
+    }
+  ]
 }

@@ -10,10 +10,7 @@
       "type": "extensionHost",
       "request": "launch",
       "runtimeExecutable": "${execPath}",
-      "args": [
-        "--extensionDevelopmentPath=${workspaceFolder}/packages/zowe-explorer",
-        "--verbose"
-      ],
+      "args": ["--extensionDevelopmentPath=${workspaceFolder}/packages/zowe-explorer", "--verbose"],
       "outFiles": ["${workspaceFolder}/packages/zowe-explorer/out/**/*.js"],
       "preLaunchTask": "build dev watch",
       "smartStep": true
@@ -23,13 +20,8 @@
       "type": "extensionHost",
       "request": "launch",
       "runtimeExecutable": "${execPath}",
-      "args": [
-        "--extensionDevelopmentPath=${workspaceFolder}/packages/zowe-explorer-ftp-extension",
-        "--verbose"
-      ],
-      "outFiles": [
-        "${workspaceFolder}/packages/zowe-explorer-ftp-extension/out/**/*.js"
-      ],
+      "args": ["--extensionDevelopmentPath=${workspaceFolder}/packages/zowe-explorer-ftp-extension", "--verbose"],
+      "outFiles": ["${workspaceFolder}/packages/zowe-explorer-ftp-extension/out/**/*.js"],
       "preLaunchTask": "build dev watch",
       "smartStep": true
     },

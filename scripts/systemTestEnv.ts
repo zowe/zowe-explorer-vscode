@@ -8,7 +8,7 @@ const session: Session = new Session({
   password: profile.password,
   port: profile.port,
   rejectUnauthorized: profile.rejectUnauthorized,
-  type: "basic"
+  type: "basic",
 });
 
 /**
@@ -62,7 +62,6 @@ export async function cleanupSystemTestEnvironment() {
   await deleteAllFiles(`${ussPattern}`);
 }
 
-
 function createDataset(type: CreateDataSetTypeEnum, name: string) {
   Logger.getConsoleLogger().info(`Creating Dataset: ${name}`);
   return Create.dataSet(session, type, name);
@@ -91,4 +90,3 @@ function createUSSDirectory(name: string) {
   Logger.getConsoleLogger().info(`Creating USS Directory: ${name}`);
   return Create.uss(session, name, "directory");
 }
-

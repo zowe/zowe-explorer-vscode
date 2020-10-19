@@ -23,7 +23,5 @@
   "editor.formatOnSave": true,
   "npm.packageManager": "yarn",
   "eslint.packageManager": "yarn",
-  "eslint.workingDirectories": [
-    { "directory": "packages/zowe-explorer-ftp-extension", "changeProcessCWD": true }
-  ]
+  "eslint.workingDirectories": [{ "directory": "packages/zowe-explorer-ftp-extension", "changeProcessCWD": true }]
 }
