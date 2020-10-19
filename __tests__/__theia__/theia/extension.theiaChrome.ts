@@ -221,6 +221,23 @@ export async function verifyRemovedFavoriteProfileInJobs(){
     }
 }
 
+export async function verifyRemovedDefaultProfileInUss(){
+    const defaultProfile = await driverChrome.findElements(By.xpath(UssLocators.defaultUssProfileXpath)).then((found) => !!found.length);
+    if(!defaultProfile){
+            return true;
+    }else{
+        return false;
+    }
+}
+
+export async function verifyRemovedDefaultProfileInJobs(){
+    const defaultProfile = await driverChrome.findElements(By.xpath(JobsLocators.defaultJobsProfileXpath)).then((found) => !!found.length);
+    if(!defaultProfile){
+            return true;
+    }else{
+        return false;
+    }
+}
 export async function closeNotificationMessage(){
     await driverChrome.findElement(By.xpath(TheiaNotificationMessages.closeTheiaNotificationWarningMsgXpath)).click();
 }

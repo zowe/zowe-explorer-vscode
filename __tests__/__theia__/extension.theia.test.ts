@@ -11,8 +11,8 @@
 
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
-import * as driverFirefox from "../../src/theia/extension.theiaFirefox";
-import * as driverChrome from "../../src/theia/extension.theiaChrome";
+import * as driverFirefox from "./theia/extension.theiaFirefox";
+import * as driverChrome from "./theia/extension.theiaChrome";
 import { sleep } from "@zowe/cli";
 
 const TIMEOUT = 45000;
@@ -253,6 +253,24 @@ describe("Delete Profiles", () => {
         await driverChrome.closeNotificationMessage();
         const deleteConfrmationMsg = await driverChrome.deleteProfileInDatasets();
         expect(deleteConfrmationMsg).to.equal("Profile TestSeleniumProfile was deleted.");
+    });
+
+    it("Should Default Profile deleted from USS", async () => {
+        await driverChrome.clickOnDatasetsTab();
+        await sleep(SHORTSLEEPTIME);
+        await driverChrome.clickOnUssTabs();
+        await sleep(SHORTSLEEPTIME);
+        const deletedDefaultProfile = await driverChrome.verifyRemovedDefaultProfileInUss();
+        expect(deletedDefaultProfile).to.equal(true);
+    });
+
+    it("Should Default Profile deleted from JOBS", async () => {
+        await driverChrome.clickOnUssTabs();
+        await sleep(SHORTSLEEPTIME);
+        await driverChrome.clickOnJobsTab();
+        await sleep(SHORTSLEEPTIME);
+        const deletedDefaultProfile = await driverChrome.verifyRemovedDefaultProfileInJobs();
+        expect(deletedDefaultProfile).to.equal(true);
     });
 
     after(async () => driverChrome.closeBrowser());
