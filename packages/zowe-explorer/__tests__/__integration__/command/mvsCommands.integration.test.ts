@@ -18,27 +18,27 @@ import * as testConst from "../../../resources/testProfileData";
 import { MvsCommandHandler } from "../../../src/command/MvsCommandHandler";
 
 describe("mvsCommands integration test", async () => {
-    const expect = chai.expect;
-    chai.use(chaiAsPromised);
-    const TEST_CMD = "/d iplinfo";
-    const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
+  const expect = chai.expect;
+  chai.use(chaiAsPromised);
+  const TEST_CMD = "/d iplinfo";
+  const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
 
-    let sandbox;
+  let sandbox;
 
-    beforeEach(async () => {
-        sandbox = sinon.createSandbox();
+  beforeEach(async () => {
+    sandbox = sinon.createSandbox();
+  });
+
+  afterEach(async () => {
+    sandbox.restore();
+  });
+
+  describe("Submit an MVS command", async () => {
+    it("should submit a command", async () => {
+      const spy = sandbox.spy(zowe.IssueCommand, "issueSimple");
+      MvsCommandHandler.getInstance().issueMvsCommand(session, TEST_CMD);
+      expect(spy.called).to.equal(true);
+      expect(spy.args[0][1]).to.equal("d iplinfo");
     });
-
-    afterEach(async () => {
-        sandbox.restore();
-    });
-
-    describe("Submit an MVS command", async () => {
-        it("should submit a command", async () => {
-            const spy = sandbox.spy(zowe.IssueCommand, "issueSimple");
-            MvsCommandHandler.getInstance().issueMvsCommand(session, TEST_CMD);
-            expect(spy.called).to.equal(true);
-            expect(spy.args[0][1]).to.equal("d iplinfo");
-        });
-    });
+  });
 });

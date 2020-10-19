@@ -4,10 +4,10 @@ root = true
 insert_final_newline = true
 end_of_line = lf
 indent_style = space
-max_line_length = 85
+max_line_length = 120
 
 [*.{js,ts,css}]
-indent_size = 4
+indent_size = 2
 
-[*.{json,yml}]
+[*.{json,yml,md}]
 indent_size = 2

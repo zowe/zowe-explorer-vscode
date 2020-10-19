@@ -14,10 +14,10 @@ import { getIconPathInResources } from "../../../shared/utils";
 import { isFavoriteSearch } from "../../../shared/context";
 
 const icon: IIconItem = {
-    id: IconId.pattern,
-    type: IconHierarchyType.base,
-    path: getIconPathInResources("pattern.svg"),
-    check: (node) => isFavoriteSearch(node)
+  id: IconId.pattern,
+  type: IconHierarchyType.base,
+  path: getIconPathInResources("pattern.svg"),
+  check: (node) => isFavoriteSearch(node),
 };
 
 export default icon;

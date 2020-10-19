@@ -14,10 +14,10 @@ import { getIconPathInResources } from "../../../shared/utils";
 import { isBinary } from "../../../shared/context";
 
 const icon: IIconItem = {
-    id: IconId.documentBinary,
-    type: IconHierarchyType.base,
-    path: getIconPathInResources("document-binary.svg"),
-    check: (node) => isBinary(node)
+  id: IconId.documentBinary,
+  type: IconHierarchyType.base,
+  path: getIconPathInResources("document-binary.svg"),
+  check: (node) => isBinary(node),
 };
 
 export default icon;

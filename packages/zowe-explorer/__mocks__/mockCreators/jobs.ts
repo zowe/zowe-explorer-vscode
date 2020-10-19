@@ -18,98 +18,91 @@ import { removeNodeFromArray } from "./shared";
 import { PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 
 export function createIJobObject(): zowe.IJob {
-    return {
-        jobid: "JOB1234",
-        jobname: "TESTJOB",
-        "files-url": "fake/files",
-        "job-correlator": "correlator",
-        "phase-name": "PHASE",
-        "reason-not-running": "",
-        "step-data": [
-            {
-                "proc-step-name": "",
-                "program-name": "",
-                "step-name": "",
-                "step-number": 1,
-                active: "",
-                smfid: "",
-            },
-        ],
-        class: "A",
-        owner: "USER",
-        phase: 0,
-        retcode: "",
-        status: "ACTIVE",
-        subsystem: "SYS",
-        type: "JOB",
-        url: "fake/url",
-    };
+  return {
+    jobid: "JOB1234",
+    jobname: "TESTJOB",
+    "files-url": "fake/files",
+    "job-correlator": "correlator",
+    "phase-name": "PHASE",
+    "reason-not-running": "",
+    "step-data": [
+      {
+        "proc-step-name": "",
+        "program-name": "",
+        "step-name": "",
+        "step-number": 1,
+        active: "",
+        smfid: "",
+      },
+    ],
+    class: "A",
+    owner: "USER",
+    phase: 0,
+    retcode: "",
+    status: "ACTIVE",
+    subsystem: "SYS",
+    type: "JOB",
+    url: "fake/url",
+  };
 }
 
 export function createIJobFile(): zowe.IJobFile {
-    return {
-        "byte-count": 128,
-        "job-correlator": "correlator",
-        "record-count": 1,
-        "records-url": "fake/records",
-        class: "A",
-        ddname: "STDOUT",
-        id: 101,
-        jobid: "JOB1234",
-        jobname: "TESTJOB",
-        lrecl: 80,
-        procstep: "",
-        recfm: "FB",
-        stepname: "STEP",
-        subsystem: "SYS",
-    };
+  return {
+    "byte-count": 128,
+    "job-correlator": "correlator",
+    "record-count": 1,
+    "records-url": "fake/records",
+    class: "A",
+    ddname: "STDOUT",
+    id: 101,
+    jobid: "JOB1234",
+    jobname: "TESTJOB",
+    lrecl: 80,
+    procstep: "",
+    recfm: "FB",
+    stepname: "STEP",
+    subsystem: "SYS",
+  };
 }
 
 export function createJobsTree(
-    session: imperative.Session,
-    iJob: zowe.IJob,
-    profile: imperative.IProfileLoaded,
-    treeView: any
+  session: imperative.Session,
+  iJob: zowe.IJob,
+  profile: imperative.IProfileLoaded,
+  treeView: any
 ): any {
-    const jobNode = new Job(
-        "jobtest",
-        vscode.TreeItemCollapsibleState.Expanded,
-        null,
-        session,
-        iJob,
-        profile
-    );
-    jobNode.contextValue = globals.JOBS_SESSION_CONTEXT;
+  const jobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, null, session, iJob, profile);
+  jobNode.contextValue = globals.JOBS_SESSION_CONTEXT;
 
-    const testJobsTree = {
-        mSessionNodes: [],
-        mFavorites: [],
-        getChildren: jest.fn(),
-        addSession: jest.fn(),
-        refresh: jest.fn(),
-        getTreeView: jest.fn(),
-        deleteSession: jest.fn(),
-        addFavorite: jest.fn(),
-        removeFavorite: jest.fn(),
-        treeView,
-        getTreeType: jest.fn().mockImplementation(() => PersistenceSchemaEnum.Job),
-        checkCurrentProfile: jest.fn(),
-        refreshElement: jest.fn(),
-        getProfiles: jest.fn(),
-        getProfileName: jest.fn(),
-        getSession: jest.fn(),
-    };
-    testJobsTree.mSessionNodes = [];
-    testJobsTree.mSessionNodes.push(jobNode);
-    testJobsTree.addFavorite.mockImplementation((newFavorite) => {
-        testJobsTree.mFavorites.push(newFavorite);
-    });
-    testJobsTree.deleteSession.mockImplementation((badSession) =>
-        removeNodeFromArray(badSession, testJobsTree.mSessionNodes)
-    );
-    testJobsTree.removeFavorite.mockImplementation((badFavorite) =>
-        removeNodeFromArray(badFavorite, testJobsTree.mFavorites)
-    );
+  const testJobsTree = {
+    mSessionNodes: [],
+    mFavorites: [],
+    getChildren: jest.fn(),
+    addSession: jest.fn(),
+    refresh: jest.fn(),
+    getTreeView: jest.fn(),
+    deleteSession: jest.fn(),
+    addFavorite: jest.fn(),
+    removeFavorite: jest.fn(),
+    treeView,
+    getTreeType: jest.fn().mockImplementation(() => PersistenceSchemaEnum.Job),
+    checkCurrentProfile: jest.fn(),
+    refreshElement: jest.fn(),
+    getProfiles: jest.fn(),
+    getProfileName: jest.fn(),
+    getSession: jest.fn(),
+  };
+  testJobsTree.mSessionNodes = [];
+  testJobsTree.mSessionNodes.push(jobNode);
+  testJobsTree.addFavorite.mockImplementation((newFavorite) => {
+    testJobsTree.mFavorites.push(newFavorite);
+  });
+  testJobsTree.deleteSession.mockImplementation((badSession) =>
+    removeNodeFromArray(badSession, testJobsTree.mSessionNodes)
+  );
+  testJobsTree.removeFavorite.mockImplementation((badFavorite) =>
+    removeNodeFromArray(badFavorite, testJobsTree.mFavorites)
+  );
 
-    return testJobsTree;
+  return testJobsTree;
 }

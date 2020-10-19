@@ -11,50 +11,50 @@
 
 import * as vscode from "vscode";
 import {
-    workspaceUtilTabSwitchDelay,
-    workspaceUtilMaxEmptyWindowsInTheRow,
-    workspaceUtilFileSaveInterval,
-    workspaceUtilFileSaveMaxIterationCount
+  workspaceUtilTabSwitchDelay,
+  workspaceUtilMaxEmptyWindowsInTheRow,
+  workspaceUtilFileSaveInterval,
+  workspaceUtilFileSaveMaxIterationCount,
 } from "../config/constants";
 
 interface IExtTextEditor extends vscode.TextEditor {
-    id: string;
+  id: string;
 }
 
 /**
  * Opens the next tab in editor with given delay
  */
 function openNextTab(delay: number) {
-    return new Promise((resolve) => {
-        vscode.commands.executeCommand("workbench.action.nextEditor");
-        setTimeout(() => resolve(), delay);
-    });
+  return new Promise((resolve) => {
+    vscode.commands.executeCommand("workbench.action.nextEditor");
+    setTimeout(() => resolve(), delay);
+  });
 }
 
 let fileWasSaved = false;
 
 export function setFileSaved(status: boolean) {
-    fileWasSaved = status;
+  fileWasSaved = status;
 }
 
 export async function awaitForDocumentBeingSaved() {
-    fileWasSaved = false;
-    return new Promise((resolve) => {
-        let count = 0;
-        const saveWaitIntervalId = setInterval(() => {
-            if (workspaceUtilFileSaveMaxIterationCount > count) {
-                count++;
-                if (fileWasSaved) {
-                    fileWasSaved = false;
-                    clearInterval(saveWaitIntervalId);
-                    resolve();
-                }
-            } else {
-                clearInterval(saveWaitIntervalId);
-                resolve();
-            }
-        }, workspaceUtilFileSaveInterval);
-    });
+  fileWasSaved = false;
+  return new Promise((resolve) => {
+    let count = 0;
+    const saveWaitIntervalId = setInterval(() => {
+      if (workspaceUtilFileSaveMaxIterationCount > count) {
+        count++;
+        if (fileWasSaved) {
+          fileWasSaved = false;
+          clearInterval(saveWaitIntervalId);
+          resolve();
+        }
+      } else {
+        clearInterval(saveWaitIntervalId);
+        resolve();
+      }
+    }, workspaceUtilFileSaveInterval);
+  });
 }
 
 /**
@@ -65,27 +65,29 @@ export async function awaitForDocumentBeingSaved() {
  * Also notice that timer delay as well as iteration through opened tabs can cause side-effects on slow machines
  */
 export async function checkTextFileIsOpened(path: string) {
-    const openedWindows = [] as IExtTextEditor[];
+  const openedWindows = [] as IExtTextEditor[];
 
-    let emptySelectedCountInTheRow = 0;
-    let selectedEditor = vscode.window.activeTextEditor as IExtTextEditor;
+  let emptySelectedCountInTheRow = 0;
+  let selectedEditor = vscode.window.activeTextEditor as IExtTextEditor;
 
-    // The idea of the condition is we can meet binary files opened, which have no text editor
-    // So we should set some maximum occurrences point and get out of the loop
-    while (emptySelectedCountInTheRow < workspaceUtilMaxEmptyWindowsInTheRow &&
-    !openedWindows.some((window) => selectedEditor && window.id === selectedEditor.id)) {
-        if (selectedEditor) {
-            emptySelectedCountInTheRow = 0;
-            openedWindows.push(selectedEditor);
-        } else {
-            emptySelectedCountInTheRow++;
-        }
-
-        await openNextTab(workspaceUtilTabSwitchDelay);
-        selectedEditor = vscode.window.activeTextEditor as IExtTextEditor;
+  // The idea of the condition is we can meet binary files opened, which have no text editor
+  // So we should set some maximum occurrences point and get out of the loop
+  while (
+    emptySelectedCountInTheRow < workspaceUtilMaxEmptyWindowsInTheRow &&
+    !openedWindows.some((window) => selectedEditor && window.id === selectedEditor.id)
+  ) {
+    if (selectedEditor) {
+      emptySelectedCountInTheRow = 0;
+      openedWindows.push(selectedEditor);
+    } else {
+      emptySelectedCountInTheRow++;
     }
 
-    return openedWindows.some((window) => window.document.fileName === path);
+    await openNextTab(workspaceUtilTabSwitchDelay);
+    selectedEditor = vscode.window.activeTextEditor as IExtTextEditor;
+  }
+
+  return openedWindows.some((window) => window.document.fileName === path);
 }
 
 /**
@@ -94,34 +96,36 @@ export async function checkTextFileIsOpened(path: string) {
  * For us it means we need to select editor first, which is again not possible via existing VSCode APIs
  */
 export async function closeOpenedTextFile(path: string) {
-    const openedWindows = [] as IExtTextEditor[];
+  const openedWindows = [] as IExtTextEditor[];
 
-    let emptySelectedCountInTheRow = 0;
-    let selectedEditor = vscode.window.activeTextEditor as IExtTextEditor;
+  let emptySelectedCountInTheRow = 0;
+  let selectedEditor = vscode.window.activeTextEditor as IExtTextEditor;
 
-    // The idea of the condition is we can meet binary files opened, which have no text editor
-    // So we should set some maximum occurrences point and get out of the loop
-    while (emptySelectedCountInTheRow < workspaceUtilMaxEmptyWindowsInTheRow &&
-    !openedWindows.some((window) => selectedEditor && window.id === selectedEditor.id)) {
-        if (selectedEditor) {
-            emptySelectedCountInTheRow = 0;
-            openedWindows.push(selectedEditor);
-        } else {
-            emptySelectedCountInTheRow++;
-        }
-
-        await openNextTab(workspaceUtilTabSwitchDelay);
-        selectedEditor = vscode.window.activeTextEditor as IExtTextEditor;
-
-        if (selectedEditor && selectedEditor.document.fileName === path) {
-            const isDirty = selectedEditor.document.isDirty;
-            await vscode.commands.executeCommand("workbench.action.closeActiveEditor");
-            if (isDirty) {
-                await awaitForDocumentBeingSaved();
-            }
-            return true;
-        }
+  // The idea of the condition is we can meet binary files opened, which have no text editor
+  // So we should set some maximum occurrences point and get out of the loop
+  while (
+    emptySelectedCountInTheRow < workspaceUtilMaxEmptyWindowsInTheRow &&
+    !openedWindows.some((window) => selectedEditor && window.id === selectedEditor.id)
+  ) {
+    if (selectedEditor) {
+      emptySelectedCountInTheRow = 0;
+      openedWindows.push(selectedEditor);
+    } else {
+      emptySelectedCountInTheRow++;
     }
 
-    return false;
+    await openNextTab(workspaceUtilTabSwitchDelay);
+    selectedEditor = vscode.window.activeTextEditor as IExtTextEditor;
+
+    if (selectedEditor && selectedEditor.document.fileName === path) {
+      const isDirty = selectedEditor.document.isDirty;
+      await vscode.commands.executeCommand("workbench.action.closeActiveEditor");
+      if (isDirty) {
+        await awaitForDocumentBeingSaved();
+      }
+      return true;
+    }
+  }
+
+  return false;
 }

@@ -27,69 +27,65 @@ declare var it: Mocha.ITestDefinition;
 // declare var describe: any;
 
 const testProfile: IProfileLoaded = {
-    name: testConst.profile.name,
-    profile: testConst.profile,
-    type: testConst.profile.type,
-    message: "",
-    failNotFound: false,
+  name: testConst.profile.name,
+  profile: testConst.profile,
+  type: testConst.profile.type,
+  message: "",
+  failNotFound: false,
 };
 
 describe("jobNodeActions integration test", async () => {
-    const expect = chai.expect;
-    chai.use(chaiAsPromised);
+  const expect = chai.expect;
+  chai.use(chaiAsPromised);
 
-    const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
-    const sessionNode = new Job(
-        testConst.profile.name,
-        vscode.TreeItemCollapsibleState.Collapsed,
-        null,
-        session,
-        null,
-        null
-    );
-    sessionNode.contextValue = JOBS_SESSION_CONTEXT;
-    const testTree = new ZosJobsProvider();
-    testTree.mSessionNodes.push(sessionNode);
+  const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
+  const sessionNode = new Job(
+    testConst.profile.name,
+    vscode.TreeItemCollapsibleState.Collapsed,
+    null,
+    session,
+    null,
+    null
+  );
+  sessionNode.contextValue = JOBS_SESSION_CONTEXT;
+  const testTree = new ZosJobsProvider();
+  testTree.mSessionNodes.push(sessionNode);
 
-    let sandbox;
+  let sandbox;
 
-    beforeEach(async function () {
-        this.timeout(TIMEOUT);
-        sandbox = sinon.createSandbox();
-    });
+  beforeEach(async function () {
+    this.timeout(TIMEOUT);
+    sandbox = sinon.createSandbox();
+  });
 
-    afterEach(async function () {
-        this.timeout(TIMEOUT);
-        sandbox.restore();
-    });
+  afterEach(async function () {
+    this.timeout(TIMEOUT);
+    sandbox.restore();
+  });
 
-    const oldSettings = vscode.workspace.getConfiguration("Zowe-DS-Persistent");
+  const oldSettings = vscode.workspace.getConfiguration("Zowe-DS-Persistent");
 
-    after(async () => {
-        await vscode.workspace
-            .getConfiguration()
-            .update(
-                "Zowe-DS-Persistent",
-                oldSettings,
-                vscode.ConfigurationTarget.Global
-            );
-    });
+  after(async () => {
+    await vscode.workspace
+      .getConfiguration()
+      .update("Zowe-DS-Persistent", oldSettings, vscode.ConfigurationTarget.Global);
+  });
 
-    describe("Refresh ALL", async () => {
-        it("It should call the RefreshALL function", async () => {
-            let eventFired = false;
+  describe("Refresh ALL", async () => {
+    it("It should call the RefreshALL function", async () => {
+      let eventFired = false;
 
-            const listener = () => {
-                eventFired = true;
-            };
+      const listener = () => {
+        eventFired = true;
+      };
 
-            const subscription = testTree.mOnDidChangeTreeData.event(listener);
-            await jobActions.refreshAllJobs(testTree);
+      const subscription = testTree.mOnDidChangeTreeData.event(listener);
+      await jobActions.refreshAllJobs(testTree);
 
-            expect(eventFired).equals(true);
-            // expect(eventFired).toBe(true);
+      expect(eventFired).equals(true);
+      // expect(eventFired).toBe(true);
 
-            subscription.dispose();
-        }).timeout(TIMEOUT);
-    });
+      subscription.dispose();
+    }).timeout(TIMEOUT);
+  });
 });

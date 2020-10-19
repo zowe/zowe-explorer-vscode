@@ -18,24 +18,24 @@ nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFo
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 const message: IMessageItem = {
-    id: MessageCategoryId.dataset,
-    type: MessageHierarchyType.generic,
-    messages: {
-        [MessageContentType.open]: localize("openPS.response.title", "Opening dataset..."),
-        [MessageContentType.upload]: localize("saveFile.response.save.title", "Saving dataset...")
-    },
-    check: (node) => {
-        const contexts = [
-            globals.DS_DS_CONTEXT,
-            globals.DS_DS_CONTEXT + globals.FAV_SUFFIX,
-            globals.DS_PDS_CONTEXT,
-            globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX,
-            globals.DS_MEMBER_CONTEXT,
-            globals.DS_MEMBER_CONTEXT + globals.FAV_SUFFIX
-        ];
+  id: MessageCategoryId.dataset,
+  type: MessageHierarchyType.generic,
+  messages: {
+    [MessageContentType.open]: localize("openPS.response.title", "Opening dataset..."),
+    [MessageContentType.upload]: localize("saveFile.response.save.title", "Saving dataset..."),
+  },
+  check: (node) => {
+    const contexts = [
+      globals.DS_DS_CONTEXT,
+      globals.DS_DS_CONTEXT + globals.FAV_SUFFIX,
+      globals.DS_PDS_CONTEXT,
+      globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX,
+      globals.DS_MEMBER_CONTEXT,
+      globals.DS_MEMBER_CONTEXT + globals.FAV_SUFFIX,
+    ];
 
-        return contexts.indexOf(node.contextValue) > -1;
-    }
+    return contexts.indexOf(node.contextValue) > -1;
+  },
 };
 
 export default message;

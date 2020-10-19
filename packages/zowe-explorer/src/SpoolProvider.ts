@@ -14,23 +14,19 @@ import * as zowe from "@zowe/cli";
 import { Profiles, ZoweExplorerApiRegister } from "@zowe/zowe-explorer-api";
 
 export default class SpoolProvider implements vscode.TextDocumentContentProvider {
-    public static scheme = "zosspool";
+  public static scheme = "zosspool";
 
-    private mOnDidChange = new vscode.EventEmitter<vscode.Uri>();
+  private mOnDidChange = new vscode.EventEmitter<vscode.Uri>();
 
-    public provideTextDocumentContent(uri: vscode.Uri): string | Thenable<string> {
-        const [sessionName, spool] = decodeJobFile(uri);
-        const profile = Profiles.getInstance().loadNamedProfile(sessionName);
-        return ZoweExplorerApiRegister.getJesApi(profile).getSpoolContentById(
-            spool.jobname,
-            spool.jobid,
-            spool.id
-        );
-    }
+  public provideTextDocumentContent(uri: vscode.Uri): string | Thenable<string> {
+    const [sessionName, spool] = decodeJobFile(uri);
+    const profile = Profiles.getInstance().loadNamedProfile(sessionName);
+    return ZoweExplorerApiRegister.getJesApi(profile).getSpoolContentById(spool.jobname, spool.jobid, spool.id);
+  }
 
-    public dispose() {
-        this.mOnDidChange.dispose();
-    }
+  public dispose() {
+    this.mOnDidChange.dispose();
+  }
 }
 
 /**
@@ -40,10 +36,8 @@ export default class SpoolProvider implements vscode.TextDocumentContentProvider
  * @param spool The IJobFile to get the spool content for.
  */
 export function encodeJobFile(session: string, spool: zowe.IJobFile): vscode.Uri {
-    const query = JSON.stringify([session, spool]);
-    return vscode.Uri.parse(
-        `${SpoolProvider.scheme}:${spool.jobname}.${spool.jobid}.${spool.ddname}?${query}`
-    );
+  const query = JSON.stringify([session, spool]);
+  return vscode.Uri.parse(`${SpoolProvider.scheme}:${spool.jobname}.${spool.jobid}.${spool.ddname}?${query}`);
 }
 
 /**
@@ -52,6 +46,6 @@ export function encodeJobFile(session: string, spool: zowe.IJobFile): vscode.Uri
  * @param uri The URI passed to TextDocumentContentProvider
  */
 export function decodeJobFile(uri: vscode.Uri): [string, zowe.IJobFile] {
-    const [session, spool] = JSON.parse(uri.query) as [string, zowe.IJobFile];
-    return [session, spool];
+  const [session, spool] = JSON.parse(uri.query) as [string, zowe.IJobFile];
+  return [session, spool];
 }

@@ -10,37 +10,37 @@
  */
 
 interface Stats {
-    isDirectory(path: string): boolean;
-    isFile(path: string): boolean;
+  isDirectory(path: string): boolean;
+  isFile(path: string): boolean;
 }
 
 export class FakeStats implements Stats {
-    isFile(path: string): boolean {
-        if (this.path.endsWith(".txt")) {
-            return true;
-        }
-        return false;
+  isFile(path: string): boolean {
+    if (this.path.endsWith(".txt")) {
+      return true;
     }
-    public path: string;
-    isDirectory(): boolean {
-        if (this.path.endsWith(".txt")) {
-            return false;
-        }
-        return true;
+    return false;
+  }
+  public path: string;
+  isDirectory(): boolean {
+    if (this.path.endsWith(".txt")) {
+      return false;
     }
-    constructor(private mMyPath: string) {
-        this.path = mMyPath;
-    }
+    return true;
+  }
+  constructor(private mMyPath: string) {
+    this.path = mMyPath;
+  }
 }
 
 export function lstatSync(path: string): Stats {
-    const value = new FakeStats(path);
-    return value;
+  const value = new FakeStats(path);
+  return value;
 }
 
 export function readdirSync(path: string): string[] {
-    const value = ["A[testSess]", "Parent[testSess]", "B"];
-    return value;
+  const value = ["A[testSess]", "Parent[testSess]", "B"];
+  return value;
 }
 export function rmdirSync(path: string): void {}
 
@@ -49,5 +49,5 @@ export function unlinkSync(path: string): void {}
 export function writeFileSync(path: string, data: any, encoding: string): void {}
 
 export function existsSync(path: string | Buffer): boolean {
-    return true;
+  return true;
 }

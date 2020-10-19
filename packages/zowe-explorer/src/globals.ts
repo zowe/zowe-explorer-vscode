@@ -56,20 +56,20 @@ export const ROOTPATH = path.join(__dirname, "..", "..");
  * @param tempPath File path for temporary folder defined in preferences
  */
 export function defineGlobals(tempPath: string | undefined) {
-    // Set app name
-    const appName: string = vscode.env.appName;
-    if (appName && appName === this.THEIA) {
-        this.ISTHEIA = true;
-    }
+  // Set app name
+  const appName: string = vscode.env.appName;
+  if (appName && appName === this.THEIA) {
+    this.ISTHEIA = true;
+  }
 
-    // Set temp path & folder paths
-    tempPath !== "" && tempPath !== undefined
-        ? (ZOWETEMPFOLDER = path.join(tempPath, "temp"))
-        : (ZOWETEMPFOLDER = path.join(__dirname, "..", "..", "resources", "temp"));
+  // Set temp path & folder paths
+  tempPath !== "" && tempPath !== undefined
+    ? (ZOWETEMPFOLDER = path.join(tempPath, "temp"))
+    : (ZOWETEMPFOLDER = path.join(__dirname, "..", "..", "resources", "temp"));
 
-    ZOWE_TMP_FOLDER = path.join(ZOWETEMPFOLDER, "tmp");
-    USS_DIR = path.join(ZOWETEMPFOLDER, "_U_");
-    DS_DIR = path.join(ZOWETEMPFOLDER, "_D_");
+  ZOWE_TMP_FOLDER = path.join(ZOWETEMPFOLDER, "tmp");
+  USS_DIR = path.join(ZOWETEMPFOLDER, "_U_");
+  DS_DIR = path.join(ZOWETEMPFOLDER, "_D_");
 }
 
 /**
@@ -77,12 +77,12 @@ export function defineGlobals(tempPath: string | undefined) {
  * @param context The extension context
  */
 export function initLogger(context: vscode.ExtensionContext) {
-    for (const appenderName of Object.keys(loggerConfig.log4jsConfig.appenders)) {
-        loggerConfig.log4jsConfig.appenders[appenderName].filename = path.join(
-            context.extensionPath,
-            loggerConfig.log4jsConfig.appenders[appenderName].filename
-        );
-    }
-    Logger.initLogger(loggerConfig);
-    this.LOG = Logger.getAppLogger();
+  for (const appenderName of Object.keys(loggerConfig.log4jsConfig.appenders)) {
+    loggerConfig.log4jsConfig.appenders[appenderName].filename = path.join(
+      context.extensionPath,
+      loggerConfig.log4jsConfig.appenders[appenderName].filename
+    );
+  }
+  Logger.initLogger(loggerConfig);
+  this.LOG = Logger.getAppLogger();
 }

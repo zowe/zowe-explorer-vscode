@@ -32,13 +32,13 @@
  */
 export function MockMethod() {
   return (target: any, key: string, descriptor: PropertyDescriptor) => {
-    if(descriptor === undefined) {
+    if (descriptor === undefined) {
       descriptor = Object.getOwnPropertyDescriptor(target, key) as PropertyDescriptor;
     }
 
     const originalMethod = descriptor.value;
 
-    descriptor.value = jest.fn(function() {
+    descriptor.value = jest.fn(function () {
       originalMethod.apply(this, arguments);
     });
 

@@ -1,6 +1,4 @@
 dist
 out
 lib
-yarn.lock
-*.js
-results
+node_modules

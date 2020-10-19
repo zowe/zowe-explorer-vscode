@@ -21,75 +21,46 @@ const WAITTIME = 30000;
 declare var it: any;
 
 describe("Extension Theia Tests", () => {
-    const expect = chai.expect;
-    chai.use(chaiAsPromised);
+  const expect = chai.expect;
+  chai.use(chaiAsPromised);
 
-    const firefoxOptions = new firefox.Options();
-    firefoxOptions.headless();
-    const driver = new Builder()
-        .forBrowser("firefox")
-        .setFirefoxOptions(firefoxOptions)
-        .build();
+  const firefoxOptions = new firefox.Options();
+  firefoxOptions.headless();
+  const driver = new Builder().forBrowser("firefox").setFirefoxOptions(firefoxOptions).build();
 
-    it("should open Zowe Explorer and find the Favorites node", async () => {
-        await driver.get("http://localhost:3000");
-        await driver.sleep(SLEEPTIME);
-        const button = driver.wait(
-            until.elementLocated(By.id("shell-tab-plugin-view-container:zowe"))
-        );
-        button.click();
-        const favoriteLink = await driver
-            .wait(until.elementLocated(By.id("/0:Favorites")), WAITTIME)
-            .getAttribute("title");
-        expect(favoriteLink).to.equal("Favorites");
-    }).timeout(TIMEOUT);
+  it("should open Zowe Explorer and find the Favorites node", async () => {
+    await driver.get("http://localhost:3000");
+    await driver.sleep(SLEEPTIME);
+    const button = driver.wait(until.elementLocated(By.id("shell-tab-plugin-view-container:zowe")));
+    button.click();
+    const favoriteLink = await driver.wait(until.elementLocated(By.id("/0:Favorites")), WAITTIME).getAttribute("title");
+    expect(favoriteLink).to.equal("Favorites");
+  }).timeout(TIMEOUT);
 
-    it("should find the Data Sets node", async () => {
-        await driver.wait(
-            until.elementLocated(
-                By.id("plugin-view-container:zowe--plugin-view:zowe.explorer")
-            ),
-            WAITTIME
-        );
-        const datasetLink = await driver
-            .wait(
-                until.elementLocated(By.xpath("//span[@title='Data Sets']")),
-                WAITTIME
-            )
-            .getText();
-        expect(datasetLink).to.equal("DATA SETS");
-    }).timeout(TIMEOUT);
+  it("should find the Data Sets node", async () => {
+    await driver.wait(until.elementLocated(By.id("plugin-view-container:zowe--plugin-view:zowe.explorer")), WAITTIME);
+    const datasetLink = await driver
+      .wait(until.elementLocated(By.xpath("//span[@title='Data Sets']")), WAITTIME)
+      .getText();
+    expect(datasetLink).to.equal("DATA SETS");
+  }).timeout(TIMEOUT);
 
-    it("should find the USS node", async () => {
-        await driver.wait(
-            until.elementLocated(
-                By.id("plugin-view-container:zowe--plugin-view:zowe.uss.explorer")
-            ),
-            WAITTIME
-        );
-        const ussLink = await driver
-            .wait(
-                until.elementLocated(
-                    By.xpath("//span[@title='Unix System Services (USS)']")
-                ),
-                WAITTIME
-            )
-            .getText();
-        expect(ussLink).to.equal("UNIX SYSTEM SERVICES (USS)");
-    }).timeout(TIMEOUT);
+  it("should find the USS node", async () => {
+    await driver.wait(
+      until.elementLocated(By.id("plugin-view-container:zowe--plugin-view:zowe.uss.explorer")),
+      WAITTIME
+    );
+    const ussLink = await driver
+      .wait(until.elementLocated(By.xpath("//span[@title='Unix System Services (USS)']")), WAITTIME)
+      .getText();
+    expect(ussLink).to.equal("UNIX SYSTEM SERVICES (USS)");
+  }).timeout(TIMEOUT);
 
-    it("should find the Jobs node", async () => {
-        await driver.wait(
-            until.elementLocated(
-                By.id("plugin-view-container:zowe--plugin-view:zowe.jobs")
-            ),
-            WAITTIME
-        );
-        const jobsLink = await driver
-            .wait(until.elementLocated(By.xpath("//span[@title='Jobs']")), WAITTIME)
-            .getText();
-        expect(jobsLink).to.equal("JOBS");
-    }).timeout(TIMEOUT);
+  it("should find the Jobs node", async () => {
+    await driver.wait(until.elementLocated(By.id("plugin-view-container:zowe--plugin-view:zowe.jobs")), WAITTIME);
+    const jobsLink = await driver.wait(until.elementLocated(By.xpath("//span[@title='Jobs']")), WAITTIME).getText();
+    expect(jobsLink).to.equal("JOBS");
+  }).timeout(TIMEOUT);
 
-    after(async () => driver.quit());
+  after(async () => driver.quit());
 });

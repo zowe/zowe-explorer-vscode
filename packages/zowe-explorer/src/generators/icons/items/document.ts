@@ -14,10 +14,10 @@ import { getIconPathInResources } from "../../../shared/utils";
 import { isDocument } from "../../../shared/context";
 
 const icon: IIconItem = {
-    id: IconId.document,
-    type: IconHierarchyType.base,
-    path: getIconPathInResources("document.svg"),
-    check: (node) => isDocument(node)
+  id: IconId.document,
+  type: IconHierarchyType.base,
+  path: getIconPathInResources("document.svg"),
+  check: (node) => isDocument(node),
 };
 
 export default icon;

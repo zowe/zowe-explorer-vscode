@@ -19,21 +19,18 @@ nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFo
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 const message: IMessageItem = {
-    id: MessageCategoryId.datasetMember,
-    type: MessageHierarchyType.specific,
-    generic: datasetMessage,
-    messages: {
-        [MessageContentType.open]: localize("openMember.response.title", "Opening dataset member..."),
-        [MessageContentType.upload]: localize("saveMember.response.title", "Saving dataset member...")
-    },
-    check: (node) => {
-        const contexts = [
-            globals.DS_MEMBER_CONTEXT,
-            globals.DS_MEMBER_CONTEXT + globals.FAV_SUFFIX
-        ];
+  id: MessageCategoryId.datasetMember,
+  type: MessageHierarchyType.specific,
+  generic: datasetMessage,
+  messages: {
+    [MessageContentType.open]: localize("openMember.response.title", "Opening dataset member..."),
+    [MessageContentType.upload]: localize("saveMember.response.title", "Saving dataset member..."),
+  },
+  check: (node) => {
+    const contexts = [globals.DS_MEMBER_CONTEXT, globals.DS_MEMBER_CONTEXT + globals.FAV_SUFFIX];
 
-        return contexts.indexOf(node.contextValue) > -1;
-    }
+    return contexts.indexOf(node.contextValue) > -1;
+  },
 };
 
 export default message;

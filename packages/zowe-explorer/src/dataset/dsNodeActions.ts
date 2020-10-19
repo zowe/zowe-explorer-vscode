@@ -20,15 +20,15 @@ import { returnIconState } from "../shared/actions";
  * @param {DataSetTree} datasetProvider
  */
 export async function refreshAll(datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
-    await Profiles.getInstance().refresh();
-    datasetProvider.mSessionNodes.forEach((sessNode) => {
-        if (contextually.isSessionNotFav(sessNode)) {
-            labelRefresh(sessNode);
-            sessNode.children = [];
-            sessNode.dirty = true;
-            refreshTree(sessNode);
-        }
-        returnIconState(sessNode);
-    });
-    await datasetProvider.refresh();
+  await Profiles.getInstance().refresh();
+  datasetProvider.mSessionNodes.forEach((sessNode) => {
+    if (contextually.isSessionNotFav(sessNode)) {
+      labelRefresh(sessNode);
+      sessNode.children = [];
+      sessNode.dirty = true;
+      refreshTree(sessNode);
+    }
+    returnIconState(sessNode);
+  });
+  await datasetProvider.refresh();
 }

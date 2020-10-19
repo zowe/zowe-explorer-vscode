@@ -20,10 +20,10 @@ import { ZoweUSSNode } from "../uss/ZoweUSSNode";
  * @returns {string}
  */
 export function injectAdditionalDataToTooltip(node: ZoweUSSNode, tooltip: string) {
-    if (node.downloaded && node.downloadedTime) {
-        // TODO: Add time formatter to localization so we will use not just US variant
-        return `${tooltip} (Downloaded: ${moment(node.downloadedTime).format("HH:mm MM/DD/YY")})`;
-    }
+  if (node.downloaded && node.downloadedTime) {
+    // TODO: Add time formatter to localization so we will use not just US variant
+    return `${tooltip} (Downloaded: ${moment(node.downloadedTime).format("HH:mm MM/DD/YY")})`;
+  }
 
-    return tooltip;
+  return tooltip;
 }
