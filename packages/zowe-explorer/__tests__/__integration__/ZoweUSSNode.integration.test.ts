@@ -106,17 +106,9 @@ describe("ZoweUSSNode Integration Tests", async () => {
       new ZoweUSSNode(path + "/group/aDir6", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null, null),
     ];
 
-    sampleChildren[0].command = {
-      command: "zowe.uss.ZoweUSSNode.open",
-      title: "",
-      arguments: [sampleChildren[0]],
-    };
+    sampleChildren[0].command = { command: "zowe.uss.ZoweUSSNode.open", title: "", arguments: [sampleChildren[0]] };
     // tslint:disable-next-line:no-magic-numbers
-    sampleChildren[1].command = {
-      command: "zowe.uss.ZoweUSSNode.open",
-      title: "",
-      arguments: [sampleChildren[1]],
-    };
+    sampleChildren[1].command = { command: "zowe.uss.ZoweUSSNode.open", title: "", arguments: [sampleChildren[1]] };
 
     // Checking that the rootChildren are what they are expected to be
     // tslint:disable-next-line: no-magic-numbers

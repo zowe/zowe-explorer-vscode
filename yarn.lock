@@ -1859,12 +1859,12 @@
   resolved "https://registry.yarnpkg.com/@xtuc/long/-/long-4.2.2.tgz#d291c6a4e97989b5c61d9acf396ae4fe133a718d"
   integrity sha512-NuHqBY1PB/D8xU6s/thBgOAiAP7HOYDQ32+BFZILJ8ivkUkAHQnWfn6WhL79Owj1qmUnoN/YPhktdIoucipkAQ==
 
-"@zowe/cli@6.15.0":
-  version "6.15.0"
-  resolved "https://registry.yarnpkg.com/@zowe/cli/-/cli-6.15.0.tgz#6981a23a32c84fcbe78f367a6b6e29940acd45e4"
-  integrity sha512-4I452508oEd9+oxLQjGTqo+weiI7U2ZsHdN+sTl4rXldz/GR0JoO49uj2+y4B5hZZt3ZBqDToSrtjrvn4HHH3A==
+"@zowe/cli@^6.22.0":
+  version "6.23.0"
+  resolved "https://registry.yarnpkg.com/@zowe/cli/-/cli-6.23.0.tgz#f211ac9083b33e6bdfa1c1f7f2bcc4261ddb1c7d"
+  integrity sha512-/oH+LowlozkY10umUyfY2uK46rGm6gKnKqTNNFR0zSvXCOZaxurz64h+BtgwAhd5fmQtRVrYuVtPgRFWWE3/6Q==
   dependencies:
-    "@zowe/imperative" "4.6.4"
+    "@zowe/imperative" "4.8.1"
     "@zowe/perf-timing" "1.0.7"
     get-stdin "7.0.0"
     js-yaml "3.13.1"
@@ -1872,10 +1872,10 @@
     ssh2 "0.8.7"
     string-width "2.1.1"
 
-"@zowe/imperative@4.6.4":
-  version "4.6.4"
-  resolved "https://registry.yarnpkg.com/@zowe/imperative/-/imperative-4.6.4.tgz#cf064964045057519be5af33bb2ff1208c1fdcea"
-  integrity sha512-8QQ/S1Gx0Q3yqwLK2f0SMWUkJzv5IHB6z5s2RSO/VTuUtF6e4vPCCZ84dGxQlkbFCWhlNtq9pDHRu8DClzcQOA==
+"@zowe/imperative@4.8.1":
+  version "4.8.1"
+  resolved "https://registry.yarnpkg.com/@zowe/imperative/-/imperative-4.8.1.tgz#1cddbbbd14e63221cf2a129dad9ded6efb75bfa6"
+  integrity sha512-mkP93zydBEQoYzXqChkT3mqTicTCxehXiCEbQD4MKwQ9GWQjMBqcW/6tYroMu4+D8ib6Q0FHOH58WharaEEaxw==
   dependencies:
     "@types/lodash-deep" "2.0.0"
     "@types/yargs" "13.0.4"

@@ -91,9 +91,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
             if (prefix === undefined) {
               prefix = spool.procstep;
             }
-            const sessionName = contextually.isFavorite(this)
-              ? this.label.substring(1, this.label.lastIndexOf("]")).trim()
-              : this.getProfileName();
+            const sessionName = this.getProfileName();
             const spoolNode = new Spool(
               `${spool.stepname}:${spool.ddname}(${spool.id})`,
               vscode.TreeItemCollapsibleState.None,
@@ -107,11 +105,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
             if (icon) {
               spoolNode.iconPath = icon.path;
             }
-            spoolNode.command = {
-              command: "zowe.zosJobsOpenspool",
-              title: "",
-              arguments: [sessionName, spool],
-            };
+            spoolNode.command = { command: "zowe.zosJobsOpenspool", title: "", arguments: [sessionName, spool] };
             elementChildren.push(spoolNode);
           }
         });
@@ -144,11 +138,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
               job,
               this.getProfile()
             );
-            jobNode.command = {
-              command: "zowe.zosJobsSelectjob",
-              title: "",
-              arguments: [jobNode],
-            };
+            jobNode.command = { command: "zowe.zosJobsSelectjob", title: "", arguments: [jobNode] };
             jobNode.contextValue = globals.JOBS_JOB_CONTEXT;
             if (job.retcode) {
               jobNode.contextValue += globals.RC_SUFFIX + job.retcode;

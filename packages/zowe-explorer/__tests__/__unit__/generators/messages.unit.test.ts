@@ -27,12 +27,8 @@ describe("Checking message generator's basics", () => {
     const createTreeView = jest.fn();
     const getConfiguration = jest.fn();
 
-    Object.defineProperty(vscode.window, "createTreeView", {
-      value: createTreeView,
-    });
-    Object.defineProperty(vscode.workspace, "getConfiguration", {
-      value: getConfiguration,
-    });
+    Object.defineProperty(vscode.window, "createTreeView", { value: createTreeView });
+    Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
   };
   const generateTestSessionNode = () => {
     const session = new Session({

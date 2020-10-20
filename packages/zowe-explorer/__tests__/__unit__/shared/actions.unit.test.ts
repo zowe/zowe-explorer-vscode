@@ -17,6 +17,7 @@ import {
   createQuickPickContent,
   createQuickPickItem,
   createTreeView,
+  createValidIProfile,
 } from "../../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
 import { Profiles, IZoweNodeType } from "@zowe/zowe-explorer-api";
@@ -35,43 +36,16 @@ async function createGlobalMocks() {
       'Choose "Create new..." to define a new profile or select an existing profile to Add to the Data Set Explorer',
   };
 
-  Object.defineProperty(vscode.window, "createTreeView", {
-    value: jest.fn(),
-    configurable: true,
-  });
-  Object.defineProperty(vscode.window, "showInformationMessage", {
-    value: jest.fn(),
-    configurable: true,
-  });
-  Object.defineProperty(vscode.window, "showInputBox", {
-    value: jest.fn(),
-    configurable: true,
-  });
-  Object.defineProperty(vscode.window, "showErrorMessage", {
-    value: jest.fn(),
-    configurable: true,
-  });
-  Object.defineProperty(vscode.window, "showQuickPick", {
-    value: jest.fn(),
-    configurable: true,
-  });
-  Object.defineProperty(vscode.window, "createQuickPick", {
-    value: jest.fn(),
-    configurable: true,
-  });
-  Object.defineProperty(Profiles, "getInstance", {
-    value: jest.fn(),
-    configurable: true,
-  });
+  Object.defineProperty(vscode.window, "createTreeView", { value: jest.fn(), configurable: true });
+  Object.defineProperty(vscode.window, "showInformationMessage", { value: jest.fn(), configurable: true });
+  Object.defineProperty(vscode.window, "showInputBox", { value: jest.fn(), configurable: true });
+  Object.defineProperty(vscode.window, "showErrorMessage", { value: jest.fn(), configurable: true });
+  Object.defineProperty(vscode.window, "showQuickPick", { value: jest.fn(), configurable: true });
+  Object.defineProperty(vscode.window, "createQuickPick", { value: jest.fn(), configurable: true });
+  Object.defineProperty(Profiles, "getInstance", { value: jest.fn(), configurable: true });
   Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
-  Object.defineProperty(globals.LOG, "debug", {
-    value: jest.fn(),
-    configurable: true,
-  });
-  Object.defineProperty(globals.LOG, "error", {
-    value: jest.fn(),
-    configurable: true,
-  });
+  Object.defineProperty(globals.LOG, "debug", { value: jest.fn(), configurable: true });
+  Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
 
   return globalMocks;
 }
@@ -117,8 +91,8 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
       globals.DS_PDS_CONTEXT
     );
     testNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
-    blockMocks.testDatasetTree.searchInLoadedItems.mockResolvedValueOnce([testNode]);
-    blockMocks.testUssTree.searchInLoadedItems.mockResolvedValueOnce([]);
+    blockMocks.testDatasetTree.getAllLoadedItems.mockResolvedValueOnce([testNode]);
+    blockMocks.testUssTree.getAllLoadedItems.mockResolvedValueOnce([]);
     blockMocks.testDatasetTree.getChildren.mockImplementation((arg) => {
       if (arg) {
         return Promise.resolve([testNode]);
@@ -154,8 +128,8 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
     blockMocks.testDatasetTree.getChildren.mockReturnValue([blockMocks.datasetSessionNode]);
 
     jest.spyOn(dsActions, "openPS").mockResolvedValueOnce(null);
-    blockMocks.testDatasetTree.searchInLoadedItems.mockResolvedValueOnce([testMember]);
-    blockMocks.testUssTree.searchInLoadedItems.mockResolvedValueOnce([]);
+    blockMocks.testDatasetTree.getAllLoadedItems.mockResolvedValueOnce([testMember]);
+    blockMocks.testUssTree.getAllLoadedItems.mockResolvedValueOnce([]);
     blockMocks.testDatasetTree.getChildren.mockImplementation((arg) => {
       if (arg === testNode) {
         return Promise.resolve([testMember]);
@@ -187,8 +161,8 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
     );
     blockMocks.testDatasetTree.getChildren.mockReturnValue([blockMocks.ussSessionNode]);
 
-    blockMocks.testDatasetTree.searchInLoadedItems.mockResolvedValueOnce([]);
-    blockMocks.testUssTree.searchInLoadedItems.mockResolvedValueOnce([folder]);
+    blockMocks.testDatasetTree.getAllLoadedItems.mockResolvedValueOnce([]);
+    blockMocks.testUssTree.getAllLoadedItems.mockResolvedValueOnce([folder]);
     jest.spyOn(folder, "getProfileName").mockImplementationOnce(() => "firstName");
     jest.spyOn(blockMocks.ussSessionNode, "getChildren").mockResolvedValueOnce([folder]);
 
@@ -216,8 +190,8 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
     const file = new ZoweUSSNode("file", vscode.TreeItemCollapsibleState.None, folder, null, "/folder");
     blockMocks.testDatasetTree.getChildren.mockReturnValue([blockMocks.ussSessionNode]);
 
-    blockMocks.testDatasetTree.searchInLoadedItems.mockResolvedValueOnce([]);
-    blockMocks.testUssTree.searchInLoadedItems.mockResolvedValueOnce([file]);
+    blockMocks.testDatasetTree.getAllLoadedItems.mockResolvedValueOnce([]);
+    blockMocks.testUssTree.getAllLoadedItems.mockResolvedValueOnce([file]);
     jest.spyOn(blockMocks.ussSessionNode, "getChildren").mockResolvedValueOnce([folder]);
     jest.spyOn(folder, "getChildren").mockResolvedValueOnce([file]);
 
@@ -237,8 +211,8 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
     const globalMocks = await createGlobalMocks();
     const blockMocks = createBlockMocks();
 
-    blockMocks.testDatasetTree.searchInLoadedItems.mockResolvedValueOnce([]);
-    blockMocks.testUssTree.searchInLoadedItems.mockResolvedValueOnce([]);
+    blockMocks.testDatasetTree.getAllLoadedItems.mockResolvedValueOnce([]);
+    blockMocks.testUssTree.getAllLoadedItems.mockResolvedValueOnce([]);
     const qpItem = null;
     const quickPickContent = createQuickPickContent(qpItem, qpItem, globalMocks.qpPlaceholder);
     quickPickContent.placeholder = "Select a filter";
@@ -276,10 +250,7 @@ describe("Shared Actions Unit Tests - Function openRecentMemberPrompt", () => {
     newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
     newMocks.ussSessionNode = createUSSSessionNode(newMocks.session, newMocks.imperativeProfile);
     newMocks.testUSSTree = createUSSTree([], [newMocks.ussSessionNode], newMocks.treeView);
-    Object.defineProperty(newMocks.testUSSTree, "getFileHistory", {
-      value: jest.fn(),
-      configurable: true,
-    });
+    Object.defineProperty(newMocks.testUSSTree, "getFileHistory", { value: jest.fn(), configurable: true });
     newMocks.testDatasetTree = createDatasetTree(newMocks.datasetSessionNode, newMocks.treeView);
 
     return newMocks;
@@ -370,6 +341,7 @@ describe("Shared Actions Unit Tests - Function returnIconState", () => {
       imperativeProfile: createIProfile(),
       profileInstance: null,
       datasetSessionNode: null,
+      mockGetIconByNode: jest.fn(),
     };
 
     newMocks.profileInstance = createInstanceOfProfile(newMocks.imperativeProfile);
@@ -381,6 +353,7 @@ describe("Shared Actions Unit Tests - Function returnIconState", () => {
       null
     );
     newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
+    newMocks.mockGetIconByNode.mockReturnValue(IconId.sessionActive);
 
     return newMocks;
   }
@@ -404,12 +377,76 @@ describe("Shared Actions Unit Tests - Function returnIconState", () => {
     const resultNode: IZoweNodeType = blockMocks.datasetSessionNode;
     const resultIcon = getIconById(IconId.session);
     resultNode.iconPath = resultIcon.path;
-
     const testNode: IZoweNodeType = blockMocks.datasetSessionNode;
     const sessionIcon = getIconById(IconId.sessionInactive);
     testNode.iconPath = sessionIcon.path;
 
+    blockMocks.mockGetIconByNode.mockReturnValueOnce(IconId.sessionInactive);
     const response = await sharedActions.returnIconState(testNode);
     expect(getIconByNode(response)).toEqual(getIconByNode(resultNode));
+  });
+});
+
+describe("Shared Actions Unit Tests - Function resetValidationSettings", () => {
+  function createBlockMocks() {
+    const newMocks = {
+      session: createISessionWithoutCredentials(),
+      treeView: createTreeView(),
+      dsNode: null,
+      imperativeProfile: createValidIProfile(),
+      profileInstance: null,
+      datasetSessionNode: null,
+      mockEnableValidationContext: jest.fn(),
+      mockDisableValidationContext: jest.fn(),
+      mockCheckProfileValidationSetting: jest.fn(),
+    };
+
+    newMocks.profileInstance = createInstanceOfProfile(newMocks.imperativeProfile);
+    mocked(Profiles.getInstance).mockReturnValue(newMocks.profileInstance);
+    newMocks.dsNode = new ZoweDatasetNode(
+      "node",
+      vscode.TreeItemCollapsibleState.Collapsed,
+      newMocks.datasetSessionNode,
+      null
+    );
+    newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
+
+    return newMocks;
+  }
+
+  it("Tests that resetValidationSettings resets contextValue to false upon global change", async () => {
+    const blockMocks = createBlockMocks();
+    const testNode: IZoweNodeType = blockMocks.datasetSessionNode;
+    testNode.contextValue = `${globals.DS_SESSION_CONTEXT}${globals.VALIDATE_SUFFIX}true`;
+    const mockNode: IZoweNodeType = blockMocks.datasetSessionNode;
+    mockNode.contextValue = `${globals.DS_SESSION_CONTEXT}${globals.VALIDATE_SUFFIX}false`;
+    Object.defineProperty(Profiles, "getInstance", {
+      value: jest.fn(() => {
+        return {
+          disableValidationContext: blockMocks.mockDisableValidationContext.mockReturnValue(mockNode),
+          checkProfileValidationSetting: blockMocks.mockCheckProfileValidationSetting.mockReturnValue(false),
+        };
+      }),
+    });
+    const response = await sharedActions.resetValidationSettings(testNode, false);
+    expect(response.contextValue).toContain(`${globals.VALIDATE_SUFFIX}false`);
+  });
+
+  it("Tests that resetValidationSettings resets contextValue to true upon global change", async () => {
+    const blockMocks = createBlockMocks();
+    const testNode: IZoweNodeType = blockMocks.datasetSessionNode;
+    testNode.contextValue = `${globals.DS_SESSION_CONTEXT}${globals.VALIDATE_SUFFIX}false`;
+    const mockNode: IZoweNodeType = blockMocks.datasetSessionNode;
+    mockNode.contextValue = `${globals.DS_SESSION_CONTEXT}${globals.VALIDATE_SUFFIX}true`;
+    Object.defineProperty(Profiles, "getInstance", {
+      value: jest.fn(() => {
+        return {
+          enableValidationContext: blockMocks.mockEnableValidationContext.mockReturnValue(mockNode),
+          checkProfileValidationSetting: blockMocks.mockCheckProfileValidationSetting.mockReturnValue(true),
+        };
+      }),
+    });
+    const response = await sharedActions.resetValidationSettings(testNode, true);
+    expect(response.contextValue).toContain(`${globals.VALIDATE_SUFFIX}true`);
   });
 });

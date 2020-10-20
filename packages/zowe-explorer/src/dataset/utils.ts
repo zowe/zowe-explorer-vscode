@@ -19,33 +19,15 @@ import * as contextually from "../shared/context";
 export function getProfileAndDataSetName(node: IZoweNodeType) {
   let profileName;
   let dataSetName;
-  if (node.contextValue.includes(globals.FAV_SUFFIX)) {
-    profileName = node.label.substring(1, node.label.indexOf("]"));
-    dataSetName = node.label.substring(node.label.indexOf(":") + 2);
-  } else {
-    profileName = node.getParent().getLabel();
-    dataSetName = node.label.trim();
-  }
-
+  profileName = node.getParent().getLabel();
+  dataSetName = node.label.trim();
   return { profileName, dataSetName };
 }
 
 export function getNodeLabels(node: IZoweNodeType) {
   if (node.contextValue.includes(globals.DS_MEMBER_CONTEXT)) {
-    return {
-      ...getProfileAndDataSetName(node.getParent()),
-      memberName: node.getLabel(),
-    };
+    return { ...getProfileAndDataSetName(node.getParent()), memberName: node.getLabel() };
   } else {
     return getProfileAndDataSetName(node);
   }
-}
-
-export function getDatasetLabel(node: ZoweDatasetNode) {
-  if (node.getParent() && contextually.isFavoriteContext(node.getParent())) {
-    const profileEnd = "]: ";
-    const profileIndex = node.label.indexOf(profileEnd);
-    return node.label.substr(profileIndex + profileEnd.length, node.label.length);
-  }
-  return node.label;
 }

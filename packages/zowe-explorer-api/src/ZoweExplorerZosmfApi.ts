@@ -10,15 +10,12 @@
  */
 
 import * as zowe from "@zowe/cli";
-import { Session, IProfileLoaded, ITaskWithStatus, TaskStage } from "@zowe/imperative";
+import { Session, IProfileLoaded, ITaskWithStatus, ICommandArguments } from "@zowe/imperative";
 import { ZoweExplorerApi } from "./ZoweExplorerApi";
 
 import * as nls from "vscode-nls";
 // Set up localization
-nls.config({
-  messageFormat: nls.MessageFormat.bundle,
-  bundleFormat: nls.BundleFormat.standalone,
-})();
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 // tslint:disable: max-classes-per-file
@@ -38,17 +35,59 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
     return ZosmfUssApi.getProfileTypeName();
   }
 
+  public getSessionFromCommandArgument(cmdArgs: ICommandArguments): Session {
+    return zowe.ZosmfSession.createBasicZosmfSessionFromArguments(cmdArgs);
+  }
+
   public getSession(profile?: IProfileLoaded): Session {
     if (!this.session) {
-      this.session = zowe.ZosmfSession.createBasicZosmfSession((profile || this.profile).profile);
+      try {
+        if (!this.profile.profile.tokenValue) {
+          this.session = zowe.ZosmfSession.createBasicZosmfSession((profile || this.profile).profile);
+        } else {
+          const serviceProfile = this.profile;
+          const cmdArgs: ICommandArguments = {
+            $0: "zowe",
+            _: [""],
+            host: serviceProfile.profile.host,
+            port: serviceProfile.profile.port,
+            basePath: serviceProfile.profile.basePath,
+            rejectUnauthorized: serviceProfile.profile.rejectUnauthorized !== null,
+            tokenType: serviceProfile.profile.tokenType,
+            tokenValue: serviceProfile.profile.tokenValue,
+          };
+
+          this.session = this.getSessionFromCommandArgument(cmdArgs);
+        }
+      } catch (error) {
+        // todo: initialize and use logging
+      }
     }
     return this.session;
   }
 
   public async getStatus(validateProfile?: IProfileLoaded, profileType?: string): Promise<string> {
     // This API call is specific for z/OSMF profiles
+    let validateSession: Session;
     if (profileType === "zosmf") {
-      const validateSession = await zowe.ZosmfSession.createBasicZosmfSession(validateProfile.profile);
+      if (validateProfile.profile.tokenValue) {
+        const serviceProfile = validateProfile;
+        const cmdArgs: ICommandArguments = {
+          $0: "zowe",
+          _: [""],
+          host: serviceProfile.profile.host,
+          port: serviceProfile.profile.port,
+          basePath: serviceProfile.profile.basePath,
+          rejectUnauthorized: serviceProfile.profile.rejectUnauthorized !== null,
+          tokenType: serviceProfile.profile.tokenType,
+          tokenValue: serviceProfile.profile.tokenValue,
+        };
+
+        validateSession = this.getSessionFromCommandArgument(cmdArgs);
+      } else {
+        validateSession = await zowe.ZosmfSession.createBasicZosmfSession(validateProfile.profile);
+      }
+
       const sessionStatus = await zowe.CheckStatus.getZosmfInfo(validateSession);
 
       if (sessionStatus) {
@@ -180,6 +219,10 @@ export class ZosmfMvsApi extends ZosmfApiCommon implements ZoweExplorerApi.IMvs 
     return zowe.Upload.bufferToDataSet(this.getSession(), Buffer.from(""), dataSetName, options);
   }
 
+  public async allocateLikeDataSet(dataSetName: string, likeDataSetName: string): Promise<zowe.IZosFilesResponse> {
+    return zowe.Create.dataSetLike(this.getSession(), dataSetName, likeDataSetName);
+  }
+
   public async copyDataSetMember(
     { dataSetName: fromDataSetName, memberName: fromMemberName }: zowe.IDataSet,
     { dataSetName: toDataSetName, memberName: toMemberName }: zowe.IDataSet,
@@ -190,24 +233,11 @@ export class ZosmfMvsApi extends ZosmfApiCommon implements ZoweExplorerApi.IMvs 
       if (options.fromDataSet) {
         newOptions = options;
       } else {
-        newOptions = {
-          ...options,
-          ...{
-            fromDataSet: {
-              dataSetName: fromDataSetName,
-              memberName: fromMemberName,
-            },
-          },
-        };
+        newOptions = { ...options, ...{ fromDataSet: { dataSetName: fromDataSetName, memberName: fromMemberName } } };
       }
     } else {
       // If we decide to match 1:1 the Zowe.Copy.dataSet implementation, we will need to break the interface definition in the ZoweExploreApi
-      newOptions = {
-        fromDataSet: {
-          dataSetName: fromDataSetName,
-          memberName: fromMemberName,
-        },
-      };
+      newOptions = { fromDataSet: { dataSetName: fromDataSetName, memberName: fromMemberName } };
     }
     return zowe.Copy.dataSet(this.getSession(), { dataSetName: toDataSetName, memberName: toMemberName }, newOptions);
   }
@@ -217,11 +247,11 @@ export class ZosmfMvsApi extends ZosmfApiCommon implements ZoweExplorerApi.IMvs 
   }
 
   public async renameDataSetMember(
-    currentMemberName: string,
-    newMemberName: string,
-    afterMemberName: string
+    dataSetName: string,
+    oldMemberName: string,
+    newMemberName: string
   ): Promise<zowe.IZosFilesResponse> {
-    return zowe.Rename.dataSetMember(this.getSession(), currentMemberName, newMemberName, afterMemberName);
+    return zowe.Rename.dataSetMember(this.getSession(), dataSetName, oldMemberName, newMemberName);
   }
 
   public async hMigrateDataSet(dataSetName: string): Promise<zowe.IZosFilesResponse> {

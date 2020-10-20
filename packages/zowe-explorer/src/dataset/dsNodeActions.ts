@@ -12,7 +12,8 @@
 import * as contextually from "../shared/context";
 import { Profiles, IZoweTree, IZoweDatasetTreeNode } from "@zowe/zowe-explorer-api";
 import { labelRefresh, refreshTree } from "../shared/utils";
-import { returnIconState } from "../shared/actions";
+import { returnIconState, resetValidationSettings } from "../shared/actions";
+import { PersistentFilters } from "../PersistentFilters";
 
 /**
  * Refreshes treeView
@@ -21,12 +22,14 @@ import { returnIconState } from "../shared/actions";
  */
 export async function refreshAll(datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
   await Profiles.getInstance().refresh();
-  datasetProvider.mSessionNodes.forEach((sessNode) => {
+  datasetProvider.mSessionNodes.forEach(async (sessNode) => {
+    const setting = PersistentFilters.getDirectValue("Zowe-Automatic-Validation") as boolean;
     if (contextually.isSessionNotFav(sessNode)) {
       labelRefresh(sessNode);
       sessNode.children = [];
       sessNode.dirty = true;
       refreshTree(sessNode);
+      resetValidationSettings(sessNode, setting);
     }
     returnIconState(sessNode);
   });

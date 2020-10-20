@@ -193,11 +193,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             undefined,
             this.getProfile()
           );
-          temp.command = {
-            command: "zowe.ZoweNode.openPS",
-            title: "",
-            arguments: [temp],
-          };
+          temp.command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [temp] };
           elementChildren[temp.label] = temp;
         } else {
           // Creates a ZoweDatasetNode for a PDS member
@@ -210,11 +206,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             undefined,
             this.getProfile()
           );
-          temp.command = {
-            command: "zowe.ZoweNode.openPS",
-            title: "",
-            arguments: [temp],
-          };
+          temp.command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [temp] };
           elementChildren[temp.label] = temp;
         }
       }
@@ -272,11 +264,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
           );
         }
       } else {
-        // Check if node is a favorite
-        let label = this.label.trim();
-        if (this.label.startsWith("[")) {
-          label = this.label.substring(this.label.indexOf(":") + 1).trim();
-        }
+        const label = this.label.trim();
         responses.push(
           await ZoweExplorerApiRegister.getMvsApi(this.getProfile()).allMembers(label, { attributes: true })
         );

@@ -113,31 +113,19 @@ describe("mvsCommandActions unit testing", () => {
     profileOne
   );
 
-  Object.defineProperty(vscode.window, "showErrorMessage", {
-    value: showErrorMessage,
-  });
+  Object.defineProperty(vscode.window, "showErrorMessage", { value: showErrorMessage });
   Object.defineProperty(vscode.window, "showInputBox", { value: showInputBox });
-  Object.defineProperty(vscode.window, "showInformationMessage", {
-    value: showInformationMessage,
-  });
+  Object.defineProperty(vscode.window, "showInformationMessage", { value: showInformationMessage });
   Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
-  Object.defineProperty(vscode.window, "createQuickPick", {
-    value: createQuickPick,
-  });
-  Object.defineProperty(vscode.workspace, "getConfiguration", {
-    value: getConfiguration,
-  });
+  Object.defineProperty(vscode.window, "createQuickPick", { value: createQuickPick });
+  Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
   Object.defineProperty(zowe, "IssueCommand", { value: IssueCommand });
   Object.defineProperty(IssueCommand, "issueSimple", { value: issueSimple });
-  Object.defineProperty(vscode.window, "createOutputChannel", {
-    value: createOutputChannel,
-  });
+  Object.defineProperty(vscode.window, "createOutputChannel", { value: createOutputChannel });
   Object.defineProperty(vscode, "ProgressLocation", { value: ProgressLocation });
   Object.defineProperty(vscode.window, "withProgress", { value: withProgress });
 
-  mockLoadNamedProfile.mockReturnValue({
-    profile: { name: "aProfile", type: "zosmf" },
-  });
+  mockLoadNamedProfile.mockReturnValue({ profile: { name: "aProfile", type: "zosmf" } });
   getConfiguration.mockReturnValue({
     get: (setting: string) => undefined,
     update: jest.fn(() => {
@@ -157,10 +145,7 @@ describe("mvsCommandActions unit testing", () => {
       value: jest.fn(() => {
         return {
           allProfiles: [
-            {
-              name: "firstName",
-              profile: { user: "firstName", password: "12345" },
-            },
+            { name: "firstName", profile: { user: "firstName", password: "12345" } },
             { name: "secondName" },
           ],
           defaultProfile: { name: "firstName" },
@@ -200,10 +185,7 @@ describe("mvsCommandActions unit testing", () => {
       value: jest.fn(() => {
         return {
           allProfiles: [
-            {
-              name: "firstName",
-              profile: { user: "firstName", password: "12345" },
-            },
+            { name: "firstName", profile: { user: "firstName", password: "12345" } },
             { name: "secondName" },
           ],
           defaultProfile: { name: "firstName" },
@@ -242,10 +224,7 @@ describe("mvsCommandActions unit testing", () => {
       value: jest.fn(() => {
         return {
           allProfiles: [
-            {
-              name: "firstName",
-              profile: { user: "firstName", password: "12345" },
-            },
+            { name: "firstName", profile: { user: "firstName", password: "12345" } },
             { name: "secondName" },
           ],
           defaultProfile: { name: "firstName" },
@@ -284,10 +263,7 @@ describe("mvsCommandActions unit testing", () => {
       value: jest.fn(() => {
         return {
           allProfiles: [
-            {
-              name: "firstName",
-              profile: { user: "firstName", password: "12345" },
-            },
+            { name: "firstName", profile: { user: "firstName", password: "12345" } },
             { name: "secondName" },
           ],
           defaultProfile: { name: "firstName" },
@@ -323,10 +299,7 @@ describe("mvsCommandActions unit testing", () => {
       value: jest.fn(() => {
         return {
           allProfiles: [
-            {
-              name: "firstName",
-              profile: { user: "firstName", password: "12345" },
-            },
+            { name: "firstName", profile: { user: "firstName", password: "12345" } },
             { name: "secondName" },
           ],
           defaultProfile: { name: "firstName" },
@@ -363,10 +336,7 @@ describe("mvsCommandActions unit testing", () => {
       value: jest.fn(() => {
         return {
           allProfiles: [
-            {
-              name: "firstName",
-              profile: { user: "firstName", password: "12345" },
-            },
+            { name: "firstName", profile: { user: "firstName", password: "12345" } },
             { name: "secondName" },
           ],
           defaultProfile: { name: "firstName" },
@@ -437,10 +407,7 @@ describe("mvsCommandActions unit testing", () => {
       value: jest.fn(() => {
         return {
           allProfiles: [
-            {
-              name: "firstName",
-              profile: { user: undefined, password: undefined },
-            },
+            { name: "firstName", profile: { user: undefined, password: undefined } },
             { name: "secondName" },
           ],
           defaultProfile: { name: "firstName" },
@@ -480,10 +447,7 @@ describe("mvsCommandActions unit testing", () => {
       value: jest.fn(() => {
         return {
           allProfiles: [
-            {
-              name: "firstName",
-              profile: { user: undefined, password: undefined },
-            },
+            { name: "firstName", profile: { user: undefined, password: undefined } },
             { name: "secondName" },
           ],
           defaultProfile: { name: "firstName" },
@@ -522,10 +486,7 @@ describe("mvsCommandActions unit testing", () => {
       value: jest.fn(() => {
         return {
           allProfiles: [
-            {
-              name: "firstName",
-              profile: { user: undefined, password: undefined },
-            },
+            { name: "firstName", profile: { user: undefined, password: undefined } },
             { name: "secondName" },
           ],
           defaultProfile: { name: "firstName" },
@@ -553,10 +514,7 @@ describe("mvsCommandActions unit testing", () => {
       value: jest.fn(() => {
         return {
           allProfiles: [
-            {
-              name: "firstName",
-              profile: { user: "firstName", password: "12345" },
-            },
+            { name: "firstName", profile: { user: "firstName", password: "12345" } },
             { name: "secondName" },
           ],
           defaultProfile: { name: "firstName" },
@@ -580,10 +538,7 @@ describe("mvsCommandActions unit testing", () => {
       value: jest.fn(() => {
         return {
           allProfiles: [
-            {
-              name: "firstName",
-              profile: { user: "firstName", password: "12345" },
-            },
+            { name: "firstName", profile: { user: "firstName", password: "12345" } },
             { name: "secondName" },
           ],
           defaultProfile: { name: "firstName" },

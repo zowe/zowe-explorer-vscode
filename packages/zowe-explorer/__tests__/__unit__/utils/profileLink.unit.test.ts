@@ -43,12 +43,8 @@ Object.defineProperty(fs, "mkdirSync", { value: mkdirSync });
 Object.defineProperty(fs, "readFileSync", { value: readFileSync });
 Object.defineProperty(fs, "writeFileSync", { value: writeFileSync });
 Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
-Object.defineProperty(vscode.window, "showInformationMessage", {
-  value: showInformationMessage,
-});
-Object.defineProperty(vscode.window, "showErrorMessage", {
-  value: showErrorMessage,
-});
+Object.defineProperty(vscode.window, "showInformationMessage", { value: showInformationMessage });
+Object.defineProperty(vscode.window, "showErrorMessage", { value: showErrorMessage });
 
 const testProfile: IProfileLoaded = {
   name: "azbox",

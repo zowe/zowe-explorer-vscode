@@ -40,7 +40,7 @@ export function createUSSTree(
   newTree.deleteSession = jest
     .fn()
     .mockImplementation((badSession) => removeNodeFromArray(badSession, newTree.mSessionNodes));
-  newTree.searchInLoadedItems = jest.fn();
+  newTree.getAllLoadedItems = jest.fn();
   newTree.getTreeView = jest.fn().mockImplementation(() => treeView);
   newTree.getTreeItem = jest.fn().mockImplementation(() => new vscode.TreeItem("test"));
   newTree.getTreeType = jest.fn().mockImplementation(() => PersistenceSchemaEnum.USS);
@@ -96,9 +96,11 @@ export function createUSSSessionNode(session: imperative.Session, profile: imper
   return zoweUSSNode;
 }
 
+// This is NOT a favorite equivalent of the node created by createdUSSNode.
+// This is a favorited textfile node. createUSSNode creates a USS session node.
 export function createFavoriteUSSNode(session, profile) {
   const ussNodeF = new ZoweUSSNode(
-    "[sestest]: usstest",
+    "usstest",
     vscode.TreeItemCollapsibleState.Expanded,
     null,
     session,
@@ -107,7 +109,7 @@ export function createFavoriteUSSNode(session, profile) {
     profile.name
   );
   const mParent = new ZoweUSSNode(
-    "Favorites",
+    "sestest",
     vscode.TreeItemCollapsibleState.Expanded,
     null,
     session,
@@ -115,7 +117,7 @@ export function createFavoriteUSSNode(session, profile) {
     false,
     profile.name
   );
-  mParent.contextValue = globals.FAVORITE_CONTEXT;
+  mParent.contextValue = globals.FAV_PROFILE_CONTEXT;
   ussNodeF.contextValue = globals.DS_TEXT_FILE_CONTEXT + globals.FAV_SUFFIX;
   ussNodeF.fullPath = "/u/myuser/usstest";
   ussNodeF.tooltip = "/u/myuser/usstest";

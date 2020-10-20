@@ -132,9 +132,7 @@ describe("SpoolProvider Unit Tests", () => {
       }),
     });
     Object.defineProperty(zowe, "GetJobs", { value: GetJobs });
-    Object.defineProperty(GetJobs, "getSpoolContentById", {
-      value: getSpoolContentById,
-    });
+    Object.defineProperty(GetJobs, "getSpoolContentById", { value: getSpoolContentById });
     getSpoolContentById.mockReturnValue("spool content");
 
     const provider = new spoolprovider.default();

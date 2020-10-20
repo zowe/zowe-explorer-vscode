@@ -16,6 +16,7 @@ import {
   IProfile,
   ISession,
   IUpdateProfileFromCliArgs,
+  ICommandArguments,
 } from "@zowe/imperative";
 import * as path from "path";
 import { URL } from "url";
@@ -33,6 +34,10 @@ import {
 } from "./IZoweTreeNode";
 import { PersistenceSchemaEnum } from "./UserSettings";
 import * as nls from "vscode-nls";
+
+// TODO: find a home for constants
+export const CONTEXT_PREFIX = "_";
+const VALIDATE_SUFFIX = CONTEXT_PREFIX + "validate=";
 
 // Set up localization
 nls.config({
@@ -53,8 +58,13 @@ interface IProfileValidation {
   name: string;
 }
 
+interface IValidationSetting {
+  name: string;
+  setting: boolean;
+}
 let InputBoxOptions: vscode.InputBoxOptions;
 export enum ValidProfileEnum {
+  UNVERIFIED = 1,
   VALID = 0,
   INVALID = -1,
 }
@@ -73,6 +83,7 @@ export class Profiles {
   private static loader: Profiles;
 
   public profilesForValidation: IProfileValidation[] = [];
+  public profilesValidationSetting: IValidationSetting[] = [];
   public allProfiles: IProfileLoaded[] = [];
   public loadedProfile: IProfileLoaded;
   public validProfile: ValidProfileEnum = ValidProfileEnum.INVALID;
@@ -89,14 +100,28 @@ export class Profiles {
   private constructor(private log: Logger) {}
 
   public async checkCurrentProfile(theProfile: IProfileLoaded) {
-    // Check what happens if there's an error
-    const profileStatus = await this.validateProfiles(theProfile);
+    const profileStatus: IProfileValidation = await this.getProfileSetting(theProfile);
     if (profileStatus.status === "inactive") {
       this.validProfile = ValidProfileEnum.INVALID;
       return profileStatus;
     }
 
-    if (!theProfile.profile.user || !theProfile.profile.password) {
+    // if (profileStatus.status === "unverified") {
+    //     this.validProfile = ValidProfileEnum.UNVERIFIED;
+    //     return profileStatus;
+    // }
+
+    // This step is for prompting of credentials. It will be triggered if it meets the following conditions:
+    // - The service does not have username or password and base profile doesn't exists
+    // - The service does not have username or password and the base profile has a different host and port
+    const baseProfile = await this.getBaseProfile();
+
+    if (
+      (!theProfile.profile.tokenType && (!theProfile.profile.user || !theProfile.profile.password)) ||
+      (baseProfile &&
+        baseProfile.profile.host !== theProfile.profile.host &&
+        baseProfile.profile.port !== theProfile.profile.port)
+    ) {
       try {
         const values = await Profiles.getInstance().promptCredentials(theProfile.name);
         if (values !== undefined) {
@@ -116,17 +141,145 @@ export class Profiles {
         theProfile.profile.user = this.usrNme;
         theProfile.profile.password = this.passWrd;
         theProfile.profile.base64EncodedAuth = this.baseEncd;
-        this.validProfile = ValidProfileEnum.VALID;
+        if (profileStatus.status === "unverified") {
+          this.validProfile = ValidProfileEnum.UNVERIFIED;
+        } else {
+          this.validProfile = ValidProfileEnum.VALID;
+        }
         return profileStatus;
       } else {
-        // return invalid if credetials are not provided
-        this.validProfile = ValidProfileEnum.INVALID;
+        // return invalid if credentials are not provided
+        if (profileStatus.status === "unverified") {
+          this.validProfile = ValidProfileEnum.UNVERIFIED;
+        } else {
+          this.validProfile = ValidProfileEnum.INVALID;
+        }
         return profileStatus;
       }
     } else {
-      this.validProfile = ValidProfileEnum.VALID;
+      if (profileStatus.status === "unverified") {
+        this.validProfile = ValidProfileEnum.UNVERIFIED;
+      } else {
+        this.validProfile = ValidProfileEnum.VALID;
+      }
       return profileStatus;
     }
+  }
+
+  public async getProfileSetting(theProfile: IProfileLoaded): Promise<IProfileValidation> {
+    let profileStatus: IProfileValidation;
+    let found: boolean = false;
+    this.profilesValidationSetting.filter(async (instance) => {
+      if (instance.name === theProfile.name && instance.setting === false) {
+        profileStatus = {
+          status: "unverified",
+          name: instance.name,
+        };
+        if (this.profilesForValidation.length > 0) {
+          this.profilesForValidation.filter((profile) => {
+            if (profile.name === theProfile.name && profile.status === "unverified") {
+              found = true;
+            }
+            if (profile.name === theProfile.name && profile.status !== "unverified") {
+              found = true;
+              const index = this.profilesForValidation.lastIndexOf(profile);
+              this.profilesForValidation.splice(index, 1, profileStatus);
+            }
+          });
+        }
+        if (!found) {
+          this.profilesForValidation.push(profileStatus);
+        }
+      }
+    });
+    if (profileStatus === undefined) {
+      profileStatus = await this.validateProfiles(theProfile);
+    }
+    return profileStatus;
+  }
+
+  public async disableValidation(node: IZoweNodeType): Promise<IZoweNodeType> {
+    this.disableValidationContext(node);
+    return node;
+  }
+
+  public async disableValidationContext(node: IZoweNodeType) {
+    const theProfile: IProfileLoaded = node.getProfile();
+    this.validationArraySetup(theProfile, false);
+    if (node.contextValue.includes(`${VALIDATE_SUFFIX}true`)) {
+      node.contextValue = node.contextValue
+        .replace(/(_validate=true)/g, "")
+        .replace(/(_Active)/g, "")
+        .replace(/(_Inactive)/g, "");
+      node.contextValue = node.contextValue + `${VALIDATE_SUFFIX}false`;
+    } else if (node.contextValue.includes(`${VALIDATE_SUFFIX}false`)) {
+      return node;
+    } else {
+      node.contextValue = node.contextValue + `${VALIDATE_SUFFIX}false`;
+    }
+    return node;
+  }
+
+  public async enableValidation(node: IZoweNodeType): Promise<IZoweNodeType> {
+    this.enableValidationContext(node);
+    return node;
+  }
+
+  public async enableValidationContext(node: IZoweNodeType) {
+    const theProfile: IProfileLoaded = node.getProfile();
+    this.validationArraySetup(theProfile, true);
+    if (node.contextValue.includes(`${VALIDATE_SUFFIX}false`)) {
+      node.contextValue = node.contextValue.replace(/(_validate=false)/g, "").replace(/(_Unverified)/g, "");
+      node.contextValue = node.contextValue + `${VALIDATE_SUFFIX}true`;
+    } else if (node.contextValue.includes(`${VALIDATE_SUFFIX}true`)) {
+      return node;
+    } else {
+      node.contextValue = node.contextValue + `${VALIDATE_SUFFIX}true`;
+    }
+
+    return node;
+  }
+
+  public async validationArraySetup(
+    theProfile: IProfileLoaded,
+    validationSetting: boolean
+  ): Promise<IValidationSetting> {
+    let found: boolean = false;
+    let profileSetting: IValidationSetting;
+    if (this.profilesValidationSetting.length > 0) {
+      this.profilesValidationSetting.filter((instance) => {
+        if (instance.name === theProfile.name && instance.setting === validationSetting) {
+          found = true;
+          profileSetting = {
+            name: instance.name,
+            setting: instance.setting,
+          };
+        }
+        if (instance.name === theProfile.name && instance.setting !== validationSetting) {
+          found = true;
+          profileSetting = {
+            name: instance.name,
+            setting: validationSetting,
+          };
+          const index = this.profilesValidationSetting.lastIndexOf(instance);
+          this.profilesValidationSetting.splice(index, 1, profileSetting);
+        }
+      });
+      if (!found) {
+        profileSetting = {
+          name: theProfile.name,
+          setting: validationSetting,
+        };
+        this.profilesValidationSetting.push(profileSetting);
+      }
+    } else {
+      profileSetting = {
+        name: theProfile.name,
+        setting: validationSetting,
+      };
+      this.profilesValidationSetting.push(profileSetting);
+    }
+    return profileSetting;
   }
 
   public loadNamedProfile(name: string, type?: string): IProfileLoaded {
@@ -153,6 +306,24 @@ export class Profiles {
   public async refresh(): Promise<void> {
     this.allProfiles = [];
     this.allTypes = [];
+    // TODO: Add Base ProfileType in registeredApiTypes
+    // This process retrieves the base profile if there's any and stores it in an array
+    // If base is added in registeredApiType maybe this process can be removed
+    try {
+      const profileManagerA = await this.getCliProfileManager("base");
+      if (profileManagerA) {
+        try {
+          const baseProfile = await profileManagerA.load({ loadDefault: true });
+          this.allProfiles.push(baseProfile);
+        } catch (err) {
+          if (!err.message.includes(`No default profile set for type "base"`)) {
+            vscode.window.showInformationMessage(err.message);
+          }
+        }
+      }
+    } catch (error) {
+      this.log.debug(error);
+    }
     for (const type of ZoweExplorerApiRegister.getInstance().registeredApiTypes()) {
       const profileManager = await this.getCliProfileManager(type);
       const profilesForType = (await profileManager.loadAll()).filter((profile) => {
@@ -163,9 +334,7 @@ export class Profiles {
         this.profilesByType.set(type, profilesForType);
         let defaultProfile: IProfileLoaded;
         try {
-          defaultProfile = await profileManager.load({
-            loadDefault: true,
-          });
+          defaultProfile = await profileManager.load({ loadDefault: true });
         } catch (error) {
           vscode.window.showInformationMessage(error.message);
         }
@@ -806,9 +975,11 @@ export class Profiles {
 
     // Delete from Data Set Favorites
     datasetTree.mFavorites.forEach((favNode) => {
-      const findNode = favNode.label.substring(1, favNode.label.indexOf("]")).trim();
+      const findNode = favNode.label.trim();
+      // const findNode = favNode.label.substring(1, favNode.label.indexOf("]")).trim();
       if (findNode === deleteLabel) {
-        datasetTree.removeFavorite(favNode);
+        // datasetTree.removeFavorite(favNode);
+        datasetTree.mFavorites = datasetTree.mFavorites.filter((tempNode) => tempNode.label.trim() !== findNode);
         favNode.dirty = true;
         datasetTree.refresh();
       }
@@ -835,9 +1006,9 @@ export class Profiles {
 
     // Delete from USS Favorites
     ussTree.mFavorites.forEach((ses) => {
-      const findNode = ses.label.substring(1, ses.label.indexOf("]")).trim();
+      const findNode = ses.label.trim();
       if (findNode === deleteLabel) {
-        ussTree.removeFavorite(ses);
+        ussTree.mFavorites = ussTree.mFavorites.filter((tempNode) => tempNode.label.trim() !== findNode);
         ses.dirty = true;
         ussTree.refresh();
       }
@@ -854,9 +1025,9 @@ export class Profiles {
 
     // Delete from Jobs Favorites
     jobsProvider.mFavorites.forEach((ses) => {
-      const findNode = ses.label.substring(1, ses.label.indexOf("]")).trim();
+      const findNode = ses.label.trim();
       if (findNode === deleteLabel) {
-        jobsProvider.removeFavorite(ses);
+        jobsProvider.mFavorites = jobsProvider.mFavorites.filter((tempNode) => tempNode.label.trim() !== findNode);
         ses.dirty = true;
         jobsProvider.refresh();
       }
@@ -954,10 +1125,14 @@ export class Profiles {
   public async getCliProfileManager(type: string): Promise<CliProfileManager> {
     let profileManager = this.profileManagerByType.get(type);
     if (!profileManager) {
-      profileManager = await new CliProfileManager({
-        profileRootDirectory: path.join(getZoweDir(), "profiles"),
-        type,
-      });
+      try {
+        profileManager = await new CliProfileManager({
+          profileRootDirectory: path.join(getZoweDir(), "profiles"),
+          type,
+        });
+      } catch (error) {
+        this.log.debug(error);
+      }
       if (profileManager) {
         this.profileManagerByType.set(type, profileManager);
       } else {
@@ -997,7 +1172,7 @@ export class Profiles {
               ),
               cancellable: true,
             },
-            (progress, token) => {
+            async (progress, token) => {
               token.onCancellationRequested(() => {
                 // will be returned as undefined
                 vscode.window.showInformationMessage(
@@ -1052,6 +1227,80 @@ export class Profiles {
     return filteredProfile;
   }
 
+  public async getCombinedProfile(serviceProfile: IProfileLoaded, baseProfile: IProfileLoaded) {
+    // TODO: This needs to be improved
+    // The idea is to handle all type of ZE Profiles
+    const commonApi = await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile);
+
+    // This check will handle service profiles that have username and password
+    if (serviceProfile.profile.user && serviceProfile.profile.password) {
+      return serviceProfile;
+    }
+
+    // This check is for optional credentials
+    if (
+      baseProfile &&
+      serviceProfile.profile.host &&
+      serviceProfile.profile.port &&
+      baseProfile.profile.host !== serviceProfile.profile.host &&
+      baseProfile.profile.port !== serviceProfile.profile.port
+    ) {
+      return serviceProfile;
+    }
+
+    let session;
+    if (!commonApi.getSessionFromCommandArgument) {
+      // This is here for extenders
+      session = ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).getSession(serviceProfile);
+    } else {
+      // This process combines the information from baseprofile to serviceprofile and create a new session
+      const profSchema = await this.getSchema(serviceProfile.type);
+      const cmdArgs: ICommandArguments = {
+        $0: "zowe",
+        _: [""],
+      };
+      for (const prop of Object.keys(profSchema)) {
+        cmdArgs[prop] = serviceProfile.profile[prop] ? serviceProfile.profile[prop] : baseProfile.profile[prop];
+      }
+      if (baseProfile) {
+        // These fields are specific to base profiles & don't exist on the service profile schema
+        cmdArgs.tokenType = baseProfile.profile.tokenType;
+        cmdArgs.tokenValue = baseProfile.profile.tokenValue;
+      }
+      if (commonApi.getSessionFromCommandArgument) {
+        session = await commonApi.getSessionFromCommandArgument(cmdArgs);
+      } else {
+        vscode.window.showErrorMessage(
+          localize("getCombinedProfile.log.debug", "This extension does not support base profiles.")
+        );
+      }
+    }
+
+    // For easier debugging, move serviceProfile to updatedServiceProfile and then update it with combinedProfile
+    const updatedServiceProfile: IProfileLoaded = serviceProfile;
+    for (const prop of Object.keys(session.ISession)) {
+      if (prop === "hostname") {
+        updatedServiceProfile.profile.host = session.ISession[prop];
+      } else {
+        updatedServiceProfile.profile[prop] = session.ISession[prop];
+      }
+    }
+    return updatedServiceProfile;
+  }
+
+  public async getBaseProfile() {
+    let baseProfile: IProfileLoaded;
+
+    // This functionality will retrieve the saved base profile in the allProfiles array
+    const allProfiles: IProfileLoaded[] = Profiles.getInstance().allProfiles;
+    for (const baseP of allProfiles) {
+      if (baseP.type === "base") {
+        baseProfile = baseP;
+      }
+    }
+    return baseProfile;
+  }
+
   private async deletePrompt(deletedProfile: IProfileLoaded) {
     const profileName = deletedProfile.name;
     this.log.debug(localize("deleteProfile.log.debug", "Deleting profile ") + profileName);
@@ -1090,7 +1339,9 @@ export class Profiles {
       throw error;
     }
 
-    vscode.window.showInformationMessage("Profile " + profileName + " was deleted.");
+    vscode.window.showInformationMessage(
+      localize("deleteProfile.success.info", "Profile {0} was deleted.", profileName)
+    );
     return profileName;
   }
 

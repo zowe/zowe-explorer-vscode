@@ -72,9 +72,11 @@ export function errorHandling(errorDetails: any, label?: string, moreInfo?: stri
   return;
 }
 
+// TODO: remove this second occurence
 export function isTheia(): boolean {
+  const VSCODE_APPNAME: string[] = ["Visual Studio Code", "VSCodium"];
   const appName = vscode.env.appName;
-  if (appName && appName === "Eclipse Theia") {
+  if (appName && !VSCODE_APPNAME.includes(appName)) {
     return true;
   }
   return false;

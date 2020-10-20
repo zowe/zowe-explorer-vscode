@@ -85,6 +85,18 @@ export interface IZoweTreeNode {
    * Retrieves the profile object in use with this node
    */
   getProfile(): IProfileLoaded;
+  /**
+   * Set the profile to use for this node to be the one chosen in the parameters
+   *
+   * @param profileObj The profile you will set the node to use
+   */
+  setProfileToChoice(profileObj: IProfileLoaded): void;
+  /**
+   * Set the session to use for this node to be the one chosen in the parameters
+   *
+   * @param sessionObj The session you will set the node to use
+   */
+  setSessionToChoice(sessionObj: Session): void;
 }
 
 /**
@@ -227,6 +239,10 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
  * @interface export interface IZoweJobTreeNode extends IZoweTreeNode {
  */
 export interface IZoweJobTreeNode extends IZoweTreeNode {
+  /**
+   * Use Job-specific tree node for children.
+   */
+  children?: IZoweJobTreeNode[];
   /**
    * Standard job response document
    * Represents the attributes and status of a z/OS batch job

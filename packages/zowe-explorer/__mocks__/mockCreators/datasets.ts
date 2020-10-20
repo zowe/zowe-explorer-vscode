@@ -31,11 +31,19 @@ export function createDatasetSessionNode(session: imperative.Session, profile: i
   return datasetNode;
 }
 
-export function createDatasetTree(sessionNode: ZoweDatasetNode, treeView: any): any {
+export function createDatasetFavoritesNode() {
+  const datasetNode = new ZoweDatasetNode("Favorites", vscode.TreeItemCollapsibleState.Collapsed, null, null, null);
+  datasetNode.contextValue = globals.FAVORITE_CONTEXT;
+
+  return datasetNode;
+}
+
+export function createDatasetTree(sessionNode: ZoweDatasetNode, treeView: any, favoritesNode?: ZoweDatasetNode): any {
   const testDatasetTree = {
     mSessionNodes: [sessionNode],
     mFavorites: [],
     mFileHistory: [],
+    mHistory: [],
     treeView,
     addSession: jest.fn(),
     addSearchHistory: jest.fn(),
@@ -52,7 +60,7 @@ export function createDatasetTree(sessionNode: ZoweDatasetNode, treeView: any): 
     createFilterString: jest.fn(),
     setItem: jest.fn(),
     getTreeView: jest.fn().mockImplementation(() => treeView),
-    searchInLoadedItems: jest.fn(),
+    getAllLoadedItems: jest.fn(),
     removeFavorite: jest.fn(),
     deleteSession: jest.fn(),
     removeFileHistory: jest.fn(),
@@ -73,16 +81,17 @@ export function createDatasetTree(sessionNode: ZoweDatasetNode, treeView: any): 
   testDatasetTree.removeFileHistory.mockImplementation((badFile) =>
     testDatasetTree.mFileHistory.splice(testDatasetTree.mFileHistory.indexOf(badFile), 1)
   );
-  testDatasetTree.getFileHistory.mockImplementation(() => {
-    return testDatasetTree.mFileHistory;
-  });
+  testDatasetTree.getFileHistory.mockImplementation(() => testDatasetTree.mFileHistory);
   testDatasetTree.deleteSession.mockImplementation((badSession) =>
     removeNodeFromArray(badSession, testDatasetTree.mSessionNodes)
   );
   testDatasetTree.removeFavorite.mockImplementation((badFavorite) =>
     removeNodeFromArray(badFavorite, testDatasetTree.mFavorites)
   );
-
+  if (!favoritesNode) {
+    return testDatasetTree;
+  }
+  testDatasetTree.mSessionNodes.push(favoritesNode);
   return testDatasetTree;
 }
 

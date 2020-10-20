@@ -37,13 +37,7 @@ describe("Unit Tests (Jest)", () => {
     protocol: "https",
     type: "basic",
   });
-  const profileOne: IProfileLoaded = {
-    name: "profile1",
-    profile: {},
-    type: "zosmf",
-    message: "",
-    failNotFound: false,
-  };
+  const profileOne: IProfileLoaded = { name: "profile1", profile: {}, type: "zosmf", message: "", failNotFound: false };
   const ProgressLocation = jest.fn().mockImplementation(() => {
     return {
       Notification: 15,
@@ -64,9 +58,7 @@ describe("Unit Tests (Jest)", () => {
   });
 
   const showErrorMessage = jest.fn();
-  Object.defineProperty(vscode.window, "showErrorMessage", {
-    value: showErrorMessage,
-  });
+  Object.defineProperty(vscode.window, "showErrorMessage", { value: showErrorMessage });
 
   afterEach(() => {
     jest.resetAllMocks();
@@ -153,11 +145,7 @@ describe("Unit Tests (Jest)", () => {
         profileOne
       ),
     ];
-    sampleChildren[0].command = {
-      command: "zowe.ZoweNode.openPS",
-      title: "",
-      arguments: [sampleChildren[0]],
-    };
+    sampleChildren[0].command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [sampleChildren[0]] };
 
     // Checking that the rootChildren are what they are expected to be
     expect(rootChildren).toEqual(sampleChildren);
@@ -246,16 +234,8 @@ describe("Unit Tests (Jest)", () => {
       ),
     ];
 
-    sampleChildren[0].command = {
-      command: "zowe.ZoweNode.openPS",
-      title: "",
-      arguments: [sampleChildren[0]],
-    };
-    sampleChildren[1].command = {
-      command: "zowe.ZoweNode.openPS",
-      title: "",
-      arguments: [sampleChildren[1]],
-    };
+    sampleChildren[0].command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [sampleChildren[0]] };
+    sampleChildren[1].command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [sampleChildren[1]] };
     // Checking that the rootChildren are what they are expected to be
     expect(subChildren).toEqual(sampleChildren);
   });

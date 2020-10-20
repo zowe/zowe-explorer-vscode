@@ -11,34 +11,24 @@
 
 import * as vscode from "vscode";
 import * as utils from "@zowe/zowe-explorer-api/lib/Utils";
+import * as globals from "../../src/globals";
 import { createInstanceOfProfile, createIProfile } from "../../__mocks__/mockCreators/shared";
 import { Profiles } from "@zowe/zowe-explorer-api";
 
 function createGlobalMocks() {
-  Object.defineProperty(vscode.window, "showQuickPick", {
-    value: jest.fn(),
-    configurable: true,
-  });
-  Object.defineProperty(vscode.window, "createQuickPick", {
-    value: jest.fn(),
-    configurable: true,
-  });
-  Object.defineProperty(vscode.window, "showInputBox", {
-    value: jest.fn(),
-    configurable: true,
-  });
-  Object.defineProperty(vscode.window, "showErrorMessage", {
-    value: jest.fn(),
-    configurable: true,
-  });
-  Object.defineProperty(Profiles, "getInstance", {
-    value: jest.fn(),
-    configurable: true,
-  });
-  Object.defineProperty(utils, "isTheia", {
-    value: jest.fn(),
-    configurable: true,
-  });
+  const isTheia = jest.fn();
+
+  Object.defineProperty(vscode.window, "showQuickPick", { value: jest.fn(), configurable: true });
+  Object.defineProperty(vscode.window, "createQuickPick", { value: jest.fn(), configurable: true });
+  Object.defineProperty(vscode.window, "showInputBox", { value: jest.fn(), configurable: true });
+  Object.defineProperty(vscode.window, "showErrorMessage", { value: jest.fn(), configurable: true });
+  Object.defineProperty(Profiles, "getInstance", { value: jest.fn(), configurable: true });
+  Object.defineProperty(globals, "ISTHEIA", { get: isTheia, configurable: true });
+  Object.defineProperty(utils, "isTheia", { value: jest.fn(), configurable: true });
+
+  return {
+    isTheia,
+  };
 }
 
 // Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/master/src/util/testing.ts
@@ -57,9 +47,7 @@ describe("Utils Unit Tests - Function errorHandling", () => {
   it("Checking common error handling", async () => {
     createGlobalMocks();
 
-    mocked(vscode.window.showErrorMessage).mockResolvedValueOnce({
-      title: "Check Credentials",
-    });
+    mocked(vscode.window.showErrorMessage).mockResolvedValueOnce({ title: "Check Credentials" });
     const label = "invalidCred";
 
     await utils.errorHandling({ mDetails: { errorCode: 401 } }, label);
@@ -72,9 +60,7 @@ describe("Utils Unit Tests - Function errorHandling", () => {
   it("Checking USS error handling", async () => {
     createGlobalMocks();
 
-    mocked(vscode.window.showErrorMessage).mockResolvedValueOnce({
-      title: "Check Credentials",
-    });
+    mocked(vscode.window.showErrorMessage).mockResolvedValueOnce({ title: "Check Credentials" });
     const label = "invalidCred [/tmp]";
 
     await utils.errorHandling({ mDetails: { errorCode: 401 } }, label);
@@ -85,22 +71,21 @@ describe("Utils Unit Tests - Function errorHandling", () => {
     );
   });
   it("Checking common error handling - Theia", async () => {
-    createGlobalMocks();
+    // const globalMocks = createGlobalMocks();
     const blockMocks = createBlockMocks();
 
     mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
-    mocked(vscode.window.showErrorMessage).mockResolvedValueOnce({
-      title: "Check Credentials",
-    });
-    // TODO: for some reason this one is not working
+    mocked(vscode.window.showErrorMessage).mockResolvedValueOnce({ title: "Check Credentials" });
     mocked(utils.isTheia).mockReturnValue(true);
+    // globalMocks.isTheia.mockReturnValue(true);
     const label = "invalidCred";
 
     await utils.errorHandling({ mDetails: { errorCode: 401 } }, label);
 
-    // TODO: see mock problem above
-    // expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(
-    //    `Invalid Credentials. Please ensure the username and password for ${label} are valid or this may lead to a lock-out.`
-    // );
+    // TODO: check why this return two messages?
+    expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(
+      `Invalid Credentials. Please ensure the username and password for ${label} are valid or this may lead to a lock-out.`,
+      "Check Credentials"
+    );
   });
 });

@@ -62,20 +62,12 @@ describe("mvsCommandActions unit testing", () => {
     return submitResponse;
   });
 
-  Object.defineProperty(vscode.window, "showErrorMessage", {
-    value: showErrorMessage,
-  });
+  Object.defineProperty(vscode.window, "showErrorMessage", { value: showErrorMessage });
   Object.defineProperty(vscode.window, "showInputBox", { value: showInputBox });
-  Object.defineProperty(vscode.window, "showInformationMessage", {
-    value: showInformationMessage,
-  });
+  Object.defineProperty(vscode.window, "showInformationMessage", { value: showInformationMessage });
   Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
-  Object.defineProperty(vscode.workspace, "getConfiguration", {
-    value: getConfiguration,
-  });
-  Object.defineProperty(vscode.window, "createOutputChannel", {
-    value: createOutputChannel,
-  });
+  Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
+  Object.defineProperty(vscode.window, "createOutputChannel", { value: createOutputChannel });
   Object.defineProperty(zowe, "IssueCommand", { value: IssueCommand });
   Object.defineProperty(vscode, "ProgressLocation", { value: ProgressLocation });
   Object.defineProperty(vscode.window, "withProgress", { value: withProgress });
@@ -102,10 +94,7 @@ describe("mvsCommandActions unit testing", () => {
       value: jest.fn(() => {
         return {
           allProfiles: [
-            {
-              name: "firstName",
-              profile: { user: "firstName", password: "12345" },
-            },
+            { name: "firstName", profile: { user: "firstName", password: "12345" } },
             { name: "secondName" },
           ],
           defaultProfile: { name: "firstName" },

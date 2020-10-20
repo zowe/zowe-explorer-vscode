@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import * as globals from "../globals";
 import { openPS } from "../dataset/actions";
-import { IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweNodeType, IZoweTree } from "@zowe/zowe-explorer-api";
+import { Profiles, IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweNodeType, IZoweTree } from "@zowe/zowe-explorer-api";
 import { filterTreeByString } from "../shared/utils";
 import { FilterItem, resolveQuickPickHelper, FilterDescriptor } from "@zowe/zowe-explorer-api/lib/Utils";
 import * as contextually from "../shared/context";
@@ -50,11 +50,11 @@ export async function searchInAllLoadedItems(
 
   // Get loaded items from Tree Providers
   if (datasetProvider) {
-    const newItems = await datasetProvider.searchInLoadedItems();
+    const newItems = await datasetProvider.getAllLoadedItems();
     items.push(...newItems);
   }
   if (ussFileProvider) {
-    const newItems = await ussFileProvider.searchInLoadedItems();
+    const newItems = await ussFileProvider.getAllLoadedItems();
     items.push(...newItems);
   }
 
@@ -226,14 +226,22 @@ export async function openRecentMemberPrompt(
 }
 
 export async function returnIconState(node: IZoweNodeType) {
-  if (
-    getIconByNode(node) === getIconById(IconId.sessionActive) ||
-    getIconByNode(node) === getIconById(IconId.sessionInactive)
-  ) {
+  const activePath = getIconById(IconId.sessionActive);
+  const inactivePath = getIconById(IconId.sessionInactive);
+  if (node.iconPath === activePath.path || node.iconPath === inactivePath.path) {
     const sessionIcon = getIconById(IconId.session);
     if (sessionIcon) {
       node.iconPath = sessionIcon.path;
     }
+  }
+  return node;
+}
+
+export async function resetValidationSettings(node: IZoweNodeType, setting: boolean) {
+  if (setting) {
+    await Profiles.getInstance().enableValidationContext(node);
+  } else {
+    await Profiles.getInstance().disableValidationContext(node);
   }
   return node;
 }

@@ -178,19 +178,11 @@ describe("dsNodeActions", () => {
 
   Object.defineProperty(dsNodeActions, "RefreshAll", { value: refreshAll });
   Object.defineProperty(vscode.window, "showInputBox", { value: showInputBox });
-  Object.defineProperty(vscode.window, "showErrorMessage", {
-    value: showErrorMessage,
-  });
+  Object.defineProperty(vscode.window, "showErrorMessage", { value: showErrorMessage });
   Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
-  Object.defineProperty(vscode.window, "showInformationMessage", {
-    value: showInformationMessage,
-  });
-  Object.defineProperty(vscode.workspace, "getConfiguration", {
-    value: getConfiguration,
-  });
-  Object.defineProperty(zowe.ZosmfSession, "createBasicZosmfSession", {
-    value: createBasicZosmfSession,
-  });
+  Object.defineProperty(vscode.window, "showInformationMessage", { value: showInformationMessage });
+  Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
+  Object.defineProperty(zowe.ZosmfSession, "createBasicZosmfSession", { value: createBasicZosmfSession });
 
   beforeEach(() => {
     showErrorMessage.mockReset();

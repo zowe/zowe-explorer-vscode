@@ -63,7 +63,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
    * @memberof USSTree
    */
   @MockMethod()
-  public searchInLoadedItems(): IZoweUSSTreeNode[] {
+  public getAllLoadedItems(): IZoweUSSTreeNode[] {
     return null;
   }
 

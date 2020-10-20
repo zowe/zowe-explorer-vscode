@@ -17,14 +17,8 @@ function createGlobalMocks() {
   const activeTextEditor = jest.fn();
   const executeCommand = jest.fn();
 
-  Object.defineProperty(vscode.window, "activeTextEditor", {
-    get: activeTextEditor,
-    configurable: true,
-  });
-  Object.defineProperty(vscode.commands, "executeCommand", {
-    value: executeCommand,
-    configurable: true,
-  });
+  Object.defineProperty(vscode.window, "activeTextEditor", { get: activeTextEditor, configurable: true });
+  Object.defineProperty(vscode.commands, "executeCommand", { value: executeCommand, configurable: true });
 
   return {
     activeTextEditor,

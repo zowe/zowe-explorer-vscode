@@ -15,6 +15,7 @@ The Zowe Explorer extension modernizes the way developers and system administrat
 - Providing a more streamlined way to access data sets, uss files and jobs.
 - Letting you create, edit, and delete Zowe CLI `zosmf` compatible profiles.
 - Letting you use the Secure Credential Store plug-in to store your credentials securely in the settings.
+- Letting you leverage the API Mediation Layer token-based authentication to access z/OSMF.
 
 More information:
 
@@ -23,25 +24,18 @@ More information:
 
 ## Contents
 
-- [What's new in Zowe Explorer 1.7.0](#what's-new-in-zowe-explorer-1.7.0)
+- [What's new in Zowe Explorer 1.10.0](#what's-new-in-zowe-explorer-1.10.0)
 - [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
 - [Credentials Security](#credentials-security)
 - [Usage Tips](#usage-tips)
 - [Extending Zowe Explorer](#extending-zowe-explorer)
 
-## What's new in Zowe Explorer 1.8.0
+## What's new in Zowe Explorer 1.10.0
 
-New features and improvements:
+New features:
 
-- Added a webpack that works with localization and logging.
-- Allowed extenders to load the saved profile sessions upon activation.
-- Added an automatic re-validation for invalid profiles.
-
-Bug Fixes:
-
-- Fixed the bug related to saving USS files.
-- Fixed the bug related to the deletion of datasets.
+- Added base profile support. You can now log in to the API Mediation Layer via Zowe CLI and use that token with a service profile in Zowe Explorer.
 
 For more information, see [Changelog](https://marketplace.visualstudio.com/items/Zowe.vscode-extension-for-zowe/changelog).
 
@@ -67,6 +61,27 @@ Create a profile, review the sample use cases to familiarize yourself with the c
 <br /><br />
 
 You can now use all the functionalities of the extension.
+
+### Use Base Profile and Token with Existing Profiles
+
+Leverage existing base profiles with a token to access z/OSMF via the API Mediation Layer.
+
+Before using the base profile functionality, ensure that you have [Zowe CLI](https://docs.zowe.org/stable/user-guide/cli-installcli.html) v1.13.0 or higher installed.
+
+**Follow these steps:**
+
+1. Open Zowe CLI and run the following command: `zowe auth login apiml`
+2. Follow the instructions to complete the login.  
+   A local base profile is created that contains your token.  
+   **Note:** For more information about the process, see [Token Management](https://docs.zowe.org/stable/user-guide/cli-usingcli.html#how-token-management-works).
+
+3. Run Zowe Explorer and click the **+** icon.
+
+4. Select the profile you use with your base profile with the token.
+
+   The profile appears in the tree and you can now use this profile to access z/OSMF via the API Mediation Layer.
+
+For more information, see [Integrating with API Mediation Layer](https://docs.zowe.org/stable/user-guide/cli-usingcli.html#integrating-with-api-mediation-layer).
 
 ### Sample use cases
 

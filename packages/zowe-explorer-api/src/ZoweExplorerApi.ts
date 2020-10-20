@@ -10,7 +10,7 @@
  */
 
 import * as zowe from "@zowe/cli";
-import { IProfileLoaded, Session } from "@zowe/imperative";
+import { IProfileLoaded, Session, ICommandArguments } from "@zowe/imperative";
 import { TreeItem } from "vscode";
 
 /**
@@ -50,7 +50,17 @@ export namespace ZoweExplorerApi {
      *      will use the profile the API was retrieved with by default
      * @returns {IZosmfInfoResponse} z/OSMF Check Status response
      */
-    getStatus?(profile: IProfileLoaded, profileType?: string): Promise<string>;
+    getStatus?(profile: IProfileLoaded, profileType?): Promise<string>;
+
+    /**
+     * Create a session for a set command arguments. The session will be created independent
+     * of a specific profile using a specific API implementation that was created with a
+     * referece profile.
+     *
+     * @param {ICommandArguments} cmdArgs a Zowe CLI ICommandArguments instance
+     * @returns {Session} a Zowe CLI Session
+     */
+    getSessionFromCommandArgument?(cmdArgs: ICommandArguments): Session;
   }
 
   /**
@@ -235,6 +245,16 @@ export namespace ZoweExplorerApi {
      * @returns {Promise<zowe.IZosFilesResponse>}
      */
     createDataSetMember(dataSetName: string, options?: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse>;
+
+    /**
+     * Allocates a copy of a data set with the specified options.
+     *
+     * @param {zowe.CreateDataSetTypeEnum} dataSetType
+     * @param {string} dataSetName
+     * @param {Partial<zowe.ICreateDataSetOptions>} [options]
+     * @returns {Promise<zowe.IZosFilesResponse>}
+     */
+    allocateLikeDataSet(dataSetName: string, likeDataSetName: string): Promise<zowe.IZosFilesResponse>;
 
     /**
      * Copies a data set member.
