@@ -14,10 +14,10 @@ import { getIconPathInResources } from "../../../shared/utils";
 import { isSessionActive } from "../../../shared/context";
 
 const icon: IIconItem = {
-  id: IconId.sessionActive,
-  type: IconHierarchyType.base,
-  path: getIconPathInResources("folder-root-connected-closed.svg"),
-  check: (node) => isSessionActive(node),
+    id: IconId.sessionActive,
+    type: IconHierarchyType.base,
+    path: getIconPathInResources("folder-root-connected-closed.svg"),
+    check: (node) => isSessionActive(node),
 };
 
 export default icon;

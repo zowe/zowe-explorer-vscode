@@ -14,19 +14,19 @@ import { getIconPathInResources } from "../../../shared/utils";
 import documentBinaryIcon from "./documentBinary";
 
 const icon: IIconItem = {
-  id: IconId.documentBinaryDownloaded,
-  type: IconHierarchyType.derived,
-  path: getIconPathInResources("document-binary-downloaded.svg"),
-  check: (node) => {
-    // Here we need to do check for potentially derived class, that's why any is required
-    const generalizedNode = node as any;
-    if (typeof generalizedNode.downloaded !== "undefined") {
-      const parentCheck = documentBinaryIcon.check(generalizedNode);
-      return parentCheck && generalizedNode.downloaded;
-    }
+    id: IconId.documentBinaryDownloaded,
+    type: IconHierarchyType.derived,
+    path: getIconPathInResources("document-binary-downloaded.svg"),
+    check: (node) => {
+        // Here we need to do check for potentially derived class, that's why any is required
+        const generalizedNode = node as any;
+        if (typeof generalizedNode.downloaded !== "undefined") {
+            const parentCheck = documentBinaryIcon.check(generalizedNode);
+            return parentCheck && generalizedNode.downloaded;
+        }
 
-    return false;
-  },
+        return false;
+    },
 };
 
 export default icon;

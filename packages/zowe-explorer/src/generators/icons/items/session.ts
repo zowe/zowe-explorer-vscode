@@ -14,10 +14,10 @@ import { getIconPathInResources } from "../../../shared/utils";
 import { isSessionNotFav } from "../../../shared/context";
 
 const icon: IIconItem = {
-  id: IconId.session,
-  type: IconHierarchyType.base,
-  path: getIconPathInResources("folder-root-unverified-closed.svg"),
-  check: (node) => isSessionNotFav(node),
+    id: IconId.session,
+    type: IconHierarchyType.base,
+    path: getIconPathInResources("folder-root-unverified-closed.svg"),
+    check: (node) => isSessionNotFav(node),
 };
 
 export default icon;

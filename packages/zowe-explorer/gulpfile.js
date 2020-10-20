@@ -28,26 +28,29 @@ const outDest = "out/src";
 const languages = [];
 /* ********************************************************************************* */
 const cleanTask = function () {
-  return del(["out/**", "package.nls.*.json", "vscode-extension-for-zowe*.vsix"]);
+    return del(["out/**", "package.nls.*.json", "vscode-extension-for-zowe*.vsix"]);
 };
 
 const generateI18nTask = function () {
-  return gulp.src(["package.nls.json"]).pipe(nls.createAdditionalLanguageFiles(languages, "i18n")).pipe(gulp.dest("."));
+    return gulp
+        .src(["package.nls.json"])
+        .pipe(nls.createAdditionalLanguageFiles(languages, "i18n"))
+        .pipe(gulp.dest("."));
 };
 
 const generateLocalizationBundle = () => {
-  // Transpile the TS to JS, and let vscode-nls-dev scan the files for calls to localize
-  // PROJECT ID is "<PUBLISHER>.<NAME>" (found in package.json)
-  return tsProject
-    .src()
-    .pipe(sourcemaps.init())
-    .pipe(tsProject())
-    .js.pipe(nls.createMetaDataFiles())
-    .pipe(nls.createAdditionalLanguageFiles(languages, "i18n"))
-    .pipe(nls.bundleMetaDataFiles("Zowe.vscode-extension-for-zowe", outDest))
-    .pipe(nls.bundleLanguageFiles())
-    .pipe(filter(["**/nls.bundle.*.json", "**/nls.metadata.header.json", "**/nls.metadata.json"]))
-    .pipe(gulp.dest(outDest));
+    // Transpile the TS to JS, and let vscode-nls-dev scan the files for calls to localize
+    // PROJECT ID is "<PUBLISHER>.<NAME>" (found in package.json)
+    return tsProject
+        .src()
+        .pipe(sourcemaps.init())
+        .pipe(tsProject())
+        .js.pipe(nls.createMetaDataFiles())
+        .pipe(nls.createAdditionalLanguageFiles(languages, "i18n"))
+        .pipe(nls.bundleMetaDataFiles("Zowe.vscode-extension-for-zowe", outDest))
+        .pipe(nls.bundleLanguageFiles())
+        .pipe(filter(["**/nls.bundle.*.json", "**/nls.metadata.header.json", "**/nls.metadata.json"]))
+        .pipe(gulp.dest(outDest));
 };
 
 const localizationTask = gulp.series(cleanTask, generateLocalizationBundle, generateI18nTask);

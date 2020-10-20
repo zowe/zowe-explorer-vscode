@@ -14,10 +14,10 @@ import { getIconPathInResources } from "../../../shared/utils";
 import { isFolder } from "../../../shared/context";
 
 const icon: IIconItem = {
-  id: IconId.folder,
-  type: IconHierarchyType.base,
-  path: getIconPathInResources("folder-closed.svg"),
-  check: (node) => isFolder(node),
+    id: IconId.folder,
+    type: IconHierarchyType.base,
+    path: getIconPathInResources("folder-closed.svg"),
+    check: (node) => isFolder(node),
 };
 
 export default icon;

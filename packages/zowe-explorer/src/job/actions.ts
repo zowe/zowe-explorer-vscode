@@ -15,11 +15,11 @@ import * as zowe from "@zowe/cli";
 import { errorHandling } from "@zowe/zowe-explorer-api/lib/Utils";
 import { labelRefresh, refreshTree } from "../shared/utils";
 import {
-  Profiles,
-  ValidProfileEnum,
-  IZoweTree,
-  IZoweJobTreeNode,
-  ZoweExplorerApiRegister,
+    Profiles,
+    ValidProfileEnum,
+    IZoweTree,
+    IZoweJobTreeNode,
+    ZoweExplorerApiRegister,
 } from "@zowe/zowe-explorer-api";
 import { Job } from "./ZoweJobNode";
 import * as contextually from "../shared/context";
@@ -30,8 +30,8 @@ import { PersistentFilters } from "../PersistentFilters";
 
 // Set up localization
 nls.config({
-  messageFormat: nls.MessageFormat.bundle,
-  bundleFormat: nls.BundleFormat.standalone,
+    messageFormat: nls.MessageFormat.bundle,
+    bundleFormat: nls.BundleFormat.standalone,
 })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
@@ -41,19 +41,19 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  * @param jobsProvider The tree to refresh
  */
 export async function refreshAllJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>) {
-  await Profiles.getInstance().refresh();
-  jobsProvider.mSessionNodes.forEach(async (jobNode) => {
-    const setting = (await PersistentFilters.getDirectValue("Zowe-Automatic-Validation")) as boolean;
-    if (contextually.isSession(jobNode)) {
-      labelRefresh(jobNode);
-      jobNode.children = [];
-      jobNode.dirty = true;
-      refreshTree(jobNode);
-      resetValidationSettings(jobNode, setting);
-      returnIconState(jobNode);
-    }
-  });
-  await jobsProvider.refresh();
+    await Profiles.getInstance().refresh();
+    jobsProvider.mSessionNodes.forEach(async (jobNode) => {
+        const setting = (await PersistentFilters.getDirectValue("Zowe-Automatic-Validation")) as boolean;
+        if (contextually.isSession(jobNode)) {
+            labelRefresh(jobNode);
+            jobNode.children = [];
+            jobNode.dirty = true;
+            refreshTree(jobNode);
+            resetValidationSettings(jobNode, setting);
+            returnIconState(jobNode);
+        }
+    });
+    await jobsProvider.refresh();
 }
 
 /**
@@ -62,23 +62,23 @@ export async function refreshAllJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>) 
  * @param job The job to download the spool content from
  */
 export async function downloadSpool(job: IZoweJobTreeNode) {
-  try {
-    const dirUri = await vscode.window.showOpenDialog({
-      openLabel: localize("downloadSpool.select", "Select"),
-      canSelectFolders: true,
-      canSelectFiles: false,
-      canSelectMany: false,
-    });
-    if (dirUri !== undefined) {
-      ZoweExplorerApiRegister.getJesApi(job.getProfile()).downloadSpoolContent({
-        jobid: job.job.jobid,
-        jobname: job.job.jobname,
-        outDir: dirUri[0].fsPath,
-      });
+    try {
+        const dirUri = await vscode.window.showOpenDialog({
+            openLabel: localize("downloadSpool.select", "Select"),
+            canSelectFolders: true,
+            canSelectFiles: false,
+            canSelectMany: false,
+        });
+        if (dirUri !== undefined) {
+            ZoweExplorerApiRegister.getJesApi(job.getProfile()).downloadSpoolContent({
+                jobid: job.job.jobid,
+                jobname: job.job.jobname,
+                outDir: dirUri[0].fsPath,
+            });
+        }
+    } catch (error) {
+        await errorHandling(error, null, error.message);
     }
-  } catch (error) {
-    await errorHandling(error, null, error.message);
-  }
 }
 
 /**
@@ -88,25 +88,25 @@ export async function downloadSpool(job: IZoweJobTreeNode) {
  * @param spool The IJobFile to get the spool content for
  */
 export async function getSpoolContent(
-  jobsProvider: IZoweTree<IZoweJobTreeNode>,
-  session: string,
-  spool: zowe.IJobFile
+    jobsProvider: IZoweTree<IZoweJobTreeNode>,
+    session: string,
+    spool: zowe.IJobFile
 ) {
-  const zosmfProfile = Profiles.getInstance().loadNamedProfile(session);
-  // This has a direct access to Profiles checkcurrentProfile() because I am able to get the profile now.
-  await Profiles.getInstance().checkCurrentProfile(zosmfProfile);
-  if (
-    Profiles.getInstance().validProfile === ValidProfileEnum.VALID ||
-    Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED
-  ) {
-    try {
-      const uri = encodeJobFile(session, spool);
-      const document = await vscode.workspace.openTextDocument(uri);
-      await vscode.window.showTextDocument(document);
-    } catch (error) {
-      await errorHandling(error, session, error.message);
+    const zosmfProfile = Profiles.getInstance().loadNamedProfile(session);
+    // This has a direct access to Profiles checkcurrentProfile() because I am able to get the profile now.
+    await Profiles.getInstance().checkCurrentProfile(zosmfProfile);
+    if (
+        Profiles.getInstance().validProfile === ValidProfileEnum.VALID ||
+        Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED
+    ) {
+        try {
+            const uri = encodeJobFile(session, spool);
+            const document = await vscode.workspace.openTextDocument(uri);
+            await vscode.window.showTextDocument(document);
+        } catch (error) {
+            await errorHandling(error, session, error.message);
+        }
     }
-  }
 }
 
 /**
@@ -116,13 +116,13 @@ export async function getSpoolContent(
  * @param jobsProvider The tree to which the refreshed node belongs
  */
 export async function refreshJobsServer(node: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>) {
-  jobsProvider.checkCurrentProfile(node);
-  if (
-    Profiles.getInstance().validProfile === ValidProfileEnum.VALID ||
-    Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED
-  ) {
-    await jobsProvider.refreshElement(node);
-  }
+    jobsProvider.checkCurrentProfile(node);
+    if (
+        Profiles.getInstance().validProfile === ValidProfileEnum.VALID ||
+        Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED
+    ) {
+        await jobsProvider.refreshElement(node);
+    }
 }
 
 /**
@@ -131,13 +131,13 @@ export async function refreshJobsServer(node: IZoweJobTreeNode, jobsProvider: IZ
  * @param job The job to download the JCL content from
  */
 export async function downloadJcl(job: Job) {
-  try {
-    const jobJcl = await ZoweExplorerApiRegister.getJesApi(job.getProfile()).getJclForJob(job.job);
-    const jclDoc = await vscode.workspace.openTextDocument({ language: "jcl", content: jobJcl });
-    await vscode.window.showTextDocument(jclDoc);
-  } catch (error) {
-    await errorHandling(error, null, error.message);
-  }
+    try {
+        const jobJcl = await ZoweExplorerApiRegister.getJesApi(job.getProfile()).getJclForJob(job.job);
+        const jclDoc = await vscode.workspace.openTextDocument({ language: "jcl", content: jobJcl });
+        await vscode.window.showTextDocument(jclDoc);
+    } catch (error) {
+        await errorHandling(error, null, error.message);
+    }
 }
 
 /**
@@ -146,19 +146,19 @@ export async function downloadJcl(job: Job) {
  * @param job The job on which to modify a command
  */
 export async function modifyCommand(job: Job) {
-  try {
-    const command = await vscode.window.showInputBox({
-      prompt: localize("modifyCommand.command.prompt", "Modify Command"),
-    });
-    if (command !== undefined) {
-      const response = await zowe.IssueCommand.issueSimple(job.getSession(), `f ${job.job.jobname},${command}`);
-      vscode.window.showInformationMessage(
-        localize("modifyCommand.response", "Command response: ") + response.commandResponse
-      );
+    try {
+        const command = await vscode.window.showInputBox({
+            prompt: localize("modifyCommand.command.prompt", "Modify Command"),
+        });
+        if (command !== undefined) {
+            const response = await zowe.IssueCommand.issueSimple(job.getSession(), `f ${job.job.jobname},${command}`);
+            vscode.window.showInformationMessage(
+                localize("modifyCommand.response", "Command response: ") + response.commandResponse
+            );
+        }
+    } catch (error) {
+        await errorHandling(error, null, error.message);
     }
-  } catch (error) {
-    await errorHandling(error, null, error.message);
-  }
 }
 
 /**
@@ -167,14 +167,14 @@ export async function modifyCommand(job: Job) {
  * @param job The job on which to stop a command
  */
 export async function stopCommand(job: Job) {
-  try {
-    const response = await zowe.IssueCommand.issueSimple(job.getSession(), `p ${job.job.jobname}`);
-    vscode.window.showInformationMessage(
-      localize("stopCommand.response", "Command response: ") + response.commandResponse
-    );
-  } catch (error) {
-    await errorHandling(error, null, error.message);
-  }
+    try {
+        const response = await zowe.IssueCommand.issueSimple(job.getSession(), `p ${job.job.jobname}`);
+        vscode.window.showInformationMessage(
+            localize("stopCommand.response", "Command response: ") + response.commandResponse
+        );
+    } catch (error) {
+        await errorHandling(error, null, error.message);
+    }
 }
 
 /**
@@ -185,9 +185,9 @@ export async function stopCommand(job: Job) {
  */
 // Is this redundant with the setter in the Job class (ZoweJobNode.ts)?
 export async function setOwner(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>) {
-  const newOwner = await vscode.window.showInputBox({ prompt: localize("setOwner.newOwner.prompt.owner", "Owner") });
-  job.owner = newOwner;
-  jobsProvider.refreshElement(job);
+    const newOwner = await vscode.window.showInputBox({ prompt: localize("setOwner.newOwner.prompt.owner", "Owner") });
+    job.owner = newOwner;
+    jobsProvider.refreshElement(job);
 }
 
 /**
@@ -197,7 +197,9 @@ export async function setOwner(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZ
  * @param jobsProvider The tree to which the updated node belongs
  */
 export async function setPrefix(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>) {
-  const newPrefix = await vscode.window.showInputBox({ prompt: localize("setOwner.newOwner.prompt.prefix", "Prefix") });
-  job.prefix = newPrefix;
-  jobsProvider.refreshElement(job);
+    const newPrefix = await vscode.window.showInputBox({
+        prompt: localize("setOwner.newOwner.prompt.prefix", "Prefix"),
+    });
+    job.prefix = newPrefix;
+    jobsProvider.refreshElement(job);
 }

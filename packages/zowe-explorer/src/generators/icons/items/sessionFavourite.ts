@@ -14,10 +14,10 @@ import { getIconPathInResources } from "../../../shared/utils";
 import { isSessionFavorite } from "../../../shared/context";
 
 const icon: IIconItem = {
-  id: IconId.sessionFavourite,
-  type: IconHierarchyType.base,
-  path: getIconPathInResources("folder-root-favorite-star-closed.svg"),
-  check: (node) => isSessionFavorite(node),
+    id: IconId.sessionFavourite,
+    type: IconHierarchyType.base,
+    path: getIconPathInResources("folder-root-favorite-star-closed.svg"),
+    check: (node) => isSessionFavorite(node),
 };
 
 export default icon;

@@ -14,19 +14,19 @@ import documentIcon from "./document";
 import { getIconPathInResources } from "../../../shared/utils";
 
 const icon: IIconItem = {
-  id: IconId.downloadedDocument,
-  type: IconHierarchyType.derived,
-  path: getIconPathInResources("document-downloaded.svg"),
-  check: (node) => {
-    // Here we need to do check for potentially derived class, that's why any is required
-    const generalizedNode = node as any;
-    if (typeof generalizedNode.downloaded !== "undefined") {
-      const parentCheck = documentIcon.check(generalizedNode);
-      return parentCheck && generalizedNode.downloaded;
-    }
+    id: IconId.downloadedDocument,
+    type: IconHierarchyType.derived,
+    path: getIconPathInResources("document-downloaded.svg"),
+    check: (node) => {
+        // Here we need to do check for potentially derived class, that's why any is required
+        const generalizedNode = node as any;
+        if (typeof generalizedNode.downloaded !== "undefined") {
+            const parentCheck = documentIcon.check(generalizedNode);
+            return parentCheck && generalizedNode.downloaded;
+        }
 
-    return false;
-  },
+        return false;
+    },
 };
 
 export default icon;

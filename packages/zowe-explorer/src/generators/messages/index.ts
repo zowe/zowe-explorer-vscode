@@ -14,77 +14,77 @@ import { ZoweUSSNode } from "../../uss/ZoweUSSNode";
 import { ZoweTreeNode } from "@zowe/zowe-explorer-api";
 
 export enum MessageCategoryId {
-  dataset = "dataset",
-  datasetMember = "datasetMember",
+    dataset = "dataset",
+    datasetMember = "datasetMember",
 }
 
 export enum MessageHierarchyType {
-  generic = "generic",
-  specific = "specific",
+    generic = "generic",
+    specific = "specific",
 }
 
 export enum MessageContentType {
-  open = "open",
-  upload = "upload",
+    open = "open",
+    upload = "upload",
 }
 
 type CombinedNode = TreeItem | ZoweUSSNode | ZoweTreeNode;
 
 export interface IMessageItem {
-  id: MessageCategoryId;
-  type: MessageHierarchyType;
-  generic?: IMessageItem;
-  messages: { [index: string]: string };
-  check: (node: CombinedNode) => boolean;
+    id: MessageCategoryId;
+    type: MessageHierarchyType;
+    generic?: IMessageItem;
+    messages: { [index: string]: string };
+    check: (node: CombinedNode) => boolean;
 }
 
 const items = [require("./items/dataset"), require("./items/datasetMember")].map(
-  (item) => item.default
+    (item) => item.default
 ) as IMessageItem[];
 
 function mergeMessages(generic: { [index: string]: string }, specific: { [index: string]: string }) {
-  if (generic) {
-    const result = { ...generic };
+    if (generic) {
+        const result = { ...generic };
 
-    if (specific) {
-      for (const key in specific) {
-        if (specific.hasOwnProperty(key)) {
-          result[key] = specific[key];
+        if (specific) {
+            for (const key in specific) {
+                if (specific.hasOwnProperty(key)) {
+                    result[key] = specific[key];
+                }
+            }
         }
-      }
+
+        return result;
     }
 
-    return result;
-  }
-
-  return specific;
+    return specific;
 }
 
 export function getMessageById(id: MessageCategoryId, type: MessageContentType): string {
-  const targetItem = items.find((item) => item.id === id);
+    const targetItem = items.find((item) => item.id === id);
 
-  if (targetItem) {
-    const messages = mergeMessages(targetItem.generic && targetItem.generic.messages, targetItem.messages);
-    return messages[type] || null;
-  }
+    if (targetItem) {
+        const messages = mergeMessages(targetItem.generic && targetItem.generic.messages, targetItem.messages);
+        return messages[type] || null;
+    }
 
-  return null;
+    return null;
 }
 
 export function getMessageByNode(node: CombinedNode, type: MessageContentType): string {
-  const targetItems = items.filter((item) => item.check(node));
-  let targetItem;
+    const targetItems = items.filter((item) => item.check(node));
+    let targetItem;
 
-  if (targetItems.some((item) => item.type === MessageHierarchyType.specific)) {
-    targetItem = targetItems.filter((item) => item.type === MessageHierarchyType.specific).pop();
-  } else {
-    targetItem = targetItems.pop();
-  }
+    if (targetItems.some((item) => item.type === MessageHierarchyType.specific)) {
+        targetItem = targetItems.filter((item) => item.type === MessageHierarchyType.specific).pop();
+    } else {
+        targetItem = targetItems.pop();
+    }
 
-  if (targetItem) {
-    const messages = mergeMessages(targetItem.generic && targetItem.generic.messages, targetItem.messages);
-    return messages[type] || null;
-  }
+    if (targetItem) {
+        const messages = mergeMessages(targetItem.generic && targetItem.generic.messages, targetItem.messages);
+        return messages[type] || null;
+    }
 
-  return null;
+    return null;
 }

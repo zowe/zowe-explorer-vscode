@@ -18,10 +18,10 @@ import { AbstractSession, ISession } from "@zowe/imperative";
  * @extends {AbstractSession}
  */
 export declare class Session extends AbstractSession {
-  /**
-   * Creates an instance of Session.
-   * @param {ISession} newSession - contains input for new session
-   * @memberof Session
-   */
-  constructor(newSession: ISession);
+    /**
+     * Creates an instance of Session.
+     * @param {ISession} newSession - contains input for new session
+     * @memberof Session
+     */
+    constructor(newSession: ISession);
 }

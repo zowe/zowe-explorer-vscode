@@ -14,10 +14,10 @@ import { getIconPathInResources } from "../../../shared/utils";
 import { isMigrated } from "../../../shared/context";
 
 const migrated: IIconItem = {
-  id: IconId.migrated,
-  type: IconHierarchyType.base,
-  path: getIconPathInResources("migrated.svg"),
-  check: (node) => isMigrated(node),
+    id: IconId.migrated,
+    type: IconHierarchyType.base,
+    path: getIconPathInResources("migrated.svg"),
+    check: (node) => isMigrated(node),
 };
 
 export default migrated;

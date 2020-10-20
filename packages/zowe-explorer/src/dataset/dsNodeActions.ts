@@ -21,17 +21,17 @@ import { PersistentFilters } from "../PersistentFilters";
  * @param {DataSetTree} datasetProvider
  */
 export async function refreshAll(datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
-  await Profiles.getInstance().refresh();
-  datasetProvider.mSessionNodes.forEach(async (sessNode) => {
-    const setting = PersistentFilters.getDirectValue("Zowe-Automatic-Validation") as boolean;
-    if (contextually.isSessionNotFav(sessNode)) {
-      labelRefresh(sessNode);
-      sessNode.children = [];
-      sessNode.dirty = true;
-      refreshTree(sessNode);
-      resetValidationSettings(sessNode, setting);
-    }
-    returnIconState(sessNode);
-  });
-  await datasetProvider.refresh();
+    await Profiles.getInstance().refresh();
+    datasetProvider.mSessionNodes.forEach(async (sessNode) => {
+        const setting = PersistentFilters.getDirectValue("Zowe-Automatic-Validation") as boolean;
+        if (contextually.isSessionNotFav(sessNode)) {
+            labelRefresh(sessNode);
+            sessNode.children = [];
+            sessNode.dirty = true;
+            refreshTree(sessNode);
+            resetValidationSettings(sessNode, setting);
+        }
+        returnIconState(sessNode);
+    });
+    await datasetProvider.refresh();
 }

@@ -14,10 +14,10 @@ import { getIconPathInResources } from "../../../shared/utils";
 import { isVsam } from "../../../shared/context";
 
 const vsam: IIconItem = {
-  id: IconId.vsam,
-  type: IconHierarchyType.base,
-  path: getIconPathInResources("file_type_db.svg"),
-  check: (node) => isVsam(node),
+    id: IconId.vsam,
+    type: IconHierarchyType.base,
+    path: getIconPathInResources("file_type_db.svg"),
+    check: (node) => isVsam(node),
 };
 
 export default vsam;

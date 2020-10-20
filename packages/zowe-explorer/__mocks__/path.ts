@@ -10,10 +10,10 @@
  */
 
 export function join(...paths: string[]): string {
-  const value = paths.join("/").replace("//", "/");
-  return value;
+    const value = paths.join("/").replace("//", "/");
+    return value;
 }
 
 export function normalize(p: string): string {
-  return p;
+    return p;
 }

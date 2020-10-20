@@ -17,20 +17,20 @@ const path = require("path");
 fse.emptyDirSync("./i18n/sample");
 
 for (const metadataJson of require("glob").sync("./out/src/**/*.nls.metadata.json")) {
-  // Read localization metadata files
-  const parsedData = JSON.parse(fse.readFileSync(metadataJson).toString());
-  const keysPairsData = {};
+    // Read localization metadata files
+    const parsedData = JSON.parse(fse.readFileSync(metadataJson).toString());
+    const keysPairsData = {};
 
-  // Extract localization key/value pairs from metadata files
-  parsedData.keys.forEach((key, i) => (keysPairsData[key] = parsedData.messages[i]));
-  if (Object.keys(keysPairsData).length === 0) {
-    continue; // Don't create empty files
-  }
+    // Extract localization key/value pairs from metadata files
+    parsedData.keys.forEach((key, i) => (keysPairsData[key] = parsedData.messages[i]));
+    if (Object.keys(keysPairsData).length === 0) {
+        continue; // Don't create empty files
+    }
 
-  // Write to i18n sample folder to create template for new languages
-  const i18nJson = metadataJson.replace("./out/src", "./i18n/sample/").replace(".nls.metadata.json", ".i18n.json");
-  fse.ensureDirSync(path.dirname(i18nJson));
-  fse.writeFileSync(i18nJson, JSON.stringify(keysPairsData, null, 4));
+    // Write to i18n sample folder to create template for new languages
+    const i18nJson = metadataJson.replace("./out/src", "./i18n/sample/").replace(".nls.metadata.json", ".i18n.json");
+    fse.ensureDirSync(path.dirname(i18nJson));
+    fse.writeFileSync(i18nJson, JSON.stringify(keysPairsData, null, 4));
 }
 
 const keysPairsPackage = JSON.parse(fse.readFileSync("./package.nls.json").toString());

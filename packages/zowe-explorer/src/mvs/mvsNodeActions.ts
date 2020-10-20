@@ -18,64 +18,64 @@ import * as contextually from "../shared/context";
 
 // Set up localization
 nls.config({
-  messageFormat: nls.MessageFormat.bundle,
-  bundleFormat: nls.BundleFormat.standalone,
+    messageFormat: nls.MessageFormat.bundle,
+    bundleFormat: nls.BundleFormat.standalone,
 })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export async function uploadDialog(node: ZoweDatasetNode, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
-  const fileOpenOptions = {
-    canSelectFiles: true,
-    openLabel: "Upload File",
-    canSelectMany: true,
-  };
+    const fileOpenOptions = {
+        canSelectFiles: true,
+        openLabel: "Upload File",
+        canSelectMany: true,
+    };
 
-  const value = await vscode.window.showOpenDialog(fileOpenOptions);
+    const value = await vscode.window.showOpenDialog(fileOpenOptions);
 
-  if (value && value.length) {
-    await Promise.all(
-      value.map(async (item) => {
-        // Convert to vscode.TextDocument
-        const doc = await vscode.workspace.openTextDocument(item);
-        await uploadFile(node, doc);
-      })
-    );
+    if (value && value.length) {
+        await Promise.all(
+            value.map(async (item) => {
+                // Convert to vscode.TextDocument
+                const doc = await vscode.workspace.openTextDocument(item);
+                await uploadFile(node, doc);
+            })
+        );
 
-    // refresh Tree View & favorites
-    datasetProvider.refreshElement(node);
-    if (contextually.isFavorite(node) || contextually.isFavoriteContext(node.getParent())) {
-      const nonFavNode = datasetProvider.findNonFavoritedNode(node);
-      if (nonFavNode) {
-        datasetProvider.refreshElement(nonFavNode);
-      }
+        // refresh Tree View & favorites
+        datasetProvider.refreshElement(node);
+        if (contextually.isFavorite(node) || contextually.isFavoriteContext(node.getParent())) {
+            const nonFavNode = datasetProvider.findNonFavoritedNode(node);
+            if (nonFavNode) {
+                datasetProvider.refreshElement(nonFavNode);
+            }
+        } else {
+            const favNode = datasetProvider.findFavoritedNode(node);
+            if (favNode) {
+                datasetProvider.refreshElement(favNode);
+            }
+        }
     } else {
-      const favNode = datasetProvider.findFavoritedNode(node);
-      if (favNode) {
-        datasetProvider.refreshElement(favNode);
-      }
+        vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
     }
-  } else {
-    vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
-  }
 }
 
 export function getDatasetLabel(node: ZoweDatasetNode) {
-  if (node.getParent() && contextually.isFavoriteContext(node.getParent())) {
-    const profileEnd = "]: ";
-    const profileIndex = node.label.indexOf(profileEnd);
-    return node.label.substr(profileIndex + profileEnd.length, node.label.length);
-  }
-  return node.label;
+    if (node.getParent() && contextually.isFavoriteContext(node.getParent())) {
+        const profileEnd = "]: ";
+        const profileIndex = node.label.indexOf(profileEnd);
+        return node.label.substr(profileIndex + profileEnd.length, node.label.length);
+    }
+    return node.label;
 }
 
 export async function uploadFile(node: ZoweDatasetNode, doc: vscode.TextDocument) {
-  try {
-    const datasetName = getDatasetLabel(node);
-    const prof = node.getProfile();
-    await ZoweExplorerApiRegister.getMvsApi(prof).putContents(doc.fileName, datasetName, {
-      encoding: prof.profile.encoding,
-    });
-  } catch (e) {
-    await utils.errorHandling(e, node.getProfileName(), e.message);
-  }
+    try {
+        const datasetName = getDatasetLabel(node);
+        const prof = node.getProfile();
+        await ZoweExplorerApiRegister.getMvsApi(prof).putContents(doc.fileName, datasetName, {
+            encoding: prof.profile.encoding,
+        });
+    } catch (e) {
+        await utils.errorHandling(e, node.getProfileName(), e.message);
+    }
 }
