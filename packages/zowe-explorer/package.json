@@ -1272,9 +1272,9 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "gulp build && yarn license && yarn lint && webpack --mode production && yarn updateStrings",
-    "build": "gulp build && yarn license && webpack --mode development",
-    "build:integration": "gulp build && yarn license && tsc --build --pretty",
+    "vscode:prepublish": "yarn createTestProfileData && gulp build && yarn license && yarn lint && webpack --mode production && yarn updateStrings",
+    "build": "yarn createTestProfileData && gulp build && yarn license && webpack --mode development",
+    "build:integration": "yarn createTestProfileData && gulp build && yarn license && tsc --build --pretty",
     "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
     "test:theia": "mocha ./out/__tests__/__theia__/*.theia.test.js --timeout 50000",
     "test": "yarn test:unit",
@@ -1283,7 +1283,7 @@
     "updateStrings": "node ../../scripts/stringUpdateScript.js && prettier --write  --loglevel warn ./i18n package.nls*",
     "package": "vsce package --yarn && node ../../scripts/mv-pack.js vscode-extension-for-zowe vsix",
     "license": "node ../../scripts/license.js",
-    "watch": "gulp build && webpack --mode development --watch --info-verbosity verbose",
+    "watch": "yarn createTestProfileData && gulp build && webpack --mode development --watch --info-verbosity verbose",
     "compile": "tsc -b",
     "markdown": "markdownlint CHANGELOG.md README.md",
     "lint": "yarn lint:src && yarn lint:tests  && yarn markdown",
@@ -1291,7 +1291,8 @@
     "lint:tests": "tslint --format stylish \"**/__tests__/**/*.ts\" --exclude \"node_modules/**/*\" && eslint \"__tests__/**\"",
     "clean": "gulp clean",
     "lintErrors": "echo \"zowe-explorer: lintErrors coming soon with eslint.\"",
-    "pretty": "prettier --write ."
+    "pretty": "prettier --write .",
+    "createTestProfileData": "ts-node ./scripts/createTestProfileData.ts"
   },
   "engines": {
     "vscode": "^1.43.0"

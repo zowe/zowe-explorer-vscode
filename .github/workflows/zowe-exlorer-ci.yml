@@ -1,6 +1,9 @@
 name: Zowe Explorer CI
 
-on: [push]
+on:
+  push:
+    paths:
+    - packages/zowe-explorer/*
 
 jobs:
   build:
@@ -32,11 +35,6 @@ jobs:
       - name: Audit from Windows / Node 12.x
         run: yarn audit --production --level=moderate
         if: matrix.os == 'windows-latest' && matrix.node-version == '12.x'
-
-      - name: Create test data file
-        run: cp resources/testProfileData.example.ts resources/testProfileData.ts
-
-      - run: yarn run build --if-present
 
       - run: yarn test
         env:
