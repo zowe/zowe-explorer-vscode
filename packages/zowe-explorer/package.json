@@ -1342,6 +1342,7 @@
     "ts-loader": "^7.0.1",
     "ts-node": "^8.10.1",
     "tslint": "^5.17.0",
+    "vscode": "^1.1.37",
     "webpack": "^4.42.1",
     "webpack-cli": "^3.3.11"
   },
@@ -1352,8 +1353,7 @@
     "js-yaml": "3.13.1",
     "moment": "2.24.0",
     "promise-queue": "2.2.5",
-    "yamljs": "0.3.0",
-    "vscode": "^1.1.37"
+    "yamljs": "0.3.0"
   },
   "jest": {
     "moduleFileExtensions": [

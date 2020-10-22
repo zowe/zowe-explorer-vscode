@@ -5,17 +5,21 @@
     "ordered-imports": false,
     "one-line": false,
     "space-within-parens": false,
+    "space-before-function-paren": false,
     "no-var-requires": false,
     "trailing-comma": false,
-    "no-submodule-imports": [true, "csv-parse/lib/sync"],
+    "no-submodule-imports": false,
     "max-line-length": [true, 150],
-    "no-magic-numbers": [true, -1, 0, 1, 2],
+    "no-magic-numbers": [true, -1, 0, 1, 2, 4],
     "no-consecutive-blank-lines": [true, 2],
     "prefer-conditional-expression": false,
     "indent": [true, "spaces", 4],
     "whitespace": [true, "check-module"],
-    "no-implicit-dependencies": [true, "dev", ["@zowe/imperative", "vscode"]],
-    "no-namespace": false
+    "no-implicit-dependencies": false,
+    "no-namespace": false,
+    "object-literal-key-quotes": false,
+    "no-object-literal-type-assertion": false,
+    "no-empty": false
   },
   "linterOptions": {
     "exclude": ["__mocks__/*"]
