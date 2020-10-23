@@ -45,8 +45,8 @@ jobs:
         uses: actions/upload-artifact@v1
         # if: matrix.os == 'windows-latest' && matrix.node-version == '12.x'
         with:
-          name: results
-          path: results/
+          name: zowe-explorer-results
+          path: package/zowe-explorer/results/
 
       # Run codecov upload for only one run
       - name: Upload Results to Codecov from Windows / Node 12.x
