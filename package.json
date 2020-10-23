@@ -27,10 +27,10 @@
     "@types/vscode": "^1.43.0",
     "vscode-test": "^1.4.0",
     "vscode-nls-dev": "^3.3.2",
-    "vsce": "^1.78.0",
+    "vsce": "^1.81.1",
     "prettier": "2.0.5",
     "rimraf": "^3.0.2",
-    "adm-zip": "0.4.16"
+    "yarn": "1.22.10"
   },
   "scripts": {
     "prepare": "yarn build",
