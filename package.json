@@ -1332,7 +1332,7 @@
     "jest-stare": "^1.26.0",
     "jsdoc": "^3.6.3",
     "jsdom": "^16.0.0",
-    "keytar": "^5.0.0",
+    "keytar": "^6.0.1",
     "log4js": "^3.0.5",
     "markdownlint-cli": "^0.16.0",
     "mem": "^6.0.1",
