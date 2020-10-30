@@ -22,17 +22,24 @@ import * as path from "path";
 import { URL } from "url";
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
-import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
-import { errorHandling, getZoweDir, FilterDescriptor, FilterItem, resolveQuickPickHelper, isTheia } from "./Utils";
-import { IZoweTree } from "./IZoweTree";
 import {
+    IZoweTree,
     IZoweNodeType,
     IZoweUSSTreeNode,
     IZoweDatasetTreeNode,
     IZoweJobTreeNode,
     IZoweTreeNode,
-} from "./IZoweTreeNode";
-import { PersistenceSchemaEnum } from "./UserSettings";
+    getZoweDir,
+    PersistenceSchemaEnum,
+    IUrlValidator,
+    IProfileValidation,
+    IValidationSetting,
+    ValidProfileEnum,
+    ProfilesCache,
+} from "@zowe/zowe-explorer-api";
+import { errorHandling, FilterDescriptor, FilterItem, resolveQuickPickHelper, isTheia } from "./utils/ProfilesUtils";
+import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
+
 import * as nls from "vscode-nls";
 
 // TODO: find a home for constants
@@ -45,34 +52,13 @@ nls.config({
     bundleFormat: nls.BundleFormat.standalone,
 })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
-
-interface IUrlValidator {
-    valid: boolean;
-    protocol: string;
-    host: string;
-    port: number;
-}
-
-interface IProfileValidation {
-    status: string;
-    name: string;
-}
-
-interface IValidationSetting {
-    name: string;
-    setting: boolean;
-}
 let InputBoxOptions: vscode.InputBoxOptions;
-export enum ValidProfileEnum {
-    UNVERIFIED = 1,
-    VALID = 0,
-    INVALID = -1,
-}
-export class Profiles {
+
+export class Profiles extends ProfilesCache {
     // Processing stops if there are no profiles detected
     public static async createInstance(log: Logger): Promise<Profiles> {
         Profiles.loader = new Profiles(log);
-        await Profiles.loader.refresh();
+        await Profiles.loader.refresh(ZoweExplorerApiRegister.getInstance());
         return Profiles.loader;
     }
 
@@ -82,22 +68,17 @@ export class Profiles {
 
     private static loader: Profiles;
 
-    public profilesForValidation: IProfileValidation[] = [];
-    public profilesValidationSetting: IValidationSetting[] = [];
-    public allProfiles: IProfileLoaded[] = [];
     public loadedProfile: IProfileLoaded;
     public validProfile: ValidProfileEnum = ValidProfileEnum.INVALID;
     private dsSchema: string = "Zowe-DS-Persistent";
     private ussSchema: string = "Zowe-USS-Persistent";
     private jobsSchema: string = "Zowe-Jobs-Persistent";
-    private allTypes: string[];
-    private profilesByType = new Map<string, IProfileLoaded[]>();
-    private defaultProfileByType = new Map<string, IProfileLoaded>();
-    private profileManagerByType = new Map<string, CliProfileManager>();
     private usrNme: string;
     private passWrd: string;
     private baseEncd: string;
-    private constructor(private log: Logger) {}
+    public constructor(log: Logger) {
+        super(log);
+    }
 
     public async checkCurrentProfile(theProfile: IProfileLoaded) {
         const profileStatus: IProfileValidation = await this.getProfileSetting(theProfile);
@@ -283,128 +264,6 @@ export class Profiles {
         return profileSetting;
     }
 
-    public loadNamedProfile(name: string, type?: string): IProfileLoaded {
-        for (const profile of this.allProfiles) {
-            if (profile.name === name && (type ? profile.type === type : true)) {
-                return profile;
-            }
-        }
-        throw new Error(
-            localize("loadNamedProfile.error.profileName", "Could not find profile named: ") +
-                name +
-                localize("loadNamedProfile.error.period", ".")
-        );
-    }
-
-    public getDefaultProfile(type: string = "zosmf"): IProfileLoaded {
-        return this.defaultProfileByType.get(type);
-    }
-
-    public getProfiles(type: string = "zosmf"): IProfileLoaded[] {
-        return this.profilesByType.get(type);
-    }
-
-    public async refresh(): Promise<void> {
-        this.allProfiles = [];
-        this.allTypes = [];
-        // TODO: Add Base ProfileType in registeredApiTypes
-        // This process retrieves the base profile if there's any and stores it in an array
-        // If base is added in registeredApiType maybe this process can be removed
-        try {
-            const profileManagerA = await this.getCliProfileManager("base");
-            if (profileManagerA) {
-                try {
-                    const baseProfile = await profileManagerA.load({ loadDefault: true });
-                    this.allProfiles.push(baseProfile);
-                } catch (err) {
-                    if (!err.message.includes(`No default profile set for type "base"`)) {
-                        vscode.window.showInformationMessage(err.message);
-                    }
-                }
-            }
-        } catch (error) {
-            this.log.debug(error);
-        }
-        for (const type of ZoweExplorerApiRegister.getInstance().registeredApiTypes()) {
-            const profileManager = await this.getCliProfileManager(type);
-            const profilesForType = (await profileManager.loadAll()).filter((profile) => {
-                return profile.type === type;
-            });
-            if (profilesForType && profilesForType.length > 0) {
-                this.allProfiles.push(...profilesForType);
-                this.profilesByType.set(type, profilesForType);
-                let defaultProfile: IProfileLoaded;
-                try {
-                    defaultProfile = await profileManager.load({ loadDefault: true });
-                } catch (error) {
-                    vscode.window.showInformationMessage(error.message);
-                }
-                this.defaultProfileByType.set(type, defaultProfile);
-            }
-            // This is in the loop because I need an instantiated profile manager config
-            if (profileManager.configurations && this.allTypes.length === 0) {
-                for (const element of profileManager.configurations) {
-                    this.allTypes.push(element.type);
-                }
-            }
-        }
-        while (this.profilesForValidation.length > 0) {
-            this.profilesForValidation.pop();
-        }
-    }
-
-    public validateAndParseUrl(newUrl: string): IUrlValidator {
-        let url: URL;
-
-        const validationResult: IUrlValidator = {
-            valid: false,
-            protocol: null,
-            host: null,
-            port: null,
-        };
-
-        try {
-            url = new URL(newUrl);
-        } catch (error) {
-            return validationResult;
-        }
-
-        validationResult.port = Number(url.port);
-        validationResult.host = url.hostname;
-        validationResult.valid = true;
-        return validationResult;
-    }
-
-    public async getUrl(urlInputBox): Promise<string | undefined> {
-        return new Promise<string | undefined>((resolve, reject) => {
-            urlInputBox.onDidHide(() => {
-                reject(undefined);
-                resolve(urlInputBox.value);
-            });
-            urlInputBox.onDidAccept(() => {
-                let host: string;
-                if (urlInputBox.value.includes(":")) {
-                    if (urlInputBox.value.includes("/")) {
-                        host = urlInputBox.value;
-                    } else {
-                        host = `https://${urlInputBox.value}`;
-                    }
-                } else {
-                    host = `https://${urlInputBox.value}`;
-                }
-
-                if (this.validateAndParseUrl(host).valid) {
-                    resolve(host);
-                } else {
-                    urlInputBox.validationMessage = localize(
-                        "createNewConnection.invalidzosURL",
-                        "Please enter a valid host URL in the format 'company.com'."
-                    );
-                }
-            });
-        });
-    }
-
     /**
      * Adds a new Profile to the provided treeview by clicking the 'Plus' button and
      * selecting which profile you would like to add from the drop-down that appears.
@@ -514,7 +373,7 @@ export class Profiles {
             }
             if (newprofile) {
                 try {
-                    await Profiles.getInstance().refresh();
+                    await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
                 } catch (error) {
                     await errorHandling(error, newprofile, error.message);
                 }
@@ -688,18 +547,6 @@ export class Profiles {
             profileType = await vscode.window.showQuickPick(typeOptions, quickPickTypeOptions);
         }
         return profileType;
-    }
-
-    public async getSchema(profileType: string): Promise<{}> {
-        const profileManager = await this.getCliProfileManager(profileType);
-        const configOptions = Array.from(profileManager.configurations);
-        let schema: {};
-        for (const val of configOptions) {
-            if (val.type === profileType) {
-                schema = val.schema.properties;
-            }
-        }
-        return schema;
     }
 
     public async createNewConnection(profileName: string, requestedProfileType?: string): Promise<string | undefined> {
@@ -885,7 +732,7 @@ export class Profiles {
             vscode.window.showInformationMessage(
                 localize("promptCredentials.undefined.username", "Operation Cancelled")
             );
-            await this.refresh();
+            await this.refresh(ZoweExplorerApiRegister.getInstance());
             return undefined;
         } else {
             if (!loadSession.password || rePrompt) {
@@ -900,7 +747,7 @@ export class Profiles {
             vscode.window.showInformationMessage(
                 localize("promptCredentials.undefined.password", "Operation Cancelled")
             );
-            await this.refresh();
+            await this.refresh(ZoweExplorerApiRegister.getInstance());
             return undefined;
         } else {
             try {
@@ -1123,49 +970,6 @@ export class Profiles {
         }
     }
 
-    public getAllTypes() {
-        return this.allTypes;
-    }
-
-    public async getNamesForType(type: string) {
-        const profileManager = await this.getCliProfileManager(type);
-        const profilesForType = (await profileManager.loadAll()).filter((profile) => {
-            return profile.type === type;
-        });
-        return profilesForType.map((profile) => {
-            return profile.name;
-        });
-    }
-
-    public async directLoad(type: string, name: string): Promise<IProfileLoaded> {
-        let directProfile: IProfileLoaded;
-        const profileManager = await this.getCliProfileManager(type);
-        if (profileManager) {
-            directProfile = await profileManager.load({ name });
-        }
-        return directProfile;
-    }
-
-    public async getCliProfileManager(type: string): Promise<CliProfileManager> {
-        let profileManager = this.profileManagerByType.get(type);
-        if (!profileManager) {
-            try {
-                profileManager = await new CliProfileManager({
-                    profileRootDirectory: path.join(getZoweDir(), "profiles"),
-                    type,
-                });
-            } catch (error) {
-                this.log.debug(error);
-            }
-            if (profileManager) {
-                this.profileManagerByType.set(type, profileManager);
-            } else {
-                return undefined;
-            }
-        }
-        return profileManager;
-    }
-
     public async validateProfiles(theProfile: IProfileLoaded) {
         let filteredProfile: IProfileValidation;
         let profileStatus;
@@ -1312,19 +1116,6 @@ export class Profiles {
         return updatedServiceProfile;
     }
 
-    public async getBaseProfile() {
-        let baseProfile: IProfileLoaded;
-
-        // This functionality will retrieve the saved base profile in the allProfiles array
-        const allProfiles: IProfileLoaded[] = Profiles.getInstance().allProfiles;
-        for (const baseP of allProfiles) {
-            if (baseP.type === "base") {
-                baseProfile = baseP;
-            }
-        }
-        return baseProfile;
-    }
-
     private async deletePrompt(deletedProfile: IProfileLoaded) {
         const profileName = deletedProfile.name;
         this.log.debug(localize("deleteProfile.log.debug", "Deleting profile ") + profileName);
@@ -1368,20 +1159,6 @@ export class Profiles {
             localize("deleteProfile.success.info", "Profile {0} was deleted.", profileName)
         );
         return profileName;
-    }
-
-    private async deleteProfileOnDisk(ProfileInfo) {
-        let zosmfProfile: IProfile;
-        try {
-            zosmfProfile = await (await this.getCliProfileManager(ProfileInfo.type)).delete({
-                profile: ProfileInfo,
-                name: ProfileInfo.name,
-                type: ProfileInfo.type,
-            });
-        } catch (error) {
-            vscode.window.showErrorMessage(error.message);
-        }
-        return zosmfProfile.profile;
     }
 
     // ** Functions for handling Profile Information */
@@ -1645,19 +1422,5 @@ export class Profiles {
         } catch (error) {
             vscode.window.showErrorMessage(error.message);
         }
-    }
-
-    private async saveProfile(ProfileInfo, ProfileName, ProfileType) {
-        let newProfile: IProfile;
-        try {
-            newProfile = await (await this.getCliProfileManager(ProfileType)).save({
-                profile: ProfileInfo,
-                name: ProfileName,
-                type: ProfileType,
-            });
-        } catch (error) {
-            vscode.window.showErrorMessage(error.message);
-        }
-        return newProfile.profile;
     }
 }

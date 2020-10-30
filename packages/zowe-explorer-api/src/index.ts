@@ -11,12 +11,9 @@
 
 export * from "./IZoweTree";
 export * from "./IZoweTreeNode";
-export * from "./ProfileLink";
-export * from "./Profiles";
+export * from "./ProfilesCache";
 export * from "./UserSettings";
 export * from "./Utils";
 export * from "./ZoweExplorerApi";
-export * from "./ZoweExplorerApiRegister";
-export * from "./ZoweExplorerExtender";
 export * from "./ZoweExplorerZosmfApi";
 export * from "./ZoweTreeNode";

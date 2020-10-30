@@ -13,8 +13,8 @@ import * as PromiseQueue from "promise-queue";
 import { IProfileLoaded } from "@zowe/imperative";
 import { IZoweTreeNode, IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweJobTreeNode } from "./IZoweTreeNode";
 import { ZoweExplorerApi } from "./ZoweExplorerApi";
-import { Profiles } from "./Profiles";
-import { getProfile, getLinkedProfile } from "./ProfileLink";
+import { ProfilesCache } from "./ProfilesCache";
+import { getProfile, getLinkedProfile } from "../../zowe-explorer/src/ProfileLink";
 import { IZoweTree } from "./IZoweTree";
 
 /**
@@ -95,7 +95,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
      */
     public async reloadProfiles(profileType?: string): Promise<void> {
         // sequentially reload the internal profiles cache to satisfy all the newly added profile types
-        await ZoweExplorerExtender.refreshProfilesQueue.add(() => Profiles.getInstance().refresh());
+        await ZoweExplorerExtender.refreshProfilesQueue.add(() => ProfilesCache.getInstance().refresh());
         // profileType is used to load a default extender profile if no other profiles are populating the trees
         this.datasetProvider?.addSession(undefined, profileType);
         this.ussFileProvider?.addSession(undefined, profileType);

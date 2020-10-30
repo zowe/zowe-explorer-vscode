@@ -517,5 +517,12 @@ export namespace ZoweExplorerApi {
          * @returns the registered API instance
          */
         getExplorerExtenderApi(): IApiExplorerExtender;
+
+        /**
+         * Get an array of all the registered APIs identified by the CLI profile type names,
+         * such as ["zosmf", "zftp"].
+         * @returns {string[]}
+         */
+        registeredApiTypes(): string[];
     }
 }

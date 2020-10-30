@@ -15,10 +15,10 @@ import * as vscode from "vscode";
 import { IProfileLoaded, Logger } from "@zowe/imperative";
 import * as path from "path";
 import * as fs from "fs";
-import { Profiles } from "./Profiles";
-import { ZoweTreeNode } from "./ZoweTreeNode";
-import { IZoweTreeNode } from "./IZoweTreeNode";
-import { getZoweDir } from "./Utils";
+import { ProfilesCache } from "@zowe/zowe-explorer-api/src/ProfilesCache";
+import { ZoweTreeNode } from "@zowe/zowe-explorer-api/src/ZoweTreeNode";
+import { IZoweTreeNode } from "@zowe/zowe-explorer-api/src/IZoweTreeNode";
+import { getZoweDir } from "@zowe/zowe-explorer-api/src/Utils";
 import * as nls from "vscode-nls";
 
 // Set up localization
@@ -56,7 +56,7 @@ export async function linkProfileDialog(aProfile: IProfileLoaded) {
     let chosenName;
     let chosenType;
     if (aProfile) {
-        const possibles = Profiles.getInstance()
+        const possibles = ProfilesCache.getInstance()
             .getAllTypes()
             .filter((value) => value !== aProfile.type);
         const quickPickOptions1: vscode.QuickPickOptions = {
@@ -69,7 +69,7 @@ export async function linkProfileDialog(aProfile: IProfileLoaded) {
         };
         chosenType = await vscode.window.showQuickPick(possibles, quickPickOptions1);
         if (chosenType) {
-            const profiles = Profiles.getInstance().getNamesForType(chosenType);
+            const profiles = ProfilesCache.getInstance().getNamesForType(chosenType);
             const quickPickOptions2: vscode.QuickPickOptions = {
                 placeHolder: localize(
                     "profileLink.selectFileName",
@@ -118,7 +118,7 @@ async function findLinkedProfile(aProfile: IProfileLoaded, type: string) {
                     for (const element of Object.keys(links)) {
                         if (element === type) {
                             try {
-                                profile = await Profiles.getInstance().directLoad(type, links[type]);
+                                profile = await ProfilesCache.getInstance().directLoad(type, links[type]);
                             } catch (err) {
                                 throw new Error(
                                     localize("profileLink.missingProfile", "Attempted to load a missing profile.") +

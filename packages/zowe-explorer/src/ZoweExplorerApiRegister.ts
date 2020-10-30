@@ -12,7 +12,7 @@
 import { IProfileLoaded } from "@zowe/imperative";
 import { ZoweExplorerApi } from "./ZoweExplorerApi";
 import { ZosmfUssApi, ZosmfMvsApi, ZosmfJesApi } from "./ZoweExplorerZosmfApi";
-import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
+import { AbstractZoweExplorerExtender } from "./AbstractZoweExplorerExtender";
 import * as nls from "vscode-nls";
 // Set up localization
 nls.config({
@@ -284,6 +284,6 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
      * @returns the instance of the API for the profile provided
      */
     public getExplorerExtenderApi(): ZoweExplorerApi.IApiExplorerExtender {
-        return ZoweExplorerExtender.getInstance();
+        return AbstractZoweExplorerExtender.getInstance();
     }
 }
