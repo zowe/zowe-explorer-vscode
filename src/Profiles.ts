@@ -1164,9 +1164,8 @@ export class Profiles {
                 cmdArgs[prop] = serviceProfile.profile[prop] ? serviceProfile.profile[prop] : baseProfile.profile[prop];
             }
             if (baseProfile) {
-                // These fields are specific to base profiles & don't exist on the service profile schema
-                cmdArgs.tokenType = baseProfile.profile.tokenType;
-                cmdArgs.tokenValue = baseProfile.profile.tokenValue;
+                cmdArgs.tokenType = serviceProfile.profile.tokenType ? serviceProfile.profile.tokenType: baseProfile.profile.tokenType;
+                cmdArgs.tokenValue = serviceProfile.profile.tokenValue ? serviceProfile.profile.tokenValue: baseProfile.profile.tokenValue;
             }
             if (commonApi.getSessionFromCommandArgument) {
                 session = await commonApi.getSessionFromCommandArgument(cmdArgs);
