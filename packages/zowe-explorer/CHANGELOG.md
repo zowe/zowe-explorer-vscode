@@ -2,6 +2,10 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## `1.10.1`
+
+- Updated arguments to keep the order of precedence consistent between service and base profile. [#1055](https://github.com/zowe/vscode-extension-for-zowe/issues/1055). Thanks @JillieBeanSim
+
 ## `1.10.0`
 
 - Added Base Profile support. [#1037](https://github.com/zowe/vscode-extension-for-zowe/issues/1037). Thanks @katelynienaber, @jellypuno, @JillieBeanSim, @lauren-li, @crawr, @phaumer
