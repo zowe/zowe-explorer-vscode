@@ -1176,6 +1176,36 @@ export class Profiles extends ProfilesCache {
         return this.validateAndParseUrl(zosURL);
     }
 
+    private async getUrl(urlInputBox): Promise<string | undefined> {
+        return new Promise<string | undefined>((resolve, reject) => {
+            urlInputBox.onDidHide(() => {
+                reject(undefined);
+                resolve(urlInputBox.value);
+            });
+            urlInputBox.onDidAccept(() => {
+                let host: string;
+                if (urlInputBox.value.includes(":")) {
+                    if (urlInputBox.value.includes("/")) {
+                        host = urlInputBox.value;
+                    } else {
+                        host = `https://${urlInputBox.value}`;
+                    }
+                } else {
+                    host = `https://${urlInputBox.value}`;
+                }
+
+                if (this.validateAndParseUrl(host).valid) {
+                    resolve(host);
+                } else {
+                    urlInputBox.validationMessage = localize(
+                        "createNewConnection.invalidzosURL",
+                        "Please enter a valid host URL in the format 'company.com'."
+                    );
+                }
+            });
+        });
+    }
+
     private async portInfo(input: string, schema: {}) {
         let options: vscode.InputBoxOptions;
         let port: number;

@@ -17,18 +17,8 @@ import * as vscode from "vscode";
 
 import { ZoweExplorerApi } from "./ZoweExplorerApi";
 
-import * as nls from "vscode-nls";
-
 // TODO: find a home for constants
 export const CONTEXT_PREFIX = "_";
-const VALIDATE_SUFFIX = CONTEXT_PREFIX + "validate=";
-
-// Set up localization
-nls.config({
-    messageFormat: nls.MessageFormat.bundle,
-    bundleFormat: nls.BundleFormat.standalone,
-})();
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export interface IUrlValidator {
     valid: boolean;
@@ -71,11 +61,7 @@ export class ProfilesCache {
                 return profile;
             }
         }
-        throw new Error(
-            localize("loadNamedProfile.error.profileName", "Could not find profile named: ") +
-                name +
-                localize("loadNamedProfile.error.period", ".")
-        );
+        throw new Error("Could not find profile named: " + name + ".");
     }
 
     public getDefaultProfile(type: string = "zosmf"): IProfileLoaded {
@@ -155,36 +141,6 @@ export class ProfilesCache {
         validationResult.host = url.hostname;
         validationResult.valid = true;
         return validationResult;
-    }
-
-    public async getUrl(urlInputBox): Promise<string | undefined> {
-        return new Promise<string | undefined>((resolve, reject) => {
-            urlInputBox.onDidHide(() => {
-                reject(undefined);
-                resolve(urlInputBox.value);
-            });
-            urlInputBox.onDidAccept(() => {
-                let host: string;
-                if (urlInputBox.value.includes(":")) {
-                    if (urlInputBox.value.includes("/")) {
-                        host = urlInputBox.value;
-                    } else {
-                        host = `https://${urlInputBox.value}`;
-                    }
-                } else {
-                    host = `https://${urlInputBox.value}`;
-                }
-
-                if (this.validateAndParseUrl(host).valid) {
-                    resolve(host);
-                } else {
-                    urlInputBox.validationMessage = localize(
-                        "createNewConnection.invalidzosURL",
-                        "Please enter a valid host URL in the format 'company.com'."
-                    );
-                }
-            });
-        });
     }
 
     public async getSchema(profileType: string): Promise<{}> {
