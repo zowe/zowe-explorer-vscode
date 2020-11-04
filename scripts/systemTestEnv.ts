@@ -1,4 +1,4 @@
-import { profile, normalPattern, ussPattern } from "../resources/testProfileData";
+import { profile, normalPattern, ussPattern } from "../packages/zowe-explorer/resources/testProfileData";
 import { Create, CreateDataSetTypeEnum, Upload, Delete } from "@zowe/cli";
 import { Session, Logger } from "@zowe/imperative";
 
