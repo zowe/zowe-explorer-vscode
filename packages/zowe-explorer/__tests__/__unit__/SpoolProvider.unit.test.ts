@@ -13,7 +13,7 @@ import * as spoolprovider from "../../src/SpoolProvider";
 import * as zowe from "@zowe/cli";
 import { IProfileLoaded } from "@zowe/imperative";
 import * as vscode from "vscode";
-import { Profiles } from "@zowe/zowe-explorer-api";
+import { Profiles } from "../../src/Profiles";
 
 describe("SpoolProvider Unit Tests", () => {
     const iJobFile: zowe.IJobFile = {

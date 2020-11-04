@@ -10,10 +10,10 @@
  */
 
 import * as vscode from "vscode";
-import * as utils from "@zowe/zowe-explorer-api/lib/Utils";
+import * as utils from "../../src/utils/ProfilesUtils";
 import * as globals from "../../src/globals";
 import { createInstanceOfProfile, createIProfile } from "../../__mocks__/mockCreators/shared";
-import { Profiles } from "@zowe/zowe-explorer-api";
+import { Profiles } from "../../src/Profiles";
 
 function createGlobalMocks() {
     const isTheia = jest.fn();

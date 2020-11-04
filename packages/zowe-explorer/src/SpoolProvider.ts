@@ -11,7 +11,8 @@
 
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
-import { Profiles, ZoweExplorerApiRegister } from "@zowe/zowe-explorer-api";
+import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
+import { Profiles } from "./Profiles";
 
 export default class SpoolProvider implements vscode.TextDocumentContentProvider {
     public static scheme = "zosspool";

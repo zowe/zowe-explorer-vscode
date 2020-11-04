@@ -16,15 +16,10 @@ import * as fs from "fs";
 import * as path from "path";
 import * as moment from "moment";
 import { Session, IProfileLoaded } from "@zowe/imperative";
-import {
-    IZoweUSSTreeNode,
-    ZoweTreeNode,
-    IZoweTree,
-    Profiles,
-    ValidProfileEnum,
-    ZoweExplorerApiRegister,
-} from "@zowe/zowe-explorer-api";
-import { errorHandling, refreshTree } from "@zowe/zowe-explorer-api/lib/Utils";
+import { IZoweUSSTreeNode, ZoweTreeNode, IZoweTree, ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { Profiles } from "../Profiles";
+import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
+import { errorHandling, refreshTree } from "../utils/ProfilesUtils";
 import { getIconByNode } from "../generators/icons/index";
 import { injectAdditionalDataToTooltip } from "../uss/utils";
 import * as contextually from "../shared/context";

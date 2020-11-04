@@ -24,7 +24,7 @@ import * as path from "path";
 import * as sinon from "sinon";
 import * as testConst from "../../resources/testProfileData";
 import * as vscode from "vscode";
-import * as utils from "@zowe/zowe-explorer-api/lib/Utils";
+import * as utils from "../../src/utils/ProfilesUtils";
 import { DatasetTree, createDatasetTree } from "../../src/dataset/DatasetTree";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import { USSTree } from "../../src/uss/USSTree";

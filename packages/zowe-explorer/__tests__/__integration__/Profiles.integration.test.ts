@@ -12,7 +12,7 @@
 import * as sinon from "sinon";
 import * as vscode from "vscode";
 import { IProfileLoaded, IProfile } from "@zowe/imperative";
-import { Profiles } from "@zowe/zowe-explorer-api";
+import { Profiles } from "../../src/Profiles";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import * as testConst from "../../resources/testProfileData";

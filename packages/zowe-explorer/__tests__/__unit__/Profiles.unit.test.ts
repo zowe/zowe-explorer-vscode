@@ -26,12 +26,14 @@ import {
 import { createDatasetSessionNode, createDatasetTree } from "../../__mocks__/mockCreators/datasets";
 import { createProfileManager, createTestSchemas } from "../../__mocks__/mockCreators/profiles";
 import * as vscode from "vscode";
-import * as utils from "@zowe/zowe-explorer-api/lib/Utils";
+import * as utils from "../../src/utils/ProfilesUtils";
 import * as child_process from "child_process";
 import { Logger } from "@zowe/imperative";
 import * as globals from "../../src/globals";
-import { Profiles, ValidProfileEnum, IZoweNodeType, ZoweExplorerApiRegister } from "@zowe/zowe-explorer-api";
+import { ValidProfileEnum, IZoweNodeType } from "@zowe/zowe-explorer-api";
 import { ZosmfSession } from "@zowe/cli";
+import { ZoweExplorerApiRegister } from "../../src/ZoweExplorerApiRegister";
+import { Profiles } from "../../src/Profiles";
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import { Job } from "../../src/job/ZoweJobNode";
@@ -2553,7 +2555,7 @@ describe("Profiles Unit Tests - Function refresh", () => {
 
         const theProfiles = await Profiles.createInstance(blockMocks.log);
         theProfiles.profilesForValidation.push({ status: "active", name: blockMocks.validProfile.name });
-        await theProfiles.refresh();
+        await theProfiles.refresh(ZoweExplorerApiRegister.getInstance());
         expect(theProfiles.profilesForValidation.length).toBe(0);
     });
 });

@@ -11,8 +11,9 @@
 
 import * as vscode from "vscode";
 import { ZoweDatasetNode } from "../dataset/ZoweDatasetNode";
-import * as utils from "@zowe/zowe-explorer-api/lib/Utils";
-import { ZoweExplorerApiRegister, IZoweTree, IZoweDatasetTreeNode } from "@zowe/zowe-explorer-api";
+import * as utils from "../utils/ProfilesUtils";
+import { IZoweTree, IZoweDatasetTreeNode } from "@zowe/zowe-explorer-api";
+import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import * as nls from "vscode-nls";
 import * as contextually from "../shared/context";
 

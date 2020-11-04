@@ -14,15 +14,11 @@ import * as zowe from "@zowe/cli";
 import * as vscode from "vscode";
 import * as globals from "../../../src/globals";
 import * as fs from "fs";
-import * as writeYaml from "yamljs";
 import * as testConst from "../../../resources/testProfileData";
-import {
-    IZoweDatasetTreeNode,
-    ZoweExplorerApiRegister,
-    Profiles,
-    linkProfileDialog,
-    getLinkedProfile,
-} from "@zowe/zowe-explorer-api";
+import { IZoweDatasetTreeNode } from "@zowe/zowe-explorer-api";
+import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
+import { Profiles } from "../../../src/Profiles";
+import { linkProfileDialog, getLinkedProfile } from "../../../src/ProfileLink";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 
 jest.mock("fs");

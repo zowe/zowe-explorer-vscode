@@ -9,13 +9,12 @@
  *                                                                                 *
  */
 
-import { IProfileLoaded, Logger, CliProfileManager, IProfile, ICommandArguments } from "@zowe/imperative";
+import { IProfileLoaded, Logger, CliProfileManager, IProfile, ImperativeConfig } from "@zowe/imperative";
 import * as path from "path";
+import * as os from "os";
 import { URL } from "url";
 import * as vscode from "vscode";
 
-import { getZoweDir } from "./Utils";
-import { IZoweNodeType } from "./IZoweTreeNode";
 import { ZoweExplorerApi } from "./ZoweExplorerApi";
 
 import * as nls from "vscode-nls";
@@ -228,7 +227,7 @@ export class ProfilesCache {
         if (!profileManager) {
             try {
                 profileManager = await new CliProfileManager({
-                    profileRootDirectory: path.join(getZoweDir(), "profiles"),
+                    profileRootDirectory: path.join(this.getZoweDir(), "profiles"),
                     type,
                 });
             } catch (error) {
@@ -281,5 +280,17 @@ export class ProfilesCache {
             vscode.window.showErrorMessage(error.message);
         }
         return newProfile.profile;
+    }
+
+    /**
+     * Function to retrieve the home directory. In the situation Imperative has
+     * not initialized it we mock a default value.
+     */
+    private getZoweDir(): string {
+        ImperativeConfig.instance.loadedConfig = {
+            defaultHome: path.join(os.homedir(), ".zowe"),
+            envVariablePrefix: "ZOWE",
+        };
+        return ImperativeConfig.instance.cliHome;
     }
 }

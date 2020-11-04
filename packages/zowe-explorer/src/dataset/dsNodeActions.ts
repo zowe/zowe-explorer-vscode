@@ -10,7 +10,9 @@
  */
 
 import * as contextually from "../shared/context";
-import { Profiles, IZoweTree, IZoweDatasetTreeNode } from "@zowe/zowe-explorer-api";
+import { IZoweTree, IZoweDatasetTreeNode } from "@zowe/zowe-explorer-api";
+import { Profiles } from "../Profiles";
+import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { labelRefresh, refreshTree } from "../shared/utils";
 import { returnIconState, resetValidationSettings } from "../shared/actions";
 import { PersistentFilters } from "../PersistentFilters";
@@ -21,7 +23,7 @@ import { PersistentFilters } from "../PersistentFilters";
  * @param {DataSetTree} datasetProvider
  */
 export async function refreshAll(datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
-    await Profiles.getInstance().refresh();
+    await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
     datasetProvider.mSessionNodes.forEach(async (sessNode) => {
         const setting = PersistentFilters.getDirectValue("Zowe-Automatic-Validation") as boolean;
         if (contextually.isSessionNotFav(sessNode)) {

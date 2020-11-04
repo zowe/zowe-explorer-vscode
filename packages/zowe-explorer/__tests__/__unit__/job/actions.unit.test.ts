@@ -27,7 +27,8 @@ import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import * as dsActions from "../../../src/dataset/actions";
 import * as globals from "../../../src/globals";
 import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
-import { Profiles, ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { Profiles } from "../../../src/Profiles";
 import { PersistentFilters } from "../../../src/PersistentFilters";
 
 const activeTextEditorDocument = jest.fn();

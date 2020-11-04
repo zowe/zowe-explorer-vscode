@@ -14,14 +14,9 @@
 jest.mock("@zowe/imperative");
 import * as zowe from "@zowe/cli";
 import { Logger, IProfileLoaded, Session } from "@zowe/imperative";
-import {
-    ZoweExplorerApi,
-    ZoweExplorerApiRegister,
-    ZosmfUssApi,
-    ZosmfJesApi,
-    ZosmfMvsApi,
-    Profiles,
-} from "@zowe/zowe-explorer-api";
+import { ZoweExplorerApi, ZosmfUssApi, ZosmfJesApi, ZosmfMvsApi } from "@zowe/zowe-explorer-api";
+import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
+import { Profiles } from "../../../src/Profiles";
 
 class MockUssApi1 implements ZoweExplorerApi.IUss {
     public profile?: IProfileLoaded;

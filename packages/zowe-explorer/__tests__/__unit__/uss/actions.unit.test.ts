@@ -25,7 +25,10 @@ import {
     createTextDocument,
     createFileResponse,
 } from "../../../__mocks__/mockCreators/shared";
-import { ValidProfileEnum, Profiles, ZoweExplorerApiRegister } from "@zowe/zowe-explorer-api";
+import { ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
+import { Profiles } from "../../../src/Profiles";
+import * as utils from "../../../src/utils/ProfilesUtils";
 import * as vscode from "vscode";
 import * as path from "path";
 import * as globals from "../../../src/globals";
@@ -35,7 +38,6 @@ import { IProfileLoaded } from "@zowe/imperative";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
 import * as isbinaryfile from "isbinaryfile";
 import * as fs from "fs";
-import * as utils from "@zowe/zowe-explorer-api/lib/Utils";
 import { createUssApi, bindUssApi } from "../../../__mocks__/mockCreators/api";
 import { PersistentFilters } from "../../../src/PersistentFilters";
 import * as workspaceUtils from "../../../src/utils/workspace";

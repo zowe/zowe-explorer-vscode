@@ -15,7 +15,7 @@ import * as fs from "fs";
 import * as zowe from "@zowe/cli";
 import * as globals from "../globals";
 import * as path from "path";
-import { errorHandling, FilterItem } from "@zowe/zowe-explorer-api/lib/Utils";
+import { FilterItem, errorHandling, resolveQuickPickHelper } from "../utils/ProfilesUtils";
 import {
     labelRefresh,
     refreshTree,
@@ -23,18 +23,16 @@ import {
     concatChildNodes,
     checkForAddedSuffix,
     willForceUpload,
-    filterTreeByString,
 } from "../shared/utils";
 import {
     IZoweDatasetTreeNode,
     IZoweTreeNode,
     IZoweNodeType,
     IZoweTree,
-    Profiles,
     ValidProfileEnum,
-    ZoweExplorerApiRegister,
-    resolveQuickPickHelper,
 } from "@zowe/zowe-explorer-api";
+import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
+import { Profiles } from "../Profiles";
 import { TextUtils, IProfileLoaded, Session } from "@zowe/imperative";
 import { getIconByNode } from "../generators/icons";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
@@ -58,7 +56,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  * @param {DataSetTree} datasetProvider
  */
 export async function refreshAll(datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
-    await Profiles.getInstance().refresh();
+    await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
     datasetProvider.mSessionNodes.forEach(async (sessNode) => {
         const setting = (await PersistentFilters.getDirectValue("Zowe-Automatic-Validation")) as boolean;
         if (contextually.isSessionNotFav(sessNode)) {

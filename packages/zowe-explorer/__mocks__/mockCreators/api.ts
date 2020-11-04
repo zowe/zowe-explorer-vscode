@@ -9,8 +9,10 @@
  *                                                                                 *
  */
 
-import { ZoweExplorerApiRegister, ZoweExplorerApi } from "@zowe/zowe-explorer-api";
+import { ZoweExplorerApi } from "@zowe/zowe-explorer-api";
 import * as imperative from "@zowe/imperative";
+
+import { ZoweExplorerApiRegister } from "../../src/ZoweExplorerApiRegister";
 
 export function createJesApi(profile: imperative.IProfileLoaded) {
     return ZoweExplorerApiRegister.getJesApi(profile);

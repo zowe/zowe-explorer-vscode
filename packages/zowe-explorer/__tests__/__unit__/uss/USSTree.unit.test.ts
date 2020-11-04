@@ -9,11 +9,13 @@
  *                                                                                 *
  */
 
-import { ValidProfileEnum, Profiles, ZoweExplorerApiRegister } from "@zowe/zowe-explorer-api";
+import { ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
+import { Profiles } from "../../../src/Profiles";
+import * as utils from "../../../src/utils/ProfilesUtils";
 import { createUSSTree, USSTree } from "../../../src/uss/USSTree";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
 import { Logger, IProfileLoaded } from "@zowe/imperative";
-import * as utils from "@zowe/zowe-explorer-api/lib/Utils";
 import {
     createIProfile,
     createISession,

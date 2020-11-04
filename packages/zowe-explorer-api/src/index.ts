@@ -13,7 +13,6 @@ export * from "./IZoweTree";
 export * from "./IZoweTreeNode";
 export * from "./ProfilesCache";
 export * from "./UserSettings";
-export * from "./Utils";
 export * from "./ZoweExplorerApi";
 export * from "./ZoweExplorerZosmfApi";
 export * from "./ZoweTreeNode";

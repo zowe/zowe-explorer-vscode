@@ -16,8 +16,10 @@ import * as zowe from "@zowe/cli";
 import { Logger } from "@zowe/imperative";
 import { DatasetTree } from "../../../src/dataset/DatasetTree";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
-import * as utils from "@zowe/zowe-explorer-api/lib/Utils";
-import { Profiles, ZoweExplorerApiRegister, ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
+import { Profiles } from "../../../src/Profiles";
+import * as utils from "../../../src/utils/ProfilesUtils";
 import { getIconByNode } from "../../../src/generators/icons";
 import {
     createInstanceOfProfile,

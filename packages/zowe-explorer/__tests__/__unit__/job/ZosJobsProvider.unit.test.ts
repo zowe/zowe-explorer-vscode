@@ -15,7 +15,6 @@ import { createJobsTree, ZosJobsProvider } from "../../../src/job/ZosJobsProvide
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import * as globals from "../../../src/globals";
-import * as utils from "@zowe/zowe-explorer-api/lib/Utils";
 import { Logger } from "@zowe/imperative";
 import {
     createIJobFile,
@@ -25,13 +24,14 @@ import {
     MockJobDetail,
 } from "../../../__mocks__/mockCreators/jobs";
 import { Job } from "../../../src/job/ZoweJobNode";
-import { Profiles, ZoweExplorerApiRegister, ValidProfileEnum, IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
+import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
+import { Profiles } from "../../../src/Profiles";
+import * as utils from "../../../src/utils/ProfilesUtils";
 import {
     createIProfile,
     createISession,
     createInstanceOfProfile,
     createISessionWithoutCredentials,
-    createQuickPickContent,
     createTreeView,
 } from "../../../__mocks__/mockCreators/shared";
 import { getIconByNode } from "../../../src/generators/icons";

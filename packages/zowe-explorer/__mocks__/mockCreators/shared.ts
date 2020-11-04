@@ -14,7 +14,8 @@ import { ZoweTreeProvider } from "../../src/abstract/ZoweTreeProvider";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
 import * as vscode from "vscode";
-import { ValidProfileEnum, FilterDescriptor } from "@zowe/zowe-explorer-api";
+import { ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { FilterDescriptor } from "../../src/utils/ProfilesUtils";
 import * as zowe from "@zowe/cli";
 
 export function createPersistentConfig() {

@@ -14,17 +14,12 @@ import * as jobUtils from "../job/utils";
 import * as globals from "../globals";
 import { ZosmfSession, IJob } from "@zowe/cli";
 import { IProfileLoaded, Logger, IProfile, Session } from "@zowe/imperative";
-import {
-    Profiles,
-    ValidProfileEnum,
-    IZoweTree,
-    IZoweJobTreeNode,
-    ZoweExplorerApiRegister,
-    PersistenceSchemaEnum,
-} from "@zowe/zowe-explorer-api";
+import { ValidProfileEnum, IZoweTree, IZoweJobTreeNode, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
+import { FilterItem, FilterDescriptor, resolveQuickPickHelper, errorHandling } from "../utils/ProfilesUtils";
+import { Profiles } from "../Profiles";
+import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Job } from "./ZoweJobNode";
 import { getAppName, sortTreeItems, labelRefresh } from "../shared/utils";
-import { FilterItem, FilterDescriptor, resolveQuickPickHelper, errorHandling } from "@zowe/zowe-explorer-api/lib/Utils";
 import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
 import { getIconByNode } from "../generators/icons";
 import * as contextually from "../shared/context";

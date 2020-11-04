@@ -16,7 +16,7 @@ import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import * as brtimperative from "@zowe/imperative";
 import * as zowe from "@zowe/cli";
 import * as dsNodeActions from "../../../src/dataset/actions";
-import { Profiles } from "@zowe/zowe-explorer-api";
+import { Profiles } from "../../../src/Profiles";
 import { FAVORITE_CONTEXT, DS_SESSION_CONTEXT, FAV_SUFFIX } from "../../../src/globals";
 
 jest.mock("vscode");

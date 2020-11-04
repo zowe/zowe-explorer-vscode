@@ -11,10 +11,11 @@
 
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
-import * as profileLoader from "@zowe/zowe-explorer-api";
+import * as profileLoader from "../../../src/Profiles";
+import { ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { MvsCommandHandler } from "../../../src/command/MvsCommandHandler";
 import * as globals from "../../../src/globals";
-import * as utils from "@zowe/zowe-explorer-api/lib/Utils";
+import * as utils from "../../../src/utils/ProfilesUtils";
 
 describe("mvsCommandActions unit testing", () => {
     const showErrorMessage = jest.fn();
@@ -103,7 +104,7 @@ describe("mvsCommandActions unit testing", () => {
                         return profilesForValidation;
                     }),
                     validateProfiles: jest.fn(),
-                    validProfile: profileLoader.ValidProfileEnum.VALID,
+                    validProfile: ValidProfileEnum.VALID,
                 };
             }),
         });

@@ -20,8 +20,9 @@ import {
     createValidIProfile,
 } from "../../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
-import { Profiles, IZoweNodeType } from "@zowe/zowe-explorer-api";
-import * as utils from "@zowe/zowe-explorer-api/lib/Utils";
+import { IZoweNodeType } from "@zowe/zowe-explorer-api";
+import { Profiles } from "../../../src/Profiles";
+import * as utils from "../../../src/utils/ProfilesUtils";
 import * as globals from "../../../src/globals";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import * as sharedActions from "../../../src/shared/actions";

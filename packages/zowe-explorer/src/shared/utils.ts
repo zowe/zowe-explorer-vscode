@@ -20,9 +20,9 @@ import {
     IZoweDatasetTreeNode,
     IZoweUSSTreeNode,
     IZoweJobTreeNode,
-    Profiles,
-    ZoweExplorerApiRegister,
 } from "@zowe/zowe-explorer-api";
+import { Profiles } from "../Profiles";
+import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { ISession, IProfileLoaded } from "@zowe/imperative";
 import * as nls from "vscode-nls";
 import { IUploadOptions, IZosFilesResponse } from "@zowe/cli";

@@ -9,7 +9,7 @@
  *                                                                                 *
  */
 
-import { FilterDescriptor } from "@zowe/zowe-explorer-api/lib/Utils";
+import { FilterDescriptor } from "../utils/ProfilesUtils";
 
 import * as nls from "vscode-nls";
 // Set up localization

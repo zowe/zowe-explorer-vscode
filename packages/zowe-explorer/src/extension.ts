@@ -25,17 +25,17 @@ import {
     IZoweUSSTreeNode,
     IZoweTreeNode,
     IZoweTree,
-    Profiles,
-    ZoweExplorerApiRegister,
-    ZoweExplorerExtender,
-    linkProfileDialog,
 } from "@zowe/zowe-explorer-api";
+import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
+import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
+import { Profiles } from "./Profiles";
+import { errorHandling, getZoweDir } from "./utils/ProfilesUtils";
+import { linkProfileDialog } from "./ProfileLink";
 import { CredentialManagerFactory, ImperativeError, CliProfileManager } from "@zowe/imperative";
 import { createDatasetTree } from "./dataset/DatasetTree";
 import { createJobsTree } from "./job/ZosJobsProvider";
 import { createUSSTree } from "./uss/USSTree";
 import { MvsCommandHandler } from "./command/MvsCommandHandler";
-import { errorHandling, getZoweDir } from "@zowe/zowe-explorer-api/lib/Utils";
 import SpoolProvider from "./SpoolProvider";
 import { KeytarCredentialManager } from "./KeytarCredentialManager";
 import * as nls from "vscode-nls";

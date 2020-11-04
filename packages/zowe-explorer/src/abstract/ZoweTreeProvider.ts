@@ -16,14 +16,15 @@ import { PersistentFilters } from "../PersistentFilters";
 import { OwnerFilterDescriptor } from "../job/utils";
 import { getIconByNode, getIconById, IconId } from "../generators/icons";
 import {
-    Profiles,
     IZoweTreeNode,
     IZoweDatasetTreeNode,
     IZoweNodeType,
     IZoweTree,
     PersistenceSchemaEnum,
 } from "@zowe/zowe-explorer-api";
-import { setProfile, setSession, errorHandling } from "@zowe/zowe-explorer-api/lib/Utils";
+import { Profiles } from "../Profiles";
+import { setProfile, setSession, errorHandling } from "../utils/ProfilesUtils";
+
 import * as nls from "vscode-nls";
 
 // Set up localization

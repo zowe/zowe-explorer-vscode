@@ -36,8 +36,9 @@ import * as globals from "../../../src/globals";
 import * as path from "path";
 import * as fs from "fs";
 import * as sharedUtils from "../../../src/shared/utils";
-import { Profiles, ValidProfileEnum } from "@zowe/zowe-explorer-api";
-import * as utils from "@zowe/zowe-explorer-api/lib/Utils";
+import { ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { Profiles } from "../../../src/Profiles";
+import * as utils from "../../../src/utils/ProfilesUtils";
 import { PersistentFilters } from "../../../src/PersistentFilters";
 
 // Missing the definition of path module, because I need the original logic for tests

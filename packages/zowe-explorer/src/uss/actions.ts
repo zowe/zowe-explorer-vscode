@@ -16,14 +16,10 @@ import * as globals from "../globals";
 import * as path from "path";
 import { ZoweUSSNode } from "./ZoweUSSNode";
 import { labelRefresh, refreshTree, concatChildNodes, willForceUpload, uploadContent } from "../shared/utils";
-import { errorHandling } from "@zowe/zowe-explorer-api/lib/Utils";
-import {
-    Profiles,
-    ValidProfileEnum,
-    IZoweTree,
-    IZoweUSSTreeNode,
-    ZoweExplorerApiRegister,
-} from "@zowe/zowe-explorer-api";
+import { errorHandling } from "../utils/ProfilesUtils";
+import { ValidProfileEnum, IZoweTree, IZoweUSSTreeNode } from "@zowe/zowe-explorer-api";
+import { Profiles } from "../Profiles";
+import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { isBinaryFileSync } from "isbinaryfile";
 import { Session } from "@zowe/imperative";
 import * as contextually from "../shared/context";
@@ -103,7 +99,7 @@ export async function createUSSNodeDialog(node: IZoweUSSTreeNode, ussFileProvide
  * @param {USSTree} ussFileProvider
  */
 export async function refreshAllUSS(ussFileProvider: IZoweTree<IZoweUSSTreeNode>) {
-    await Profiles.getInstance().refresh();
+    await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
     ussFileProvider.mSessionNodes.forEach(async (sessNode) => {
         const setting = (await PersistentFilters.getDirectValue("Zowe-Automatic-Validation")) as boolean;
         if (contextually.isSession(sessNode)) {

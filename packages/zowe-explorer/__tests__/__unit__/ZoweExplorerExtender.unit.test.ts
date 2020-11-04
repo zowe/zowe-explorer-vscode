@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { Profiles, ZoweExplorerExtender } from "@zowe/zowe-explorer-api";
+
 import { Logger } from "@zowe/imperative";
 import {
     createISession,
@@ -21,6 +21,9 @@ import {
 import { createDatasetSessionNode, createDatasetTree } from "../../__mocks__/mockCreators/datasets";
 import { createUSSSessionNode, createUSSTree } from "../../__mocks__/mockCreators/uss";
 import { createJobsTree, createIJobObject } from "../../__mocks__/mockCreators/jobs";
+import { ZoweExplorerExtender } from "../../src/ZoweExplorerExtender";
+import { Profiles } from "../../src/Profiles";
+
 describe("ZoweExplorerExtender unit tests", () => {
     async function createBlockMocks() {
         const newMocks = {

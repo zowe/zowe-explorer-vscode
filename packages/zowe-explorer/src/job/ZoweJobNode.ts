@@ -13,8 +13,9 @@ import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import * as globals from "../globals";
 import { Session, IProfileLoaded } from "@zowe/imperative";
-import { IZoweJobTreeNode, ZoweTreeNode, ZoweExplorerApiRegister } from "@zowe/zowe-explorer-api";
-import { errorHandling, refreshTree } from "@zowe/zowe-explorer-api/lib/Utils";
+import { IZoweJobTreeNode, ZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
+import { errorHandling, refreshTree } from "../utils/ProfilesUtils";
 import { getIconByNode } from "../generators/icons";
 import * as contextually from "../shared/context";
 

@@ -15,11 +15,13 @@ import { createJobsTree } from "../../../src/job/ZosJobsProvider";
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import * as globals from "../../../src/globals";
-import * as utils from "@zowe/zowe-explorer-api/lib/Utils";
 import { Logger } from "@zowe/imperative";
 import { createIJobFile, createIJobObject, createJobSessionNode } from "../../../__mocks__/mockCreators/jobs";
 import { Job } from "../../../src/job/ZoweJobNode";
-import { Profiles, ValidProfileEnum, ZoweExplorerApiRegister, IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
+import { ValidProfileEnum, IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
+import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
+import { Profiles } from "../../../src/Profiles";
+import * as utils from "../../../src/utils/ProfilesUtils";
 import {
     createIProfile,
     createISession,

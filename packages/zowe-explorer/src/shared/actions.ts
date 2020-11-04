@@ -12,12 +12,13 @@
 import * as vscode from "vscode";
 import * as globals from "../globals";
 import { openPS } from "../dataset/actions";
-import { Profiles, IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweNodeType, IZoweTree } from "@zowe/zowe-explorer-api";
+import { IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweNodeType, IZoweTree } from "@zowe/zowe-explorer-api";
+import { Profiles } from "../Profiles";
 import { filterTreeByString } from "../shared/utils";
-import { FilterItem, resolveQuickPickHelper, FilterDescriptor } from "@zowe/zowe-explorer-api/lib/Utils";
+import { FilterItem, resolveQuickPickHelper, FilterDescriptor } from "../utils/ProfilesUtils";
 import * as contextually from "../shared/context";
 import * as nls from "vscode-nls";
-import { getIconByNode, getIconById, IconId } from "../generators/icons";
+import { getIconById, IconId } from "../generators/icons";
 
 // Set up localization
 nls.config({

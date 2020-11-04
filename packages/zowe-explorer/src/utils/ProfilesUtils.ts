@@ -15,21 +15,8 @@ import * as vscode from "vscode";
 import * as os from "os";
 import * as path from "path";
 import { ISession, IProfile, ImperativeConfig } from "@zowe/imperative";
-import {
-    ZoweExplorerApiRegister,
-    IZoweTree,
-    IZoweNodeType,
-    IZoweUSSTreeNode,
-    IZoweDatasetTreeNode,
-    IZoweJobTreeNode,
-    IZoweTreeNode,
-    PersistenceSchemaEnum,
-    IUrlValidator,
-    IProfileValidation,
-    IValidationSetting,
-    ValidProfileEnum,
-    ProfilesCache,
-} from "@zowe/zowe-explorer-api";
+import { IZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { Profiles } from "../Profiles";
 import * as nls from "vscode-nls";
 
 // Set up localization
@@ -66,11 +53,11 @@ export function errorHandling(errorDetails: any, label?: string, moreInfo?: stri
 
             if (isTheia()) {
                 vscode.window.showErrorMessage(errMsg);
-                ProfilesCache.getInstance().promptCredentials(label.trim());
+                Profiles.getInstance().promptCredentials(label.trim());
             } else {
                 vscode.window.showErrorMessage(errMsg, "Check Credentials").then(async (selection) => {
                     if (selection) {
-                        await ProfilesCache.getInstance().promptCredentials(label.trim(), true);
+                        await Profiles.getInstance().promptCredentials(label.trim(), true);
                     }
                 });
             }
@@ -100,7 +87,7 @@ export function isTheia(): boolean {
  * @param {sessNode} IZoweTreeNode
  *************************************************************************************************************/
 export function refreshTree(sessNode: IZoweTreeNode) {
-    const allProf = ProfilesCache.getInstance().getProfiles();
+    const allProf = Profiles.getInstance().getProfiles();
     for (const profNode of allProf) {
         if (sessNode.getProfileName() === profNode.name) {
             setProfile(sessNode, profNode.profile);

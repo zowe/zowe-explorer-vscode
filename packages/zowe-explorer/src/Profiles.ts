@@ -9,17 +9,7 @@
  *                                                                                 *
  */
 
-import {
-    IProfileLoaded,
-    Logger,
-    CliProfileManager,
-    IProfile,
-    ISession,
-    IUpdateProfileFromCliArgs,
-    ICommandArguments,
-} from "@zowe/imperative";
-import * as path from "path";
-import { URL } from "url";
+import { IProfileLoaded, Logger, ISession, IUpdateProfileFromCliArgs, ICommandArguments } from "@zowe/imperative";
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import {
@@ -29,9 +19,7 @@ import {
     IZoweDatasetTreeNode,
     IZoweJobTreeNode,
     IZoweTreeNode,
-    getZoweDir,
     PersistenceSchemaEnum,
-    IUrlValidator,
     IProfileValidation,
     IValidationSetting,
     ValidProfileEnum,

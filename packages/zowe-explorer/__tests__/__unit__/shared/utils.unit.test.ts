@@ -9,7 +9,6 @@
  *                                                                                 *
  */
 
-import * as utils from "@zowe/zowe-explorer-api/lib/Utils";
 import * as sharedUtils from "../../../src/shared/utils";
 import * as globals from "../../../src/globals";
 import { Session, IProfileLoaded, Logger } from "@zowe/imperative";
@@ -23,9 +22,11 @@ import {
     createFileResponse,
 } from "../../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode } from "../../../__mocks__/mockCreators/datasets";
-import { Profiles, ZoweExplorerApiRegister } from "@zowe/zowe-explorer-api";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
 import { Job } from "../../../src/job/ZoweJobNode";
+import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
+import { Profiles } from "../../../src/Profiles";
+import * as utils from "../../../src/utils/ProfilesUtils";
 
 jest.mock("path");
 

@@ -13,16 +13,11 @@ import * as vscode from "vscode";
 import * as globals from "../globals";
 import * as path from "path";
 import { IProfileLoaded, Logger, Session } from "@zowe/imperative";
-import { FilterItem, FilterDescriptor, resolveQuickPickHelper, errorHandling } from "@zowe/zowe-explorer-api/lib/Utils";
+import { FilterItem, FilterDescriptor, resolveQuickPickHelper, errorHandling } from "../utils/ProfilesUtils";
 import { sortTreeItems, getAppName } from "../shared/utils";
-import {
-    IZoweTree,
-    IZoweUSSTreeNode,
-    Profiles,
-    ValidProfileEnum,
-    ZoweExplorerApiRegister,
-    PersistenceSchemaEnum,
-} from "@zowe/zowe-explorer-api";
+import { IZoweTree, IZoweUSSTreeNode, ValidProfileEnum, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
+import { Profiles } from "../Profiles";
+import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { ZoweUSSNode } from "./ZoweUSSNode";
 import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
 import { getIconByNode } from "../generators/icons";
