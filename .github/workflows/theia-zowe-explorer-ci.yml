@@ -4,19 +4,18 @@ name: Theia Zowe Explorer CI
 on: [push, pull_request]
 
 jobs:
-
   theia-build:
-
     runs-on: ubuntu-latest
 
     steps:
       # check out source
       - uses: actions/checkout@v2
 
+      # install yarn
+      - run: npm install -g yarn
+
       # install dependencies
-      #   equivalent to `npm ci`
-      #   - run: yarn install --frozen-lockfile
-      - run: npm ci
+      - run: yarn install --frozen-lockfile
 
       # copy test data file needed for build :-(
       - name: Create test data file
@@ -33,7 +32,7 @@ jobs:
 
       - name: Start Theia
         run: docker run --name theia --init -d -p 3000:3000 -v "${PWD}/temp:/home/theia/.theia" theiaide/theia
-      # NOTE(Kelosky): alternatively, we could run docker via something like this; however, we cannot hot reload 
+      # NOTE(Kelosky): alternatively, we could run docker via something like this; however, we cannot hot reload
       #                hosted VS Code extensions after theia is started (at least at the time this was written).
       # services:
       #   theia:
@@ -42,7 +41,7 @@ jobs:
       #       - 3000:3000
       #     volumes:
       #       - temp:/home/theia/.theia
-      #     # --health-cmd "curl --fail http://localhost:3000 || exit 1" --health-interval=5s --health-timeout=5s --health-retries 60 
+      #     # --health-cmd "curl --fail http://localhost:3000 || exit 1" --health-interval=5s --health-timeout=5s --health-retries 60
       #     options: --init
 
       - run: yarn lint
@@ -63,4 +62,3 @@ jobs:
         run: yarn build:integration
 
       - run: yarn test:theia
-
