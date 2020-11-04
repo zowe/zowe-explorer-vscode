@@ -20,7 +20,7 @@ import {
     IZoweJobTreeNode,
 } from "@zowe/zowe-explorer-api";
 import { Profiles } from "./Profiles";
-import { getProfile, getLinkedProfile } from "../../zowe-explorer/src/ProfileLink";
+import { getProfile, getLinkedProfile } from "./ProfileLink";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 
 /**
