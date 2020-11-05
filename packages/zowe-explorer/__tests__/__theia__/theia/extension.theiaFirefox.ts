@@ -1,14 +1,13 @@
-import { sleep } from "@zowe/cli";
 /*
-* This program and the accompanying materials are made available under the terms of the *
-* Eclipse Public License v2.0 which accompanies this distribution, and is available at *
-* https://www.eclipse.org/legal/epl-v20.html                                      *
-*                                                                                 *
-* SPDX-License-Identifier: EPL-2.0                                                *
-*                                                                                 *
-* Copyright Contributors to the Zowe Project.                                     *
-*                                                                                 *
-*/
+ * This program and the accompanying materials are made available under the terms of the *
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
+ * https://www.eclipse.org/legal/epl-v20.html                                      *
+ *                                                                                 *
+ * SPDX-License-Identifier: EPL-2.0                                                *
+ *                                                                                 *
+ * Copyright Contributors to the Zowe Project.                                     *
+ *                                                                                 *
+ */
 
 import { Builder, By, Key, until, Button } from "selenium-webdriver";
 // tslint:disable-next-line: no-submodule-imports
@@ -75,36 +74,36 @@ export async function clickOnAddSessionInJobs(){
 
 export async function addProfileDetails(profileName: string){
     await driverFirefox.findElement(By.id(DatasetsLocators.datasetsAddSessionId)).click();
-    await sleep(SHORTSLEEPTIME);
+    await driverFirefox.sleep(SHORTSLEEPTIME);
     await driverFirefox.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath)).sendKeys(Key.ENTER);
-    await sleep(SHORTSLEEPTIME);
+    await driverFirefox.sleep(SHORTSLEEPTIME);
     const datasetProfileName = await driverFirefox.wait(until.elementLocated(By.xpath(DatasetsLocators.emptyInputBoxXpath)),WAITTIME);
     datasetProfileName.sendKeys(profileName);
     datasetProfileName.sendKeys(Key.ENTER);
-    await sleep(SHORTSLEEPTIME);
+    await driverFirefox.sleep(SHORTSLEEPTIME);
     const zosUrl = await driverFirefox.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
     zosUrl.sendKeys("fakehost.net:1003");
     zosUrl.sendKeys(Key.ENTER);
-    await sleep(SHORTSLEEPTIME);
+    await driverFirefox.sleep(SHORTSLEEPTIME);
     const username = await driverFirefox.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
     username.sendKeys(Key.ENTER);
-    await sleep(SHORTSLEEPTIME);
+    await driverFirefox.sleep(SHORTSLEEPTIME);
     const password = await driverFirefox.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
     password.sendKeys(Key.ENTER);
-    await sleep(SHORTSLEEPTIME);
+    await driverFirefox.sleep(SHORTSLEEPTIME);
     const authorization = await driverFirefox.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
     authorization.sendKeys("False - Accept connections with self-signed certificates");
     authorization.sendKeys(Key.ENTER);
-    await sleep(SHORTSLEEPTIME);
+    await driverFirefox.sleep(SHORTSLEEPTIME);
     const basepath = await driverFirefox.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
     basepath.sendKeys(Key.ENTER);
-    await sleep(SHORTSLEEPTIME);
+    await driverFirefox.sleep(SHORTSLEEPTIME);
     const encoding = await driverFirefox.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
     encoding.sendKeys(Key.ENTER);
-    await sleep(SHORTSLEEPTIME);
+    await driverFirefox.sleep(SHORTSLEEPTIME);
     const responseTimeout = await driverFirefox.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
     responseTimeout.sendKeys(Key.ENTER);
-    await sleep(SHORTSLEEPTIME);
+    await driverFirefox.sleep(SHORTSLEEPTIME);
 }
 
 export async function addProfileDetailsInUss(profileName: string){
@@ -172,6 +171,9 @@ export async function getJobsNode(){
     return jobsLink;
 }
 
+export async function sleepTime(sleeptime: number){
+    await driverFirefox.sleep(sleeptime);
+}
 export async function refreshBrowser(){
     await driverFirefox.navigate().refresh();
 }
