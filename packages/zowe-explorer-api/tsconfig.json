@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "types": ["node", "jest"],
+    "target": "es2015",
+    "module": "commonjs",
+    "declaration": true,
+    "moduleResolution": "node",
+    "noImplicitAny": false,
+    "outDir": "./lib",
+    "preserveConstEnums": true,
+    "removeComments": false,
+    "pretty": true,
+    "sourceMap": true,
+    "newLine": "lf"
+  },
+  "include": ["src/**/*"],
+  "exclude": ["lib", "node_modules"]
+}

@@ -1,0 +1,26 @@
+{
+  "name": "@zowe/zowe-explorer-api",
+  "version": "1.10.0",
+  "description": "Extensibility API for Zowe Explorer.",
+  "publisher": "Zowe",
+  "author": "Zowe",
+  "license": "EPL-2.0",
+  "repository": {
+    "url": "https://github.com/zowe/vscode-extension-for-zowe"
+  },
+  "main": "lib/index.js",
+  "files": [
+    "lib",
+    "src"
+  ],
+  "scripts": {
+    "build": "yarn clean && yarn license && tsc -p ./",
+    "test": "echo \"zowe-explorer-api: coming soon.\"",
+    "lint": "echo \"zowe-explorer-api: coming soon.\"",
+    "lintErrors": "echo \"zowe-explorer-api: coming soon.\"",
+    "pretty": "prettier --write .",
+    "clean": "rimraf lib",
+    "license": "node ../../scripts/license.js",
+    "package": "yarn build && npm pack && node ../../scripts/mv-pack.js zowe-zowe-explorer-api tgz"
+  }
+}

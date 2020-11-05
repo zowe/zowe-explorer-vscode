@@ -1,243 +1,209 @@
-# Zowe Explorer
+# Install, Build, and Test the Extension
 
-![Node.js CI](https://img.shields.io/github/workflow/status/zowe/vscode-extension-for-zowe/Node.js%20CI.svg?logo=github)
-[![version](https://vsmarketplacebadge.apphb.com/version-short/Zowe.vscode-extension-for-zowe.png)](https://vsmarketplacebadge.apphb.com/version-short/Zowe.vscode-extension-for-zowe.png)
-[![downloads](https://vsmarketplacebadge.apphb.com/downloads-short/Zowe.vscode-extension-for-zowe.png)](https://vsmarketplacebadge.apphb.com/downloads-short/Zowe.vscode-extension-for-zowe.png)
-[![codecov](https://codecov.io/gh/zowe/vscode-extension-for-zowe/branch/master/graph/badge.svg)](https://codecov.io/gh/zowe/vscode-extension-for-zowe)
-[![slack](https://img.shields.io/badge/chat-on%20Slack-blue)](https://slack.openmainframeproject.org/)
-
-[Zowe Explorer](https://github.com/zowe/community#zowe-explorer) is a sub-project of Zowe, focusing on modernizing mainframe experience. [Zowe](https://www.zowe.org/) is a project hosted by the [Open Mainframe Project](https://www.openmainframeproject.org/), a [Linux Foundation](https://www.linuxfoundation.org/) project.
-
-The Zowe Explorer extension modernizes the way developers and system administrators interact with z/OS mainframes by:
-
-* Enabling you to create, modify, rename, copy, and upload data sets directly to a z/OS mainframe.
-* Enabling you to create, modify, rename, and upload USS files directly to a z/OS mainframe.
-* Providing a more streamlined way to access data sets, uss files and jobs.
-* Letting you create, edit, and delete Zowe CLI `zosmf` compatible profiles.
-* Letting you use the Secure Credential Store plug-in to store your credentials securely in the settings.
-* Letting you leverage the API Mediation Layer token-based authentication to access z/OSMF.
-
-More information:
-
-* For the complete Zowe Explorer documentation, see [Zowe Docs](https://docs.zowe.org/stable/user-guide/ze-install.html).
-* Join the **#zowe-explorer** channel on [Slack](https://openmainframeproject.slack.com/) to stay in touch with the Zowe community.
+Developers can install the Visual Studio Code Extension for Zowe, which lets users interact with z/OS data sets on a remote mainframe instance, from a VSIX file and run system tests on the extension.
 
 ## Contents
 
-* [What's new in Zowe Explorer 1.10.0](#what's-new-in-zowe-explorer-1.10.0)
-* [Prerequisites](#prerequisites)
-* [Getting Started](#getting-started)
-* [Credentials Security](#credentials-security)
-* [Usage Tips](#usage-tips)
-* [Extending Zowe Explorer](#extending-zowe-explorer)
+- [Install to VSC from source](#install-to-vsc-from-source)
+- [Run System Tests](#run-system-tests)
+- [Run Zowe Explorer Regression Tests for Theia](#run-zowe-explorer-regression-tests-for-theia)
+- [Localization](#localization)
 
-## What's new in Zowe Explorer 1.10.0
+## Install to VSC from source
 
-New features:
+You can build the extension (VSIX file) from this source repository and install it to VSC.
 
-* Added base profile support. You can now log in to the API Mediation Layer via Zowe CLI and use that token with a service profile in Zowe Explorer.  
+**Important!** Follow the [instructions for creating testProfileData.ts](#run-system-tests) before performing these steps.
 
-For more information, see [Changelog](https://marketplace.visualstudio.com/items/Zowe.vscode-extension-for-zowe/changelog).
+### Build the extension
 
-## Prerequisites
+From your local copy of this repository, issue the following commands to create the VSIX package file from source:
 
-* Install [Node.js](https://nodejs.org/en/download/) v8.0 or later.
-* Configure TSO/E address space services, z/OS data set, file REST interface and z/OS jobs REST interface. For more information, see [z/OS Requirements](https://docs.zowe.org/stable/user-guide/systemrequirements-zosmf.html#z-os-requirements).
-* Create a Zowe Explorer profile.
+1. `npm install`
+2. `npm run package`
+   This creates a `.vsix` file in your local copy of the project.
 
-## Getting Started
+### Install the extension to VSC
 
-Create a profile, review the sample use cases to familiarize yourself with the capabilities of Zowe Explorer, and you are ready to use Zowe Explorer.
+After you create a VSIX file, install the extension to VSC:
 
-### Create Profile
+1. Navigate to the Extensions menu in Visual Studio Code and click the **...** menu on the top-left.
+2. Select Install from VSIX and select the `.vsix` file that was created by your `npm run package` command.
+3. Restart Visual Studio Code.
 
-1. Navigate to the explorer tree.
-2. Hover over **DATA SETS**, **USS**, or **JOBS**.
-3. Click the **+** icon.
-4. Select **Create a New Connection to z/OS**. The user name and password fields are optional before you started to use a profile.
-5. Follow the instructions, and enter all required information to complete the profile creation.
+The extension is installed.
 
-![New Connection](docs/images/ZE-newProfiles.gif?raw=true "New Connection")
-<br /><br />
+## Run System Tests
 
-You can now use all the functionalities of the extension.
+The following topics describe how to run system tests on the Visual Studio Code extension.
 
-### Use Base Profile and Token with Existing Profiles
+### Test Profile Data
 
-Leverage existing base profiles with a token to access z/OSMF via the API Mediation Layer.
+In your copy of this repository, create a `testProfileData.ts` file in the `resources` directory. In this file, include the following text with your credentials:
 
-Before using the base profile functionality, ensure that you have [Zowe CLI](https://docs.zowe.org/stable/user-guide/cli-installcli.html) v1.13.0 or higher installed.
+```typescript
+import { IProfile } from "@zowe/imperative";
 
-**Follow these steps:**
+export const profile: IProfile = {
+  type: "zosmf",
+  host: "",
+  port: 0,
+  user: "",
+  pass: "",
+  rejectUnauthorized: false,
+  name: "", // @NOTE: This profile name must match an existing zowe profile in the ~/.zowe/profiles/zosmf folder
+};
 
-1. Open Zowe CLI and run the following command: `zowe auth login apiml`
-2. Follow the instructions to complete the login.  
-   A local base profile is created that contains your token.  
-   **Note:** For more information about the process, see [Token Management](https://docs.zowe.org/stable/user-guide/cli-usingcli.html#how-token-management-works).
-  
-3. Run Zowe Explorer and click the **+** icon.  
+export const normalPattern = "";
+export const orPattern = "";
+```
 
-4. Select the profile you use with your base profile with the token.
+**Note:** You can copy the above example content from `./resources/testProfileData.example.ts`.
 
-   The profile appears in the tree and you can now use this profile to access z/OSMF via the API Mediation Layer.  
+#### Normal pattern
 
-For more information, see [Integrating with API Mediation Layer](https://docs.zowe.org/stable/user-guide/cli-usingcli.html#integrating-with-api-mediation-layer).
+To test the extension, the mainframe data sets under `normalPattern` must match the following structures:
 
-### Sample use cases
+- `normalPattern` + ".EXT.PDS"
+  - "MEMBER"
+- `normalPattern` + ".EXT.PS"
+- `normalPattern` + ".EXT.SAMPLE.PDS"
+- `normalPattern` + ".PUBLIC.BIN"
+- `normalPattern` + ".PUBLIC.TCLASSIC"
+  - "NEW"
+- `normalPattern` + ".PUBLIC.TPDS"
+  - "TCHILD1"
+  - "TCHILD2"
+- `normalPattern` + ".PUBLIC.TPS"
 
-Review the following use cases to understand how to work with data sets in Zowe Explorer. For the complete list of features including USS and jobs, see [Zowe Explorer Sample Use Cases](https://docs.zowe.org/stable/user-guide/ze-usage.html#sample-use-cases).
+The `./scripts` folder contains the following scripts to help you set up the required file structure. You can execute the scripts when the `ts-node` package is installed globally.
 
-* [View data sets and use multiple filters](#view-data-sets-and-use-multiple-filters): View multiple data sets simultaneously and apply filters to show specified data sets.
-* [Refresh the data set list](#refresh-the-list-of-data-sets): Refresh the list of pre-filtered data sets.
-* [Rename data sets](#rename-data-sets): Rename specified data sets.
-* [Copy data sets](#copy-data-sets): Copy specified data sets and members.
-* [Download, edit, and upload existing PDS members](#download-edit-and-upload-existing-pds-members): You can instantly pull data sets and data set members from the mainframe, edit them, and upload back.
-* [Prevent merge conflicts](#use-the-save-option-to-prevent-merge-conflicts): The save option includes a **compare** mechanism letting you resolve potential merge conflicts.
-* [Create data sets and data set members](#create-a-new-pds-and-a-pds-member): Create a new data set and data set members.
-* [Delete data set member and a data set](#delete-a-pds-member-and-pds): Delete a chosen data set member or an entire data set.
-* [View and access multiple profiles simultaneously](#view-and-access-multiple-profiles-simultaneously): Work with data sets from multiple profiles.
+- [create-env](/scripts/create-env.ts): Creates the proper data sets on the mainframe.
+- [clean-env](/scripts/clean-env.ts): Cleans up the data sets created on the mainframe.
 
-#### View data sets and use multiple filters
+**Note:** The scripts use the profile that you specified in `testProfileData`.
 
-1. Navigate to the explorer tree.
-2. Open the **DATA SETS** bar.
-3. Hover over the profile that you want to apply the filter to.
-4. Click the **magnifying glass** icon.
-5. Enter a pattern you want to create a filter for.
-  The data sets that match your pattern(s) are displayed in the explorer tree.
+##### Execute the setup scripts
 
-**Tip:** To provide multiple filters, separate entries with a comma. You can append or postpend any filter with an \*, which indicates wildcard searching. You cannot enter an \* as the entire pattern.
+1. Issue the following command to install `ts-node` globally:
 
-![View Data Set](docs/images/ZE-multiple-search.gif?raw=true "View Data Set")
-<br /><br />
+   `npm install -g ts-node`
 
-#### Refresh the list of data sets
+2. Issue the following command to execute script as if it were a node script.
 
-1. Navigate to the explorer tree.
-2. Click **Refresh All** button (circular arrow icon) on the right of the **DATA SETS** explorer bar.
+   `ts-node ./scripts/clean-env.ts` or `ts-node ./scripts/create-env.ts`
 
-#### Rename data sets
+#### Or pattern
 
-1. Navigate to the explorer tree.
-2. Open the **DATA SETS** bar.
-3. Select a data set you want to rename.
-4. Right-click the data set and select the **Rename Data Set** option.
-5. Change the name of the data set.
+There is no required structure for the mainframe data sets under `orPattern`.
 
-![Rename Data Set](docs/images/ZE-rename.gif?raw=true "Rename Data Set")
-<br /><br />
+### Executing from VSC
 
-#### Copy data sets
+1. To run the tests, open your copy of the repository in VSC, [build the extension](#build-the-extension), and open the **Debug** panel on the left.
 
-1. Navigate to the explorer tree.
-2. Open the **DATA SETS** bar.
-3. Select a member you want to copy.
-4. Right-click the member and select the **Copy Data Set** option.
-5. Right-click the data set where the member belongs and select the **Paste Data Set** option.
-6. Enter the name of the copied member.
+2. From the drop-down next to the green play button, click **Integration Tests Mocha** and click the **Play** button.
 
-![Copy Data Set](docs/images/ZE-copy.gif?raw=true "Copy Data Set")
-<br /><br />
+The tests run and the output goes to your VSC debug console.
 
-#### Download, edit, and upload existing PDS members
+### Profile notes
 
-1. Navigate to the explorer tree.
-2. Open the **DATA SETS** bar.
-3. Open a profile.
-4. Click the PDS member (or PS) that you want to download.
+- As mentioned in the example test properties file, there must be at least one valid zosmf profile corresponding to the name in your properties file.
 
-    **Note:** To view the members of a PDS, click the PDS to expand the tree.
+  **Example:** When your test properties define a profile named `test-vscode-extension`, a corresponding profile should exist in the `.zowe` profiles directory of your `zowe-cli`. The profile definitions **must** be identical to allow your tests to execute properly.
 
-    The PDS member is displayed in the text editor window of VSC.
-5. Edit the document.
-6. Navigate back to the PDS member (or PS) in the explorer tree, and click the **Save** button.
+- The tests need at least two profiles to work properly. The second profile does not require valid credentials, however, it must exist on disk.
 
-Your PDS member (or PS) is uploaded.
+## Run Zowe Explorer Regression Tests for Theia
 
-**Note:** If someone else has made changes to the PDS member (or PS) while you were editing it, you can merge your conflicts before uploading to the mainframe.
+Run regression tests to ensure that the latest release of Zowe Explorer is compatible with a Theia enviroment.
 
-![Edit](docs/images/ZE-download-edit.gif?raw=true "Edit")
-<br /><br />
+### Set up Theia Workspace
 
-#### Use the save option to prevent merge conflicts
+Set up your Theia workspace for development purposes.
 
-1. Navigate to the explorer tree.
-2. Open the **DATA SETS** bar.
-3. Open a member of a data set you want to edit.
-4. Edit a data set.
-5. Press Ctrl+S or Command+S (OSx) to save you changes.
-6. (Optional) Resolve merge conflicts if necessary.
+**Follow these steps**:
 
-![Save](docs/images/ZE-safe-save.gif?raw=true "Save")
-<br /><br />
+1. Build a VSIX file with your changes.
 
-#### Create a new PDS and a PDS member
+2. Build and run the Theia browser example, using [Setting up your Theia workspace](https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/README-Theia.md#setting-up-your-theia-workspace).
 
-1. Navigate to the explorer tree.
-2. Open the **DATA SETS** bar.
-3. Click the **Create New Data Set** button to create a PDS.
-4. From the drop-down menu, select the type of PDS that you want to create.
-5. Enter a name for the PDS.
-   The PDS is created.
-6. To create a member, right-click the PDS and select **Create New Member**.
-7. Enter a name for the member.
-   The member is created.
+   **Note**: Ensure that your latest VSIX file is in the `plugins` folder.
 
-![Create](docs/images/ZE-cre-pds-member.gif?raw=true "Create")
-<br /><br />
+3. Open a web browser and navigate to <http://localhost:3000> to verify your setup.
 
-#### Delete a PDS member and PDS
+   You should see Zowe Explorer that is deployed in Theia.
 
-1. Navigate to the explorer tree.
-2. Open the **DATA SETS** bar.
-3. Open the profile and PDS containing the member.
-4. Right-click on the PDS member that you want to delete and select **Delete Member**.
-5. Confirm the deletion by clicking **Yes** on the drop-down menu.
+### Run Regression Tests
 
-    **Note:** Alternatively, you can select 'No' to cancel the deletion.
-6. To delete a PDS, right-click the PDS and click **Delete PDS**, then confirm the deletion.
+Issue the following command to run the regression tests:
 
-    **Note:** You can delete a PDS before you delete its members.
+```
+npm run test:theia
+```
 
-![Delete](docs/images/ZE-del-pds-member.gif?raw=true "Delete")
-<br /><br />
+The regression tests output appears in your VSC debug console.
 
-#### View and access multiple profiles simultaneously
+### Run Tests with Firefox UI Visibility Components
 
-1. Navigate to the explorer tree.
-2. Open the **DATA SETS** bar.
-3. Click the **Add Profile** button on the right of the **DATA SET** explorer bar.
-4. Select the profile that you want to add to the view as illustrated by the following screen.
+Disable headless mode to see changes in Firefox while your tests are in progress.
 
-![Add Profile](docs/images/ZE-mult-profiles.gif?raw=true "Add Profile")
+**Note**: Tests run in headless mode by default.
 
-## Credentials Security
+1. Navigate to the `__tests__/__theia__/` folder.
+2. Comment out the line `firefoxOptions.headless();` in the tests.
+3. Compile the extension.
+4. Run the regression test.
 
-Store your credentials securely with the Secure Credentials Store (SCS) plug-in.
+The tests run and the Firefox browser is launched.
 
-1. Navigate to the VSCode settings.
-2. Open Zowe Explorer Settings.
-3. Add the `Zowe-Plugin` value to the **Zowe Security** entry field.
-4. Restart VSCode.
+## Localization
 
-For more information about SCS, see [Secure Credential Store Plug-in for Zowe Explorer](https://docs.zowe.org/stable/user-guide/ze-profiles.html#enabling-secure-credential-store-with-zowe-explorer).
+All localized strings must be string literals, you cannot include variables or use template literals within the argument you provide to the localize function.
 
-## Usage tips
+### Adding Strings
 
-* Use the **Add Favorite** feature to permanently store chosen data sets, USS files, and jobs in the **Favorites** folder. Right-click on a data set, USS file or jobs and select **Add Favorite**.
+1. Create a new key for your string. Existing keys follow the convention of including the functions/properties the string is nested in and a short one/two word description of the string.
 
-* **Syntax Highlighting:** Zowe Explorer supports syntax highlighting for data sets. Fox example, you can use such extensions as [COBOL Language Support](https://marketplace.visualstudio.com/items?itemName=broadcomMFD.cobol-language-support) or [HLASM Language Support](https://marketplace.visualstudio.com/items?itemName=broadcomMFD.hlasm-language-support).
+2. There are two places to localize strings: in the package.json file and in the typescript files in the src directory.
 
-* **Edit a profile**: Click the **pencil** icon next to the **magnifying glass** icon in the explorer tree, and modify the information inside your profile.
+   - If you want to add a new string to the package.json file, replace the string with your key enclosed by the percent sign as such \% **key** \% i.e. `"This is a string"` becomes `"%exampleProperty.exDescription%"`. Then go to the package.nls.json file found in the root directory of the repository and include your newly created key and string inside as a json key/value pair.
 
-* **Delete a profile**: Right-click a chosen profile and select **Delete Profile** to permanently delete the profile. The functionality deletes a profile from your `.zowe` folder.
+   - If you want to add a new string to a typescript file, you will need to include the following library in your file (if not already included). `import * as nls from 'vscode-nls';`
 
-* **Hide a profile**: You can hide a profile from the profile tree by right-clicking the profile and selecting the **Hide Profile** option. To add the profile back, click the **+** button and select the profile from the quick pick list.
+     - You will also need to include the following code:
 
-For information how to configure Zowe Explorer, see [Zowe Explorer Configuration guidelines](https://docs.zowe.org/stable/user-guide/ze-install.html#configuration).
+       ```Typescript
+       // Set up localization
+       nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+       const localize: nls.LocalizeFunc = nls.loadMessageBundle();
+       ```
 
-## Extending Zowe Explorer
+     - Next wrap your string with the localize function in this format `localize('key', 'string') i.e. localize('addEntry','Successfully called add entry.')`
 
-You can add new functionalities to Zowe Explorer by creating your own extension. For more information, see [Extensions for Zowe Explorer](https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/README-Extending.md).
+3. After adding/updating/removing any string, run `npm run package`. This will update the sample directory under the i18n folder with the newly added strings. Upload these files to Zanata or email a maintainer to do so.
 
-**Tip:** View an example of a Zowe Explorer extension — [Zowe Explorer FTP extension documentation](https://github.com/zowe/zowe-explorer-ftp-extension#zowe-explorer-ftp-extension).
+Maintainers: Evann Wu (evannw@andrew.cmu.edu), Lauren Li (lauren.li@ibm.com), Kristina Mayo (ktopchi@us.ibm.com)
+
+### Adding a New Language
+
+1. Navigate to the i18n folder found in the root directory of the repository. Duplicate the sample folder and rename the new folder to the ISO-639-3 code for the language [found here](<https://en.wikipedia.org/wiki/Wikipedia:WikiProject_Languages/List_of_ISO_639-3_language_codes_(2019)>).
+
+2. Once the language has been translated, go to the Zowe VS Code Extension project in Zanata, select the most up to date version, select the translated language, and for each file, press the arrow to the left of the filename and select download translated .json.
+
+3. Replace the files in the folder you created with these newly downloaded files of the same name.
+
+4. Next, open gulpfile.js found in the root directory of the repository. Add the following information: { folderName: `'ISO-639-3-Code'`, id: `'vscode-locale-id'` } to the `languages` array. For example, for Chinese add: `{ folderName: 'zho', id: 'zh-cn' }`. You can find the vscode locale id [here](https://code.visualstudio.com/docs/getstarted/locales).
+
+5. Make sure you have the vscode language pack of this new language installed and to see the localized result, first run the `npm run package` command in terminal. Then press F1, run the Configure Display Language command, and select the locale id of your translated language.
+
+### How to Donate Translations
+
+1. Click [here](https://translate.zanata.org/?dswid=8786) and follow instructions under the Sign Up heading to sign up to Zanata.
+
+2. Send an email to one of the maintainers with the email heading as ZANATA TRANSLATOR REQUEST and include the following information in the body of the email.
+
+   1. Zanata username
+   2. Language(s) you wish to translate
+   3. Affiliation with Zowe
+
+3. You should receive a response within 3 business days and be added to the Zanata Zowe VS Code Extension project. Click [here](http://docs.zanata.org/en/release/user-guide/translator-guide/) for more information about how to use Zanata to translate.
