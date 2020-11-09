@@ -1079,11 +1079,24 @@ export class Profiles extends ProfilesCache {
                 cmdArgs[prop] = serviceProfile.profile[prop] ? serviceProfile.profile[prop] : baseProfile.profile[prop];
             }
             if (baseProfile) {
-                cmdArgs.tokenType = serviceProfile.profile.tokenType ? serviceProfile.profile.tokenType: baseProfile.profile.tokenType;
-                cmdArgs.tokenValue = serviceProfile.profile.tokenValue ? serviceProfile.profile.tokenValue: baseProfile.profile.tokenValue;
+                cmdArgs.tokenType = serviceProfile.profile.tokenType
+                    ? serviceProfile.profile.tokenType
+                    : baseProfile.profile.tokenType;
+                cmdArgs.tokenValue = serviceProfile.profile.tokenValue
+                    ? serviceProfile.profile.tokenValue
+                    : baseProfile.profile.tokenValue;
             }
             if (commonApi.getSessionFromCommandArgument) {
-                session = await commonApi.getSessionFromCommandArgument(cmdArgs);
+                if (cmdArgs.tokenType === undefined || cmdArgs.tokenValue === undefined) {
+                    vscode.window.showInformationMessage(
+                        "Base Profile " +
+                            baseProfile.name +
+                            " is currently logged out. Please login and reload Zowe Explorer to be able to use it."
+                    );
+                    return serviceProfile;
+                } else {
+                    session = await commonApi.getSessionFromCommandArgument(cmdArgs);
+                }
             } else {
                 vscode.window.showErrorMessage(
                     localize("getCombinedProfile.log.debug", "This extension does not support base profiles.")
