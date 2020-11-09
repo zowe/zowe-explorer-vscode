@@ -2641,3 +2641,129 @@ describe("Profiles Unit Tests - Function getCombinedProfile", () => {
         expect(response).toEqual(blockMocks.testCombinedProfile);
     });
 });
+
+describe("Profiles Unit Tests - Function ssoLogin", () => {
+    async function createBlockMocks(globalMocks) {
+        const newMocks = {
+            log: Logger.getAppLogger(),
+            testDatasetTree: null,
+            testUSSTree: null,
+            testJobTree: null,
+            treeView: createTreeView(),
+            datasetSessionNode: null,
+            ussSessionNode: null,
+            iJob: createIJobObject(),
+            profiles: null,
+            imperativeProfile: createValidIProfile(),
+            profileInstance: null,
+            session: null,
+            mockNode: null,
+            mockEnableValidationContext: jest.fn(),
+            mockLoadNamedProfile: jest.fn(),
+        };
+        newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
+        newMocks.mockNode = newMocks.datasetSessionNode;
+        newMocks.profiles = await Profiles.createInstance(newMocks.log);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        newMocks.testDatasetTree = createDatasetTree(newMocks.datasetSessionNode, newMocks.treeView);
+        newMocks.testJobTree = createJobsTree(
+            newMocks.session,
+            newMocks.iJob,
+            newMocks.imperativeProfile,
+            newMocks.treeView
+        );
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    loadNamedProfile: newMocks.mockLoadNamedProfile.mockReturnValue(newMocks.imperativeProfile),
+                    enableValidationContext: newMocks.mockEnableValidationContext.mockReturnValue(
+                        newMocks.datasetSessionNode
+                    ),
+                };
+            }),
+        });
+        globalMocks.mockGetInstance.mockReturnValue(newMocks.profiles);
+
+        return newMocks;
+    }
+
+    it("Tests that sso login is skipped if service profile contains user/password", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const ussSessionNode = createUSSSessionNode(blockMocks.session, blockMocks.imperativeProfile);
+        const ussTree = createUSSTree([], [ussSessionNode], blockMocks.treeView);
+        const resultNode: IZoweNodeType = blockMocks.datasetSessionNode;
+        const theProfiles = await Profiles.createInstance(blockMocks.log);
+
+        const response = await theProfiles.ssoLogin(resultNode);
+
+        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe(
+            "Log in skipped"
+        );
+    });
+});
+
+describe("Profiles Unit Tests - Function ssoLogout", () => {
+    async function createBlockMocks(globalMocks) {
+        const newMocks = {
+            log: Logger.getAppLogger(),
+            testDatasetTree: null,
+            testUSSTree: null,
+            testJobTree: null,
+            treeView: createTreeView(),
+            datasetSessionNode: null,
+            ussSessionNode: null,
+            iJob: createIJobObject(),
+            profiles: null,
+            imperativeProfile: createValidIProfile(),
+            profileInstance: null,
+            session: null,
+            mockNode: null,
+            mockEnableValidationContext: jest.fn(),
+            mockLoadNamedProfile: jest.fn(),
+        };
+        newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
+        newMocks.mockNode = newMocks.datasetSessionNode;
+        newMocks.profiles = await Profiles.createInstance(newMocks.log);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        newMocks.testDatasetTree = createDatasetTree(newMocks.datasetSessionNode, newMocks.treeView);
+        newMocks.testJobTree = createJobsTree(
+            newMocks.session,
+            newMocks.iJob,
+            newMocks.imperativeProfile,
+            newMocks.treeView
+        );
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    loadNamedProfile: newMocks.mockLoadNamedProfile.mockReturnValue(newMocks.imperativeProfile),
+                    enableValidationContext: newMocks.mockEnableValidationContext.mockReturnValue(
+                        newMocks.datasetSessionNode
+                    ),
+                };
+            }),
+        });
+        globalMocks.mockGetInstance.mockReturnValue(newMocks.profiles);
+
+        return newMocks;
+    }
+
+    it("Tests that sso logout is skipped if service profile contains user/password", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const ussSessionNode = createUSSSessionNode(blockMocks.session, blockMocks.imperativeProfile);
+        const ussTree = createUSSTree([], [ussSessionNode], blockMocks.treeView);
+        const resultNode: IZoweNodeType = blockMocks.datasetSessionNode;
+        const theProfiles = await Profiles.createInstance(blockMocks.log);
+
+        const response = await theProfiles.ssoLogout(resultNode);
+
+        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe(
+            "Log out skipped"
+        );
+    });
+});

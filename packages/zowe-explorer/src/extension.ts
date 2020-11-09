@@ -254,6 +254,8 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
     vscode.commands.registerCommand("zowe.enableValidation", async (node) =>
         Profiles.getInstance().enableValidation(node)
     );
+    vscode.commands.registerCommand("zowe.ssoLogin", async (node) => Profiles.getInstance().ssoLogin(node));
+    vscode.commands.registerCommand("zowe.ssoLogout", async (node) => Profiles.getInstance().ssoLogout(node));
     vscode.workspace.onDidChangeConfiguration((e) => {
         datasetProvider.onDidChangeConfiguration(e);
     });
@@ -326,6 +328,8 @@ function initUSSProvider(context: vscode.ExtensionContext, ussFileProvider: IZow
     vscode.commands.registerCommand("zowe.uss.enableValidation", async (node) =>
         Profiles.getInstance().enableValidation(node)
     );
+    vscode.commands.registerCommand("zowe.uss.ssoLogin", async (node) => Profiles.getInstance().ssoLogin(node));
+    vscode.commands.registerCommand("zowe.uss.ssoLogout", async (node) => Profiles.getInstance().ssoLogout(node));
     vscode.workspace.onDidChangeConfiguration((e) => {
         ussFileProvider.onDidChangeConfiguration(e);
     });
@@ -376,6 +380,8 @@ function initJobsProvider(context: vscode.ExtensionContext, jobsProvider: IZoweT
     vscode.commands.registerCommand("zowe.jobs.enableValidation", async (node) =>
         Profiles.getInstance().enableValidation(node)
     );
+    vscode.commands.registerCommand("zowe.jobs.ssoLogin", async (node) => Profiles.getInstance().ssoLogin(node));
+    vscode.commands.registerCommand("zowe.jobs.ssoLogout", async (node) => Profiles.getInstance().ssoLogout(node));
     vscode.workspace.onDidChangeConfiguration((e) => {
         jobsProvider.onDidChangeConfiguration(e);
     });

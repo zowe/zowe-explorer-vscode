@@ -88,5 +88,11 @@
   "jobs.disableValidation": "Disable Validation for Profile",
   "enableValidation": "Enable Validation for Profile",
   "uss.enableValidation": "Enable Validation for Profile",
-  "jobs.enableValidation": "Enable Validation for Profile"
+  "jobs.enableValidation": "Enable Validation for Profile",
+  "ssoLogin": "Log in to API ML",
+  "uss.ssoLogin": "Log in to API ML",
+  "jobs.ssoLogin": "Log in to API ML",
+  "ssoLogout": "Log out from API ML",
+  "uss.ssoLogout": "Log out from API ML",
+  "jobs.ssoLogout": "Log out from API ML"
 }

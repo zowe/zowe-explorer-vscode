@@ -9,7 +9,17 @@
  *                                                                                 *
  */
 
-import { IProfileLoaded, Logger, ISession, IUpdateProfileFromCliArgs, ICommandArguments } from "@zowe/imperative";
+import {
+    IProfileLoaded,
+    Logger,
+    ISession,
+    IUpdateProfileFromCliArgs,
+    ICommandArguments,
+    Session,
+    SessConstants,
+    IUpdateProfile,
+    IProfile,
+} from "@zowe/imperative";
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import {
@@ -1101,6 +1111,136 @@ export class Profiles extends ProfilesCache {
             }
         }
         return updatedServiceProfile;
+    }
+
+    public async ssoLogin(node: IZoweNodeType) {
+        const baseProfile = await this.getBaseProfile();
+        const serviceProfile = node.getProfile();
+
+        // This check will handle service profiles that have username and password
+        if (serviceProfile.profile.user && serviceProfile.profile.password) {
+            vscode.window.showInformationMessage(localize("ssoLogin.noBase", "Log in skipped"));
+            return;
+        }
+
+        // This check is for optional credentials
+        if (
+            baseProfile &&
+            serviceProfile.profile.host &&
+            serviceProfile.profile.port &&
+            ((baseProfile.profile.host !== serviceProfile.profile.host &&
+                baseProfile.profile.port !== serviceProfile.profile.port) ||
+                (baseProfile.profile.host === serviceProfile.profile.host &&
+                    baseProfile.profile.port !== serviceProfile.profile.port))
+        ) {
+            vscode.window.showInformationMessage(localize("ssoLogin.noBase", "Log in skipped"));
+            return;
+        }
+
+        let newUser: string;
+        let newPass: string;
+
+        if (baseProfile) {
+            newUser = await this.userInfo();
+            if (newUser === undefined) {
+                vscode.window.showInformationMessage(localize("ssoLogin.undefined.username", "Operation Cancelled"));
+                return;
+            } else {
+                newPass = await this.passwordInfo();
+                if (newPass === undefined) {
+                    vscode.window.showInformationMessage(
+                        localize("ssoLogin.undefined.username", "Operation Cancelled")
+                    );
+                    return;
+                }
+            }
+
+            try {
+                const combinedProfile = await Profiles.getInstance().getCombinedProfile(serviceProfile, baseProfile);
+                const updSession = new Session({
+                    hostname: combinedProfile.profile.host,
+                    port: combinedProfile.profile.port,
+                    user: newUser,
+                    password: newPass,
+                    rejectUnauthorized: combinedProfile.profile.rejectUnauthorized,
+                    tokenType: SessConstants.TOKEN_TYPE_APIML,
+                    type: SessConstants.AUTH_TYPE_TOKEN,
+                });
+                const loginToken = await zowe.Login.apimlLogin(updSession);
+                const profileManager = await Profiles.getInstance().getCliProfileManager("base");
+                const updBaseProfile: IProfile = {
+                    tokenType: SessConstants.TOKEN_TYPE_APIML,
+                    tokenValue: loginToken,
+                };
+
+                const updateParms: IUpdateProfile = {
+                    name: baseProfile.name,
+                    merge: true,
+                    profile: updBaseProfile,
+                };
+
+                try {
+                    await profileManager.update(updateParms);
+                } catch (error) {
+                    vscode.window.showErrorMessage(
+                        localize("ssoLogin.unableToLogin", "Unable to login. ") + error.message
+                    );
+                    return;
+                }
+                vscode.window.showInformationMessage(
+                    localize("ssoLogin.successful", "Log in to API ML with {0} was successful", baseProfile.name)
+                );
+                await this.refresh(ZoweExplorerApiRegister.getInstance());
+            } catch (error) {
+                vscode.window.showErrorMessage(localize("ssoLogin.unableToLogin", "Unable to login. ") + error.message);
+                return;
+            }
+        }
+    }
+
+    public async ssoLogout(node: IZoweNodeType) {
+        const baseProfile = await this.getBaseProfile();
+        const serviceProfile = node.getProfile();
+
+        // This check will handle service profiles that have username and password
+        if (serviceProfile.profile.user && serviceProfile.profile.password) {
+            vscode.window.showInformationMessage(localize("ssoLogout.noBase", "Log out skipped"));
+            return;
+        }
+
+        // This check is for optional credentials
+        if (
+            baseProfile &&
+            serviceProfile.profile.host &&
+            serviceProfile.profile.port &&
+            ((baseProfile.profile.host !== serviceProfile.profile.host &&
+                baseProfile.profile.port !== serviceProfile.profile.port) ||
+                (baseProfile.profile.host === serviceProfile.profile.host &&
+                    baseProfile.profile.port !== serviceProfile.profile.port))
+        ) {
+            vscode.window.showInformationMessage(localize("ssoLogout.noBase", "Log out skipped"));
+            return;
+        }
+
+        try {
+            const combinedProfile = await Profiles.getInstance().getCombinedProfile(serviceProfile, baseProfile);
+            const updSession = new Session({
+                hostname: combinedProfile.profile.host,
+                port: combinedProfile.profile.port,
+                rejectUnauthorized: combinedProfile.profile.rejectUnauthorized,
+                tokenType: SessConstants.TOKEN_TYPE_APIML,
+                type: SessConstants.AUTH_TYPE_TOKEN,
+                tokenValue: combinedProfile.profile.tokenValue,
+            });
+            await zowe.Logout.apimlLogout(updSession);
+            vscode.window.showInformationMessage(
+                localize("ssoLogout.successful", "Log out from API ML with {0} was successful", baseProfile.name)
+            );
+            await this.refresh(ZoweExplorerApiRegister.getInstance());
+        } catch (error) {
+            vscode.window.showErrorMessage(localize("ssoLogout.unableToLogout", "Unable to logout. ") + error.message);
+            return;
+        }
     }
 
     private async deletePrompt(deletedProfile: IProfileLoaded) {
