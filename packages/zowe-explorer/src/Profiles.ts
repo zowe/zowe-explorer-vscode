@@ -1113,9 +1113,14 @@ export class Profiles extends ProfilesCache {
         return updatedServiceProfile;
     }
 
-    public async ssoLogin(node: IZoweNodeType) {
+    public async ssoLogin(node?: IZoweNodeType, label?: string) {
         const baseProfile = await this.getBaseProfile();
-        const serviceProfile = node.getProfile();
+        let serviceProfile: IProfileLoaded;
+        if (node) {
+            serviceProfile = node.getProfile();
+        } else {
+            serviceProfile = this.loadNamedProfile(label.trim());
+        }
 
         // This check will handle service profiles that have username and password
         if (serviceProfile.profile.user && serviceProfile.profile.password) {

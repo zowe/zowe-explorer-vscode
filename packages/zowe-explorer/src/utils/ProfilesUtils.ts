@@ -39,6 +39,10 @@ export function errorHandling(errorDetails: any, label?: string, moreInfo?: stri
         "Invalid Credentials. Please ensure the username and password for {0} are valid or this may lead to a lock-out.",
         label
     );
+    const errToken = localize(
+        "errorHandling.invalid.token",
+        "Token is not valid or expired. Please login with your base profile."
+    );
 
     if (errorDetails.mDetails !== undefined) {
         httpErrCode = errorDetails.mDetails.errorCode;
@@ -51,6 +55,24 @@ export function errorHandling(errorDetails: any, label?: string, moreInfo?: stri
                 label = label.substring(0, label.indexOf(" ["));
             }
 
+            if (errorDetails.mDetails.additionalDetails) {
+                const tokenError: string = errorDetails.mDetails.additionalDetails;
+                if (tokenError.includes("Token is not valid or expired.")) {
+                    if (isTheia()) {
+                        vscode.window.showErrorMessage(errToken).then(async () => {
+                            await Profiles.getInstance().ssoLogin(null, label);
+                        })
+                    } else {
+                        vscode.window.showErrorMessage(errToken, "Log in to API ML").then(async (selection) => {
+                            if (selection) {
+                                await Profiles.getInstance().ssoLogin(null, label);
+                            }
+                        });
+                    }
+                    break;
+                }
+            }
+            
             if (isTheia()) {
                 vscode.window.showErrorMessage(errMsg);
                 Profiles.getInstance().promptCredentials(label.trim());
