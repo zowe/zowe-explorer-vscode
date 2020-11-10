@@ -143,6 +143,7 @@ jobs:
         # TODO: change test-monorepo-deployment
 
       - name: Create the Release
+        if: steps.check_project.outputs.files_staged == 1
         id: create_release
         uses: actions/create-release@v1
         env:
@@ -159,7 +160,9 @@ jobs:
           prerelease: false
 
       - name: Upload the Zowe Explorer Assets
-        if: ${{ steps.deploy_zowe_explorer.outputs.archive != null }}
+        if: |
+          steps.check_project.outputs.files_staged == 1 &&
+          steps.deploy_zowe_explorer.outputs.archive != null
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -170,7 +173,9 @@ jobs:
           asset_content_type: application/octet-stream
 
       - name: Upload the FTP Extension for Zowe Explorer Assets
-        if: ${{ steps.deploy_zowe_explorer_ftp_extension.outputs.vsix != null }}
+        if: |
+          steps.check_project.outputs.files_staged == 1 &&
+          steps.deploy_zowe_explorer_ftp_extension.outputs.archive != null
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -181,6 +186,9 @@ jobs:
           asset_content_type: application/octet-stream
 
       - name: Upload the Zowe Explorer APIs Assets
+        if: |
+          steps.check_project.outputs.files_staged == 1 &&
+          steps.deploy_zowe_explorer_api.outputs.archive != null
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -191,6 +199,9 @@ jobs:
           asset_content_type: application/octet-stream
 
       - name: Upload the ESLint plugin for Zowe Explorer Assets
+        if: |
+          steps.check_project.outputs.files_staged == 1 &&
+          steps.deploy_eslint_plugin_zowe_explorer.outputs.archive != null
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

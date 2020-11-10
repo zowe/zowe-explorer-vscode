@@ -39,8 +39,8 @@ try {
     console.log(execSync(`git status`, {cwd: packagePath}).toString());
     console.log(execSync(`git add package.json`, {cwd: packagePath}).toString());
 
-    const versionName = `${packageJson.name}-${topPackageJson.version}`;
-    versionName.replace("@", "").replace("/", "-");
+    let versionName = `${packageJson.name}-${topPackageJson.version}`;
+    versionName = versionName.replace("@", "").replace("/", "-");
     console.log(`Generate: ${versionName}`);
     console.log(execSync(`yarn package`, {cwd: packagePath}).toString());
     core.setOutput("archive", versionName);
