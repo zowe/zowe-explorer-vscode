@@ -247,6 +247,17 @@ export class ZoweTreeProvider {
         await this.refresh();
     }
 
+    public async ssoLogin(node: IZoweTreeNode) {
+        await Profiles.getInstance().ssoLogin(node);
+        await this.refresh();
+    }
+
+    public async ssoLogout(node: IZoweTreeNode) {
+        await Profiles.getInstance().ssoLogout(node);
+        await this.refreshElement(node);
+        await this.refresh();
+    }
+
     public async createZoweSession(zoweFileProvider: IZoweTree<IZoweNodeType>) {
         await Profiles.getInstance().createZoweSession(zoweFileProvider);
     }
