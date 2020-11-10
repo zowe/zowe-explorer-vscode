@@ -1124,7 +1124,7 @@ export class Profiles extends ProfilesCache {
 
         // This check will handle service profiles that have username and password
         if (serviceProfile.profile.user && serviceProfile.profile.password) {
-            vscode.window.showInformationMessage(localize("ssoLogin.noBase", "Log in skipped"));
+            vscode.window.showInformationMessage(localize("ssoLogin.noBase", "Log in skipped. This profile does not support base profiles."));
             return;
         }
 
@@ -1138,7 +1138,7 @@ export class Profiles extends ProfilesCache {
                 (baseProfile.profile.host === serviceProfile.profile.host &&
                     baseProfile.profile.port !== serviceProfile.profile.port))
         ) {
-            vscode.window.showInformationMessage(localize("ssoLogin.noBase", "Log in skipped"));
+            vscode.window.showInformationMessage(localize("ssoLogin.noBase", "Log in skipped. This profile does not support base profiles."));
             return;
         }
 
@@ -1188,16 +1188,16 @@ export class Profiles extends ProfilesCache {
                     await profileManager.update(updateParms);
                 } catch (error) {
                     vscode.window.showErrorMessage(
-                        localize("ssoLogin.unableToLogin", "Unable to login. ") + error.message
+                        localize("ssoLogin.unableToLogin", "Unable to log in. ") + error.message
                     );
                     return;
                 }
                 vscode.window.showInformationMessage(
-                    localize("ssoLogin.successful", "Log in to API ML with {0} was successful", baseProfile.name)
+                    localize("ssoLogin.successful", "Login to API Mediation Layer was successful.")
                 );
-                await this.refresh(ZoweExplorerApiRegister.getInstance());
+                this.allProfiles = this.allProfiles.map( (item) => { item.profile.tokenValue = loginToken; return item;});
             } catch (error) {
-                vscode.window.showErrorMessage(localize("ssoLogin.unableToLogin", "Unable to login. ") + error.message);
+                vscode.window.showErrorMessage(localize("ssoLogin.unableToLogin", "Unable to log in. ") + error.message);
                 return;
             }
         }
@@ -1209,7 +1209,7 @@ export class Profiles extends ProfilesCache {
 
         // This check will handle service profiles that have username and password
         if (serviceProfile.profile.user && serviceProfile.profile.password) {
-            vscode.window.showInformationMessage(localize("ssoLogout.noBase", "Log out skipped"));
+            vscode.window.showInformationMessage(localize("ssoLogout.noBase", "Log out skipped. This profile does not support base profiles."));
             return;
         }
 
@@ -1223,7 +1223,7 @@ export class Profiles extends ProfilesCache {
                 (baseProfile.profile.host === serviceProfile.profile.host &&
                     baseProfile.profile.port !== serviceProfile.profile.port))
         ) {
-            vscode.window.showInformationMessage(localize("ssoLogout.noBase", "Log out skipped"));
+            vscode.window.showInformationMessage(localize("ssoLogout.noBase", "Log out skipped. This profile does not support base profiles."));
             return;
         }
 
@@ -1239,11 +1239,11 @@ export class Profiles extends ProfilesCache {
             });
             await zowe.Logout.apimlLogout(updSession);
             vscode.window.showInformationMessage(
-                localize("ssoLogout.successful", "Log out from API ML with {0} was successful", baseProfile.name)
+                localize("ssoLogout.successful", "Logout from API Mediation Layer was successful.")
             );
-            await this.refresh(ZoweExplorerApiRegister.getInstance());
+            // await this.refresh(ZoweExplorerApiRegister.getInstance());
         } catch (error) {
-            vscode.window.showErrorMessage(localize("ssoLogout.unableToLogout", "Unable to logout. ") + error.message);
+            vscode.window.showErrorMessage(localize("ssoLogout.unableToLogout", "Unable to log out. ") + error.message);
             return;
         }
     }

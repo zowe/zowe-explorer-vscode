@@ -41,7 +41,7 @@ export function errorHandling(errorDetails: any, label?: string, moreInfo?: stri
     );
     const errToken = localize(
         "errorHandling.invalid.token",
-        "Token is not valid or expired. Please login with your base profile."
+        "Your connection is no longer active. Please log in to the API Mediation Layer to restore the connection."
     );
 
     if (errorDetails.mDetails !== undefined) {
@@ -61,9 +61,9 @@ export function errorHandling(errorDetails: any, label?: string, moreInfo?: stri
                     if (isTheia()) {
                         vscode.window.showErrorMessage(errToken).then(async () => {
                             await Profiles.getInstance().ssoLogin(null, label);
-                        })
+                        });
                     } else {
-                        vscode.window.showErrorMessage(errToken, "Log in to API ML").then(async (selection) => {
+                        vscode.window.showErrorMessage(errToken, "Log in to API Mediation Layer").then(async (selection) => {
                             if (selection) {
                                 await Profiles.getInstance().ssoLogin(null, label);
                             }
@@ -72,7 +72,7 @@ export function errorHandling(errorDetails: any, label?: string, moreInfo?: stri
                     break;
                 }
             }
-            
+
             if (isTheia()) {
                 vscode.window.showErrorMessage(errMsg);
                 Profiles.getInstance().promptCredentials(label.trim());
