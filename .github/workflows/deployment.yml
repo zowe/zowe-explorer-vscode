@@ -66,8 +66,6 @@ jobs:
 
       - run: yarn && yarn package
 
-      - run: ls -al ./dist/ # TODO: debug
-
       - run: "echo ::set-output name=package_nls::$(cat packages/zowe-explorer/package.nls.json)"
         id: get_ze_name
 
@@ -79,22 +77,22 @@ jobs:
           package: packages/zowe-explorer
           token: ${{ secrets.VSCODE_PUBLISHER_TOKEN }}
 
+      - run: "echo ::set-output name=package::$(cat packages/zowe-explorer-ftp-extension/package.json)"
+        id: get_ftp_name
+
+      - name: Publish the FTP Extension for Zowe Explorer
+        id: deploy_zowe_explorer_ftp_extension
+        uses: ./.github/actions/deploy-vscode-extension
+        with:
+          name: ${{ fromJson(steps.get_ftp_name.outputs.package).displayName }}
+          package: packages/zowe-explorer-ftp-extension
+          token: ${{ secrets.VSCODE_PUBLISHER_TOKEN }}
+
       # - name: Publish the Zowe Explorer APIs
       #   id: deploy_zowe_explorer_api
       #   uses: ./.github/actions/deploy-zowe-explorer-api
       #   with:
       #     package: packages/zowe-explorer-api
-
-      # - run: "echo ::set-output name=package::$(cat packages/zowe-explorer-ftp-extension/package.json)"
-      #   id: get_ftp_name
-
-      # - name: Publish the FTP Extension for Zowe Explorer
-      #   id: deploy_zowe_explorer_ftp_extension
-      #   uses: ./.github/actions/deploy-vscode-extension
-      #   with:
-      #     name: ${{ fromJson(steps.get_ftp_name.outputs.package).displayName }}
-      #     package: packages/zowe-explorer-ftp-extension
-      #     token: ${{ secrets.VSCODE_PUBLISHER_TOKEN }}
 
       # - name: Publish the ESLint plugin for Zowe Explorer
       #   id: deploy_eslint_plugin_zowe_explorer
@@ -116,10 +114,11 @@ jobs:
           release_name: v${{ fromJson(steps.get_version.outputs.top_package).version }}
           body: |
             ${{ steps.deploy_zowe_explorer.outputs.changelog }}
+            ${{ steps.deploy_zowe_explorer_ftp_extension.outputs.changelog }}
           # body: |
           #   ${{ steps.deploy_zowe_explorer.outputs.changelog }}
-          #   ${{ steps.deploy_zowe_explorer_api.outputs.changelog }}
           #   ${{ steps.deploy_zowe_explorer_ftp_extension.outputs.changelog }}
+          #   ${{ steps.deploy_zowe_explorer_api.outputs.changelog }}
           #   ${{ steps.deploy_eslint_plugin_zowe_explorer.outputs.changelog }}
           draft: true
           prerelease: false
