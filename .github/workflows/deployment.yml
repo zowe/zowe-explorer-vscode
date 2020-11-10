@@ -14,38 +14,40 @@ jobs:
     outputs:
       should_publish: ${{ steps.should_publish_any.outputs.should_publish != null }}
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
-        with:
-          node-version: 12
+      - name: Checkout the Source Code
+        uses: actions/checkout@v2
 
-      - run: npm install -g vsce
+      - name: Get Top-Level package.json
+        run: "echo ::set-output name=market_ze::$(cat package.json)"
+        id: get_info
 
-      - run: "echo ::set-output name=market_ze::$(vsce show Zowe.vscode-extension-for-zowe --json)"
-        id: get_ze_info
-
-      - run: "echo ::set-output name=package::$(cat packages/zowe-explorer/package.json)"
+      - name: Get the Zowe Explorer package.json
+        run: "echo ::set-output name=package::$(cat packages/zowe-explorer/package.json)"
         id: get_ze_package
 
-      - run: "echo ::set-output name=package::$(cat packages/zowe-explorer-ftp-extension/package.json)"
+      - name: Get the Zowe Explorer - FTP Extension package.json
+        run: "echo ::set-output name=package::$(cat packages/zowe-explorer-ftp-extension/package.json)"
         id: get_ze_ftp_package
 
-      - run: "echo ::set-output name=package::$(cat packages/zowe-explorer-api/package.json)"
+      - name: Get the Zowe Explorer - API package.json
+        run: "echo ::set-output name=package::$(cat packages/zowe-explorer-api/package.json)"
         id: get_ze_api_package
 
-      # - run: "echo ::set-output name=package::$(cat packages/eslint-plugin-zowe-explorer/package.json)"
-      #   id: get_ze_eslint_package
+      - name: Get the Zowe Explorer - ESLint Extension package.json
+        run: "echo ::set-output name=package::$(cat packages/eslint-plugin-zowe-explorer/package.json)"
+        id: get_ze_eslint_package
 
-      - run: "echo ::set-output name=should_publish::true"
+      - name: Verify that Deployment is Required
+        run: "echo ::set-output name=should_publish::true"
         if: |
-          fromJson(steps.get_ze_info.outputs.market_ze).versions[0].version != fromJson(steps.get_ze_package.outputs.package).version ||
-          fromJson(steps.get_ze_info.outputs.market_ze).versions[0].version != fromJson(steps.get_ze_ftp_package.outputs.package).version ||
-          fromJson(steps.get_ze_info.outputs.market_ze).versions[0].version != fromJson(steps.get_ze_api_package.outputs.package).version
+          fromJson(steps.get_info.outputs.market_ze).versions[0].version != fromJson(steps.get_ze_package.outputs.package).version ||
+          fromJson(steps.get_info.outputs.market_ze).versions[0].version != fromJson(steps.get_ze_ftp_package.outputs.package).version ||
+          fromJson(steps.get_info.outputs.market_ze).versions[0].version != fromJson(steps.get_ze_api_package.outputs.package).version
         # if: |
-        #   fromJson(steps.get_ze_info.outputs.market_ze).versions[0].version != fromJson(steps.get_ze_package.outputs.package).version ||
-        #   fromJson(steps.get_ze_info.outputs.market_ze).versions[0].version != fromJson(steps.get_ze_ftp_package.outputs.package).version ||
-        #   fromJson(steps.get_ze_info.outputs.market_ze).versions[0].version != fromJson(steps.get_ze_api_package.outputs.package).version ||
-        #   fromJson(steps.get_ze_info.outputs.market_ze).versions[0].version != fromJson(steps.get_ze_eslint_package.outputs.package).version
+        #   fromJson(steps.get_info.outputs.market_ze).versions[0].version != fromJson(steps.get_ze_package.outputs.package).version ||
+        #   fromJson(steps.get_info.outputs.market_ze).versions[0].version != fromJson(steps.get_ze_ftp_package.outputs.package).version ||
+        #   fromJson(steps.get_info.outputs.market_ze).versions[0].version != fromJson(steps.get_ze_api_package.outputs.package).version ||
+        #   fromJson(steps.get_info.outputs.market_ze).versions[0].version != fromJson(steps.get_ze_eslint_package.outputs.package).version
         id: should_publish_any
 
   deploy:
@@ -53,20 +55,32 @@ jobs:
     needs: check_version
     if: needs.check_version.outputs.should_publish
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
+      - name: Checkout the Source Code
+        uses: actions/checkout@v2
+
+      - name: Setup NodeJS
+        uses: actions/setup-node@v1
         with:
           node-version: 12
 
-      - run: npm install -g vsce yarn
+      - name: Configure Git
+        run: |
+          git config --global user.name "zowe-robot"
+          git config --global user.email "zowe.robot@gmail.com"
+          git remote add origin_token https://${{ secrets.ROBOT_TOKEN }}:x-oauth-basic@github.com/${{ github.repository }}.git
+
+      - name: Install Project Dependencies
+        run: |
+          npm install -g vsce yarn
+          yarn
 
       # Avoid adding node_modules to each .github/actions folder
-      - run: npm install @actions/core
+      - name: Install Internal Dependencies for Actions to Work
+        run: npm install @actions/core
         working-directory: ./.github/actions/deploy-vscode-extension
 
-      - run: yarn # && yarn package
-
-      - run: "echo ::set-output name=package_nls::$(cat packages/zowe-explorer/package.nls.json)"
+      - name: Get the Zowe Explorer Display Name
+        run: "echo ::set-output name=package_nls::$(cat packages/zowe-explorer/package.nls.json)"
         id: get_ze_name
 
       - name: Publish the Zowe Explorer
@@ -77,7 +91,8 @@ jobs:
           package: packages/zowe-explorer
           token: ${{ secrets.VSCODE_PUBLISHER_TOKEN }}
 
-      - run: "echo ::set-output name=package::$(cat packages/zowe-explorer-ftp-extension/package.json)"
+      - name: Get the FTP Extension's package.json
+        run: "echo ::set-output name=package::$(cat packages/zowe-explorer-ftp-extension/package.json)"
         id: get_ftp_name
 
       - name: Publish the FTP Extension for Zowe Explorer
@@ -100,8 +115,22 @@ jobs:
       #   with:
       #     package: packages/eslint-plugin-zowe-explorer
 
-      - run: "echo ::set-output name=top_package::$(cat package.json)"
+      - name: Get Top-Level package.json
+        run: "echo ::set-output name=top_package::$(cat package.json)"
         id: get_version
+
+
+      - name: Check if files were staged
+        run: "echo ::set-output name=files_staged::$(git diff --cached --quiet || echo $?)"
+        id: check_project
+
+      # Each individual action should git-add the desired files
+      - name: Update Project Files with new Version
+        if: steps.check_project.outputs.files_staged == 1
+        run: |
+          git status
+          git commit -m "Version Bumped to ${{ fromJson(steps.get_version.outputs.top_package).version }}"
+          git push origin_token master
 
       - name: Create the Release
         id: create_release

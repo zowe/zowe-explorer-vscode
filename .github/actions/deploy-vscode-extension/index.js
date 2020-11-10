@@ -42,13 +42,11 @@ try {
   if (extensionMetadata != null && extensionMetadata.versions[0].version == topPackageJson.version) {
     console.log(`No new version to publish at this time. Current version: ${topPackageJson.version}`);
   } else {
-    // TODO: Need to `yarn install && npm install --only=prod` (After publishing zowe-explorer-api)
-    // console.log(execSync(`yarn install && npm i ../zowe-explorer-api && npm i --only=prod`, {cwd: packagePath}).toString());
-
     console.log(`Incrementing version: ${packageJson.version} -> ${topPackageJson.version}`);
     console.log(execSync(`npm version ${topPackageJson.version}`, {cwd: packagePath}).toString());
 
     console.log(execSync(`git status`, {cwd: packagePath}).toString());
+    console.log(execSync(`git add package.json`, {cwd: packagePath}).toString());
 
     console.log(`Publishing version ${topPackageJson.version}`);
     // console.log(execSync(`vsce publish --yarn -p ${core.getInput("token")}`, {cwd: packagePath}).toString());
@@ -66,8 +64,9 @@ try {
     } else {
       // No changelog for this version
       console.log("No changelog available for version:", topPackageJson.version);
+
+      // TODO: Decide whether to use `Recent Changes` method (similar to CLIs)
     }
-    throw new Error("stop here");
   }
 } catch (err) {
   core.setFailed(err.message);
