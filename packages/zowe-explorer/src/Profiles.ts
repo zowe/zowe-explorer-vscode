@@ -1093,9 +1093,10 @@ export class Profiles extends ProfilesCache {
                             baseProfile.name +
                             " is currently logged out. Please login and reload Zowe Explorer to be able to use it."
                     );
-                    return serviceProfile;
+                    session = baseProfile.profile;
                 } else {
-                    session = await commonApi.getSessionFromCommandArgument(cmdArgs);
+                    const res = await commonApi.getSessionFromCommandArgument(cmdArgs);
+                    session = res.ISession;
                 }
             } else {
                 vscode.window.showErrorMessage(
@@ -1106,11 +1107,11 @@ export class Profiles extends ProfilesCache {
 
         // For easier debugging, move serviceProfile to updatedServiceProfile and then update it with combinedProfile
         const updatedServiceProfile: IProfileLoaded = serviceProfile;
-        for (const prop of Object.keys(session.ISession)) {
+        for (const prop of Object.keys(session)) {
             if (prop === "hostname") {
-                updatedServiceProfile.profile.host = session.ISession[prop];
+                updatedServiceProfile.profile.host = session[prop];
             } else {
-                updatedServiceProfile.profile[prop] = session.ISession[prop];
+                updatedServiceProfile.profile[prop] = session[prop];
             }
         }
         return updatedServiceProfile;
