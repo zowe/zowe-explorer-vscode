@@ -317,22 +317,22 @@ describe("USS Action Unit Tests - Function createUSSNodeDialog", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        globalMocks.mockShowInputBox.mockReturnValueOnce("USSFolder");
+        const testProfile = createIProfile();
+        const ussApi = ZoweExplorerApiRegister.getUssApi(testProfile);
+        const getUssApiMock = jest.fn().mockReturnValue(ussApi);
+        ZoweExplorerApiRegister.getUssApi = getUssApiMock.bind(ZoweExplorerApiRegister);
+        const createSpy = jest.spyOn(ussApi, "create");
+
+        blockMocks.ussNode.contextValue = globals.DS_BINARY_FILE_CONTEXT;
+        blockMocks.ussNode.fullPath = "/test/path";
+
+        globalMocks.mockShowInputBox.mockReturnValueOnce("testFile");
+        jest.spyOn(blockMocks.testTreeView, "reveal").mockReturnValueOnce(new Promise((resolve) => resolve(null)));
+
+        jest.spyOn(blockMocks.ussNode, "getChildren").mockResolvedValueOnce([]);
 
         await ussNodeActions.createUSSNode(blockMocks.ussNode, blockMocks.testUSSTree, "file");
-        expect(blockMocks.testUSSTree.refreshElement).toHaveBeenCalled();
-        expect(globalMocks.showErrorMessage.mock.calls.length).toBe(0);
-    });
-
-    it("Tests that createUSSNode does not execute if node name was not entered", async () => {
-        const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        globalMocks.mockShowInputBox.mockReturnValueOnce("");
-
-        await ussNodeActions.createUSSNode(blockMocks.ussNode, blockMocks.testUSSTree, "file");
-        expect(blockMocks.testUSSTree.refresh).not.toHaveBeenCalled();
-        expect(globalMocks.showErrorMessage.mock.calls.length).toBe(0);
+        expect(createSpy).toBeCalledWith("/test/path/testFile", "file");
     });
 
     it("Tests that only the child node is refreshed when createUSSNode() is called on a child node", async () => {
@@ -340,6 +340,7 @@ describe("USS Action Unit Tests - Function createUSSNodeDialog", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         globalMocks.mockShowInputBox.mockReturnValueOnce("USSFolder");
+        jest.spyOn(blockMocks.ussNode, "getChildren").mockResolvedValueOnce([]);
         const isTopLevel = false;
         spyOn(ussNodeActions, "refreshAllUSS");
 
@@ -347,6 +348,7 @@ describe("USS Action Unit Tests - Function createUSSNodeDialog", () => {
         expect(blockMocks.testUSSTree.refreshElement).toHaveBeenCalled();
         expect(ussNodeActions.refreshAllUSS).not.toHaveBeenCalled();
     });
+
     it("Tests that the error is handled if createUSSNode is unsuccessful", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
