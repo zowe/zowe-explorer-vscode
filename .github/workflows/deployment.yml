@@ -69,10 +69,11 @@ jobs:
           git config --global user.email "zowe.robot@gmail.com"
           git remote add origin_token https://${{ secrets.ROBOT_TOKEN }}:x-oauth-basic@github.com/${{ github.repository }}.git
 
+      - name: Install CLIs for Workflow use
+        run: npm install -g vsce yarn
+
       - name: Install Project Dependencies
-        run: |
-          npm install -g vsce yarn
-          yarn
+        run: yarn
 
       # Avoid adding node_modules to each .github/actions folder
       - name: Install Internal Dependencies for Actions to Work
@@ -118,7 +119,6 @@ jobs:
       - name: Get Top-Level package.json
         run: "echo ::set-output name=top_package::$(cat package.json)"
         id: get_version
-
 
       - name: Check if files were staged
         run: "echo ::set-output name=files_staged::$(git diff --cached --quiet || echo $?)"
