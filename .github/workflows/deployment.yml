@@ -59,7 +59,7 @@ jobs:
           node-version: 12
 
       - run: npm install -g vsce yarn
-      - run: npm install --no-save @actions/core # Avoid adding node_modules to .github/actions folders
+      - run: npm install -g @actions/core # Avoid adding node_modules to .github/actions folders
 
       - run: yarn && yarn package
 
