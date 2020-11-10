@@ -21,7 +21,7 @@ jobs:
       - name: Create test data file
         run: cp resources/testProfileData.example.ts resources/testProfileData.ts
         with:
-          path: package/zowe-explorer/
+          path: packages/zowe-explorer/
 
       - name: Create extension install directory
         run: mkdir -p temp/plugins && chmod -R 777 temp
