@@ -72,13 +72,13 @@ jobs:
       - name: Install CLIs for Workflow use
         run: npm install -g vsce yarn
 
-      - name: Install Project Dependencies
-        run: yarn
-
       # Avoid adding node_modules to each .github/actions folder
       - name: Install Internal Dependencies for Actions to Work
         run: npm install @actions/core
         working-directory: ./.github/actions/deploy-vscode-extension
+
+      - name: Install Project Dependencies
+        run: yarn
 
       - name: Get the Zowe Explorer Display Name
         run: "echo ::set-output name=package_nls::$(cat packages/zowe-explorer/package.nls.json)"
@@ -130,7 +130,7 @@ jobs:
         run: |
           git status
           git commit -m "Version Bumped to ${{ fromJson(steps.get_version.outputs.top_package).version }}"
-          git push origin_token master
+          git push origin_token test-monorepo-deployment
 
       - name: Create the Release
         id: create_release
