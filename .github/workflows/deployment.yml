@@ -1,0 +1,160 @@
+name: Deployment of Zowe Explorer and related extensions
+
+on:
+  push:
+    branches:
+    - master
+    - test-monorepo-deployment # TODO: remove after testing is done & add the package.json path
+    # paths:
+    # - package.json
+
+jobs:
+  check_version:
+    runs-on: ubuntu-latest
+    outputs:
+      should_publish: ${{ steps.should_publish_any.outputs.should_publish != null }}
+    steps:
+      - uses: actions/checkout@v2
+
+      - run: npm install -g vsce
+
+      - run: "echo ::set-output name=market_ze::$(vsce show Zowe.vscode-extension-for-zowe --json)"
+        id: get_ze_info
+
+      - run: "echo ::set-output name=package::$(cat packages/zowe-explorer/package.json)"
+        id: get_ze_package
+
+      - run: "echo ::set-output name=package::$(cat packages/zowe-explorer-ftp-extension/package.json)"
+        id: get_ze_ftp_package
+
+      - run: "echo ::set-output name=package::$(cat packages/zowe-explorer-api/package.json)"
+        id: get_ze_api_package
+
+      - run: "echo ::set-output name=package::$(cat packages/eslint-plugin-zowe-explorer/package.json)"
+        id: get_ze_eslint_package
+
+      - run: "echo ::set-output name=should_publish::true"
+        if: |
+          fromJson(steps.get_ze_info.outputs.market_ze).versions[0].version != fromJson(steps.get_ze_package.outputs.package).version ||
+          fromJson(steps.get_ze_info.outputs.market_ze).versions[0].version != fromJson(steps.get_ze_ftp_package.outputs.package).version ||
+          fromJson(steps.get_ze_info.outputs.market_ze).versions[0].version != fromJson(steps.get_ze_api_package.outputs.package).version
+        # if: |
+        #   fromJson(steps.get_ze_info.outputs.market_ze).versions[0].version != fromJson(steps.get_ze_package.outputs.package).version ||
+        #   fromJson(steps.get_ze_info.outputs.market_ze).versions[0].version != fromJson(steps.get_ze_ftp_package.outputs.package).version ||
+        #   fromJson(steps.get_ze_info.outputs.market_ze).versions[0].version != fromJson(steps.get_ze_api_package.outputs.package).version ||
+        #   fromJson(steps.get_ze_info.outputs.market_ze).versions[0].version != fromJson(steps.get_ze_eslint_package.outputs.package).version
+        id: should_publish_any
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: check_version
+    if: needs.check_version.outputs.should_publish
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 12
+
+      - run: npm install -g vsce yarn
+      - run: npm install --no-save @actions/core # Avoid adding node_modules to .github/actions folders
+
+      - run: yarn && yarn package
+
+      - run: ls -al ./dist/ # TODO: debug
+
+      - run: "echo ::set-output name=package_nls::$(cat packages/zowe-explorer/package.nls.json)"
+        id: get_ze_name
+
+      - name: Publish the Zowe Explorer
+        id: deploy_zowe_explorer
+        uses: ./.github/actions/deploy-vscode-extension
+        with:
+          name: ${{ fromJson(steps.get_ze_name.outputs.package_nls).displayName }}
+          package: packages/zowe-explorer
+          token: ${{ secrets.VSCODE_PUBLISHER_TOKEN }}
+
+      # - name: Publish the Zowe Explorer APIs
+      #   id: deploy_zowe_explorer_api
+      #   uses: ./.github/actions/deploy-zowe-explorer-api
+      #   with:
+      #     package: packages/zowe-explorer-api
+
+      # - run: "echo ::set-output name=package::$(cat packages/zowe-explorer-ftp-extension/package.json)"
+      #   id: get_ftp_name
+
+      # - name: Publish the FTP Extension for Zowe Explorer
+      #   id: deploy_zowe_explorer_ftp_extension
+      #   uses: ./.github/actions/deploy-vscode-extension
+      #   with:
+      #     name: ${{ fromJson(steps.get_ftp_name.outputs.package).displayName }}
+      #     package: packages/zowe-explorer-ftp-extension
+      #     token: ${{ secrets.VSCODE_PUBLISHER_TOKEN }}
+
+      # - name: Publish the ESLint plugin for Zowe Explorer
+      #   id: deploy_eslint_plugin_zowe_explorer
+      #   uses: ./.github/actions/deploy-eslint-plugin-zowe-explorer
+      #   with:
+      #     package: packages/eslint-plugin-zowe-explorer
+
+      - run: "echo ::set-output name=top_package::$(cat package.json)"
+        id: get_version
+
+      - name: Create the Release
+        if: ${{ steps.deploy_zowe_explorer.outputs.vsix != null }}
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ fromJson(steps.get_version.outputs.top_package).version }}
+          release_name: v${{ fromJson(steps.get_version.outputs.top_package).version }}
+          body: |
+            ${{ steps.deploy_zowe_explorer.outputs.changelog }}
+          # body: |
+          #   ${{ steps.deploy_zowe_explorer.outputs.changelog }}
+          #   ${{ steps.deploy_zowe_explorer_api.outputs.changelog }}
+          #   ${{ steps.deploy_zowe_explorer_ftp_extension.outputs.changelog }}
+          #   ${{ steps.deploy_eslint_plugin_zowe_explorer.outputs.changelog }}
+          draft: true
+          prerelease: false
+
+      - name: Upload the Zowe Explorer Assets
+        if: ${{ steps.deploy_zowe_explorer.outputs.vsix != null }}
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dist/${{ steps.deploy_zowe_explorer.outputs.vsix }}
+          asset_name: ${{ steps.deploy_zowe_explorer.outputs.vsix }}
+          asset_content_type: application/octet-stream
+
+      # - name: Upload the Zowe Explorer APIs Assets
+      #   uses: actions/upload-release-asset@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     upload_url: ${{ steps.create_release.outputs.upload_url }}
+      #     asset_path: ./dist/${{ steps.deploy_zowe_explorer_api.outputs.tgz }}
+      #     asset_name: ${{ steps.deploy_zowe_explorer_api.outputs.tgz }}
+      #     asset_content_type: application/octet-stream
+
+      # - name: Upload the FTP Extension for Zowe Explorer Assets
+      #   uses: actions/upload-release-asset@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     upload_url: ${{ steps.create_release.outputs.upload_url }}
+      #     asset_path: ./dist/${{ steps.deploy_zowe_explorer_ftp_extension.outputs.vsix }}
+      #     asset_name: ${{ steps.deploy_zowe_explorer_ftp_extension.outputs.vsix }}
+      #     asset_content_type: application/octet-stream
+
+      # - name: Upload the ESLint plugin for Zowe Explorer Assets
+      #   uses: actions/upload-release-asset@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     upload_url: ${{ steps.create_release.outputs.upload_url }}
+      #     asset_path: ./dist/${{ steps.deploy_eslint_plugin_zowe_explorer.outputs.tgz }}
+      #     asset_name: ${{ steps.deploy_eslint_plugin_zowe_explorer.outputs.tgz }}
+      #     asset_content_type: application/octet-stream

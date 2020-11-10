@@ -1,0 +1,18 @@
+name: Deploy - Zowe Explorer
+inputs:
+  name:
+    description: Title to be used in the GH Releases
+    required: true
+  package:
+    description: Relative path to the package directory
+    required: true
+  token:
+    required: true
+outputs:
+  vsix:
+    description: The VSIX file to be uploaded to GH Releases
+  changelog:
+    description: The body of the changelog to be added to GH Releases
+runs:
+  using: node12
+  main: index.js
