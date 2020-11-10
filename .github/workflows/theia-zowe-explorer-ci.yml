@@ -3,10 +3,6 @@ name: Theia Zowe Explorer CI
 
 on: [push, pull_request]
 
-defaults:
-  run:
-    working-directory: packages/zowe-explorer
-
 jobs:
   theia-build:
     runs-on: ubuntu-latest
@@ -24,6 +20,8 @@ jobs:
       # copy test data file needed for build :-(
       - name: Create test data file
         run: cp resources/testProfileData.example.ts resources/testProfileData.ts
+        with:
+          path: package/zowe-explorer/
 
       - name: Create extension install directory
         run: mkdir -p temp/plugins && chmod -R 777 temp

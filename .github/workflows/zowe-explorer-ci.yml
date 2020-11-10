@@ -2,10 +2,6 @@ name: Zowe Explorer CI
 
 on: [push, pull_request]
 
-defaults:
-  run:
-    working-directory: packages/zowe-explorer
-
 jobs:
   build:
     runs-on: ${{ matrix.os }}
