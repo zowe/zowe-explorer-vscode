@@ -59,7 +59,10 @@ jobs:
           node-version: 12
 
       - run: npm install -g vsce yarn
-      - run: npm install -g @actions/core # Avoid adding node_modules to .github/actions folders
+
+      # Avoid adding node_modules to each .github/actions folder
+      - run: npm install @actions/core
+        working-directory: ./.github/actions/deploy-vscode-extension
 
       - run: yarn && yarn package
 
