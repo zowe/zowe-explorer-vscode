@@ -49,7 +49,7 @@ try {
     console.log(execSync(`git add package.json`, {cwd: packagePath}).toString());
 
     console.log(`Publishing version ${topPackageJson.version}`);
-    // console.log(execSync(`vsce publish --yarn -p ${core.getInput("token")}`, {cwd: packagePath}).toString());
+    console.log(execSync(`vsce publish --yarn -p ${core.getInput("token")}`, {cwd: packagePath}).toString());
 
     const versionName = `${packageJson.name}-${topPackageJson.version}`;
     console.log(`Generate: ${versionName}`);
