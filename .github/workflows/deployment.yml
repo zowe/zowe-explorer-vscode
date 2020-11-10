@@ -80,6 +80,8 @@ jobs:
       - name: Install Project Dependencies
         run: yarn
 
+      # TODO: Update ZE dependency on the ze-api to match the top-level version once published
+
       - name: Get the Zowe Explorer Display Name
         run: "echo ::set-output name=package_nls::$(cat packages/zowe-explorer/package.nls.json)"
         id: get_ze_name
