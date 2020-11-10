@@ -104,14 +104,13 @@ jobs:
         id: get_version
 
       - name: Create the Release
-        if: ${{ steps.deploy_zowe_explorer.outputs.vsix != null }}
         id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ fromJson(steps.get_version.outputs.top_package).version }}
-          release_name: v${{ fromJson(steps.get_version.outputs.top_package).version }}
+          tag_name: v${{ fromJson(steps.get_version.outputs.top_package).version }}
+          release_name: v${{ fromJson(steps.get_version.outputs.top_package).version }} - test
           body: |
             ${{ steps.deploy_zowe_explorer.outputs.changelog }}
             ${{ steps.deploy_zowe_explorer_ftp_extension.outputs.changelog }}
@@ -134,6 +133,17 @@ jobs:
           asset_name: ${{ steps.deploy_zowe_explorer.outputs.vsix }}
           asset_content_type: application/octet-stream
 
+      - name: Upload the FTP Extension for Zowe Explorer Assets
+        if: ${{ steps.deploy_zowe_explorer_ftp_extension.outputs.vsix != null }}
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dist/${{ steps.deploy_zowe_explorer_ftp_extension.outputs.vsix }}
+          asset_name: ${{ steps.deploy_zowe_explorer_ftp_extension.outputs.vsix }}
+          asset_content_type: application/octet-stream
+
       # - name: Upload the Zowe Explorer APIs Assets
       #   uses: actions/upload-release-asset@v1
       #   env:
@@ -142,16 +152,6 @@ jobs:
       #     upload_url: ${{ steps.create_release.outputs.upload_url }}
       #     asset_path: ./dist/${{ steps.deploy_zowe_explorer_api.outputs.tgz }}
       #     asset_name: ${{ steps.deploy_zowe_explorer_api.outputs.tgz }}
-      #     asset_content_type: application/octet-stream
-
-      # - name: Upload the FTP Extension for Zowe Explorer Assets
-      #   uses: actions/upload-release-asset@v1
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   with:
-      #     upload_url: ${{ steps.create_release.outputs.upload_url }}
-      #     asset_path: ./dist/${{ steps.deploy_zowe_explorer_ftp_extension.outputs.vsix }}
-      #     asset_name: ${{ steps.deploy_zowe_explorer_ftp_extension.outputs.vsix }}
       #     asset_content_type: application/octet-stream
 
       # - name: Upload the ESLint plugin for Zowe Explorer Assets

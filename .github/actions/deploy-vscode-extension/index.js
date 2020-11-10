@@ -35,6 +35,7 @@ try {
     extensionMetadata = JSON.parse(execSync(`vsce show ${packageJson.publisher}.${packageJson.name} --json`).toString());
   } catch (err) {
     // Do nothing if the package was not found and just continue to publish the extension
+    console.log(`Package ${packageJson.publisher}.${packageJson.name} not found!`);
   }
 
   // Check if there is a new version to publish (looking at the top level package.json for version)
@@ -48,11 +49,10 @@ try {
     console.log(execSync(`npm version ${topPackageJson.version}`, {cwd: packagePath}).toString());
 
     console.log(`Publishing version ${topPackageJson.version}`);
-    console.log(execSync(`ls -al`, {cwd: packagePath}).toString());
-    // console.log(exec(`vsce publish -p ${core.getInput("token")}`, {cwd: packagePath}).toString());
+    console.log(exec(`vsce publish --yarn -p ${core.getInput("token")}`, {cwd: packagePath}).toString());
 
     const versionName = `${packageJson.name}-${topPackageJson.version}`;
-    // Assume package is already created by `yarn package`
+    // Assume package is already created by top-level `yarn package`
     // console.log(`Generate: ${versionName}`);
     // console.log(execSync(`vsce package --yarn -o ${_helperCd(packagePath)}${versionName}`, {cwd: packagePath}).toString());
 
@@ -65,6 +65,7 @@ try {
       core.setOutput("changelog", changelog);
     } else {
       // No changelog for this version
+      console.log("No changelog available for version:", topPackageJson.version);
     }
   }
 } catch (err) {
