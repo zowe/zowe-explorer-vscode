@@ -49,7 +49,7 @@ try {
 
     let changelog = execSync("awk -v ver=" + topPackageJson.version + " '/## / {if (p) { exit }; if (\$2 ~ ver) { p=1; next} } p && NF' CHANGELOG.md | sed -z \"s/'/'\\\\\\''/g\" | sed -z 's/\"/\\\"/g' | sed -z 's/\\n/\\\\n/g'", {cwd: packagePath}).toString();
     if (changelog != "") {
-      changelog = `### ${core.getInput('name')}\n${changelog}`;
+      changelog = `#### ${core.getInput('name')}\n${changelog}`;
       console.log("changelog", changelog);
       core.setOutput("changelog", changelog);
     } else {

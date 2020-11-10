@@ -105,7 +105,7 @@ jobs:
           token: ${{ secrets.VSCODE_PUBLISHER_TOKEN }}
 
       - name: Get the NPM API package.json
-        run: "echo ::set-output name=package::$(cat packages/zowe-explorer-ftp-extension/package.json)"
+        run: "echo ::set-output name=package::$(cat packages/zowe-explorer-api/package.json)"
         id: get_npm_api_info
 
       - name: Publish the Zowe Explorer APIs
