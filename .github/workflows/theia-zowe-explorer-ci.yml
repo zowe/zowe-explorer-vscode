@@ -20,7 +20,8 @@ jobs:
       # copy test data file needed for build :-(
       - name: Create test data file
         run: cp resources/testProfileData.example.ts resources/testProfileData.ts
-        working-directory: ./packages/zowe-explorer/resources
+        with:
+          path: packages/zowe-explorer/
 
       - name: Create extension install directory
         run: mkdir -p temp/plugins && chmod -R 777 temp
