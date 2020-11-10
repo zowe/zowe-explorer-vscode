@@ -92,7 +92,7 @@ jobs:
           package: packages/zowe-explorer
           token: ${{ secrets.VSCODE_PUBLISHER_TOKEN }}
 
-      - name: Get the FTP Extension's package.json
+      - name: Get the FTP Extension package.json
         run: "echo ::set-output name=package::$(cat packages/zowe-explorer-ftp-extension/package.json)"
         id: get_ftp_name
 
@@ -104,11 +104,17 @@ jobs:
           package: packages/zowe-explorer-ftp-extension
           token: ${{ secrets.VSCODE_PUBLISHER_TOKEN }}
 
-      # - name: Publish the Zowe Explorer APIs
-      #   id: deploy_zowe_explorer_api
-      #   uses: ./.github/actions/deploy-zowe-explorer-api
-      #   with:
-      #     package: packages/zowe-explorer-api
+      - name: Get the NPM API package.json
+        run: "echo ::set-output name=package::$(cat packages/zowe-explorer-ftp-extension/package.json)"
+        id: get_npm_api_info
+
+      - name: Publish the Zowe Explorer APIs
+        id: deploy_zowe_explorer_api
+        uses: ./.github/actions/deploy-npm-package
+        with:
+          name: ${{ fromJson(steps.get_npm_api_info.outputs.package).description }}
+          package: packages/zowe-explorer-api
+          token: ${{ secrets.NPM_PUBLISHER_TOKEN }}
 
       # - name: Publish the ESLint plugin for Zowe Explorer
       #   id: deploy_eslint_plugin_zowe_explorer
@@ -150,14 +156,14 @@ jobs:
           prerelease: false
 
       - name: Upload the Zowe Explorer Assets
-        if: ${{ steps.deploy_zowe_explorer.outputs.vsix != null }}
+        if: ${{ steps.deploy_zowe_explorer.outputs.archive != null }}
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist/${{ steps.deploy_zowe_explorer.outputs.vsix }}.vsix
-          asset_name: ${{ steps.deploy_zowe_explorer.outputs.vsix }}.vsix
+          asset_path: ./dist/${{ steps.deploy_zowe_explorer.outputs.archive }}.vsix
+          asset_name: ${{ steps.deploy_zowe_explorer.outputs.archive }}.vsix
           asset_content_type: application/octet-stream
 
       - name: Upload the FTP Extension for Zowe Explorer Assets
@@ -167,26 +173,26 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist/${{ steps.deploy_zowe_explorer_ftp_extension.outputs.vsix }}.vsix
-          asset_name: ${{ steps.deploy_zowe_explorer_ftp_extension.outputs.vsix }}.vsix
+          asset_path: ./dist/${{ steps.deploy_zowe_explorer_ftp_extension.outputs.archive }}.vsix
+          asset_name: ${{ steps.deploy_zowe_explorer_ftp_extension.outputs.archive }}.vsix
           asset_content_type: application/octet-stream
 
-      # - name: Upload the Zowe Explorer APIs Assets
-      #   uses: actions/upload-release-asset@v1
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   with:
-      #     upload_url: ${{ steps.create_release.outputs.upload_url }}
-      #     asset_path: ./dist/${{ steps.deploy_zowe_explorer_api.outputs.tgz }}.tgz
-      #     asset_name: ${{ steps.deploy_zowe_explorer_api.outputs.tgz }}.tgz
-      #     asset_content_type: application/octet-stream
+      - name: Upload the Zowe Explorer APIs Assets
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dist/${{ steps.deploy_zowe_explorer_api.outputs.archive }}.tgz
+          asset_name: ${{ steps.deploy_zowe_explorer_api.outputs.archive }}.tgz
+          asset_content_type: application/octet-stream
 
-      # - name: Upload the ESLint plugin for Zowe Explorer Assets
-      #   uses: actions/upload-release-asset@v1
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   with:
-      #     upload_url: ${{ steps.create_release.outputs.upload_url }}
-      #     asset_path: ./dist/${{ steps.deploy_eslint_plugin_zowe_explorer.outputs.tgz }}.tgz
-      #     asset_name: ${{ steps.deploy_eslint_plugin_zowe_explorer.outputs.tgz }}.tgz
-      #     asset_content_type: application/octet-stream
+      - name: Upload the ESLint plugin for Zowe Explorer Assets
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dist/${{ steps.deploy_eslint_plugin_zowe_explorer.outputs.archive }}.tgz
+          asset_name: ${{ steps.deploy_eslint_plugin_zowe_explorer.outputs.archive }}.tgz
+          asset_content_type: application/octet-stream

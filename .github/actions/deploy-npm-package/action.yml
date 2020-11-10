@@ -1,4 +1,4 @@
-name: Deploy - Zowe Explorer - VSCode Extensions
+name: Deploy - Zowe Explorer - NPM Packages
 inputs:
   name:
     description: Title to be used in the GH Releases
@@ -10,7 +10,7 @@ inputs:
     required: true
 outputs:
   archive:
-    description: The VSIX file to be uploaded to GH Releases
+    description: The TGZ file to be uploaded to GH Releases
   changelog:
     description: The body of the changelog to be added to GH Releases
 runs:
