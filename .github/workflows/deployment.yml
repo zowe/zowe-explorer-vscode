@@ -64,7 +64,7 @@ jobs:
       - run: npm install @actions/core
         working-directory: ./.github/actions/deploy-vscode-extension
 
-      # - run: yarn && yarn package
+      - run: yarn # && yarn package
 
       - run: "echo ::set-output name=package_nls::$(cat packages/zowe-explorer/package.nls.json)"
         id: get_ze_name
