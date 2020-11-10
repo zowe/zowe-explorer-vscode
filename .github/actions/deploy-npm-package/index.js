@@ -45,7 +45,7 @@ try {
     core.setOutput("archive", versionName);
 
     console.log(execSync(`echo registry=https://registry.npmjs.org/ > .npmrc`, {cwd: packagePath}).toString());
-    console.log(execSync(`//registry.npmjs.org/:_authToken=${core.getInput("token")} >> .npmrc`, {cwd: packagePath}).toString());
+    console.log(execSync(`echo //registry.npmjs.org/:_authToken=${core.getInput("token")} >> .npmrc`, {cwd: packagePath}).toString());
 
     console.log(`Publishing version ${topPackageJson.version}`);
     console.log(execSync(`npm publish --access public`, {cwd: packagePath}).toString());
