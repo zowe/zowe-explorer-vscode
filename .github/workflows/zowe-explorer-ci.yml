@@ -4,6 +4,9 @@ on:
   push:
     paths:
       - packages/zowe-explorer/*
+  pull_request:
+    paths:
+      - packages/zowe-explorer/*
 
 jobs:
   build:
