@@ -48,14 +48,14 @@ try {
     console.log(`Incrementing version: ${packageJson.version} -> ${topPackageJson.version}`);
     console.log(execSync(`npm version ${topPackageJson.version}`, {cwd: packagePath}).toString());
 
+    console.log(execSync(`git status`, {cwd: packagePath}).toString());
+
     console.log(`Publishing version ${topPackageJson.version}`);
-    console.log(exec(`vsce publish --yarn -p ${core.getInput("token")}`, {cwd: packagePath}).toString());
+    // console.log(execSync(`vsce publish --yarn -p ${core.getInput("token")}`, {cwd: packagePath}).toString());
 
     const versionName = `${packageJson.name}-${topPackageJson.version}`;
-    // Assume package is already created by top-level `yarn package`
-    // console.log(`Generate: ${versionName}`);
-    // console.log(execSync(`vsce package --yarn -o ${_helperCd(packagePath)}${versionName}`, {cwd: packagePath}).toString());
-
+    console.log(`Generate: ${versionName}`);
+    console.log(execSync(`yarn package`, {cwd: packagePath}).toString());
     core.setOutput("vsix", versionName);
 
     let changelog = execSync("awk -v ver=" + topPackageJson.version + " '/## / {if (p) { exit }; if (\$2 ~ ver) { p=1; next} } p && NF' CHANGELOG.md | sed -z \"s/'/'\\\\\\''/g\" | sed -z 's/\"/\\\"/g' | sed -z 's/\\n/\\\\n/g'", {cwd: packagePath}).toString();
@@ -67,6 +67,7 @@ try {
       // No changelog for this version
       console.log("No changelog available for version:", topPackageJson.version);
     }
+    throw new Error("stop here");
   }
 } catch (err) {
   core.setFailed(err.message);
