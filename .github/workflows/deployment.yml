@@ -81,6 +81,7 @@ jobs:
         run: yarn
 
       # TODO: Update ZE dependency on the ze-api to match the top-level version once published
+      #       Maybe this will help https://yarnpkg.com/cli/version/apply
 
       - name: Get the Zowe Explorer Display Name
         run: "echo ::set-output name=package_nls::$(cat packages/zowe-explorer/package.nls.json)"
