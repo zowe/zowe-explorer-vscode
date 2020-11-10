@@ -23,7 +23,7 @@ For development and debugging it is recommended to clone the full Theia reposito
     "@theia/plugin-ext-vscode": "next"
    ```
 
-  As the name indicates, these will add VS Code Extension compatibility.
+As the name indicates, these will add VS Code Extension compatibility.
 
 1. Before you run the `yarn theia start` command, download Zowe Explorer's vsix file from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=Zowe.vscode-extension-for-zowe) using the "Download Extension" link on the right.
 
@@ -47,9 +47,9 @@ As the default Theia Docker image does not include the VS Code Plugin extension 
 
 1. Make sure are not running any other Theia app anymore or change the mapped port in the command. Then run this command to download the image and start a container
 
-    ```bash
-    docker run -it --init -p 3000:3000 theiaide/theia-full:next --plugins=local-dir:/home/theia/plugins
-    ```
+   ```bash
+   docker run -it --init -p 3000:3000 theiaide/theia-full:next --plugins=local-dir:/home/theia/plugins
+   ```
 
 1. Open a Web browser and navigate to <http://localhost:3000>.
 
@@ -63,7 +63,7 @@ As the default Theia Docker image does not include the VS Code Plugin extension 
 
 1. And then move it in the right place as root:
 
-    ```bash
+   ```bash
    $ docker exec -u 0 -it ${container-id} bash
    # mkdir plugins
    # mv Zowe.vscode-extension-for-zowe-0.29.0.vsix plugins
