@@ -13,7 +13,7 @@ const fs = require("fs");
 const path = require("path");
 const packageName = process.argv[2];
 const extension = process.argv[3];
-const fullPackageName = `${packageName}-v${process.env.npm_package_version}.${extension}`;
+const fullPackageName = `${packageName}-${process.env.npm_package_version}.${extension}`;
 const targetPath = path.join("..", "..", "dist", fullPackageName);
 fs.renameSync(fullPackageName, targetPath);
 console.log(`Published package to ${targetPath}.`);

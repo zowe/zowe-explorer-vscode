@@ -51,7 +51,7 @@ try {
     console.log(execSync(`ls -al`, {cwd: packagePath}).toString());
     // console.log(exec(`vsce publish -p ${core.getInput("token")}`, {cwd: packagePath}).toString());
 
-    const versionName = `${packageJson.name}-v${topPackageJson.version}`;
+    const versionName = `${packageJson.name}-${topPackageJson.version}`;
     // Assume package is already created by `yarn package`
     // console.log(`Generate: ${versionName}`);
     // console.log(execSync(`vsce package --yarn -o ${_helperCd(packagePath)}${versionName}`, {cwd: packagePath}).toString());
