@@ -3,10 +3,10 @@ name: Zowe Explorer CI
 on:
   push:
     paths:
-      - packages/zowe-explorer/*
+      - "packages/zowe-explorer/**"
   pull_request:
     paths:
-      - packages/zowe-explorer/*
+      - "packages/zowe-explorer/**"
 
 jobs:
   build:
