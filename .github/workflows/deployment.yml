@@ -15,6 +15,9 @@ jobs:
       should_publish: ${{ steps.should_publish_any.outputs.should_publish != null }}
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 12
 
       - run: npm install -g vsce
 
