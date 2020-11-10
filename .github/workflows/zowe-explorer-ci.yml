@@ -1,12 +1,10 @@
 name: Zowe Explorer CI
 
-on:
-  push:
-    paths:
-      - "packages/zowe-explorer/**"
-  pull_request:
-    paths:
-      - "packages/zowe-explorer/**"
+on: [push, pull_request]
+
+defaults:
+  run:
+    working-directory: packages/zowe-explorer
 
 jobs:
   build:
@@ -30,7 +28,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
 
       # install yarn
-      - run: sudo npm install -g yarn
+      - run: npm install -g yarn
 
       - run: yarn install --frozen-lockfile
 
