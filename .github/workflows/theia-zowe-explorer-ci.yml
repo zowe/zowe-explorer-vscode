@@ -3,6 +3,10 @@ name: Theia Zowe Explorer CI
 
 on: [push, pull_request]
 
+defaults:
+  run:
+    working-directory: packages/zowe-explorer/
+
 jobs:
   theia-build:
     runs-on: ubuntu-latest
