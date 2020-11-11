@@ -3,10 +3,6 @@ name: Theia Zowe Explorer CI
 
 on: [push, pull_request]
 
-defaults:
-  run:
-    working-directory: packages/zowe-explorer/
-
 jobs:
   theia-build:
     runs-on: ubuntu-latest
@@ -31,7 +27,6 @@ jobs:
 
       - name: Build vsix
         run: yarn vsce package -o temp/plugins/vscode-extension-for-zowe.vsix
-        working-directory: packages/
 
       # Verify vsix
       - run: ls -la temp/plugins
