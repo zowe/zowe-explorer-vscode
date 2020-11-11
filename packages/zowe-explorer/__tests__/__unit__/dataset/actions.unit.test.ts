@@ -1635,7 +1635,7 @@ describe("Dataset Actions Unit Tests - Function showDSAttributes", () => {
     });
 });
 
-describe("Dataset Actions Unit Tests - Function copyDataSet", () => {
+describe("Dataset Actions Unit Tests - Function copyDataSetName", () => {
     function createBlockMocks() {
         const session = createISession();
         const sessionWithoutCredentials = createISessionWithoutCredentials();
@@ -1675,7 +1675,7 @@ describe("Dataset Actions Unit Tests - Function copyDataSet", () => {
         );
         node.contextValue = globals.DS_DS_CONTEXT;
 
-        await dsActions.copyDataSet(node);
+        await dsActions.copyDataSetName(node);
 
         expect(clipboard.readText()).toBe(
             JSON.stringify({
@@ -1696,7 +1696,7 @@ describe("Dataset Actions Unit Tests - Function copyDataSet", () => {
         );
         node.contextValue = globals.DS_DS_CONTEXT + globals.FAV_SUFFIX;
 
-        await dsActions.copyDataSet(node);
+        await dsActions.copyDataSetName(node);
 
         expect(clipboard.readText()).toBe(
             JSON.stringify({
@@ -1719,7 +1719,7 @@ describe("Dataset Actions Unit Tests - Function copyDataSet", () => {
         const child = new ZoweDatasetNode("child", vscode.TreeItemCollapsibleState.None, parent, null);
         child.contextValue = globals.DS_MEMBER_CONTEXT;
 
-        await dsActions.copyDataSet(child);
+        await dsActions.copyDataSetName(child);
 
         expect(clipboard.readText()).toBe(
             JSON.stringify({
@@ -1743,7 +1743,7 @@ describe("Dataset Actions Unit Tests - Function copyDataSet", () => {
         const child = new ZoweDatasetNode("child", vscode.TreeItemCollapsibleState.None, parent, null);
         child.contextValue = globals.DS_MEMBER_CONTEXT;
 
-        await dsActions.copyDataSet(child);
+        await dsActions.copyDataSetName(child);
 
         expect(clipboard.readText()).toBe(
             JSON.stringify({

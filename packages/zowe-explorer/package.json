@@ -176,12 +176,8 @@
         "title": "%renameDataSet%"
       },
       {
-        "command": "zowe.copyDataSet",
-        "title": "%copyDataSet%"
-      },
-      {
-        "command": "zowe.copyMember",
-        "title": "%copyMember%"
+        "command": "zowe.copyMemberName",
+        "title": "%copyMemberName%"
       },
       {
         "command": "zowe.hMigrateDataSet",
@@ -214,6 +210,10 @@
       {
         "command": "zowe.allocateLike",
         "title": "%allocateLike%"
+      },
+      {
+        "command": "zowe.copyDataSetName",
+        "title": "%copyDataSetName%"
       },
       {
         "command": "zowe.uploadDialog",
@@ -772,12 +772,12 @@
         },
         {
           "when": "view == zowe.explorer && viewItem =~ /^ds.*/",
-          "command": "zowe.copyDataSet",
+          "command": "zowe.copyDataSetName",
           "group": "6_cutCopyPaste@0"
         },
         {
           "when": "view == zowe.explorer && viewItem =~ /^member.*/",
-          "command": "zowe.copyMember",
+          "command": "zowe.copyMemberName",
           "group": "6_cutCopyPaste@0"
         },
         {
