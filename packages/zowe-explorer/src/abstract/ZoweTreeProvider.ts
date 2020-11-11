@@ -254,8 +254,9 @@ export class ZoweTreeProvider {
 
     public async ssoLogout(node: IZoweTreeNode) {
         await Profiles.getInstance().ssoLogout(node);
-        await this.refreshElement(node);
-        await this.refresh();
+        await vscode.commands.executeCommand("zowe.refreshAll");
+        await vscode.commands.executeCommand("zowe.uss.refreshAll");
+        await vscode.commands.executeCommand("zowe.refreshAllJobs");
     }
 
     public async createZoweSession(zoweFileProvider: IZoweTree<IZoweNodeType>) {

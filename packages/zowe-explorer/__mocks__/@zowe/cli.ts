@@ -44,6 +44,12 @@ export namespace CheckStatus {
     }
 }
 
+export namespace Login {
+    export function apimlLogin(session: Session) {
+        return "APIMLToken";
+    }
+}
+
 export declare const enum sampleCreateDataSetTypeEnum {
     DATA_SET_BINARY = 0,
     DATA_SET_C = 1,

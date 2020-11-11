@@ -16,7 +16,6 @@ import {
     IUpdateProfileFromCliArgs,
     ICommandArguments,
     Session,
-    SessConstants,
     IUpdateProfile,
     IProfile,
 } from "@zowe/imperative";
@@ -1041,6 +1040,11 @@ export class Profiles extends ProfilesCache {
                         break;
                 }
             } catch (error) {
+                // tslint:disable-next-line: no-magic-numbers
+                if (error.errorCode === 401) {
+                    await errorHandling(error, theProfile.name);
+                }
+
                 this.log.debug("Validate Error - Invalid Profile: " + error);
                 filteredProfile = {
                     status: "inactive",
@@ -1089,8 +1093,12 @@ export class Profiles extends ProfilesCache {
                 cmdArgs[prop] = serviceProfile.profile[prop] ? serviceProfile.profile[prop] : baseProfile.profile[prop];
             }
             if (baseProfile) {
-                cmdArgs.tokenType = serviceProfile.profile.tokenType ? serviceProfile.profile.tokenType: baseProfile.profile.tokenType;
-                cmdArgs.tokenValue = serviceProfile.profile.tokenValue ? serviceProfile.profile.tokenValue: baseProfile.profile.tokenValue;
+                cmdArgs.tokenType = serviceProfile.profile.tokenType
+                    ? serviceProfile.profile.tokenType
+                    : baseProfile.profile.tokenType;
+                cmdArgs.tokenValue = serviceProfile.profile.tokenValue
+                    ? serviceProfile.profile.tokenValue
+                    : baseProfile.profile.tokenValue;
             }
             if (commonApi.getSessionFromCommandArgument) {
                 session = await commonApi.getSessionFromCommandArgument(cmdArgs);
@@ -1124,7 +1132,9 @@ export class Profiles extends ProfilesCache {
 
         // This check will handle service profiles that have username and password
         if (serviceProfile.profile.user && serviceProfile.profile.password) {
-            vscode.window.showInformationMessage(localize("ssoLogin.noBase", "Log in skipped. This profile does not support base profiles."));
+            vscode.window.showInformationMessage(
+                localize("ssoLogin.noBase", "Log in skipped. This profile does not support base profiles.")
+            );
             return;
         }
 
@@ -1138,7 +1148,9 @@ export class Profiles extends ProfilesCache {
                 (baseProfile.profile.host === serviceProfile.profile.host &&
                     baseProfile.profile.port !== serviceProfile.profile.port))
         ) {
-            vscode.window.showInformationMessage(localize("ssoLogin.noBase", "Log in skipped. This profile does not support base profiles."));
+            vscode.window.showInformationMessage(
+                localize("ssoLogin.noBase", "Log in skipped. This profile does not support base profiles.")
+            );
             return;
         }
 
@@ -1168,13 +1180,13 @@ export class Profiles extends ProfilesCache {
                     user: newUser,
                     password: newPass,
                     rejectUnauthorized: combinedProfile.profile.rejectUnauthorized,
-                    tokenType: SessConstants.TOKEN_TYPE_APIML,
-                    type: SessConstants.AUTH_TYPE_TOKEN,
+                    tokenType: combinedProfile.profile.tokenType,
+                    type: combinedProfile.profile.type,
                 });
                 const loginToken = await zowe.Login.apimlLogin(updSession);
                 const profileManager = await Profiles.getInstance().getCliProfileManager("base");
                 const updBaseProfile: IProfile = {
-                    tokenType: SessConstants.TOKEN_TYPE_APIML,
+                    tokenType: combinedProfile.profile.tokenType,
                     tokenValue: loginToken,
                 };
 
@@ -1195,9 +1207,14 @@ export class Profiles extends ProfilesCache {
                 vscode.window.showInformationMessage(
                     localize("ssoLogin.successful", "Login to API Mediation Layer was successful.")
                 );
-                this.allProfiles = this.allProfiles.map( (item) => { item.profile.tokenValue = loginToken; return item;});
+                this.allProfiles = this.allProfiles.map((item) => {
+                    item.profile.tokenValue = loginToken;
+                    return item;
+                });
             } catch (error) {
-                vscode.window.showErrorMessage(localize("ssoLogin.unableToLogin", "Unable to log in. ") + error.message);
+                vscode.window.showErrorMessage(
+                    localize("ssoLogin.unableToLogin", "Unable to log in. ") + error.message
+                );
                 return;
             }
         }
@@ -1209,7 +1226,9 @@ export class Profiles extends ProfilesCache {
 
         // This check will handle service profiles that have username and password
         if (serviceProfile.profile.user && serviceProfile.profile.password) {
-            vscode.window.showInformationMessage(localize("ssoLogout.noBase", "Log out skipped. This profile does not support base profiles."));
+            vscode.window.showInformationMessage(
+                localize("ssoLogout.noBase", "Log out skipped. This profile does not support base profiles.")
+            );
             return;
         }
 
@@ -1223,7 +1242,9 @@ export class Profiles extends ProfilesCache {
                 (baseProfile.profile.host === serviceProfile.profile.host &&
                     baseProfile.profile.port !== serviceProfile.profile.port))
         ) {
-            vscode.window.showInformationMessage(localize("ssoLogout.noBase", "Log out skipped. This profile does not support base profiles."));
+            vscode.window.showInformationMessage(
+                localize("ssoLogout.noBase", "Log out skipped. This profile does not support base profiles.")
+            );
             return;
         }
 
@@ -1233,8 +1254,8 @@ export class Profiles extends ProfilesCache {
                 hostname: combinedProfile.profile.host,
                 port: combinedProfile.profile.port,
                 rejectUnauthorized: combinedProfile.profile.rejectUnauthorized,
-                tokenType: SessConstants.TOKEN_TYPE_APIML,
-                type: SessConstants.AUTH_TYPE_TOKEN,
+                tokenType: combinedProfile.profile.tokenType,
+                type: combinedProfile.profile.type,
                 tokenValue: combinedProfile.profile.tokenValue,
             });
             await zowe.Logout.apimlLogout(updSession);
