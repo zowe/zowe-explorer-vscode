@@ -31,6 +31,7 @@ jobs:
 
       - name: Build vsix
         run: yarn vsce package -o temp/plugins/vscode-extension-for-zowe.vsix
+        working-directory: packages/
 
       # Verify vsix
       - run: ls -la temp/plugins
