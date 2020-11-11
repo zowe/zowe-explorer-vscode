@@ -12,7 +12,6 @@
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import * as imperative from "@zowe/imperative";
-import * as shared from "../../../src/shared/actions";
 import {
     createBasicZosmfSession,
     createInstanceOfProfile,
@@ -1677,12 +1676,7 @@ describe("Dataset Actions Unit Tests - Function copyDataSetName", () => {
 
         await dsActions.copyDataSetName(node);
 
-        expect(clipboard.readText()).toBe(
-            JSON.stringify({
-                profileName: "sestest",
-                dataSetName: "HLQ.TEST.DELETE.NODE",
-            })
-        );
+        expect(clipboard.readText()).toBe('"HLQ.TEST.DELETE.NODE"');
     });
     it("Checking copy the label of a favorite node to the clipboard", async () => {
         globals.defineGlobals("");
@@ -1698,12 +1692,7 @@ describe("Dataset Actions Unit Tests - Function copyDataSetName", () => {
 
         await dsActions.copyDataSetName(node);
 
-        expect(clipboard.readText()).toBe(
-            JSON.stringify({
-                profileName: "sestest",
-                dataSetName: "HLQ.TEST.DELETE.NODE",
-            })
-        );
+        expect(clipboard.readText()).toBe('"HLQ.TEST.DELETE.NODE"');
     });
     it("Checking copy the label of a member to the clipboard", async () => {
         globals.defineGlobals("");
@@ -1721,13 +1710,7 @@ describe("Dataset Actions Unit Tests - Function copyDataSetName", () => {
 
         await dsActions.copyDataSetName(child);
 
-        expect(clipboard.readText()).toBe(
-            JSON.stringify({
-                profileName: "sestest",
-                dataSetName: "parent",
-                memberName: "child",
-            })
-        );
+        expect(clipboard.readText()).toBe('"child"');
     });
     it("Checking copy the label of a favorite member to the clipboard", async () => {
         globals.defineGlobals("");
@@ -1745,17 +1728,11 @@ describe("Dataset Actions Unit Tests - Function copyDataSetName", () => {
 
         await dsActions.copyDataSetName(child);
 
-        expect(clipboard.readText()).toBe(
-            JSON.stringify({
-                profileName: "sestest",
-                dataSetName: "parent",
-                memberName: "child",
-            })
-        );
+        expect(clipboard.readText()).toBe('"child"');
     });
 });
 
-describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
+describe("Dataset Actions Unit Tests - Function pasteMember", () => {
     function createBlockMocks() {
         const session = createISession();
         const sessionWithoutCredentials = createISessionWithoutCredentials();
@@ -1814,7 +1791,7 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
             })
         );
 
-        await dsActions.pasteDataSet(node, blockMocks.testDatasetTree);
+        await dsActions.pasteMember(node, blockMocks.testDatasetTree);
 
         expect(copySpy).toHaveBeenCalledWith(
             { dataSetName: "HLQ.TEST.BEFORE.NODE" },
@@ -1861,7 +1838,7 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
             })
         );
 
-        await dsActions.pasteDataSet(node, blockMocks.testDatasetTree);
+        await dsActions.pasteMember(node, blockMocks.testDatasetTree);
 
         expect(copySpy).toHaveBeenCalledWith(
             { dataSetName: "HLQ.TEST.BEFORE.NODE" },
@@ -1893,7 +1870,7 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
         });
         clipboard.writeText("INVALID");
 
-        await expect(dsActions.pasteDataSet(node, blockMocks.testDatasetTree)).rejects.toEqual(
+        await expect(dsActions.pasteMember(node, blockMocks.testDatasetTree)).rejects.toEqual(
             Error("Invalid clipboard. Copy from data set first")
         );
         expect(copySpy).not.toBeCalled();
@@ -1924,7 +1901,7 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
         mocked(vscode.window.showInputBox).mockResolvedValueOnce("");
         clipboard.writeText(JSON.stringify({ dataSetName: "HLQ.TEST.BEFORE.NODE", profileName: "sestest" }));
 
-        await dsActions.pasteDataSet(node, blockMocks.testDatasetTree);
+        await dsActions.pasteMember(node, blockMocks.testDatasetTree);
         expect(copySpy).not.toBeCalled();
     });
     it("Should call zowe.Copy.dataSet when pasting to partitioned data set", async () => {
@@ -1962,7 +1939,7 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
         mocked(vscode.window.showInputBox).mockResolvedValueOnce("mem1");
         clipboard.writeText(JSON.stringify({ dataSetName: "HLQ.TEST.BEFORE.NODE", profileName: "sestest" }));
 
-        await dsActions.pasteDataSet(node, blockMocks.testDatasetTree);
+        await dsActions.pasteMember(node, blockMocks.testDatasetTree);
 
         expect(copySpy).toHaveBeenCalledWith(
             { dataSetName: "HLQ.TEST.BEFORE.NODE" },
@@ -2001,7 +1978,7 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
         mocked(vscode.window.showInputBox).mockResolvedValueOnce("mem1");
         clipboard.writeText(JSON.stringify({ dataSetName: "HLQ.TEST.BEFORE.NODE", profileName: "sestest" }));
 
-        await expect(dsActions.pasteDataSet(node, blockMocks.testDatasetTree)).rejects.toEqual(
+        await expect(dsActions.pasteMember(node, blockMocks.testDatasetTree)).rejects.toEqual(
             Error("HLQ.TEST.TO.NODE(mem1) already exists. You cannot replace a member")
         );
         expect(copySpy).not.toBeCalled();
@@ -2053,7 +2030,7 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
         mocked(blockMocks.testDatasetTree.findNonFavoritedNode).mockReturnValueOnce(nonFavoritedNode);
         clipboard.writeText(JSON.stringify({ dataSetName: "HLQ.TEST.BEFORE.NODE", profileName: "sestest" }));
 
-        await dsActions.pasteDataSet(favoritedNode, blockMocks.testDatasetTree);
+        await dsActions.pasteMember(favoritedNode, blockMocks.testDatasetTree);
 
         expect(copySpy).toHaveBeenCalledWith(
             { dataSetName: "HLQ.TEST.BEFORE.NODE" },

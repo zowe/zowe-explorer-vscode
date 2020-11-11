@@ -132,8 +132,8 @@ Review the following use cases to understand how to work with data sets in Zowe 
 1. Navigate to the explorer tree.
 2. Open the **DATA SETS** bar.
 3. Select a member you want to copy.
-4. Right-click the member and select the **Copy Data Set** option.
-5. Right-click the data set where the member belongs and select the **Paste Data Set** option.
+4. Right-click the member and select the **Copy Member** option.
+5. Right-click the data set where the member belongs and select the **Paste Member** option.
 6. Enter the name of the copied member.
 
 ![Copy Data Set](docs/images/ZE-copy.gif?raw=true "Copy Data Set")

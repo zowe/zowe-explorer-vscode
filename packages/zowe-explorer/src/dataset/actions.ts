@@ -892,12 +892,26 @@ export async function enterPattern(node: IZoweDatasetTreeNode, datasetProvider: 
 }
 
 /**
- * Copy data sets
+ * Copy data set name
  *
  * @export
  * @param {IZoweNodeType} node - The node to copy
  */
 export async function copyDataSetName(node: IZoweNodeType) {
+    if (node.contextValue.includes(globals.DS_MEMBER_CONTEXT)) {
+        return vscode.env.clipboard.writeText(JSON.stringify(dsUtils.getNodeLabels(node).memberName));
+    } else {
+        return vscode.env.clipboard.writeText(JSON.stringify(dsUtils.getNodeLabels(node).dataSetName));
+    }
+}
+
+/**
+ * Copy data set info
+ *
+ * @export
+ * @param {IZoweNodeType} node - The node to copy
+ */
+export async function copyDataSet(node: IZoweNodeType) {
     return vscode.env.clipboard.writeText(JSON.stringify(dsUtils.getNodeLabels(node)));
 }
 
@@ -952,13 +966,13 @@ export async function hRecallDataSet(node: ZoweDatasetNode) {
 }
 
 /**
- * Paste data sets
+ * Paste member
  *
  * @export
  * @param {ZoweNode} node - The node to paste to
  * @param {DatasetTree} datasetProvider - the tree which contains the nodes
  */
-export async function pasteDataSet(node: IZoweDatasetTreeNode, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
+export async function pasteMember(node: IZoweDatasetTreeNode, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
     const { profileName, dataSetName } = dsUtils.getNodeLabels(node);
     let memberName;
     let beforeDataSetName;

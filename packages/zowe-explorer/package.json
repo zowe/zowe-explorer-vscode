@@ -180,6 +180,10 @@
         "title": "%copyMemberName%"
       },
       {
+        "command": "zowe.copyMember",
+        "title": "%copyMember%"
+      },
+      {
         "command": "zowe.hMigrateDataSet",
         "title": "%hMigrateDataSet%"
       },
@@ -188,7 +192,7 @@
         "title": "%hRecallDataSet%"
       },
       {
-        "command": "zowe.pasteDataSet",
+        "command": "zowe.pasteMember",
         "title": "%paste%"
       },
       {
@@ -777,12 +781,17 @@
         },
         {
           "when": "view == zowe.explorer && viewItem =~ /^member.*/",
-          "command": "zowe.copyMemberName",
+          "command": "zowe.copyMember",
           "group": "6_cutCopyPaste@0"
         },
         {
+          "when": "view == zowe.explorer && viewItem =~ /^member.*/",
+          "command": "zowe.copyMemberName",
+          "group": "6_cutCopyPaste@1"
+        },
+        {
           "when": "view == zowe.explorer && viewItem =~ /^(ds.*|^pds.*)/",
-          "command": "zowe.pasteDataSet",
+          "command": "zowe.pasteMember",
           "group": "6_cutCopyPaste@1"
         },
         {
