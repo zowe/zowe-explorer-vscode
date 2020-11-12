@@ -586,6 +586,10 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         profileNodeInFavorites.children = profileNodeInFavorites.children.filter(
             (temp) => !(temp.label === node.label && temp.contextValue.startsWith(node.contextValue))
         );
+        // Remove profile node from Favorites if it contains no more favorites.
+        if (profileNodeInFavorites.children.length < 1) {
+            this.removeFavProfile(node);
+        }
         this.refresh();
         await this.updateFavorites();
         this.refreshElement(this.mFavoriteSession);
@@ -610,6 +614,23 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             });
         });
         this.mHistory.updateFavorites(favoritesArray);
+    }
+
+    /**
+     * Removes profile node from Favorites section
+     */
+    public async removeFavProfile(node: IZoweDatasetTreeNode) {
+        const deleteLabel = node.getProfileName();
+        this.mFavorites.forEach((favProfileNode) => {
+            const favProfileLabel = favProfileNode.label.trim();
+            // const findNode = favNode.label.substring(1, favNode.label.indexOf("]")).trim();
+            if (favProfileLabel === deleteLabel) {
+                // datasetTree.removeFavorite(favNode);
+                this.mFavorites = this.mFavorites.filter((tempNode) => tempNode.label.trim() !== favProfileLabel);
+                favProfileNode.dirty = true;
+                this.refresh();
+            }
+        });
     }
 
     public async onDidChangeConfiguration(e) {
