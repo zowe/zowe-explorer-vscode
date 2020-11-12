@@ -450,6 +450,10 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         profileNodeInFavorites.children = profileNodeInFavorites.children.filter(
             (temp) => !(temp.label === node.label && temp.contextValue.startsWith(node.contextValue))
         );
+        // Remove profile node from Favorites if it contains no more favorites.
+        if (profileNodeInFavorites.children.length < 1) {
+            this.removeFavProfile(node);
+        }
         if (startLength !== profileNodeInFavorites.children.length) {
             await this.updateFavorites();
             this.refreshElement(this.mFavoriteSession);
@@ -472,6 +476,22 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             });
         });
         this.mHistory.updateFavorites(favoritesArray);
+    }
+
+    /**
+     * Removes profile node from Favorites section
+     * @param node
+     */
+    public async removeFavProfile(node: IZoweJobTreeNode) {
+        const deleteLabel = node.getProfileName();
+        this.mFavorites.forEach((favProfileNode) => {
+            const favProfileLabel = favProfileNode.label.trim();
+            if (favProfileLabel === deleteLabel) {
+                this.mFavorites = this.mFavorites.filter((tempNode) => tempNode.label.trim() !== favProfileLabel);
+                favProfileNode.dirty = true;
+                this.refresh();
+            }
+        });
     }
 
     /**

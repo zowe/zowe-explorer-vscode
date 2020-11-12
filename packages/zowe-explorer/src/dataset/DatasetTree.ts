@@ -617,6 +617,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
 
     /**
      * Removes profile node from Favorites section
+     * @param node
      */
     public async removeFavProfile(node: IZoweDatasetTreeNode) {
         const deleteLabel = node.getProfileName();

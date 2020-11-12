@@ -399,6 +399,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
 
     /**
      * Removes profile node from Favorites section
+     * @param node
      */
     public async removeFavProfile(node: IZoweUSSTreeNode) {
         const deleteLabel = node.getProfileName();
