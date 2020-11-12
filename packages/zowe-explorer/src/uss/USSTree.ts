@@ -371,6 +371,10 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         profileNodeInFavorites.children = profileNodeInFavorites.children.filter(
             (temp) => !(temp.label === node.label && temp.contextValue.startsWith(node.contextValue))
         );
+        // Remove profile node from Favorites if it contains no more favorites.
+        if (profileNodeInFavorites.children.length < 1) {
+            this.removeFavProfile(node);
+        }
         await this.updateFavorites();
         this.refreshElement(this.mFavoriteSession);
     }
@@ -391,6 +395,21 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             });
         });
         this.mHistory.updateFavorites(favoritesArray);
+    }
+
+    /**
+     * Removes profile node from Favorites section
+     */
+    public async removeFavProfile(node: IZoweUSSTreeNode) {
+        const deleteLabel = node.getProfileName();
+        this.mFavorites.forEach((favProfileNode) => {
+            const favProfileLabel = favProfileNode.label.trim();
+            if (favProfileLabel === deleteLabel) {
+                this.mFavorites = this.mFavorites.filter((tempNode) => tempNode.label.trim() !== favProfileLabel);
+                favProfileNode.dirty = true;
+                this.refresh();
+            }
+        });
     }
 
     /**

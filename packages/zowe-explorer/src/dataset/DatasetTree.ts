@@ -623,9 +623,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         const deleteLabel = node.getProfileName();
         this.mFavorites.forEach((favProfileNode) => {
             const favProfileLabel = favProfileNode.label.trim();
-            // const findNode = favNode.label.substring(1, favNode.label.indexOf("]")).trim();
             if (favProfileLabel === deleteLabel) {
-                // datasetTree.removeFavorite(favNode);
                 this.mFavorites = this.mFavorites.filter((tempNode) => tempNode.label.trim() !== favProfileLabel);
                 favProfileNode.dirty = true;
                 this.refresh();
