@@ -10,15 +10,8 @@
  */
 
 import * as zowe from "@zowe/cli";
-import { Session, IProfileLoaded, ITaskWithStatus, ICommandArguments } from "@zowe/imperative";
+import { Session, IProfileLoaded, ICommandArguments } from "@zowe/imperative";
 import { ZoweExplorerApi } from "./ZoweExplorerApi";
-
-import * as nls from "vscode-nls";
-// Set up localization
-nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
-
-// tslint:disable: max-classes-per-file
 
 /**
  * An implementation of the Zowe Explorer API Common interface for zOSMF.
@@ -142,13 +135,6 @@ export class ZosmfUssApi extends ZosmfApiCommon implements ZoweExplorerApi.IUss 
         ussFilePath: string,
         options: zowe.IUploadOptions
     ): Promise<zowe.IZosFilesResponse> {
-        const task: ITaskWithStatus = {
-            percentComplete: 0,
-            statusMessage: localize("api.zosmfUSSApi.putContents", "Uploading USS file"),
-            stageName: 0, // TaskStage.IN_PROGRESS - https://github.com/kulshekhar/ts-jest/issues/281
-        };
-
-        options.task = task;
         return zowe.Upload.fileToUssFile(this.getSession(), inputFilePath, ussFilePath, options);
     }
 

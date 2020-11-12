@@ -23,7 +23,7 @@ import {
 } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
-import { ISession, IProfileLoaded } from "@zowe/imperative";
+import { ISession, IProfileLoaded, ITaskWithStatus } from "@zowe/imperative";
 import * as nls from "vscode-nls";
 import { IUploadOptions, IZosFilesResponse } from "@zowe/cli";
 
@@ -234,13 +234,21 @@ export async function uploadContent(
     } else {
         // if new api method exists, use it
         if (ZoweExplorerApiRegister.getUssApi(profile).putContent) {
-            return ZoweExplorerApiRegister.getUssApi(profile).putContent(doc.fileName, remotePath, {
+            const task: ITaskWithStatus = {
+                percentComplete: 0,
+                statusMessage: localize("uploadContent.putContents", "Uploading USS file"),
+                stageName: 0, // TaskStage.IN_PROGRESS - https://github.com/kulshekhar/ts-jest/issues/281
+            };
+            const options: IUploadOptions = {
                 binary,
                 localEncoding: null,
                 etag: etagToUpload,
                 returnEtag,
                 encoding: profile.profile.encoding,
-            });
+                task,
+            };
+            const result = ZoweExplorerApiRegister.getUssApi(profile).putContent(doc.fileName, remotePath, options);
+            return result;
         } else {
             return ZoweExplorerApiRegister.getUssApi(profile).putContents(
                 doc.fileName,
