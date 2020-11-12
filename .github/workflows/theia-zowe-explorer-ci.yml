@@ -31,8 +31,8 @@ jobs:
       # Verify vsix
       - run: ls -la temp/plugins
 
-      - name: Build vsix
-        run: yarn vsce package -o "${PWD}/temp:/home/theia/.theia/plugins"
+      - name: Copy Vsix to theia plugins folder
+        run: cp temp/plugins/vscode-extension-for-zowe.vsix ${PWD}/temp:/home/theia/.theia/plugins/vscode-extension-for-zowe.vsix
 
       - run: ls -la ${PWD}/temp:/home/theia/.theia/plugins
 
