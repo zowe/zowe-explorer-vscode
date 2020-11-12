@@ -56,8 +56,8 @@ jobs:
       - name: Verify plugin loaded
         run: docker exec -i theia ls -la .theia/plugins
 
-      - name: Verify Theia accessible
-        run: curl --fail http://localhost:3000
+      # - name: Verify Theia accessible
+      #   run: curl --fail http://localhost:3000
 
       - name: Prep integration test files
         run: yarn build:integration
