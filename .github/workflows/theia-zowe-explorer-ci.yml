@@ -58,8 +58,10 @@ jobs:
 
       - run: docker ps
 
-      - name: Verify Theia accessible
-        run: curl --fail http://localhost:3000
+      - run: docker restart theia
+
+      # - name: Verify Theia accessible
+      #   run: curl --fail http://localhost:3000
 
       - name: Prep integration test files
         run: yarn build:integration
