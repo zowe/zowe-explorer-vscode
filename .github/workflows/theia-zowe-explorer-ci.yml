@@ -56,8 +56,13 @@ jobs:
       - name: Verify plugin loaded
         run: docker exec -i theia ls -la .theia/plugins
 
-      # - name: Verify Theia accessible
-      #   run: curl --fail http://localhost:3000
+      - name: Sleep for 30 seconds
+        uses: jakejarvis/wait-action@master
+        with:
+          time: "30s"
+
+      - name: Verify Theia accessible
+        run: curl --fail http://localhost:3000
 
       - name: Prep integration test files
         run: yarn build:integration
