@@ -31,8 +31,6 @@ jobs:
       # Verify vsix
       - run: ls -la temp/plugins
 
-      - run: ls -la ${PWD}/temp:/home/theia/.theia/plugins
-
       - name: Start Theia
         run: docker run --name theia --init -d -p 3000:3000 -v "${PWD}/temp:/home/theia/.theia" theiaide/theia
       # NOTE(Kelosky): alternatively, we could run docker via something like this; however, we cannot hot reload
@@ -57,6 +55,8 @@ jobs:
 
       - name: Verify plugin loaded
         run: docker exec -i theia ls -la .theia/plugins
+
+      - run: docker ps
 
       - name: Verify Theia accessible
         run: curl --fail http://localhost:3000
