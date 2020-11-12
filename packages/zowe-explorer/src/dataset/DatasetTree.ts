@@ -590,7 +590,6 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         if (profileNodeInFavorites.children.length < 1) {
             this.removeFavProfile(node);
         }
-        this.refresh();
         await this.updateFavorites();
         this.refreshElement(this.mFavoriteSession);
     }
