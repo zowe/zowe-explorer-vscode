@@ -264,20 +264,12 @@
         }
       },
       {
-        "command": "zowe.removeFavProfile",
-        "title": "%removeFavProfile%"
-      },
-      {
         "command": "zowe.uss.removeFavorite",
         "title": "%uss.removeFavorite%",
         "icon": {
           "dark": "./resources/dark/favorites-close-dark.svg",
           "light": "./resources/light/favorites-close-light.svg"
         }
-      },
-      {
-        "command": "zowe.uss.removeFavProfile",
-        "title": "%removeFavProfile%"
       },
       {
         "command": "zowe.removeSavedSearch",
@@ -418,10 +410,6 @@
       {
         "command": "zowe.jobs.removeSearchFavorite",
         "title": "%removeSavedSearch%"
-      },
-      {
-        "command": "zowe.jobs.removeFavProfile",
-        "title": "%removeFavProfile%"
       },
       {
         "command": "zowe.jobs.saveSearch",
@@ -646,11 +634,6 @@
           "group": "3_workspace@3"
         },
         {
-          "when": "view == zowe.uss.explorer && viewItem == profile_fav",
-          "command": "zowe.uss.removeFavProfile",
-          "group": "3_workspace"
-        },
-        {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(ussSession|favorite|profile_fav))/",
           "command": "zowe.uss.copyPath",
           "group": "4_copyPath"
@@ -799,11 +782,6 @@
           "when": "view == zowe.explorer && viewItem =~ /^session.*_fav.*/",
           "command": "zowe.removeSavedSearch",
           "group": "5_workspace@3"
-        },
-        {
-          "when": "view == zowe.explorer && viewItem == profile_fav",
-          "command": "zowe.removeFavProfile",
-          "group": "5_workspace"
         },
         {
           "when": "view == zowe.explorer && viewItem =~ /^(ds|pds).*/",
@@ -959,11 +937,6 @@
           "group": "2_workspace@0"
         },
         {
-          "when": "view == zowe.jobs && viewItem == profile_fav",
-          "command": "zowe.jobs.removeFavProfile",
-          "group": "2_workspace"
-        },
-        {
           "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/",
           "command": "zowe.all.profilelink",
           "group": "3_modification@0"
@@ -1035,10 +1008,6 @@
         },
         {
           "command": "zowe.removeSession",
-          "when": "never"
-        },
-        {
-          "command": "zowe.removeFavProfile",
           "when": "never"
         },
         {
@@ -1126,10 +1095,6 @@
           "when": "never"
         },
         {
-          "command": "zowe.uss.removeFavProfile",
-          "when": "never"
-        },
-        {
           "command": "zowe.jobs.addFavorite",
           "when": "never"
         },
@@ -1139,10 +1104,6 @@
         },
         {
           "command": "zowe.jobs.removeSearchFavorite",
-          "when": "never"
-        },
-        {
-          "command": "zowe.jobs.removeFavProfile",
           "when": "never"
         },
         {
