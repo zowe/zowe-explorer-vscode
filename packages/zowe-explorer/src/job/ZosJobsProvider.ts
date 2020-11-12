@@ -452,7 +452,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         );
         // Remove profile node from Favorites if it contains no more favorites.
         if (profileNodeInFavorites.children.length < 1) {
-            this.removeFavProfile(node);
+            this.removeFavProfile(profileName);
         }
         if (startLength !== profileNodeInFavorites.children.length) {
             await this.updateFavorites();
@@ -482,11 +482,10 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      * Removes profile node from Favorites section
      * @param node
      */
-    public async removeFavProfile(node: IZoweJobTreeNode) {
-        const deleteLabel = node.getProfileName();
+    public async removeFavProfile(profileName: string) {
         this.mFavorites.forEach((favProfileNode) => {
             const favProfileLabel = favProfileNode.label.trim();
-            if (favProfileLabel === deleteLabel) {
+            if (favProfileLabel === profileName) {
                 this.mFavorites = this.mFavorites.filter((tempNode) => tempNode.label.trim() !== favProfileLabel);
                 favProfileNode.dirty = true;
                 this.refresh();

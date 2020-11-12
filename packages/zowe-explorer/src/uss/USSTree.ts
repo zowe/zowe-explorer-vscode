@@ -373,7 +373,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         );
         // Remove profile node from Favorites if it contains no more favorites.
         if (profileNodeInFavorites.children.length < 1) {
-            this.removeFavProfile(node);
+            this.removeFavProfile(profileName);
         }
         await this.updateFavorites();
         this.refreshElement(this.mFavoriteSession);
@@ -399,13 +399,12 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
 
     /**
      * Removes profile node from Favorites section
-     * @param node
+     * @param profileName
      */
-    public async removeFavProfile(node: IZoweUSSTreeNode) {
-        const deleteLabel = node.getProfileName();
+    public async removeFavProfile(profileName: string) {
         this.mFavorites.forEach((favProfileNode) => {
             const favProfileLabel = favProfileNode.label.trim();
-            if (favProfileLabel === deleteLabel) {
+            if (favProfileLabel === profileName) {
                 this.mFavorites = this.mFavorites.filter((tempNode) => tempNode.label.trim() !== favProfileLabel);
                 favProfileNode.dirty = true;
                 this.refresh();
