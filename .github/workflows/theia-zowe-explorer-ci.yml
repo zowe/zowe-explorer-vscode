@@ -31,6 +31,17 @@ jobs:
       # Verify vsix
       - run: ls -la temp/plugins
 
+      - run: yarn lint
+
+      - name: Upload vsix
+        uses: actions/upload-artifact@v1
+        with:
+          name: vscode-extension-for-zowe.vsix
+          path: temp/plugins/vscode-extension-for-zowe.vsix
+
+      - name: Verify plugin loaded
+        run: docker exec -i theia ls -la .theia/plugins
+
       - name: Start Theia
         run: docker run --name theia --init -d -p 3000:3000 -v "${PWD}/temp:/home/theia/.theia" theiaide/theia
       # NOTE(Kelosky): alternatively, we could run docker via something like this; however, we cannot hot reload
@@ -45,23 +56,8 @@ jobs:
       #     # --health-cmd "curl --fail http://localhost:3000 || exit 1" --health-interval=5s --health-timeout=5s --health-retries 60
       #     options: --init
 
-      - run: yarn lint
-
-      - name: Upload vsix
-        uses: actions/upload-artifact@v1
-        with:
-          name: vscode-extension-for-zowe.vsix
-          path: temp/plugins/vscode-extension-for-zowe.vsix
-
-      - name: Verify plugin loaded
-        run: docker exec -i theia ls -la .theia/plugins
-
-      - run: docker ps
-
-      - run: docker restart theia
-
-      # - name: Verify Theia accessible
-      #   run: curl --fail http://localhost:3000
+      - name: Verify Theia accessible
+        run: curl --fail http://localhost:3000
 
       - name: Prep integration test files
         run: yarn build:integration
