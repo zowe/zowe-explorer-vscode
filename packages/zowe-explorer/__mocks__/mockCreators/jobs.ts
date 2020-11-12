@@ -84,6 +84,7 @@ export function createJobsTree(
         deleteSession: jest.fn(),
         addFavorite: jest.fn(),
         removeFavorite: jest.fn(),
+        removeFavProfile: jest.fn(),
         treeView,
         getTreeType: jest.fn().mockImplementation(() => PersistenceSchemaEnum.Job),
         checkCurrentProfile: jest.fn(),

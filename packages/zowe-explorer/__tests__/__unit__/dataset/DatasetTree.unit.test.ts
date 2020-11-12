@@ -1088,13 +1088,20 @@ describe("Dataset Tree Unit Tests - Function removeFavorite", () => {
             testTree.mSessionNodes[1],
             null
         );
+        const node2 = new ZoweDatasetNode(
+            "Dataset2",
+            vscode.TreeItemCollapsibleState.None,
+            testTree.mSessionNodes[1],
+            null
+        );
 
         // We're breaking rule 1 function call per 1 it block, but there's no over proper way to verify the functionality
         // First we need to have the item and be sure that it's properly added to have legit removal operation
         testTree.addFavorite(node);
+        testTree.addFavorite(node2);
         expect(testTree.mFavorites[0].children[0].label).toBe(`${node.label}`);
         testTree.removeFavorite(testTree.mFavorites[0].children[0]);
-        expect(testTree.mFavorites[0].children[0]).not.toBeDefined();
+        expect(testTree.mFavorites[0].children.length).toBe(1);
     });
 });
 describe("Dataset Tree Unit Tests - Function deleteSession", () => {
