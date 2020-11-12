@@ -39,9 +39,6 @@ jobs:
           name: vscode-extension-for-zowe.vsix
           path: temp/plugins/vscode-extension-for-zowe.vsix
 
-      - name: Verify plugin loaded
-        run: docker exec -i theia ls -la .theia/plugins
-
       - name: Start Theia
         run: docker run --name theia --init -d -p 3000:3000 -v "${PWD}/temp:/home/theia/.theia" theiaide/theia
       # NOTE(Kelosky): alternatively, we could run docker via something like this; however, we cannot hot reload
@@ -55,6 +52,9 @@ jobs:
       #       - temp:/home/theia/.theia
       #     # --health-cmd "curl --fail http://localhost:3000 || exit 1" --health-interval=5s --health-timeout=5s --health-retries 60
       #     options: --init
+
+      - name: Verify plugin loaded
+        run: docker exec -i theia ls -la .theia/plugins
 
       - name: Verify Theia accessible
         run: curl --fail http://localhost:3000
