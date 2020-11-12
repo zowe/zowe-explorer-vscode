@@ -88,7 +88,7 @@ export class ZoweTreeProvider {
      *
      */
     public refresh(): void {
-        this.mOnDidChangeTreeData.fire();
+        this.mOnDidChangeTreeData.fire(undefined);
     }
 
     /**
