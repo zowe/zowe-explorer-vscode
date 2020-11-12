@@ -57,7 +57,7 @@ jobs:
         run: docker exec -i theia ls -la .theia/plugins
 
       - name: Restart Docker
-        run: docker restart theia
+        run: docker container restart theia
 
       - name: Verify Theia accessible
         run: curl --fail http://localhost:3000
