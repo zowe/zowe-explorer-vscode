@@ -31,9 +31,6 @@ jobs:
       # Verify vsix
       - run: ls -la temp/plugins
 
-      - name: Copy Vsix to theia plugins folder
-        run: cp temp/plugins/vscode-extension-for-zowe.vsix ${PWD}/temp:/home/theia/.theia/plugins/vscode-extension-for-zowe.vsix
-
       - run: ls -la ${PWD}/temp:/home/theia/.theia/plugins
 
       - name: Start Theia
@@ -52,11 +49,11 @@ jobs:
 
       - run: yarn lint
 
-      # - name: Upload vsix
-      #   uses: actions/upload-artifact@v1
-      #   with:
-      #     name: vscode-extension-for-zowe.vsix
-      #     path: temp/plugins/vscode-extension-for-zowe.vsix
+      - name: Upload vsix
+        uses: actions/upload-artifact@v1
+        with:
+          name: vscode-extension-for-zowe.vsix
+          path: temp/plugins/vscode-extension-for-zowe.vsix
 
       - name: Verify plugin loaded
         run: docker exec -i theia ls -la .theia/plugins
