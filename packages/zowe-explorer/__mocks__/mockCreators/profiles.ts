@@ -12,7 +12,7 @@
 import { CliProfileManager } from "@zowe/imperative";
 
 export function createTestSchemas() {
-    const schema1: {} = {
+    const schema1: Record<string, unknown> = {
         host: { type: "string", optionDefinition: { description: "description" } },
         port: { type: "number", optionDefinition: { description: "description", defaultValue: 443 } },
         user: { type: "string", secure: true, optionDefinition: { description: "description" } },
@@ -20,7 +20,7 @@ export function createTestSchemas() {
         rejectUnauthorized: { type: "boolean", optionDefinition: { description: "description" } },
         basePath: { type: "string", optionDefinition: { description: "description" } },
     };
-    const schema2: {} = {
+    const schema2: Record<string, unknown> = {
         host: { type: "string", optionDefinition: { description: "description" } },
         port: { type: "number", optionDefinition: { description: "description", defaultValue: 123 } },
         user: { type: "string", secure: true, optionDefinition: { description: "description" } },
@@ -29,13 +29,13 @@ export function createTestSchemas() {
         aBoolean: { type: ["boolean", "null"], optionDefinition: { description: "description" } },
         aNumber: { type: "number", optionDefinition: { description: "description", defaultValue: 123 } },
     };
-    const schema3: {} = {
+    const schema3: Record<string, unknown> = {
         host: { type: "string", optionDefinition: { description: "description" } },
         port: { type: "number", optionDefinition: { description: "description" } },
         aNumber: { type: ["number", "null"], optionDefinition: { description: "description" } },
         aOther: { type: ["string", "null"], optionDefinition: { description: "description" } },
     };
-    const schema4 = {
+    const schema4: Record<string, unknown> = {
         // tslint:disable-next-line:max-line-length
         host: {
             type: "string",

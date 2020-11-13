@@ -1079,8 +1079,12 @@ export class Profiles extends ProfilesCache {
                 cmdArgs[prop] = serviceProfile.profile[prop] ? serviceProfile.profile[prop] : baseProfile.profile[prop];
             }
             if (baseProfile) {
-                cmdArgs.tokenType = serviceProfile.profile.tokenType ? serviceProfile.profile.tokenType: baseProfile.profile.tokenType;
-                cmdArgs.tokenValue = serviceProfile.profile.tokenValue ? serviceProfile.profile.tokenValue: baseProfile.profile.tokenValue;
+                cmdArgs.tokenType = serviceProfile.profile.tokenType
+                    ? serviceProfile.profile.tokenType
+                    : baseProfile.profile.tokenType;
+                cmdArgs.tokenValue = serviceProfile.profile.tokenValue
+                    ? serviceProfile.profile.tokenValue
+                    : baseProfile.profile.tokenValue;
             }
             if (commonApi.getSessionFromCommandArgument) {
                 session = await commonApi.getSessionFromCommandArgument(cmdArgs);
@@ -1132,7 +1136,7 @@ export class Profiles extends ProfilesCache {
         }
 
         try {
-            this.deleteProfileOnDisk(deletedProfile);
+            await this.deleteProfileOnDisk(deletedProfile);
         } catch (error) {
             this.log.error(
                 localize("deleteProfile.delete.log.error", "Error encountered when deleting profile! ") +
