@@ -277,7 +277,7 @@
       },
       {
         "command": "zowe.uss.removeFavProfile",
-        "title": "%removeFavProfile%"
+        "title": "%uss.removeFavProfile%"
       },
       {
         "command": "zowe.removeSavedSearch",
@@ -421,7 +421,7 @@
       },
       {
         "command": "zowe.jobs.removeFavProfile",
-        "title": "%removeFavProfile%"
+        "title": "%jobs.removeFavProfile%"
       },
       {
         "command": "zowe.jobs.saveSearch",
