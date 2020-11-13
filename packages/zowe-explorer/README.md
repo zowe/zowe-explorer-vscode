@@ -1,6 +1,5 @@
 # Zowe Explorer
 
-![Node.js CI](https://img.shields.io/github/workflow/status/zowe/vscode-extension-for-zowe/Node.js%20CI.svg?logo=github)
 [![version](https://vsmarketplacebadge.apphb.com/version-short/Zowe.vscode-extension-for-zowe.png)](https://vsmarketplacebadge.apphb.com/version-short/Zowe.vscode-extension-for-zowe.png)
 [![downloads](https://vsmarketplacebadge.apphb.com/downloads-short/Zowe.vscode-extension-for-zowe.png)](https://vsmarketplacebadge.apphb.com/downloads-short/Zowe.vscode-extension-for-zowe.png)
 [![codecov](https://codecov.io/gh/zowe/vscode-extension-for-zowe/branch/master/graph/badge.svg)](https://codecov.io/gh/zowe/vscode-extension-for-zowe)
@@ -24,9 +23,10 @@ More information:
 
 ## Contents
 
-- [What's new in Zowe Explorer 1.10.0](#what's-new-in-zowe-explorer-1.10.0)
+- [What's new in Zowe Explorer 1.10.0](#whats-new-in-zowe-explorer-1.10.0)
 - [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
+- [Sample Use Cases](#sample-use-cases)
 - [Credentials Security](#credentials-security)
 - [Usage Tips](#usage-tips)
 - [Extending Zowe Explorer](#extending-zowe-explorer)
@@ -57,7 +57,7 @@ Create a profile, review the sample use cases to familiarize yourself with the c
 4. Select **Create a New Connection to z/OS**. The user name and password fields are optional before you started to use a profile.
 5. Follow the instructions, and enter all required information to complete the profile creation.
 
-![New Connection](docs/images/ZE-newProfiles.gif?raw=true "New Connection")
+![New Connection](../../docs/images/ZE-newProfiles.gif?raw=true "New Connection")
 <br /><br />
 
 You can now use all the functionalities of the extension.
@@ -83,7 +83,7 @@ Before using the base profile functionality, ensure that you have [Zowe CLI](htt
 
 For more information, see [Integrating with API Mediation Layer](https://docs.zowe.org/stable/user-guide/cli-usingcli.html#integrating-with-api-mediation-layer).
 
-### Sample use cases
+s## Sample Use Cases
 
 Review the following use cases to understand how to work with data sets in Zowe Explorer. For the complete list of features including USS and jobs, see [Zowe Explorer Sample Use Cases](https://docs.zowe.org/stable/user-guide/ze-usage.html#sample-use-cases).
 
@@ -96,6 +96,7 @@ Review the following use cases to understand how to work with data sets in Zowe 
 - [Create data sets and data set members](#create-a-new-pds-and-a-pds-member): Create a new data set and data set members.
 - [Delete data set member and a data set](#delete-a-pds-member-and-pds): Delete a chosen data set member or an entire data set.
 - [View and access multiple profiles simultaneously](#view-and-access-multiple-profiles-simultaneously): Work with data sets from multiple profiles.
+- [Allocate Like](#allocate-like): Create a copy of a chosen data set with the same parameters.
 
 #### View data sets and use multiple filters
 
@@ -108,7 +109,7 @@ Review the following use cases to understand how to work with data sets in Zowe 
 
 **Tip:** To provide multiple filters, separate entries with a comma. You can append or postpend any filter with an \*, which indicates wildcard searching. You cannot enter an \* as the entire pattern.
 
-![View Data Set](docs/images/ZE-multiple-search.gif?raw=true "View Data Set")
+![View Data Set](../../docs/images/ZE-multiple-search.gif?raw=true "View Data Set")
 <br /><br />
 
 #### Refresh the list of data sets
@@ -124,7 +125,7 @@ Review the following use cases to understand how to work with data sets in Zowe 
 4. Right-click the data set and select the **Rename Data Set** option.
 5. Change the name of the data set.
 
-![Rename Data Set](docs/images/ZE-rename.gif?raw=true "Rename Data Set")
+![Rename Data Set](../../docs/images/ZE-rename.gif?raw=true "Rename Data Set")
 <br /><br />
 
 #### Copy data sets
@@ -136,7 +137,7 @@ Review the following use cases to understand how to work with data sets in Zowe 
 5. Right-click the data set where the member belongs and select the **Paste Data Set** option.
 6. Enter the name of the copied member.
 
-![Copy Data Set](docs/images/ZE-copy.gif?raw=true "Copy Data Set")
+![Copy Data Set](../../docs/images/ZE-copy.gif?raw=true "Copy Data Set")
 <br /><br />
 
 #### Download, edit, and upload existing PDS members
@@ -157,7 +158,7 @@ Your PDS member (or PS) is uploaded.
 
 **Note:** If someone else has made changes to the PDS member (or PS) while you were editing it, you can merge your conflicts before uploading to the mainframe.
 
-![Edit](docs/images/ZE-download-edit.gif?raw=true "Edit")
+![Edit](../../docs/images/ZE-download-edit.gif?raw=true "Edit")
 <br /><br />
 
 #### Use the save option to prevent merge conflicts
@@ -169,7 +170,7 @@ Your PDS member (or PS) is uploaded.
 5. Press Ctrl+S or Command+S (OSx) to save you changes.
 6. (Optional) Resolve merge conflicts if necessary.
 
-![Save](docs/images/ZE-safe-save.gif?raw=true "Save")
+![Save](../../docs/images/ZE-safe-save.gif?raw=true "Save")
 <br /><br />
 
 #### Create a new PDS and a PDS member
@@ -184,7 +185,7 @@ Your PDS member (or PS) is uploaded.
 7. Enter a name for the member.
    The member is created.
 
-![Create](docs/images/ZE-cre-pds-member.gif?raw=true "Create")
+![Create](../../docs/images/ZE-cre-pds-member.gif?raw=true "Create")
 <br /><br />
 
 #### Delete a PDS member and PDS
@@ -201,7 +202,7 @@ Your PDS member (or PS) is uploaded.
 
    **Note:** You can delete a PDS before you delete its members.
 
-![Delete](docs/images/ZE-del-pds-member.gif?raw=true "Delete")
+![Delete](../../docs/images/ZE-del-pds-member.gif?raw=true "Delete")
 <br /><br />
 
 #### View and access multiple profiles simultaneously
@@ -211,7 +212,16 @@ Your PDS member (or PS) is uploaded.
 3. Click the **Add Profile** button on the right of the **DATA SET** explorer bar.
 4. Select the profile that you want to add to the view as illustrated by the following screen.
 
-![Add Profile](docs/images/ZE-mult-profiles.gif?raw=true "Add Profile")
+![Add Profile](../../docs/images/ZE-mult-profiles.gif?raw=true "Add Profile")
+
+#### Allocate Like
+
+1. Navigate to the explorer tree.
+2. Open the **DATA SETS** bar.
+3. Right-click the data set and select the **Allocate Like (New File with Same Attributes)** option.
+4. Enter the new data set name.
+
+![Allocate Like](../../docs/images/ZE-allocate-like.gif?raw=true "Allocate Like")
 
 ## Credentials Security
 
@@ -235,6 +245,8 @@ For more information about SCS, see [Secure Credential Store Plug-in for Zowe Ex
 - **Delete a profile**: Right-click a chosen profile and select **Delete Profile** to permanently delete the profile. The functionality deletes a profile from your `.zowe` folder.
 
 - **Hide a profile**: You can hide a profile from the profile tree by right-clicking the profile and selecting the **Hide Profile** option. To add the profile back, click the **+** button and select the profile from the quick pick list.
+
+- **Associate profiles**: You can create a secondary association by right-clicking the profile and selecting the **Associate profiles** icon. For more information, see [the Associate profiles section](https://docs.zowe.org/stable/user-guide/ze-profiles.html#associate-profile) in Zowe Docs.
 
 For information how to configure Zowe Explorer, see [Zowe Explorer Configuration guidelines](https://docs.zowe.org/stable/user-guide/ze-install.html#configuration).
 
