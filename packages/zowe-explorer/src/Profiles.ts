@@ -827,7 +827,7 @@ export class Profiles extends ProfilesCache {
             });
 
         // Delete from Data Set Favorites
-        datasetTree.removeFavProfile(deleteLabel);
+        datasetTree.removeFavProfile(deleteLabel, false);
 
         // Delete from Data Set Tree
         datasetTree.mSessionNodes.forEach((sessNode) => {
@@ -849,7 +849,7 @@ export class Profiles extends ProfilesCache {
             });
 
         // Delete from USS Favorites
-        ussTree.removeFavProfile(deleteLabel);
+        ussTree.removeFavProfile(deleteLabel, false);
 
         // Delete from USS Tree
         ussTree.mSessionNodes.forEach((sessNode) => {
@@ -861,7 +861,7 @@ export class Profiles extends ProfilesCache {
         });
 
         // Delete from Jobs Favorites
-        jobsProvider.removeFavProfile(deleteLabel);
+        jobsProvider.removeFavProfile(deleteLabel, false);
 
         // Delete from Jobs Tree
         jobsProvider.mSessionNodes.forEach((jobNode) => {

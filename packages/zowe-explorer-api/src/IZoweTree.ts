@@ -74,7 +74,7 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
      * Removes profile node from Favorites section
      * @param profileName
      */
-    removeFavProfile(profileName: string);
+    removeFavProfile(profileName: string, userSelected: boolean);
     /**
      * Refreshes the tree
      */

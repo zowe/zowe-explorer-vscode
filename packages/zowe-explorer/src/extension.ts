@@ -238,7 +238,7 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
     vscode.commands.registerCommand("zowe.saveSearch", async (node) => datasetProvider.addFavorite(node));
     vscode.commands.registerCommand("zowe.removeSavedSearch", async (node) => datasetProvider.removeFavorite(node));
     vscode.commands.registerCommand("zowe.removeFavProfile", async (node) =>
-        datasetProvider.removeFavProfile(node.label)
+        datasetProvider.removeFavProfile(node.label, true)
     );
     vscode.commands.registerCommand("zowe.submitJcl", async () => dsActions.submitJcl(datasetProvider));
     vscode.commands.registerCommand("zowe.submitMember", async (node) => dsActions.submitMember(node));
@@ -272,7 +272,7 @@ function initUSSProvider(context: vscode.ExtensionContext, ussFileProvider: IZow
         ussFileProvider.removeFavorite(node)
     );
     vscode.commands.registerCommand("zowe.uss.removeFavProfile", async (node) =>
-        ussFileProvider.removeFavProfile(node.label)
+        ussFileProvider.removeFavProfile(node.label, true)
     );
     vscode.commands.registerCommand("zowe.uss.addSession", async () =>
         ussFileProvider.createZoweSession(ussFileProvider)
@@ -377,7 +377,7 @@ function initJobsProvider(context: vscode.ExtensionContext, jobsProvider: IZoweT
         jobsProvider.removeFavorite(node)
     );
     vscode.commands.registerCommand("zowe.jobs.removeFavProfile", async (node) =>
-        jobsProvider.removeFavProfile(node.label)
+        jobsProvider.removeFavProfile(node.label, true)
     );
     vscode.commands.registerCommand("zowe.jobs.disableValidation", async (node) =>
         Profiles.getInstance().disableValidation(node)

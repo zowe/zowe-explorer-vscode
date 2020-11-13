@@ -373,7 +373,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         );
         // Remove profile node from Favorites if it contains no more favorites.
         if (profileNodeInFavorites.children.length < 1) {
-            this.removeFavProfile(profileName);
+            this.removeFavProfile(profileName, false);
         }
         await this.updateFavorites();
         this.refreshElement(this.mFavoriteSession);
@@ -400,8 +400,30 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
     /**
      * Removes profile node from Favorites section
      * @param profileName
+     * @param userSelected True if the function is being called directly because the user selected to remove the profile from Favorites
      */
-    public async removeFavProfile(profileName: string) {
+    public async removeFavProfile(profileName: string, userSelected: boolean) {
+        // If user selected the "Remove profile from Favorites option", confirm they are okay with deleting all favorited items for that profile.
+        if (userSelected) {
+            const checkConfirmation = localize(
+                "removeFavProfile.confirm",
+                "This will remove all favorited USS items for profile {0}. Continue?",
+                profileName
+            );
+            const continueRemove = localize("removeFavProfile.continue", "Continue");
+            const cancelRemove = localize("removeFavProfile.cancel", "Cancel");
+            const quickPickOptions: vscode.QuickPickOptions = {
+                placeHolder: checkConfirmation,
+                ignoreFocusOut: true,
+                canPickMany: false,
+            };
+            if (
+                (await vscode.window.showQuickPick([continueRemove, cancelRemove], quickPickOptions)) !== continueRemove
+            ) {
+                return;
+            }
+        }
+
         this.mFavorites.forEach((favProfileNode) => {
             const favProfileLabel = favProfileNode.label.trim();
             if (favProfileLabel === profileName) {
