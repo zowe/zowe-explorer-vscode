@@ -480,7 +480,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
 
     /**
      * Removes profile node from Favorites section
-     * @param node
+     * @param profileName Name of profile
      * @param userSelected True if the function is being called directly because the user selected to remove the profile from Favorites
      */
     public async removeFavProfile(profileName: string, userSelected: boolean) {

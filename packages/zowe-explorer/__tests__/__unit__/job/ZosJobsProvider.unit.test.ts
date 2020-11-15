@@ -16,6 +16,7 @@ import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import * as globals from "../../../src/globals";
 import { Logger } from "@zowe/imperative";
+import { IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
 import {
     createIJobFile,
     createIJobObject,
@@ -136,6 +137,7 @@ async function createGlobalMocks() {
     ZoweExplorerApiRegister.getJesApi = globalMocks.mockGetJesApi.bind(ZoweExplorerApiRegister);
 
     globalMocks.createTreeView.mockReturnValue("testTreeView");
+    globalMocks.testSessionNode = createJobSessionNode(globalMocks.testSession, globalMocks.testProfile);
     globalMocks.mockGetJob.mockReturnValue(globalMocks.testIJob);
     globalMocks.mockGetJobsByOwnerAndPrefix.mockReturnValue([globalMocks.testIJob, globalMocks.testIJobComplete]);
     globalMocks.mockProfileInstance.editSession = jest.fn(() => globalMocks.testProfile);
@@ -148,6 +150,7 @@ async function createGlobalMocks() {
         }),
     });
     globalMocks.testJobsProvider = await createJobsTree(Logger.getAppLogger());
+    globalMocks.testJobsProvider.mSessionNodes.push(globalMocks.testSessionNode);
     Object.defineProperty(globalMocks.testJobsProvider, "refresh", {
         value: globalMocks.mockRefresh,
         configurable: true,
@@ -520,5 +523,38 @@ describe("ZosJobsProvider unit tests - Function loadProfilesForFavorites", () =>
         const resultFavJobNode = testTree.mFavorites[0].children[0];
 
         expect(resultFavJobNode).toEqual(expectedFavJobNode);
+    });
+});
+
+describe("ZoweJobNode unit tests - Function removeFavProfile", () => {
+    async function createBlockMocks(globalMocks) {
+        const newMocks = {
+            testJobNode: new Job(
+                "MYHLQ(JOB1283) - Input",
+                vscode.TreeItemCollapsibleState.Collapsed,
+                globalMocks.testJobsProvider.mSessionNodes[1],
+                globalMocks.testJobsProvider.mSessionNodes[1].getSession(),
+                globalMocks.testIJob,
+                globalMocks.testProfile
+            ),
+        };
+
+        return newMocks;
+    }
+
+    it("Tests that removeFavProfile successfully removes profile node in Favorites when called outside user command", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        globalMocks.testJobsProvider.mFavorites = [];
+
+        await globalMocks.testJobsProvider.addFavorite(blockMocks.testJobNode);
+        const profileNodeInFavs: IZoweJobTreeNode = globalMocks.testJobsProvider.mFavorites[0];
+
+        expect(globalMocks.testJobsProvider.mFavorites.length).toEqual(1);
+
+        await globalMocks.testJobsProvider.removeFavProfile(profileNodeInFavs.label, false);
+
+        expect(globalMocks.testJobsProvider.mFavorites.length).toEqual(0);
     });
 });
