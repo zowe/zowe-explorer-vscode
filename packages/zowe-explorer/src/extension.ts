@@ -271,9 +271,6 @@ function initUSSProvider(context: vscode.ExtensionContext, ussFileProvider: IZow
     vscode.commands.registerCommand("zowe.uss.removeFavorite", async (node: IZoweUSSTreeNode) =>
         ussFileProvider.removeFavorite(node)
     );
-    vscode.commands.registerCommand("zowe.uss.removeFavProfile", async (node) =>
-        ussFileProvider.removeFavProfile(node.label, true)
-    );
     vscode.commands.registerCommand("zowe.uss.addSession", async () =>
         ussFileProvider.createZoweSession(ussFileProvider)
     );
@@ -325,6 +322,9 @@ function initUSSProvider(context: vscode.ExtensionContext, ussFileProvider: IZow
     );
     vscode.commands.registerCommand("zowe.uss.removeSavedSearch", async (node: IZoweUSSTreeNode) =>
         ussFileProvider.removeFavorite(node)
+    );
+    vscode.commands.registerCommand("zowe.uss.removeFavProfile", async (node) =>
+        ussFileProvider.removeFavProfile(node.label, true)
     );
     vscode.commands.registerCommand("zowe.uss.disableValidation", async (node) =>
         Profiles.getInstance().disableValidation(node)
