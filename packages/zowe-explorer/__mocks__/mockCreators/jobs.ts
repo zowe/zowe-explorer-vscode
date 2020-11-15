@@ -104,6 +104,10 @@ export function createJobsTree(
     testJobsTree.removeFavorite.mockImplementation((badFavorite) =>
         removeNodeFromArray(badFavorite, testJobsTree.mFavorites)
     );
+    testJobsTree.removeFavProfile.mockImplementation((badFavProfileName) => {
+        const badFavProfileNode = testJobsTree.mFavorites.find((treeNode) => treeNode.label === badFavProfileName);
+        removeNodeFromArray(badFavProfileNode, testJobsTree.mFavorites);
+    });
 
     return testJobsTree;
 }
