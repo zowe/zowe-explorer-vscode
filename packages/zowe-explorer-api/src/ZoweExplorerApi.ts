@@ -68,7 +68,14 @@ export namespace ZoweExplorerApi {
          * @param {Session} session a Zowe CLI Session
          * @returns {string} the token value
          */
-        getToken?(session: Session): Promise<string>;
+        login?(session: Session): Promise<string>;
+
+        /**
+         * Perform logout from the authentication service
+         *
+         * @param {Session} session a Zowe CLI Session
+         */
+        logout?(session: Session);
     }
 
     /**

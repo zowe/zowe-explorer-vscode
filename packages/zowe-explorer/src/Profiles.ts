@@ -1183,7 +1183,9 @@ export class Profiles extends ProfilesCache {
                     tokenType: combinedProfile.profile.tokenType,
                     type: combinedProfile.profile.type,
                 });
-                const loginToken = await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).getToken(updSession);
+                const loginToken = await ZoweExplorerApiRegister.getInstance()
+                    .getCommonApi(serviceProfile)
+                    .login(updSession);
                 const profileManager = await Profiles.getInstance().getCliProfileManager("base");
                 const updBaseProfile: IProfile = {
                     tokenType: combinedProfile.profile.tokenType,
@@ -1258,7 +1260,7 @@ export class Profiles extends ProfilesCache {
                 type: combinedProfile.profile.type,
                 tokenValue: combinedProfile.profile.tokenValue,
             });
-            await zowe.Logout.apimlLogout(updSession);
+            await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).logout(updSession);
             vscode.window.showInformationMessage(
                 localize("ssoLogout.successful", "Logout from API Mediation Layer was successful.")
             );

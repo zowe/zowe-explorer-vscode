@@ -100,8 +100,12 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
         }
     }
 
-    public getToken(session: Session): Promise<string> {
+    public login(session: Session): Promise<string> {
         return zowe.Login.apimlLogin(session);
+    }
+
+    public logout(session: Session) {
+        return zowe.Logout.apimlLogout(session);
     }
 }
 
