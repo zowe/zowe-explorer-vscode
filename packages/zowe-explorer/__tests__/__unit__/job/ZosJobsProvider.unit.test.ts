@@ -541,7 +541,40 @@ describe("ZoweJobNode unit tests - Function removeFavProfile", () => {
 
         return newMocks;
     }
+    it("Tests successful removal of profile node in Favorites when user confirms they want to Continue removing it", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        globalMocks.mockShowQuickPick.mockResolvedValueOnce("Continue");
 
+        globalMocks.testJobsProvider.mFavorites = [];
+
+        await globalMocks.testJobsProvider.addFavorite(blockMocks.testJobNode);
+        const profileNodeInFavs: IZoweJobTreeNode = globalMocks.testJobsProvider.mFavorites[0];
+
+        expect(globalMocks.testJobsProvider.mFavorites.length).toEqual(1);
+
+        await globalMocks.testJobsProvider.removeFavProfile(profileNodeInFavs.label, true);
+
+        expect(globalMocks.testJobsProvider.mFavorites.length).toEqual(0);
+    });
+    it("Tests that removeFavProfile leaves profile node in Favorites when user cancels", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        globalMocks.mockShowQuickPick.mockResolvedValueOnce("Cancel");
+
+        globalMocks.testJobsProvider.mFavorites = [];
+
+        await globalMocks.testJobsProvider.addFavorite(blockMocks.testJobNode);
+        const profileNodeInFavs: IZoweJobTreeNode = globalMocks.testJobsProvider.mFavorites[0];
+        // Make sure favorite is added before the actual unit test
+        expect(globalMocks.testJobsProvider.mFavorites.length).toEqual(1);
+        const expectedFavProfileNode = globalMocks.testJobsProvider.mFavorites[0];
+
+        await globalMocks.testJobsProvider.removeFavProfile(profileNodeInFavs.label, true);
+
+        expect(globalMocks.testJobsProvider.mFavorites.length).toEqual(1);
+        expect(globalMocks.testJobsProvider.mFavorites[0]).toEqual(expectedFavProfileNode);
+    });
     it("Tests that removeFavProfile successfully removes profile node in Favorites when called outside user command", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
