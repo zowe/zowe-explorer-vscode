@@ -61,6 +61,14 @@ export namespace ZoweExplorerApi {
          * @returns {Session} a Zowe CLI Session
          */
         getSessionFromCommandArgument?(cmdArgs: ICommandArguments): Session;
+
+        /**
+         * Perform login to obtain a token from the authentication service
+         *
+         * @param {Session} session a Zowe CLI Session
+         * @returns {string} the token value
+         */
+        getToken?(session: Session): Promise<string>;
     }
 
     /**

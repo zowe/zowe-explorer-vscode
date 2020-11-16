@@ -99,6 +99,10 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
             return "unverified";
         }
     }
+
+    public getToken(session: Session): Promise<string> {
+        return zowe.Login.apimlLogin(session);
+    }
 }
 
 /**

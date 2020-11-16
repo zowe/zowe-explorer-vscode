@@ -1183,7 +1183,7 @@ export class Profiles extends ProfilesCache {
                     tokenType: combinedProfile.profile.tokenType,
                     type: combinedProfile.profile.type,
                 });
-                const loginToken = await zowe.Login.apimlLogin(updSession);
+                const loginToken = await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).getToken(updSession);
                 const profileManager = await Profiles.getInstance().getCliProfileManager("base");
                 const updBaseProfile: IProfile = {
                     tokenType: combinedProfile.profile.tokenType,
