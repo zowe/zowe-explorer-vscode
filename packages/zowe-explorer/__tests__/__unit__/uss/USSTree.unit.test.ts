@@ -365,6 +365,63 @@ describe("USSTree Unit Tests - Function USSTree.removeFavorite()", () => {
     });
 });
 
+describe("USSTree Unit Tests - Function USSTree.removeFavProfile", () => {
+    async function createBlockMocks(globalMocks) {
+        globalMocks.testTree.mFavorites = [];
+        const testDir = new ZoweUSSNode(
+            "testDir",
+            vscode.TreeItemCollapsibleState.Collapsed,
+            globalMocks.testTree.mSessionNodes[1],
+            null,
+            "/"
+        );
+        await globalMocks.testTree.addFavorite(testDir);
+        const profileNodeInFavs = globalMocks.testTree.mFavorites[0];
+        profileNodeInFavs.mProfileName = globalMocks.testProfile.name;
+
+        const newMocks = {
+            profileNodeInFavs,
+        };
+
+        return newMocks;
+    }
+
+    it("Tests successful removal of profile node in Favorites when user confirms they want to Continue removing it", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        // Make sure favorite is added before the actual unit test
+        expect(globalMocks.testTree.mFavorites.length).toEqual(1);
+
+        globalMocks.showQuickPick.mockResolvedValueOnce("Continue");
+        await globalMocks.testTree.removeFavProfile(blockMocks.profileNodeInFavs.label, true);
+
+        expect(globalMocks.testTree.mFavorites.length).toEqual(0);
+    });
+    it("Tests that removeFavProfile leaves profile node in Favorites when user cancels", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        // Make sure favorite is added before the actual unit test
+        expect(globalMocks.testTree.mFavorites.length).toEqual(1);
+        const expectedFavProfileNode = globalMocks.testTree.mFavorites[0];
+
+        globalMocks.showQuickPick.mockResolvedValueOnce("Cancel");
+        await globalMocks.testTree.removeFavProfile(blockMocks.profileNodeInFavs.label, true);
+
+        expect(globalMocks.testTree.mFavorites.length).toEqual(1);
+        expect(globalMocks.testTree.mFavorites[0]).toEqual(expectedFavProfileNode);
+    });
+    it("Tests that removeFavProfile successfully removes profile node in Favorites when called outside user command", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        // Make sure favorite is added before the actual unit test
+        expect(globalMocks.testTree.mFavorites.length).toEqual(1);
+
+        await globalMocks.testTree.removeFavProfile(blockMocks.profileNodeInFavs.label, false);
+
+        expect(globalMocks.testTree.mFavorites.length).toEqual(0);
+    });
+});
+
 describe("USSTree Unit Tests - Function USSTree.openItemFromPath()", () => {
     it("Tests that openItemFromPath opens a USS file in the tree", async () => {
         const globalMocks = await createGlobalMocks();

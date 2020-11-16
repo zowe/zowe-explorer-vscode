@@ -1140,6 +1140,7 @@ describe("Dataset Tree Unit Tests - Function  - Function removeFavProfile", () =
 
         const profileNodeInFavs: IZoweDatasetTreeNode = testTree.mFavorites[0];
 
+        // Make sure favorite is added before the actual unit test
         expect(testTree.mFavorites.length).toEqual(1);
 
         await testTree.removeFavProfile(profileNodeInFavs.label, true);
@@ -1194,6 +1195,7 @@ describe("Dataset Tree Unit Tests - Function  - Function removeFavProfile", () =
         testTree.addFavorite(node);
         const profileNodeInFavs: IZoweDatasetTreeNode = testTree.mFavorites[0];
 
+        // Make sure favorite is added before the actual unit test
         expect(testTree.mFavorites.length).toEqual(1);
 
         await testTree.removeFavProfile(profileNodeInFavs.label, false);
