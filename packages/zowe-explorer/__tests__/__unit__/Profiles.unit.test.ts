@@ -2724,8 +2724,33 @@ describe("Profiles Unit Tests - Function ssoLogin", () => {
         const response = await theProfiles.ssoLogin(resultNode);
 
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("This profile does not support login.");
+    });
+
+    it("Tests that sso login with token", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const resultNode: IZoweNodeType = blockMocks.datasetSessionNodeToken;
+        const theProfiles = await Profiles.createInstance(blockMocks.log);
+        Object.defineProperty(theProfiles, "getBaseProfile", {
+            value: jest.fn(() => {
+                return blockMocks.testBaseProfile;
+            }),
+        });
+
+        Object.defineProperty(theProfiles, "getCombinedProfile", {
+            value: jest.fn(() => {
+                return blockMocks.testCombinedProfile;
+            }),
+        });
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        const response = await theProfiles.ssoLogin(resultNode);
+
+        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe(
-            "Log in skipped. This profile does not support base profiles."
+            "Login to authentication service was successful."
         );
     });
 
@@ -2752,34 +2777,7 @@ describe("Profiles Unit Tests - Function ssoLogin", () => {
 
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe(
-            "Login to API Mediation Layer was successful."
-        );
-    });
-
-    it("Tests that sso login with token", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        const resultNode: IZoweNodeType = blockMocks.datasetSessionNodeToken;
-        const theProfiles = await Profiles.createInstance(blockMocks.log);
-        Object.defineProperty(theProfiles, "getBaseProfile", {
-            value: jest.fn(() => {
-                return blockMocks.testBaseProfile;
-            }),
-        });
-
-        Object.defineProperty(theProfiles, "getCombinedProfile", {
-            value: jest.fn(() => {
-                return blockMocks.testCombinedProfile;
-            }),
-        });
-        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
-        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
-        const response = await theProfiles.ssoLogin(resultNode);
-
-        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
-        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe(
-            "Login to API Mediation Layer was successful."
+            "Login to authentication service was successful."
         );
     });
 });
@@ -2841,8 +2839,6 @@ describe("Profiles Unit Tests - Function ssoLogout", () => {
         const response = await theProfiles.ssoLogout(resultNode);
 
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
-        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe(
-            "Log out skipped. This profile does not support base profiles."
-        );
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("This profile does not support logout.");
     });
 });

@@ -1,4 +1,4 @@
 {
   "errorHandling.invalid.credentials": "Invalid Credentials. Please ensure the username and password for {0} are valid or this may lead to a lock-out.",
-  "errorHandling.invalid.token": "Your connection is no longer active. Please log in to the API Mediation Layer to restore the connection."
+  "errorHandling.invalid.token": "Your connection is no longer active. Please log in to an authentication service to restore the connection."
 }

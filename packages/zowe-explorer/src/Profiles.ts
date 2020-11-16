@@ -1132,9 +1132,7 @@ export class Profiles extends ProfilesCache {
 
         // This check will handle service profiles that have username and password
         if (serviceProfile.profile.user && serviceProfile.profile.password) {
-            vscode.window.showInformationMessage(
-                localize("ssoLogin.noBase", "Log in skipped. This profile does not support base profiles.")
-            );
+            vscode.window.showInformationMessage(localize("ssoLogin.noBase", "This profile does not support login."));
             return;
         }
 
@@ -1148,9 +1146,7 @@ export class Profiles extends ProfilesCache {
                 (baseProfile.profile.host === serviceProfile.profile.host &&
                     baseProfile.profile.port !== serviceProfile.profile.port))
         ) {
-            vscode.window.showInformationMessage(
-                localize("ssoLogin.noBase", "Log in skipped. This profile does not support base profiles.")
-            );
+            vscode.window.showInformationMessage(localize("ssoLogin.noBase", "This profile does not support login."));
             return;
         }
 
@@ -1207,7 +1203,7 @@ export class Profiles extends ProfilesCache {
                     return;
                 }
                 vscode.window.showInformationMessage(
-                    localize("ssoLogin.successful", "Login to API Mediation Layer was successful.")
+                    localize("ssoLogin.successful", "Login to authentication service was successful.")
                 );
                 this.allProfiles = this.allProfiles.map((item) => {
                     item.profile.tokenValue = loginToken;
@@ -1228,9 +1224,7 @@ export class Profiles extends ProfilesCache {
 
         // This check will handle service profiles that have username and password
         if (serviceProfile.profile.user && serviceProfile.profile.password) {
-            vscode.window.showInformationMessage(
-                localize("ssoLogout.noBase", "Log out skipped. This profile does not support base profiles.")
-            );
+            vscode.window.showInformationMessage(localize("ssoLogout.noBase", "This profile does not support logout."));
             return;
         }
 
@@ -1244,9 +1238,7 @@ export class Profiles extends ProfilesCache {
                 (baseProfile.profile.host === serviceProfile.profile.host &&
                     baseProfile.profile.port !== serviceProfile.profile.port))
         ) {
-            vscode.window.showInformationMessage(
-                localize("ssoLogout.noBase", "Log out skipped. This profile does not support base profiles.")
-            );
+            vscode.window.showInformationMessage(localize("ssoLogout.noBase", "This profile does not support logout."));
             return;
         }
 
@@ -1262,7 +1254,7 @@ export class Profiles extends ProfilesCache {
             });
             await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).logout(updSession);
             vscode.window.showInformationMessage(
-                localize("ssoLogout.successful", "Logout from API Mediation Layer was successful.")
+                localize("ssoLogout.successful", "Logout from authentication service was successful.")
             );
             // await this.refresh(ZoweExplorerApiRegister.getInstance());
         } catch (error) {

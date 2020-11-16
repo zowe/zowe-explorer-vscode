@@ -89,10 +89,10 @@
   "enableValidation": "Enable Validation for Profile",
   "uss.enableValidation": "Enable Validation for Profile",
   "jobs.enableValidation": "Enable Validation for Profile",
-  "ssoLogin": "Log in to API Mediation Layer",
-  "uss.ssoLogin": "Log in to API Mediation Layer",
-  "jobs.ssoLogin": "Log in to API Mediation Layer",
-  "ssoLogout": "Log out from API Mediation Layer",
-  "uss.ssoLogout": "Log out from API Mediation Layer",
-  "jobs.ssoLogout": "Log out from API Mediation Layer"
+  "ssoLogin": "Log in to Authentication Service",
+  "uss.ssoLogin": "Log in to Authentication Service",
+  "jobs.ssoLogin": "Log in to Authentication Service",
+  "ssoLogout": "Log out from Authentication Service",
+  "uss.ssoLogout": "Log out from Authentication Service",
+  "jobs.ssoLogout": "Log out from Authentication Service"
 }

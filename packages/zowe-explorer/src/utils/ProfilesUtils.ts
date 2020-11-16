@@ -41,7 +41,7 @@ export function errorHandling(errorDetails: any, label?: string, moreInfo?: stri
     );
     const errToken = localize(
         "errorHandling.invalid.token",
-        "Your connection is no longer active. Please log in to the API Mediation Layer to restore the connection."
+        "Your connection is no longer active. Please log in to an authentication service to restore the connection."
     );
 
     if (errorDetails.mDetails !== undefined) {
@@ -63,11 +63,13 @@ export function errorHandling(errorDetails: any, label?: string, moreInfo?: stri
                             await Profiles.getInstance().ssoLogin(null, label);
                         });
                     } else {
-                        vscode.window.showErrorMessage(errToken, "Log in to API Mediation Layer").then(async (selection) => {
-                            if (selection) {
-                                await Profiles.getInstance().ssoLogin(null, label);
-                            }
-                        });
+                        vscode.window
+                            .showErrorMessage(errToken, "Log in to Authentication Service")
+                            .then(async (selection) => {
+                                if (selection) {
+                                    await Profiles.getInstance().ssoLogin(null, label);
+                                }
+                            });
                     }
                     break;
                 }
