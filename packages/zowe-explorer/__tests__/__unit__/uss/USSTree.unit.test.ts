@@ -9,7 +9,7 @@
  *                                                                                 *
  */
 
-import { ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { IZoweUSSTreeNode, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
@@ -376,7 +376,7 @@ describe("USSTree Unit Tests - Function USSTree.removeFavProfile", () => {
             "/"
         );
         await globalMocks.testTree.addFavorite(testDir);
-        const profileNodeInFavs = globalMocks.testTree.mFavorites[0];
+        const profileNodeInFavs: IZoweUSSTreeNode = globalMocks.testTree.mFavorites[0];
         profileNodeInFavs.mProfileName = globalMocks.testProfile.name;
 
         const newMocks = {
