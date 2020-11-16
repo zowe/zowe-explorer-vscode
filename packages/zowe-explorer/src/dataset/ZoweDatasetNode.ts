@@ -36,6 +36,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNode {
     public command: vscode.Command;
     public pattern = "";
+    public memberPattern = "";
     public dirty = true;
     public children: ZoweDatasetNode[] = [];
 
@@ -128,7 +129,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
         // push nodes to an object with property names to avoid duplicates
         const elementChildren = {};
-        responses.forEach((response) => {
+        responses.forEach(async (response) => {
             // Throws reject if the Zowe command does not throw an error but does not succeed
             if (!response.success) {
                 throw Error(localize("getChildren.responses.error", "The response from Zowe CLI was not successful"));
@@ -256,21 +257,44 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         const sessNode = this.getSessionNode();
         const responses: zowe.IZosFilesResponse[] = [];
         try {
+            const options: zowe.IListOptions = {};
+            options.attributes = true;
+            let label: string;
             if (contextually.isSessionNotFav(this)) {
                 this.pattern = this.pattern.toUpperCase();
-                // loop through each pattern
+                // loop through each pattern for datasets
                 for (const pattern of this.pattern.split(",")) {
                     responses.push(
                         await ZoweExplorerApiRegister.getMvsApi(this.getProfile()).dataSet(pattern.trim(), {
                             attributes: true,
                         })
                     );
+                    if (this.memberPattern !== undefined) {
+                        this.memberPattern = this.memberPattern.toUpperCase();
+                        for (const memPattern of this.memberPattern.split(",")) {
+                            options.pattern = memPattern;
+                            label = this.label.trim();
+                            responses.push(
+                                await ZoweExplorerApiRegister.getMvsApi(sessNode.getProfile()).allMembers(
+                                    label,
+                                    options
+                                )
+                            );
+                        }
+                    }
+                }
+            } else if (this.memberPattern !== undefined) {
+                this.memberPattern = this.memberPattern.toUpperCase();
+                for (const memPattern of this.memberPattern.split(",")) {
+                    options.pattern = memPattern;
+                    label = this.label.trim();
+                    responses.push(
+                        await ZoweExplorerApiRegister.getMvsApi(sessNode.getProfile()).allMembers(label, options)
+                    );
                 }
             } else {
-                const label = this.label.trim();
-                responses.push(
-                    await ZoweExplorerApiRegister.getMvsApi(this.getProfile()).allMembers(label, { attributes: true })
-                );
+                label = this.label.trim();
+                responses.push(await ZoweExplorerApiRegister.getMvsApi(this.getProfile()).allMembers(label, options));
             }
         } catch (err) {
             try {
