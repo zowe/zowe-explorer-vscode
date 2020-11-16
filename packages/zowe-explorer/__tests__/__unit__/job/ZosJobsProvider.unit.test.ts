@@ -526,7 +526,7 @@ describe("ZosJobsProvider unit tests - Function loadProfilesForFavorites", () =>
     });
 });
 
-describe("ZoweJobNode unit tests - Function removeFavProfile", () => {
+describe("ZosJobsProvider unit tests - Function removeFavProfile", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
             testJobNode: new Job(

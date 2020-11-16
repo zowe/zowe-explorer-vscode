@@ -16,7 +16,7 @@ import * as zowe from "@zowe/cli";
 import { Logger } from "@zowe/imperative";
 import { DatasetTree } from "../../../src/dataset/DatasetTree";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
-import { ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { IZoweDatasetTreeNode, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
@@ -1102,6 +1102,103 @@ describe("Dataset Tree Unit Tests - Function removeFavorite", () => {
         expect(testTree.mFavorites[0].children[0].label).toBe(`${node.label}`);
         testTree.removeFavorite(testTree.mFavorites[0].children[0]);
         expect(testTree.mFavorites[0].children.length).toBe(1);
+    });
+});
+describe("Dataset Tree Unit Tests - Function  - Function removeFavProfile", () => {
+    function createBlockMocks() {
+        const session = createISession();
+        const imperativeProfile = createIProfile();
+        const treeView = createTreeView();
+        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+
+        return {
+            session,
+            datasetSessionNode,
+            treeView,
+        };
+    }
+    it("Tests successful removal of profile node in Favorites when user confirms they want to Continue removing it", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        Object.defineProperty(vscode.window, "showQuickPick", {
+            value: jest.fn(() => {
+                return "Continue";
+            }),
+        });
+        const testTree = new DatasetTree();
+        testTree.mFavorites = [];
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        const node = new ZoweDatasetNode(
+            "Dataset",
+            vscode.TreeItemCollapsibleState.None,
+            testTree.mSessionNodes[1],
+            null
+        );
+        testTree.addFavorite(node);
+
+        const profileNodeInFavs: IZoweDatasetTreeNode = testTree.mFavorites[0];
+
+        expect(testTree.mFavorites.length).toEqual(1);
+
+        await testTree.removeFavProfile(profileNodeInFavs.label, true);
+
+        expect(testTree.mFavorites.length).toEqual(0);
+    });
+    it("Tests that removeFavProfile leaves profile node in Favorites when user cancels", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        Object.defineProperty(vscode.window, "showQuickPick", {
+            value: jest.fn(() => {
+                return "Cancel";
+            }),
+        });
+        const testTree = new DatasetTree();
+        testTree.mFavorites = [];
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        const node = new ZoweDatasetNode(
+            "Dataset",
+            vscode.TreeItemCollapsibleState.None,
+            testTree.mSessionNodes[1],
+            null
+        );
+        testTree.addFavorite(node);
+        const profileNodeInFavs: IZoweDatasetTreeNode = testTree.mFavorites[0];
+
+        // Make sure favorite is added before the actual unit test
+        expect(testTree.mFavorites.length).toEqual(1);
+        const expectedFavProfileNode = testTree.mFavorites[0];
+
+        await testTree.removeFavProfile(profileNodeInFavs.label, true);
+
+        expect(testTree.mFavorites.length).toEqual(1);
+        expect(testTree.mFavorites[0]).toEqual(expectedFavProfileNode);
+    });
+    it("Tests that removeFavProfile successfully removes profile node in Favorites when called outside user command", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mFavorites = [];
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        const node = new ZoweDatasetNode(
+            "Dataset",
+            vscode.TreeItemCollapsibleState.None,
+            testTree.mSessionNodes[1],
+            null
+        );
+        testTree.addFavorite(node);
+        const profileNodeInFavs: IZoweDatasetTreeNode = testTree.mFavorites[0];
+
+        expect(testTree.mFavorites.length).toEqual(1);
+
+        await testTree.removeFavProfile(profileNodeInFavs.label, false);
+
+        expect(testTree.mFavorites.length).toEqual(0);
     });
 });
 describe("Dataset Tree Unit Tests - Function deleteSession", () => {
