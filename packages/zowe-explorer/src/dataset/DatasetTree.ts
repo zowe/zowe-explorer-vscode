@@ -152,12 +152,12 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             const response = await element.getChildren();
             if (element.memberPattern !== undefined) {
                 for (const item of response) {
-                    element.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+                    //         element.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
                     item.memberPattern = element.memberPattern;
-                    const members = await item.getChildren();
-                    for (const mem of members) {
-                        response.push(mem);
-                    }
+                    //         const members = await item.getChildren();
+                    //         for (const mem of members) {
+                    //             response.push(mem);
+                    //         }
                 }
             }
             return response;
