@@ -139,7 +139,6 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * @returns {IZoweDatasetTreeNode[] | Promise<IZoweDatasetTreeNode[]>}
      */
     public async getChildren(element?: IZoweDatasetTreeNode | undefined): Promise<IZoweDatasetTreeNode[]> {
-        // note of where I am working DELETE THIS WHEN DONE WITH BRANCH
         if (element) {
             if (contextually.isFavoriteContext(element)) {
                 return this.mFavorites;
@@ -152,12 +151,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             const response = await element.getChildren();
             if (element.memberPattern !== undefined) {
                 for (const item of response) {
-                    //         element.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
                     item.memberPattern = element.memberPattern;
-                    //         const members = await item.getChildren();
-                    //         for (const mem of members) {
-                    //             response.push(mem);
-                    //         }
                 }
             }
             return response;
@@ -778,7 +772,6 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     }
 
     public async datasetFilterPrompt(node: IZoweDatasetTreeNode) {
-        // note of where I am working DELETE THIS WHEN DONE WITH BRANCH
         this.log.debug(localize("enterPattern.log.debug.prompt", "Prompting the user for a data set pattern"));
         let pattern: string;
         await this.checkCurrentProfile(node);

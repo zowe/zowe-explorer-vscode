@@ -126,7 +126,6 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 return this.getDatasets();
             }
         );
-        // note of where I am working DELETE THIS WHEN DONE WITH BRANCH
 
         // push nodes to an object with property names to avoid duplicates
         const elementChildren = {};
@@ -255,8 +254,6 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     }
 
     private async getDatasets(): Promise<zowe.IZosFilesResponse[]> {
-        // note of where I am working DELETE THIS WHEN DONE WITH BRANCH
-
         const sessNode = this.getSessionNode();
         const responses: zowe.IZosFilesResponse[] = [];
         try {
