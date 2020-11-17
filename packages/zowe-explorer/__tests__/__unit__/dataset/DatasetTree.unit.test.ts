@@ -1082,7 +1082,7 @@ describe("Dataset Tree Unit Tests - Function removeFavorite", () => {
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
-        const node = new ZoweDatasetNode(
+        const node1 = new ZoweDatasetNode(
             "Dataset",
             vscode.TreeItemCollapsibleState.None,
             testTree.mSessionNodes[1],
@@ -1098,15 +1098,19 @@ describe("Dataset Tree Unit Tests - Function removeFavorite", () => {
 
         // We're breaking rule 1 function call per 1 it block, but there's no over proper way to verify the functionality
         // First we need to have the item and be sure that it's properly added to have legit removal operation
-        testTree.addFavorite(node);
+        testTree.addFavorite(node1);
         testTree.addFavorite(node2);
         const profileNodeInFavs = testTree.mFavorites[0];
-        expect(profileNodeInFavs.children[0].label).toBe(`${node.label}`);
+        expect(profileNodeInFavs.children[0].label).toBe(`${node1.label}`);
+        expect(profileNodeInFavs.children[1].label).toBe(`${node2.label}`);
+
+        // Actual test
         testTree.removeFavorite(profileNodeInFavs.children[0]);
         expect(removeFavProfileSpy).not.toBeCalled();
         expect(profileNodeInFavs.children.length).toBe(1);
+        expect(profileNodeInFavs.children[0].label).toBe(`${node2.label}`);
     });
-    it("Checking removeFavorite when starting with more than one favorite for the profile", async () => {
+    it("Checking removeFavorite when starting with only one favorite for the profile", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 

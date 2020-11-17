@@ -352,16 +352,44 @@ describe("USSTree Unit Tests - Function USSTree.removeFavorite()", () => {
         return newMocks;
     }
 
-    it("Tests that removeFavorite() works properly", async () => {
+    it("Tests that removeFavorite() works properly when starting with more than one favorite for the profile", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
-        const favProfileNode = globalMocks.testTree.mFavorites[0];
+        const removeFavProfileSpy = jest.spyOn(globalMocks.testTree, "removeFavProfile");
+        const profileNodeInFavs = globalMocks.testTree.mFavorites[0];
+
+        // Add second favorite
+        const testDir2 = new ZoweUSSNode(
+            "testDir2",
+            vscode.TreeItemCollapsibleState.Collapsed,
+            globalMocks.testTree.mSessionNodes[1],
+            null,
+            "/"
+        );
+        await globalMocks.testTree.addFavorite(testDir2);
 
         // Checking that favorites are set successfully before test
-        expect(favProfileNode.children[0].fullPath).toEqual(blockMocks.testDir.fullPath);
+        expect(profileNodeInFavs.children.length).toEqual(2);
+        expect(profileNodeInFavs.children[0].fullPath).toEqual(blockMocks.testDir.fullPath);
+        expect(profileNodeInFavs.children[1].fullPath).toEqual(testDir2.fullPath);
+
+        // Actual test
+        await globalMocks.testTree.removeFavorite(blockMocks.testDir);
+        expect(removeFavProfileSpy).not.toBeCalled();
+        expect(profileNodeInFavs.children[0].fullPath).toEqual(testDir2.fullPath);
+    });
+    it("Tests that removeFavorite() works properly when starting with only one favorite for the profile", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        const removeFavProfileSpy = jest.spyOn(globalMocks.testTree, "removeFavProfile");
+        const profileNodeInFavs = globalMocks.testTree.mFavorites[0];
+
+        // Checking that favorites are set successfully before test
+        expect(profileNodeInFavs.children[0].fullPath).toEqual(blockMocks.testDir.fullPath);
 
         await globalMocks.testTree.removeFavorite(blockMocks.testDir);
-        expect(favProfileNode.children).toEqual([]);
+        expect(removeFavProfileSpy).toHaveBeenCalledWith(profileNodeInFavs.label, false);
+        expect(profileNodeInFavs.children).toEqual([]);
     });
 });
 
