@@ -28,7 +28,6 @@ import * as contextually from "../shared/context";
 import { resetValidationSettings } from "../shared/actions";
 import { closeOpenedTextFile } from "../utils/workspace";
 import { PersistentFilters } from "../PersistentFilters";
-import { IListOptions } from "@zowe/cli";
 
 // Set up localization
 nls.config({
@@ -149,10 +148,8 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             }
             await Profiles.getInstance().checkCurrentProfile(element.getProfile());
             const response = await element.getChildren();
-            if (element.memberPattern !== undefined) {
-                for (const item of response) {
-                    item.memberPattern = element.memberPattern;
-                }
+            for (const item of response) {
+                item.memberPattern = element.memberPattern;
             }
             return response;
         }
@@ -850,39 +847,29 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             // looking for members in pattern
             let enteredPattern: string;
             enteredPattern = pattern.replace(/\s/g, "");
-            let splitSearchPattern: string[] = [];
-            const dataSetsFound: string[] = [];
-            if (enteredPattern.includes(",")) {
-                splitSearchPattern = enteredPattern.split(",");
-            } else {
-                splitSearchPattern.push(enteredPattern);
-            }
-            const memberFound: string[] = [];
-            let splitSearchMembers: string[];
-            const options: IListOptions = {};
             let members: string;
             let datasets: string;
-            splitSearchPattern.forEach(async (element) => {
-                if (element.includes("(")) {
-                    splitSearchMembers = element.split("(", 2);
-                    splitSearchMembers.forEach((e) => {
-                        if (e.includes(")")) {
-                            const newE = e.replace(/([)])/g, "");
-                            memberFound.push(newE);
+            const dataSetsFound: string[] = [];
+            const memberFound: string[] = [];
+            for (const item of enteredPattern.split(",")) {
+                if (item.includes("(")) {
+                    for (const element of item.split("(")) {
+                        if (element.includes(")")) {
+                            memberFound.push(element.replace(/([)])/g, ""));
                         } else {
-                            dataSetsFound.push(e);
+                            dataSetsFound.push(element);
                         }
-                    });
+                    }
                 } else {
-                    dataSetsFound.push(element);
+                    dataSetsFound.push(item);
                 }
-                if (memberFound.length > -1) {
+                if (memberFound.length > 0) {
                     members = memberFound.toString();
                 }
-                if (dataSetsFound.length > -1) {
+                if (dataSetsFound.length > 0) {
                     datasets = dataSetsFound.toString();
                 }
-            });
+            }
 
             node.label = node.label.trim() + " ";
             node.label.trim();
@@ -893,6 +880,8 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             }
             if (members !== undefined) {
                 node.memberPattern = members.toUpperCase();
+            } else {
+                node.memberPattern = undefined;
             }
             node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
             node.dirty = true;
