@@ -126,6 +126,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 return this.getDatasets();
             }
         );
+        // note of where I am working DELETE THIS WHEN DONE WITH BRANCH
 
         // push nodes to an object with property names to avoid duplicates
         const elementChildren = {};
@@ -254,6 +255,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     }
 
     private async getDatasets(): Promise<zowe.IZosFilesResponse[]> {
+        // note of where I am working DELETE THIS WHEN DONE WITH BRANCH
+
         const sessNode = this.getSessionNode();
         const responses: zowe.IZosFilesResponse[] = [];
         try {
@@ -269,19 +272,6 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                             attributes: true,
                         })
                     );
-                    if (this.memberPattern !== undefined) {
-                        this.memberPattern = this.memberPattern.toUpperCase();
-                        for (const memPattern of this.memberPattern.split(",")) {
-                            options.pattern = memPattern;
-                            label = this.label.trim();
-                            responses.push(
-                                await ZoweExplorerApiRegister.getMvsApi(sessNode.getProfile()).allMembers(
-                                    label,
-                                    options
-                                )
-                            );
-                        }
-                    }
                 }
             } else if (this.memberPattern !== undefined) {
                 this.memberPattern = this.memberPattern.toUpperCase();
@@ -289,7 +279,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     options.pattern = memPattern;
                     label = this.label.trim();
                     responses.push(
-                        await ZoweExplorerApiRegister.getMvsApi(sessNode.getProfile()).allMembers(label, options)
+                        await ZoweExplorerApiRegister.getMvsApi(this.getProfile()).allMembers(label, options)
                     );
                 }
             } else {
