@@ -1100,10 +1100,11 @@ describe("Dataset Tree Unit Tests - Function removeFavorite", () => {
         // First we need to have the item and be sure that it's properly added to have legit removal operation
         testTree.addFavorite(node);
         testTree.addFavorite(node2);
-        expect(testTree.mFavorites[0].children[0].label).toBe(`${node.label}`);
-        testTree.removeFavorite(testTree.mFavorites[0].children[0]);
+        const profileNodeInFavs = testTree.mFavorites[0];
+        expect(profileNodeInFavs.children[0].label).toBe(`${node.label}`);
+        testTree.removeFavorite(profileNodeInFavs.children[0]);
         expect(removeFavProfileSpy).not.toBeCalled();
-        expect(testTree.mFavorites[0].children.length).toBe(1);
+        expect(profileNodeInFavs.children.length).toBe(1);
     });
     it("Checking removeFavorite when starting with more than one favorite for the profile", async () => {
         createGlobalMocks();
@@ -1124,10 +1125,10 @@ describe("Dataset Tree Unit Tests - Function removeFavorite", () => {
         // We're breaking rule 1 function call per 1 it block, but there's no over proper way to verify the functionality
         // First we need to have the item and be sure that it's properly added to have legit removal operation
         testTree.addFavorite(node);
-        const favProfileName = testTree.mFavorites[0].label;
-        expect(testTree.mFavorites[0].children[0].label).toBe(`${node.label}`);
-        await testTree.removeFavorite(testTree.mFavorites[0].children[0]);
-        expect(removeFavProfileSpy).toHaveBeenCalledWith(favProfileName, false);
+        const profileNodeInFavs = testTree.mFavorites[0];
+        expect(profileNodeInFavs.children[0].label).toBe(`${node.label}`);
+        await testTree.removeFavorite(profileNodeInFavs.children[0]);
+        expect(removeFavProfileSpy).toHaveBeenCalledWith(profileNodeInFavs.label, false);
         expect(testTree.mFavorites.length).toBe(0);
     });
 });
