@@ -83,7 +83,7 @@ Before using the base profile functionality, ensure that you have [Zowe CLI](htt
 
 For more information, see [Integrating with API Mediation Layer](https://docs.zowe.org/stable/user-guide/cli-usingcli.html#integrating-with-api-mediation-layer).
 
-s## Sample Use Cases
+## Sample Use Cases
 
 Review the following use cases to understand how to work with data sets in Zowe Explorer. For the complete list of features including USS and jobs, see [Zowe Explorer Sample Use Cases](https://docs.zowe.org/stable/user-guide/ze-usage.html#sample-use-cases).
 
