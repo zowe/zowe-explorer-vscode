@@ -17,21 +17,21 @@ jobs:
       # check out source
       - uses: actions/checkout@v2
 
-      # install yarn
-      - run: npm install -g yarn
-
       # install dependencies
       - run: yarn install --frozen-lockfile
 
       # copy test data file needed for build :-(
       - name: Create test data file
-        run: cp resources/testProfileData.example.ts resources/testProfileData.ts
+        run: cp packages/zowe-explorer/resources/testProfileData.example.ts packages/zowe-explorer/resources/testProfileData.ts
+
+      - name: Build vsix
+        run: yarn workspace vscode-extension-for-zowe package
 
       - name: Create extension install directory
         run: mkdir -p temp/plugins && chmod -R 777 temp
 
-      - name: Build vsix
-        run: yarn vsce package -o temp/plugins/vscode-extension-for-zowe.vsix
+      - name: Copy vsix to theia folder
+        run: cp dist/*.vsix temp/plugins
 
       # Verify vsix
       - run: ls -la temp/plugins
@@ -52,19 +52,19 @@ jobs:
 
       - run: yarn lint
 
-      - name: Upload vsix
-        uses: actions/upload-artifact@v1
-        with:
-          name: vscode-extension-for-zowe.vsix
-          path: temp/plugins/vscode-extension-for-zowe.vsix
+      # - name: Upload vsix
+      #   uses: actions/upload-artifact@v1
+      #   with:
+      #     name: vscode-extension-for-zowe.vsix
+      #     path: /plugins/vscode-extension-for-zowe.vsix
 
       - name: Verify plugin loaded
-        run: docker exec -i theia ls -la .theia/plugins
+        run: docker exec -i theia ls -la /home/theia/.theia/plugins
 
       - name: Verify Theia accessible
         run: curl --fail http://localhost:3000
 
       - name: Prep integration test files
-        run: yarn build:integration
+        run: yarn workspace vscode-extension-for-zowe build:integration 
 
-      - run: yarn test:theia
+      - run: yarn workspace vscode-extension-for-zowe test:theia
