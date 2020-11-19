@@ -61,7 +61,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         "\uFF0B " +
         localize(
             "defaultFilterPrompt.option.prompt.search",
-            "Create a new filter. Comma separate multiple entries (pattern 1, pattern 2, ...)"
+            "Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)"
         );
     public mFavoriteSession: ZoweDatasetNode;
 
