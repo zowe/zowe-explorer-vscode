@@ -1,6 +1,12 @@
 name: Zowe Explorer CI
 
-on: [push, pull_request]
+on:
+  push:
+    paths:
+      - packages/zowe-explorer/**
+  pull_request:
+    paths:
+      - packages/zowe-explorer/**
 
 jobs:
   build:
