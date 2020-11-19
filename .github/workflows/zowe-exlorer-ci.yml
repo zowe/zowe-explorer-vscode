@@ -9,7 +9,7 @@ on:
     - packages/zowe-explorer/**
 
 jobs:
-  build:
+  ze-build:
     runs-on: ${{ matrix.os }}
 
     strategy:
