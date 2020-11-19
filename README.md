@@ -57,7 +57,7 @@ Create a profile, review the sample use cases to familiarize yourself with the c
 4. Select **Create a New Connection to z/OS**. The user name and password fields are optional before you started to use a profile.
 5. Follow the instructions, and enter all required information to complete the profile creation.
 
-![New Connection](../../docs/images/ZE-newProfiles.gif?raw=true "New Connection")
+![New Connection](/docs/images/ZE-newProfiles.gif?raw=true "New Connection")
 <br /><br />
 
 You can now use all the functionalities of the extension.
@@ -109,7 +109,7 @@ Review the following use cases to understand how to work with data sets in Zowe 
 
 **Tip:** To provide multiple filters, separate entries with a comma. You can append or postpend any filter with an \*, which indicates wildcard searching. You cannot enter an \* as the entire pattern.
 
-![View Data Set](../../docs/images/ZE-multiple-search.gif?raw=true "View Data Set")
+![View Data Set](docs/images/ZE-multiple-search.gif?raw=true "View Data Set")
 <br /><br />
 
 #### Refresh the list of data sets
@@ -125,7 +125,7 @@ Review the following use cases to understand how to work with data sets in Zowe 
 4. Right-click the data set and select the **Rename Data Set** option.
 5. Change the name of the data set.
 
-![Rename Data Set](../../docs/images/ZE-rename.gif?raw=true "Rename Data Set")
+![Rename Data Set](docs/images/ZE-rename.gif?raw=true "Rename Data Set")
 <br /><br />
 
 #### Copy data sets
@@ -137,7 +137,7 @@ Review the following use cases to understand how to work with data sets in Zowe 
 5. Right-click the data set where the member belongs and select the **Paste Data Set** option.
 6. Enter the name of the copied member.
 
-![Copy Data Set](../../docs/images/ZE-copy.gif?raw=true "Copy Data Set")
+![Copy Data Set](docs/images/ZE-copy.gif?raw=true "Copy Data Set")
 <br /><br />
 
 #### Download, edit, and upload existing PDS members
@@ -158,7 +158,7 @@ Your PDS member (or PS) is uploaded.
 
 **Note:** If someone else has made changes to the PDS member (or PS) while you were editing it, you can merge your conflicts before uploading to the mainframe.
 
-![Edit](../../docs/images/ZE-download-edit.gif?raw=true "Edit")
+![Edit](docs/images/ZE-download-edit.gif?raw=true "Edit")
 <br /><br />
 
 #### Use the save option to prevent merge conflicts
@@ -170,7 +170,7 @@ Your PDS member (or PS) is uploaded.
 5. Press Ctrl+S or Command+S (OSx) to save you changes.
 6. (Optional) Resolve merge conflicts if necessary.
 
-![Save](../../docs/images/ZE-safe-save.gif?raw=true "Save")
+![Save](docs/images/ZE-safe-save.gif?raw=true "Save")
 <br /><br />
 
 #### Create a new PDS and a PDS member
@@ -185,7 +185,7 @@ Your PDS member (or PS) is uploaded.
 7. Enter a name for the member.
    The member is created.
 
-![Create](../../docs/images/ZE-cre-pds-member.gif?raw=true "Create")
+![Create](docs/images/ZE-cre-pds-member.gif?raw=true "Create")
 <br /><br />
 
 #### Delete a PDS member and PDS
@@ -202,7 +202,7 @@ Your PDS member (or PS) is uploaded.
 
    **Note:** You can delete a PDS before you delete its members.
 
-![Delete](../../docs/images/ZE-del-pds-member.gif?raw=true "Delete")
+![Delete](docs/images/ZE-del-pds-member.gif?raw=true "Delete")
 <br /><br />
 
 #### View and access multiple profiles simultaneously
@@ -212,7 +212,7 @@ Your PDS member (or PS) is uploaded.
 3. Click the **Add Profile** button on the right of the **DATA SET** explorer bar.
 4. Select the profile that you want to add to the view as illustrated by the following screen.
 
-![Add Profile](../../docs/images/ZE-mult-profiles.gif?raw=true "Add Profile")
+![Add Profile](docs/images/ZE-mult-profiles.gif?raw=true "Add Profile")
 
 #### Allocate Like
 
@@ -221,7 +221,7 @@ Your PDS member (or PS) is uploaded.
 3. Right-click the data set and select the **Allocate Like (New File with Same Attributes)** option.
 4. Enter the new data set name.
 
-![Allocate Like](../../docs/images/ZE-allocate-like.gif?raw=true "Allocate Like")
+![Allocate Like](docs/images/ZE-allocate-like.gif?raw=true "Allocate Like")
 
 ## Credentials Security
 
