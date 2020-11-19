@@ -4,9 +4,8 @@ on:
   push:
     branches:
     - master
-    - test-monorepo-deployment # TODO: remove after testing is done & add the package.json path
-    # paths:
-    # - package.json
+    paths:
+    - package.json
 
 jobs:
   check_version:
@@ -138,9 +137,8 @@ jobs:
         if: steps.check_project.outputs.files_staged == 1
         run: |
           git status
-          git commit -m "Version Bumped to ${{ fromJson(steps.get_version.outputs.top_package).version }}"
-          git push origin_token test-monorepo-deployment
-        # TODO: change test-monorepo-deployment
+          git commit -m "Version Bumped to ${{ fromJson(steps.get_version.outputs.top_package).version }}" --signoff
+          git push origin_token master
 
       - name: Create the Release
         if: steps.check_project.outputs.files_staged == 1
