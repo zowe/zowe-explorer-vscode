@@ -10,7 +10,7 @@ on:
     - packages/zowe-explorer/**
 
 jobs:
-  theia-build:
+  ze-theia-build:
     runs-on: ubuntu-latest
 
     steps:
