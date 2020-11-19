@@ -11,7 +11,7 @@
 
 import * as sharedUtils from "../../../src/shared/utils";
 import * as globals from "../../../src/globals";
-import { Session, IProfileLoaded, Logger } from "@zowe/imperative";
+import { IProfileLoaded, Logger } from "@zowe/imperative";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import * as vscode from "vscode";
 import * as path from "path";
@@ -45,6 +45,9 @@ async function createGlobalMocks() {
             return {
                 allProfiles: [{ name: "firstName" }, { name: "secondName" }],
                 getDefaultProfile: { name: "firstName" },
+                getProfiles: jest.fn(() => {
+                    return [newVariables.profileOne];
+                }),
                 loadNamedProfile: newVariables.mockLoadNamedProfile,
                 checkCurrentProfile: jest.fn(() => {
                     return profilesForValidation;
@@ -55,9 +58,13 @@ async function createGlobalMocks() {
         }),
         configurable: true,
     });
+    // Object.defineProperty(Profiles, "getProfiles", { value: jest.fn(), configurable: true });
 
     return newVariables;
 }
+
+// Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/master/src/util/testing.ts
+const mocked = <T extends (...args: any[]) => any>(fn: T): jest.Mock<ReturnType<T>> => fn as any;
 
 describe("Shared Utils Unit Tests - Function node.concatChildNodes()", () => {
     it("Checks that concatChildNodes returns the proper array of children", async () => {
@@ -119,6 +126,20 @@ describe("Shared Utils Unit Tests - Function node.labelRefresh()", () => {
         expect(rootNode.label === "gappy ");
         sharedUtils.labelRefresh(rootNode);
         expect(rootNode.label === "gappy");
+    });
+});
+
+describe.only("Shared Utils Unit Tests - Function refreshTree()", () => {
+    it("should pass in appropriate profile type when getting all profiles to compare with session node", async () => {
+        const globalMocks = await createGlobalMocks();
+        const datasetSessionNode = createDatasetSessionNode(globalMocks.session, globalMocks.profileOne);
+        const getProfilesSpy = jest.spyOn(Profiles.getInstance, "getProfiles");
+
+        sharedUtils.refreshTree(datasetSessionNode);
+        // Other things I was trying
+        // expect(mocked(Profiles.getProfiles)).toHaveBeenCalledWith("zosmf");
+
+        expect(getProfilesSpy).toBeCalledWith(globalMocks.profileOne.type);
     });
 });
 
