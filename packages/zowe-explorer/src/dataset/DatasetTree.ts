@@ -150,6 +150,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             const response = await element.getChildren();
             for (const item of response) {
                 item.memberPattern = element.memberPattern;
+                this.refreshElement(item);
             }
             return response;
         }
