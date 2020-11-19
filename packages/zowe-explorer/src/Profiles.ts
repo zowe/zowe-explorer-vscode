@@ -1088,10 +1088,15 @@ export class Profiles extends ProfilesCache {
             }
             if (commonApi.getSessionFromCommandArgument) {
                 if (cmdArgs.tokenType === undefined || cmdArgs.tokenValue === undefined) {
-                    vscode.window.showInformationMessage(
-                        "Base Profile " +
+                    this.log.debug(
+                        localize("getCombinedProfile.noToken1", "Profile ") +
                             baseProfile.name +
-                            " is currently logged out. Please login and reload Zowe Explorer to be able to use it."
+                            " " +
+                            serviceProfile.name +
+                            localize(
+                                "getCombinedProfile.noToken2",
+                                " is not authorized. Please check the connection and try again"
+                            )
                     );
                     session = baseProfile.profile;
                 } else {
