@@ -46,12 +46,6 @@ jobs:
 
       - run: yarn lint
 
-      # - name: Upload vsix
-      #   uses: actions/upload-artifact@v1
-      #   with:
-      #     name: vscode-extension-for-zowe.vsix
-      #     path: /plugins/vscode-extension-for-zowe.vsix
-
       - name: Verify plugin loaded
         run: docker exec -i theia ls -la /home/theia/.theia/plugins
 
@@ -59,6 +53,6 @@ jobs:
         run: curl --fail http://localhost:3000
 
       - name: Prep integration test files
-        run: yarn workspace vscode-extension-for-zowe build:integration 
+        run: yarn workspace vscode-extension-for-zowe build:integration
 
       - run: yarn workspace vscode-extension-for-zowe test:theia
