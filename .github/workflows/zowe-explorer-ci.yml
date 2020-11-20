@@ -3,7 +3,10 @@ name: Zowe Explorer CI
 on:
   push:
     paths:
-    - packages/zowe-explorer/*
+      - packages/zowe-explorer/**
+  pull_request:
+    paths:
+      - packages/zowe-explorer/**
 
 jobs:
   build:
@@ -46,7 +49,7 @@ jobs:
         # if: matrix.os == 'windows-latest' && matrix.node-version == '12.x'
         with:
           name: zowe-explorer-results
-          path: package/zowe-explorer/results/
+          path: packages/zowe-explorer/results/
 
       # Run codecov upload for only one run
       - name: Upload Results to Codecov from Windows / Node 12.x
