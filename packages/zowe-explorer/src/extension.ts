@@ -228,7 +228,6 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
     vscode.commands.registerCommand("zowe.all.profilelink", (node) => linkProfileDialog(node.getProfile()));
     vscode.commands.registerCommand("zowe.createMember", (node) => dsActions.createMember(node, datasetProvider));
     vscode.commands.registerCommand("zowe.deleteDataset", (node) => dsActions.deleteDataset(node, datasetProvider));
-    vscode.commands.registerCommand("zowe.deletePDS", (node) => dsActions.deleteDataset(node, datasetProvider));
     vscode.commands.registerCommand("zowe.allocateLike", (node) => dsActions.allocateLike(datasetProvider, node));
     vscode.commands.registerCommand("zowe.uploadDialog", (node) => dsActions.uploadDialog(node, datasetProvider));
     vscode.commands.registerCommand("zowe.deleteMember", (node) => dsActions.deleteDataset(node, datasetProvider));
@@ -244,9 +243,7 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
         dsActions.showDSAttributes(node, datasetProvider)
     );
     vscode.commands.registerCommand("zowe.renameDataSet", (node) => datasetProvider.rename(node));
-    vscode.commands.registerCommand("zowe.copyDataSetName", (node) => dsActions.copyDataSetName(node));
     vscode.commands.registerCommand("zowe.copyMember", (node) => dsActions.copyDataSet(node));
-    vscode.commands.registerCommand("zowe.copyMemberName", (node) => dsActions.copyDataSetName(node));
     vscode.commands.registerCommand("zowe.pasteMember", (node) => dsActions.pasteMember(node, datasetProvider));
     vscode.commands.registerCommand("zowe.renameDataSetMember", (node) => datasetProvider.rename(node));
     vscode.commands.registerCommand("zowe.hMigrateDataSet", (node) => dsActions.hMigrateDataSet(node));

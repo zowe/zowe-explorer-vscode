@@ -892,20 +892,6 @@ export async function enterPattern(node: IZoweDatasetTreeNode, datasetProvider: 
 }
 
 /**
- * Copy data set name
- *
- * @export
- * @param {IZoweNodeType} node - The node to copy
- */
-export async function copyDataSetName(node: IZoweNodeType) {
-    if (node.contextValue.includes(globals.DS_MEMBER_CONTEXT)) {
-        return vscode.env.clipboard.writeText(JSON.stringify(dsUtils.getNodeLabels(node).memberName));
-    } else {
-        return vscode.env.clipboard.writeText(JSON.stringify(dsUtils.getNodeLabels(node).dataSetName));
-    }
-}
-
-/**
  * Copy data set info
  *
  * @export

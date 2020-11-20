@@ -176,10 +176,6 @@
         "title": "%renameDataSet%"
       },
       {
-        "command": "zowe.copyMemberName",
-        "title": "%copyMemberName%"
-      },
-      {
         "command": "zowe.copyMember",
         "title": "%copyMember%"
       },
@@ -208,16 +204,8 @@
         "title": "%deleteMember%"
       },
       {
-        "command": "zowe.deletePDS",
-        "title": "%deleteDataset%"
-      },
-      {
         "command": "zowe.allocateLike",
         "title": "%allocateLike%"
-      },
-      {
-        "command": "zowe.copyDataSetName",
-        "title": "%copyDataSetName%"
       },
       {
         "command": "zowe.uploadDialog",
@@ -705,9 +693,14 @@
           "group": "1_create@1"
         },
         {
+          "when": "view == zowe.explorer && viewItem =~ /^(ds|pds).*/",
+          "command": "zowe.allocateLike",
+          "group": "1_create@2"
+        },
+        {
           "when": "view == zowe.explorer && viewItem =~ /^pds.*/",
           "command": "zowe.uploadDialog",
-          "group": "1_create@2"
+          "group": "1_create@3"
         },
         {
           "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
@@ -770,27 +763,12 @@
           "group": "5_workspace@3"
         },
         {
-          "when": "view == zowe.explorer && viewItem =~ /^(ds|pds).*/",
-          "command": "zowe.allocateLike",
-          "group": "6_cutCopyPaste@0"
-        },
-        {
-          "when": "view == zowe.explorer && viewItem =~ /^ds.*/",
-          "command": "zowe.copyDataSetName",
-          "group": "6_cutCopyPaste@0"
-        },
-        {
           "when": "view == zowe.explorer && viewItem =~ /^member.*/",
           "command": "zowe.copyMember",
           "group": "6_cutCopyPaste@0"
         },
         {
-          "when": "view == zowe.explorer && viewItem =~ /^member.*/",
-          "command": "zowe.copyMemberName",
-          "group": "6_cutCopyPaste@1"
-        },
-        {
-          "when": "view == zowe.explorer && viewItem =~ /^(ds.*|^pds.*)/",
+          "when": "view == zowe.explorer && viewItem =~ /^pds.*/",
           "command": "zowe.pasteMember",
           "group": "6_cutCopyPaste@1"
         },
@@ -846,7 +824,7 @@
         },
         {
           "when": "view == zowe.explorer && viewItem =~ /^pds.*/",
-          "command": "zowe.deletePDS",
+          "command": "zowe.deleteDataset",
           "group": "7_modification@5"
         },
         {
@@ -999,10 +977,6 @@
         },
         {
           "command": "zowe.deleteDataset",
-          "when": "never"
-        },
-        {
-          "command": "zowe.deletePDS",
           "when": "never"
         },
         {

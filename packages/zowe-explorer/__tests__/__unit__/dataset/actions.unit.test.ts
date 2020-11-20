@@ -1634,7 +1634,7 @@ describe("Dataset Actions Unit Tests - Function showDSAttributes", () => {
     });
 });
 
-describe("Dataset Actions Unit Tests - Function copyDataSetName", () => {
+describe("Dataset Actions Unit Tests - Function copyDataSet", () => {
     function createBlockMocks() {
         const session = createISession();
         const sessionWithoutCredentials = createISessionWithoutCredentials();
@@ -1674,9 +1674,9 @@ describe("Dataset Actions Unit Tests - Function copyDataSetName", () => {
         );
         node.contextValue = globals.DS_DS_CONTEXT;
 
-        await dsActions.copyDataSetName(node);
+        await dsActions.copyDataSet(node);
 
-        expect(clipboard.readText()).toBe('"HLQ.TEST.DELETE.NODE"');
+        expect(clipboard.readText()).toBe('{"profileName":"sestest","dataSetName":"HLQ.TEST.DELETE.NODE"}');
     });
     it("Checking copy the label of a favorite node to the clipboard", async () => {
         globals.defineGlobals("");
@@ -1690,9 +1690,9 @@ describe("Dataset Actions Unit Tests - Function copyDataSetName", () => {
         );
         node.contextValue = globals.DS_DS_CONTEXT + globals.FAV_SUFFIX;
 
-        await dsActions.copyDataSetName(node);
+        await dsActions.copyDataSet(node);
 
-        expect(clipboard.readText()).toBe('"HLQ.TEST.DELETE.NODE"');
+        expect(clipboard.readText()).toBe('{"profileName":"sestest","dataSetName":"HLQ.TEST.DELETE.NODE"}');
     });
     it("Checking copy the label of a member to the clipboard", async () => {
         globals.defineGlobals("");
@@ -1708,9 +1708,9 @@ describe("Dataset Actions Unit Tests - Function copyDataSetName", () => {
         const child = new ZoweDatasetNode("child", vscode.TreeItemCollapsibleState.None, parent, null);
         child.contextValue = globals.DS_MEMBER_CONTEXT;
 
-        await dsActions.copyDataSetName(child);
+        await dsActions.copyDataSet(child);
 
-        expect(clipboard.readText()).toBe('"child"');
+        expect(clipboard.readText()).toBe('{"profileName":"sestest","dataSetName":"parent","memberName":"child"}');
     });
     it("Checking copy the label of a favorite member to the clipboard", async () => {
         globals.defineGlobals("");
@@ -1726,9 +1726,9 @@ describe("Dataset Actions Unit Tests - Function copyDataSetName", () => {
         const child = new ZoweDatasetNode("child", vscode.TreeItemCollapsibleState.None, parent, null);
         child.contextValue = globals.DS_MEMBER_CONTEXT;
 
-        await dsActions.copyDataSetName(child);
+        await dsActions.copyDataSet(child);
 
-        expect(clipboard.readText()).toBe('"child"');
+        expect(clipboard.readText()).toBe('{"profileName":"sestest","dataSetName":"parent","memberName":"child"}');
     });
 });
 
