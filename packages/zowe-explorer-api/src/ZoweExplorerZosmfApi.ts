@@ -16,6 +16,7 @@ import { ZoweExplorerApi } from "./ZoweExplorerApi";
 /**
  * An implementation of the Zowe Explorer API Common interface for zOSMF.
  */
+// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
     public static getProfileTypeName(): string {
         return "zosmf";
@@ -97,6 +98,7 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
 /**
  * An implementation of the Zowe Explorer USS API interface for zOSMF.
  */
+// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 export class ZosmfUssApi extends ZosmfApiCommon implements ZoweExplorerApi.IUss {
     public async fileList(ussFilePath: string): Promise<zowe.IZosFilesResponse> {
         return await zowe.List.fileList(this.getSession(), ussFilePath);
@@ -169,6 +171,7 @@ export class ZosmfUssApi extends ZosmfApiCommon implements ZoweExplorerApi.IUss 
 /**
  * An implementation of the Zowe Explorer MVS API interface for zOSMF.
  */
+// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 export class ZosmfMvsApi extends ZosmfApiCommon implements ZoweExplorerApi.IMvs {
     public async dataSet(filter: string, options?: zowe.IListOptions): Promise<zowe.IZosFilesResponse> {
         return await zowe.List.dataSet(this.getSession(), filter, options);
@@ -266,6 +269,7 @@ export class ZosmfMvsApi extends ZosmfApiCommon implements ZoweExplorerApi.IMvs 
 /**
  * An implementation of the Zowe Explorer JES API interface for zOSMF.
  */
+// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 export class ZosmfJesApi extends ZosmfApiCommon implements ZoweExplorerApi.IJes {
     public async getJobsByOwnerAndPrefix(owner: string, prefix: string): Promise<zowe.IJob[]> {
         return await zowe.GetJobs.getJobsByOwnerAndPrefix(this.getSession(), owner, prefix);
