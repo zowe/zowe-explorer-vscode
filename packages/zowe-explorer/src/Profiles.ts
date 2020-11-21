@@ -1401,13 +1401,13 @@ export class Profiles extends ProfilesCache {
 
     private async updateProfile(ProfileInfo, rePrompt?: boolean) {
         if (ProfileInfo.type !== undefined) {
-            const profileManager = await this.getCliProfileManager(ProfileInfo.type);
+            const profileManager = this.getCliProfileManager(ProfileInfo.type);
             this.loadedProfile = await profileManager.load({
                 name: ProfileInfo.name,
             });
         } else {
             for (const type of ZoweExplorerApiRegister.getInstance().registeredApiTypes()) {
-                const profileManager = await this.getCliProfileManager(type);
+                const profileManager = this.getCliProfileManager(type);
                 this.loadedProfile = await profileManager.load({
                     name: ProfileInfo.name,
                 });
@@ -1439,7 +1439,7 @@ export class Profiles extends ProfilesCache {
             args: OrigProfileInfo as any,
         };
         try {
-            (await this.getCliProfileManager(this.loadedProfile.type)).update(updateParms);
+            this.getCliProfileManager(this.loadedProfile.type).update(updateParms);
         } catch (error) {
             vscode.window.showErrorMessage(error.message);
         }

@@ -969,7 +969,7 @@ describe("Profiles Unit Tests - Function getSchema", () => {
     it("Tests that getSchema returns correct schema for zosmf profile", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
-        blockMocks.profiles.getCliProfileManager = () => Promise.resolve(globalMocks.mockCliProfileManager);
+        blockMocks.profiles.getCliProfileManager = () => globalMocks.mockCliProfileManager;
 
         const response = await blockMocks.profiles.getSchema("zosmf");
         // tslint:disable-next-line: no-magic-numbers
@@ -1000,7 +1000,7 @@ describe("Profiles Unit Tests - Function updateProfile", () => {
             configurable: true,
         });
         Object.defineProperty(globalMocks.mockCliProfileManager, "update", { value: jest.fn(), configurable: true });
-        newMocks.profiles.getCliProfileManager = () => Promise.resolve(globalMocks.mockCliProfileManager);
+        newMocks.profiles.getCliProfileManager = () => globalMocks.mockCliProfileManager;
 
         return newMocks;
     }
