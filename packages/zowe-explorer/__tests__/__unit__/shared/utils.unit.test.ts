@@ -35,32 +35,9 @@ async function createGlobalMocks() {
     const newVariables = {
         session: createISession(),
         profileOne: createIProfile(),
-        mockLoadNamedProfile: jest.fn(),
         mockGetInstance: jest.fn(),
-        mockGetProfiles: jest.fn(),
     };
-    const profilesForValidation = { status: "active", name: "fake" };
-
     await Profiles.createInstance(Logger.getAppLogger());
-
-    // Object.defineProperty(Profiles, "getInstance", {
-    //     value: jest.fn(() => {
-    //         return {
-    //             allProfiles: [{ name: "firstName" }, { name: "secondName" }],
-    //             getDefaultProfile: { name: "firstName" },
-    //             getProfiles: jest.fn(() => {
-    //                 return [newVariables.profileOne];
-    //             }),
-    //             loadNamedProfile: newVariables.mockLoadNamedProfile,
-    //             checkCurrentProfile: jest.fn(() => {
-    //                 return profilesForValidation;
-    //             }),
-    //             profilesForValidation: [],
-    //             validateProfiles: jest.fn(),
-    //         };
-    //     }),
-    //     configurable: true,
-    // });
 
     return newVariables;
 }
