@@ -20,7 +20,6 @@ import {
     createISessionWithoutCredentials,
     createISession,
     createFileResponse,
-    createInstanceOfProfile,
 } from "../../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode } from "../../../__mocks__/mockCreators/datasets";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
