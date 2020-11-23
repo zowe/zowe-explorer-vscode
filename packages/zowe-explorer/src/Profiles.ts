@@ -1089,14 +1089,12 @@ export class Profiles extends ProfilesCache {
             if (commonApi.getSessionFromCommandArgument) {
                 if (cmdArgs.tokenType === undefined || cmdArgs.tokenValue === undefined) {
                     this.log.debug(
-                        localize("getCombinedProfile.noToken1", "Profile ") +
-                            baseProfile.name +
-                            " " +
-                            serviceProfile.name +
-                            localize(
-                                "getCombinedProfile.noToken2",
-                                " is not authorized. Please check the connection and try again"
-                            )
+                        localize(
+                            "getCombinedProfile.noToken",
+                            "Profile {0} {1} is not authorized. Please check the connection and try again.",
+                            baseProfile.name,
+                            serviceProfile.name
+                        )
                     );
                     session = baseProfile.profile;
                 } else {
