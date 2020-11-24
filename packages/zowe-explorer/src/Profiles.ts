@@ -1176,15 +1176,12 @@ export class Profiles extends ProfilesCache {
                     user: newUser,
                     password: newPass,
                     rejectUnauthorized: combinedProfile.profile.rejectUnauthorized,
-                    tokenType: combinedProfile.profile.tokenType,
-                    type: combinedProfile.profile.type,
                 });
                 const loginToken = await ZoweExplorerApiRegister.getInstance()
                     .getCommonApi(serviceProfile)
                     .login(updSession);
                 const profileManager = await Profiles.getInstance().getCliProfileManager("base");
                 const updBaseProfile: IProfile = {
-                    tokenType: combinedProfile.profile.tokenType,
                     tokenValue: loginToken,
                 };
 
@@ -1248,15 +1245,27 @@ export class Profiles extends ProfilesCache {
                 hostname: combinedProfile.profile.host,
                 port: combinedProfile.profile.port,
                 rejectUnauthorized: combinedProfile.profile.rejectUnauthorized,
-                tokenType: combinedProfile.profile.tokenType,
-                type: combinedProfile.profile.type,
                 tokenValue: combinedProfile.profile.tokenValue,
             });
             await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).logout(updSession);
             vscode.window.showInformationMessage(
                 localize("ssoLogout.successful", "Logout from authentication service was successful.")
             );
-            // await this.refresh(ZoweExplorerApiRegister.getInstance());
+
+            try {
+                (await this.getCliProfileManager(baseProfile.type)).save({
+                    name: baseProfile.name,
+                    type: baseProfile.type,
+                    overwrite: true,
+                    profile: {
+                        ...baseProfile.profile,
+                        tokenType: undefined,
+                        tokenValue: undefined,
+                    },
+                });
+            } catch (error) {
+                vscode.window.showErrorMessage(error.message);
+            }
         } catch (error) {
             vscode.window.showErrorMessage(localize("ssoLogout.unableToLogout", "Unable to log out. ") + error.message);
             return;

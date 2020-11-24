@@ -10,7 +10,7 @@
  */
 
 import * as zowe from "@zowe/cli";
-import { Session, IProfileLoaded, ITaskWithStatus, ICommandArguments } from "@zowe/imperative";
+import { Session, SessConstants, IProfileLoaded, ITaskWithStatus, ICommandArguments } from "@zowe/imperative";
 import { ZoweExplorerApi } from "./ZoweExplorerApi";
 
 import * as nls from "vscode-nls";
@@ -101,11 +101,28 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
     }
 
     public login(session: Session): Promise<string> {
-        return zowe.Login.apimlLogin(session);
+        const updSession = new Session({
+            hostname: session.ISession.hostname,
+            port: session.ISession.port,
+            user: session.ISession.user,
+            password: session.ISession.password,
+            rejectUnauthorized: session.ISession.rejectUnauthorized,
+            tokenType: SessConstants.TOKEN_TYPE_APIML,
+            type: SessConstants.AUTH_TYPE_TOKEN,
+        });
+        return zowe.Login.apimlLogin(updSession);
     }
 
     public logout(session: Session) {
-        return zowe.Logout.apimlLogout(session);
+        const updSession = new Session({
+            hostname: session.ISession.hostname,
+            port: session.ISession.port,
+            rejectUnauthorized: session.ISession.rejectUnauthorized,
+            tokenType: SessConstants.TOKEN_TYPE_APIML,
+            type: SessConstants.AUTH_TYPE_TOKEN,
+            tokenValue: session.ISession.tokenValue,
+        });
+        return zowe.Logout.apimlLogout(updSession);
     }
 }
 
