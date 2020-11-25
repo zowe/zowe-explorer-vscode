@@ -100,29 +100,16 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
         }
     }
 
+    public getTokenTypeName(): string {
+        return SessConstants.TOKEN_TYPE_APIML;
+    }
+
     public login(session: Session): Promise<string> {
-        const updSession = new Session({
-            hostname: session.ISession.hostname,
-            port: session.ISession.port,
-            user: session.ISession.user,
-            password: session.ISession.password,
-            rejectUnauthorized: session.ISession.rejectUnauthorized,
-            tokenType: SessConstants.TOKEN_TYPE_APIML,
-            type: SessConstants.AUTH_TYPE_TOKEN,
-        });
-        return zowe.Login.apimlLogin(updSession);
+        return zowe.Login.apimlLogin(session);
     }
 
     public logout(session: Session) {
-        const updSession = new Session({
-            hostname: session.ISession.hostname,
-            port: session.ISession.port,
-            rejectUnauthorized: session.ISession.rejectUnauthorized,
-            tokenType: SessConstants.TOKEN_TYPE_APIML,
-            type: SessConstants.AUTH_TYPE_TOKEN,
-            tokenValue: session.ISession.tokenValue,
-        });
-        return zowe.Logout.apimlLogout(updSession);
+        return zowe.Logout.apimlLogout(session);
     }
 }
 

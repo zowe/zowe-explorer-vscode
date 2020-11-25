@@ -76,6 +76,13 @@ export namespace ZoweExplorerApi {
          * @param {Session} session a Zowe CLI Session
          */
         logout?(session: Session);
+
+        /**
+         * Return the type name of the token supported by this api.
+         *
+         * @returns {string} the token type name as defined by a CLI plugin that implements the profile.
+         */
+        getTokenTypeName?(): string;
     }
 
     /**

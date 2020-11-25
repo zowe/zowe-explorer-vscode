@@ -16,6 +16,7 @@ import {
     IUpdateProfileFromCliArgs,
     ICommandArguments,
     Session,
+    SessConstants,
     IUpdateProfile,
     IProfile,
 } from "@zowe/imperative";
@@ -1170,18 +1171,24 @@ export class Profiles extends ProfilesCache {
 
             try {
                 const combinedProfile = await Profiles.getInstance().getCombinedProfile(serviceProfile, baseProfile);
+                const loginTokenType = ZoweExplorerApiRegister.getInstance()
+                    .getCommonApi(serviceProfile)
+                    .getTokenTypeName();
                 const updSession = new Session({
                     hostname: combinedProfile.profile.host,
                     port: combinedProfile.profile.port,
                     user: newUser,
                     password: newPass,
                     rejectUnauthorized: combinedProfile.profile.rejectUnauthorized,
+                    tokenType: loginTokenType,
+                    type: SessConstants.AUTH_TYPE_TOKEN,
                 });
                 const loginToken = await ZoweExplorerApiRegister.getInstance()
                     .getCommonApi(serviceProfile)
                     .login(updSession);
-                const profileManager = await Profiles.getInstance().getCliProfileManager("base");
+                const profileManager = await Profiles.getInstance().getCliProfileManager(baseProfile.type);
                 const updBaseProfile: IProfile = {
+                    tokenType: loginTokenType,
                     tokenValue: loginToken,
                 };
 
@@ -1241,10 +1248,15 @@ export class Profiles extends ProfilesCache {
 
         try {
             const combinedProfile = await Profiles.getInstance().getCombinedProfile(serviceProfile, baseProfile);
+            const loginTokenType = ZoweExplorerApiRegister.getInstance()
+                .getCommonApi(serviceProfile)
+                .getTokenTypeName();
             const updSession = new Session({
                 hostname: combinedProfile.profile.host,
                 port: combinedProfile.profile.port,
                 rejectUnauthorized: combinedProfile.profile.rejectUnauthorized,
+                tokenType: loginTokenType,
+                type: SessConstants.AUTH_TYPE_TOKEN,
                 tokenValue: combinedProfile.profile.tokenValue,
             });
             await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).logout(updSession);
