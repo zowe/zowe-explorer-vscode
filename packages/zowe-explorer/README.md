@@ -35,9 +35,13 @@ More information:
 
 New features:
 
-- Added the log in to Authentication Service feature. You can now log in to API Mediation Layer and generate a token for your base profile.
-<!-- TODO - Feature 2
-- Feature 3 -->
+- Added login and logout functions for base profiles. You can now log in to API Mediation Layer and generate a token for your base profile.
+
+Bug Fixes:
+
+- Fixed the empty profile folders in Favorites issue.
+- Fixed the initialization error that occurred when base profiles were used while being logged out from API ML.
+- Fixed the issue preventing the tree refresh function from updating extender profiles.
 
 For more information, see [Changelog](https://marketplace.visualstudio.com/items/Zowe.vscode-extension-for-zowe/changelog).
 
