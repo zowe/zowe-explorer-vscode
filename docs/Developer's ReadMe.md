@@ -58,7 +58,7 @@ export const normalPattern = "";
 export const orPattern = "";
 ```
 
-**Note:** You can copy the above example content from `./resources/testProfileData.example.ts`.
+**Note:** You can copy the above example content from `packages/zowe-explorer/resources/testProfileData.example.ts`.
 
 #### Normal pattern
 
