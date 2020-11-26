@@ -103,7 +103,7 @@ Use the Log in to the **Authentication Service** feature to regenerate a new tok
 
 The token is stored in the default base profile .yaml file.
 
-If you do not want to store your token, request from the server to end the session of your token. Use the **Log in to Authentication Service** feature to invalidate the token.
+If you do not want to store your token, request from the server to end the session of your token. Use the **Log out from Authentication Service** feature to invalidate the token.
 
 **Follow these steps:**
 
