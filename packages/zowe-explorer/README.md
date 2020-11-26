@@ -128,7 +128,7 @@ Review the following use cases to understand how to work with data sets in Zowe 
 - [View and access multiple profiles simultaneously](#view-and-access-multiple-profiles-simultaneously): Work with data sets from multiple profiles.
 - [Allocate Like](#allocate-like): Create a copy of a chosen data set with the same parameters.
 
-#### View data sets and use multiple filters
+### View data sets and use multiple filters
 
 1. Navigate to the explorer tree.
 2. Open the **DATA SETS** bar.
@@ -142,12 +142,12 @@ Review the following use cases to understand how to work with data sets in Zowe 
 ![View Data Set](../../docs/images/ZE-multiple-search.gif?raw=true "View Data Set")
 <br /><br />
 
-#### Refresh the list of data sets
+### Refresh the list of data sets
 
 1. Navigate to the explorer tree.
 2. Click **Refresh All** button (circular arrow icon) on the right of the **DATA SETS** explorer bar.
 
-#### Rename data sets
+### Rename data sets
 
 1. Navigate to the explorer tree.
 2. Open the **DATA SETS** bar.
@@ -158,7 +158,7 @@ Review the following use cases to understand how to work with data sets in Zowe 
 ![Rename Data Set](../../docs/images/ZE-rename.gif?raw=true "Rename Data Set")
 <br /><br />
 
-#### Copy data sets
+### Copy data sets
 
 1. Navigate to the explorer tree.
 2. Open the **DATA SETS** bar.
@@ -170,7 +170,7 @@ Review the following use cases to understand how to work with data sets in Zowe 
 ![Copy Data Set](../../docs/images/ZE-copy.gif?raw=true "Copy Data Set")
 <br /><br />
 
-#### Download, edit, and upload existing PDS members
+### Download, edit, and upload existing PDS members
 
 1. Navigate to the explorer tree.
 2. Open the **DATA SETS** bar.
@@ -191,7 +191,7 @@ Your PDS member (or PS) is uploaded.
 ![Edit](../../docs/images/ZE-download-edit.gif?raw=true "Edit")
 <br /><br />
 
-#### Use the save option to prevent merge conflicts
+### Use the save option to prevent merge conflicts
 
 1. Navigate to the explorer tree.
 2. Open the **DATA SETS** bar.
@@ -203,7 +203,7 @@ Your PDS member (or PS) is uploaded.
 ![Save](../../docs/images/ZE-safe-save.gif?raw=true "Save")
 <br /><br />
 
-#### Create a new PDS and a PDS member
+### Create a new PDS and a PDS member
 
 1. Navigate to the explorer tree.
 2. Open the **DATA SETS** bar.
@@ -218,7 +218,7 @@ Your PDS member (or PS) is uploaded.
 ![Create](../../docs/images/ZE-cre-pds-member.gif?raw=true "Create")
 <br /><br />
 
-#### Delete a PDS member and PDS
+### Delete a PDS member and PDS
 
 1. Navigate to the explorer tree.
 2. Open the **DATA SETS** bar.
@@ -235,7 +235,7 @@ Your PDS member (or PS) is uploaded.
 ![Delete](../../docs/images/ZE-del-pds-member.gif?raw=true "Delete")
 <br /><br />
 
-#### View and access multiple profiles simultaneously
+### View and access multiple profiles simultaneously
 
 1. Navigate to the explorer tree.
 2. Open the **DATA SETS** bar.
@@ -244,7 +244,7 @@ Your PDS member (or PS) is uploaded.
 
 ![Add Profile](../../docs/images/ZE-mult-profiles.gif?raw=true "Add Profile")
 
-#### Allocate Like
+### Allocate Like
 
 1. Navigate to the explorer tree.
 2. Open the **DATA SETS** bar.
