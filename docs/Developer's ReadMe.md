@@ -20,7 +20,7 @@ You can build the extension (VSIX file) from this source repository and install 
 From your local copy of this repository, issue the following commands to create the VSIX package file from source:
 
 1. `yarn install`
-2. `yarn run package`
+2. `yarn workspace vscode-extension-for-zowe package`
    This creates a `.vsix` file in your local copy of the project.
 
 ### Install the extension to VSC
@@ -28,7 +28,7 @@ From your local copy of this repository, issue the following commands to create 
 After you create a VSIX file, install the extension to VSC:
 
 1. Navigate to the Extensions menu in Visual Studio Code and click the **...** menu on the top-left.
-2. Select Install from VSIX and select the `.vsix` file that was created by your `yarn run package` command.
+2. Select Install from VSIX and select the `.vsix` file that was created by your `yarn workspace vscode-extension-for-zowe package` command.
 3. Restart Visual Studio Code.
 
 The extension is installed.
@@ -87,7 +87,7 @@ The `./scripts` folder contains the following scripts to help you set up the req
 
 1. Issue the following command to install `ts-node` globally:
 
-   `yarn install -g ts-node`
+   `npm install -g ts-node`
 
 2. Issue the following command to execute script as if it were a node script.
 
@@ -138,7 +138,7 @@ Set up your Theia workspace for development purposes.
 Issue the following command to run the regression tests:
 
 ```
-yarn run test:theia
+yarn workspace vscode-extension-for-zowe test:theia
 ```
 
 The regression tests output appears in your VSC debug console.
@@ -180,7 +180,7 @@ All localized strings must be string literals, you cannot include variables or u
 
      - Next wrap your string with the localize function in this format `localize('key', 'string') i.e. localize('addEntry','Successfully called add entry.')`
 
-3. After adding/updating/removing any string, run `yarn run package`. This will update the sample directory under the i18n folder with the newly added strings. Upload these files to Zanata or email a maintainer to do so.
+3. After adding/updating/removing any string, run `yarn workspace vscode-extension-for-zowe package`. This will update the sample directory under the i18n folder with the newly added strings. Upload these files to Zanata or email a maintainer to do so.
 
 Maintainers: Evann Wu (evannw@andrew.cmu.edu), Lauren Li (lauren.li@ibm.com), Kristina Mayo (ktopchi@us.ibm.com)
 
@@ -194,7 +194,7 @@ Maintainers: Evann Wu (evannw@andrew.cmu.edu), Lauren Li (lauren.li@ibm.com), Kr
 
 4. Next, open gulpfile.js found in the root directory of the repository. Add the following information: { folderName: `'ISO-639-3-Code'`, id: `'vscode-locale-id'` } to the `languages` array. For example, for Chinese add: `{ folderName: 'zho', id: 'zh-cn' }`. You can find the vscode locale id [here](https://code.visualstudio.com/docs/getstarted/locales).
 
-5. Make sure you have the vscode language pack of this new language installed and to see the localized result, first run the `yarn run package` command in terminal. Then press F1, run the Configure Display Language command, and select the locale id of your translated language.
+5. Make sure you have the vscode language pack of this new language installed and to see the localized result, first run the `yarn workspace vscode-extension-for-zowe package` command in terminal. Then press F1, run the Configure Display Language command, and select the locale id of your translated language.
 
 ### How to Donate Translations
 
