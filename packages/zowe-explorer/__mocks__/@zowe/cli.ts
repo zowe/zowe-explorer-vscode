@@ -50,6 +50,12 @@ export namespace Login {
     }
 }
 
+export namespace Login {
+    export function apimlLogout(session: Session) {
+        return;
+    }
+}
+
 export declare const enum sampleCreateDataSetTypeEnum {
     DATA_SET_BINARY = 0,
     DATA_SET_C = 1,
