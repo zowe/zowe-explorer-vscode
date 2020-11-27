@@ -84,6 +84,7 @@ export function createJobsTree(
         deleteSession: jest.fn(),
         addFavorite: jest.fn(),
         removeFavorite: jest.fn(),
+        removeFavProfile: jest.fn(),
         treeView,
         getTreeType: jest.fn().mockImplementation(() => PersistenceSchemaEnum.Job),
         checkCurrentProfile: jest.fn(),
@@ -103,6 +104,10 @@ export function createJobsTree(
     testJobsTree.removeFavorite.mockImplementation((badFavorite) =>
         removeNodeFromArray(badFavorite, testJobsTree.mFavorites)
     );
+    testJobsTree.removeFavProfile.mockImplementation((badFavProfileName) => {
+        const badFavProfileNode = testJobsTree.mFavorites.find((treeNode) => treeNode.label === badFavProfileName);
+        removeNodeFromArray(badFavProfileNode, testJobsTree.mFavorites);
+    });
 
     return testJobsTree;
 }
