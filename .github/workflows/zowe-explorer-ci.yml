@@ -9,14 +9,14 @@ on:
       - packages/zowe-explorer/**
 
 jobs:
-  build:
+  ze-build:
     runs-on: ${{ matrix.os }}
 
     strategy:
       # Continue to run tests on the other systems if one fails
       fail-fast: false
       matrix:
-        node-version: [10.x, 12.x]
+        node-version: [10.x, 12.x, 14.x]
         # order operating systems from best to worst
         os: [windows-latest, ubuntu-latest, macos-latest]
 
