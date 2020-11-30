@@ -827,18 +827,7 @@ export class Profiles extends ProfilesCache {
             });
 
         // Delete from Data Set Favorites
-        datasetTree.mFavorites.forEach((favNode) => {
-            const findNode = favNode.label.trim();
-            // const findNode = favNode.label.substring(1, favNode.label.indexOf("]")).trim();
-            if (findNode === deleteLabel) {
-                // datasetTree.removeFavorite(favNode);
-                datasetTree.mFavorites = datasetTree.mFavorites.filter(
-                    (tempNode) => tempNode.label.trim() !== findNode
-                );
-                favNode.dirty = true;
-                datasetTree.refresh();
-            }
-        });
+        datasetTree.removeFavProfile(deleteLabel, false);
 
         // Delete from Data Set Tree
         datasetTree.mSessionNodes.forEach((sessNode) => {
@@ -860,14 +849,7 @@ export class Profiles extends ProfilesCache {
             });
 
         // Delete from USS Favorites
-        ussTree.mFavorites.forEach((ses) => {
-            const findNode = ses.label.trim();
-            if (findNode === deleteLabel) {
-                ussTree.mFavorites = ussTree.mFavorites.filter((tempNode) => tempNode.label.trim() !== findNode);
-                ses.dirty = true;
-                ussTree.refresh();
-            }
-        });
+        ussTree.removeFavProfile(deleteLabel, false);
 
         // Delete from USS Tree
         ussTree.mSessionNodes.forEach((sessNode) => {
@@ -879,16 +861,7 @@ export class Profiles extends ProfilesCache {
         });
 
         // Delete from Jobs Favorites
-        jobsProvider.mFavorites.forEach((ses) => {
-            const findNode = ses.label.trim();
-            if (findNode === deleteLabel) {
-                jobsProvider.mFavorites = jobsProvider.mFavorites.filter(
-                    (tempNode) => tempNode.label.trim() !== findNode
-                );
-                ses.dirty = true;
-                jobsProvider.refresh();
-            }
-        });
+        jobsProvider.removeFavProfile(deleteLabel, false);
 
         // Delete from Jobs Tree
         jobsProvider.mSessionNodes.forEach((jobNode) => {
