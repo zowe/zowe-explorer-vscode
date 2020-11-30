@@ -24,6 +24,7 @@
   "devDependencies": {
     "@types/node": "^10.17.24",
     "@types/vscode": "^1.43.0",
+    "@types/mocha": "^2.2.42",
     "@typescript-eslint/eslint-plugin": "^4.7.0",
     "@typescript-eslint/parser": "^4.7.0",
     "typescript": "^3.8.3",
@@ -33,6 +34,7 @@
     "vscode-test": "^1.4.0",
     "vscode-nls-dev": "^3.3.2",
     "vsce": "^1.81.1",
+    "mocha": "^4.0.0",
     "prettier": "2.0.5",
     "rimraf": "^3.0.2",
     "yarn": "1.22.10"
