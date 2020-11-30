@@ -54,6 +54,116 @@ export const ICON_STATE_OPEN = "open";
 export const ICON_STATE_CLOSED = "closed";
 export const VSCODE_APPNAME: string[] = ["Visual Studio Code", "VSCodium"];
 export const ROOTPATH = path.join(__dirname, "..", "..");
+export const DATA_SET_PROPERTIES = [
+    {
+        key: `volser`,
+        label: `Volume Serial`,
+        value: null,
+        placeHolder: `Enter the volume serial on which the data set should be placed`,
+    },
+    {
+        key: `unit`,
+        label: `Device Type`,
+        value: null,
+        placeHolder: `Enter a device type (unit)`,
+    },
+    {
+        key: `dsorg`,
+        label: `Node Type`,
+        value: null,
+        placeHolder: `Select a node type`,
+    },
+    {
+        key: `alcunit`,
+        label: `Allocation Unit`,
+        value: null,
+        placeHolder: `Enter an allocation unit`,
+    },
+    {
+        key: `primary`,
+        label: `Primary Space`,
+        value: null,
+        placeHolder: `Enter the primary space allocation`,
+    },
+    {
+        key: `secondary`,
+        label: `Secondary Space`,
+        value: null,
+        placeHolder: `Enter the secondary space allocation`,
+    },
+    {
+        key: `dirblk`,
+        label: `Directory Blocks`,
+        value: null,
+        placeHolder: `Enter the number of directory blocks`,
+    },
+    {
+        key: `avgblk`,
+        label: `Directory Blocks`,
+        value: null,
+        placeHolder: `Enter the average block length (if allocation unit = BLK)`,
+    },
+    {
+        key: `recfm`,
+        label: `Record Format`,
+        value: null,
+        placeHolder: `Enter the data set's record format`,
+    },
+    {
+        key: `blksize`,
+        label: `Block Size`,
+        value: null,
+        placeHolder: `Enter a block size`,
+    },
+    {
+        key: `lrecl`,
+        label: `Record Length`,
+        value: null,
+        placeHolder: `Enter the logical record length`,
+    },
+    {
+        key: `storclass`,
+        label: `Storage Class`,
+        value: null,
+        placeHolder: `Enter the SMS storage class`,
+    },
+    {
+        key: `mgntclass`,
+        label: `Management Class`,
+        value: null,
+        placeHolder: `Enter the SMS management class`,
+    },
+    {
+        key: `dataclass`,
+        label: `Data Class`,
+        value: null,
+        placeHolder: `Enter an SMS data class`,
+    },
+    {
+        key: `dsntype`,
+        label: `DSN Type`,
+        value: null,
+        placeHolder: `Specify the DSN type`,
+    },
+    {
+        key: `showAttributes`,
+        label: `Show Attributes`,
+        value: null,
+        placeHolder: `Show the full allocation attributes?`,
+    },
+    {
+        key: `size`,
+        label: `Size`,
+        value: null,
+        placeHolder: `Enter the size of the data set`,
+    },
+    {
+        key: `nodeLabel`,
+        label: `Node Label`,
+        value: null,
+        placeHolder: `Enter a node label`,
+    },
+];
 
 /**
  * Defines all global variables
