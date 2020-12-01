@@ -1131,6 +1131,12 @@ export class Profiles extends ProfilesCache {
             serviceProfile = this.loadNamedProfile(label.trim());
         }
 
+        // Skip if there is no base profile
+        if (!baseProfile) {
+            vscode.window.showInformationMessage(localize("ssoLogin.noBase", "This profile does not support login."));
+            return;
+        }
+
         // This check will handle service profiles that have username and password
         if (serviceProfile.profile.user && serviceProfile.profile.password) {
             vscode.window.showInformationMessage(localize("ssoLogin.noBase", "This profile does not support login."));
@@ -1225,6 +1231,12 @@ export class Profiles extends ProfilesCache {
     public async ssoLogout(node: IZoweNodeType) {
         const baseProfile = await this.getBaseProfile();
         const serviceProfile = node.getProfile();
+
+        // Skip if there is no base profile
+        if (!baseProfile) {
+            vscode.window.showInformationMessage(localize("ssoLogout.noBase", "This profile does not support logout."));
+            return;
+        }
 
         // This check will handle service profiles that have username and password
         if (serviceProfile.profile.user && serviceProfile.profile.password) {
