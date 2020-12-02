@@ -1060,7 +1060,20 @@ export class Profiles extends ProfilesCache {
                     : baseProfile.profile.tokenValue;
             }
             if (commonApi.getSessionFromCommandArgument) {
-                session = await commonApi.getSessionFromCommandArgument(cmdArgs);
+                if (cmdArgs.tokenType === undefined || cmdArgs.tokenValue === undefined) {
+                    this.log.debug(
+                        localize(
+                            "getCombinedProfile.noToken",
+                            "Profile {0} {1} is not authorized. Please check the connection and try again.",
+                            baseProfile.name,
+                            serviceProfile.name
+                        )
+                    );
+                    session = baseProfile.profile;
+                } else {
+                    const res = await commonApi.getSessionFromCommandArgument(cmdArgs);
+                    session = res.ISession;
+                }
             } else {
                 vscode.window.showErrorMessage(
                     localize("getCombinedProfile.log.debug", "This extension does not support base profiles.")
@@ -1070,11 +1083,11 @@ export class Profiles extends ProfilesCache {
 
         // For easier debugging, move serviceProfile to updatedServiceProfile and then update it with combinedProfile
         const updatedServiceProfile: IProfileLoaded = serviceProfile;
-        for (const prop of Object.keys(session.ISession)) {
+        for (const prop of Object.keys(session)) {
             if (prop === "hostname") {
-                updatedServiceProfile.profile.host = session.ISession[prop];
+                updatedServiceProfile.profile.host = session[prop];
             } else {
-                updatedServiceProfile.profile[prop] = session.ISession[prop];
+                updatedServiceProfile.profile[prop] = session[prop];
             }
         }
         return updatedServiceProfile;
