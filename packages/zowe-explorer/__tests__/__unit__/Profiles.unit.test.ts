@@ -2640,4 +2640,23 @@ describe("Profiles Unit Tests - Function getCombinedProfile", () => {
 
         expect(response).toEqual(blockMocks.testCombinedProfile);
     });
+
+    it("Tests that getCombinedProfile returns a combined profile with undefined tokenValue", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        globalMocks.testProfile.profile.user = null;
+        globalMocks.testProfile.profile.password = null;
+        blockMocks.testBaseProfile.profile.host = globalMocks.testProfile.profile.host;
+        blockMocks.testBaseProfile.profile.port = globalMocks.testProfile.profile.port;
+        blockMocks.testBaseProfile.profile.tokenValue = undefined;
+        blockMocks.testBaseProfile.profile.tokenType = undefined;
+
+        const response = await (await blockMocks.mockProfileInstance).getCombinedProfile(
+            globalMocks.testProfile,
+            blockMocks.testBaseProfile
+        );
+
+        expect(response.profile.tokenValue).toEqual(undefined);
+    });
 });
