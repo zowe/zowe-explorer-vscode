@@ -368,7 +368,7 @@ export function getDataSetTypeAndOptions(type: string) {
 export async function createFile(node: IZoweDatasetTreeNode, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
     let dsName: string;
     let typeEnum: zowe.CreateDataSetTypeEnum;
-    const stepTwoOptions: vscode.QuickPickOptions = {
+    const stepTwoOptions = {
         placeHolder: localize("createFile.quickPickOption.dataSetType", "Type of Data Set to be Created"),
         ignoreFocusOut: true,
         canPickMany: false,
@@ -493,7 +493,6 @@ export async function createFile(node: IZoweDatasetTreeNode, datasetProvider: IZ
 
 async function handleUserSelection(newDSProperties, dsType): Promise<string> {
     // Create the array of items in the quickpick list
-    const typeOptions = getDataSetTypeAndOptions(dsType).createOptions;
     const qpItems = [];
     newDSProperties.forEach((prop) => {
         qpItems.push(new FilterItem(prop.label, prop.value));
