@@ -60,6 +60,19 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
      * @param favorite Adds a favorite node
      */
     checkCurrentProfile(node: IZoweNodeType);
+
+    /**
+     * Log in to authentication service
+     * @param node This parameter identifies the node that needs to be called
+     */
+    ssoLogin(node: IZoweNodeType);
+
+    /**
+     * Log out from authentication service
+     * @param node This parameter identifies the node that needs to be called
+     */
+    ssoLogout(node: IZoweNodeType);
+
     /**
      * Adds a favorite node
      * @param favorite Adds a favorite node
