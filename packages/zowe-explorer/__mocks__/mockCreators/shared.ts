@@ -231,6 +231,7 @@ export function createQuickPickContent(
         show: jest.fn(),
         hide: jest.fn(),
         onDidAccept: jest.fn(),
+        onDidHide: jest.fn(),
         onDidChangeValue: jest.fn(),
         dispose: jest.fn(),
     };

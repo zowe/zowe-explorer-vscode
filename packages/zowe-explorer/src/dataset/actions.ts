@@ -385,7 +385,7 @@ export async function createFile(node: IZoweDatasetTreeNode, datasetProvider: IZ
         localize("createFile.dataSetSequential", "Data Set Sequential"),
     ];
     const stepThreeChoices = [
-        localize("createFile.allocate", "+ Allocate Data Set"),
+        localize("createFile.allocate", " + Allocate Data Set"),
         localize("createFile.editAttributes", "Edit Attributes"),
     ];
     // Make a nice new mutable array for the DS properties
@@ -404,37 +404,61 @@ export async function createFile(node: IZoweDatasetTreeNode, datasetProvider: IZ
         });
         if (dsName) {
             dsName = dsName.trim().toUpperCase();
-            newDSProperties[newDSProperties.length - 1].value = dsName;
-            newDSProperties[newDSProperties.length - 1].placeHolder = dsName;
+            newDSProperties.forEach((property) => {
+                if (property.key === `nodeLabel`) {
+                    property.value = dsName;
+                    property.placeHolder = dsName;
+                }
+            });
+        } else {
+            globals.LOG.debug(
+                localize("createFile.noValidNameEntered", "No valid data set name entered. Operation cancelled")
+            );
+            vscode.window.showInformationMessage(localize("createFile.operationCancelled", "Operation cancelled."));
+            return;
         }
 
         // 2nd step: Get data set type
         const type = await vscode.window.showQuickPick(stepTwoChoices, stepTwoOptions);
         if (type == null) {
-            globals.LOG.debug(localize("createFile.log.debug.noValidTypeSelected", "No valid data type selected"));
+            globals.LOG.debug(
+                localize("createFile.noValidTypeSelected", "No valid data set type selected. Operation cancelled.")
+            );
+            vscode.window.showInformationMessage(localize("createFile.operationCancelled", "Operation cancelled."));
             return;
         } else {
             typeEnum = getDataSetTypeAndOptions(type).typeEnum;
-            globals.LOG.debug(localize("createFile.log.debug.allocatingNewDataSet", "Allocating new data set"));
         }
 
         // 3rd step: Ask if we allocate, or show DS attributes
         const choice = await vscode.window.showQuickPick(stepThreeChoices, stepThreeOptions);
         if (choice == null) {
-            globals.LOG.debug(localize("createFile.log.debug.noOptionSelected", "No option selected"));
+            globals.LOG.debug(localize("createFile.noOptionSelected", "No option selected. Operation cancelled."));
+            vscode.window.showInformationMessage(localize("createFile.operationCancelled", "Operation cancelled."));
             return;
         } else {
             if (choice === "+ Allocate Data Set") {
                 // User wants to allocate straightaway - skip Step 4
-                globals.LOG.debug(localize("createFile.log.debug.allocatingNewDataSet", "Allocating new data set"));
+                globals.LOG.debug(localize("createFile.allocatingNewDataSet", "Allocating new data set"));
+                vscode.window.showInformationMessage(
+                    localize("createFile.allocatingNewDataSet", "Allocating new data set")
+                );
             } else {
                 // 4th step (optional): Show data set attributes
                 const choice2 = await handleUserSelection(newDSProperties, type);
                 if (choice2 == null) {
-                    globals.LOG.debug(localize("createFile.log.debug.noValidTypeSelected", "No option selected"));
+                    globals.LOG.debug(
+                        localize("createFile.noOptionSelected", "No option selected. Operation cancelled.")
+                    );
+                    vscode.window.showInformationMessage(
+                        localize("createFile.operationCancelled", "Operation cancelled.")
+                    );
                     return;
                 } else {
-                    globals.LOG.debug(localize("createFile.log.debug.allocatingNewDataSet", "Allocating new data set"));
+                    globals.LOG.debug(localize("createFile.allocatingNewDataSet", "Allocating new data set"));
+                    vscode.window.showInformationMessage(
+                        localize("createFile.allocatingNewDataSet", "Allocating new data set")
+                    );
                 }
             }
         }
@@ -442,18 +466,18 @@ export async function createFile(node: IZoweDatasetTreeNode, datasetProvider: IZ
         // Format properties for use by API
         const dsPropsForAPI = {};
         newDSProperties.forEach((property) => {
-            if (property.value && property.key !== `nodeLabel`) {
-                dsPropsForAPI[property.key] = property.value;
+            if (property.value) {
+                if (property.key === `nodeLabel`) {
+                    dsName = property.value;
+                } else {
+                    dsPropsForAPI[property.key] = property.value;
+                }
             }
         });
 
         try {
             // Allocate the data set
-            await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).createDataSet(
-                typeEnum,
-                newDSProperties[newDSProperties.length - 1].value,
-                dsPropsForAPI
-            );
+            await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).createDataSet(typeEnum, dsName, dsPropsForAPI);
             node.dirty = true;
 
             const theFilter = await datasetProvider.createFilterString(dsName, node);
@@ -494,10 +518,10 @@ export async function createFile(node: IZoweDatasetTreeNode, datasetProvider: IZ
 async function handleUserSelection(newDSProperties, dsType): Promise<string> {
     // Create the array of items in the quickpick list
     const qpItems = [];
+    qpItems.push(new FilterItem(`+ Allocate Data Set`, null, true));
     newDSProperties.forEach((prop) => {
         qpItems.push(new FilterItem(prop.label, prop.value));
     });
-    qpItems.push(new FilterItem(`+ Allocate Data Set`, null, true));
 
     // Provide the settings for the quickpick's appearance & behavior
     const quickpick = vscode.window.createQuickPick();
@@ -505,19 +529,19 @@ async function handleUserSelection(newDSProperties, dsType): Promise<string> {
     quickpick.ignoreFocusOut = true;
     quickpick.items = [...qpItems];
     quickpick.matchOnDescription = false;
+    quickpick.onDidHide(() => {
+        if (quickpick.selectedItems.length === 0) {
+            globals.LOG.debug(localize("createFile.noOptionSelected", "No option selected. Operation cancelled."));
+            vscode.window.showInformationMessage(localize("createFile.operationCancelled", "Operation cancelled."));
+            return;
+        }
+    });
 
     // Show quickpick and store the user's input
     quickpick.show();
     let pattern: string;
     const choice2 = await resolveQuickPickHelper(quickpick);
-    if (!choice2) {
-        vscode.window.showInformationMessage(
-            localize("createFileNoWebview.enterPattern", "You must select an option to edit.")
-        );
-        return;
-    } else {
-        pattern = choice2.label;
-    }
+    pattern = choice2.label;
     quickpick.dispose();
 
     if (pattern) {
