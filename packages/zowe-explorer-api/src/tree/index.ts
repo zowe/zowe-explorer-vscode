@@ -9,11 +9,7 @@
  *                                                                                 *
  */
 
-export * from "./profiles/UserSettings";
-export * from "./profiles/ProfilesCache";
-export * from "./profiles/ZoweExplorerApi";
-export * from "./profiles/ZoweExplorerZosmfApi";
-export * from "./tree/ZoweExplorerTreeApi";
-export * from "./tree/ZoweTreeNode";
-export * from "./tree/IZoweTree";
-export * from "./tree/IZoweTreeNode";
+export * from "./ZoweExplorerTreeApi";
+export * from "./ZoweTreeNode";
+export * from "./IZoweTree";
+export * from "./IZoweTreeNode";

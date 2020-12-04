@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import { IZoweNodeType, IZoweDatasetTreeNode, IZoweUSSTreeNode } from "./IZoweTreeNode";
-import { PersistenceSchemaEnum } from "./UserSettings";
+import { PersistenceSchemaEnum } from "../profiles/UserSettings";
 
 /**
  * The base interface for Zowe tree browsers that implement the
