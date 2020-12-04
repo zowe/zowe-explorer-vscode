@@ -10,7 +10,7 @@
  */
 
 import * as zowe from "@zowe/cli";
-import { Session, IProfileLoaded, ICommandArguments } from "@zowe/imperative";
+import { Session, SessConstants, IProfileLoaded, ICommandArguments } from "@zowe/imperative";
 import { ZoweExplorerApi } from "./ZoweExplorerApi";
 
 /**
@@ -92,6 +92,18 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
         } else {
             return "unverified";
         }
+    }
+
+    public getTokenTypeName(): string {
+        return SessConstants.TOKEN_TYPE_APIML;
+    }
+
+    public login(session: Session): Promise<string> {
+        return zowe.Login.apimlLogin(session);
+    }
+
+    public logout(session: Session): Promise<void> {
+        return zowe.Logout.apimlLogout(session);
     }
 }
 

@@ -2661,3 +2661,267 @@ describe("Profiles Unit Tests - Function getCombinedProfile", () => {
         expect(response.profile.tokenValue).toEqual(undefined);
     });
 });
+
+describe("Profiles Unit Tests - Function ssoLogin", () => {
+    async function createBlockMocks(globalMocks) {
+        const newMocks = {
+            log: Logger.getAppLogger(),
+            testDatasetTree: null,
+            testUSSTree: null,
+            testJobTree: null,
+            treeView: createTreeView(),
+            datasetSessionNode: null,
+            optionalCredNode: null,
+            datasetSessionNodeToken: null,
+            ussSessionNode: null,
+            iJob: createIJobObject(),
+            profiles: null,
+            imperativeProfile: createValidIProfile(),
+            profileInstance: null,
+            session: null,
+            mockNode: null,
+            mockEnableValidationContext: jest.fn(),
+            mockLoadNamedProfile: jest.fn(),
+            testBaseProfile: createValidIProfile(),
+            testCombinedSession: createISession(),
+            testCombinedProfile: createValidIProfile(),
+            testOptionalProfile: createValidIProfile(),
+        };
+        newMocks.testBaseProfile.profile.tokenType = "testTokenType";
+        newMocks.testBaseProfile.profile.tokenValue = "testTokenValue";
+        newMocks.testCombinedSession.ISession.tokenType = "testTokenType";
+        newMocks.testCombinedSession.ISession.tokenValue = "testTokenValue";
+        newMocks.testCombinedProfile.profile.tokenType = "testTokenType";
+        newMocks.testCombinedProfile.profile.tokenValue = "testTokenValue";
+        newMocks.testCombinedProfile.profile.user = undefined;
+        newMocks.testCombinedProfile.profile.password = undefined;
+        newMocks.testCombinedProfile.profile.protocol = "https";
+        newMocks.testCombinedProfile.profile.host = "fake";
+        newMocks.testCombinedProfile.profile.type = "basic";
+        newMocks.testOptionalProfile.profile.host = "host";
+        newMocks.testOptionalProfile.profile.port = "999";
+        newMocks.testOptionalProfile.profile.user = undefined;
+        newMocks.testOptionalProfile.profile.password = undefined;
+        globalMocks.mockCreateBasicZosmfSessionFromArguments.mockResolvedValue(newMocks.testCombinedSession);
+        newMocks.datasetSessionNodeToken = createDatasetSessionNode(
+            newMocks.testCombinedSession,
+            newMocks.testCombinedProfile
+        );
+        newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
+        newMocks.optionalCredNode = createDatasetSessionNode(newMocks.session, newMocks.testOptionalProfile);
+        newMocks.mockNode = newMocks.datasetSessionNode;
+        newMocks.profiles = await Profiles.createInstance(newMocks.log);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        newMocks.profileInstance.getBaseProfile.mockResolvedValue(newMocks.testBaseProfile);
+        newMocks.profileInstance.getCombinedProfile.mockResolvedValue(newMocks.testCombinedProfile);
+        newMocks.profileInstance.getCombinedProfile.mockResolvedValue(newMocks.testCombinedProfile);
+        newMocks.testDatasetTree = createDatasetTree(newMocks.datasetSessionNode, newMocks.treeView);
+        newMocks.testJobTree = createJobsTree(
+            newMocks.session,
+            newMocks.iJob,
+            newMocks.imperativeProfile,
+            newMocks.treeView
+        );
+
+        Object.defineProperty(globalMocks.mockCliProfileManager, "load", {
+            value: jest.fn(() => {
+                return new Promise((resolve) => {
+                    resolve(newMocks.imperativeProfile);
+                });
+            }),
+            configurable: true,
+        });
+        Object.defineProperty(globalMocks.mockCliProfileManager, "update", { value: jest.fn(), configurable: true });
+        newMocks.profiles.getCliProfileManager = () => Promise.resolve(globalMocks.mockCliProfileManager);
+
+        globalMocks.mockGetInstance.mockReturnValue(newMocks.profiles);
+
+        return newMocks;
+    }
+
+    it("Tests that sso login is skipped if service profile contains user/password", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const ussSessionNode = createUSSSessionNode(blockMocks.session, blockMocks.imperativeProfile);
+        const ussTree = createUSSTree([], [ussSessionNode], blockMocks.treeView);
+        const resultNode: IZoweNodeType = blockMocks.datasetSessionNode;
+        const theProfiles = await Profiles.createInstance(blockMocks.log);
+
+        const response = await theProfiles.ssoLogin(resultNode);
+
+        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("This profile does not support login.");
+    });
+
+    it("Tests that sso login with token", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const resultNode: IZoweNodeType = blockMocks.datasetSessionNodeToken;
+        const theProfiles = await Profiles.createInstance(blockMocks.log);
+        Object.defineProperty(theProfiles, "getBaseProfile", {
+            value: jest.fn(() => {
+                return blockMocks.testBaseProfile;
+            }),
+        });
+
+        Object.defineProperty(theProfiles, "getCombinedProfile", {
+            value: jest.fn(() => {
+                return blockMocks.testCombinedProfile;
+            }),
+        });
+
+        const mockCommonApi = await ZoweExplorerApiRegister.getInstance().getCommonApi(blockMocks.testCombinedProfile);
+        const getCommonApiMock = jest.fn();
+        getCommonApiMock.mockReturnValue(mockCommonApi);
+        ZoweExplorerApiRegister.getInstance().getCommonApi = getCommonApiMock.bind(ZoweExplorerApiRegister);
+        jest.spyOn(mockCommonApi, "getTokenTypeName").mockReturnValue("token");
+
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        const response = await theProfiles.ssoLogin(resultNode);
+
+        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe(
+            "Login to authentication service was successful."
+        );
+    });
+
+    it("Tests that sso login is skipped if service profile has its own host and port", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        const theProfiles = await Profiles.createInstance(blockMocks.log);
+        Object.defineProperty(theProfiles, "getBaseProfile", {
+            value: jest.fn(() => {
+                return blockMocks.testBaseProfile;
+            }),
+        });
+
+        const resultNode: IZoweNodeType = blockMocks.optionalCredNode;
+
+        const response = await theProfiles.ssoLogin(resultNode);
+
+        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("This profile does not support login.");
+    });
+});
+
+describe("Profiles Unit Tests - Function ssoLogout", () => {
+    async function createBlockMocks(globalMocks) {
+        const newMocks = {
+            log: Logger.getAppLogger(),
+            testDatasetTree: null,
+            testUSSTree: null,
+            testJobTree: null,
+            treeView: createTreeView(),
+            datasetSessionNode: null,
+            datasetSessionNodeToken: null,
+            ussSessionNode: null,
+            iJob: createIJobObject(),
+            profiles: null,
+            imperativeProfile: createValidIProfile(),
+            profileInstance: null,
+            session: null,
+            mockNode: null,
+            mockEnableValidationContext: jest.fn(),
+            mockLoadNamedProfile: jest.fn(),
+            testBaseProfile: createValidIProfile(),
+            testCombinedSession: createISession(),
+            testCombinedProfile: createValidIProfile(),
+        };
+        newMocks.testBaseProfile.profile.tokenType = "testTokenType";
+        newMocks.testBaseProfile.profile.tokenValue = "testTokenValue";
+        newMocks.testCombinedSession.ISession.tokenType = "testTokenType";
+        newMocks.testCombinedSession.ISession.tokenValue = "testTokenValue";
+        newMocks.testCombinedProfile.profile.tokenType = "testTokenType";
+        newMocks.testCombinedProfile.profile.tokenValue = "testTokenValue";
+        newMocks.testCombinedProfile.profile.user = undefined;
+        newMocks.testCombinedProfile.profile.password = undefined;
+        newMocks.testCombinedProfile.profile.protocol = "https";
+        newMocks.testCombinedProfile.profile.host = "fake";
+        newMocks.testCombinedProfile.profile.type = "basic";
+        globalMocks.mockCreateBasicZosmfSessionFromArguments.mockResolvedValue(newMocks.testCombinedSession);
+        newMocks.datasetSessionNodeToken = createDatasetSessionNode(
+            newMocks.testCombinedSession,
+            newMocks.testCombinedProfile
+        );
+        newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
+        newMocks.mockNode = newMocks.datasetSessionNode;
+        newMocks.profiles = await Profiles.createInstance(newMocks.log);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        newMocks.profileInstance.getBaseProfile.mockResolvedValue(newMocks.testBaseProfile);
+        newMocks.profileInstance.getCombinedProfile.mockResolvedValue(newMocks.testCombinedProfile);
+        newMocks.profileInstance.getCombinedProfile.mockResolvedValue(newMocks.testCombinedProfile);
+        newMocks.testDatasetTree = createDatasetTree(newMocks.datasetSessionNode, newMocks.treeView);
+        newMocks.testJobTree = createJobsTree(
+            newMocks.session,
+            newMocks.iJob,
+            newMocks.imperativeProfile,
+            newMocks.treeView
+        );
+
+        Object.defineProperty(globalMocks.mockCliProfileManager, "save", {
+            value: jest.fn(() => {
+                return new Promise((resolve) => {
+                    resolve(newMocks.imperativeProfile);
+                });
+            }),
+            configurable: true,
+        });
+        Object.defineProperty(globalMocks.mockCliProfileManager, "update", { value: jest.fn(), configurable: true });
+        newMocks.profiles.getCliProfileManager = () => Promise.resolve(globalMocks.mockCliProfileManager);
+
+        globalMocks.mockGetInstance.mockReturnValue(newMocks.profiles);
+
+        return newMocks;
+    }
+
+    it("Tests that sso logout is skipped if service profile contains user/password", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const ussSessionNode = createUSSSessionNode(blockMocks.session, blockMocks.imperativeProfile);
+        const ussTree = createUSSTree([], [ussSessionNode], blockMocks.treeView);
+        const resultNode: IZoweNodeType = blockMocks.datasetSessionNode;
+        const theProfiles = await Profiles.createInstance(blockMocks.log);
+
+        const response = await theProfiles.ssoLogout(resultNode);
+
+        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("This profile does not support logout.");
+    });
+
+    it("Tests that sso logout with token", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const resultNode: IZoweNodeType = blockMocks.datasetSessionNodeToken;
+        const theProfiles = await Profiles.createInstance(blockMocks.log);
+        Object.defineProperty(theProfiles, "getBaseProfile", {
+            value: jest.fn(() => {
+                return blockMocks.testBaseProfile;
+            }),
+        });
+
+        Object.defineProperty(theProfiles, "getCombinedProfile", {
+            value: jest.fn(() => {
+                return blockMocks.testCombinedProfile;
+            }),
+        });
+
+        const mockCommonApi = await ZoweExplorerApiRegister.getInstance().getCommonApi(blockMocks.testCombinedProfile);
+        const getCommonApiMock = jest.fn();
+        getCommonApiMock.mockReturnValue(mockCommonApi);
+        ZoweExplorerApiRegister.getInstance().getCommonApi = getCommonApiMock.bind(ZoweExplorerApiRegister);
+        jest.spyOn(mockCommonApi, "getTokenTypeName").mockReturnValue("token");
+        jest.spyOn(mockCommonApi, "logout").mockReturnValue("logout success");
+
+        const response = await theProfiles.ssoLogout(resultNode);
+
+        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe(
+            "Logout from authentication service was successful."
+        );
+    });
+});
