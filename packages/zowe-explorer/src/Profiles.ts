@@ -1108,7 +1108,7 @@ export class Profiles extends ProfilesCache {
         return updatedServiceProfile;
     }
 
-    public async ssoLogin(node?: IZoweNodeType, label?: string) {
+    public async ssoLogin(node?: IZoweNodeType, label?: string): Promise<void> {
         const baseProfile = this.getBaseProfile();
         let serviceProfile: IProfileLoaded;
         if (node) {
@@ -1214,7 +1214,7 @@ export class Profiles extends ProfilesCache {
         }
     }
 
-    public async ssoLogout(node: IZoweNodeType) {
+    public async ssoLogout(node: IZoweNodeType): Promise<void> {
         const baseProfile = this.getBaseProfile();
         const serviceProfile = node.getProfile();
 

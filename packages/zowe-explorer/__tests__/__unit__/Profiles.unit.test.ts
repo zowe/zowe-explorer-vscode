@@ -2696,10 +2696,10 @@ describe("Profiles Unit Tests - Function ssoLogin", () => {
         newMocks.testCombinedProfile.profile.user = undefined;
         newMocks.testCombinedProfile.profile.password = undefined;
         newMocks.testCombinedProfile.profile.protocol = "https";
-        newMocks.testCombinedProfile.profile.host = "fake";
+        newMocks.testCombinedProfile.profile.host = "test";
         newMocks.testCombinedProfile.profile.type = "basic";
         newMocks.testOptionalProfile.profile.host = "host";
-        newMocks.testOptionalProfile.profile.port = "999";
+        newMocks.testOptionalProfile.profile.port = "1443";
         newMocks.testOptionalProfile.profile.user = undefined;
         newMocks.testOptionalProfile.profile.password = undefined;
         globalMocks.mockCreateBasicZosmfSessionFromArguments.mockResolvedValue(newMocks.testCombinedSession);
@@ -2767,8 +2767,8 @@ describe("Profiles Unit Tests - Function ssoLogin", () => {
         });
 
         Object.defineProperty(theProfiles, "getCombinedProfile", {
-            value: jest.fn(() => {
-                return blockMocks.testCombinedProfile;
+            value: jest.fn(async () => {
+                Promise.resolve(blockMocks.testCombinedProfile);
             }),
         });
 
@@ -2905,8 +2905,8 @@ describe("Profiles Unit Tests - Function ssoLogout", () => {
         });
 
         Object.defineProperty(theProfiles, "getCombinedProfile", {
-            value: jest.fn(() => {
-                return blockMocks.testCombinedProfile;
+            value: jest.fn(async () => {
+                Promise.resolve(blockMocks.testCombinedProfile);
             }),
         });
 
