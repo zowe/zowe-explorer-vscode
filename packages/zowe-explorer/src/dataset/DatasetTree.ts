@@ -1030,7 +1030,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         if (profile) {
             // If baseProfile exists, combine that information first before adding the session to the tree
             // TODO: Move addSession to abstract/ZoweTreeProvider (similar to editSession)
-            const baseProfile = await Profiles.getInstance().getBaseProfile();
+            const baseProfile = Profiles.getInstance().getBaseProfile();
 
             if (baseProfile) {
                 try {

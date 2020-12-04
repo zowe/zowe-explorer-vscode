@@ -93,7 +93,7 @@ export class Profiles extends ProfilesCache {
         // This step is for prompting of credentials. It will be triggered if it meets the following conditions:
         // - The service does not have username or password and base profile doesn't exists
         // - The service does not have username or password and the base profile has a different host and port
-        const baseProfile = await this.getBaseProfile();
+        const baseProfile = this.getBaseProfile();
 
         if (
             (!theProfile.profile.tokenType && (!theProfile.profile.user || !theProfile.profile.password)) ||
@@ -1034,7 +1034,7 @@ export class Profiles extends ProfilesCache {
     public async getCombinedProfile(serviceProfile: IProfileLoaded, baseProfile: IProfileLoaded) {
         // TODO: This needs to be improved
         // The idea is to handle all type of ZE Profiles
-        const commonApi = await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile);
+        const commonApi = ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile);
 
         // This check will handle service profiles that have username and password
         if (serviceProfile.profile.user && serviceProfile.profile.password) {
@@ -1109,7 +1109,7 @@ export class Profiles extends ProfilesCache {
     }
 
     public async ssoLogin(node?: IZoweNodeType, label?: string) {
-        const baseProfile = await this.getBaseProfile();
+        const baseProfile = this.getBaseProfile();
         let serviceProfile: IProfileLoaded;
         if (node) {
             serviceProfile = node.getProfile();
@@ -1215,7 +1215,7 @@ export class Profiles extends ProfilesCache {
     }
 
     public async ssoLogout(node: IZoweNodeType) {
-        const baseProfile = await this.getBaseProfile();
+        const baseProfile = this.getBaseProfile();
         const serviceProfile = node.getProfile();
 
         // Skip if there is no base profile
