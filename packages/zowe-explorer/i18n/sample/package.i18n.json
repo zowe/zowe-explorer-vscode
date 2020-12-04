@@ -89,5 +89,11 @@
   "jobs.disableValidation": "Disable Validation for Profile",
   "enableValidation": "Enable Validation for Profile",
   "uss.enableValidation": "Enable Validation for Profile",
-  "jobs.enableValidation": "Enable Validation for Profile"
+  "jobs.enableValidation": "Enable Validation for Profile",
+  "ssoLogin": "Log in to Authentication Service",
+  "uss.ssoLogin": "Log in to Authentication Service",
+  "jobs.ssoLogin": "Log in to Authentication Service",
+  "ssoLogout": "Log out from Authentication Service",
+  "uss.ssoLogout": "Log out from Authentication Service",
+  "jobs.ssoLogout": "Log out from Authentication Service"
 }
