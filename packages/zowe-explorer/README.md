@@ -103,6 +103,8 @@ Use the Log in to the **Authentication Service** feature to regenerate a new tok
 
 The token is stored in the default base profile .yaml file.
 
+**Note:** There is a known issue that tokens issued in Zowe Explorer, from an API Mediation Layer instance accepting self-signed certificates, are rejected with `Error: self signed certificate in certificate chain`, even if the reject unauthorized flag is set to false in the base profile. You can continue to use tokens generated from Zowe CLI in Zowe Explorer.
+
 If you do not want to store your token, request from the server to end the session of your token. Use the **Log out from Authentication Service** feature to invalidate the token.
 
 **Follow these steps:**
