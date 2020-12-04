@@ -30,3 +30,5 @@ rules:
   # incompatibility fixes with eslint for javascript
   no-shadow: 0
   "@typescript-eslint/no-shadow": warn
+  "no-unused-vars": 0
+  "@typescript-eslint/no-unused-vars": ["warn", { "args": "none" }]
