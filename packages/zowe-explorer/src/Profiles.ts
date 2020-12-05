@@ -402,7 +402,7 @@ export class Profiles extends ProfilesCache {
         let updPort: number;
         let updUrl: any;
 
-        const schema: {} = await this.getSchema(profileLoaded.type);
+        const schema: {} = this.getSchema(profileLoaded.type);
         const schemaArray = Object.keys(schema);
 
         const updSchemaValues: any = {};
@@ -571,7 +571,7 @@ export class Profiles extends ProfilesCache {
             return undefined;
         }
 
-        const schema: {} = await this.getSchema(profileType);
+        const schema: {} = this.getSchema(profileType);
         const schemaArray = Object.keys(schema);
 
         const schemaValues: any = {};
@@ -1058,7 +1058,7 @@ export class Profiles extends ProfilesCache {
             session = ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).getSession(serviceProfile);
         } else {
             // This process combines the information from baseprofile to serviceprofile and create a new session
-            const profSchema = await this.getSchema(serviceProfile.type);
+            const profSchema = this.getSchema(serviceProfile.type);
             const cmdArgs: ICommandArguments = {
                 $0: "zowe",
                 _: [""],
@@ -1178,7 +1178,7 @@ export class Profiles extends ProfilesCache {
                 const loginToken = await ZoweExplorerApiRegister.getInstance()
                     .getCommonApi(serviceProfile)
                     .login(updSession);
-                const profileManager = await Profiles.getInstance().getCliProfileManager(baseProfile.type);
+                const profileManager = Profiles.getInstance().getCliProfileManager(baseProfile.type);
                 const updBaseProfile: IProfile = {
                     tokenType: loginTokenType,
                     tokenValue: loginToken,
@@ -1245,7 +1245,8 @@ export class Profiles extends ProfilesCache {
         }
 
         try {
-            const combinedProfile = await Profiles.getInstance().getCombinedProfile(serviceProfile, baseProfile);
+            const profiles = Profiles.getInstance();
+            const combinedProfile = await profiles.getCombinedProfile(serviceProfile, baseProfile);
             const loginTokenType = ZoweExplorerApiRegister.getInstance()
                 .getCommonApi(serviceProfile)
                 .getTokenTypeName();
@@ -1263,7 +1264,7 @@ export class Profiles extends ProfilesCache {
             );
 
             try {
-                (await this.getCliProfileManager(baseProfile.type)).save({
+                this.getCliProfileManager(baseProfile.type).save({
                     name: baseProfile.name,
                     type: baseProfile.type,
                     overwrite: true,
