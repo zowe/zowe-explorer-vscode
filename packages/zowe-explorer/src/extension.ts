@@ -361,9 +361,12 @@ function initJobsProvider(context: vscode.ExtensionContext, jobsProvider: IZoweT
     vscode.commands.registerCommand("zowe.downloadSpool", (job) => jobActions.downloadSpool(job));
     vscode.commands.registerCommand("zowe.getJobJcl", (job) => jobActions.downloadJcl(job));
     vscode.commands.registerCommand("zowe.setJobSpool", async (session, jobid) => {
-        const sessionNode = jobsProvider.mSessionNodes.find((jobNode) => jobNode.label.trim() === session.trim());
+        const sessionNode: IZoweJobTreeNode = jobsProvider.mSessionNodes.find(
+            (jobNode) => jobNode.label.trim() === session.trim()
+        );
         sessionNode.dirty = true;
         jobsProvider.refresh();
+        sessionNode.searchId = jobid;
         const jobs: IZoweJobTreeNode[] = await sessionNode.getChildren();
         const job: IZoweJobTreeNode = jobs.find((jobNode) => jobNode.job.jobid === jobid);
         jobsProvider.setItem(jobsProvider.getTreeView(), job);
