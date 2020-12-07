@@ -257,28 +257,25 @@ describe("DatasetTree Integration Tests", async () => {
 
     describe("removeFavorite()", () => {
         beforeEach(() => {
-            const favProfileNode = new ZoweDatasetNode(
-                testConst.profile.name,
-                vscode.TreeItemCollapsibleState.Expanded,
-                null,
-                session,
-                FAV_PROFILE_CONTEXT,
-                undefined,
-                testProfile
+            const favoriteNode1 = new ZoweDatasetNode(
+                pattern + ".TPDS1",
+                vscode.TreeItemCollapsibleState.Collapsed,
+                sessNode,
+                null
             );
-            testTree.mFavorites.push(favProfileNode);
+            testTree.addFavorite(favoriteNode1);
         });
         afterEach(() => {
             testTree.mFavorites = [];
         });
         it("should remove the selected favorite data set from the treeView", async () => {
-            const favoriteNode = new ZoweDatasetNode(
-                pattern + ".TPDS",
+            const favoriteNode2 = new ZoweDatasetNode(
+                pattern + ".TPDS2",
                 vscode.TreeItemCollapsibleState.Collapsed,
                 sessNode,
                 null
             );
-            await testTree.addFavorite(favoriteNode);
+            await testTree.addFavorite(favoriteNode2);
             const len = testTree.mFavorites[0].children.length;
             await testTree.removeFavorite(testTree.mFavorites[0].children[len - 1]);
             expect(testTree.mFavorites[0].children.length).toEqual(len - 1);
@@ -289,6 +286,10 @@ describe("DatasetTree Integration Tests", async () => {
             const len = testTree.mFavorites[0].children.length;
             await testTree.removeFavorite(testTree.mFavorites[0].children[len - 1]);
             expect(testTree.mFavorites[0].children.length).toEqual(len - 1);
+        });
+        it("when removing the last favorite for a profile, should also remove the favorite's profile node from Favorites", async () => {
+            await testTree.removeFavorite(testTree.mFavorites[0].children[0]);
+            expect(testTree.mFavorites).toEqual([]);
         });
     });
 

@@ -61,6 +61,28 @@ export namespace ZoweExplorerApi {
          * @returns {Session} a Zowe CLI Session
          */
         getSessionFromCommandArgument?(cmdArgs: ICommandArguments): Session;
+
+        /**
+         * Perform login to obtain a token from the authentication service
+         *
+         * @param {Session} session a Zowe CLI Session
+         * @returns {string} the token value
+         */
+        login?(session: Session): Promise<string>;
+
+        /**
+         * Perform logout from the authentication service
+         *
+         * @param {Session} session a Zowe CLI Session
+         */
+        logout?(session: Session);
+
+        /**
+         * Return the type name of the token supported by this api.
+         *
+         * @returns {string} the token type name as defined by a CLI plugin that implements the profile.
+         */
+        getTokenTypeName?(): string;
     }
 
     /**

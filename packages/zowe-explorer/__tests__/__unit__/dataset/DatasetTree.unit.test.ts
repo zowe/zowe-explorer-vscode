@@ -16,7 +16,7 @@ import * as zowe from "@zowe/cli";
 import { Logger } from "@zowe/imperative";
 import { DatasetTree } from "../../../src/dataset/DatasetTree";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
-import { ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { IZoweDatasetTreeNode, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
@@ -1075,7 +1075,42 @@ describe("Dataset Tree Unit Tests - Function removeFavorite", () => {
         };
     }
 
-    it("Checking common run of function", async () => {
+    it("Checking removeFavorite when starting with more than one favorite for the profile", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        const node1 = new ZoweDatasetNode(
+            "Dataset",
+            vscode.TreeItemCollapsibleState.None,
+            testTree.mSessionNodes[1],
+            null
+        );
+        const node2 = new ZoweDatasetNode(
+            "Dataset2",
+            vscode.TreeItemCollapsibleState.None,
+            testTree.mSessionNodes[1],
+            null
+        );
+        const removeFavProfileSpy = jest.spyOn(testTree, "removeFavProfile");
+
+        // We're breaking rule 1 function call per 1 it block, but there's no over proper way to verify the functionality
+        // First we need to have the item and be sure that it's properly added to have legit removal operation
+        testTree.addFavorite(node1);
+        testTree.addFavorite(node2);
+        const profileNodeInFavs = testTree.mFavorites[0];
+        expect(profileNodeInFavs.children[0].label).toBe(`${node1.label}`);
+        expect(profileNodeInFavs.children[1].label).toBe(`${node2.label}`);
+
+        // Actual test
+        testTree.removeFavorite(profileNodeInFavs.children[0]);
+        expect(removeFavProfileSpy).not.toBeCalled();
+        expect(profileNodeInFavs.children.length).toBe(1);
+        expect(profileNodeInFavs.children[0].label).toBe(`${node2.label}`);
+    });
+    it("Checking removeFavorite when starting with only one favorite for the profile", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
@@ -1089,12 +1124,88 @@ describe("Dataset Tree Unit Tests - Function removeFavorite", () => {
             null
         );
 
+        const removeFavProfileSpy = jest.spyOn(testTree, "removeFavProfile");
+
         // We're breaking rule 1 function call per 1 it block, but there's no over proper way to verify the functionality
         // First we need to have the item and be sure that it's properly added to have legit removal operation
         testTree.addFavorite(node);
-        expect(testTree.mFavorites[0].children[0].label).toBe(`${node.label}`);
-        testTree.removeFavorite(testTree.mFavorites[0].children[0]);
-        expect(testTree.mFavorites[0].children[0]).not.toBeDefined();
+        const profileNodeInFavs = testTree.mFavorites[0];
+        expect(profileNodeInFavs.children[0].label).toBe(`${node.label}`);
+        await testTree.removeFavorite(profileNodeInFavs.children[0]);
+        expect(removeFavProfileSpy).toHaveBeenCalledWith(profileNodeInFavs.label, false);
+        expect(testTree.mFavorites.length).toBe(0);
+    });
+});
+describe("Dataset Tree Unit Tests - Function  - Function removeFavProfile", () => {
+    function createBlockMocks() {
+        const session = createISession();
+        const imperativeProfile = createIProfile();
+        const treeView = createTreeView();
+        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        const testTree = new DatasetTree();
+        testTree.mFavorites = [];
+        testTree.mSessionNodes.push(datasetSessionNode);
+        const node = new ZoweDatasetNode(
+            "Dataset",
+            vscode.TreeItemCollapsibleState.None,
+            testTree.mSessionNodes[1],
+            null
+        );
+        testTree.addFavorite(node);
+        const profileNodeInFavs: IZoweDatasetTreeNode = testTree.mFavorites[0];
+
+        return {
+            treeView,
+            testTree,
+            profileNodeInFavs,
+        };
+    }
+    it("Tests successful removal of profile node in Favorites when user confirms they want to Continue removing it", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        // Make sure favorite is added before the actual unit test
+        expect(blockMocks.testTree.mFavorites.length).toEqual(1);
+
+        Object.defineProperty(vscode.window, "showQuickPick", {
+            value: jest.fn(() => {
+                return "Continue";
+            }),
+        });
+
+        await blockMocks.testTree.removeFavProfile(blockMocks.profileNodeInFavs.label, true);
+
+        expect(blockMocks.testTree.mFavorites.length).toEqual(0);
+    });
+    it("Tests that removeFavProfile leaves profile node in Favorites when user cancels", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        // Make sure favorite is added before the actual unit test
+        expect(blockMocks.testTree.mFavorites.length).toEqual(1);
+
+        Object.defineProperty(vscode.window, "showQuickPick", {
+            value: jest.fn(() => {
+                return "Cancel";
+            }),
+        });
+        const expectedFavProfileNode = blockMocks.testTree.mFavorites[0];
+
+        await blockMocks.testTree.removeFavProfile(blockMocks.profileNodeInFavs.label, true);
+
+        expect(blockMocks.testTree.mFavorites.length).toEqual(1);
+        expect(blockMocks.testTree.mFavorites[0]).toEqual(expectedFavProfileNode);
+    });
+    it("Tests that removeFavProfile successfully removes profile node in Favorites when called outside user command", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        // Make sure favorite is added before the actual unit test
+        expect(blockMocks.testTree.mFavorites.length).toEqual(1);
+
+        await blockMocks.testTree.removeFavProfile(blockMocks.profileNodeInFavs.label, false);
+
+        expect(blockMocks.testTree.mFavorites.length).toEqual(0);
     });
 });
 describe("Dataset Tree Unit Tests - Function deleteSession", () => {
