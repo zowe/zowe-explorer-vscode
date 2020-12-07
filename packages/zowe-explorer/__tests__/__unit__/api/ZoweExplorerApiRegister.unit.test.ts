@@ -71,6 +71,15 @@ class MockUssApi1 implements ZoweExplorerApi.IUss {
     public getStatus?(profile?: IProfileLoaded): Promise<string> {
         throw new Error("Method not implemented.");
     }
+    public getTokenTypeName?(): string {
+        throw new Error("Method not implemented.");
+    }
+    public login?(session: Session): Promise<string> {
+        throw new Error("Method not implemented.");
+    }
+    public logout?(session: Session): Promise<string> {
+        throw new Error("Method not implemented.");
+    }
 }
 
 class MockUssApi2 implements ZoweExplorerApi.IUss {
@@ -124,6 +133,15 @@ class MockUssApi2 implements ZoweExplorerApi.IUss {
         throw new Error("Method not implemented.");
     }
     public getStatus?(profile?: IProfileLoaded): Promise<string> {
+        throw new Error("Method not implemented.");
+    }
+    public getTokenTypeName?(): string {
+        throw new Error("Method not implemented.");
+    }
+    public login?(session: Session): Promise<string> {
+        throw new Error("Method not implemented.");
+    }
+    public logout?(session: Session): Promise<string> {
         throw new Error("Method not implemented.");
     }
 }
