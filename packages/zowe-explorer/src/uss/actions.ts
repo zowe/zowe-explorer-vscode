@@ -229,7 +229,7 @@ export async function uploadFile(node: IZoweUSSTreeNode, doc: vscode.TextDocumen
                 stageName: 0, // TaskStage.IN_PROGRESS - https://github.com/kulshekhar/ts-jest/issues/281
             };
             const options: zowe.IUploadOptions = {
-                encoding: prof.profile.encoding,
+                localEncoding: prof.profile.encoding.toString(),
                 task,
             };
             await ZoweExplorerApiRegister.getUssApi(prof).putContent(doc.fileName, ussName, options);
