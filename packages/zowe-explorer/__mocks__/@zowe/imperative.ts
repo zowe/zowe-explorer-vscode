@@ -150,3 +150,7 @@ export class TextUtils {
         return JSON.stringify(object);
     }
 }
+
+export namespace SessConstants {
+    export declare const AUTH_TYPE_TOKEN = "token";
+}
