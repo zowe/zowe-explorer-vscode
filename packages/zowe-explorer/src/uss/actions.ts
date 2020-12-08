@@ -228,12 +228,11 @@ export async function uploadFile(node: IZoweUSSTreeNode, doc: vscode.TextDocumen
                 statusMessage: localize("uploadFile.putContents", "Uploading USS file"),
                 stageName: 0, // TaskStage.IN_PROGRESS - https://github.com/kulshekhar/ts-jest/issues/281
             };
-            let options: zowe.IUploadOptions;
+            const options: zowe.IUploadOptions = {
+                task,
+            };
             if (prof.profile.encoding) {
-                options = {
-                    localEncoding: prof.profile.encoding.toString(),
-                    task,
-                };
+                options.localEncoding = prof.profile.encoding.toString();
             }
             await ZoweExplorerApiRegister.getUssApi(prof).putContent(doc.fileName, ussName, options);
         } else {
