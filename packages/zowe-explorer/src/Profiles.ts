@@ -482,10 +482,28 @@ export class Profiles extends ProfilesCache {
                             if (!Number.isNaN(Number(updValue))) {
                                 updSchemaValues[value] = Number(updValue);
                             } else {
-                                if (schema[value].optionDefinition.hasOwnProperty("defaultValue")) {
-                                    updSchemaValues[value] = schema[value].optionDefinition.defaultValue;
-                                } else {
-                                    break;
+                                switch (true) {
+                                    case schema[value].optionDefinition.hasOwnProperty("defaultValue"):
+                                        if (schema[value].optionDefinition.defaultValue === null) {
+                                            // TODO: Remove this one issue #871 in Zowe/CLI is
+                                            vscode.window.showInformationMessage(
+                                                localize(
+                                                    "createNewConnection.rejectUnauthorize",
+                                                    "Value cannot be null"
+                                                )
+                                            );
+                                            return undefined;
+                                        }
+                                        updSchemaValues[value] = schema[value].optionDefinition.defaultValue;
+                                        break;
+                                    case schema[value] === undefined:
+                                        vscode.window.showInformationMessage(
+                                            localize("createNewConnection.rejectUnauthorize", "Operation Cancelled")
+                                        );
+                                        return undefined;
+                                    default:
+                                        updSchemaValues[value] = undefined;
+                                        break;
                                 }
                             }
                             break;
@@ -503,6 +521,12 @@ export class Profiles extends ProfilesCache {
                         default:
                             options = await this.optionsValue(value, schema, editSession[value]);
                             const updDefValue = await vscode.window.showInputBox(options);
+                            if (updDefValue === undefined) {
+                                vscode.window.showInformationMessage(
+                                    localize("createNewConnection.booleanValue", "Operation Cancelled")
+                                );
+                                return undefined;
+                            }
                             if (updDefValue === "") {
                                 break;
                             }
@@ -649,10 +673,28 @@ export class Profiles extends ProfilesCache {
                             if (!Number.isNaN(Number(enteredValue))) {
                                 schemaValues[value] = Number(enteredValue);
                             } else {
-                                if (schema[value].optionDefinition.hasOwnProperty("defaultValue")) {
-                                    schemaValues[value] = schema[value].optionDefinition.defaultValue;
-                                } else {
-                                    schemaValues[value] = undefined;
+                                switch (true) {
+                                    case schema[value].optionDefinition.hasOwnProperty("defaultValue"):
+                                        if (schema[value].optionDefinition.defaultValue === null) {
+                                            // TODO: Remove this one issue #871 in Zowe/CLI is
+                                            vscode.window.showInformationMessage(
+                                                localize(
+                                                    "createNewConnection.rejectUnauthorize",
+                                                    "Value cannot be null"
+                                                )
+                                            );
+                                            return undefined;
+                                        }
+                                        schemaValues[value] = schema[value].optionDefinition.defaultValue;
+                                        break;
+                                    case schema[value] === undefined:
+                                        vscode.window.showInformationMessage(
+                                            localize("createNewConnection.rejectUnauthorize", "Operation Cancelled")
+                                        );
+                                        return undefined;
+                                    default:
+                                        schemaValues[value] = undefined;
+                                        break;
                                 }
                             }
                             break;
@@ -670,6 +712,12 @@ export class Profiles extends ProfilesCache {
                         default:
                             options = await this.optionsValue(value, schema);
                             const defValue = await vscode.window.showInputBox(options);
+                            if (defValue === undefined) {
+                                vscode.window.showInformationMessage(
+                                    localize("createNewConnection.booleanValue", "Operation Cancelled")
+                                );
+                                return undefined;
+                            }
                             if (defValue === "") {
                                 break;
                             }
