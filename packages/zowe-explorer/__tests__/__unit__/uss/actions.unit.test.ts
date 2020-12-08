@@ -25,7 +25,7 @@ import {
     createTextDocument,
     createFileResponse,
 } from "../../../__mocks__/mockCreators/shared";
-import { ValidProfileEnum, ZosmfUssApi } from "@zowe/zowe-explorer-api";
+import { ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
