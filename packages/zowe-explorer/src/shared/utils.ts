@@ -86,7 +86,8 @@ export function labelRefresh(node: vscode.TreeItem): void {
  * @param {profile} IProfileLoaded
  *************************************************************************************************************/
 export async function refreshTree(sessNode: IZoweTreeNode) {
-    const allProf = await Profiles.getInstance().getProfiles();
+    const profileType = sessNode.getProfile().type;
+    const allProf = await Profiles.getInstance().getProfiles(profileType);
     const baseProf = await Profiles.getInstance().getBaseProfile();
     for (const profNode of allProf) {
         if (sessNode.getProfileName() === profNode.name) {
