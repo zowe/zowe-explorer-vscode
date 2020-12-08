@@ -3,11 +3,6 @@
 exports[`Zosmf API tests should test putContent method passes all options to Zowe api method 1`] = `
 Object {
   "encoding": 285,
-  "task": Object {
-    "percentComplete": 0,
-    "stageName": 0,
-    "statusMessage": "Uploading USS file",
-  },
 }
 `;
 

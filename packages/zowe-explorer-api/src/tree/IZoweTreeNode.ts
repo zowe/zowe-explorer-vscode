@@ -145,7 +145,7 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
     /**
      * List of child nodes downloaded in binary format
      */
-    binaryFiles?: {};
+    binaryFiles?: Record<string, unknown>;
     /**
      * Binary indicator. Default false (text)
      */

@@ -22,16 +22,21 @@
     "vscode-nls": "4.1.2"
   },
   "devDependencies": {
-    "@types/mocha": "^2.2.42",
     "@types/node": "^10.17.24",
     "@types/vscode": "^1.43.0",
+    "@types/mocha": "^2.2.42",
+    "@typescript-eslint/eslint-plugin": "^4.9.0",
+    "@typescript-eslint/parser": "^4.9.0",
+    "typescript": "^3.8.3",
+    "eslint": "^7.14.0",
+    "eslint-config-prettier": "^6.15.0",
+    "eslint-plugin-prettier": "^3.1.4",
+    "vscode-test": "^1.4.0",
+    "vscode-nls-dev": "^3.3.2",
+    "vsce": "^1.81.1",
     "mocha": "^4.0.0",
     "prettier": "2.0.5",
     "rimraf": "^3.0.2",
-    "typescript": "^3.8.3",
-    "vsce": "^1.81.1",
-    "vscode-nls-dev": "^3.3.2",
-    "vscode-test": "^1.4.0",
     "yarn": "1.22.10"
   },
   "scripts": {

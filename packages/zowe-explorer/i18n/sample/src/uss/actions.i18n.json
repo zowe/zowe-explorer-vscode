@@ -2,6 +2,7 @@
   "createUSSNode.name": "Name of file or directory",
   "createUSSNode.error.create": "Unable to create node: ",
   "renameUSSNode.error": "Unable to rename node: ",
+  "uploadFile.putContents": "Uploading USS file",
   "copyPath.infoMessage": "Copy Path is not yet supported in Theia.",
   "saveUSSFile.log.debug.saveRequest": "save requested for USS file ",
   "saveUSSFile.response.title": "Saving file...",
