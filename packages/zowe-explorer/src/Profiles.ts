@@ -93,7 +93,7 @@ export class Profiles extends ProfilesCache {
         // This step is for prompting of credentials. It will be triggered if it meets the following conditions:
         // - The service does not have username or password and base profile doesn't exists
         // - The service does not have username or password and the base profile has a different host and port
-        const baseProfile = await this.getBaseProfile();
+        const baseProfile = this.getBaseProfile();
 
         if (
             (!theProfile.profile.tokenType && (!theProfile.profile.user || !theProfile.profile.password)) ||
@@ -402,7 +402,7 @@ export class Profiles extends ProfilesCache {
         let updPort: number;
         let updUrl: any;
 
-        const schema: {} = await this.getSchema(profileLoaded.type);
+        const schema: {} = this.getSchema(profileLoaded.type);
         const schemaArray = Object.keys(schema);
 
         const updSchemaValues: any = {};
@@ -595,7 +595,7 @@ export class Profiles extends ProfilesCache {
             return undefined;
         }
 
-        const schema: {} = await this.getSchema(profileType);
+        const schema: {} = this.getSchema(profileType);
         const schemaArray = Object.keys(schema);
 
         const schemaValues: any = {};
@@ -1083,7 +1083,7 @@ export class Profiles extends ProfilesCache {
     public async getCombinedProfile(serviceProfile: IProfileLoaded, baseProfile: IProfileLoaded) {
         // TODO: This needs to be improved
         // The idea is to handle all type of ZE Profiles
-        const commonApi = await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile);
+        const commonApi = ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile);
 
         // This check will handle service profiles that have username and password
         if (serviceProfile.profile.user && serviceProfile.profile.password) {
@@ -1107,7 +1107,7 @@ export class Profiles extends ProfilesCache {
             session = ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).getSession(serviceProfile);
         } else {
             // This process combines the information from baseprofile to serviceprofile and create a new session
-            const profSchema = await this.getSchema(serviceProfile.type);
+            const profSchema = this.getSchema(serviceProfile.type);
             const cmdArgs: ICommandArguments = {
                 $0: "zowe",
                 _: [""],
@@ -1157,8 +1157,8 @@ export class Profiles extends ProfilesCache {
         return updatedServiceProfile;
     }
 
-    public async ssoLogin(node?: IZoweNodeType, label?: string) {
-        const baseProfile = await this.getBaseProfile();
+    public async ssoLogin(node?: IZoweNodeType, label?: string): Promise<void> {
+        const baseProfile = this.getBaseProfile();
         let serviceProfile: IProfileLoaded;
         if (node) {
             serviceProfile = node.getProfile();
@@ -1227,7 +1227,7 @@ export class Profiles extends ProfilesCache {
                 const loginToken = await ZoweExplorerApiRegister.getInstance()
                     .getCommonApi(serviceProfile)
                     .login(updSession);
-                const profileManager = await Profiles.getInstance().getCliProfileManager(baseProfile.type);
+                const profileManager = Profiles.getInstance().getCliProfileManager(baseProfile.type);
                 const updBaseProfile: IProfile = {
                     tokenType: loginTokenType,
                     tokenValue: loginToken,
@@ -1263,8 +1263,8 @@ export class Profiles extends ProfilesCache {
         }
     }
 
-    public async ssoLogout(node: IZoweNodeType) {
-        const baseProfile = await this.getBaseProfile();
+    public async ssoLogout(node: IZoweNodeType): Promise<void> {
+        const baseProfile = this.getBaseProfile();
         const serviceProfile = node.getProfile();
 
         // Skip if there is no base profile
@@ -1294,7 +1294,8 @@ export class Profiles extends ProfilesCache {
         }
 
         try {
-            const combinedProfile = await Profiles.getInstance().getCombinedProfile(serviceProfile, baseProfile);
+            const profiles = Profiles.getInstance();
+            const combinedProfile = await profiles.getCombinedProfile(serviceProfile, baseProfile);
             const loginTokenType = ZoweExplorerApiRegister.getInstance()
                 .getCommonApi(serviceProfile)
                 .getTokenTypeName();
@@ -1312,7 +1313,7 @@ export class Profiles extends ProfilesCache {
             );
 
             try {
-                (await this.getCliProfileManager(baseProfile.type)).save({
+                this.getCliProfileManager(baseProfile.type).save({
                     name: baseProfile.name,
                     type: baseProfile.type,
                     overwrite: true,
@@ -1360,7 +1361,7 @@ export class Profiles extends ProfilesCache {
         }
 
         try {
-            this.deleteProfileOnDisk(deletedProfile);
+            await this.deleteProfileOnDisk(deletedProfile);
         } catch (error) {
             this.log.error(
                 localize("deleteProfile.delete.log.error", "Error encountered when deleting profile! ") +
@@ -1625,13 +1626,13 @@ export class Profiles extends ProfilesCache {
 
     private async updateProfile(ProfileInfo, rePrompt?: boolean) {
         if (ProfileInfo.type !== undefined) {
-            const profileManager = await this.getCliProfileManager(ProfileInfo.type);
+            const profileManager = this.getCliProfileManager(ProfileInfo.type);
             this.loadedProfile = await profileManager.load({
                 name: ProfileInfo.name,
             });
         } else {
             for (const type of ZoweExplorerApiRegister.getInstance().registeredApiTypes()) {
-                const profileManager = await this.getCliProfileManager(type);
+                const profileManager = this.getCliProfileManager(type);
                 this.loadedProfile = await profileManager.load({
                     name: ProfileInfo.name,
                 });
@@ -1663,7 +1664,7 @@ export class Profiles extends ProfilesCache {
             args: OrigProfileInfo as any,
         };
         try {
-            (await this.getCliProfileManager(this.loadedProfile.type)).update(updateParms);
+            this.getCliProfileManager(this.loadedProfile.type).update(updateParms);
         } catch (error) {
             vscode.window.showErrorMessage(error.message);
         }
