@@ -1,10 +1,16 @@
 # Workflow name for GitHub Actions
 name: Theia Zowe Explorer CI
 
-on: [push, pull_request]
+on:
+  push:
+    paths:
+    - packages/zowe-explorer/**
+  pull_request:
+    paths:
+    - packages/zowe-explorer/**
 
 jobs:
-  theia-build:
+  ze-theia-build:
     runs-on: ubuntu-latest
 
     steps:
@@ -45,12 +51,6 @@ jobs:
       #     options: --init
 
       - run: yarn lint
-
-      # - name: Upload vsix
-      #   uses: actions/upload-artifact@v1
-      #   with:
-      #     name: vscode-extension-for-zowe.vsix
-      #     path: /plugins/vscode-extension-for-zowe.vsix
 
       - name: Verify plugin loaded
         run: docker exec -i theia ls -la /home/theia/.theia/plugins
