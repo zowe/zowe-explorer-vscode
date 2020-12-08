@@ -85,19 +85,22 @@ export function labelRefresh(node: vscode.TreeItem): void {
  * @param {sessNode} IZoweTreeNode
  * @param {profile} IProfileLoaded
  *************************************************************************************************************/
-export function refreshTree(sessNode: IZoweTreeNode) {
-    const allProf = Profiles.getInstance().getProfiles();
+export async function refreshTree(sessNode: IZoweTreeNode) {
+    const profileType = sessNode.getProfile().type;
+    const allProf = await Profiles.getInstance().getProfiles(profileType);
+    const baseProf = await Profiles.getInstance().getBaseProfile();
     for (const profNode of allProf) {
         if (sessNode.getProfileName() === profNode.name) {
             sessNode.getProfile().profile = profNode.profile;
-            const SessionProfile = profNode.profile as ISession;
-            if (sessNode.getSession().ISession !== SessionProfile) {
-                sessNode.getSession().ISession.user = SessionProfile.user;
-                sessNode.getSession().ISession.password = SessionProfile.password;
-                sessNode.getSession().ISession.base64EncodedAuth = SessionProfile.base64EncodedAuth;
-                sessNode.getSession().ISession.hostname = SessionProfile.hostname;
-                sessNode.getSession().ISession.port = SessionProfile.port;
-                sessNode.getSession().ISession.rejectUnauthorized = SessionProfile.rejectUnauthorized;
+            const combinedSessionProfile = (await Profiles.getInstance().getCombinedProfile(profNode, baseProf))
+                .profile;
+            const sessionNode = sessNode.getSession();
+            for (const prop of Object.keys(combinedSessionProfile)) {
+                if (prop === "host") {
+                    sessionNode.ISession.hostname = combinedSessionProfile[prop];
+                } else {
+                    sessionNode.ISession[prop] = combinedSessionProfile[prop];
+                }
             }
         }
     }

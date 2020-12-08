@@ -37,10 +37,10 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 // tslint:disable-next-line: max-classes-per-file
 export class ZoweTreeProvider {
     // Event Emitters used to notify subscribers that the refresh event has fired
-    public mOnDidChangeTreeData: vscode.EventEmitter<IZoweTreeNode | undefined> = new vscode.EventEmitter<
+    public mOnDidChangeTreeData: vscode.EventEmitter<IZoweTreeNode | void> = new vscode.EventEmitter<
         IZoweTreeNode | undefined
     >();
-    public readonly onDidChangeTreeData: vscode.Event<IZoweTreeNode | undefined> = this.mOnDidChangeTreeData.event;
+    public readonly onDidChangeTreeData: vscode.Event<IZoweTreeNode | void> = this.mOnDidChangeTreeData.event;
     public createOwner = new OwnerFilterDescriptor();
 
     protected mHistory: PersistentFilters;
@@ -245,6 +245,20 @@ export class ZoweTreeProvider {
             }
         }
         await this.refresh();
+    }
+
+    public async ssoLogin(node: IZoweTreeNode) {
+        await Profiles.getInstance().ssoLogin(node);
+        await vscode.commands.executeCommand("zowe.refreshAll");
+        await vscode.commands.executeCommand("zowe.uss.refreshAll");
+        await vscode.commands.executeCommand("zowe.refreshAllJobs");
+    }
+
+    public async ssoLogout(node: IZoweTreeNode) {
+        await Profiles.getInstance().ssoLogout(node);
+        await vscode.commands.executeCommand("zowe.refreshAll");
+        await vscode.commands.executeCommand("zowe.uss.refreshAll");
+        await vscode.commands.executeCommand("zowe.refreshAllJobs");
     }
 
     public async createZoweSession(zoweFileProvider: IZoweTree<IZoweNodeType>) {
