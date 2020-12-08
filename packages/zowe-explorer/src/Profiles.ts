@@ -1019,6 +1019,7 @@ export class Profiles extends ProfilesCache {
                     await errorHandling(error, theProfile.name);
                 }
 
+                await errorHandling(error, theProfile.name);
                 this.log.debug("Validate Error - Invalid Profile: " + error);
                 filteredProfile = {
                     status: "inactive",
