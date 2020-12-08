@@ -1415,7 +1415,7 @@ export class Profiles extends ProfilesCache {
             userName = input;
         }
         InputBoxOptions = {
-            placeHolder: localize("createNewConnection.option.prompt.username.placeholder", "Optional: User Name"),
+            placeHolder: localize("createNewConnection.option.prompt.username.placeholder", "User Name"),
             prompt: localize(
                 "createNewConnection.option.prompt.username",
                 "Enter the user name for the connection. Leave blank to not store."
@@ -1442,7 +1442,7 @@ export class Profiles extends ProfilesCache {
         }
 
         InputBoxOptions = {
-            placeHolder: localize("createNewConnection.option.prompt.password.placeholder", "Optional: Password"),
+            placeHolder: localize("createNewConnection.option.prompt.password.placeholder", "Password"),
             prompt: localize(
                 "createNewConnection.option.prompt.password",
                 "Enter the password for the connection. Leave blank to not store."
