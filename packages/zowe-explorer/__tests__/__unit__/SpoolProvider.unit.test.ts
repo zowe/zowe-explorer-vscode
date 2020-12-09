@@ -103,7 +103,7 @@ describe("SpoolProvider Unit Tests", () => {
         expect(spool).toEqual(iJobFile);
     });
 
-    it("Tests that the spool content is returned", () => {
+    it("Tests that the spool content is returned", async () => {
         const GetJobs = jest.fn();
         const getSpoolContentById = jest.fn();
         const profileOne: IProfileLoaded = {
@@ -136,7 +136,7 @@ describe("SpoolProvider Unit Tests", () => {
         getSpoolContentById.mockReturnValue("spool content");
 
         const provider = new spoolprovider.default();
-        const content = provider.provideTextDocumentContent(uriObj);
+        const content = await provider.provideTextDocumentContent(uriObj);
         expect(content).toBe("spool content");
         expect(getSpoolContentById.mock.calls.length).toEqual(1);
         expect(getSpoolContentById.mock.calls[0][1]).toEqual(iJobFile.jobname);
