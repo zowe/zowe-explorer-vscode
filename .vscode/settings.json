@@ -1,18 +1,30 @@
 // Place your settings in this file to overwrite default and user settings.
 {
-    "files.exclude": {
-        "out": false,
-        "**/.classpath": true,
-        "**/.project": true,
-        "**/.settings": true,
-        "**/.factorypath": true
-    },
-    "search.exclude": {
-        "out": true // set this to false to include "out" folder in search results
-    },
-    // Turn off tsc task auto detection since we have the necessary tasks as npm scripts
-   "typescript.tsc.autoDetect": "off",
-   // Make sure people do not accidentally forget to sign
-   "git.alwaysSignOff": true,
-   "typescript.tsdk": "node_modules/typescript/lib"
+  "files.exclude": {
+    "out": false,
+    "**/.classpath": true,
+    "**/.project": true,
+    "**/.settings": true,
+    "**/.factorypath": true
+  },
+  "search.exclude": {
+    "out": true // set this to false to include "out" folder in search results
+  },
+
+  // Make sure people do not accidentally forget to sign
+  "git.alwaysSignOff": true,
+
+  "typescript.tsdk": "node_modules/typescript/lib",
+  // Turn off tsc task auto detection since we have the necessary tasks as npm scripts
+  "typescript.tsc.autoDetect": "off",
+  // Standardize on the Prettier formatter
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  // Enforce prettier on save
+  "editor.formatOnSave": true,
+  "npm.packageManager": "yarn",
+  "eslint.packageManager": "yarn",
+  "eslint.workingDirectories": [
+    { "directory": "packages/zowe-explorer-ftp-extension", "changeProcessCWD": true },
+    { "directory": "packages/zowe-explorer-api", "changeProcessCWD": true }
+  ]
 }
