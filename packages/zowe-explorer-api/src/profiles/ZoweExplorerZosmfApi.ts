@@ -46,7 +46,7 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
                         host: serviceProfile.profile.host,
                         port: serviceProfile.profile.port,
                         basePath: serviceProfile.profile.basePath,
-                        rejectUnauthorized: serviceProfile.profile.rejectUnauthorized !== null,
+                        rejectUnauthorized: serviceProfile.profile.rejectUnauthorized,
                         tokenType: serviceProfile.profile.tokenType,
                         tokenValue: serviceProfile.profile.tokenValue,
                     };
@@ -72,7 +72,7 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
                     host: serviceProfile.profile.host,
                     port: serviceProfile.profile.port,
                     basePath: serviceProfile.profile.basePath,
-                    rejectUnauthorized: serviceProfile.profile.rejectUnauthorized !== null,
+                    rejectUnauthorized: serviceProfile.profile.rejectUnauthorized,
                     tokenType: serviceProfile.profile.tokenType,
                     tokenValue: serviceProfile.profile.tokenValue,
                 };
