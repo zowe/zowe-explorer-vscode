@@ -685,12 +685,17 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
             new Promise((resolve) => {
                 resolve("alternate");
             });
-        blockMocks.profiles.getSchema = () => blockMocks.testSchemas[2];
-        blockMocks.profiles.getUrl = () =>
+        blockMocks.profiles.getSchema = () =>
             new Promise((resolve) => {
-                resolve("https://fake");
+                resolve(blockMocks.testSchemas[2]);
             });
+        blockMocks.profiles.getUrl = () => Promise.resolve("https://fake:143");
+        globalMocks.mockCreateInputBox.mockReturnValue(blockMocks.inputBox);
         globalMocks.mockShowInputBox.mockResolvedValueOnce(Number("143"));
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("");
+        globalMocks.mockCreateBasicZosmfSession.mockReturnValue({
+            ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" },
+        });
 
         await blockMocks.profiles.createNewConnection("fake");
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
@@ -1111,6 +1116,7 @@ describe("Profiles Unit Tests - Function editSession", () => {
         blockMocks.profiles.getUrl = () => Promise.resolve("https://fake:143");
         globalMocks.mockCreateInputBox.mockReturnValue(blockMocks.inputBox);
         globalMocks.mockShowInputBox.mockResolvedValueOnce(undefined);
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("");
         globalMocks.mockCreateBasicZosmfSession.mockReturnValue({
             ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" },
         });

@@ -487,10 +487,7 @@ export class Profiles extends ProfilesCache {
                                         if (schema[value].optionDefinition.defaultValue === null) {
                                             // TODO: Remove this one issue #871 in Zowe/CLI is
                                             vscode.window.showInformationMessage(
-                                                localize(
-                                                    "createNewConnection.rejectUnauthorize",
-                                                    "Value cannot be null"
-                                                )
+                                                localize("createNewConnection.rejectUnauthorize", "Operation Cancelled")
                                             );
                                             return undefined;
                                         }
@@ -678,10 +675,7 @@ export class Profiles extends ProfilesCache {
                                         if (schema[value].optionDefinition.defaultValue === null) {
                                             // TODO: Remove this one issue #871 in Zowe/CLI is
                                             vscode.window.showInformationMessage(
-                                                localize(
-                                                    "createNewConnection.rejectUnauthorize",
-                                                    "Value cannot be null"
-                                                )
+                                                localize("createNewConnection.rejectUnauthorize", "Operation Cancelled")
                                             );
                                             return undefined;
                                         }
