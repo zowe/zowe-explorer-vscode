@@ -19,10 +19,15 @@ export default class SpoolProvider implements vscode.TextDocumentContentProvider
 
     private mOnDidChange = new vscode.EventEmitter<vscode.Uri>();
 
-    public provideTextDocumentContent(uri: vscode.Uri): string | Thenable<string> {
+    public async provideTextDocumentContent(uri: vscode.Uri): Promise<string> {
         const [sessionName, spool] = decodeJobFile(uri);
         const profile = Profiles.getInstance().loadNamedProfile(sessionName);
-        return ZoweExplorerApiRegister.getJesApi(profile).getSpoolContentById(spool.jobname, spool.jobid, spool.id);
+        const result = await ZoweExplorerApiRegister.getJesApi(profile).getSpoolContentById(
+            spool.jobname,
+            spool.jobid,
+            spool.id
+        );
+        return result;
     }
 
     public dispose() {
