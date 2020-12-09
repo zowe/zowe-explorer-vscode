@@ -485,7 +485,6 @@ export class Profiles extends ProfilesCache {
                                 switch (true) {
                                     case schema[value].optionDefinition.hasOwnProperty("defaultValue"):
                                         if (schema[value].optionDefinition.defaultValue === null) {
-                                            // TODO: Remove this one issue #871 in Zowe/CLI is
                                             vscode.window.showInformationMessage(
                                                 localize("createNewConnection.rejectUnauthorize", "Operation Cancelled")
                                             );
@@ -673,7 +672,6 @@ export class Profiles extends ProfilesCache {
                                 switch (true) {
                                     case schema[value].optionDefinition.hasOwnProperty("defaultValue"):
                                         if (schema[value].optionDefinition.defaultValue === null) {
-                                            // TODO: Remove this one issue #871 in Zowe/CLI is
                                             vscode.window.showInformationMessage(
                                                 localize("createNewConnection.rejectUnauthorize", "Operation Cancelled")
                                             );
