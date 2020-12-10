@@ -9,13 +9,13 @@
  *                                                                                 *
  */
 
-import { IZoweDatasetTreeNode, IZoweTree, IZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { IZoweTree, IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { PersistentFilters } from "../PersistentFilters";
 import { Profiles } from "../Profiles";
 import { refreshTree } from "../utils/ProfilesUtils";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { resetValidationSettings, returnIconState } from "./actions";
-import { isZoweJobTreeNode, isZoweUSSTreeNode, labelRefresh } from "./utils";
+import { labelRefresh } from "./utils";
 import * as contextually from "../shared/context";
 
 /**
