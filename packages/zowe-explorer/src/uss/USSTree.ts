@@ -798,7 +798,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         if (profile) {
             // If baseProfile exists, combine that information first before adding the session to the tree
             // TODO: Move addSession to abstract/ZoweTreeProvider (similar to editSession)
-            const baseProfile = await Profiles.getInstance().getBaseProfile();
+            const baseProfile = Profiles.getInstance().getBaseProfile();
             if (baseProfile) {
                 try {
                     const combinedProfile = await Profiles.getInstance().getCombinedProfile(profile, baseProfile);
