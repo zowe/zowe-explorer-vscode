@@ -150,7 +150,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         }
         if (e.affectsConfiguration("Zowe-Automatic-Validation")) {
             await refreshActions.refreshAll(datasetProvider);
-            await ussActions.refreshAllUSS(ussFileProvider);
+            await refreshActions.refreshAll(ussFileProvider);
             await refreshActions.refreshAll(jobsProvider);
         }
     });
@@ -277,7 +277,7 @@ function initUSSProvider(context: vscode.ExtensionContext, ussFileProvider: IZow
     vscode.commands.registerCommand("zowe.uss.addSession", async () =>
         ussFileProvider.createZoweSession(ussFileProvider)
     );
-    vscode.commands.registerCommand("zowe.uss.refreshAll", () => ussActions.refreshAllUSS(ussFileProvider));
+    vscode.commands.registerCommand("zowe.uss.refreshAll", () => refreshActions.refreshAll(ussFileProvider));
     vscode.commands.registerCommand("zowe.uss.refreshUSS", (node: IZoweUSSTreeNode) => node.refreshUSS());
     vscode.commands.registerCommand("zowe.uss.refreshUSSInTree", (node: IZoweUSSTreeNode) =>
         ussActions.refreshUSSInTree(node, ussFileProvider)

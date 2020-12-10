@@ -41,6 +41,7 @@ import * as fs from "fs";
 import { createUssApi, bindUssApi } from "../../../__mocks__/mockCreators/api";
 import { PersistentFilters } from "../../../src/PersistentFilters";
 import * as workspaceUtils from "../../../src/utils/workspace";
+import * as refreshActions from "../../../src/shared/refresh";
 
 function createGlobalMocks() {
     const globalMocks = {
@@ -342,11 +343,11 @@ describe("USS Action Unit Tests - Function createUSSNode", () => {
 
         globalMocks.mockShowInputBox.mockReturnValueOnce("USSFolder");
         const isTopLevel = false;
-        spyOn(ussNodeActions, "refreshAllUSS");
+        spyOn(refreshActions, "refreshAll");
 
         await ussNodeActions.createUSSNode(blockMocks.ussNode, blockMocks.testUSSTree, "folder", isTopLevel);
         expect(blockMocks.testUSSTree.refreshElement).toHaveBeenCalled();
-        expect(ussNodeActions.refreshAllUSS).not.toHaveBeenCalled();
+        expect(refreshActions.refreshAll).not.toHaveBeenCalled();
     });
     it("Tests that the error is handled if createUSSNode is unsuccessful", async () => {
         const globalMocks = createGlobalMocks();
@@ -445,11 +446,11 @@ describe("USS Action Unit Tests - Function refreshAllUSS", () => {
                 };
             }),
         });
-        const spy = jest.spyOn(ussNodeActions, "refreshAllUSS");
+        const spy = jest.spyOn(refreshActions, "refreshAll");
 
-        ussNodeActions.refreshAllUSS(blockMocks.testUSSTree);
+        refreshActions.refreshAll(blockMocks.testUSSTree);
         expect(spy).toHaveBeenCalledTimes(1);
-        expect(ussNodeActions.refreshAllUSS(blockMocks.testUSSTree)).toEqual(response);
+        expect(refreshActions.refreshAll(blockMocks.testUSSTree)).toEqual(response);
     });
 });
 

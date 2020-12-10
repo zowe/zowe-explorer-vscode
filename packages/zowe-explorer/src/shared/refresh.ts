@@ -19,7 +19,8 @@ import { isZoweJobTreeNode, isZoweUSSTreeNode, labelRefresh } from "./utils";
 import * as contextually from "../shared/context";
 
 /**
- * Refreshes treeView
+ * View (DATA SETS, JOBS, USS) refresh button
+ * Refreshes treeView and profiles including their validation setting
  *
  * @param {IZoweTree} treeProvider
  */

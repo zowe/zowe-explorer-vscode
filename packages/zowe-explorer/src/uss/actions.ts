@@ -27,6 +27,7 @@ import { setFileSaved } from "../utils/workspace";
 import * as nls from "vscode-nls";
 import { returnIconState, resetValidationSettings } from "../shared/actions";
 import { PersistentFilters } from "../PersistentFilters";
+import { refreshAll } from "../shared/refresh";
 
 // Set up localization
 nls.config({
@@ -56,7 +57,7 @@ export async function createUSSNode(
             const filePath = `${node.fullPath}/${name}`;
             await ZoweExplorerApiRegister.getUssApi(node.getProfile()).create(filePath, nodeType);
             if (isTopLevel) {
-                refreshAllUSS(ussFileProvider);
+                refreshAll(ussFileProvider);
             } else {
                 ussFileProvider.refreshElement(node);
             }
@@ -98,21 +99,21 @@ export async function createUSSNodeDialog(node: IZoweUSSTreeNode, ussFileProvide
  *
  * @param {USSTree} ussFileProvider
  */
-export async function refreshAllUSS(ussFileProvider: IZoweTree<IZoweUSSTreeNode>) {
-    await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
-    ussFileProvider.mSessionNodes.forEach(async (sessNode) => {
-        const setting = (await PersistentFilters.getDirectValue("Zowe-Automatic-Validation")) as boolean;
-        if (contextually.isSession(sessNode)) {
-            labelRefresh(sessNode);
-            sessNode.children = [];
-            sessNode.dirty = true;
-            refreshTree(sessNode);
-            resetValidationSettings(sessNode, setting);
-            returnIconState(sessNode);
-        }
-    });
-    await ussFileProvider.refresh();
-}
+// export async function refreshAllUSS(ussFileProvider: IZoweTree<IZoweUSSTreeNode>) {
+//     await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
+//     ussFileProvider.mSessionNodes.forEach(async (sessNode) => {
+//         const setting = (await PersistentFilters.getDirectValue("Zowe-Automatic-Validation")) as boolean;
+//         if (contextually.isSession(sessNode)) {
+//             labelRefresh(sessNode);
+//             sessNode.children = [];
+//             sessNode.dirty = true;
+//             refreshTree(sessNode);
+//             resetValidationSettings(sessNode, setting);
+//             returnIconState(sessNode);
+//         }
+//     });
+//     await ussFileProvider.refresh();
+// }
 
 /**
  * Process for renaming a USS Node. This could be a Favorite Node
