@@ -53,7 +53,11 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
     ) {
         super(label, collapsibleState, mParent, session, profile);
         if (session) {
-            this._owner = session.ISession.user;
+            if (session.ISession.user) {
+                this._owner = session.ISession.user;
+            } else {
+                this._owner = "*";
+            }
         }
         this._prefix = "*";
         this._searchId = "";
