@@ -39,7 +39,7 @@ export class ZoweTreeNode extends vscode.TreeItem {
      * @param {Session} session
      * @param {string} etag
      */
-    constructor(
+    public constructor(
         label: string,
         collapsibleState: vscode.TreeItemCollapsibleState,
         private mParent: IZoweTreeNode,
@@ -102,7 +102,7 @@ export class ZoweTreeNode extends vscode.TreeItem {
      *
      * @param {IProfileLoaded} The profile you will set the node to use
      */
-    public setProfileToChoice(aProfile: IProfileLoaded) {
+    public setProfileToChoice(aProfile: IProfileLoaded): void {
         this.profile = aProfile;
     }
     /**
@@ -110,7 +110,7 @@ export class ZoweTreeNode extends vscode.TreeItem {
      *
      * @param aSession The session you will set the node to use
      */
-    public setSessionToChoice(aSession: Session) {
+    public setSessionToChoice(aSession: Session): void {
         this.session = aSession;
     }
 }

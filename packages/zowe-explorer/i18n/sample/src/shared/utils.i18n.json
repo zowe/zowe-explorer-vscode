@@ -1,4 +1,5 @@
 {
+  "uploadContent.putContents": "Uploading USS file",
   "saveFile.response.save.title": "Saving data set...",
   "saveUSSFile.response.title": "Saving file...",
   "saveFile.error.theiaDetected": "A merge conflict has been detected. Since you are running inside Theia editor, a merge conflict resolution is not available yet.",

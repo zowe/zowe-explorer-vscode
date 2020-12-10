@@ -257,6 +257,8 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
     vscode.commands.registerCommand("zowe.enableValidation", async (node) =>
         Profiles.getInstance().enableValidation(node)
     );
+    vscode.commands.registerCommand("zowe.ssoLogin", async (node) => datasetProvider.ssoLogin(node));
+    vscode.commands.registerCommand("zowe.ssoLogout", async (node) => datasetProvider.ssoLogout(node));
     vscode.workspace.onDidChangeConfiguration((e) => {
         datasetProvider.onDidChangeConfiguration(e);
     });
@@ -332,6 +334,8 @@ function initUSSProvider(context: vscode.ExtensionContext, ussFileProvider: IZow
     vscode.commands.registerCommand("zowe.uss.enableValidation", async (node) =>
         Profiles.getInstance().enableValidation(node)
     );
+    vscode.commands.registerCommand("zowe.uss.ssoLogin", async (node) => ussFileProvider.ssoLogin(node));
+    vscode.commands.registerCommand("zowe.uss.ssoLogout", async (node) => ussFileProvider.ssoLogout(node));
     vscode.workspace.onDidChangeConfiguration((e) => {
         ussFileProvider.onDidChangeConfiguration(e);
     });
@@ -357,9 +361,12 @@ function initJobsProvider(context: vscode.ExtensionContext, jobsProvider: IZoweT
     vscode.commands.registerCommand("zowe.downloadSpool", (job) => jobActions.downloadSpool(job));
     vscode.commands.registerCommand("zowe.getJobJcl", (job) => jobActions.downloadJcl(job));
     vscode.commands.registerCommand("zowe.setJobSpool", async (session, jobid) => {
-        const sessionNode = jobsProvider.mSessionNodes.find((jobNode) => jobNode.label.trim() === session.trim());
+        const sessionNode: IZoweJobTreeNode = jobsProvider.mSessionNodes.find(
+            (jobNode) => jobNode.label.trim() === session.trim()
+        );
         sessionNode.dirty = true;
         jobsProvider.refresh();
+        sessionNode.searchId = jobid;
         const jobs: IZoweJobTreeNode[] = await sessionNode.getChildren();
         const job: IZoweJobTreeNode = jobs.find((jobNode) => jobNode.job.jobid === jobid);
         jobsProvider.setItem(jobsProvider.getTreeView(), job);
@@ -385,6 +392,8 @@ function initJobsProvider(context: vscode.ExtensionContext, jobsProvider: IZoweT
     vscode.commands.registerCommand("zowe.jobs.enableValidation", async (node) =>
         Profiles.getInstance().enableValidation(node)
     );
+    vscode.commands.registerCommand("zowe.jobs.ssoLogin", async (node) => jobsProvider.ssoLogin(node));
+    vscode.commands.registerCommand("zowe.jobs.ssoLogout", async (node) => jobsProvider.ssoLogout(node));
     vscode.workspace.onDidChangeConfiguration((e) => {
         jobsProvider.onDidChangeConfiguration(e);
     });
