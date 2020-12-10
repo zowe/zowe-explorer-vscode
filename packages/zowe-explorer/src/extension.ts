@@ -151,7 +151,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         if (e.affectsConfiguration("Zowe-Automatic-Validation")) {
             await refreshActions.refreshAll(datasetProvider);
             await ussActions.refreshAllUSS(ussFileProvider);
-            await jobActions.refreshAllJobs(jobsProvider);
+            await refreshActions.refreshAll(jobsProvider);
         }
     });
 
@@ -354,7 +354,7 @@ function initJobsProvider(context: vscode.ExtensionContext, jobsProvider: IZoweT
     vscode.commands.registerCommand("zowe.refreshJobsServer", async (job) =>
         jobActions.refreshJobsServer(job, jobsProvider)
     );
-    vscode.commands.registerCommand("zowe.refreshAllJobs", async () => jobActions.refreshAllJobs(jobsProvider));
+    vscode.commands.registerCommand("zowe.refreshAllJobs", async () => refreshActions.refreshAll(jobsProvider));
     vscode.commands.registerCommand("zowe.addJobsSession", () => jobsProvider.createZoweSession(jobsProvider));
     vscode.commands.registerCommand("zowe.setOwner", (job) => jobActions.setOwner(job, jobsProvider));
     vscode.commands.registerCommand("zowe.setPrefix", (job) => jobActions.setPrefix(job, jobsProvider));

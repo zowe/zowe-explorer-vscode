@@ -21,7 +21,7 @@ import * as contextually from "../shared/context";
 /**
  * Refreshes treeView
  *
- * @param {DataSetTree} datasetProvider
+ * @param {IZoweTree} treeProvider
  */
 export async function refreshAll(treeProvider: IZoweTree<IZoweTreeNode>) {
     await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());

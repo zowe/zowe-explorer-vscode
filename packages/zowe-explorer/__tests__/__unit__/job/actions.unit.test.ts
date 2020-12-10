@@ -23,6 +23,7 @@ import {
 import { createIJobFile, createIJobObject, createJobsTree } from "../../../__mocks__/mockCreators/jobs";
 import { createJesApi, bindJesApi } from "../../../__mocks__/mockCreators/api";
 import * as jobActions from "../../../src/job/actions";
+import * as refreshActions from "../../../src/shared/refresh";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import * as dsActions from "../../../src/dataset/actions";
 import * as globals from "../../../src/globals";
@@ -956,9 +957,9 @@ describe("refreshAll", () => {
             return {};
         });
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        const submitJclSpy = jest.spyOn(jobActions, "refreshAllJobs");
-        jobActions.refreshAllJobs(blockMocks.jobsTree);
+        const submitJclSpy = jest.spyOn(refreshActions, "refreshAll");
+        refreshActions.refreshAll(blockMocks.jobsTree);
         expect(submitJclSpy).toHaveBeenCalledTimes(1);
-        expect(jobActions.refreshAllJobs(blockMocks.jobsTree)).toEqual(response);
+        expect(refreshActions.refreshAll(blockMocks.jobsTree)).toEqual(response);
     });
 });
