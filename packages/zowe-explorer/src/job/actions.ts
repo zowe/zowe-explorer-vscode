@@ -12,16 +12,12 @@
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import { errorHandling } from "../utils/ProfilesUtils";
-import { labelRefresh, refreshTree } from "../shared/utils";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { ValidProfileEnum, IZoweTree, IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
 import { Job } from "./ZoweJobNode";
-import * as contextually from "../shared/context";
-import { returnIconState, resetValidationSettings } from "../shared/actions";
 import * as nls from "vscode-nls";
 import { encodeJobFile } from "../SpoolProvider";
-import { PersistentFilters } from "../PersistentFilters";
 
 // Set up localization
 nls.config({

@@ -16,14 +16,7 @@ import * as zowe from "@zowe/cli";
 import * as globals from "../globals";
 import * as path from "path";
 import { FilterItem, errorHandling, resolveQuickPickHelper } from "../utils/ProfilesUtils";
-import {
-    labelRefresh,
-    refreshTree,
-    getDocumentFilePath,
-    concatChildNodes,
-    checkForAddedSuffix,
-    willForceUpload,
-} from "../shared/utils";
+import { getDocumentFilePath, concatChildNodes, checkForAddedSuffix, willForceUpload } from "../shared/utils";
 import {
     IZoweDatasetTreeNode,
     IZoweTreeNode,
@@ -38,11 +31,9 @@ import { getIconByNode } from "../generators/icons";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { DatasetTree } from "./DatasetTree";
 import * as contextually from "../shared/context";
-import { returnIconState, resetValidationSettings } from "../shared/actions";
 import { setFileSaved } from "../utils/workspace";
-
 import * as nls from "vscode-nls";
-import { PersistentFilters } from "../PersistentFilters";
+
 // Set up localization
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
