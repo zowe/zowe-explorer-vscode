@@ -32,6 +32,7 @@ import {
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import { bindMvsApi, createMvsApi } from "../../../__mocks__/mockCreators/api";
 import * as dsActions from "../../../src/dataset/actions";
+import * as refreshActions from "../../../src/shared/refresh";
 import * as globals from "../../../src/globals";
 import * as path from "path";
 import * as fs from "fs";
@@ -145,7 +146,7 @@ describe("Dataset Actions Unit Tests - Function refreshAll", () => {
             return {};
         });
         blockMocks.testDatasetTree.mSessionNodes.push(blockMocks.datasetSessionNode);
-        expect(dsActions.refreshAll(blockMocks.testDatasetTree)).toEqual(response);
+        expect(refreshActions.refreshAll(blockMocks.testDatasetTree)).toEqual(response);
     });
 });
 describe("Dataset Actions Unit Tests - Function createMember", () => {
