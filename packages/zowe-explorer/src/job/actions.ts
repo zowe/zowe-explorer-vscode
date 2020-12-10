@@ -31,27 +31,6 @@ nls.config({
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 /**
- * Refresh all jobs in the job tree
- *
- * @param jobsProvider The tree to refresh
- */
-// export async function refreshAllJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>) {
-//     await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
-//     jobsProvider.mSessionNodes.forEach(async (jobNode) => {
-//         const setting = (await PersistentFilters.getDirectValue("Zowe-Automatic-Validation")) as boolean;
-//         if (contextually.isSession(jobNode)) {
-//             labelRefresh(jobNode);
-//             jobNode.children = [];
-//             jobNode.dirty = true;
-//             refreshTree(jobNode);
-//             resetValidationSettings(jobNode, setting);
-//             returnIconState(jobNode);
-//         }
-//     });
-//     await jobsProvider.refresh();
-// }
-
-/**
  * Download all the spool content for the specified job.
  *
  * @param job The job to download the spool content from

@@ -51,27 +51,6 @@ nls.config({
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 /**
- * Refreshes treeView
- *
- * @param {DataSetTree} datasetProvider
- */
-// export async function refreshAll(datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
-//     await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
-//     datasetProvider.mSessionNodes.forEach(async (sessNode) => {
-//         const setting = (await PersistentFilters.getDirectValue("Zowe-Automatic-Validation")) as boolean;
-//         if (contextually.isSessionNotFav(sessNode)) {
-//             labelRefresh(sessNode);
-//             sessNode.children = [];
-//             sessNode.dirty = true;
-//             refreshTree(sessNode);
-//             resetValidationSettings(sessNode, setting);
-//             returnIconState(sessNode);
-//         }
-//     });
-//     datasetProvider.refresh();
-// }
-
-/**
  * Allocates a copy of a data set or member
  *
  */
