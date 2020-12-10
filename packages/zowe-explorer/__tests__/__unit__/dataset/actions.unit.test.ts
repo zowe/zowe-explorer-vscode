@@ -867,7 +867,7 @@ describe("Dataset Actions Unit Tests - Function enterPattern", () => {
         await dsActions.enterPattern(node, blockMocks.testDatasetTree);
 
         expect(mocked(vscode.window.showInputBox)).toBeCalledWith({
-            prompt: "Search data sets by entering patterns: use a comma to separate multiple patterns",
+            prompt: "Search Data Sets: use a comma to separate multiple patterns",
             value: node.pattern,
         });
         expect(mocked(vscode.window.showInformationMessage)).not.toBeCalled();

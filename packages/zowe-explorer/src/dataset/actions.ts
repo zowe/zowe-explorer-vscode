@@ -857,7 +857,7 @@ export async function enterPattern(node: IZoweDatasetTreeNode, datasetProvider: 
         const options: vscode.InputBoxOptions = {
             prompt: localize(
                 "enterPattern.options.prompt",
-                "Search data sets by entering patterns: use a comma to separate multiple patterns"
+                "Search Data Sets: use a comma to separate multiple patterns"
             ),
             value: node.pattern,
         };
