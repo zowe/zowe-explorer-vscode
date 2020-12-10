@@ -42,6 +42,7 @@ Bug Fixes:
 - Fixed the empty profile folders in Favorites issue.
 - Fixed the initialization error that occurred when base profiles were used while being logged out from API ML.
 - Fixed the issue preventing the tree refresh function from updating extender profiles.
+- Fixed the issue causing jobs retrieval failure when using profiles with tokens.
 
 For more information, see [Changelog](https://marketplace.visualstudio.com/items/Zowe.vscode-extension-for-zowe/changelog).
 
@@ -99,13 +100,11 @@ Use the Log in to the **Authentication Service** feature to regenerate a new tok
 2. Right-click your profile.
 3. Select the **Log in to Authentication Service** option.
 
-   You will be prompted to enter your username and password beforehand.
+   You are prompted to enter your username and password.
 
 The token is stored in the default base profile .yaml file.
 
-**Note:** There is a known issue that tokens issued in Zowe Explorer, from an API Mediation Layer instance accepting self-signed certificates, are rejected with `Error: self signed certificate in certificate chain`, even if the reject unauthorized flag is set to false in the base profile. You can continue to use tokens generated from Zowe CLI in Zowe Explorer.
-
-If you do not want to store your token, request from the server to end the session of your token. Use the **Log out from Authentication Service** feature to invalidate the token.
+If you do not want to store your token, you can request the server to end your session token. Use the **Log out from Authentication Service** feature to invalidate the token.
 
 **Follow these steps:**
 
