@@ -8,7 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  */
 
-node('ibm-jenkins-slave-dind') {
+node('zowe-jenkins-agent-dind') {
   def lib = library("jenkins-library").org.zowe.jenkins_shared_library
 
   def pipeline = lib.pipelines.nodejs.NodeJSPipeline.new(this)
