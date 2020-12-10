@@ -317,6 +317,19 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
         expect(spoolFiles[0].label).toEqual("STEP:STDOUT(101)");
         expect(spoolFiles[0].owner).toEqual("fake");
     });
+
+    it("Tests that getChildren returns the spool files if user/owner is not defined", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        globalMocks.testJobsProvider.mSessionNodes[1]._owner = undefined;
+        globalMocks.testJobsProvider.mSessionNodes[1]._prefix = "";
+        globalMocks.testJobsProvider.mSessionNodes[1]._searchId = "";
+        globalMocks.testJobsProvider.mSessionNodes[1].session.ISession.user = undefined;
+        const spoolFiles = await globalMocks.testJobNode.getChildren();
+        expect(spoolFiles.length).toBe(1);
+        expect(spoolFiles[0].label).toEqual("STEP:STDOUT(101)");
+        expect(spoolFiles[0].owner).toEqual("*");
+    });
 });
 
 describe("ZoweJobNode unit tests - Function interpretFreeform", () => {

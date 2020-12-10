@@ -11,7 +11,6 @@
 
 import * as zowe from "@zowe/cli";
 import { IProfileLoaded, Session, ICommandArguments } from "@zowe/imperative";
-import { TreeItem } from "vscode";
 
 /**
  * This namespace provides interfaces for all the external APIs provided by this VS Code Extension.
@@ -61,6 +60,28 @@ export namespace ZoweExplorerApi {
          * @returns {Session} a Zowe CLI Session
          */
         getSessionFromCommandArgument?(cmdArgs: ICommandArguments): Session;
+
+        /**
+         * Perform login to obtain a token from the authentication service
+         *
+         * @param {Session} session a Zowe CLI Session
+         * @returns {string} the token value
+         */
+        login?(session: Session): Promise<string>;
+
+        /**
+         * Perform logout from the authentication service
+         *
+         * @param {Session} session a Zowe CLI Session
+         */
+        logout?(session: Session);
+
+        /**
+         * Return the type name of the token supported by this api.
+         *
+         * @returns {string} the token type name as defined by a CLI plugin that implements the profile.
+         */
+        getTokenTypeName?(): string;
     }
 
     /**
@@ -415,25 +436,6 @@ export namespace ZoweExplorerApi {
      */
     export interface IApiExplorerExtender {
         /**
-         * Used by other VS Code Extensions to access the primary profile.
-         *
-         * @param primaryNode represents the Tree item that is being used
-         * @return The requested profile
-         *
-         */
-        getProfile(primaryNode: TreeItem): IProfileLoaded;
-
-        /**
-         * Used by other VS Code Extensions to access an alternative
-         * profile types that can be employed in conjunction with the primary
-         * profile to provide alternative support.
-         *
-         * @param primaryNode represents the Tree item that is being used
-         * @return The requested profile
-         */
-        getLinkedProfile(primaryNode: TreeItem, type: string): Promise<IProfileLoaded>;
-
-        /**
          * After an extenders registered all its API extensions it
          * might want to request that profiles should get reloaded
          * to make them automatically appears in the Explorer drop-
@@ -448,8 +450,7 @@ export namespace ZoweExplorerApi {
      * more interfaces above, for example MyZoweExplorerAppUssApi, and register it with
      * the object returned by this extensions activate() method as shown below.
      *
-     * Sample code:
-     *
+     * @example
      * // see if Zowe Explorer is installed and retrieve the API Registry\
      * const explorerApi = extensions.getExtension('zowe.vscode-extension-for-zowe');\
      * if (explorerApi && explorerApi.exports) {\

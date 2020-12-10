@@ -96,6 +96,30 @@
         "title": "%jobs.enableValidation%"
       },
       {
+        "command": "zowe.ssoLogin",
+        "title": "%ssoLogin%"
+      },
+      {
+        "command": "zowe.uss.ssoLogin",
+        "title": "%uss.ssoLogin%"
+      },
+      {
+        "command": "zowe.jobs.ssoLogin",
+        "title": "%jobs.ssoLogin%"
+      },
+      {
+        "command": "zowe.ssoLogout",
+        "title": "%ssoLogout%"
+      },
+      {
+        "command": "zowe.uss.ssoLogout",
+        "title": "%uss.ssoLogout%"
+      },
+      {
+        "command": "zowe.jobs.ssoLogout",
+        "title": "%jobs.ssoLogout%"
+      },
+      {
         "command": "zowe.uss.copyPath",
         "title": "%uss.copyPath%"
       },
@@ -681,6 +705,16 @@
           "group": "6_modification@5"
         },
         {
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)ussSession.*/",
+          "command": "zowe.uss.ssoLogin",
+          "group": "6_modification@6"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)ussSession.*/",
+          "command": "zowe.uss.ssoLogout",
+          "group": "6_modification@7"
+        },
+        {
           "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav)(member|migr|ds|pds).*/",
           "command": "zowe.addFavorite",
           "group": "inline"
@@ -881,6 +915,16 @@
           "group": "7_modification@7"
         },
         {
+          "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
+          "command": "zowe.ssoLogin",
+          "group": "7_modification@8"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
+          "command": "zowe.ssoLogout",
+          "group": "7_modification@9"
+        },
+        {
           "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/",
           "command": "zowe.refreshJobsServer",
           "group": "inline"
@@ -987,6 +1031,16 @@
           "when": "view == zowe.jobs && viewItem =~ /^(?=.*_validate=false.*)server.*/",
           "command": "zowe.enableValidation",
           "group": "3_modification@4"
+        },
+        {
+          "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/",
+          "command": "zowe.jobs.ssoLogin",
+          "group": "3_modification@5"
+        },
+        {
+          "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/",
+          "command": "zowe.jobs.ssoLogout",
+          "group": "3_modification@6"
         }
       ],
       "commandPalette": [
@@ -1067,6 +1121,30 @@
         },
         {
           "command": "zowe.jobs.enableValidation",
+          "when": "never"
+        },
+        {
+          "command": "zowe.ssoLogin",
+          "when": "never"
+        },
+        {
+          "command": "zowe.ssoLogout",
+          "when": "never"
+        },
+        {
+          "command": "zowe.uss.ssoLogin",
+          "when": "never"
+        },
+        {
+          "command": "zowe.uss.ssoLogout",
+          "when": "never"
+        },
+        {
+          "command": "zowe.jobs.ssoLogin",
+          "when": "never"
+        },
+        {
+          "command": "zowe.jobs.ssoLogout",
           "when": "never"
         },
         {

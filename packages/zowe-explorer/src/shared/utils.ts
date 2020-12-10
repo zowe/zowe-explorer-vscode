@@ -23,7 +23,7 @@ import {
 } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
-import { ISession, IProfileLoaded } from "@zowe/imperative";
+import { ISession, IProfileLoaded, ITaskWithStatus } from "@zowe/imperative";
 import * as nls from "vscode-nls";
 import { IUploadOptions, IZosFilesResponse } from "@zowe/cli";
 
@@ -85,19 +85,22 @@ export function labelRefresh(node: vscode.TreeItem): void {
  * @param {sessNode} IZoweTreeNode
  * @param {profile} IProfileLoaded
  *************************************************************************************************************/
-export function refreshTree(sessNode: IZoweTreeNode) {
-    const allProf = Profiles.getInstance().getProfiles();
+export async function refreshTree(sessNode: IZoweTreeNode) {
+    const profileType = sessNode.getProfile().type;
+    const allProf = Profiles.getInstance().getProfiles(profileType);
+    const baseProf = await Profiles.getInstance().getBaseProfile();
     for (const profNode of allProf) {
         if (sessNode.getProfileName() === profNode.name) {
             sessNode.getProfile().profile = profNode.profile;
-            const SessionProfile = profNode.profile as ISession;
-            if (sessNode.getSession().ISession !== SessionProfile) {
-                sessNode.getSession().ISession.user = SessionProfile.user;
-                sessNode.getSession().ISession.password = SessionProfile.password;
-                sessNode.getSession().ISession.base64EncodedAuth = SessionProfile.base64EncodedAuth;
-                sessNode.getSession().ISession.hostname = SessionProfile.hostname;
-                sessNode.getSession().ISession.port = SessionProfile.port;
-                sessNode.getSession().ISession.rejectUnauthorized = SessionProfile.rejectUnauthorized;
+            const combinedSessionProfile = (await Profiles.getInstance().getCombinedProfile(profNode, baseProf))
+                .profile;
+            const sessionNode = sessNode.getSession();
+            for (const prop of Object.keys(combinedSessionProfile)) {
+                if (prop === "host") {
+                    sessionNode.ISession.hostname = combinedSessionProfile[prop];
+                } else {
+                    sessionNode.ISession[prop] = combinedSessionProfile[prop];
+                }
             }
         }
     }
@@ -234,13 +237,21 @@ export async function uploadContent(
     } else {
         // if new api method exists, use it
         if (ZoweExplorerApiRegister.getUssApi(profile).putContent) {
-            return ZoweExplorerApiRegister.getUssApi(profile).putContent(doc.fileName, remotePath, {
+            const task: ITaskWithStatus = {
+                percentComplete: 0,
+                statusMessage: localize("uploadContent.putContents", "Uploading USS file"),
+                stageName: 0, // TaskStage.IN_PROGRESS - https://github.com/kulshekhar/ts-jest/issues/281
+            };
+            const options: IUploadOptions = {
                 binary,
                 localEncoding: null,
                 etag: etagToUpload,
                 returnEtag,
                 encoding: profile.profile.encoding,
-            });
+                task,
+            };
+            const result = ZoweExplorerApiRegister.getUssApi(profile).putContent(doc.fileName, remotePath, options);
+            return result;
         } else {
             return ZoweExplorerApiRegister.getUssApi(profile).putContents(
                 doc.fileName,
