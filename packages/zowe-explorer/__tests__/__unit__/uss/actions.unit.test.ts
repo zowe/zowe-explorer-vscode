@@ -11,6 +11,9 @@
 
 jest.mock("fs");
 
+import * as zowe from "@zowe/cli";
+import { IProfileLoaded } from "@zowe/imperative";
+import { ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import * as ussNodeActions from "../../../src/uss/actions";
 import {
     createUSSTree,
@@ -25,7 +28,6 @@ import {
     createTextDocument,
     createFileResponse,
 } from "../../../__mocks__/mockCreators/shared";
-import { ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
@@ -33,13 +35,10 @@ import * as vscode from "vscode";
 import * as path from "path";
 import * as globals from "../../../src/globals";
 import * as sharedUtils from "../../../src/shared/utils";
-import * as zowe from "@zowe/cli";
-import { IProfileLoaded } from "@zowe/imperative";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
 import * as isbinaryfile from "isbinaryfile";
 import * as fs from "fs";
 import { createUssApi, bindUssApi } from "../../../__mocks__/mockCreators/api";
-import { PersistentFilters } from "../../../src/PersistentFilters";
 import * as workspaceUtils from "../../../src/utils/workspace";
 import * as refreshActions from "../../../src/shared/refresh";
 
@@ -391,66 +390,6 @@ describe("USS Action Unit Tests - Function refreshUSSInTree", () => {
         await ussNodeActions.refreshUSSInTree(blockMocks.ussNode, blockMocks.testUSSTree);
 
         expect(blockMocks.testUSSTree.refreshElement).toHaveBeenCalledWith(blockMocks.ussNode);
-    });
-});
-
-describe("USS Action Unit Tests - Function refreshAllUSS", () => {
-    async function createBlockMocks(globalMocks) {
-        const newMocks = {
-            testUSSTree: null,
-            ussNode: createUSSNode(globalMocks.testSession, createIProfile()),
-        };
-        newMocks.testUSSTree = createUSSTree(
-            [createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile)],
-            [newMocks.ussNode],
-            createTreeView()
-        );
-        newMocks.testUSSTree.mSessionNodes.push(newMocks.ussNode);
-
-        Object.defineProperty(PersistentFilters, "getDirectValue", {
-            value: jest.fn(() => {
-                return {
-                    "Zowe-Automatic-Validation": true,
-                };
-            }),
-        });
-
-        return newMocks;
-    }
-
-    it("Tests that refreshAllUSS() is executed successfully", async () => {
-        const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-        const profilesForValidation = { status: "active", name: "fake" };
-        const response = new Promise(() => {
-            return {};
-        });
-
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    allProfiles: [{ name: "firstName" }, { name: "secondName" }],
-                    defaultProfile: { name: "firstName" },
-                    getDefaultProfile: globalMocks.mockLoadNamedProfile,
-                    loadNamedProfile: globalMocks.mockLoadNamedProfile,
-                    usesSecurity: true,
-                    getProfiles: jest.fn().mockReturnValue([
-                        { name: globalMocks.testProfile.name, profile: globalMocks.testProfile },
-                        { name: globalMocks.testProfile.name, profile: globalMocks.testProfile },
-                    ]),
-                    checkCurrentProfile: jest.fn(() => {
-                        return profilesForValidation;
-                    }),
-                    validateProfiles: jest.fn(),
-                    refresh: jest.fn(),
-                };
-            }),
-        });
-        const spy = jest.spyOn(refreshActions, "refreshAll");
-
-        refreshActions.refreshAll(blockMocks.testUSSTree);
-        expect(spy).toHaveBeenCalledTimes(1);
-        expect(refreshActions.refreshAll(blockMocks.testUSSTree)).toEqual(response);
     });
 });
 
