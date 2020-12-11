@@ -16,7 +16,7 @@
       "smartStep": true
     },
     {
-      "name": "Run Zowe Explorer FTP VS Code Extensionn",
+      "name": "Run Zowe Explorer FTP VS Code Extension",
       "type": "extensionHost",
       "request": "launch",
       "runtimeExecutable": "${execPath}",
