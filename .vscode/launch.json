@@ -22,7 +22,7 @@
       "runtimeExecutable": "${execPath}",
       "args": ["--extensionDevelopmentPath=${workspaceFolder}/packages/zowe-explorer-ftp-extension", "--verbose"],
       "outFiles": ["${workspaceFolder}/packages/zowe-explorer-ftp-extension/out/**/*.js"],
-      "preLaunchTask": "build dev watch",
+      "preLaunchTask": "build dev watch ftp",
       "smartStep": true
     },
     {
