@@ -13,14 +13,18 @@
     "lib",
     "src"
   ],
+  "peerDependencies": {
+    "@zowe/imperative": "^=4.8.1 < 5",
+    "@zowe/cli": "^=6.22.0 < 7"
+  },
   "scripts": {
-    "build": "yarn clean && yarn license && tsc -p ./",
+    "build": "yarn clean && tsc -p ./",
     "test": "echo \"zowe-explorer-api: coming soon.\"",
-    "lint": "echo \"zowe-explorer-api: coming soon.\"",
+    "lint": "concurrently -n \"_eslint_,prettier\" \"eslint . --ext .ts\" \"prettier --check .\"",
     "lintErrors": "echo \"zowe-explorer-api: coming soon.\"",
     "pretty": "prettier --write .",
     "clean": "rimraf lib",
     "license": "node ../../scripts/license.js",
-    "package": "yarn build && npm pack && node ../../scripts/mv-pack.js zowe-zowe-explorer-api tgz"
+    "package": "yarn license && yarn lint && yarn build && npm pack && node ../../scripts/mv-pack.js zowe-zowe-explorer-api tgz"
   }
 }

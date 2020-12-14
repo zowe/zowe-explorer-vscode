@@ -13,7 +13,6 @@ import { IProfileLoaded, Logger, CliProfileManager, IProfile, ImperativeConfig }
 import * as path from "path";
 import * as os from "os";
 import { URL } from "url";
-import * as vscode from "vscode";
 
 import { ZoweExplorerApi } from "./ZoweExplorerApi";
 
@@ -36,8 +35,6 @@ export interface IValidationSetting {
     name: string;
     setting: boolean;
 }
-
-let InputBoxOptions: vscode.InputBoxOptions;
 
 export enum ValidProfileEnum {
     UNVERIFIED = 1,
@@ -64,11 +61,11 @@ export class ProfilesCache {
         throw new Error("Could not find profile named: " + name + ".");
     }
 
-    public getDefaultProfile(type: string = "zosmf"): IProfileLoaded {
+    public getDefaultProfile(type = "zosmf"): IProfileLoaded {
         return this.defaultProfileByType.get(type);
     }
 
-    public getProfiles(type: string = "zosmf"): IProfileLoaded[] {
+    public getProfiles(type = "zosmf"): IProfileLoaded[] {
         return this.profilesByType.get(type);
     }
 
@@ -79,22 +76,22 @@ export class ProfilesCache {
         // This process retrieves the base profile if there's any and stores it in an array
         // If base is added in registeredApiType maybe this process can be removed
         try {
-            const profileManagerA = await this.getCliProfileManager("base");
+            const profileManagerA = this.getCliProfileManager("base");
             if (profileManagerA) {
                 try {
                     const baseProfile = await profileManagerA.load({ loadDefault: true });
                     this.allProfiles.push(baseProfile);
-                } catch (err) {
-                    if (!err.message.includes(`No default profile set for type "base"`)) {
-                        vscode.window.showInformationMessage(err.message);
+                } catch (error) {
+                    if (!error?.message?.includes(`No default profile set for type "base"`)) {
+                        this.log.error(error);
                     }
                 }
             }
         } catch (error) {
-            this.log.debug(error);
+            this.log.error(error);
         }
         for (const type of apiRegister.registeredApiTypes()) {
-            const profileManager = await this.getCliProfileManager(type);
+            const profileManager = this.getCliProfileManager(type);
             const profilesForType = (await profileManager.loadAll()).filter((profile) => {
                 return profile.type === type;
             });
@@ -105,7 +102,7 @@ export class ProfilesCache {
                 try {
                     defaultProfile = await profileManager.load({ loadDefault: true });
                 } catch (error) {
-                    vscode.window.showInformationMessage(error.message);
+                    this.log.error(error);
                 }
                 this.defaultProfileByType.set(type, defaultProfile);
             }
@@ -143,10 +140,10 @@ export class ProfilesCache {
         return validationResult;
     }
 
-    public async getSchema(profileType: string): Promise<{}> {
-        const profileManager = await this.getCliProfileManager(profileType);
+    public getSchema(profileType: string): Record<string, unknown> {
+        const profileManager = this.getCliProfileManager(profileType);
         const configOptions = Array.from(profileManager.configurations);
-        let schema: {};
+        let schema = {};
         for (const val of configOptions) {
             if (val.type === profileType) {
                 schema = val.schema.properties;
@@ -155,12 +152,12 @@ export class ProfilesCache {
         return schema;
     }
 
-    public getAllTypes() {
+    public getAllTypes(): string[] {
         return this.allTypes;
     }
 
-    public async getNamesForType(type: string) {
-        const profileManager = await this.getCliProfileManager(type);
+    public async getNamesForType(type: string): Promise<string[]> {
+        const profileManager = this.getCliProfileManager(type);
         const profilesForType = (await profileManager.loadAll()).filter((profile) => {
             return profile.type === type;
         });
@@ -171,18 +168,18 @@ export class ProfilesCache {
 
     public async directLoad(type: string, name: string): Promise<IProfileLoaded> {
         let directProfile: IProfileLoaded;
-        const profileManager = await this.getCliProfileManager(type);
+        const profileManager = this.getCliProfileManager(type);
         if (profileManager) {
             directProfile = await profileManager.load({ name });
         }
         return directProfile;
     }
 
-    public async getCliProfileManager(type: string): Promise<CliProfileManager> {
+    public getCliProfileManager(type: string): CliProfileManager {
         let profileManager = this.profileManagerByType.get(type);
         if (!profileManager) {
             try {
-                profileManager = await new CliProfileManager({
+                profileManager = new CliProfileManager({
                     profileRootDirectory: path.join(this.getZoweDir(), "profiles"),
                     type,
                 });
@@ -198,7 +195,7 @@ export class ProfilesCache {
         return profileManager;
     }
 
-    public async getBaseProfile() {
+    public getBaseProfile(): IProfileLoaded {
         let baseProfile: IProfileLoaded;
 
         // This functionality will retrieve the saved base profile in the allProfiles array
@@ -210,31 +207,24 @@ export class ProfilesCache {
         return baseProfile;
     }
 
-    protected async deleteProfileOnDisk(ProfileInfo) {
-        let zosmfProfile: IProfile;
-        try {
-            zosmfProfile = await (await this.getCliProfileManager(ProfileInfo.type)).delete({
-                profile: ProfileInfo,
-                name: ProfileInfo.name,
-                type: ProfileInfo.type,
-            });
-        } catch (error) {
-            vscode.window.showErrorMessage(error.message);
-        }
-        return zosmfProfile.profile;
+    protected async deleteProfileOnDisk(ProfileInfo: IProfileLoaded): Promise<void> {
+        await this.getCliProfileManager(ProfileInfo.type).delete({
+            profile: ProfileInfo,
+            name: ProfileInfo.name,
+            type: ProfileInfo.type,
+        });
     }
 
-    protected async saveProfile(ProfileInfo, ProfileName, ProfileType) {
-        let newProfile: IProfile;
-        try {
-            newProfile = await (await this.getCliProfileManager(ProfileType)).save({
-                profile: ProfileInfo,
-                name: ProfileName,
-                type: ProfileType,
-            });
-        } catch (error) {
-            vscode.window.showErrorMessage(error.message);
-        }
+    protected async saveProfile(
+        profileInfo: Record<string, unknown>,
+        profileName: string,
+        profileType: string
+    ): Promise<IProfile> {
+        const newProfile = await this.getCliProfileManager(profileType).save({
+            profile: profileInfo,
+            name: profileName,
+            type: profileType,
+        });
         return newProfile.profile;
     }
 

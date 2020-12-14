@@ -13,6 +13,7 @@ import * as PromiseQueue from "promise-queue";
 import { IProfileLoaded } from "@zowe/imperative";
 import {
     ZoweExplorerApi,
+    ZoweExplorerTreeApi,
     IZoweTree,
     IZoweTreeNode,
     IZoweDatasetTreeNode,
@@ -28,7 +29,7 @@ import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
  * extensions to contribute their implementations.
  * @export
  */
-export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtender {
+export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtender, ZoweExplorerTreeApi {
     public static ZoweExplorerExtenderInst: ZoweExplorerExtender;
 
     /**
