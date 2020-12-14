@@ -16,13 +16,13 @@
       "smartStep": true
     },
     {
-      "name": "Run Zowe Explorer FTP VS Code Extensionn",
+      "name": "Run Zowe Explorer FTP VS Code Extension",
       "type": "extensionHost",
       "request": "launch",
       "runtimeExecutable": "${execPath}",
       "args": ["--extensionDevelopmentPath=${workspaceFolder}/packages/zowe-explorer-ftp-extension", "--verbose"],
       "outFiles": ["${workspaceFolder}/packages/zowe-explorer-ftp-extension/out/**/*.js"],
-      "preLaunchTask": "build dev watch",
+      "preLaunchTask": "build dev watch ftp",
       "smartStep": true
     },
     {
