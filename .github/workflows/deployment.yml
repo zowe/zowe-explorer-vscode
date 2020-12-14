@@ -6,6 +6,12 @@ on:
     - master
     paths:
     - package.json
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version to be published
+        default: v1.11.0
+        required: false
 
 jobs:
   check_version:
