@@ -138,7 +138,7 @@ jobs:
         run: |
           git status
           git commit -m "Version Bumped to ${{ fromJson(steps.get_version.outputs.top_package).version }}" --signoff
-          git push origin_token master
+          git push --force-with-lease origin_token master
 
       - name: Create the Release
         if: steps.check_project.outputs.files_staged == 1
