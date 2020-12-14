@@ -14,7 +14,7 @@ on:
         required: false
       create_release:
         description: Create the release even if publishing already happened
-        default: false
+        default: 'false'
         required: false
 
 jobs:
@@ -144,14 +144,14 @@ jobs:
 
       # Each individual action should git-add the desired files
       - name: Update Project Files with new Version
-        if: steps.check_project.outputs.files_staged == 1 || github.event.input.create_release == true
+        if: steps.check_project.outputs.files_staged == 1 || github.event.input.create_release == 'true'
         run: |
           git status
           git commit -m "Version Bumped to ${{ fromJson(steps.get_version.outputs.top_package).version }}" --signoff
           git push --force-with-lease origin_token master
 
       - name: Create the Release
-        if: steps.check_project.outputs.files_staged == 1 || github.event.input.create_release == true
+        if: steps.check_project.outputs.files_staged == 1 || github.event.input.create_release == 'true'
         id: create_release
         uses: actions/create-release@v1
         env:
@@ -169,7 +169,7 @@ jobs:
 
       - name: Upload the Zowe Explorer Assets
         if: |
-          (steps.check_project.outputs.files_staged == 1 || github.event.input.create_release == true) &&
+          (steps.check_project.outputs.files_staged == 1 || github.event.input.create_release == 'true') &&
           steps.deploy_zowe_explorer.outputs.archive != null
         uses: actions/upload-release-asset@v1
         env:
@@ -182,7 +182,7 @@ jobs:
 
       - name: Upload the FTP Extension for Zowe Explorer Assets
         if: |
-          (steps.check_project.outputs.files_staged == 1 || github.event.input.create_release == true) &&
+          (steps.check_project.outputs.files_staged == 1 || github.event.input.create_release == 'true') &&
           steps.deploy_zowe_explorer_ftp_extension.outputs.archive != null
         uses: actions/upload-release-asset@v1
         env:
@@ -195,7 +195,7 @@ jobs:
 
       - name: Upload the Zowe Explorer APIs Assets
         if: |
-          (steps.check_project.outputs.files_staged == 1 || github.event.input.create_release == true) &&
+          (steps.check_project.outputs.files_staged == 1 || github.event.input.create_release == 'true') &&
           steps.deploy_zowe_explorer_api.outputs.archive != null
         uses: actions/upload-release-asset@v1
         env:
@@ -208,7 +208,7 @@ jobs:
 
       - name: Upload the ESLint plugin for Zowe Explorer Assets
         if: |
-          (steps.check_project.outputs.files_staged == 1 || github.event.input.create_release == true) &&
+          (steps.check_project.outputs.files_staged == 1 || github.event.input.create_release == 'true') &&
           steps.deploy_eslint_plugin_zowe_explorer.outputs.archive != null
         uses: actions/upload-release-asset@v1
         env:
