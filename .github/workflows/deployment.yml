@@ -76,7 +76,6 @@ jobs:
         run: |
           git config --global user.name "zowe-robot"
           git config --global user.email "zowe.robot@gmail.com"
-          git remote add origin_token https://${{ secrets.ROBOT_TOKEN }}:x-oauth-basic@github.com/${{ github.repository }}.git
 
       - name: Install CLIs for Workflow use
         run: npm install -g vsce yarn
@@ -148,7 +147,12 @@ jobs:
         run: |
           git status
           git commit -m "Version Bumped to ${{ fromJson(steps.get_version.outputs.top_package).version }}" --signoff
-          git push --force-with-lease origin_token master
+      - name: Push changes
+        if: steps.check_project.outputs.files_staged == 1
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
 
       - name: Create the Release
         if: steps.check_project.outputs.files_staged == 1
