@@ -13,8 +13,8 @@ const execSync = require("child_process").execSync;
 const publishProject = require("../common").publishProject;
 
 // VSCE command to get extension metadata
-const getProjectMetadataCmd = (packageJson) => {
-  return `vsce show ${packageJson.publisher}.${packageJson.name} --json`;
+const getProjectMetadataCmd = (name, publisher) => {
+  return `vsce show ${publisher}.${name} --json`;
 };
 
 // VSCE specific steps for publishing an extension
