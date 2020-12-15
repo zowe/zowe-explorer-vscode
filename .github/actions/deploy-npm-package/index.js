@@ -12,9 +12,16 @@
 const execSync = require("child_process").execSync;
 const publishProject = require("../common").publishProject;
 
-// NPM command for getting package metadata
-const getProjectMetadataCmd = (packageJson) => {
-  return `npm view ${packageJson.name} --json`
+// Check if the given versions is already published
+const checkVersion = (packageJson, version) => {
+  try {
+    const metadata = JSON.parse(execSync(`npm view ${packageJson.name} --json`).toString());
+    return metadata != null && metadata.versions.includes(version);
+  } catch (err) {
+    // Do nothing if the package was not found and just continue to publish the extension
+    console.log(`Project: ${packageJson.name} not found!`);
+  }
+  return false;
 };
 
 // NPM package specific publishing steps
@@ -27,4 +34,4 @@ const publishSpecificProject = (version, token, packagePath) => {
 }
 
 // Call common function to deploy the NPM package
-publishProject(getProjectMetadataCmd, publishSpecificProject);
+publishProject(checkVersion, publishSpecificProject);

@@ -17,30 +17,17 @@ const execSync = require("child_process").execSync;
 
 /**
  * Common function for deploying projects in this monorepo.
- * @param {Function} getProjectMetadataCmd Returns the command that will give us a stringified json object containing the project metadata
+ * @param {Function} checkVersion Checks if the version was already published to the corresponding marketplace or registry
  * @param {Function} publishSpecificProject Executes the specific steps for publishing the given project
  */
-const publishProject = (getProjectMetadataCmd, publishSpecificProject) => {
+const publishProject = (checkVersion, publishSpecificProject) => {
   try {
     const packagePath = path.normalize(core.getInput("package"));
     const topPackageJson = JSON.parse(readFileSync("package.json"));
     const packageJson = JSON.parse(readFileSync(path.join(packagePath, "package.json")));
 
-    // Gather the project information
-    let projectMetadata = null;
-    try {
-      const metadataCmd = getProjectMetadataCmd(packageJson);
-      console.log(`Metadata Command: ${metadataCmd}`)
-      projectMetadata = JSON.parse(execSync(`${metadataCmd}`).toString());
-      console.log(`Project: ${packageJson.name} found!`);
-      console.log(`Version: ${projectMetadata.versions.toString()}`);
-    } catch (err) {
-      // Do nothing if the package/extesion was not found and just continue to publish the extension
-      console.log(`Project: ${packageJson.publisher}.${packageJson.name} not found!`);
-    }
-
     // Check if there is a new version to publish (looking at the top level package.json for version)
-    if (projectMetadata != null && projectMetadata.versions.includes(topPackageJson.version)) {
+    if (checkVersion(packageJson, topPackageJson.version)) {
       console.log(`No new version to publish at this time. Current version: ${topPackageJson.version}`);
       if (topPackageJson.version != packageJson.version) {
         console.log(`Project not updated: ${packageJson.name}. Incrementing version: ${packageJson.version} -> ${topPackageJson.version}`);
