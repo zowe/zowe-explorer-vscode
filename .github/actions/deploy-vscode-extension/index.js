@@ -10,7 +10,7 @@
  */
 
 const execSync = require("child_process").execSync;
-const publishProject = require("../common");
+const publishProject = require("../common").publishProject;
 
 // VSCE command to get extension metadata
 const getProjectMetadataCmd = (packageJson) => {
