@@ -20,7 +20,7 @@ const execSync = require("child_process").execSync;
  * @param {Function} getProjectMetadataCmd Returns the command that will give us a stringified json object containing the project metadata
  * @param {Function} publishSpecificProject Executes the specific steps for publishing the given project
  */
-export const publishProject = (getProjectMetadataCmd, publishSpecificProject) => {
+const publishProject = (getProjectMetadataCmd, publishSpecificProject) => {
   try {
     const packagePath = path.normalize(core.getInput("package"));
     const topPackageJson = JSON.parse(readFileSync("package.json"));
@@ -77,3 +77,5 @@ export const publishProject = (getProjectMetadataCmd, publishSpecificProject) =>
     core.setFailed(err.message);
   }
 }
+
+exports.publishProject = publishProject;
