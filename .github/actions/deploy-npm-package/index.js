@@ -13,8 +13,8 @@ const execSync = require("child_process").execSync;
 const publishProject = require("../common").publishProject;
 
 // NPM command for getting package metadata
-const getProjectMetadataCmd = (name, publisher = null) => {
-  return `npm view ${name} --json`;
+const getProjectMetadataCmd = (packageJson) => {
+  return `npm view ${packageJson.name} --json`
 };
 
 // NPM package specific publishing steps
