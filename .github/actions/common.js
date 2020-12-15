@@ -29,7 +29,7 @@ const publishProject = (getProjectMetadataCmd, publishSpecificProject) => {
     // Gather the project information
     let projectMetadata = null;
     try {
-      return JSON.parse(execSync(getProjectMetadataCmd(packageJson)).toString());
+      projectMetadata = JSON.parse(execSync(getProjectMetadataCmd(packageJson)).toString());
     } catch (err) {
       // Do nothing if the package/extesion was not found and just continue to publish the extension
       console.log(`Project: ${packageJson.publisher}.${packageJson.name} not found!`);
