@@ -110,6 +110,10 @@ export interface IZoweDatasetTreeNode extends IZoweTreeNode {
      * Search criteria for a Dataset search
      */
     pattern?: string;
+    /**
+     * Search criteria for a Dataset member search
+     */
+    memberPattern?: string;
 
     /**
      * Retrieves child nodes of this IZoweDatasetTreeNode
