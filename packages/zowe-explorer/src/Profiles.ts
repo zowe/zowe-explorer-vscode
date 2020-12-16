@@ -415,7 +415,7 @@ export class Profiles extends ProfilesCache {
                     updUrl = await this.urlInfo(editURL);
                     if (updUrl === undefined) {
                         vscode.window.showInformationMessage(
-                            localize("createNewConnection.zosmfURL", "No valid value for z/OS URL. Operation Cancelled")
+                            localize("editConnection.zosmfURL", "No valid value for z/OS URL. Operation Cancelled")
                         );
                         return undefined;
                     }
@@ -432,7 +432,7 @@ export class Profiles extends ProfilesCache {
                         if (Number.isNaN(updPort)) {
                             vscode.window.showInformationMessage(
                                 localize(
-                                    "createNewConnection.undefined.port",
+                                    "editConnection.undefined.port",
                                     "Invalid Port number provided or operation was cancelled"
                                 )
                             );
@@ -446,7 +446,7 @@ export class Profiles extends ProfilesCache {
                     updUser = await this.userInfo(editUser);
                     if (updUser === undefined) {
                         vscode.window.showInformationMessage(
-                            localize("createNewConnection.undefined.username", "Operation Cancelled")
+                            localize("editConnection.undefined.username", "Operation Cancelled")
                         );
                         return undefined;
                     }
@@ -456,7 +456,7 @@ export class Profiles extends ProfilesCache {
                     updPass = await this.passwordInfo(editPass);
                     if (updPass === undefined) {
                         vscode.window.showInformationMessage(
-                            localize("createNewConnection.undefined.username", "Operation Cancelled")
+                            localize("editConnection.undefined.username", "Operation Cancelled")
                         );
                         return undefined;
                     }
@@ -466,7 +466,7 @@ export class Profiles extends ProfilesCache {
                     updRU = await this.ruInfo(editrej);
                     if (updRU === undefined) {
                         vscode.window.showInformationMessage(
-                            localize("createNewConnection.rejectUnauthorize", "Operation Cancelled")
+                            localize("editConnection.rejectUnauthorize", "Operation Cancelled")
                         );
                         return undefined;
                     }
@@ -486,7 +486,7 @@ export class Profiles extends ProfilesCache {
                                     case schema[value].optionDefinition.hasOwnProperty("defaultValue"):
                                         if (schema[value].optionDefinition.defaultValue === null) {
                                             vscode.window.showInformationMessage(
-                                                localize("createNewConnection.rejectUnauthorize", "Operation Cancelled")
+                                                localize("editConnection.rejectUnauthorize", "Operation Cancelled")
                                             );
                                             return undefined;
                                         }
@@ -494,7 +494,7 @@ export class Profiles extends ProfilesCache {
                                         break;
                                     case schema[value] === undefined:
                                         vscode.window.showInformationMessage(
-                                            localize("createNewConnection.rejectUnauthorize", "Operation Cancelled")
+                                            localize("editConnection.rejectUnauthorize", "Operation Cancelled")
                                         );
                                         return undefined;
                                     default:
@@ -508,7 +508,7 @@ export class Profiles extends ProfilesCache {
                             updIsTrue = await this.boolInfo(value, schema);
                             if (updIsTrue === undefined) {
                                 vscode.window.showInformationMessage(
-                                    localize("createNewConnection.booleanValue", "Operation Cancelled")
+                                    localize("editConnection.booleanValue", "Operation Cancelled")
                                 );
                                 return undefined;
                             }
@@ -519,7 +519,7 @@ export class Profiles extends ProfilesCache {
                             const updDefValue = await vscode.window.showInputBox(options);
                             if (updDefValue === undefined) {
                                 vscode.window.showInformationMessage(
-                                    localize("createNewConnection.booleanValue", "Operation Cancelled")
+                                    localize("editConnection.booleanValue", "Operation Cancelled")
                                 );
                                 return undefined;
                             }

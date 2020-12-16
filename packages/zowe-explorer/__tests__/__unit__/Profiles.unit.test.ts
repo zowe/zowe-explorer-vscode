@@ -609,6 +609,48 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile alternate was created.");
     });
 
+    it("Tests that createNewConnection creates an alternate profile with undefined aNumber value", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.profiles.getProfileType = () =>
+            new Promise((resolve) => {
+                resolve("alternate");
+            });
+        blockMocks.profiles.getSchema = () => blockMocks.testSchemas[2];
+        blockMocks.profiles.getUrl = () =>
+            new Promise((resolve) => {
+                resolve("https://fake:234");
+            });
+
+        globalMocks.mockShowInputBox.mockResolvedValueOnce(undefined);
+
+        await blockMocks.profiles.createNewConnection("alternate");
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+    });
+
+    it("Tests that createNewConnection creates an alternate profile with null aNumber value", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.profiles.getProfileType = () =>
+            new Promise((resolve) => {
+                resolve("alternate");
+            });
+        blockMocks.profiles.getSchema = () => blockMocks.testSchemas[4];
+        blockMocks.profiles.getUrl = () =>
+            new Promise((resolve) => {
+                resolve("https://fake:234");
+            });
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowQuickPick.mockResolvedValueOnce("False");
+
+        await blockMocks.profiles.createNewConnection("alternate");
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+    });
+
     it("Tests that createNewConnection creates an alternate profile with default port value", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
@@ -671,6 +713,28 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
             });
         globalMocks.mockShowInputBox.mockResolvedValue("fake");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce(undefined);
+
+        await blockMocks.profiles.createNewConnection("fake");
+        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+    });
+
+    it("Tests that createNewConnection fails to create an alternate profile if aOther is undefined", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.profiles.getProfileType = () =>
+            new Promise((resolve) => {
+                resolve("alternate");
+            });
+        blockMocks.profiles.getSchema = () => blockMocks.testSchemas[2];
+        blockMocks.profiles.getUrl = () =>
+            new Promise((resolve) => {
+                resolve("https://fake:234");
+            });
+
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("123");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce(undefined);
 
         await blockMocks.profiles.createNewConnection("fake");
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
@@ -1125,6 +1189,50 @@ describe("Profiles Unit Tests - Function editSession", () => {
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile was successfully updated");
     });
 
+    it("Tests that editSession successfully edits a session of type alternate with undefined aNumber", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.profiles.getProfileType = () =>
+            new Promise((resolve) => {
+                resolve("alternate");
+            });
+        blockMocks.profiles.getSchema = () => blockMocks.testSchemas[2];
+        blockMocks.profiles.getUrl = () => Promise.resolve("https://fake:143");
+        globalMocks.mockCreateInputBox.mockReturnValue(blockMocks.inputBox);
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("False");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce(undefined);
+        globalMocks.mockCreateBasicZosmfSession.mockReturnValue({
+            ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" },
+        });
+
+        await blockMocks.profiles.editSession(blockMocks.imperativeProfile, blockMocks.imperativeProfile.name);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+    });
+
+    it("Tests that editSession successfully edits a session of type alternate with null aNumber", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.profiles.getProfileType = () =>
+            new Promise((resolve) => {
+                resolve("alternate");
+            });
+        blockMocks.profiles.getSchema = () => blockMocks.testSchemas[4];
+        blockMocks.profiles.getUrl = () => Promise.resolve("https://fake:143");
+        globalMocks.mockCreateInputBox.mockReturnValue(blockMocks.inputBox);
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowQuickPick.mockResolvedValueOnce("False");
+        globalMocks.mockCreateBasicZosmfSession.mockReturnValue({
+            ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" },
+        });
+
+        await blockMocks.profiles.editSession(blockMocks.imperativeProfile, blockMocks.imperativeProfile.name);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+    });
+
     it("Tests that editSession successfully edits a session of type alternate with empty aOther value", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
@@ -1144,6 +1252,27 @@ describe("Profiles Unit Tests - Function editSession", () => {
 
         await blockMocks.profiles.editSession(blockMocks.imperativeProfile, blockMocks.imperativeProfile.name);
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile was successfully updated");
+    });
+
+    it("Tests that editSession successfully edits a session of type alternate with undefined aOther value", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.profiles.getProfileType = () =>
+            new Promise((resolve) => {
+                resolve("alternate");
+            });
+        blockMocks.profiles.getSchema = () => blockMocks.testSchemas[2];
+        blockMocks.profiles.getUrl = () => Promise.resolve("https://fake:143");
+        globalMocks.mockCreateInputBox.mockReturnValue(blockMocks.inputBox);
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("123");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce(undefined);
+        globalMocks.mockCreateBasicZosmfSession.mockReturnValue({
+            ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" },
+        });
+
+        await blockMocks.profiles.editSession(blockMocks.imperativeProfile, blockMocks.imperativeProfile.name);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
     });
 
     it("Tests that editSession fails with error", async () => {
