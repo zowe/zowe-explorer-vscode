@@ -280,7 +280,7 @@ describe("Unit Tests (Jest)", () => {
      *************************************************************************************************************/
     it(
         "Checks that when bright.List.dataSet/allMembers() returns an unsuccessful response, " +
-            "it throws an error and the catch block is reached",
+            "it returns a label of 'No datasets found'",
         async () => {
             // Creating a rootNode
             const rootNode = new ZoweDatasetNode(
@@ -304,7 +304,10 @@ describe("Unit Tests (Jest)", () => {
                 profileOne
             );
             subNode.dirty = true;
-            await expect(subNode.getChildren()).rejects.toThrow("The response from Zowe CLI was not successful");
+            const response = await subNode.getChildren();
+            for (const item of response) {
+                expect(item.label).toEqual("No datasets found");
+            }
         }
     );
 
