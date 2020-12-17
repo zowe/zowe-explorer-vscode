@@ -208,7 +208,7 @@ export class FtpUssApi implements ZoweExplorerApi.IUss {
             } else if (type === "File" || type === "file") {
                 const content = Buffer.from(CoreUtils.addCarriageReturns(""));
                 const transferOptions = {
-                    transferType: "ascii",
+                    transferType: TRANSFER_TYPE_ASCII,
                     content: content,
                 };
                 await UssUtils.uploadFile(connection, ussPath, transferOptions);
