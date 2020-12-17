@@ -17,13 +17,13 @@ import * as zowe from "@zowe/cli";
 import * as imperative from "@zowe/imperative";
 
 import { ZoweExplorerApi } from "@zowe/zowe-explorer-api";
-import { IZosFTPProfile } from "@zowe/zos-ftp-for-zowe-cli/lib/api/doc/IZosFTPProfile";
-import { FTPConfig } from "@zowe/zos-ftp-for-zowe-cli/lib/api/FTPConfig";
 import {
     CoreUtils,
     UssUtils,
     TRANSFER_TYPE_ASCII,
     TRANSFER_TYPE_BINARY,
+    IZosFTPProfile,
+    FTPConfig
 } from "@zowe/zos-ftp-for-zowe-cli/lib/api";
 import { Buffer } from "buffer";
 
