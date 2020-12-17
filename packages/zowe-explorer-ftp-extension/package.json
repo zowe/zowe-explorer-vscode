@@ -24,7 +24,7 @@
   "scripts": {
     "prepare": "yarn build",
     "build": "yarn clean && webpack --mode development",
-    "test": "echo \"zowe-explorer-api: coming soon.\"",
+    "test": "echo \"zowe-explorer-ftp-extension: Tests coming soon.\"",
     "lint": "concurrently -n \"_eslint_,prettier\" \"eslint . --ext .ts\" \"prettier --check .\"",
     "pretty": "prettier --write .",
     "watch": "webpack --mode development --watch --info-verbosity verbose",

@@ -23,7 +23,7 @@ import {
     TRANSFER_TYPE_ASCII,
     TRANSFER_TYPE_BINARY,
     IZosFTPProfile,
-    FTPConfig
+    FTPConfig,
 } from "@zowe/zos-ftp-for-zowe-cli";
 import { Buffer } from "buffer";
 
@@ -69,10 +69,7 @@ export class FtpUssApi implements ZoweExplorerApi.IUss {
         const result = this.getDefaultResponse();
         const connection = await this.ftpClient(this.checkedProfile());
         if (connection) {
-            const response: any[] = await UssUtils.listFiles(
-                connection,
-                ussFilePath
-            );
+            const response: any[] = await UssUtils.listFiles(connection, ussFilePath);
             if (response) {
                 result.success = true;
                 result.apiResponse.items = response.map((element) => ({
@@ -91,17 +88,12 @@ export class FtpUssApi implements ZoweExplorerApi.IUss {
         return false; // TODO: needs to be implemented checking file type
     }
 
-    public async getContents(
-        ussFilePath: string,
-        options: zowe.IDownloadOptions
-    ): Promise<zowe.IZosFilesResponse> {
+    public async getContents(ussFilePath: string, options: zowe.IDownloadOptions): Promise<zowe.IZosFilesResponse> {
         const connection = await this.ftpClient(this.checkedProfile());
         const result = this.getDefaultResponse();
         const targetFile = options.file;
         const transferOptions = {
-            transferType: options.binary
-                ? TRANSFER_TYPE_BINARY
-                : TRANSFER_TYPE_ASCII,
+            transferType: options.binary ? TRANSFER_TYPE_BINARY : TRANSFER_TYPE_ASCII,
             localFile: targetFile,
             size: 1,
         };
@@ -176,19 +168,11 @@ export class FtpUssApi implements ZoweExplorerApi.IUss {
             throw new Error("The local directory path provided does not exist.");
         }
         // getting list of files from directory
-        const files = zowe.ZosFilesUtils.getFileListFromPath(
-            inputDirectoryPath,
-            false
-        );
+        const files = zowe.ZosFilesUtils.getFileListFromPath(inputDirectoryPath, false);
         // TODO: this solution will not perform very well; rewrite this and putContents methods
         for (const file of files) {
-            const relativePath = path
-                .relative(inputDirectoryPath, file)
-                .replace(/\\/g, "/");
-            const putResult = await this.putContents(
-                file,
-                path.posix.join(ussDirectoryPath, relativePath)
-            );
+            const relativePath = path.relative(inputDirectoryPath, file).replace(/\\/g, "/");
+            const putResult = await this.putContents(file, path.posix.join(ussDirectoryPath, relativePath));
             result = putResult;
         }
         return result;
@@ -221,10 +205,7 @@ export class FtpUssApi implements ZoweExplorerApi.IUss {
         return result;
     }
 
-    public async delete(
-        ussPath: string,
-        recursive?: boolean
-    ): Promise<zowe.IZosFilesResponse> {
+    public async delete(ussPath: string, recursive?: boolean): Promise<zowe.IZosFilesResponse> {
         const result = this.getDefaultResponse();
         const connection = await this.ftpClient(this.checkedProfile());
         if (connection) {
@@ -241,10 +222,7 @@ export class FtpUssApi implements ZoweExplorerApi.IUss {
         return result;
     }
 
-    public async rename(
-        currentUssPath: string,
-        newUssPath: string
-    ): Promise<zowe.IZosFilesResponse> {
+    public async rename(currentUssPath: string, newUssPath: string): Promise<zowe.IZosFilesResponse> {
         const result = this.getDefaultResponse();
         const connection = await this.ftpClient(this.checkedProfile());
         if (connection) {
