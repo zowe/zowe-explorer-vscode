@@ -24,7 +24,7 @@ import {
     TRANSFER_TYPE_BINARY,
     IZosFTPProfile,
     FTPConfig
-} from "@zowe/zos-ftp-for-zowe-cli/lib/api";
+} from "@zowe/zos-ftp-for-zowe-cli";
 import { Buffer } from "buffer";
 
 // The Zowe FTP CLI plugin is written and uses mostly JavaScript, so relax the rules here.
