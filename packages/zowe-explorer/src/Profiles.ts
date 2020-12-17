@@ -483,20 +483,14 @@ export class Profiles extends ProfilesCache {
                                 updSchemaValues[value] = Number(updValue);
                             } else {
                                 switch (true) {
-                                    case schema[value].optionDefinition.hasOwnProperty("defaultValue"):
-                                        if (schema[value].optionDefinition.defaultValue === null) {
-                                            vscode.window.showInformationMessage(
-                                                localize("editConnection.rejectUnauthorize", "Operation Cancelled")
-                                            );
-                                            return undefined;
-                                        }
-                                        updSchemaValues[value] = schema[value].optionDefinition.defaultValue;
-                                        break;
-                                    case schema[value] === undefined:
+                                    case updValue === undefined:
                                         vscode.window.showInformationMessage(
                                             localize("editConnection.rejectUnauthorize", "Operation Cancelled")
                                         );
                                         return undefined;
+                                    case schema[value].optionDefinition.hasOwnProperty("defaultValue"):
+                                        updSchemaValues[value] = schema[value].optionDefinition.defaultValue;
+                                        break;
                                     default:
                                         updSchemaValues[value] = undefined;
                                         break;
@@ -670,20 +664,14 @@ export class Profiles extends ProfilesCache {
                                 schemaValues[value] = Number(enteredValue);
                             } else {
                                 switch (true) {
-                                    case schema[value].optionDefinition.hasOwnProperty("defaultValue"):
-                                        if (schema[value].optionDefinition.defaultValue === null) {
-                                            vscode.window.showInformationMessage(
-                                                localize("createNewConnection.rejectUnauthorize", "Operation Cancelled")
-                                            );
-                                            return undefined;
-                                        }
-                                        schemaValues[value] = schema[value].optionDefinition.defaultValue;
-                                        break;
-                                    case schema[value] === undefined:
+                                    case enteredValue === undefined:
                                         vscode.window.showInformationMessage(
                                             localize("createNewConnection.rejectUnauthorize", "Operation Cancelled")
                                         );
                                         return undefined;
+                                    case schema[value].optionDefinition.hasOwnProperty("defaultValue"):
+                                        schemaValues[value] = schema[value].optionDefinition.defaultValue;
+                                        break;
                                     default:
                                         schemaValues[value] = undefined;
                                         break;
