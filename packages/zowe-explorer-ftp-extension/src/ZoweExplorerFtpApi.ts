@@ -20,6 +20,7 @@ import { ZoweExplorerApi } from "@zowe/zowe-explorer-api";
 import {
     CoreUtils,
     UssUtils,
+    DataSetUtils,
     TRANSFER_TYPE_ASCII,
     TRANSFER_TYPE_BINARY,
     IZosFTPProfile,
@@ -285,6 +286,127 @@ export class FtpUssApi implements ZoweExplorerApi.IUss {
                     resolve(`${hash.digest("hex")}`);
                 }
             });
+        });
+    }
+}
+
+export class FtpMvsApi implements ZoweExplorerApi.IMvs {
+    private session?: imperative.Session;
+
+    async dataSet(filter: string, options?: zowe.IListOptions): Promise<zowe.IZosFilesResponse> {
+        const result = this.getDefaultResponse();
+        const connection = await this.ftpClient(this.checkedProfile());
+        if (connection) {
+            const response = await DataSetUtils.listDataSets(connection, filter);
+            if (response) {
+                result.success = true;
+                result.apiResponse.items = response;
+            }
+        }
+        return result;
+    }
+    allMembers(dataSetName: string, options?: zowe.IListOptions): Promise<zowe.IZosFilesResponse> {
+        throw new Error("Method not implemented.");
+    }
+    getContents(dataSetName: string, options?: zowe.IDownloadOptions): Promise<zowe.IZosFilesResponse> {
+        throw new Error("Method not implemented.");
+    }
+    putContents(
+        inputFilePath: string,
+        dataSetName: string,
+        options?: zowe.IUploadOptions
+    ): Promise<zowe.IZosFilesResponse> {
+        throw new Error("Method not implemented.");
+    }
+    createDataSet(
+        dataSetType: zowe.CreateDataSetTypeEnum,
+        dataSetName: string,
+        options?: Partial<zowe.ICreateDataSetOptions>
+    ): Promise<zowe.IZosFilesResponse> {
+        throw new Error("Method not implemented.");
+    }
+    createDataSetMember(dataSetName: string, options?: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse> {
+        throw new Error("Method not implemented.");
+    }
+    allocateLikeDataSet(dataSetName: string, likeDataSetName: string): Promise<zowe.IZosFilesResponse> {
+        throw new Error("Method not implemented.");
+    }
+    copyDataSetMember(
+        { dataSetName: fromDataSetName, memberName: fromMemberName }: zowe.IDataSet,
+        { dataSetName: toDataSetName, memberName: toMemberName }: zowe.IDataSet,
+        options?: { replace?: boolean | undefined }
+    ): Promise<zowe.IZosFilesResponse> {
+        throw new Error("Method not implemented.");
+    }
+    renameDataSet(currentDataSetName: string, newDataSetName: string): Promise<zowe.IZosFilesResponse> {
+        throw new Error("Method not implemented.");
+    }
+    renameDataSetMember(
+        dataSetName: string,
+        currentMemberName: string,
+        newMemberName: string
+    ): Promise<zowe.IZosFilesResponse> {
+        throw new Error("Method not implemented.");
+    }
+    hMigrateDataSet(dataSetName: string): Promise<zowe.IZosFilesResponse> {
+        throw new Error("Method not implemented.");
+    }
+    hRecallDataSet(dataSetName: string): Promise<zowe.IZosFilesResponse> {
+        throw new Error("Method not implemented.");
+    }
+    deleteDataSet(dataSetName: string, options?: zowe.IDeleteDatasetOptions): Promise<zowe.IZosFilesResponse> {
+        throw new Error("Method not implemented.");
+    }
+    profile?: imperative.IProfileLoaded | undefined;
+    getProfileTypeName(): string {
+        return "zftp";
+    }
+
+    getSession(profile?: imperative.IProfileLoaded): imperative.Session {
+        if (!this.session) {
+            const ftpProfile = (profile || this.profile)?.profile;
+            if (!ftpProfile) {
+                throw new Error(
+                    "Internal error: ZoweVscFtpUssRestApi instance was not initialized with a valid Zowe profile."
+                );
+            }
+            this.session = new imperative.Session({
+                hostname: ftpProfile.host,
+                port: ftpProfile.port,
+                user: ftpProfile.user,
+                password: ftpProfile.password,
+                rejectUnauthorized: ftpProfile.rejectUnauthorized,
+            });
+        }
+        return this.session;
+    }
+
+    private getDefaultResponse(): zowe.IZosFilesResponse {
+        return {
+            success: false,
+            commandResponse: "Could not get a valid FTP connection.",
+            apiResponse: {},
+        };
+    }
+
+    private checkedProfile(): imperative.IProfileLoaded {
+        if (!this.profile?.profile) {
+            throw new Error(
+                "Internal error: ZoweVscFtpUssRestApi instance was not initialized with a valid Zowe profile."
+            );
+        }
+        return this.profile;
+    }
+
+    private async ftpClient(profile: imperative.IProfileLoaded): Promise<any> {
+        const ftpProfile = profile.profile as IZosFTPProfile;
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+        return await FTPConfig.connectFromArguments({
+            host: ftpProfile.host,
+            user: ftpProfile.user,
+            password: ftpProfile.password,
+            port: ftpProfile.port,
+            secureFtp: ftpProfile.secureFtp,
         });
     }
 }
