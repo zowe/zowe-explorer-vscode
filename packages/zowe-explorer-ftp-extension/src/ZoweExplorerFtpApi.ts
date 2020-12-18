@@ -61,7 +61,37 @@ export class FtpApiCommon implements ZoweExplorerApi.ICommon {
         }
         return this.session;
     }
+
+    protected getDefaultResponse(): zowe.IZosFilesResponse {
+        return {
+            success: false,
+            commandResponse: "Could not get a valid FTP connection.",
+            apiResponse: {},
+        };
+    }
+
+    protected checkedProfile(): imperative.IProfileLoaded {
+        if (!this.profile?.profile) {
+            throw new Error(
+                "Internal error: ZoweVscFtpUssRestApi instance was not initialized with a valid Zowe profile."
+            );
+        }
+        return this.profile;
+    }
+
+    protected async ftpClient(profile: imperative.IProfileLoaded): Promise<any> {
+        const ftpProfile = profile.profile as IZosFTPProfile;
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+        return await FTPConfig.connectFromArguments({
+            host: ftpProfile.host,
+            user: ftpProfile.user,
+            password: ftpProfile.password,
+            port: ftpProfile.port,
+            secureFtp: ftpProfile.secureFtp,
+        });
+    }
 }
+
 export class FtpUssApi extends FtpApiCommon implements ZoweExplorerApi.IUss {
     public async fileList(ussFilePath: string): Promise<zowe.IZosFilesResponse> {
         const result = this.getDefaultResponse();
@@ -242,35 +272,6 @@ export class FtpUssApi extends FtpApiCommon implements ZoweExplorerApi.IUss {
         }
     }
 
-    private getDefaultResponse(): zowe.IZosFilesResponse {
-        return {
-            success: false,
-            commandResponse: "Could not get a valid FTP connection.",
-            apiResponse: {},
-        };
-    }
-
-    private checkedProfile(): imperative.IProfileLoaded {
-        if (!this.profile?.profile) {
-            throw new Error(
-                "Internal error: ZoweVscFtpUssRestApi instance was not initialized with a valid Zowe profile."
-            );
-        }
-        return this.profile;
-    }
-
-    private async ftpClient(profile: imperative.IProfileLoaded): Promise<any> {
-        const ftpProfile = profile.profile as IZosFTPProfile;
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-        return await FTPConfig.connectFromArguments({
-            host: ftpProfile.host,
-            user: ftpProfile.user,
-            password: ftpProfile.password,
-            port: ftpProfile.port,
-            secureFtp: ftpProfile.secureFtp,
-        });
-    }
-
     private async hashFile(filename: string): Promise<string> {
         return await new Promise((resolve) => {
             const hash = crypto.createHash("sha1");
@@ -351,34 +352,5 @@ export class FtpMvsApi extends FtpApiCommon implements ZoweExplorerApi.IMvs {
     }
     deleteDataSet(dataSetName: string, options?: zowe.IDeleteDatasetOptions): Promise<zowe.IZosFilesResponse> {
         throw new Error("Method not implemented.");
-    }
-
-    private getDefaultResponse(): zowe.IZosFilesResponse {
-        return {
-            success: false,
-            commandResponse: "Could not get a valid FTP connection.",
-            apiResponse: {},
-        };
-    }
-
-    private checkedProfile(): imperative.IProfileLoaded {
-        if (!this.profile?.profile) {
-            throw new Error(
-                "Internal error: ZoweVscFtpUssRestApi instance was not initialized with a valid Zowe profile."
-            );
-        }
-        return this.profile;
-    }
-
-    private async ftpClient(profile: imperative.IProfileLoaded): Promise<any> {
-        const ftpProfile = profile.profile as IZosFTPProfile;
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-        return await FTPConfig.connectFromArguments({
-            host: ftpProfile.host,
-            user: ftpProfile.user,
-            password: ftpProfile.password,
-            port: ftpProfile.port,
-            secureFtp: ftpProfile.secureFtp,
-        });
     }
 }
