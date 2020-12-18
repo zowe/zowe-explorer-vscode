@@ -34,16 +34,16 @@ import { Buffer } from "buffer";
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-export class FtpUssApi implements ZoweExplorerApi.IUss {
+export class FtpApiCommon implements ZoweExplorerApi.ICommon {
     private session?: imperative.Session;
 
-    public constructor(public profile?: imperative.IProfileLoaded) {}
+    profile?: imperative.IProfileLoaded | undefined;
 
-    public static getProfileTypeName(): string {
+    getProfileTypeName(): string {
         return "zftp";
     }
 
-    public getSession(profile?: imperative.IProfileLoaded): imperative.Session {
+    getSession(profile?: imperative.IProfileLoaded): imperative.Session {
         if (!this.session) {
             const ftpProfile = (profile || this.profile)?.profile;
             if (!ftpProfile) {
@@ -61,11 +61,8 @@ export class FtpUssApi implements ZoweExplorerApi.IUss {
         }
         return this.session;
     }
-
-    public getProfileTypeName(): string {
-        return FtpUssApi.getProfileTypeName();
-    }
-
+}
+export class FtpUssApi extends FtpApiCommon implements ZoweExplorerApi.IUss {
     public async fileList(ussFilePath: string): Promise<zowe.IZosFilesResponse> {
         const result = this.getDefaultResponse();
         const connection = await this.ftpClient(this.checkedProfile());
@@ -290,9 +287,7 @@ export class FtpUssApi implements ZoweExplorerApi.IUss {
     }
 }
 
-export class FtpMvsApi implements ZoweExplorerApi.IMvs {
-    private session?: imperative.Session;
-
+export class FtpMvsApi extends FtpApiCommon implements ZoweExplorerApi.IMvs {
     async dataSet(filter: string, options?: zowe.IListOptions): Promise<zowe.IZosFilesResponse> {
         const result = this.getDefaultResponse();
         const connection = await this.ftpClient(this.checkedProfile());
@@ -356,29 +351,6 @@ export class FtpMvsApi implements ZoweExplorerApi.IMvs {
     }
     deleteDataSet(dataSetName: string, options?: zowe.IDeleteDatasetOptions): Promise<zowe.IZosFilesResponse> {
         throw new Error("Method not implemented.");
-    }
-    profile?: imperative.IProfileLoaded | undefined;
-    getProfileTypeName(): string {
-        return "zftp";
-    }
-
-    getSession(profile?: imperative.IProfileLoaded): imperative.Session {
-        if (!this.session) {
-            const ftpProfile = (profile || this.profile)?.profile;
-            if (!ftpProfile) {
-                throw new Error(
-                    "Internal error: ZoweVscFtpUssRestApi instance was not initialized with a valid Zowe profile."
-                );
-            }
-            this.session = new imperative.Session({
-                hostname: ftpProfile.host,
-                port: ftpProfile.port,
-                user: ftpProfile.user,
-                password: ftpProfile.password,
-                rejectUnauthorized: ftpProfile.rejectUnauthorized,
-            });
-        }
-        return this.session;
     }
 
     private getDefaultResponse(): zowe.IZosFilesResponse {
