@@ -37,13 +37,13 @@ import { Buffer } from "buffer";
 export class FtpApiCommon implements ZoweExplorerApi.ICommon {
     private session?: imperative.Session;
 
-    profile?: imperative.IProfileLoaded | undefined;
+    public constructor(public profile?: imperative.IProfileLoaded) {}
 
-    getProfileTypeName(): string {
+    public getProfileTypeName(): string {
         return "zftp";
     }
 
-    getSession(profile?: imperative.IProfileLoaded): imperative.Session {
+    public getSession(profile?: imperative.IProfileLoaded): imperative.Session {
         if (!this.session) {
             const ftpProfile = (profile || this.profile)?.profile;
             if (!ftpProfile) {
@@ -319,53 +319,53 @@ export class FtpMvsApi extends FtpApiCommon implements ZoweExplorerApi.IMvs {
         }
         return result;
     }
-    getContents(dataSetName: string, options?: zowe.IDownloadOptions): Promise<zowe.IZosFilesResponse> {
+    public getContents(dataSetName: string, options?: zowe.IDownloadOptions): Promise<zowe.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
-    putContents(
+    public putContents(
         inputFilePath: string,
         dataSetName: string,
         options?: zowe.IUploadOptions
     ): Promise<zowe.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
-    createDataSet(
+    public createDataSet(
         dataSetType: zowe.CreateDataSetTypeEnum,
         dataSetName: string,
         options?: Partial<zowe.ICreateDataSetOptions>
     ): Promise<zowe.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
-    createDataSetMember(dataSetName: string, options?: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse> {
+    public createDataSetMember(dataSetName: string, options?: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
-    allocateLikeDataSet(dataSetName: string, likeDataSetName: string): Promise<zowe.IZosFilesResponse> {
+    public allocateLikeDataSet(dataSetName: string, likeDataSetName: string): Promise<zowe.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
-    copyDataSetMember(
+    public copyDataSetMember(
         { dataSetName: fromDataSetName, memberName: fromMemberName }: zowe.IDataSet,
         { dataSetName: toDataSetName, memberName: toMemberName }: zowe.IDataSet,
         options?: { replace?: boolean | undefined }
     ): Promise<zowe.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
-    renameDataSet(currentDataSetName: string, newDataSetName: string): Promise<zowe.IZosFilesResponse> {
+    public renameDataSet(currentDataSetName: string, newDataSetName: string): Promise<zowe.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
-    renameDataSetMember(
+    public renameDataSetMember(
         dataSetName: string,
         currentMemberName: string,
         newMemberName: string
     ): Promise<zowe.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
-    hMigrateDataSet(dataSetName: string): Promise<zowe.IZosFilesResponse> {
+    public hMigrateDataSet(dataSetName: string): Promise<zowe.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
-    hRecallDataSet(dataSetName: string): Promise<zowe.IZosFilesResponse> {
+    public hRecallDataSet(dataSetName: string): Promise<zowe.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
-    deleteDataSet(dataSetName: string, options?: zowe.IDeleteDatasetOptions): Promise<zowe.IZosFilesResponse> {
+    public deleteDataSet(dataSetName: string, options?: zowe.IDeleteDatasetOptions): Promise<zowe.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
 }
