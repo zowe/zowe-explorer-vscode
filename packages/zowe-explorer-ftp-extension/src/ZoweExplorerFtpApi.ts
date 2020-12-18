@@ -289,7 +289,7 @@ export class FtpUssApi extends FtpApiCommon implements ZoweExplorerApi.IUss {
 }
 
 export class FtpMvsApi extends FtpApiCommon implements ZoweExplorerApi.IMvs {
-    async dataSet(filter: string, options?: zowe.IListOptions): Promise<zowe.IZosFilesResponse> {
+    public async dataSet(filter: string, options?: zowe.IListOptions): Promise<zowe.IZosFilesResponse> {
         const result = this.getDefaultResponse();
         const connection = await this.ftpClient(this.checkedProfile());
         if (connection) {
@@ -298,11 +298,26 @@ export class FtpMvsApi extends FtpApiCommon implements ZoweExplorerApi.IMvs {
                 result.success = true;
                 result.apiResponse.items = response;
             }
+        } else {
+            throw new Error(result.commandResponse);
         }
         return result;
     }
-    allMembers(dataSetName: string, options?: zowe.IListOptions): Promise<zowe.IZosFilesResponse> {
-        throw new Error("Method not implemented.");
+    public async allMembers(dataSetName: string, options?: zowe.IListOptions): Promise<zowe.IZosFilesResponse> {
+        const result = this.getDefaultResponse();
+        const connection = await this.ftpClient(this.checkedProfile());
+        if (connection) {
+            const response = await DataSetUtils.listMembers(connection, dataSetName);
+            if (response) {
+                result.success = true;
+                result.apiResponse.items = response.map((element) => ({
+                    member: element.name,
+                }));
+            }
+        } else {
+            throw new Error(result.commandResponse);
+        }
+        return result;
     }
     getContents(dataSetName: string, options?: zowe.IDownloadOptions): Promise<zowe.IZosFilesResponse> {
         throw new Error("Method not implemented.");
