@@ -125,7 +125,7 @@ export class MvsCommandHandler {
                     updSession && updSession.ISession ? updSession.ISession.hostname : "unknown"
                 );
             }
-            await this.issueCommand(updSession, command1);
+            await this.issueCommand(updSession, command1, zosmfProfile.name);
         } else {
             vscode.window.showErrorMessage(localize("issueMvsCommand.checkProfile", "Profile is invalid"));
             return;
@@ -210,7 +210,7 @@ export class MvsCommandHandler {
      * @param session The Session object
      * @param command the command string
      */
-    private async issueCommand(session: Session, command: string) {
+    private async issueCommand(session: Session, command: string, label: string) {
         try {
             if (command) {
                 // If the user has started their command with a / then remove it
@@ -233,7 +233,7 @@ export class MvsCommandHandler {
                 }
             }
         } catch (error) {
-            await errorHandling(error, "", error.message);
+            await errorHandling(error, label, error.message);
         }
         this.history.addSearchHistory(command);
     }
