@@ -2527,6 +2527,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce(undefined);
         await dsActions.createFile(node, blockMocks.testDatasetTree);
 
+        expect(mocked(vscode.window.showInformationMessage)).toHaveBeenCalledWith("Operation cancelled.");
         expect(mocked(vscode.workspace.getConfiguration)).not.toBeCalled();
         expect(createDataSetSpy).not.toHaveBeenCalled();
     });

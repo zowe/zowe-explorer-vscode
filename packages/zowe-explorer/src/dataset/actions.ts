@@ -40,10 +40,10 @@ import { DatasetTree } from "./DatasetTree";
 import * as contextually from "../shared/context";
 import { returnIconState, resetValidationSettings } from "../shared/actions";
 import { setFileSaved } from "../utils/workspace";
-
-import * as nls from "vscode-nls";
 import { PersistentFilters } from "../PersistentFilters";
+
 // Set up localization
+import * as nls from "vscode-nls";
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
     bundleFormat: nls.BundleFormat.standalone,
@@ -437,7 +437,7 @@ export async function createFile(node: IZoweDatasetTreeNode, datasetProvider: IZ
             vscode.window.showInformationMessage(localize("createFile.operationCancelled", "Operation cancelled."));
             return;
         } else {
-            if (choice === "+ Allocate Data Set") {
+            if (choice === " + Allocate Data Set") {
                 // User wants to allocate straightaway - skip Step 4
                 globals.LOG.debug(localize("createFile.allocatingNewDataSet", "Allocating new data set"));
                 vscode.window.showInformationMessage(
