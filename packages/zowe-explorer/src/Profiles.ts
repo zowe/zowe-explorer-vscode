@@ -1615,6 +1615,14 @@ export class Profiles extends ProfilesCache {
                     OrigProfileInfo.user = NewProfileInfo.user;
                     OrigProfileInfo.password = NewProfileInfo.password;
                 }
+                // We pass these fields as CLI arguments to CliProfileManager.update()
+                // so we have to reformat some keys to match the CLI args
+            } else if (value === "rejectUnauthorized") {
+                OrigProfileInfo["reject-unauthorized"] = NewProfileInfo[value];
+                delete OrigProfileInfo.rejectUnauthorized;
+            } else if (value === "basePath") {
+                OrigProfileInfo["base-path"] = NewProfileInfo[value] ? NewProfileInfo[value] : "";
+                delete OrigProfileInfo.basePath;
             } else {
                 OrigProfileInfo[value] = NewProfileInfo[value];
             }
