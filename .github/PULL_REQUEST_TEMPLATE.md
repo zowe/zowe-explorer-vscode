@@ -3,6 +3,7 @@
 <!-- Describe the big picture of your changes here to communicate to the maintainers why we should accept this pull request. If it fixes a bug or resolves a feature request, be sure to link to that issue. -->
 
 ## Release Notes
+
 <!-- Include the Milestone Number and a small description of your change that will be added to the changelog -->
 <!-- If there is a linked issue, it should have the same milestone as this PR -->
 
@@ -28,7 +29,7 @@ _Put an `x` in the boxes that apply. You can also fill these out after creating 
 - [ ] PR title follows [Conventional Commits Guidelines](https://www.conventionalcommits.org/en/v1.0.0-beta.2/)
 - [ ] PR Description is included
 - [ ] gif or screenshot is included if visual changes are made
-- [ ] `npm run vscode:prepublish` has been executed
+- [ ] `yarn workspace vscode-extension-for-zowe vscode:prepublish` has been executed
 - [ ] All checks have passed (DCO, Jenkins and Code Coverage)
 - [ ] I have added unit test and it is passing
 - [ ] I have added integration test and it is passing
