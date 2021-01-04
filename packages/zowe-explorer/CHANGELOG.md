@@ -2,6 +2,14 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## `1.11.0`
+
+- Added login and logout functions for base profiles. You can now log in to API Mediation Layer and generate a token for your base profile. [#914](https://github.com/zowe/vscode-extension-for-zowe/issues/914). Thanks @crawr
+- Fixed the empty profile folders in Favorites issue. [#1026](https://github.com/zowe/vscode-extension-for-zowe/issues/1026). Thanks @lauren-li
+- Fixed the initialization error that occurred when base profiles were used while being logged out from API ML. [1063](https://github.com/zowe/vscode-extension-for-zowe/issues/1063). Thanks @jellypuno
+- Fixed the issue preventing the tree refresh function from updating extender profiles. [1078](https://github.com/zowe/vscode-extension-for-zowe/issues/1078). Thanks @lauren-li
+- Fixed the issue causing jobs retrieval failure when using profiles with tokens. [1088](https://github.com/zowe/vscode-extension-for-zowe/issues/1088). Thanks @jellypuno
+
 ## `1.10.1`
 
 - Updated arguments to keep the order of precedence consistent between service and base profile. [#1055](https://github.com/zowe/vscode-extension-for-zowe/issues/1055). Thanks @JillieBeanSim
