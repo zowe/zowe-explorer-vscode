@@ -547,7 +547,7 @@ async function handleUserSelection(newDSProperties, dsType): Promise<string> {
     if (pattern) {
         // Parse pattern for selected attribute
         switch (pattern) {
-            case "+ Allocate Data Set":
+            case " + Allocate Data Set":
                 return new Promise((resolve) => resolve(`+ Allocate Data Set`));
             case "Show Attributes":
                 newDSProperties.find((prop) => prop.label === pattern).value = await vscode.window.showQuickPick([
