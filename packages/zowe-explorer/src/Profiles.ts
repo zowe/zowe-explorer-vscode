@@ -1625,7 +1625,7 @@ export class Profiles extends ProfilesCache {
                 // that were stored in the profile before this update
                 delete OrigProfileInfo[value];
             } else if (value === "responseTimeout" && OrigProfileInfo[value] === 0) {
-                // If the updated profile had an empty property, delete it...
+                // If the updated profile had responseTimeout set to 0, delete it...
                 // this should get rid of a bad value that was stored
                 // in the responseTimeout property before this update
                 delete OrigProfileInfo[value];
