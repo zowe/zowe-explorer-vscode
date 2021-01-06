@@ -13,7 +13,6 @@ import {
     IProfileLoaded,
     Logger,
     ISession,
-    IUpdateProfileFromCliArgs,
     ICommandArguments,
     Session,
     SessConstants,
@@ -1608,34 +1607,35 @@ export class Profiles extends ProfilesCache {
         const OrigProfileInfo = this.loadedProfile.profile;
         const NewProfileInfo = ProfileInfo.profile;
 
+        // Update the currently-loaded profile with the new info
         const profileArray = Object.keys(this.loadedProfile.profile);
         for (const value of profileArray) {
-            if (value === "user" || value === "password") {
-                if (!rePrompt) {
-                    OrigProfileInfo.user = NewProfileInfo.user;
-                    OrigProfileInfo.password = NewProfileInfo.password;
+            if (NewProfileInfo[value] !== undefined && NewProfileInfo[value] !== "") {
+                if (value === "user" || value === "password") {
+                    if (!rePrompt) {
+                        OrigProfileInfo.user = NewProfileInfo.user;
+                        OrigProfileInfo.password = NewProfileInfo.password;
+                    }
+                } else {
+                    OrigProfileInfo[value] = NewProfileInfo[value];
                 }
-                // We pass these fields as CLI arguments to CliProfileManager.update()
-                // so we have to reformat some keys to match the CLI args
-            } else if (value === "rejectUnauthorized") {
-                OrigProfileInfo["reject-unauthorized"] = NewProfileInfo[value];
-                delete OrigProfileInfo.rejectUnauthorized;
-            } else if (value === "basePath") {
-                OrigProfileInfo["base-path"] = NewProfileInfo[value] ? NewProfileInfo[value] : "";
-                delete OrigProfileInfo.basePath;
-            } else {
-                OrigProfileInfo[value] = NewProfileInfo[value];
+            } else if (OrigProfileInfo[value] !== undefined || OrigProfileInfo[value] === "") {
+                // If the updated profile had an empty property, delete it...
+                // this should get rid of any empty strings
+                // that were stored in the profile before this update
+                delete OrigProfileInfo[value];
+            } else if (value === "responseTimeout" && OrigProfileInfo[value] === 0) {
+                // If the updated profile had an empty property, delete it...
+                // this should get rid of a bad value that was stored
+                // in the responseTimeout property before this update
+                delete OrigProfileInfo[value];
             }
         }
 
-        // Using `IUpdateProfileFromCliArgs` here instead of `IUpdateProfile` is
-        // kind of a hack, but necessary to support storing secure credentials
-        // until this is fixed: https://github.com/zowe/imperative/issues/379
-        const updateParms: IUpdateProfileFromCliArgs = {
+        const updateParms: IUpdateProfile = {
             name: this.loadedProfile.name,
-            merge: true,
-            // profile: OrigProfileInfo as IProfile
-            args: OrigProfileInfo as any,
+            merge: false,
+            profile: OrigProfileInfo as IProfile,
         };
         try {
             this.getCliProfileManager(this.loadedProfile.type).update(updateParms);

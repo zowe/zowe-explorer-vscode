@@ -1015,7 +1015,7 @@ describe("Profiles Unit Tests - Function updateProfile", () => {
         };
         newMocks.profiles = await Profiles.createInstance(newMocks.log);
         newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
-        newMocks.changedImperativeProfile.profile = { user: "test2", password: "test2" };
+        newMocks.changedImperativeProfile.profile = { user: "test2", password: "test2", rejectUnauthorize: true };
         newMocks.profileInfo = newMocks.changedImperativeProfile;
         Object.defineProperty(globalMocks.mockCliProfileManager, "load", {
             value: jest.fn(() => {
