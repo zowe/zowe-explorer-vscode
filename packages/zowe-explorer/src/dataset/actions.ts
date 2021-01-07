@@ -756,6 +756,7 @@ export async function deleteDataset(node: IZoweTreeNode, datasetProvider: IZoweT
  *
  * @param {IZoweDatasetTreeNode} node - The node which represents the dataset
  */
+// This is not a UI refresh.
 export async function refreshPS(node: IZoweDatasetTreeNode) {
     let label: string;
     try {
