@@ -357,6 +357,11 @@ export class Profiles extends ProfilesCache {
             if (newprofile) {
                 try {
                     await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
+
+                    // Since optional values can't be passed into CliProfileManager.save,
+                    // we call updateProfile after refreshing to get rid of any blank fields
+                    const newProfileLoaded = Profiles.getInstance().loadNamedProfile(newprofile);
+                    await this.updateProfile(newProfileLoaded);
                 } catch (error) {
                     await errorHandling(error, newprofile, error.message);
                 }
@@ -1610,7 +1615,12 @@ export class Profiles extends ProfilesCache {
         // Update the currently-loaded profile with the new info
         const profileArray = Object.keys(this.loadedProfile.profile);
         for (const value of profileArray) {
-            if (NewProfileInfo[value] !== undefined && NewProfileInfo[value] !== "") {
+            if ((value === "encoding" || value === "responseTimeout") && NewProfileInfo[value] === 0) {
+                // If the updated profile had these fields set to 0, delete them...
+                // this should get rid of a bad value that was stored
+                // in these properties before this update
+                delete OrigProfileInfo[value];
+            } else if (NewProfileInfo[value] !== undefined && NewProfileInfo[value] !== "") {
                 if (value === "user" || value === "password") {
                     if (!rePrompt) {
                         OrigProfileInfo.user = NewProfileInfo.user;
@@ -1619,15 +1629,10 @@ export class Profiles extends ProfilesCache {
                 } else {
                     OrigProfileInfo[value] = NewProfileInfo[value];
                 }
-            } else if (OrigProfileInfo[value] !== undefined || OrigProfileInfo[value] === "") {
+            } else if (NewProfileInfo[value] === undefined || NewProfileInfo[value] === "") {
                 // If the updated profile had an empty property, delete it...
                 // this should get rid of any empty strings
                 // that were stored in the profile before this update
-                delete OrigProfileInfo[value];
-            } else if (value === "responseTimeout" && OrigProfileInfo[value] === 0) {
-                // If the updated profile had responseTimeout set to 0, delete it...
-                // this should get rid of a bad value that was stored
-                // in the responseTimeout property before this update
                 delete OrigProfileInfo[value];
             }
         }
