@@ -163,6 +163,9 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
     public delete(node: IZoweUSSTreeNode) {
         throw new Error("Method not implemented.");
     }
+    public deleteMulti(ussFileProvider: vscode.TreeView<IZoweUSSTreeNode>) {
+        throw new Error("Method not implemented.");
+    }
     public saveFile(document: vscode.TextDocument) {
         throw new Error("Method not implemented.");
     }

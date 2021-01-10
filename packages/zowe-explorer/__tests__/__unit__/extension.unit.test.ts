@@ -175,6 +175,7 @@ async function createGlobalMocks() {
             "zowe.uss.ssoLogout",
             "zowe.zosJobsOpenspool",
             "zowe.deleteJob",
+            "zowe.deleteMultiJob",
             "zowe.runModifyCommand",
             "zowe.runStopCommand",
             "zowe.refreshJobsServer",

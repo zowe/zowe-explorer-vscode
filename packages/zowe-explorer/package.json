@@ -424,6 +424,10 @@
         }
       },
       {
+        "command": "zowe.deleteMultiJob",
+        "title": "%deleteMultiJob%"
+      },
+      {
         "command": "zowe.jobs.addFavorite",
         "title": "%addFavorite%",
         "icon": {
@@ -966,6 +970,11 @@
           "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)job.*/",
           "command": "zowe.getJobJcl",
           "group": "0_mainframeInteraction"
+        },
+        {
+          "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)job.*/",
+          "command": "zowe.deleteMultiJob",
+          "group": "0_mainframeInteraction@1"
         },
         {
           "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/",

@@ -46,6 +46,7 @@
   "uss.text": "Toggle Text",
   "jobs.search": "Search Jobs using Attributes",
   "deleteJob": "Delete Job",
+  "deleteMultiJob": "Delete Multiple Jobs",
   "runModifyCommand": "Issue Modify command",
   "runStopCommand": "Issue Stop command",
   "setOwner": "Set Owner",

@@ -80,7 +80,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             this.mFavoriteSession.iconPath = icon.path;
         }
         this.mSessionNodes = [this.mFavoriteSession];
-        this.treeView = vscode.window.createTreeView("zowe.jobs", { treeDataProvider: this });
+        this.treeView = vscode.window.createTreeView("zowe.jobs", { treeDataProvider: this, canSelectMany: true });
     }
 
     public rename(node: IZoweJobTreeNode) {
@@ -211,6 +211,15 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             this.removeFavorite(this.createJobsFavorite(node));
         } catch (error) {
             await errorHandling(error, node.getProfileName(), error.message);
+        }
+    }
+
+    public async deleteMulti(jobsProvider: vscode.TreeView<IZoweJobTreeNode>) {
+        const nodes: IZoweJobTreeNode[] = jobsProvider.selection;
+        if (nodes) {
+            nodes.forEach((node) => {
+                this.delete(node);
+            });
         }
     }
 
