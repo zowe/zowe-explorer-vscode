@@ -64,6 +64,60 @@ export declare const enum sampleCreateDataSetTypeEnum {
     DATA_SET_SEQUENTIAL = 4,
 }
 
+export const CreateDefaults = {
+    DATA_SET: {
+        PARTITIONED: {
+            alcunit: "CYL",
+            dsorg: "PO",
+            primary: 1,
+            dirblk: 5,
+            recfm: "FB",
+            blksize: 6160,
+            lrecl: 80,
+        },
+        SEQUENTIAL: {
+            alcunit: "CYL",
+            dsorg: "PS",
+            primary: 1,
+            recfm: "FB",
+            blksize: 6160,
+            lrecl: 80,
+        },
+        CLASSIC: {
+            alcunit: "CYL",
+            dsorg: "PO",
+            primary: 1,
+            recfm: "FB",
+            blksize: 6160,
+            lrecl: 80,
+            dirblk: 25,
+        },
+        C: {
+            dsorg: "PO",
+            alcunit: "CYL",
+            primary: 1,
+            recfm: "VB",
+            blksize: 32760,
+            lrecl: 260,
+            dirblk: 25,
+        },
+        BINARY: {
+            dsorg: "PO",
+            alcunit: "CYL",
+            primary: 10,
+            recfm: "U",
+            blksize: 27998,
+            lrecl: 27998,
+            dirblk: 25,
+        },
+    },
+    VSAM: {
+        dsorg: "INDEXED",
+        alcunit: "KB",
+        primary: 840,
+    },
+};
+
 // tslint:disable-next-line:no-namespace
 export namespace List {
     export function dataSet(session: Session, hlq: string, options: IListOptions): Promise<IZosFilesResponse> {

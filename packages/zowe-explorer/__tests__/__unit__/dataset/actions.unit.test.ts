@@ -2467,7 +2467,15 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         await dsActions.createFile(node, blockMocks.testDatasetTree);
 
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("Zowe-Default-Datasets-PS");
-        expect(createDataSetSpy).toHaveBeenCalledWith(zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, "TEST", {});
+        expect(createDataSetSpy).toHaveBeenCalledWith(zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, "TEST", {
+            alcunit: "CYL",
+            blksize: 6160,
+            dirblk: "5",
+            dsorg: "PS",
+            lrecl: 80,
+            primary: 1,
+            recfm: "FB",
+        });
     });
     it("Checking PS dataset errored creation with Unverified profile", async () => {
         createGlobalMocks();
@@ -2514,7 +2522,15 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
             "Error encountered when creating data set! Generic Error Error: Generic Error"
         );
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("Zowe-Default-Datasets-PS");
-        expect(createDataSetSpy).toHaveBeenCalledWith(zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, "TEST", {});
+        expect(createDataSetSpy).toHaveBeenCalledWith(zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, "TEST", {
+            alcunit: "CYL",
+            blksize: 6160,
+            dirblk: "5",
+            dsorg: "PS",
+            lrecl: 80,
+            primary: 1,
+            recfm: "FB",
+        });
     });
     it("Checking dataset attempt of creation with empty type", async () => {
         createGlobalMocks();
@@ -2633,7 +2649,15 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
 
         await dsActions.createFile(node, blockMocks.testDatasetTree);
 
-        expect(createDataSetSpy).toHaveBeenCalledWith(zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, "TEST.EDIT", {});
+        expect(createDataSetSpy).toHaveBeenCalledWith(zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, "TEST.EDIT", {
+            alcunit: "CYL",
+            blksize: 6160,
+            dirblk: "5",
+            dsorg: "PS",
+            lrecl: 80,
+            primary: 1,
+            recfm: "FB",
+        });
     });
 
     it("Tests that user can edit the attributes", async () => {
@@ -2665,9 +2689,9 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         // 4th step: User tries to edit Record Length
         const quickPickContent = createQuickPickContent("", [], "");
         mocked(vscode.window.createQuickPick).mockReturnValueOnce(quickPickContent);
-        const selectedItem: vscode.QuickPickItem = { label: "Record Length" };
+        const selectedItem: vscode.QuickPickItem = { label: "Allocation Unit" };
         jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(selectedItem);
-        mocked(vscode.window.showInputBox).mockResolvedValueOnce("80");
+        mocked(vscode.window.showInputBox).mockResolvedValueOnce("TRK");
 
         // Then they try to allocate
         mocked(vscode.window.createQuickPick).mockReturnValueOnce(quickPickContent);
@@ -2676,7 +2700,13 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         await dsActions.createFile(node, blockMocks.testDatasetTree);
 
         expect(createDataSetSpy).toHaveBeenCalledWith(zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, "TEST", {
-            lrecl: "80",
+            alcunit: "TRK",
+            blksize: 6160,
+            dirblk: "5",
+            dsorg: "PS",
+            lrecl: 80,
+            primary: 1,
+            recfm: "FB",
         });
     });
 });
