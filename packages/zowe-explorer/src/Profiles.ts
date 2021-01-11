@@ -357,11 +357,6 @@ export class Profiles extends ProfilesCache {
             if (newprofile) {
                 try {
                     await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
-
-                    // Since optional values can't be passed into CliProfileManager.save,
-                    // we call updateProfile after refreshing to get rid of any blank fields
-                    const newProfileLoaded = Profiles.getInstance().loadNamedProfile(newprofile);
-                    await this.updateProfile(newProfileLoaded);
                 } catch (error) {
                     await errorHandling(error, newprofile, error.message);
                 }
