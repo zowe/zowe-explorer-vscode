@@ -357,11 +357,6 @@ export class Profiles extends ProfilesCache {
             if (newprofile) {
                 try {
                     await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
-
-                    // Since optional values can't be passed into CliProfileManager.save,
-                    // we call updateProfile after refreshing to get rid of any blank fields
-                    const newProfileLoaded = Profiles.getInstance().loadNamedProfile(newprofile);
-                    await this.updateProfile(newProfileLoaded);
                 } catch (error) {
                     await errorHandling(error, newprofile, error.message);
                 }
@@ -620,8 +615,11 @@ export class Profiles extends ProfilesCache {
                             localize("createNewConnection.undefined.username", "Operation Cancelled")
                         );
                         return undefined;
+                    } else if (newUser === "") {
+                        delete schemaValues[value];
+                    } else {
+                        schemaValues[value] = newUser;
                     }
-                    schemaValues[value] = newUser;
                     break;
                 case "password":
                     newPass = await this.passwordInfo();
@@ -630,8 +628,11 @@ export class Profiles extends ProfilesCache {
                             localize("createNewConnection.undefined.username", "Operation Cancelled")
                         );
                         return undefined;
+                    } else if (newPass === "") {
+                        delete schemaValues[value];
+                    } else {
+                        schemaValues[value] = newPass;
                     }
-                    schemaValues[value] = newPass;
                     break;
                 case "rejectUnauthorized":
                     newRU = await this.ruInfo();
@@ -649,22 +650,18 @@ export class Profiles extends ProfilesCache {
                     switch (response) {
                         case "number":
                             options = await this.optionsValue(value, schema);
-                            const enteredValue = await vscode.window.showInputBox(options);
-                            if (!Number.isNaN(Number(enteredValue))) {
-                                schemaValues[value] = Number(enteredValue);
+                            const enteredValue = Number(await vscode.window.showInputBox(options));
+                            if (!Number.isNaN(enteredValue)) {
+                                if ((value === "encoding" || value === "responseTimeout") && enteredValue === 0) {
+                                    delete schemaValues[value];
+                                } else {
+                                    schemaValues[value] = Number(enteredValue);
+                                }
                             } else {
-                                switch (true) {
-                                    case enteredValue === undefined:
-                                        vscode.window.showInformationMessage(
-                                            localize("createNewConnection.number", "Operation Cancelled")
-                                        );
-                                        return undefined;
-                                    case schema[value].optionDefinition.hasOwnProperty("defaultValue"):
-                                        schemaValues[value] = schema[value].optionDefinition.defaultValue;
-                                        break;
-                                    default:
-                                        schemaValues[value] = undefined;
-                                        break;
+                                if (schema[value].optionDefinition.hasOwnProperty("defaultValue")) {
+                                    schemaValues[value] = schema[value].optionDefinition.defaultValue;
+                                } else {
+                                    delete schemaValues[value];
                                 }
                             }
                             break;
@@ -689,9 +686,10 @@ export class Profiles extends ProfilesCache {
                                 return undefined;
                             }
                             if (defValue === "") {
-                                break;
+                                delete schemaValues[value];
+                            } else {
+                                schemaValues[value] = defValue;
                             }
-                            schemaValues[value] = defValue;
                             break;
                     }
             }
