@@ -61,12 +61,13 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         "\uFF0B " +
         localize(
             "defaultFilterPrompt.option.prompt.search",
-            "Create a new filter. Comma separate multiple entries (pattern 1, pattern 2, ...)"
+            "Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)"
         );
     public mFavoriteSession: ZoweDatasetNode;
 
     public mSessionNodes: IZoweDatasetTreeNode[] = [];
     public mFavorites: IZoweDatasetTreeNode[] = [];
+    // public memberPattern: IZoweDatasetTreeNode[] = [];
     private treeView: vscode.TreeView<IZoweDatasetTreeNode>;
 
     constructor() {
@@ -97,10 +98,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      */
     public async rename(node: IZoweDatasetTreeNode) {
         await Profiles.getInstance().checkCurrentProfile(node.getProfile());
-        if (
-            Profiles.getInstance().validProfile === ValidProfileEnum.VALID ||
-            Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED
-        ) {
+        if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
             return contextually.isDsMember(node) ? this.renameDataSetMember(node) : this.renameDataSet(node);
         }
     }
@@ -149,7 +147,12 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 return favsForProfile;
             }
             await Profiles.getInstance().checkCurrentProfile(element.getProfile());
-            return element.getChildren();
+            const response = await element.getChildren();
+            for (const item of response) {
+                item.memberPattern = element.memberPattern;
+                this.refreshElement(item);
+            }
+            return response;
         }
         return this.mSessionNodes;
     }
@@ -811,10 +814,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         let pattern: string;
         await this.checkCurrentProfile(node);
 
-        if (
-            Profiles.getInstance().validProfile === ValidProfileEnum.VALID ||
-            Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED
-        ) {
+        if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
             if (contextually.isSessionNotFav(node)) {
                 if (this.mHistory.getSearchHistory().length > 0) {
                     const createPick = new FilterDescriptor(DatasetTree.defaultDialogText);
@@ -885,17 +885,52 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     node.getSession().ISession.base64EncodedAuth = faveNode.getSession().ISession.base64EncodedAuth;
                 }
             }
-            // update the treeview with the new pattern
+            // looking for members in pattern
+            let enteredPattern: string;
+            enteredPattern = pattern.replace(/\s/g, "");
+            let members: string;
+            let datasets: string;
+            const dataSetsFound: string[] = [];
+            const memberFound: string[] = [];
+            for (const item of enteredPattern.split(",")) {
+                if (item.includes("(")) {
+                    for (const element of item.split("(")) {
+                        if (element.includes(")")) {
+                            memberFound.push(element.replace(/([)])/g, ""));
+                        } else {
+                            dataSetsFound.push(element);
+                        }
+                    }
+                } else {
+                    dataSetsFound.push(item);
+                }
+                if (memberFound.length > 0) {
+                    members = memberFound.toString();
+                }
+                if (dataSetsFound.length > 0) {
+                    datasets = dataSetsFound.toString();
+                }
+            }
+
             node.label = node.label.trim() + " ";
             node.label.trim();
-            node.tooltip = node.pattern = pattern.toUpperCase();
+            if (datasets !== undefined) {
+                node.tooltip = node.pattern = datasets.toUpperCase();
+            } else {
+                node.tooltip = node.pattern = pattern.toUpperCase();
+            }
+            if (members !== undefined) {
+                node.memberPattern = members.toUpperCase();
+            } else {
+                node.memberPattern = undefined;
+            }
             node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
             node.dirty = true;
             const icon = getIconByNode(node);
             if (icon) {
                 node.iconPath = icon.path;
             }
-            this.addSearchHistory(node.pattern);
+            this.addSearchHistory(pattern);
         }
     }
 
@@ -1030,7 +1065,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         if (profile) {
             // If baseProfile exists, combine that information first before adding the session to the tree
             // TODO: Move addSession to abstract/ZoweTreeProvider (similar to editSession)
-            const baseProfile = await Profiles.getInstance().getBaseProfile();
+            const baseProfile = Profiles.getInstance().getBaseProfile();
 
             if (baseProfile) {
                 try {

@@ -6,6 +6,16 @@ on:
     - master
     paths:
     - package.json
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version to be published
+        default: v1.11.0
+        required: false
+      # create_release:
+      #   description: Create the release even if publishing already happened
+      #   default: 'false'
+      #   required: false
 
 jobs:
   check_version:
@@ -66,7 +76,6 @@ jobs:
         run: |
           git config --global user.name "zowe-robot"
           git config --global user.email "zowe.robot@gmail.com"
-          git remote add origin_token https://${{ secrets.ROBOT_TOKEN }}:x-oauth-basic@github.com/${{ github.repository }}.git
 
       - name: Install CLIs for Workflow use
         run: npm install -g vsce yarn
@@ -138,7 +147,13 @@ jobs:
         run: |
           git status
           git commit -m "Version Bumped to ${{ fromJson(steps.get_version.outputs.top_package).version }}" --signoff
-          git push origin_token master
+      - name: Push changes
+        if: steps.check_project.outputs.files_staged == 1
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          force: true
+          branch: ${{ github.ref }}
 
       - name: Create the Release
         if: steps.check_project.outputs.files_staged == 1
@@ -161,6 +176,7 @@ jobs:
         if: |
           steps.check_project.outputs.files_staged == 1 &&
           steps.deploy_zowe_explorer.outputs.archive != null
+        # steps.check_project.outputs.files_staged == 1 || github.event.input.create_release == 'true') &&
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -174,6 +190,7 @@ jobs:
         if: |
           steps.check_project.outputs.files_staged == 1 &&
           steps.deploy_zowe_explorer_ftp_extension.outputs.archive != null
+        # steps.check_project.outputs.files_staged == 1 || github.event.input.create_release == 'true') &&
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -187,6 +204,7 @@ jobs:
         if: |
           steps.check_project.outputs.files_staged == 1 &&
           steps.deploy_zowe_explorer_api.outputs.archive != null
+        # steps.check_project.outputs.files_staged == 1 || github.event.input.create_release == 'true') &&
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -200,6 +218,7 @@ jobs:
         if: |
           steps.check_project.outputs.files_staged == 1 &&
           steps.deploy_eslint_plugin_zowe_explorer.outputs.archive != null
+        # steps.check_project.outputs.files_staged == 1 || github.event.input.create_release == 'true') &&
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
