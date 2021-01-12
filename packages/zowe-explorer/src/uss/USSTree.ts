@@ -135,7 +135,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             if (newFullPath === node.fullPath.trim()) {
                 return localize(
                     "renameUSSNode.duplicateName",
-                    "A {0} already exists with this name. Please choose a different one.",
+                    "A {0} already exists with this name. Please choose a different name.",
                     nodeType
                 );
             }
