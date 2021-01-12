@@ -1,5 +1,9 @@
 # Change Log
 
+## `1.11.1`
+
+- Updated USS functionality to use the new zos-ftp-for-zowe-cli API.
+
 ## `1.5.0`
 
 - Updated to API changes in Zowe Explorer 1.5.
