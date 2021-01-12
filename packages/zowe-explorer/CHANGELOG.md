@@ -2,6 +2,10 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## `1.11.1`
+
+- Updated Keytar and Jest dev deps for Node 14. Thanks @t1m0thyj
+
 ## `1.11.0`
 
 - Added login and logout functions for base profiles. You can now log in to API Mediation Layer and generate a token for your base profile. [#914](https://github.com/zowe/vscode-extension-for-zowe/issues/914). Thanks @crawr
