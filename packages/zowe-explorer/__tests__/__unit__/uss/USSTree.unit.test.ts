@@ -276,7 +276,7 @@ describe("USSTree Unit Tests - Function USSTree.checkDuplicateLabel()", () => {
         const globalMocks = await createGlobalMocks();
 
         const returnVal = globalMocks.testTree.checkDuplicateLabel("/u/myuser", [globalMocks.testUSSNode], "file");
-        expect(returnVal).toEqual("A file already exists with this name. Please choose a different one.");
+        expect(returnVal).toEqual("A file already exists with this name. Please choose a different name.");
     });
 });
 
