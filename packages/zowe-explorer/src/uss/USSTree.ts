@@ -132,11 +132,11 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
     public checkDuplicateLabel(newFullPath: string, nodesToCheck: IZoweUSSTreeNode[], newNodeType: string) {
         for (const node of nodesToCheck) {
             const nodeType = contextually.isFolder(node) ? "folder" : "file";
-            if (newFullPath === node.fullPath.trim() && newNodeType === nodeType) {
+            if (newFullPath === node.fullPath.trim()) {
                 return localize(
                     "renameUSSNode.duplicateName",
                     "A {0} already exists with this name. Please choose a different one.",
-                    newNodeType
+                    nodeType
                 );
             }
         }
