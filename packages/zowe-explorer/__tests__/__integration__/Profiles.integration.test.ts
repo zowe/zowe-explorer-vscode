@@ -62,6 +62,9 @@ describe("Create profiles integration tests", async () => {
         const showInputStub = sandbox.stub(vscode.window, "showInputBox");
         showInputStub.onCall(0).returns("testUser");
         showInputStub.onCall(1).returns("testPass");
+        showInputStub.onCall(2).returns("basePath");
+        showInputStub.onCall(3).returns("123");
+        showInputStub.onCall(4).returns("123");
         const showQuickPickStub = sandbox.stub(vscode.window, "showQuickPick");
         showQuickPickStub.returns("True - Reject connections with self-signed certificates");
         const saveProfileStub = sandbox.stub(profiles, "saveProfile");
@@ -143,6 +146,9 @@ describe("Create profiles integration tests", async () => {
         const showInputStub = sandbox.stub(vscode.window, "showInputBox");
         showInputStub.onCall(0).returns("testUser");
         showInputStub.onCall(1).returns("testPass");
+        showInputStub.onCall(2).returns("basePath");
+        showInputStub.onCall(3).returns("123");
+        showInputStub.onCall(4).returns("123");
         const showQuickPickStub = sandbox.stub(vscode.window, "showQuickPick");
         showQuickPickStub.returns("True - Reject connections with self-signed certificates");
 
