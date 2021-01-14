@@ -19,6 +19,7 @@ import * as testConst from "../../../resources/testProfileData";
 import * as vscode from "vscode";
 import { ZosJobsProvider } from "../../../src/job/ZosJobsProvider";
 import * as jobActions from "../../../src/job/actions";
+import * as refreshActions from "../../../src/shared/refresh";
 import { Job } from "../../../src/job/ZoweJobNode";
 import { JOBS_SESSION_CONTEXT } from "../../../src/globals";
 
@@ -80,7 +81,7 @@ describe("jobNodeActions integration test", async () => {
             };
 
             const subscription = testTree.mOnDidChangeTreeData.event(listener);
-            await jobActions.refreshAllJobs(testTree);
+            await refreshActions.refreshAll(testTree);
 
             expect(eventFired).equals(true);
             // expect(eventFired).toBe(true);
