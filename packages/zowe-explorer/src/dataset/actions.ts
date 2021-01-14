@@ -413,7 +413,7 @@ export async function createFile(node: IZoweDatasetTreeNode, datasetProvider: IZ
         if (dsName) {
             dsName = dsName.trim().toUpperCase();
             newDSProperties.forEach((property) => {
-                if (property.key === `nodeLabel`) {
+                if (property.key === `dsName`) {
                     property.value = dsName;
                     property.placeHolder = dsName;
                 }
@@ -488,7 +488,7 @@ export async function createFile(node: IZoweDatasetTreeNode, datasetProvider: IZ
         const dsPropsForAPI = {};
         newDSProperties.forEach((property) => {
             if (property.value) {
-                if (property.key === `nodeLabel`) {
+                if (property.key === `dsName`) {
                     dsName = property.value;
                 } else {
                     if (typeof propertiesFromDsType[property.key] === "number") {

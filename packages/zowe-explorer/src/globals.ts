@@ -93,9 +93,9 @@ export const DATA_SET_PROPERTIES = [
     },
     {
         key: `dsntype`,
-        label: `DSN Type`,
+        label: `Data Set Type (DSNTYPE)`,
         value: null,
-        placeHolder: `Specify the DSN type`,
+        placeHolder: `Specify the data set type (DSNTYPE)`,
     },
     {
         key: `mgntclass`,
@@ -104,16 +104,16 @@ export const DATA_SET_PROPERTIES = [
         placeHolder: `Enter the SMS management class`,
     },
     {
-        key: `nodeLabel`,
-        label: `Node Label`,
+        key: `dsName`,
+        label: `Data Set Name`,
         value: null,
-        placeHolder: `Enter a node label`,
+        placeHolder: `Enter a data set name`,
     },
     {
         key: `dsorg`,
-        label: `Node Type`,
+        label: `Data Set Organization (DSORG)`,
         value: null,
-        placeHolder: `Select a node type`,
+        placeHolder: `Select a data set organization (DSORG)`,
     },
     {
         key: `primary`,

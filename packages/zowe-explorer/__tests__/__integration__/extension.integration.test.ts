@@ -140,6 +140,7 @@ describe("Extension Integration Tests", () => {
             const testFileName = pattern + ".EXT.CREATE.DATASET.TEST";
             const quickPickStub = sandbox.stub(vscode.window, "showQuickPick");
             quickPickStub.returns("Data Set Sequential");
+            quickPickStub.returns(" + Allocate Data Set");
 
             const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
             inputBoxStub.returns(testFileName);
@@ -155,6 +156,7 @@ describe("Extension Integration Tests", () => {
             // Mock user selecting first option from list
             const quickPickStub = sandbox.stub(vscode.window, "showQuickPick");
             quickPickStub.returns("Data Set Sequential");
+            quickPickStub.returns(" + Allocate Data Set");
 
             const testFileName = pattern + ".EXT.CREATE.DATASET.TEST";
             const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
