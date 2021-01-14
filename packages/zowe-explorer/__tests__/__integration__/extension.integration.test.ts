@@ -136,14 +136,17 @@ describe("Extension Integration Tests", () => {
 
     describe("Creating Data Sets and Members", () => {
         it("should create a data set when zowe.createFile is invoked", async () => {
-            // Mock user selecting first option from list
+            // 1st step: User names DS
             const testFileName = pattern + ".EXT.CREATE.DATASET.TEST";
-            const quickPickStub = sandbox.stub(vscode.window, "showQuickPick");
-            quickPickStub.returns("Data Set Sequential");
-            quickPickStub.returns(" + Allocate Data Set");
-
             const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
             inputBoxStub.returns(testFileName);
+
+            // 2nd step: User selects DS type
+            const quickPickStub = sandbox.stub(vscode.window, "showQuickPick");
+            quickPickStub.onCall(0).returns("Data Set Sequential");
+
+            // 3rd step: User tries to allocate
+            quickPickStub.onCall(1).returns(" + Allocate Data Set");
 
             await dsActions.createFile(sessionNode, testTree);
 
@@ -153,14 +156,17 @@ describe("Extension Integration Tests", () => {
         }).timeout(TIMEOUT);
 
         it("should display an error message when creating a data set that already exists", async () => {
-            // Mock user selecting first option from list
-            const quickPickStub = sandbox.stub(vscode.window, "showQuickPick");
-            quickPickStub.returns("Data Set Sequential");
-            quickPickStub.returns(" + Allocate Data Set");
-
+            // 1st step: User names DS
             const testFileName = pattern + ".EXT.CREATE.DATASET.TEST";
             const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
             inputBoxStub.returns(testFileName);
+
+            // 2nd step: User selects DS type
+            const quickPickStub = sandbox.stub(vscode.window, "showQuickPick");
+            quickPickStub.onCall(0).returns("Data Set Sequential");
+
+            // 3rd step: User tries to allocate
+            quickPickStub.onCall(1).returns(" + Allocate Data Set");
 
             await dsActions.createFile(sessionNode, testTree);
 

@@ -2639,7 +2639,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         // 4th step: User tries to edit Node Label
         const quickPickContent = createQuickPickContent("", [], "");
         mocked(vscode.window.createQuickPick).mockReturnValueOnce(quickPickContent);
-        const selectedItem: vscode.QuickPickItem = { label: "Node Label" };
+        const selectedItem: vscode.QuickPickItem = { label: "Data Set Name" };
         jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(selectedItem);
         mocked(vscode.window.showInputBox).mockResolvedValueOnce("TEST.EDIT");
 
