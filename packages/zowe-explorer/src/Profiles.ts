@@ -415,7 +415,7 @@ export class Profiles extends ProfilesCache {
                     updUrl = await this.urlInfo(editURL);
                     if (updUrl === undefined) {
                         vscode.window.showInformationMessage(
-                            localize("createNewConnection.zosmfURL", "No valid value for z/OS URL. Operation Cancelled")
+                            localize("editConnection.zosmfURL", "No valid value for z/OS URL. Operation Cancelled")
                         );
                         return undefined;
                     }
@@ -432,7 +432,7 @@ export class Profiles extends ProfilesCache {
                         if (Number.isNaN(updPort)) {
                             vscode.window.showInformationMessage(
                                 localize(
-                                    "createNewConnection.undefined.port",
+                                    "editConnection.undefined.port",
                                     "Invalid Port number provided or operation was cancelled"
                                 )
                             );
@@ -446,7 +446,7 @@ export class Profiles extends ProfilesCache {
                     updUser = await this.userInfo(editUser);
                     if (updUser === undefined) {
                         vscode.window.showInformationMessage(
-                            localize("createNewConnection.undefined.username", "Operation Cancelled")
+                            localize("editConnection.undefined.username", "Operation Cancelled")
                         );
                         return undefined;
                     }
@@ -456,7 +456,7 @@ export class Profiles extends ProfilesCache {
                     updPass = await this.passwordInfo(editPass);
                     if (updPass === undefined) {
                         vscode.window.showInformationMessage(
-                            localize("createNewConnection.undefined.username", "Operation Cancelled")
+                            localize("editConnection.undefined.username", "Operation Cancelled")
                         );
                         return undefined;
                     }
@@ -466,7 +466,7 @@ export class Profiles extends ProfilesCache {
                     updRU = await this.ruInfo(editrej);
                     if (updRU === undefined) {
                         vscode.window.showInformationMessage(
-                            localize("createNewConnection.rejectUnauthorize", "Operation Cancelled")
+                            localize("editConnection.rejectUnauthorize", "Operation Cancelled")
                         );
                         return undefined;
                     }
@@ -482,10 +482,18 @@ export class Profiles extends ProfilesCache {
                             if (!Number.isNaN(Number(updValue))) {
                                 updSchemaValues[value] = Number(updValue);
                             } else {
-                                if (schema[value].optionDefinition.hasOwnProperty("defaultValue")) {
-                                    updSchemaValues[value] = schema[value].optionDefinition.defaultValue;
-                                } else {
-                                    break;
+                                switch (true) {
+                                    case updValue === undefined:
+                                        vscode.window.showInformationMessage(
+                                            localize("editConnection.number", "Operation Cancelled")
+                                        );
+                                        return undefined;
+                                    case schema[value].optionDefinition.hasOwnProperty("defaultValue"):
+                                        updSchemaValues[value] = schema[value].optionDefinition.defaultValue;
+                                        break;
+                                    default:
+                                        updSchemaValues[value] = undefined;
+                                        break;
                                 }
                             }
                             break;
@@ -494,7 +502,7 @@ export class Profiles extends ProfilesCache {
                             updIsTrue = await this.boolInfo(value, schema);
                             if (updIsTrue === undefined) {
                                 vscode.window.showInformationMessage(
-                                    localize("createNewConnection.booleanValue", "Operation Cancelled")
+                                    localize("editConnection.booleanValue", "Operation Cancelled")
                                 );
                                 return undefined;
                             }
@@ -503,6 +511,12 @@ export class Profiles extends ProfilesCache {
                         default:
                             options = await this.optionsValue(value, schema, editSession[value]);
                             const updDefValue = await vscode.window.showInputBox(options);
+                            if (updDefValue === undefined) {
+                                vscode.window.showInformationMessage(
+                                    localize("editConnection.default", "Operation Cancelled")
+                                );
+                                return undefined;
+                            }
                             if (updDefValue === "") {
                                 break;
                             }
@@ -649,10 +663,18 @@ export class Profiles extends ProfilesCache {
                             if (!Number.isNaN(Number(enteredValue))) {
                                 schemaValues[value] = Number(enteredValue);
                             } else {
-                                if (schema[value].optionDefinition.hasOwnProperty("defaultValue")) {
-                                    schemaValues[value] = schema[value].optionDefinition.defaultValue;
-                                } else {
-                                    schemaValues[value] = undefined;
+                                switch (true) {
+                                    case enteredValue === undefined:
+                                        vscode.window.showInformationMessage(
+                                            localize("createNewConnection.number", "Operation Cancelled")
+                                        );
+                                        return undefined;
+                                    case schema[value].optionDefinition.hasOwnProperty("defaultValue"):
+                                        schemaValues[value] = schema[value].optionDefinition.defaultValue;
+                                        break;
+                                    default:
+                                        schemaValues[value] = undefined;
+                                        break;
                                 }
                             }
                             break;
@@ -670,6 +692,12 @@ export class Profiles extends ProfilesCache {
                         default:
                             options = await this.optionsValue(value, schema);
                             const defValue = await vscode.window.showInputBox(options);
+                            if (defValue === undefined) {
+                                vscode.window.showInformationMessage(
+                                    localize("createNewConnection.default", "Operation Cancelled")
+                                );
+                                return undefined;
+                            }
                             if (defValue === "") {
                                 break;
                             }
@@ -1019,6 +1047,7 @@ export class Profiles extends ProfilesCache {
                     await errorHandling(error, theProfile.name);
                 }
 
+                await errorHandling(error, theProfile.name);
                 this.log.debug("Validate Error - Invalid Profile: " + error);
                 filteredProfile = {
                     status: "inactive",
@@ -1416,7 +1445,7 @@ export class Profiles extends ProfilesCache {
             userName = input;
         }
         InputBoxOptions = {
-            placeHolder: localize("createNewConnection.option.prompt.username.placeholder", "Optional: User Name"),
+            placeHolder: localize("createNewConnection.option.prompt.username.placeholder", "User Name"),
             prompt: localize(
                 "createNewConnection.option.prompt.username",
                 "Enter the user name for the connection. Leave blank to not store."
@@ -1443,7 +1472,7 @@ export class Profiles extends ProfilesCache {
         }
 
         InputBoxOptions = {
-            placeHolder: localize("createNewConnection.option.prompt.password.placeholder", "Optional: Password"),
+            placeHolder: localize("createNewConnection.option.prompt.password.placeholder", "Password"),
             prompt: localize(
                 "createNewConnection.option.prompt.password",
                 "Enter the password for the connection. Leave blank to not store."
