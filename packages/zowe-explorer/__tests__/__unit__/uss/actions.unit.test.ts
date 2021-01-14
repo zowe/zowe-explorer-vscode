@@ -336,6 +336,20 @@ describe("USS Action Unit Tests - Function createUSSNode", () => {
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(0);
     });
 
+    it("Tests that createUSSNode fails if an error is thrown", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const getUssApiSpy = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockImplementationOnce(() => { throw (Error("Test error")); });
+        globalMocks.mockShowInputBox.mockReturnValueOnce("USSFolder");
+
+        let testError;
+        try { await ussNodeActions.createUSSNode(blockMocks.ussNode, blockMocks.testUSSTree, "file"); }
+        catch (err) { testError = err; }
+
+        expect(testError.message).toEqual("Test error");
+    });
+
     it("Tests that only the child node is refreshed when createUSSNode() is called on a child node", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
@@ -704,6 +718,7 @@ describe("USS Action Unit Tests - Function changeFileType", () => {
         node.contextValue = globals.DS_BINARY_FILE_CONTEXT;
         node.getSessionNode().binaryFiles[node.fullPath] = true;
         expect(node.binary).toBeTruthy();
+
         await ussNodeActions.changeFileType(node, false, blockMocks.testUSSTree);
         expect(node.binary).toBeFalsy();
     });
