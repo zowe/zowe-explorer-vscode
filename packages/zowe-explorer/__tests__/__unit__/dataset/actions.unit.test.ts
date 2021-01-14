@@ -11,8 +11,7 @@
 
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
-import * as imperative from "@zowe/imperative";
-import * as shared from "../../../src/shared/actions";
+import { ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import {
     createBasicZosmfSession,
     createInstanceOfProfile,
@@ -36,10 +35,8 @@ import * as globals from "../../../src/globals";
 import * as path from "path";
 import * as fs from "fs";
 import * as sharedUtils from "../../../src/shared/utils";
-import { ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
-import { PersistentFilters } from "../../../src/PersistentFilters";
 
 // Missing the definition of path module, because I need the original logic for tests
 jest.mock("fs");
@@ -91,63 +88,6 @@ function createGlobalMocks() {
 // Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/master/src/util/testing.ts
 const mocked = <T extends (...args: any[]) => any>(fn: T): jest.Mock<ReturnType<T>> => fn as any;
 
-describe("Dataset Actions Unit Tests - Function refreshAll", () => {
-    function createBlockMocks() {
-        const session = createISession();
-        const imperativeProfile = createIProfile();
-        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
-        const treeView = createTreeView();
-        const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
-        const refreshAll = jest.fn();
-        const refreshTree = jest.fn();
-        const resetValidationSettings = jest.fn();
-        const returnIconState = jest.fn();
-
-        Profiles.createInstance(imperative.Logger.getAppLogger());
-        datasetSessionNode.contextValue = globals.DS_SESSION_CONTEXT;
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    refresh: jest.fn(),
-                    getProfiles: jest.fn().mockReturnValue([
-                        { name: imperativeProfile.name, profile: imperativeProfile },
-                        { name: imperativeProfile.name, profile: imperativeProfile },
-                    ]),
-                };
-            }),
-        });
-        Object.defineProperty(PersistentFilters, "getDirectValue", {
-            value: jest.fn(() => {
-                return {
-                    "Zowe-Automatic-Validation": true,
-                };
-            }),
-        });
-
-        return {
-            session,
-            imperativeProfile,
-            datasetSessionNode,
-            refreshTree,
-            resetValidationSettings,
-            returnIconState,
-            treeView,
-            testDatasetTree,
-            refreshAll,
-        };
-    }
-    afterAll(() => jest.restoreAllMocks());
-
-    it("Call refreshAll", async () => {
-        createGlobalMocks();
-        const blockMocks = createBlockMocks();
-        const response = new Promise(() => {
-            return {};
-        });
-        blockMocks.testDatasetTree.mSessionNodes.push(blockMocks.datasetSessionNode);
-        expect(dsActions.refreshAll(blockMocks.testDatasetTree)).toEqual(response);
-    });
-});
 describe("Dataset Actions Unit Tests - Function createMember", () => {
     function createBlockMocks() {
         const session = createISession();

@@ -9,31 +9,33 @@
  *                                                                                 *
  */
 
-import * as contextually from "../shared/context";
-import { IZoweTree, IZoweDatasetTreeNode } from "@zowe/zowe-explorer-api";
-import { Profiles } from "../Profiles";
-import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
-import { labelRefresh, refreshTree } from "../shared/utils";
-import { returnIconState, resetValidationSettings } from "../shared/actions";
+import { IZoweTree, IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { PersistentFilters } from "../PersistentFilters";
+import { Profiles } from "../Profiles";
+import { refreshTree } from "../utils/ProfilesUtils";
+import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
+import { resetValidationSettings, returnIconState } from "./actions";
+import { labelRefresh } from "./utils";
+import * as contextually from "../shared/context";
 
 /**
- * Refreshes treeView
+ * View (DATA SETS, JOBS, USS) refresh button
+ * Refreshes treeView and profiles including their validation setting
  *
- * @param {DataSetTree} datasetProvider
+ * @param {IZoweTree} treeProvider
  */
-export async function refreshAll(datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
+export async function refreshAll(treeProvider: IZoweTree<IZoweTreeNode>) {
     await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
-    datasetProvider.mSessionNodes.forEach(async (sessNode) => {
-        const setting = PersistentFilters.getDirectValue("Zowe-Automatic-Validation") as boolean;
+    treeProvider.mSessionNodes.forEach(async (sessNode) => {
+        const setting = (await PersistentFilters.getDirectValue("Zowe-Automatic-Validation")) as boolean;
         if (contextually.isSessionNotFav(sessNode)) {
             labelRefresh(sessNode);
             sessNode.children = [];
             sessNode.dirty = true;
             refreshTree(sessNode);
             resetValidationSettings(sessNode, setting);
+            returnIconState(sessNode);
         }
-        returnIconState(sessNode);
     });
-    await datasetProvider.refresh();
+    treeProvider.refresh();
 }

@@ -17,6 +17,7 @@ import * as vscode from "vscode";
 import * as ussActions from "./uss/actions";
 import * as dsActions from "./dataset/actions";
 import * as jobActions from "./job/actions";
+import * as refreshActions from "./shared/refresh";
 import * as sharedActions from "./shared/actions";
 import { moveSync } from "fs-extra";
 import {
@@ -148,9 +149,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             preferencesTempPath = updatedPreferencesTempPath;
         }
         if (e.affectsConfiguration("Zowe-Automatic-Validation")) {
-            await dsActions.refreshAll(datasetProvider);
-            await ussActions.refreshAllUSS(ussFileProvider);
-            await jobActions.refreshAllJobs(jobsProvider);
+            await refreshActions.refreshAll(datasetProvider);
+            await refreshActions.refreshAll(ussFileProvider);
+            await refreshActions.refreshAll(jobsProvider);
         }
     });
 
@@ -219,7 +220,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
 function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
     vscode.commands.registerCommand("zowe.addSession", async () => datasetProvider.createZoweSession(datasetProvider));
     vscode.commands.registerCommand("zowe.addFavorite", async (node) => datasetProvider.addFavorite(node));
-    vscode.commands.registerCommand("zowe.refreshAll", () => dsActions.refreshAll(datasetProvider));
+    vscode.commands.registerCommand("zowe.refreshAll", () => refreshActions.refreshAll(datasetProvider));
     vscode.commands.registerCommand("zowe.refreshNode", (node) => dsActions.refreshPS(node));
     vscode.commands.registerCommand("zowe.pattern", (node) => datasetProvider.filterPrompt(node));
     vscode.commands.registerCommand("zowe.editSession", async (node) => datasetProvider.editSession(node));
@@ -276,7 +277,7 @@ function initUSSProvider(context: vscode.ExtensionContext, ussFileProvider: IZow
     vscode.commands.registerCommand("zowe.uss.addSession", async () =>
         ussFileProvider.createZoweSession(ussFileProvider)
     );
-    vscode.commands.registerCommand("zowe.uss.refreshAll", () => ussActions.refreshAllUSS(ussFileProvider));
+    vscode.commands.registerCommand("zowe.uss.refreshAll", () => refreshActions.refreshAll(ussFileProvider));
     vscode.commands.registerCommand("zowe.uss.refreshUSS", (node: IZoweUSSTreeNode) => node.refreshUSS());
     vscode.commands.registerCommand("zowe.uss.refreshUSSInTree", (node: IZoweUSSTreeNode) =>
         ussActions.refreshUSSInTree(node, ussFileProvider)
@@ -353,7 +354,7 @@ function initJobsProvider(context: vscode.ExtensionContext, jobsProvider: IZoweT
     vscode.commands.registerCommand("zowe.refreshJobsServer", async (job) =>
         jobActions.refreshJobsServer(job, jobsProvider)
     );
-    vscode.commands.registerCommand("zowe.refreshAllJobs", async () => jobActions.refreshAllJobs(jobsProvider));
+    vscode.commands.registerCommand("zowe.refreshAllJobs", async () => refreshActions.refreshAll(jobsProvider));
     vscode.commands.registerCommand("zowe.addJobsSession", () => jobsProvider.createZoweSession(jobsProvider));
     vscode.commands.registerCommand("zowe.setOwner", (job) => jobActions.setOwner(job, jobsProvider));
     vscode.commands.registerCommand("zowe.setPrefix", (job) => jobActions.setPrefix(job, jobsProvider));

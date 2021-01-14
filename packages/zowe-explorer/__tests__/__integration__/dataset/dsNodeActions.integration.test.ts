@@ -20,6 +20,7 @@ import * as vscode from "vscode";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import { DatasetTree } from "../../../src/dataset/DatasetTree";
 import * as dsActions from "../../../src/dataset/actions";
+import * as refreshActions from "../../../src/shared/refresh";
 import { DS_SESSION_CONTEXT } from "../../../src/globals";
 
 const TIMEOUT = 45000;
@@ -83,7 +84,7 @@ describe("dsNodeActions integration test", async () => {
             };
 
             const subscription = testTree.mOnDidChangeTreeData.event(listener);
-            await dsActions.refreshAll(testTree);
+            await refreshActions.refreshAll(testTree);
 
             expect(eventFired).equals(true);
             // expect(eventFired).toBe(true);
