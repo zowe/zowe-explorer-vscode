@@ -11579,3 +11579,4 @@ zos-node-accessor@1.0.7:
   dependencies:
     debug "~2.6.8"
     ftp4 "~0.3.13"
+    q "~1.4.1"
