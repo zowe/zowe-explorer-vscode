@@ -11,6 +11,7 @@
 
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
+import { ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { Job } from "../../../src/job/ZoweJobNode";
 import {
     createISession,
@@ -27,9 +28,7 @@ import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import * as dsActions from "../../../src/dataset/actions";
 import * as globals from "../../../src/globals";
 import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
-import { ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../src/Profiles";
-import { PersistentFilters } from "../../../src/PersistentFilters";
 
 const activeTextEditorDocument = jest.fn();
 
@@ -901,64 +900,5 @@ describe("Jobs Actions Unit Tests - Function refreshJobsServer", () => {
 
         expect(blockMocks.testJobTree.checkCurrentProfile).toHaveBeenCalledWith(job);
         expect(blockMocks.testJobTree.refreshElement).toHaveBeenCalledWith(job);
-    });
-});
-
-describe("refreshAll", () => {
-    function createBlockMocks() {
-        const newMocks = {
-            session: createISessionWithoutCredentials(),
-            iJob: createIJobObject(),
-            imperativeProfile: createIProfile(),
-            datasetSessionNode: createDatasetSessionNode(createISessionWithoutCredentials(), createIProfile()),
-            profileInstance: null,
-            treeView: createTreeView(),
-            jobsTree: null,
-            jesApi: null,
-        };
-        newMocks.jesApi = createJesApi(newMocks.imperativeProfile);
-        newMocks.profileInstance = createInstanceOfProfile(newMocks.imperativeProfile);
-        newMocks.jobsTree = createJobsTree(
-            newMocks.session,
-            newMocks.iJob,
-            newMocks.profileInstance,
-            newMocks.treeView
-        );
-        newMocks.jobsTree.mSessionNodes.push(newMocks.datasetSessionNode);
-        bindJesApi(newMocks.jesApi);
-
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    refresh: jest.fn(),
-                    getProfiles: jest.fn().mockReturnValue([
-                        { name: newMocks.imperativeProfile.name, profile: newMocks.imperativeProfile },
-                        { name: newMocks.imperativeProfile.name, profile: newMocks.imperativeProfile },
-                    ]),
-                };
-            }),
-        });
-
-        Object.defineProperty(PersistentFilters, "getDirectValue", {
-            value: jest.fn(() => {
-                return {
-                    "Zowe-Automatic-Validation": true,
-                };
-            }),
-        });
-
-        return newMocks;
-    }
-
-    it("Testing that refreshAllJobs is executed successfully", async () => {
-        const blockMocks = createBlockMocks();
-        const response = new Promise(() => {
-            return {};
-        });
-        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        const submitJclSpy = jest.spyOn(jobActions, "refreshAllJobs");
-        jobActions.refreshAllJobs(blockMocks.jobsTree);
-        expect(submitJclSpy).toHaveBeenCalledTimes(1);
-        expect(jobActions.refreshAllJobs(blockMocks.jobsTree)).toEqual(response);
     });
 });

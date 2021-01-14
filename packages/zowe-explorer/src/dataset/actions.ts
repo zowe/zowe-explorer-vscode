@@ -16,14 +16,7 @@ import * as zowe from "@zowe/cli";
 import * as globals from "../globals";
 import * as path from "path";
 import { FilterItem, errorHandling, resolveQuickPickHelper } from "../utils/ProfilesUtils";
-import {
-    labelRefresh,
-    refreshTree,
-    getDocumentFilePath,
-    concatChildNodes,
-    checkForAddedSuffix,
-    willForceUpload,
-} from "../shared/utils";
+import { getDocumentFilePath, concatChildNodes, checkForAddedSuffix, willForceUpload } from "../shared/utils";
 import {
     IZoweDatasetTreeNode,
     IZoweTreeNode,
@@ -38,7 +31,6 @@ import { getIconByNode } from "../generators/icons";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { DatasetTree } from "./DatasetTree";
 import * as contextually from "../shared/context";
-import { returnIconState, resetValidationSettings } from "../shared/actions";
 import { setFileSaved } from "../utils/workspace";
 import { PersistentFilters } from "../PersistentFilters";
 
@@ -49,27 +41,6 @@ nls.config({
     bundleFormat: nls.BundleFormat.standalone,
 })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
-
-/**
- * Refreshes treeView
- *
- * @param {DataSetTree} datasetProvider
- */
-export async function refreshAll(datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
-    await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
-    datasetProvider.mSessionNodes.forEach(async (sessNode) => {
-        const setting = (await PersistentFilters.getDirectValue("Zowe-Automatic-Validation")) as boolean;
-        if (contextually.isSessionNotFav(sessNode)) {
-            labelRefresh(sessNode);
-            sessNode.children = [];
-            sessNode.dirty = true;
-            refreshTree(sessNode);
-            resetValidationSettings(sessNode, setting);
-            returnIconState(sessNode);
-        }
-    });
-    datasetProvider.refresh();
-}
 
 /**
  * Allocates a copy of a data set or member
@@ -933,6 +904,7 @@ export async function deleteDataset(node: IZoweTreeNode, datasetProvider: IZoweT
  *
  * @param {IZoweDatasetTreeNode} node - The node which represents the dataset
  */
+// This is not a UI refresh.
 export async function refreshPS(node: IZoweDatasetTreeNode) {
     let label: string;
     try {
@@ -1024,7 +996,6 @@ export async function enterPattern(node: IZoweDatasetTreeNode, datasetProvider: 
     // instead of changing the collapsible state
     // change label so the treeview updates
     node.label = node.label.trim() + " ";
-    node.label = node.label.trim();
     node.tooltip = node.pattern = pattern.toUpperCase();
     node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
     node.dirty = true;
