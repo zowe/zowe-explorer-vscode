@@ -106,7 +106,16 @@ export function createTestSchemas() {
             },
         },
     };
-    const schemaArray = [schema1, schema2, schema3, schema4];
+    const schema5: {} = {
+        host: { type: "string", optionDefinition: { description: "description" } },
+        port: { type: "number", optionDefinition: { description: "description", defaultValue: 123 } },
+        user: { type: "string", secure: true, optionDefinition: { description: "description" } },
+        password: { type: "string", secure: true, optionDefinition: { description: "description" } },
+        basePath: { type: "string", optionDefinition: { description: "description" } },
+        aBoolean: { type: ["boolean", "null"], optionDefinition: { description: "description" } },
+        aNumber: { type: "number", optionDefinition: { description: "description", defaultValue: null } },
+    };
+    const schemaArray = [schema1, schema2, schema3, schema4, schema5];
     return schemaArray;
 }
 

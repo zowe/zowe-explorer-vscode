@@ -86,10 +86,10 @@ export function labelRefresh(node: vscode.TreeItem): void {
 }
 
 /*************************************************************************************************************
- * Refresh Profile and Session
+ * Get updated profile and session information
  * @param {sessNode} IZoweTreeNode
- * @param {profile} IProfileLoaded
  *************************************************************************************************************/
+// This function does not perform any UI refresh; it just gets updated profile information.
 export async function refreshTree(sessNode: IZoweTreeNode) {
     const profileType = sessNode.getProfile().type;
     const allProf = Profiles.getInstance().getProfiles(profileType);
