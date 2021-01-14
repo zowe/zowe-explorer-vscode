@@ -107,9 +107,10 @@ export function isTheia(): boolean {
 }
 
 /*************************************************************************************************************
- * Refresh Profile and Session
+ * Get updated profile and session information
  * @param {sessNode} IZoweTreeNode
  *************************************************************************************************************/
+// This function does not perform any UI refresh; it just gets updated profile information.
 export function refreshTree(sessNode: IZoweTreeNode) {
     const allProf = Profiles.getInstance().getProfiles();
     for (const profNode of allProf) {

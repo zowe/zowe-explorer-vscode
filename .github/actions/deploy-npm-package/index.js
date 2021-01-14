@@ -14,24 +14,24 @@ const publishProject = require("../common").publishProject;
 
 // Check if the given versions is already published
 const checkVersion = (packageJson, version) => {
-  try {
-    const metadata = JSON.parse(execSync(`npm view ${packageJson.name} --json`).toString());
-    return metadata != null && metadata.versions.includes(version);
-  } catch (err) {
-    // Do nothing if the package was not found and just continue to publish the extension
-    console.log(`Project: ${packageJson.name} not found!`);
-  }
-  return false;
+    try {
+        const metadata = JSON.parse(execSync(`npm view ${packageJson.name} --json`).toString());
+        return metadata != null && metadata.versions.includes(version);
+    } catch (err) {
+        // Do nothing if the package was not found and just continue to publish the extension
+        console.log(`Project: ${packageJson.name} not found!`);
+    }
+    return false;
 };
 
 // NPM package specific publishing steps
 const publishSpecificProject = (version, token, packagePath) => {
-  console.log(execSync(`echo registry=https://registry.npmjs.org/ > .npmrc`, {cwd: packagePath}).toString());
-  console.log(execSync(`echo //registry.npmjs.org/:_authToken=${token} >> .npmrc`, {cwd: packagePath}).toString());
+    console.log(execSync(`echo registry=https://registry.npmjs.org/ > .npmrc`, { cwd: packagePath }).toString());
+    console.log(execSync(`echo //registry.npmjs.org/:_authToken=${token} >> .npmrc`, { cwd: packagePath }).toString());
 
-  console.log(`Publishing version ${version}`);
-  console.log(execSync(`npm publish --access public`, {cwd: packagePath}).toString());
-}
+    console.log(`Publishing version ${version}`);
+    console.log(execSync(`npm publish --access public`, { cwd: packagePath }).toString());
+};
 
 // Call common function to deploy the NPM package
 publishProject(checkVersion, publishSpecificProject);

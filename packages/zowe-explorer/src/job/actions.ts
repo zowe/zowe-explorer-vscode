@@ -12,16 +12,12 @@
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import { errorHandling } from "../utils/ProfilesUtils";
-import { labelRefresh, refreshTree } from "../shared/utils";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { ValidProfileEnum, IZoweTree, IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
 import { Job } from "./ZoweJobNode";
-import * as contextually from "../shared/context";
-import { returnIconState, resetValidationSettings } from "../shared/actions";
 import * as nls from "vscode-nls";
 import { encodeJobFile } from "../SpoolProvider";
-import { PersistentFilters } from "../PersistentFilters";
 
 // Set up localization
 nls.config({
@@ -29,27 +25,6 @@ nls.config({
     bundleFormat: nls.BundleFormat.standalone,
 })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
-
-/**
- * Refresh all jobs in the job tree
- *
- * @param jobsProvider The tree to refresh
- */
-export async function refreshAllJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>) {
-    await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
-    jobsProvider.mSessionNodes.forEach(async (jobNode) => {
-        const setting = (await PersistentFilters.getDirectValue("Zowe-Automatic-Validation")) as boolean;
-        if (contextually.isSession(jobNode)) {
-            labelRefresh(jobNode);
-            jobNode.children = [];
-            jobNode.dirty = true;
-            refreshTree(jobNode);
-            resetValidationSettings(jobNode, setting);
-            returnIconState(jobNode);
-        }
-    });
-    await jobsProvider.refresh();
-}
 
 /**
  * Download all the spool content for the specified job.
