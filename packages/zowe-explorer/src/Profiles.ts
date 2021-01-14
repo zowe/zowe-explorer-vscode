@@ -485,7 +485,7 @@ export class Profiles extends ProfilesCache {
                                 switch (true) {
                                     case updValue === undefined:
                                         vscode.window.showInformationMessage(
-                                            localize("editConnection.rejectUnauthorize", "Operation Cancelled")
+                                            localize("editConnection.number", "Operation Cancelled")
                                         );
                                         return undefined;
                                     case schema[value].optionDefinition.hasOwnProperty("defaultValue"):
@@ -513,7 +513,7 @@ export class Profiles extends ProfilesCache {
                             const updDefValue = await vscode.window.showInputBox(options);
                             if (updDefValue === undefined) {
                                 vscode.window.showInformationMessage(
-                                    localize("editConnection.booleanValue", "Operation Cancelled")
+                                    localize("editConnection.default", "Operation Cancelled")
                                 );
                                 return undefined;
                             }
@@ -666,7 +666,7 @@ export class Profiles extends ProfilesCache {
                                 switch (true) {
                                     case enteredValue === undefined:
                                         vscode.window.showInformationMessage(
-                                            localize("createNewConnection.rejectUnauthorize", "Operation Cancelled")
+                                            localize("createNewConnection.number", "Operation Cancelled")
                                         );
                                         return undefined;
                                     case schema[value].optionDefinition.hasOwnProperty("defaultValue"):
@@ -694,7 +694,7 @@ export class Profiles extends ProfilesCache {
                             const defValue = await vscode.window.showInputBox(options);
                             if (defValue === undefined) {
                                 vscode.window.showInformationMessage(
-                                    localize("createNewConnection.booleanValue", "Operation Cancelled")
+                                    localize("createNewConnection.default", "Operation Cancelled")
                                 );
                                 return undefined;
                             }
