@@ -272,11 +272,11 @@ describe("USS Action Unit Tests - Function createUSSNodeDialog", () => {
         globalMocks.mockShowInputBox.mockReturnValue("USSFolder");
         jest.spyOn(blockMocks.ussNode, "getChildren").mockResolvedValueOnce([]);
         const isTopLevel = false;
-        spyOn(ussNodeActions, "refreshAllUSS");
+        jest.spyOn(refreshActions, "refreshAll");
 
         await ussNodeActions.createUSSNode(blockMocks.ussNode, blockMocks.testUSSTree, "folder", isTopLevel);
         expect(blockMocks.testUSSTree.refreshElement).toHaveBeenCalled();
-        expect(ussNodeActions.refreshAllUSS).not.toHaveBeenCalled();
+        expect(refreshActions.refreshAll).not.toHaveBeenCalled();
     });
 
     it("Tests if createUSSNode is executed successfully with Unverified profile", async () => {
@@ -339,12 +339,17 @@ describe("USS Action Unit Tests - Function createUSSNodeDialog", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        const getUssApiSpy = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockImplementationOnce(() => { throw (Error("Test error")); });
+        const getUssApiSpy = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockImplementationOnce(() => {
+            throw Error("Test error");
+        });
         globalMocks.mockShowInputBox.mockReturnValueOnce("USSFolder");
 
         let testError;
-        try { await ussNodeActions.createUSSNode(blockMocks.ussNode, blockMocks.testUSSTree, "file"); }
-        catch (err) { testError = err; }
+        try {
+            await ussNodeActions.createUSSNode(blockMocks.ussNode, blockMocks.testUSSTree, "file");
+        } catch (err) {
+            testError = err;
+        }
 
         expect(testError.message).toEqual("Test error");
     });

@@ -265,18 +265,14 @@ describe("USSTree Unit Tests - Function USSTree.checkDuplicateLabel()", () => {
     it("Tests that checkDuplicateLabel() returns null if passed a unique name", async () => {
         const globalMocks = await createGlobalMocks();
 
-        const returnVal = globalMocks.testTree.checkDuplicateLabel(
-            "totallyNewLabel",
-            [globalMocks.testUSSNode],
-            "file"
-        );
+        const returnVal = globalMocks.testTree.checkDuplicateLabel("totallyNewLabel", [globalMocks.testUSSNode]);
         expect(returnVal).toEqual(null);
     });
     it("Tests that checkDuplicateLabel() returns an error message if passed a name that's already used for an existing folder", async () => {
         const globalMocks = await createGlobalMocks();
 
-        const returnVal = globalMocks.testTree.checkDuplicateLabel("/u/myuser", [globalMocks.testUSSNode], "file");
-        expect(returnVal).toEqual("A file already exists with this name. Please choose a different name.");
+        const returnVal = globalMocks.testTree.checkDuplicateLabel("/u/myuser/usstest", [globalMocks.testUSSNode]);
+        expect(returnVal).toEqual("A folder already exists with this name. Please choose a different name.");
     });
 });
 
