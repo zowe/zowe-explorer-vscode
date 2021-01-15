@@ -16,6 +16,8 @@ import { ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { MvsCommandHandler } from "../../../src/command/MvsCommandHandler";
 import * as globals from "../../../src/globals";
 import * as utils from "../../../src/utils/ProfilesUtils";
+import { Session, IProfileLoaded } from "@zowe/imperative";
+import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 
 describe("mvsCommandActions unit testing", () => {
     const showErrorMessage = jest.fn();
@@ -63,6 +65,23 @@ describe("mvsCommandActions unit testing", () => {
         return submitResponse;
     });
 
+    const session = new Session({
+        user: "fake",
+        password: "fake",
+        hostname: "fake",
+        port: 443,
+        protocol: "https",
+        type: "basic",
+    });
+
+    const profileOne: IProfileLoaded = {
+        name: "aProfile",
+        profile: {},
+        type: "zosmf",
+        message: "",
+        failNotFound: false,
+    };
+
     Object.defineProperty(vscode.window, "showErrorMessage", { value: showErrorMessage });
     Object.defineProperty(vscode.window, "showInputBox", { value: showInputBox });
     Object.defineProperty(vscode.window, "showInformationMessage", { value: showInformationMessage });
@@ -104,10 +123,17 @@ describe("mvsCommandActions unit testing", () => {
                         return profilesForValidation;
                     }),
                     validateProfiles: jest.fn(),
+                    getBaseProfile: jest.fn(),
                     validProfile: ValidProfileEnum.VALID,
                 };
             }),
         });
+
+        const mockMvsApi = await ZoweExplorerApiRegister.getMvsApi(profileOne);
+        const getMvsApiMock = jest.fn();
+        getMvsApiMock.mockReturnValue(mockMvsApi);
+        ZoweExplorerApiRegister.getMvsApi = getMvsApiMock.bind(ZoweExplorerApiRegister);
+        jest.spyOn(mockMvsApi, "getSession").mockReturnValue(session);
 
         showQuickPick.mockReturnValueOnce("firstName");
         showInputBox.mockReturnValueOnce("/d iplinfo1");

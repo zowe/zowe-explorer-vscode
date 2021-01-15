@@ -17,6 +17,7 @@ import { ValidProfileEnum, IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { PersistentFilters } from "../PersistentFilters";
 import { Profiles } from "../Profiles";
 import { FilterDescriptor, FilterItem, resolveQuickPickHelper, errorHandling } from "../utils/ProfilesUtils";
+import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import * as nls from "vscode-nls";
 
 // Set up localization
@@ -102,18 +103,29 @@ export class MvsCommandHandler {
         } else {
             zosmfProfile = node.getProfile();
         }
+        // If baseProfile exists, combine that information first
+        const baseProfile = Profiles.getInstance().getBaseProfile();
+        if (baseProfile) {
+            try {
+                const combinedProfile = await Profiles.getInstance().getCombinedProfile(zosmfProfile, baseProfile);
+                zosmfProfile = combinedProfile;
+            } catch (error) {
+                throw error;
+            }
+        }
         await Profiles.getInstance().checkCurrentProfile(zosmfProfile);
         if (
             Profiles.getInstance().validProfile === ValidProfileEnum.VALID ||
             Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED
         ) {
-            const updProfile = zosmfProfile.profile as ISession;
-            session = zowe.ZosmfSession.createBasicZosmfSession(updProfile as IProfile);
+            const updSession = ZoweExplorerApiRegister.getMvsApi(zosmfProfile).getSession();
             let command1: string = command;
             if (!command) {
-                command1 = await this.getQuickPick(session && session.ISession ? session.ISession.hostname : "unknown");
+                command1 = await this.getQuickPick(
+                    updSession && updSession.ISession ? updSession.ISession.hostname : "unknown"
+                );
             }
-            await this.issueCommand(session, command1);
+            await this.issueCommand(updSession, command1, zosmfProfile.name);
         } else {
             vscode.window.showErrorMessage(localize("issueMvsCommand.checkProfile", "Profile is invalid"));
             return;
@@ -198,7 +210,7 @@ export class MvsCommandHandler {
      * @param session The Session object
      * @param command the command string
      */
-    private async issueCommand(session: Session, command: string) {
+    private async issueCommand(session: Session, command: string, label: string) {
         try {
             if (command) {
                 // If the user has started their command with a / then remove it
@@ -221,7 +233,7 @@ export class MvsCommandHandler {
                 }
             }
         } catch (error) {
-            await errorHandling(error, null, error.message);
+            await errorHandling(error, label, error.message);
         }
         this.history.addSearchHistory(command);
     }
