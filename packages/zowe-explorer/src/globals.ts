@@ -14,6 +14,14 @@ import { Logger } from "@zowe/imperative";
 import * as vscode from "vscode";
 import * as loggerConfig from "../log4jsconfig.json";
 
+// Set up localization
+import * as nls from "vscode-nls";
+nls.config({
+    messageFormat: nls.MessageFormat.bundle,
+    bundleFormat: nls.BundleFormat.standalone,
+})();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
+
 // Globals
 export let ZOWETEMPFOLDER;
 export let ZOWE_TMP_FOLDER;
@@ -54,114 +62,127 @@ export const ICON_STATE_OPEN = "open";
 export const ICON_STATE_CLOSED = "closed";
 export const VSCODE_APPNAME: string[] = ["Visual Studio Code", "VSCodium"];
 export const ROOTPATH = path.join(__dirname, "..", "..");
+export enum CreateDataSetTypeWithKeysEnum {
+    DATA_SET_BINARY = 0,
+    DATA_SET_C = 1,
+    DATA_SET_CLASSIC = 2,
+    DATA_SET_PARTITIONED = 3,
+    DATA_SET_SEQUENTIAL = 4,
+}
 export const DATA_SET_PROPERTIES = [
     {
         key: `alcunit`,
         label: `Allocation Unit`,
         value: null,
-        placeHolder: `Enter an allocation unit`,
+        placeHolder: localize("createFile.attribute.alcunit", `Enter an allocation unit`),
     },
     {
         key: `avgblk`,
         label: `Average Block Length`,
         value: null,
-        placeHolder: `Enter the average block length (if allocation unit = BLK)`,
+        placeHolder: localize(
+            "createFile.attribute.avgblk",
+            `Enter the average block length (if allocation unit = BLK)`
+        ),
     },
     {
         key: `blksize`,
         label: `Block Size`,
         value: null,
-        placeHolder: `Enter a block size`,
+        placeHolder: localize("createFile.attribute.blksize", `Enter a block size`),
     },
     {
         key: `dataclass`,
         label: `Data Class`,
         value: null,
-        placeHolder: `Enter an SMS data class`,
+        placeHolder: localize("createFile.attribute.dataclass", `Enter an SMS data class`),
     },
     {
         key: `unit`,
         label: `Device Type`,
         value: null,
-        placeHolder: `Enter a device type (unit)`,
+        placeHolder: localize("createFile.attribute.unit", `Enter a device type (unit)`),
     },
     {
         key: `dirblk`,
         label: `Directory Blocks`,
         value: null,
-        placeHolder: `Enter the number of directory blocks`,
+        placeHolder: localize("createFile.attribute.dirblk", `Enter the number of directory blocks`),
     },
     {
         key: `dsntype`,
         label: `Data Set Type (DSNTYPE)`,
         value: null,
-        placeHolder: `Specify the data set type (DSNTYPE)`,
+        placeHolder: localize("createFile.attribute.dsntype", `Specify the data set type (DSNTYPE)`),
     },
     {
         key: `mgntclass`,
         label: `Management Class`,
         value: null,
-        placeHolder: `Enter the SMS management class`,
+        placeHolder: localize("createFile.attribute.mgntclass", `Enter the SMS management class`),
     },
     {
         key: `dsName`,
         label: `Data Set Name`,
         value: null,
-        placeHolder: `Enter a data set name`,
+        placeHolder: localize("createFile.attribute.dsName", `Enter a data set name`),
     },
     {
         key: `dsorg`,
         label: `Data Set Organization (DSORG)`,
         value: null,
-        placeHolder: `Select a data set organization (DSORG)`,
+        placeHolder: localize("createFile.attribute.dsorg", `Select a data set organization (DSORG)`),
     },
     {
         key: `primary`,
         label: `Primary Space`,
         value: null,
-        placeHolder: `Enter the primary space allocation`,
+        placeHolder: localize("createFile.attribute.primary", `Enter the primary space allocation`),
     },
     {
         key: `recfm`,
         label: `Record Format`,
         value: null,
-        placeHolder: `Enter the data set's record format`,
+        placeHolder: localize("createFile.attribute.recfm", `Enter the data set's record format`),
     },
     {
         key: `lrecl`,
         label: `Record Length`,
         value: null,
-        placeHolder: `Enter the logical record length`,
+        placeHolder: localize("createFile.attribute.lrecl", `Enter the logical record length`),
     },
     {
         key: `secondary`,
         label: `Secondary Space`,
         value: null,
-        placeHolder: `Enter the secondary space allocation`,
+        placeHolder: localize("createFile.attribute.secondary", `Enter the secondary space allocation`),
     },
     {
         key: `showAttributes`,
         label: `Show Attributes`,
         value: null,
-        placeHolder: `Show the full allocation attributes?`,
+        placeHolder: localize("createFile.attribute.showAttributes", `Show the full allocation attributes?`),
     },
     {
         key: `size`,
         label: `Size`,
         value: null,
-        placeHolder: `Enter the size of the data set`,
+        placeHolder: localize("createFile.attribute.size", `Enter the size of the data set`),
     },
     {
         key: `storclass`,
         label: `Storage Class`,
         value: null,
-        placeHolder: `Enter the SMS storage class`,
+        placeHolder: localize("createFile.attribute.storclass", `Enter the SMS storage class`),
     },
     {
         key: `volser`,
         label: `Volume Serial`,
         value: null,
-        placeHolder: `Enter the volume serial on which the data set should be placed`,
+        placeHolder: localize(
+            "createFile.attribute.volser",
+            `Enter the volume serial on which the data set should be placed`
+        ),
     },
 ];
 

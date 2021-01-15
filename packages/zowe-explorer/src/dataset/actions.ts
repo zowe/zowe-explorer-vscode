@@ -298,38 +298,31 @@ export async function openPS(
 
 export function getDataSetTypeAndOptions(type: string) {
     let typeEnum;
-    let cliDefaultsKey;
     let createOptions;
     switch (type) {
         case localize("createFile.dataSetBinary", "Data Set Binary"):
             typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_BINARY;
-            cliDefaultsKey = "BINARY";
             createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-Binary");
             break;
         case localize("createFile.dataSetC", "Data Set C"):
             typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_C;
-            cliDefaultsKey = "C";
             createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-C");
             break;
         case localize("createFile.dataSetClassic", "Data Set Classic"):
             typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_CLASSIC;
-            cliDefaultsKey = "CLASSIC";
             createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-Classic");
             break;
         case localize("createFile.dataSetPartitioned", "Data Set Partitioned"):
             typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED;
-            cliDefaultsKey = "PARTITIONED";
             createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-PDS");
             break;
         case localize("createFile.dataSetSequential", "Data Set Sequential"):
             typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL;
-            cliDefaultsKey = "SEQUENTIAL";
             createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-PS");
             break;
     }
     return {
         typeEnum,
-        cliDefaultsKey,
         createOptions,
     };
 }
@@ -409,7 +402,7 @@ export async function createFile(node: IZoweDatasetTreeNode, datasetProvider: IZ
             // Add the default property values to the list of items
             // that will be shown in DS attributes for editing
             typeEnum = getDataSetTypeAndOptions(type).typeEnum;
-            const cliDefaultsKey = getDataSetTypeAndOptions(type).cliDefaultsKey;
+            const cliDefaultsKey = globals.CreateDataSetTypeWithKeysEnum[typeEnum];
 
             propertiesFromDsType = zowe.CreateDefaults.DATA_SET[cliDefaultsKey];
             newDSProperties.forEach((property) => {

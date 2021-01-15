@@ -59,6 +59,7 @@ export async function cleanupSystemTestEnvironment() {
     await deleteDataset(`${normalPattern}.PUBLIC.TCLASSIC`);
     await deleteDataset(`${normalPattern}.PUBLIC.TPDS`);
     await deleteDataset(`${normalPattern}.PUBLIC.TPS`);
+    await deleteDataset(`${normalPattern}.CREATE.DATASET.TEST`);
     await deleteAllFiles(`${ussPattern}`);
 }
 
