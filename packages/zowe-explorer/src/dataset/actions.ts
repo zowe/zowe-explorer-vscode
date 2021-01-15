@@ -506,7 +506,7 @@ export async function createFile(node: IZoweDatasetTreeNode, datasetProvider: IZ
                 node.getProfileName(),
                 localize("createDataSet.error", "Error encountered when creating data set! ") + err.message
             );
-            throw err;
+            throw err as Error;
         }
     }
 }

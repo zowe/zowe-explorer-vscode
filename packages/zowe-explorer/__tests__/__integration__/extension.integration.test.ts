@@ -168,10 +168,16 @@ describe("Extension Integration Tests", () => {
             // 3rd step: User tries to allocate
             quickPickStub.onCall(1).returns(" + Allocate Data Set");
 
+            // 2nd call, 1st step: User selects DS type
+            quickPickStub.onCall(2).returns("Data Set Sequential");
+
+            // 2nd call, 2nd step: User tries to allocate
+            quickPickStub.onCall(3).returns(" + Allocate Data Set");
+
             await dsActions.createFile(sessionNode, testTree);
 
             const showErrorStub = sandbox.spy(vscode.window, "showErrorMessage");
-            await expect(dsActions.createFile(sessionNode, testTree)).to.eventually.be.rejectedWith(Error);
+            expect(await dsActions.createFile(sessionNode, testTree)).to.be.rejectedWith(Error);
             const gotCalled = showErrorStub.called;
             expect(gotCalled).to.equal(true);
         }).timeout(TIMEOUT);
