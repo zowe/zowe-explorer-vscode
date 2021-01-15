@@ -142,11 +142,12 @@ describe("Extension Integration Tests", () => {
             inputBoxStub.returns(testFileName);
 
             // 2nd step: User selects DS type
-            const quickPickStub = sandbox.stub(vscode.window, "showQuickPick");
-            quickPickStub.onCall(0).returns("Data Set Sequential");
-
             // 3rd step: User tries to allocate
-            quickPickStub.onCall(1).returns(" + Allocate Data Set");
+            const returnVals = ["Data Set Sequential", " + Allocate Data Set"];
+            const quickPickStub = sandbox.stub(vscode.window, "showQuickPick");
+            returnVals.forEach((value, index) => {
+                quickPickStub.onCall(index).returns(value);
+            });
 
             await dsActions.createFile(sessionNode, testTree);
 
@@ -162,17 +163,17 @@ describe("Extension Integration Tests", () => {
             inputBoxStub.returns(testFileName);
 
             // 2nd step: User selects DS type
-            const quickPickStub = sandbox.stub(vscode.window, "showQuickPick");
-            quickPickStub.onCall(0).returns("Data Set Sequential");
-
             // 3rd step: User tries to allocate
-            quickPickStub.onCall(1).returns(" + Allocate Data Set");
-
-            // 2nd call, 1st step: User selects DS type
-            quickPickStub.onCall(2).returns("Data Set Sequential");
-
-            // 2nd call, 2nd step: User tries to allocate
-            quickPickStub.onCall(3).returns(" + Allocate Data Set");
+            const returnVals = [
+                "Data Set Sequential",
+                " + Allocate Data Set",
+                "Data Set Sequential",
+                " + Allocate Data Set",
+            ];
+            const quickPickStub = sandbox.stub(vscode.window, "showQuickPick");
+            returnVals.forEach((value, index) => {
+                quickPickStub.onCall(index).returns(value);
+            });
 
             await dsActions.createFile(sessionNode, testTree);
 
