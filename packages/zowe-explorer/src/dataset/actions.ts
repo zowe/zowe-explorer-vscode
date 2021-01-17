@@ -402,7 +402,7 @@ export async function createFile(node: IZoweDatasetTreeNode, datasetProvider: IZ
             // Add the default property values to the list of items
             // that will be shown in DS attributes for editing
             typeEnum = getDataSetTypeAndOptions(type).typeEnum;
-            const cliDefaultsKey = globals.CreateDataSetTypeWithKeysEnum[typeEnum];
+            const cliDefaultsKey = globals.CreateDataSetTypeWithKeysEnum[typeEnum].replace("DATA_SET_", "");
 
             propertiesFromDsType = zowe.CreateDefaults.DATA_SET[cliDefaultsKey];
             newDSProperties.forEach((property) => {

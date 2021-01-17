@@ -56,14 +56,6 @@ export namespace Login {
     }
 }
 
-export declare const enum sampleCreateDataSetTypeEnum {
-    DATA_SET_BINARY = 0,
-    DATA_SET_C = 1,
-    DATA_SET_CLASSIC = 2,
-    DATA_SET_PARTITIONED = 3,
-    DATA_SET_SEQUENTIAL = 4,
-}
-
 export const CreateDefaults = {
     DATA_SET: {
         PARTITIONED: {
@@ -117,6 +109,14 @@ export const CreateDefaults = {
         primary: 840,
     },
 };
+
+export declare const enum CreateDataSetTypeEnum {
+    DATA_SET_BINARY = 0,
+    DATA_SET_C = 1,
+    DATA_SET_CLASSIC = 2,
+    DATA_SET_PARTITIONED = 3,
+    DATA_SET_SEQUENTIAL = 4,
+}
 
 // tslint:disable-next-line:no-namespace
 export namespace List {
