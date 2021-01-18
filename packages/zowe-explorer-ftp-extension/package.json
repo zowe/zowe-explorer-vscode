@@ -5,7 +5,7 @@
   "author": "Zowe",
   "license": "EPL-2.0",
   "description": "Adds zFTP support to Zowe Explorer demonstrating how to extend the Zowe Explorer using its extensibility API.",
-  "version": "1.10.0",
+  "version": "1.11.1",
   "icon": "zowe_logo.png",
   "repository": {
     "url": "https://github.com/zowe/zowe-explorer-ftp-extension"
@@ -24,7 +24,7 @@
   "scripts": {
     "prepare": "yarn build",
     "build": "yarn clean && webpack --mode development",
-    "test": "echo \"zowe-explorer-api: coming soon.\"",
+    "test": "echo \"zowe-explorer-ftp-extension: Tests coming soon.\"",
     "lint": "concurrently -n \"_eslint_,prettier\" \"eslint . --ext .ts\" \"prettier --check .\"",
     "pretty": "prettier --write .",
     "watch": "webpack --mode development --watch --info-verbosity verbose",
@@ -37,18 +37,13 @@
     "vscode": "^1.43.0"
   },
   "dependencies": {
-    "@zowe/zowe-explorer-api": "1.10.0",
-    "@zowe/zos-ftp-for-zowe-cli": "1.2.0",
+    "@zowe/zowe-explorer-api": "1.11.1",
+    "@zowe/zos-ftp-for-zowe-cli": "1.3.0",
     "tmp": "0.2.1"
   },
   "devDependencies": {
     "@types/tmp": "0.2.0",
-    "@typescript-eslint/eslint-plugin": "^3.0.2",
-    "@typescript-eslint/parser": "^3.0.2",
     "concurrently": "^5.2.0",
-    "eslint": "^7.1.0",
-    "eslint-config-prettier": "^6.11.0",
-    "eslint-plugin-prettier": "^3.1.3",
     "webpack": "^4.42.1",
     "webpack-cli": "^3.3.11"
   }

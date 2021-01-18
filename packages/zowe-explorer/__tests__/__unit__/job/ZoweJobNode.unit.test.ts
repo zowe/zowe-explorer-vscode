@@ -317,6 +317,19 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
         expect(spoolFiles[0].label).toEqual("STEP:STDOUT(101)");
         expect(spoolFiles[0].owner).toEqual("fake");
     });
+
+    it("Tests that getChildren returns the spool files if user/owner is not defined", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        globalMocks.testJobsProvider.mSessionNodes[1]._owner = undefined;
+        globalMocks.testJobsProvider.mSessionNodes[1]._prefix = "";
+        globalMocks.testJobsProvider.mSessionNodes[1]._searchId = "";
+        globalMocks.testJobsProvider.mSessionNodes[1].session.ISession.user = undefined;
+        const spoolFiles = await globalMocks.testJobNode.getChildren();
+        expect(spoolFiles.length).toBe(1);
+        expect(spoolFiles[0].label).toEqual("STEP:STDOUT(101)");
+        expect(spoolFiles[0].owner).toEqual("*");
+    });
 });
 
 describe("ZoweJobNode unit tests - Function interpretFreeform", () => {
@@ -429,8 +442,16 @@ describe("ZoweJobNode unit tests - Function addFavorite", () => {
 describe("ZoweJobNode unit tests - Function removeFavorite", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
-            testJobNode: new Job(
+            testJobNode1: new Job(
                 "MYHLQ(JOB1283) - Input",
+                vscode.TreeItemCollapsibleState.Collapsed,
+                globalMocks.testJobsProvider.mSessionNodes[1],
+                globalMocks.testJobsProvider.mSessionNodes[1].getSession(),
+                globalMocks.testIJob,
+                globalMocks.testProfile
+            ),
+            testJobNode2: new Job(
+                "MYHLQ(JOB1284) - Input",
                 vscode.TreeItemCollapsibleState.Collapsed,
                 globalMocks.testJobsProvider.mSessionNodes[1],
                 globalMocks.testJobsProvider.mSessionNodes[1].getSession(),
@@ -442,19 +463,42 @@ describe("ZoweJobNode unit tests - Function removeFavorite", () => {
         return newMocks;
     }
 
-    it("Tests that removeFavorite successfully removes a favorited job", async () => {
+    it("Tests removeFavorite when starting with more than one favorite for the profile", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
+        const removeFavProfileSpy = jest.spyOn(globalMocks.testJobsProvider, "removeFavProfile");
 
         globalMocks.testJobsProvider.mFavorites = [];
 
-        await globalMocks.testJobsProvider.addFavorite(blockMocks.testJobNode);
+        await globalMocks.testJobsProvider.addFavorite(blockMocks.testJobNode1);
+        await globalMocks.testJobsProvider.addFavorite(blockMocks.testJobNode2);
+        const profileNodeInFavs: IZoweJobTreeNode = globalMocks.testJobsProvider.mFavorites[0];
+        // Make sure setup is correct
+        expect(profileNodeInFavs.children.length).toEqual(2);
+        expect(profileNodeInFavs.children[0].label).toBe("MYHLQ(JOB1283)");
+        expect(profileNodeInFavs.children[1].label).toBe("MYHLQ(JOB1284)");
+
+        // Actual test
+        await globalMocks.testJobsProvider.removeFavorite(profileNodeInFavs.children[0]);
+        expect(removeFavProfileSpy).not.toBeCalled();
+        expect(profileNodeInFavs.children.length).toEqual(1);
+        expect(profileNodeInFavs.children[0].label).toBe("MYHLQ(JOB1284)");
+    });
+    it("Tests removeFavorite when starting with only one favorite for the profile", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        const removeFavProfileSpy = jest.spyOn(globalMocks.testJobsProvider, "removeFavProfile");
+
+        globalMocks.testJobsProvider.mFavorites = [];
+
+        await globalMocks.testJobsProvider.addFavorite(blockMocks.testJobNode1);
         const profileNodeInFavs: IZoweJobTreeNode = globalMocks.testJobsProvider.mFavorites[0];
         const favoritedNode = profileNodeInFavs.children[0];
 
         expect(profileNodeInFavs.children.length).toEqual(1);
 
         await globalMocks.testJobsProvider.removeFavorite(favoritedNode);
+        expect(removeFavProfileSpy).toHaveBeenCalledWith(profileNodeInFavs.label, false);
 
         expect(profileNodeInFavs.children.length).toEqual(0);
     });

@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import { IZoweNodeType, IZoweDatasetTreeNode, IZoweUSSTreeNode } from "./IZoweTreeNode";
-import { PersistenceSchemaEnum } from "./UserSettings";
+import { PersistenceSchemaEnum } from "../profiles/UserSettings";
 
 /**
  * The base interface for Zowe tree browsers that implement the
@@ -60,6 +60,19 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
      * @param favorite Adds a favorite node
      */
     checkCurrentProfile(node: IZoweNodeType);
+
+    /**
+     * Log in to authentication service
+     * @param node This parameter identifies the node that needs to be called
+     */
+    ssoLogin(node: IZoweNodeType);
+
+    /**
+     * Log out from authentication service
+     * @param node This parameter identifies the node that needs to be called
+     */
+    ssoLogout(node: IZoweNodeType);
+
     /**
      * Adds a favorite node
      * @param favorite Adds a favorite node
@@ -70,6 +83,11 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
      * @param favorite Adds a favorite node
      */
     removeFavorite(node: IZoweNodeType);
+    /**
+     * Removes profile node from Favorites section
+     * @param profileName
+     */
+    removeFavProfile(profileName: string, userSelected: boolean);
     /**
      * Refreshes the tree
      */

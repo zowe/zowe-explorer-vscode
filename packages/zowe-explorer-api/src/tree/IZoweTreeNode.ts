@@ -110,6 +110,10 @@ export interface IZoweDatasetTreeNode extends IZoweTreeNode {
      * Search criteria for a Dataset search
      */
     pattern?: string;
+    /**
+     * Search criteria for a Dataset member search
+     */
+    memberPattern?: string;
 
     /**
      * Retrieves child nodes of this IZoweDatasetTreeNode
@@ -145,7 +149,7 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
     /**
      * List of child nodes downloaded in binary format
      */
-    binaryFiles?: {};
+    binaryFiles?: Record<string, unknown>;
     /**
      * Binary indicator. Default false (text)
      */

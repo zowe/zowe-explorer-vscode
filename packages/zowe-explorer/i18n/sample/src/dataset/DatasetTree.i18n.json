@@ -10,6 +10,9 @@
   "loadProfilesForFavorites.error.profile2": " To resolve this, you can create a profile with this name, ",
   "loadProfilesForFavorites.error.profile3": "or remove the favorites with this profile name from the Zowe-DS-Persistent setting in your {0} user settings.",
   "addFavorite": "PDS already in favorites",
+  "removeFavProfile.confirm": "This will remove all favorited Data Sets items for profile {0}. Continue?",
+  "removeFavProfile.continue": "Continue",
+  "removeFavProfile.cancel": "Cancel",
   "findParentNode.unsuccessful": "Node does not exist. It may have been deleted.",
   "enterPattern.log.debug.prompt": "Prompting the user for a data set pattern",
   "searchHistory.options.prompt": "Select a filter",
@@ -20,5 +23,5 @@
   "renameDataSet.log.debug": "Renaming data set ",
   "renameDataSet.log.error": "Error encountered when renaming data set! ",
   "renameDataSet.error": "Unable to rename data set: ",
-  "defaultFilterPrompt.option.prompt.search": "Create a new filter. Comma separate multiple entries (pattern 1, pattern 2, ...)"
+  "defaultFilterPrompt.option.prompt.search": "Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)"
 }

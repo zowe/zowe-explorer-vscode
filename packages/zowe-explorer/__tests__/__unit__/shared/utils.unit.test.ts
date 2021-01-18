@@ -11,7 +11,7 @@
 
 import * as sharedUtils from "../../../src/shared/utils";
 import * as globals from "../../../src/globals";
-import { Session, IProfileLoaded, Logger } from "@zowe/imperative";
+import { IProfileLoaded, Logger } from "@zowe/imperative";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import * as vscode from "vscode";
 import * as path from "path";
@@ -34,27 +34,9 @@ async function createGlobalMocks() {
     const newVariables = {
         session: createISession(),
         profileOne: createIProfile(),
-        mockLoadNamedProfile: jest.fn(),
+        mockGetInstance: jest.fn(),
     };
-    const profilesForValidation = { status: "active", name: "fake" };
-
-    Profiles.createInstance(Logger.getAppLogger());
-    newVariables.mockLoadNamedProfile.mockReturnValue(newVariables.profileOne);
-    Object.defineProperty(Profiles, "getInstance", {
-        value: jest.fn(() => {
-            return {
-                allProfiles: [{ name: "firstName" }, { name: "secondName" }],
-                getDefaultProfile: { name: "firstName" },
-                loadNamedProfile: newVariables.mockLoadNamedProfile,
-                checkCurrentProfile: jest.fn(() => {
-                    return profilesForValidation;
-                }),
-                profilesForValidation: [],
-                validateProfiles: jest.fn(),
-            };
-        }),
-        configurable: true,
-    });
+    await Profiles.createInstance(Logger.getAppLogger());
 
     return newVariables;
 }
@@ -119,6 +101,28 @@ describe("Shared Utils Unit Tests - Function node.labelRefresh()", () => {
         expect(rootNode.label === "gappy ");
         sharedUtils.labelRefresh(rootNode);
         expect(rootNode.label === "gappy");
+    });
+});
+
+describe("Shared Utils Unit Tests - Function refreshTree()", () => {
+    async function createBlockMocks(globalMocks) {
+        const newMocks = {
+            log: Logger.getAppLogger(),
+            imperativeProfile: createIProfile(),
+            testDatasetSessionNode: null,
+        };
+        newMocks.testDatasetSessionNode = createDatasetSessionNode(globalMocks.session, newMocks.imperativeProfile);
+        return newMocks;
+    }
+    it("should pass in appropriate profile type when getting all profiles to compare with session node", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        globalMocks.mockGetInstance.mockReturnValue(blockMocks.imperativeProfile);
+        const getProfilesSpy = jest.spyOn(Profiles.getInstance(), "getProfiles");
+
+        sharedUtils.refreshTree(blockMocks.testDatasetSessionNode);
+
+        expect(getProfilesSpy).toBeCalledWith(globalMocks.profileOne.type);
     });
 });
 

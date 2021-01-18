@@ -88,54 +88,31 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      * @param {string} filePath
      */
     public async rename(originalNode: IZoweUSSTreeNode) {
-        // Get the favorited & non-favorited versions of the node, if available
-        let oldFavorite;
-        if (contextually.isFavorite(originalNode)) {
-            oldFavorite = originalNode;
-            originalNode = this.findNonFavoritedNode(originalNode);
-        } else {
-            oldFavorite = this.findFavoritedNode(originalNode);
-        }
-
-        // Get new label & path
-        let originalFullPath;
-        let originalName;
-        let parentPath;
-        if (originalNode) {
-            originalFullPath = originalNode.fullPath;
-            originalName = originalNode.label;
-            parentPath = originalNode.fullPath.substr(0, originalNode.fullPath.indexOf(originalNode.label));
-        } else {
-            // Tree is not expanded, so original node cannot be found
-            originalFullPath = oldFavorite.fullPath;
-            originalName = oldFavorite.label;
-            parentPath = oldFavorite.fullPath.substr(0, oldFavorite.fullPath.indexOf(originalName));
-        }
-        const newName = await vscode.window.showInputBox({ value: originalName });
-        let newNamePath = path.join(parentPath + newName);
-        newNamePath = newNamePath.replace(/\\/g, "/"); // Added to cover Windows backslash issue
-
-        if (newName && newNamePath !== originalFullPath) {
+        // Could be a favorite or regular entry always deal with the regular entry
+        const parentPath = originalNode.fullPath.substr(0, originalNode.fullPath.indexOf(originalNode.label));
+        // Check if an old favorite exists for this node
+        const oldFavorite: IZoweUSSTreeNode = contextually.isFavorite(originalNode)
+            ? originalNode
+            : this.findFavoritedNode(originalNode);
+        const loadedNodes = await this.getAllLoadedItems();
+        const nodeType = contextually.isFolder(originalNode) ? "folder" : "file";
+        const options: vscode.InputBoxOptions = {
+            prompt: localize("renameUSSNode.enterName", "Enter a new name for the {0}", nodeType),
+            value: originalNode.label.replace(/^\[.+\]:\s/, ""),
+            ignoreFocusOut: true,
+            validateInput: (value) => this.checkDuplicateLabel(parentPath + value, loadedNodes, nodeType),
+        };
+        const newName = await vscode.window.showInputBox(options);
+        if (newName && parentPath + newName !== originalNode.fullPath) {
             try {
-                // Rename original node
-                if (originalNode) {
-                    const hasClosedTab = await originalNode.rename(newNamePath);
-                    await ZoweExplorerApiRegister.getUssApi(originalNode.getProfile()).rename(
-                        originalFullPath,
-                        newNamePath
-                    );
-                    await originalNode.refreshAndReopen(hasClosedTab);
-                } else {
-                    // Tree is not expanded, so original node cannot be found
-                    const hasClosedTab = await oldFavorite.rename(newNamePath);
-                    await ZoweExplorerApiRegister.getUssApi(oldFavorite.getProfile()).rename(
-                        originalFullPath,
-                        newNamePath
-                    );
-                    await oldFavorite.refreshAndReopen(hasClosedTab);
-                }
+                let newNamePath = path.join(parentPath + newName);
+                newNamePath = newNamePath.replace(/\\/g, "/"); // Added to cover Windows backslash issue
+                const oldNamePath = originalNode.fullPath;
 
-                // Rename favorite, if available
+                const hasClosedTab = await originalNode.rename(newNamePath);
+                await ZoweExplorerApiRegister.getUssApi(originalNode.getProfile()).rename(oldNamePath, newNamePath);
+                await originalNode.refreshAndReopen(hasClosedTab);
+
                 if (oldFavorite) {
                     this.removeFavorite(oldFavorite);
                     await oldFavorite.rename(newNamePath);
@@ -151,6 +128,21 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             }
         }
     }
+
+    public checkDuplicateLabel(newFullPath: string, nodesToCheck: IZoweUSSTreeNode[], newNodeType: string) {
+        for (const node of nodesToCheck) {
+            const nodeType = contextually.isFolder(node) ? "folder" : "file";
+            if (newFullPath === node.fullPath.trim()) {
+                return localize(
+                    "renameUSSNode.duplicateName",
+                    "A {0} already exists with this name. Please choose a different name.",
+                    nodeType
+                );
+            }
+        }
+        return null;
+    }
+
     public open(node: IZoweUSSTreeNode, preview: boolean) {
         throw new Error("Method not implemented.");
     }
@@ -371,6 +363,10 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         profileNodeInFavorites.children = profileNodeInFavorites.children.filter(
             (temp) => !(temp.label === node.label && temp.contextValue.startsWith(node.contextValue))
         );
+        // Remove profile node from Favorites if it contains no more favorites.
+        if (profileNodeInFavorites.children.length < 1) {
+            this.removeFavProfile(profileName, false);
+        }
         await this.updateFavorites();
         this.refreshElement(this.mFavoriteSession);
     }
@@ -391,6 +387,43 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             });
         });
         this.mHistory.updateFavorites(favoritesArray);
+    }
+
+    /**
+     * Removes profile node from Favorites section
+     * @param profileName Name of profile
+     * @param userSelected True if the function is being called directly because the user selected to remove the profile from Favorites
+     */
+    public async removeFavProfile(profileName: string, userSelected: boolean) {
+        // If user selected the "Remove profile from Favorites option", confirm they are okay with deleting all favorited items for that profile.
+        if (userSelected) {
+            const checkConfirmation = localize(
+                "removeFavProfile.confirm",
+                "This will remove all favorited USS items for profile {0}. Continue?",
+                profileName
+            );
+            const continueRemove = localize("removeFavProfile.continue", "Continue");
+            const cancelRemove = localize("removeFavProfile.cancel", "Cancel");
+            const quickPickOptions: vscode.QuickPickOptions = {
+                placeHolder: checkConfirmation,
+                ignoreFocusOut: true,
+                canPickMany: false,
+            };
+            if (
+                (await vscode.window.showQuickPick([continueRemove, cancelRemove], quickPickOptions)) !== continueRemove
+            ) {
+                return;
+            }
+        }
+
+        this.mFavorites.forEach((favProfileNode) => {
+            const favProfileLabel = favProfileNode.label.trim();
+            if (favProfileLabel === profileName) {
+                this.mFavorites = this.mFavorites.filter((tempNode) => tempNode.label.trim() !== favProfileLabel);
+                favProfileNode.dirty = true;
+                this.refresh();
+            }
+        });
     }
 
     /**
@@ -757,7 +790,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         if (profile) {
             // If baseProfile exists, combine that information first before adding the session to the tree
             // TODO: Move addSession to abstract/ZoweTreeProvider (similar to editSession)
-            const baseProfile = await Profiles.getInstance().getBaseProfile();
+            const baseProfile = Profiles.getInstance().getBaseProfile();
             if (baseProfile) {
                 try {
                     const combinedProfile = await Profiles.getInstance().getCombinedProfile(profile, baseProfile);
