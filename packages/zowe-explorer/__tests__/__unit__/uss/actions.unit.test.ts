@@ -167,82 +167,6 @@ function createGlobalMocks() {
     return globalMocks;
 }
 
-describe("USS Action Unit Tests - Function renameUSSNode", () => {
-    async function createBlockMocks(globalMocks) {
-        const newMocks = {
-            testFavNode: createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile),
-            testUSSNode: createUSSNode(globalMocks.testSession, globalMocks.testProfile),
-            testUSSTree: null,
-            mockUssApi: null,
-        };
-
-        newMocks.testUSSTree = createUSSTree(
-            [createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile)],
-            [createUSSSessionNode(globalMocks.testSession, globalMocks.testProfile)],
-            createTreeView()
-        );
-        newMocks.testUSSTree.mFavorites.push(newMocks.testFavNode);
-        globalMocks.mockShowInputBox.mockReturnValue("testNewNodeLabel");
-        jest.spyOn(newMocks.testFavNode, "getUSSDocumentFilePath").mockImplementation(jest.fn());
-        jest.spyOn(newMocks.testUSSNode, "getUSSDocumentFilePath").mockImplementation(jest.fn());
-        jest.spyOn(workspaceUtils, "closeOpenedTextFile").mockImplementation(jest.fn());
-
-        // Mock the USS API so that getSession returns the correct value
-        newMocks.mockUssApi = await ZoweExplorerApiRegister.getUssApi(globalMocks.testProfile);
-        const getUssApiMock = jest.fn();
-        getUssApiMock.mockReturnValue(newMocks.mockUssApi);
-        ZoweExplorerApiRegister.getUssApi = getUssApiMock.bind(ZoweExplorerApiRegister);
-
-        return newMocks;
-    }
-
-    it("Tests if renameUSSNode works when called from a favorite", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        await ussNodeActions.renameUSSNode(
-            blockMocks.testFavNode,
-            blockMocks.testUSSTree,
-            blockMocks.testFavNode.fullPath
-        );
-
-        expect(blockMocks.testFavNode.label).toEqual("[sestest]: testNewNodeLabel");
-    });
-
-    it("Tests if renameUSSNode works when called from a non-favorite", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        await ussNodeActions.renameUSSNode(
-            blockMocks.testUSSNode,
-            blockMocks.testUSSTree,
-            blockMocks.testUSSNode.fullPath
-        );
-
-        expect(blockMocks.testUSSNode.label).toEqual("testNewNodeLabel");
-    });
-
-    it("Tests if renameUSSNode successfully handles errors from the ZoweExplorerApiRegister.rename function", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        jest.spyOn(blockMocks.testUSSNode, "rename").mockRejectedValue("Test error!");
-
-        let error;
-        try {
-            await ussNodeActions.renameUSSNode(
-                blockMocks.testUSSNode,
-                blockMocks.testUSSTree,
-                blockMocks.testUSSNode.fullPath
-            );
-        } catch (err) {
-            error = err;
-        }
-
-        expect(error).toEqual("Test error!");
-    });
-});
-
 describe("USS Action Unit Tests - Function createUSSNodeDialog", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
@@ -340,12 +264,17 @@ describe("USS Action Unit Tests - Function createUSSNode", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        const getUssApiSpy = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockImplementationOnce(() => { throw (Error("Test error")); });
+        const getUssApiSpy = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockImplementationOnce(() => {
+            throw Error("Test error");
+        });
         globalMocks.mockShowInputBox.mockReturnValueOnce("USSFolder");
 
         let testError;
-        try { await ussNodeActions.createUSSNode(blockMocks.ussNode, blockMocks.testUSSTree, "file"); }
-        catch (err) { testError = err; }
+        try {
+            await ussNodeActions.createUSSNode(blockMocks.ussNode, blockMocks.testUSSTree, "file");
+        } catch (err) {
+            testError = err;
+        }
 
         expect(testError.message).toEqual("Test error");
     });
