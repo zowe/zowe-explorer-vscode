@@ -729,6 +729,11 @@
           "group": "inline"
         },
         {
+          "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav)(member|migr|ds|pds).*/",
+          "command": "zowe.addFavorite",
+          "group": "inline"
+        },
+        {
           "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
           "command": "zowe.pattern",
           "group": "1_create@0"
@@ -787,6 +792,11 @@
           "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
           "command": "zowe.issueMvsCmd",
           "group": "1_create@9"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
+          "command": "zowe.saveSearch",
+          "group": "2_favorite@0"
         },
         {
           "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav)(member|migr|ds|pds).*/",
@@ -900,6 +910,16 @@
         },
         {
           "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)job.*/",
+          "command": "zowe.jobs.addFavorite",
+          "group": "inline"
+        },
+        {
+          "when": "view == zowe.jobs && viewItem =~ /^job.*_fav.*/",
+          "command": "zowe.jobs.removeFavorite",
+          "group": "inline"
+        },
+        {
+          "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)job.*/",
           "command": "zowe.getJobJcl",
           "group": "0_mainframeInteraction@0"
         },
@@ -947,16 +967,6 @@
           "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)job.*/",
           "command": "zowe.deleteJob",
           "group": "6_cutCopyPaste"
-        },
-        {
-          "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)job.*/",
-          "command": "zowe.jobs.addFavorite",
-          "group": "inline"
-        },
-        {
-          "when": "view == zowe.jobs && viewItem =~ /^job.*_fav.*/",
-          "command": "zowe.jobs.removeFavorite",
-          "group": "inline"
         },
         {
           "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/",
