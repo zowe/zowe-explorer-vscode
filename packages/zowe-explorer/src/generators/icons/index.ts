@@ -25,6 +25,8 @@ export enum IconId {
     "sessionOpen" = "sessionOpen",
     "sessionFavourite" = "sessionFavourite",
     "sessionFavouriteOpen" = "sessionFavouriteOpen",
+    "filterFolder" = "filterFolder",
+    "filterFolderOpen" = "filterFolderOpen",
     "folder" = "folder",
     "folderOpen" = "folderOpen",
     "migrated" = "migrated",
@@ -59,6 +61,8 @@ const items = [
     require("./items/folderOpen"),
     require("./items/migrated"),
     require("./items/vsam"),
+    require("./items/filterFolder"),
+    require("./items/filterFolderOpen"),
 ].map((item) => item.default) as IIconItem[];
 
 export function getIconById(id: IconId): IIconItem {

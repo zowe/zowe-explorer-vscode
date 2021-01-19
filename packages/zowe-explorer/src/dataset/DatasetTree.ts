@@ -22,7 +22,7 @@ import { FilterDescriptor, FilterItem, resolveQuickPickHelper, errorHandling } f
 import { sortTreeItems, getAppName, getDocumentFilePath } from "../shared/utils";
 import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
-import { getIconByNode } from "../generators/icons";
+import { getIconById, getIconByNode, IconId } from "../generators/icons";
 import * as fs from "fs";
 import * as contextually from "../shared/context";
 import { resetValidationSettings } from "../shared/actions";
@@ -147,10 +147,36 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 return favsForProfile;
             }
             await Profiles.getInstance().checkCurrentProfile(element.getProfile());
+            if (element.memberPattern && !element.contextValue.includes(globals.FILTER_SEARCH)) {
+                element.contextValue = element.contextValue + globals.FILTER_SEARCH;
+            }
             const response = await element.getChildren();
             for (const item of response) {
-                item.memberPattern = element.memberPattern;
-                this.refreshElement(item);
+                const filterIcon = getIconById(IconId.filterFolder);
+                const folderIcon = getIconById(IconId.folder);
+                if (element.memberPattern) {
+                    const docIcon = getIconById(IconId.document);
+                    const icon = getIconByNode(item);
+                    if (icon !== filterIcon && contextually.isFilterFolder && icon !== docIcon) {
+                        item.iconPath = filterIcon.path;
+                    }
+                    item.memberPattern = element.memberPattern;
+                    this.refreshElement(item);
+                } else {
+                    if (item.iconPath === filterIcon.path) {
+                        // tslint:disable-next-line:no-console
+                        console.log(item.contextValue);
+                        item.iconPath = folderIcon.path;
+                        item.memberPattern = element.memberPattern;
+                        if (item.contextValue.includes(globals.FILTER_SEARCH)) {
+                            item.contextValue = item.contextValue.replace(globals.FILTER_SEARCH, "");
+                        }
+                        // tslint:disable-next-line:no-console
+                        console.log(item.contextValue);
+                        this.refreshElement(item);
+                        item.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+                    }
+                }
             }
             return response;
         }
@@ -921,8 +947,12 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             }
             if (members !== undefined) {
                 node.memberPattern = members.toUpperCase();
+                node.contextValue = node.contextValue + globals.FILTER_SEARCH;
             } else {
                 node.memberPattern = undefined;
+                if (node.contextValue.includes(globals.FILTER_SEARCH)) {
+                    node.contextValue = node.contextValue.replace(globals.FILTER_SEARCH, "");
+                }
             }
             node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
             node.dirty = true;
