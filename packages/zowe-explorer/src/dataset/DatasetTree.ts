@@ -164,15 +164,11 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     this.refreshElement(item);
                 } else {
                     if (item.iconPath === filterIcon.path) {
-                        // tslint:disable-next-line:no-console
-                        console.log(item.contextValue);
                         item.iconPath = folderIcon.path;
                         item.memberPattern = element.memberPattern;
                         if (item.contextValue.includes(globals.FILTER_SEARCH)) {
                             item.contextValue = item.contextValue.replace(globals.FILTER_SEARCH, "");
                         }
-                        // tslint:disable-next-line:no-console
-                        console.log(item.contextValue);
                         this.refreshElement(item);
                         item.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
                     }
