@@ -118,6 +118,10 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                     await oldFavorite.rename(newNamePath);
                     this.addFavorite(oldFavorite);
                 }
+                if (contextually.isFavorite) {
+                    const profileName = originalNode.getProfileName();
+                    this.renameNode(profileName, originalNode.label.trim(), newName);
+                }
             } catch (err) {
                 errorHandling(
                     err,
@@ -192,6 +196,32 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         const profileName = node.getProfileName();
         const sessionNode = this.mSessionNodes.find((session) => session.label.includes(profileName));
         return sessionNode.children.find((temp) => temp.label === node.label);
+    }
+
+    public async renameNode(profileLabel: string, beforeLabel: string, afterLabel: string) {
+        const sessionNode = this.mSessionNodes.find((session) => session.label.trim() === profileLabel.trim());
+        if (sessionNode) {
+            const matchingNode = sessionNode.children.find((node) => node.label === beforeLabel);
+            if (matchingNode) {
+                matchingNode.label = afterLabel;
+                matchingNode.tooltip = afterLabel;
+                this.refreshElement(matchingNode);
+            }
+        }
+    }
+
+    /**
+     * Renames a node from the favorites list
+     *
+     * @param node
+     */
+    public async renameFavorite(node: IZoweUSSTreeNode, newLabel: string) {
+        const matchingNode = this.findFavoritedNode(node);
+        if (matchingNode) {
+            matchingNode.label = newLabel;
+            matchingNode.tooltip = newLabel;
+            this.refreshElement(matchingNode);
+        }
     }
 
     /**

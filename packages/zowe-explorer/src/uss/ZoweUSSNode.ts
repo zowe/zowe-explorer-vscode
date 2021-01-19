@@ -306,9 +306,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         const hasClosedInstance = await closeOpenedTextFile(currentFilePath);
         this.fullPath = newFullPath;
         this.shortLabel = newFullPath.split("/").pop();
-        if (contextually.isFavorite(this)) {
-            this.shortLabel = `[${this.getProfileName()}]: ${this.shortLabel}`;
-        }
         this.label = this.shortLabel;
         this.tooltip = injectAdditionalDataToTooltip(this, newFullPath);
 
@@ -320,11 +317,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * @param hasClosedInstance
      */
     public async refreshAndReopen(hasClosedInstance = false) {
-        if (this.isFolder) {
-            await vscode.commands.executeCommand("zowe.uss.refreshAll");
-        } else {
-            await vscode.commands.executeCommand("zowe.uss.refreshUSSInTree", this);
-        }
+        await vscode.commands.executeCommand("zowe.uss.refreshUSSInTree", this);
 
         if (!this.isFolder && (hasClosedInstance || (this.binary && this.downloaded))) {
             await vscode.commands.executeCommand("zowe.uss.ZoweUSSNode.open", this);
