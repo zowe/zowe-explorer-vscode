@@ -147,12 +147,16 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 return favsForProfile;
             }
             await Profiles.getInstance().checkCurrentProfile(element.getProfile());
-            const response = await element.getChildren();
-            for (const item of response) {
-                item.memberPattern = element.memberPattern;
-                this.refreshElement(item);
+            if (element.memberPattern) {
+                const response = await element.getChildren();
+                for (const item of response) {
+                    item.memberPattern = element.memberPattern;
+                    this.refreshElement(item);
+                }
+                return response;
+            } else {
+                return element.getChildren();
             }
-            return response;
         }
         return this.mSessionNodes;
     }
