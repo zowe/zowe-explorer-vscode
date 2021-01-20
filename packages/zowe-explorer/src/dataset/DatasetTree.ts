@@ -896,12 +896,11 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     };
                 } else {
                     dataSet = {
-                        dataSetName: ds,
+                        dataSetName: ds.replace(",", ""),
                     };
                 }
                 dsSets.push(dataSet);
             }
-
             let datasets: string;
             for (const item of dsSets) {
                 if (item.dataSetName) {
@@ -912,7 +911,6 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     }
                 }
             }
-
             node.label = node.label.trim() + " ";
             node.label.trim();
             if (datasets) {
