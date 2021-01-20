@@ -22,7 +22,7 @@ import { FilterDescriptor, FilterItem, resolveQuickPickHelper, errorHandling } f
 import { sortTreeItems, getAppName, getDocumentFilePath } from "../shared/utils";
 import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
-import { getIconById, getIconByNode, IconId } from "../generators/icons";
+import { getIconById, getIconByNode, IconId, IIconItem } from "../generators/icons";
 import * as fs from "fs";
 import * as contextually from "../shared/context";
 import { resetValidationSettings } from "../shared/actions";
@@ -929,28 +929,39 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             // add member pattern only to appropriate data set
             const response = await this.getChildren(node);
             for (const child of response) {
-                const resetIcon = getIconById(IconId.folder);
+                let resetIcon: IIconItem;
+                if (child.collapsibleState === 1) {
+                    resetIcon = getIconById(IconId.folder);
+                }
+                if (child.collapsibleState === 2) {
+                    resetIcon = getIconById(IconId.folderOpen);
+                }
                 if (resetIcon) {
                     child.iconPath = resetIcon.path;
                 }
-                child.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
                 // remove any previous search memberPatterns
                 if (child.contextValue.includes(globals.FILTER_SEARCH)) {
                     child.contextValue = child.contextValue.replace(globals.FILTER_SEARCH, "");
                     child.memberPattern = undefined;
+                    this.refreshElement(child);
                 }
                 for (const dsName of dsSets) {
                     if (child.label === dsName.dataSetName.toUpperCase() && dsName.memberName) {
                         child.memberPattern = dsName.memberName.toUpperCase();
                         child.contextValue = child.contextValue + globals.FILTER_SEARCH;
-                        const setIcon = getIconById(IconId.filterFolder);
+                        let setIcon: IIconItem;
+                        if (child.collapsibleState === 1) {
+                            setIcon = getIconById(IconId.filterFolder);
+                        }
+                        if (child.collapsibleState === 2) {
+                            setIcon = getIconById(IconId.filterFolderOpen);
+                        }
                         if (setIcon) {
                             child.iconPath = setIcon.path;
                         }
-                        child.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+                        this.refreshElement(child);
                     }
                 }
-                this.refreshElement(child);
             }
 
             this.addSearchHistory(pattern);
