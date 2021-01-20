@@ -959,12 +959,8 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     child.contextValue = child.contextValue.replace(globals.FILTER_SEARCH, "");
                     child.memberPattern = undefined;
                     this.refreshElement(child);
-                    // tslint:disable-next-line:no-console
-                    console.log(child);
                 }
                 for (const dsName of dsSets) {
-                    // tslint:disable-next-line:no-console
-                    console.log(dsName.dataSetName);
                     if (child.label === dsName.dataSetName.toUpperCase() && dsName.memberName) {
                         child.memberPattern = dsName.memberName.toUpperCase();
                         child.contextValue = child.contextValue + globals.FILTER_SEARCH;
