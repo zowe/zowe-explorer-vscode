@@ -138,10 +138,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * @param [element] - Optional parameter; if not passed, returns root session nodes
      * @returns {IZoweDatasetTreeNode[] | Promise<IZoweDatasetTreeNode[]>}
      */
-    public async getChildren(
-        element?: IZoweDatasetTreeNode | undefined,
-        dsSets?: [IDataSet]
-    ): Promise<IZoweDatasetTreeNode[]> {
+    public async getChildren(element?: IZoweDatasetTreeNode | undefined): Promise<IZoweDatasetTreeNode[]> {
         if (element) {
             if (contextually.isFavoriteContext(element)) {
                 return this.mFavorites;
@@ -174,7 +171,6 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                             item.contextValue = item.contextValue.replace(globals.FILTER_SEARCH, "");
                         }
                         this.refreshElement(item);
-                        item.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
                     }
                 }
             }
@@ -954,12 +950,25 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             // add member pattern only to appropriate data set
             const response = await this.getChildren(node);
             for (const child of response) {
+                const resetIcon = getIconById(IconId.folder);
+                if (resetIcon) {
+                    child.iconPath = resetIcon.path;
+                }
+                // remove any previous search memberPatterns
+                if (child.contextValue.includes(globals.FILTER_SEARCH)) {
+                    child.contextValue = child.contextValue.replace(globals.FILTER_SEARCH, "");
+                    child.memberPattern = undefined;
+                    this.refreshElement(child);
+                    // tslint:disable-next-line:no-console
+                    console.log(child);
+                }
                 for (const dsName of dsSets) {
                     // tslint:disable-next-line:no-console
                     console.log(dsName.dataSetName);
                     if (child.label === dsName.dataSetName.toUpperCase() && dsName.memberName) {
                         child.memberPattern = dsName.memberName.toUpperCase();
                         child.contextValue = child.contextValue + globals.FILTER_SEARCH;
+                        this.refreshElement(child);
                     }
                 }
             }
