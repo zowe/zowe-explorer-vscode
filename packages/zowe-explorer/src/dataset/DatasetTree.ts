@@ -929,19 +929,24 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 if (resetIcon) {
                     child.iconPath = resetIcon.path;
                 }
+                child.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
                 // remove any previous search memberPatterns
                 if (child.contextValue.includes(globals.FILTER_SEARCH)) {
                     child.contextValue = child.contextValue.replace(globals.FILTER_SEARCH, "");
                     child.memberPattern = undefined;
-                    this.refreshElement(child);
                 }
                 for (const dsName of dsSets) {
                     if (child.label === dsName.dataSetName.toUpperCase() && dsName.memberName) {
                         child.memberPattern = dsName.memberName.toUpperCase();
                         child.contextValue = child.contextValue + globals.FILTER_SEARCH;
-                        this.refreshElement(child);
+                        const setIcon = getIconById(IconId.filterFolder);
+                        if (setIcon) {
+                            child.iconPath = setIcon.path;
+                        }
+                        child.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
                     }
                 }
+                this.refreshElement(child);
             }
             const icon = getIconByNode(node);
             if (icon) {
