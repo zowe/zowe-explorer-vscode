@@ -1279,7 +1279,20 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweT
                         "Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict."
                     )
                 );
-                if (vscode.window.activeTextEditor) {
+
+                // This is a fix for issue #1046, which was an issue when the user changed tabs
+                // before the file was saved in VSCode
+                // Unfortunately VSCode doesn't keep track of all open tabs, so this is messy...
+                // Check on this link to see when they add the feature: https://github.com/Microsoft/vscode/issues/15178
+                const firstDocInTabs = vscode.window.activeTextEditor.document.fileName;
+                let firstTabReached = 0;
+                while (vscode.window.activeTextEditor.document.fileName !== oldDoc.fileName && !firstTabReached) {
+                    await vscode.commands.executeCommand("workbench.action.nextEditorInGroup");
+                    if (vscode.window.activeTextEditor.document.fileName === firstDocInTabs) {
+                        firstTabReached = 1;
+                    }
+                }
+                if (vscode.window.activeTextEditor.document.fileName === oldDoc.fileName) {
                     // Store document in a separate variable, to be used on merge conflict
                     const startPosition = new vscode.Position(0, 0);
                     const endPosition = new vscode.Position(oldDoc.lineCount, 0);
@@ -1290,6 +1303,10 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweT
                         editBuilder.insert(startPosition, oldDocText);
                     });
                     await vscode.window.activeTextEditor.document.save();
+                } else {
+                    vscode.window.showErrorMessage(
+                        localize("saveFile.error.fileClosed", "The file was closed before save could be completed.")
+                    );
                 }
             }
         } else {
