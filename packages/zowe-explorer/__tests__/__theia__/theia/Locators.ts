@@ -28,7 +28,7 @@ export const DatasetsLocators = {
     favoriteProfileInDatasetId: "/0:Favorites/0:TestSeleniumProfile",
     addToFavoriteOptionXpath: "//li[@data-command='__plugin.menu.action.zowe.saveSearch']",
     searchSymbolInFavoriteXpath: "//*[@id='/0:Favorites/0:TestSeleniumProfile/0:']",
-    removeFavoriteProfileFromDatasetsOptionXpath: "//li[@data-command='__plugin.menu.action.zowe.removeSavedSearch']",
+    removeFavoriteProfileFromDatasetsOptionXpath: "//li[@data-command='__plugin.menu.action.zowe.removeFavProfile']",
     secondDatasetProfileBeforeDeletingId: "/1:TestSeleniumProfile",
     deleteProfileFromDatasetsXpath: "(//li[@data-command='__plugin.menu.action.zowe.deleteProfile'])",
   };
@@ -45,7 +45,7 @@ export const UssLocators = {
     favoriteProfileInUssXpath: "(//div[@id='/0:Favorites/0:TestSeleniumProfile'])[2]",
     addToFavoriteOptionXpath: "//li[@data-command='__plugin.menu.action.zowe.uss.addFavorite:1']",
     favoriteProfileInUssBeforeRemovingXpath: "(//div[@id='/0:Favorites/0:TestSeleniumProfile'])",
-    removeFavoriteProfileFromUssOptionXpath: "//li[@data-command='__plugin.menu.action.zowe.uss.removeSavedSearch']",
+    removeFavoriteProfileFromUssOptionXpath: "//li[@data-command='__plugin.menu.action.zowe.uss.removeFavProfile']",
     hideProfileFromUssOptionXpath: "//li[@data-command='__plugin.menu.action.zowe.uss.removeSession']",
     searchSymbolInFavoriteXpath: "//*[@id='/0:Favorites/0:TestSeleniumProfile/0:']",
   };
@@ -64,7 +64,7 @@ export const JobsLocators = {
     favoriteprofile: "(//div[@id='/0:Favorites/0:TestSeleniumProfile'])",
     addToFavoriteOptionXpath: "//li[@data-command='__plugin.menu.action.zowe.jobs.addFavorite:0']",
     favoriteProfileInJobsBeforeRemovingXpath: "//div[@id='/0:Favorites/0:TestSeleniumProfile/0:Prefix:*']",
-    removeFavoriteProfileFromJobsOptionXpath: "//li[@data-command='__plugin.menu.action.zowe.jobs.removeSearchFavorite']",
+    removeFavoriteProfileFromJobsOptionXpath: "//li[@data-command='__plugin.menu.action.zowe.jobs.removeFavProfile']",
     hideProfileFromJobsOptionXpath: "//li[@data-command='__plugin.menu.action.zowe.removeJobsSession']",
     secondJobsProfileIdBeforeHidingXpath: "(//div[@id='/2:TestSeleniumProfile'])[2]",
     favoriteprofilexpath: "//div[@id='/0:Favorites/0:TestSeleniumProfile']",
