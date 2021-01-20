@@ -930,10 +930,10 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             const response = await this.getChildren(node);
             for (const child of response) {
                 let resetIcon: IIconItem;
-                if (child.collapsibleState === 1) {
+                if (child.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed) {
                     resetIcon = getIconById(IconId.folder);
                 }
-                if (child.collapsibleState === 2) {
+                if (child.collapsibleState === vscode.TreeItemCollapsibleState.Expanded) {
                     resetIcon = getIconById(IconId.folderOpen);
                 }
                 if (resetIcon) {
@@ -950,10 +950,10 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                         child.memberPattern = dsName.memberName.toUpperCase();
                         child.contextValue = child.contextValue + globals.FILTER_SEARCH;
                         let setIcon: IIconItem;
-                        if (child.collapsibleState === 1) {
+                        if (child.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed) {
                             setIcon = getIconById(IconId.filterFolder);
                         }
-                        if (child.collapsibleState === 2) {
+                        if (child.collapsibleState === vscode.TreeItemCollapsibleState.Expanded) {
                             setIcon = getIconById(IconId.filterFolderOpen);
                         }
                         if (setIcon) {
