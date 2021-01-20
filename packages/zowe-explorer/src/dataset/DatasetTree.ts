@@ -922,6 +922,10 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             }
             node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
             node.dirty = true;
+            const icon = getIconByNode(node);
+            if (icon) {
+                node.iconPath = icon.path;
+            }
             // add member pattern only to appropriate data set
             const response = await this.getChildren(node);
             for (const child of response) {
@@ -948,10 +952,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 }
                 this.refreshElement(child);
             }
-            const icon = getIconByNode(node);
-            if (icon) {
-                node.iconPath = icon.path;
-            }
+
             this.addSearchHistory(pattern);
         }
     }
