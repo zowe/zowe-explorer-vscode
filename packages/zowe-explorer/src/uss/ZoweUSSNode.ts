@@ -298,7 +298,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     }
 
     /**
-     * Helper method to change the node names in one go
+     * Helper method to change the UI node names in one go
      * @param newFullPath string
      */
     public async rename(newFullPath: string) {
