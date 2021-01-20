@@ -114,13 +114,17 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 await originalNode.refreshAndReopen(hasClosedTab);
 
                 if (oldFavorite) {
-                    this.removeFavorite(oldFavorite);
-                    await oldFavorite.rename(newNamePath);
-                    this.addFavorite(oldFavorite);
-                }
-                if (contextually.isFavorite) {
-                    const profileName = originalNode.getProfileName();
-                    this.renameNode(profileName, originalNode.label.trim(), newName);
+                    // Rename corresponding node in Sessions or Favorites section (whichever one Rename wasn't called from)
+                    if (contextually.isFavorite(originalNode)) {
+                        const profileName = originalNode.getProfileName();
+                        this.renameNode(profileName, oldNamePath, newNamePath);
+                    } else {
+                        this.renameFavorite(originalNode, newNamePath);
+                    }
+                    this.updateFavorites();
+                    // this.removeFavorite(oldFavorite);
+                    // await oldFavorite.rename(newNamePath);
+                    // this.addFavorite(oldFavorite);
                 }
             } catch (err) {
                 errorHandling(
@@ -198,14 +202,18 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         return sessionNode.children.find((temp) => temp.label === node.label);
     }
 
-    public async renameNode(profileLabel: string, beforeLabel: string, afterLabel: string) {
-        const sessionNode = this.mSessionNodes.find((session) => session.label.trim() === profileLabel.trim());
+    /**
+     * This function is for renaming the non-favorited equivalent of a favorited node for a given profile.
+     * @param profileLabel
+     * @param oldNamePath
+     * @param newNamePath
+     */
+    public async renameNode(profileLabel: string, oldNamePath: string, newNamePath: string) {
+        const sessionNode = this.mSessionNodes.find((session) => session.getProfileName() === profileLabel.trim());
         if (sessionNode) {
-            const matchingNode = sessionNode.children.find((node) => node.label === beforeLabel);
+            const matchingNode: IZoweUSSTreeNode = sessionNode.children.find((node) => node.fullPath === oldNamePath);
             if (matchingNode) {
-                matchingNode.label = afterLabel;
-                matchingNode.tooltip = afterLabel;
-                this.refreshElement(matchingNode);
+                matchingNode.rename(newNamePath);
             }
         }
     }
@@ -215,12 +223,11 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      *
      * @param node
      */
-    public async renameFavorite(node: IZoweUSSTreeNode, newLabel: string) {
-        const matchingNode = this.findFavoritedNode(node);
+    public async renameFavorite(node: IZoweUSSTreeNode, newNamePath: string) {
+        const matchingNode: IZoweUSSTreeNode = this.findFavoritedNode(node);
         if (matchingNode) {
-            matchingNode.label = newLabel;
-            matchingNode.tooltip = newLabel;
-            this.refreshElement(matchingNode);
+            matchingNode.rename(newNamePath);
+            // this.refreshElement(matchingNode);
         }
     }
 
