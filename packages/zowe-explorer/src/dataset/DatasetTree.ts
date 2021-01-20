@@ -148,32 +148,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 return favsForProfile;
             }
             await Profiles.getInstance().checkCurrentProfile(element.getProfile());
-            if (element.memberPattern && !element.contextValue.includes(globals.FILTER_SEARCH)) {
-                element.contextValue = element.contextValue + globals.FILTER_SEARCH;
-            }
             const response = await element.getChildren();
-            for (const item of response) {
-                const filterIcon = getIconById(IconId.filterFolder);
-                const folderIcon = getIconById(IconId.folder);
-                if (element.memberPattern) {
-                    const docIcon = getIconById(IconId.document);
-                    const icon = getIconByNode(item);
-                    if (icon !== filterIcon && contextually.isFilterFolder && icon !== docIcon) {
-                        item.iconPath = filterIcon.path;
-                    }
-                    item.memberPattern = element.memberPattern;
-                    this.refreshElement(item);
-                } else {
-                    if (item.iconPath === filterIcon.path) {
-                        item.iconPath = folderIcon.path;
-                        item.memberPattern = element.memberPattern;
-                        if (item.contextValue.includes(globals.FILTER_SEARCH)) {
-                            item.contextValue = item.contextValue.replace(globals.FILTER_SEARCH, "");
-                        }
-                        this.refreshElement(item);
-                    }
-                }
-            }
             return response;
         }
         return this.mSessionNodes;
