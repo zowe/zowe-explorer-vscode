@@ -109,10 +109,8 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 newNamePath = newNamePath.replace(/\\/g, "/"); // Added to cover Windows backslash issue
                 const oldNamePath = originalNode.fullPath;
 
-                // Handle rename in back-end:
-                // const hasClosedTab = await originalNode.rename(newNamePath);
+                // // Handle rename in back-end:
                 await ZoweExplorerApiRegister.getUssApi(originalNode.getProfile()).rename(oldNamePath, newNamePath);
-                // await originalNode.refreshAndReopen(hasClosedTab);
 
                 // Handle rename in UI:
                 if (oldFavorite) {
@@ -127,7 +125,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 }
                 // Rename originalNode in UI
                 const hasClosedTab = await originalNode.rename(newNamePath);
-                // await originalNode.refreshAndReopen(hasClosedTab);
+                await originalNode.refreshAndReopen(hasClosedTab);
                 this.updateFavorites();
             } catch (err) {
                 errorHandling(
