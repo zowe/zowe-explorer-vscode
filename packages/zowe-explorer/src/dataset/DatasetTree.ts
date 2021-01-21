@@ -350,9 +350,22 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             // If no profile/session yet, then add session and profile to parent profile node in this.mFavorites array:
             try {
                 profile = Profiles.getInstance().loadNamedProfile(profileName);
-                session = ZoweExplorerApiRegister.getMvsApi(profile).getSession();
-                parentNode.setProfileToChoice(profile);
-                parentNode.setSessionToChoice(session);
+                await Profiles.getInstance().checkCurrentProfile(profile);
+                if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
+                    session = ZoweExplorerApiRegister.getMvsApi(profile).getSession();
+                    parentNode.setProfileToChoice(profile);
+                    parentNode.setSessionToChoice(session);
+                } else {
+                    return [
+                        new ZoweDatasetNode(
+                            localize("loadProfilesForFavorites.authFailed", "You must authenticate to view favorites."),
+                            vscode.TreeItemCollapsibleState.None,
+                            parentNode,
+                            null,
+                            globals.INFORMATION_CONTEXT
+                        ),
+                    ];
+                }
             } catch (error) {
                 const errMessage: string =
                     localize(

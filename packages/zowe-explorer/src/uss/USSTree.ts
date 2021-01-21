@@ -477,13 +477,10 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         if (this.log) {
             this.log.debug(localize("filterPrompt.log.debug.promptUSSPath", "Prompting the user for a USS path"));
         }
+        await this.checkCurrentProfile(node);
         let sessionNode = node.getSessionNode();
         let remotepath: string;
-        await this.checkCurrentProfile(node);
-        if (
-            Profiles.getInstance().validProfile === ValidProfileEnum.VALID ||
-            Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED
-        ) {
+        if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
             if (contextually.isSessionNotFav(node)) {
                 if (this.mHistory.getSearchHistory().length > 0) {
                     const createPick = new FilterDescriptor(USSTree.defaultDialogText);
@@ -690,12 +687,25 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             // If no profile/session yet, then add session and profile to parent profile node in this.mFavorites array:
             try {
                 profile = Profiles.getInstance().loadNamedProfile(profileName);
-                session = ZoweExplorerApiRegister.getUssApi(profile).getSession();
-                parentNode.setProfileToChoice(profile);
-                parentNode.setSessionToChoice(session);
                 // Set mProfileName for the getProfileName function, but after initialization of child fav nodes.
                 // This way, it won't try to load profile in constructor for child fav nodes too early.
                 parentNode.mProfileName = profileName;
+                await Profiles.getInstance().checkCurrentProfile(profile);
+                if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
+                    session = ZoweExplorerApiRegister.getUssApi(profile).getSession();
+                    parentNode.setProfileToChoice(profile);
+                    parentNode.setSessionToChoice(session);
+                } else {
+                    return [
+                        new ZoweUSSNode(
+                            localize("loadProfilesForFavorites.authFailed", "You must authenticate to view favorites."),
+                            vscode.TreeItemCollapsibleState.None,
+                            parentNode,
+                            null,
+                            parentNode.fullPath
+                        ),
+                    ];
+                }
             } catch (error) {
                 const errMessage: string =
                     localize(

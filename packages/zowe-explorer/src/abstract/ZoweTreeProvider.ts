@@ -98,9 +98,9 @@ export class ZoweTreeProvider {
      * @param isOpen the intended state of the the tree view provider, true or false
      */
     public async flipState(element: IZoweTreeNode, isOpen: boolean = false) {
-        if (element.contextValue.includes("session")) {
-            this.checkCurrentProfile(element);
-        }
+        // if (element.contextValue.includes("session")) {
+        //     this.checkCurrentProfile(element);
+        // }
         element.collapsibleState = isOpen
             ? vscode.TreeItemCollapsibleState.Expanded
             : vscode.TreeItemCollapsibleState.Collapsed;
