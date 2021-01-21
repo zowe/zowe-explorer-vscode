@@ -661,7 +661,7 @@
         {
           "when": "view == zowe.uss.explorer && viewItem == profile_fav",
           "command": "zowe.uss.removeFavProfile",
-          "group": "3_workspace"
+          "group": "3_workspace@5"
         },
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^textFile|binaryFile/",
@@ -802,6 +802,11 @@
           "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav)(member|migr|ds|pds).*/",
           "command": "zowe.addFavorite",
           "group": "2_favorite@0"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem =~ /^session.*_fav.*/",
+          "command": "zowe.removeSavedSearch",
+          "group": "2_favorite@1"
         },
         {
           "when": "view == zowe.explorer && viewItem =~ /^(pds|ds|migr).*_fav.*/",
