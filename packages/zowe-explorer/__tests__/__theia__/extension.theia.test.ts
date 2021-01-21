@@ -209,7 +209,7 @@ describe("Remove Profile from Favorites", () => {
     after(async () => driverChrome.closeBrowser());
 });
 
-describe("Hide Profile", () => {
+describe("Hide Profiles", () => {
     before(async () => {
         await driverChrome.openBrowser();
         await driverChrome.sleepTime(SHORTSLEEPTIME);
