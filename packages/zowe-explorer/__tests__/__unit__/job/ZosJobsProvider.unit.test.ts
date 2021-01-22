@@ -16,7 +16,7 @@ import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import * as globals from "../../../src/globals";
 import { Logger } from "@zowe/imperative";
-import { IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
+import { IZoweJobTreeNode, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import {
     createIJobFile,
     createIJobObject,
@@ -400,6 +400,13 @@ describe("ZosJobsProvider unit tests - Function loadProfilesForFavorites", () =>
                     loadNamedProfile: jest.fn(() => {
                         return blockMocks.imperativeProfile;
                     }),
+                    checkCurrentProfile: jest.fn(() => {
+                        return {
+                            name: blockMocks.imperativeProfile.name,
+                            status: "unverified",
+                        };
+                    }),
+                    validProfile: ValidProfileEnum.VALID,
                 };
             }),
         });

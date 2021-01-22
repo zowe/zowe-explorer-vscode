@@ -15,6 +15,7 @@ import { Logger, IProfile, ISession } from "@zowe/imperative";
 import { PersistentFilters } from "../PersistentFilters";
 import { OwnerFilterDescriptor } from "../job/utils";
 import { getIconByNode, getIconById, IconId } from "../generators/icons";
+import * as contextually from "../shared/context";
 import {
     IZoweTreeNode,
     IZoweDatasetTreeNode,
@@ -98,9 +99,6 @@ export class ZoweTreeProvider {
      * @param isOpen the intended state of the the tree view provider, true or false
      */
     public async flipState(element: IZoweTreeNode, isOpen: boolean = false) {
-        // if (element.contextValue.includes("session")) {
-        //     this.checkCurrentProfile(element);
-        // }
         element.collapsibleState = isOpen
             ? vscode.TreeItemCollapsibleState.Expanded
             : vscode.TreeItemCollapsibleState.Collapsed;
@@ -190,8 +188,9 @@ export class ZoweTreeProvider {
         const profileStatus = await Profiles.getInstance().checkCurrentProfile(profile);
         if (profileStatus.status === "inactive") {
             if (
-                node.contextValue.toLowerCase().includes("session") ||
-                node.contextValue.toLowerCase().includes("server")
+                contextually.isSessionNotFav(node) &&
+                (node.contextValue.toLowerCase().includes("session") ||
+                    node.contextValue.toLowerCase().includes("server"))
             ) {
                 node.contextValue = node.contextValue.replace(/(?<=.*)(_Active|_Inactive|_Unverified)$/, "");
                 node.contextValue = node.contextValue + globals.INACTIVE_CONTEXT;
@@ -219,8 +218,9 @@ export class ZoweTreeProvider {
             );
         } else if (profileStatus.status === "active") {
             if (
-                node.contextValue.toLowerCase().includes("session") ||
-                node.contextValue.toLowerCase().includes("server")
+                contextually.isSessionNotFav(node) &&
+                (node.contextValue.toLowerCase().includes("session") ||
+                    node.contextValue.toLowerCase().includes("server"))
             ) {
                 node.contextValue = node.contextValue.replace(/(?<=.*)(_Active|_Inactive|_Unverified)$/, "");
                 node.contextValue = node.contextValue + globals.ACTIVE_CONTEXT;
@@ -231,8 +231,9 @@ export class ZoweTreeProvider {
             }
         } else if (profileStatus.status === "unverified") {
             if (
-                node.contextValue.toLowerCase().includes("session") ||
-                node.contextValue.toLowerCase().includes("server")
+                contextually.isSessionNotFav(node) &&
+                (node.contextValue.toLowerCase().includes("session") ||
+                    node.contextValue.toLowerCase().includes("server"))
             ) {
                 node.contextValue = node.contextValue.replace(/(?<=.*)(_Active|_Inactive|_Unverified)$/, "");
                 node.contextValue = node.contextValue + globals.UNVERIFIED_CONTEXT;
