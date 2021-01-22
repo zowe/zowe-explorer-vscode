@@ -96,11 +96,11 @@ export class Profiles extends ProfilesCache {
         const baseProfile = this.getBaseProfile();
 
         if (
-            !theProfile.profile.tokenType &&
-            (!theProfile.profile.user || !theProfile.profile.password) &&
-            baseProfile &&
-            baseProfile.profile.host !== theProfile.profile.host &&
-            baseProfile.profile.port !== theProfile.profile.port
+            (!theProfile.profile.tokenType && (!theProfile.profile.user || !theProfile.profile.password)) ||
+            ((theProfile.profile.user === "" || theProfile.profile.password === "") &&
+                baseProfile &&
+                baseProfile.profile.host !== theProfile.profile.host &&
+                baseProfile.profile.port !== theProfile.profile.port)
         ) {
             try {
                 const values = await Profiles.getInstance().promptCredentials(theProfile.name);
