@@ -8,10 +8,16 @@
   "version": "1.11.1",
   "icon": "zowe_logo.png",
   "repository": {
-    "url": "https://github.com/zowe/zowe-explorer-ftp-extension"
+    "url": "https://github.com/zowe/vscode-extension-for-zowe"
   },
   "categories": [
     "Other"
+  ],
+  "keywords": [
+    "mainframe",
+    "Zowe",
+    "z/OS",
+    "USS"
   ],
   "activationEvents": [
     "*"
