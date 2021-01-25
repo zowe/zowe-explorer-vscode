@@ -120,8 +120,7 @@ describe("KeytarCredentialManager Unit Tests", () => {
             error = err;
         }
         expect(error).toBeDefined();
-        expect(error.additionalDetails).toContain("Service = Zowe-Plugin");
-        expect(error.additionalDetails).toContain("Awesome-Service\n  Account = user5");
+        expect(error.additionalDetails).toContain("Could not find an entry in the credential vault");
     });
 
     it("Test saving passwords to credential store", async () => {
