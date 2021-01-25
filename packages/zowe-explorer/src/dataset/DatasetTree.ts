@@ -19,7 +19,14 @@ import { ValidProfileEnum, IZoweTree, IZoweDatasetTreeNode, PersistenceSchemaEnu
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { FilterDescriptor, FilterItem, resolveQuickPickHelper, errorHandling } from "../utils/ProfilesUtils";
-import { sortTreeItems, getAppName, getDocumentFilePath, isZoweDatasetTreeNode } from "../shared/utils";
+import {
+    sortTreeItems,
+    getAppName,
+    getDocumentFilePath,
+    isZoweDatasetTreeNode,
+    labelRefresh,
+    refreshTree,
+} from "../shared/utils";
 import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { getIconById, getIconByNode, IconId, IIconItem } from "../generators/icons";
@@ -28,7 +35,8 @@ import * as contextually from "../shared/context";
 import { resetValidationSettings } from "../shared/actions";
 import { closeOpenedTextFile } from "../utils/workspace";
 import { PersistentFilters } from "../PersistentFilters";
-import { IDataSet } from "@zowe/cli";
+import { IDataSet, IListOptions } from "@zowe/cli";
+import { refreshAll } from "../shared/refresh";
 
 // Set up localization
 nls.config({
@@ -148,23 +156,11 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 return favsForProfile;
             }
             await Profiles.getInstance().checkCurrentProfile(element.getProfile());
-            const response = await element.getChildren();
-
             let finalResponse: IZoweDatasetTreeNode[] = [];
+            const response = await element.getChildren();
             for (const item of response) {
                 if (item.pattern && item.memberPattern) {
-                    let doPush = false;
-                    const mems = await this.getChildren(item);
-                    for (const mem of mems) {
-                        const label = mem.label.trim();
-                        const memSearch = item.memberPattern.replace("*", "");
-                        if (label.includes(memSearch.toUpperCase())) {
-                            doPush = true;
-                        }
-                    }
-                    if (doPush) {
-                        finalResponse.push(item);
-                    }
+                    finalResponse.push(item);
                 }
                 if (!item.memberPattern && !item.pattern) {
                     finalResponse.push(item);
@@ -907,6 +903,10 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 }
             }
             // looking for members in pattern
+            labelRefresh(node);
+            node.children = [];
+            node.dirty = true;
+            refreshTree(node);
             let dataSet: IDataSet;
             const dsSets = [];
             const dsNames = pattern.split(",");
@@ -974,33 +974,47 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                         const name = label.split(".");
                         let index = 0;
                         let includes = false;
-                        let inc = false;
                         for (const each of dsn) {
+                            let inc = false;
                             if (each.includes("*")) {
                                 inc = name[index].includes(each.toUpperCase().replace("*", ""));
-                            }
-                            if (inc) {
-                                child.pattern = item.dataSetName;
-                                includes = true;
+                                if (inc) {
+                                    child.pattern = item.dataSetName;
+                                    includes = true;
+                                }
                             }
                             index++;
                         }
-                        if (includes) {
-                            child.memberPattern = item.memberName;
-                            if (!child.contextValue.includes(globals.FILTER_SEARCH)) {
-                                child.contextValue = child.contextValue + globals.FILTER_SEARCH;
+
+                        if (includes && child.contextValue.includes("pds")) {
+                            const options: IListOptions = {};
+                            options.pattern = item.memberPattern;
+                            options.attributes = true;
+                            const memResponse = await ZoweExplorerApiRegister.getMvsApi(child.getProfile()).allMembers(
+                                label,
+                                options
+                            );
+                            let existing = false;
+                            for (const mem of memResponse.apiResponse.items) {
+                                existing = mem.member.includes(item.memberName.toUpperCase().replace(/\*/g, ""));
+                                if (existing) {
+                                    child.memberPattern = item.memberName;
+                                    if (!child.contextValue.includes(globals.FILTER_SEARCH)) {
+                                        child.contextValue = child.contextValue + globals.FILTER_SEARCH;
+                                    }
+                                    let setIcon: IIconItem;
+                                    if (child.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed) {
+                                        setIcon = getIconById(IconId.filterFolder);
+                                    }
+                                    if (child.collapsibleState === vscode.TreeItemCollapsibleState.Expanded) {
+                                        setIcon = getIconById(IconId.filterFolderOpen);
+                                    }
+                                    if (setIcon) {
+                                        child.iconPath = setIcon.path;
+                                    }
+                                    this.refreshElement(child);
+                                }
                             }
-                            let setIcon: IIconItem;
-                            if (child.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed) {
-                                setIcon = getIconById(IconId.filterFolder);
-                            }
-                            if (child.collapsibleState === vscode.TreeItemCollapsibleState.Expanded) {
-                                setIcon = getIconById(IconId.filterFolderOpen);
-                            }
-                            if (setIcon) {
-                                child.iconPath = setIcon.path;
-                            }
-                            this.refreshElement(child);
                         }
                     }
                 }
