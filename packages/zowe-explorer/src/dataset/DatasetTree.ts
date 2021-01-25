@@ -19,7 +19,7 @@ import { ValidProfileEnum, IZoweTree, IZoweDatasetTreeNode, PersistenceSchemaEnu
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { FilterDescriptor, FilterItem, resolveQuickPickHelper, errorHandling } from "../utils/ProfilesUtils";
-import { sortTreeItems, getAppName, getDocumentFilePath } from "../shared/utils";
+import { sortTreeItems, getAppName, getDocumentFilePath, isZoweDatasetTreeNode } from "../shared/utils";
 import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { getIconById, getIconByNode, IconId, IIconItem } from "../generators/icons";
@@ -149,7 +149,31 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             }
             await Profiles.getInstance().checkCurrentProfile(element.getProfile());
             const response = await element.getChildren();
-            return response;
+
+            let finalResponse: IZoweDatasetTreeNode[] = [];
+            for (const item of response) {
+                if (item.pattern && item.memberPattern) {
+                    let doPush = false;
+                    const mems = await this.getChildren(item);
+                    for (const mem of mems) {
+                        const label = mem.label.trim();
+                        const memSearch = item.memberPattern.replace("*", "");
+                        if (label.includes(memSearch.toUpperCase())) {
+                            doPush = true;
+                        }
+                    }
+                    if (doPush) {
+                        finalResponse.push(item);
+                    }
+                }
+                if (!item.memberPattern && !item.pattern) {
+                    finalResponse.push(item);
+                }
+            }
+            if (finalResponse.length === 0) {
+                finalResponse = response;
+            }
+            return finalResponse;
         }
         return this.mSessionNodes;
     }
@@ -885,7 +909,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             // looking for members in pattern
             let dataSet: IDataSet;
             const dsSets = [];
-            const dsNames = pattern.split(/\s/g);
+            const dsNames = pattern.split(",");
             for (const ds of dsNames) {
                 const match = /(.*)\((.*)\)/.exec(ds);
                 if (match) {
@@ -896,11 +920,13 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     };
                 } else {
                     dataSet = {
-                        dataSetName: ds.replace(",", ""),
+                        dataSetName: ds.replace(/\s/g, ""),
                     };
                 }
                 dsSets.push(dataSet);
             }
+            node.label = node.label.trim() + " ";
+            node.label.trim();
             let datasets: string;
             for (const item of dsSets) {
                 if (item.dataSetName) {
@@ -911,8 +937,6 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     }
                 }
             }
-            node.label = node.label.trim() + " ";
-            node.label.trim();
             if (datasets) {
                 node.tooltip = node.pattern = datasets.toUpperCase();
             } else {
@@ -924,7 +948,6 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             if (icon) {
                 node.iconPath = icon.path;
             }
-            // add member pattern only to appropriate data set
             const response = await this.getChildren(node);
             for (const child of response) {
                 let resetIcon: IIconItem;
@@ -940,28 +963,48 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 // remove any previous search memberPatterns
                 if (child.contextValue.includes(globals.FILTER_SEARCH)) {
                     child.contextValue = child.contextValue.replace(globals.FILTER_SEARCH, "");
-                    child.memberPattern = undefined;
+                    child.memberPattern = "";
+                    child.pattern = "";
                     this.refreshElement(child);
                 }
-                for (const dsName of dsSets) {
-                    if (child.label === dsName.dataSetName.toUpperCase() && dsName.memberName) {
-                        child.memberPattern = dsName.memberName.toUpperCase();
-                        child.contextValue = child.contextValue + globals.FILTER_SEARCH;
-                        let setIcon: IIconItem;
-                        if (child.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed) {
-                            setIcon = getIconById(IconId.filterFolder);
+                for (const item of dsSets) {
+                    if (item.memberName) {
+                        const dsn = item.dataSetName.split(".");
+                        const label = child.label.trim();
+                        const name = label.split(".");
+                        let index = 0;
+                        let includes = false;
+                        let inc = false;
+                        for (const each of dsn) {
+                            if (each.includes("*")) {
+                                inc = name[index].includes(each.toUpperCase().replace("*", ""));
+                            }
+                            if (inc) {
+                                child.pattern = item.dataSetName;
+                                includes = true;
+                            }
+                            index++;
                         }
-                        if (child.collapsibleState === vscode.TreeItemCollapsibleState.Expanded) {
-                            setIcon = getIconById(IconId.filterFolderOpen);
+                        if (includes) {
+                            child.memberPattern = item.memberName;
+                            if (!child.contextValue.includes(globals.FILTER_SEARCH)) {
+                                child.contextValue = child.contextValue + globals.FILTER_SEARCH;
+                            }
+                            let setIcon: IIconItem;
+                            if (child.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed) {
+                                setIcon = getIconById(IconId.filterFolder);
+                            }
+                            if (child.collapsibleState === vscode.TreeItemCollapsibleState.Expanded) {
+                                setIcon = getIconById(IconId.filterFolderOpen);
+                            }
+                            if (setIcon) {
+                                child.iconPath = setIcon.path;
+                            }
+                            this.refreshElement(child);
                         }
-                        if (setIcon) {
-                            child.iconPath = setIcon.path;
-                        }
-                        this.refreshElement(child);
                     }
                 }
             }
-
             this.addSearchHistory(pattern);
         }
     }
