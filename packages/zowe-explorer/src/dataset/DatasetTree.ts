@@ -910,6 +910,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             let dataSet: IDataSet;
             const dsSets = [];
             const dsNames = pattern.split(",");
+
             for (const ds of dsNames) {
                 const match = /(.*)\((.*)\)/.exec(ds);
                 if (match) {
@@ -941,12 +942,6 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 node.tooltip = node.pattern = datasets.toUpperCase();
             } else {
                 node.tooltip = node.pattern = pattern.toUpperCase();
-            }
-            node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
-            node.dirty = true;
-            const icon = getIconByNode(node);
-            if (icon) {
-                node.iconPath = icon.path;
             }
             const response = await this.getChildren(node);
             for (const child of response) {
@@ -985,7 +980,6 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                             }
                             index++;
                         }
-
                         if (includes && child.contextValue.includes("pds")) {
                             const options: IListOptions = {};
                             options.pattern = item.memberPattern;
@@ -1017,6 +1011,12 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                             }
                         }
                     }
+                }
+                node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+                node.dirty = true;
+                const icon = getIconByNode(node);
+                if (icon) {
+                    node.iconPath = icon.path;
                 }
             }
             this.addSearchHistory(pattern);
