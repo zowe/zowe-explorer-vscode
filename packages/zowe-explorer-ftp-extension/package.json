@@ -17,7 +17,9 @@
     "mainframe",
     "Zowe",
     "z/OS",
-    "USS"
+    "USS",
+    "FTP",
+    "zFTP"
   ],
   "activationEvents": [
     "*"
