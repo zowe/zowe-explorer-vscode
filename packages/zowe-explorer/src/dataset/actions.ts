@@ -397,7 +397,10 @@ export async function createFile(node: IZoweDatasetTreeNode, datasetProvider: IZ
                     const newNode = await node
                         .getChildren()
                         .then((children) => children.find((child) => child.label === name));
-                    datasetProvider.getTreeView().reveal(newNode, { select: true });
+                    datasetProvider
+                        .getTreeView()
+                        .reveal(node, { select: true, focus: true })
+                        .then(() => datasetProvider.getTreeView().reveal(newNode, { select: true, focus: true }));
                 }
             } catch (err) {
                 globals.LOG.error(
@@ -825,7 +828,7 @@ export async function enterPattern(node: IZoweDatasetTreeNode, datasetProvider: 
         const options: vscode.InputBoxOptions = {
             prompt: localize(
                 "enterPattern.options.prompt",
-                "Search data sets by entering patterns: use a comma to separate multiple patterns"
+                "Search Data Sets: use a comma to separate multiple patterns"
             ),
             value: node.pattern,
         };
@@ -859,7 +862,7 @@ export async function enterPattern(node: IZoweDatasetTreeNode, datasetProvider: 
 }
 
 /**
- * Copy data sets
+ * Copy data set info
  *
  * @export
  * @param {IZoweNodeType} node - The node to copy
@@ -919,13 +922,13 @@ export async function hRecallDataSet(node: ZoweDatasetNode) {
 }
 
 /**
- * Paste data sets
+ * Paste member
  *
  * @export
  * @param {ZoweNode} node - The node to paste to
  * @param {DatasetTree} datasetProvider - the tree which contains the nodes
  */
-export async function pasteDataSet(node: IZoweDatasetTreeNode, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
+export async function pasteMember(node: IZoweDatasetTreeNode, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
     const { profileName, dataSetName } = dsUtils.getNodeLabels(node);
     let memberName;
     let beforeDataSetName;
