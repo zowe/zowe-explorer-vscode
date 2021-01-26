@@ -545,7 +545,7 @@ describe("Extension Integration Tests", () => {
                         );
 
                         await dsActions.copyDataSet(fromNode);
-                        await dsActions.pasteDataSet(toNode, testTree);
+                        await dsActions.pasteMember(toNode, testTree);
 
                         contents = await zowe.Get.dataSet(sessionNode.getSession(), fromDataSetName);
                     } catch (err) {
@@ -602,7 +602,7 @@ describe("Extension Integration Tests", () => {
                         inputBoxStub.returns(toMemberName);
 
                         await dsActions.copyDataSet(fromNode);
-                        await dsActions.pasteDataSet(parentNode, testTree);
+                        await dsActions.pasteMember(parentNode, testTree);
 
                         contents = await zowe.Get.dataSet(sessionNode.getSession(), `${dataSetName}(${toMemberName})`);
                     } catch (err) {
@@ -674,7 +674,7 @@ describe("Extension Integration Tests", () => {
                         inputBoxStub.returns(toMemberName);
 
                         await dsActions.copyDataSet(fromNode);
-                        await dsActions.pasteDataSet(toNode, testTree);
+                        await dsActions.pasteMember(toNode, testTree);
 
                         contents = await zowe.Get.dataSet(
                             sessionNode.getSession(),
@@ -753,7 +753,7 @@ describe("Extension Integration Tests", () => {
                         toNode.contextValue = DS_DS_CONTEXT;
 
                         await dsActions.copyDataSet(fromMemberNode);
-                        await dsActions.pasteDataSet(toNode, testTree);
+                        await dsActions.pasteMember(toNode, testTree);
 
                         contents = await zowe.Get.dataSet(sessionNode.getSession(), toDataSetName);
                     } catch (err) {
