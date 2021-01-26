@@ -24,14 +24,14 @@ If you do not have an existing Zowe FTP profile, you can create one graphically 
 
 1. In the USS Explorer view, click the `+` icon and select `Create a New Connection to z/OS`.
 1. Provide a name for your profile.
-1. You will be prompted for the type of connection you want to create. The drop-down dialog will show you the types of all the extension available, such as `zosmf` and `zftp`.
+1. You will be prompted for the type of connection you want to create. The drop-down dialog will show you the types of all the extensions available, such as `zosmf` and `zftp`.
 1. Select `zftp` and continue providing values for the prompts shown. As you will see, the questions prompted are now specific for FTP-type connections and match the parameters available in the FTP plugin for Zowe CLI.
 
 ## Using the Zowe CLI FTP plugin
 
-Whe using this extension, we also recommend that you are already familiar with the [z/OS FTP Plug-in for Zowe CLI](https://github.com/zowe/zowe-cli-ftp-plugin) that this extension is based on. Not all capabilities that this plugin provides have yet be implemented for Zowe Explorer so it would greatly augment your user experience.
+When using this extension, we also recommend that you are already familiar with the [z/OS FTP Plug-in for Zowe CLI](https://github.com/zowe/zowe-cli-ftp-plugin) that this extension is based on. Not all capabilities that this plugin provides have yet been implemented for Zowe Explorer so it would greatly augment your user experience.
 
-The following steps are not required, as the Zowe Explorer FTP extension also includes the capability of creating such a profile in the Zowe Explorer UI as described below. However, to enable FTP for Zowe CLI and reuse the profile created for Zowe CLI also in Zowe Explorer, install the plugin and create the profile via command line:
+The following steps are not required, as the Zowe Explorer FTP extension also includes the capability of creating such a profile in the Zowe Explorer UI as described above. However, to enable FTP for Zowe CLI and reuse the profile created for Zowe CLI also in Zowe Explorer, install the plugin and create the profile via command line:
 
 1. Go to the [z/OS FTP Plug-in for Zowe CLI](https://github.com/zowe/zowe-cli-ftp-plugin) GitHub repository and review the installation instructions for installing it into Zowe CLI. In short, after [meeting the prerequisites](https://github.com/zowe/zowe-cli-ftp-plugin#software-requirements), the command is:
 
