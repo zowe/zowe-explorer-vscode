@@ -950,7 +950,7 @@ export class Profiles extends ProfilesCache {
 
         // Remove from list of all profiles
         const index = this.allProfiles.findIndex((deleteItem) => {
-            return deleteItem === deletedProfile;
+            return deleteItem.name === deletedProfile.name;
         });
         if (index >= 0) {
             this.allProfiles.splice(index, 1);

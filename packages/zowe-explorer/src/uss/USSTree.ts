@@ -477,13 +477,13 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         if (this.log) {
             this.log.debug(localize("filterPrompt.log.debug.promptUSSPath", "Prompting the user for a USS path"));
         }
-        let sessionNode = node.getSessionNode();
-        let remotepath: string;
         await this.checkCurrentProfile(node);
         if (
             Profiles.getInstance().validProfile === ValidProfileEnum.VALID ||
             Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED
         ) {
+            let sessionNode = node.getSessionNode();
+            let remotepath: string;
             if (contextually.isSessionNotFav(node)) {
                 if (this.mHistory.getSearchHistory().length > 0) {
                     const createPick = new FilterDescriptor(USSTree.defaultDialogText);
