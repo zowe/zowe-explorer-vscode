@@ -204,6 +204,10 @@
         "title": "%copyMember%"
       },
       {
+        "command": "zowe.copyDataSet",
+        "title": "%copyDataSet%"
+      },
+      {
         "command": "zowe.hMigrateDataSet",
         "title": "%hMigrateDataSet%"
       },
@@ -793,6 +797,11 @@
         {
           "when": "view == zowe.explorer && viewItem =~ /^member.*/",
           "command": "zowe.copyMember",
+          "group": "1_create@6"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem =~ /^ds.*/",
+          "command": "zowe.copyDataSet",
           "group": "1_create@6"
         },
         {

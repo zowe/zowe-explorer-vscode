@@ -77,6 +77,7 @@
   "renameDataSet": "Rename Data Set",
   "renameMember": "Rename Member",
   "copyMember": "Copy Member",
+  "copyDataSet": "Copy Data Set",
   "paste": "Paste Member",
   "hMigrateDataSet": "Migrate Data Set",
   "hRecallDataSet": "Recall Data Set",
