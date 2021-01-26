@@ -19,14 +19,7 @@ import { ValidProfileEnum, IZoweTree, IZoweDatasetTreeNode, PersistenceSchemaEnu
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { FilterDescriptor, FilterItem, resolveQuickPickHelper, errorHandling } from "../utils/ProfilesUtils";
-import {
-    sortTreeItems,
-    getAppName,
-    getDocumentFilePath,
-    isZoweDatasetTreeNode,
-    labelRefresh,
-    refreshTree,
-} from "../shared/utils";
+import { sortTreeItems, getAppName, getDocumentFilePath, labelRefresh, refreshTree } from "../shared/utils";
 import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { getIconById, getIconByNode, IconId, IIconItem } from "../generators/icons";
@@ -36,7 +29,6 @@ import { resetValidationSettings } from "../shared/actions";
 import { closeOpenedTextFile } from "../utils/workspace";
 import { PersistentFilters } from "../PersistentFilters";
 import { IDataSet, IListOptions } from "@zowe/cli";
-import { refreshAll } from "../shared/refresh";
 
 // Set up localization
 nls.config({
@@ -964,19 +956,20 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 }
                 for (const item of dsSets) {
                     if (item.memberName) {
-                        const dsn = item.dataSetName.split(".");
                         const label = child.label.trim();
+                        const dsn = item.dataSetName.split(".");
                         const name = label.split(".");
                         let index = 0;
                         let includes = false;
                         for (const each of dsn) {
                             let inc = false;
-                            if (each.includes("*")) {
-                                inc = name[index].includes(each.toUpperCase().replace("*", ""));
-                                if (inc) {
-                                    child.pattern = item.dataSetName;
-                                    includes = true;
-                                }
+                            inc = await this.checkFilterPattern(name[index], each);
+                            if (inc) {
+                                child.pattern = item.dataSetName;
+                                includes = true;
+                            } else {
+                                child.pattern = "";
+                                includes = false;
                             }
                             index++;
                         }
@@ -990,7 +983,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                             );
                             let existing = false;
                             for (const mem of memResponse.apiResponse.items) {
-                                existing = mem.member.includes(item.memberName.toUpperCase().replace(/\*/g, ""));
+                                existing = await this.checkFilterPattern(mem.member, item.memberName);
                                 if (existing) {
                                     child.memberPattern = item.memberName;
                                     if (!child.contextValue.includes(globals.FILTER_SEARCH)) {
@@ -1021,6 +1014,64 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             }
             this.addSearchHistory(pattern);
         }
+    }
+
+    public async checkFilterPattern(dsName: string, itemName: string): Promise<boolean> {
+        let existing: boolean;
+        if (!/(\*?)(\w+)(\*)(\w+)(\*?)/.test(itemName)) {
+            if (/^[^*](\w+)[^*]$/.test(itemName)) {
+                if (dsName) {
+                    const compare = dsName.localeCompare(itemName.toUpperCase());
+                    if (compare === 0) {
+                        existing = true;
+                    }
+                }
+            }
+            if (/^(\*)$/.test(itemName)) {
+                existing = true;
+            }
+            if (itemName.startsWith("*") && itemName.endsWith("*")) {
+                existing = dsName.includes(itemName.toUpperCase().replace(/\*/g, ""));
+            }
+            if (!itemName.startsWith("*") && itemName.endsWith("*")) {
+                existing = dsName.startsWith(itemName.toUpperCase().replace(/\*/g, ""));
+            }
+            if (itemName.startsWith("*") && !itemName.endsWith("*")) {
+                existing = dsName.endsWith(itemName.toUpperCase().replace(/\*/g, ""));
+            }
+        } else {
+            let value: string;
+            let split: string[];
+            let isExist: boolean;
+            if (/(^\w+)(\*)(\w+)(\*)/.test(itemName)) {
+                value = itemName.slice(0, itemName.length - 1);
+                split = value.split("*");
+                isExist = dsName.startsWith(split[0].toUpperCase());
+                if (isExist) {
+                    existing = dsName.includes(split[1].toUpperCase());
+                }
+            }
+            if (/(^\*)(\w+)(\*)(\w+)$/.test(itemName)) {
+                value = itemName.slice(1, itemName.length);
+                split = value.split("*");
+                isExist = dsName.endsWith(split[1].toUpperCase());
+                if (isExist) {
+                    existing = dsName.includes(split[0].toUpperCase());
+                }
+            }
+            if (/(^\*)(\w+)(\*)(\w+)(\*)$/.test(itemName)) {
+                value = itemName.slice(1, itemName.length);
+                value = value.slice(0, itemName.lastIndexOf("*") - 1);
+                split = value.split("*");
+                for (const i of split) {
+                    isExist = dsName.includes(i.toUpperCase());
+                }
+                if (isExist) {
+                    existing = true;
+                }
+            }
+        }
+        return existing;
     }
 
     /**
