@@ -168,7 +168,7 @@ export class ZoweTreeProvider {
             if (await node.getSession()) {
                 await setSession(node, EditSession as ISession);
             } else {
-                this.deleteSessionByLabel(node.label);
+                zoweFileProvider.deleteSession(node.getSessionNode());
                 this.mHistory.addSession(node.label);
                 zoweFileProvider.addSession(node.getProfileName());
             }
