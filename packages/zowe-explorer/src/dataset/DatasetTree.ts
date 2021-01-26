@@ -148,7 +148,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 return favsForProfile;
             }
             await Profiles.getInstance().checkCurrentProfile(element.getProfile());
-            let finalResponse: IZoweDatasetTreeNode[] = [];
+            const finalResponse: IZoweDatasetTreeNode[] = [];
             const response = await element.getChildren();
             for (const item of response) {
                 if (item.pattern && item.memberPattern) {
@@ -159,7 +159,15 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 }
             }
             if (finalResponse.length === 0) {
-                finalResponse = response;
+                return (element.children = [
+                    new ZoweDatasetNode(
+                        localize("getChildren.noDataset", "No datasets found"),
+                        vscode.TreeItemCollapsibleState.None,
+                        element,
+                        null,
+                        globals.INFORMATION_CONTEXT
+                    ),
+                ]);
             }
             return finalResponse;
         }
