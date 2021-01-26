@@ -906,7 +906,7 @@
         },
         {
           "when": "view == zowe.explorer && viewItem =~ /^(?=.*_validate=true.*)session.*/",
-          "command": "zowe.jobs.disableValidation",
+          "command": "zowe.disableValidation",
           "group": "7_modification@6"
         },
         {
@@ -1036,7 +1036,7 @@
         },
         {
           "when": "view == zowe.jobs && viewItem =~ /^(?=.*_validate=true.*)server.*/",
-          "command": "zowe.disableValidation",
+          "command": "zowe.jobs.disableValidation",
           "group": "3_modification@3"
         },
         {
