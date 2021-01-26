@@ -22,6 +22,7 @@ import {
     createFileResponse,
     createTreeView,
     createInstanceOfProfile,
+    createValidIProfile,
 } from "../../../__mocks__/mockCreators/shared";
 import { createUSSTree } from "../../../__mocks__/mockCreators/uss";
 import * as fs from "fs";
@@ -758,6 +759,38 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
         globalMocks.withProgress.mockImplementation((progLocation, callback) => {
             return callback();
         });
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{ name: "firstName" }, { name: "secondName" }],
+                    defaultProfile: { name: "firstName" },
+                    getDefaultProfile: globalMocks.mockLoadNamedProfile,
+                    promptCredentials: jest.fn(() => {
+                        return ["fake", "fake", "fake"];
+                    }),
+                    loadNamedProfile: globalMocks.mockLoadNamedProfile,
+                    usesSecurity: true,
+                    validProfile: ValidProfileEnum.VALID,
+                    checkCurrentProfile: jest.fn(() => {
+                        return globalMocks.profilesForValidation;
+                    }),
+                    validateProfiles: jest.fn(),
+                    getProfiles: jest.fn(() => {
+                        return [
+                            { name: globalMocks.profileOne.name, profile: globalMocks.profileOne },
+                            { name: globalMocks.profileOne.name, profile: globalMocks.profileOne },
+                        ];
+                    }),
+                    refresh: jest.fn(),
+                    getCombinedProfile: jest.fn(() => {
+                        return [{ name: globalMocks.profileOne.name, profile: globalMocks.profileOne }];
+                    }),
+                    getBaseProfile: jest.fn(() => {
+                        return [{ name: globalMocks.profileOne.name, profile: globalMocks.profileOne }];
+                    }),
+                };
+            }),
+        });
 
         return newMocks;
     }
@@ -836,7 +869,7 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
     });
 
     it(
-        "Tests that when bright.List. causes an error on the zowe call, " +
+        "Tests that when zowe.List. causes an error on the zowe call, " +
             "node.getChildren() throws an error and the catch block is reached",
         async () => {
             const globalMocks = await createGlobalMocks();
@@ -845,6 +878,7 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
             blockMocks.childNode.contextValue = globals.USS_SESSION_CONTEXT;
             blockMocks.childNode.fullPath = "Throw Error";
             blockMocks.childNode.dirty = true;
+            blockMocks.childNode.profile = globalMocks.profileOne;
 
             await blockMocks.childNode.getChildren();
             expect(globalMocks.showErrorMessage.mock.calls.length).toEqual(1);
@@ -863,6 +897,7 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
 
             blockMocks.childNode.contextValue = globals.USS_SESSION_CONTEXT;
             blockMocks.childNode.dirty = true;
+            blockMocks.childNode.profile = globalMocks.profileOne;
             const subNode = new ZoweUSSNode(
                 "Response Fail",
                 vscode.TreeItemCollapsibleState.Collapsed,
@@ -921,7 +956,6 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
                 "123"
             ),
         };
-
         newMocks.testUSSTree = createUSSTree([], [newMocks.ussNode], createTreeView());
         newMocks.dsNode = new ZoweUSSNode(
             "testSess",
@@ -962,6 +996,9 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
                         ];
                     }),
                     refresh: jest.fn(),
+                    getCombinedProfile: jest.fn(() => {
+                        return [{ name: globalMocks.profileOne.name, profile: globalMocks.profileOne }];
+                    }),
                 };
             }),
         });

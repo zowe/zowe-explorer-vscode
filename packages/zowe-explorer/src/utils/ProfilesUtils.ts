@@ -111,15 +111,16 @@ export function isTheia(): boolean {
  * @param {sessNode} IZoweTreeNode
  *************************************************************************************************************/
 // This function does not perform any UI refresh; it just gets updated profile information.
-export function refreshTree(sessNode: IZoweTreeNode) {
-    const allProf = Profiles.getInstance().getProfiles();
+export async function refreshTree(sessNode: IZoweTreeNode) {
+    const profileType = sessNode.getProfile().type;
+    const allProf = Profiles.getInstance().getProfiles(profileType);
+    const baseProf = await Profiles.getInstance().getBaseProfile();
     for (const profNode of allProf) {
         if (sessNode.getProfileName() === profNode.name) {
             setProfile(sessNode, profNode.profile);
-            const SessionProfile = profNode.profile as ISession;
-            if (sessNode.getSession().ISession !== SessionProfile) {
-                setSession(sessNode, SessionProfile);
-            }
+            const combinedSessionProfile = (await Profiles.getInstance().getCombinedProfile(profNode, baseProf))
+                .profile;
+            setSession(sessNode, combinedSessionProfile);
         }
     }
     sessNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
@@ -187,11 +188,13 @@ export async function setProfile(node: IZoweTreeNode, profile: IProfile) {
 /**
  * Function to update the node session information
  */
-export async function setSession(node: IZoweTreeNode, session: ISession) {
-    node.getSession().ISession.user = session.user;
-    node.getSession().ISession.password = session.password;
-    node.getSession().ISession.hostname = session.hostname;
-    node.getSession().ISession.port = session.port;
-    node.getSession().ISession.base64EncodedAuth = session.base64EncodedAuth;
-    node.getSession().ISession.rejectUnauthorized = session.rejectUnauthorized;
+export async function setSession(node: IZoweTreeNode, combinedSessionProfile: IProfile) {
+    const sessionNode = node.getSession();
+    for (const prop of Object.keys(combinedSessionProfile)) {
+        if (prop === "host") {
+            sessionNode.ISession.hostname = combinedSessionProfile[prop];
+        } else {
+            sessionNode.ISession[prop] = combinedSessionProfile[prop];
+        }
+    }
 }
