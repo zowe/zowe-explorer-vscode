@@ -177,9 +177,6 @@ export class ZoweTreeProvider {
         try {
             // Remove the edited profile from profilesForValidation since it should be revalidated
             Profiles.getInstance().profilesForValidation.forEach((checkProfile, index) => {
-                if (index === 0) {
-                    Profiles.getInstance().profilesForValidation = [];
-                }
                 if (checkProfile.name === profileName) {
                     Profiles.getInstance().profilesForValidation.splice(index, 1);
                 }
