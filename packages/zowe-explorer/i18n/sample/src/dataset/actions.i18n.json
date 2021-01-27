@@ -59,7 +59,7 @@
   "refreshPS.file1": "Unable to find file: ",
   "refreshPS.file2": " was probably deleted.",
   "enterPattern.log.debug.prompt": "Prompting the user for a data set pattern",
-  "enterPattern.options.prompt": "Search data sets by entering patterns: use a comma to separate multiple patterns",
+  "enterPattern.options.prompt": "Search Data Sets: use a comma to separate multiple patterns",
   "hMigrate.requestSent1": "Migration of dataset: ",
   "hMigrate.requestSent2": " requested.",
   "hMigrateDataSet.checkProfile": "Profile is invalid",
