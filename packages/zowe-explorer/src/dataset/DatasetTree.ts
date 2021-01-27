@@ -860,7 +860,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 const options2: vscode.InputBoxOptions = {
                     prompt: localize(
                         "enterPattern.options.prompt",
-                        "Search data sets by entering patterns: use a comma to separate multiple patterns"
+                        "Search Data Sets: use a comma to separate multiple patterns"
                     ),
                     value: pattern,
                 };
