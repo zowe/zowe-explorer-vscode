@@ -155,6 +155,9 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     finalResponse.push(item);
                 }
                 if (!item.memberPattern && !item.pattern) {
+                    if (item.contextValue.includes(globals.DS_MEMBER_CONTEXT) && element.memberPattern) {
+                        item.contextValue += globals.FILTER_SEARCH;
+                    }
                     finalResponse.push(item);
                 }
             }
