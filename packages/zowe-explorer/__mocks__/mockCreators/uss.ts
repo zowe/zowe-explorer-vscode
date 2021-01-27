@@ -69,8 +69,10 @@ export function createUSSNode(session, profile) {
         false,
         profile.name
     );
-    ussNode.contextValue = globals.USS_SESSION_CONTEXT;
-    ussNode.fullPath = "/u/myuser";
+    mParent.contextValue = globals.USS_SESSION_CONTEXT;
+    ussNode.contextValue = globals.USS_DIR_CONTEXT;
+    mParent.fullPath = "/u/myuser";
+    ussNode.fullPath = "/u/myuser/usstest";
     return ussNode;
 }
 
