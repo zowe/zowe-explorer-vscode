@@ -2391,7 +2391,6 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         expect(createDataSetSpy).toHaveBeenCalledWith(zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, "TEST", {
             alcunit: "CYL",
             blksize: 6160,
-            dirblk: "5",
             dsorg: "PS",
             lrecl: 80,
             primary: 1,
@@ -2446,7 +2445,6 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         expect(createDataSetSpy).toHaveBeenCalledWith(zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, "TEST", {
             alcunit: "CYL",
             blksize: 6160,
-            dirblk: "5",
             dsorg: "PS",
             lrecl: 80,
             primary: 1,
@@ -2573,7 +2571,6 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         expect(createDataSetSpy).toHaveBeenCalledWith(zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, "TEST.EDIT", {
             alcunit: "CYL",
             blksize: 6160,
-            dirblk: "5",
             dsorg: "PS",
             lrecl: 80,
             primary: 1,
@@ -2623,7 +2620,6 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         expect(createDataSetSpy).toHaveBeenCalledWith(zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, "TEST", {
             alcunit: "TRK",
             blksize: 6160,
-            dirblk: "5",
             dsorg: "PS",
             lrecl: 80,
             primary: 1,

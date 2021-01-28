@@ -362,7 +362,7 @@ export async function createFile(node: IZoweDatasetTreeNode, datasetProvider: IZ
     ];
     // Make a nice new mutable array for the DS properties
     // tslint:disable-next-line: prefer-const
-    let newDSProperties = globals.DATA_SET_PROPERTIES;
+    let newDSProperties = JSON.parse(JSON.stringify(globals.DATA_SET_PROPERTIES));
 
     datasetProvider.checkCurrentProfile(node);
     if (
