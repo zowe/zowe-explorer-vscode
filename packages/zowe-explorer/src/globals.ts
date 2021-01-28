@@ -159,12 +159,6 @@ export const DATA_SET_PROPERTIES = [
         placeHolder: localize("createFile.attribute.secondary", `Enter the secondary space allocation`),
     },
     {
-        key: `showAttributes`,
-        label: `Show Attributes`,
-        value: null,
-        placeHolder: localize("createFile.attribute.showAttributes", `Show the full allocation attributes?`),
-    },
-    {
         key: `size`,
         label: `Size`,
         value: null,
