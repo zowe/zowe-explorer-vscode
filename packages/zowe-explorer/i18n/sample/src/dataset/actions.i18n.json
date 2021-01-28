@@ -28,7 +28,7 @@
   "createFile.operationCancelled": "Operation cancelled.",
   "createFile.noValidTypeSelected": "No valid data set type selected. Operation cancelled.",
   "createFile.noOptionSelected": "No option selected. Operation cancelled.",
-  "createFile.allocatingNewDataSet": "Allocating new data set",
+  "createFile.allocatingNewDataSet": "Attempting to allocate new data set",
   "createFileNoWebview.options.prompt": "Click on parameters to change them",
   "showDSAttributes.debug": "showing attributes of data set ",
   "showDSAttributes.lengthError": "No matching data set names found for query: ",

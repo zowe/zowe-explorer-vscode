@@ -440,9 +440,8 @@ export async function createFile(node: IZoweDatasetTreeNode, datasetProvider: IZ
                     );
                     return;
                 } else {
-                    globals.LOG.debug(localize("createFile.allocatingNewDataSet", "Allocating new data set"));
-                    vscode.window.showInformationMessage(
-                        localize("createFile.allocatingNewDataSet", "Allocating new data set")
+                    globals.LOG.debug(
+                        localize("createFile.allocatingNewDataSet", "Attempting to allocate new data set")
                     );
                 }
             }
