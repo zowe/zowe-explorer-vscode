@@ -750,7 +750,7 @@
           "group": "inline"
         },
         {
-          "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav)(member|migr|ds|pds).*/",
+          "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav|.*isFilterSearch)(member|migr|ds|pds).*/",
           "command": "zowe.addFavorite",
           "group": "inline"
         },
@@ -830,7 +830,7 @@
           "group": "2_favorite@0"
         },
         {
-          "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav)(member|migr|ds|pds).*/",
+          "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav|.*isFilterSearch)(member|migr|ds|pds).*/",
           "command": "zowe.addFavorite",
           "group": "2_favorite@0"
         },
