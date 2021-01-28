@@ -487,7 +487,7 @@ export async function createFile(node: IZoweDatasetTreeNode, datasetProvider: IZ
 
                 const newNode = await node
                     .getChildren()
-                    .then((children) => children.find((child) => child.label === name));
+                    .then((children) => children.find((child) => child.label === dsName));
                 datasetProvider
                     .getTreeView()
                     .reveal(node, { select: true, focus: true })
