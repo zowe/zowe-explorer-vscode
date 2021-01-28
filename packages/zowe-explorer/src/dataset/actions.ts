@@ -474,7 +474,7 @@ export async function createFile(node: IZoweDatasetTreeNode, datasetProvider: IZ
             datasetProvider.refresh();
 
             // Show newly-created data set in expanded tree view
-            if (name) {
+            if (dsName) {
                 node.label = `${node.label} `;
                 node.label = node.label.trim();
                 node.tooltip = node.pattern = theFilter.toUpperCase();
