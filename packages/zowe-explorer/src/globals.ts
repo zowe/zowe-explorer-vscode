@@ -52,6 +52,7 @@ export const ACTIVE_CONTEXT = CONTEXT_PREFIX + "Active";
 export const UNVERIFIED_CONTEXT = CONTEXT_PREFIX + "Unverified";
 export const ICON_STATE_OPEN = "open";
 export const ICON_STATE_CLOSED = "closed";
+export const FILTER_SEARCH = "isFilterSearch";
 export const VSCODE_APPNAME: string[] = ["Visual Studio Code", "VSCodium"];
 export const ROOTPATH = path.join(__dirname, "..", "..");
 
