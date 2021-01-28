@@ -11,20 +11,20 @@
 
 import { IconHierarchyType, IconId, IIconItem } from "../index";
 import { getIconPathInResources } from "../../../shared/utils";
-import sessionIcon from "./session";
+import sessionActive from "./sessionActive";
 import { TreeItemCollapsibleState } from "vscode";
-import { UNVERIFIED_CONTEXT } from "../../../globals";
+import { ACTIVE_CONTEXT } from "../../../globals";
 
 const icon: IIconItem = {
-    id: IconId.sessionOpen,
+    id: IconId.sessionActiveOpen,
     type: IconHierarchyType.derived,
-    path: getIconPathInResources("folder-root-unverified-open.svg"),
+    path: getIconPathInResources("folder-root-connected-open.svg"),
     check: (node) => {
-        const parentCheck = sessionIcon.check(node);
+        const parentCheck = sessionActive.check(node);
         return (
             parentCheck &&
             node.collapsibleState === TreeItemCollapsibleState.Expanded &&
-            node.contextValue.includes(UNVERIFIED_CONTEXT)
+            node.contextValue.includes(ACTIVE_CONTEXT)
         );
     },
 };
