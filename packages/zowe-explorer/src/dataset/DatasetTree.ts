@@ -966,8 +966,8 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     this.refreshElement(child);
                 }
                 for (const item of dsSets) {
-                    if (item.memberName) {
-                        const label = child.label.trim();
+                    const label = child.label.trim();
+                    if (item.memberName && label !== "No datasets found") {
                         const dsn = item.dataSetName.split(".");
                         const name = label.split(".");
                         let index = 0;
