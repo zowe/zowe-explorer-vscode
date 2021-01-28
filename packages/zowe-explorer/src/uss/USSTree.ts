@@ -304,7 +304,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 node.getSession(),
                 null,
                 false,
-                node.getSessionNode().getProfileName()
+                profileName
             );
             temp.fullPath = node.fullPath;
             this.saveSearch(temp);
@@ -318,7 +318,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 node.getSession(),
                 node.getParent().fullPath,
                 false,
-                node.getSessionNode().getProfileName()
+                profileName
             );
             temp.contextValue = contextually.asFavorite(temp);
             if (contextually.isFavoriteTextOrBinary(temp)) {
