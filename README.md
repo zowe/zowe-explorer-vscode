@@ -143,6 +143,13 @@ Review the following use cases to understand how to work with data sets in Zowe 
 ![View Data Set](/docs/images/ZE-multiple-search.gif?raw=true "View Data Set")
 <br /><br />
 
+#### View data sets with member filters
+
+![View Data Set With Member Pattern](/docs/images/ZE-member-filter-search.gif?raw=true "View Data Set With Member Pattern")
+
+**Limitations** Cannot favorite a data set or member that includes a member filter search pattern.
+<br /><br />
+
 ### Refresh the list of data sets
 
 1. Navigate to the explorer tree.
