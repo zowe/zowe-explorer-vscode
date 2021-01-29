@@ -178,7 +178,7 @@ describe("Extension Integration Tests", () => {
             await dsActions.createFile(sessionNode, testTree);
 
             const showErrorStub = sandbox.spy(vscode.window, "showErrorMessage");
-            expect(await dsActions.createFile(sessionNode, testTree)).to.be.rejectedWith(Error);
+            await expect(dsActions.createFile(sessionNode, testTree)).to.eventually.be.rejectedWith(Error);
             const gotCalled = showErrorStub.called;
             expect(gotCalled).to.equal(true);
         }).timeout(TIMEOUT);
