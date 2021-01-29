@@ -147,7 +147,7 @@ Review the following use cases to understand how to work with data sets in Zowe 
 
 ![View Data Set With Member Pattern](/docs/images/ZE-member-filter-search.gif?raw=true "View Data Set With Member Pattern")
 
-**Limitations** Cannot favorite a data set or member that includes a member filter search pattern.
+**Note:** You cannot favorite a data set or member that includes a member filter search pattern.
 <br /><br />
 
 ### Refresh the list of data sets
