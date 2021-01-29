@@ -169,17 +169,16 @@ export async function uploadDialog(node: ZoweDatasetNode, datasetProvider: IZowe
  * {
  *      "rootNode": [
  *          {
- *              "type": "Data Set Type (ex. Data Set Classic, Data Set Partitioned)",
- *              "label": "HLQ.new.classic.set"
- *          },
- *          {
  *              "type": "Data Set Partitioned",
- *              "label": "HLQ.new.pds.test"
+ *              "label": "HLQ.test",
+ *              "properties": {
+ *                  "lrecl": 80
+ *              }
  *          },
  *          {
  *              "type": "Member",
  *              "label": "newMember",
- *              "parent": "HLQ.new.pds.test"
+ *              "parent": "HLQ.test"
  *          }
  *      ]
  * }
@@ -226,10 +225,14 @@ export async function uploadFromJsonDialog(node: ZoweDatasetNode, datasetProvide
                 memberArray.push(newNode);
             } else {
                 const nodeOptions = getDataSetTypeAndOptions(newNode.type);
+                let mergedProperties = nodeOptions.createOptions;
+                if (newNode.properties) {
+                    mergedProperties = { ...mergedProperties, ...newNode.properties };
+                }
                 await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).createDataSet(
                     nodeOptions.typeEnum,
                     newNode.label,
-                    nodeOptions.createOptions
+                    mergedProperties
                 );
                 newFilterString += newFilterString ? `,${newNode.label}` : `${newNode.label}`;
             }
