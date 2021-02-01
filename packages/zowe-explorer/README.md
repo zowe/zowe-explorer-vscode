@@ -31,18 +31,19 @@ More information:
 - [Usage Tips](#usage-tips)
 - [Extending Zowe Explorer](#extending-zowe-explorer)
 
-## What's new in Zowe Explorer 1.11.0
+## What's new in Zowe Explorer 1.12.0
 
 New features:
 
-- Added login and logout functions for base profiles. You can now log in to API Mediation Layer and generate a token for your base profile.
+- Added the ability to edit data set attributes before allocation
+- Allowed filtering of member names from the Data Sets search bar
+- Reorganized the context menus and streamlined the visible icons
 
 Bug Fixes:
 
-- Fixed the empty profile folders in Favorites issue.
-- Fixed the initialization error that occurred when base profiles were used while being logged out from API ML.
-- Fixed the issue preventing the tree refresh function from updating extender profiles.
-- Fixed the issue causing jobs retrieval failure when using profiles with tokens.
+- Fixed the messaging displayed when handling inactive profiles and when updating profiles
+- Fixed the issue causing tree restructure when renaming a USS file or directory
+- Fixed the issue preventing issuing of commands when using profiles with tokens
 
 For more information, see [Changelog](https://marketplace.visualstudio.com/items/Zowe.vscode-extension-for-zowe/changelog).
 
@@ -64,7 +65,7 @@ Create a profile, review the sample use cases to familiarize yourself with the c
 4. Select **Create a New Connection to z/OS**. The user name and password fields are optional before you started to use a profile.
 5. Follow the instructions, and enter all required information to complete the profile creation.
 
-![New Connection](../../docs/images/ZE-newProfiles.gif?raw=true "New Connection")
+![New Connection](/docs/images/ZE-newProfiles.gif?raw=true "New Connection")
 <br /><br />
 
 You can now use all the functionalities of the extension.
@@ -124,7 +125,8 @@ Review the following use cases to understand how to work with data sets in Zowe 
 - [Copy data sets](#copy-data-sets): Copy specified data sets and members.
 - [Download, edit, and upload existing PDS members](#download-edit-and-upload-existing-pds-members): You can instantly pull data sets and data set members from the mainframe, edit them, and upload back.
 - [Prevent merge conflicts](#use-the-save-option-to-prevent-merge-conflicts): The save option includes a **compare** mechanism letting you resolve potential merge conflicts.
-- [Create data sets and data set members](#create-a-new-pds-and-a-pds-member): Create a new data set and data set members.
+- [Create data sets and data set members](#create-a-new-data-set-and-add-a-member): Create a new data set and data set members.
+- [Create data sets and specify the parameters](#create-a-new-data-set-and-specify-the-parameters): Create a new data set and specify parameter values.
 - [Delete data set member and a data set](#delete-a-pds-member-and-pds): Delete a chosen data set member or an entire data set.
 - [View and access multiple profiles simultaneously](#view-and-access-multiple-profiles-simultaneously): Work with data sets from multiple profiles.
 - [Allocate Like](#allocate-like): Create a copy of a chosen data set with the same parameters.
@@ -140,7 +142,14 @@ Review the following use cases to understand how to work with data sets in Zowe 
 
 **Tip:** To provide multiple filters, separate entries with a comma. You can append or postpend any filter with an \*, which indicates wildcard searching. You cannot enter an \* as the entire pattern.
 
-![View Data Set](../../docs/images/ZE-multiple-search.gif?raw=true "View Data Set")
+![View Data Set](/docs/images/ZE-multiple-search.gif?raw=true "View Data Set")
+<br /><br />
+
+### View data sets with member filters
+
+![View Data Set With Member Pattern](/docs/images/ZE-member-filter-search.gif?raw=true "View Data Set With Member Pattern")
+
+**Note:** You cannot favorite a data set or member that includes a member filter search pattern.
 <br /><br />
 
 ### Refresh the list of data sets
@@ -156,7 +165,7 @@ Review the following use cases to understand how to work with data sets in Zowe 
 4. Right-click the data set and select the **Rename Data Set** option.
 5. Change the name of the data set.
 
-![Rename Data Set](../../docs/images/ZE-rename.gif?raw=true "Rename Data Set")
+![Rename Data Set](/docs/images/ZE-rename.gif?raw=true "Rename Data Set")
 <br /><br />
 
 ### Copy data sets
@@ -164,11 +173,11 @@ Review the following use cases to understand how to work with data sets in Zowe 
 1. Navigate to the explorer tree.
 2. Open the **DATA SETS** bar.
 3. Select a member you want to copy.
-4. Right-click the member and select the **Copy Member** option.
-5. Right-click the data set where the member belongs and select the **Paste Member** option.
+4. Right-click the member and select the **Copy Data Set** option.
+5. Right-click the data set where the member belongs and select the **Paste Data Set** option.
 6. Enter the name of the copied member.
 
-![Copy Data Set](../../docs/images/ZE-copy.gif?raw=true "Copy Data Set")
+![Copy Data Set](/docs/images/ZE-copy.gif?raw=true "Copy Data Set")
 <br /><br />
 
 ### Download, edit, and upload existing PDS members
@@ -189,7 +198,7 @@ Your PDS member (or PS) is uploaded.
 
 **Note:** If someone else has made changes to the PDS member (or PS) while you were editing it, you can merge your conflicts before uploading to the mainframe.
 
-![Edit](../../docs/images/ZE-download-edit.gif?raw=true "Edit")
+![Edit](/docs/images/ZE-download-edit.gif?raw=true "Edit")
 <br /><br />
 
 ### Use the save option to prevent merge conflicts
@@ -201,23 +210,33 @@ Your PDS member (or PS) is uploaded.
 5. Press Ctrl+S or Command+S (OSx) to save you changes.
 6. (Optional) Resolve merge conflicts if necessary.
 
-![Save](../../docs/images/ZE-safe-save.gif?raw=true "Save")
+![Save](/docs/images/ZE-safe-save.gif?raw=true "Save")
 <br /><br />
 
-### Create a new PDS and a PDS member
+### Create a new data set and add a member
 
 1. Navigate to the explorer tree.
 2. Open the **DATA SETS** bar.
-3. Click the **Create New Data Set** button to create a PDS.
-4. From the drop-down menu, select the type of PDS that you want to create.
-5. Enter a name for the PDS.
-   The PDS is created.
-6. To create a member, right-click the PDS and select **Create New Member**.
-7. Enter a name for the member.
-   The member is created.
+3. Right + click on the profile where you want to create a data set and select **Create New Data Set**.
+4. Enter a name for your data set.
+5. From the drop-down menu, select the type of data set that you want to create.
+6. Select **+Allocate Data Set** to create your data set.
+7. On your newly created data set, right + click and select **Create new member**.
+8. Enter a name for your new data set member and click **Enter**.
+   The member is created and opened in the workspace.
 
-![Create](../../docs/images/ZE-cre-pds-member.gif?raw=true "Create")
-<br /><br />
+### Create a new data set and specify the parameters
+
+1. Navigate to the explorer tree.
+2. Open the **DATA SETS** bar.
+3. Right + click on the profile where you want to create a data set and select **Create New Data Set**.
+4. Enter a name for your data set.
+5. From the drop-down menu, select the type of data set that you want to create.
+6. Select **Edit Attributes** in the dropdown.
+   The attributes list opens for the data set.
+7. Click on the attribute you want to edit, provide the value in the command palette, and click **Enter**.
+8. Once you have edited the parameters, select **+ Allocate Data Set**.
+   Your data set with the specified parameters is created.
 
 ### Delete a PDS member and PDS
 
@@ -233,7 +252,7 @@ Your PDS member (or PS) is uploaded.
 
    **Note:** You can delete a PDS before you delete its members.
 
-![Delete](../../docs/images/ZE-del-pds-member.gif?raw=true "Delete")
+![Delete](/docs/images/ZE-del-pds-member.gif?raw=true "Delete")
 <br /><br />
 
 ### View and access multiple profiles simultaneously
@@ -243,7 +262,7 @@ Your PDS member (or PS) is uploaded.
 3. Click the **Add Profile** button on the right of the **DATA SET** explorer bar.
 4. Select the profile that you want to add to the view as illustrated by the following screen.
 
-![Add Profile](../../docs/images/ZE-mult-profiles.gif?raw=true "Add Profile")
+![Add Profile](/docs/images/ZE-mult-profiles.gif?raw=true "Add Profile")
 
 ### Allocate Like
 
@@ -252,7 +271,7 @@ Your PDS member (or PS) is uploaded.
 3. Right-click the data set and select the **Allocate Like (New File with Same Attributes)** option.
 4. Enter the new data set name.
 
-![Allocate Like](../../docs/images/ZE-allocate-like.gif?raw=true "Allocate Like")
+![Allocate Like](/docs/images/ZE-allocate-like.gif?raw=true "Allocate Like")
 
 ## Credentials Security
 
