@@ -99,7 +99,10 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      */
     public async rename(node: IZoweDatasetTreeNode) {
         await Profiles.getInstance().checkCurrentProfile(node.getProfile());
-        if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
+        if (
+            Profiles.getInstance().validProfile === ValidProfileEnum.VALID ||
+            Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED
+        ) {
             return contextually.isDsMember(node) ? this.renameDataSetMember(node) : this.renameDataSet(node);
         }
     }
@@ -351,7 +354,10 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             try {
                 profile = Profiles.getInstance().loadNamedProfile(profileName);
                 await Profiles.getInstance().checkCurrentProfile(profile);
-                if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
+                if (
+                    Profiles.getInstance().validProfile === ValidProfileEnum.VALID ||
+                    Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED
+                ) {
                     session = ZoweExplorerApiRegister.getMvsApi(profile).getSession();
                     parentNode.setProfileToChoice(profile);
                     parentNode.setSessionToChoice(session);
@@ -848,7 +854,10 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         await this.checkCurrentProfile(node);
         let nonFaveNode;
 
-        if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
+        if (
+            Profiles.getInstance().validProfile === ValidProfileEnum.VALID ||
+            Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED
+        ) {
             if (contextually.isSessionNotFav(node)) {
                 nonFaveNode = node;
                 if (this.mHistory.getSearchHistory().length > 0) {

@@ -215,7 +215,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 return this.mFavorites;
             }
             if (element.contextValue && element.contextValue === globals.FAV_PROFILE_CONTEXT) {
-                const favsForProfile = this.loadProfilesForFavorites(this.log, element);
+                const favsForProfile = await this.loadProfilesForFavorites(this.log, element);
                 return favsForProfile;
             }
             return element.getChildren();
@@ -478,9 +478,12 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             this.log.debug(localize("filterPrompt.log.debug.promptUSSPath", "Prompting the user for a USS path"));
         }
         await this.checkCurrentProfile(node);
-        let sessionNode = node.getSessionNode();
-        let remotepath: string;
-        if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
+        if (
+            Profiles.getInstance().validProfile === ValidProfileEnum.VALID ||
+            Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED
+        ) {
+            let sessionNode = node.getSessionNode();
+            let remotepath: string;
             if (contextually.isSessionNotFav(node)) {
                 if (this.mHistory.getSearchHistory().length > 0) {
                     const createPick = new FilterDescriptor(USSTree.defaultDialogText);
@@ -691,20 +694,24 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 // This way, it won't try to load profile in constructor for child fav nodes too early.
                 parentNode.mProfileName = profileName;
                 await Profiles.getInstance().checkCurrentProfile(profile);
-                if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
+                if (
+                    Profiles.getInstance().validProfile === ValidProfileEnum.VALID ||
+                    Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED
+                ) {
                     session = ZoweExplorerApiRegister.getUssApi(profile).getSession();
                     parentNode.setProfileToChoice(profile);
                     parentNode.setSessionToChoice(session);
                 } else {
-                    return [
-                        new ZoweUSSNode(
-                            localize("loadProfilesForFavorites.authFailed", "You must authenticate to view favorites."),
-                            vscode.TreeItemCollapsibleState.None,
-                            parentNode,
-                            null,
-                            parentNode.fullPath
-                        ),
-                    ];
+                    const infoNode = new ZoweUSSNode(
+                        localize("loadProfilesForFavorites.authFailed", "You must authenticate to view favorites."),
+                        vscode.TreeItemCollapsibleState.None,
+                        parentNode,
+                        null,
+                        parentNode.fullPath
+                    );
+                    infoNode.contextValue = globals.INFORMATION_CONTEXT;
+                    infoNode.iconPath = undefined;
+                    return [infoNode];
                 }
             } catch (error) {
                 const errMessage: string =
