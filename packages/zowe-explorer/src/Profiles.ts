@@ -79,16 +79,7 @@ export class Profiles extends ProfilesCache {
     }
 
     public async checkCurrentProfile(theProfile: IProfileLoaded) {
-        const profileStatus: IProfileValidation = await this.getProfileSetting(theProfile);
-        if (profileStatus.status === "inactive") {
-            this.validProfile = ValidProfileEnum.INVALID;
-            return profileStatus;
-        }
-
-        // if (profileStatus.status === "unverified") {
-        //     this.validProfile = ValidProfileEnum.UNVERIFIED;
-        //     return profileStatus;
-        // }
+        let profileStatus: IProfileValidation = await this.getProfileSetting(theProfile);
 
         // This step is for prompting of credentials. It will be triggered if it meets the following conditions:
         // - The service does not have username or password and base profile doesn't exists
@@ -101,12 +92,18 @@ export class Profiles extends ProfilesCache {
                 baseProfile.profile.host !== theProfile.profile.host &&
                 baseProfile.profile.port !== theProfile.profile.port)
         ) {
+            // The profile will need to be reactivated, so remove it from profilesForValidation
+            this.profilesForValidation.filter((profile, index) => {
+                if (profile.name === theProfile.name && profile.status !== "unverified") {
+                    this.profilesForValidation.splice(index, 1);
+                }
+            });
             try {
-                const values = await Profiles.getInstance().promptCredentials(theProfile.name);
+                const values = await Profiles.getInstance().promptCredentials(theProfile.name, true);
                 if (values !== undefined) {
-                    this.usrNme = values[0];
-                    this.passWrd = values[1];
-                    this.baseEncd = values[2];
+                    theProfile.profile.user = values[0];
+                    theProfile.profile.password = values[1];
+                    theProfile.profile.base64EncodedAuth = values[2];
                 }
             } catch (error) {
                 errorHandling(
@@ -117,33 +114,22 @@ export class Profiles extends ProfilesCache {
                 );
                 return profileStatus;
             }
-            if (this.usrNme !== undefined && this.passWrd !== undefined && this.baseEncd !== undefined) {
-                theProfile.profile.user = this.usrNme;
-                theProfile.profile.password = this.passWrd;
-                theProfile.profile.base64EncodedAuth = this.baseEncd;
-                if (profileStatus.status === "unverified") {
-                    this.validProfile = ValidProfileEnum.UNVERIFIED;
-                } else {
-                    this.validProfile = ValidProfileEnum.VALID;
-                }
-                return profileStatus;
-            } else {
-                // return invalid if credentials are not provided
-                if (profileStatus.status === "unverified") {
-                    this.validProfile = ValidProfileEnum.UNVERIFIED;
-                } else {
-                    this.validProfile = ValidProfileEnum.INVALID;
-                }
-                return profileStatus;
-            }
-        } else {
-            if (profileStatus.status === "unverified") {
-                this.validProfile = ValidProfileEnum.UNVERIFIED;
-            } else {
-                this.validProfile = ValidProfileEnum.VALID;
-            }
-            return profileStatus;
+
+            // Revalidate profile
+            profileStatus = await this.getProfileSetting(theProfile);
         }
+        switch (profileStatus.status) {
+            case "unverified":
+                this.validProfile = ValidProfileEnum.UNVERIFIED;
+                break;
+            case "inactive":
+                this.validProfile = ValidProfileEnum.INVALID;
+                break;
+            case "active":
+                this.validProfile = ValidProfileEnum.VALID;
+                break;
+        }
+        return profileStatus;
     }
 
     public async getProfileSetting(theProfile: IProfileLoaded): Promise<IProfileValidation> {
@@ -754,7 +740,7 @@ export class Profiles extends ProfilesCache {
             newUser = loadSession.user = loadProfile.profile.user;
         }
 
-        if (newUser === undefined) {
+        if (newUser === undefined || (rePrompt && newUser === "")) {
             vscode.window.showInformationMessage(
                 localize("promptCredentials.undefined.username", "Operation Cancelled")
             );
@@ -769,7 +755,7 @@ export class Profiles extends ProfilesCache {
             }
         }
 
-        if (newPass === undefined) {
+        if (newPass === undefined || (rePrompt && newUser === "")) {
             vscode.window.showInformationMessage(
                 localize("promptCredentials.undefined.password", "Operation Cancelled")
             );
