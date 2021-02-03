@@ -261,6 +261,21 @@ describe("USSTree Unit Tests - Function USSTree.createProfileNodeForFavs()", () 
     });
 });
 
+describe("USSTree Unit Tests - Function USSTree.checkDuplicateLabel()", () => {
+    it("Tests that checkDuplicateLabel() returns null if passed a unique name", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        const returnVal = globalMocks.testTree.checkDuplicateLabel("totallyNewLabel", [globalMocks.testUSSNode]);
+        expect(returnVal).toEqual(null);
+    });
+    it("Tests that checkDuplicateLabel() returns an error message if passed a name that's already used for an existing folder", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        const returnVal = globalMocks.testTree.checkDuplicateLabel("/u/myuser/usstest", [globalMocks.testUSSNode]);
+        expect(returnVal).toEqual("A folder already exists with this name. Please choose a different name.");
+    });
+});
+
 describe("USSTree Unit Tests - Functions USSTree.addFileHistory() & USSTree.getFileHistory()", () => {
     it("Tests that addFileHistory() & getFileHistory() are executed successfully", async () => {
         const globalMocks = await createGlobalMocks();
@@ -906,6 +921,8 @@ describe("USSTree Unit Tests - Function USSTree.rename()", () => {
             false,
             globalMocks.testProfile.name
         );
+        ussFavNodeParent.shortLabel = "usstest";
+        ussFavNodeParent.fullPath = globalMocks.testUSSNode.fullPath;
         ussFavNodeParent.children.push(ussFavNode);
         globalMocks.testTree.mFavorites.push(ussFavNodeParent);
 
@@ -920,16 +937,17 @@ describe("USSTree Unit Tests - Function USSTree.rename()", () => {
     it("Tests that USSTree.rename() is executed successfully for non-favorited node that is also in Favorites", async () => {
         const globalMocks = await createGlobalMocks();
         createBlockMocks(globalMocks);
+
         globalMocks.testUSSNode.fullPath = globalMocks.testUSSNode.fullPath + "/usstest";
         globalMocks.testTree.mSessionNodes[1].children.push(globalMocks.testUSSNode);
         const renameNode = jest.spyOn(globalMocks.testUSSNode, "rename");
         const removeFavorite = jest.spyOn(globalMocks.testTree, "removeFavorite");
         const addFavorite = jest.spyOn(globalMocks.testTree, "addFavorite");
         renameNode.mockResolvedValue(false);
-
         globalMocks.showInputBox.mockReturnValueOnce("new name");
 
         await globalMocks.testTree.rename(globalMocks.testUSSNode);
+
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(0);
         expect(globalMocks.renameUSSFile.mock.calls.length).toBe(1);
         expect(removeFavorite.mock.calls.length).toBe(1);

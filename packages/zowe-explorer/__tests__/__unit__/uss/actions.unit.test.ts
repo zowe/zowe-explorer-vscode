@@ -11,6 +11,9 @@
 
 jest.mock("fs");
 
+import * as zowe from "@zowe/cli";
+import { IProfileLoaded } from "@zowe/imperative";
+import { ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import * as ussNodeActions from "../../../src/uss/actions";
 import {
     createUSSTree,
@@ -24,8 +27,8 @@ import {
     createTreeView,
     createTextDocument,
     createFileResponse,
+    createValidIProfile,
 } from "../../../__mocks__/mockCreators/shared";
-import { ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
@@ -33,14 +36,12 @@ import * as vscode from "vscode";
 import * as path from "path";
 import * as globals from "../../../src/globals";
 import * as sharedUtils from "../../../src/shared/utils";
-import * as zowe from "@zowe/cli";
-import { IProfileLoaded } from "@zowe/imperative";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
 import * as isbinaryfile from "isbinaryfile";
 import * as fs from "fs";
 import { createUssApi, bindUssApi } from "../../../__mocks__/mockCreators/api";
-import { PersistentFilters } from "../../../src/PersistentFilters";
 import * as workspaceUtils from "../../../src/utils/workspace";
+import * as refreshActions from "../../../src/shared/refresh";
 
 function createGlobalMocks() {
     const globalMocks = {
@@ -71,7 +72,7 @@ function createGlobalMocks() {
         isFileTagBinOrAscii: jest.fn(),
         theia: false,
         testSession: createISession(),
-        testProfile: createIProfile(),
+        testProfile: createValidIProfile(),
         ProgressLocation: jest.fn().mockImplementation(() => {
             return {
                 Notification: 15,
@@ -193,6 +194,8 @@ describe("USS Action Unit Tests - Function renameUSSNode", () => {
         getUssApiMock.mockReturnValue(newMocks.mockUssApi);
         ZoweExplorerApiRegister.getUssApi = getUssApiMock.bind(ZoweExplorerApiRegister);
 
+        jest.spyOn(newMocks.testUSSNode, "getChildren").mockResolvedValueOnce([]);
+
         return newMocks;
     }
 
@@ -248,16 +251,33 @@ describe("USS Action Unit Tests - Function createUSSNodeDialog", () => {
         const newMocks = {
             testUSSTree: null,
             ussNode: createUSSNode(globalMocks.testSession, createIProfile()),
+            testTreeView: createTreeView(),
             mockCheckCurrentProfile: jest.fn(),
+            ussApi: createUssApi(globalMocks.testProfile),
         };
         newMocks.testUSSTree = createUSSTree(
             [createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile)],
             [newMocks.ussNode],
-            createTreeView()
+            newMocks.testTreeView
         );
+        bindUssApi(newMocks.ussApi);
 
         return newMocks;
     }
+
+    it("Tests that only the child node is refreshed when createUSSNode() is called on a child node", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        globalMocks.mockShowInputBox.mockReturnValue("USSFolder");
+        jest.spyOn(blockMocks.ussNode, "getChildren").mockResolvedValueOnce([]);
+        const isTopLevel = false;
+        jest.spyOn(refreshActions, "refreshAll");
+
+        await ussNodeActions.createUSSNode(blockMocks.ussNode, blockMocks.testUSSTree, "folder", isTopLevel);
+        expect(blockMocks.testUSSTree.refreshElement).toHaveBeenCalled();
+        expect(refreshActions.refreshAll).not.toHaveBeenCalled();
+    });
 
     it("Tests if createUSSNode is executed successfully with Unverified profile", async () => {
         const globalMocks = createGlobalMocks();
@@ -277,51 +297,8 @@ describe("USS Action Unit Tests - Function createUSSNodeDialog", () => {
         globalMocks.showQuickPick.mockResolvedValueOnce("File");
         globalMocks.mockShowInputBox.mockReturnValueOnce("USSFolder");
 
-        await ussNodeActions.createUSSNodeDialog(blockMocks.ussNode, blockMocks.testUSSTree);
+        await ussNodeActions.createUSSNodeDialog(blockMocks.ussNode.getParent(), blockMocks.testUSSTree);
         expect(blockMocks.testUSSTree.refreshElement).not.toHaveBeenCalled();
-        expect(globalMocks.showErrorMessage.mock.calls.length).toBe(0);
-    });
-
-    it("Tests if createUSSNode is executed successfully", async () => {
-        const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        globalMocks.showQuickPick.mockResolvedValueOnce("File");
-        globalMocks.mockShowInputBox.mockReturnValueOnce("USSFolder");
-
-        await ussNodeActions.createUSSNodeDialog(blockMocks.ussNode, blockMocks.testUSSTree);
-        expect(blockMocks.testUSSTree.refreshElement).not.toHaveBeenCalled();
-        expect(globalMocks.showErrorMessage.mock.calls.length).toBe(0);
-    });
-});
-
-describe("USS Action Unit Tests - Function createUSSNode", () => {
-    async function createBlockMocks(globalMocks) {
-        const ussApi = createUssApi(globalMocks.testProfile);
-        bindUssApi(ussApi);
-
-        const newMocks = {
-            testUSSTree: null,
-            ussNode: createUSSNode(globalMocks.testSession, createIProfile()),
-            ussApi,
-        };
-        newMocks.testUSSTree = createUSSTree(
-            [createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile)],
-            [newMocks.ussNode],
-            createTreeView()
-        );
-
-        return newMocks;
-    }
-
-    it("Tests that createUSSNode is executed successfully", async () => {
-        const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        globalMocks.mockShowInputBox.mockReturnValueOnce("USSFolder");
-
-        await ussNodeActions.createUSSNode(blockMocks.ussNode, blockMocks.testUSSTree, "file");
-        expect(blockMocks.testUSSTree.refreshElement).toHaveBeenCalled();
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(0);
     });
 
@@ -336,18 +313,61 @@ describe("USS Action Unit Tests - Function createUSSNode", () => {
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(0);
     });
 
+    it("Tests that createUSSNode is executed successfully", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const testProfile = createIProfile();
+        const ussApi = ZoweExplorerApiRegister.getUssApi(testProfile);
+        const getUssApiMock = jest.fn().mockReturnValue(ussApi);
+        ZoweExplorerApiRegister.getUssApi = getUssApiMock.bind(ZoweExplorerApiRegister);
+        const createSpy = jest.spyOn(ussApi, "create");
+
+        blockMocks.ussNode.contextValue = globals.DS_BINARY_FILE_CONTEXT;
+        blockMocks.ussNode.fullPath = "/test/path";
+
+        globalMocks.mockShowInputBox.mockReturnValueOnce("testFile");
+        jest.spyOn(blockMocks.testTreeView, "reveal").mockReturnValueOnce(new Promise((resolve) => resolve(null)));
+
+        jest.spyOn(blockMocks.ussNode, "getChildren").mockResolvedValueOnce([]);
+
+        await ussNodeActions.createUSSNode(blockMocks.ussNode, blockMocks.testUSSTree, "file");
+        expect(createSpy).toBeCalledWith("/test/path/testFile", "file");
+    });
+
+    it("Tests that createUSSNode fails if an error is thrown", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const getUssApiSpy = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockImplementationOnce(() => {
+            throw Error("Test error");
+        });
+        globalMocks.mockShowInputBox.mockReturnValueOnce("USSFolder");
+
+        let testError;
+        try {
+            await ussNodeActions.createUSSNode(blockMocks.ussNode, blockMocks.testUSSTree, "file");
+        } catch (err) {
+            testError = err;
+        }
+
+        expect(testError.message).toEqual("Test error");
+    });
+
     it("Tests that only the child node is refreshed when createUSSNode() is called on a child node", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
         globalMocks.mockShowInputBox.mockReturnValueOnce("USSFolder");
+        jest.spyOn(blockMocks.ussNode, "getChildren").mockResolvedValueOnce([]);
         const isTopLevel = false;
-        spyOn(ussNodeActions, "refreshAllUSS");
+        spyOn(refreshActions, "refreshAll");
 
         await ussNodeActions.createUSSNode(blockMocks.ussNode, blockMocks.testUSSTree, "folder", isTopLevel);
         expect(blockMocks.testUSSTree.refreshElement).toHaveBeenCalled();
-        expect(ussNodeActions.refreshAllUSS).not.toHaveBeenCalled();
+        expect(refreshActions.refreshAll).not.toHaveBeenCalled();
     });
+
     it("Tests that the error is handled if createUSSNode is unsuccessful", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
@@ -390,66 +410,6 @@ describe("USS Action Unit Tests - Function refreshUSSInTree", () => {
         await ussNodeActions.refreshUSSInTree(blockMocks.ussNode, blockMocks.testUSSTree);
 
         expect(blockMocks.testUSSTree.refreshElement).toHaveBeenCalledWith(blockMocks.ussNode);
-    });
-});
-
-describe("USS Action Unit Tests - Function refreshAllUSS", () => {
-    async function createBlockMocks(globalMocks) {
-        const newMocks = {
-            testUSSTree: null,
-            ussNode: createUSSNode(globalMocks.testSession, createIProfile()),
-        };
-        newMocks.testUSSTree = createUSSTree(
-            [createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile)],
-            [newMocks.ussNode],
-            createTreeView()
-        );
-        newMocks.testUSSTree.mSessionNodes.push(newMocks.ussNode);
-
-        Object.defineProperty(PersistentFilters, "getDirectValue", {
-            value: jest.fn(() => {
-                return {
-                    "Zowe-Automatic-Validation": true,
-                };
-            }),
-        });
-
-        return newMocks;
-    }
-
-    it("Tests that refreshAllUSS() is executed successfully", async () => {
-        const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-        const profilesForValidation = { status: "active", name: "fake" };
-        const response = new Promise(() => {
-            return {};
-        });
-
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    allProfiles: [{ name: "firstName" }, { name: "secondName" }],
-                    defaultProfile: { name: "firstName" },
-                    getDefaultProfile: globalMocks.mockLoadNamedProfile,
-                    loadNamedProfile: globalMocks.mockLoadNamedProfile,
-                    usesSecurity: true,
-                    getProfiles: jest.fn().mockReturnValue([
-                        { name: globalMocks.testProfile.name, profile: globalMocks.testProfile },
-                        { name: globalMocks.testProfile.name, profile: globalMocks.testProfile },
-                    ]),
-                    checkCurrentProfile: jest.fn(() => {
-                        return profilesForValidation;
-                    }),
-                    validateProfiles: jest.fn(),
-                    refresh: jest.fn(),
-                };
-            }),
-        });
-        const spy = jest.spyOn(ussNodeActions, "refreshAllUSS");
-
-        ussNodeActions.refreshAllUSS(blockMocks.testUSSTree);
-        expect(spy).toHaveBeenCalledTimes(1);
-        expect(ussNodeActions.refreshAllUSS(blockMocks.testUSSTree)).toEqual(response);
     });
 });
 
@@ -764,6 +724,7 @@ describe("USS Action Unit Tests - Function changeFileType", () => {
         node.contextValue = globals.DS_BINARY_FILE_CONTEXT;
         node.getSessionNode().binaryFiles[node.fullPath] = true;
         expect(node.binary).toBeTruthy();
+
         await ussNodeActions.changeFileType(node, false, blockMocks.testUSSTree);
         expect(node.binary).toBeFalsy();
     });

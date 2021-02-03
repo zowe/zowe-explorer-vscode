@@ -107,9 +107,10 @@ export function isTheia(): boolean {
 }
 
 /*************************************************************************************************************
- * Refresh Profile and Session
+ * Get updated profile and session information
  * @param {sessNode} IZoweTreeNode
  *************************************************************************************************************/
+// This function does not perform any UI refresh; it just gets updated profile information.
 export function refreshTree(sessNode: IZoweTreeNode) {
     const allProf = Profiles.getInstance().getProfiles();
     for (const profNode of allProf) {
@@ -134,7 +135,7 @@ export async function resolveQuickPickHelper(
 
 // tslint:disable-next-line: max-classes-per-file
 export class FilterItem implements vscode.QuickPickItem {
-    constructor(private text: string, private desc?: string) {}
+    constructor(private text: string, private desc?: string, private show?: boolean) {}
     get label(): string {
         return this.text;
     }
@@ -146,7 +147,7 @@ export class FilterItem implements vscode.QuickPickItem {
         }
     }
     get alwaysShow(): boolean {
-        return false;
+        return this.show;
     }
 }
 

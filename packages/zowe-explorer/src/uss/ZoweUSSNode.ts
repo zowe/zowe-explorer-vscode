@@ -510,6 +510,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      *
      * @param {ZoweUSSNode} node - The node which represents the file
      */
+    // This is not a UI refresh.
     public async refreshUSS() {
         let label;
         switch (true) {

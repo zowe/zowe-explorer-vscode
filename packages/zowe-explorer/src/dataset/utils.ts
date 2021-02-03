@@ -11,8 +11,6 @@
 
 import * as globals from "../globals";
 import { IZoweNodeType } from "@zowe/zowe-explorer-api";
-import { ZoweDatasetNode } from "./ZoweDatasetNode";
-import * as contextually from "../shared/context";
 
 // tslint:disable-next-line: no-duplicate-imports
 
@@ -28,6 +26,6 @@ export function getNodeLabels(node: IZoweNodeType) {
     if (node.contextValue.includes(globals.DS_MEMBER_CONTEXT)) {
         return { ...getProfileAndDataSetName(node.getParent()), memberName: node.getLabel() };
     } else {
-        return getProfileAndDataSetName(node);
+        return { ...getProfileAndDataSetName(node), memberName: undefined };
     }
 }
