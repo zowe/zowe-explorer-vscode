@@ -11,22 +11,13 @@
 
 import { IconHierarchyType, IconId, IIconItem } from "../index";
 import { getIconPathInResources } from "../../../shared/utils";
-import sessionIcon from "./session";
-import { TreeItemCollapsibleState } from "vscode";
-import { UNVERIFIED_CONTEXT } from "../../../globals";
+import { isFilterFolder } from "../../../shared/context";
 
 const icon: IIconItem = {
-    id: IconId.sessionOpen,
-    type: IconHierarchyType.derived,
-    path: getIconPathInResources("folder-root-unverified-open.svg"),
-    check: (node) => {
-        const parentCheck = sessionIcon.check(node);
-        return (
-            parentCheck &&
-            node.collapsibleState === TreeItemCollapsibleState.Expanded &&
-            node.contextValue.includes(UNVERIFIED_CONTEXT)
-        );
-    },
+    id: IconId.filterFolder,
+    type: IconHierarchyType.base,
+    path: getIconPathInResources("folder-root-filtered-closed.svg"),
+    check: (node) => isFilterFolder(node),
 };
 
 export default icon;

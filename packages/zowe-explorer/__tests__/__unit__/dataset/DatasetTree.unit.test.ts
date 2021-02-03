@@ -1486,15 +1486,13 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce(
             new utils.FilterDescriptor("\uFF0B " + "Create a new filter")
         );
-        mocked(vscode.window.showInputBox).mockResolvedValueOnce("HLQ.PROD1.STUFF(MEMBER)");
+        mocked(vscode.window.showInputBox).mockResolvedValueOnce("HLQ.PROD1(MEMBER)");
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
-
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
-
         expect(testTree.mSessionNodes[1].contextValue).toEqual(globals.DS_SESSION_CONTEXT + globals.ACTIVE_CONTEXT);
-        expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD1.STUFF");
+        expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD1");
     });
     it("Checking adding of new filter with Unverified profile", async () => {
         const globalMocks = await createGlobalMocks();

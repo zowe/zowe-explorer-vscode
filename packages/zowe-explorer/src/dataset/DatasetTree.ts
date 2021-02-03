@@ -14,20 +14,21 @@ import * as nls from "vscode-nls";
 
 import * as globals from "../globals";
 import * as dsActions from "./actions";
-import { IProfileLoaded, Logger, Session, IProfile, ISession } from "@zowe/imperative";
+import { IProfileLoaded, Logger, Session } from "@zowe/imperative";
 import { ValidProfileEnum, IZoweTree, IZoweDatasetTreeNode, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { FilterDescriptor, FilterItem, resolveQuickPickHelper, errorHandling } from "../utils/ProfilesUtils";
-import { sortTreeItems, getAppName, getDocumentFilePath } from "../shared/utils";
+import { sortTreeItems, getAppName, getDocumentFilePath, labelRefresh, refreshTree } from "../shared/utils";
 import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
-import { getIconByNode } from "../generators/icons";
+import { getIconById, getIconByNode, IconId, IIconItem } from "../generators/icons";
 import * as fs from "fs";
 import * as contextually from "../shared/context";
 import { resetValidationSettings } from "../shared/actions";
 import { closeOpenedTextFile } from "../utils/workspace";
 import { PersistentFilters } from "../PersistentFilters";
+import { IDataSet, IListOptions } from "@zowe/cli";
 
 // Set up localization
 nls.config({
@@ -147,12 +148,31 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 return favsForProfile;
             }
             await Profiles.getInstance().checkCurrentProfile(element.getProfile());
+            const finalResponse: IZoweDatasetTreeNode[] = [];
             const response = await element.getChildren();
             for (const item of response) {
-                item.memberPattern = element.memberPattern;
-                this.refreshElement(item);
+                if (item.pattern && item.memberPattern) {
+                    finalResponse.push(item);
+                }
+                if (!item.memberPattern && !item.pattern) {
+                    if (item.contextValue.includes(globals.DS_MEMBER_CONTEXT) && element.memberPattern) {
+                        item.contextValue += globals.FILTER_SEARCH;
+                    }
+                    finalResponse.push(item);
+                }
             }
-            return response;
+            if (finalResponse.length === 0) {
+                return (element.children = [
+                    new ZoweDatasetNode(
+                        localize("getChildren.noDataset", "No datasets found"),
+                        vscode.TreeItemCollapsibleState.None,
+                        element,
+                        null,
+                        globals.INFORMATION_CONTEXT
+                    ),
+                ]);
+            }
+            return finalResponse;
         }
         return this.mSessionNodes;
     }
@@ -867,7 +887,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 const options2: vscode.InputBoxOptions = {
                     prompt: localize(
                         "enterPattern.options.prompt",
-                        "Search data sets by entering patterns: use a comma to separate multiple patterns"
+                        "Search Data Sets: use a comma to separate multiple patterns"
                     ),
                     value: pattern,
                 };
@@ -893,52 +913,183 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 }
             }
             // looking for members in pattern
-            let enteredPattern: string;
-            enteredPattern = pattern.replace(/\s/g, "");
-            let members: string;
-            let datasets: string;
-            const dataSetsFound: string[] = [];
-            const memberFound: string[] = [];
-            for (const item of enteredPattern.split(",")) {
-                if (item.includes("(")) {
-                    for (const element of item.split("(")) {
-                        if (element.includes(")")) {
-                            memberFound.push(element.replace(/([)])/g, ""));
-                        } else {
-                            dataSetsFound.push(element);
-                        }
-                    }
-                } else {
-                    dataSetsFound.push(item);
-                }
-                if (memberFound.length > 0) {
-                    members = memberFound.toString();
-                }
-                if (dataSetsFound.length > 0) {
-                    datasets = dataSetsFound.toString();
-                }
-            }
+            labelRefresh(node);
+            node.children = [];
+            node.dirty = true;
+            refreshTree(node);
+            let dataSet: IDataSet;
+            const dsSets = [];
+            const dsNames = pattern.split(",");
 
+            for (const ds of dsNames) {
+                const match = /(.*)\((.*)\)/.exec(ds);
+                if (match) {
+                    const [, dataSetName, memberName] = match;
+                    dataSet = {
+                        dataSetName,
+                        memberName,
+                    };
+                } else {
+                    dataSet = {
+                        dataSetName: ds.replace(/\s/g, ""),
+                    };
+                }
+                dsSets.push(dataSet);
+            }
             node.label = node.label.trim() + " ";
             node.label.trim();
-            if (datasets !== undefined) {
+            let datasets: string;
+            for (const item of dsSets) {
+                if (item.dataSetName) {
+                    if (datasets) {
+                        datasets += `, ${item.dataSetName}`;
+                    } else {
+                        datasets = `${item.dataSetName}`;
+                    }
+                }
+            }
+            if (datasets) {
                 node.tooltip = node.pattern = datasets.toUpperCase();
             } else {
                 node.tooltip = node.pattern = pattern.toUpperCase();
             }
-            if (members !== undefined) {
-                node.memberPattern = members.toUpperCase();
-            } else {
-                node.memberPattern = undefined;
-            }
-            node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
-            node.dirty = true;
-            const icon = getIconByNode(node);
-            if (icon) {
-                node.iconPath = icon.path;
+            const response = await this.getChildren(node);
+            for (const child of response) {
+                let resetIcon: IIconItem;
+                if (child.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed) {
+                    resetIcon = getIconById(IconId.folder);
+                }
+                if (child.collapsibleState === vscode.TreeItemCollapsibleState.Expanded) {
+                    resetIcon = getIconById(IconId.folderOpen);
+                }
+                if (resetIcon) {
+                    child.iconPath = resetIcon.path;
+                }
+                // remove any previous search memberPatterns
+                if (child.contextValue.includes(globals.FILTER_SEARCH)) {
+                    child.contextValue = child.contextValue.replace(globals.FILTER_SEARCH, "");
+                    child.memberPattern = "";
+                    child.pattern = "";
+                    this.refreshElement(child);
+                }
+                for (const item of dsSets) {
+                    const label = child.label.trim();
+                    if (item.memberName && label !== "No datasets found") {
+                        const dsn = item.dataSetName.split(".");
+                        const name = label.split(".");
+                        let index = 0;
+                        let includes = false;
+                        for (const each of dsn) {
+                            let inc = false;
+                            inc = await this.checkFilterPattern(name[index], each);
+                            if (inc) {
+                                child.pattern = item.dataSetName;
+                                includes = true;
+                            } else {
+                                child.pattern = "";
+                                includes = false;
+                            }
+                            index++;
+                        }
+                        if (includes && child.contextValue.includes("pds")) {
+                            const options: IListOptions = {};
+                            options.pattern = item.memberPattern;
+                            options.attributes = true;
+                            const memResponse = await ZoweExplorerApiRegister.getMvsApi(child.getProfile()).allMembers(
+                                label,
+                                options
+                            );
+                            let existing = false;
+                            for (const mem of memResponse.apiResponse.items) {
+                                existing = await this.checkFilterPattern(mem.member, item.memberName);
+                                if (existing) {
+                                    child.memberPattern = item.memberName;
+                                    if (!child.contextValue.includes(globals.FILTER_SEARCH)) {
+                                        child.contextValue = child.contextValue + globals.FILTER_SEARCH;
+                                    }
+                                    let setIcon: IIconItem;
+                                    if (child.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed) {
+                                        setIcon = getIconById(IconId.filterFolder);
+                                    }
+                                    if (child.collapsibleState === vscode.TreeItemCollapsibleState.Expanded) {
+                                        setIcon = getIconById(IconId.filterFolderOpen);
+                                    }
+                                    if (setIcon) {
+                                        child.iconPath = setIcon.path;
+                                    }
+                                    this.refreshElement(child);
+                                }
+                            }
+                        }
+                    }
+                }
+                node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+                node.dirty = true;
+                const icon = getIconByNode(node);
+                if (icon) {
+                    node.iconPath = icon.path;
+                }
             }
             this.addSearchHistory(pattern);
         }
+    }
+
+    public async checkFilterPattern(dsName: string, itemName: string): Promise<boolean> {
+        let existing: boolean;
+        if (!/(\*?)(\w+)(\*)(\w+)(\*?)/.test(itemName)) {
+            if (/^[^*](\w+)[^*]$/.test(itemName)) {
+                if (dsName) {
+                    const compare = dsName.localeCompare(itemName.toUpperCase());
+                    if (compare === 0) {
+                        existing = true;
+                    }
+                }
+            }
+            if (/^(\*)$/.test(itemName)) {
+                existing = true;
+            }
+            if (itemName.startsWith("*") && itemName.endsWith("*")) {
+                existing = dsName.includes(itemName.toUpperCase().replace(/\*/g, ""));
+            }
+            if (!itemName.startsWith("*") && itemName.endsWith("*")) {
+                existing = dsName.startsWith(itemName.toUpperCase().replace(/\*/g, ""));
+            }
+            if (itemName.startsWith("*") && !itemName.endsWith("*")) {
+                existing = dsName.endsWith(itemName.toUpperCase().replace(/\*/g, ""));
+            }
+        } else {
+            let value: string;
+            let split: string[];
+            let isExist: boolean;
+            if (/(^\w+)(\*)(\w+)(\*)/.test(itemName)) {
+                value = itemName.slice(0, itemName.length - 1);
+                split = value.split("*");
+                isExist = dsName.startsWith(split[0].toUpperCase());
+                if (isExist) {
+                    existing = dsName.includes(split[1].toUpperCase());
+                }
+            }
+            if (/(^\*)(\w+)(\*)(\w+)$/.test(itemName)) {
+                value = itemName.slice(1, itemName.length);
+                split = value.split("*");
+                isExist = dsName.endsWith(split[1].toUpperCase());
+                if (isExist) {
+                    existing = dsName.includes(split[0].toUpperCase());
+                }
+            }
+            if (/(^\*)(\w+)(\*)(\w+)(\*)$/.test(itemName)) {
+                value = itemName.slice(1, itemName.length);
+                value = value.slice(0, itemName.lastIndexOf("*") - 1);
+                split = value.split("*");
+                for (const i of split) {
+                    isExist = dsName.includes(i.toUpperCase());
+                }
+                if (isExist) {
+                    existing = true;
+                }
+            }
+        }
+        return existing;
     }
 
     /**

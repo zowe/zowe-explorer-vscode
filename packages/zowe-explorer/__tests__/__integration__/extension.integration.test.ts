@@ -136,13 +136,18 @@ describe("Extension Integration Tests", () => {
 
     describe("Creating Data Sets and Members", () => {
         it("should create a data set when zowe.createFile is invoked", async () => {
-            // Mock user selecting first option from list
+            // 1st step: User names DS
             const testFileName = pattern + ".EXT.CREATE.DATASET.TEST";
-            const quickPickStub = sandbox.stub(vscode.window, "showQuickPick");
-            quickPickStub.returns("Data Set Sequential");
-
             const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
             inputBoxStub.returns(testFileName);
+
+            // 2nd step: User selects DS type
+            // 3rd step: User tries to allocate
+            const returnVals = ["Data Set Sequential", " + Allocate Data Set"];
+            const quickPickStub = sandbox.stub(vscode.window, "showQuickPick");
+            returnVals.forEach((value, index) => {
+                quickPickStub.onCall(index).returns(value);
+            });
 
             await dsActions.createFile(sessionNode, testTree);
 
@@ -152,13 +157,23 @@ describe("Extension Integration Tests", () => {
         }).timeout(TIMEOUT);
 
         it("should display an error message when creating a data set that already exists", async () => {
-            // Mock user selecting first option from list
-            const quickPickStub = sandbox.stub(vscode.window, "showQuickPick");
-            quickPickStub.returns("Data Set Sequential");
-
+            // 1st step: User names DS
             const testFileName = pattern + ".EXT.CREATE.DATASET.TEST";
             const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
             inputBoxStub.returns(testFileName);
+
+            // 2nd step: User selects DS type
+            // 3rd step: User tries to allocate
+            const returnVals = [
+                "Data Set Sequential",
+                " + Allocate Data Set",
+                "Data Set Sequential",
+                " + Allocate Data Set",
+            ];
+            const quickPickStub = sandbox.stub(vscode.window, "showQuickPick");
+            returnVals.forEach((value, index) => {
+                quickPickStub.onCall(index).returns(value);
+            });
 
             await dsActions.createFile(sessionNode, testTree);
 
@@ -545,7 +560,7 @@ describe("Extension Integration Tests", () => {
                         );
 
                         await dsActions.copyDataSet(fromNode);
-                        await dsActions.pasteDataSet(toNode, testTree);
+                        await dsActions.pasteMember(toNode, testTree);
 
                         contents = await zowe.Get.dataSet(sessionNode.getSession(), fromDataSetName);
                     } catch (err) {
@@ -602,7 +617,7 @@ describe("Extension Integration Tests", () => {
                         inputBoxStub.returns(toMemberName);
 
                         await dsActions.copyDataSet(fromNode);
-                        await dsActions.pasteDataSet(parentNode, testTree);
+                        await dsActions.pasteMember(parentNode, testTree);
 
                         contents = await zowe.Get.dataSet(sessionNode.getSession(), `${dataSetName}(${toMemberName})`);
                     } catch (err) {
@@ -674,7 +689,7 @@ describe("Extension Integration Tests", () => {
                         inputBoxStub.returns(toMemberName);
 
                         await dsActions.copyDataSet(fromNode);
-                        await dsActions.pasteDataSet(toNode, testTree);
+                        await dsActions.pasteMember(toNode, testTree);
 
                         contents = await zowe.Get.dataSet(
                             sessionNode.getSession(),
@@ -753,7 +768,7 @@ describe("Extension Integration Tests", () => {
                         toNode.contextValue = DS_DS_CONTEXT;
 
                         await dsActions.copyDataSet(fromMemberNode);
-                        await dsActions.pasteDataSet(toNode, testTree);
+                        await dsActions.pasteMember(toNode, testTree);
 
                         contents = await zowe.Get.dataSet(sessionNode.getSession(), toDataSetName);
                     } catch (err) {

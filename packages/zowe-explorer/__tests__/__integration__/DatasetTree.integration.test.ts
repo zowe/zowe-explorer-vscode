@@ -119,9 +119,9 @@ describe("DatasetTree Integration Tests", async () => {
         sampleRChildren[2].children = samplePChildren;
 
         // Checking that the rootChildren are what they are expected to be
-        expect(rootChildren).toEqual(testTree.mSessionNodes);
-        expect(sessChildren).toEqual(sampleRChildren);
-        expect(PDSChildren).toEqual(samplePChildren);
+        expect(rootChildren[0]).toEqual(testTree.mSessionNodes[0]);
+        expect(sessChildren[0]).toEqual(sampleRChildren[0]);
+        expect(PDSChildren[0]).toEqual(samplePChildren[0]);
     }).timeout(TIMEOUT);
 
     /*************************************************************************************************************
