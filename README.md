@@ -1,138 +1,162 @@
 # Zowe Explorer
 
+[![version](https://vsmarketplacebadge.apphb.com/version-short/Zowe.vscode-extension-for-zowe.png)](https://vsmarketplacebadge.apphb.com/version-short/Zowe.vscode-extension-for-zowe.png)
+[![downloads](https://vsmarketplacebadge.apphb.com/downloads-short/Zowe.vscode-extension-for-zowe.png)](https://vsmarketplacebadge.apphb.com/downloads-short/Zowe.vscode-extension-for-zowe.png)
 [![codecov](https://codecov.io/gh/zowe/vscode-extension-for-zowe/branch/master/graph/badge.svg)](https://codecov.io/gh/zowe/vscode-extension-for-zowe)
+[![slack](https://img.shields.io/badge/chat-on%20Slack-blue)](https://slack.openmainframeproject.org/)
 
-Zowe Explorer is a separately delivered component of Zowe belonging to the [Zowe CLI](https://github.com/zowe/community#zowe-cli) sub-project.  
-[Zowe](https://www.zowe.org/) is a project hosted by the [Open Mainframe Project](https://www.openmainframeproject.org/), a [Linux Foundation](https://www.linuxfoundation.org/) project.
+[Zowe Explorer](https://github.com/zowe/community#zowe-explorer) is a sub-project of Zowe, focusing on modernizing mainframe experience. [Zowe](https://www.zowe.org/) is a project hosted by the [Open Mainframe Project](https://www.openmainframeproject.org/), a [Linux Foundation](https://www.linuxfoundation.org/) project.
 
-The Zowe Explorer extension modernizes the way developers and system administrators interact with z/OS mainframes. Working with data sets and USS files from VSC can be more convenient than using 3270 emulators, and complements your Zowe CLI experience. The extension provides the following benefits:
+The Zowe Explorer extension modernizes the way developers and system administrators interact with z/OS mainframes by:
 
-* Enables developers to create, modify, rename, copy and upload data sets directly to a z/OS mainframe.
-* Enables developers to create, modify, rename and upload USS files directly to a z/OS mainframe.
-* Provides a more streamlined way to access data sets, uss files and jobs.
-* Lets you create and use Zowe CLI `zosmf` compatible profiles.
+- Enabling you to create, modify, rename, copy, and upload data sets directly to a z/OS mainframe.
+- Enabling you to create, modify, rename, and upload USS files directly to a z/OS mainframe.
+- Providing a more streamlined way to access data sets, uss files and jobs.
+- Letting you create, edit, and delete Zowe CLI `zosmf` compatible profiles.
+- Letting you use the Secure Credential Store plug-in to store your credentials securely in the settings.
+- Letting you leverage the API Mediation Layer token-based authentication to access z/OSMF.
 
-**Note:** The Zowe Explorer is powered by [Zowe CLI](https://zowe.org/home/). The extension demonstrates the potential for plug-ins powered by Zowe.
+More information:
 
-**Tips:**
-
-* For information about how to install the extension from a `VSIX` file and run system tests on the extension, see the [Developer README](https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/README.md).
-* For information about how to develop for Eclipse Theia, see [Theia README](https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/README-Theia.md).
+- For the complete Zowe Explorer documentation, see [Zowe Docs](https://docs.zowe.org/stable/user-guide/ze-install.html).
+- Join the **#zowe-explorer** channel on [Slack](https://openmainframeproject.slack.com/) to stay in touch with the Zowe community.
 
 ## Contents
 
-* [Software Requirements](#software-requirements)
-* [Create a Zowe CLI z/OSMF profile](#create-a-zowe-cli-zosmf-profile)
-* [Usage tips](#usage-tips)
-* [Sample use cases](#sample-use-cases)
+- [What's new in Zowe Explorer 1.11.0](#whats-new-in-zowe-explorer-1.11.0)
+- [Prerequisites](#prerequisites)
+- [Getting Started](#getting-started)
+- [Sample Use Cases](#sample-use-cases)
+- [Credentials Security](#credentials-security)
+- [Usage Tips](#usage-tips)
+- [Extending Zowe Explorer](#extending-zowe-explorer)
 
-## Software Requirements
+## What's new in Zowe Explorer 1.12.0
 
-Ensure that you meet the following prerequisites before using the extension:
+New features:
 
-* Installed [Node.js](https://nodejs.org/en/download/) v8.0 or later.
-* Configured TSO/E address space services, z/OS data set and file REST interface, and z/OS jobs REST interface. For more information, see [z/OS Requirements](https://docs.zowe.org/stable/user-guide/systemrequirements-zosmf.html#z-os-requirements).
-* Zowe CLI `zosmf` profile.
+- Added the ability to edit data set attributes before allocation
+- Allowed filtering of member names from the Data Sets search bar
+- Reorganized the context menus and streamlined the visible icons
 
-**Notes:**
+Bug Fixes:
 
-* You can use your existing Zowe CLI `zosmf` profiles that are created with the Zowe CLI v.2.0.0 or later.
-* Zowe CLI `zosmf` profiles that are created in Zowe Explorer can be interchangeably used in the Zowe CLI.
+- Fixed the messaging displayed when handling inactive profiles and when updating profiles
+- Fixed the issue causing tree restructure when renaming a USS file or directory
+- Fixed the issue preventing issuing of commands when using profiles with tokens
 
-### Create a Zowe CLI z/OSMF profile
+For more information, see [Changelog](https://marketplace.visualstudio.com/items/Zowe.vscode-extension-for-zowe/changelog).
+
+## Prerequisites
+
+- Install [Node.js](https://nodejs.org/en/download/) v8.0 or later.
+- Configure TSO/E address space services, z/OS data set, file REST interface and z/OS jobs REST interface. For more information, see [z/OS Requirements](https://docs.zowe.org/stable/user-guide/systemrequirements-zosmf.html#z-os-requirements).
+- Create a Zowe Explorer profile.
+
+## Getting Started
+
+Create a profile, review the sample use cases to familiarize yourself with the capabilities of Zowe Explorer, and you are ready to use Zowe Explorer.
+
+### Create Profile
+
+1. Navigate to the explorer tree.
+2. Hover over **DATA SETS**, **USS**, or **JOBS**.
+3. Click the **+** icon.
+4. Select **Create a New Connection to z/OS**. The user name and password fields are optional before you started to use a profile.
+5. Follow the instructions, and enter all required information to complete the profile creation.
+
+![New Connection](/docs/images/ZE-newProfiles.gif?raw=true "New Connection")
+<br /><br />
+
+You can now use all the functionalities of the extension.
+
+### Use Base Profile and Token with Existing Profiles
+
+Leverage existing base profiles with a token to access z/OSMF via the API Mediation Layer.
+
+Before using the base profile functionality, ensure that you have [Zowe CLI](https://docs.zowe.org/stable/user-guide/cli-installcli.html) v1.13.0 or higher installed.
 
 **Follow these steps:**
 
-1. Navigate to the explorer tree.
-2. Click the **+** sign next to the **DATA SETS**, **USS** or **JOBS** bar.
+1. Open Zowe CLI and run the following command: `zowe auth login apiml`
+2. Follow the instructions to complete the login.  
+   A local base profile is created that contains your token.  
+   **Note:** For more information about the process, see [Token Management](https://docs.zowe.org/stable/user-guide/cli-usingcli.html#how-token-management-works).
 
-   **Note:** If you already have a profile, select it from the drop-down menu.
+3. Run Zowe Explorer and click the **+** icon.
 
-3. Select the **Create a New Connection to z/OS** option.
+4. Select the profile you use with your base profile with the token.
 
-   **Note:** When you create a new profile, user name and password fields are optional. However, the system will prompt you to specify your credentials when you use the new profile.
+   The profile appears in the tree and you can now use this profile to access z/OSMF via the API Mediation Layer.
 
-4. Follow the instructions, and enter all required information to complete the profile creation.
+For more information, see [Integrating with API Mediation Layer](https://docs.zowe.org/stable/user-guide/cli-usingcli.html#integrating-with-api-mediation-layer).
 
-![New Connection](docs/images/ZE-newProfiles.gif?raw=true "New Connection")
-<br /><br />
+#### Log in to the Authentication Service
 
-You successfully created a Zowe CLI `zosmf` profile. Now you can use all the functionalities of the extension.
+Use the Log in to the **Authentication Service** feature to regenerate a new token for your base profile.
 
-## Usage tips
+**Follow these steps:**
 
-Use the following tips to familiarize yourself with the extension and make the best use of it:
+1. Open Zowe Explorer.
+2. Right-click your profile.
+3. Select the **Log in to Authentication Service** option.
 
-* **Data set, USS and jobs persistence settings:** You can enable the persistence of any data sets, USS files and jobs by adding them to the **Favorites** tab. Right-click on a data set, USS file or jobs and click **Add Favorite**.
+   You are prompted to enter your username and password.
 
-* **Syntax highlighter:** Zowe Explorer supports syntax hightlighter for data sets. To enhance the experience of using the extension, download an extension that highlights syntax, such as [IBM-JCL](https://marketplace.visualstudio.com/items?itemName=kelosky.ibm-jcl) or [IBM-Assembler](https://marketplace.visualstudio.com/items?itemName=kelosky.ibm-assembler).
+The token is stored in the default base profile .yaml file.
 
-### Advanced Configuration
+If you do not want to store your token, you can request the server to end your session token. Use the **Log out from Authentication Service** feature to invalidate the token.
 
-You can modify Zowe Explorer preferences in the extension `Setting` in the following ways:
+**Follow these steps:**
 
-* **Temp Folder Location:** You can change the default folder location where temporary files are stored. For example, use the following script:
+1. Open Zowe Explorer.
+2. Right-click your profile.
+3. Select the **Log out from Authentication Service** option.
 
-```json
-"Zowe-Temp-Folder-Location": {
-    "folderPath": "/path/to/directory"
-  }
-```
+Your token has been successfully invalidated.
 
-where **/path/to/directory** is the folder location that you specify.
+## Sample Use Cases
 
-* **Data set creation settings:** You can change the default creation settings for various data set types.
+Review the following use cases to understand how to work with data sets in Zowe Explorer. For the complete list of features including USS and jobs, see [Zowe Explorer Sample Use Cases](https://docs.zowe.org/stable/user-guide/ze-usage.html#sample-use-cases).
 
-1. Navigate to the extension configuration manager.
-2. In the section **Extensions**, scroll to **Zowe Configuration** and expand the options.
-3. Click the **Edit in settings.json** button under Data Set, USS or JOBS settings that you want to edit.
-4. Edit the settings as needed.
-5. Save the settings.
+- [View data sets and use multiple filters](#view-data-sets-and-use-multiple-filters): View multiple data sets simultaneously and apply filters to show specified data sets.
+- [Refresh the data set list](#refresh-the-list-of-data-sets): Refresh the list of pre-filtered data sets.
+- [Rename data sets](#rename-data-sets): Rename specified data sets.
+- [Copy data sets](#copy-data-sets): Copy specified data sets and members.
+- [Download, edit, and upload existing PDS members](#download-edit-and-upload-existing-pds-members): You can instantly pull data sets and data set members from the mainframe, edit them, and upload back.
+- [Prevent merge conflicts](#use-the-save-option-to-prevent-merge-conflicts): The save option includes a **compare** mechanism letting you resolve potential merge conflicts.
+- [Create data sets and data set members](#create-a-new-pds-and-a-pds-member): Create a new data set and data set members.
+- [Delete data set member and a data set](#delete-a-pds-member-and-pds): Delete a chosen data set member or an entire data set.
+- [View and access multiple profiles simultaneously](#view-and-access-multiple-profiles-simultaneously): Work with data sets from multiple profiles.
+- [Allocate Like](#allocate-like): Create a copy of a chosen data set with the same parameters.
 
-![Configure Zowe settings](docs/images/ZE-Configuration.gif?raw=true "Configure Zowe settings")
-<br /><br />
-
-## Sample use cases
-
-Review the following use cases to understand how to use Zowe Explorer.
-
-* [Data Sets](#data-sets)
-* [USS](#uss)
-* [JOBS](#jobs)
-* [Extras](#extras)
-
-### Data Sets
-
-You can use the following functionalities when interacting with data set:
-
-* **View data sets and use multiple filters**: You can view multiple data sets simultaneously and apply filters to show specified data sets.
-* **Rename data sets**: You can rename specified data sets.
-* **Copy data sets**: You can copy a specified data sets and memebers.
-* **Download, edit, and upload existing PDS members**: You can instantly pull data sets and data set members from the mainframe, edit them and upload back.
-* **Create and delete data sets and data set members**: Enables you to easily create and delete both data sets and their members.
-* **View and access multiple profiles simultaneously**: Enables to work with data sets from multiple profiles.
-* **Submit a JCL**: You can submit a jcl from a chosen data set.
-
-#### View data sets and use multiple filters
+### View data sets and use multiple filters
 
 1. Navigate to the explorer tree.
 2. Open the **DATA SETS** bar.
-3. Select the profile that you want to filter.
-4. Click the **Search Data Sets by Entering Patterns** magnifying glass.
-5. From the drop-down, enter the patterns that you want to filter.  
-  The data sets that match your pattern(s) display in the explorer tree.
+3. Hover over the profile that you want to apply the filter to.
+4. Click the **magnifying glass** icon.
+5. Enter a pattern you want to create a filter for.
+   The data sets that match your pattern(s) are displayed in the explorer tree.
 
 **Tip:** To provide multiple filters, separate entries with a comma. You can append or postpend any filter with an \*, which indicates wildcard searching. You cannot enter an \* as the entire pattern.
 
-![View Data Set](docs/images/ZE-multiple-search.gif?raw=true "View Data Set")
+![View Data Set](/docs/images/ZE-multiple-search.gif?raw=true "View Data Set")
 <br /><br />
 
-#### Refresh the list of data sets
+#### View data sets with member filters
+
+![View Data Set With Member Pattern](/docs/images/ZE-member-filter-search.gif?raw=true "View Data Set With Member Pattern")
+
+**Note:** You cannot favorite a data set or member that includes a member filter search pattern.
+<br /><br />
+
+### Refresh the list of data sets
 
 1. Navigate to the explorer tree.
-2. Click **Refresh All** button on the right of the **DATA SETS** explorer bar.
+2. Click **Refresh All** button (circular arrow icon) on the right of the **DATA SETS** explorer bar.
 
-#### Rename data sets
+### Rename data sets
 
 1. Navigate to the explorer tree.
 2. Open the **DATA SETS** bar.
@@ -140,10 +164,10 @@ You can use the following functionalities when interacting with data set:
 4. Right-click the data set and select the **Rename Data Set** option.
 5. Change the name of the data set.
 
-![Rename Data Set](docs/images/ZE-rename.gif?raw=true "Rename Data Set")
+![Rename Data Set](/docs/images/ZE-rename.gif?raw=true "Rename Data Set")
 <br /><br />
 
-#### Copy data sets
+### Copy data sets
 
 1. Navigate to the explorer tree.
 2. Open the **DATA SETS** bar.
@@ -152,46 +176,47 @@ You can use the following functionalities when interacting with data set:
 5. Right-click the data set where the member belongs and select the **Paste Data Set** option.
 6. Enter the name of the copied member.
 
-![Copy Data Set](docs/images/ZE-copy.gif?raw=true "Copy Data Set")
+![Copy Data Set](/docs/images/ZE-copy.gif?raw=true "Copy Data Set")
 <br /><br />
 
-#### Download, edit, and upload existing PDS members
-
-1. Navigate to the explorer tree.
-2. Open the **DATA SETS** bar.
-3. Open a profile.  
-4. Click the PDS member (or PS) that you want to download.
-
-    **Note:** To view the members of a PDS, click the PDS to expand the tree.
-
-    The PDS member displays in the text editor window of VSC.
-5. Edit the document.
-6. Navigate back to the PDS member (or PS) in the explorer tree, and click the **Save** button.
-
-Your PDS member (or PS) is uploaded.  
-
-**Note:** If someone else has made changes to the PDS member (or PS) while you were editing it, you can merge your conflicts before uploading to the mainframe.
-
-![Edit](docs/images/ZE-download-edit.gif?raw=true "Edit")
-<br /><br />
-
-#### Use the save option to prevent merge conflicts
+### Download, edit, and upload existing PDS members
 
 1. Navigate to the explorer tree.
 2. Open the **DATA SETS** bar.
 3. Open a profile.
-4. Download and edit a data set.
-5. Click the **Save** button for the data set that you opened in the explorer tree.
-6. Resolve merge conflicts if necessary.
+4. Click the PDS member (or PS) that you want to download.
 
-![Save](docs/images/ZE-safe-save.gif?raw=true "Save")
+   **Note:** To view the members of a PDS, click the PDS to expand the tree.
+
+   The PDS member is displayed in the text editor window of VSC.
+
+5. Edit the document.
+6. Navigate back to the PDS member (or PS) in the explorer tree, and click the **Save** button.
+
+Your PDS member (or PS) is uploaded.
+
+**Note:** If someone else has made changes to the PDS member (or PS) while you were editing it, you can merge your conflicts before uploading to the mainframe.
+
+![Edit](/docs/images/ZE-download-edit.gif?raw=true "Edit")
 <br /><br />
 
-#### Create a new PDS and a PDS member
+### Use the save option to prevent merge conflicts
 
 1. Navigate to the explorer tree.
 2. Open the **DATA SETS** bar.
-3. Click the **Create New Data Set** button to specify the profile that you want to create the data set with.
+3. Open a member of a data set you want to edit.
+4. Edit a data set.
+5. Press Ctrl+S or Command+S (OSx) to save you changes.
+6. (Optional) Resolve merge conflicts if necessary.
+
+![Save](/docs/images/ZE-safe-save.gif?raw=true "Save")
+<br /><br />
+
+### Create a new PDS and a PDS member
+
+1. Navigate to the explorer tree.
+2. Open the **DATA SETS** bar.
+3. Click the **Create New Data Set** button to create a PDS.
 4. From the drop-down menu, select the type of PDS that you want to create.
 5. Enter a name for the PDS.
    The PDS is created.
@@ -199,10 +224,10 @@ Your PDS member (or PS) is uploaded.
 7. Enter a name for the member.
    The member is created.
 
-![Create](docs/images/ZE-cre-pds-member.gif?raw=true "Create")
+![Create](/docs/images/ZE-cre-pds-member.gif?raw=true "Create")
 <br /><br />
 
-#### Delete a PDS member and PDS
+### Delete a PDS member and PDS
 
 1. Navigate to the explorer tree.
 2. Open the **DATA SETS** bar.
@@ -210,172 +235,62 @@ Your PDS member (or PS) is uploaded.
 4. Right-click on the PDS member that you want to delete and select **Delete Member**.
 5. Confirm the deletion by clicking **Yes** on the drop-down menu.
 
-    **Note:** Alternatively, you can select 'No' to cancel the deletion.
+   **Note:** Alternatively, you can select 'No' to cancel the deletion.
+
 6. To delete a PDS, right-click the PDS and click **Delete PDS**, then confirm the deletion.
 
-    **Note:** You can delete a PDS before you delete its members.
+   **Note:** You can delete a PDS before you delete its members.
 
-![Delete](docs/images/ZE-del-pds-member.gif?raw=true "Delete")
+![Delete](/docs/images/ZE-del-pds-member.gif?raw=true "Delete")
 <br /><br />
 
-#### View and access multiple profiles simultaneously
+### View and access multiple profiles simultaneously
 
 1. Navigate to the explorer tree.
 2. Open the **DATA SETS** bar.
 3. Click the **Add Profile** button on the right of the **DATA SET** explorer bar.
 4. Select the profile that you want to add to the view as illustrated by the following screen.
 
-![Add Profile](docs/images/ZE-mult-profiles.gif?raw=true "Add Profile")
-<br /><br />
+![Add Profile](/docs/images/ZE-mult-profiles.gif?raw=true "Add Profile")
 
----
-
-### USS
-
-You can use the following functionalities when interacting with USS files:
-
-* **View Unix System Services (USS) files**: You can view multiple USS files simultaneously.
-* **Rename USS files**: You can rename specified USS files.
-* **Download, edit, and upload existing USS files**: You can instantly pull USS files from the mainframe, edit them and upload back.
-* **Create and delete USS files and directories**: Enables you to easily create and delete both USS files and directories.
-* **View and access multiple profiles simultaneously**: Enables to work with USS files from multiple profiles.
-
-#### View Unix System Services (USS) files
+### Allocate Like
 
 1. Navigate to the explorer tree.
-2. Open the **Unix System Services (USS)** bar.
-3. Select the profile that you want to filter.
-4. Click the **Search Unix System Services (USS) by Entering a Path** magnifying glass.
-5. From the drop-down, enter the path that you want as the root of your displayed tree.  
-  All child files and directories of that root file are displayed in the explorer tree.
+2. Open the **DATA SETS** bar.
+3. Right-click the data set and select the **Allocate Like (New File with Same Attributes)** option.
+4. Enter the new data set name.
 
-  **Note:** You will not be able to expand directories or files that you are not authorised for.
+![Allocate Like](/docs/images/ZE-allocate-like.gif?raw=true "Allocate Like")
 
-  ![Enter Path](docs/images/ZE-path.gif?raw=true "Enter Path")
-<br /><br />
+## Credentials Security
 
-#### Refresh the list of files
+Store your credentials securely with the Secure Credentials Store (SCS) plug-in.
 
-1. Navigate to the explorer tree.
-2. Click **Refresh All** button on the right of the **Unix System Services (USS)** explorer bar as illustrated by the following screen:
+1. Navigate to the VSCode settings.
+2. Open Zowe Explorer Settings.
+3. Add the `Zowe-Plugin` value to the **Zowe Security** entry field.
+4. Restart VSCode.
 
-![Refresh All](docs/images/ZE-refreshUSS.gif?raw=true "Refresh All")
-<br /><br />
+For more information about SCS, see [Secure Credential Store Plug-in for Zowe Explorer](https://docs.zowe.org/stable/user-guide/ze-profiles.html#enabling-secure-credential-store-with-zowe-explorer).
 
-#### Rename USS files
+## Usage tips
 
-1. Navigate to the explorer tree.
-2. Open the **USS** bar.
-3. Select a USS file you want to rename.
-4. Right-click the USS file and select the **Rename USS file** option.
-5. Change the name of the USS file.
+- Use the **Add Favorite** feature to permanently store chosen data sets, USS files, and jobs in the **Favorites** folder. Right-click on a data set, USS file or jobs and select **Add Favorite**.
 
-#### Download, edit, and upload an existing file
+- **Syntax Highlighting:** Zowe Explorer supports syntax highlighting for data sets. Fox example, you can use such extensions as [COBOL Language Support](https://marketplace.visualstudio.com/items?itemName=broadcomMFD.cobol-language-support) or [HLASM Language Support](https://marketplace.visualstudio.com/items?itemName=broadcomMFD.hlasm-language-support).
 
-1. Click the file that you want to download.
+- **Edit a profile**: Click the **pencil** icon next to the **magnifying glass** icon in the explorer tree, and modify the information inside your profile.
 
-    **Note:** To view the files within a directory, click the directory to expand the tree.
+- **Delete a profile**: Right-click a chosen profile and select **Delete Profile** to permanently delete the profile. The functionality deletes a profile from your `.zowe` folder.
 
-    The file displays in the text editor window of VSC.
+- **Hide a profile**: You can hide a profile from the profile tree by right-clicking the profile and selecting the **Hide Profile** option. To add the profile back, click the **+** button and select the profile from the quick pick list.
 
-    **Note:** If you have defined file associations with syntax coloring the suffix of your file will be marked up.
+- **Associate profiles**: You can create a secondary association by right-clicking the profile and selecting the **Associate profiles** icon. For more information, see [the Associate profiles section](https://docs.zowe.org/stable/user-guide/ze-profiles.html#associate-profile) in Zowe Docs.
 
-2. Edit the document.
-3. Type Ctrl-s or Command-s (OSx) to save the file
+For information how to configure Zowe Explorer, see [Zowe Explorer Configuration guidelines](https://docs.zowe.org/stable/user-guide/ze-install.html#configuration).
 
-Your file is uploaded.  
+## Extending Zowe Explorer
 
-![Edit](docs/images/ZE-editUSS.gif?raw=true "Edit")
-<br /><br />
+You can add new functionalities to Zowe Explorer by creating your own extension. For more information, see [Extensions for Zowe Explorer](https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/README-Extending.md).
 
-#### Creating and deleting files and directories
-
-#### Create a directory
-
-1. Navigate to the explorer tree.
-2. Open the **Unix System Services (USS)** bar.
-3. Select a directory that you want to add the new directory to.
-4. Select the **Create directory** button and specify the directory name.
-   The directory is created.
-
-#### Create a file
-
-1. Navigate to the explorer tree.
-2. Open the **Unix System Services (USS)** bar.
-3. Select a directory that you want to add the new file to.
-4. Select the **Create file** button and specify the file name.
-   The file is created.
-
-#### Delete a file
-
-1. Navigate to the explorer tree.
-2. Open the **Unix System Services (USS)** bar.
-3. Select a file you want to remove.
-4. Select the **Delete** button and press yes in the confirmation dropdown.
-   The file is deleted.
-
-#### Delete a directory
-
-1. Navigate to the explorer tree.
-2. Open the **Unix System Services (USS)** bar.
-3. Select a directory you want to remove.
-4. Select the **Delete** button and press yes in the confirmation dropdown.
-   The directory and all child files and directories are deleted.
-
-![Create and Delete](docs/images/ZE-CreateDelete.gif?raw=true "Create and Delete")
-<br /><br />
-
-#### View and access multiple USS profiles simultaneously
-
-1. Navigate to the explorer tree.
-2. Open the **Unix System Services (USS)** bar.
-3. Click the **Add Session** button on the right of the **Unix System Services (USS)** explorer bar.
-4. Select the profile that you want to add to the view as illustrated by the following screen.
-
-![View Profiles](docs/images/ZE-profile2.gif?raw=true "View Profiles")
-<br /><br />
-
----
-
-### JOBS
-
-You can use the following functionalities when interacting with Jobs:
-
-* **View a job**: You can view multiple jobs simultaneously.
-* **Download spool content**: You can download spool content on your computer.
-
-#### View a job
-
-1. Navigate to the explorer tree.
-2. Open the **JOBS** bar.
-3. Select a directory with JCL files.
-4. Right-click on the JCL you want to view, and click **Get JCL**.
-
-![View JOB](docs/images/ZE-jobs-get-jcl.gif?raw=true "View JOB")
-<br /><br />
-
-#### Download spool content
-
-1. Navigate to the explorer tree.
-2. Open the **JOBS** bar.
-3. Select a directory with JCL files.
-4. Click the **Download** icon next to a folder with the spool content.
-5. Save the file on your computer.
-
-![Download Spool](docs/images/ZE-jobs-download-spool.gif?raw=true "Download Spool")
-<br /><br />
-
----
-
-### Extras
-
-#### Issue MVS commands
-
-Zowe Explorer also enables you to issue MVS command. You can issue such commands as Allocate or Exec against a profile.
-
-1. Press the **F1** key on your keyboard.
-2. Select the **Zowe:Issue MVS Command** option.
-3. Select your profile.
-4. Issue a MVS command.
-
-![Issue a MVS command](docs/images/ZE-Jobs-Issue-TSO-Command.gif?raw=true "Issue a MVS command")
+**Tip:** View an example of a Zowe Explorer extension — [Zowe Explorer FTP extension documentation](https://github.com/zowe/zowe-explorer-ftp-extension#zowe-explorer-ftp-extension).

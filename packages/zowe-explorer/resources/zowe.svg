@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1358px" height="1337px" viewBox="0 0 1358 1337" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>Zowe Icon - White</title>
+    <defs>
+        <path d="M854.75,1 L1356.71875,759.34375 L548.328125,1335.54688 L1,572.625 L854.75,1 Z M701.585938,287 L300,568.03125 L371.65625,687.21875 L645.460938,498.945312 L587.65625,997.695312 L626.351563,1049.65625 L1056.92969,744.078125 L986.6875,636.890625 L737.40625,809.34375 L784.851563,454.882812 L701.585938,287 Z" id="path-1"></path>
+    </defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <mask id="mask-2" fill="white">
+            <use xlink:href="#path-1"></use>
+        </mask>
+        <use id="Combined-Shape" stroke="#979797" fill="#FFFFFF" xlink:href="#path-1"></use>
+    </g>
+</svg>

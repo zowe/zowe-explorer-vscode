@@ -1,9 +1,8 @@
 node_modules
 out
+lib
 logs
-resources/temp
-resources/Favorites.txt
-resources/testProfileData.ts
+testProfileData.ts
 results
 debug.log
 npm-shrinkwrap.json
@@ -12,3 +11,8 @@ vscode-extension-for-zowe*.vsix
 .history
 .DS_Store
 .idea
+temp
+*.zip
+*.vsix
+*.tgz
+.tmp

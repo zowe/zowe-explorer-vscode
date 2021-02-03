@@ -1,0 +1,64 @@
+# Workflow name for GitHub Actions
+name: Theia Zowe Explorer CI
+
+on:
+  push:
+    paths:
+      - packages/zowe-explorer/**
+  pull_request:
+    paths:
+      - packages/zowe-explorer/**
+
+jobs:
+  ze-theia-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # check out source
+      - uses: actions/checkout@v2
+
+      # install dependencies
+      - run: yarn install --frozen-lockfile
+
+      # copy test data file needed for build :-(
+      - name: Create test data file
+        run: cp packages/zowe-explorer/resources/testProfileData.example.ts packages/zowe-explorer/resources/testProfileData.ts
+
+      - name: Build vsix
+        run: yarn workspace vscode-extension-for-zowe package
+
+      - name: Create extension install directory
+        run: mkdir -p temp/plugins && chmod -R 777 temp
+
+      - name: Copy vsix to theia folder
+        run: cp dist/*.vsix temp/plugins
+
+      # Verify vsix
+      - run: ls -la temp/plugins
+
+      - name: Start Theia
+        run: docker run --name theia --init -d -p 3000:3000 -v "${PWD}/temp:/home/theia/.theia" theiaide/theia
+      # NOTE(Kelosky): alternatively, we could run docker via something like this; however, we cannot hot reload
+      #                hosted VS Code extensions after theia is started (at least at the time this was written).
+      # services:
+      #   theia:
+      #     image: theiaide/theia:next
+      #     ports:
+      #       - 3000:3000
+      #     volumes:
+      #       - temp:/home/theia/.theia
+      #     # --health-cmd "curl --fail http://localhost:3000 || exit 1" --health-interval=5s --health-timeout=5s --health-retries 60
+      #     options: --init
+
+      - run: yarn lint
+
+      - name: Verify plugin loaded
+        run: docker exec -i theia ls -la /home/theia/.theia/plugins
+
+      - name: Verify Theia accessible
+        run: curl --fail http://localhost:3000
+
+      - name: Prep integration test files
+        run: yarn workspace vscode-extension-for-zowe build:integration
+
+      - run: yarn workspace vscode-extension-for-zowe test:theia
