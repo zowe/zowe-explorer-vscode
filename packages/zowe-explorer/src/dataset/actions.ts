@@ -1070,19 +1070,7 @@ export async function pasteMember(node: IZoweDatasetTreeNode, datasetProvider: I
     let beforeMemberName;
 
     await Profiles.getInstance().checkCurrentProfile(node.getProfile());
-    if (
-        Profiles.getInstance().validProfile === ValidProfileEnum.VALID ||
-        Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED
-    ) {
-        if (node.contextValue.includes(globals.DS_PDS_CONTEXT)) {
-            memberName = await vscode.window.showInputBox({
-                placeHolder: localize("renameDataSet.name", "Name of Data Set Member"),
-            });
-            if (!memberName) {
-                return;
-            }
-        }
-
+    if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
         try {
             ({
                 dataSetName: beforeDataSetName,
@@ -1091,6 +1079,15 @@ export async function pasteMember(node: IZoweDatasetTreeNode, datasetProvider: I
             } = JSON.parse(await vscode.env.clipboard.readText()));
         } catch (err) {
             throw Error("Invalid clipboard. Copy from data set first");
+        }
+        if (node.contextValue.includes(globals.DS_PDS_CONTEXT)) {
+            memberName = await vscode.window.showInputBox({
+                value: beforeMemberName,
+                placeHolder: localize("renameDataSet.name", "Name of Data Set Member"),
+            });
+            if (!memberName) {
+                return;
+            }
         }
 
         if (beforeProfileName === profileName) {
