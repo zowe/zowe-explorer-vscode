@@ -745,6 +745,7 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
                 undefined
             ),
             childNode: null,
+            testCombinedProfile: createValidIProfile(),
         };
         newMocks.childNode = new ZoweUSSNode(
             "root",
@@ -758,38 +759,6 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
         );
         globalMocks.withProgress.mockImplementation((progLocation, callback) => {
             return callback();
-        });
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    allProfiles: [{ name: "firstName" }, { name: "secondName" }],
-                    defaultProfile: { name: "firstName" },
-                    getDefaultProfile: globalMocks.mockLoadNamedProfile,
-                    promptCredentials: jest.fn(() => {
-                        return ["fake", "fake", "fake"];
-                    }),
-                    loadNamedProfile: globalMocks.mockLoadNamedProfile,
-                    usesSecurity: true,
-                    validProfile: ValidProfileEnum.VALID,
-                    checkCurrentProfile: jest.fn(() => {
-                        return globalMocks.profilesForValidation;
-                    }),
-                    validateProfiles: jest.fn(),
-                    getProfiles: jest.fn(() => {
-                        return [
-                            { name: globalMocks.profileOne.name, profile: globalMocks.profileOne },
-                            { name: globalMocks.profileOne.name, profile: globalMocks.profileOne },
-                        ];
-                    }),
-                    refresh: jest.fn(),
-                    getCombinedProfile: jest.fn(() => {
-                        return [{ name: globalMocks.profileOne.name, profile: globalMocks.profileOne }];
-                    }),
-                    getBaseProfile: jest.fn(() => {
-                        return [{ name: globalMocks.profileOne.name, profile: globalMocks.profileOne }];
-                    }),
-                };
-            }),
         });
 
         return newMocks;
@@ -879,6 +848,10 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
             blockMocks.childNode.fullPath = "Throw Error";
             blockMocks.childNode.dirty = true;
             blockMocks.childNode.profile = globalMocks.profileOne;
+            globalMocks.profileOps.getCombinedProfile.mockResolvedValue({
+                name: blockMocks.testCombinedProfile.name,
+                profile: blockMocks.testCombinedProfile.profile,
+            });
 
             await blockMocks.childNode.getChildren();
             expect(globalMocks.showErrorMessage.mock.calls.length).toEqual(1);
@@ -898,6 +871,10 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
             blockMocks.childNode.contextValue = globals.USS_SESSION_CONTEXT;
             blockMocks.childNode.dirty = true;
             blockMocks.childNode.profile = globalMocks.profileOne;
+            globalMocks.profileOps.getCombinedProfile.mockResolvedValue({
+                name: blockMocks.testCombinedProfile.name,
+                profile: blockMocks.testCombinedProfile.profile,
+            });
             const subNode = new ZoweUSSNode(
                 "Response Fail",
                 vscode.TreeItemCollapsibleState.Collapsed,
