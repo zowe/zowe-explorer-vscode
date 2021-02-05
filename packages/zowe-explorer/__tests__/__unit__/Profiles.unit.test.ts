@@ -2022,10 +2022,6 @@ describe("Profiles Unit Tests - Function checkCurrentProfile", () => {
         Object.defineProperty(theProfiles, "validateProfiles", {
             value: mockValidateProfiles,
         });
-        mockValidateProfiles.mockReturnValueOnce({
-            status: "active",
-            name: blockMocks.invalidProfile.name,
-        });
         mockValidateProfiles.mockReturnValue({
             status: "inactive",
             name: blockMocks.invalidProfile.name,

@@ -79,7 +79,7 @@ export class Profiles extends ProfilesCache {
     }
 
     public async checkCurrentProfile(theProfile: IProfileLoaded) {
-        let profileStatus: IProfileValidation = await this.getProfileSetting(theProfile);
+        let profileStatus: IProfileValidation;
 
         // This step is for prompting of credentials. It will be triggered if it meets the following conditions:
         // - The service does not have username or password and base profile doesn't exists
@@ -115,7 +115,10 @@ export class Profiles extends ProfilesCache {
                 return profileStatus;
             }
 
-            // Revalidate profile
+            // Validate profile
+            profileStatus = await this.getProfileSetting(theProfile);
+        } else {
+            // Profile should have enough information to allow validation
             profileStatus = await this.getProfileSetting(theProfile);
         }
         switch (profileStatus.status) {
