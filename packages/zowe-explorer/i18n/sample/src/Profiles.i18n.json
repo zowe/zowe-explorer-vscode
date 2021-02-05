@@ -1,5 +1,4 @@
 {
-  "promptCredentials.undefined.username": "Operation Cancelled",
   "checkCurrentProfile.error": "Error encountered in ",
   "addSession.quickPickOption": "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the USS Explorer",
   "enterPattern.pattern": "No selection made.",
@@ -28,6 +27,7 @@
   "createNewConnection.booleanValue": "Operation Cancelled",
   "createNewConnection.default": "Operation Cancelled",
   "createNewConnection.duplicateProfileName": "Profile name already exists. Please create a profile using a different name",
+  "promptCredentials.undefined.username": "Operation Cancelled",
   "promptCredentials.undefined.password": "Operation Cancelled",
   "promptCredentials.saveCredentials.button": "Save Credentials",
   "promptCredentials.doNotSave.button": "Do Not Save",
