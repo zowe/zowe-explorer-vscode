@@ -304,7 +304,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 node.getSession(),
                 null,
                 false,
-                node.getSessionNode().getProfileName()
+                profileName
             );
             temp.fullPath = node.fullPath;
             this.saveSearch(temp);
@@ -318,7 +318,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 node.getSession(),
                 node.getParent().fullPath,
                 false,
-                node.getSessionNode().getProfileName()
+                profileName
             );
             temp.contextValue = contextually.asFavorite(temp);
             if (contextually.isFavoriteTextOrBinary(temp)) {
@@ -365,10 +365,11 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         );
         // Remove profile node from Favorites if it contains no more favorites.
         if (profileNodeInFavorites.children.length < 1) {
-            this.removeFavProfile(profileName, false);
+            return this.removeFavProfile(profileName, false);
         }
         await this.updateFavorites();
         this.refreshElement(this.mFavoriteSession);
+        return;
     }
 
     public async updateFavorites() {
@@ -409,6 +410,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 ignoreFocusOut: true,
                 canPickMany: false,
             };
+            // If user did not select "Continue", do nothing.
             if (
                 (await vscode.window.showQuickPick([continueRemove, cancelRemove], quickPickOptions)) !== continueRemove
             ) {
@@ -416,6 +418,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             }
         }
 
+        // Remove favorited profile from UI
         this.mFavorites.forEach((favProfileNode) => {
             const favProfileLabel = favProfileNode.label.trim();
             if (favProfileLabel === profileName) {
@@ -424,6 +427,10 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 this.refresh();
             }
         });
+
+        // Update the favorites in settings file
+        await this.updateFavorites();
+        return;
     }
 
     /**
@@ -477,13 +484,13 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         if (this.log) {
             this.log.debug(localize("filterPrompt.log.debug.promptUSSPath", "Prompting the user for a USS path"));
         }
-        let sessionNode = node.getSessionNode();
-        let remotepath: string;
         await this.checkCurrentProfile(node);
         if (
             Profiles.getInstance().validProfile === ValidProfileEnum.VALID ||
             Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED
         ) {
+            let sessionNode = node.getSessionNode();
+            let remotepath: string;
             if (contextually.isSessionNotFav(node)) {
                 if (this.mHistory.getSearchHistory().length > 0) {
                     const createPick = new FilterDescriptor(USSTree.defaultDialogText);

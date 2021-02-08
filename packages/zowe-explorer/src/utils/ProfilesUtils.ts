@@ -15,7 +15,7 @@ import * as vscode from "vscode";
 import * as os from "os";
 import * as path from "path";
 import { ISession, IProfile, ImperativeConfig } from "@zowe/imperative";
-import { IZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { IZoweNodeType, IZoweTree, IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import * as nls from "vscode-nls";
 
