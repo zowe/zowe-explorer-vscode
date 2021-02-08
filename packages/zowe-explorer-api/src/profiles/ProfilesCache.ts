@@ -224,6 +224,7 @@ export class ProfilesCache {
             profile: profileInfo,
             name: profileName,
             type: profileType,
+            overwrite: true,
         });
         return newProfile.profile;
     }

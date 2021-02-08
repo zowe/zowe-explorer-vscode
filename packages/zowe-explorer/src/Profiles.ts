@@ -13,7 +13,6 @@ import {
     IProfileLoaded,
     Logger,
     ISession,
-    IUpdateProfileFromCliArgs,
     ICommandArguments,
     Session,
     SessConstants,
@@ -605,8 +604,11 @@ export class Profiles extends ProfilesCache {
                             localize("createNewConnection.undefined.username", "Operation Cancelled")
                         );
                         return undefined;
+                    } else if (newUser === "") {
+                        delete schemaValues[value];
+                    } else {
+                        schemaValues[value] = newUser;
                     }
-                    schemaValues[value] = newUser;
                     break;
                 case "password":
                     newPass = await this.passwordInfo();
@@ -615,8 +617,11 @@ export class Profiles extends ProfilesCache {
                             localize("createNewConnection.undefined.username", "Operation Cancelled")
                         );
                         return undefined;
+                    } else if (newPass === "") {
+                        delete schemaValues[value];
+                    } else {
+                        schemaValues[value] = newPass;
                     }
-                    schemaValues[value] = newPass;
                     break;
                 case "rejectUnauthorized":
                     newRU = await this.ruInfo();
@@ -634,22 +639,18 @@ export class Profiles extends ProfilesCache {
                     switch (response) {
                         case "number":
                             options = await this.optionsValue(value, schema);
-                            const enteredValue = await vscode.window.showInputBox(options);
-                            if (!Number.isNaN(Number(enteredValue))) {
-                                schemaValues[value] = Number(enteredValue);
+                            const enteredValue = Number(await vscode.window.showInputBox(options));
+                            if (!Number.isNaN(enteredValue)) {
+                                if ((value === "encoding" || value === "responseTimeout") && enteredValue === 0) {
+                                    delete schemaValues[value];
+                                } else {
+                                    schemaValues[value] = Number(enteredValue);
+                                }
                             } else {
-                                switch (true) {
-                                    case enteredValue === undefined:
-                                        vscode.window.showInformationMessage(
-                                            localize("createNewConnection.number", "Operation Cancelled")
-                                        );
-                                        return undefined;
-                                    case schema[value].optionDefinition.hasOwnProperty("defaultValue"):
-                                        schemaValues[value] = schema[value].optionDefinition.defaultValue;
-                                        break;
-                                    default:
-                                        schemaValues[value] = undefined;
-                                        break;
+                                if (schema[value].optionDefinition.hasOwnProperty("defaultValue")) {
+                                    schemaValues[value] = schema[value].optionDefinition.defaultValue;
+                                } else {
+                                    delete schemaValues[value];
                                 }
                             }
                             break;
@@ -674,9 +675,10 @@ export class Profiles extends ProfilesCache {
                                 return undefined;
                             }
                             if (defValue === "") {
-                                break;
+                                delete schemaValues[value];
+                            } else {
+                                schemaValues[value] = defValue;
                             }
-                            schemaValues[value] = defValue;
                             break;
                     }
             }
@@ -937,7 +939,7 @@ export class Profiles extends ProfilesCache {
 
         // Remove from list of all profiles
         const index = this.allProfiles.findIndex((deleteItem) => {
-            return deleteItem === deletedProfile;
+            return deleteItem.name === deletedProfile.name;
         });
         if (index >= 0) {
             this.allProfiles.splice(index, 1);
@@ -1597,26 +1599,35 @@ export class Profiles extends ProfilesCache {
         const OrigProfileInfo = this.loadedProfile.profile;
         const NewProfileInfo = ProfileInfo.profile;
 
+        // Update the currently-loaded profile with the new info
         const profileArray = Object.keys(this.loadedProfile.profile);
         for (const value of profileArray) {
-            if (value === "user" || value === "password") {
-                if (!rePrompt) {
-                    OrigProfileInfo.user = NewProfileInfo.user;
-                    OrigProfileInfo.password = NewProfileInfo.password;
+            if ((value === "encoding" || value === "responseTimeout") && NewProfileInfo[value] === 0) {
+                // If the updated profile had these fields set to 0, delete them...
+                // this should get rid of a bad value that was stored
+                // in these properties before this update
+                delete OrigProfileInfo[value];
+            } else if (NewProfileInfo[value] !== undefined && NewProfileInfo[value] !== "") {
+                if (value === "user" || value === "password") {
+                    if (!rePrompt) {
+                        OrigProfileInfo.user = NewProfileInfo.user;
+                        OrigProfileInfo.password = NewProfileInfo.password;
+                    }
+                } else {
+                    OrigProfileInfo[value] = NewProfileInfo[value];
                 }
-            } else {
-                OrigProfileInfo[value] = NewProfileInfo[value];
+            } else if (NewProfileInfo[value] === undefined || NewProfileInfo[value] === "") {
+                // If the updated profile had an empty property, delete it...
+                // this should get rid of any empty strings
+                // that were stored in the profile before this update
+                delete OrigProfileInfo[value];
             }
         }
 
-        // Using `IUpdateProfileFromCliArgs` here instead of `IUpdateProfile` is
-        // kind of a hack, but necessary to support storing secure credentials
-        // until this is fixed: https://github.com/zowe/imperative/issues/379
-        const updateParms: IUpdateProfileFromCliArgs = {
+        const updateParms: IUpdateProfile = {
             name: this.loadedProfile.name,
-            merge: true,
-            // profile: OrigProfileInfo as IProfile
-            args: OrigProfileInfo as any,
+            merge: false,
+            profile: OrigProfileInfo as IProfile,
         };
         try {
             this.getCliProfileManager(this.loadedProfile.type).update(updateParms);
