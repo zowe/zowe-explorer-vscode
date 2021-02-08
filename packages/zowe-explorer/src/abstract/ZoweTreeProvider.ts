@@ -193,10 +193,8 @@ export class ZoweTreeProvider {
                 node.contextValue.toLowerCase().includes("session") ||
                 node.contextValue.toLowerCase().includes("server")
             ) {
-                // change contextValue only if the word inactive is not there
-                if (node.contextValue.toLowerCase().indexOf("inactive") === -1) {
-                    node.contextValue = node.contextValue + globals.INACTIVE_CONTEXT;
-                }
+                node.contextValue = node.contextValue.replace(/(?<=.*)(_Active|_Inactive|_Unverified)$/, "");
+                node.contextValue = node.contextValue + globals.INACTIVE_CONTEXT;
                 const inactiveIcon = getIconById(IconId.sessionInactive);
                 if (inactiveIcon) {
                     node.iconPath = inactiveIcon.path;
@@ -224,10 +222,8 @@ export class ZoweTreeProvider {
                 node.contextValue.toLowerCase().includes("session") ||
                 node.contextValue.toLowerCase().includes("server")
             ) {
-                // change contextValue only if the word active is not there
-                if (node.contextValue.toLowerCase().indexOf("active") === -1) {
-                    node.contextValue = node.contextValue + globals.ACTIVE_CONTEXT;
-                }
+                node.contextValue = node.contextValue.replace(/(?<=.*)(_Active|_Inactive|_Unverified)$/, "");
+                node.contextValue = node.contextValue + globals.ACTIVE_CONTEXT;
                 const activeIcon = getIconById(IconId.sessionActive);
                 if (activeIcon) {
                     node.iconPath = activeIcon.path;
@@ -238,10 +234,8 @@ export class ZoweTreeProvider {
                 node.contextValue.toLowerCase().includes("session") ||
                 node.contextValue.toLowerCase().includes("server")
             ) {
-                // change contextValue only if the word unverified is not there
-                if (node.contextValue.toLowerCase().indexOf("unverified") === -1) {
-                    node.contextValue = node.contextValue + globals.UNVERIFIED_CONTEXT;
-                }
+                node.contextValue = node.contextValue.replace(/(?<=.*)(_Active|_Inactive|_Unverified)$/, "");
+                node.contextValue = node.contextValue + globals.UNVERIFIED_CONTEXT;
             }
         }
         await this.refresh();

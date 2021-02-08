@@ -2018,13 +2018,13 @@ describe("Profiles Unit Tests - Function checkCurrentProfile", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         const theProfiles = await Profiles.createInstance(blockMocks.log);
+        const mockValidateProfiles = jest.fn();
         Object.defineProperty(theProfiles, "validateProfiles", {
-            value: jest.fn(() => {
-                return {
-                    status: "active",
-                    name: blockMocks.invalidProfile.name,
-                };
-            }),
+            value: mockValidateProfiles,
+        });
+        mockValidateProfiles.mockReturnValue({
+            status: "inactive",
+            name: blockMocks.invalidProfile.name,
         });
         blockMocks.profiles.promptCredentials = jest.fn(() => {
             return undefined;
