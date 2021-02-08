@@ -15,7 +15,7 @@ import * as vscode from "vscode";
 import * as os from "os";
 import * as path from "path";
 import { ISession, IProfile, ImperativeConfig } from "@zowe/imperative";
-import { IZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { IZoweNodeType, IZoweTree, IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import * as nls from "vscode-nls";
 
@@ -111,14 +111,14 @@ export function isTheia(): boolean {
  * @param {sessNode} IZoweTreeNode
  *************************************************************************************************************/
 // This function does not perform any UI refresh; it just gets updated profile information.
-export function refreshTree(sessNode: IZoweTreeNode) {
+export async function refreshTree(sessNode: IZoweTreeNode) {
     const allProf = Profiles.getInstance().getProfiles();
     for (const profNode of allProf) {
         if (sessNode.getProfileName() === profNode.name) {
             setProfile(sessNode, profNode.profile);
             const SessionProfile = profNode.profile as ISession;
-            if (sessNode.getSession().ISession !== SessionProfile) {
-                setSession(sessNode, SessionProfile);
+            if (sessNode.getSession() && sessNode.getSession().ISession !== SessionProfile) {
+                await setSession(sessNode, SessionProfile);
             }
         }
     }
