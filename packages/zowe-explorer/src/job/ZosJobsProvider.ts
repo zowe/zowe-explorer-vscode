@@ -469,12 +469,13 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         );
         // Remove profile node from Favorites if it contains no more favorites.
         if (profileNodeInFavorites.children.length < 1) {
-            this.removeFavProfile(profileName, false);
+            return this.removeFavProfile(profileName, false);
         }
         if (startLength !== profileNodeInFavorites.children.length) {
             await this.updateFavorites();
             this.refreshElement(this.mFavoriteSession);
         }
+        return;
     }
 
     public async updateFavorites() {
@@ -515,6 +516,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 ignoreFocusOut: true,
                 canPickMany: false,
             };
+            // If user did not select "Continue", do nothing.
             if (
                 (await vscode.window.showQuickPick([continueRemove, cancelRemove], quickPickOptions)) !== continueRemove
             ) {
@@ -522,6 +524,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             }
         }
 
+        // Remove favorited profile from UI
         this.mFavorites.forEach((favProfileNode) => {
             const favProfileLabel = favProfileNode.label.trim();
             if (favProfileLabel === profileName) {
@@ -530,6 +533,10 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 this.refresh();
             }
         });
+
+        // Update the favorites in settings file
+        await this.updateFavorites();
+        return;
     }
 
     /**
