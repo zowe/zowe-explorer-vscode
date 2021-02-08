@@ -36,14 +36,14 @@ More information:
 New features:
 
 - Added the ability to edit data set attributes before allocation
-- Allowed filtering of member names from the Data Sets search bar
+- Added the member-filtering functionality to the Data Sets search bar
 - Reorganized the context menus and streamlined the visible icons
 
 Bug Fixes:
 
 - Fixed the messaging displayed when handling inactive profiles and when updating profiles
-- Fixed the issue causing tree restructure when renaming a USS file or directory
-- Fixed the issue preventing issuing of commands when using profiles with tokens
+- Fixed the issue that restructures the tree when renaming a USS file or directory
+- Fixed the bug that prevented you from issuing commands when using the profiles with tokens
 
 For more information, see [Changelog](https://marketplace.visualstudio.com/items/Zowe.vscode-extension-for-zowe/changelog).
 
