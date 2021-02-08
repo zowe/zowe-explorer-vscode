@@ -1163,6 +1163,7 @@ describe("Dataset Tree Unit Tests - Function  - Function removeFavProfile", () =
     it("Tests successful removal of profile node in Favorites when user confirms they want to Continue removing it", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
+        const updateFavoritesSpy = jest.spyOn(blockMocks.testTree, "updateFavorites");
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         // Make sure favorite is added before the actual unit test
         expect(blockMocks.testTree.mFavorites.length).toEqual(1);
@@ -1175,7 +1176,10 @@ describe("Dataset Tree Unit Tests - Function  - Function removeFavProfile", () =
 
         await blockMocks.testTree.removeFavProfile(blockMocks.profileNodeInFavs.label, true);
 
+        // Check that favorite is removed from UI
         expect(blockMocks.testTree.mFavorites.length).toEqual(0);
+        // Check that favorite is removed from settings file
+        expect(updateFavoritesSpy).toBeCalledTimes(1);
     });
     it("Tests that removeFavProfile leaves profile node in Favorites when user cancels", async () => {
         createGlobalMocks();
