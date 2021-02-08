@@ -154,7 +154,7 @@ export class ZoweTreeProvider {
         return undefined;
     }
 
-    public async editSession(node: IZoweTreeNode) {
+    public async editSession(node: IZoweTreeNode, zoweFileProvider: IZoweTree<IZoweNodeType>) {
         const profile = node.getProfile();
         const profileName = node.getProfileName();
         // Check what happens is inactive
@@ -163,21 +163,22 @@ export class ZoweTreeProvider {
         if (EditSession) {
             node.getProfile().profile = EditSession as IProfile;
             await setProfile(node, EditSession as IProfile);
-            await setSession(node, EditSession as ISession);
+            if (await node.getSession()) {
+                await setSession(node, EditSession as ISession);
+            } else {
+                zoweFileProvider.deleteSession(node.getSessionNode());
+                this.mHistory.addSession(node.label);
+                zoweFileProvider.addSession(node.getProfileName());
+            }
             this.refresh();
         }
         try {
-            // refresh profilesForValidation to check the profile status again
+            // Remove the edited profile from profilesForValidation since it should be revalidated
             Profiles.getInstance().profilesForValidation.forEach((checkProfile, index) => {
-                if (index === 0) {
-                    Profiles.getInstance().profilesForValidation = [];
-                }
                 if (checkProfile.name === profileName) {
                     Profiles.getInstance().profilesForValidation.splice(index, 1);
                 }
             });
-
-            await this.checkCurrentProfile(node);
         } catch (error) {
             await errorHandling(error);
         }

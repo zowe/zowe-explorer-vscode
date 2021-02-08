@@ -1623,7 +1623,7 @@ describe("Dataset Tree Unit Tests - Function editSession", () => {
             null
         );
 
-        await testTree.editSession(node);
+        await testTree.editSession(node, testTree);
 
         expect(node.getProfile().profile).toBe("testProfile");
     });
