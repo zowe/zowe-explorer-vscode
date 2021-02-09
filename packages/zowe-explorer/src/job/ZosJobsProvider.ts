@@ -137,7 +137,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 const favsForProfile = this.loadProfilesForFavorites(this.log, element);
                 return favsForProfile;
             }
-            await Profiles.getInstance().checkCurrentProfile(element.getProfile());
+            // await Profiles.getInstance().checkCurrentProfile(element.getProfile());
             return element.getChildren();
         }
         return this.mSessionNodes;
@@ -335,10 +335,27 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         if (!parentNode.getProfile() || !parentNode.getSession()) {
             try {
                 profile = Profiles.getInstance().loadNamedProfile(profileName);
-                session = ZoweExplorerApiRegister.getJesApi(profile).getSession();
-                parentNode.setProfileToChoice(profile);
-                parentNode.setSessionToChoice(session);
-                parentNode.owner = session.ISession.user;
+                await Profiles.getInstance().checkCurrentProfile(profile);
+                if (
+                    Profiles.getInstance().validProfile === ValidProfileEnum.VALID ||
+                    Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED
+                ) {
+                    session = ZoweExplorerApiRegister.getJesApi(profile).getSession();
+                    parentNode.setProfileToChoice(profile);
+                    parentNode.setSessionToChoice(session);
+                    parentNode.owner = session.ISession.user;
+                } else {
+                    return [
+                        new Job(
+                            localize("loadProfilesForFavorites.authFailed", "You must authenticate to view favorites."),
+                            vscode.TreeItemCollapsibleState.None,
+                            parentNode,
+                            null,
+                            null,
+                            null
+                        ),
+                    ];
+                }
             } catch (error) {
                 const errMessage: string =
                     localize(
