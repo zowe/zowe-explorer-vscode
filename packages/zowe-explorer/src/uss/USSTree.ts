@@ -215,7 +215,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 return this.mFavorites;
             }
             if (element.contextValue && element.contextValue === globals.FAV_PROFILE_CONTEXT) {
-                const favsForProfile = this.loadProfilesForFavorites(this.log, element);
+                const favsForProfile = await this.loadProfilesForFavorites(this.log, element);
                 return favsForProfile;
             }
             return element.getChildren();
@@ -697,12 +697,29 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             // If no profile/session yet, then add session and profile to parent profile node in this.mFavorites array:
             try {
                 profile = Profiles.getInstance().loadNamedProfile(profileName);
-                session = ZoweExplorerApiRegister.getUssApi(profile).getSession();
-                parentNode.setProfileToChoice(profile);
-                parentNode.setSessionToChoice(session);
                 // Set mProfileName for the getProfileName function, but after initialization of child fav nodes.
                 // This way, it won't try to load profile in constructor for child fav nodes too early.
                 parentNode.mProfileName = profileName;
+                await Profiles.getInstance().checkCurrentProfile(profile);
+                if (
+                    Profiles.getInstance().validProfile === ValidProfileEnum.VALID ||
+                    Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED
+                ) {
+                    session = ZoweExplorerApiRegister.getUssApi(profile).getSession();
+                    parentNode.setProfileToChoice(profile);
+                    parentNode.setSessionToChoice(session);
+                } else {
+                    const infoNode = new ZoweUSSNode(
+                        localize("loadProfilesForFavorites.authFailed", "You must authenticate to view favorites."),
+                        vscode.TreeItemCollapsibleState.None,
+                        parentNode,
+                        null,
+                        parentNode.fullPath
+                    );
+                    infoNode.contextValue = globals.INFORMATION_CONTEXT;
+                    infoNode.iconPath = undefined;
+                    return [infoNode];
+                }
             } catch (error) {
                 const errMessage: string =
                     localize(

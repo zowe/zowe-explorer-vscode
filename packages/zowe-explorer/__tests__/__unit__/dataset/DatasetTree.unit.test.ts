@@ -475,6 +475,13 @@ describe("Dataset Tree Unit Tests - Function loadProfilesForFavorites", () => {
                     loadNamedProfile: jest.fn(() => {
                         return blockMocks.imperativeProfile;
                     }),
+                    checkCurrentProfile: jest.fn(() => {
+                        return {
+                            name: blockMocks.imperativeProfile.name,
+                            status: "unverified",
+                        };
+                    }),
+                    validProfile: ValidProfileEnum.VALID,
                 };
             }),
         });
@@ -1320,19 +1327,6 @@ describe("Dataset Tree Unit Tests - Function flipState", () => {
         expect(JSON.stringify(node.iconPath)).toContain("folder-closed.svg");
         await testTree.flipState(node, true);
         expect(JSON.stringify(node.iconPath)).toContain("folder-open.svg");
-    });
-    it("Checking flipping of favorite Dataset session", async () => {
-        createGlobalMocks();
-        const blockMocks = createBlockMocks();
-
-        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
-        const testTree = new DatasetTree();
-        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
-        testTree.mSessionNodes[1].contextValue = globals.DS_SESSION_CONTEXT + globals.FAV_SUFFIX;
-
-        await testTree.flipState(testTree.mSessionNodes[1], true);
-
-        expect(JSON.stringify(testTree.mSessionNodes[1].iconPath)).toContain("folder-root-connected-closed.svg");
     });
 });
 describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {

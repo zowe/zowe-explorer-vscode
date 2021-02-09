@@ -73,6 +73,18 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
      * @returns {Promise<IZoweJobTreeNode[]>}
      */
     public async getChildren(): Promise<IZoweJobTreeNode[]> {
+        if (!this._owner && contextually.isSession(this)) {
+            return [
+                new Job(
+                    localize("getChildren.search", "Use the search button to display jobs"),
+                    vscode.TreeItemCollapsibleState.None,
+                    this,
+                    null,
+                    null,
+                    null
+                ),
+            ];
+        }
         if (this.dirty) {
             let spools: zowe.IJobFile[] = [];
             const elementChildren = [];
