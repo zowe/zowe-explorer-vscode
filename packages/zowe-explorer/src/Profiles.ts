@@ -1427,6 +1427,7 @@ export class Profiles extends ProfilesCache {
                 "createNewConnection.option.prompt.username",
                 "Enter the user name for the connection. Leave blank to not store."
             ),
+            ignoreFocusOut: true,
             value: userName,
         };
         userName = await vscode.window.showInputBox(InputBoxOptions);
@@ -1455,6 +1456,7 @@ export class Profiles extends ProfilesCache {
                 "Enter the password for the connection. Leave blank to not store."
             ),
             password: true,
+            ignoreFocusOut: true,
             value: passWord,
         };
         passWord = await vscode.window.showInputBox(InputBoxOptions);

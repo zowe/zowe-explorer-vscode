@@ -1254,7 +1254,7 @@ describe("USSTree Unit Tests - Function USSTree.addSingleSession()", () => {
     });
 });
 
-describe("USSTree Unit Tests - Function USSTree.deleteSession()", () => {
+describe("USSTree Unit Tests - Function USSTree.getChildren()", () => {
     it("Tests that getChildren() returns valid list of elements", async () => {
         const globalMocks = await createGlobalMocks();
 
@@ -1441,6 +1441,10 @@ describe("USSTree Unit Tests - Function USSTree.loadProfilesForFavorites", () =>
                     loadNamedProfile: jest.fn(() => {
                         return globalMocks.testProfile;
                     }),
+                    checkCurrentProfile: jest.fn(() => {
+                        return globalMocks.profilesForValidation;
+                    }),
+                    validProfile: ValidProfileEnum.VALID,
                 };
             }),
             configurable: true,

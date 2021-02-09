@@ -100,7 +100,10 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      */
     public async rename(node: IZoweDatasetTreeNode) {
         await Profiles.getInstance().checkCurrentProfile(node.getProfile());
-        if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
+        if (
+            Profiles.getInstance().validProfile === ValidProfileEnum.VALID ||
+            Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED
+        ) {
             return contextually.isDsMember(node) ? this.renameDataSetMember(node) : this.renameDataSet(node);
         }
     }
@@ -351,9 +354,25 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             // If no profile/session yet, then add session and profile to parent profile node in this.mFavorites array:
             try {
                 profile = Profiles.getInstance().loadNamedProfile(profileName);
-                session = ZoweExplorerApiRegister.getMvsApi(profile).getSession();
-                parentNode.setProfileToChoice(profile);
-                parentNode.setSessionToChoice(session);
+                await Profiles.getInstance().checkCurrentProfile(profile);
+                if (
+                    Profiles.getInstance().validProfile === ValidProfileEnum.VALID ||
+                    Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED
+                ) {
+                    session = ZoweExplorerApiRegister.getMvsApi(profile).getSession();
+                    parentNode.setProfileToChoice(profile);
+                    parentNode.setSessionToChoice(session);
+                } else {
+                    return [
+                        new ZoweDatasetNode(
+                            localize("loadProfilesForFavorites.authFailed", "You must authenticate to view favorites."),
+                            vscode.TreeItemCollapsibleState.None,
+                            parentNode,
+                            null,
+                            globals.INFORMATION_CONTEXT
+                        ),
+                    ];
+                }
             } catch (error) {
                 const errMessage: string =
                     localize(
@@ -841,9 +860,14 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         this.log.debug(localize("enterPattern.log.debug.prompt", "Prompting the user for a data set pattern"));
         let pattern: string;
         await this.checkCurrentProfile(node);
+        let nonFaveNode;
 
-        if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
+        if (
+            Profiles.getInstance().validProfile === ValidProfileEnum.VALID ||
+            Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED
+        ) {
             if (contextually.isSessionNotFav(node)) {
+                nonFaveNode = node;
                 if (this.mHistory.getSearchHistory().length > 0) {
                     const createPick = new FilterDescriptor(DatasetTree.defaultDialogText);
                     const items: vscode.QuickPickItem[] = this.mHistory
@@ -905,12 +929,11 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 pattern = node.getLabel();
                 const sessionName = node.getProfileName();
                 await this.addSession(sessionName);
-                const faveNode = node;
-                node = this.mSessionNodes.find((tempNode) => tempNode.label.trim() === sessionName);
-                if (!node.getSession().ISession.user || !node.getSession().ISession.password) {
-                    node.getSession().ISession.user = faveNode.getSession().ISession.user;
-                    node.getSession().ISession.password = faveNode.getSession().ISession.password;
-                    node.getSession().ISession.base64EncodedAuth = faveNode.getSession().ISession.base64EncodedAuth;
+                nonFaveNode = this.mSessionNodes.find((tempNode) => tempNode.label.trim() === sessionName);
+                if (!nonFaveNode.getSession().ISession.user || !nonFaveNode.getSession().ISession.password) {
+                    nonFaveNode.getSession().ISession.user = node.getSession().ISession.user;
+                    nonFaveNode.getSession().ISession.password = node.getSession().ISession.password;
+                    nonFaveNode.getSession().ISession.base64EncodedAuth = node.getSession().ISession.base64EncodedAuth;
                 }
             }
             // looking for members in pattern
@@ -937,8 +960,9 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 }
                 dsSets.push(dataSet);
             }
-            node.label = node.label.trim() + " ";
-            node.label.trim();
+
+            nonFaveNode.label = nonFaveNode.label.trim() + " ";
+            nonFaveNode.label.trim();
             let datasets: string;
             for (const item of dsSets) {
                 if (item.dataSetName) {
@@ -950,11 +974,11 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 }
             }
             if (datasets) {
-                node.tooltip = node.pattern = datasets.toUpperCase();
+                nonFaveNode.tooltip = nonFaveNode.pattern = datasets.toUpperCase();
             } else {
-                node.tooltip = node.pattern = pattern.toUpperCase();
+                nonFaveNode.tooltip = nonFaveNode.pattern = pattern.toUpperCase();
             }
-            const response = await this.getChildren(node);
+            const response = await this.getChildren(nonFaveNode);
             for (const child of response) {
                 let resetIcon: IIconItem;
                 if (child.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed) {
@@ -966,6 +990,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 if (resetIcon) {
                     child.iconPath = resetIcon.path;
                 }
+
                 // remove any previous search memberPatterns
                 if (child.contextValue.includes(globals.FILTER_SEARCH)) {
                     child.contextValue = child.contextValue.replace(globals.FILTER_SEARCH, "");
@@ -1024,11 +1049,11 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                         }
                     }
                 }
-                node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
-                node.dirty = true;
-                const icon = getIconByNode(node);
+                nonFaveNode.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+                nonFaveNode.dirty = true;
+                const icon = getIconByNode(nonFaveNode);
                 if (icon) {
-                    node.iconPath = icon.path;
+                    nonFaveNode.iconPath = icon.path;
                 }
             }
             this.addSearchHistory(pattern);

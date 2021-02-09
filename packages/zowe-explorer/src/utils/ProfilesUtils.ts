@@ -88,7 +88,7 @@ export function errorHandling(errorDetails: any, label?: string, moreInfo?: stri
             break;
         default:
             if (moreInfo === undefined) {
-                moreInfo = "Error:";
+                moreInfo = errorDetails.toString().includes("Error") ? "" : "Error:";
             }
             vscode.window.showErrorMessage(moreInfo + " " + errorDetails);
             break;
