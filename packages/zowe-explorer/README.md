@@ -23,7 +23,7 @@ More information:
 
 ## Contents
 
-- [What's new in Zowe Explorer 1.12.0](#whats-new-in-zowe-explorer-1.12.0)
+- [What's new in Zowe Explorer 1.12.1](#whats-new-in-zowe-explorer-1.12.1)
 - [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
 - [Sample Use Cases](#sample-use-cases)
@@ -31,19 +31,16 @@ More information:
 - [Usage Tips](#usage-tips)
 - [Extending Zowe Explorer](#extending-zowe-explorer)
 
-## What's new in Zowe Explorer 1.12.0
-
-New features:
-
-- Added the ability to edit data set attributes before allocation
-- Added the member-filtering functionality to the Data Sets search bar
-- Reorganized the context menus and streamlined the visible icons
+## What's new in Zowe Explorer 1.12.1
 
 Bug Fixes:
 
-- Fixed the messaging displayed when handling inactive profiles and when updating profiles
-- Fixed the issue that restructures the tree when renaming a USS file or directory
-- Fixed the bug that prevented you from issuing commands when using the profiles with tokens
+- Fixed the issue that prevented edited profile base paths from being saved.
+- Fixed the issue that prevented Zowe Explorer from storing empty values for optional profile fields, such as `user`, `password`, `timeout`, and `encoding`. This is done to be consistent with the way Zowe CLI stores profile information when creating and editing profiles.
+- Fixed the issue that caused repeated credential prompting if a user refused to authenticate.
+- Fixed the issue that caused removed favorite profiles to persist between IDE sessions.
+- Fixed the issue that prevented the editing of data set attributes on allocation functionality from being enabled.
+- Fixed the issue that prevented updated credential prompting from occurring when a profile was marked “invalid”.
 
 For more information, see [Changelog](https://marketplace.visualstudio.com/items/Zowe.vscode-extension-for-zowe/changelog).
 
