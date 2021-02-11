@@ -1,9 +1,13 @@
 # Zowe Explorer
 
+<div align="center">
+
 [![version](https://vsmarketplacebadge.apphb.com/version-short/Zowe.vscode-extension-for-zowe.png)](https://vsmarketplacebadge.apphb.com/version-short/Zowe.vscode-extension-for-zowe.png)
 [![downloads](https://vsmarketplacebadge.apphb.com/downloads-short/Zowe.vscode-extension-for-zowe.png)](https://vsmarketplacebadge.apphb.com/downloads-short/Zowe.vscode-extension-for-zowe.png)
 [![codecov](https://codecov.io/gh/zowe/vscode-extension-for-zowe/branch/master/graph/badge.svg)](https://codecov.io/gh/zowe/vscode-extension-for-zowe)
 [![slack](https://img.shields.io/badge/chat-on%20Slack-blue)](https://slack.openmainframeproject.org/)
+
+</div>
 
 [Zowe Explorer](https://github.com/zowe/community#zowe-explorer) is a sub-project of Zowe, focusing on modernizing mainframe experience. [Zowe](https://www.zowe.org/) is a project hosted by the [Open Mainframe Project](https://www.openmainframeproject.org/), a [Linux Foundation](https://www.linuxfoundation.org/) project.
 
@@ -11,7 +15,7 @@ The Zowe Explorer extension modernizes the way developers and system administrat
 
 - Enabling you to create, modify, rename, copy, and upload data sets directly to a z/OS mainframe.
 - Enabling you to create, modify, rename, and upload USS files directly to a z/OS mainframe.
-- Providing a more streamlined way to access data sets, uss files and jobs.
+- Providing a more streamlined way to access data sets, uss files, and jobs.
 - Letting you create, edit, and delete Zowe CLI `zosmf` compatible profiles.
 - Letting you use the Secure Credential Store plug-in to store your credentials securely in the settings.
 - Letting you leverage the API Mediation Layer token-based authentication to access z/OSMF.
@@ -122,12 +126,12 @@ Review the following use cases to understand how to work with data sets in Zowe 
 - [View data sets and use multiple filters](#view-data-sets-and-use-multiple-filters): View multiple data sets simultaneously and apply filters to show specified data sets.
 - [Refresh the data set list](#refresh-the-list-of-data-sets): Refresh the list of pre-filtered data sets.
 - [Rename data sets](#rename-data-sets): Rename specified data sets.
-- [Copy data sets](#copy-data-sets): Copy specified data sets and members.
-- [Download, edit, and upload existing PDS members](#download-edit-and-upload-existing-pds-members): You can instantly pull data sets and data set members from the mainframe, edit them, and upload back.
+- [Copy data set members](#copy-data-set-members): Copy specified data set members.
+- [Edit and upload a data set member](#edit-and-upload-a-data-set-member): You can instantly pull data sets and data set members from the mainframe, edit them, and upload back.
 - [Prevent merge conflicts](#use-the-save-option-to-prevent-merge-conflicts): The save option includes a **compare** mechanism letting you resolve potential merge conflicts.
 - [Create data sets and data set members](#create-a-new-data-set-and-add-a-member): Create a new data set and data set members.
-- [Create data sets and specify the parameters](#create-a-new-data-set-and-specify-the-parameters): Create a new data set and specify parameter values.
-- [Delete data set member and a data set](#delete-a-pds-member-and-pds): Delete a chosen data set member or an entire data set.
+- [Create data sets and specify the parameters](#create-data-sets-and-specify-the-parameters): Create a new data set and specify parameter values.
+- [Delete a data set member and a data set](#delete-a-data-set-member-and-a-data-set): Delete a chosen data set member or an entire data set.
 - [View and access multiple profiles simultaneously](#view-and-access-multiple-profiles-simultaneously): Work with data sets from multiple profiles.
 - [Allocate Like](#allocate-like): Create a copy of a chosen data set with the same parameters.
 
@@ -146,6 +150,11 @@ Review the following use cases to understand how to work with data sets in Zowe 
 <br /><br />
 
 ### View data sets with member filters
+
+1. Navigate to the explorer tree.
+2. Open the **DATA SETS** bar.
+3. Click the **magnifying glass** icon.
+4. Enter a search patterm in the `HLQ.ZZZ.SSS(MEMBERNAME)` format to filter out and display the specified member in the tree.
 
 ![View Data Set With Member Pattern](/docs/images/ZE-member-filter-search.gif?raw=true "View Data Set With Member Pattern")
 
@@ -168,37 +177,37 @@ Review the following use cases to understand how to work with data sets in Zowe 
 ![Rename Data Set](/docs/images/ZE-rename.gif?raw=true "Rename Data Set")
 <br /><br />
 
-### Copy data sets
+### Copy data set members
 
 1. Navigate to the explorer tree.
 2. Open the **DATA SETS** bar.
-3. Select a member you want to copy.
-4. Right-click the member and select the **Copy Data Set** option.
-5. Right-click the data set where the member belongs and select the **Paste Data Set** option.
+3. Select a data set member you want to copy.
+4. Right-click the member and select the **Copy Member** option.
+5. Right-click a data set that you want to paste the member to and select the **Paste Member** option.
 6. Enter the name of the copied member.
 
-![Copy Data Set](/docs/images/ZE-copy.gif?raw=true "Copy Data Set")
+![Copy Data Set](/docs/images/ZE-copy-member.gif?raw=true "Copy Data Set")
 <br /><br />
 
-### Download, edit, and upload existing PDS members
+### Edit and upload a data set member
 
 1. Navigate to the explorer tree.
 2. Open the **DATA SETS** bar.
 3. Open a profile.
-4. Click the PDS member (or PS) that you want to download.
+4. Select the data set member you want to edit.
 
-   **Note:** To view the members of a PDS, click the PDS to expand the tree.
+   **Note:** To view the members of a data set, click the data to expand the tree.
 
-   The PDS member is displayed in the text editor window of VSC.
+   The data set member is displayed in the text editor window of VS Code.
 
 5. Edit the document.
-6. Navigate back to the PDS member (or PS) in the explorer tree, and click the **Save** button.
+6. Navigate back to the data set member in the explorer tree, and press Ctrl+S or Command+S (OSx) to upload the member.
 
-Your PDS member (or PS) is uploaded.
+Your data set member is uploaded.
 
-**Note:** If someone else has made changes to the PDS member (or PS) while you were editing it, you can merge your conflicts before uploading to the mainframe.
+**Note:** If someone else has made changes to the data set member while you were editing it, you can merge your conflicts before uploading the member to the mainframe.
 
-![Edit](/docs/images/ZE-download-edit.gif?raw=true "Edit")
+![Edit](/docs/images/ZE-edit-upload.gif?raw=true "Edit")
 <br /><br />
 
 ### Use the save option to prevent merge conflicts
@@ -219,47 +228,87 @@ Your PDS member (or PS) is uploaded.
 2. Open the **DATA SETS** bar.
 3. Right + click on the profile where you want to create a data set and select **Create New Data Set**.
 4. Enter a name for your data set.
-5. From the drop-down menu, select the type of data set that you want to create.
+5. From the drop-down menu, select the data set type that you want to create.
 6. Select **+Allocate Data Set** to create your data set.
-7. On your newly created data set, right + click and select **Create new member**.
+7. Right-click your newly-created data set and select **Create New Member**.
 8. Enter a name for your new data set member and click **Enter**.
    The member is created and opened in the workspace.
 
-### Create a new data set and specify the parameters
+### Create data sets and specify the parameters
 
 1. Navigate to the explorer tree.
 2. Open the **DATA SETS** bar.
-3. Right + click on the profile where you want to create a data set and select **Create New Data Set**.
+3. Right-click the profile you want to create a data set with and select **Create New Data Set**.
 4. Enter a name for your data set.
-5. From the drop-down menu, select the type of data set that you want to create.
-6. Select **Edit Attributes** in the dropdown.
-   The attributes list opens for the data set.
-7. Click on the attribute you want to edit, provide the value in the command palette, and click **Enter**.
-8. Once you have edited the parameters, select **+ Allocate Data Set**.
-   Your data set with the specified parameters is created.
+5. From the drop-down menu, select the data set type that you want to create.
+6. Select **Edit Attributes** in the drop-down menu.
 
-### Delete a PDS member and PDS
+   The attributes list for the data set appears. You can edit the following attributes:
+
+   * Allocation Unit
+
+   * Average Block Length
+
+   * Block Size
+
+   * Data Class
+
+   * Device Type
+
+   * Directory Block
+
+   * Data Set Type
+
+   * Management Class
+
+   * Data Set Name
+   
+   * Data Set Organization
+
+   * Primary Space
+
+   * Record Format
+
+   * Record Length
+   
+   * Secondary Space
+
+   * Size
+
+   * Storage Class
+
+   * Volume Serial
+
+7. Select the attribute you want to edit, provide the value in the command palette, and click **Enter**.
+8. (Optional) Edit the parameters of your data set.
+9. Select the **+ Allocate Data Set** option to create the data set.
+   You successfully created a data set.
+
+   ![Parameters](/docs/images/ZE-set-params.gif?raw=true "Parameters")
+<br /><br />
+
+### Delete a data set member and a data set
 
 1. Navigate to the explorer tree.
 2. Open the **DATA SETS** bar.
-3. Open the profile and PDS containing the member.
-4. Right-click on the PDS member that you want to delete and select **Delete Member**.
-5. Confirm the deletion by clicking **Yes** on the drop-down menu.
+3. Open the profile and a data set containing the member.
+4. Right-click the data set member that you want to delete and select **Delete Member**.
+5. Confirm the deletion by clicking **Delete** in the drop-down menu.
 
-   **Note:** Alternatively, you can select 'No' to cancel the deletion.
+   **Note:** Alternatively, you can select **Cancel** to cancel the deletion.
 
-6. To delete a PDS, right-click the PDS and click **Delete PDS**, then confirm the deletion.
+6. To delete a data set, right-click the data set and click **Delete Data Set**, then confirm the deletion.
 
-   **Note:** You can delete a PDS before you delete its members.
+   **Note:** You can delete a data set before you delete the data set members.
 
-![Delete](/docs/images/ZE-del-pds-member.gif?raw=true "Delete")
+![Delete](/docs/images/ZE-delete-ds.gif?raw=true "Delete")
 <br /><br />
 
 ### View and access multiple profiles simultaneously
 
 1. Navigate to the explorer tree.
 2. Open the **DATA SETS** bar.
-3. Click the **Add Profile** button on the right of the **DATA SET** explorer bar.
+3. Click the **+** icon (Add Profile) on the right of the **DATA SET** explorer bar.
 4. Select the profile that you want to add to the view as illustrated by the following screen.
 
 ![Add Profile](/docs/images/ZE-mult-profiles.gif?raw=true "Add Profile")
@@ -268,10 +317,10 @@ Your PDS member (or PS) is uploaded.
 
 1. Navigate to the explorer tree.
 2. Open the **DATA SETS** bar.
-3. Right-click the data set and select the **Allocate Like (New File with Same Attributes)** option.
-4. Enter the new data set name.
+3. Right-click the data set and select the **Allocate Like (New Data Set with Same Attributes)** option.
+4. Enter a new data set name.
 
-![Allocate Like](/docs/images/ZE-allocate-like.gif?raw=true "Allocate Like")
+![Allocate Like](/docs/images/ZE-allocate.gif?raw=true "Allocate Like")
 
 ## Credentials Security
 
@@ -286,19 +335,19 @@ For more information about SCS, see [Secure Credential Store Plug-in for Zowe Ex
 
 ## Usage tips
 
-- Use the **Add Favorite** feature to permanently store chosen data sets, USS files, and jobs in the **Favorites** folder. Right-click on a data set, USS file or jobs and select **Add Favorite**.
+- Use the **Add to Favorite** feature to permanently store chosen data sets, USS files, and jobs in the **Favorites** folder. Right-click on a data set, USS file or jobs and select **Add Favorite**.
 
 - **Syntax Highlighting:** Zowe Explorer supports syntax highlighting for data sets. Fox example, you can use such extensions as [COBOL Language Support](https://marketplace.visualstudio.com/items?itemName=broadcomMFD.cobol-language-support) or [HLASM Language Support](https://marketplace.visualstudio.com/items?itemName=broadcomMFD.hlasm-language-support).
 
-- **Edit a profile**: Click the **pencil** icon next to the **magnifying glass** icon in the explorer tree, and modify the information inside your profile.
+- **Update a profile**: Right-click a chosen profile, select **Update Profile** option, and modify the information inside the profile.
 
-- **Delete a profile**: Right-click a chosen profile and select **Delete Profile** to permanently delete the profile. The functionality deletes a profile from your `.zowe` folder.
+- **Delete a profile**: Right-click a chosen profile and select **Delete Profile** to permanently delete the profile. The functionality deletes the profile from your `.zowe` folder.
 
 - **Hide a profile**: You can hide a profile from the profile tree by right-clicking the profile and selecting the **Hide Profile** option. To add the profile back, click the **+** button and select the profile from the quick pick list.
 
 - **Associate profiles**: You can create a secondary association by right-clicking the profile and selecting the **Associate profiles** icon. For more information, see [the Associate profiles section](https://docs.zowe.org/stable/user-guide/ze-profiles.html#associate-profile) in Zowe Docs.
 
-For information how to configure Zowe Explorer, see [Zowe Explorer Configuration guidelines](https://docs.zowe.org/stable/user-guide/ze-install.html#configuration).
+For information on how to configure Zowe Explorer, see [Zowe Explorer Configuration](https://docs.zowe.org/stable/user-guide/ze-install.html#configuration).
 
 ## Extending Zowe Explorer
 
