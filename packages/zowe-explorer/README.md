@@ -1,13 +1,9 @@
 # Zowe Explorer
 
-<div align="center">
-
 [![version](https://vsmarketplacebadge.apphb.com/version-short/Zowe.vscode-extension-for-zowe.png)](https://vsmarketplacebadge.apphb.com/version-short/Zowe.vscode-extension-for-zowe.png)
 [![downloads](https://vsmarketplacebadge.apphb.com/downloads-short/Zowe.vscode-extension-for-zowe.png)](https://vsmarketplacebadge.apphb.com/downloads-short/Zowe.vscode-extension-for-zowe.png)
 [![codecov](https://codecov.io/gh/zowe/vscode-extension-for-zowe/branch/master/graph/badge.svg)](https://codecov.io/gh/zowe/vscode-extension-for-zowe)
 [![slack](https://img.shields.io/badge/chat-on%20Slack-blue)](https://slack.openmainframeproject.org/)
-
-</div>
 
 [Zowe Explorer](https://github.com/zowe/community#zowe-explorer) is a sub-project of Zowe, focusing on modernizing mainframe experience. [Zowe](https://www.zowe.org/) is a project hosted by the [Open Mainframe Project](https://www.openmainframeproject.org/), a [Linux Foundation](https://www.linuxfoundation.org/) project.
 
@@ -245,39 +241,39 @@ Your data set member is uploaded.
 
    The attributes list for the data set appears. You can edit the following attributes:
 
-   * Allocation Unit
+   - Allocation Unit
 
-   * Average Block Length
+   - Average Block Length
 
-   * Block Size
+   - Block Size
 
-   * Data Class
+   - Data Class
 
-   * Device Type
+   - Device Type
 
-   * Directory Block
+   - Directory Block
 
-   * Data Set Type
+   - Data Set Type
 
-   * Management Class
+   - Management Class
 
-   * Data Set Name
-   
-   * Data Set Organization
+   - Data Set Name
 
-   * Primary Space
+   - Data Set Organization
 
-   * Record Format
+   - Primary Space
 
-   * Record Length
-   
-   * Secondary Space
+   - Record Format
 
-   * Size
+   - Record Length
 
-   * Storage Class
+   - Secondary Space
 
-   * Volume Serial
+   - Size
+
+   - Storage Class
+
+   - Volume Serial
 
 7. Select the attribute you want to edit, provide the value in the command palette, and click **Enter**.
 8. (Optional) Edit the parameters of your data set.
