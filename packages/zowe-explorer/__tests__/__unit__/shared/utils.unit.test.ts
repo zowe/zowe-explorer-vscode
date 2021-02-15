@@ -120,7 +120,7 @@ describe("Shared Utils Unit Tests - Function refreshTree()", () => {
         globalMocks.mockGetInstance.mockReturnValue(blockMocks.imperativeProfile);
         const getProfilesSpy = jest.spyOn(Profiles.getInstance(), "getProfiles");
 
-        sharedUtils.refreshTree(blockMocks.testDatasetSessionNode);
+        utils.refreshTree(blockMocks.testDatasetSessionNode);
 
         expect(getProfilesSpy).toBeCalledWith(globalMocks.profileOne.type);
     });
