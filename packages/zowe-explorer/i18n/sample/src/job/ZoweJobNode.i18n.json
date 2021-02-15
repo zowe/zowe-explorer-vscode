@@ -1,4 +1,5 @@
 {
+  "getChildren.search": "Use the search button to display jobs",
   "ZoweJobNode.getJobs.spoolfiles": "Get Job Spool files command submitted.",
   "ZoweJobNode.getJobs.jobs": "Get Jobs command submitted.",
   "getChildren.error.response": "Retrieving response from "

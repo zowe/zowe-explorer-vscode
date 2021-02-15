@@ -15,6 +15,7 @@ import { Logger, IProfile, ISession } from "@zowe/imperative";
 import { PersistentFilters } from "../PersistentFilters";
 import { OwnerFilterDescriptor } from "../job/utils";
 import { getIconByNode, getIconById, IconId } from "../generators/icons";
+import * as contextually from "../shared/context";
 import {
     IZoweTreeNode,
     IZoweDatasetTreeNode,
@@ -98,9 +99,6 @@ export class ZoweTreeProvider {
      * @param isOpen the intended state of the the tree view provider, true or false
      */
     public async flipState(element: IZoweTreeNode, isOpen: boolean = false) {
-        if (element.contextValue.includes("session")) {
-            this.checkCurrentProfile(element);
-        }
         element.collapsibleState = isOpen
             ? vscode.TreeItemCollapsibleState.Expanded
             : vscode.TreeItemCollapsibleState.Collapsed;
@@ -156,7 +154,7 @@ export class ZoweTreeProvider {
         return undefined;
     }
 
-    public async editSession(node: IZoweTreeNode) {
+    public async editSession(node: IZoweTreeNode, zoweFileProvider: IZoweTree<IZoweNodeType>) {
         const profile = node.getProfile();
         const profileName = node.getProfileName();
         // Check what happens is inactive
@@ -165,21 +163,22 @@ export class ZoweTreeProvider {
         if (EditSession) {
             node.getProfile().profile = EditSession as IProfile;
             await setProfile(node, EditSession as IProfile);
-            await setSession(node, EditSession as ISession);
+            if (await node.getSession()) {
+                await setSession(node, EditSession as ISession);
+            } else {
+                zoweFileProvider.deleteSession(node.getSessionNode());
+                this.mHistory.addSession(node.label);
+                zoweFileProvider.addSession(node.getProfileName());
+            }
             this.refresh();
         }
         try {
-            // refresh profilesForValidation to check the profile status again
+            // Remove the edited profile from profilesForValidation since it should be revalidated
             Profiles.getInstance().profilesForValidation.forEach((checkProfile, index) => {
-                if (index === 0) {
-                    Profiles.getInstance().profilesForValidation = [];
-                }
                 if (checkProfile.name === profileName) {
                     Profiles.getInstance().profilesForValidation.splice(index, 1);
                 }
             });
-
-            await this.checkCurrentProfile(node);
         } catch (error) {
             await errorHandling(error);
         }
@@ -190,13 +189,12 @@ export class ZoweTreeProvider {
         const profileStatus = await Profiles.getInstance().checkCurrentProfile(profile);
         if (profileStatus.status === "inactive") {
             if (
-                node.contextValue.toLowerCase().includes("session") ||
-                node.contextValue.toLowerCase().includes("server")
+                contextually.isSessionNotFav(node) &&
+                (node.contextValue.toLowerCase().includes("session") ||
+                    node.contextValue.toLowerCase().includes("server"))
             ) {
-                // change contextValue only if the word inactive is not there
-                if (node.contextValue.toLowerCase().indexOf("inactive") === -1) {
-                    node.contextValue = node.contextValue + globals.INACTIVE_CONTEXT;
-                }
+                node.contextValue = node.contextValue.replace(/(?<=.*)(_Active|_Inactive|_Unverified)$/, "");
+                node.contextValue = node.contextValue + globals.INACTIVE_CONTEXT;
                 const inactiveIcon = getIconById(IconId.sessionInactive);
                 if (inactiveIcon) {
                     node.iconPath = inactiveIcon.path;
@@ -221,13 +219,12 @@ export class ZoweTreeProvider {
             );
         } else if (profileStatus.status === "active") {
             if (
-                node.contextValue.toLowerCase().includes("session") ||
-                node.contextValue.toLowerCase().includes("server")
+                contextually.isSessionNotFav(node) &&
+                (node.contextValue.toLowerCase().includes("session") ||
+                    node.contextValue.toLowerCase().includes("server"))
             ) {
-                // change contextValue only if the word active is not there
-                if (node.contextValue.toLowerCase().indexOf("active") === -1) {
-                    node.contextValue = node.contextValue + globals.ACTIVE_CONTEXT;
-                }
+                node.contextValue = node.contextValue.replace(/(?<=.*)(_Active|_Inactive|_Unverified)$/, "");
+                node.contextValue = node.contextValue + globals.ACTIVE_CONTEXT;
                 const activeIcon = getIconById(IconId.sessionActive);
                 if (activeIcon) {
                     node.iconPath = activeIcon.path;
@@ -235,13 +232,12 @@ export class ZoweTreeProvider {
             }
         } else if (profileStatus.status === "unverified") {
             if (
-                node.contextValue.toLowerCase().includes("session") ||
-                node.contextValue.toLowerCase().includes("server")
+                contextually.isSessionNotFav(node) &&
+                (node.contextValue.toLowerCase().includes("session") ||
+                    node.contextValue.toLowerCase().includes("server"))
             ) {
-                // change contextValue only if the word unverified is not there
-                if (node.contextValue.toLowerCase().indexOf("unverified") === -1) {
-                    node.contextValue = node.contextValue + globals.UNVERIFIED_CONTEXT;
-                }
+                node.contextValue = node.contextValue.replace(/(?<=.*)(_Active|_Inactive|_Unverified)$/, "");
+                node.contextValue = node.contextValue + globals.UNVERIFIED_CONTEXT;
             }
         }
         await this.refresh();
