@@ -7,6 +7,7 @@
   "initializeFavorites.invalidDsFavorite2": " Please check formatting of the Zowe-DS-Persistent 'favorites' settings in the {0} user settings.",
   "initializeFavChildNodeForProfile.error": "Error creating data set favorite node: {0} for profile {1}.",
   "loadProfilesForFavorites.log.debug": "Loading profile: {0} for data set favorites",
+  "loadProfilesForFavorites.authFailed": "You must authenticate to view favorites.",
   "loadProfilesForFavorites.error.profile1": "Error: You have Zowe Data Set favorites that refer to a non-existent CLI profile named: {0}.",
   "loadProfilesForFavorites.error.profile2": " To resolve this, you can create a profile with this name, ",
   "loadProfilesForFavorites.error.profile3": "or remove the favorites with this profile name from the Zowe-DS-Persistent setting in your {0} user settings.",

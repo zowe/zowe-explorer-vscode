@@ -39,11 +39,15 @@ const publishProject = (checkVersion, publishSpecificProject) => {
                 console.log(execSync(`git add package.json`, { cwd: packagePath }).toString());
             }
         } else {
-            console.log(`Incrementing version: ${packageJson.version} -> ${topPackageJson.version}`);
-            console.log(execSync(`npm version ${topPackageJson.version}`, { cwd: packagePath }).toString());
+            if (packageJson.version == topPackageJson.version) {
+                console.log(`Version in package.json was already updated!`);
+            } else {
+                console.log(`Incrementing version: ${packageJson.version} -> ${topPackageJson.version}`);
+                console.log(execSync(`npm version ${topPackageJson.version}`, { cwd: packagePath }).toString());
 
-            console.log(execSync(`git status`, { cwd: packagePath }).toString());
-            console.log(execSync(`git add package.json`, { cwd: packagePath }).toString());
+                console.log(execSync(`git status`, { cwd: packagePath }).toString());
+                console.log(execSync(`git add package.json`, { cwd: packagePath }).toString());
+            }
 
             let versionName = `${packageJson.name}-${topPackageJson.version}`;
             versionName = versionName.replace("@", "").replace("/", "-");

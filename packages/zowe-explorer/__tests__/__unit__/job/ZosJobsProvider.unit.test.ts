@@ -16,7 +16,7 @@ import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import * as globals from "../../../src/globals";
 import { Logger } from "@zowe/imperative";
-import { IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
+import { IZoweJobTreeNode, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import {
     createIJobFile,
     createIJobObject,
@@ -400,6 +400,13 @@ describe("ZosJobsProvider unit tests - Function loadProfilesForFavorites", () =>
                     loadNamedProfile: jest.fn(() => {
                         return blockMocks.imperativeProfile;
                     }),
+                    checkCurrentProfile: jest.fn(() => {
+                        return {
+                            name: blockMocks.imperativeProfile.name,
+                            status: "unverified",
+                        };
+                    }),
+                    validProfile: ValidProfileEnum.VALID,
                 };
             }),
         });
@@ -548,13 +555,17 @@ describe("ZosJobsProvider unit tests - Function removeFavProfile", () => {
     it("Tests successful removal of profile node in Favorites when user confirms they want to Continue removing it", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
+        const updateFavoritesSpy = jest.spyOn(globalMocks.testJobsProvider, "updateFavorites");
         // Make sure favorite is added before the actual unit test
         expect(globalMocks.testJobsProvider.mFavorites.length).toEqual(1);
 
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("Continue");
         await globalMocks.testJobsProvider.removeFavProfile(blockMocks.profileNodeInFavs.label, true);
 
+        // Check that favorite is removed from UI
         expect(globalMocks.testJobsProvider.mFavorites.length).toEqual(0);
+        // Check that favorite is removed from settings file
+        expect(updateFavoritesSpy).toBeCalledTimes(1);
     });
     it("Tests that removeFavProfile leaves profile node in Favorites when user cancels", async () => {
         const globalMocks = await createGlobalMocks();
