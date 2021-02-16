@@ -116,9 +116,6 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     public delete(node: IZoweDatasetTreeNode) {
         throw new Error("Method not implemented.");
     }
-    public deleteMulti(datasetProvider: vscode.TreeView<IZoweDatasetTreeNode>) {
-        throw new Error("Method not implemented.");
-    }
     public saveSearch(node: IZoweDatasetTreeNode) {
         throw new Error("Method not implemented.");
     }

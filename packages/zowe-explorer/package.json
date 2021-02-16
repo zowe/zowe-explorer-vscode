@@ -68,6 +68,11 @@
         "command": "zowe.searchInAllLoadedItems",
         "key": "ctrl+alt+p",
         "mac": "cmd+alt+p"
+      },
+      {
+        "command": "zowe.deleteJob",
+        "key": "delete",
+        "when": "listSupportsMultiselect"
       }
     ],
     "commands": [
@@ -438,10 +443,6 @@
           "dark": "./resources/dark/trash.svg",
           "light": "./resources/light/trash.svg"
         }
-      },
-      {
-        "command": "zowe.deleteMultiJob",
-        "title": "%deleteMultiJob%"
       },
       {
         "command": "zowe.jobs.addFavorite",
@@ -971,11 +972,6 @@
         {
           "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)job.*/",
           "command": "zowe.downloadSpool",
-          "group": "0_mainframeInteraction@1"
-        },
-        {
-          "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)job.*/",
-          "command": "zowe.deleteMultiJob",
           "group": "0_mainframeInteraction@1"
         },
         {

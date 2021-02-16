@@ -135,11 +135,6 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
      */
     delete(node: IZoweNodeType);
     /**
-     * Deletes nodes.
-     * @param nodes: the nodes to be deleted
-     */
-    deleteMulti?(treeView: vscode.TreeView<IZoweNodeType>);
-    /**
      * Reveals and selects a node within the tree.
      * @param treeView: the vscode tree container
      * @param node: the node to be selected

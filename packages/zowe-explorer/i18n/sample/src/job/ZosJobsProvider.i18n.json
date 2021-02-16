@@ -1,7 +1,5 @@
 {
   "Favorites": "Favorites",
-  "deleteJob.job": "Job ",
-  "deleteJob.delete": " deleted",
   "initializeJobsTree.log.debug": "Initializing profiles with jobs favorites.",
   "initializeJobsTree.no.favorites": "No jobs favorites found.",
   "loadProfilesForFavorites.log.debug": "Loading profile: {0} for jobs favorites",
