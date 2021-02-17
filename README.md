@@ -70,6 +70,8 @@ Use the following list with the description and links to find the topics of your
 
 [Zowe Explorer Developer's ReadMe](https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/Developer's%20ReadMe.md) — contains information on how to install, build, and test Zowe Explorer.
 
+[Zowe Explorer in Theia ReadMe](https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/README-Theia.md) — contains information on how to develop for the Web-based IDE Eclipse Theia.
+
 ## How to Contribute
 
 We encourage you to contribute to Zowe Explorer. See the [Contributor Guidance](https://github.com/zowe/vscode-extension-for-zowe/wiki/Best-Practices:-Contributor-Guidance) to proceed.
