@@ -218,7 +218,7 @@ export async function openRecentMemberPrompt(
         } else {
             // Data set was selected
             const sessionNode: IZoweDatasetTreeNode = datasetTree.mSessionNodes.find(
-                (sessNode) => sessNode.label.trim() === sessionName.toLowerCase()
+                (sessNode) => sessNode.label.trim().toLowerCase() === sessionName.toLowerCase()
             );
             await datasetTree.openItemFromPath(pattern, sessionNode);
         }
