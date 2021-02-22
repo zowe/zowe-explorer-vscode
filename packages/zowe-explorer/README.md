@@ -66,6 +66,17 @@ Create a profile, review the sample use cases to familiarize yourself with the c
 
 You can now use all the functionalities of the extension.
 
+#### Profile Validation
+
+Zowe Explorer includes the profile validation feature that helps to ensure that z/OSMF is accessbile and ready for use. If a profile is valid, the profile is active and can be used. By default, the feature is automatically enabled. You can disable the feature by right-clicking on your profile and selecting the **Disable Validation for Profile** option. Alternatively, you can enable or disable the feature for all profiles in the VS Code settings.
+
+Follow these steps:
+
+1. Navigate to the VSCode settings.
+2. Open Zowe Explorer Settings.
+3. Enable or disable the automatic validation of profiles option.
+4. Restart VSCode.
+
 ### Use Base Profile and Token with Existing Profiles
 
 Leverage existing base profiles with a token to access z/OSMF via the API Mediation Layer.
