@@ -350,6 +350,8 @@ For more information about SCS, see [Secure Credential Store Plug-in for Zowe Ex
 
 - **Associate profiles**: You can create a secondary association by right-clicking the profile and selecting the **Associate profiles** icon. For more information, see [the Associate profiles section](https://docs.zowe.org/stable/user-guide/ze-profiles.html#associate-profile) in Zowe Docs.
 
+- **Open recent members**: Zowe Explorer lets you open a list of members you worked on earlier. You can access the list by pressing Ctrl+Alt+R or Command+Alt+R.
+
 For information on how to configure Zowe Explorer, see [Zowe Explorer Configuration](https://docs.zowe.org/stable/user-guide/ze-install.html#configuration).
 
 ## Extending Zowe Explorer
