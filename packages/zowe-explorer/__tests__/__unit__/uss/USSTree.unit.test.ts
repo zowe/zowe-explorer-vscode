@@ -265,18 +265,14 @@ describe("USSTree Unit Tests - Function USSTree.checkDuplicateLabel()", () => {
     it("Tests that checkDuplicateLabel() returns null if passed a unique name", async () => {
         const globalMocks = await createGlobalMocks();
 
-        const returnVal = globalMocks.testTree.checkDuplicateLabel(
-            "totallyNewLabel",
-            [globalMocks.testUSSNode],
-            "file"
-        );
+        const returnVal = globalMocks.testTree.checkDuplicateLabel("totallyNewLabel", [globalMocks.testUSSNode]);
         expect(returnVal).toEqual(null);
     });
     it("Tests that checkDuplicateLabel() returns an error message if passed a name that's already used for an existing folder", async () => {
         const globalMocks = await createGlobalMocks();
 
-        const returnVal = globalMocks.testTree.checkDuplicateLabel("/u/myuser", [globalMocks.testUSSNode], "file");
-        expect(returnVal).toEqual("A file already exists with this name. Please choose a different name.");
+        const returnVal = globalMocks.testTree.checkDuplicateLabel("/u/myuser/usstest", [globalMocks.testUSSNode]);
+        expect(returnVal).toEqual("A folder already exists with this name. Please choose a different name.");
     });
 });
 
@@ -436,13 +432,17 @@ describe("USSTree Unit Tests - Function USSTree.removeFavProfile", () => {
     it("Tests successful removal of profile node in Favorites when user confirms they want to Continue removing it", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
+        const updateFavoritesSpy = jest.spyOn(globalMocks.testTree, "updateFavorites");
         // Make sure favorite is added before the actual unit test
         expect(globalMocks.testTree.mFavorites.length).toEqual(1);
 
         globalMocks.showQuickPick.mockResolvedValueOnce("Continue");
         await globalMocks.testTree.removeFavProfile(blockMocks.profileNodeInFavs.label, true);
 
+        // Check that favorite is removed from UI
         expect(globalMocks.testTree.mFavorites.length).toEqual(0);
+        // Check that favorite is removed from settings file
+        expect(updateFavoritesSpy).toBeCalledTimes(1);
     });
     it("Tests that removeFavProfile leaves profile node in Favorites when user cancels", async () => {
         const globalMocks = await createGlobalMocks();
@@ -1254,7 +1254,7 @@ describe("USSTree Unit Tests - Function USSTree.addSingleSession()", () => {
     });
 });
 
-describe("USSTree Unit Tests - Function USSTree.deleteSession()", () => {
+describe("USSTree Unit Tests - Function USSTree.getChildren()", () => {
     it("Tests that getChildren() returns valid list of elements", async () => {
         const globalMocks = await createGlobalMocks();
 
@@ -1441,6 +1441,10 @@ describe("USSTree Unit Tests - Function USSTree.loadProfilesForFavorites", () =>
                     loadNamedProfile: jest.fn(() => {
                         return globalMocks.testProfile;
                     }),
+                    checkCurrentProfile: jest.fn(() => {
+                        return globalMocks.profilesForValidation;
+                    }),
+                    validProfile: ValidProfileEnum.VALID,
                 };
             }),
             configurable: true,

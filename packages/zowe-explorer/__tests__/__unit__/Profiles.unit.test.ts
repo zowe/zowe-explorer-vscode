@@ -648,7 +648,7 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("False");
 
         await blockMocks.profiles.createNewConnection("alternate");
-        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile alternate was created.");
     });
 
     it("Tests that createNewConnection creates an alternate profile with default port value", async () => {
@@ -1015,7 +1015,7 @@ describe("Profiles Unit Tests - Function updateProfile", () => {
         };
         newMocks.profiles = await Profiles.createInstance(newMocks.log);
         newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
-        newMocks.changedImperativeProfile.profile = { user: "test2", password: "test2" };
+        newMocks.changedImperativeProfile.profile = { user: "test2", password: "test2", rejectUnauthorize: true };
         newMocks.profileInfo = newMocks.changedImperativeProfile;
         Object.defineProperty(globalMocks.mockCliProfileManager, "load", {
             value: jest.fn(() => {
@@ -2018,13 +2018,13 @@ describe("Profiles Unit Tests - Function checkCurrentProfile", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         const theProfiles = await Profiles.createInstance(blockMocks.log);
+        const mockValidateProfiles = jest.fn();
         Object.defineProperty(theProfiles, "validateProfiles", {
-            value: jest.fn(() => {
-                return {
-                    status: "active",
-                    name: blockMocks.invalidProfile.name,
-                };
-            }),
+            value: mockValidateProfiles,
+        });
+        mockValidateProfiles.mockReturnValue({
+            status: "inactive",
+            name: blockMocks.invalidProfile.name,
         });
         blockMocks.profiles.promptCredentials = jest.fn(() => {
             return undefined;

@@ -244,6 +244,15 @@ export function isFolder(node: TreeItem): boolean {
 }
 
 /**
+ * Helper function which identifies if the node is a grouping or folder of a filter search
+ * @param node
+ * @return true if a folder with a filter search, false otherwise
+ */
+export function isFilterFolder(node: TreeItem): boolean {
+    return new RegExp("^(" + globals.DS_PDS_CONTEXT + ")(" + globals.FILTER_SEARCH + ")").test(node.contextValue);
+}
+
+/**
  * Helper function which identifies if the node is a session
  * @param node
  * @return true if a session, false otherwise

@@ -2,6 +2,26 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## `1.12.1`
+
+- Fixed the issue that prevented edited profile base paths from being saved [#989](https://github.com/zowe/vscode-extension-for-zowe/issues/989). Thanks @katelynienaber
+- Fixed the issue that prevented Zowe Explorer from storing empty values for optional profile fields, such as `user`, `password`, `timeout`, and `encoding`. This is done to be consistent with the way Zowe CLI stores profile information when creating and editing profiles [#1016](https://github.com/zowe/vscode-extension-for-zowe/issues/1016). Thanks @katelynienaber
+- Fixed the issue that caused repeated credential prompting if a user refused to authenticate [#1147](https://github.com/zowe/vscode-extension-for-zowe/issues/1147). Thanks @katelynienaber
+- Fixed the issue that caused removed favorite profiles to be favorited again in subsequent IDE sessions [#1144](https://github.com/zowe/vscode-extension-for-zowe/issues/1144). Thanks @lauren-li
+- Fixed the issue that prevented updated credential prompting from occurring when a profile was marked “invalid” [#1095](https://github.com/zowe/vscode-extension-for-zowe/issues/1095). Thanks @katelynienaber
+
+## `1.12.0`
+
+- Added the ability to edit data set attributes before allocation [#1031](https://github.com/zowe/vscode-extension-for-zowe/issues/1031). Thanks @katelynienaber
+- Allowed filtering of member names from the Data Sets search bar [#868](https://github.com/zowe/vscode-extension-for-zowe/issues/868). Thanks @JillieBeanSim
+- Reorganized the context menus and streamlined the visible icons [#1052](https://github.com/zowe/vscode-extension-for-zowe/issues/1052). Thanks @katelynienaber
+- Fixed the messaging displayed when handling inactive profiles and when updating profiles [#1065](https://github.com/zowe/vscode-extension-for-zowe/issues/1065) [#1096](https://github.com/zowe/vscode-extension-for-zowe/issues/1096). Thanks @jellypuno
+- Fixed the issue causing tree restructure when renaming a USS file or directory [#757](https://github.com/zowe/vscode-extension-for-zowe/issues/757). Thanks @katelynienaber
+- Fixed the issue preventing issuing of commands when using profiles with tokens [#1051](https://github.com/zowe/vscode-extension-for-zowe/issues/1051). Thanks @crawr
+- Refactored refresh functions. Thanks @lauren-li @JillieBeanSim
+- Updated FTP and API Readme documentation. Thanks @phaumer
+- Added regression tests for profiles in Theia. Thanks @deepali-hub
+
 ## `1.11.1`
 
 - Updated Keytar and Jest dev deps for Node 14. Thanks @t1m0thyj

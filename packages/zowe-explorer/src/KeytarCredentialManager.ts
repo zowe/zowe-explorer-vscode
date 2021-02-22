@@ -9,9 +9,10 @@
  *                                                                                 *
  */
 
-import { AbstractCredentialManager, ImperativeError, SecureCredential } from "@zowe/imperative";
+import { AbstractCredentialManager, ImperativeError, SecureCredential, Logger } from "@zowe/imperative";
 
 import * as nls from "vscode-nls";
+
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
@@ -72,10 +73,7 @@ export class KeytarCredentialManager extends AbstractCredentialManager {
      */
     protected async deleteCredentials(account: string): Promise<void> {
         if (!(await this.deleteCredentialsHelper(account))) {
-            throw new ImperativeError({
-                msg: localize("errorHandling.deleteCredentials", "Unable to delete credentials."),
-                additionalDetails: this.getMissingEntryMessage(account),
-            });
+            Logger.getAppLogger().debug(localize("errorHandling.deleteCredentials", "Unable to delete credentials."));
         }
     }
 

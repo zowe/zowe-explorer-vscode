@@ -23,7 +23,7 @@ More information:
 
 ## Contents
 
-- [What's new in Zowe Explorer 1.11.0](#whats-new-in-zowe-explorer-1.11.0)
+- [What's new in Zowe Explorer 1.12.0](#whats-new-in-zowe-explorer-1.12.0)
 - [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
 - [Sample Use Cases](#sample-use-cases)
@@ -31,18 +31,19 @@ More information:
 - [Usage Tips](#usage-tips)
 - [Extending Zowe Explorer](#extending-zowe-explorer)
 
-## What's new in Zowe Explorer 1.11.0
+## What's new in Zowe Explorer 1.12.0
 
 New features:
 
-- Added login and logout functions for base profiles. You can now log in to API Mediation Layer and generate a token for your base profile.
+- Added the ability to edit data set attributes before allocation
+- Allowed filtering of member names from the Data Sets search bar
+- Reorganized the context menus and streamlined the visible icons
 
 Bug Fixes:
 
-- Fixed the empty profile folders in Favorites issue.
-- Fixed the initialization error that occurred when base profiles were used while being logged out from API ML.
-- Fixed the issue preventing the tree refresh function from updating extender profiles.
-- Fixed the issue causing jobs retrieval failure when using profiles with tokens.
+- Fixed the messaging displayed when handling inactive profiles and when updating profiles
+- Fixed the issue causing tree restructure when renaming a USS file or directory
+- Fixed the issue preventing issuing of commands when using profiles with tokens
 
 For more information, see [Changelog](https://marketplace.visualstudio.com/items/Zowe.vscode-extension-for-zowe/changelog).
 
@@ -141,6 +142,13 @@ Review the following use cases to understand how to work with data sets in Zowe 
 **Tip:** To provide multiple filters, separate entries with a comma. You can append or postpend any filter with an \*, which indicates wildcard searching. You cannot enter an \* as the entire pattern.
 
 ![View Data Set](/docs/images/ZE-multiple-search.gif?raw=true "View Data Set")
+<br /><br />
+
+#### View data sets with member filters
+
+![View Data Set With Member Pattern](/docs/images/ZE-member-filter-search.gif?raw=true "View Data Set With Member Pattern")
+
+**Note:** You cannot favorite a data set or member that includes a member filter search pattern.
 <br /><br />
 
 ### Refresh the list of data sets
