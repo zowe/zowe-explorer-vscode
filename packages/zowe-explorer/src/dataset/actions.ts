@@ -15,7 +15,7 @@ import * as fs from "fs";
 import * as zowe from "@zowe/cli";
 import * as globals from "../globals";
 import * as path from "path";
-import { FilterItem, errorHandling, resolveQuickPickHelper } from "../utils/ProfilesUtils";
+import { FilterItem, errorHandling, resolveQuickPickHelper, isTheia } from "../utils/ProfilesUtils";
 import { getDocumentFilePath, concatChildNodes, checkForAddedSuffix, willForceUpload } from "../shared/utils";
 import {
     IZoweDatasetTreeNode,
@@ -340,6 +340,7 @@ export async function createFile(node: IZoweDatasetTreeNode, datasetProvider: IZ
     let dsName: string;
     let typeEnum: number;
     let propertiesFromDsType: any;
+    let stepThreeChoices: string[];
     const stepTwoOptions = {
         placeHolder: localize("createFile.quickPickOption.dataSetType", "Type of Data Set to be Created"),
         ignoreFocusOut: true,
@@ -356,10 +357,13 @@ export async function createFile(node: IZoweDatasetTreeNode, datasetProvider: IZ
         localize("createFile.dataSetPartitioned", "Data Set Partitioned"),
         localize("createFile.dataSetSequential", "Data Set Sequential"),
     ];
-    const stepThreeChoices = [
-        localize("createFile.allocate", " + Allocate Data Set"),
-        localize("createFile.editAttributes", "Edit Attributes"),
-    ];
+
+    if (!isTheia()) {
+        stepThreeChoices = [
+            localize("createFile.allocate", " + Allocate Data Set"),
+            localize("createFile.editAttributes", "Edit Attributes"),
+        ];
+    }
     // Make a nice new mutable array for the DS properties
     // tslint:disable-next-line: prefer-const
     let newDSProperties = JSON.parse(JSON.stringify(globals.DATA_SET_PROPERTIES));
@@ -415,34 +419,36 @@ export async function createFile(node: IZoweDatasetTreeNode, datasetProvider: IZ
             });
         }
 
-        // 3rd step: Ask if we allocate, or show DS attributes
-        const choice = await vscode.window.showQuickPick(stepThreeChoices, stepThreeOptions);
-        if (choice == null) {
-            globals.LOG.debug(localize("createFile.noOptionSelected", "No option selected. Operation cancelled."));
-            vscode.window.showInformationMessage(localize("createFile.operationCancelled", "Operation cancelled."));
-            return;
-        } else {
-            if (choice === " + Allocate Data Set") {
-                // User wants to allocate straightaway - skip Step 4
-                globals.LOG.debug(localize("createFile.allocatingNewDataSet", "Allocating new data set"));
-                vscode.window.showInformationMessage(
-                    localize("createFile.allocatingNewDataSet", "Allocating new data set")
-                );
+        if (!isTheia()) {
+            // 3rd step: Ask if we allocate, or show DS attributes
+            const choice = await vscode.window.showQuickPick(stepThreeChoices, stepThreeOptions);
+            if (choice == null) {
+                globals.LOG.debug(localize("createFile.noOptionSelected", "No option selected. Operation cancelled."));
+                vscode.window.showInformationMessage(localize("createFile.operationCancelled", "Operation cancelled."));
+                return;
             } else {
-                // 4th step (optional): Show data set attributes
-                const choice2 = await handleUserSelection(newDSProperties, type);
-                if (choice2 == null) {
-                    globals.LOG.debug(
-                        localize("createFile.noOptionSelected", "No option selected. Operation cancelled.")
-                    );
+                if (choice === " + Allocate Data Set") {
+                    // User wants to allocate straightaway - skip Step 4
+                    globals.LOG.debug(localize("createFile.allocatingNewDataSet", "Allocating new data set"));
                     vscode.window.showInformationMessage(
-                        localize("createFile.operationCancelled", "Operation cancelled.")
+                        localize("createFile.allocatingNewDataSet", "Allocating new data set")
                     );
-                    return;
                 } else {
-                    globals.LOG.debug(
-                        localize("createFile.allocatingNewDataSet", "Attempting to allocate new data set")
-                    );
+                    // 4th step (optional): Show data set attributes
+                    const choice2 = await handleUserSelection(newDSProperties, type);
+                    if (choice2 == null) {
+                        globals.LOG.debug(
+                            localize("createFile.noOptionSelected", "No option selected. Operation cancelled.")
+                        );
+                        vscode.window.showInformationMessage(
+                            localize("createFile.operationCancelled", "Operation cancelled.")
+                        );
+                        return;
+                    } else {
+                        globals.LOG.debug(
+                            localize("createFile.allocatingNewDataSet", "Attempting to allocate new data set")
+                        );
+                    }
                 }
             }
         }
