@@ -68,14 +68,14 @@ You can now use all the functionalities of the extension.
 
 #### Profile Validation
 
-Zowe Explorer includes the profile validation feature that helps to ensure that z/OSMF is accessbile and ready for use. If a profile is valid, the profile is active and can be used. By default, the feature is automatically enabled. You can disable the feature by right-clicking on your profile and selecting the **Disable Validation for Profile** option. Alternatively, you can enable or disable the feature for all profiles in the VS Code settings.
+Zowe Explorer includes the profile validation feature that helps to ensure that z/OSMF is accessible and ready for use. If a profile is valid, the profile is active and can be used. By default, the feature is automatically enabled. You can disable the feature by right-clicking on your profile and selecting the **Disable Validation for Profile** option. Alternatively, you can enable or disable the feature for all profiles in the VS Code settings.
 
 Follow these steps:
 
-1. Navigate to the VSCode settings.
+1. Navigate to the VS Code settings.
 2. Open Zowe Explorer Settings.
 3. Enable or disable the automatic validation of profiles option.
-4. Restart VSCode.
+4. Restart VS Code.
 
 ### Use Base Profile and Token with Existing Profiles
 
@@ -329,10 +329,10 @@ Your data set member is uploaded.
 
 Store your credentials securely with the Secure Credentials Store (SCS) plug-in.
 
-1. Navigate to the VSCode settings.
+1. Navigate to the VS Code settings.
 2. Open Zowe Explorer Settings.
 3. Add the `Zowe-Plugin` value to the **Zowe Security** entry field.
-4. Restart VSCode.
+4. Restart VS Code.
 
 For more information about SCS, see [Secure Credential Store Plug-in for Zowe Explorer](https://docs.zowe.org/stable/user-guide/ze-profiles.html#enabling-secure-credential-store-with-zowe-explorer).
 
