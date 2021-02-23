@@ -27,6 +27,7 @@
   "pattern": "Search Data Sets",
   "refreshNode": "Pull from Mainframe",
   "removeFavorite": "Remove Favorite",
+  "uploadFromJsonDialog": "Upload Data Sets From JSON File...",
   "uss.removeFavorite": "Remove Favorite",
   "removeSavedSearch": "Remove Search",
   "removeSession": "Hide Profile",

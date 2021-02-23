@@ -23,8 +23,6 @@
   "createFile.dataSetClassic": "Data Set Classic",
   "createFile.dataSetPartitioned": "Data Set Partitioned",
   "createFile.dataSetSequential": "Data Set Sequential",
-  "createFile.log.debug.noValidTypeSelected": "No valid data type selected",
-  "createFile.log.debug.creatingNewDataSet": "Creating new data set",
   "createFile.allocate": " + Allocate Data Set",
   "createFile.editAttributes": "Edit Attributes",
   "dataset.name": "Name of Data Set",
