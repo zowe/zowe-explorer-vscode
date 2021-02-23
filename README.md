@@ -15,10 +15,10 @@ Join our [Slack channel](https://slack.openmainframeproject.org/) to connect wit
 
 ## Directory Structure
 
-Zowe Explorer repository includes several folders with files that let you  build and configure various aspects of the extension, but most importantly we want to draw your attention to the `packages` folder. This folder has the following structure:
+Zowe Explorer repository includes several folders with files that let you build and configure various aspects of the extension. The bulk of the Zowe Explorer source code is in the `packages` directory. The `packages` folder has the following structure:
 
-- `├──`[`packages`](./packages) — includes source code of Zowe Explorer, extensibility API, and other Zowe Explorer extensions<br>
-    - `├──`[`eslint-plugin-zowe-explorer`](./packages/eslint-plugin-zowe-explorer) — includes necessary files to configure ESlint plug-in for Zowe Explorer
+- `├──`[`packages`](./packages) — includes source code of Zowe Explorer, various Zowe Explorer-related extensions, and the extensibility API<br>
+    - `├──`[`eslint-plugin-zowe-explorer`](./packages/eslint-plugin-zowe-explorer) — includes necessary files to configure ESLint plug-in for Zowe Explorer
     - `├──`[`zowe-explorer-api`](./packages/zowe-explorer-api) — includes files to set up and use Extensibility API for Explorer. The API has two modules: Profiles API and Tree API.
     - `├──`[`zowe-explorer-ftp-extension`](./packages/zowe-explorer-ftp-extension) — includes files to set up and use the FTP extension for Zowe Explorer. 
     - `├──`[`zowe-explorer`](./packages/zowe-explorer) — core Zowe Explorer source files, ReadMe, Changelog, and more.
@@ -60,7 +60,7 @@ Use the following list with the description and links to find the topics of your
 
 [Core Zowe Explorer ReadMe](https://github.com/zowe/vscode-extension-for-zowe/tree/master/packages/zowe-explorer) — contains information about how to install, configure, and use Zowe Explorer. This ReadMe helps you to familiarize yourself with the basic features of the extension.
 
-[Zowe Explorer ESlint Plug-in ReadMe](https://github.com/zowe/vscode-extension-for-zowe/tree/master/packages/eslint-plugin-zowe-explorer) — contains information about how to install ESlint and configure ESlint rules. ESlint helps you to find and fix problems in your JavaScript code.
+[Zowe Explorer ESlint Plug-in ReadMe](https://github.com/zowe/vscode-extension-for-zowe/tree/master/packages/eslint-plugin-zowe-explorer) — contains information about how to install ESLint and configure ESLint rules. ESLint helps you to find and fix problems in your JavaScript code.
 
 [Zowe Explorer Extensibility API ReadMe](https://github.com/zowe/vscode-extension-for-zowe/tree/master/packages/zowe-explorer-api) — contains information about how to extend the capabilities of Zowe Explorer, using the extensibility API.
 
@@ -74,11 +74,11 @@ Use the following list with the description and links to find the topics of your
 
 ## How to Contribute
 
-We encourage you to contribute to Zowe Explorer. See the [Contributor Guidance](https://github.com/zowe/vscode-extension-for-zowe/wiki/Best-Practices:-Contributor-Guidance) to proceed.
+We encourage you to contribute to Zowe Explorer!
 
-You can start by checking the current [open issues](https://github.com/zowe/vscode-extension-for-zowe/issues).
+Check the current [open issues](https://github.com/zowe/vscode-extension-for-zowe/issues) to choose where you can contribute. You can look for the `help wanted`-labeled issues to find issues that require additional input. If you are new to the project, you might want to check the issues with the `good first issue` label.
 
-{TODO Do we want to create some sort of labels that will indicate that 'external' help is needed/wanted? Like "help needed" or something like that.}
+For more information on how to contribute, see [Contributor Guidance](https://github.com/zowe/vscode-extension-for-zowe/wiki/Best-Practices:-Contributor-Guidance).
 
 ## License
 
