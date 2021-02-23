@@ -475,6 +475,13 @@ describe("Dataset Tree Unit Tests - Function loadProfilesForFavorites", () => {
                     loadNamedProfile: jest.fn(() => {
                         return blockMocks.imperativeProfile;
                     }),
+                    checkCurrentProfile: jest.fn(() => {
+                        return {
+                            name: blockMocks.imperativeProfile.name,
+                            status: "unverified",
+                        };
+                    }),
+                    validProfile: ValidProfileEnum.VALID,
                 };
             }),
         });
@@ -1163,6 +1170,7 @@ describe("Dataset Tree Unit Tests - Function  - Function removeFavProfile", () =
     it("Tests successful removal of profile node in Favorites when user confirms they want to Continue removing it", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
+        const updateFavoritesSpy = jest.spyOn(blockMocks.testTree, "updateFavorites");
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         // Make sure favorite is added before the actual unit test
         expect(blockMocks.testTree.mFavorites.length).toEqual(1);
@@ -1175,7 +1183,10 @@ describe("Dataset Tree Unit Tests - Function  - Function removeFavProfile", () =
 
         await blockMocks.testTree.removeFavProfile(blockMocks.profileNodeInFavs.label, true);
 
+        // Check that favorite is removed from UI
         expect(blockMocks.testTree.mFavorites.length).toEqual(0);
+        // Check that favorite is removed from settings file
+        expect(updateFavoritesSpy).toBeCalledTimes(1);
     });
     it("Tests that removeFavProfile leaves profile node in Favorites when user cancels", async () => {
         createGlobalMocks();
@@ -1316,19 +1327,6 @@ describe("Dataset Tree Unit Tests - Function flipState", () => {
         expect(JSON.stringify(node.iconPath)).toContain("folder-closed.svg");
         await testTree.flipState(node, true);
         expect(JSON.stringify(node.iconPath)).toContain("folder-open.svg");
-    });
-    it("Checking flipping of favorite Dataset session", async () => {
-        createGlobalMocks();
-        const blockMocks = createBlockMocks();
-
-        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
-        const testTree = new DatasetTree();
-        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
-        testTree.mSessionNodes[1].contextValue = globals.DS_SESSION_CONTEXT + globals.FAV_SUFFIX;
-
-        await testTree.flipState(testTree.mSessionNodes[1], true);
-
-        expect(JSON.stringify(testTree.mSessionNodes[1].iconPath)).toContain("folder-root-connected-closed.svg");
     });
 });
 describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
@@ -1625,7 +1623,7 @@ describe("Dataset Tree Unit Tests - Function editSession", () => {
             null
         );
 
-        await testTree.editSession(node);
+        await testTree.editSession(node, testTree);
 
         expect(node.getProfile().profile).toBe("testProfile");
     });

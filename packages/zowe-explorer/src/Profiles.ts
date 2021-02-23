@@ -13,7 +13,6 @@ import {
     IProfileLoaded,
     Logger,
     ISession,
-    IUpdateProfileFromCliArgs,
     ICommandArguments,
     Session,
     SessConstants,
@@ -71,42 +70,25 @@ export class Profiles extends ProfilesCache {
     private dsSchema: string = "Zowe-DS-Persistent";
     private ussSchema: string = "Zowe-USS-Persistent";
     private jobsSchema: string = "Zowe-Jobs-Persistent";
-    private usrNme: string;
-    private passWrd: string;
-    private baseEncd: string;
     public constructor(log: Logger) {
         super(log);
     }
 
     public async checkCurrentProfile(theProfile: IProfileLoaded) {
-        const profileStatus: IProfileValidation = await this.getProfileSetting(theProfile);
-        if (profileStatus.status === "inactive") {
-            this.validProfile = ValidProfileEnum.INVALID;
-            return profileStatus;
-        }
-
-        // if (profileStatus.status === "unverified") {
-        //     this.validProfile = ValidProfileEnum.UNVERIFIED;
-        //     return profileStatus;
-        // }
-
-        // This step is for prompting of credentials. It will be triggered if it meets the following conditions:
-        // - The service does not have username or password and base profile doesn't exists
-        // - The service does not have username or password and the base profile has a different host and port
-        const baseProfile = this.getBaseProfile();
-
-        if (
-            (!theProfile.profile.tokenType && (!theProfile.profile.user || !theProfile.profile.password)) ||
-            (baseProfile &&
-                baseProfile.profile.host !== theProfile.profile.host &&
-                baseProfile.profile.port !== theProfile.profile.port)
-        ) {
+        let profileStatus: IProfileValidation;
+        if (!theProfile.profile.tokenType && (!theProfile.profile.user || !theProfile.profile.password)) {
+            // The profile will need to be reactivated, so remove it from profilesForValidation
+            this.profilesForValidation.filter((profile, index) => {
+                if (profile.name === theProfile.name && profile.status !== "unverified") {
+                    this.profilesForValidation.splice(index, 1);
+                }
+            });
             try {
-                const values = await Profiles.getInstance().promptCredentials(theProfile.name);
+                const values = await Profiles.getInstance().promptCredentials(theProfile.name, true);
                 if (values !== undefined) {
-                    this.usrNme = values[0];
-                    this.passWrd = values[1];
-                    this.baseEncd = values[2];
+                    theProfile.profile.user = values[0];
+                    theProfile.profile.password = values[1];
+                    theProfile.profile.base64EncodedAuth = values[2];
                 }
             } catch (error) {
                 errorHandling(
@@ -117,33 +99,25 @@ export class Profiles extends ProfilesCache {
                 );
                 return profileStatus;
             }
-            if (this.usrNme !== undefined && this.passWrd !== undefined && this.baseEncd !== undefined) {
-                theProfile.profile.user = this.usrNme;
-                theProfile.profile.password = this.passWrd;
-                theProfile.profile.base64EncodedAuth = this.baseEncd;
-                if (profileStatus.status === "unverified") {
-                    this.validProfile = ValidProfileEnum.UNVERIFIED;
-                } else {
-                    this.validProfile = ValidProfileEnum.VALID;
-                }
-                return profileStatus;
-            } else {
-                // return invalid if credentials are not provided
-                if (profileStatus.status === "unverified") {
-                    this.validProfile = ValidProfileEnum.UNVERIFIED;
-                } else {
-                    this.validProfile = ValidProfileEnum.INVALID;
-                }
-                return profileStatus;
-            }
+
+            // Validate profile
+            profileStatus = await this.getProfileSetting(theProfile);
         } else {
-            if (profileStatus.status === "unverified") {
-                this.validProfile = ValidProfileEnum.UNVERIFIED;
-            } else {
-                this.validProfile = ValidProfileEnum.VALID;
-            }
-            return profileStatus;
+            // Profile should have enough information to allow validation
+            profileStatus = await this.getProfileSetting(theProfile);
         }
+        switch (profileStatus.status) {
+            case "unverified":
+                this.validProfile = ValidProfileEnum.UNVERIFIED;
+                break;
+            case "inactive":
+                this.validProfile = ValidProfileEnum.INVALID;
+                break;
+            case "active":
+                this.validProfile = ValidProfileEnum.VALID;
+                break;
+        }
+        return profileStatus;
     }
 
     public async getProfileSetting(theProfile: IProfileLoaded): Promise<IProfileValidation> {
@@ -630,8 +604,11 @@ export class Profiles extends ProfilesCache {
                             localize("createNewConnection.undefined.username", "Operation Cancelled")
                         );
                         return undefined;
+                    } else if (newUser === "") {
+                        delete schemaValues[value];
+                    } else {
+                        schemaValues[value] = newUser;
                     }
-                    schemaValues[value] = newUser;
                     break;
                 case "password":
                     newPass = await this.passwordInfo();
@@ -640,8 +617,11 @@ export class Profiles extends ProfilesCache {
                             localize("createNewConnection.undefined.username", "Operation Cancelled")
                         );
                         return undefined;
+                    } else if (newPass === "") {
+                        delete schemaValues[value];
+                    } else {
+                        schemaValues[value] = newPass;
                     }
-                    schemaValues[value] = newPass;
                     break;
                 case "rejectUnauthorized":
                     newRU = await this.ruInfo();
@@ -659,22 +639,18 @@ export class Profiles extends ProfilesCache {
                     switch (response) {
                         case "number":
                             options = await this.optionsValue(value, schema);
-                            const enteredValue = await vscode.window.showInputBox(options);
-                            if (!Number.isNaN(Number(enteredValue))) {
-                                schemaValues[value] = Number(enteredValue);
+                            const enteredValue = Number(await vscode.window.showInputBox(options));
+                            if (!Number.isNaN(enteredValue)) {
+                                if ((value === "encoding" || value === "responseTimeout") && enteredValue === 0) {
+                                    delete schemaValues[value];
+                                } else {
+                                    schemaValues[value] = Number(enteredValue);
+                                }
                             } else {
-                                switch (true) {
-                                    case enteredValue === undefined:
-                                        vscode.window.showInformationMessage(
-                                            localize("createNewConnection.number", "Operation Cancelled")
-                                        );
-                                        return undefined;
-                                    case schema[value].optionDefinition.hasOwnProperty("defaultValue"):
-                                        schemaValues[value] = schema[value].optionDefinition.defaultValue;
-                                        break;
-                                    default:
-                                        schemaValues[value] = undefined;
-                                        break;
+                                if (schema[value].optionDefinition.hasOwnProperty("defaultValue")) {
+                                    schemaValues[value] = schema[value].optionDefinition.defaultValue;
+                                } else {
+                                    delete schemaValues[value];
                                 }
                             }
                             break;
@@ -699,9 +675,10 @@ export class Profiles extends ProfilesCache {
                                 return undefined;
                             }
                             if (defValue === "") {
-                                break;
+                                delete schemaValues[value];
+                            } else {
+                                schemaValues[value] = defValue;
                             }
-                            schemaValues[value] = defValue;
                             break;
                     }
             }
@@ -754,7 +731,7 @@ export class Profiles extends ProfilesCache {
             newUser = loadSession.user = loadProfile.profile.user;
         }
 
-        if (newUser === undefined) {
+        if (newUser === undefined || (rePrompt && newUser === "")) {
             vscode.window.showInformationMessage(
                 localize("promptCredentials.undefined.username", "Operation Cancelled")
             );
@@ -769,7 +746,7 @@ export class Profiles extends ProfilesCache {
             }
         }
 
-        if (newPass === undefined) {
+        if (newPass === undefined || (rePrompt && newUser === "")) {
             vscode.window.showInformationMessage(
                 localize("promptCredentials.undefined.password", "Operation Cancelled")
             );
@@ -962,7 +939,7 @@ export class Profiles extends ProfilesCache {
 
         // Remove from list of all profiles
         const index = this.allProfiles.findIndex((deleteItem) => {
-            return deleteItem === deletedProfile;
+            return deleteItem.name === deletedProfile.name;
         });
         if (index >= 0) {
             this.allProfiles.splice(index, 1);
@@ -1450,6 +1427,7 @@ export class Profiles extends ProfilesCache {
                 "createNewConnection.option.prompt.username",
                 "Enter the user name for the connection. Leave blank to not store."
             ),
+            ignoreFocusOut: true,
             value: userName,
         };
         userName = await vscode.window.showInputBox(InputBoxOptions);
@@ -1478,6 +1456,7 @@ export class Profiles extends ProfilesCache {
                 "Enter the password for the connection. Leave blank to not store."
             ),
             password: true,
+            ignoreFocusOut: true,
             value: passWord,
         };
         passWord = await vscode.window.showInputBox(InputBoxOptions);
@@ -1622,26 +1601,35 @@ export class Profiles extends ProfilesCache {
         const OrigProfileInfo = this.loadedProfile.profile;
         const NewProfileInfo = ProfileInfo.profile;
 
+        // Update the currently-loaded profile with the new info
         const profileArray = Object.keys(this.loadedProfile.profile);
         for (const value of profileArray) {
-            if (value === "user" || value === "password") {
-                if (!rePrompt) {
-                    OrigProfileInfo.user = NewProfileInfo.user;
-                    OrigProfileInfo.password = NewProfileInfo.password;
+            if ((value === "encoding" || value === "responseTimeout") && NewProfileInfo[value] === 0) {
+                // If the updated profile had these fields set to 0, delete them...
+                // this should get rid of a bad value that was stored
+                // in these properties before this update
+                delete OrigProfileInfo[value];
+            } else if (NewProfileInfo[value] !== undefined && NewProfileInfo[value] !== "") {
+                if (value === "user" || value === "password") {
+                    if (!rePrompt) {
+                        OrigProfileInfo.user = NewProfileInfo.user;
+                        OrigProfileInfo.password = NewProfileInfo.password;
+                    }
+                } else {
+                    OrigProfileInfo[value] = NewProfileInfo[value];
                 }
-            } else {
-                OrigProfileInfo[value] = NewProfileInfo[value];
+            } else if (NewProfileInfo[value] === undefined || NewProfileInfo[value] === "") {
+                // If the updated profile had an empty property, delete it...
+                // this should get rid of any empty strings
+                // that were stored in the profile before this update
+                delete OrigProfileInfo[value];
             }
         }
 
-        // Using `IUpdateProfileFromCliArgs` here instead of `IUpdateProfile` is
-        // kind of a hack, but necessary to support storing secure credentials
-        // until this is fixed: https://github.com/zowe/imperative/issues/379
-        const updateParms: IUpdateProfileFromCliArgs = {
+        const updateParms: IUpdateProfile = {
             name: this.loadedProfile.name,
-            merge: true,
-            // profile: OrigProfileInfo as IProfile
-            args: OrigProfileInfo as any,
+            merge: false,
+            profile: OrigProfileInfo as IProfile,
         };
         try {
             this.getCliProfileManager(this.loadedProfile.type).update(updateParms);

@@ -153,7 +153,7 @@ describe("ZoweJobNode unit tests - Function editSession", () => {
         const blockMocks = await createBlockMocks(globalMocks);
         const checkSession = jest.spyOn(blockMocks.testJobsProvider, "editSession");
 
-        await blockMocks.testJobsProvider.editSession(blockMocks.jobNode);
+        await blockMocks.testJobsProvider.editSession(blockMocks.jobNode, globalMocks.testUSSTree);
         expect(globalMocks.mockEditSession).toHaveBeenCalled();
     });
 });
