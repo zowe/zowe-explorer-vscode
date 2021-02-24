@@ -1023,24 +1023,6 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                                 index++;
                             }
                         }
-                    }
-                    if (item.memberName && label !== "No datasets found") {
-                        const dsn = item.dataSetName.split(".");
-                        const name = label.split(".");
-                        let index = 0;
-                        let includes = false;
-                        for (const each of dsn) {
-                            let inc = false;
-                            inc = await this.checkFilterPattern(name[index], each);
-                            if (inc) {
-                                child.pattern = item.dataSetName;
-                                includes = true;
-                            } else {
-                                child.pattern = "";
-                                includes = false;
-                            }
-                            index++;
-                        }
                         if (includes && child.contextValue.includes("pds")) {
                             const options: IListOptions = {};
                             options.pattern = item.memberPattern;
