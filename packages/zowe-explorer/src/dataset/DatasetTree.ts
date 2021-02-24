@@ -979,6 +979,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 nonFaveNode.tooltip = nonFaveNode.pattern = pattern.toUpperCase();
             }
             const response = await this.getChildren(nonFaveNode);
+            // reset and remove previous search patterns for each child of getChildren
             for (const child of response) {
                 let resetIcon: IIconItem;
                 if (child.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed) {
@@ -998,8 +999,31 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     child.pattern = "";
                     this.refreshElement(child);
                 }
+            }
+            // set new search patterns for each child of getChildren
+            for (const child of response) {
                 for (const item of dsSets) {
                     const label = child.label.trim();
+                    if (item.memberName && label !== "No datasets found") {
+                        const dsn = item.dataSetName.split(".");
+                        const name = label.split(".");
+                        let index = 0;
+                        let includes = false;
+                        if (!child.pattern) {
+                            for (const each of dsn) {
+                                let inc = false;
+                                inc = await this.checkFilterPattern(name[index], each);
+                                if (inc) {
+                                    child.pattern = item.dataSetName;
+                                    includes = true;
+                                } else {
+                                    child.pattern = "";
+                                    includes = false;
+                                }
+                                index++;
+                            }
+                        }
+                    }
                     if (item.memberName && label !== "No datasets found") {
                         const dsn = item.dataSetName.split(".");
                         const name = label.split(".");
