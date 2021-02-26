@@ -68,7 +68,7 @@ You can now use all the functionalities of the extension.
 
 #### Profile Validation
 
-Zowe Explorer includes the profile validation feature that helps to ensure that z/OSMF is accessible and ready for use. If a profile is valid, the profile is active and can be used. By default, the feature is automatically enabled. You can disable the feature by right-clicking on your profile and selecting the **Disable Validation for Profile** option. Alternatively, you can enable or disable the feature for all profiles in the VS Code settings.
+Zowe Explorer includes the profile validation feature that helps to ensure that the specified connection to z/OS is successfully established and your profile is ready for use. If a profile is valid, the profile is active and can be used. By default, the feature is automatically enabled. You can disable the feature by right-clicking on your profile and selecting the **Disable Validation for Profile** option. Alternatively, you can enable or disable the feature for all profiles in the VS Code settings.
 
 Follow these steps:
 
@@ -288,7 +288,7 @@ Your data set member is uploaded.
    You successfully created a data set.
 
    ![Parameters](/docs/images/ZE-set-params.gif?raw=true "Parameters")
-<br /><br />
+   <br /><br />
 
 ### Delete a data set member and a data set
 
@@ -340,7 +340,7 @@ For more information about SCS, see [Secure Credential Store Plug-in for Zowe Ex
 
 - Use the **Add to Favorite** feature to permanently store chosen data sets, USS files, and jobs in the **Favorites** folder. Right-click on a data set, USS file or jobs and select **Add Favorite**.
 
-- **Syntax Highlighting:** Zowe Explorer supports syntax highlighting for data sets. Fox example, you can use such extensions as [COBOL Language Support](https://marketplace.visualstudio.com/items?itemName=broadcomMFD.cobol-language-support) or [HLASM Language Support](https://marketplace.visualstudio.com/items?itemName=broadcomMFD.hlasm-language-support).
+- **Syntax Highlighting:** Zowe Explorer supports syntax highlighting for data sets. You can search and install such extensions in VS Code Marketplace.
 
 - **Update a profile**: Right-click a chosen profile, select **Update Profile** option, and modify the information inside the profile.
 
@@ -352,7 +352,7 @@ For more information about SCS, see [Secure Credential Store Plug-in for Zowe Ex
 
 - **Open recent members**: Zowe Explorer lets you open a list of members you worked on earlier. You can access the list by pressing Ctrl+Alt+R or Command+Alt+R.
 
-For information on how to configure Zowe Explorer, see [Zowe Explorer Configuration](https://docs.zowe.org/stable/user-guide/ze-install.html#configuration).
+For the complete Zowe Explorer documentation that also includes information about USS and Jobs interactions, see [the complete Zowe Explorer documentation](https://docs.zowe.org/stable/user-guide/ze-install.html).
 
 ## Extending Zowe Explorer
 

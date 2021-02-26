@@ -9,23 +9,28 @@ Join our [Slack channel](https://slack.openmainframeproject.org/) to connect wit
 
 ## Requirements
 
+Client-side prerequisites:
+
 - Install [Node.js](https://nodejs.org/en/download/) v8.0 or later.
-- Configure TSO/E address space services, z/OS data set, file REST interface and z/OS jobs REST interface. For more information, see [z/OS Requirements](https://docs.zowe.org/stable/user-guide/systemrequirements-zosmf.html#z-os-requirements).
 - Install [Yarn](https://yarnpkg.com/getting-started/install).
+
+Host-side prerequisites:
+
+- Configure TSO/E address space services, z/OS data set, file REST interface and z/OS jobs REST interface. For more information, see [z/OS Requirements](https://docs.zowe.org/stable/user-guide/systemrequirements-zosmf.html#z-os-requirements).
 
 ## Directory Structure
 
 Zowe Explorer repository includes several folders with files that let you build and configure various aspects of the extension. The bulk of the Zowe Explorer source code is in the `packages` directory. The `packages` folder has the following structure:
 
 - `├──`[`packages`](./packages) — includes source code of Zowe Explorer, various Zowe Explorer-related extensions, and the extensibility API<br>
-    - `├──`[`eslint-plugin-zowe-explorer`](./packages/eslint-plugin-zowe-explorer) — includes necessary files to configure ESLint plug-in for Zowe Explorer
-    - `├──`[`zowe-explorer-api`](./packages/zowe-explorer-api) — includes files to set up and use Extensibility API for Explorer. The API has two modules: Profiles API and Tree API.
-    - `├──`[`zowe-explorer-ftp-extension`](./packages/zowe-explorer-ftp-extension) — includes files to set up and use the FTP extension for Zowe Explorer. 
-    - `├──`[`zowe-explorer`](./packages/zowe-explorer) — core Zowe Explorer source files, ReadMe, Changelog, and more.
+  - `├──`[`eslint-plugin-zowe-explorer`](./packages/eslint-plugin-zowe-explorer) — includes necessary files to configure ESLint plug-in for Zowe Explorer
+  - `├──`[`zowe-explorer-api`](./packages/zowe-explorer-api) — includes files to set up and use Extensibility API for Explorer. The API has two modules: Profiles API and Tree API.
+  - `├──`[`zowe-explorer-ftp-extension`](./packages/zowe-explorer-ftp-extension) — includes files to set up and use the FTP extension for Zowe Explorer.
+  - `├──`[`zowe-explorer`](./packages/zowe-explorer) — core Zowe Explorer source files, ReadMe, Changelog, and more.
 
 ## Build Locally
 
-Ensure that you have met the [software requirements](#requirements) before you can build and test your Zowe Explorer.
+Ensure that you meet the [software requirements](#requirements) before you build and test your Zowe Explorer.
 
 Clone the repository and run `yarn workspace vscode-extension-for-zowe package` to build a VSIX file and start working with the extension.
 
@@ -58,13 +63,13 @@ The current repository of the VS Code extension Zowe Explorer includes several R
 
 Use the following list with the description and links to find the topics of your interest:
 
-[Core Zowe Explorer ReadMe](https://github.com/zowe/vscode-extension-for-zowe/tree/master/packages/zowe-explorer) — contains information about how to install, configure, and use Zowe Explorer. This ReadMe helps you to familiarize yourself with the basic features of the extension.
+[Core Zowe Explorer ReadMe](https://github.com/zowe/vscode-extension-for-zowe/blob/master/packages/zowe-explorer/README.md) — contains information about how to install, configure, and use Zowe Explorer. This ReadMe helps you to familiarize yourself with the basic features of the extension.
 
-[Zowe Explorer ESlint Plug-in ReadMe](https://github.com/zowe/vscode-extension-for-zowe/tree/master/packages/eslint-plugin-zowe-explorer) — contains information about how to install ESLint and configure ESLint rules. ESLint helps you to find and fix problems in your JavaScript code.
+[Zowe Explorer ESlint Plug-in ReadMe](https://github.com/zowe/vscode-extension-for-zowe/blob/master/packages/eslint-plugin-zowe-explorer/README.md) — contains information about how to install ESLint and configure ESLint rules. ESLint helps you to find and fix problems in your JavaScript code.
 
-[Zowe Explorer Extensibility API ReadMe](https://github.com/zowe/vscode-extension-for-zowe/tree/master/packages/zowe-explorer-api) — contains information about how to extend the capabilities of Zowe Explorer, using the extensibility API.
+[Zowe Explorer Extensibility API ReadMe](https://github.com/zowe/vscode-extension-for-zowe/blob/master/packages/zowe-explorer-api/README.md) — contains information about how to extend the capabilities of Zowe Explorer, using the extensibility API.
 
-[Zowe Explorer FTP Extension ReadMe](https://github.com/zowe/vscode-extension-for-zowe/tree/master/packages/zowe-explorer-ftp-extension) — contains information about how to install and use the Zowe Explorer extension for FTP. The extension adds the FTP protocol to Zowe Explorer, enabling you to use z/OS FTP Plug-in for Zowe CLI profiles to connect and interact with z/OS USS.
+[Zowe Explorer FTP Extension ReadMe](https://github.com/zowe/vscode-extension-for-zowe/blob/master/packages/zowe-explorer-ftp-extension/README.md) — contains information about how to install and use the Zowe Explorer extension for FTP. The extension adds the FTP protocol to Zowe Explorer, enabling you to use z/OS FTP Plug-in for Zowe CLI profiles to connect and interact with z/OS USS.
 
 **Note**: Zowe Explorer FTP extension is an example that shows how the extensibility API is used to add new capabilities to Zowe Explorer.
 
@@ -79,14 +84,6 @@ We encourage you to contribute to Zowe Explorer!
 Check the current [open issues](https://github.com/zowe/vscode-extension-for-zowe/issues) to choose where you can contribute. You can look for the `help wanted`-labeled issues to find issues that require additional input. If you are new to the project, you might want to check the issues with the `good first issue` label.
 
 For more information on how to contribute, see [Contributor Guidance](https://github.com/zowe/vscode-extension-for-zowe/wiki/Best-Practices:-Contributor-Guidance).
-
-## License
-
-{TODO I don't know exactly how to formulate this section exactly. See the following 2 versions. Something tells me, it's the second version but I'd rather check with someone who knows for sure}
-
-1. © Open Mainframe Project, a Linux Foundation Project. All Rights Reserved. The Linux Foundation has registered trademarks and uses trademarks. For a list of trademarks of The Linux Foundation, please see our Trademark Usage page. Please refer to Marketing and Branding Guidelines for name usage guidelines. Linux is a registered trademark of Linus Torvalds. Privacy Policy and Terms of Use.
-
-2. Copyright © 2018-present Linux Foundation. This source code is licensed under the Eclipse Public License found in the LICENSE file.
 
 ## External Links
 
