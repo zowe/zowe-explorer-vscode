@@ -97,7 +97,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         const loadedNodes = await this.getAllLoadedItems();
         const nodeType = contextually.isFolder(originalNode) ? "folder" : "file";
         const options: vscode.InputBoxOptions = {
-            prompt: localize("renameUSSNode.enterName", "Enter a new name for the {0}", nodeType),
+            prompt: localize("renameUSS.enterName", "Enter a new name for the {0}", nodeType),
             value: originalNode.label.replace(/^\[.+\]:\s/, ""),
             ignoreFocusOut: true,
             validateInput: (value) => this.checkDuplicateLabel(parentPath + value, loadedNodes),
@@ -131,7 +131,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 errorHandling(
                     err,
                     originalNode.mProfileName,
-                    localize("renameUSSNode.error", "Unable to rename node: ") + err.message
+                    localize("renameUSS.error", "Unable to rename node: ") + err.message
                 );
                 throw err;
             }
@@ -143,7 +143,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             const nodeType = contextually.isFolder(node) ? "folder" : "file";
             if (newFullPath === node.fullPath.trim()) {
                 return localize(
-                    "renameUSSNode.duplicateName",
+                    "renameUSS.duplicateName",
                     "A {0} already exists with this name. Please choose a different name.",
                     nodeType
                 );
