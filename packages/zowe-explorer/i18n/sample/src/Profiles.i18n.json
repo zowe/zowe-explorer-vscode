@@ -23,7 +23,6 @@
   "createNewConnection.undefined.port": "Invalid Port number provided or operation was cancelled",
   "createNewConnection.undefined.username": "Operation Cancelled",
   "createNewConnection.rejectUnauthorize": "Operation Cancelled",
-  "createNewConnection.number": "Operation Cancelled",
   "createNewConnection.booleanValue": "Operation Cancelled",
   "createNewConnection.default": "Operation Cancelled",
   "createNewConnection.duplicateProfileName": "Profile name already exists. Please create a profile using a different name",
