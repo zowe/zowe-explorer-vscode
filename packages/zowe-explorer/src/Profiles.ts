@@ -1052,12 +1052,13 @@ export class Profiles extends ProfilesCache {
             baseProfile &&
             serviceProfile.profile.host &&
             serviceProfile.profile.port &&
-            baseProfile.profile.host !== serviceProfile.profile.host &&
-            baseProfile.profile.port !== serviceProfile.profile.port
+            ((baseProfile.profile.host !== serviceProfile.profile.host &&
+                baseProfile.profile.port !== serviceProfile.profile.port) ||
+                (baseProfile.profile.host === serviceProfile.profile.host &&
+                    baseProfile.profile.port !== serviceProfile.profile.port))
         ) {
             return serviceProfile;
         }
-
         let session;
         if (!commonApi.getSessionFromCommandArgument) {
             // This is here for extenders
