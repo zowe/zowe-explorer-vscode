@@ -57,6 +57,8 @@ function createGlobalMocks() {
     Object.defineProperty(Profiles, "getInstance", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode, "Uri", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.Uri, "parse", { value: jest.fn(), configurable: true });
+    const executeCommand = jest.fn();
+    Object.defineProperty(vscode.commands, "executeCommand", { value: executeCommand, configurable: true });
 }
 
 // Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/master/src/util/testing.ts
@@ -900,5 +902,40 @@ describe("Jobs Actions Unit Tests - Function refreshJobsServer", () => {
 
         expect(blockMocks.testJobTree.checkCurrentProfile).toHaveBeenCalledWith(job);
         expect(blockMocks.testJobTree.refreshElement).toHaveBeenCalledWith(job);
+    });
+});
+
+describe("Jobs Actions Unit Tests - Function deleteCommand", () => {
+    function createBlockMocks() {
+        const session = createISession();
+        const treeView = createTreeView();
+        const iJob = createIJobObject();
+        const imperativeProfile = createIProfile();
+
+        return {
+            session,
+            treeView,
+            iJob,
+            imperativeProfile,
+            testJobsTree: createJobsTree(session, iJob, imperativeProfile, treeView),
+        };
+    }
+    it("Tests that delete informs the user that a job was deleted", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const node = new Job(
+            "jobtest",
+            vscode.TreeItemCollapsibleState.Expanded,
+            null,
+            blockMocks.session,
+            blockMocks.iJob,
+            blockMocks.imperativeProfile
+        );
+
+        await jobActions.deleteCommand(node, blockMocks.testJobsTree);
+        expect(mocked(vscode.window.showInformationMessage).mock.calls.length).toBe(1);
+        expect(mocked(vscode.window.showInformationMessage).mock.calls[0][0]).toEqual(
+            `Job ${node.job.jobname}(${node.job.jobid}) deleted`
+        );
     });
 });
