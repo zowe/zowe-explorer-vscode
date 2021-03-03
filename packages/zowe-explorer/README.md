@@ -23,7 +23,7 @@ More information:
 
 ## Contents
 
-- [What's new in Zowe Explorer 1.12.1](#whats-new-in-zowe-explorer-1.12.1)
+- [What's new in Zowe Explorer 1.13.0](#whats-new-in-zowe-explorer-1.13.0)
 - [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
 - [Sample Use Cases](#sample-use-cases)
@@ -31,15 +31,20 @@ More information:
 - [Usage Tips](#usage-tips)
 - [Extending Zowe Explorer](#extending-zowe-explorer)
 
-## What's new in Zowe Explorer 1.12.1
+## What's new in Zowe Explorer 1.13.0
 
-Bug Fixes:
+Enhancements:
 
-- Fixed the issue that prevented edited profile base paths from being saved.
-- Fixed the issue that prevented Zowe Explorer from storing empty values for optional profile fields, such as `user`, `password`, `timeout`, and `encoding`. This is done to be consistent with the way Zowe CLI stores profile information when creating and editing profiles.
-- Fixed the issue that caused repeated credential prompting if a user refused to authenticate.
-- Fixed the issue that caused removed favorite profiles to persist between IDE sessions.
-- Fixed the issue that prevented updated credential prompting from occurring when a profile was marked “invalid”.
+- Added the monorepo landing Readme that contains the high-level overview of the repository folders such as `packages` folder, instructions on how to contribute to the project and links to Medium articles providing additional useful information about Zowe Explorer and Zowe.
+- Added the previously selected `Reject Unauthorized` value to the placeholder text of the entry field while updating an existing profile.
+- Added the zFTP extension for data sets.
+<!-- TODO I'll need a context and more information on this last one. The current note is not descriptive enough -->
+
+Bug fixes:
+
+- Fixed the issue that prevented the list of recently opened files from being displayed upon request. You can access a list of recently opened files by pressing the Ctrl+Alt+R or Command+Alt+R key combination.
+- Fixed the issue that caused the USS tree to collapse after renaming a USS directory.
+- Fixed the issue that caused the content from a previously filtered directory instead of the currently filtered directory to be served.
 
 For more information, see [Changelog](https://marketplace.visualstudio.com/items/Zowe.vscode-extension-for-zowe/changelog).
 
