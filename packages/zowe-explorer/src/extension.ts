@@ -350,7 +350,7 @@ function initJobsProvider(context: vscode.ExtensionContext, jobsProvider: IZoweT
     vscode.commands.registerCommand("zowe.zosJobsOpenspool", (session, spool) =>
         jobActions.getSpoolContent(jobsProvider, session, spool)
     );
-    vscode.commands.registerCommand("zowe.deleteJob", (job) => jobsProvider.delete(job));
+    vscode.commands.registerCommand("zowe.deleteJob", async (job) => jobActions.deleteCommand(job, jobsProvider));
     vscode.commands.registerCommand("zowe.runModifyCommand", (job) => jobActions.modifyCommand(job));
     vscode.commands.registerCommand("zowe.runStopCommand", (job) => jobActions.stopCommand(job));
     vscode.commands.registerCommand("zowe.refreshJobsServer", async (job) =>
