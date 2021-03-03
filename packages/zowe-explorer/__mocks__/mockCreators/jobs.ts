@@ -80,7 +80,18 @@ export function createJobsTree(
         getChildren: jest.fn(),
         addSession: jest.fn(),
         refresh: jest.fn(),
-        getTreeView: jest.fn(),
+        getTreeView: jest.fn().mockImplementation(() => {
+            return {
+                reveal: jest.fn(),
+                onDidExpandElement: jest.fn(),
+                onDidCollapseElement: jest.fn(),
+                selection: [],
+                onDidChangeSelection: jest.fn(),
+                visible: true,
+                onDidChangeVisibility: jest.fn(),
+                dispose: jest.fn(),
+            };
+        }),
         deleteSession: jest.fn(),
         addFavorite: jest.fn(),
         removeFavorite: jest.fn(),
@@ -92,6 +103,7 @@ export function createJobsTree(
         getProfiles: jest.fn(),
         getProfileName: jest.fn(),
         getSession: jest.fn(),
+        delete: jest.fn(),
     };
     testJobsTree.mSessionNodes = [];
     testJobsTree.mSessionNodes.push(jobNode);
