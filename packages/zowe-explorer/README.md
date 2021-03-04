@@ -33,18 +33,16 @@ More information:
 
 ## What's new in Zowe Explorer 1.13.0
 
-Enhancements:
+Documentation updates:
 
 - Added the monorepo landing Readme that contains the high-level overview of the repository folders such as `packages` folder, instructions on how to contribute to the project and links to Medium articles providing additional useful information about Zowe Explorer and Zowe.
-- Added the previously selected `Reject Unauthorized` value to the placeholder text of the entry field while updating an existing profile.
-- Added the zFTP extension for data sets.
-<!-- TODO I'll need a context and more information on this last one. The current note is not descriptive enough -->
 
 Bug fixes:
 
 - Fixed the issue that prevented the list of recently opened files from being displayed upon request. You can access a list of recently opened files by pressing the Ctrl+Alt+R or Command+Alt+R key combination.
 - Fixed the issue that caused the USS tree to collapse after renaming a USS directory.
 - Fixed the issue that caused the content from a previously filtered directory instead of the currently filtered directory to be served.
+- Added the previously selected `RejectUnauthorized` value to the placeholder text of the entry field while updating an existing profile. In addition, the value is highlighted and shown at the top of the selection list.
 
 For more information, see [Changelog](https://marketplace.visualstudio.com/items/Zowe.vscode-extension-for-zowe/changelog).
 
