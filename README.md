@@ -32,7 +32,7 @@ Zowe Explorer repository includes several folders with files that let you build 
 
 Ensure that you meet the [software requirements](#requirements) before you build and test your Zowe Explorer.
 
-Clone the repository and run `yarn workspace vscode-extension-for-zowe package` to build a VSIX file and start working with the extension.
+Clone the repository and run `yarn run package` to build a VSIX file and start working with the extension.
 
 1. Clone the repository by issuing the following command:
 
@@ -44,10 +44,12 @@ Clone the repository and run `yarn workspace vscode-extension-for-zowe package` 
 
    ```shell
    yarn install
-   yarn workspace vscode-extension-for-zowe package
+   yarn run package
    ```
 
-After you create a VSIX file, install the extension to VS Code.
+You can find the VSIX file in the `dist` folder.
+
+Now install the extension to VS Code.
 
 1. Navigate to the Extensions menu in VS Code and click the `...` button in the top-left corner of the pane.
 2. Select Install from VSIX and select the .vsix file that was created by your `yarn workspace vscode-extension-for-zowe package` command.
