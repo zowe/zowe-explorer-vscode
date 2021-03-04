@@ -173,3 +173,39 @@ export async function setPrefix(job: IZoweJobTreeNode, jobsProvider: IZoweTree<I
     job.prefix = newPrefix;
     jobsProvider.refreshElement(job);
 }
+
+/**
+ * Delete the selected jobs command
+ *
+ * @param jobsProvider The tree to which the node belongs
+ */
+export async function deleteCommand(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>) {
+    const deletedNodes: string[] = [" "];
+    const selectedNodes: IZoweJobTreeNode[] = jobsProvider.getTreeView().selection;
+    const nodes: IZoweJobTreeNode[] = selectedNodes.filter(
+        (jobNode) => jobNode.job !== undefined && jobNode.job !== null
+    );
+    if (nodes.length > 0) {
+        for (const node of nodes) {
+            await jobsProvider.delete(node);
+            deletedNodes.unshift(" " + node.job.jobname + "(" + node.job.jobid + ")");
+        }
+        deletedNodes.pop();
+        vscode.window.showInformationMessage(
+            localize("deleteMulti.job", "The following jobs were deleted:") + deletedNodes
+        );
+    }
+    // Delete a single job node
+    if (job && !(nodes.length > 0)) {
+        jobsProvider.delete(job);
+        vscode.window.showInformationMessage(
+            localize("deleteCommand.job", "Job ") +
+                job.job.jobname +
+                "(" +
+                job.job.jobid +
+                ")" +
+                localize("deleteCommand.delete", " deleted")
+        );
+    }
+    await vscode.commands.executeCommand("zowe.refreshAllJobs");
+}

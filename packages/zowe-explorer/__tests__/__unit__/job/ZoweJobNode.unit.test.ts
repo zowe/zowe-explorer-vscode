@@ -235,15 +235,6 @@ describe("ZoweJobNode unit tests - Function deleteSession", () => {
 });
 
 describe("ZoweJobNode unit tests - Function delete", () => {
-    it("Tests that delete informs the user that a job was deleted", async () => {
-        const globalMocks = await createGlobalMocks();
-
-        await globalMocks.testJobsProvider.delete(globalMocks.testJobNode);
-        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
-        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toEqual(
-            `Job ${globalMocks.testJobNode.job.jobname}(${globalMocks.testJobNode.job.jobid}) deleted`
-        );
-    });
     it("Tests that delete handles an error thrown during job deletion", async () => {
         const globalMocks = await createGlobalMocks();
         const badJobNode = new Job(

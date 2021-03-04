@@ -4,5 +4,8 @@
   "modifyCommand.response": "Command response: ",
   "stopCommand.response": "Command response: ",
   "setOwner.newOwner.prompt.owner": "Owner",
-  "setOwner.newOwner.prompt.prefix": "Prefix"
+  "setOwner.newOwner.prompt.prefix": "Prefix",
+  "deleteMulti.job": "The following jobs were deleted:",
+  "deleteCommand.job": "Job ",
+  "deleteCommand.delete": " deleted"
 }
