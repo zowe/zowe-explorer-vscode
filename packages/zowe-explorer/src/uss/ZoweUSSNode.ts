@@ -308,6 +308,14 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         this.shortLabel = newFullPath.split("/").pop();
         this.label = this.shortLabel;
         this.tooltip = injectAdditionalDataToTooltip(this, newFullPath);
+        // Update the full path of any children already loaded locally
+        // TODO: Check if child opens cached file with old name path
+        if (this.children.length > 0) {
+            this.children.forEach((child) => {
+                let newChildFullPath = newFullPath + "/" + child.shortLabel;
+                child.rename(newChildFullPath);
+            });
+        }
         await vscode.commands.executeCommand("zowe.uss.refreshUSSInTree", this);
         return hasClosedInstance;
     }
