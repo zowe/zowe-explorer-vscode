@@ -80,7 +80,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             this.mFavoriteSession.iconPath = icon.path;
         }
         this.mSessionNodes = [this.mFavoriteSession];
-        this.treeView = vscode.window.createTreeView("zowe.jobs", { treeDataProvider: this });
+        this.treeView = vscode.window.createTreeView("zowe.jobs", { treeDataProvider: this, canSelectMany: true });
     }
 
     public rename(node: IZoweJobTreeNode) {
@@ -200,15 +200,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
     public async delete(node: IZoweJobTreeNode) {
         try {
             await ZoweExplorerApiRegister.getJesApi(node.getProfile()).deleteJob(node.job.jobname, node.job.jobid);
-            vscode.window.showInformationMessage(
-                localize("deleteJob.job", "Job ") +
-                    node.job.jobname +
-                    "(" +
-                    node.job.jobid +
-                    ")" +
-                    localize("deleteJob.delete", " deleted")
-            );
-            this.removeFavorite(this.createJobsFavorite(node));
+            await this.removeFavorite(this.createJobsFavorite(node));
         } catch (error) {
             await errorHandling(error, node.getProfileName(), error.message);
         }
@@ -463,17 +455,19 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         // Get node's profile node in favorites
         const profileName = node.getProfileName();
         const profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profileName);
-        const startLength = profileNodeInFavorites.children.length;
-        profileNodeInFavorites.children = profileNodeInFavorites.children.filter(
-            (temp) => !(temp.label === node.label && temp.contextValue.startsWith(node.contextValue))
-        );
-        // Remove profile node from Favorites if it contains no more favorites.
-        if (profileNodeInFavorites.children.length < 1) {
-            return this.removeFavProfile(profileName, false);
-        }
-        if (startLength !== profileNodeInFavorites.children.length) {
-            await this.updateFavorites();
-            this.refreshElement(this.mFavoriteSession);
+        if (profileNodeInFavorites) {
+            const startLength = profileNodeInFavorites.children.length;
+            profileNodeInFavorites.children = profileNodeInFavorites.children.filter(
+                (temp) => !(temp.label === node.label && temp.contextValue.startsWith(node.contextValue))
+            );
+            // Remove profile node from Favorites if it contains no more favorites.
+            if (profileNodeInFavorites.children.length < 1) {
+                return this.removeFavProfile(profileName, false);
+            }
+            if (startLength !== profileNodeInFavorites.children.length) {
+                await this.updateFavorites();
+                this.refreshElement(this.mFavoriteSession);
+            }
         }
         return;
     }

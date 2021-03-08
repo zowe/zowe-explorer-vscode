@@ -1,75 +1,80 @@
 {
-    "name": "vscode-extension-for-zowe",
-    "displayName": "%displayName%",
-    "description": "%description%",
-    "version": "1.12.1",
-    "publisher": "Zowe",
-    "author": "Zowe",
-    "license": "EPL-2.0",
-    "repository": {
-        "url": "https://github.com/zowe/vscode-extension-for-zowe"
+  "name": "vscode-extension-for-zowe",
+  "displayName": "%displayName%",
+  "description": "%description%",
+  "version": "1.12.1",
+  "publisher": "Zowe",
+  "author": "Zowe",
+  "license": "EPL-2.0",
+  "repository": {
+    "url": "https://github.com/zowe/vscode-extension-for-zowe"
+  },
+  "icon": "resources/zowe_logo.png",
+  "keywords": [
+    "mainframe",
+    "dataset",
+    "Zowe",
+    "explorer",
+    "z/OS",
+    "USS",
+    "JES",
+    "MVS"
+  ],
+  "categories": [
+    "Other"
+  ],
+  "files": [
+    "out",
+    "README.md",
+    "resources"
+  ],
+  "activationEvents": [
+    "*"
+  ],
+  "main": "./out/src/extension",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "zowe",
+          "title": "%viewsContainers.activitybar%",
+          "icon": "resources/zowe.svg"
+        }
+      ]
     },
-    "icon": "resources/zowe_logo.png",
-    "keywords": [
-        "mainframe",
-        "dataset",
-        "Zowe",
-        "explorer",
-        "z/OS",
-        "USS",
-        "JES",
-        "MVS"
-    ],
-    "categories": [
-        "Other"
-    ],
-    "files": [
-        "out",
-        "README.md",
-        "resources"
-    ],
-    "activationEvents": [
-        "*"
-    ],
-    "main": "./out/src/extension",
-    "contributes": {
-        "viewsContainers": {
-            "activitybar": [
-                {
-                    "id": "zowe",
-                    "title": "%viewsContainers.activitybar%",
-                    "icon": "resources/zowe.svg"
-                }
-            ]
+    "views": {
+      "zowe": [
+        {
+          "id": "zowe.explorer",
+          "name": "%zowe.explorer%"
         },
-        "views": {
-            "zowe": [
-                {
-                    "id": "zowe.explorer",
-                    "name": "%zowe.explorer%"
-                },
-                {
-                    "id": "zowe.uss.explorer",
-                    "name": "%zowe.uss.explorer%"
-                },
-                {
-                    "id": "zowe.jobs",
-                    "name": "%zowe.jobs%"
-                }
-            ]
+        {
+          "id": "zowe.uss.explorer",
+          "name": "%zowe.uss.explorer%"
         },
-        "keybindings": [
-            {
-                "command": "zowe.openRecentMember",
-                "key": "ctrl+alt+r",
-                "mac": "cmd+alt+r"
-            },
-            {
-                "command": "zowe.searchInAllLoadedItems",
-                "key": "ctrl+alt+p",
-                "mac": "cmd+alt+p"
-            }
-        ],
+        {
+          "id": "zowe.jobs",
+          "name": "%zowe.jobs%"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "zowe.openRecentMember",
+        "key": "ctrl+alt+r",
+        "mac": "cmd+alt+r"
+      },
+      {
+        "command": "zowe.searchInAllLoadedItems",
+        "key": "ctrl+alt+p",
+        "mac": "cmd+alt+p"
+      },
+      {
+        "command": "zowe.deleteJob",
+        "key": "delete",
+        "when": "listSupportsMultiselect"
+      }
+    ],
         "commands": [
             {
                 "command": "zowe.disableValidation",
