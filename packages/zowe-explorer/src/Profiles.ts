@@ -1474,32 +1474,47 @@ export class Profiles extends ProfilesCache {
 
     private async ruInfo(input?) {
         let rejectUnauthorize: boolean;
+        let placeholder: string;
+        let selectRU: string[];
+        const falseString = localize(
+            "createNewConnection.ru.false",
+            "False - Accept connections with self-signed certificates"
+        );
+        const trueString = localize(
+            "createNewConnection.ru.true",
+            "True - Reject connections with self-signed certificates"
+        );
 
         if (input !== undefined) {
             rejectUnauthorize = input;
+            if (!input) {
+                placeholder = falseString;
+                selectRU = [falseString, trueString];
+            } else {
+                placeholder = trueString;
+                selectRU = [trueString, falseString];
+            }
+        } else {
+            placeholder = localize(
+                "createNewConnection.option.prompt.ru.placeholder",
+                "Reject Unauthorized Connections"
+            );
+            selectRU = [trueString, falseString];
         }
 
         const quickPickOptions: vscode.QuickPickOptions = {
-            placeHolder: localize(
-                "createNewConnection.option.prompt.ru.placeholder",
-                "Reject Unauthorized Connections"
-            ),
+            placeHolder: placeholder,
             ignoreFocusOut: true,
             canPickMany: false,
         };
-
-        const selectRU = [
-            "True - Reject connections with self-signed certificates",
-            "False - Accept connections with self-signed certificates",
-        ];
 
         const ruOptions = Array.from(selectRU);
 
         const chosenRU = await vscode.window.showQuickPick(ruOptions, quickPickOptions);
 
-        if (chosenRU === ruOptions[0]) {
+        if (chosenRU && chosenRU.includes(trueString)) {
             rejectUnauthorize = true;
-        } else if (chosenRU === ruOptions[1]) {
+        } else if (chosenRU && chosenRU.includes(falseString)) {
             rejectUnauthorize = false;
         } else {
             vscode.window.showInformationMessage(
