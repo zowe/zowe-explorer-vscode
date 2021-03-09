@@ -1,6 +1,6 @@
 # Change Log
 
-## 1.13.0
+## `1.13.0`
 
 - Added a range of data set functionalities including list datasets, list dataset members, edit datasets, upload members, rename datasets, delete datasets and more. For the complete list of added functionalities, see [PR-1219](https://github.com/zowe/vscode-extension-for-zowe/pull/1219).
 
