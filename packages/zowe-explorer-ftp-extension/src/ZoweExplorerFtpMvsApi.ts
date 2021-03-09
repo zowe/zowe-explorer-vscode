@@ -149,7 +149,7 @@ export class FtpMvsApi implements ZoweExplorerApi.IMvs {
             const contentsTag = await this.getContentsTag(dataSetName);
             if (contentsTag && contentsTag !== options.etag) {
                 // TODO: extension.ts should not check for zosmf errors.
-                throw new Error("Rest API failure with HTTP(S) status 412");
+                throw new Error("Save conflict. Please pull the latest content from mainfram first.");
             }
         }
         await DataSetUtils.uploadDataSet(connection, targetDataset, transferOptions);
@@ -162,7 +162,7 @@ export class FtpMvsApi implements ZoweExplorerApi.IMvs {
                 },
             ];
         }
-        result.commandResponse = "File updated.";
+        result.commandResponse = "Data set uploaded successfully.";
         return result;
     }
 
@@ -207,7 +207,7 @@ export class FtpMvsApi implements ZoweExplorerApi.IMvs {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-call
             await DataSetUtils.allocateDataSet(connection, dataSetName, allocateOptions);
             result.success = true;
-            result.commandResponse = "Dataset created.";
+            result.commandResponse = "Data set created successfully.";
         } else {
             throw new Error(result.commandResponse);
         }
@@ -230,12 +230,12 @@ export class FtpMvsApi implements ZoweExplorerApi.IMvs {
 
         await DataSetUtils.uploadDataSet(connection, dataSetName, transferOptions);
         result.success = true;
-        result.commandResponse = "Member created.";
+        result.commandResponse = "Member created successfully.";
         return result;
     }
 
     public allocateLikeDataSet(dataSetName: string, likeDataSetName: string): Promise<zowe.IZosFilesResponse> {
-        throw new Error("Allocate like dataset is not supported.");
+        throw new Error("Allocate like dataset is not supported in ftp extension.");
     }
 
     public copyDataSetMember(
@@ -243,7 +243,7 @@ export class FtpMvsApi implements ZoweExplorerApi.IMvs {
         { dataSetName: toDataSetName, memberName: toMemberName }: zowe.IDataSet,
         options?: { replace?: boolean }
     ): Promise<zowe.IZosFilesResponse> {
-        throw new Error("Copy dataset is not supported.");
+        throw new Error("Copy dataset is not supported in ftp extension.");
     }
 
     public async renameDataSet(currentDataSetName: string, newDataSetName: string): Promise<zowe.IZosFilesResponse> {
@@ -252,7 +252,7 @@ export class FtpMvsApi implements ZoweExplorerApi.IMvs {
         if (connection) {
             await DataSetUtils.renameDataSet(connection, currentDataSetName, newDataSetName);
             result.success = true;
-            result.commandResponse = "Rename completed.";
+            result.commandResponse = "Rename completed successfully.";
         } else {
             throw new Error(result.commandResponse);
         }
@@ -271,7 +271,7 @@ export class FtpMvsApi implements ZoweExplorerApi.IMvs {
         if (connection) {
             await DataSetUtils.renameDataSet(connection, currentName, newName);
             result.success = true;
-            result.commandResponse = "Rename completed.";
+            result.commandResponse = "Rename completed successfully.";
         } else {
             throw new Error(result.commandResponse);
         }
@@ -279,11 +279,11 @@ export class FtpMvsApi implements ZoweExplorerApi.IMvs {
     }
 
     public hMigrateDataSet(dataSetName: string): Promise<zowe.IZosFilesResponse> {
-        throw new Error("Migrate dataset is not supported.");
+        throw new Error("Migrate dataset is not supported in ftp extension.");
     }
 
     public hRecallDataSet(dataSetName: string): Promise<zowe.IZosFilesResponse> {
-        throw new Error("Recall dataset is not supported.");
+        throw new Error("Recall dataset is not supported in ftp extension.");
     }
     public async deleteDataSet(
         dataSetName: string,
@@ -294,7 +294,7 @@ export class FtpMvsApi implements ZoweExplorerApi.IMvs {
         if (connection) {
             await DataSetUtils.deleteDataSet(connection, dataSetName);
             result.success = true;
-            result.commandResponse = "Delete completed.";
+            result.commandResponse = "Delete completed successfully.";
         } else {
             throw new Error(result.commandResponse);
         }

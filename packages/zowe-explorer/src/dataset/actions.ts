@@ -1023,7 +1023,12 @@ export async function hMigrateDataSet(node: ZoweDatasetNode) {
                 dataSetName +
                 localize("hMigrate.requestSent2", " requested.")
         );
-        return ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hMigrateDataSet(dataSetName);
+        try {
+            return ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hMigrateDataSet(dataSetName);
+        } catch (err) {
+            vscode.window.showErrorMessage(err.message);
+            return;
+        }
     } else {
         vscode.window.showErrorMessage(localize("hMigrateDataSet.checkProfile", "Profile is invalid"));
         return;
@@ -1048,7 +1053,12 @@ export async function hRecallDataSet(node: ZoweDatasetNode) {
                 dataSetName +
                 localize("hRecall.requestSent2", " requested.")
         );
-        return ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hRecallDataSet(dataSetName);
+        try {
+            return ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hRecallDataSet(dataSetName);
+        } catch (err) {
+            vscode.window.showErrorMessage(err.message);
+            return;
+        }
     } else {
         vscode.window.showErrorMessage(localize("hMigrateDataSet.checkProfile", "Profile is invalid"));
         return;
@@ -1101,11 +1111,15 @@ export async function pasteMember(node: IZoweDatasetTreeNode, datasetProvider: I
                     throw Error(`${dataSetName}(${memberName}) already exists. You cannot replace a member`);
                 }
             }
-            await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).copyDataSetMember(
-                { dataSetName: beforeDataSetName, memberName: beforeMemberName },
-                { dataSetName, memberName }
-            );
-
+            try {
+                await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).copyDataSetMember(
+                    { dataSetName: beforeDataSetName, memberName: beforeMemberName },
+                    { dataSetName, memberName }
+                );
+            } catch (err) {
+                vscode.window.showErrorMessage(err.message);
+                return;
+            }
             if (memberName) {
                 datasetProvider.refreshElement(node);
                 let node2;
