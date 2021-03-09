@@ -68,6 +68,11 @@
         "command": "zowe.searchInAllLoadedItems",
         "key": "ctrl+alt+p",
         "mac": "cmd+alt+p"
+      },
+      {
+        "command": "zowe.deleteJob",
+        "key": "delete",
+        "when": "listSupportsMultiselect"
       }
     ],
     "commands": [

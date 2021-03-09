@@ -68,7 +68,7 @@ export async function searchInAllLoadedItems(
 
     let qpItem: vscode.QuickPickItem;
     for (const item of items) {
-        if (item.constructor.name === "ZoweDatasetNode") {
+        if (contextually.isDs(item) || contextually.isPdsNotFav(item) || contextually.isVsam(item)) {
             if (contextually.isDsMember(item)) {
                 qpItem = new FilterItem(
                     `[${item.getSessionNode().label.trim()}]: ${item.getParent().label.trim()}(${item.label.trim()})`,
@@ -78,7 +78,7 @@ export async function searchInAllLoadedItems(
                 qpItem = new FilterItem(`[${item.getSessionNode().label.trim()}]: ${item.label.trim()}`, "Data Set");
             }
             qpItems.push(qpItem);
-        } else if (item.constructor.name === "ZoweUSSNode") {
+        } else if (contextually.isUssDirectory(item) || contextually.isText(item) || contextually.isBinary(item)) {
             const filterItem = `[${item.getProfileName().trim()}]: ${item.getParent().fullPath}/${item.label.trim()}`;
             qpItem = new FilterItem(filterItem, "USS");
             qpItems.push(qpItem);
@@ -218,7 +218,7 @@ export async function openRecentMemberPrompt(
         } else {
             // Data set was selected
             const sessionNode: IZoweDatasetTreeNode = datasetTree.mSessionNodes.find(
-                (sessNode) => sessNode.label.trim() === sessionName
+                (sessNode) => sessNode.label.trim().toLowerCase() === sessionName.toLowerCase()
             );
             await datasetTree.openItemFromPath(pattern, sessionNode);
         }
