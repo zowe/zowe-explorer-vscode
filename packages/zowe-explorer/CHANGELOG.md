@@ -6,9 +6,11 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 - Added the monorepo landing Readme that contains the high-level overview of the repository folders such as `packages` folder, instructions on how to contribute to the project and links to Medium articles providing additional useful information about Zowe Explorer and Zowe [#1199](https://github.com/zowe/vscode-extension-for-zowe/pull/1199). Thanks @IgorCATech
 - Fixed the issue that prevented the list of recently opened files from being displayed upon request. You can access a list of recently opened files by pressing the Ctrl+Alt+R or Command+Alt+R key combination [#1208](https://github.com/zowe/vscode-extension-for-zowe/pull/#1208). Thanks @jellypuno
-- Fixed the issue that caused the USS tree to collapse after renaming a USS directory [#650](https://github.com/zowe/vscode-extension-for-zowe/issues/650). Thanks @lauren-li
+- Fixed the issue that prevented file picker from functioning. The file picker feature lets you filter your datasets in the tree by pressing the Ctrl+Alt+P combination [#992](https://github.com/zowe/vscode-extension-for-zowe/issues/992). Thanks @jellypuno
 - Fixed the issue that caused the content from a previously filtered directory instead of the currently filtered directory to be served [#1134](https://github.com/zowe/vscode-extension-for-zowe/issues/1134). Thanks @lauren-li
 - Added the previously selected `RejectUnauthorized` value to the placeholder text of the entry field while updating an existing profile. In addition, the value is highlighted and shown at the top of the selection list [#1218](https://github.com/zowe/vscode-extension-for-zowe/pull/1218). Thanks @JillieBeanSim
+- Added the pre-filled and pre-selected filename of the copied member to the entry field while performing the paste member action [#1183](https://github.com/zowe/vscode-extension-for-zowe/pull/1183). Thanks @JillieBeanSim
+- Added the multiple deletion of jobs feature [#1128](https://github.com/zowe/vscode-extension-for-zowe/pull/1128). Thanks @crawr
 
 ## `1.12.1`
 

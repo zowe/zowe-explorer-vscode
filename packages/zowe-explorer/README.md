@@ -36,11 +36,13 @@ More information:
 Documentation updates:
 
 - Added the monorepo landing Readme that contains the high-level overview of the repository folders such as `packages` folder, instructions on how to contribute to the project and links to Medium articles providing additional useful information about Zowe Explorer and Zowe.
+- Added the pre-filled and pre-selected filename of the copied member to the entry field while performing the paste member action.
+- Added the multiple deletion of jobs feature. You can now select and delete multiple jobs.
 
 Bug fixes:
 
 - Fixed the issue that prevented the list of recently opened files from being displayed upon request. You can access a list of recently opened files by pressing the Ctrl+Alt+R or Command+Alt+R key combination.
-- Fixed the issue that caused the USS tree to collapse after renaming a USS directory.
+- Fixed the issue that prevented file picker from functioning. The file picker feature lets you filter your datasets in the tree by pressing the Ctrl+Alt+P combination.
 - Fixed the issue that caused the content from a previously filtered directory instead of the currently filtered directory to be served.
 - Added the previously selected `RejectUnauthorized` value to the placeholder text of the entry field while updating an existing profile. In addition, the value is highlighted and shown at the top of the selection list.
 
