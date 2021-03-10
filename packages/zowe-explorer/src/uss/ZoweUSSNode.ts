@@ -124,6 +124,15 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         return this.returnmProfileName();
     }
 
+    /**
+     * Get parent path for USS node.
+     *
+     * @returns {string}
+     */
+    public getParentPath(): string {
+        return this.parentPath;
+    }
+
     public getSessionNode(): IZoweUSSTreeNode {
         return this.session ? this : this.getParent().getSessionNode();
     }
@@ -185,7 +194,11 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
             // Loops through all the returned file references members and creates nodes for them
             for (const item of response.apiResponse.items) {
-                const existing = this.children.find((element) => element.label.trim() === item.name);
+                const existing = this.children.find(
+                    // Ensure both parent path and short label match.
+                    // (Can't use mParent fullPath since that is already updated with new value by this point in getChildren.)
+                    (element: ZoweUSSNode) => element.parentPath === this.fullPath && element.label.trim() === item.name
+                );
                 if (existing) {
                     elementChildren[existing.label] = existing;
                 } else if (item.name !== "." && item.name !== "..") {
