@@ -61,5 +61,7 @@
   "createNewConnection.undefined.passWord": "Operation Cancelled",
   "createNewConnection.option.prompt.password.placeholder": "Password",
   "createNewConnection.option.prompt.password": "Enter the password for the connection. Leave blank to not store.",
+  "createNewConnection.ru.false": "False - Accept connections with self-signed certificates",
+  "createNewConnection.ru.true": "True - Reject connections with self-signed certificates",
   "createNewConnection.option.prompt.ru.placeholder": "Reject Unauthorized Connections"
 }
