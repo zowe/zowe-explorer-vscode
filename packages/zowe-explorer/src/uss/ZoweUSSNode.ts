@@ -124,15 +124,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         return this.returnmProfileName();
     }
 
-    /**
-     * Get parent path for USS node.
-     *
-     * @returns {string}
-     */
-    public getParentPath(): string {
-        return this.parentPath;
-    }
-
     public getSessionNode(): IZoweUSSTreeNode {
         return this.session ? this : this.getParent().getSessionNode();
     }
