@@ -478,11 +478,13 @@
       },
       {
         "command": "zowe.runModifyCommand",
-        "title": "%runModifyCommand%"
+        "title": "%runModifyCommand%",
+        "category": "Zowe"
       },
       {
         "command": "zowe.runStopCommand",
-        "title": "%runStopCommand%"
+        "title": "%runStopCommand%",
+        "category": "Zowe"
       },
       {
         "command": "zowe.setOwner",
@@ -549,12 +551,9 @@
         "title": "%setJobSpool%"
       },
       {
-        "command": "zowe.issueTsoCmd",
-        "title": "%issueTsoCmd%"
-      },
-      {
         "command": "zowe.issueMvsCmd",
-        "title": "%issueMvsCmd%"
+        "title": "%issueMvsCmd%",
+        "category": "Zowe"
       },
       {
         "command": "zowe.jobs.search",
@@ -1262,10 +1261,6 @@
         },
         {
           "command": "zowe.jobs.deleteProfile",
-          "when": "never"
-        },
-        {
-          "command": "zowe.issueMvsCmd",
           "when": "never"
         }
       ]

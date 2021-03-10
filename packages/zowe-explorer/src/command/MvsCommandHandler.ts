@@ -50,7 +50,7 @@ export class MvsCommandHandler {
     private static readonly totalFilters: number = 10;
     private static readonly persistenceSchema: string = "Zowe Commands: History";
     private static readonly defaultDialogText: string =
-        "\uFF0B " + localize("command.option.prompt.search", "Create a new Command");
+        "\uFF0B " + localize("command.option.prompt.search", "Create a new MVS Command");
     private static instance: MvsCommandHandler;
 
     private history: PersistentFilters;
@@ -143,7 +143,7 @@ export class MvsCommandHandler {
             if (globals.ISTHEIA) {
                 const options1: vscode.QuickPickOptions = {
                     placeHolder:
-                        localize("issueMvsCommand.command.hostname", "Select a command to run against ") +
+                        localize("issueMvsCommand.command.hostname", "Select a MVS command to run against ") +
                         hostname +
                         (alwaysEdit
                             ? localize("issueMvsCommand.command.edit", " (An option to edit will follow)")
@@ -161,10 +161,10 @@ export class MvsCommandHandler {
             } else {
                 const quickpick = vscode.window.createQuickPick();
                 quickpick.placeholder = alwaysEdit
-                    ? localize("issueMvsCommand.command.hostnameAlt", "Select a command to run against ") +
+                    ? localize("issueMvsCommand.command.hostnameAlt", "Select a MVS command to run against ") +
                       hostname +
                       localize("issueMvsCommand.command.edit", " (An option to edit will follow)")
-                    : localize("issueMvsCommand.command.hostname", "Select a command to run immediately against ") +
+                    : localize("issueMvsCommand.command.hostname", "Select a MVS command to run immediately against ") +
                       hostname;
 
                 quickpick.items = [createPick, ...items];
@@ -190,7 +190,7 @@ export class MvsCommandHandler {
         if (!response || alwaysEdit) {
             // manually entering a search
             const options2: vscode.InputBoxOptions = {
-                prompt: localize("issueMvsCommand.command", "Enter or update the command"),
+                prompt: localize("issueMvsCommand.command", "Enter or update the MVS command"),
                 value: response,
                 valueSelection: response ? [response.length, response.length] : undefined,
             };
