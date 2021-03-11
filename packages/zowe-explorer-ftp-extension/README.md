@@ -61,31 +61,31 @@ See the list of the supported functionalities for different types of data sets:
 
 Migrated Dataset:
 
-- Show Data Set Attribute — Supported
-- Add to Favorites — Supported
+- Show Data Set Attribute
+- Add to Favorites
 
 Sequential Dataset:
 
-- Show Data Set Attribute — Supported
-- Pull from Mainframe — Supported
-- Edit Data Set — Supported
-- Rename Data Set — Supported
-- Delete Data Set — Supported
+- Show Data Set Attribute
+- Pull from Mainframe
+- Edit Data Set
+- Rename Data Set
+- Delete Data Set
 
 Partitioned Dataset:
 
-- Show Data Set Attribute — Supported
-- Create New Member — Supported
-- Update Member — Supported
-- Rename Data Set — Supported
-- Delete Data Set — Supported
+- Show Data Set Attribute
+- Create New Member
+- Update Member
+- Rename Data Set
+- Delete Data Set
 
 Partitioned Dataset Member:
 
-- Pull from Mainframe — Supported
-- Edit Member — Supported
-- Rename Member — Supported
-- Delete Member — Supported
+- Pull from Mainframe
+- Edit Member
+- Rename Member
+- Delete Member
 
 ## Providing feedback or help contributing
 
