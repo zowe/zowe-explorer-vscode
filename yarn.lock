@@ -1991,10 +1991,10 @@
   dependencies:
     minimatch "3.0.4"
 
-"@zowe/zos-ftp-for-zowe-cli@1.3.0":
-  version "1.3.0"
-  resolved "https://registry.npmjs.org/@zowe/zos-ftp-for-zowe-cli/-/zos-ftp-for-zowe-cli-1.3.0.tgz#cd974d080ac5cb73fbd1a8d0014fa9b30a6354e3"
-  integrity sha512-5eyRMIAgufurBJni7n25hfBsQF+Vb+b8UOYoBuYpyZktj9Kkp/e9+GPawqoaQa7HObJhnKx0FpolPOXLDitCcQ==
+"@zowe/zos-ftp-for-zowe-cli@1.4.0":
+  version "1.4.0"
+  resolved "https://registry.npmjs.org/@zowe/zos-ftp-for-zowe-cli/-/zos-ftp-for-zowe-cli-1.4.0.tgz#530d99a717f16cf257f774116f8c4c549ddd5d02"
+  integrity sha512-7CNMKmcMgHn50+yWVNpzkoof9MJlWrRpUGybFdGHIukolqNg0QKkr9wjjY5Zwsq+JcIF5MqsYnfSdNA0vi8E5g==
   dependencies:
     zos-node-accessor "1.0.7"
 
