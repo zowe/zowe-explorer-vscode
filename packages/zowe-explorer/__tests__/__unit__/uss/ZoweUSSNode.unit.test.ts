@@ -827,6 +827,59 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
         expect(rootChildren.length).toBe(0);
     });
 
+    it("Tests that only children with parent paths matching the current fullPath are returned as existing children", async () => {
+        // This tests functionality that prevents children of previous searches from appearing in new searches with different filepaths,
+        // especially if file or folder names (labels) are shared between the different filepaths.
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        const oldPath = "/u/oldUser";
+        const newPath = "/u/newUser";
+
+        const parentNode = new ZoweUSSNode(
+            "newUser",
+            vscode.TreeItemCollapsibleState.Collapsed,
+            blockMocks.rootNode,
+            globalMocks.session,
+            "/u",
+            false,
+            globalMocks.profileOne.name,
+            undefined
+        );
+
+        // Creating structure of files and directorie
+        // Label of each child must match names of items returned by mock fileList() in packages/zowe-explorer/__mocks__/@zowe/cli.ts
+        const oldUserChildren: ZoweUSSNode[] = [
+            new ZoweUSSNode(
+                "aDir",
+                vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode,
+                globalMocks.session,
+                oldPath,
+                false,
+                globalMocks.profileOne.name,
+                undefined
+            ),
+            new ZoweUSSNode(
+                "myFile.txt",
+                vscode.TreeItemCollapsibleState.None,
+                parentNode,
+                globalMocks.session,
+                oldPath,
+                false,
+                globalMocks.profileOne.name,
+                undefined
+            ),
+        ];
+        parentNode.children = oldUserChildren;
+        parentNode.dirty = true;
+
+        const newChildren = await parentNode.getChildren();
+        expect(newChildren[0].fullPath).not.toContain(oldPath);
+        expect(newChildren[1].fullPath).not.toContain(oldPath);
+        expect(newChildren[0].fullPath).toContain(newPath);
+        expect(newChildren[1].fullPath).toContain(newPath);
+    });
+
     it("Tests that error is thrown when node label is blank", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
