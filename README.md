@@ -3,7 +3,7 @@
 [![version](https://vsmarketplacebadge.apphb.com/version-short/Zowe.vscode-extension-for-zowe.png)](https://vsmarketplacebadge.apphb.com/version-short/Zowe.vscode-extension-for-zowe.png)
 [![downloads](https://vsmarketplacebadge.apphb.com/downloads-short/Zowe.vscode-extension-for-zowe.png)](https://vsmarketplacebadge.apphb.com/downloads-short/Zowe.vscode-extension-for-zowe.png)
 
-Welcome to Zowe Explorer! This project is powered by Zowe, [Open Mainframe Project](https://www.openmainframeproject.org/).
+Welcome to Zowe Explorer! [Zowe](https://www.zowe.org/) is a project hosted by the [Open Mainframe Project](https://www.openmainframeproject.org/), a [Linux Foundation](https://www.linuxfoundation.org/) project.
 
 Join our [Slack channel](https://slack.openmainframeproject.org/) to connect with the Zowe community.
 
