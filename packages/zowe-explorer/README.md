@@ -33,7 +33,7 @@ More information:
 
 ## What's new in Zowe Explorer 1.13.0
 
-Documentation updates:
+Enhancements:
 
 - Added the monorepo landing Readme that contains the high-level overview of the repository folders such as `packages` folder, instructions on how to contribute to the project and links to Medium articles providing additional useful information about Zowe Explorer and Zowe.
 - Added the pre-filled and pre-selected filename of the copied member to the entry field while performing the paste member action.
