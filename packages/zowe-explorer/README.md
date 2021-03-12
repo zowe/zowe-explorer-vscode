@@ -23,7 +23,7 @@ More information:
 
 ## Contents
 
-- [What's new in Zowe Explorer 1.12.1](#whats-new-in-zowe-explorer-1.12.1)
+- [What's new in Zowe Explorer 1.13.0](#whats-new-in-zowe-explorer-1.13.0)
 - [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
 - [Sample Use Cases](#sample-use-cases)
@@ -31,15 +31,21 @@ More information:
 - [Usage Tips](#usage-tips)
 - [Extending Zowe Explorer](#extending-zowe-explorer)
 
-## What's new in Zowe Explorer 1.12.1
+## What's new in Zowe Explorer 1.13.0
 
-Bug Fixes:
+Enhancements:
 
-- Fixed the issue that prevented edited profile base paths from being saved.
-- Fixed the issue that prevented Zowe Explorer from storing empty values for optional profile fields, such as `user`, `password`, `timeout`, and `encoding`. This is done to be consistent with the way Zowe CLI stores profile information when creating and editing profiles.
-- Fixed the issue that caused repeated credential prompting if a user refused to authenticate.
-- Fixed the issue that caused removed favorite profiles to persist between IDE sessions.
-- Fixed the issue that prevented updated credential prompting from occurring when a profile was marked “invalid”.
+- Added the monorepo landing Readme that contains the high-level overview of the repository folders such as `packages` folder, instructions on how to contribute to the project and links to Medium articles providing additional useful information about Zowe Explorer and Zowe.
+- Added the pre-filled and pre-selected filename of the copied member to the entry field while performing the paste member action.
+- Added the multiple deletion of jobs feature. You can now select and delete multiple jobs.
+
+Bug fixes:
+
+- Fixed the issue that prevented the list of recently opened files from being displayed upon request. You can access a list of recently opened files by pressing the Ctrl+Alt+R (Windows) or Command+Option+R (Mac) key combination.
+- Fixed the issue that prevented file picker from functioning. The file picker feature lets you filter your datasets in the tree by pressing the Ctrl+Alt+P (Windows) or Command+Option+P (Mac) key combination.
+- Fixed the issue that caused the content from a previously filtered USS directory instead of the currently filtered USS directory to be served.
+- Added the previously selected `RejectUnauthorized` value to the placeholder text of the entry field while updating an existing profile. In addition, the value is highlighted and shown at the top of the selection list.
+- Improved error handling for the data set copy/paste member, migrate, and recall functions.
 
 For more information, see [Changelog](https://marketplace.visualstudio.com/items/Zowe.vscode-extension-for-zowe/changelog).
 
@@ -65,6 +71,17 @@ Create a profile, review the sample use cases to familiarize yourself with the c
 <br /><br />
 
 You can now use all the functionalities of the extension.
+
+#### Profile Validation
+
+Zowe Explorer includes the profile validation feature that helps to ensure that the specified connection to z/OS is successfully established and your profile is ready for use. If a profile is valid, the profile is active and can be used. By default, the feature is automatically enabled. You can disable the feature by right-clicking on your profile and selecting the **Disable Validation for Profile** option. Alternatively, you can enable or disable the feature for all profiles in the VS Code settings.
+
+Follow these steps:
+
+1. Navigate to the VS Code settings.
+2. Open Zowe Explorer Settings.
+3. Enable or disable the automatic validation of profiles option.
+4. Restart VS Code.
 
 ### Use Base Profile and Token with Existing Profiles
 
@@ -277,7 +294,7 @@ Your data set member is uploaded.
    You successfully created a data set.
 
    ![Parameters](/docs/images/ZE-set-params.gif?raw=true "Parameters")
-<br /><br />
+   <br /><br />
 
 ### Delete a data set member and a data set
 
@@ -318,10 +335,10 @@ Your data set member is uploaded.
 
 Store your credentials securely with the Secure Credentials Store (SCS) plug-in.
 
-1. Navigate to the VSCode settings.
+1. Navigate to the VS Code settings.
 2. Open Zowe Explorer Settings.
 3. Add the `Zowe-Plugin` value to the **Zowe Security** entry field.
-4. Restart VSCode.
+4. Restart VS Code.
 
 For more information about SCS, see [Secure Credential Store Plug-in for Zowe Explorer](https://docs.zowe.org/stable/user-guide/ze-profiles.html#enabling-secure-credential-store-with-zowe-explorer).
 
@@ -329,7 +346,7 @@ For more information about SCS, see [Secure Credential Store Plug-in for Zowe Ex
 
 - Use the **Add to Favorite** feature to permanently store chosen data sets, USS files, and jobs in the **Favorites** folder. Right-click on a data set, USS file or jobs and select **Add Favorite**.
 
-- **Syntax Highlighting:** Zowe Explorer supports syntax highlighting for data sets. Fox example, you can use such extensions as [COBOL Language Support](https://marketplace.visualstudio.com/items?itemName=broadcomMFD.cobol-language-support) or [HLASM Language Support](https://marketplace.visualstudio.com/items?itemName=broadcomMFD.hlasm-language-support).
+- **Syntax Highlighting:** Zowe Explorer supports syntax highlighting for data sets. You can search for and install such extensions in VS Code Marketplace.
 
 - **Update a profile**: Right-click a chosen profile, select **Update Profile** option, and modify the information inside the profile.
 
@@ -339,7 +356,9 @@ For more information about SCS, see [Secure Credential Store Plug-in for Zowe Ex
 
 - **Associate profiles**: You can create a secondary association by right-clicking the profile and selecting the **Associate profiles** icon. For more information, see [the Associate profiles section](https://docs.zowe.org/stable/user-guide/ze-profiles.html#associate-profile) in Zowe Docs.
 
-For information on how to configure Zowe Explorer, see [Zowe Explorer Configuration](https://docs.zowe.org/stable/user-guide/ze-install.html#configuration).
+- **Open recent members**: Zowe Explorer lets you open a list of members you worked on earlier. You can access the list by pressing Ctrl+Alt+R (Windows) or Command+Option+R (Mac).
+
+For the comprehensive Zowe Explorer documentation that also includes information about USS and Jobs interactions, see [the Zowe Explorer documentation](https://docs.zowe.org/stable/user-guide/ze-install.html) in Zowe Docs.
 
 ## Extending Zowe Explorer
 
