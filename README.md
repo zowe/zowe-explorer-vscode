@@ -1,9 +1,9 @@
-# Getting Started with Zowe Explorer
+# Zowe Explorer
 
 [![version](https://vsmarketplacebadge.apphb.com/version-short/Zowe.vscode-extension-for-zowe.png)](https://vsmarketplacebadge.apphb.com/version-short/Zowe.vscode-extension-for-zowe.png)
 [![downloads](https://vsmarketplacebadge.apphb.com/downloads-short/Zowe.vscode-extension-for-zowe.png)](https://vsmarketplacebadge.apphb.com/downloads-short/Zowe.vscode-extension-for-zowe.png)
 
-Welcome to Zowe Explorer! [Zowe](https://www.zowe.org/) is a project hosted by the [Open Mainframe Project](https://www.openmainframeproject.org/), a [Linux Foundation](https://www.linuxfoundation.org/) project.
+Welcome to Zowe Explorer! Zowe Explorer brings mainframe capabilities to modern IDEs, such as VS Code. [Zowe](https://www.zowe.org/) is a project hosted by the [Open Mainframe Project](https://www.openmainframeproject.org/), a [Linux Foundation](https://www.linuxfoundation.org/) project.
 
 Join our [Slack channel](https://slack.openmainframeproject.org/) to connect with the Zowe community.
 
@@ -34,17 +34,22 @@ Ensure that you meet the [software requirements](#requirements) before you build
 
 Clone the repository and run `yarn run package` to build a VSIX file and start working with the extension.
 
-1. Clone the repository by issuing the following command:
+1. Clone the repository by issuing the following command in your local command-line interface:
 
    ```shell
-   git clone --origin=upstream --branch=main --single-branch https://github.com/zowe/vscode-extension-for-zowe.git
+   git clone --origin=upstream --branch=master --single-branch https://github.com/zowe/vscode-extension-for-zowe.git
    ```
 
-2. From your local copy of the repository, issue the following commands:
+2. Change directories into the newly-cloned repository:
 
    ```shell
-   yarn install
-   yarn run package
+   cd C:\<path>\vscode-extension-for-zowe
+   ```
+
+3. From your local copy of the repository, issue the following commands:
+
+   ```shell
+   yarn install && yarn run package
    ```
 
 You can find the VSIX file in the `dist` folder.
@@ -52,7 +57,7 @@ You can find the VSIX file in the `dist` folder.
 Now install the extension to VS Code.
 
 1. Navigate to the Extensions menu in VS Code and click the `...` button in the top-left corner of the pane.
-2. Select Install from VSIX and select the .vsix file that was created by your `yarn workspace vscode-extension-for-zowe package` command.
+2. Select Install from VSIX and select the .vsix file that was created by the commands you issued earlier.
 3. Restart Visual Studio Code.
 
 You can now use the extension.
@@ -85,7 +90,7 @@ We encourage you to contribute to Zowe Explorer!
 
 Check the current [open issues](https://github.com/zowe/vscode-extension-for-zowe/issues) to choose where you can contribute. You can look for the `help wanted`-labeled issues to find issues that require additional input. If you are new to the project, you might want to check the issues with the `good first issue` label.
 
-Also, you can check our [Zenhub Communities boards](https://github.com/zowe/vscode-extension-for-zowe#workspaces/zowe-cli-explorers-5d77ca38fb288f0001ceae92/board?repos=150100207) for more convenient view of issues and access to other boards of Zowe-related projects.
+Also, you can check our [Zenhub Communities boards](https://github.com/zowe/vscode-extension-for-zowe#workspaces/zowe-cli-explorers-5d77ca38fb288f0001ceae92/board?repos=150100207) for a more convenient view of issues and access to other boards of Zowe-related projects.
 
 For more information on how to contribute, see [Contributor Guidance](https://github.com/zowe/vscode-extension-for-zowe/wiki/Best-Practices:-Contributor-Guidance).
 

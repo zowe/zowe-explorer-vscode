@@ -41,8 +41,8 @@ Enhancements:
 
 Bug fixes:
 
-- Fixed the issue that prevented the list of recently opened files from being displayed upon request. You can access a list of recently opened files by pressing the Ctrl+Alt+R or Command+Alt+R key combination.
-- Fixed the issue that prevented file picker from functioning. The file picker feature lets you filter your datasets in the tree by pressing the Ctrl+Alt+P combination.
+- Fixed the issue that prevented the list of recently opened files from being displayed upon request. You can access a list of recently opened files by pressing the Ctrl+Alt+R (Windows) or Command+Option+R (Mac) key combination.
+- Fixed the issue that prevented file picker from functioning. The file picker feature lets you filter your datasets in the tree by pressing the Ctrl+Alt+P (Windows) or Command+Option+P (Mac) key combination.
 - Fixed the issue that caused the content from a previously filtered directory instead of the currently filtered directory to be served.
 - Added the previously selected `RejectUnauthorized` value to the placeholder text of the entry field while updating an existing profile. In addition, the value is highlighted and shown at the top of the selection list.
 
@@ -345,7 +345,7 @@ For more information about SCS, see [Secure Credential Store Plug-in for Zowe Ex
 
 - Use the **Add to Favorite** feature to permanently store chosen data sets, USS files, and jobs in the **Favorites** folder. Right-click on a data set, USS file or jobs and select **Add Favorite**.
 
-- **Syntax Highlighting:** Zowe Explorer supports syntax highlighting for data sets. You can search and install such extensions in VS Code Marketplace.
+- **Syntax Highlighting:** Zowe Explorer supports syntax highlighting for data sets. You can search for and install such extensions in VS Code Marketplace.
 
 - **Update a profile**: Right-click a chosen profile, select **Update Profile** option, and modify the information inside the profile.
 
@@ -355,9 +355,9 @@ For more information about SCS, see [Secure Credential Store Plug-in for Zowe Ex
 
 - **Associate profiles**: You can create a secondary association by right-clicking the profile and selecting the **Associate profiles** icon. For more information, see [the Associate profiles section](https://docs.zowe.org/stable/user-guide/ze-profiles.html#associate-profile) in Zowe Docs.
 
-- **Open recent members**: Zowe Explorer lets you open a list of members you worked on earlier. You can access the list by pressing Ctrl+Alt+R or Command+Alt+R.
+- **Open recent members**: Zowe Explorer lets you open a list of members you worked on earlier. You can access the list by pressing Ctrl+Alt+R (Windows) or Command+Option+R (Mac).
 
-For the complete Zowe Explorer documentation that also includes information about USS and Jobs interactions, see [the complete Zowe Explorer documentation](https://docs.zowe.org/stable/user-guide/ze-install.html).
+For the comprehensive Zowe Explorer documentation that also includes information about USS and Jobs interactions, see [the Zowe Explorer documentation](https://docs.zowe.org/stable/user-guide/ze-install.html) in Zowe Docs.
 
 ## Extending Zowe Explorer
 
