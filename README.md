@@ -32,7 +32,7 @@ Zowe Explorer repository includes several folders with files that let you build 
 
 Ensure that you meet the [software requirements](#requirements) before you build and test your Zowe Explorer.
 
-Clone the repository and run `yarn run package` to build a VSIX file and start working with the extension.
+Clone the repository, build a VSIX file, and start working with the extension.
 
 1. Clone the repository by issuing the following command in your local command-line interface:
 
