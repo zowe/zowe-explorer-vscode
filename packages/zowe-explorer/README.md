@@ -43,7 +43,7 @@ Bug fixes:
 
 - Fixed the issue that prevented the list of recently opened files from being displayed upon request. You can access a list of recently opened files by pressing the Ctrl+Alt+R (Windows) or Command+Option+R (Mac) key combination.
 - Fixed the issue that prevented file picker from functioning. The file picker feature lets you filter your datasets in the tree by pressing the Ctrl+Alt+P (Windows) or Command+Option+P (Mac) key combination.
-- Fixed the issue that caused the content from a previously filtered directory instead of the currently filtered directory to be served.
+- Fixed the issue that caused the content from a previously filtered USS directory instead of the currently filtered USS directory to be served.
 - Added the previously selected `RejectUnauthorized` value to the placeholder text of the entry field while updating an existing profile. In addition, the value is highlighted and shown at the top of the selection list.
 - Improved error handling for the data set copy/paste member, migrate, and recall functions.
 
