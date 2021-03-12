@@ -2,295 +2,98 @@
 
 [![version](https://vsmarketplacebadge.apphb.com/version-short/Zowe.vscode-extension-for-zowe.png)](https://vsmarketplacebadge.apphb.com/version-short/Zowe.vscode-extension-for-zowe.png)
 [![downloads](https://vsmarketplacebadge.apphb.com/downloads-short/Zowe.vscode-extension-for-zowe.png)](https://vsmarketplacebadge.apphb.com/downloads-short/Zowe.vscode-extension-for-zowe.png)
-[![codecov](https://codecov.io/gh/zowe/vscode-extension-for-zowe/branch/master/graph/badge.svg)](https://codecov.io/gh/zowe/vscode-extension-for-zowe)
-[![slack](https://img.shields.io/badge/chat-on%20Slack-blue)](https://slack.openmainframeproject.org/)
 
-[Zowe Explorer](https://github.com/zowe/community#zowe-explorer) is a sub-project of Zowe, focusing on modernizing mainframe experience. [Zowe](https://www.zowe.org/) is a project hosted by the [Open Mainframe Project](https://www.openmainframeproject.org/), a [Linux Foundation](https://www.linuxfoundation.org/) project.
+Welcome to Zowe Explorer! Zowe Explorer brings mainframe capabilities to modern IDEs, such as VS Code. [Zowe](https://www.zowe.org/) is a project hosted by the [Open Mainframe Project](https://www.openmainframeproject.org/), a [Linux Foundation](https://www.linuxfoundation.org/) project.
 
-The Zowe Explorer extension modernizes the way developers and system administrators interact with z/OS mainframes by:
+Join our [Slack channel](https://slack.openmainframeproject.org/) to connect with the Zowe community.
 
-- Enabling you to create, modify, rename, copy, and upload data sets directly to a z/OS mainframe.
-- Enabling you to create, modify, rename, and upload USS files directly to a z/OS mainframe.
-- Providing a more streamlined way to access data sets, uss files and jobs.
-- Letting you create, edit, and delete Zowe CLI `zosmf` compatible profiles.
-- Letting you use the Secure Credential Store plug-in to store your credentials securely in the settings.
-- Letting you leverage the API Mediation Layer token-based authentication to access z/OSMF.
+## Requirements
 
-More information:
-
-- For the complete Zowe Explorer documentation, see [Zowe Docs](https://docs.zowe.org/stable/user-guide/ze-install.html).
-- Join the **#zowe-explorer** channel on [Slack](https://openmainframeproject.slack.com/) to stay in touch with the Zowe community.
-
-## Contents
-
-- [What's new in Zowe Explorer 1.12.0](#whats-new-in-zowe-explorer-1.12.0)
-- [Prerequisites](#prerequisites)
-- [Getting Started](#getting-started)
-- [Sample Use Cases](#sample-use-cases)
-- [Credentials Security](#credentials-security)
-- [Usage Tips](#usage-tips)
-- [Extending Zowe Explorer](#extending-zowe-explorer)
-
-## What's new in Zowe Explorer 1.12.0
-
-New features:
-
-- Added the ability to edit data set attributes before allocation
-- Allowed filtering of member names from the Data Sets search bar
-- Reorganized the context menus and streamlined the visible icons
-
-Bug Fixes:
-
-- Fixed the messaging displayed when handling inactive profiles and when updating profiles
-- Fixed the issue causing tree restructure when renaming a USS file or directory
-- Fixed the issue preventing issuing of commands when using profiles with tokens
-
-For more information, see [Changelog](https://marketplace.visualstudio.com/items/Zowe.vscode-extension-for-zowe/changelog).
-
-## Prerequisites
+Client-side prerequisites:
 
 - Install [Node.js](https://nodejs.org/en/download/) v8.0 or later.
+- Install [Yarn](https://yarnpkg.com/getting-started/install).
+
+Host-side prerequisites:
+
 - Configure TSO/E address space services, z/OS data set, file REST interface and z/OS jobs REST interface. For more information, see [z/OS Requirements](https://docs.zowe.org/stable/user-guide/systemrequirements-zosmf.html#z-os-requirements).
-- Create a Zowe Explorer profile.
 
-## Getting Started
+## Directory Structure
 
-Create a profile, review the sample use cases to familiarize yourself with the capabilities of Zowe Explorer, and you are ready to use Zowe Explorer.
+Zowe Explorer repository includes several folders with files that let you build and configure various aspects of the extension. The bulk of the Zowe Explorer source code is in the `packages` directory. The `packages` folder has the following structure:
 
-### Create Profile
+- `├──`[`packages`](./packages) — includes source code of Zowe Explorer, various Zowe Explorer-related extensions, and the extensibility API<br>
+  - `├──`[`eslint-plugin-zowe-explorer`](./packages/eslint-plugin-zowe-explorer) — includes necessary files to configure ESLint plug-in for Zowe Explorer
+  - `├──`[`zowe-explorer-api`](./packages/zowe-explorer-api) — includes files to set up and use Extensibility API for Explorer. The API has two modules: Profiles API and Tree API.
+  - `├──`[`zowe-explorer-ftp-extension`](./packages/zowe-explorer-ftp-extension) — includes files to set up and use the FTP extension for Zowe Explorer.
+  - `├──`[`zowe-explorer`](./packages/zowe-explorer) — core Zowe Explorer source files, ReadMe, Changelog, and more.
 
-1. Navigate to the explorer tree.
-2. Hover over **DATA SETS**, **USS**, or **JOBS**.
-3. Click the **+** icon.
-4. Select **Create a New Connection to z/OS**. The user name and password fields are optional before you started to use a profile.
-5. Follow the instructions, and enter all required information to complete the profile creation.
+## Build Locally
 
-![New Connection](/docs/images/ZE-newProfiles.gif?raw=true "New Connection")
-<br /><br />
+Ensure that you meet the [software requirements](#requirements) before you build and test your Zowe Explorer.
 
-You can now use all the functionalities of the extension.
+Clone the repository, build a VSIX file, and start working with the extension.
 
-### Use Base Profile and Token with Existing Profiles
+1. Clone the repository by issuing the following command in your local command-line interface:
 
-Leverage existing base profiles with a token to access z/OSMF via the API Mediation Layer.
+   ```shell
+   git clone --origin=upstream --branch=master --single-branch https://github.com/zowe/vscode-extension-for-zowe.git
+   ```
 
-Before using the base profile functionality, ensure that you have [Zowe CLI](https://docs.zowe.org/stable/user-guide/cli-installcli.html) v1.13.0 or higher installed.
+2. Change directories into the newly-cloned repository:
 
-**Follow these steps:**
+   ```shell
+   cd vscode-extension-for-zowe
+   ```
 
-1. Open Zowe CLI and run the following command: `zowe auth login apiml`
-2. Follow the instructions to complete the login.  
-   A local base profile is created that contains your token.  
-   **Note:** For more information about the process, see [Token Management](https://docs.zowe.org/stable/user-guide/cli-usingcli.html#how-token-management-works).
+3. From your local copy of the repository, issue the following commands:
 
-3. Run Zowe Explorer and click the **+** icon.
+   ```shell
+   yarn install && yarn run package
+   ```
 
-4. Select the profile you use with your base profile with the token.
+You can find the VSIX file in the `dist` folder.
 
-   The profile appears in the tree and you can now use this profile to access z/OSMF via the API Mediation Layer.
+Now install the extension to VS Code.
 
-For more information, see [Integrating with API Mediation Layer](https://docs.zowe.org/stable/user-guide/cli-usingcli.html#integrating-with-api-mediation-layer).
+1. Navigate to the Extensions menu in VS Code and click the `...` button in the top-left corner of the pane.
+2. Select Install from VSIX and select the .vsix file that was created by the commands you issued earlier.
+3. Restart Visual Studio Code.
 
-#### Log in to the Authentication Service
+You can now use the extension.
 
-Use the Log in to the **Authentication Service** feature to regenerate a new token for your base profile.
+For more information on how to run tests for the extension, see [Developer's ReadMe](https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/Developer's%20ReadMe.md).
 
-**Follow these steps:**
+## Available Documentation
 
-1. Open Zowe Explorer.
-2. Right-click your profile.
-3. Select the **Log in to Authentication Service** option.
+The current repository of the VS Code extension Zowe Explorer includes several ReadMes that highlight different aspects of using the extension.
 
-   You are prompted to enter your username and password.
+Use the following list with the description and links to find the topics of your interest:
 
-The token is stored in the default base profile .yaml file.
+[Core Zowe Explorer ReadMe](https://github.com/zowe/vscode-extension-for-zowe/blob/master/packages/zowe-explorer/README.md) — contains information about how to install, configure, and use Zowe Explorer. This ReadMe helps you to familiarize yourself with the basic features of the extension.
 
-If you do not want to store your token, you can request the server to end your session token. Use the **Log out from Authentication Service** feature to invalidate the token.
+[Zowe Explorer ESlint Plug-in ReadMe](https://github.com/zowe/vscode-extension-for-zowe/blob/master/packages/eslint-plugin-zowe-explorer/README.md) — contains information about how to install ESLint and configure ESLint rules. ESLint helps you to find and fix problems in your JavaScript code.
 
-**Follow these steps:**
+[Zowe Explorer Extensibility API ReadMe](https://github.com/zowe/vscode-extension-for-zowe/blob/master/packages/zowe-explorer-api/README.md) — contains information about how to extend the capabilities of Zowe Explorer, using the extensibility API.
 
-1. Open Zowe Explorer.
-2. Right-click your profile.
-3. Select the **Log out from Authentication Service** option.
+[Zowe Explorer FTP Extension ReadMe](https://github.com/zowe/vscode-extension-for-zowe/blob/master/packages/zowe-explorer-ftp-extension/README.md) — contains information about how to install and use the Zowe Explorer extension for FTP. The extension adds the FTP protocol to Zowe Explorer, enabling you to use z/OS FTP Plug-in for Zowe CLI profiles to connect and interact with z/OS USS and MVS.
 
-Your token has been successfully invalidated.
+**Note**: Zowe Explorer FTP extension is an example that shows how the extensibility API is used to add new capabilities to Zowe Explorer.
 
-## Sample Use Cases
+[Zowe Explorer Developer's ReadMe](https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/Developer's%20ReadMe.md) — contains information on how to install, build, and test Zowe Explorer.
 
-Review the following use cases to understand how to work with data sets in Zowe Explorer. For the complete list of features including USS and jobs, see [Zowe Explorer Sample Use Cases](https://docs.zowe.org/stable/user-guide/ze-usage.html#sample-use-cases).
+[Zowe Explorer in Theia ReadMe](https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/README-Theia.md) — contains information on how to develop for the Web-based IDE Eclipse Theia.
 
-- [View data sets and use multiple filters](#view-data-sets-and-use-multiple-filters): View multiple data sets simultaneously and apply filters to show specified data sets.
-- [Refresh the data set list](#refresh-the-list-of-data-sets): Refresh the list of pre-filtered data sets.
-- [Rename data sets](#rename-data-sets): Rename specified data sets.
-- [Copy data sets](#copy-data-sets): Copy specified data sets and members.
-- [Download, edit, and upload existing PDS members](#download-edit-and-upload-existing-pds-members): You can instantly pull data sets and data set members from the mainframe, edit them, and upload back.
-- [Prevent merge conflicts](#use-the-save-option-to-prevent-merge-conflicts): The save option includes a **compare** mechanism letting you resolve potential merge conflicts.
-- [Create data sets and data set members](#create-a-new-pds-and-a-pds-member): Create a new data set and data set members.
-- [Delete data set member and a data set](#delete-a-pds-member-and-pds): Delete a chosen data set member or an entire data set.
-- [View and access multiple profiles simultaneously](#view-and-access-multiple-profiles-simultaneously): Work with data sets from multiple profiles.
-- [Allocate Like](#allocate-like): Create a copy of a chosen data set with the same parameters.
+## How to Contribute
 
-### View data sets and use multiple filters
+We encourage you to contribute to Zowe Explorer!
 
-1. Navigate to the explorer tree.
-2. Open the **DATA SETS** bar.
-3. Hover over the profile that you want to apply the filter to.
-4. Click the **magnifying glass** icon.
-5. Enter a pattern you want to create a filter for.
-   The data sets that match your pattern(s) are displayed in the explorer tree.
+Check the current [open issues](https://github.com/zowe/vscode-extension-for-zowe/issues) to choose where you can contribute. You can look for the `help wanted`-labeled issues to find issues that require additional input. If you are new to the project, you might want to check the issues with the `good first issue` label.
 
-**Tip:** To provide multiple filters, separate entries with a comma. You can append or postpend any filter with an \*, which indicates wildcard searching. You cannot enter an \* as the entire pattern.
+Also, you can check our [Zenhub Communities boards](https://github.com/zowe/vscode-extension-for-zowe#workspaces/zowe-cli-explorers-5d77ca38fb288f0001ceae92/board?repos=150100207) for a more convenient view of issues and access to other boards of Zowe-related projects.
 
-![View Data Set](/docs/images/ZE-multiple-search.gif?raw=true "View Data Set")
-<br /><br />
+For more information on how to contribute, see [Contributor Guidance](https://github.com/zowe/vscode-extension-for-zowe/wiki/Best-Practices:-Contributor-Guidance).
 
-#### View data sets with member filters
+## External Links
 
-![View Data Set With Member Pattern](/docs/images/ZE-member-filter-search.gif?raw=true "View Data Set With Member Pattern")
-
-**Note:** You cannot favorite a data set or member that includes a member filter search pattern.
-<br /><br />
-
-### Refresh the list of data sets
-
-1. Navigate to the explorer tree.
-2. Click **Refresh All** button (circular arrow icon) on the right of the **DATA SETS** explorer bar.
-
-### Rename data sets
-
-1. Navigate to the explorer tree.
-2. Open the **DATA SETS** bar.
-3. Select a data set you want to rename.
-4. Right-click the data set and select the **Rename Data Set** option.
-5. Change the name of the data set.
-
-![Rename Data Set](/docs/images/ZE-rename.gif?raw=true "Rename Data Set")
-<br /><br />
-
-### Copy data sets
-
-1. Navigate to the explorer tree.
-2. Open the **DATA SETS** bar.
-3. Select a member you want to copy.
-4. Right-click the member and select the **Copy Data Set** option.
-5. Right-click the data set where the member belongs and select the **Paste Data Set** option.
-6. Enter the name of the copied member.
-
-![Copy Data Set](/docs/images/ZE-copy.gif?raw=true "Copy Data Set")
-<br /><br />
-
-### Download, edit, and upload existing PDS members
-
-1. Navigate to the explorer tree.
-2. Open the **DATA SETS** bar.
-3. Open a profile.
-4. Click the PDS member (or PS) that you want to download.
-
-   **Note:** To view the members of a PDS, click the PDS to expand the tree.
-
-   The PDS member is displayed in the text editor window of VSC.
-
-5. Edit the document.
-6. Navigate back to the PDS member (or PS) in the explorer tree, and click the **Save** button.
-
-Your PDS member (or PS) is uploaded.
-
-**Note:** If someone else has made changes to the PDS member (or PS) while you were editing it, you can merge your conflicts before uploading to the mainframe.
-
-![Edit](/docs/images/ZE-download-edit.gif?raw=true "Edit")
-<br /><br />
-
-### Use the save option to prevent merge conflicts
-
-1. Navigate to the explorer tree.
-2. Open the **DATA SETS** bar.
-3. Open a member of a data set you want to edit.
-4. Edit a data set.
-5. Press Ctrl+S or Command+S (OSx) to save you changes.
-6. (Optional) Resolve merge conflicts if necessary.
-
-![Save](/docs/images/ZE-safe-save.gif?raw=true "Save")
-<br /><br />
-
-### Create a new PDS and a PDS member
-
-1. Navigate to the explorer tree.
-2. Open the **DATA SETS** bar.
-3. Click the **Create New Data Set** button to create a PDS.
-4. From the drop-down menu, select the type of PDS that you want to create.
-5. Enter a name for the PDS.
-   The PDS is created.
-6. To create a member, right-click the PDS and select **Create New Member**.
-7. Enter a name for the member.
-   The member is created.
-
-![Create](/docs/images/ZE-cre-pds-member.gif?raw=true "Create")
-<br /><br />
-
-### Delete a PDS member and PDS
-
-1. Navigate to the explorer tree.
-2. Open the **DATA SETS** bar.
-3. Open the profile and PDS containing the member.
-4. Right-click on the PDS member that you want to delete and select **Delete Member**.
-5. Confirm the deletion by clicking **Yes** on the drop-down menu.
-
-   **Note:** Alternatively, you can select 'No' to cancel the deletion.
-
-6. To delete a PDS, right-click the PDS and click **Delete PDS**, then confirm the deletion.
-
-   **Note:** You can delete a PDS before you delete its members.
-
-![Delete](/docs/images/ZE-del-pds-member.gif?raw=true "Delete")
-<br /><br />
-
-### View and access multiple profiles simultaneously
-
-1. Navigate to the explorer tree.
-2. Open the **DATA SETS** bar.
-3. Click the **Add Profile** button on the right of the **DATA SET** explorer bar.
-4. Select the profile that you want to add to the view as illustrated by the following screen.
-
-![Add Profile](/docs/images/ZE-mult-profiles.gif?raw=true "Add Profile")
-
-### Allocate Like
-
-1. Navigate to the explorer tree.
-2. Open the **DATA SETS** bar.
-3. Right-click the data set and select the **Allocate Like (New File with Same Attributes)** option.
-4. Enter the new data set name.
-
-![Allocate Like](/docs/images/ZE-allocate-like.gif?raw=true "Allocate Like")
-
-## Credentials Security
-
-Store your credentials securely with the Secure Credentials Store (SCS) plug-in.
-
-1. Navigate to the VSCode settings.
-2. Open Zowe Explorer Settings.
-3. Add the `Zowe-Plugin` value to the **Zowe Security** entry field.
-4. Restart VSCode.
-
-For more information about SCS, see [Secure Credential Store Plug-in for Zowe Explorer](https://docs.zowe.org/stable/user-guide/ze-profiles.html#enabling-secure-credential-store-with-zowe-explorer).
-
-## Usage tips
-
-- Use the **Add Favorite** feature to permanently store chosen data sets, USS files, and jobs in the **Favorites** folder. Right-click on a data set, USS file or jobs and select **Add Favorite**.
-
-- **Syntax Highlighting:** Zowe Explorer supports syntax highlighting for data sets. Fox example, you can use such extensions as [COBOL Language Support](https://marketplace.visualstudio.com/items?itemName=broadcomMFD.cobol-language-support) or [HLASM Language Support](https://marketplace.visualstudio.com/items?itemName=broadcomMFD.hlasm-language-support).
-
-- **Edit a profile**: Click the **pencil** icon next to the **magnifying glass** icon in the explorer tree, and modify the information inside your profile.
-
-- **Delete a profile**: Right-click a chosen profile and select **Delete Profile** to permanently delete the profile. The functionality deletes a profile from your `.zowe` folder.
-
-- **Hide a profile**: You can hide a profile from the profile tree by right-clicking the profile and selecting the **Hide Profile** option. To add the profile back, click the **+** button and select the profile from the quick pick list.
-
-- **Associate profiles**: You can create a secondary association by right-clicking the profile and selecting the **Associate profiles** icon. For more information, see [the Associate profiles section](https://docs.zowe.org/stable/user-guide/ze-profiles.html#associate-profile) in Zowe Docs.
-
-For information how to configure Zowe Explorer, see [Zowe Explorer Configuration guidelines](https://docs.zowe.org/stable/user-guide/ze-install.html#configuration).
-
-## Extending Zowe Explorer
-
-You can add new functionalities to Zowe Explorer by creating your own extension. For more information, see [Extensions for Zowe Explorer](https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/README-Extending.md).
-
-**Tip:** View an example of a Zowe Explorer extension — [Zowe Explorer FTP extension documentation](https://github.com/zowe/zowe-explorer-ftp-extension#zowe-explorer-ftp-extension).
+Check out more about using Zowe Explorer and Zowe on [Medium](https://medium.com/zowe) and [Awesome Zowe](https://github.com/tucker01/awesome-zowe).
