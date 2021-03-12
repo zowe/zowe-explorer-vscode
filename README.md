@@ -43,7 +43,7 @@ Clone the repository and run `yarn run package` to build a VSIX file and start w
 2. Change directories into the newly-cloned repository:
 
    ```shell
-   cd C:\<path>\vscode-extension-for-zowe
+   cd vscode-extension-for-zowe
    ```
 
 3. From your local copy of the repository, issue the following commands:
