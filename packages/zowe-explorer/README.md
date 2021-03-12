@@ -45,6 +45,7 @@ Bug fixes:
 - Fixed the issue that prevented file picker from functioning. The file picker feature lets you filter your datasets in the tree by pressing the Ctrl+Alt+P (Windows) or Command+Option+P (Mac) key combination.
 - Fixed the issue that caused the content from a previously filtered directory instead of the currently filtered directory to be served.
 - Added the previously selected `RejectUnauthorized` value to the placeholder text of the entry field while updating an existing profile. In addition, the value is highlighted and shown at the top of the selection list.
+- Improved error handling for the data set copy member, paste member, migrate, and recall functions.
 
 For more information, see [Changelog](https://marketplace.visualstudio.com/items/Zowe.vscode-extension-for-zowe/changelog).
 
