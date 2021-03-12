@@ -4,7 +4,7 @@ Zowe Explorer's FTP extension adds the FTP protocol to the [Zowe Explorer](https
 
 This VS Code extension also serves as a [source code example](https://github.com/zowe/vscode-extension-for-zowe/tree/master/packages/zowe-explorer-ftp-extension) demonstrating how to use the [Zowe Explorer Extensibility API](https://github.com/zowe/vscode-extension-for-zowe/tree/master/packages/zowe-explorer-api) to create VS Code extensions that extend the Zowe Explorer VS Code extensions with new capabilities.
 
-## What's new in zFTP 1.13.0
+## What's new in 1.13.0
 
 Enhancements:
 
@@ -76,7 +76,8 @@ Partitioned Dataset:
 
 - Show Data Set Attribute
 - Create New Member
-- Update Member
+- Edit Member
+- Upload Member
 - Rename Data Set
 - Delete Data Set
 
