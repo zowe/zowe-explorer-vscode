@@ -36,7 +36,11 @@
     "viewsWelcome": [
       {
         "view": "zowe.explorer",
-        "contents": "No connections found.\n[Add New Connection](command:zowe.addSession)"
+        "contents": "No connections defined.\n[Add New Connection](command:zowe.addSession)"
+      },
+      {
+        "view": "zowe.uss.explorer",
+        "contents": "No connections defined.\n[Add New Connection](command:zowe.uss.addSession)"
       }
     ],
     "viewsContainers": {
