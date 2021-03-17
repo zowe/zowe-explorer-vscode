@@ -130,10 +130,7 @@ describe("Dataset Tree Unit Tests - Initialisation", () => {
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
 
-        expect(testTree.mSessionNodes.map((node) => node.label)).toEqual([
-            "Favorites",
-            blockMocks.datasetSessionNode.label,
-        ]);
+        expect(testTree.mSessionNodes.map((node) => node.label)).toEqual([blockMocks.datasetSessionNode.label]);
         expect(testTree.getTreeView()).toEqual(blockMocks.treeView);
     });
 });
@@ -278,22 +275,10 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
-        const favoriteSessionNode = new ZoweDatasetNode(
-            "Favorites",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            null,
-            null
-        );
-        favoriteSessionNode.contextValue = globals.FAVORITE_CONTEXT;
-        const targetIcon = getIconByNode(favoriteSessionNode);
-        if (targetIcon) {
-            favoriteSessionNode.iconPath = targetIcon.path;
-        }
 
         const children = await testTree.getChildren();
 
-        expect(favoriteSessionNode).toMatchObject(children[0]);
-        expect(blockMocks.datasetSessionNode).toMatchObject(children[1]);
+        expect(blockMocks.datasetSessionNode).toMatchObject(children[0]);
     });
     it("Checking function for session node", async () => {
         createGlobalMocks();
@@ -304,12 +289,12 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
         const testTree = new DatasetTree();
         blockMocks.datasetSessionNode.pattern = "test";
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
-        testTree.mSessionNodes[1].dirty = true;
+        blockMocks.datasetSessionNode.dirty = true;
         const sampleChildren: ZoweDatasetNode[] = [
             new ZoweDatasetNode(
                 "BRTVS99",
                 vscode.TreeItemCollapsibleState.None,
-                testTree.mSessionNodes[1],
+                blockMocks.datasetSessionNode,
                 null,
                 undefined,
                 undefined,
@@ -318,7 +303,7 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
             new ZoweDatasetNode(
                 "BRTVS99.CA10",
                 vscode.TreeItemCollapsibleState.None,
-                testTree.mSessionNodes[1],
+                blockMocks.datasetSessionNode,
                 null,
                 globals.DS_MIGRATED_FILE_CONTEXT,
                 undefined,
@@ -327,7 +312,7 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
             new ZoweDatasetNode(
                 "BRTVS99.CA11.SPFTEMP0.CNTL",
                 vscode.TreeItemCollapsibleState.Collapsed,
-                testTree.mSessionNodes[1],
+                blockMocks.datasetSessionNode,
                 null,
                 undefined,
                 undefined,
@@ -336,7 +321,7 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
             new ZoweDatasetNode(
                 "BRTVS99.DDIR",
                 vscode.TreeItemCollapsibleState.Collapsed,
-                testTree.mSessionNodes[1],
+                blockMocks.datasetSessionNode,
                 null,
                 undefined,
                 undefined,
@@ -345,7 +330,7 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
             new ZoweDatasetNode(
                 "BRTVS99.VS1",
                 vscode.TreeItemCollapsibleState.None,
-                testTree.mSessionNodes[1],
+                blockMocks.datasetSessionNode,
                 null,
                 globals.VSAM_CONTEXT,
                 undefined,
@@ -354,28 +339,9 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
         ];
         sampleChildren[0].command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [sampleChildren[0]] };
 
-        const children = await testTree.getChildren(testTree.mSessionNodes[1]);
+        const children = await testTree.getChildren(blockMocks.datasetSessionNode);
 
         expect(children).toEqual(sampleChildren);
-    });
-    it("Checking function for favorite node", async () => {
-        createGlobalMocks();
-        const blockMocks = createBlockMocks();
-
-        const favProfileNode = new ZoweDatasetNode(
-            "testProfile",
-            vscode.TreeItemCollapsibleState.None,
-            blockMocks.datasetSessionNode,
-            blockMocks.session
-        );
-        favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
-        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
-        const testTree = new DatasetTree();
-        testTree.mFavorites.push(favProfileNode);
-
-        const children = await testTree.getChildren(testTree.mSessionNodes[0]);
-
-        expect(children).toEqual([favProfileNode]);
     });
     it("Checking function for profile node in Favorites section", async () => {
         createGlobalMocks();
@@ -397,7 +363,8 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
 
         expect(loadProfilesForFavoritesSpy).toHaveBeenCalledWith(log, favProfileNode);
     });
-    it("Checking function for PDS Dataset node", async () => {
+    fit("Checking function for PDS Dataset node", async () => {
+        // Arrange
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
@@ -408,9 +375,10 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
         const parent = new ZoweDatasetNode(
             "BRTVS99.PUBLIC",
             vscode.TreeItemCollapsibleState.Collapsed,
-            testTree.mSessionNodes[1],
+            blockMocks.datasetSessionNode,
             null
         );
+        parent.getProfile = () => blockMocks.imperativeProfile;
         parent.dirty = true;
         const sampleChildren: ZoweDatasetNode[] = [
             new ZoweDatasetNode("BRTVS99", vscode.TreeItemCollapsibleState.None, parent, null),
@@ -419,8 +387,10 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
         sampleChildren[0].command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [sampleChildren[0]] };
         sampleChildren[1].command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [sampleChildren[1]] };
 
+        // Act
         const children = await testTree.getChildren(parent);
 
+        // Assert
         expect(children).toEqual(sampleChildren);
     });
 });
@@ -776,7 +746,7 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
 
         testTree.addSession(blockMocks.imperativeProfile.name);
-        expect(testTree.mSessionNodes[1].label).toBe(blockMocks.imperativeProfile.name);
+        expect(blockMocks.datasetSessionNode.label).toBe(blockMocks.imperativeProfile.name);
     });
 
     it("Checking successful adding of session with disabled validation", async () => {
@@ -795,7 +765,7 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
         blockMocks.mockProfileInstance.validationSetting = blockMocks.mockValidationSetting.mockReturnValueOnce(false);
 
         testTree.addSession(blockMocks.imperativeProfile.name);
-        expect(testTree.mSessionNodes[1].label).toBe(blockMocks.imperativeProfile.name);
+        expect(blockMocks.datasetSessionNode.label).toBe(blockMocks.imperativeProfile.name);
     });
 
     it("Checking successful adding of session without sessname passed", async () => {
@@ -808,7 +778,7 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
         testTree.mHistory.push(blockMocks.imperativeProfile.name);
 
         testTree.addSession();
-        expect(testTree.mSessionNodes[1].label).toBe(blockMocks.imperativeProfile.name);
+        expect(blockMocks.datasetSessionNode.label).toBe(blockMocks.imperativeProfile.name);
     });
 
     it("Checking failed attempt to add a session due to the missing profile", async () => {
@@ -820,7 +790,7 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
 
         testTree.addSession("fake");
 
-        expect(testTree.mSessionNodes[1]).not.toBeDefined();
+        expect(testTree.mSessionNodes.length).toBe(0);
     });
 });
 
@@ -834,6 +804,7 @@ describe("USSTree Unit Tests - Function USSTree.addSingleSession()", () => {
             testSession: createISession(),
             testUSSNode: null,
             testTree: null,
+            datasetSessionNode: null,
             profilesForValidation: { status: "active", name: "fake" },
         };
 
@@ -851,8 +822,8 @@ describe("USSTree Unit Tests - Function USSTree.addSingleSession()", () => {
             { name: "secondName" },
         ];
         newMocks.testTree = new DatasetTree();
-        const datasetSessionTestNode = createDatasetSessionNode(newMocks.testSession, newMocks.testProfile);
-        newMocks.testTree.mSessionNodes.push(datasetSessionTestNode);
+        newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.testSession, newMocks.testProfile);
+        newMocks.testTree.mSessionNodes.push(newMocks.datasetSessionNode);
         mocked(Profiles.getInstance).mockReturnValue(newMocks.mockProfilesInstance);
 
         return newMocks;
@@ -874,7 +845,7 @@ describe("USSTree Unit Tests - Function USSTree.addSingleSession()", () => {
 
         await blockMocks.testTree.addSingleSession(blockMocks.testProfile);
 
-        expect(blockMocks.testTree.mSessionNodes[1].session.ISession.tokenValue).toEqual("testTokenValue");
+        expect(blockMocks.datasetSessionNode.session.ISession.tokenValue).toEqual("testTokenValue");
     });
 
     it("Tests if addSingleSession throws an error if  getCombinedProfile fails", async () => {
@@ -899,7 +870,7 @@ describe("USSTree Unit Tests - Function USSTree.addSingleSession()", () => {
 
         await blockMocks.testTree.addSingleSession(blockMocks.testProfile);
 
-        expect(blockMocks.testTree.mSessionNodes.length).toEqual(2);
+        expect(blockMocks.testTree.mSessionNodes.length).toEqual(1);
     });
 
     it("Tests that addSingleSession successfully adds a session", async () => {
@@ -920,7 +891,7 @@ describe("USSTree Unit Tests - Function USSTree.addSingleSession()", () => {
         await blockMocks.testTree.addSingleSession(blockMocks.testProfile);
 
         expect(blockMocks.testTree.mSessionNodes.length).toEqual(2);
-        expect(blockMocks.testTree.mSessionNodes[1].profile.name).toEqual(blockMocks.testProfile.name);
+        expect(blockMocks.datasetSessionNode.profile.name).toEqual(blockMocks.testProfile.name);
     });
 });
 
@@ -951,7 +922,7 @@ describe("Dataset Tree Unit Tests - Function addFavorite", () => {
         const node = new ZoweDatasetNode(
             "Dataset",
             vscode.TreeItemCollapsibleState.None,
-            testTree.mSessionNodes[1],
+            blockMocks.datasetSessionNode,
             null
         );
 
@@ -972,7 +943,7 @@ describe("Dataset Tree Unit Tests - Function addFavorite", () => {
         const node = new ZoweDatasetNode(
             "Dataset",
             vscode.TreeItemCollapsibleState.None,
-            testTree.mSessionNodes[1],
+            blockMocks.datasetSessionNode,
             null
         );
         node.contextValue = globals.DS_PDS_CONTEXT;
@@ -994,7 +965,7 @@ describe("Dataset Tree Unit Tests - Function addFavorite", () => {
         const parent = new ZoweDatasetNode(
             "Dataset",
             vscode.TreeItemCollapsibleState.None,
-            testTree.mSessionNodes[1],
+            blockMocks.datasetSessionNode,
             null
         );
         const child = new ZoweDatasetNode("Child", vscode.TreeItemCollapsibleState.None, parent, null);
@@ -1016,13 +987,13 @@ describe("Dataset Tree Unit Tests - Function addFavorite", () => {
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
-        testTree.mSessionNodes[1].pattern = "test";
+        blockMocks.datasetSessionNode.pattern = "test";
 
-        await testTree.addFavorite(testTree.mSessionNodes[1]);
+        await testTree.addFavorite(blockMocks.datasetSessionNode);
 
         expect(testTree.mFavorites[0].label).toBe(`${blockMocks.datasetSessionNode.label}`);
         expect(testTree.mFavorites[0].contextValue).toBe(`${globals.FAV_PROFILE_CONTEXT}`);
-        expect(testTree.mFavorites[0].children[0].label).toBe(`${testTree.mSessionNodes[1].pattern}`);
+        expect(testTree.mFavorites[0].children[0].label).toBe(`${blockMocks.datasetSessionNode.pattern}`);
         expect(testTree.mFavorites[0].children[0].contextValue).toBe(
             `${globals.DS_SESSION_CONTEXT}${globals.FAV_SUFFIX}`
         );
@@ -1037,7 +1008,7 @@ describe("Dataset Tree Unit Tests - Function addFavorite", () => {
         const node = new ZoweDatasetNode(
             "Dataset",
             vscode.TreeItemCollapsibleState.None,
-            testTree.mSessionNodes[1],
+            blockMocks.datasetSessionNode,
             null
         );
 
@@ -1056,7 +1027,7 @@ describe("Dataset Tree Unit Tests - Function addFavorite", () => {
         const parent = new ZoweDatasetNode(
             "Dataset",
             vscode.TreeItemCollapsibleState.None,
-            testTree.mSessionNodes[1],
+            blockMocks.datasetSessionNode,
             null
         );
         const child = new ZoweDatasetNode("Child", vscode.TreeItemCollapsibleState.None, parent, null);
@@ -1092,13 +1063,13 @@ describe("Dataset Tree Unit Tests - Function removeFavorite", () => {
         const node1 = new ZoweDatasetNode(
             "Dataset",
             vscode.TreeItemCollapsibleState.None,
-            testTree.mSessionNodes[1],
+            blockMocks.datasetSessionNode,
             null
         );
         const node2 = new ZoweDatasetNode(
             "Dataset2",
             vscode.TreeItemCollapsibleState.None,
-            testTree.mSessionNodes[1],
+            blockMocks.datasetSessionNode,
             null
         );
         const removeFavProfileSpy = jest.spyOn(testTree, "removeFavProfile");
@@ -1127,7 +1098,7 @@ describe("Dataset Tree Unit Tests - Function removeFavorite", () => {
         const node = new ZoweDatasetNode(
             "Dataset",
             vscode.TreeItemCollapsibleState.None,
-            testTree.mSessionNodes[1],
+            blockMocks.datasetSessionNode,
             null
         );
 
@@ -1152,12 +1123,7 @@ describe("Dataset Tree Unit Tests - Function  - Function removeFavProfile", () =
         const testTree = new DatasetTree();
         testTree.mFavorites = [];
         testTree.mSessionNodes.push(datasetSessionNode);
-        const node = new ZoweDatasetNode(
-            "Dataset",
-            vscode.TreeItemCollapsibleState.None,
-            testTree.mSessionNodes[1],
-            null
-        );
+        const node = new ZoweDatasetNode("Dataset", vscode.TreeItemCollapsibleState.None, datasetSessionNode, null);
         testTree.addFavorite(node);
         const profileNodeInFavs: IZoweDatasetTreeNode = testTree.mFavorites[0];
 
@@ -1241,9 +1207,9 @@ describe("Dataset Tree Unit Tests - Function deleteSession", () => {
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
 
-        testTree.deleteSession(testTree.mSessionNodes[1]);
+        testTree.deleteSession(blockMocks.datasetSessionNode);
 
-        expect(testTree.mSessionNodes.map((node) => node.label)).toEqual(["Favorites"]);
+        expect(testTree.mSessionNodes.map((node) => node.label)).toEqual([]);
     });
 });
 describe("Dataset Tree Unit Tests - Function flipState", () => {
@@ -1380,10 +1346,10 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
 
-        await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+        await testTree.datasetFilterPrompt(blockMocks.datasetSessionNode);
 
-        expect(testTree.mSessionNodes[1].contextValue).toEqual(globals.DS_SESSION_CONTEXT + globals.ACTIVE_CONTEXT);
-        expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD1.STUFF");
+        expect(blockMocks.datasetSessionNode.contextValue).toEqual(globals.DS_SESSION_CONTEXT + globals.ACTIVE_CONTEXT);
+        expect(blockMocks.datasetSessionNode.pattern).toEqual("HLQ.PROD1.STUFF");
     });
     it("Checking cancelled attempt to add a filter - Theia", async () => {
         const globalMocks = await createGlobalMocks();
@@ -1398,7 +1364,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
 
-        await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+        await testTree.datasetFilterPrompt(blockMocks.datasetSessionNode);
 
         expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith("You must enter a pattern.");
     });
@@ -1414,9 +1380,9 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
         testTree.addSearchHistory("test");
 
-        await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+        await testTree.datasetFilterPrompt(blockMocks.datasetSessionNode);
 
-        expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD1.STUFF");
+        expect(blockMocks.datasetSessionNode.pattern).toEqual("HLQ.PROD1.STUFF");
     });
     it("Checking cancelling of filter prompt with available filters - Theia", async () => {
         const globalMocks = await createGlobalMocks();
@@ -1429,7 +1395,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
         testTree.addSearchHistory("test");
 
-        await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+        await testTree.datasetFilterPrompt(blockMocks.datasetSessionNode);
 
         expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith("No selection made.");
     });
@@ -1444,7 +1410,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         const favoriteSearch = new ZoweDatasetNode(
             `[${blockMocks.datasetSessionNode.label}]: HLQ.PROD1.STUFF`,
             vscode.TreeItemCollapsibleState.None,
-            testTree.mSessionNodes[1],
+            blockMocks.datasetSessionNode,
             blockMocks.session,
             undefined,
             undefined,
@@ -1468,10 +1434,10 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
 
-        await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+        await testTree.datasetFilterPrompt(blockMocks.datasetSessionNode);
 
-        expect(testTree.mSessionNodes[1].contextValue).toEqual(globals.DS_SESSION_CONTEXT + globals.ACTIVE_CONTEXT);
-        expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD1.STUFF");
+        expect(blockMocks.datasetSessionNode.contextValue).toEqual(globals.DS_SESSION_CONTEXT + globals.ACTIVE_CONTEXT);
+        expect(blockMocks.datasetSessionNode.pattern).toEqual("HLQ.PROD1.STUFF");
     });
     it("Checking adding of new filter with data set member", async () => {
         const globalMocks = await createGlobalMocks();
@@ -1484,9 +1450,9 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
-        await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
-        expect(testTree.mSessionNodes[1].contextValue).toEqual(globals.DS_SESSION_CONTEXT + globals.ACTIVE_CONTEXT);
-        expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD1");
+        await testTree.datasetFilterPrompt(blockMocks.datasetSessionNode);
+        expect(blockMocks.datasetSessionNode.contextValue).toEqual(globals.DS_SESSION_CONTEXT + globals.ACTIVE_CONTEXT);
+        expect(blockMocks.datasetSessionNode.pattern).toEqual("HLQ.PROD1");
     });
     it("Checking adding of new filter with Unverified profile", async () => {
         const globalMocks = await createGlobalMocks();
@@ -1511,10 +1477,12 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
 
-        await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+        await testTree.datasetFilterPrompt(blockMocks.datasetSessionNode);
 
-        expect(testTree.mSessionNodes[1].contextValue).toEqual(globals.DS_SESSION_CONTEXT + globals.UNVERIFIED_CONTEXT);
-        expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD1.STUFF");
+        expect(blockMocks.datasetSessionNode.contextValue).toEqual(
+            globals.DS_SESSION_CONTEXT + globals.UNVERIFIED_CONTEXT
+        );
+        expect(blockMocks.datasetSessionNode.pattern).toEqual("HLQ.PROD1.STUFF");
     });
     it("Checking cancelled attempt to add a filter", async () => {
         const globalMocks = await createGlobalMocks();
@@ -1528,7 +1496,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
 
-        await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+        await testTree.datasetFilterPrompt(blockMocks.datasetSessionNode);
 
         expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith("You must enter a pattern.");
     });
@@ -1549,9 +1517,9 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
         testTree.addSearchHistory("test");
 
-        await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+        await testTree.datasetFilterPrompt(blockMocks.datasetSessionNode);
 
-        expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD1.STUFF");
+        expect(blockMocks.datasetSessionNode.pattern).toEqual("HLQ.PROD1.STUFF");
     });
     it("Checking cancelling of filter prompt with available filters", async () => {
         const globalMocks = await createGlobalMocks();
@@ -1569,7 +1537,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
         testTree.addSearchHistory("test");
 
-        await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+        await testTree.datasetFilterPrompt(blockMocks.datasetSessionNode);
 
         expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith("No selection made.");
     });
@@ -1610,7 +1578,7 @@ describe("Dataset Tree Unit Tests - Function editSession", () => {
     }
 
     it("Checking common run of function", async () => {
-        const globalMocks = await createGlobalMocks();
+        await createGlobalMocks();
         const blockMocks = await createBlockMocks();
 
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
@@ -1619,7 +1587,7 @@ describe("Dataset Tree Unit Tests - Function editSession", () => {
         const node = new ZoweDatasetNode(
             "EditSession",
             vscode.TreeItemCollapsibleState.Collapsed,
-            testTree.mSessionNodes[1],
+            blockMocks.datasetSessionNode,
             null
         );
 
@@ -1652,11 +1620,11 @@ describe("Dataset Tree Unit Tests - Function getAllLoadedItems", () => {
         const node = new ZoweDatasetNode(
             "HLQ.PROD2.STUFF",
             vscode.TreeItemCollapsibleState.Collapsed,
-            testTree.mSessionNodes[1],
+            blockMocks.datasetSessionNode,
             blockMocks.session,
             globals.DS_DS_CONTEXT
         );
-        testTree.mSessionNodes[1].children.push(node);
+        blockMocks.datasetSessionNode.children.push(node);
 
         const items = await testTree.getAllLoadedItems();
 
@@ -1737,7 +1705,7 @@ describe("Dataset Tree Unit Tests - Function renameNode", () => {
 
         await testTree.renameNode("sestest", "TO.RENAME", "RENAMED");
 
-        expect(testTree.mSessionNodes[1].children[0]).toEqual(afterNode);
+        expect(blockMocks.datasetSessionNode.children[0]).toEqual(afterNode);
     });
 });
 describe("Dataset Tree Unit Tests - Function renameFavorite", () => {
@@ -1907,7 +1875,7 @@ describe("Dataset Tree Unit Tests - Function findNonFavoritedNode", () => {
             blockMocks.imperativeProfile
         );
         favoriteNode.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
-        testTree.mSessionNodes[1].children.push(node);
+        blockMocks.datasetSessionNode.children.push(node);
 
         const foundNode = testTree.findNonFavoritedNode(favoriteNode);
 
@@ -1942,9 +1910,9 @@ describe("Dataset Tree Unit Tests - Function openItemFromPath", () => {
             blockMocks.datasetSessionNode,
             null
         );
-        testTree.mSessionNodes[1].children.push(node);
-        testTree.mSessionNodes[1].pattern = "test";
-        spyOn(testTree.mSessionNodes[1], "getChildren").and.returnValue(Promise.resolve([node]));
+        blockMocks.datasetSessionNode.children.push(node);
+        blockMocks.datasetSessionNode.pattern = "test";
+        spyOn(blockMocks.datasetSessionNode, "getChildren").and.returnValue(Promise.resolve([node]));
 
         await testTree.openItemFromPath(
             `[${blockMocks.datasetSessionNode.label}]: ${node.label}`,
@@ -1964,13 +1932,13 @@ describe("Dataset Tree Unit Tests - Function openItemFromPath", () => {
         const parent = new ZoweDatasetNode(
             "TEST.PDS",
             vscode.TreeItemCollapsibleState.Collapsed,
-            testTree.mSessionNodes[1],
+            blockMocks.datasetSessionNode,
             null
         );
         const child = new ZoweDatasetNode("TESTMEMB", vscode.TreeItemCollapsibleState.None, parent, null);
-        testTree.mSessionNodes[1].children.push(parent);
-        testTree.mSessionNodes[1].pattern = "test";
-        spyOn(testTree.mSessionNodes[1], "getChildren").and.returnValue(Promise.resolve([parent]));
+        blockMocks.datasetSessionNode.children.push(parent);
+        blockMocks.datasetSessionNode.pattern = "test";
+        spyOn(blockMocks.datasetSessionNode, "getChildren").and.returnValue(Promise.resolve([parent]));
         spyOn(parent, "getChildren").and.returnValue(Promise.resolve([child]));
 
         await testTree.openItemFromPath(
@@ -2112,7 +2080,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         const node = new ZoweDatasetNode(
             "HLQ.TEST.RENAME.NODE",
             vscode.TreeItemCollapsibleState.None,
-            testTree.mSessionNodes[1],
+            blockMocks.datasetSessionNode,
             blockMocks.session
         );
         const renameDataSetSpy = jest.spyOn(blockMocks.mvsApi, "renameDataSet");
@@ -2146,7 +2114,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         const node = new ZoweDatasetNode(
             "HLQ.TEST.RENAME.NODE",
             vscode.TreeItemCollapsibleState.None,
-            testTree.mSessionNodes[1],
+            blockMocks.datasetSessionNode,
             blockMocks.session
         );
         const renameDataSetSpy = jest.spyOn(blockMocks.mvsApi, "renameDataSet");
@@ -2169,7 +2137,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         const node = new ZoweDatasetNode(
             "HLQ.TEST.RENAME.NODE",
             vscode.TreeItemCollapsibleState.None,
-            testTree.mSessionNodes[1],
+            blockMocks.datasetSessionNode,
             blockMocks.session
         );
         const renameDataSetSpy = jest.spyOn(blockMocks.mvsApi, "renameDataSet");
@@ -2193,11 +2161,11 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         const node = new ZoweDatasetNode(
             "HLQ.TEST.RENAME.NODE",
             vscode.TreeItemCollapsibleState.None,
-            testTree.mSessionNodes[1],
+            blockMocks.datasetSessionNode,
             blockMocks.session
         );
         node.contextValue = "ds_fav";
-        testTree.mSessionNodes[1].children.push(node);
+        blockMocks.datasetSessionNode.children.push(node);
         const renameDataSetSpy = jest.spyOn(blockMocks.mvsApi, "renameDataSet");
 
         await testTree.rename(node);
@@ -2221,7 +2189,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         const node = new ZoweDatasetNode(
             "HLQ.TEST.RENAME.NODE",
             vscode.TreeItemCollapsibleState.None,
-            testTree.mSessionNodes[1],
+            blockMocks.datasetSessionNode,
             blockMocks.session
         );
         const renameDataSetSpy = jest.spyOn(blockMocks.mvsApi, "renameDataSet");
@@ -2250,7 +2218,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         const parent = new ZoweDatasetNode(
             "HLQ.TEST.RENAME.NODE",
             vscode.TreeItemCollapsibleState.None,
-            testTree.mSessionNodes[1],
+            blockMocks.datasetSessionNode,
             blockMocks.session
         );
         const child = new ZoweDatasetNode("mem1", vscode.TreeItemCollapsibleState.None, parent, blockMocks.session);
@@ -2279,7 +2247,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         favChild.contextValue = globals.DS_MEMBER_CONTEXT;
         // Push test nodes to respective arrays
         parent.children.push(child);
-        testTree.mSessionNodes[1].children.push(parent);
+        blockMocks.datasetSessionNode.children.push(parent);
         favParent.children.push(favChild);
         favProfileNode.children.push(favParent);
         testTree.mFavorites.push(favProfileNode);
@@ -2333,7 +2301,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         favChild.contextValue = globals.DS_MEMBER_CONTEXT;
         // Push test nodes to respective arrays
         parent.children.push(child);
-        testTree.mSessionNodes[1].children.push(parent);
+        blockMocks.datasetSessionNode.children.push(parent);
         favParent.children.push(favChild);
         favProfileNode.children.push(favParent);
         testTree.mFavorites.push(favProfileNode);
@@ -2357,7 +2325,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         const parent = new ZoweDatasetNode(
             "HLQ.TEST.RENAME.NODE",
             vscode.TreeItemCollapsibleState.None,
-            testTree.mSessionNodes[1],
+            blockMocks.datasetSessionNode,
             blockMocks.session,
             globals.PDS_FAV_CONTEXT
         );
@@ -2393,7 +2361,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         favChild.contextValue = globals.DS_MEMBER_CONTEXT;
         // Push test nodes to respective arrays
         parent.children.push(child);
-        testTree.mSessionNodes[1].children.push(parent);
+        blockMocks.datasetSessionNode.children.push(parent);
         favParent.children.push(favChild);
         favProfileNode.children.push(favParent);
         testTree.mFavorites.push(favProfileNode);

@@ -164,6 +164,7 @@ function createGlobalMocks() {
             };
         }),
     });
+    Object.defineProperty(vscode.workspace, "getConfiguration", { value: jest.fn(), configurable: true });
 
     return globalMocks;
 }
@@ -633,6 +634,7 @@ describe("USS Action Unit Tests - Functions uploadDialog & uploadFile", () => {
     }
 
     it("Tests that uploadDialog() works for non-binary file", async () => {
+        // Arrange
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
@@ -641,7 +643,10 @@ describe("USS Action Unit Tests - Functions uploadDialog & uploadFile", () => {
         globalMocks.showOpenDialog.mockReturnValue([fileUri]);
         globalMocks.isBinaryFileSync.mockReturnValueOnce(false);
 
+        // Act
         await ussNodeActions.uploadDialog(blockMocks.ussNode, blockMocks.testUSSTree);
+
+        // Assert
         expect(globalMocks.showOpenDialog).toBeCalled();
         expect(globalMocks.openTextDocument).toBeCalled();
         expect(blockMocks.testUSSTree.refresh).toBeCalled();

@@ -238,7 +238,7 @@ export class PersistentFilters {
         }
     }
 
-    private async initialize() {
+    private initialize() {
         let searchHistoryLines: string[];
         let sessionLines: string[];
         let fileHistoryLines: string[];
