@@ -33,6 +33,12 @@
   ],
   "main": "./out/src/extension",
   "contributes": {
+    "viewsWelcome": [
+      {
+        "view": "zowe.explorer",
+        "contents": "No connections found.\n[Add New Connection](command:zowe.addSession)"
+      }
+    ],
     "viewsContainers": {
       "activitybar": [
         {
