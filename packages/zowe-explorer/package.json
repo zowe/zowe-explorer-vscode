@@ -41,6 +41,10 @@
       {
         "view": "zowe.uss.explorer",
         "contents": "No connections defined.\n[Add New Connection](command:zowe.uss.addSession)"
+      },
+      {
+        "view": "zowe.jobs",
+        "contents": "No connections defined.\n[Add New Connection](command:zowe.addJobsSession)"
       }
     ],
     "viewsContainers": {

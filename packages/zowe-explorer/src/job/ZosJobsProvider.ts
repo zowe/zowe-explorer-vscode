@@ -79,7 +79,6 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         if (icon) {
             this.mFavoriteSession.iconPath = icon.path;
         }
-        this.mSessionNodes = [this.mFavoriteSession];
         this.treeView = vscode.window.createTreeView("zowe.jobs", { treeDataProvider: this, canSelectMany: true });
     }
 
@@ -190,7 +189,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                     }
                 }
             }
-            if (this.mSessionNodes.length === 1) {
+            if (this.mSessionNodes.length === 0) {
                 this.addSingleSession(Profiles.getInstance().getDefaultProfile(profileType));
             }
         }
@@ -719,6 +718,10 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
 
     public deleteSession(node: IZoweJobTreeNode) {
         this.mSessionNodes = this.mSessionNodes.filter((tempNode) => tempNode.label.trim() !== node.label.trim());
+        // if we only have favorites node, remove it so that viewsWelcome button shows up
+        if (this.mSessionNodes.length === 1) {
+            this.mSessionNodes = [];
+        }
         this.deleteSessionByLabel(node.getLabel());
     }
 
@@ -862,6 +865,10 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 node.iconPath = icon.path;
             }
             node.dirty = true;
+            // if this is the first session being added, add favorites before it
+            if (!this.mSessionNodes.length) {
+                this.mSessionNodes.push(this.mFavoriteSession);
+            }
             this.mSessionNodes.push(node);
             this.mHistory.addSession(zosmfProfile.name);
         }
