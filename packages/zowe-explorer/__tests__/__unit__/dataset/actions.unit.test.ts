@@ -3059,7 +3059,7 @@ describe("Dataset Actions Unit Tests - Function uploadFromJsonDialog", () => {
             testDatasetTree,
             badJsonFile,
             dataSetJsonFile,
-            memberJsonFile
+            memberJsonFile,
         };
     }
 
