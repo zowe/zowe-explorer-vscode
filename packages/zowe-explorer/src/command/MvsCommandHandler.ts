@@ -143,7 +143,7 @@ export class MvsCommandHandler {
             if (globals.ISTHEIA) {
                 const options1: vscode.QuickPickOptions = {
                     placeHolder:
-                        localize("issueMvsCommand.command.hostname", "Select a MVS command to run against ") +
+                        localize("issueMvsCommand.command.hostname", "Select an MVS command to run against ") +
                         hostname +
                         (alwaysEdit
                             ? localize("issueMvsCommand.command.edit", " (An option to edit will follow)")
@@ -161,11 +161,13 @@ export class MvsCommandHandler {
             } else {
                 const quickpick = vscode.window.createQuickPick();
                 quickpick.placeholder = alwaysEdit
-                    ? localize("issueMvsCommand.command.hostnameAlt", "Select a MVS command to run against ") +
+                    ? localize("issueMvsCommand.command.hostnameAlt", "Select an MVS command to run against ") +
                       hostname +
                       localize("issueMvsCommand.command.edit", " (An option to edit will follow)")
-                    : localize("issueMvsCommand.command.hostname", "Select a MVS command to run immediately against ") +
-                      hostname;
+                    : localize(
+                          "issueMvsCommand.command.hostname",
+                          "Select an MVS command to run immediately against "
+                      ) + hostname;
 
                 quickpick.items = [createPick, ...items];
                 quickpick.ignoreFocusOut = true;
