@@ -71,7 +71,7 @@
   "Zowe-Default-Commands-Persistent-Favorites": "Toggle if Commands persist locally",
   "Zowe-Environment": "Environment where the extension is running, default is VSCode",
   "Zowe-Automatic-Validation": "Allow automatic validation of profiles.",
-  "issueTsoCmd": "Zowe: Issue TSO Command...",
+  "issueTsoCmd": "Issue TSO Command",
   "deleteProfile": "Delete Profile",
   "cmd.deleteProfile": "Zowe: Delete a Profile Permanently...",
   "renameDataSet": "Rename Data Set",
