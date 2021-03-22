@@ -74,6 +74,9 @@ export class MvsCommandHandler {
         if (node && !session) {
             await Profiles.getInstance().checkCurrentProfile(node.getProfile());
             session = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).getSession();
+            if (!session) {
+                return;
+            }
         }
         if (!session) {
             const profiles = Profiles.getInstance();
