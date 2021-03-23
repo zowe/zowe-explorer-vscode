@@ -12,6 +12,22 @@ Enhancements:
 
 For more information, see [Changelog](https://github.com/zowe/vscode-extension-for-zowe/blob/master/packages/zowe-explorer-ftp-extension/CHANGELOG.md).
 
+## Prerequisites
+
+Host-side prerequisites:
+
+- Check to ensure that z/OS FTP service can be accessed remotely:
+  - Connect to z/OS with the FTP client and run the command `rstat` in the FTP client to check that the option `JESINTERFACELevel` is set to `2`.
+
+Client-side prerequisites:
+
+1. Install [Zowe CLI](https://docs.zowe.org/stable/user-guide/cli-installcli.html) on your local machine.
+1. Install [z/OS FTP Plug-in for Zowe CLI](https://github.com/zowe/zowe-cli-ftp-plugin) on your local machine by using the following command:
+
+   ```bash
+   zowe plugins install @zowe/zos-ftp-for-zowe-cli@latest
+   ```
+
 ## Installation
 
 1. Install this VS Code extension from the [Microsoft](https://marketplace.visualstudio.com/items?itemName=Zowe.zowe-explorer-ftp-extension) or [Open VSX](https://open-vsx.org/extension/Zowe/zowe-explorer-ftp-extension) marketplace.
