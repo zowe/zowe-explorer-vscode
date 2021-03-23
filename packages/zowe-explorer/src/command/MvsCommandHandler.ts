@@ -71,6 +71,13 @@ export class MvsCommandHandler {
      */
     public async issueMvsCommand(session?: Session, command?: string, node?: IZoweTreeNode) {
         let zosmfProfile: IProfileLoaded;
+        if (node && !session) {
+            await Profiles.getInstance().checkCurrentProfile(node.getProfile());
+            session = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).getSession();
+            if (!session) {
+                return;
+            }
+        }
         if (!session) {
             const profiles = Profiles.getInstance();
             const allProfiles: IProfileLoaded[] = profiles.allProfiles;
