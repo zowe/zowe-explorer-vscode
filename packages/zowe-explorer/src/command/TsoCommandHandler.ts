@@ -19,6 +19,7 @@ import { PersistentFilters } from "../PersistentFilters";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, FilterDescriptor, FilterItem, resolveQuickPickHelper } from "../utils/ProfilesUtils";
+import { Profile } from "selenium-webdriver/firefox";
 
 // Set up localization
 nls.config({
@@ -212,7 +213,7 @@ export class TsoCommandHandler {
      * @param command the command string
      */
     private async issueCommand(session: imperative.Session, command: string, label: string) {
-        const acctNum = await this.getAccountNumber(session);
+        const acctNum = await this.getAccountNumber();
         if (!acctNum) {
             return;
         }
@@ -243,10 +244,52 @@ export class TsoCommandHandler {
         this.history.addSearchHistory(command);
     }
 
-    private async getAccountNumber(session: imperative.Session): Promise<string> {
+    private async getAccountNumber(): Promise<string> {
+        const tsoProfiles: imperative.IProfileLoaded[] = [];
         let tsoProfile: imperative.IProfileLoaded;
         let acctNum: string;
-        tsoProfile = await Profiles.getInstance().getDefaultProfile("tso");
+        const profileManager = Profiles.getInstance().getCliProfileManager("tso");
+        if (profileManager) {
+            try {
+                const profiles = await profileManager.loadAll();
+                for (const item of profiles) {
+                    if (item.type === "tso") {
+                        tsoProfiles.push(item);
+                    }
+                }
+                if (tsoProfiles.length && tsoProfiles.length > 1) {
+                    const tsoProfileNamesList = tsoProfiles.map((temprofile) => {
+                        return temprofile.name;
+                    });
+                    if (tsoProfileNamesList.length) {
+                        const quickPickOptions: vscode.QuickPickOptions = {
+                            placeHolder: localize(
+                                "issueTsoCommand.tsoProfile.quickPickOption",
+                                "Select the TSO Profile to use for account number."
+                            ),
+                            ignoreFocusOut: true,
+                            canPickMany: false,
+                        };
+                        const sesName = await vscode.window.showQuickPick(tsoProfileNamesList, quickPickOptions);
+                        if (sesName === undefined) {
+                            vscode.window.showInformationMessage(
+                                localize("issueTsoCommand.cancelled", "Operation Cancelled")
+                            );
+                            return;
+                        }
+                        tsoProfile = tsoProfiles.filter((temprofile) => temprofile.name === sesName)[0];
+                    }
+                } else {
+                    if (tsoProfiles.length) {
+                        tsoProfile = tsoProfiles[0];
+                    }
+                }
+            } catch (error) {
+                if (!error?.message?.includes(`No default profile set for type "tso"`)) {
+                    vscode.window.showInformationMessage(error);
+                }
+            }
+        }
         if (tsoProfile) {
             acctNum = tsoProfile.profile.account;
         } else {
