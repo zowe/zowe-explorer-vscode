@@ -1,6 +1,7 @@
 # Change Log
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
+
 ## `1.13.1`
 
 - Updated the dialog text for issuing MVS commands. Now the text of the function is `Zowe: Issue MVS Command` [#1230](https://github.com/zowe/vscode-extension-for-zowe/pull/1230). Thanks @JillieBeanSim
