@@ -427,6 +427,13 @@ export namespace ZoweExplorerApi {
          */
         deleteJob(jobname: string, jobid: string): Promise<void>;
     }
+    /**
+     * API for providing a Command API handler to the extension.
+     * @export
+     */
+    export interface ICommand extends ICommon {
+        issueTsoCommand(acctNum: string, command: string): Promise<zowe.IIssueResponse>;
+    }
 
     /**
      * This interface can be used by other VS Code Extensions to access an alternative
@@ -512,6 +519,21 @@ export namespace ZoweExplorerApi {
          * @returns the registered API instance
          */
         getJesApi(profile: IProfileLoaded): IJes;
+
+        /**
+         * Register a new implementation of the Command Api.
+         * See example in Interface docs.
+         *
+         * @param {IJes} jesApi
+         */
+        registerCommandApi(CommandApi: ICommand): void;
+
+        /**
+         * Lookup of an API for Command for a given profile.
+         * @param {string} profile
+         * @returns the registered API instance
+         */
+        getCommandApi(profile: IProfileLoaded): ICommand;
 
         /**
          * Lookup of an API for the generic extender API.
