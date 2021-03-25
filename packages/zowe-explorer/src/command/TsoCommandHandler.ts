@@ -9,7 +9,6 @@
  *                                                                                 *
  */
 
-import * as zowe from "@zowe/cli";
 import * as vscode from "vscode";
 import * as nls from "vscode-nls";
 import * as globals from "../globals";
@@ -19,7 +18,6 @@ import { PersistentFilters } from "../PersistentFilters";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, FilterDescriptor, FilterItem, resolveQuickPickHelper } from "../utils/ProfilesUtils";
-import { Profile } from "selenium-webdriver/firefox";
 
 // Set up localization
 nls.config({
