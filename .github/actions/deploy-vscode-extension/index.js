@@ -27,9 +27,12 @@ const checkVersion = (packageJson, version) => {
 };
 
 // VSCE specific steps for publishing an extension
-const publishSpecificProject = (version, token, packagePath) => {
-    console.log(`Publishing version ${version}`);
-    console.log(execSync(`vsce publish --yarn -p ${token}`, { cwd: packagePath }).toString());
+// VSCE token contains two values: "<VSCode Marketplace token> <Open VSX token>"
+// ex: "s0m3-V3ry-L0ng-T0k3n an0th3r-L0ng-T0k3n"
+const publishSpecificProject = (versionName, token, packagePath) => {
+    console.log(`Publishing: ${versionName}`);
+    console.log(execSync(`vsce publish --yarn -p ${token.split(" ")[0]}`, { cwd: packagePath }).toString());
+    console.log(execSync(`ovsx publish ${versionName}.vsix -p ${token.split(" ")[1]}`, { cwd: "dist" }).toString());
 };
 
 // Call common function to deploy the extension

@@ -386,9 +386,13 @@ function initJobsProvider(context: vscode.ExtensionContext, jobsProvider: IZoweT
             TsoCommandHandler.getInstance().issueTsoCommand();
         }
     });
-    vscode.commands.registerCommand("zowe.issueMvsCmd", async (node, command) =>
-        MvsCommandHandler.getInstance().issueMvsCommand(node.session, command, node)
-    );
+    vscode.commands.registerCommand("zowe.issueMvsCmd", async (node?, command?) => {
+        if (node) {
+            MvsCommandHandler.getInstance().issueMvsCommand(node.session, command, node);
+        } else {
+            MvsCommandHandler.getInstance().issueMvsCommand();
+        }
+    });
     vscode.commands.registerCommand("zowe.jobs.addFavorite", async (node) => jobsProvider.addFavorite(node));
     vscode.commands.registerCommand("zowe.jobs.removeFavorite", async (node) => jobsProvider.removeFavorite(node));
     vscode.commands.registerCommand("zowe.jobs.saveSearch", async (node) => jobsProvider.saveSearch(node));
