@@ -23,7 +23,7 @@ More information:
 
 ## Contents
 
-- [What's new in Zowe Explorer 1.13.0](#whats-new-in-zowe-explorer-1.13.0)
+- [What's new in Zowe Explorer 1.13.1](#whats-new-in-zowe-explorer-1.13.1)
 - [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
 - [Sample Use Cases](#sample-use-cases)
@@ -31,21 +31,17 @@ More information:
 - [Usage Tips](#usage-tips)
 - [Extending Zowe Explorer](#extending-zowe-explorer)
 
-## What's new in Zowe Explorer 1.13.0
+## What's new in Zowe Explorer 1.13.1
 
 Enhancements:
 
-- Added the monorepo landing Readme that contains the high-level overview of the repository folders such as `packages` folder, instructions on how to contribute to the project and links to Medium articles providing additional useful information about Zowe Explorer and Zowe.
-- Added the pre-filled and pre-selected filename of the copied member to the entry field while performing the paste member action.
-- Added the multiple deletion of jobs feature. You can now select and delete multiple jobs.
+- Updated the dialog text for issuing MVS commands. Now the text of the function is `Zowe: Issue MVS Command`.
+- Added the Prerequisites section to the Zowe Explorer extension for FTP ReadMe.
+- Added Open VSX to the deployment pipeline.
 
 Bug fixes:
 
-- Fixed the issue that prevented the list of recently opened files from being displayed upon request. You can access a list of recently opened files by pressing the Ctrl+Alt+R (Windows) or Command+Option+R (Mac) key combination.
-- Fixed the issue that prevented file picker from functioning. The file picker feature lets you filter your datasets in the tree by pressing the Ctrl+Alt+P (Windows) or Command+Option+P (Mac) key combination.
-- Fixed the issue that caused the content from a previously filtered USS directory instead of the currently filtered USS directory to be served.
-- Added the previously selected `RejectUnauthorized` value to the placeholder text of the entry field while updating an existing profile. In addition, the value is highlighted and shown at the top of the selection list.
-- Improved error handling for the data set copy/paste member, migrate, and recall functions.
+- Added the prompt for credentials when issuing MVS commands, using the right click action, against profiles with missing credentials.
 
 For more information, see [Changelog](https://marketplace.visualstudio.com/items/Zowe.vscode-extension-for-zowe/changelog).
 
