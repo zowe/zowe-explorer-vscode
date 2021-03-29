@@ -13,11 +13,12 @@ import * as vscode from "vscode";
 import * as nls from "vscode-nls";
 import * as globals from "../globals";
 import * as imperative from "@zowe/imperative";
-import { ValidProfileEnum, IZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { ValidProfileEnum, IZoweTreeNode, IZoweTree } from "@zowe/zowe-explorer-api";
 import { PersistentFilters } from "../PersistentFilters";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, FilterDescriptor, FilterItem, resolveQuickPickHelper } from "../utils/ProfilesUtils";
+import { ZoweCommandProvider } from "../abstract/ZoweCommandProvider";
 
 // Set up localization
 nls.config({
@@ -32,7 +33,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  * @export
  * @class TSOCommandHandler
  */
-export class TsoCommandHandler {
+export class TsoCommandHandler extends ZoweCommandProvider {
     /**
      * Implements access singleton
      * for {TsoCommandHandler}.
@@ -46,20 +47,12 @@ export class TsoCommandHandler {
         return this.instance;
     }
 
-    private static readonly totalFilters: number = 10;
-    private static readonly persistenceSchema: string = "Zowe Commands: History";
     private static readonly defaultDialogText: string =
         "\uFF0B " + localize("command.option.prompt.search", "Create a new TSO Command");
     private static instance: TsoCommandHandler;
 
-    private history: PersistentFilters;
-    private outputChannel: vscode.OutputChannel;
-
     constructor() {
-        this.outputChannel = vscode.window.createOutputChannel(
-            localize("issueTsoCommand.outputchannel.title", "Zowe TSO Command")
-        );
-        this.history = new PersistentFilters(TsoCommandHandler.persistenceSchema, TsoCommandHandler.totalFilters);
+        super();
     }
 
     /**
@@ -70,11 +63,15 @@ export class TsoCommandHandler {
      */
     public async issueTsoCommand(session?: imperative.Session, command?: string, node?: IZoweTreeNode) {
         let profile: imperative.IProfileLoaded;
-        if (node && !session) {
-            await Profiles.getInstance().checkCurrentProfile(node.getProfile());
-            session = ZoweExplorerApiRegister.getMvsApi(node.getProfile()).getSession();
+        // // tslint:disable-next-line:no-console
+        // console.log(node);
+        if (node) {
+            await this.checkCurrentProfile(node);
             if (!session) {
-                return;
+                session = ZoweExplorerApiRegister.getMvsApi(node.getProfile()).getSession();
+                if (!session) {
+                    return;
+                }
             }
         }
         if (!session) {
@@ -107,15 +104,19 @@ export class TsoCommandHandler {
         } else {
             profile = node.getProfile();
         }
-        // If baseProfile exists, combine that information first
-        const baseProfile = Profiles.getInstance().getBaseProfile();
-        if (baseProfile) {
-            try {
-                const combinedProfile = await Profiles.getInstance().getCombinedProfile(profile, baseProfile);
-                profile = combinedProfile;
-            } catch (error) {
-                throw error;
+
+        if (!node) {
+            // If baseProfile exists, combine that information first
+            const baseProfile = Profiles.getInstance().getBaseProfile();
+            if (baseProfile) {
+                try {
+                    const combinedProfile = await Profiles.getInstance().getCombinedProfile(profile, baseProfile);
+                    profile = combinedProfile;
+                } catch (error) {
+                    throw error;
+                }
             }
+            await Profiles.getInstance().checkCurrentProfile(profile);
         }
         await Profiles.getInstance().checkCurrentProfile(profile);
         try {

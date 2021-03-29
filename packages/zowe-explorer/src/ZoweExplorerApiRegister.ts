@@ -169,7 +169,7 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
     }
 
     /**
-     * Other VS Code extension need to call this to register their MVS API implementation.
+     * Other VS Code extension need to call this to register their Command API implementation.
      * @param {ZoweExplorerApi.ICommand} api
      */
     public registerCommandApi(commandApi: ZoweExplorerApi.ICommand): void {
