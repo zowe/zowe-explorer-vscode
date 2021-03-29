@@ -26,6 +26,7 @@ import {
     FTPConfig,
 } from "@zowe/zos-ftp-for-zowe-cli";
 import { Buffer } from "buffer";
+import { AbstractFtpApi } from "./abstractFtpApi";
 
 // The Zowe FTP CLI plugin is written and uses mostly JavaScript, so relax the rules here.
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
@@ -33,38 +34,7 @@ import { Buffer } from "buffer";
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-export class FtpUssApi implements ZoweExplorerApi.IUss {
-    private session?: imperative.Session;
-
-    public constructor(public profile?: imperative.IProfileLoaded) {}
-
-    public static getProfileTypeName(): string {
-        return "zftp";
-    }
-
-    public getSession(profile?: imperative.IProfileLoaded): imperative.Session {
-        if (!this.session) {
-            const ftpProfile = (profile || this.profile)?.profile;
-            if (!ftpProfile) {
-                throw new Error(
-                    "Internal error: ZoweVscFtpUssRestApi instance was not initialized with a valid Zowe profile."
-                );
-            }
-            this.session = new imperative.Session({
-                hostname: ftpProfile.host,
-                port: ftpProfile.port,
-                user: ftpProfile.user,
-                password: ftpProfile.password,
-                rejectUnauthorized: ftpProfile.rejectUnauthorized,
-            });
-        }
-        return this.session;
-    }
-
-    public getProfileTypeName(): string {
-        return FtpUssApi.getProfileTypeName();
-    }
-
+export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
     public async fileList(ussFilePath: string): Promise<zowe.IZosFilesResponse> {
         const result = this.getDefaultResponse();
         const connection = await this.ftpClient(this.checkedProfile());

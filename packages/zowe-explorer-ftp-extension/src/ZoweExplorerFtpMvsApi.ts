@@ -24,42 +24,12 @@ import {
     TRANSFER_TYPE_ASCII,
     TRANSFER_TYPE_BINARY,
 } from "@zowe/zos-ftp-for-zowe-cli";
+import { AbstractFtpApi } from "./abstractFtpApi";
 // The Zowe FTP CLI plugin is written and uses mostly JavaScript, so relax the rules here.
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
-export class FtpMvsApi implements ZoweExplorerApi.IMvs {
-    private session?: imperative.Session;
-
-    public constructor(public profile?: imperative.IProfileLoaded) {}
-
-    public static getProfileTypeName(): string {
-        return "zftp";
-    }
-
-    public getSession(profile?: imperative.IProfileLoaded): imperative.Session {
-        if (!this.session) {
-            const ftpProfile = (profile || this.profile)?.profile;
-            if (!ftpProfile) {
-                throw new Error(
-                    "Internal error: ZoweVscFtpUssRestApi instance was not initialized with a valid Zowe profile."
-                );
-            }
-            this.session = new imperative.Session({
-                hostname: ftpProfile.host,
-                port: ftpProfile.port,
-                user: ftpProfile.user,
-                password: ftpProfile.password,
-                rejectUnauthorized: ftpProfile.rejectUnauthorized,
-            });
-        }
-        return this.session;
-    }
-
-    public getProfileTypeName(): string {
-        return FtpMvsApi.getProfileTypeName();
-    }
-
+export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
     public async dataSet(filter: string, options?: zowe.IListOptions): Promise<zowe.IZosFilesResponse> {
         const result = this.getDefaultResponse();
         const connection = await this.ftpClient(this.checkedProfile());
@@ -204,7 +174,6 @@ export class FtpMvsApi implements ZoweExplorerApi.IMvs {
             dcb: dcb,
         };
         if (connection) {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
             await DataSetUtils.allocateDataSet(connection, dataSetName, allocateOptions);
             result.success = true;
             result.commandResponse = "Data set created successfully.";
