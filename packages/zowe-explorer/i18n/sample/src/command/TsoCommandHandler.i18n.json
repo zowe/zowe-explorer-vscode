@@ -1,5 +1,4 @@
 {
-  "issueTsoCommand.outputchannel.title": "Zowe TSO Command",
   "issueTsoCommand.quickPickOption": "Select the Profile to use to submit the TSO command",
   "issueTsoCommand.cancelled": "Operation Cancelled",
   "issueTsoCommand.noProfilesLoaded": "No profiles available",
