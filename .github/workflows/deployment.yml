@@ -10,7 +10,7 @@ on:
     inputs:
       version:
         description: Version to be published
-        default: v1.13.0
+        default: v1.13.1
         required: false
       # create_release:
       #   description: Create the release even if publishing already happened
@@ -78,7 +78,7 @@ jobs:
           git config --global user.email "zowe.robot@gmail.com"
 
       - name: Install CLIs for Workflow use
-        run: npm install -g vsce yarn
+        run: npm install -g vsce yarn ovsx
 
       # Avoid adding node_modules to each .github/actions folder
       - name: Install Internal Dependencies for Actions to Work
@@ -101,7 +101,7 @@ jobs:
         with:
           name: ${{ fromJson(steps.get_ze_name.outputs.package_nls).displayName }}
           package: packages/zowe-explorer
-          token: ${{ secrets.VSCODE_PUBLISHER_TOKEN }}
+          token: ${{ secrets.VSCODE_PUBLISHER_TOKEN }} ${{ secrets.VSCODE_ZOWE_ROBOT_PUBLISH_TOKEN }}
 
       - name: Get the FTP Extension package.json
         run: "echo ::set-output name=package::$(cat packages/zowe-explorer-ftp-extension/package.json)"
@@ -113,7 +113,7 @@ jobs:
         with:
           name: ${{ fromJson(steps.get_ftp_name.outputs.package).displayName }}
           package: packages/zowe-explorer-ftp-extension
-          token: ${{ secrets.VSCODE_PUBLISHER_TOKEN }}
+          token: ${{ secrets.VSCODE_PUBLISHER_TOKEN }} ${{ secrets.VSCODE_ZOWE_ROBOT_PUBLISH_TOKEN }}
 
       - name: Get the NPM API package.json
         run: "echo ::set-output name=package::$(cat packages/zowe-explorer-api/package.json)"
