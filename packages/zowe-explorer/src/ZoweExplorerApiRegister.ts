@@ -326,12 +326,16 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
                 try {
                     result = this.getJesApi(profile);
                 } catch (error) {
-                    throw new Error(
-                        localize(
-                            "getCommonApi.error",
-                            "Internal error: Tried to call a non-existing Common API in API register: "
-                        ) + profile.type
-                    );
+                    try {
+                        result = this.getCommandApi(profile);
+                    } catch (error) {
+                        throw new Error(
+                            localize(
+                                "getCommonApi.error",
+                                "Internal error: Tried to call a non-existing Common API in API register: "
+                            ) + profile.type
+                        );
+                    }
                 }
             }
         }

@@ -9,7 +9,6 @@
  *                                                                                 *
  */
 
-import * as zowe from "@zowe/cli";
 import * as vscode from "vscode";
 import * as nls from "vscode-nls";
 import * as globals from "../globals";
@@ -19,7 +18,6 @@ import { PersistentFilters } from "../PersistentFilters";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, FilterDescriptor, FilterItem, resolveQuickPickHelper } from "../utils/ProfilesUtils";
-import { Profile } from "selenium-webdriver/firefox";
 
 // Set up localization
 nls.config({
@@ -120,18 +118,29 @@ export class TsoCommandHandler {
             }
         }
         await Profiles.getInstance().checkCurrentProfile(profile);
-        if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
-            const updSession = ZoweExplorerApiRegister.getMvsApi(profile).getSession();
-            let command1: string = command;
-            if (!command) {
-                command1 = await this.getQuickPick(
-                    updSession && updSession.ISession ? updSession.ISession.hostname : "unknown"
-                );
+        try {
+            const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(profile);
+            if (commandApi) {
+                if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
+                    const updSession = ZoweExplorerApiRegister.getMvsApi(profile).getSession();
+                    let command1: string = command;
+                    if (!command) {
+                        command1 = await this.getQuickPick(
+                            updSession && updSession.ISession ? updSession.ISession.hostname : "unknown"
+                        );
+                    }
+                    await this.issueCommand(updSession, command1, profile);
+                } else {
+                    vscode.window.showErrorMessage(localize("issueTsoCommand.checkProfile", "Profile is invalid"));
+                    return;
+                }
             }
-            await this.issueCommand(updSession, command1, profile);
-        } else {
-            vscode.window.showErrorMessage(localize("issueTsoCommand.checkProfile", "Profile is invalid"));
-            return;
+        } catch (error) {
+            if (error.toString().includes("non-existing")) {
+                vscode.window.showErrorMessage(localize("issueTsoCommand.apiNonExisting", "Not implemented yet."));
+            } else {
+                await errorHandling(error.toString(), profile.name, error.message.toString());
+            }
         }
     }
 
@@ -214,9 +223,6 @@ export class TsoCommandHandler {
      */
     private async issueCommand(session: imperative.Session, command: string, profile: imperative.IProfileLoaded) {
         const acctNum = await this.getAccountNumber();
-        if (!acctNum) {
-            return;
-        }
         try {
             if (command) {
                 // If the user has started their command with a / then remove it
@@ -230,7 +236,6 @@ export class TsoCommandHandler {
                         title: localize("issueTsoCommand.command.submitted", "TSO command submitted."),
                     },
                     () => {
-                        // return zowe.IssueTso.issueTsoCommand(session, acctNum, command);
                         return ZoweExplorerApiRegister.getCommandApi(profile).issueTsoCommand(acctNum, command);
                     }
                 );
@@ -239,10 +244,16 @@ export class TsoCommandHandler {
                     this.outputChannel.show(true);
                 }
             }
+            this.history.addSearchHistory(command);
         } catch (error) {
-            await errorHandling(error, profile.name, error.message);
+            if (error.toString().includes("account number")) {
+                vscode.window.showErrorMessage(
+                    localize("issueTsoCommand.accountNumberNotSupplied", "Error: No account number was supplied.")
+                );
+            } else {
+                await errorHandling(error.toString(), profile.name, error.message.toString());
+            }
         }
-        this.history.addSearchHistory(command);
     }
 
     private async getAccountNumber(): Promise<string> {
@@ -304,10 +315,6 @@ export class TsoCommandHandler {
                 value: acctNum,
             };
             acctNum = await vscode.window.showInputBox(InputBoxOptions);
-            if (!acctNum) {
-                vscode.window.showInformationMessage(localize("issueTsoCommand.cancelled", "Operation Cancelled."));
-                return;
-            }
         }
         return acctNum;
     }

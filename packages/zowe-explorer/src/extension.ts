@@ -212,6 +212,20 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         vscode.commands.registerCommand("zowe.jobs.deleteProfile", async (node) =>
             Profiles.getInstance().deleteProfile(datasetProvider, ussFileProvider, jobsProvider, node)
         );
+        vscode.commands.registerCommand("zowe.issueTsoCmd", async (node?, command?) => {
+            if (node) {
+                TsoCommandHandler.getInstance().issueTsoCommand(node.session, command, node);
+            } else {
+                TsoCommandHandler.getInstance().issueTsoCommand();
+            }
+        });
+        vscode.commands.registerCommand("zowe.issueMvsCmd", async (node?, command?) => {
+            if (node) {
+                MvsCommandHandler.getInstance().issueMvsCommand(node.session, command, node);
+            } else {
+                MvsCommandHandler.getInstance().issueMvsCommand();
+            }
+        });
     }
 
     ZoweExplorerExtender.createInstance(datasetProvider, ussFileProvider, jobsProvider);
@@ -379,20 +393,6 @@ function initJobsProvider(context: vscode.ExtensionContext, jobsProvider: IZoweT
     vscode.commands.registerCommand("zowe.jobs.editSession", async (node) =>
         jobsProvider.editSession(node, jobsProvider)
     );
-    vscode.commands.registerCommand("zowe.issueTsoCmd", async (node?, command?) => {
-        if (node) {
-            TsoCommandHandler.getInstance().issueTsoCommand(node.session, command, node);
-        } else {
-            TsoCommandHandler.getInstance().issueTsoCommand();
-        }
-    });
-    vscode.commands.registerCommand("zowe.issueMvsCmd", async (node?, command?) => {
-        if (node) {
-            MvsCommandHandler.getInstance().issueMvsCommand(node.session, command, node);
-        } else {
-            MvsCommandHandler.getInstance().issueMvsCommand();
-        }
-    });
     vscode.commands.registerCommand("zowe.jobs.addFavorite", async (node) => jobsProvider.addFavorite(node));
     vscode.commands.registerCommand("zowe.jobs.removeFavorite", async (node) => jobsProvider.removeFavorite(node));
     vscode.commands.registerCommand("zowe.jobs.saveSearch", async (node) => jobsProvider.saveSearch(node));

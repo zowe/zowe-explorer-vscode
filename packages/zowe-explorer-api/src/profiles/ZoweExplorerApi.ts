@@ -432,7 +432,7 @@ export namespace ZoweExplorerApi {
      * @export
      */
     export interface ICommand extends ICommon {
-        issueTsoCommand(acctNum: string, command: string): Promise<zowe.IIssueResponse>;
+        issueTsoCommand?(acctNum: string, command: string): Promise<zowe.IIssueResponse>;
     }
 
     /**
@@ -524,7 +524,7 @@ export namespace ZoweExplorerApi {
          * Register a new implementation of the Command Api.
          * See example in Interface docs.
          *
-         * @param {IJes} jesApi
+         * @param {ICommand} commandApi
          */
         registerCommandApi(CommandApi: ICommand): void;
 
