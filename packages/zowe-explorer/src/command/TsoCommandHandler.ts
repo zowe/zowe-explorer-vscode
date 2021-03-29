@@ -129,7 +129,7 @@ export class TsoCommandHandler {
                             updSession && updSession.ISession ? updSession.ISession.hostname : "unknown"
                         );
                     }
-                    await this.issueCommand(updSession, command1, profile);
+                    await this.issueCommand(command1, profile);
                 } else {
                     vscode.window.showErrorMessage(localize("issueTsoCommand.checkProfile", "Profile is invalid"));
                     return;
@@ -221,7 +221,7 @@ export class TsoCommandHandler {
      * @param session The Session object
      * @param command the command string
      */
-    private async issueCommand(session: imperative.Session, command: string, profile: imperative.IProfileLoaded) {
+    private async issueCommand(command: string, profile: imperative.IProfileLoaded) {
         const acctNum = await this.getAccountNumber();
         try {
             if (command) {
@@ -236,7 +236,7 @@ export class TsoCommandHandler {
                         title: localize("issueTsoCommand.command.submitted", "TSO command submitted."),
                     },
                     () => {
-                        return ZoweExplorerApiRegister.getCommandApi(profile).issueTsoCommand(acctNum, command);
+                        return ZoweExplorerApiRegister.getCommandApi(profile).issueTsoCommand(command, acctNum);
                     }
                 );
                 if (submitResponse.success) {
