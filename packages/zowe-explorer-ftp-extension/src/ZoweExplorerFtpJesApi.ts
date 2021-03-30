@@ -13,10 +13,10 @@ import * as zowe from "@zowe/cli";
 import * as imperative from "@zowe/imperative";
 
 import { ZoweExplorerApi } from "@zowe/zowe-explorer-api";
-import { IZosFTPProfile, FTPConfig, JobUtils, DataSetUtils, TRANSFER_TYPE_ASCII } from "@zowe/zos-ftp-for-zowe-cli";
+import { JobUtils, DataSetUtils, TRANSFER_TYPE_ASCII } from "@zowe/zos-ftp-for-zowe-cli";
 import { DownloadJobs, IJobFile } from "@zowe/cli";
 import { IJob, IJobStatus, ISpoolFile } from "@zowe/zos-ftp-for-zowe-cli/lib/api/JobInterface";
-import { AbstractFtpApi } from "./abstractFtpApi";
+import { AbstractFtpApi } from "./ZoweExplorerAbstractFtpApi";
 // The Zowe FTP CLI plugin is written and uses mostly JavaScript, so relax the rules here.
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
@@ -99,6 +99,7 @@ export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
     }
     public async downloadSpoolContent(parms: zowe.IDownloadAllSpoolContentParms): Promise<void> {
         const connection = await this.ftpClient(this.checkedProfile());
+        /* it's duplicate code with zftp. We may add new job API in the next zftp to cover spool file downloading. */
         if (connection) {
             const destination = parms.outDir == null ? "./output/" : parms.outDir;
             const jobDetails = await JobUtils.findJobByID(connection, parms.jobid);
@@ -137,7 +138,6 @@ export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
                 imperative.IO.writeFile(destinationFile, spoolFileToDownload.contents);
             }
         }
-        return;
     }
 
     public async getSpoolContentById(jobname: string, jobid: string, spoolId: number): Promise<string> {
@@ -175,9 +175,9 @@ export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
             };
             const content = await DataSetUtils.downloadDataSet(connection, jobDataSet, transferOptions);
             const jcl = content.toString();
-            const response: string = await JobUtils.submitJob(connection, jcl);
-            if (response) {
-                result.jobid = response;
+            const jobId: string = await JobUtils.submitJob(connection, jcl);
+            if (jobId) {
+                result.jobid = jobId;
             }
         }
         return result;
@@ -225,25 +225,5 @@ export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
             stepname: "",
             procstep: "",
         };
-    }
-    private checkedProfile(): imperative.IProfileLoaded {
-        if (!this.profile?.profile) {
-            throw new Error(
-                "Internal error: ZoweVscFtpJesRestApi instance was not initialized with a valid Zowe profile."
-            );
-        }
-        return this.profile;
-    }
-
-    private async ftpClient(profile: imperative.IProfileLoaded): Promise<any> {
-        const ftpProfile = profile.profile as IZosFTPProfile;
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-        return await FTPConfig.connectFromArguments({
-            host: ftpProfile.host,
-            user: ftpProfile.user,
-            password: ftpProfile.password,
-            port: ftpProfile.port,
-            secureFtp: ftpProfile.secureFtp,
-        });
     }
 }

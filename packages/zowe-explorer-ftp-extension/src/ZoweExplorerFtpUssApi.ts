@@ -17,16 +17,9 @@ import * as zowe from "@zowe/cli";
 import * as imperative from "@zowe/imperative";
 
 import { ZoweExplorerApi } from "@zowe/zowe-explorer-api";
-import {
-    CoreUtils,
-    UssUtils,
-    TRANSFER_TYPE_ASCII,
-    TRANSFER_TYPE_BINARY,
-    IZosFTPProfile,
-    FTPConfig,
-} from "@zowe/zos-ftp-for-zowe-cli";
+import { CoreUtils, UssUtils, TRANSFER_TYPE_ASCII, TRANSFER_TYPE_BINARY } from "@zowe/zos-ftp-for-zowe-cli";
 import { Buffer } from "buffer";
-import { AbstractFtpApi } from "./abstractFtpApi";
+import { AbstractFtpApi } from "./ZoweExplorerAbstractFtpApi";
 
 // The Zowe FTP CLI plugin is written and uses mostly JavaScript, so relax the rules here.
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
@@ -220,27 +213,6 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
             commandResponse: "Could not get a valid FTP connection.",
             apiResponse: {},
         };
-    }
-
-    private checkedProfile(): imperative.IProfileLoaded {
-        if (!this.profile?.profile) {
-            throw new Error(
-                "Internal error: ZoweVscFtpUssRestApi instance was not initialized with a valid Zowe profile."
-            );
-        }
-        return this.profile;
-    }
-
-    private async ftpClient(profile: imperative.IProfileLoaded): Promise<any> {
-        const ftpProfile = profile.profile as IZosFTPProfile;
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-        return await FTPConfig.connectFromArguments({
-            host: ftpProfile.host,
-            user: ftpProfile.user,
-            password: ftpProfile.password,
-            port: ftpProfile.port,
-            secureFtp: ftpProfile.secureFtp,
-        });
     }
 
     private async hashFile(filename: string): Promise<string> {

@@ -11,9 +11,10 @@
 
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import * as imperative from "@zowe/imperative";
+import { FTPConfig, IZosFTPProfile } from "@zowe/zos-ftp-for-zowe-cli";
 import { ZoweExplorerApi } from "@zowe/zowe-explorer-api";
 
-export class AbstractFtpApi implements ZoweExplorerApi.ICommon {
+export abstract class AbstractFtpApi implements ZoweExplorerApi.ICommon {
     private session?: imperative.Session;
 
     public constructor(public profile?: imperative.IProfileLoaded) {}
@@ -43,5 +44,26 @@ export class AbstractFtpApi implements ZoweExplorerApi.ICommon {
 
     public getProfileTypeName(): string {
         return AbstractFtpApi.getProfileTypeName();
+    }
+
+    public checkedProfile(): imperative.IProfileLoaded {
+        if (!this.profile?.profile) {
+            throw new Error(
+                "Internal error: ZoweVscFtpRestApi instance was not initialized with a valid Zowe profile."
+            );
+        }
+        return this.profile;
+    }
+
+    public async ftpClient(profile: imperative.IProfileLoaded): Promise<any> {
+        const ftpProfile = profile.profile as IZosFTPProfile;
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+        return await FTPConfig.connectFromArguments({
+            host: ftpProfile.host,
+            user: ftpProfile.user,
+            password: ftpProfile.password,
+            port: ftpProfile.port,
+            secureFtp: ftpProfile.secureFtp,
+        });
     }
 }
