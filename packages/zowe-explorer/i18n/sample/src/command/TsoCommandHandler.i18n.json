@@ -1,6 +1,6 @@
 {
   "issueTsoCommand.quickPickOption": "Select the Profile to use to submit the TSO command",
-  "issueTsoCommand.cancelled": "Operation Cancelled",
+  "issueTsoCommand.cancelled": "Operation Cancelled.",
   "issueTsoCommand.noProfilesLoaded": "No profiles available",
   "issueTsoCommand.checkProfile": "Profile is invalid",
   "issueTsoCommand.apiNonExisting": "Not implemented yet.",

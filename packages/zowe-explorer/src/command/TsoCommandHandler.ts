@@ -13,7 +13,7 @@ import * as vscode from "vscode";
 import * as nls from "vscode-nls";
 import * as globals from "../globals";
 import * as imperative from "@zowe/imperative";
-import { ValidProfileEnum, IZoweTreeNode, IZoweTree } from "@zowe/zowe-explorer-api";
+import { ValidProfileEnum, IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { PersistentFilters } from "../PersistentFilters";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
@@ -63,8 +63,6 @@ export class TsoCommandHandler extends ZoweCommandProvider {
      */
     public async issueTsoCommand(session?: imperative.Session, command?: string, node?: IZoweTreeNode) {
         let profile: imperative.IProfileLoaded;
-        // // tslint:disable-next-line:no-console
-        // console.log(node);
         if (node) {
             await this.checkCurrentProfile(node);
             if (!session) {
@@ -95,6 +93,25 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                     return;
                 }
                 profile = allProfiles.filter((temprofile) => temprofile.name === sesName)[0];
+                if (!node) {
+                    // If baseProfile exists, combine that information first
+                    const baseProfile = Profiles.getInstance().getBaseProfile();
+                    if (baseProfile) {
+                        try {
+                            const combinedProfile = await Profiles.getInstance().getCombinedProfile(
+                                profile,
+                                baseProfile
+                            );
+                            profile = combinedProfile;
+                        } catch (error) {
+                            throw error;
+                        }
+                    }
+                    await Profiles.getInstance().checkCurrentProfile(profile);
+                }
+                if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
+                    session = ZoweExplorerApiRegister.getMvsApi(profile).getSession();
+                }
             } else {
                 vscode.window.showInformationMessage(
                     localize("issueTsoCommand.noProfilesLoaded", "No profiles available")
@@ -104,30 +121,14 @@ export class TsoCommandHandler extends ZoweCommandProvider {
         } else {
             profile = node.getProfile();
         }
-
-        if (!node) {
-            // If baseProfile exists, combine that information first
-            const baseProfile = Profiles.getInstance().getBaseProfile();
-            if (baseProfile) {
-                try {
-                    const combinedProfile = await Profiles.getInstance().getCombinedProfile(profile, baseProfile);
-                    profile = combinedProfile;
-                } catch (error) {
-                    throw error;
-                }
-            }
-            await Profiles.getInstance().checkCurrentProfile(profile);
-        }
-        await Profiles.getInstance().checkCurrentProfile(profile);
         try {
-            const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(profile);
-            if (commandApi) {
-                if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
-                    const updSession = ZoweExplorerApiRegister.getMvsApi(profile).getSession();
+            if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
+                const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(profile);
+                if (commandApi) {
                     let command1: string = command;
                     if (!command) {
                         command1 = await this.getQuickPick(
-                            updSession && updSession.ISession ? updSession.ISession.hostname : "unknown"
+                            session && session.ISession ? session.ISession.hostname : "unknown"
                         );
                     }
                     await this.issueCommand(command1, profile);
@@ -223,7 +224,10 @@ export class TsoCommandHandler extends ZoweCommandProvider {
      * @param command the command string
      */
     private async issueCommand(command: string, profile: imperative.IProfileLoaded) {
-        const acctNum = await this.getAccountNumber();
+        let acctNum: string;
+        if (profile.type === "zosmf") {
+            acctNum = await this.getAccountNumber();
+        }
         try {
             if (command) {
                 // If the user has started their command with a / then remove it
@@ -316,6 +320,10 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                 value: acctNum,
             };
             acctNum = await vscode.window.showInputBox(InputBoxOptions);
+            if (!acctNum) {
+                vscode.window.showInformationMessage(localize("issueTsoCommand.cancelled", "Operation Cancelled."));
+                return;
+            }
         }
         return acctNum;
     }

@@ -440,7 +440,7 @@ export namespace ZoweExplorerApi {
          * @returns {zowe.IIssueResponse>}
          * @memberof ICommand
          */
-        issueTsoCommand?(command: string, acctNum: string): Promise<zowe.IIssueResponse>;
+        issueTsoCommand?(command: string, acctNum?: string): Promise<zowe.IIssueResponse>;
     }
 
     /**

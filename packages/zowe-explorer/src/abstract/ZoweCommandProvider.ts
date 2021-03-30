@@ -52,7 +52,7 @@ export class ZoweCommandProvider {
      * Called whenever the tree needs to be refreshed, and fires the data change event
      *
      */
-    public refreshElement(element: IZoweTreeNode): void {
+    public async refreshElement(element: IZoweTreeNode): Promise<void> {
         element.dirty = true;
         this.mOnDidChangeTreeData.fire(element);
     }
@@ -61,7 +61,7 @@ export class ZoweCommandProvider {
      * Called whenever the tree needs to be refreshed, and fires the data change event
      *
      */
-    public refresh(): void {
+    public async refresh(): Promise<void> {
         this.mOnDidChangeTreeData.fire();
     }
 
