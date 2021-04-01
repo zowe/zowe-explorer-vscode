@@ -54,6 +54,8 @@ async function createGlobalMocks() {
         mockDisableValidationContext: jest.fn(),
         mockEnableValidationContext: jest.fn(),
         mockCheckCurrentProfile: jest.fn(),
+        mockTextDocument: { fileName: `/test/path/temp/_U_/sestest//test/node`, isDirty: true },
+        mockTextDocuments: [],
         mockProfilesInstance: null,
         withProgress: jest.fn(),
         closeOpenedTextFile: jest.fn(),
@@ -72,6 +74,7 @@ async function createGlobalMocks() {
         profilesForValidation: { status: "active", name: "fake" },
     };
 
+    globalMocks.mockTextDocuments.push(globalMocks.mockTextDocument);
     globalMocks.testBaseProfile.profile.tokenType = "tokenType";
     globalMocks.testBaseProfile.profile.tokenValue = "testTokenValue";
     globalMocks.testCombinedProfile.profile.tokenType = "tokenType";
@@ -120,6 +123,10 @@ async function createGlobalMocks() {
     Object.defineProperty(vscode.window, "showInputBox", { value: globalMocks.showInputBox, configurable: true });
     Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true });
     Object.defineProperty(vscode.window, "withProgress", { value: globalMocks.withProgress, configurable: true });
+    Object.defineProperty(vscode.workspace, "textDocuments", {
+        value: globalMocks.mockTextDocuments,
+        configurable: true,
+    });
     Object.defineProperty(Profiles, "getInstance", {
         value: jest.fn().mockReturnValue(globalMocks.mockProfilesInstance),
         configurable: true,
@@ -945,8 +952,7 @@ describe("USSTree Unit Tests - Function USSTree.rename()", () => {
         globalMocks.testUSSNode.fullPath = globalMocks.testUSSNode.fullPath + "/usstest";
         globalMocks.testTree.mSessionNodes[1].children.push(globalMocks.testUSSNode);
         const renameNode = jest.spyOn(globalMocks.testUSSNode, "rename");
-        const removeFavorite = jest.spyOn(globalMocks.testTree, "removeFavorite");
-        const addFavorite = jest.spyOn(globalMocks.testTree, "addFavorite");
+        const renameFavorite = jest.spyOn(globalMocks.testTree, "renameFavorite");
         renameNode.mockResolvedValue(false);
         globalMocks.showInputBox.mockReturnValueOnce("new name");
 
@@ -954,8 +960,7 @@ describe("USSTree Unit Tests - Function USSTree.rename()", () => {
 
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(0);
         expect(globalMocks.renameUSSFile.mock.calls.length).toBe(1);
-        expect(removeFavorite.mock.calls.length).toBe(1);
-        expect(addFavorite.mock.calls.length).toBe(1);
+        expect(renameFavorite.mock.calls.length).toBe(1);
     });
 
     it("Tests that USSTree.rename() is executed successfully for non-favorited node with no Favorite equivalent", async () => {
@@ -982,31 +987,27 @@ describe("USSTree Unit Tests - Function USSTree.rename()", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
         globalMocks.testTree.mSessionNodes[1].children.push(globalMocks.testUSSNode);
-        const removeFavorite = jest.spyOn(globalMocks.testTree, "removeFavorite");
-        const addFavorite = jest.spyOn(globalMocks.testTree, "addFavorite");
+        const renameNode = jest.spyOn(globalMocks.testTree, "renameNode");
         globalMocks.showInputBox.mockReturnValueOnce("new name");
 
         await globalMocks.testTree.rename(blockMocks.ussFavNode);
 
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(0);
         expect(globalMocks.renameUSSFile.mock.calls.length).toBe(1);
-        expect(removeFavorite.mock.calls.length).toBe(1);
-        expect(addFavorite.mock.calls.length).toBe(1);
+        expect(renameNode.mock.calls.length).toBe(1);
     });
 
     it("Tests that USSTree.rename() is executed successfully for a favorited USS file, when tree is not expanded", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
-        const removeFavorite = jest.spyOn(globalMocks.testTree, "removeFavorite");
-        const addFavorite = jest.spyOn(globalMocks.testTree, "addFavorite");
+        const renameNode = jest.spyOn(globalMocks.testTree, "renameNode");
         globalMocks.showInputBox.mockReturnValueOnce("new name");
 
         await globalMocks.testTree.rename(blockMocks.ussFavNode);
 
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(0);
         expect(globalMocks.renameUSSFile.mock.calls.length).toBe(1);
-        expect(removeFavorite.mock.calls.length).toBe(1);
-        expect(addFavorite.mock.calls.length).toBe(1);
+        expect(renameNode.mock.calls.length).toBe(1);
     });
 
     it("Tests that USSTree.rename() exits when blank input is provided", async () => {

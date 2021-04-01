@@ -449,25 +449,6 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
 });
 
 describe("ZoweUSSNode Unit Tests - Function node.refreshAndReopen()", () => {
-    it("Tests that refreshAndReopen works for a folder", async () => {
-        const globalMocks = await createGlobalMocks();
-        const ussDir = new ZoweUSSNode(
-            "usstest",
-            vscode.TreeItemCollapsibleState.Expanded,
-            null,
-            globalMocks.session,
-            null,
-            null,
-            globalMocks.profileOne.name,
-            "123"
-        );
-        ussDir.contextValue = globals.USS_DIR_CONTEXT;
-        const vscodeCommandSpy = jest.spyOn(vscode.commands, "executeCommand");
-
-        await ussDir.refreshAndReopen();
-
-        expect(vscodeCommandSpy).toHaveBeenCalledWith("zowe.uss.refreshAll");
-    });
     it("Tests that refreshAndReopen works for a file with closed tab", async () => {
         const globalMocks = await createGlobalMocks();
         const hasClosedTab = true;
@@ -535,7 +516,7 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshAndReopen()", () => {
     it("Tests that refreshAndReopen() refreshes a directory", async () => {
         const globalMocks = await createGlobalMocks();
 
-        const refreshAllSpy = jest.spyOn(vscode.commands, "executeCommand");
+        const refreshUssSpy = jest.spyOn(vscode.commands, "executeCommand");
 
         const rootNode = new ZoweUSSNode(
             "gappy",
@@ -551,8 +532,8 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshAndReopen()", () => {
 
         await rootNode.refreshAndReopen();
 
-        expect(refreshAllSpy).toHaveBeenCalledWith("zowe.uss.refreshAll");
-        refreshAllSpy.mockClear();
+        expect(refreshUssSpy).toHaveBeenCalledWith("zowe.uss.refreshUSSInTree", rootNode);
+        refreshUssSpy.mockClear();
     });
 
     it("Tests that refreshAndReopen() refreshes a file", async () => {

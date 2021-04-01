@@ -250,7 +250,6 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         const matchingNode: IZoweUSSTreeNode = this.findFavoritedNode(node);
         if (matchingNode) {
             matchingNode.rename(newNamePath);
-            // this.refreshElement(matchingNode);
         }
     }
 
