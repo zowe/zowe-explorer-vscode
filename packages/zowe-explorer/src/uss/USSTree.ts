@@ -94,8 +94,30 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         const oldFavorite: IZoweUSSTreeNode = contextually.isFavorite(originalNode)
             ? originalNode
             : this.findFavoritedNode(originalNode);
-        const loadedNodes = await this.getAllLoadedItems();
+
         const nodeType = contextually.isFolder(originalNode) ? "folder" : "file";
+
+        const currentFilePath = originalNode.getUSSDocumentFilePath(); // The user's complete local file path for the node
+        const openedTextDocuments: readonly vscode.TextDocument[] = vscode.workspace.textDocuments; // Array of all documents open in VS Code
+
+        // If the USS node or any of its children are locally open with unsaved data, prevent rename until user saves their work.
+        for (const doc of openedTextDocuments) {
+            if (doc.fileName.includes(currentFilePath)) {
+                if (doc.isDirty === true) {
+                    vscode.window.showErrorMessage(
+                        localize(
+                            "renameUSS.unsavedWork",
+                            "Unable to rename {0} because you have unsaved changes in this {1}. Please save your work before renaming the {1}.",
+                            originalNode.fullPath,
+                            nodeType
+                        ),
+                        { modal: true }
+                    );
+                    return;
+                }
+            }
+        }
+        const loadedNodes = await this.getAllLoadedItems();
         const options: vscode.InputBoxOptions = {
             prompt: localize("renameUSS.enterName", "Enter a new name for the {0}", nodeType),
             value: originalNode.label.replace(/^\[.+\]:\s/, ""),
