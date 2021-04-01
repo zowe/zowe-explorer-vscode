@@ -258,6 +258,7 @@ export async function openPS(
                 localize("openPS.log.debug.openDataSet", "opening physical sequential data set from label ") + label
             );
             // if local copy exists, open that instead of pulling from mainframe
+            const encodedLabel = label.replace(/#/g, "%23");
             const documentFilePath = getDocumentFilePath(label, node);
             if (!fs.existsSync(documentFilePath)) {
                 const response = await vscode.window.withProgress(
@@ -267,7 +268,7 @@ export async function openPS(
                     },
                     function downloadDataset() {
                         const prof = node.getProfile();
-                        return ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
+                        return ZoweExplorerApiRegister.getMvsApi(prof).getContents(encodedLabel, {
                             file: documentFilePath,
                             returnEtag: true,
                             encoding: prof.profile.encoding,
