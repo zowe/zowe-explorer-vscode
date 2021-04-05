@@ -313,7 +313,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         this.label = this.shortLabel;
         this.tooltip = injectAdditionalDataToTooltip(this, newFullPath);
         // Update the full path of any children already loaded locally
-        // TODO: Check if child opens cached file with old name path
         if (this.children.length > 0) {
             this.children.forEach((child) => {
                 const newChildFullPath = newFullPath + "/" + child.shortLabel;
@@ -325,12 +324,10 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     }
 
     /**
-     * Refreshes node and reopens it.
+     * Reopens a file if it was closed (e.g. while it was being renamed).
      * @param hasClosedInstance
      */
-    public async refreshAndReopen(hasClosedInstance = false) {
-        await vscode.commands.executeCommand("zowe.uss.refreshUSSInTree", this);
-
+    public async reopen(hasClosedInstance = false) {
         if (!this.isFolder && (hasClosedInstance || (this.binary && this.downloaded))) {
             await vscode.commands.executeCommand("zowe.uss.ZoweUSSNode.open", this);
         }

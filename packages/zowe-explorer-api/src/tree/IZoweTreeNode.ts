@@ -224,10 +224,10 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      */
     renameUSSNode?(ussFileProvider: IZoweTree<IZoweUSSTreeNode>, filePath: string);
     /**
-     * Refreshes node and reopens it.
+     * Reopens a file if it was closed (e.g. while it was being renamed).
      * @param hasClosedInstance
      */
-    refreshAndReopen?(hasClosedInstance?: boolean);
+    reopen?(hasClosedInstance?: boolean);
     /**
      * Adds a search node to the USS favorites list
      *
