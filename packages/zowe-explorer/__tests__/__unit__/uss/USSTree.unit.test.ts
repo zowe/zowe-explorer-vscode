@@ -55,7 +55,7 @@ async function createGlobalMocks() {
         mockEnableValidationContext: jest.fn(),
         mockCheckCurrentProfile: jest.fn(),
         mockTextDocumentDirty: { fileName: `/test/path/temp/_U_/sestest/test/node`, isDirty: true },
-        mockTextDocumentClean: { fileName: `/test/path/temp/_U_/sestest/test2/node`, isDirty: false },
+        mockTextDocumentClean: { fileName: `/test/path/temp/_U_/sestest/testClean/node`, isDirty: false },
         mockTextDocuments: [],
         mockProfilesInstance: null,
         withProgress: jest.fn(),
@@ -1014,7 +1014,7 @@ describe("USSTree Unit Tests - Function USSTree.rename()", () => {
         const globalMocks = await createGlobalMocks();
         createBlockMocks(globalMocks);
         const testUSSDir = new ZoweUSSNode(
-            "test2",
+            "testClean", // This name intentionally contains the mock dirty document path as a substring to test for false positives
             vscode.TreeItemCollapsibleState.Expanded,
             globalMocks.testUSSNode,
             globalMocks.testSession,
