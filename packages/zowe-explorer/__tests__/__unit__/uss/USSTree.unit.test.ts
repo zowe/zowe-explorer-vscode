@@ -988,7 +988,7 @@ describe("USSTree Unit Tests - Function USSTree.rename()", () => {
         return newMocks;
     }
 
-    it("Tests that USSTree.rename() shows error if there is an open dirty file whose fullpath includes that of the node being renamed", async () => {
+    it("Tests that USSTree.rename() shows error if an open dirty file's fullpath includes that of the node being renamed", async () => {
         // Open dirty file defined by globalMocks.mockTextDocumentDirty, with filepath including "sestest/test/node"
         const globalMocks = await createGlobalMocks();
         createBlockMocks(globalMocks);
@@ -1009,7 +1009,7 @@ describe("USSTree Unit Tests - Function USSTree.rename()", () => {
         expect(vscodeErrorMsgSpy.mock.calls[0][0]).toContain("because you have unsaved changes in this");
     });
 
-    it("Tests that USSTree.rename() shows no error if there is an open clean file whose fullpath includes that of the node being renamed", async () => {
+    it("Tests that USSTree.rename() shows no error if an open clean file's fullpath includes that of the node being renamed", async () => {
         // Open clean file defined by globalMocks.mockTextDocumentClean, with filepath including "sestest/test2/node"
         const globalMocks = await createGlobalMocks();
         createBlockMocks(globalMocks);
