@@ -102,7 +102,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
 
         // If the USS node or any of its children are locally open with unsaved data, prevent rename until user saves their work.
         for (const doc of openedTextDocuments) {
-            if (doc.fileName.includes(currentFilePath)) {
+            if (doc.fileName === currentFilePath || doc.fileName.includes(currentFilePath + "/")) {
                 if (doc.isDirty === true) {
                     vscode.window.showErrorMessage(
                         localize(

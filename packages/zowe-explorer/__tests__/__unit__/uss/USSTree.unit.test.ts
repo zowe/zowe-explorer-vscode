@@ -54,7 +54,8 @@ async function createGlobalMocks() {
         mockDisableValidationContext: jest.fn(),
         mockEnableValidationContext: jest.fn(),
         mockCheckCurrentProfile: jest.fn(),
-        mockTextDocument: { fileName: `/test/path/temp/_U_/sestest//test/node`, isDirty: true },
+        mockTextDocumentDirty: { fileName: `/test/path/temp/_U_/sestest/test/node`, isDirty: true },
+        mockTextDocumentClean: { fileName: `/test/path/temp/_U_/sestest/test2/node`, isDirty: false },
         mockTextDocuments: [],
         mockProfilesInstance: null,
         withProgress: jest.fn(),
@@ -74,7 +75,8 @@ async function createGlobalMocks() {
         profilesForValidation: { status: "active", name: "fake" },
     };
 
-    globalMocks.mockTextDocuments.push(globalMocks.mockTextDocument);
+    globalMocks.mockTextDocuments.push(globalMocks.mockTextDocumentDirty);
+    globalMocks.mockTextDocuments.push(globalMocks.mockTextDocumentClean);
     globalMocks.testBaseProfile.profile.tokenType = "tokenType";
     globalMocks.testBaseProfile.profile.tokenValue = "testTokenValue";
     globalMocks.testCombinedProfile.profile.tokenType = "tokenType";
@@ -944,6 +946,47 @@ describe("USSTree Unit Tests - Function USSTree.rename()", () => {
 
         return newMocks;
     }
+
+    it("Tests that USSTree.rename() shows error if there is an open dirty file whose fullpath includes that of the node being renamed", async () => {
+        // Open dirty file defined by globalMocks.mockTextDocumentDirty, with filepath including "sestest/test/node"
+        const globalMocks = await createGlobalMocks();
+        createBlockMocks(globalMocks);
+        const testUSSDir = new ZoweUSSNode(
+            "test",
+            vscode.TreeItemCollapsibleState.Expanded,
+            globalMocks.testUSSNode,
+            globalMocks.testSession,
+            "/",
+            false,
+            globalMocks.testProfile.name
+        );
+        const vscodeErrorMsgSpy = jest.spyOn(vscode.window, "showErrorMessage");
+
+        await globalMocks.testTree.rename(testUSSDir);
+
+        expect(vscodeErrorMsgSpy.mock.calls.length).toBe(1);
+        expect(vscodeErrorMsgSpy.mock.calls[0][0]).toContain("because you have unsaved changes in this");
+    });
+
+    it("Tests that USSTree.rename() shows no error if there is an open clean file whose fullpath includes that of the node being renamed", async () => {
+        // Open clean file defined by globalMocks.mockTextDocumentClean, with filepath including "sestest/test2/node"
+        const globalMocks = await createGlobalMocks();
+        createBlockMocks(globalMocks);
+        const testUSSDir = new ZoweUSSNode(
+            "test2",
+            vscode.TreeItemCollapsibleState.Expanded,
+            globalMocks.testUSSNode,
+            globalMocks.testSession,
+            "/",
+            false,
+            globalMocks.testProfile.name
+        );
+        const vscodeErrorMsgSpy = jest.spyOn(vscode.window, "showErrorMessage");
+
+        await globalMocks.testTree.rename(testUSSDir);
+
+        expect(vscodeErrorMsgSpy.mock.calls.length).toBe(0);
+    });
 
     it("Tests that USSTree.rename() is executed successfully for non-favorited node that is also in Favorites", async () => {
         const globalMocks = await createGlobalMocks();
