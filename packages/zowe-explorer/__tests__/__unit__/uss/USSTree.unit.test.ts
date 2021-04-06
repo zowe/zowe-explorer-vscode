@@ -854,6 +854,47 @@ describe("USSTree Unit Tests - Function USSTree.findNonFavoritedNode()", () => {
     });
 });
 
+describe("USSTree Unit Tests - Function USSTree.renameNode()", () => {
+    it("Checking common run of function", async () => {
+        const globalMocks = await createGlobalMocks();
+        const ussSessionNode = createUSSSessionNode(globalMocks.testSession, globalMocks.testProfile);
+        const ussNode = createUSSNode(globalMocks.testSession, globalMocks.testProfile);
+        const renameSpy = jest.spyOn(ussNode, "rename");
+
+        ussSessionNode.children.push(ussNode);
+        globalMocks.testTree.mSessionNodes[1].children.push(ussNode);
+
+        await globalMocks.testTree.renameNode("sestest", "/u/myuser/usstest", "/u/myuser/renamed");
+
+        expect(renameSpy).toBeCalledTimes(1);
+        expect(renameSpy).toBeCalledWith("/u/myuser/renamed");
+    });
+});
+
+describe("USSTree Unit Tests - Function USSTree.renameFavorite()", () => {
+    it("Checking common run of function", async () => {
+        const globalMocks = await createGlobalMocks();
+        const ussFavNode = createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile);
+        const ussFavNodeParent = new ZoweUSSNode(
+            "sestest",
+            vscode.TreeItemCollapsibleState.Expanded,
+            null,
+            globalMocks.testSession,
+            null,
+            false,
+            globalMocks.testProfile.name
+        );
+        ussFavNodeParent.children.push(ussFavNode);
+        globalMocks.testTree.mFavorites.push(ussFavNodeParent);
+        const renameSpy = jest.spyOn(ussFavNode, "rename");
+
+        await globalMocks.testTree.renameFavorite(ussFavNode, "/u/myuser/renamed");
+
+        expect(renameSpy).toBeCalledTimes(1);
+        expect(renameSpy).toBeCalledWith("/u/myuser/renamed");
+    });
+});
+
 describe("USSTree Unit Tests - Function USSTree.saveSearch()", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
