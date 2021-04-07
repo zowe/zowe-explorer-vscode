@@ -1001,10 +1001,12 @@ describe("USSTree Unit Tests - Function USSTree.rename()", () => {
             false,
             globalMocks.testProfile.name
         );
+        const getAllLoadedItemsSpy = jest.spyOn(globalMocks.testTree, "getAllLoadedItems");
         const vscodeErrorMsgSpy = jest.spyOn(vscode.window, "showErrorMessage");
 
         await globalMocks.testTree.rename(testUSSDir);
 
+        expect(getAllLoadedItemsSpy.mock.calls.length).toBe(0);
         expect(vscodeErrorMsgSpy.mock.calls.length).toBe(1);
         expect(vscodeErrorMsgSpy.mock.calls[0][0]).toContain("because you have unsaved changes in this");
     });
