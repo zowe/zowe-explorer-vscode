@@ -1001,14 +1001,19 @@ describe("USSTree Unit Tests - Function USSTree.rename()", () => {
             false,
             globalMocks.testProfile.name
         );
-        const getAllLoadedItemsSpy = jest.spyOn(globalMocks.testTree, "getAllLoadedItems");
+        Object.defineProperty(testUSSDir, "getUSSDocumentFilePath", {
+            value: jest.fn(() => {
+                return "/test/path/temp/_U_/sestest/test";
+            }),
+        });
         const vscodeErrorMsgSpy = jest.spyOn(vscode.window, "showErrorMessage");
+        const getAllLoadedItemsSpy = jest.spyOn(globalMocks.testTree, "getAllLoadedItems");
 
         await globalMocks.testTree.rename(testUSSDir);
 
-        expect(getAllLoadedItemsSpy.mock.calls.length).toBe(0);
         expect(vscodeErrorMsgSpy.mock.calls.length).toBe(1);
         expect(vscodeErrorMsgSpy.mock.calls[0][0]).toContain("because you have unsaved changes in this");
+        expect(getAllLoadedItemsSpy.mock.calls.length).toBe(0);
     });
 
     it("Tests that USSTree.rename() shows no error if an open clean file's fullpath includes that of the node being renamed", async () => {
@@ -1024,6 +1029,11 @@ describe("USSTree Unit Tests - Function USSTree.rename()", () => {
             false,
             globalMocks.testProfile.name
         );
+        Object.defineProperty(testUSSDir, "getUSSDocumentFilePath", {
+            value: jest.fn(() => {
+                return "/test/path/temp/_U_/sestest/testClean";
+            }),
+        });
         const vscodeErrorMsgSpy = jest.spyOn(vscode.window, "showErrorMessage");
 
         await globalMocks.testTree.rename(testUSSDir);
