@@ -257,7 +257,7 @@ export async function openPS(
             globals.LOG.debug(
                 localize("openPS.log.debug.openDataSet", "opening physical sequential data set from label ") + label
             );
-            // if local copy exists, open that instead of pulling from mainframe
+            // if a local copy exists, open that instead of pulling from mainframe
             const encodedLabel = label.replace(/#/g, "%23");
             const documentFilePath = getDocumentFilePath(label, node);
             if (!fs.existsSync(documentFilePath)) {
