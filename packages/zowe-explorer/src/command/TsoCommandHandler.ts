@@ -111,6 +111,9 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                 }
                 if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
                     session = ZoweExplorerApiRegister.getMvsApi(profile).getSession();
+                } else {
+                    vscode.window.showErrorMessage(localize("issueTsoCommand.checkProfile", "Profile is invalid"));
+                    return;
                 }
             } else {
                 vscode.window.showInformationMessage(
