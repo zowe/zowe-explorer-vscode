@@ -19,6 +19,7 @@ import { Profiles } from "../Profiles";
 import { FilterDescriptor, FilterItem, resolveQuickPickHelper, errorHandling } from "../utils/ProfilesUtils";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import * as nls from "vscode-nls";
+import { ZoweCommandProvider } from "../abstract/ZoweCommandProvider";
 
 // Set up localization
 nls.config({
@@ -33,7 +34,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  * @export
  * @class MvsCommandHandler
  */
-export class MvsCommandHandler {
+export class MvsCommandHandler extends ZoweCommandProvider {
     /**
      * Implements access singleton
      * for {MvsCommandHandler}.
@@ -47,20 +48,12 @@ export class MvsCommandHandler {
         return this.instance;
     }
 
-    private static readonly totalFilters: number = 10;
-    private static readonly persistenceSchema: string = "Zowe Commands: History";
     private static readonly defaultDialogText: string =
         "\uFF0B " + localize("command.option.prompt.search", "Create a new MVS Command");
     private static instance: MvsCommandHandler;
 
-    private history: PersistentFilters;
-    private outputChannel: vscode.OutputChannel;
-
     constructor() {
-        this.outputChannel = vscode.window.createOutputChannel(
-            localize("issueMvsCommand.outputchannel.title", "Zowe MVS Command")
-        );
-        this.history = new PersistentFilters(MvsCommandHandler.persistenceSchema, MvsCommandHandler.totalFilters);
+        super();
     }
 
     /**
@@ -70,12 +63,14 @@ export class MvsCommandHandler {
      * @param command the command string (optional) user is prompted if not supplied
      */
     public async issueMvsCommand(session?: Session, command?: string, node?: IZoweTreeNode) {
-        let zosmfProfile: IProfileLoaded;
-        if (node && !session) {
-            await Profiles.getInstance().checkCurrentProfile(node.getProfile());
-            session = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).getSession();
+        let profile: IProfileLoaded;
+        if (node) {
+            await this.checkCurrentProfile(node);
             if (!session) {
-                return;
+                session = ZoweExplorerApiRegister.getMvsApi(node.getProfile()).getSession();
+                if (!session) {
+                    return;
+                }
             }
         }
         if (!session) {
@@ -100,7 +95,29 @@ export class MvsCommandHandler {
                     );
                     return;
                 }
-                zosmfProfile = allProfiles.filter((temprofile) => temprofile.name === sesName)[0];
+                profile = allProfiles.filter((temprofile) => temprofile.name === sesName)[0];
+                if (!node) {
+                    // If baseProfile exists, combine that information first
+                    const baseProfile = Profiles.getInstance().getBaseProfile();
+                    if (baseProfile) {
+                        try {
+                            const combinedProfile = await Profiles.getInstance().getCombinedProfile(
+                                profile,
+                                baseProfile
+                            );
+                            profile = combinedProfile;
+                        } catch (error) {
+                            throw error;
+                        }
+                    }
+                    await Profiles.getInstance().checkCurrentProfile(profile);
+                }
+                if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
+                    session = ZoweExplorerApiRegister.getMvsApi(profile).getSession();
+                } else {
+                    vscode.window.showErrorMessage(localize("issueMvsCommand.checkProfile", "Profile is invalid"));
+                    return;
+                }
             } else {
                 vscode.window.showInformationMessage(
                     localize("issueMvsCommand.noProfilesLoaded", "No profiles available")
@@ -108,34 +125,30 @@ export class MvsCommandHandler {
                 return;
             }
         } else {
-            zosmfProfile = node.getProfile();
+            profile = node.getProfile();
         }
-        // If baseProfile exists, combine that information first
-        const baseProfile = Profiles.getInstance().getBaseProfile();
-        if (baseProfile) {
-            try {
-                const combinedProfile = await Profiles.getInstance().getCombinedProfile(zosmfProfile, baseProfile);
-                zosmfProfile = combinedProfile;
-            } catch (error) {
-                throw error;
+        try {
+            if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
+                const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(profile);
+                if (commandApi) {
+                    let command1: string = command;
+                    if (!command) {
+                        command1 = await this.getQuickPick(
+                            session && session.ISession ? session.ISession.hostname : "unknown"
+                        );
+                    }
+                    await this.issueCommand(profile, command1);
+                } else {
+                    vscode.window.showErrorMessage(localize("issueMvsCommand.checkProfile", "Profile is invalid"));
+                    return;
+                }
             }
-        }
-        await Profiles.getInstance().checkCurrentProfile(zosmfProfile);
-        if (
-            Profiles.getInstance().validProfile === ValidProfileEnum.VALID ||
-            Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED
-        ) {
-            const updSession = ZoweExplorerApiRegister.getMvsApi(zosmfProfile).getSession();
-            let command1: string = command;
-            if (!command) {
-                command1 = await this.getQuickPick(
-                    updSession && updSession.ISession ? updSession.ISession.hostname : "unknown"
-                );
+        } catch (error) {
+            if (error.toString().includes("non-existing")) {
+                vscode.window.showErrorMessage(localize("issueMvsCommand.apiNonExisting", "Not implemented yet."));
+            } else {
+                await errorHandling(error.toString(), profile.name, error.message.toString());
             }
-            await this.issueCommand(updSession, command1, zosmfProfile.name);
-        } else {
-            vscode.window.showErrorMessage(localize("issueMvsCommand.checkProfile", "Profile is invalid"));
-            return;
         }
     }
 
@@ -219,7 +232,7 @@ export class MvsCommandHandler {
      * @param session The Session object
      * @param command the command string
      */
-    private async issueCommand(session: Session, command: string, label: string) {
+    private async issueCommand(profile: IProfileLoaded, command: string) {
         try {
             if (command) {
                 // If the user has started their command with a / then remove it
@@ -233,7 +246,7 @@ export class MvsCommandHandler {
                         title: localize("issueMvsCommand.command.submitted", "MVS command submitted."),
                     },
                     () => {
-                        return zowe.IssueCommand.issueSimple(session, command);
+                        return ZoweExplorerApiRegister.getCommandApi(profile).issueMvsCommand(command);
                     }
                 );
                 if (submitResponse.success) {
@@ -242,7 +255,7 @@ export class MvsCommandHandler {
                 }
             }
         } catch (error) {
-            await errorHandling(error, label, error.message);
+            await errorHandling(error, profile.name, error.message);
         }
         this.history.addSearchHistory(command);
     }

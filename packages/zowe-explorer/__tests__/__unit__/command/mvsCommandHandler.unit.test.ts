@@ -13,7 +13,6 @@ jest.mock("Session");
 jest.mock("@zowe/imperative");
 
 import * as vscode from "vscode";
-import * as zowe from "@zowe/cli";
 import { ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import * as profileLoader from "../../../src/Profiles";
 import { MvsCommandHandler } from "../../../src/command/MvsCommandHandler";
@@ -28,9 +27,7 @@ describe("mvsCommandActions unit testing", () => {
     const showInformationMessage = jest.fn();
     const showQuickPick = jest.fn();
     const createQuickPick = jest.fn();
-    const issueSimple = jest.fn();
     const getConfiguration = jest.fn();
-    const IssueCommand = jest.fn();
     const createOutputChannel = jest.fn();
 
     const appendLine = jest.fn();
@@ -121,8 +118,6 @@ describe("mvsCommandActions unit testing", () => {
     Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
     Object.defineProperty(vscode.window, "createQuickPick", { value: createQuickPick });
     Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
-    Object.defineProperty(zowe, "IssueCommand", { value: IssueCommand });
-    Object.defineProperty(IssueCommand, "issueSimple", { value: issueSimple });
     Object.defineProperty(vscode.window, "createOutputChannel", { value: createOutputChannel });
     Object.defineProperty(vscode, "ProgressLocation", { value: ProgressLocation });
     Object.defineProperty(vscode.window, "withProgress", { value: withProgress });
@@ -139,6 +134,7 @@ describe("mvsCommandActions unit testing", () => {
         jest.clearAllMocks();
     });
 
+    const apiRegisterInstance = ZoweExplorerApiRegister.getInstance();
     const mvsActions = MvsCommandHandler.getInstance();
     const profilesForValidation = { status: "active", name: "fake" };
 
@@ -161,16 +157,22 @@ describe("mvsCommandActions unit testing", () => {
                 };
             }),
         });
-        const mockMvsApi = await ZoweExplorerApiRegister.getMvsApi(profileOne);
+        const mockMvsApi = await apiRegisterInstance.getMvsApi(profileOne);
         const getMvsApiMock = jest.fn();
         getMvsApiMock.mockReturnValue(mockMvsApi);
-        ZoweExplorerApiRegister.getMvsApi = getMvsApiMock.bind(ZoweExplorerApiRegister);
+        apiRegisterInstance.getMvsApi = getMvsApiMock.bind(apiRegisterInstance);
         jest.spyOn(mockMvsApi, "getSession").mockReturnValue(session);
 
         showQuickPick.mockReturnValueOnce("firstName");
+
+        const mockCommandApi = await apiRegisterInstance.getCommandApi(profileOne);
+        const getCommandApiMock = jest.fn();
+        getCommandApiMock.mockReturnValue(mockCommandApi);
+        apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
+
         showInputBox.mockReturnValueOnce("/d iplinfo1");
         jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(() => Promise.resolve(qpItem));
-        issueSimple.mockReturnValueOnce("iplinfo1");
+        jest.spyOn(mockCommandApi, "issueMvsCommand").mockReturnValue("iplinfo1" as any);
 
         await mvsActions.issueMvsCommand();
 
@@ -209,8 +211,14 @@ describe("mvsCommandActions unit testing", () => {
         });
 
         showQuickPick.mockReturnValueOnce("firstName");
+
+        const mockCommandApi = await apiRegisterInstance.getCommandApi(profileOne);
+        const getCommandApiMock = jest.fn();
+        getCommandApiMock.mockReturnValue(mockCommandApi);
+        apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
+
         jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(() => Promise.resolve(qpItem2));
-        issueSimple.mockReturnValueOnce("iplinfo0");
+        jest.spyOn(mockCommandApi, "issueMvsCommand").mockReturnValue("iplinfo0" as any);
 
         await mvsActions.issueMvsCommand();
 
@@ -251,8 +259,13 @@ describe("mvsCommandActions unit testing", () => {
         showQuickPick.mockReturnValueOnce("firstName");
         showInputBox.mockReturnValueOnce("/d iplinfo3");
         withProgress.mockRejectedValueOnce(Error("fake testError"));
-        issueSimple.mockRejectedValueOnce(Error("fake testError"));
+
+        const mockCommandApi = await apiRegisterInstance.getCommandApi(profileOne);
+        const getCommandApiMock = jest.fn();
+        getCommandApiMock.mockReturnValue(mockCommandApi);
+        apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
         jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(() => Promise.resolve(qpItem));
+        jest.spyOn(mockCommandApi, "issueMvsCommand").mockReturnValue("iplinfo3" as any);
 
         await mvsActions.issueMvsCommand();
 
@@ -289,6 +302,12 @@ describe("mvsCommandActions unit testing", () => {
         });
 
         showQuickPick.mockReturnValueOnce("firstName");
+
+        const mockCommandApi = await apiRegisterInstance.getCommandApi(profileOne);
+        const getCommandApiMock = jest.fn();
+        getCommandApiMock.mockReturnValue(mockCommandApi);
+        apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
+
         jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(() => Promise.resolve(undefined));
 
         await mvsActions.issueMvsCommand();
@@ -326,7 +345,12 @@ describe("mvsCommandActions unit testing", () => {
         });
         showQuickPick.mockReturnValueOnce("firstName");
         showInputBox.mockReturnValueOnce(undefined);
-        issueSimple.mockReturnValueOnce({ commandResponse: "fake response" });
+
+        const mockCommandApi = await apiRegisterInstance.getCommandApi(profileOne);
+        const getCommandApiMock = jest.fn();
+        getCommandApiMock.mockReturnValue(mockCommandApi);
+        apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
+
         jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(() => Promise.resolve(qpItem));
 
         await mvsActions.issueMvsCommand();
@@ -382,7 +406,12 @@ describe("mvsCommandActions unit testing", () => {
 
         showQuickPick.mockReturnValueOnce("firstName");
         showInputBox.mockReturnValueOnce(undefined);
-        issueSimple.mockReturnValueOnce({ commandResponse: "fake response" });
+
+        const mockCommandApi = await apiRegisterInstance.getCommandApi(profileOne);
+        const getCommandApiMock = jest.fn();
+        getCommandApiMock.mockReturnValue(mockCommandApi);
+        apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
+
         jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(() => Promise.resolve(qpItem));
 
         await mvsActions.issueMvsCommand();
@@ -442,8 +471,14 @@ describe("mvsCommandActions unit testing", () => {
         showInputBox.mockReturnValueOnce("fake");
         showInputBox.mockReturnValueOnce("fake");
         showInputBox.mockReturnValueOnce("/d iplinfo");
-        issueSimple.mockReturnValueOnce({ commandResponse: "fake response" });
+
+        const mockCommandApi = await apiRegisterInstance.getCommandApi(profileOne);
+        const getCommandApiMock = jest.fn();
+        getCommandApiMock.mockReturnValue(mockCommandApi);
+        apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
+
         jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(() => Promise.resolve(qpItem));
+        jest.spyOn(mockCommandApi, "issueMvsCommand").mockReturnValueOnce({ commandResponse: "fake response" } as any);
 
         await mvsActions.issueMvsCommand();
 
@@ -482,8 +517,13 @@ describe("mvsCommandActions unit testing", () => {
         showQuickPick.mockReturnValueOnce("firstName");
         showInputBox.mockReturnValueOnce("fake");
         showInputBox.mockReturnValueOnce("/d iplinfo5");
-        issueSimple.mockReturnValueOnce({ commandResponse: "fake response" });
+
+        const mockCommandApi = await apiRegisterInstance.getCommandApi(profileOne);
+        const getCommandApiMock = jest.fn();
+        getCommandApiMock.mockReturnValue(mockCommandApi);
+        apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
         jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(() => Promise.resolve(qpItem));
+        jest.spyOn(mockCommandApi, "issueMvsCommand").mockReturnValueOnce({ commandResponse: "fake response" } as any);
 
         await mvsActions.issueMvsCommand();
 
@@ -511,15 +551,13 @@ describe("mvsCommandActions unit testing", () => {
                     checkCurrentProfile: jest.fn(() => {
                         return ValidProfileEnum.INVALID;
                     }),
+                    validProfile: ValidProfileEnum.INVALID,
                 };
             }),
         });
 
         showQuickPick.mockReturnValueOnce("firstName");
         showInputBox.mockReturnValueOnce("fake");
-        showInputBox.mockReturnValueOnce("/d iplinfo");
-
-        jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(() => Promise.resolve(qpItem));
 
         await mvsActions.issueMvsCommand();
 
@@ -568,8 +606,15 @@ describe("mvsCommandActions unit testing", () => {
             }),
         });
 
+        jest.spyOn(mvsActions, "checkCurrentProfile").mockReturnValue(undefined);
+
+        const mockCommandApi = await apiRegisterInstance.getCommandApi(profileOne);
+        const getCommandApiMock = jest.fn();
+        getCommandApiMock.mockReturnValue(mockCommandApi);
+        apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
+
         showInputBox.mockReturnValueOnce("/d iplinfo1");
-        issueSimple.mockReturnValueOnce({ commandResponse: "fake response" });
+        jest.spyOn(mockCommandApi, "issueMvsCommand").mockReturnValueOnce({ commandResponse: "fake response" } as any);
 
         await mvsActions.issueMvsCommand(session, null, testNode);
 

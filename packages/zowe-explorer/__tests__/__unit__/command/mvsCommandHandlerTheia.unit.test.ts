@@ -103,6 +103,7 @@ describe("mvsCommandActions unit testing", () => {
         jest.clearAllMocks();
     });
 
+    const apiRegisterInstance = ZoweExplorerApiRegister.getInstance();
     const mvsActions = MvsCommandHandler.getInstance();
 
     it("tests the issueMvsCommand function - theia route", async () => {
@@ -136,8 +137,14 @@ describe("mvsCommandActions unit testing", () => {
         jest.spyOn(mockMvsApi, "getSession").mockReturnValue(session);
 
         showQuickPick.mockReturnValueOnce("firstName");
+
+        const mockCommandApi = await apiRegisterInstance.getCommandApi(profileOne);
+        const getCommandApiMock = jest.fn();
+        getCommandApiMock.mockReturnValue(mockCommandApi);
+        apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
+
         showInputBox.mockReturnValueOnce("/d iplinfo1");
-        jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(() => Promise.resolve(qpItem));
+        jest.spyOn(mockCommandApi, "issueMvsCommand").mockReturnValue("iplinfo1" as any);
 
         await mvsActions.issueMvsCommand();
 

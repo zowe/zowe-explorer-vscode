@@ -121,8 +121,6 @@ describe("TsoCommandHandler unit testing", () => {
     Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
     Object.defineProperty(vscode.window, "createQuickPick", { value: createQuickPick });
     Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
-    // Object.defineProperty(zowe, "IssueTso", { value: IssueTso });
-    // Object.defineProperty(IssueTso, "issueTsoCommand", { value: issueTsoCommand });
     Object.defineProperty(vscode.window, "createOutputChannel", { value: createOutputChannel });
     Object.defineProperty(vscode, "ProgressLocation", { value: ProgressLocation });
     Object.defineProperty(vscode.window, "withProgress", { value: withProgress });
@@ -272,7 +270,7 @@ describe("TsoCommandHandler unit testing", () => {
         getCommandApiMock.mockReturnValue(mockCommandApi);
         apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
         jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(() => Promise.resolve(qpItem));
-        jest.spyOn(mockCommandApi, "issueTsoCommand").mockReturnValue("iplinfo0" as any);
+        jest.spyOn(mockCommandApi, "issueTsoCommand").mockReturnValue("iplinfo3" as any);
 
         await tsoActions.issueTsoCommand();
 
