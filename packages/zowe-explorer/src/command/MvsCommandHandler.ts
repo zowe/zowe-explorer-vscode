@@ -9,9 +9,8 @@
  *                                                                                 *
  */
 
-import * as zowe from "@zowe/cli";
 import * as vscode from "vscode";
-import { IProfileLoaded, ISession, Session, IProfile } from "@zowe/imperative";
+import { IProfileLoaded, Session } from "@zowe/imperative";
 import * as globals from "../globals";
 import { ValidProfileEnum, IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { PersistentFilters } from "../PersistentFilters";
