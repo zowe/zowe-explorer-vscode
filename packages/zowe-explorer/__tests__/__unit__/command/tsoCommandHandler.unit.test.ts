@@ -27,9 +27,7 @@ describe("TsoCommandHandler unit testing", () => {
     const showInformationMessage = jest.fn();
     const showQuickPick = jest.fn();
     const createQuickPick = jest.fn();
-    // const issueTsoCommand = jest.fn();
     const getConfiguration = jest.fn();
-    // const IssueTso = jest.fn();
     const createOutputChannel = jest.fn();
 
     const appendLine = jest.fn();
