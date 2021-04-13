@@ -19,7 +19,6 @@ import * as testConst from "../../../resources/testProfileData";
 
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import { TsoCommandHandler } from "../../../src/command/TsoCommandHandler";
-import * as utils from "../../../src/utils/ProfilesUtils";
 
 const TIMEOUT = 45000;
 declare var it: Mocha.ITestDefinition;

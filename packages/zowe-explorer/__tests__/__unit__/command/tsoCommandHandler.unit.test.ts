@@ -13,7 +13,6 @@ jest.mock("Session");
 jest.mock("@zowe/imperative");
 
 import * as vscode from "vscode";
-import * as zowe from "@zowe/cli";
 import { ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import * as profileLoader from "../../../src/Profiles";
 import { TsoCommandHandler } from "../../../src/command/TsoCommandHandler";
