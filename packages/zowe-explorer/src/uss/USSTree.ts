@@ -89,7 +89,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      */
     public async rename(originalNode: IZoweUSSTreeNode) {
         // Could be a favorite or regular entry always deal with the regular entry
-        const parentPath = originalNode.fullPath.substr(0, originalNode.fullPath.indexOf(originalNode.label));
+        const parentPath = path.dirname(originalNode.fullPath);
         // Check if an old favorite exists for this node
         const oldFavorite: IZoweUSSTreeNode = contextually.isFavorite(originalNode)
             ? originalNode
@@ -129,8 +129,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         const newName = await vscode.window.showInputBox(options);
         if (newName && parentPath + newName !== originalNode.fullPath) {
             try {
-                let newNamePath = path.join(parentPath + newName);
-                newNamePath = newNamePath.replace(/\\/g, "/"); // Added to cover Windows backslash issue
+                const newNamePath = path.join(parentPath, newName);
                 const oldNamePath = originalNode.fullPath;
 
                 // // Handle rename in back-end:
