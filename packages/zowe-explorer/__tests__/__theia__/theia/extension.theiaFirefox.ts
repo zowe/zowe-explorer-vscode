@@ -16,11 +16,12 @@ import { TheiaLocator, DatasetsLocators, UssLocators, JobsLocators } from "./Loc
 
 const WAITTIME = 30000;
 const SHORTSLEEPTIME = 2000;
+const wait5sec = 5000;
 let driverFirefox: any;
 
 export async function openBrowser(){
     const firefoxOptions = new firefox.Options();
-    firefoxOptions.headless();
+    // firefoxOptions.headless();
     driverFirefox = new Builder().forBrowser("firefox").setFirefoxOptions(firefoxOptions).build();
 }
 
@@ -48,14 +49,6 @@ export async function clickOnJobsTab(){
     await driverFirefox.findElement(By.id(JobsLocators.jobTabId)).click();
 }
 
-export async function clickOnDatasetsPanel(){
-    await driverFirefox.findElement(By.id(DatasetsLocators.datasetsPanelId)).click();
-}
-
-export async function clickOnAddSessionInDatasets(){
-    await driverFirefox.findElement(By.id(DatasetsLocators.datasetsAddSessionId)).click();
-}
-
 export async function clickOnUssPanel(){
     await driverFirefox.findElement(By.id(UssLocators.ussPanelId)).click();
 }
@@ -72,40 +65,6 @@ export async function clickOnAddSessionInJobs(){
     await driverFirefox.findElement(By.id(JobsLocators.jobsAddSessionId)).click();
 }
 
-export async function addProfileDetails(profileName: string){
-    await driverFirefox.findElement(By.id(DatasetsLocators.datasetsAddSessionId)).click();
-    await driverFirefox.sleep(SHORTSLEEPTIME);
-    await driverFirefox.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath)).sendKeys(Key.ENTER);
-    await driverFirefox.sleep(SHORTSLEEPTIME);
-    const datasetProfileName = await driverFirefox.wait(until.elementLocated(By.xpath(DatasetsLocators.emptyInputBoxXpath)),WAITTIME);
-    datasetProfileName.sendKeys(profileName);
-    datasetProfileName.sendKeys(Key.ENTER);
-    await driverFirefox.sleep(SHORTSLEEPTIME);
-    const zosUrl = await driverFirefox.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
-    zosUrl.sendKeys("fakehost.net:1003");
-    zosUrl.sendKeys(Key.ENTER);
-    await driverFirefox.sleep(SHORTSLEEPTIME);
-    const username = await driverFirefox.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
-    username.sendKeys(Key.ENTER);
-    await driverFirefox.sleep(SHORTSLEEPTIME);
-    const password = await driverFirefox.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
-    password.sendKeys(Key.ENTER);
-    await driverFirefox.sleep(SHORTSLEEPTIME);
-    const authorization = await driverFirefox.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
-    authorization.sendKeys("False - Accept connections with self-signed certificates");
-    authorization.sendKeys(Key.ENTER);
-    await driverFirefox.sleep(SHORTSLEEPTIME);
-    const basepath = await driverFirefox.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
-    basepath.sendKeys(Key.ENTER);
-    await driverFirefox.sleep(SHORTSLEEPTIME);
-    const encoding = await driverFirefox.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
-    encoding.sendKeys(Key.ENTER);
-    await driverFirefox.sleep(SHORTSLEEPTIME);
-    const responseTimeout = await driverFirefox.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
-    responseTimeout.sendKeys(Key.ENTER);
-    await driverFirefox.sleep(SHORTSLEEPTIME);
-}
-
 export async function addProfileDetailsInUss(profileName: string){
     const ussProfileName = await driverFirefox.findElement(By.xpath(UssLocators.emptyInputBoxXpath));
     ussProfileName.sendKeys(profileName);
@@ -118,11 +77,6 @@ export async function addProfileDetailsInJobs(profileName: string){
     jobsProfileName.sendKeys(Key.ENTER);
 }
 
-export async function getDatasetsDefaultProfilename(){
-    const datasetProfile = await driverFirefox.wait(until.elementLocated(By.id(DatasetsLocators.defaultDatasetsProfileId)),WAITTIME).getText();
-    return datasetProfile;
-}
-
 export async function getUssDefaultProfilename(){
     const ussProfile = await driverFirefox.wait(until.elementLocated(By.xpath(UssLocators.defaultUssProfileXpath)), WAITTIME).getText();
     return ussProfile;
@@ -131,11 +85,6 @@ export async function getUssDefaultProfilename(){
 export async function getJobsDefaultProfilename(){
     const jobsProfile = await driverFirefox.wait(until.elementLocated(By.xpath(JobsLocators.defaultJobsProfileXpath)), WAITTIME).getText();
     return jobsProfile;
-}
-
-export async function getDatasetsProfilename(){
-    const datasetProfile = await driverFirefox.wait(until.elementLocated(By.id(DatasetsLocators.secondDatasetProfileId)),WAITTIME).getText();
-    return datasetProfile;
 }
 
 export async function getUssProfilename(){
