@@ -228,9 +228,9 @@ describe("ZoweJobNode unit tests - Function deleteSession", () => {
     it("Tests that deleteSession removes the session from the tree", async () => {
         const globalMocks = await createGlobalMocks();
 
-        await globalMocks.testJobsProvider.deleteSession(globalMocks.testJobsProvider.mSessionNodes[1]);
+        await globalMocks.testJobsProvider.deleteSession(globalMocks.testJobsProvider.mSessionNodes[0]);
 
-        expect(globalMocks.testJobsProvider.mSessionNodes.length).toBe(1);
+        expect(globalMocks.testJobsProvider.mSessionNodes.length).toBe(0);
     });
 });
 
@@ -277,7 +277,7 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
 
         await globalMocks.testJobsProvider.addSession("fake");
 
-        const jobs = await globalMocks.testJobsProvider.mSessionNodes[1].getChildren();
+        const jobs = await globalMocks.testJobsProvider.mSessionNodes[0].getChildren();
 
         expect(jobs.length).toBe(2);
         expect(jobs[0].job.jobid).toEqual(globalMocks.testIJob.jobid);
@@ -290,10 +290,10 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
         const globalMocks = await createGlobalMocks();
 
         await globalMocks.testJobsProvider.addSession("fake");
-        globalMocks.testJobsProvider.mSessionNodes[1].searchId = "JOB1234";
-        globalMocks.testJobsProvider.mSessionNodes[1].dirty = true;
+        globalMocks.testJobsProvider.mSessionNodes[0].searchId = "JOB1234";
+        globalMocks.testJobsProvider.mSessionNodes[0].dirty = true;
 
-        const jobs = await globalMocks.testJobsProvider.mSessionNodes[1].getChildren();
+        const jobs = await globalMocks.testJobsProvider.mSessionNodes[0].getChildren();
 
         expect(jobs.length).toBe(1);
         expect(jobs[0].job.jobid).toEqual(globalMocks.testIJob.jobid);
@@ -312,10 +312,10 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
     it("Tests that getChildren returns the spool files if user/owner is not defined", async () => {
         const globalMocks = await createGlobalMocks();
 
-        globalMocks.testJobsProvider.mSessionNodes[1]._owner = undefined;
-        globalMocks.testJobsProvider.mSessionNodes[1]._prefix = "";
-        globalMocks.testJobsProvider.mSessionNodes[1]._searchId = "";
-        globalMocks.testJobsProvider.mSessionNodes[1].session.ISession.user = undefined;
+        globalMocks.testJobsProvider.mSessionNodes[0]._owner = undefined;
+        globalMocks.testJobsProvider.mSessionNodes[0]._prefix = "";
+        globalMocks.testJobsProvider.mSessionNodes[0]._searchId = "";
+        globalMocks.testJobsProvider.mSessionNodes[0].session.ISession.user = undefined;
         const spoolFiles = await globalMocks.testJobNode.getChildren();
         expect(spoolFiles.length).toBe(1);
         expect(spoolFiles[0].label).toEqual("STEP:STDOUT(101)");
@@ -355,19 +355,19 @@ describe("ZoweJobNode unit tests - Function flipState", () => {
     it("Tests that flipState is executed successfully", async () => {
         const globalMocks = await createGlobalMocks();
         globalMocks.testJobsProvider.addSession("fake");
-        globalMocks.testJobsProvider.mSessionNodes[1].contextValue = globals.JOBS_SESSION_CONTEXT;
+        globalMocks.testJobsProvider.mSessionNodes[0].contextValue = globals.JOBS_SESSION_CONTEXT;
         globalMocks.mockCreateBasicZosmfSession.mockReturnValue(globalMocks.testSession);
 
-        await globalMocks.testJobsProvider.flipState(globalMocks.testJobsProvider.mSessionNodes[1], true);
-        expect(JSON.stringify(globalMocks.testJobsProvider.mSessionNodes[1].iconPath)).toContain(
+        await globalMocks.testJobsProvider.flipState(globalMocks.testJobsProvider.mSessionNodes[0], true);
+        expect(JSON.stringify(globalMocks.testJobsProvider.mSessionNodes[0].iconPath)).toContain(
             "folder-root-unverified-closed.svg"
         );
-        await globalMocks.testJobsProvider.flipState(globalMocks.testJobsProvider.mSessionNodes[1], false);
-        expect(JSON.stringify(globalMocks.testJobsProvider.mSessionNodes[1].iconPath)).toContain(
+        await globalMocks.testJobsProvider.flipState(globalMocks.testJobsProvider.mSessionNodes[0], false);
+        expect(JSON.stringify(globalMocks.testJobsProvider.mSessionNodes[0].iconPath)).toContain(
             "folder-root-unverified-closed.svg"
         );
-        await globalMocks.testJobsProvider.flipState(globalMocks.testJobsProvider.mSessionNodes[1], true);
-        expect(JSON.stringify(globalMocks.testJobsProvider.mSessionNodes[1].iconPath)).toContain(
+        await globalMocks.testJobsProvider.flipState(globalMocks.testJobsProvider.mSessionNodes[0], true);
+        expect(JSON.stringify(globalMocks.testJobsProvider.mSessionNodes[0].iconPath)).toContain(
             "folder-root-unverified-closed.svg"
         );
 
@@ -386,8 +386,8 @@ describe("ZoweJobNode unit tests - Function addFavorite", () => {
             testJobNode: new Job(
                 "MYHLQ(JOB1283) - Input",
                 vscode.TreeItemCollapsibleState.Collapsed,
-                globalMocks.testJobsProvider.mSessionNodes[1],
-                globalMocks.testJobsProvider.mSessionNodes[1].getSession(),
+                globalMocks.testJobsProvider.mSessionNodes[0],
+                globalMocks.testJobsProvider.mSessionNodes[0].getSession(),
                 globalMocks.testIJob,
                 globalMocks.testProfile
             ),
@@ -417,11 +417,11 @@ describe("ZoweJobNode unit tests - Function addFavorite", () => {
         const globalMocks = await createGlobalMocks();
         await createBlockMocks(globalMocks);
         globalMocks.testJobsProvider.mFavorites = [];
-        globalMocks.testJobsProvider.mSessionNodes[1].owner = "myHLQ";
-        globalMocks.testJobsProvider.mSessionNodes[1].prefix = "*";
-        globalMocks.testJobsProvider.mSessionNodes[1].contextValue = globals.JOBS_SESSION_CONTEXT;
+        globalMocks.testJobsProvider.mSessionNodes[0].owner = "myHLQ";
+        globalMocks.testJobsProvider.mSessionNodes[0].prefix = "*";
+        globalMocks.testJobsProvider.mSessionNodes[0].contextValue = globals.JOBS_SESSION_CONTEXT;
 
-        await globalMocks.testJobsProvider.addFavorite(globalMocks.testJobsProvider.mSessionNodes[1]);
+        await globalMocks.testJobsProvider.addFavorite(globalMocks.testJobsProvider.mSessionNodes[0]);
         const profileNodeInFavs: IZoweJobTreeNode = globalMocks.testJobsProvider.mFavorites[0];
 
         expect(profileNodeInFavs.children.length).toEqual(1);
@@ -436,16 +436,16 @@ describe("ZoweJobNode unit tests - Function removeFavorite", () => {
             testJobNode1: new Job(
                 "MYHLQ(JOB1283) - Input",
                 vscode.TreeItemCollapsibleState.Collapsed,
-                globalMocks.testJobsProvider.mSessionNodes[1],
-                globalMocks.testJobsProvider.mSessionNodes[1].getSession(),
+                globalMocks.testJobsProvider.mSessionNodes[0],
+                globalMocks.testJobsProvider.mSessionNodes[0].getSession(),
                 globalMocks.testIJob,
                 globalMocks.testProfile
             ),
             testJobNode2: new Job(
                 "MYHLQ(JOB1284) - Input",
                 vscode.TreeItemCollapsibleState.Collapsed,
-                globalMocks.testJobsProvider.mSessionNodes[1],
-                globalMocks.testJobsProvider.mSessionNodes[1].getSession(),
+                globalMocks.testJobsProvider.mSessionNodes[0],
+                globalMocks.testJobsProvider.mSessionNodes[0].getSession(),
                 globalMocks.testIJob,
                 globalMocks.testProfile
             ),
@@ -497,13 +497,13 @@ describe("ZoweJobNode unit tests - Function removeFavorite", () => {
 
 describe("ZoweJobNode unit tests - Function saveSearch", () => {
     async function createBlockMocks(globalMocks) {
-        const testSession = globalMocks.testJobsProvider.mSessionNodes[1].getSession();
+        const testSession = globalMocks.testJobsProvider.mSessionNodes[0].getSession();
         const newMocks = {
             testSession,
             testJobNode: new Job(
                 "MYHLQ(JOB1283) - Input",
                 vscode.TreeItemCollapsibleState.Collapsed,
-                globalMocks.testJobsProvider.mSessionNodes[1],
+                globalMocks.testJobsProvider.mSessionNodes[0],
                 testSession,
                 globalMocks.testIJob,
                 globalMocks.testProfile
@@ -615,14 +615,14 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
         globalMocks.mockShowInputBox.mockReturnValueOnce("");
         globalMocks.mockShowInputBox.mockReturnValueOnce(""); // need the jobId in this case
 
-        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
+        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[0]);
 
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].contextValue).toEqual(
+        expect(globalMocks.testJobsProvider.mSessionNodes[0].contextValue).toEqual(
             globals.JOBS_SESSION_CONTEXT + "_Active"
         );
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("MYHLQ");
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].prefix).toEqual("*");
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].searchId).toEqual("");
+        expect(globalMocks.testJobsProvider.mSessionNodes[0].owner).toEqual("MYHLQ");
+        expect(globalMocks.testJobsProvider.mSessionNodes[0].prefix).toEqual("*");
+        expect(globalMocks.testJobsProvider.mSessionNodes[0].searchId).toEqual("");
     });
 
     it("Testing that searchPrompt is successfully executed when searching by prefix, VSCode route", async () => {
@@ -632,14 +632,14 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
         globalMocks.mockShowInputBox.mockReturnValueOnce("");
         globalMocks.mockShowInputBox.mockReturnValueOnce("STO*");
 
-        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
+        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[0]);
 
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].contextValue).toEqual(
+        expect(globalMocks.testJobsProvider.mSessionNodes[0].contextValue).toEqual(
             globals.JOBS_SESSION_CONTEXT + "_Active"
         );
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("*");
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].prefix).toEqual("STO*");
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].searchId).toEqual("");
+        expect(globalMocks.testJobsProvider.mSessionNodes[0].owner).toEqual("*");
+        expect(globalMocks.testJobsProvider.mSessionNodes[0].prefix).toEqual("STO*");
+        expect(globalMocks.testJobsProvider.mSessionNodes[0].searchId).toEqual("");
     });
 
     it("Testing that searchPrompt is successfully executed when searching by prefix, VSCode route with Unverified profile", async () => {
@@ -662,14 +662,14 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
         globalMocks.mockShowInputBox.mockReturnValueOnce("");
         globalMocks.mockShowInputBox.mockReturnValueOnce("STO*");
 
-        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
+        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[0]);
 
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].contextValue).toEqual(
+        expect(globalMocks.testJobsProvider.mSessionNodes[0].contextValue).toEqual(
             globals.JOBS_SESSION_CONTEXT + "_Unverified"
         );
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("*");
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].prefix).toEqual("STO*");
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].searchId).toEqual("");
+        expect(globalMocks.testJobsProvider.mSessionNodes[0].owner).toEqual("*");
+        expect(globalMocks.testJobsProvider.mSessionNodes[0].prefix).toEqual("STO*");
+        expect(globalMocks.testJobsProvider.mSessionNodes[0].searchId).toEqual("");
     });
 
     it("Testing that searchPrompt is successfully executed when searching by owner & prefix, VSCode route", async () => {
@@ -679,14 +679,14 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
         globalMocks.mockShowInputBox.mockReturnValueOnce("MYHLQ");
         globalMocks.mockShowInputBox.mockReturnValueOnce("STO*");
 
-        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
+        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[0]);
 
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].contextValue).toEqual(
+        expect(globalMocks.testJobsProvider.mSessionNodes[0].contextValue).toEqual(
             globals.JOBS_SESSION_CONTEXT + "_Active"
         );
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("MYHLQ");
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].prefix).toEqual("STO*");
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].searchId).toEqual("");
+        expect(globalMocks.testJobsProvider.mSessionNodes[0].owner).toEqual("MYHLQ");
+        expect(globalMocks.testJobsProvider.mSessionNodes[0].prefix).toEqual("STO*");
+        expect(globalMocks.testJobsProvider.mSessionNodes[0].searchId).toEqual("");
     });
 
     it("Testing that searchPrompt is successfully executed when searching by job ID, VSCode route", async () => {
@@ -696,14 +696,14 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
         blockMocks.qpItem = globalMocks.testJobsProvider.createId;
         globalMocks.mockShowInputBox.mockReturnValueOnce("STO12345");
 
-        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
+        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[0]);
 
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].contextValue).toEqual(
+        expect(globalMocks.testJobsProvider.mSessionNodes[0].contextValue).toEqual(
             globals.JOBS_SESSION_CONTEXT + "_Active"
         );
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("*");
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].prefix).toEqual("*");
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].searchId).toEqual("STO12345");
+        expect(globalMocks.testJobsProvider.mSessionNodes[0].owner).toEqual("*");
+        expect(globalMocks.testJobsProvider.mSessionNodes[0].prefix).toEqual("*");
+        expect(globalMocks.testJobsProvider.mSessionNodes[0].searchId).toEqual("STO12345");
     });
 
     it("Testing that searchPrompt is successfully canceled by the user at the owner input box, VSCode route", async () => {
@@ -712,7 +712,7 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
 
         globalMocks.mockShowInputBox.mockReturnValueOnce(undefined);
 
-        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
+        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[0]);
 
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Search Cancelled");
@@ -724,10 +724,10 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
 
         blockMocks.qpItem = new utils.FilterItem("Owner:fake Prefix:*");
 
-        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
+        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[0]);
 
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("fake");
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].prefix).toEqual("*");
+        expect(globalMocks.testJobsProvider.mSessionNodes[0].owner).toEqual("fake");
+        expect(globalMocks.testJobsProvider.mSessionNodes[0].prefix).toEqual("*");
     });
 
     it("Testing that searchPrompt is successfully canceled by the user at first quick pick selection, VSCode route", async () => {
@@ -736,7 +736,7 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
 
         blockMocks.qpItem = undefined;
 
-        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
+        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[0]);
 
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("No selection made.");
@@ -764,8 +764,8 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
         globalMocks.testJobNode.contextValue = globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX;
 
         const sessionNoCreds = createISessionWithoutCredentials();
-        globalMocks.testJobsProvider.mSessionNodes[1].session = sessionNoCreds;
-        const sessNodeNoCreds = globalMocks.testJobsProvider.mSessionNodes[1];
+        globalMocks.testJobsProvider.mSessionNodes[0].session = sessionNoCreds;
+        const sessNodeNoCreds = globalMocks.testJobsProvider.mSessionNodes[0];
 
         await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobNode);
 
@@ -786,14 +786,14 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
         globalMocks.mockShowInputBox.mockReturnValueOnce("");
         globalMocks.mockShowInputBox.mockReturnValueOnce(""); // need the jobId in this case
 
-        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
+        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[0]);
 
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].contextValue).toEqual(
+        expect(globalMocks.testJobsProvider.mSessionNodes[0].contextValue).toEqual(
             globals.JOBS_SESSION_CONTEXT + "_Active"
         );
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("MYHLQY");
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].prefix).toEqual("*");
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].searchId).toEqual("");
+        expect(globalMocks.testJobsProvider.mSessionNodes[0].owner).toEqual("MYHLQY");
+        expect(globalMocks.testJobsProvider.mSessionNodes[0].prefix).toEqual("*");
+        expect(globalMocks.testJobsProvider.mSessionNodes[0].searchId).toEqual("");
     });
 
     it("Testing that searchPrompt is successfully executed when searching by prefix, Theia route", async () => {
@@ -805,14 +805,14 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
         globalMocks.mockShowInputBox.mockReturnValueOnce("");
         globalMocks.mockShowInputBox.mockReturnValueOnce("STO*");
 
-        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
+        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[0]);
 
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].contextValue).toEqual(
+        expect(globalMocks.testJobsProvider.mSessionNodes[0].contextValue).toEqual(
             globals.JOBS_SESSION_CONTEXT + "_Active"
         );
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("*");
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].prefix).toEqual("STO*");
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].searchId).toEqual("");
+        expect(globalMocks.testJobsProvider.mSessionNodes[0].owner).toEqual("*");
+        expect(globalMocks.testJobsProvider.mSessionNodes[0].prefix).toEqual("STO*");
+        expect(globalMocks.testJobsProvider.mSessionNodes[0].searchId).toEqual("");
     });
 
     it("Testing that searchPrompt is successfully executed when searching by owner & prefix, Theia route", async () => {
@@ -824,14 +824,14 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
         globalMocks.mockShowInputBox.mockReturnValueOnce("MYHLQX");
         globalMocks.mockShowInputBox.mockReturnValueOnce("STO*");
 
-        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
+        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[0]);
 
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].contextValue).toEqual(
+        expect(globalMocks.testJobsProvider.mSessionNodes[0].contextValue).toEqual(
             globals.JOBS_SESSION_CONTEXT + "_Active"
         );
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("MYHLQX");
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].prefix).toEqual("STO*");
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].searchId).toEqual("");
+        expect(globalMocks.testJobsProvider.mSessionNodes[0].owner).toEqual("MYHLQX");
+        expect(globalMocks.testJobsProvider.mSessionNodes[0].prefix).toEqual("STO*");
+        expect(globalMocks.testJobsProvider.mSessionNodes[0].searchId).toEqual("");
     });
 
     it("Testing that searchPrompt is successfully executed when searching by job ID, Theia route", async () => {
@@ -843,14 +843,14 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
         globalMocks.mockShowQuickPick.mockReturnValueOnce(blockMocks.qpItem);
         globalMocks.mockShowInputBox.mockReturnValueOnce("STO12345");
 
-        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
+        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[0]);
 
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].contextValue).toEqual(
+        expect(globalMocks.testJobsProvider.mSessionNodes[0].contextValue).toEqual(
             globals.JOBS_SESSION_CONTEXT + "_Active"
         );
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("*");
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].prefix).toEqual("*");
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].searchId).toEqual("STO12345");
+        expect(globalMocks.testJobsProvider.mSessionNodes[0].owner).toEqual("*");
+        expect(globalMocks.testJobsProvider.mSessionNodes[0].prefix).toEqual("*");
+        expect(globalMocks.testJobsProvider.mSessionNodes[0].searchId).toEqual("STO12345");
     });
 
     it("Testing that searchPrompt is successfully canceled by the user at the owner input box, Theia route", async () => {
@@ -861,7 +861,7 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
         globalMocks.mockShowInputBox.mockReturnValueOnce(undefined);
         globalMocks.mockShowQuickPick.mockReturnValueOnce(blockMocks.qpItem);
 
-        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
+        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[0]);
 
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Search Cancelled");
@@ -875,10 +875,10 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
         blockMocks.qpItem = new utils.FilterItem("Owner:fake Prefix:*");
         globalMocks.mockShowQuickPick.mockReturnValueOnce(blockMocks.qpItem);
 
-        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
+        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[0]);
 
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("fake");
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].prefix).toEqual("*");
+        expect(globalMocks.testJobsProvider.mSessionNodes[0].owner).toEqual("fake");
+        expect(globalMocks.testJobsProvider.mSessionNodes[0].prefix).toEqual("*");
     });
 
     it("Testing that searchPrompt is successfully canceled by the user at first quick pick selection, Theia route", async () => {
@@ -889,7 +889,7 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
         globalMocks.mockShowQuickPick.mockReturnValueOnce(undefined);
 
         // Assert edge condition user cancels the quick pick
-        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
+        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[0]);
 
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("No selection made.");
