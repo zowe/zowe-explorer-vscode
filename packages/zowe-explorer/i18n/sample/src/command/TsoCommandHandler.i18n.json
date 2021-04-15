@@ -3,7 +3,7 @@
   "issueTsoCommand.cancelled": "Operation Cancelled.",
   "issueTsoCommand.checkProfile": "Profile is invalid",
   "issueTsoCommand.noProfilesLoaded": "No profiles available",
-  "issueTsoCommand.apiNonExisting": "Not implemented yet.",
+  "issueTsoCommand.apiNonExisting": "Not implemented yet for profile of type: ",
   "issueTsoCommand.command.hostname": "Select a TSO command to run immediately against ",
   "issueTsoCommand.command.edit": " (An option to edit will follow)",
   "issueTsoCommand.options.noselection": "No selection made.",

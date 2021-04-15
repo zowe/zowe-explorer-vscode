@@ -128,13 +128,17 @@ export class TsoCommandHandler extends ZoweCommandProvider {
             if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
                 const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(profile);
                 if (commandApi) {
+                    let acctNum: string;
+                    if (profile.type === "zosmf") {
+                        acctNum = await this.getAccountNumber();
+                    }
                     let command1: string = command;
                     if (!command) {
                         command1 = await this.getQuickPick(
                             session && session.ISession ? session.ISession.hostname : "unknown"
                         );
                     }
-                    await this.issueCommand(command1, profile);
+                    await this.issueCommand(command1, profile, acctNum);
                 } else {
                     vscode.window.showErrorMessage(localize("issueTsoCommand.checkProfile", "Profile is invalid"));
                     return;
@@ -142,7 +146,10 @@ export class TsoCommandHandler extends ZoweCommandProvider {
             }
         } catch (error) {
             if (error.toString().includes("non-existing")) {
-                vscode.window.showErrorMessage(localize("issueTsoCommand.apiNonExisting", "Not implemented yet."));
+                vscode.window.showErrorMessage(
+                    localize("issueTsoCommand.apiNonExisting", "Not implemented yet for profile of type: ") +
+                        profile.type
+                );
             } else {
                 await errorHandling(error.toString(), profile.name, error.message.toString());
             }
@@ -226,11 +233,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
      * @param session The Session object
      * @param command the command string
      */
-    private async issueCommand(command: string, profile: imperative.IProfileLoaded) {
-        let acctNum: string;
-        if (profile.type === "zosmf") {
-            acctNum = await this.getAccountNumber();
-        }
+    private async issueCommand(command: string, profile: imperative.IProfileLoaded, acctNum?: string) {
         try {
             if (command) {
                 // If the user has started their command with a / then remove it

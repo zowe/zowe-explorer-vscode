@@ -3,7 +3,7 @@
   "issueMvsCommand.undefined.profilename": "Operation Cancelled",
   "issueMvsCommand.checkProfile": "Profile is invalid",
   "issueMvsCommand.noProfilesLoaded": "No profiles available",
-  "issueMvsCommand.apiNonExisting": "Not implemented yet.",
+  "issueMvsCommand.apiNonExisting": "Not implemented yet for profile of type: ",
   "issueMvsCommand.command.hostname": "Select an MVS command to run immediately against ",
   "issueMvsCommand.command.edit": " (An option to edit will follow)",
   "issueMvsCommand.options.noselection": "No selection made.",
