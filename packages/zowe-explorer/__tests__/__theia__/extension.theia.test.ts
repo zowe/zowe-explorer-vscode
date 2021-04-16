@@ -63,7 +63,7 @@ describe("Add Default Profile and Profile in DATASETS", () => {
         await driverChrome.clickOnZoweExplorer();
     });
 
-    it("Should Add Default Profile in DATA SETS", async () => {
+    it("Should Add Default Profile in DATASETS", async () => {
         await driverChrome.clickOnDatasetsPanel();
         await driverChrome.clickOnAddSessionInDatasets();
         await driverChrome.addProfileDetails("DefaultProfile");
@@ -71,7 +71,7 @@ describe("Add Default Profile and Profile in DATASETS", () => {
         expect(datasetProfile).to.equal("DefaultProfile");
     });
 
-    it("Should Add Profile in DATA SETS", async () => {
+    it("Should Add Profile in DATASETS", async () => {
         await driverChrome.clickOnDatasetsPanel();
         await driverChrome.clickOnAddSessionInDatasets();
         await driverChrome.addProfileDetails("TestSeleniumProfile");
@@ -152,7 +152,7 @@ describe("Add Profile to Favorites", () => {
         await driverChrome.clickOnZoweExplorer();
     });
 
-    it("Should Add Profile to Favorites under DATA SETS", async () => {
+    it("Should Add Profile to Favorites under DATASETS", async () => {
         await driverChrome.addProfileToFavoritesInDatasets();
         await driverChrome.clickOnFavoriteTabInDatasets();
         const favoriteProfile = await driverChrome.getFavoritePrfileNameFromDatasets();
