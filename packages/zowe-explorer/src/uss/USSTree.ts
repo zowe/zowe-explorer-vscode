@@ -129,7 +129,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         const newName = await vscode.window.showInputBox(options);
         if (newName && parentPath + newName !== originalNode.fullPath) {
             try {
-                const newNamePath = path.join(parentPath, newName);
+                const newNamePath = path.posix.join(parentPath, newName);
                 const oldNamePath = originalNode.fullPath;
 
                 // // Handle rename in back-end:
