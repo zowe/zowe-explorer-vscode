@@ -14,7 +14,7 @@ import * as globals from "../globals";
 import * as path from "path";
 import { IProfileLoaded, Logger, Session } from "@zowe/imperative";
 import { FilterItem, FilterDescriptor, resolveQuickPickHelper, errorHandling } from "../utils/ProfilesUtils";
-import { sortTreeItems, getAppName } from "../shared/utils";
+import { sortTreeItems, getAppName, checkIfChildPath } from "../shared/utils";
 import { IZoweTree, IZoweUSSTreeNode, ValidProfileEnum, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
@@ -139,8 +139,8 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 if (oldFavorite) {
                     // Rename corresponding node in Sessions or Favorites section (whichever one Rename wasn't called from)
                     if (contextually.isFavorite(originalNode)) {
-                        const profileName = originalNode.getProfileName();
-                        this.renameNode(profileName, oldNamePath, newNamePath);
+                        // TODO: should also check if node is descendant of favorite
+                        this.renameUssNode(originalNode, newNamePath);
                     } else {
                         // This has to happen before renaming originalNode, as originalNode's label is used to find the favorite equivalent.
                         this.renameFavorite(originalNode, newNamePath);
@@ -215,15 +215,34 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         );
     }
 
+    protected findMatch(parentNode: IZoweUSSTreeNode, fullPath: string): IZoweUSSTreeNode {
+        // Is match direct child?
+        let match: IZoweUSSTreeNode = parentNode.children.find((child) => child.fullPath === fullPath);
+        if (match === undefined) {
+            // Is match contained within one of the children?
+            for (let child of parentNode.children) {
+                const isFullPathChild: boolean = checkIfChildPath(child.fullPath, fullPath);
+                if (isFullPathChild) {
+                    return this.findMatch(child, fullPath);
+                }
+            }
+        }
+        return match;
+    }
+
     /**
      * Finds the equivalent node not as a favorite
      *
      * @param node
      */
     public findNonFavoritedNode(node: IZoweUSSTreeNode): IZoweUSSTreeNode {
+        let matchingNode: IZoweUSSTreeNode;
         const profileName = node.getProfileName();
-        const sessionNode = this.mSessionNodes.find((session) => session.label.includes(profileName));
-        return sessionNode.children.find((temp) => temp.label === node.label);
+        const sessionNode = this.mSessionNodes.find((session) => session.getProfileName() === profileName.trim());
+        if (sessionNode) {
+            matchingNode = this.findMatch(sessionNode, node.fullPath);
+        }
+        return matchingNode;
     }
 
     /**
@@ -232,13 +251,10 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      * @param oldNamePath
      * @param newNamePath
      */
-    public async renameNode(profileLabel: string, oldNamePath: string, newNamePath: string) {
-        const sessionNode = this.mSessionNodes.find((session) => session.getProfileName() === profileLabel.trim());
-        if (sessionNode) {
-            const matchingNode: IZoweUSSTreeNode = sessionNode.children.find((node) => node.fullPath === oldNamePath);
-            if (matchingNode) {
-                matchingNode.rename(newNamePath);
-            }
+    public async renameUssNode(node: IZoweUSSTreeNode, newNamePath: string) {
+        const matchingNode: IZoweUSSTreeNode = this.findNonFavoritedNode(node);
+        if (matchingNode) {
+            matchingNode.rename(newNamePath);
         }
     }
 
