@@ -37,6 +37,7 @@ describe("ZoweExplorerExtender unit tests", () => {
         };
         newMocks.profiles = await Profiles.createInstance(newMocks.log);
         Object.defineProperty(vscode.window, "createTreeView", { value: jest.fn(), configurable: true });
+        Object.defineProperty(vscode.workspace, "getConfiguration", { value: jest.fn(), configurable: true });
         return newMocks;
     }
     afterEach(async () => {

@@ -130,10 +130,7 @@ describe("Dataset Tree Unit Tests - Initialisation", () => {
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
 
-        expect(testTree.mSessionNodes.map((node) => node.label)).toEqual([
-            "Favorites",
-            blockMocks.datasetSessionNode.label,
-        ]);
+        expect(testTree.mSessionNodes.map((node) => node.label)).toEqual([blockMocks.datasetSessionNode.label]);
         expect(testTree.getTreeView()).toEqual(blockMocks.treeView);
     });
 });
@@ -304,7 +301,7 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
         const testTree = new DatasetTree();
         blockMocks.datasetSessionNode.pattern = "test";
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
-        testTree.mSessionNodes[1].dirty = true;
+        testTree.mSessionNodes[0].dirty = true;
         const sampleChildren: ZoweDatasetNode[] = [
             new ZoweDatasetNode(
                 "BRTVS99",
@@ -397,7 +394,8 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
 
         expect(loadProfilesForFavoritesSpy).toHaveBeenCalledWith(log, favProfileNode);
     });
-    it("Checking function for PDS Dataset node", async () => {
+    fit("Checking function for PDS Dataset node", async () => {
+        // Arrange
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
@@ -411,6 +409,7 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
             testTree.mSessionNodes[1],
             null
         );
+        parent.getProfile = () => blockMocks.imperativeProfile;
         parent.dirty = true;
         const sampleChildren: ZoweDatasetNode[] = [
             new ZoweDatasetNode("BRTVS99", vscode.TreeItemCollapsibleState.None, parent, null),
@@ -419,8 +418,10 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
         sampleChildren[0].command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [sampleChildren[0]] };
         sampleChildren[1].command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [sampleChildren[1]] };
 
+        // Act
         const children = await testTree.getChildren(parent);
 
+        // Assert
         expect(children).toEqual(sampleChildren);
     });
 });

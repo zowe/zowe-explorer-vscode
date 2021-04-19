@@ -47,6 +47,7 @@ async function createGlobalMocks() {
     Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
     Object.defineProperty(globals.LOG, "debug", { value: jest.fn(), configurable: true });
     Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
+    Object.defineProperty(vscode, "workspace", { value: { getConfiguration: jest.fn() }, configurable: true });
 
     return globalMocks;
 }
@@ -80,7 +81,7 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
 
     afterAll(() => jest.restoreAllMocks());
 
-    it("Checking that searchForLoadedItems works for a PDS", async () => {
+    fit("Checking that searchForLoadedItems works for a PDS", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
 

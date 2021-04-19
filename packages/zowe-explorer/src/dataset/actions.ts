@@ -183,7 +183,11 @@ export async function uploadFile(node: ZoweDatasetNode, doc: vscode.TextDocument
  * @param {IZoweDatasetTreeNode} parent - The parent Node
  * @param {DatasetTree} datasetProvider - the tree which contains the nodes
  */
-export async function createMember(parent: IZoweDatasetTreeNode, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
+export async function createMember(
+    parent: IZoweDatasetTreeNode,
+    datasetProvider: IZoweTree<IZoweDatasetTreeNode>,
+    open = openPS
+) {
     const name = await vscode.window.showInputBox({ placeHolder: localize("createMember.inputBox", "Name of Member") });
     globals.LOG.debug(
         localize("createMember.log.debug.createNewDataSet", "creating new data set member of name ") + name
@@ -201,7 +205,7 @@ export async function createMember(parent: IZoweDatasetTreeNode, datasetProvider
         }
         parent.dirty = true;
         datasetProvider.refreshElement(parent);
-        openPS(
+        await open(
             new ZoweDatasetNode(
                 name,
                 vscode.TreeItemCollapsibleState.None,

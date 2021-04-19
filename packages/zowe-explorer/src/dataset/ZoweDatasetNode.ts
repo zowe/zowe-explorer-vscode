@@ -123,7 +123,9 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 title: localize("ZoweJobNode.getJobs.progress", "Get Dataset list command submitted."),
             },
             () => {
-                return this.getDatasets();
+                const a = this.getDatasets();
+                console.trace(a);
+                return a;
             }
         );
 
