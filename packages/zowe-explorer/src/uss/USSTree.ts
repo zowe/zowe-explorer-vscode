@@ -88,22 +88,25 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      * @param {string} filePath
      */
     public async rename(originalNode: IZoweUSSTreeNode) {
-        // Could be a favorite or regular entry always deal with the regular entry
-        const parentPath = path.dirname(originalNode.fullPath);
-        // Check if an old favorite exists for this node
-        const oldFavorite: IZoweUSSTreeNode = contextually.isFavorite(originalNode)
-            ? originalNode
-            : this.findFavoritedNode(originalNode);
-
-        const nodeType = contextually.isFolder(originalNode) ? "folder" : "file";
-
         const currentFilePath = originalNode.getUSSDocumentFilePath(); // The user's complete local file path for the node
         const openedTextDocuments: readonly vscode.TextDocument[] = vscode.workspace.textDocuments; // Array of all documents open in VS Code
+        const nodeType = contextually.isFolder(originalNode) ? "folder" : "file";
+        const parentPath = path.dirname(originalNode.fullPath);
+        let originalNodeInFavorites: boolean = false;
+        let oldFavorite: IZoweUSSTreeNode;
+
+        // Could be a favorite or regular entry always deal with the regular entry
+        // Check if an old favorite exists for this node
+        if (contextually.isFavorite(originalNode) || contextually.isFavoriteDescendant(originalNode)) {
+            originalNodeInFavorites = true; // Node is a favorite or a descendant of a node in Favorites section
+            oldFavorite = originalNode;
+        } else {
+            oldFavorite = this.findFavoritedNode(originalNode);
+        }
 
         // If the USS node or any of its children are locally open with unsaved data, prevent rename until user saves their work.
         for (const doc of openedTextDocuments) {
-            const relativePath = path.relative(currentFilePath, doc.fileName);
-            const docIsChild = relativePath && !relativePath.startsWith("..") && !path.isAbsolute(relativePath);
+            const docIsChild = checkIfChildPath(currentFilePath, doc.fileName);
             if (doc.fileName === currentFilePath || docIsChild === true) {
                 if (doc.isDirty === true) {
                     vscode.window.showErrorMessage(
@@ -138,10 +141,17 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 // Handle rename in UI:
                 if (oldFavorite) {
                     // Rename corresponding node in Sessions or Favorites section (whichever one Rename wasn't called from)
-                    if (contextually.isFavorite(originalNode)) {
-                        // TODO: should also check if node is descendant of favorite
-                        this.renameUssNode(originalNode, newNamePath);
+                    if (originalNodeInFavorites) {
+                        this.renameUSSNode(originalNode, newNamePath);
+                        if (!contextually.isFavorite(originalNode)) {
+                            // Needed if originalNode is a child node of a favorite, but the child itself is also directly favorited separately
+                            this.renameFavorite(originalNode, newNamePath); // Also rename the directly-favorited child
+                        } else {
+                            // If originalNode is a direct Favorite, use this to update any other appearances of the node in Favorites (e.g. as child)
+                            this.refreshElement(this.mFavoriteSession);
+                        }
                     } else {
+                        // originalNode is in a session node
                         // This has to happen before renaming originalNode, as originalNode's label is used to find the favorite equivalent.
                         this.renameFavorite(originalNode, newNamePath);
                     }
@@ -198,49 +208,56 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
     }
 
     /**
+     * Finds matching node by fullPath in the loaded descendants (i.e. children, grandchildren, etc.) of a parent node.
+     * @param parentNode The node whose descendants are being searched through.
+     * @param fullPath The fullPath used as the matching criteria.
+     * @returns {IZoweUSSTreeNode}
+     */
+    protected findMatchInLoadedChildren(parentNode: IZoweUSSTreeNode, fullPath: string): IZoweUSSTreeNode {
+        // If this is used for findFavoritedNode later: There may be more than one match in Favorites, and this could return an array.
+        // // Is match direct child?
+        let match: IZoweUSSTreeNode = parentNode.children.find((child) => child.fullPath === fullPath);
+        if (match === undefined) {
+            // Is match contained within one of the children?
+            for (let node of parentNode.children) {
+                const isFullPathChild: boolean = checkIfChildPath(node.fullPath, fullPath);
+                if (isFullPathChild) {
+                    return this.findMatchInLoadedChildren(node, fullPath);
+                }
+            }
+        }
+        // }
+        return match;
+    }
+
+    /**
      * Finds the equivalent node as a favorite.
      * Used to ensure functions like delete, rename are synced between non-favorite nodes and their favorite equivalents.
      *
      * @param node
      */
     public findFavoritedNode(node: IZoweUSSTreeNode) {
+        let matchingNodeInFavs: IZoweUSSTreeNode;
         // Get node's profile node in favorites
         const profileName = node.getProfileName();
         const profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profileName);
-        if (!profileNodeInFavorites) {
-            return;
+        if (profileNodeInFavorites) {
+            matchingNodeInFavs = this.findMatchInLoadedChildren(profileNodeInFavorites, node.fullPath);
         }
-        return profileNodeInFavorites.children.find(
-            (temp) => temp.label === node.getLabel() && temp.contextValue.includes(node.contextValue)
-        );
-    }
-
-    protected findMatch(parentNode: IZoweUSSTreeNode, fullPath: string): IZoweUSSTreeNode {
-        // Is match direct child?
-        let match: IZoweUSSTreeNode = parentNode.children.find((child) => child.fullPath === fullPath);
-        if (match === undefined) {
-            // Is match contained within one of the children?
-            for (let child of parentNode.children) {
-                const isFullPathChild: boolean = checkIfChildPath(child.fullPath, fullPath);
-                if (isFullPathChild) {
-                    return this.findMatch(child, fullPath);
-                }
-            }
-        }
-        return match;
+        return matchingNodeInFavs;
     }
 
     /**
      * Finds the equivalent node not as a favorite
      *
-     * @param node
+     * @param node The favorited node you want to find the non-favorite equivalent for.
      */
     public findNonFavoritedNode(node: IZoweUSSTreeNode): IZoweUSSTreeNode {
         let matchingNode: IZoweUSSTreeNode;
         const profileName = node.getProfileName();
         const sessionNode = this.mSessionNodes.find((session) => session.getProfileName() === profileName.trim());
         if (sessionNode) {
-            matchingNode = this.findMatch(sessionNode, node.fullPath);
+            matchingNode = this.findMatchInLoadedChildren(sessionNode, node.fullPath);
         }
         return matchingNode;
     }
@@ -251,7 +268,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      * @param oldNamePath
      * @param newNamePath
      */
-    public async renameUssNode(node: IZoweUSSTreeNode, newNamePath: string) {
+    public async renameUSSNode(node: IZoweUSSTreeNode, newNamePath: string) {
         const matchingNode: IZoweUSSTreeNode = this.findNonFavoritedNode(node);
         if (matchingNode) {
             matchingNode.rename(newNamePath);
@@ -268,6 +285,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         if (matchingNode) {
             matchingNode.rename(newNamePath);
         }
+        this.refreshElement(this.mFavoriteSession); // Needed in case the same node appears multiple times in Favorites (e.g. as child, grandchild)
     }
 
     /**
