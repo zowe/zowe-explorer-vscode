@@ -143,13 +143,16 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                     // Rename corresponding node in Sessions or Favorites section (whichever one Rename wasn't called from)
                     if (originalNodeInFavorites) {
                         this.renameUSSNode(originalNode, newNamePath);
-                        if (!contextually.isFavorite(originalNode)) {
-                            // Needed if originalNode is a child node of a favorite, but the child itself is also directly favorited separately
-                            this.renameFavorite(originalNode, newNamePath); // Also rename the directly-favorited child
-                        } else {
-                            // If originalNode is a direct Favorite, use this to update any other appearances of the node in Favorites (e.g. as child)
-                            this.refreshElement(this.mFavoriteSession);
-                        }
+                        // Needed if originalNode is a direct favorite or child node of one; also updates other appearances of the node in Favorites
+                        // If there aren't any other appearances of originalNode in Favorites, this function call doesn't do anything.
+                        this.renameFavorite(originalNode, newNamePath);
+                        // if (!contextually.isFavorite(originalNode)) {
+                        //     // Needed if originalNode is a child node of a favorite, but the child itself is also directly favorited separately
+                        //     this.renameFavorite(originalNode, newNamePath); // Also rename the directly-favorited child
+                        // } else {
+                        //     // If originalNode is a direct Favorite, use this to update any other appearances of the node in Favorites (e.g. as child)
+                        //     this.refreshElement(this.mFavoriteSession);
+                        // }
                     } else {
                         // originalNode is in a session node
                         // This has to happen before renaming originalNode, as originalNode's label is used to find the favorite equivalent.
@@ -284,8 +287,8 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         const matchingNode: IZoweUSSTreeNode = this.findFavoritedNode(node);
         if (matchingNode) {
             matchingNode.rename(newNamePath);
+            this.refreshElement(this.mFavoriteSession); // Needed in case the node appears multiple times in Favorites (e.g. as child, grandchild)
         }
-        this.refreshElement(this.mFavoriteSession); // Needed in case the same node appears multiple times in Favorites (e.g. as child, grandchild)
     }
 
     /**
