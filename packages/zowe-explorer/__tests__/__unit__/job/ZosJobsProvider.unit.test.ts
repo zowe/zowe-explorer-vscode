@@ -195,8 +195,7 @@ describe("ZosJobsProvider unit tests - Function getChildren", () => {
 
         const children = await testTree.getChildren();
 
-        expect(blockMocks.jobFavoritesNode).toMatchObject(children[0]);
-        expect(blockMocks.jobSessionNode).toMatchObject(children[1]);
+        expect(blockMocks.jobSessionNode).toMatchObject(children[0]);
     });
     it("Tests that getChildren returns favorites profile node when called on Favorites", async () => {
         createGlobalMocks();
@@ -252,11 +251,11 @@ describe("ZosJobsProvider unit tests - Function getChildren", () => {
 
         const testTree = new ZosJobsProvider();
         testTree.mSessionNodes.push(blockMocks.jobSessionNode);
-        testTree.mSessionNodes[1].dirty = true;
-        const sessionElement = testTree.mSessionNodes[1];
+        blockMocks.jobSessionNode.dirty = true;
+        const sessionElement = blockMocks.jobSessionNode;
         const elementGetChildrenSpy = jest.spyOn(sessionElement, "getChildren");
 
-        await testTree.getChildren(testTree.mSessionNodes[1]);
+        await testTree.getChildren(blockMocks.jobSessionNode);
 
         expect(elementGetChildrenSpy).toHaveBeenCalledTimes(1);
     });
@@ -539,8 +538,8 @@ describe("ZosJobsProvider unit tests - Function removeFavProfile", () => {
         const testJobNode = new Job(
             "MYHLQ(JOB1283) - Input",
             vscode.TreeItemCollapsibleState.Collapsed,
-            globalMocks.testJobsProvider.mSessionNodes[1],
-            globalMocks.testJobsProvider.mSessionNodes[1].getSession(),
+            globalMocks.testSessionNode,
+            globalMocks.testSessionNode.getSession(),
             globalMocks.testIJob,
             globalMocks.testProfile
         );

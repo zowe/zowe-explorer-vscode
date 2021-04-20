@@ -172,7 +172,7 @@ describe("Tree Provider unit tests, function getParent", () => {
 
         // Await return value from getChildren
         const rootChildren = await globalMocks.testUSSTree.getChildren();
-        const parent = globalMocks.testUSSTree.getParent(rootChildren[1]);
+        const parent = globalMocks.testUSSTree.getParent(rootChildren[0]);
 
         expect(parent).toEqual(null);
     });
