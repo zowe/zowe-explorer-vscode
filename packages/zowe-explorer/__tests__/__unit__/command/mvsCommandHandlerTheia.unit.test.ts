@@ -10,7 +10,6 @@
  */
 
 import * as vscode from "vscode";
-import * as zowe from "@zowe/cli";
 import * as profileLoader from "../../../src/Profiles";
 import { ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { MvsCommandHandler } from "../../../src/command/MvsCommandHandler";
@@ -24,7 +23,6 @@ describe("mvsCommandActions unit testing", () => {
     const showInputBox = jest.fn();
     const showInformationMessage = jest.fn();
     const showQuickPick = jest.fn();
-    const IssueCommand = jest.fn();
     const getConfiguration = jest.fn();
     const createOutputChannel = jest.fn();
 
@@ -88,7 +86,6 @@ describe("mvsCommandActions unit testing", () => {
     Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
     Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
     Object.defineProperty(vscode.window, "createOutputChannel", { value: createOutputChannel });
-    Object.defineProperty(zowe, "IssueCommand", { value: IssueCommand });
     Object.defineProperty(vscode, "ProgressLocation", { value: ProgressLocation });
     Object.defineProperty(vscode.window, "withProgress", { value: withProgress });
 
@@ -103,6 +100,7 @@ describe("mvsCommandActions unit testing", () => {
         jest.clearAllMocks();
     });
 
+    const apiRegisterInstance = ZoweExplorerApiRegister.getInstance();
     const mvsActions = MvsCommandHandler.getInstance();
 
     it("tests the issueMvsCommand function - theia route", async () => {
@@ -136,8 +134,14 @@ describe("mvsCommandActions unit testing", () => {
         jest.spyOn(mockMvsApi, "getSession").mockReturnValue(session);
 
         showQuickPick.mockReturnValueOnce("firstName");
+
+        const mockCommandApi = await apiRegisterInstance.getCommandApi(profileOne);
+        const getCommandApiMock = jest.fn();
+        getCommandApiMock.mockReturnValue(mockCommandApi);
+        apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
+
         showInputBox.mockReturnValueOnce("/d iplinfo1");
-        jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(() => Promise.resolve(qpItem));
+        jest.spyOn(mockCommandApi, "issueMvsCommand").mockReturnValue("iplinfo1" as any);
 
         await mvsActions.issueMvsCommand();
 
