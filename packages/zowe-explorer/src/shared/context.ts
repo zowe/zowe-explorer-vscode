@@ -335,7 +335,7 @@ export function isSessionFavorite(node: TreeItem): boolean {
  * @returns true if node is located in Favorites, false otherwise
  */
 export function isFavoriteDescendant(node: IZoweTreeNode): boolean {
-    return node.getSessionNode().contextValue === globals.FAV_PROFILE_CONTEXT;
+    return isFavorite(node.getSessionNode());
 }
 
 /**
