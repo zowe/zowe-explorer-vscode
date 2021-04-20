@@ -10,7 +10,7 @@
  */
 
 import { IProfileLoaded } from "@zowe/imperative";
-import { ZoweExplorerApi, ZosmfUssApi, ZosmfMvsApi, ZosmfJesApi } from "@zowe/zowe-explorer-api";
+import { ZoweExplorerApi, ZosmfUssApi, ZosmfMvsApi, ZosmfJesApi, ZosmfCommandApi } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 
 import * as nls from "vscode-nls";
@@ -64,6 +64,15 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
     }
 
     /**
+     * Static lookup of an API for Command for a given profile.
+     * @param {IProfileLoaded} a profile to be used with this instance of the API returned
+     * @returns an instance of the API that uses the profile provided
+     */
+    public static getCommandApi(profile: IProfileLoaded): ZoweExplorerApi.ICommand {
+        return ZoweExplorerApiRegister.getInstance().getCommandApi(profile);
+    }
+
+    /**
      * Static lookup of an API Common interface for a given profile for any of the registries supported.
      * @param profile {IProfileLoaded} a profile to be used with this instance of the API returned
      * @returns an instance of the Commin API that uses the profile provided; could be an instance any of its subclasses
@@ -91,6 +100,7 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
     private ussApiImplementations = new Map<string, ZoweExplorerApi.IUss>();
     private mvsApiImplementations = new Map<string, ZoweExplorerApi.IMvs>();
     private jesApiImplementations = new Map<string, ZoweExplorerApi.IJes>();
+    private commandApiImplementations = new Map<string, ZoweExplorerApi.ICommand>();
 
     /**
      * Private constructor that creates the singleton instance of ZoweExplorerApiRegister.
@@ -100,6 +110,7 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
         this.registerUssApi(new ZosmfUssApi());
         this.registerMvsApi(new ZosmfMvsApi());
         this.registerJesApi(new ZosmfJesApi());
+        this.registerCommandApi(new ZosmfCommandApi());
     }
 
     // TODO: the redundant functions that follow could be done with generics, but as we are using
@@ -158,6 +169,23 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
     }
 
     /**
+     * Other VS Code extension need to call this to register their Command API implementation.
+     * @param {ZoweExplorerApi.ICommand} api
+     */
+    public registerCommandApi(commandApi: ZoweExplorerApi.ICommand): void {
+        if (commandApi && commandApi.getProfileTypeName()) {
+            this.commandApiImplementations.set(commandApi.getProfileTypeName(), commandApi);
+        } else {
+            throw new Error(
+                localize(
+                    "registerCommandApi.error",
+                    "Internal error: A Zowe Explorer extension client tried to register an invalid Command API."
+                )
+            );
+        }
+    }
+
+    /**
      * Get an array of all the registered APIs identified by the CLI profile type names,
      * such as ["zosmf", "zftp"].
      * @returns {string[]}
@@ -168,6 +196,7 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
                 ...this.registeredUssApiTypes(),
                 ...this.registeredMvsApiTypes(),
                 ...this.registeredJesApiTypes(),
+                ...this.registeredCommandApiTypes(),
             ]),
         ];
     }
@@ -197,6 +226,15 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
      */
     public registeredJesApiTypes(): string[] {
         return [...this.jesApiImplementations.keys()];
+    }
+
+    /**
+     * Get an array of all the registered Command APIs identified by the CLI profile types,
+     * such as ["zosmf", "ftp"].
+     * @returns {string[]}
+     */
+    public registeredCommandApiTypes(): string[] {
+        return [...this.commandApiImplementations.keys()];
     }
 
     /**
@@ -256,6 +294,27 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
         }
     }
 
+    /**
+     * Lookup of an API implementation for Command for a given profile.
+     * @param {IProfileLoaded} profile
+     * @returns an instance of the API for the profile provided
+     */
+    public getCommandApi(profile: IProfileLoaded): ZoweExplorerApi.ICommand {
+        if (profile && profile.type && this.registeredCommandApiTypes().includes(profile.type)) {
+            // create a clone of the API object that remembers the profile with which it was created
+            const api = Object.create(this.commandApiImplementations.get(profile.type));
+            api.profile = profile;
+            return api;
+        } else {
+            throw new Error(
+                localize(
+                    "getCommandApi.error",
+                    "Internal error: Tried to call a non-existing Command API in API register: "
+                ) + profile.type
+            );
+        }
+    }
+
     public getCommonApi(profile: IProfileLoaded): ZoweExplorerApi.ICommon {
         let result: ZoweExplorerApi.ICommon;
         try {
@@ -267,12 +326,16 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
                 try {
                     result = this.getJesApi(profile);
                 } catch (error) {
-                    throw new Error(
-                        localize(
-                            "getCommonApi.error",
-                            "Internal error: Tried to call a non-existing Common API in API register: "
-                        ) + profile.type
-                    );
+                    try {
+                        result = this.getCommandApi(profile);
+                    } catch (error) {
+                        throw new Error(
+                            localize(
+                                "getCommonApi.error",
+                                "Internal error: Tried to call a non-existing Common API in API register: "
+                            ) + profile.type
+                        );
+                    }
                 }
             }
         }
