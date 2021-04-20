@@ -140,24 +140,13 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
 
                 // Handle rename in UI:
                 if (oldFavorite) {
-                    // Rename corresponding node in Sessions or Favorites section (whichever one Rename wasn't called from)
                     if (originalNodeInFavorites) {
-                        this.renameUSSNode(originalNode, newNamePath);
-                        // Needed if originalNode is a direct favorite or child node of one; also updates other appearances of the node in Favorites
-                        // If there aren't any other appearances of originalNode in Favorites, this function call doesn't do anything.
-                        this.renameFavorite(originalNode, newNamePath);
-                        // if (!contextually.isFavorite(originalNode)) {
-                        //     // Needed if originalNode is a child node of a favorite, but the child itself is also directly favorited separately
-                        //     this.renameFavorite(originalNode, newNamePath); // Also rename the directly-favorited child
-                        // } else {
-                        //     // If originalNode is a direct Favorite, use this to update any other appearances of the node in Favorites (e.g. as child)
-                        //     this.refreshElement(this.mFavoriteSession);
-                        // }
-                    } else {
-                        // originalNode is in a session node
-                        // This has to happen before renaming originalNode, as originalNode's label is used to find the favorite equivalent.
-                        this.renameFavorite(originalNode, newNamePath);
+                        this.renameUSSNode(originalNode, newNamePath); // Rename corresponding node in Sessions
                     }
+                    // Below handles if originalNode is in a session node or is only indirectly in Favorites (e.g. is only a child of a favorite).
+                    // Also handles if there are multiple appearances of originalNode in Favorites.
+                    // This has to happen before renaming originalNode.rename, as originalNode's label is used to find the favorite equivalent.
+                    this.renameFavorite(originalNode, newNamePath); // Doesn't do anything if there aren't any appearances of originalNode in Favs
                 }
                 // Rename originalNode in UI
                 const hasClosedTab = await originalNode.rename(newNamePath);
@@ -211,31 +200,9 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
     }
 
     /**
-     * Finds matching node by fullPath in the loaded descendants (i.e. children, grandchildren, etc.) of a parent node.
-     * @param parentNode The node whose descendants are being searched through.
-     * @param fullPath The fullPath used as the matching criteria.
-     * @returns {IZoweUSSTreeNode}
-     */
-    protected findMatchInLoadedChildren(parentNode: IZoweUSSTreeNode, fullPath: string): IZoweUSSTreeNode {
-        // If this is used for findFavoritedNode later: There may be more than one match in Favorites, and this could return an array.
-        // // Is match direct child?
-        let match: IZoweUSSTreeNode = parentNode.children.find((child) => child.fullPath === fullPath);
-        if (match === undefined) {
-            // Is match contained within one of the children?
-            for (let node of parentNode.children) {
-                const isFullPathChild: boolean = checkIfChildPath(node.fullPath, fullPath);
-                if (isFullPathChild) {
-                    return this.findMatchInLoadedChildren(node, fullPath);
-                }
-            }
-        }
-        // }
-        return match;
-    }
-
-    /**
      * Finds the equivalent node as a favorite.
      * Used to ensure functions like delete, rename are synced between non-favorite nodes and their favorite equivalents.
+     * This will also find the node if it is a child of a favorite and has been loaded.
      *
      * @param node
      */
@@ -901,6 +868,27 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             );
             this.removeFileHistory(`[${sessionNode.getProfileName()}]: ${itemPath}`);
         }
+    }
+
+    /**
+     * Finds matching node by fullPath in the loaded descendants (i.e. children, grandchildren, etc.) of a parent node.
+     * @param parentNode The node whose descendants are being searched through.
+     * @param fullPath The fullPath used as the matching criteria.
+     * @returns {IZoweUSSTreeNode}
+     */
+    protected findMatchInLoadedChildren(parentNode: IZoweUSSTreeNode, fullPath: string): IZoweUSSTreeNode {
+        // // Is match direct child?
+        const match: IZoweUSSTreeNode = parentNode.children.find((child) => child.fullPath === fullPath);
+        if (match === undefined) {
+            // Is match contained within one of the children?
+            for (const node of parentNode.children) {
+                const isFullPathChild: boolean = checkIfChildPath(node.fullPath, fullPath);
+                if (isFullPathChild) {
+                    return this.findMatchInLoadedChildren(node, fullPath);
+                }
+            }
+        }
+        return match;
     }
 
     /**
