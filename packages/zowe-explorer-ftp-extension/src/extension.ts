@@ -33,6 +33,11 @@ async function registerFtpApis(): Promise<boolean> {
         importedApi.registerUssApi(new FtpUssApi());
         importedApi.registerMvsApi(new FtpMvsApi());
         importedApi.registerJesApi(new FtpJesApi());
+        // check for getExplorerExtenderApi().reloadProfiles() to initialize home dir folder if cli not installed
+        if (importedApi.getExplorerExtenderApi && importedApi.getExplorerExtenderApi().initForZowe) {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+            await importedApi.getExplorerExtenderApi().initForZowe("zftp");
+        }
         // check as getExplorerExtenderApi().reloadProfiles() was add in Zowe Explorer 1.5 only
         if (importedApi.getExplorerExtenderApi && importedApi.getExplorerExtenderApi().reloadProfiles) {
             await importedApi.getExplorerExtenderApi().reloadProfiles();

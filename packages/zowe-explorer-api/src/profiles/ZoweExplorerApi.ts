@@ -466,6 +466,8 @@ export namespace ZoweExplorerApi {
          * down dialogs.
          */
         reloadProfiles(): Promise<void>;
+
+        initForZowe(type: string): Promise<void>;
     }
 
     /**
