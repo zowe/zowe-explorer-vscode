@@ -16,12 +16,13 @@ import * as driverChrome from "./theia/extension.theiaChrome";
 
 const TIMEOUT = 45000;
 const SLEEPTIME = 10000;
-const SHORTSLEEPTIME = 2000;
+const SHORTSLEEPTIME  = 2000;
 declare var it: any;
 const expect = chai.expect;
 chai.use(chaiAsPromised);
 
 describe("Add Default Profile", () => {
+
     before(async () => {
         await driverFirefox.openBrowser();
         await driverFirefox.sleepTime(SHORTSLEEPTIME);
@@ -78,6 +79,7 @@ describe("Add Default Profile", () => {
 });
 
 describe("Add Profiles", () => {
+
     before(async () => {
         await driverFirefox.openBrowser();
         await driverFirefox.sleepTime(SHORTSLEEPTIME);
@@ -202,6 +204,7 @@ describe("Remove Profile from Favorites", () => {
         const favoriteProfile = await driverChrome.verifyRemovedFavoriteProfileInDatasets();
         expect(favoriteProfile).to.equal(true);
     });
+
 
     after(async () => driverChrome.closeBrowser());
 });
