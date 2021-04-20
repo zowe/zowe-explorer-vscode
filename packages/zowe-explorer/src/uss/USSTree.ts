@@ -253,7 +253,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
     public async renameFavorite(node: IZoweUSSTreeNode, newNamePath: string) {
         const matchingNode: IZoweUSSTreeNode = this.findFavoritedNode(node);
         if (matchingNode) {
-            matchingNode.rename(newNamePath);
+            await matchingNode.rename(newNamePath);
             this.refreshElement(this.mFavoriteSession); // Needed in case the node appears multiple times in Favorites (e.g. as child, grandchild)
         }
     }
