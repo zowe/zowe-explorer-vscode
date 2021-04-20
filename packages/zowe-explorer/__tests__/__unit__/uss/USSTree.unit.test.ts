@@ -1323,7 +1323,19 @@ describe("USSTree Unit Tests - Function USSTree.getChildren()", () => {
                 null
             )
         );
-        globalMocks.testTree.addSession(globalMocks.testSession);
+        const favoriteSession = new ZoweUSSNode(
+            "Favorites",
+            vscode.TreeItemCollapsibleState.Collapsed,
+            null,
+            globalMocks.testSession,
+            null,
+            false,
+            globalMocks.testProfile.name
+        );
+        favoriteSession.contextValue = globals.FAVORITE_CONTEXT;
+        globalMocks.testTree.mSessionNodes = [];
+        globalMocks.testTree.mSessionNodes.push(favoriteSession);
+        globalMocks.testTree.mSessionNodes.push(globalMocks.ussSessionTestNode);
         const favChildren = await globalMocks.testTree.getChildren(globalMocks.testTree.mSessionNodes[0]);
         const sampleChildren: ZoweUSSNode[] = [
             new ZoweUSSNode(
