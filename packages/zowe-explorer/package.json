@@ -555,6 +555,11 @@
         "title": "%setJobSpool%"
       },
       {
+        "command": "zowe.issueTsoCmd",
+        "title": "%issueTsoCmd%",
+        "category": "Zowe"
+      },
+      {
         "command": "zowe.issueMvsCmd",
         "title": "%issueMvsCmd%",
         "category": "Zowe"
@@ -660,6 +665,11 @@
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)ussSession.*/",
           "command": "zowe.issueMvsCmd",
+          "group": "1_create@5"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)ussSession.*/",
+          "command": "zowe.issueTsoCmd",
           "group": "1_create@5"
         },
         {
@@ -835,6 +845,11 @@
         {
           "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
           "command": "zowe.issueMvsCmd",
+          "group": "1_create@9"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
+          "command": "zowe.issueTsoCmd",
           "group": "1_create@9"
         },
         {
@@ -1015,6 +1030,11 @@
         {
           "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/",
           "command": "zowe.issueMvsCmd",
+          "group": "1_systemSpecific@4"
+        },
+        {
+          "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/",
+          "command": "zowe.issueTsoCmd",
           "group": "1_systemSpecific@4"
         },
         {
