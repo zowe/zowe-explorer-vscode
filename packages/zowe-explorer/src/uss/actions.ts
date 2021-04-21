@@ -109,58 +109,6 @@ export async function createUSSNodeDialog(node: IZoweUSSTreeNode, ussFileProvide
 }
 
 /**
- * Process for renaming a USS Node. This could be a Favorite Node
- *
- * @param {IZoweTreeNode} originalNode
- * @param {USSTree} ussFileProvider
- * @param {string} filePath
- */
-export async function renameUSSNode(
-    originalNode: IZoweUSSTreeNode,
-    ussFileProvider: IZoweTree<IZoweUSSTreeNode>,
-    filePath: string
-) {
-    // Could be a favorite or regular entry always deal with the regular entry
-    const isFav = originalNode.contextValue.endsWith(globals.FAV_SUFFIX);
-    const oldLabel = originalNode.label;
-    const parentPath = originalNode.fullPath.substr(0, originalNode.fullPath.indexOf(oldLabel));
-    // Check if an old favorite exists for this node
-    const oldFavorite: IZoweUSSTreeNode = isFav
-        ? originalNode
-        : ussFileProvider.mFavorites.find(
-              (temp: ZoweUSSNode) =>
-                  temp.shortLabel === oldLabel &&
-                  temp.fullPath.substr(0, temp.fullPath.indexOf(oldLabel)) === parentPath
-          );
-    const newName = await vscode.window.showInputBox({ value: oldLabel });
-    if (newName && newName !== oldLabel) {
-        try {
-            let newNamePath = path.join(parentPath + newName);
-            newNamePath = newNamePath.replace(/\\/g, "/"); // Added to cover Windows backslash issue
-            const oldNamePath = originalNode.fullPath;
-
-            const hasClosedTab = await originalNode.rename(newNamePath);
-            await ZoweExplorerApiRegister.getUssApi(originalNode.getProfile()).rename(oldNamePath, newNamePath);
-            await deleteFromDisk(originalNode, filePath);
-            await originalNode.refreshAndReopen(hasClosedTab);
-
-            if (oldFavorite) {
-                ussFileProvider.removeFavorite(oldFavorite);
-                await oldFavorite.rename(newNamePath);
-                ussFileProvider.addFavorite(oldFavorite);
-            }
-        } catch (err) {
-            errorHandling(
-                err,
-                originalNode.mProfileName,
-                localize("renameUSSNode.error", "Unable to rename node: ") + err.message
-            );
-            throw err;
-        }
-    }
-}
-
-/**
  * Marks file as deleted from disk
  *
  * @param {ZoweUSSNode} node
