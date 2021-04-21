@@ -41,8 +41,6 @@ Bug fixes:
 
 - Fixed the issue that caused the USS tree to colapse after renaming a folder.
 
-- Fixed the issue that prevented members with an octothorpe (#) in the name from being displayed while using API ML.
-
 - Fixed the issue that prevented jobs with an octothorpe (#) in the name from opening.
 
 For more information, see [Changelog](https://marketplace.visualstudio.com/items/Zowe.vscode-extension-for-zowe/changelog).

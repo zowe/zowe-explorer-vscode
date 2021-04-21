@@ -6,7 +6,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 - Added the Issue TSO Commands feature [#1245](https://github.com/zowe/vscode-extension-for-zowe/pull/1245). Thanks @JillieBeanSim
 - Fixed the issue that caused the USS tree to colapse after renaming a folder [#1259](https://github.com/zowe/vscode-extension-for-zowe/pull/1259). Thanks @lauren-li
-- Fixed the issue that prevented members with an octothorpe (#) in the name from being displayed while using API ML [#1258](https://github.com/zowe/vscode-extension-for-zowe/issues/1258). Thanks @katelynienaber
 - Fixed the issue that prevented jobs with an octothorpe (#) in the name from opening [#1253](https://github.com/zowe/vscode-extension-for-zowe/issues/1253). Thanks @katelynienaber
 
 ## `1.13.1`
