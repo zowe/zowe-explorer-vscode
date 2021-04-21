@@ -39,7 +39,7 @@ Enhancements:
 
 Bug fixes:
 
-- Fixed the issue that caused the USS tree to colapse after renaming a folder.
+- Fixed the issue that caused the USS tree to collapse after renaming a folder.
 
 - Fixed the issue that prevented jobs with an octothorpe (#) in the name from opening.
 
