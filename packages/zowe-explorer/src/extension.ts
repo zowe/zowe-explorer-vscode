@@ -26,13 +26,14 @@ import {
     IZoweUSSTreeNode,
     IZoweTreeNode,
     IZoweTree,
+    ProfilesConfig,
 } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import { Profiles } from "./Profiles";
 import { errorHandling, getZoweDir } from "./utils/ProfilesUtils";
 import { linkProfileDialog } from "./ProfileLink";
-import { CredentialManagerFactory, ImperativeError, CliProfileManager } from "@zowe/imperative";
+import { CredentialManagerFactory, ImperativeError, CliProfileManager, ProfileInfo } from "@zowe/imperative";
 import { createDatasetTree } from "./dataset/DatasetTree";
 import { createJobsTree } from "./job/ZosJobsProvider";
 import { createUSSTree } from "./uss/USSTree";
@@ -89,7 +90,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         globals.initLogger(context);
         globals.LOG.debug(localize("initialize.log.debug", "Initialized logger from VSCode extension"));
 
-        const keytar = getSecurityModules("keytar");
+        const keytar = checkImperativeSecure("keytar");
         if (keytar) {
             KeytarCredentialManager.keytar = keytar;
             const service: string = vscode.workspace.getConfiguration().get("Zowe Security: Credential Key");
@@ -111,8 +112,18 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             profileRootDirectory: path.join(getZoweDir(), "profiles"),
         });
 
-        // Initialize profile manager
-        await Profiles.createInstance(globals.LOG);
+        const mProfileInfo = new ProfileInfo("zowe", {
+            requireKeytar: () => getSecurityModules("keytar"),
+        });
+        await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir() });
+
+        if (mProfileInfo.usingTeamConfig) {
+            // Initialize profile manager for team config
+            await Profiles.createConfigInstance(globals.LOG, mProfileInfo);
+        } else {
+            // Initialize profile manager for old-school profiles
+            await Profiles.createInstance(globals.LOG);
+        }
         // Initialize dataset provider
         datasetProvider = await createDatasetTree(globals.LOG);
         // Initialize uss provider
@@ -425,12 +436,10 @@ function initSubscribers(context: vscode.ExtensionContext, theProvider: IZoweTre
 
 /**
  * function to check if imperative.json contains
- * information about security or not and then
- * Imports the neccesary security modules
+ * information about security or not
  */
-export function getSecurityModules(moduleName): NodeRequire | undefined {
+export function checkImperativeSecure(moduleName): NodeModule | undefined {
     let imperativeIsSecure: boolean = false;
-    const r = typeof __webpack_require__ === "function" ? __non_webpack_require__ : require;
     try {
         const fileName = path.join(getZoweDir(), "settings", "imperative.json");
         let settings: any;
@@ -447,22 +456,31 @@ export function getSecurityModules(moduleName): NodeRequire | undefined {
         return undefined;
     }
     if (imperativeIsSecure) {
-        // Workaround for Theia issue (https://github.com/eclipse-theia/theia/issues/4935)
-        const appRoot = globals.ISTHEIA ? process.cwd() : vscode.env.appRoot;
-        try {
-            return r(`${appRoot}/node_modules/${moduleName}`);
-        } catch (err) {
-            /* Do nothing */
-        }
-        try {
-            return r(`${appRoot}/node_modules.asar/${moduleName}`);
-        } catch (err) {
-            /* Do nothing */
-        }
-        vscode.window.showWarningMessage(
-            localize("initialize.module.load", "Credentials not managed, unable to load security file: ") + moduleName
-        );
+        return this.getSecurityModules(moduleName);
     }
+    return undefined;
+}
+
+/**
+ * Imports the neccesary security modules
+ */
+export function getSecurityModules(moduleName): NodeModule | undefined {
+    const r = typeof __webpack_require__ === "function" ? __non_webpack_require__ : require;
+    // Workaround for Theia issue (https://github.com/eclipse-theia/theia/issues/4935)
+    const appRoot = globals.ISTHEIA ? process.cwd() : vscode.env.appRoot;
+    try {
+        return r(`${appRoot}/node_modules/${moduleName}`);
+    } catch (err) {
+        /* Do nothing */
+    }
+    try {
+        return r(`${appRoot}/node_modules.asar/${moduleName}`);
+    } catch (err) {
+        /* Do nothing */
+    }
+    vscode.window.showWarningMessage(
+        localize("initialize.module.load", "Credentials not managed, unable to load security file: ") + moduleName
+    );
     return undefined;
 }
 

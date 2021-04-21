@@ -18,6 +18,7 @@ import {
     SessConstants,
     IUpdateProfile,
     IProfile,
+    ProfileInfo
 } from "@zowe/imperative";
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
@@ -56,6 +57,12 @@ export class Profiles extends ProfilesCache {
     public static async createInstance(log: Logger): Promise<Profiles> {
         Profiles.loader = new Profiles(log);
         await Profiles.loader.refresh(ZoweExplorerApiRegister.getInstance());
+        return Profiles.loader;
+    }
+
+    public static createConfigInstance(log: Logger, mProfileInfo: ProfileInfo): Profiles {
+        Profiles.loader = new Profiles(log);
+        Profiles.loader.refreshConfig(ZoweExplorerApiRegister.getInstance(), mProfileInfo);
         return Profiles.loader;
     }
 
@@ -1599,23 +1606,23 @@ export class Profiles extends ProfilesCache {
 
     // ** Functions that Calls Get CLI Profile Manager  */
 
-    private async updateProfile(ProfileInfo, rePrompt?: boolean) {
-        if (ProfileInfo.type !== undefined) {
-            const profileManager = this.getCliProfileManager(ProfileInfo.type);
+    private async updateProfile(updProfileInfo, rePrompt?: boolean) {
+        if (updProfileInfo.type !== undefined) {
+            const profileManager = this.getCliProfileManager(updProfileInfo.type);
             this.loadedProfile = await profileManager.load({
-                name: ProfileInfo.name,
+                name: updProfileInfo.name,
             });
         } else {
             for (const type of ZoweExplorerApiRegister.getInstance().registeredApiTypes()) {
                 const profileManager = this.getCliProfileManager(type);
                 this.loadedProfile = await profileManager.load({
-                    name: ProfileInfo.name,
+                    name: updProfileInfo.name,
                 });
             }
         }
 
         const OrigProfileInfo = this.loadedProfile.profile;
-        const NewProfileInfo = ProfileInfo.profile;
+        const NewProfileInfo = updProfileInfo.profile;
 
         // Update the currently-loaded profile with the new info
         const profileArray = Object.keys(this.loadedProfile.profile);

@@ -14,8 +14,8 @@
     "src"
   ],
   "peerDependencies": {
-    "@zowe/imperative": "^=4.8.1 < 5",
-    "@zowe/cli": "^=6.22.0 < 7"
+    "@zowe/imperative": "5.0.0-next.202104142114",
+    "@zowe/cli": "7.0.0-next.202104162205"
   },
   "scripts": {
     "build": "yarn clean && tsc -p ./",

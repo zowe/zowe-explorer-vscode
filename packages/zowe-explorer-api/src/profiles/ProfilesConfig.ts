@@ -9,8 +9,18 @@
  *                                                                                 *
  */
 
-export * from "./UserSettings";
-export * from "./ProfilesCache";
-export * from "./ProfilesConfig";
-export * from "./ZoweExplorerApi";
-export * from "./ZoweExplorerZosmfApi";
+import { IProfAttrs, IProfile, ProfileInfo } from "@zowe/imperative";
+
+export class ProfilesConfig {
+    public static getMergedAttrs(mProfileInfo: ProfileInfo, profAttrs: IProfAttrs): IProfile {
+        const profile: IProfile = {};
+        if (profAttrs != null) {
+            const mergedArgs = mProfileInfo.mergeArgsForProfile(profAttrs);
+
+            for (const arg of mergedArgs.knownArgs) {
+                profile[arg.argName] = arg.secure ? mProfileInfo.loadSecureArg(arg) : arg.argValue;
+            }
+        }
+        return profile;
+    }
+}
