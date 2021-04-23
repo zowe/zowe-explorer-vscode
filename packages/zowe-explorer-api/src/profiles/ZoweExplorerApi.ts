@@ -10,7 +10,7 @@
  */
 
 import * as zowe from "@zowe/cli";
-import { IProfileLoaded, Session, ICommandArguments } from "@zowe/imperative";
+import { IProfileLoaded, Session, ICommandArguments, ICommandProfileTypeConfiguration } from "@zowe/imperative";
 
 /**
  * This namespace provides interfaces for all the external APIs provided by this VS Code Extension.
@@ -467,7 +467,7 @@ export namespace ZoweExplorerApi {
          */
         reloadProfiles(): Promise<void>;
 
-        initForZowe(type: string): Promise<void>;
+        initForZowe(type: string, meta: ICommandProfileTypeConfiguration[]): Promise<void>;
     }
 
     /**
