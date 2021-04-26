@@ -12,7 +12,6 @@
 import * as imperative from "@zowe/imperative";
 import * as path from "path";
 import * as os from "os";
-import * as fs from "fs";
 import { URL } from "url";
 
 import { ZoweExplorerApi } from "./ZoweExplorerApi";
@@ -51,7 +50,7 @@ export class ProfilesCache {
     protected profilesByType = new Map<string, imperative.IProfileLoaded[]>();
     protected defaultProfileByType = new Map<string, imperative.IProfileLoaded>();
     protected profileManagerByType = new Map<string, imperative.CliProfileManager>();
-    public constructor(protected log: imperative.Logger) {}
+    public constructor(protected log: imperative.Logger) { }
 
     public loadNamedProfile(name: string, type?: string): imperative.IProfileLoaded {
         for (const profile of this.allProfiles) {
@@ -66,38 +65,13 @@ export class ProfilesCache {
         return this.defaultProfileByType.get(type);
     }
 
-    /**
-     * @returns {(imperative.IProfileLoaded | undefined)}
-     *      The default profile with a preference for RSE REST profiles over zOSMF.
-     * @memberof ZoweCliProfiles
-     */
-    public getPreferredDefaultProfile(type?: string): imperative.IProfileLoaded | undefined {
-        let profile = this.defaultProfileByType.get(type);
-        if (!profile) {
-            profile = this.getDefaultProfile();
-        }
-        return profile;
-    }
-
     public getProfiles(type = "zosmf"): imperative.IProfileLoaded[] {
         return this.profilesByType.get(type);
     }
 
-    // eslint-disable-next-line complexity
     public async refresh(apiRegister?: ZoweExplorerApi.IApiRegisterClient): Promise<void> {
         this.allProfiles = [];
         this.allTypes = [];
-        for (const type of this.getAllTypes().concat("ssh")) {
-            const profileManager = this.getCliProfileManager(type);
-            const profilesForType = (await profileManager.loadAll()).filter((profile) => {
-                return profile.type === type;
-            });
-            if (profilesForType && profilesForType.length > 0) {
-                this.allProfiles.push(...profilesForType);
-                this.profilesByType.set(type, profilesForType);
-                this.defaultProfileByType.set(type, await profileManager.load({ loadDefault: true }));
-            }
-        }
         // TODO: Add Base ProfileType in registeredApiTypes
         // This process retrieves the base profile if there's any and stores it in an array
         // If base is added in registeredApiType maybe this process can be removed
@@ -231,31 +205,6 @@ export class ProfilesCache {
             }
         }
         return baseProfile;
-    }
-
-    public isSecureCredentialPluginActive(): boolean {
-        let imperativeIsSecure = false;
-        try {
-            const fileName = path.join(this.getZoweDir(), "settings", "imperative.json");
-            let settings: Record<string, unknown>;
-            if (fs.existsSync(fileName)) {
-                settings = JSON.parse(fs.readFileSync(fileName, "utf-8")) as Record<string, unknown>;
-            }
-            if (settings) {
-                const baseValue = settings.overrides as Record<string, unknown>;
-                const value1 = baseValue.CredentialManager;
-                const value2 = baseValue["credential-manager"];
-                imperativeIsSecure =
-                    (typeof value1 === "string" && value1.length > 0) ||
-                    (typeof value2 === "string" && value2.length > 0);
-            }
-        } catch (error) {
-            // throw new Error(
-            //     `ZoweCliProfiles.isSecureCredentialPluginActive: Unable to read imperative file: ${error?.message}`
-            // );
-            this.log.error(error);
-        }
-        return imperativeIsSecure;
     }
 
     protected async deleteProfileOnDisk(ProfileInfo: imperative.IProfileLoaded): Promise<void> {

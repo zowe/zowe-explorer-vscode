@@ -70,7 +70,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
         public datasetProvider?: IZoweTree<IZoweDatasetTreeNode>,
         public ussFileProvider?: IZoweTree<IZoweUSSTreeNode>,
         public jobsProvider?: IZoweTree<IZoweJobTreeNode>
-    ) { }
+    ) {}
 
     public async initForZowe(type: string, meta: imperative.ICommandProfileTypeConfiguration[]) {
         // Ensure that when a user has not installed the RSE CLI plugin

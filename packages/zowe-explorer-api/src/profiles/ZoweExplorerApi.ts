@@ -467,6 +467,11 @@ export namespace ZoweExplorerApi {
          */
         reloadProfiles(): Promise<void>;
 
+        /**
+         * After an extenders registered all its API extensions it
+         * might want to check for an existing profile folder with meta-file
+         * or to create them automatically if it is non-existant.
+         */
         initForZowe(type: string, meta: ICommandProfileTypeConfiguration[]): Promise<void>;
     }
 

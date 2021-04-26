@@ -43,14 +43,12 @@ jobs:
         env:
           CI: true
           NODE_OPTIONS: --max_old_space_size=4096
-
       # - name: Upload test results
       #   uses: actions/upload-artifact@v1
       #   # if: matrix.os == 'windows-latest' && matrix.node-version == '12.x'
       #   with:
       #     name: zowe-explorer-ftp-extension-results
       #     path: packages/zowe-explorer-ftp-extension/results/
-
       # Run codecov upload for only one run
       # - name: Upload Results to Codecov from Windows / Node 12.x
       #   if: matrix.os == 'windows-latest' && matrix.node-version == '12.x'

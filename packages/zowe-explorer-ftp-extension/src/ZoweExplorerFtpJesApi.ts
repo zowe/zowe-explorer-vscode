@@ -32,7 +32,7 @@ export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
             const options = {
                 owner: owner,
             };
-            const response = (await JobUtils.listJobs(connection, prefix, options));
+            const response = await JobUtils.listJobs(connection, prefix, options);
             if (response) {
                 const results = response.map((job: IJob) => {
                     return {
@@ -127,8 +127,8 @@ export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
                     procstep: String(
                         spoolFileToDownload.procstep === "N/A" || spoolFileToDownload.procstep == null
                             ? undefined
-                            : spoolFileToDownload.procstep,
-                    )
+                            : spoolFileToDownload.procstep
+                    ),
                 };
                 const destinationFile = DownloadJobs.getSpoolDownloadFile(
                     mockJobFile,
