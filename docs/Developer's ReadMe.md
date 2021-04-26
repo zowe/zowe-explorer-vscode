@@ -126,7 +126,7 @@ Set up your Theia workspace for development purposes.
 1. Ensure that you install the following components:
 
    - [Mozilla Firefox](https://www.mozilla.org/en-US/firefox/new/)
-   - [GOogle Chrome](https://www.google.com/chrome/)
+   - [Google Chrome](https://www.google.com/chrome/)
    - [Mozilla Geckodriver](https://github.com/mozilla/geckodriver/releases/) (and add it to your PATH)
    - [ChromeDriver](https://sites.google.com/chromium.org/driver/) (and add it to your PATH)
    - Selenium webdriver with `npm i -g selenium-webdriver`
