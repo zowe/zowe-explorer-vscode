@@ -123,25 +123,36 @@ Set up your Theia workspace for development purposes.
 
 **Follow these steps**:
 
-1. Build a VSIX file with your changes.
+1. Ensure that you install the following components:
 
-2. Build and run the Theia browser example, using [Setting up your Theia workspace](https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/README-Theia.md#setting-up-your-theia-workspace).
+   - [Mozilla Firefox](https://www.mozilla.org/en-US/firefox/new/)
+   - [Google Chrome](https://www.google.com/chrome/)
+   - [Mozilla Geckodriver](https://github.com/mozilla/geckodriver/releases/) (and add it to your PATH)
+   - [ChromeDriver](https://sites.google.com/chromium.org/driver/) (and add it to your PATH)
+   - Selenium webdriver with `npm i -g selenium-webdriver`
 
-   **Note**: Ensure that your latest VSIX file is in the `plugins` folder.
+2. Build a VSIX file that contains your changes.
 
-3. Open a web browser and navigate to <http://localhost:3000> to verify your setup.
+3. Build and run the Theia browser example, using [Setting up your Theia workspace](https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/README-Theia.md#setting-up-your-theia-workspace).
 
-   You should see Zowe Explorer that is deployed in Theia.
+   - Ensure that your latest VSIX file is in the `plugins` folder.
+   - Ensure that Theia is running while you execute the tests!
+
+4. (Optional) To verify your setup, open a web browser and navigate to <http://localhost:3000>
+
+   You should see Zowe Explorer deployed in Theia.
 
 ### Run Regression Tests
 
-Issue the following command to run the regression tests:
+1. Compile your project by running `yarn run compile` in your command-line interface.
+
+2. Run the Theia test by issuing the following command:
 
 ```
-yarn workspace vscode-extension-for-zowe test:theia
+yarn run test:theia
 ```
 
-The regression tests output appears in your VSC debug console.
+The output from the tests appears in your VSCode debug console.
 
 ### Run Tests with Firefox UI Visibility Components
 
