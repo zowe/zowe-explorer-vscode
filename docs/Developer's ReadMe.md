@@ -146,7 +146,11 @@ Set up your Theia workspace for development purposes.
 
 1. Compile your project by running `yarn run compile` in your command-line interface.
 
-2. Run the Theia test with `yarn run test:theia`
+2. Run the Theia test by issuing the following command:
+
+```
+yarn run test:theia
+```
 
 The output from the tests appears in your VSCode debug console.
 
