@@ -70,7 +70,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
         public datasetProvider?: IZoweTree<IZoweDatasetTreeNode>,
         public ussFileProvider?: IZoweTree<IZoweUSSTreeNode>,
         public jobsProvider?: IZoweTree<IZoweJobTreeNode>
-    ) {}
+    ) { }
 
     public async initForZowe(type: string, meta: imperative.ICommandProfileTypeConfiguration[]) {
         // Ensure that when a user has not installed the RSE CLI plugin
@@ -81,26 +81,8 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
             defaultHome: path.join(os.homedir(), ".zowe"),
             envVariablePrefix: "ZOWE",
         };
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        // imperative.Imperative.init
-        // let profileManager = await Profiles.getInstance().getCliProfileManager(type);
-        // let profileManager;
-        // if (!meta) {
-        //     profileManager = new imperative.CliProfileManager({
-        //         profileRootDirectory: path.posix.join(`${os.homedir}/.zowe/profiles`),
-        //         type,
-        //     });
-        // }
-        // tslint:disable-next-line:no-console
-        console.log(meta);
         const configOptions = Array.from(meta);
-        // tslint:disable-next-line:no-console
-        console.log(configOptions);
         const exists = fs.existsSync(path.posix.join(`${os.homedir}/.zowe/profiles/${type}`));
-        // tslint:disable-next-line:no-console
-        console.log(type);
-        // tslint:disable-next-line:no-console
-        console.log(exists);
         if (configOptions && !exists) {
             await imperative.CliProfileManager.initialize({
                 configuration: configOptions,
