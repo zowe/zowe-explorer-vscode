@@ -34,9 +34,8 @@ async function registerFtpApis(): Promise<boolean> {
         importedApi.registerUssApi(new FtpUssApi());
         importedApi.registerMvsApi(new FtpMvsApi());
         importedApi.registerJesApi(new FtpJesApi());
-        // check for getExplorerExtenderApi().reloadProfiles() to initialize home dir folder if cli not installed
+        // check for getExplorerExtenderApi().initForZowe() to initialize home dir folder if cli not installed
         if (importedApi.getExplorerExtenderApi && importedApi.getExplorerExtenderApi().initForZowe) {
-            // eslint-disable-next-line @typescript-eslint/await-thenable
             const meta = await CoreUtils.getProfileMeta();
             await importedApi.getExplorerExtenderApi().initForZowe("zftp", meta);
         }
