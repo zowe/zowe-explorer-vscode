@@ -70,11 +70,11 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
         public datasetProvider?: IZoweTree<IZoweDatasetTreeNode>,
         public ussFileProvider?: IZoweTree<IZoweUSSTreeNode>,
         public jobsProvider?: IZoweTree<IZoweJobTreeNode>
-    ) {}
+    ) { }
 
     public async initForZowe(type: string, meta: imperative.ICommandProfileTypeConfiguration[]) {
-        // Ensure that when a user has not installed the RSE CLI plugin
-        // and/or created an RSE profile that the profile directory in ~/.zowe/profiles
+        // Ensure that when a user has not installed the profile type's CLI plugin
+        // and/or created a profile that the profile directory in ~/.zowe/profiles
         // will be created with the appropriate meta data. If not called the user will
         // see errors when creating a profile of any type.
         imperative.ImperativeConfig.instance.loadedConfig = {
