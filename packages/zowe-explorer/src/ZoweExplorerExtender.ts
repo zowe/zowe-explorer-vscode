@@ -14,6 +14,7 @@ import * as imperative from "@zowe/imperative";
 import * as path from "path";
 import * as os from "os";
 import * as fs from "fs";
+import * as vscode from "vscode";
 import {
     ZoweExplorerApi,
     ZoweExplorerTreeApi,
@@ -26,6 +27,13 @@ import {
 import { Profiles } from "./Profiles";
 import { getProfile, getLinkedProfile } from "./ProfileLink";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
+import { getSecurityModules } from "./utils/CoreUtils";
+import { KeytarCredentialManager } from "./KeytarCredentialManager";
+import * as nls from "vscode-nls";
+
+// Set up localization
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 /**
  * The Zowe Explorer API Register singleton that gets exposed to other VS Code
@@ -70,7 +78,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
         public datasetProvider?: IZoweTree<IZoweDatasetTreeNode>,
         public ussFileProvider?: IZoweTree<IZoweUSSTreeNode>,
         public jobsProvider?: IZoweTree<IZoweJobTreeNode>
-    ) { }
+    ) {}
 
     public async initForZowe(type: string, meta: imperative.ICommandProfileTypeConfiguration[]) {
         // Ensure that when a user has not installed the profile type's CLI plugin
@@ -116,6 +124,24 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
      */
     public getLinkedProfile(primaryNode: IZoweTreeNode, type: string): Promise<imperative.IProfileLoaded> {
         return getLinkedProfile(primaryNode, type);
+    }
+
+    public async activateKeytarApis(): Promise<void> {
+        const scsActive = Profiles.getInstance().isSecureCredentialPluginActive();
+        const keytar = getSecurityModules("keytar");
+        if (!imperative.CredentialManagerFactory.initialized && keytar) {
+            KeytarCredentialManager.keytar = keytar;
+            const service = (vscode.workspace.getConfiguration().get("Zowe Security: Credential Key") as string) || "";
+            try {
+                await imperative.CredentialManagerFactory.initialize({
+                    service: service || "Zowe-Plugin",
+                    Manager: KeytarCredentialManager,
+                    displayName: localize("displayName", "Zowe Explorer"),
+                });
+            } catch (err) {
+                throw new imperative.ImperativeError({ msg: err?.message });
+            }
+        }
     }
 
     /**
