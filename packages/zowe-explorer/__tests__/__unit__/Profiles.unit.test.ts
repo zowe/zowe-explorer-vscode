@@ -676,28 +676,6 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile alternate was created.");
     });
 
-    it("Tests that createNewConnection fails to create an alternate profile if port is invalid", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        blockMocks.profiles.getProfileType = () =>
-            new Promise((resolve) => {
-                resolve("alternate");
-            });
-        blockMocks.profiles.getSchema = () => blockMocks.testSchemas[1];
-        blockMocks.profiles.getUrl = () =>
-            new Promise((resolve) => {
-                resolve("https://fake");
-            });
-        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
-
-        await blockMocks.profiles.createNewConnection("fake");
-        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
-        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe(
-            "Invalid Port number provided or operation was cancelled"
-        );
-    });
-
     it("Tests that createNewConnection fails to create an alternate profile if aBoolean is invalid", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
@@ -1383,25 +1361,6 @@ describe("Profiles Unit Tests - Function editSession", () => {
 
         await blockMocks.profiles.editSession(blockMocks.imperativeProfile, blockMocks.imperativeProfile.name);
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
-    });
-
-    it("Tests that editSession fails with invalid port value supplied", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        blockMocks.profiles.getProfileType = () =>
-            new Promise((resolve) => {
-                resolve("alternate");
-            });
-        blockMocks.profiles.getSchema = () => blockMocks.testSchemas[1];
-        blockMocks.profiles.getUrl = () => Promise.resolve("https://fake");
-        globalMocks.mockCreateInputBox.mockReturnValue(blockMocks.inputBox);
-        globalMocks.mockShowInputBox.mockResolvedValueOnce(undefined);
-
-        await blockMocks.profiles.editSession(blockMocks.imperativeProfile, blockMocks.imperativeProfile.name);
-        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe(
-            "Invalid Port number provided or operation was cancelled"
-        );
     });
 });
 

@@ -373,7 +373,6 @@ export class Profiles extends ProfilesCache {
         let updUser: string;
         let updPass: string;
         let updRU: boolean;
-        let updPort: number;
         let updUrl: any;
 
         const schema: {} = this.getSchema(profileLoaded.type);
@@ -401,20 +400,7 @@ export class Profiles extends ProfilesCache {
                     }
                     break;
                 case "port":
-                    if (updSchemaValues[value] === undefined) {
-                        updPort = await this.portInfo(value, schema);
-                        if (Number.isNaN(updPort)) {
-                            vscode.window.showInformationMessage(
-                                localize(
-                                    "editConnection.undefined.port",
-                                    "Invalid Port number provided or operation was cancelled"
-                                )
-                            );
-                            return undefined;
-                        }
-                        updSchemaValues[value] = updPort;
-                        break;
-                    }
+                    // Do nothing, the user should put in the port at the end of the hostname
                     break;
                 case "user":
                     updUser = await this.userInfo(editUser);
@@ -540,7 +526,6 @@ export class Profiles extends ProfilesCache {
         let newPass: string;
         let newRU: boolean;
         let newUrl: any;
-        let newPort: number;
 
         const newProfileName = profileName.trim();
 
@@ -582,20 +567,7 @@ export class Profiles extends ProfilesCache {
                     }
                     break;
                 case "port":
-                    if (schemaValues[value] === undefined) {
-                        newPort = await this.portInfo(value, schema);
-                        if (Number.isNaN(newPort)) {
-                            vscode.window.showInformationMessage(
-                                localize(
-                                    "createNewConnection.undefined.port",
-                                    "Invalid Port number provided or operation was cancelled"
-                                )
-                            );
-                            return undefined;
-                        }
-                        schemaValues[value] = newPort;
-                        break;
-                    }
+                    // Do nothing, the user should put in the port at the end of the hostname
                     break;
                 case "user":
                     newUser = await this.userInfo();
@@ -1390,30 +1362,6 @@ export class Profiles extends ProfilesCache {
                 }
             });
         });
-    }
-
-    private async portInfo(input: string, schema: {}) {
-        let options: vscode.InputBoxOptions;
-        let port: number;
-        if (schema[input].optionDefinition.hasOwnProperty("defaultValue")) {
-            options = {
-                prompt: schema[input].optionDefinition.description.toString(),
-                value: schema[input].optionDefinition.defaultValue.toString(),
-            };
-        } else {
-            options = {
-                placeHolder: localize("createNewConnection.option.prompt.port.placeholder", "Port Number"),
-                prompt: schema[input].optionDefinition.description.toString(),
-            };
-        }
-        port = Number(await vscode.window.showInputBox(options));
-
-        if (port === 0 && schema[input].optionDefinition.hasOwnProperty("defaultValue")) {
-            port = Number(schema[input].optionDefinition.defaultValue.toString());
-        } else {
-            return port;
-        }
-        return port;
     }
 
     private async userInfo(input?) {
