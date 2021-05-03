@@ -34,6 +34,7 @@ import {
     IValidationSetting,
     ValidProfileEnum,
     ProfilesCache,
+    ProfilesConfig,
 } from "@zowe/zowe-explorer-api";
 import { errorHandling, FilterDescriptor, FilterItem, resolveQuickPickHelper, isTheia } from "./utils/ProfilesUtils";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
@@ -90,25 +91,74 @@ export class Profiles extends ProfilesCache {
                     this.profilesForValidation.splice(index, 1);
                 }
             });
-            try {
-                const values = await Profiles.getInstance().promptCredentials(theProfile.name, true);
-                if (values !== undefined) {
-                    theProfile.profile.user = values[0];
-                    theProfile.profile.password = values[1];
-                    theProfile.profile.base64EncodedAuth = values[2];
+            if(ProfilesConfig.getInstance().usingTeamConfig){
+                console.log(theProfile);
+                const configAllProfiles = ProfilesConfig.getInstance().getAllProfiles();
+                console.log(configAllProfiles);
+                const currentProfile = configAllProfiles.filter((temprofile) => temprofile.profName === theProfile.name)[0];
+                const mergedArgs = ProfilesConfig.getInstance().mergeArgsForProfile(currentProfile);
+                const profile: IProfile = {};
+                for (const arg of mergedArgs.knownArgs) {
+                    profile[arg.argName] = arg.secure ? ProfilesConfig.getInstance().loadSecureArg(arg) : arg.argValue;
                 }
-            } catch (error) {
-                errorHandling(
-                    error,
-                    theProfile.name,
-                    localize("checkCurrentProfile.error", "Error encountered in ") +
-                        `checkCurrentProfile.optionalProfiles!`
-                );
-                return profileStatus;
+                for (const arg of mergedArgs.missingArgs) {
+                    let response: string;
+                    switch (arg.dataType) {
+                        case "string":
+                        case "number":
+                            response = await vscode.window.showInputBox({
+                                prompt: `Enter a ${arg.dataType} value for "${arg.argName}"`,
+                                value: arg.argValue?.toString(),
+                                password: arg.secure
+                            });
+                            if (response != null) {
+                                profile[arg.argName] = (arg.dataType === "number") ? parseInt(response, 10) : response;
+                            }
+                            break;
+                        case "boolean":
+                            response = await vscode.window.showQuickPick(arg.argValue ? ["True", "False"] : ["False", "True"], {
+                                placeHolder: `Select a boolean value for "${arg.argName}"`
+                            });
+                            if (response != null) {
+                                profile[arg.argName] = response === "True";
+                            }
+                            break;
+                    }
+                }
+                const profileFix: IProfileLoaded = {
+                    message: "",
+                    name: theProfile.name,
+                    type: theProfile.type,
+                    profile: profile,
+                    failNotFound: false,
+                };
+                // Validate profile
+                profileStatus = await this.getProfileSetting(profileFix);
+                const updSession = await ZoweExplorerApiRegister.getMvsApi(profileFix).getSession();
+                theProfile.profile.user = updSession.ISession.user;
+                theProfile.profile.password = updSession.ISession.password;
+                theProfile.profile.base64EncodedAuth = updSession.ISession.base64EncodedAuth;
+            } else {
+                try {
+                    const values = await Profiles.getInstance().promptCredentials(theProfile.name, true);
+                    if (values !== undefined) {
+                        theProfile.profile.user = values[0];
+                        theProfile.profile.password = values[1];
+                        theProfile.profile.base64EncodedAuth = values[2];
+                    }
+                } catch (error) {
+                    errorHandling(
+                        error,
+                        theProfile.name,
+                        localize("checkCurrentProfile.error", "Error encountered in ") +
+                            `checkCurrentProfile.optionalProfiles!`
+                    );
+                    return profileStatus;
+                }
+    
+                // Validate profile
+                profileStatus = await this.getProfileSetting(theProfile);
             }
-
-            // Validate profile
-            profileStatus = await this.getProfileSetting(theProfile);
         } else {
             // Profile should have enough information to allow validation
             profileStatus = await this.getProfileSetting(theProfile);
@@ -322,6 +372,13 @@ export class Profiles extends ProfilesCache {
         }
 
         if (chosenProfile === "") {
+            if (ProfilesConfig.getInstance().usingTeamConfig) {
+                const zosmfDefault = ProfilesConfig.getInstance().getDefaultProfile("zosmf");
+                const filepath = zosmfDefault.profLoc.osLoc;
+                const document = await vscode.workspace.openTextDocument(filepath[0]);
+                await vscode.window.showTextDocument(document);
+                return;
+            }
             let newprofile: any;
             let profileName: string;
             if (quickpick.value) {

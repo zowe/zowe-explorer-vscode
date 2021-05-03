@@ -12,6 +12,16 @@
 import { IProfAttrs, IProfile, ProfileInfo } from "@zowe/imperative";
 
 export class ProfilesConfig {
+    public static createInstance(mProfileInfo: ProfileInfo): ProfileInfo {
+        return ProfilesConfig.info = mProfileInfo;
+    }
+
+    public static getInstance(): ProfileInfo {
+        return ProfilesConfig.info;
+    }
+
+    private static info: ProfileInfo;
+
     public static getMergedAttrs(mProfileInfo: ProfileInfo, profAttrs: IProfAttrs): IProfile {
         const profile: IProfile = {};
         if (profAttrs != null) {
@@ -22,5 +32,9 @@ export class ProfilesConfig {
             }
         }
         return profile;
+    }
+
+    public static getDefaultProfile(mProfileInfo: ProfileInfo, profileType: string): IProfAttrs {
+        return mProfileInfo.getDefaultProfile(profileType);
     }
 }

@@ -115,6 +115,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         const mProfileInfo = new ProfileInfo("zowe", {
             requireKeytar: () => getSecurityModules("keytar"),
         });
+        ProfilesConfig.createInstance(mProfileInfo);
         await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir() });
 
         if (mProfileInfo.usingTeamConfig) {

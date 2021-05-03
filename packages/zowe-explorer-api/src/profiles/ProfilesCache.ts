@@ -143,6 +143,15 @@ export class ProfilesCache {
                 }
                 this.profilesByType.set(type, tmpAllProfiles);
                 tmpAllProfiles = [];
+                const defaultProfAttr = ProfilesConfig.getDefaultProfile(mProfileInfo, type);
+                const defaultProfile: IProfileLoaded = {
+                    message: "",
+                    name: defaultProfAttr.profName,
+                    type: defaultProfAttr.profType,
+                    profile: defaultProfAttr,
+                    failNotFound: false,
+                };
+                this.defaultProfileByType.set(type, defaultProfile);
             }
             this.allTypes.push(type);
         }
