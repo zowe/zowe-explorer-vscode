@@ -18,6 +18,7 @@ import { ISession, IProfile, ImperativeConfig } from "@zowe/imperative";
 import { IZoweNodeType, IZoweTree, IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import * as nls from "vscode-nls";
+import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 
 // Set up localization
 nls.config({
@@ -111,19 +112,20 @@ export function isTheia(): boolean {
  * @param {sessNode} IZoweTreeNode
  *************************************************************************************************************/
 // This function does not perform any UI refresh; it just gets updated profile information.
-export async function refreshTree(sessNode: IZoweTreeNode) {
-    const profileType = sessNode.getProfile().type;
-    const allProf = Profiles.getInstance().getProfiles(profileType);
-    const baseProf = await Profiles.getInstance().getBaseProfile();
-    for (const profNode of allProf) {
-        if (sessNode.getProfileName() === profNode.name) {
-            setProfile(sessNode, profNode.profile);
-            const combinedSessionProfile = (await Profiles.getInstance().getCombinedProfile(profNode, baseProf))
-                .profile;
-            setSession(sessNode, combinedSessionProfile);
-        }
-    }
-    sessNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+export async function refreshTree(sessionNode: IZoweTreeNode) {
+    const profiles = Profiles.getInstance();
+    const profileType = sessionNode.getProfile().type;
+    const profileName = sessionNode.getProfileName();
+
+    const profile = profiles.loadNamedProfile(profileName, profileType);
+    sessionNode.setProfileToChoice(profile);
+
+    const baseProfile = profiles.getBaseProfile();
+    const combinedProfile = await profiles.getCombinedProfile(profile, baseProfile);
+    const session = ZoweExplorerApiRegister.getCommonApi(combinedProfile).getSession();
+    sessionNode.setSessionToChoice(session);
+
+    sessionNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
 }
 
 export async function resolveQuickPickHelper(
