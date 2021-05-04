@@ -11,6 +11,7 @@
 
 import * as globals from "../globals";
 import { TreeItem } from "vscode";
+import { IZoweTreeNode } from "@zowe/zowe-explorer-api";
 
 /**
  *
@@ -326,6 +327,15 @@ export function isSessionNotFav(node: TreeItem): boolean {
  */
 export function isSessionFavorite(node: TreeItem): boolean {
     return new RegExp("^(" + globals.FAVORITE_CONTEXT + ")").test(node.contextValue);
+}
+
+/**
+ * Helper function to determine if node is located anywhere in a Favorites section (including as a child, grandchild, etc).
+ * @param node
+ * @returns true if node is located in Favorites, false otherwise
+ */
+export function isFavoriteDescendant(node: IZoweTreeNode): boolean {
+    return isFavorite(node.getSessionNode());
 }
 
 /**

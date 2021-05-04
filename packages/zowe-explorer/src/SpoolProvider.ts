@@ -43,7 +43,11 @@ export default class SpoolProvider implements vscode.TextDocumentContentProvider
  */
 export function encodeJobFile(session: string, spool: zowe.IJobFile): vscode.Uri {
     const query = JSON.stringify([session, spool]);
-    return vscode.Uri.parse(`${SpoolProvider.scheme}:${spool.jobname}.${spool.jobid}.${spool.ddname}?${query}`);
+    return vscode.Uri.parse("").with({
+        scheme: SpoolProvider.scheme,
+        path: `${spool.jobname}.${spool.jobid}.${spool.ddname}`,
+        query,
+    });
 }
 
 /**
