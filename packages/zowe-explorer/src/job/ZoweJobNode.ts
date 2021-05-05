@@ -21,6 +21,7 @@ import { getIconByNode } from "../generators/icons";
 import * as contextually from "../shared/context";
 
 import * as nls from "vscode-nls";
+import { Profiles } from "../Profiles";
 // Set up localization
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
@@ -266,7 +267,9 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                     this.label,
                     localize("getChildren.error.response", "Retrieving response from ") + `zowe.GetJobs`
                 );
-                await syncSession(sessNode);
+                await syncSession(Profiles.getInstance())((profileValue) =>
+                    ZoweExplorerApiRegister.getJesApi(profileValue).getSession()
+                )(sessNode);
             }
         }
         return jobsInternal;

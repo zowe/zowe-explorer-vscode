@@ -171,7 +171,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 this.label,
                 localize("getChildren.error.response", "Retrieving response from ") + `uss-file-list`
             );
-            await syncSession(sessNode);
+            await syncSession(Profiles.getInstance())((profileValue) =>
+                ZoweExplorerApiRegister.getUssApi(profileValue).getSession()
+            )(sessNode);
         }
         // push nodes to an object with property names to avoid duplicates
         const elementChildren = {};

@@ -19,6 +19,7 @@ import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { getIconByNode } from "../generators/icons";
 import * as contextually from "../shared/context";
 import * as nls from "vscode-nls";
+import { Profiles } from "../Profiles";
 // Set up localization
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
@@ -290,7 +291,9 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     this.label,
                     localize("getChildren.error.response", "Retrieving response from ") + `zowe.List`
                 );
-                await syncSession(sessNode);
+                await syncSession(Profiles.getInstance())((profileValue) =>
+                    ZoweExplorerApiRegister.getMvsApi(profileValue).getSession()
+                )(sessNode);
             } catch (err) {
                 await errorHandling(
                     err,

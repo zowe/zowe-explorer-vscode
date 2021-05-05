@@ -32,7 +32,9 @@ export async function refreshAll(treeProvider: IZoweTree<IZoweTreeNode>) {
             labelRefresh(sessNode);
             sessNode.children = [];
             sessNode.dirty = true;
-            syncSession(sessNode);
+            await syncSession(Profiles.getInstance())((profileValue) =>
+                ZoweExplorerApiRegister.getCommonApi(profileValue).getSession()
+            )(sessNode);
             resetValidationSettings(sessNode, setting);
             returnIconState(sessNode);
         }

@@ -14,7 +14,7 @@
 import * as vscode from "vscode";
 import * as os from "os";
 import * as path from "path";
-import { ISession, IProfile, ImperativeConfig } from "@zowe/imperative";
+import { Session, IProfile, ImperativeConfig, IProfileLoaded } from "@zowe/imperative";
 import { IZoweNodeType, IZoweTree, IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import * as nls from "vscode-nls";
@@ -109,10 +109,14 @@ export function isTheia(): boolean {
 
 /**
  * Function to update session and profile information in provided node
+ * @param profiles is data source to find profiles
+ * @param getSessionForProfile is a function to build a valid specific session based on provided profile
  * @param sessionNode is a tree node, containing session information
  */
-export const syncSession = async (sessionNode: IZoweTreeNode): Promise<void> => {
-    const profiles = Profiles.getInstance();
+type SessionForProfile = (profile: IProfileLoaded) => Session;
+export const syncSession = (profiles: Profiles) => (getSessionForProfile: SessionForProfile) => async (
+    sessionNode: IZoweTreeNode
+): Promise<void> => {
     const profileType = sessionNode.getProfile().type;
     const profileName = sessionNode.getProfileName();
 
@@ -121,7 +125,7 @@ export const syncSession = async (sessionNode: IZoweTreeNode): Promise<void> => 
 
     const baseProfile = profiles.getBaseProfile();
     const combinedProfile = await profiles.getCombinedProfile(profile, baseProfile);
-    const session = ZoweExplorerApiRegister.getCommonApi(combinedProfile).getSession();
+    const session = getSessionForProfile(combinedProfile);
     sessionNode.setSessionToChoice(session);
 
     sessionNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
