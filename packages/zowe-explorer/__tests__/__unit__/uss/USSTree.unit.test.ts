@@ -321,12 +321,15 @@ describe("USSTree Unit Tests - Functions USSTree.addFavorite()", () => {
     }
 
     it("Tests that addFavorite() works for directories", async () => {
+        // Arrange
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
+        // Act
         await globalMocks.testTree.addFavorite(blockMocks.parentDir);
-        const favProfileNode = globalMocks.testTree.mFavorites[0];
 
+        // Assert
+        const favProfileNode = globalMocks.testTree.mFavorites[0];
         expect(favProfileNode.children[0].fullPath).toEqual(blockMocks.parentDir.fullPath);
     });
 
@@ -357,7 +360,8 @@ describe("USSTree Unit Tests - Function USSTree.removeFavorite()", () => {
                 vscode.TreeItemCollapsibleState.Collapsed,
                 globalMocks.ussSessionTestNode,
                 null,
-                "/"
+                "/",
+                globalMocks.testProfile
             ),
         };
         await globalMocks.testTree.addFavorite(newMocks.testDir);
@@ -368,7 +372,8 @@ describe("USSTree Unit Tests - Function USSTree.removeFavorite()", () => {
         return newMocks;
     }
 
-    it("Tests that removeFavorite() works properly when starting with more than one favorite for the profile", async () => {
+    fit("Tests that removeFavorite() works properly when starting with more than one favorite for the profile", async () => {
+        // Arrange
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
         const removeFavProfileSpy = jest.spyOn(globalMocks.testTree, "removeFavProfile");
@@ -389,8 +394,10 @@ describe("USSTree Unit Tests - Function USSTree.removeFavorite()", () => {
         expect(profileNodeInFavs.children[0].fullPath).toEqual(blockMocks.testDir.fullPath);
         expect(profileNodeInFavs.children[1].fullPath).toEqual(testDir2.fullPath);
 
-        // Actual test
+        // Act
         await globalMocks.testTree.removeFavorite(blockMocks.testDir);
+
+        // Assert
         expect(removeFavProfileSpy).not.toBeCalled();
         expect(profileNodeInFavs.children[0].fullPath).toEqual(testDir2.fullPath);
     });

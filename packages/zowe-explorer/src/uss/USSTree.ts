@@ -319,7 +319,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 node.collapsibleState,
                 profileNodeInFavorites,
                 node.getSession(),
-                node.getParent().fullPath,
+                node.getParent()?.fullPath,
                 false,
                 profileName
             );
@@ -359,7 +359,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      *
      * @param {IZoweUSSTreeNode} node
      */
-    public async removeFavorite(node: IZoweUSSTreeNode) {
+    public removeFavorite(node: IZoweUSSTreeNode) {
         // Get node's profile node in favorites
         const profileName = node.getProfileName();
         const profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profileName);
@@ -370,12 +370,12 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         if (profileNodeInFavorites.children.length < 1) {
             return this.removeFavProfile(profileName, false);
         }
-        await this.updateFavorites();
+        this.updateFavorites();
         this.refreshElement(this.mFavoriteSession);
         return;
     }
 
-    public async updateFavorites() {
+    public updateFavorites() {
         const favoritesArray = [];
         this.mFavorites.forEach((profileNode) => {
             profileNode.children.forEach((fav) => {

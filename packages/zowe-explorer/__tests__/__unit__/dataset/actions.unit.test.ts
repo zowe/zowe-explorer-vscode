@@ -134,8 +134,10 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
                 etag: "123",
             },
         });
+        const open = jest.fn();
 
-        await dsActions.createMember(parent, blockMocks.testDatasetTree);
+        // Act
+        await dsActions.createMember(parent, blockMocks.testDatasetTree, open);
 
         expect(mocked(vscode.window.showInputBox)).toBeCalledWith({ placeHolder: "Name of Member" });
         expect(mocked(zowe.Upload.bufferToDataSet)).toBeCalledWith(
@@ -181,6 +183,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
         expect(mocked(zowe.Upload.bufferToDataSet)).not.toBeCalled();
     });
     it("Checking of member creation for favorite dataset", async () => {
+        // Arrange
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         const parent = new ZoweDatasetNode(
@@ -204,9 +207,12 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
                 etag: "123",
             },
         });
+        const open = jest.fn();
 
-        await dsActions.createMember(parent, blockMocks.testDatasetTree);
+        // Act
+        await dsActions.createMember(parent, blockMocks.testDatasetTree, open);
 
+        // Assert
         expect(mocked(vscode.window.showInputBox)).toBeCalledWith({ placeHolder: "Name of Member" });
         expect(mocked(zowe.Upload.bufferToDataSet)).toBeCalledWith(
             blockMocks.zosmfSession,

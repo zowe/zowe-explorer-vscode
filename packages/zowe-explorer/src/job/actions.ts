@@ -40,7 +40,7 @@ export async function downloadSpool(job: IZoweJobTreeNode) {
             canSelectMany: false,
         });
         if (dirUri !== undefined) {
-            ZoweExplorerApiRegister.getJesApi(job.getProfile()).downloadSpoolContent({
+            await ZoweExplorerApiRegister.getJesApi(job.getProfile()).downloadSpoolContent({
                 jobid: job.job.jobid,
                 jobname: job.job.jobname,
                 outDir: dirUri[0].fsPath,

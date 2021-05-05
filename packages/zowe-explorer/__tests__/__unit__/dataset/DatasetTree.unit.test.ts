@@ -363,7 +363,8 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
 
         expect(loadProfilesForFavoritesSpy).toHaveBeenCalledWith(log, favProfileNode);
     });
-    it("Checking function for PDS Dataset node", async () => {
+    fit("Checking function for PDS Dataset node", async () => {
+        // Arrange
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
@@ -377,6 +378,7 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
             blockMocks.datasetSessionNode,
             null
         );
+        parent.getProfile = () => blockMocks.imperativeProfile;
         parent.dirty = true;
         const sampleChildren: ZoweDatasetNode[] = [
             new ZoweDatasetNode("BRTVS99", vscode.TreeItemCollapsibleState.None, parent, null),
@@ -385,8 +387,10 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
         sampleChildren[0].command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [sampleChildren[0]] };
         sampleChildren[1].command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [sampleChildren[1]] };
 
+        // Act
         const children = await testTree.getChildren(parent);
 
+        // Assert
         expect(children).toEqual(sampleChildren);
     });
 });
