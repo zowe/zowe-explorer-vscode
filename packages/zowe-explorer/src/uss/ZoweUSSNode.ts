@@ -19,7 +19,7 @@ import { Session, IProfileLoaded } from "@zowe/imperative";
 import { IZoweUSSTreeNode, ZoweTreeNode, IZoweTree, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
-import { errorHandling, refreshTree } from "../utils/ProfilesUtils";
+import { errorHandling, syncSession } from "../utils/ProfilesUtils";
 import { getIconByNode } from "../generators/icons/index";
 import { injectAdditionalDataToTooltip } from "../uss/utils";
 import * as contextually from "../shared/context";
@@ -171,7 +171,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 this.label,
                 localize("getChildren.error.response", "Retrieving response from ") + `uss-file-list`
             );
-            await refreshTree(sessNode);
+            await syncSession(sessNode);
         }
         // push nodes to an object with property names to avoid duplicates
         const elementChildren = {};

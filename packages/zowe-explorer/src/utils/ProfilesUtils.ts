@@ -107,12 +107,11 @@ export function isTheia(): boolean {
     return false;
 }
 
-/*************************************************************************************************************
- * Get updated profile and session information
- * @param {sessNode} IZoweTreeNode
- *************************************************************************************************************/
-// This function does not perform any UI refresh; it just gets updated profile information.
-export async function refreshTree(sessionNode: IZoweTreeNode) {
+/**
+ * Function to update session and profile information in provided node
+ * @param sessionNode is a tree node, containing session information
+ */
+export const syncSession = async (sessionNode: IZoweTreeNode): Promise<void> => {
     const profiles = Profiles.getInstance();
     const profileType = sessionNode.getProfile().type;
     const profileName = sessionNode.getProfileName();
@@ -126,7 +125,7 @@ export async function refreshTree(sessionNode: IZoweTreeNode) {
     sessionNode.setSessionToChoice(session);
 
     sessionNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
-}
+};
 
 export async function resolveQuickPickHelper(
     quickpick: vscode.QuickPick<vscode.QuickPickItem>

@@ -13,7 +13,7 @@ import * as zowe from "@zowe/cli";
 import * as vscode from "vscode";
 import * as globals from "../globals";
 import { Session, IProfileLoaded } from "@zowe/imperative";
-import { errorHandling, refreshTree } from "../utils/ProfilesUtils";
+import { errorHandling, syncSession } from "../utils/ProfilesUtils";
 import { IZoweDatasetTreeNode, ZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { getIconByNode } from "../generators/icons";
@@ -290,7 +290,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     this.label,
                     localize("getChildren.error.response", "Retrieving response from ") + `zowe.List`
                 );
-                await refreshTree(sessNode);
+                await syncSession(sessNode);
             } catch (err) {
                 await errorHandling(
                     err,
