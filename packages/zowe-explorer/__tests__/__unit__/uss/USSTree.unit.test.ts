@@ -1274,7 +1274,7 @@ describe("USSTree Unit Tests - Function USSTree.getChildren()", () => {
         sessNode[0].fullPath = "test";
 
         // Set icon
-        let targetIcon = getIconByNode(sessNode[0]);
+        const targetIcon = getIconByNode(sessNode[0]);
         if (targetIcon) {
             sessNode[0].iconPath = targetIcon.path;
         }
