@@ -124,7 +124,6 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             },
             () => {
                 const a = this.getDatasets();
-                console.trace(a);
                 return a;
             }
         );
