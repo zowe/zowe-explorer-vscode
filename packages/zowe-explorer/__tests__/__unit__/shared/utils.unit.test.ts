@@ -11,7 +11,7 @@
 
 import * as sharedUtils from "../../../src/shared/utils";
 import * as globals from "../../../src/globals";
-import { IProfileLoaded, Logger } from "@zowe/imperative";
+import { IProfileLoaded, Logger, IProfile, Session } from "@zowe/imperative";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import * as vscode from "vscode";
 import * as path from "path";
@@ -101,6 +101,143 @@ describe("Shared Utils Unit Tests - Function node.labelRefresh()", () => {
         expect(rootNode.label === "gappy ");
         sharedUtils.labelRefresh(rootNode);
         expect(rootNode.label === "gappy");
+    });
+});
+
+describe("syncSession shared util function", () => {
+    const serviceProfileName = "test";
+    const serviceProfileType = "zosmf";
+    const serviceProfile = {
+        name: serviceProfileName,
+        profile: {},
+    };
+
+    // we don't really care about the node type here, can be anything
+    const sessionNode = new ZoweDatasetNode(
+        "profile session",
+        vscode.TreeItemCollapsibleState.Collapsed,
+        null,
+        undefined,
+        undefined,
+        undefined,
+        {
+            profile: serviceProfile,
+            type: serviceProfileType,
+            message: "",
+            failNotFound: true,
+        }
+    );
+
+    it("should update a session and profile in the provided node", async () => {
+        // given
+        const baseProfileName = "base_test";
+        const baseProfile: IProfile = {};
+        const combinedProfile = serviceProfile;
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    loadNamedProfile: jest.fn(() => serviceProfile),
+                    getBaseProfile: jest.fn(() => {
+                        return {
+                            name: baseProfileName,
+                            profile: baseProfile,
+                        };
+                    }),
+                    getCombinedProfile: jest.fn(() => combinedProfile),
+                };
+            }),
+        });
+        const expectedSession = new Session({});
+        const sessionFromProfile = (_combinedProfileValue: IProfileLoaded) => {
+            return expectedSession;
+        };
+        const expectedProfile = combinedProfile;
+        // when
+        await utils.syncSession(Profiles.getInstance())(sessionFromProfile)(sessionNode);
+        // then
+        expect(sessionNode.getSession()).toEqual(expectedSession);
+        expect(sessionNode.getProfile()).toEqual(expectedProfile);
+    });
+    it("should update a session and profile without default base profile in the provided node", async () => {
+        const combinedProfile = serviceProfile;
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    loadNamedProfile: jest.fn(() => serviceProfile),
+                    getBaseProfile: jest.fn(() => undefined),
+                    getCombinedProfile: jest.fn(() => combinedProfile),
+                };
+            }),
+        });
+        const expectedSession = new Session({});
+        const sessionFromProfile = (_combinedProfileValue: IProfileLoaded) => {
+            return expectedSession;
+        };
+        const expectedProfile = combinedProfile;
+        // when
+        await utils.syncSession(Profiles.getInstance())(sessionFromProfile)(sessionNode);
+        // then
+        expect(sessionNode.getSession()).toEqual(expectedSession);
+        expect(sessionNode.getProfile()).toEqual(expectedProfile);
+    });
+    // TODO: unskip the test below after updating the implementation
+    it.skip("should throw an error, if there is no profile from provided node in the file system", async () => {
+        const expectedMessage = `There is no such profile with name: ${serviceProfileName}`;
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    loadNamedProfile: jest.fn(() => {
+                        throw new Error(expectedMessage);
+                    }),
+                    getBaseProfile: jest.fn(() => undefined),
+                };
+            }),
+        });
+        const sessionFromProfile = (_combinedProfileValue: IProfileLoaded) => {
+            return new Session({});
+        };
+        // when
+        try {
+            await utils.syncSession(Profiles.getInstance())(sessionFromProfile)(sessionNode);
+            fail(`Should be an error with message: ${expectedMessage}`);
+        } catch (error) {
+            // then
+            expect(error.message).toEqual(expectedMessage);
+        }
+    });
+    // TODO: unskip the test below after updating the implementation
+    it.skip("should throw an error, if combined profile value is not valid to create a session", async () => {
+        // given
+        const baseProfileName = "base_test";
+        const baseProfile: IProfile = {};
+        const combinedProfile = serviceProfile;
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    loadNamedProfile: jest.fn(() => serviceProfile),
+                    getBaseProfile: jest.fn(() => {
+                        return {
+                            name: baseProfileName,
+                            profile: baseProfile,
+                        };
+                    }),
+                    getCombinedProfile: jest.fn(() => combinedProfile),
+                };
+            }),
+        });
+        const sessionFromProfile = (_combinedProfileValue: IProfileLoaded) => {
+            const sessionWasNotBuilt = undefined;
+            return sessionWasNotBuilt;
+        };
+        const expectedMessage = `Session cannot be created based on this profile value: ${combinedProfile}`;
+        // when
+        try {
+            await utils.syncSession(Profiles.getInstance())(sessionFromProfile)(sessionNode);
+            fail(`Should be an error with message: ${expectedMessage}`);
+        } catch (error) {
+            // then
+            expect(error.message).toEqual(expectedMessage);
+        }
     });
 });
 
