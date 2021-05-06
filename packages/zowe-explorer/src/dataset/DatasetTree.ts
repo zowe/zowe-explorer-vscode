@@ -940,7 +940,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             labelRefresh(node);
             node.children = [];
             node.dirty = true;
-            syncSession(Profiles.getInstance())((profileValue) =>
+            await syncSession(Profiles.getInstance())((profileValue) =>
                 ZoweExplorerApiRegister.getMvsApi(profileValue).getSession()
             )(node);
             let dataSet: IDataSet;
