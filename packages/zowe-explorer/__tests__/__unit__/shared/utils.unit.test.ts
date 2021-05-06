@@ -104,28 +104,6 @@ describe("Shared Utils Unit Tests - Function node.labelRefresh()", () => {
     });
 });
 
-describe("Shared Utils Unit Tests - Function refreshTree()", () => {
-    async function createBlockMocks(globalMocks) {
-        const newMocks = {
-            log: Logger.getAppLogger(),
-            imperativeProfile: createIProfile(),
-            testDatasetSessionNode: null,
-        };
-        newMocks.testDatasetSessionNode = createDatasetSessionNode(globalMocks.session, newMocks.imperativeProfile);
-        return newMocks;
-    }
-    it("should pass in appropriate profile type when getting all profiles to compare with session node", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-        globalMocks.mockGetInstance.mockReturnValue(blockMocks.imperativeProfile);
-        const getProfilesSpy = jest.spyOn(Profiles.getInstance(), "getProfiles");
-
-        utils.syncSession(blockMocks.testDatasetSessionNode);
-
-        expect(getProfilesSpy).toBeCalledWith(globalMocks.profileOne.type);
-    });
-});
-
 describe("Positive testing", () => {
     it("should pass for ZoweDatasetTreeNode with ZoweDatasetNode node type", async () => {
         const dsNode = new ZoweDatasetNode(null, null, null, null);
