@@ -153,7 +153,7 @@ describe("syncSession shared util function", () => {
         };
         const expectedProfile = combinedProfile;
         // when
-        await utils.syncSession(Profiles.getInstance())(sessionFromProfile)(sessionNode);
+        await utils.syncSessionNode(Profiles.getInstance())(sessionFromProfile)(sessionNode);
         // then
         expect(sessionNode.getSession()).toEqual(expectedSession);
         expect(sessionNode.getProfile()).toEqual(expectedProfile);
@@ -175,7 +175,7 @@ describe("syncSession shared util function", () => {
         };
         const expectedProfile = combinedProfile;
         // when
-        await utils.syncSession(Profiles.getInstance())(sessionFromProfile)(sessionNode);
+        await utils.syncSessionNode(Profiles.getInstance())(sessionFromProfile)(sessionNode);
         // then
         expect(sessionNode.getSession()).toEqual(expectedSession);
         expect(sessionNode.getProfile()).toEqual(expectedProfile);
@@ -198,7 +198,7 @@ describe("syncSession shared util function", () => {
         };
         // when
         try {
-            await utils.syncSession(Profiles.getInstance())(sessionFromProfile)(sessionNode);
+            await utils.syncSessionNode(Profiles.getInstance())(sessionFromProfile)(sessionNode);
             fail(`Should be an error with message: ${expectedMessage}`);
         } catch (error) {
             // then
@@ -232,7 +232,7 @@ describe("syncSession shared util function", () => {
         const expectedMessage = `Session cannot be created based on this profile value: ${combinedProfile}`;
         // when
         try {
-            await utils.syncSession(Profiles.getInstance())(sessionFromProfile)(sessionNode);
+            await utils.syncSessionNode(Profiles.getInstance())(sessionFromProfile)(sessionNode);
             fail(`Should be an error with message: ${expectedMessage}`);
         } catch (error) {
             // then

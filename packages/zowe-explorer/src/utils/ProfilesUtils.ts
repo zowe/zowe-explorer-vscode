@@ -114,7 +114,7 @@ export function isTheia(): boolean {
  * @param sessionNode is a tree node, containing session information
  */
 type SessionForProfile = (profile: IProfileLoaded) => Session;
-export const syncSession = (profiles: Profiles) => (getSessionForProfile: SessionForProfile) => async (
+export const syncSessionNode = (profiles: Profiles) => (getSessionForProfile: SessionForProfile) => async (
     sessionNode: IZoweTreeNode
 ): Promise<void> => {
     const profileType = sessionNode.getProfile().type;

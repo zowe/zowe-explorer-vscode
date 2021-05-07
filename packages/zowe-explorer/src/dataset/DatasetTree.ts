@@ -29,7 +29,7 @@ import { resetValidationSettings } from "../shared/actions";
 import { closeOpenedTextFile } from "../utils/workspace";
 import { PersistentFilters } from "../PersistentFilters";
 import { IDataSet, IListOptions } from "@zowe/cli";
-import { syncSession } from "../../src/utils/ProfilesUtils";
+import { syncSessionNode } from "../../src/utils/ProfilesUtils";
 
 // Set up localization
 nls.config({
@@ -940,7 +940,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             labelRefresh(node);
             node.children = [];
             node.dirty = true;
-            await syncSession(Profiles.getInstance())((profileValue) =>
+            await syncSessionNode(Profiles.getInstance())((profileValue) =>
                 ZoweExplorerApiRegister.getMvsApi(profileValue).getSession()
             )(node);
             let dataSet: IDataSet;

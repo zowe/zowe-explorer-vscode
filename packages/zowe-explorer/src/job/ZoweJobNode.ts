@@ -16,7 +16,7 @@ import * as globals from "../globals";
 import { Session, IProfileLoaded } from "@zowe/imperative";
 import { IZoweJobTreeNode, ZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
-import { errorHandling, syncSession } from "../utils/ProfilesUtils";
+import { errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
 import { getIconByNode } from "../generators/icons";
 import * as contextually from "../shared/context";
 
@@ -267,7 +267,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                     this.label,
                     localize("getChildren.error.response", "Retrieving response from ") + `zowe.GetJobs`
                 );
-                await syncSession(Profiles.getInstance())((profileValue) =>
+                await syncSessionNode(Profiles.getInstance())((profileValue) =>
                     ZoweExplorerApiRegister.getJesApi(profileValue).getSession()
                 )(sessNode);
             }
