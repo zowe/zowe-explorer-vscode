@@ -117,18 +117,23 @@ type SessionForProfile = (profile: IProfileLoaded) => Session;
 export const syncSessionNode = (profiles: Profiles) => (getSessionForProfile: SessionForProfile) => async (
     sessionNode: IZoweTreeNode
 ): Promise<void> => {
+    sessionNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+
     const profileType = sessionNode.getProfile().type;
     const profileName = sessionNode.getProfileName();
 
-    const profile = profiles.loadNamedProfile(profileName, profileType);
+    let profile: IProfileLoaded;
+    try {
+        profile = profiles.loadNamedProfile(profileName, profileType);
+    } catch (e) {
+        return;
+    }
     sessionNode.setProfileToChoice(profile);
 
     const baseProfile = profiles.getBaseProfile();
     const combinedProfile = await profiles.getCombinedProfile(profile, baseProfile);
     const session = getSessionForProfile(combinedProfile);
     sessionNode.setSessionToChoice(session);
-
-    sessionNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
 };
 
 export async function resolveQuickPickHelper(

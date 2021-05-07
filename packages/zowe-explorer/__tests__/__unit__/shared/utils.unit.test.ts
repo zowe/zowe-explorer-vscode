@@ -128,7 +128,7 @@ describe("syncSession shared util function", () => {
         }
     );
 
-    it("should update a session and profile in the provided node", async () => {
+    it("should update a session and a profile in the provided node", async () => {
         // given
         const baseProfileName = "base_test";
         const baseProfile: IProfile = {};
@@ -148,17 +148,16 @@ describe("syncSession shared util function", () => {
             }),
         });
         const expectedSession = new Session({});
-        const sessionFromProfile = (_combinedProfileValue: IProfileLoaded) => {
-            return expectedSession;
-        };
-        const expectedProfile = combinedProfile;
+        const sessionFromProfile = (_combinedProfileValue: IProfileLoaded) => expectedSession;
         // when
         await utils.syncSessionNode(Profiles.getInstance())(sessionFromProfile)(sessionNode);
         // then
+        const expectedProfile = combinedProfile;
         expect(sessionNode.getSession()).toEqual(expectedSession);
         expect(sessionNode.getProfile()).toEqual(expectedProfile);
+        expect(sessionNode.collapsibleState).toEqual(vscode.TreeItemCollapsibleState.Collapsed);
     });
-    it("should update a session and profile without default base profile in the provided node", async () => {
+    it("should update a session and a profile without default base profile in the provided node", async () => {
         const combinedProfile = serviceProfile;
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
@@ -170,74 +169,35 @@ describe("syncSession shared util function", () => {
             }),
         });
         const expectedSession = new Session({});
-        const sessionFromProfile = (_combinedProfileValue: IProfileLoaded) => {
-            return expectedSession;
-        };
-        const expectedProfile = combinedProfile;
+        const sessionFromProfile = (_combinedProfileValue: IProfileLoaded) => expectedSession;
         // when
         await utils.syncSessionNode(Profiles.getInstance())(sessionFromProfile)(sessionNode);
         // then
+        const expectedProfile = combinedProfile;
         expect(sessionNode.getSession()).toEqual(expectedSession);
         expect(sessionNode.getProfile()).toEqual(expectedProfile);
+        expect(sessionNode.collapsibleState).toEqual(vscode.TreeItemCollapsibleState.Collapsed);
     });
-    // TODO: unskip the test below after updating the implementation
-    it.skip("should throw an error, if there is no profile from provided node in the file system", async () => {
-        const expectedMessage = `There is no such profile with name: ${serviceProfileName}`;
+    it("should do nothing, if there is no profile from provided node in the file system", async () => {
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
                     loadNamedProfile: jest.fn(() => {
-                        throw new Error(expectedMessage);
+                        throw new Error(`There is no such profile with name: ${serviceProfileName}`);
                     }),
                     getBaseProfile: jest.fn(() => undefined),
                 };
             }),
         });
-        const sessionFromProfile = (_combinedProfileValue: IProfileLoaded) => {
-            return new Session({});
-        };
         // when
-        try {
-            await utils.syncSessionNode(Profiles.getInstance())(sessionFromProfile)(sessionNode);
-            fail(`Should be an error with message: ${expectedMessage}`);
-        } catch (error) {
-            // then
-            expect(error.message).toEqual(expectedMessage);
-        }
-    });
-    // TODO: unskip the test below after updating the implementation
-    it.skip("should throw an error, if combined profile value is not valid to create a session", async () => {
-        // given
-        const baseProfileName = "base_test";
-        const baseProfile: IProfile = {};
-        const combinedProfile = serviceProfile;
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    loadNamedProfile: jest.fn(() => serviceProfile),
-                    getBaseProfile: jest.fn(() => {
-                        return {
-                            name: baseProfileName,
-                            profile: baseProfile,
-                        };
-                    }),
-                    getCombinedProfile: jest.fn(() => combinedProfile),
-                };
-            }),
-        });
-        const sessionFromProfile = (_combinedProfileValue: IProfileLoaded) => {
-            const sessionWasNotBuilt = undefined;
-            return sessionWasNotBuilt;
-        };
-        const expectedMessage = `Session cannot be created based on this profile value: ${combinedProfile}`;
-        // when
-        try {
-            await utils.syncSessionNode(Profiles.getInstance())(sessionFromProfile)(sessionNode);
-            fail(`Should be an error with message: ${expectedMessage}`);
-        } catch (error) {
-            // then
-            expect(error.message).toEqual(expectedMessage);
-        }
+        const dummyFn = (_combinedProfileValue: IProfileLoaded) => new Session({});
+        await utils.syncSessionNode(Profiles.getInstance())(dummyFn)(sessionNode);
+        // then
+        const initialSession = sessionNode.getSession();
+        const initialProfile = sessionNode.getProfile();
+        expect(sessionNode.getSession()).toEqual(initialSession);
+        expect(sessionNode.getProfile()).toEqual(initialProfile);
+        expect(sessionNode.collapsibleState).toEqual(vscode.TreeItemCollapsibleState.Collapsed);
     });
 });
 
