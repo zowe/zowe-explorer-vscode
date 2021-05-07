@@ -96,8 +96,26 @@ A data provider Zowe Explorer extension provides an alternative protocol for Zow
 
 ## Menu extension conformance criteria (3)
 
-1. (Required) Menu Names: **If the extension is adding new commands and context menu entries to the Zowe Explorer tree view nodes, it adheres to the Zowe Explorer-provided contextual string format.**
+A Zowe Explorer menu extension contributes additional commands to Zowe Explorer's existing menus in VS Code. Typically, these are contributions to the right-click context menus associated with items in one or more of Zowe Explorer's three views (Data Sets, USS, and Jobs). VS Code extensions can define and use commands in the `contributes` section of their `package.json`. By setting the `when` property of a command match the view(s) and context values used by Zowe Explorer, a menu extension can hook into and add commands into Zowe Explorer's existing menus.
 
-   **TBD**: Define rules and verification criteria.
+1. (Required) Command operations: **If the extension is adding new commands to Zowe Explorer's tree views, the commands must not replace any existing Zowe Explorer commands.**
 
-   _For team discussion_: We currently only have documented for how to add context menus, but not how the commands that implement the menu can actually access the node on which the click occurred to determine all the information needed (e.g. the data set member name and the profile of the node). We need to implement and provide an API for our tree browsers to properly support this and prevent users for just hacking the tree views themselves. Until we have such an API perhaps this extensibility kind needs to be postponed.
+   When defining or using a command in the `contributes` section of `package.json`, the extender must not set the value of the `command` property equal to any `command` value that is already used by Zowe Explorer. This can generally be avoided by not prefixing `zowe.` at the beginning of the `command` value. For more details, Zowe Explorer's extensibility documentation provides a full list of Zowe Explorer's reserved `command` values.
+
+   Similarly, if the extension implements keyboard shortcuts (keybindings) for its commands, the keybindings must not conflict with Zowe Explorer's reserved keybindings, which are defined in the Zowe Explorer extensibility documentation.
+
+   This criteria helps ensure a consistent user experience, and can be verified by comparing the commands and keybindings in the extension's `package.json` file to those found in Zowe Explorer's `package.json`.
+
+1. (Required) Command categories: **If the extension assigns a value to the `category` property of commands it adds to `contributes.commands` in `package.json`, the `category` value cannot be "Zowe Explorer".**
+
+   Assigning a category to a contributed command helps ensure that users can easily determine what VS Code extension the command comes from, particularly when using interfaces that can display commands from multiple sources, such as VS Code's Command Palette. It is recommended (but not required) that the value of a command's `category` property be or include the name of the extension. The `category` value cannot be "Zowe Explorer", as this category is used for core Zowe Explorer commands. This criteria can be verified by examining the extender's `package.json` file.
+
+1. (Required) Context menu groups: **If contributing commands to Zowe Explorer's context menus, the extension must add them in new context menu groups that are located below Zowe Explorer's existing context menu groups in the user interface.**
+
+   The `group` property for items in `contributes.menus.view/item/context` of `package.json` is used to define groupings of commands separated by dividers in VS Code's right-click context menus. Zowe Explorer prefixes its context menu command `group` values with `##_zowe_`, where `##` represents numbers 00 - 99. If the extension is assigning a value to `group` for a context menu command it contributes to Zowe Explorer, the `group` value must not begin with `##_zowe_`. Additionally, the extender's contributed context menu group(s) should be located below Zowe Explorer's context menu groups when they appear together in the same context menu. This helps keep the core Zowe Explorer context menu commands in a uniform location for users. Conformance with this criteria can be verified by examining the extender's `package.json` file.
+
+1. (Best practice) Context menu items: **If contributing commands to Zowe Explorer's views (such as Data Sets, USS, or Jobs), the extension should only add them to the view's right-click context menus.**
+
+   These context menu items are added by contributing entries into `contributes.menus.view/item/context` of `package.json`. The extension should avoid contributing commands to Zowe Explorer's views outside of this section. Additionally, the extension should avoid using the value `inline` for the `group` property. While creativity from extensions is encouraged, this best practice helps keep the Zowe Explorer user interface from getting too cluttered with additional icons or text. Conformance with this criteria can be verified by examining the extender's `package.json` file.
+
+_For team discussion_: We currently only have documented for how to add context menus, but not how the commands that implement the menu can actually access the node on which the click occurred to determine all the information needed (e.g. the data set member name and the profile of the node). We need to implement and provide an API for our tree browsers to properly support this and prevent users for just hacking the tree views themselves. Until we have such an API perhaps this extensibility kind needs to be postponed.
