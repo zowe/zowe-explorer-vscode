@@ -473,8 +473,6 @@ export namespace ZoweExplorerApi {
          * or to create them automatically if it is non-existant.
          */
         initForZowe(type: string, meta: ICommandProfileTypeConfiguration[]): Promise<void>;
-
-        activateKeytarApis(): Promise<void>;
     }
 
     /**

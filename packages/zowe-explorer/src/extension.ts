@@ -19,31 +19,28 @@ import * as dsActions from "./dataset/actions";
 import * as jobActions from "./job/actions";
 import * as refreshActions from "./shared/refresh";
 import * as sharedActions from "./shared/actions";
-import { moveSync } from "fs-extra";
 import {
     IZoweDatasetTreeNode,
     IZoweJobTreeNode,
     IZoweUSSTreeNode,
     IZoweTreeNode,
     IZoweTree,
+    ProfilesCache,
 } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import { Profiles } from "./Profiles";
 import { errorHandling, getZoweDir } from "./utils/ProfilesUtils";
 import { linkProfileDialog } from "./ProfileLink";
-import { CredentialManagerFactory, ImperativeError, CliProfileManager } from "@zowe/imperative";
+import { ImperativeError, CliProfileManager } from "@zowe/imperative";
 import { createDatasetTree } from "./dataset/DatasetTree";
 import { createJobsTree } from "./job/ZosJobsProvider";
 import { createUSSTree } from "./uss/USSTree";
 import { MvsCommandHandler } from "./command/MvsCommandHandler";
 import SpoolProvider from "./SpoolProvider";
-import { KeytarCredentialManager } from "./KeytarCredentialManager";
 import * as nls from "vscode-nls";
 import { TsoCommandHandler } from "./command/TsoCommandHandler";
-import { cleanTempDir, getSecurityModules, moveTempFolder } from "./utils/CoreUtils";
-declare const __webpack_require__: typeof require;
-declare const __non_webpack_require__: typeof require;
+import { cleanTempDir, moveTempFolder } from "./utils/CoreUtils";
 
 // Set up localization
 nls.config({
@@ -91,20 +88,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         globals.initLogger(context);
         globals.LOG.debug(localize("initialize.log.debug", "Initialized logger from VSCode extension"));
 
-        const keytar = getSecurityModules("keytar");
-        if (keytar) {
-            KeytarCredentialManager.keytar = keytar;
-            const service: string = vscode.workspace.getConfiguration().get("Zowe Security: Credential Key");
-
-            try {
-                await CredentialManagerFactory.initialize({
-                    service: service || "Zowe-Plugin",
-                    Manager: KeytarCredentialManager,
-                    displayName: localize("displayName", "Zowe Explorer"),
-                });
-            } catch (err) {
-                throw new ImperativeError({ msg: err.toString() });
-            }
+        try {
+            const profCache = new ProfilesCache(globals.LOG);
+            await profCache.activateKeytarApis(false, globals.ISTHEIA);
+        } catch (err) {
+            throw new ImperativeError({ msg: err.toString() });
         }
 
         // Ensure that ~/.zowe folder exists
@@ -129,7 +117,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         );
         globals.LOG.error(
             localize("initialize.log.error", "Error encountered while activating and initializing logger! ") +
-                JSON.stringify(err)
+            JSON.stringify(err)
         );
     }
 
@@ -179,11 +167,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
                     "onDidSaveTextDocument1",
                     "File was saved -- determining whether the file is a USS file or Data set.\n Comparing (case insensitive) "
                 ) +
-                    savedFile.fileName +
-                    localize("onDidSaveTextDocument2", " against directory ") +
-                    globals.DS_DIR +
-                    localize("onDidSaveTextDocument3", "and") +
-                    globals.USS_DIR
+                savedFile.fileName +
+                localize("onDidSaveTextDocument2", " against directory ") +
+                globals.DS_DIR +
+                localize("onDidSaveTextDocument3", "and") +
+                globals.USS_DIR
             );
             if (savedFile.fileName.toUpperCase().indexOf(globals.DS_DIR.toUpperCase()) >= 0) {
                 globals.LOG.debug(localize("activate.didSaveText.isDataSet", "File is a data set-- saving "));
@@ -194,8 +182,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             } else {
                 globals.LOG.debug(
                     localize("activate.didSaveText.file", "File ") +
-                        savedFile.fileName +
-                        localize("activate.didSaveText.notDataSet", " is not a data set or USS file ")
+                    savedFile.fileName +
+                    localize("activate.didSaveText.notDataSet", " is not a data set or USS file ")
                 );
             }
         });

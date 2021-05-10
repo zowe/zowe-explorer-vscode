@@ -26,54 +26,11 @@ nls.config({
 })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
-/**
- * function to check if imperative.json contains
- * information about security or not and then
- * Imports the neccesary security modules
- */
-export function getSecurityModules(moduleName): NodeRequire | undefined {
-    let imperativeIsSecure: boolean = false;
-    const r = typeof __webpack_require__ === "function" ? __non_webpack_require__ : require;
-    try {
-        const fileName = path.join(getZoweDir(), "settings", "imperative.json");
-        let settings: any;
-        if (fs.existsSync(fileName)) {
-            settings = JSON.parse(fs.readFileSync(fileName).toString());
-        }
-        const value1 = settings?.overrides.CredentialManager;
-        const value2 = settings?.overrides["credential-manager"];
-        imperativeIsSecure =
-            (typeof value1 === "string" && value1.length > 0) || (typeof value2 === "string" && value2.length > 0);
-    } catch (error) {
-        globals.LOG.warn(localize("profile.init.read.imperative", "Unable to read imperative file. ") + error.message);
-        vscode.window.showWarningMessage(error.message);
-        return undefined;
-    }
-    if (imperativeIsSecure) {
-        // Workaround for Theia issue (https://github.com/eclipse-theia/theia/issues/4935)
-        const appRoot = globals.ISTHEIA ? process.cwd() : vscode.env.appRoot;
-        try {
-            return r(`${appRoot}/node_modules/${moduleName}`);
-        } catch (err) {
-            /* Do nothing */
-        }
-        try {
-            return r(`${appRoot}/node_modules.asar/${moduleName}`);
-        } catch (err) {
-            /* Do nothing */
-        }
-        vscode.window.showWarningMessage(
-            localize("initialize.module.load", "Credentials not managed, unable to load security file: ") + moduleName
-        );
-    }
-    return undefined;
-}
-
-/**
- * Moves temp folder to user defined location in preferences
- * @param previousTempPath temp path settings value before updated by user
- * @param currentTempPath temp path settings value after updated by user
- */
+// /**
+//  * Moves temp folder to user defined location in preferences
+//  * @param previousTempPath temp path settings value before updated by user
+//  * @param currentTempPath temp path settings value after updated by user
+//  */
 export function moveTempFolder(previousTempPath: string, currentTempPath: string) {
     // Re-define globals with updated path
     globals.defineGlobals(currentTempPath);

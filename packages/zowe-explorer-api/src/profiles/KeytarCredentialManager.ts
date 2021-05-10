@@ -9,6 +9,9 @@
  *                                                                                 *
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+
 import { AbstractCredentialManager, ImperativeError, SecureCredential, Logger } from "@zowe/imperative";
 
 import * as nls from "vscode-nls";
@@ -29,6 +32,7 @@ export class KeytarCredentialManager extends AbstractCredentialManager {
      *
      * @public
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public static keytar: any;
 
     /**
@@ -47,6 +51,7 @@ export class KeytarCredentialManager extends AbstractCredentialManager {
      * @param {string} service The service string to send to the superclass constructor.
      * @param {string} displayName The display name for this credential manager to send to the superclass constructor
      */
+    // eslint-disable-next-line @typescript-eslint/explicit-member-accessibility
     constructor(service: string, displayName: string) {
         // Always ensure that a manager instantiates the super class, even if the
         // constructor doesn't do anything. Who knows what things might happen in
@@ -90,10 +95,13 @@ export class KeytarCredentialManager extends AbstractCredentialManager {
      */
     protected async loadCredentials(account: string, optional?: boolean): Promise<SecureCredential> {
         // Helper function to handle all breaking changes
+        // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
         const loadHelper = async (service: string) => {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             let secureValue: string = await KeytarCredentialManager.keytar.getPassword(service, account);
             // Handle user vs username case // Zowe v1 -> v2 (i.e. @brightside/core@2.x -> @zowe/cli@6+ )
             if (secureValue == null && account.endsWith("_username")) {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                 secureValue = await KeytarCredentialManager.keytar.getPassword(
                     service,
                     account.replace("_username", "_user")
@@ -101,6 +109,7 @@ export class KeytarCredentialManager extends AbstractCredentialManager {
             }
             // Handle pass vs password case // Zowe v0 -> v1 (i.e. @brightside/core@1.x -> @brightside/core@2.x)
             if (secureValue == null && account.endsWith("_pass")) {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                 secureValue = await KeytarCredentialManager.keytar.getPassword(
                     service,
                     account.replace("_pass", "_password")
@@ -129,6 +138,7 @@ export class KeytarCredentialManager extends AbstractCredentialManager {
             });
         }
 
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return password;
     }
 
@@ -161,6 +171,7 @@ export class KeytarCredentialManager extends AbstractCredentialManager {
         return wasDeleted;
     }
 
+    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
     private getMissingEntryMessage(account: string) {
         return (
             localize(
