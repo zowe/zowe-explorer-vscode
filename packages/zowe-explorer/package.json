@@ -1197,6 +1197,14 @@
           "when": "never"
         },
         {
+          "command": "zowe.copyDataSet",
+          "when": "never"
+        },
+        {
+          "command": "zowe.showDSAttributes",
+          "when": "never"
+        },
+        {
           "command": "zowe.editSession",
           "when": "never"
         },
@@ -1209,6 +1217,38 @@
           "when": "never"
         },
         {
+          "command": "zowe.uploadDialog",
+          "when": "never"
+        },
+        {
+          "command": "zowe.copyMember",
+          "when": "never"
+        },
+        {
+          "command": "zowe.pasteMember",
+          "when": "never"
+        },
+        {
+          "command": "zowe.editMember",
+          "when": "never"
+        },
+        {
+          "command": "zowe.renameDataSetMember",
+          "when": "never"
+        },
+        {
+          "command": "zowe.deleteMember",
+          "when": "never"
+        },
+        {
+          "command": "zowe.editDataSet",
+          "when": "never"
+        },
+        {
+          "command": "zowe.renameDataSet",
+          "when": "never"
+        },
+        {
           "command": "zowe.deleteDataset",
           "when": "never"
         },
@@ -1217,7 +1257,19 @@
           "when": "never"
         },
         {
-          "command": "zowe.deleteMember",
+          "command": "zowe.hMigrateDataSet",
+          "when": "never"
+        },
+        {
+          "command": "zowe.hRecallDataSet",
+          "when": "never"
+        },
+        {
+          "command": "zowe.addFavorite",
+          "when": "never"
+        },
+        {
+          "command": "zowe.removeFavorite",
           "when": "never"
         },
         {
@@ -1293,11 +1345,47 @@
           "when": "never"
         },
         {
+          "command": "zowe.uss.copyPath",
+          "when": "never"
+        },
+        {
           "command": "zowe.jobs.search",
           "when": "never"
         },
         {
           "command": "zowe.uss.refreshUSS",
+          "when": "never"
+        },
+        {
+          "command": "zowe.uss.createFolder",
+          "when": "never"
+        },
+        {
+          "command": "zowe.uss.createFile",
+          "when": "never"
+        },
+        {
+          "command": "zowe.uss.uploadDialog",
+          "when": "never"
+        },
+        {
+          "command": "zowe.uss.editFile",
+          "when": "never"
+        },
+        {
+          "command": "zowe.uss.binary",
+          "when": "never"
+        },
+        {
+          "command": "zowe.uss.text",
+          "when": "never"
+        },
+        {
+          "command": "zowe.uss.renameNode",
+          "when": "never"
+        },
+        {
+          "command": "zowe.uss.deleteNode",
           "when": "never"
         },
         {
@@ -1341,6 +1429,22 @@
           "when": "never"
         },
         {
+          "command": "zowe.setPrefix",
+          "when": "never"
+        },
+        {
+          "command": "zowe.setOwner",
+          "when": "never"
+        },
+        {
+          "command": "zowe.setJobSpool",
+          "when": "never"
+        },
+        {
+          "command": "zowe.refreshJobsServer",
+          "when": "never"
+        },
+        {
           "command": "zowe.jobs.addFavorite",
           "when": "never"
         },
@@ -1361,7 +1465,27 @@
           "when": "never"
         },
         {
+          "command": "zowe.getJobJcl",
+          "when": "never"
+        },
+        {
+          "command": "zowe.runModifyCommand",
+          "when": "never"
+        },
+        {
+          "command": "zowe.runStopCommand",
+          "when": "never"
+        },
+        {
+          "command": "zowe.downloadSpool",
+          "when": "never"
+        },
+        {
           "command": "zowe.jobs.editSession",
+          "when": "never"
+        },
+        {
+          "command": "zowe.removeJobsSession",
           "when": "never"
         },
         {
