@@ -416,24 +416,6 @@
         "category": "Zowe Explorer"
       },
       {
-        "command": "zowe.uss.createDirectory",
-        "title": "%uss.createDirectory%",
-        "category": "Zowe Explorer",
-        "icon": {
-          "light": "./resources/light/newfile.svg",
-          "dark": "./resources/dark/newfile.svg"
-        }
-      },
-      {
-        "command": "zowe.uss.createNode",
-        "title": "%uss.createNode%",
-        "category": "Zowe Explorer",
-        "icon": {
-          "light": "./resources/light/newfile.svg",
-          "dark": "./resources/dark/newfile.svg"
-        }
-      },
-      {
         "command": "zowe.uss.editFile",
         "title": "%uss.editFile%",
         "category": "Zowe Explorer",
