@@ -323,3 +323,17 @@ export class ZosmfJesApi extends ZosmfApiCommon implements ZoweExplorerApi.IJes 
         return await zowe.DeleteJobs.deleteJob(this.getSession(), jobname, jobid);
     }
 }
+
+/**
+ * An implementation of the Zowe Explorer Command API interface for zOSMF.
+ */
+// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+export class ZosmfCommandApi extends ZosmfApiCommon implements ZoweExplorerApi.ICommand {
+    public async issueTsoCommand(command: string, acctNum: string): Promise<zowe.IIssueResponse> {
+        return await zowe.IssueTso.issueTsoCommand(this.getSession(), acctNum, command);
+    }
+
+    public async issueMvsCommand(command: string): Promise<zowe.IConsoleResponse> {
+        return await zowe.IssueCommand.issueSimple(this.getSession(), command);
+    }
+}

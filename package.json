@@ -1,6 +1,6 @@
 {
   "name": "zowe-explorer",
-  "version": "1.13.1",
+  "version": "1.14.0",
   "description": "Monorepo for the Zowe Explorer project.",
   "publisher": "Zowe",
   "author": "Zowe",
@@ -18,7 +18,7 @@
     "vscode": "^1.43.0"
   },
   "dependencies": {
-    "@zowe/cli": "^6.23.0",
+    "@zowe/cli": "6.30.0",
     "vscode-nls": "4.1.2"
   },
   "devDependencies": {

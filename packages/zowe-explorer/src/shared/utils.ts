@@ -171,6 +171,11 @@ export function checkForAddedSuffix(filename: string): boolean {
     );
 }
 
+export function checkIfChildPath(parentPath: string, childPath: string): boolean {
+    const relativePath = path.relative(parentPath, childPath);
+    return relativePath && !relativePath.startsWith("..") && !path.isAbsolute(relativePath);
+}
+
 /**
  * Function that rewrites the document in the active editor thus marking it dirty
  * @param {vscode.TextDocument} doc - document to rewrite

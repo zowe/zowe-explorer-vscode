@@ -13,42 +13,32 @@ import * as vscode from "vscode";
 import { ZoweExplorerApi } from "@zowe/zowe-explorer-api";
 import { FtpUssApi } from "./ZoweExplorerFtpUssApi";
 import { FtpMvsApi } from "./ZoweExplorerFtpMvsApi";
+import { FtpJesApi } from "./ZoweExplorerFtpJesApi";
+import { CoreUtils } from "@zowe/zos-ftp-for-zowe-cli";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function activate(context: vscode.ExtensionContext): void {
-    void registerFtpUssApi();
-    void registerFtpMvsApi();
+    void registerFtpApis();
 }
 
 /**
  * Function that searches for the Zowe VS Code Extension and if found
  * registers the additional USS API implementation provided by this extension.
  */
-async function registerFtpUssApi(): Promise<boolean> {
+
+async function registerFtpApis(): Promise<boolean> {
     const zoweExplorerApi = vscode.extensions.getExtension("Zowe.vscode-extension-for-zowe");
 
     if (zoweExplorerApi && zoweExplorerApi.exports) {
         const importedApi = zoweExplorerApi.exports as ZoweExplorerApi.IApiRegisterClient;
         importedApi.registerUssApi(new FtpUssApi());
-        // check as getExplorerExtenderApi().reloadProfiles() was add in Zowe Explorer 1.5 only
-        if (importedApi.getExplorerExtenderApi && importedApi.getExplorerExtenderApi().reloadProfiles) {
-            await importedApi.getExplorerExtenderApi().reloadProfiles();
-        }
-        void vscode.window.showInformationMessage("Zowe Explorer was modified for FTP support.");
-        return true;
-    }
-    void vscode.window.showInformationMessage(
-        "Zowe Explorer was not found: either it is not installed or you are using an older version without extensibility API."
-    );
-    return false;
-}
-
-async function registerFtpMvsApi(): Promise<boolean> {
-    const zoweExplorerApi = vscode.extensions.getExtension("Zowe.vscode-extension-for-zowe");
-
-    if (zoweExplorerApi && zoweExplorerApi.exports) {
-        const importedApi = zoweExplorerApi.exports as ZoweExplorerApi.IApiRegisterClient;
         importedApi.registerMvsApi(new FtpMvsApi());
+        importedApi.registerJesApi(new FtpJesApi());
+        // check for getExplorerExtenderApi().initForZowe() to initialize home dir folder if cli not installed
+        if (importedApi.getExplorerExtenderApi && importedApi.getExplorerExtenderApi().initForZowe) {
+            const meta = await CoreUtils.getProfileMeta();
+            await importedApi.getExplorerExtenderApi().initForZowe("zftp", meta);
+        }
         // check as getExplorerExtenderApi().reloadProfiles() was add in Zowe Explorer 1.5 only
         if (importedApi.getExplorerExtenderApi && importedApi.getExplorerExtenderApi().reloadProfiles) {
             await importedApi.getExplorerExtenderApi().reloadProfiles();
