@@ -134,7 +134,12 @@ export class ProfilesCache {
             return validationResult;
         }
 
-        validationResult.port = Number(url.port);
+        if (url.protocol.includes("https") && url.port === "") {
+            validationResult.port = 443;
+        } else {
+            validationResult.port = Number(url.port);
+        }
+
         validationResult.host = url.hostname;
         validationResult.valid = true;
         return validationResult;
