@@ -32,7 +32,7 @@ export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
             const options = {
                 owner: owner,
             };
-            const response = (await JobUtils.listJobs(connection, prefix, options)) as IJob[];
+            const response = await JobUtils.listJobs(connection, prefix, options);
             if (response) {
                 const results = response.map((job: IJob) => {
                     return {
@@ -114,20 +114,21 @@ export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
                     jobname: jobDetails.jobname,
                     recfm: "FB",
                     lrecl: 80,
-                    "byte-count": spoolFileToDownload.byteCount,
+                    "byte-count": Number(spoolFileToDownload.byteCount),
                     // todo is recfm or lrecl available? FB 80 could be wrong
                     "record-count": 0,
                     "job-correlator": "", // most of these options don't matter for download
                     class: "A",
-                    ddname: spoolFileToDownload.ddname,
-                    id: spoolFileToDownload.id,
+                    ddname: String(spoolFileToDownload.ddname),
+                    id: Number(spoolFileToDownload.id),
                     "records-url": "",
                     subsystem: "JES2",
-                    stepname: spoolFileToDownload.stepname,
-                    procstep:
+                    stepname: String(spoolFileToDownload.stepname),
+                    procstep: String(
                         spoolFileToDownload.procstep === "N/A" || spoolFileToDownload.procstep == null
                             ? undefined
-                            : spoolFileToDownload.procstep,
+                            : spoolFileToDownload.procstep
+                    ),
                 };
                 const destinationFile = DownloadJobs.getSpoolDownloadFile(
                     mockJobFile,
@@ -135,7 +136,7 @@ export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
                     parms.outDir
                 );
                 imperative.IO.createDirsSyncFromFilePath(destinationFile);
-                imperative.IO.writeFile(destinationFile, spoolFileToDownload.contents);
+                imperative.IO.writeFile(destinationFile, spoolFileToDownload.contents as Buffer);
             }
         }
     }
