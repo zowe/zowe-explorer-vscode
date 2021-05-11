@@ -435,7 +435,7 @@
       },
       {
         "command": "zowe.uss.refreshAll",
-        "title": "%refreshAll%",
+        "title": "%uss.refreshAll%",
         "category": "Zowe Explorer",
         "icon": {
           "light": "./resources/light/refresh.svg",
@@ -576,7 +576,7 @@
       },
       {
         "command": "zowe.refreshAllJobs",
-        "title": "%refreshAll%",
+        "title": "%refreshAllJobs%",
         "category": "Zowe Explorer",
         "icon": {
           "light": "./resources/light/refresh.svg",
@@ -1171,10 +1171,6 @@
           "when": "never"
         },
         {
-          "command": "zowe.refreshAll",
-          "when": "never"
-        },
-        {
           "command": "zowe.createDataset",
           "when": "never"
         },
@@ -1388,10 +1384,6 @@
         },
         {
           "command": "zowe.uss.removeSession",
-          "when": "never"
-        },
-        {
-          "command": "zowe.uss.addSession",
           "when": "never"
         },
         {
