@@ -40,7 +40,8 @@
     "yarn": "1.22.10"
   },
   "resolutions": {
-    "**/lodash": "^4.17.21"
+    "**/lodash": "^4.17.21",
+    "**/postcss": "^8.2.10"
   },
   "scripts": {
     "prepare": "yarn build",
