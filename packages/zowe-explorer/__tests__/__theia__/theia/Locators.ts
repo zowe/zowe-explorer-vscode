@@ -10,11 +10,10 @@
  */
 
 export const TheiaLocator = {
-
     theiaUrl: "http://localhost:3000",
 
     zoweExplorerxId: "shell-tab-plugin-view-container:zowe",
-  };
+};
 
 export const DatasetsLocators = {
     datasetTabId: "plugin-view-container:zowe--plugin-view:zowe.explorer",
@@ -32,7 +31,7 @@ export const DatasetsLocators = {
     removeFavoriteProfileFromDatasetsOptionXpath: "//li[@data-command='__plugin.menu.action.zowe.removeFavProfile']",
     secondDatasetProfileBeforeDeletingId: "/1:TestSeleniumProfile",
     deleteProfileFromDatasetsXpath: "(//li[@data-command='__plugin.menu.action.zowe.deleteProfile'])",
-  };
+};
 
 export const UssLocators = {
     ussTabId: "plugin-view-container:zowe--plugin-view:zowe.uss.explorer",
@@ -49,7 +48,7 @@ export const UssLocators = {
     removeFavoriteProfileFromUssOptionXpath: "//li[@data-command='__plugin.menu.action.zowe.uss.removeFavProfile']",
     hideProfileFromUssOptionXpath: "//li[@data-command='__plugin.menu.action.zowe.uss.removeSession']",
     searchSymbolInFavoriteXpath: "//*[@id='/0:Favorites/0:TestSeleniumProfile/0:']",
-  };
+};
 
 export const JobsLocators = {
     jobTabId: "plugin-view-container:zowe--plugin-view:zowe.jobs",
@@ -69,9 +68,9 @@ export const JobsLocators = {
     hideProfileFromJobsOptionXpath: "//li[@data-command='__plugin.menu.action.zowe.removeJobsSession']",
     secondJobsProfileIdBeforeHidingXpath: "(//div[@id='/2:TestSeleniumProfile'])[2]",
     favoriteprofilexpath: "//div[@id='/0:Favorites/0:TestSeleniumProfile']",
-  };
+};
 
 export const TheiaNotificationMessages = {
     closeTheiaNotificationWarningMsgXpath: "/html/body/div[3]/div/div[1]/div/div/div/div/ul/li",
     deleteProfileNotificationMsg: "/html/body/div[3]/div/div[1]/div/div/div/div/div[2]/span",
-  };
+};
