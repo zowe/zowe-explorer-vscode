@@ -29,11 +29,8 @@ export function getSecurityModules(moduleName: string, isTheia: boolean): NodeRe
         const fileName = path.join(getZoweDir(), "settings", "imperative.json");
         let settings: any;
         if (fs.existsSync(fileName)) {
-            // settings = JSON.parse(fs.readFileSync(fileName).toString());
             settings = JSON.parse(fs.readFileSync(fileName, "utf8")) as Record<string, unknown>;
         }
-        // const value1 = settings?.overrides.CredentialManager;
-        // const value2 = settings?.overrides["credential-manager"];
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         const baseValue = settings.overrides as Record<string, unknown>;
         const value1 = baseValue.CredentialManager;
@@ -41,8 +38,6 @@ export function getSecurityModules(moduleName: string, isTheia: boolean): NodeRe
         imperativeIsSecure =
             (typeof value1 === "string" && value1.length > 0) || (typeof value2 === "string" && value2.length > 0);
     } catch (error) {
-        // globals.LOG.warn(localize("profile.init.read.imperative", "Unable to read imperative file. ") + error.message);
-        // vscode.window.showWarningMessage(error.message);
         return undefined;
     }
     if (imperativeIsSecure) {
@@ -60,9 +55,6 @@ export function getSecurityModules(moduleName: string, isTheia: boolean): NodeRe
         } catch (err) {
             /* Do nothing */
         }
-        // vscode.window.showWarningMessage(
-        //     localize("initialize.module.load", "Credentials not managed, unable to load security file: ") + moduleName
-        // );
     }
     return undefined;
 }

@@ -9,6 +9,7 @@
  *                                                                                 *
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 
@@ -97,11 +98,9 @@ export class KeytarCredentialManager extends AbstractCredentialManager {
         // Helper function to handle all breaking changes
         // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
         const loadHelper = async (service: string) => {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             let secureValue: string = await KeytarCredentialManager.keytar.getPassword(service, account);
             // Handle user vs username case // Zowe v1 -> v2 (i.e. @brightside/core@2.x -> @zowe/cli@6+ )
             if (secureValue == null && account.endsWith("_username")) {
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                 secureValue = await KeytarCredentialManager.keytar.getPassword(
                     service,
                     account.replace("_username", "_user")
@@ -109,7 +108,6 @@ export class KeytarCredentialManager extends AbstractCredentialManager {
             }
             // Handle pass vs password case // Zowe v0 -> v1 (i.e. @brightside/core@1.x -> @brightside/core@2.x)
             if (secureValue == null && account.endsWith("_pass")) {
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                 secureValue = await KeytarCredentialManager.keytar.getPassword(
                     service,
                     account.replace("_pass", "_password")
