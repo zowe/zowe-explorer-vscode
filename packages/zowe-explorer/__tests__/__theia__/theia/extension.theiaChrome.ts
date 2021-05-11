@@ -280,6 +280,9 @@ export async function addProfileDetails(profileName: string){
     const basepath = await driverChrome.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
     basepath.sendKeys(Key.ENTER);
     await driverChrome.sleep(SHORTSLEEPTIME);
+    const protocol = await driverChrome.findElement(By.xpath(DatasetsLocators.inputBoxXpath));
+    protocol.sendKeys(Key.ENTER);
+    await driverChrome.sleep(SHORTSLEEPTIME);
     const encoding = await driverChrome.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
     encoding.sendKeys(Key.ENTER);
     await driverChrome.sleep(SHORTSLEEPTIME);
