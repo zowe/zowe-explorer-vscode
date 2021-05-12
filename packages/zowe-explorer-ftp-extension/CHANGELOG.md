@@ -1,5 +1,9 @@
 # Change Log
 
+## Recent Changes
+
+- FTP VS Code Extension no longer has an installation pre-requisite of @zowe/zos-ftp-for-zowe-cli
+
 ## `1.14.0`
 
 - Added a range of jobs functionalities with zFTP profiles, including submit job, list job by jobID, list spool files, view spool file content, download spool files, and delete job.
