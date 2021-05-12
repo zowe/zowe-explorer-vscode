@@ -335,3 +335,59 @@ export async function refreshBrowser() {
 export function closeBrowser() {
     driverChrome.close();
 }
+
+export async function addProfileDetails(profileName: string){
+    await driverChrome.findElement(By.id(DatasetsLocators.datasetsAddSessionId)).click();
+    await driverChrome.sleep(SHORTSLEEPTIME);
+    await driverChrome.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath)).sendKeys(Key.ENTER);
+    await driverChrome.sleep(SHORTSLEEPTIME);
+    const datasetProfileName = await driverChrome.wait(until.elementLocated(By.xpath(DatasetsLocators.emptyInputBoxXpath)),WAITTIME);
+    datasetProfileName.sendKeys(profileName);
+    datasetProfileName.sendKeys(Key.ENTER);
+    await driverChrome.sleep(SHORTSLEEPTIME);
+    const zosUrl = await driverChrome.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
+    zosUrl.sendKeys("fakehost.net:1003");
+    zosUrl.sendKeys(Key.ENTER);
+    await driverChrome.sleep(SHORTSLEEPTIME);
+    const username = await driverChrome.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
+    username.sendKeys(Key.ENTER);
+    await driverChrome.sleep(SHORTSLEEPTIME);
+    const password = await driverChrome.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
+    password.sendKeys(Key.ENTER);
+    await driverChrome.sleep(SHORTSLEEPTIME);
+    const authorization = await driverChrome.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
+    authorization.sendKeys("False - Accept connections with self-signed certificates");
+    authorization.sendKeys(Key.ENTER);
+    await driverChrome.sleep(SHORTSLEEPTIME);
+    const basepath = await driverChrome.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
+    basepath.sendKeys(Key.ENTER);
+    await driverChrome.sleep(SHORTSLEEPTIME);
+    const protocol = await driverChrome.findElement(By.xpath(DatasetsLocators.inputBoxXpath));
+    protocol.sendKeys(Key.ENTER);
+    await driverChrome.sleep(SHORTSLEEPTIME);
+    const encoding = await driverChrome.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
+    encoding.sendKeys(Key.ENTER);
+    await driverChrome.sleep(SHORTSLEEPTIME);
+    const responseTimeout = await driverChrome.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
+    responseTimeout.sendKeys(Key.ENTER);
+    await driverChrome.sleep(SHORTSLEEPTIME);
+    await driverChrome.actions().sendKeys(Key.ENTER).perform();
+    await driverChrome.sleep(SHORTSLEEPTIME);
+}
+export async function clickOnDatasetsPanel(){
+    await driverChrome.findElement(By.id(DatasetsLocators.datasetsPanelId)).click();
+}
+
+export async function clickOnAddSessionInDatasets(){
+    await driverChrome.findElement(By.id(DatasetsLocators.datasetsAddSessionId)).click();
+}
+
+export async function getDatasetsDefaultProfilename(){
+    const datasetProfile = await driverChrome.wait(until.elementLocated(By.id(DatasetsLocators.defaultDatasetsProfileId)),WAITTIME).getText();
+    return datasetProfile;
+}
+
+export async function getDatasetsProfilename(){
+    const datasetProfile = await driverChrome.wait(until.elementLocated(By.id(DatasetsLocators.secondDatasetProfileId)),WAITTIME).getText();
+    return datasetProfile;
+}
