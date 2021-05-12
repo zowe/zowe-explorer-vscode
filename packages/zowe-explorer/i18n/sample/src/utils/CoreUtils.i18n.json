@@ -1,6 +1,4 @@
 {
-  "profile.init.read.imperative": "Unable to read imperative file. ",
-  "initialize.module.load": "Credentials not managed, unable to load security file: ",
   "moveTempFolder.error": "Error encountered when creating temporary folder! ",
   "deactivate.error": "Unable to delete temporary folder. "
 }
