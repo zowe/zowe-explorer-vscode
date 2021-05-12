@@ -20,6 +20,7 @@ import {
     createISessionWithoutCredentials,
     createISession,
     createFileResponse,
+    createInstanceOfProfile,
 } from "../../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode } from "../../../__mocks__/mockCreators/datasets";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
@@ -106,51 +107,39 @@ describe("Shared Utils Unit Tests - Function node.labelRefresh()", () => {
 
 describe("syncSession shared util function", () => {
     const serviceProfileName = "test";
-    const serviceProfileType = "zosmf";
-    const serviceProfile = {
+    const serviceProfileValue = {
         name: serviceProfileName,
         profile: {},
     };
+    const serviceProfileType = "zosmf";
+    const serviceProfile = {
+        profile: serviceProfileValue,
+        type: serviceProfileType,
+        message: "",
+        failNotFound: true,
+    };
 
-    // we don't really care about the node type here, can be anything
-    const sessionNode = new ZoweDatasetNode(
-        "profile session",
-        vscode.TreeItemCollapsibleState.Collapsed,
-        null,
-        undefined,
-        undefined,
-        undefined,
-        {
-            profile: serviceProfile,
-            type: serviceProfileType,
-            message: "",
-            failNotFound: true,
-        }
-    );
+    const anySession = undefined;
+    const sessionNode = createDatasetSessionNode(anySession, serviceProfile);
 
     it("should update a session and a profile in the provided node", async () => {
         // given
         const baseProfileName = "base_test";
         const baseProfile: IProfile = {};
-        const combinedProfile = serviceProfile;
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    loadNamedProfile: jest.fn(() => serviceProfile),
-                    getBaseProfile: jest.fn(() => {
-                        return {
-                            name: baseProfileName,
-                            profile: baseProfile,
-                        };
-                    }),
-                    getCombinedProfile: jest.fn(() => combinedProfile),
-                };
-            }),
+        const combinedProfile = serviceProfileValue;
+        const profiles = createInstanceOfProfile(serviceProfile);
+        profiles.loadNamedProfile = jest.fn(() => serviceProfileValue);
+        profiles.getBaseProfile = jest.fn(() => {
+            return {
+                name: baseProfileName,
+                profile: baseProfile,
+            };
         });
+        profiles.getCombinedProfile = jest.fn(() => combinedProfile);
         const expectedSession = new Session({});
         const sessionFromProfile = (_combinedProfileValue: IProfileLoaded) => expectedSession;
         // when
-        await utils.syncSessionNode(Profiles.getInstance())(sessionFromProfile)(sessionNode);
+        await utils.syncSessionNode(profiles)(sessionFromProfile)(sessionNode);
         // then
         const expectedProfile = combinedProfile;
         expect(sessionNode.getSession()).toEqual(expectedSession);
@@ -158,20 +147,15 @@ describe("syncSession shared util function", () => {
         expect(sessionNode.collapsibleState).toEqual(vscode.TreeItemCollapsibleState.Collapsed);
     });
     it("should update a session and a profile without default base profile in the provided node", async () => {
-        const combinedProfile = serviceProfile;
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    loadNamedProfile: jest.fn(() => serviceProfile),
-                    getBaseProfile: jest.fn(() => undefined),
-                    getCombinedProfile: jest.fn(() => combinedProfile),
-                };
-            }),
-        });
+        const combinedProfile = serviceProfileValue;
+        const profiles = createInstanceOfProfile(serviceProfile);
+        profiles.loadNamedProfile = jest.fn(() => serviceProfileValue);
+        profiles.getBaseProfile = jest.fn(() => undefined);
+        profiles.getCombinedProfile = jest.fn(() => combinedProfile);
         const expectedSession = new Session({});
         const sessionFromProfile = (_combinedProfileValue: IProfileLoaded) => expectedSession;
         // when
-        await utils.syncSessionNode(Profiles.getInstance())(sessionFromProfile)(sessionNode);
+        await utils.syncSessionNode(profiles)(sessionFromProfile)(sessionNode);
         // then
         const expectedProfile = combinedProfile;
         expect(sessionNode.getSession()).toEqual(expectedSession);
@@ -179,19 +163,16 @@ describe("syncSession shared util function", () => {
         expect(sessionNode.collapsibleState).toEqual(vscode.TreeItemCollapsibleState.Collapsed);
     });
     it("should do nothing, if there is no profile from provided node in the file system", async () => {
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    loadNamedProfile: jest.fn(() => {
-                        throw new Error(`There is no such profile with name: ${serviceProfileName}`);
-                    }),
-                    getBaseProfile: jest.fn(() => undefined),
-                };
-            }),
-        });
+        const profiles = createInstanceOfProfile(serviceProfile);
+        profiles.loadNamedProfile = jest.fn(() =>
+            jest.fn(() => {
+                throw new Error(`There is no such profile with name: ${serviceProfileName}`);
+            })
+        );
+        profiles.getBaseProfile = jest.fn(() => undefined);
         // when
         const dummyFn = (_combinedProfileValue: IProfileLoaded) => new Session({});
-        await utils.syncSessionNode(Profiles.getInstance())(dummyFn)(sessionNode);
+        await utils.syncSessionNode(profiles)(dummyFn)(sessionNode);
         // then
         const initialSession = sessionNode.getSession();
         const initialProfile = sessionNode.getProfile();
