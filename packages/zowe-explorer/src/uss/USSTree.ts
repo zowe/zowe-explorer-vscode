@@ -14,7 +14,7 @@ import * as globals from "../globals";
 import * as path from "path";
 import { IProfileLoaded, Logger, Session } from "@zowe/imperative";
 import { FilterItem, FilterDescriptor, resolveQuickPickHelper, errorHandling } from "../utils/ProfilesUtils";
-import { sortTreeItems, getAppName } from "../shared/utils";
+import { sortTreeItems, getAppName, checkIfChildPath } from "../shared/utils";
 import { IZoweTree, IZoweUSSTreeNode, ValidProfileEnum, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
@@ -87,16 +87,43 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      * @param {string} filePath
      */
     public async rename(originalNode: IZoweUSSTreeNode) {
-        // Could be a favorite or regular entry always deal with the regular entry
-        const parentPath = originalNode.fullPath.substr(0, originalNode.fullPath.indexOf(originalNode.label));
-        // Check if an old favorite exists for this node
-        const oldFavorite: IZoweUSSTreeNode = contextually.isFavorite(originalNode)
-            ? originalNode
-            : this.findFavoritedNode(originalNode);
-        const loadedNodes = await this.getAllLoadedItems();
+        const currentFilePath = originalNode.getUSSDocumentFilePath(); // The user's complete local file path for the node
+        const openedTextDocuments: readonly vscode.TextDocument[] = vscode.workspace.textDocuments; // Array of all documents open in VS Code
         const nodeType = contextually.isFolder(originalNode) ? "folder" : "file";
+        const parentPath = path.dirname(originalNode.fullPath);
+        let originalNodeInFavorites: boolean = false;
+        let oldFavorite: IZoweUSSTreeNode;
+
+        // Could be a favorite or regular entry always deal with the regular entry
+        // Check if an old favorite exists for this node
+        if (contextually.isFavorite(originalNode) || contextually.isFavoriteDescendant(originalNode)) {
+            originalNodeInFavorites = true; // Node is a favorite or a descendant of a node in Favorites section
+            oldFavorite = originalNode;
+        } else {
+            oldFavorite = this.findFavoritedNode(originalNode);
+        }
+
+        // If the USS node or any of its children are locally open with unsaved data, prevent rename until user saves their work.
+        for (const doc of openedTextDocuments) {
+            const docIsChild = checkIfChildPath(currentFilePath, doc.fileName);
+            if (doc.fileName === currentFilePath || docIsChild === true) {
+                if (doc.isDirty === true) {
+                    vscode.window.showErrorMessage(
+                        localize(
+                            "renameUSS.unsavedWork",
+                            "Unable to rename {0} because you have unsaved changes in this {1}. Please save your work before renaming the {1}.",
+                            originalNode.fullPath,
+                            nodeType
+                        ),
+                        { modal: true }
+                    );
+                    return;
+                }
+            }
+        }
+        const loadedNodes = await this.getAllLoadedItems();
         const options: vscode.InputBoxOptions = {
-            prompt: localize("renameUSSNode.enterName", "Enter a new name for the {0}", nodeType),
+            prompt: localize("renameUSS.enterName", "Enter a new name for the {0}", nodeType),
             value: originalNode.label.replace(/^\[.+\]:\s/, ""),
             ignoreFocusOut: true,
             validateInput: (value) => this.checkDuplicateLabel(parentPath + value, loadedNodes),
@@ -104,24 +131,31 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         const newName = await vscode.window.showInputBox(options);
         if (newName && parentPath + newName !== originalNode.fullPath) {
             try {
-                let newNamePath = path.join(parentPath + newName);
-                newNamePath = newNamePath.replace(/\\/g, "/"); // Added to cover Windows backslash issue
+                const newNamePath = path.posix.join(parentPath, newName);
                 const oldNamePath = originalNode.fullPath;
 
-                const hasClosedTab = await originalNode.rename(newNamePath);
+                // // Handle rename in back-end:
                 await ZoweExplorerApiRegister.getUssApi(originalNode.getProfile()).rename(oldNamePath, newNamePath);
-                await originalNode.refreshAndReopen(hasClosedTab);
 
+                // Handle rename in UI:
                 if (oldFavorite) {
-                    this.removeFavorite(oldFavorite);
-                    await oldFavorite.rename(newNamePath);
-                    this.addFavorite(oldFavorite);
+                    if (originalNodeInFavorites) {
+                        this.renameUSSNode(originalNode, newNamePath); // Rename corresponding node in Sessions
+                    }
+                    // Below handles if originalNode is in a session node or is only indirectly in Favorites (e.g. is only a child of a favorite).
+                    // Also handles if there are multiple appearances of originalNode in Favorites.
+                    // This has to happen before renaming originalNode.rename, as originalNode's label is used to find the favorite equivalent.
+                    this.renameFavorite(originalNode, newNamePath); // Doesn't do anything if there aren't any appearances of originalNode in Favs
                 }
+                // Rename originalNode in UI
+                const hasClosedTab = await originalNode.rename(newNamePath);
+                await originalNode.reopen(hasClosedTab);
+                this.updateFavorites();
             } catch (err) {
                 errorHandling(
                     err,
                     originalNode.mProfileName,
-                    localize("renameUSSNode.error", "Unable to rename node: ") + err.message
+                    localize("renameUSS.error", "Unable to rename node: ") + err.message
                 );
                 throw err;
             }
@@ -133,7 +167,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             const nodeType = contextually.isFolder(node) ? "folder" : "file";
             if (newFullPath === node.fullPath.trim()) {
                 return localize(
-                    "renameUSSNode.duplicateName",
+                    "renameUSS.duplicateName",
                     "A {0} already exists with this name. Please choose a different name.",
                     nodeType
                 );
@@ -167,30 +201,60 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
     /**
      * Finds the equivalent node as a favorite.
      * Used to ensure functions like delete, rename are synced between non-favorite nodes and their favorite equivalents.
+     * This will also find the node if it is a child of a favorite and has been loaded.
      *
      * @param node
      */
     public findFavoritedNode(node: IZoweUSSTreeNode) {
+        let matchingNodeInFavs: IZoweUSSTreeNode;
         // Get node's profile node in favorites
         const profileName = node.getProfileName();
         const profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profileName);
-        if (!profileNodeInFavorites) {
-            return;
+        if (profileNodeInFavorites) {
+            matchingNodeInFavs = this.findMatchInLoadedChildren(profileNodeInFavorites, node.fullPath);
         }
-        return profileNodeInFavorites.children.find(
-            (temp) => temp.label === node.getLabel() && temp.contextValue.includes(node.contextValue)
-        );
+        return matchingNodeInFavs;
     }
 
     /**
      * Finds the equivalent node not as a favorite
      *
-     * @param node
+     * @param node The favorited node you want to find the non-favorite equivalent for.
      */
     public findNonFavoritedNode(node: IZoweUSSTreeNode): IZoweUSSTreeNode {
+        let matchingNode: IZoweUSSTreeNode;
         const profileName = node.getProfileName();
-        const sessionNode = this.mSessionNodes.find((session) => session.label.includes(profileName));
-        return sessionNode.children.find((temp) => temp.label === node.label);
+        const sessionNode = this.mSessionNodes.find((session) => session.getProfileName() === profileName.trim());
+        if (sessionNode) {
+            matchingNode = this.findMatchInLoadedChildren(sessionNode, node.fullPath);
+        }
+        return matchingNode;
+    }
+
+    /**
+     * This function is for renaming the non-favorited equivalent of a favorited node for a given profile.
+     * @param profileLabel
+     * @param oldNamePath
+     * @param newNamePath
+     */
+    public async renameUSSNode(node: IZoweUSSTreeNode, newNamePath: string) {
+        const matchingNode: IZoweUSSTreeNode = this.findNonFavoritedNode(node);
+        if (matchingNode) {
+            matchingNode.rename(newNamePath);
+        }
+    }
+
+    /**
+     * Renames a node from the favorites list
+     *
+     * @param node
+     */
+    public async renameFavorite(node: IZoweUSSTreeNode, newNamePath: string) {
+        const matchingNode: IZoweUSSTreeNode = this.findFavoritedNode(node);
+        if (matchingNode) {
+            await matchingNode.rename(newNamePath);
+            this.refreshElement(this.mFavoriteSession); // Needed in case the node appears multiple times in Favorites (e.g. as child, grandchild)
+        }
     }
 
     /**
@@ -807,6 +871,27 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             );
             this.removeFileHistory(`[${sessionNode.getProfileName()}]: ${itemPath}`);
         }
+    }
+
+    /**
+     * Finds matching node by fullPath in the loaded descendants (i.e. children, grandchildren, etc.) of a parent node.
+     * @param parentNode The node whose descendants are being searched through.
+     * @param fullPath The fullPath used as the matching criteria.
+     * @returns {IZoweUSSTreeNode}
+     */
+    protected findMatchInLoadedChildren(parentNode: IZoweUSSTreeNode, fullPath: string): IZoweUSSTreeNode {
+        // // Is match direct child?
+        const match: IZoweUSSTreeNode = parentNode.children.find((child) => child.fullPath === fullPath);
+        if (match === undefined) {
+            // Is match contained within one of the children?
+            for (const node of parentNode.children) {
+                const isFullPathChild: boolean = checkIfChildPath(node.fullPath, fullPath);
+                if (isFullPathChild) {
+                    return this.findMatchInLoadedChildren(node, fullPath);
+                }
+            }
+        }
+        return match;
     }
 
     /**

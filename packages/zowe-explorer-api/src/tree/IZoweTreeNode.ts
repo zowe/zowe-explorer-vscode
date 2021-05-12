@@ -226,8 +226,14 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
     /**
      * Refreshes node and reopens it.
      * @param hasClosedInstance
+     * @deprecated Use reopen instead. Will be removed by version 2.0.
      */
     refreshAndReopen?(hasClosedInstance?: boolean);
+    /**
+     * Reopens a file if it was closed (e.g. while it was being renamed).
+     * @param hasClosedInstance
+     */
+    reopen?(hasClosedInstance?: boolean);
     /**
      * Adds a search node to the USS favorites list
      *

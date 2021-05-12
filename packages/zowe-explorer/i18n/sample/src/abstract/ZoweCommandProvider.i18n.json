@@ -1,0 +1,5 @@
+{
+  "issueCommand.outputchannel.title": "Zowe Command",
+  "validateProfiles.invalid1": "Profile Name ",
+  "validateProfiles.invalid2": " is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct."
+}

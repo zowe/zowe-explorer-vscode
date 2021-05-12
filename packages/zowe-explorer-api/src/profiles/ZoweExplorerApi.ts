@@ -10,7 +10,7 @@
  */
 
 import * as zowe from "@zowe/cli";
-import { IProfileLoaded, Session, ICommandArguments } from "@zowe/imperative";
+import { IProfileLoaded, Session, ICommandArguments, ICommandProfileTypeConfiguration } from "@zowe/imperative";
 
 /**
  * This namespace provides interfaces for all the external APIs provided by this VS Code Extension.
@@ -427,6 +427,30 @@ export namespace ZoweExplorerApi {
          */
         deleteJob(jobname: string, jobid: string): Promise<void>;
     }
+    /**
+     * API for providing a Command API handler to the extension.
+     * @export
+     */
+    export interface ICommand extends ICommon {
+        /**
+         * Issues a TSO Command and returns a TsoSend API response.
+         *
+         * @param {string} command
+         * @param {string} acctNum
+         * @returns {zowe.IIssueResponse>}
+         * @memberof ICommand
+         */
+        issueTsoCommand?(command: string, acctNum?: string): Promise<zowe.IIssueResponse>;
+
+        /**
+         * Issues a MVS Command and returns a Console Command API response.
+         *
+         * @param {string} command
+         * @returns {zowe.IConsoleResponse>}
+         * @memberof ICommand
+         */
+        issueMvsCommand?(command: string): Promise<zowe.IConsoleResponse>;
+    }
 
     /**
      * This interface can be used by other VS Code Extensions to access an alternative
@@ -442,6 +466,13 @@ export namespace ZoweExplorerApi {
          * down dialogs.
          */
         reloadProfiles(): Promise<void>;
+
+        /**
+         * After an extenders registered all its API extensions it
+         * might want to check for an existing profile folder with meta-file
+         * or to create them automatically if it is non-existant.
+         */
+        initForZowe(type: string, meta: ICommandProfileTypeConfiguration[]): Promise<void>;
     }
 
     /**
@@ -512,6 +543,21 @@ export namespace ZoweExplorerApi {
          * @returns the registered API instance
          */
         getJesApi(profile: IProfileLoaded): IJes;
+
+        /**
+         * Register a new implementation of the Command Api.
+         * See example in Interface docs.
+         *
+         * @param {ICommand} commandApi
+         */
+        registerCommandApi(CommandApi: ICommand): void;
+
+        /**
+         * Lookup of an API for Issuing a Command for a given profile.
+         * @param {string} profile
+         * @returns the registered API instance
+         */
+        getCommandApi(profile: IProfileLoaded): ICommand;
 
         /**
          * Lookup of an API for the generic extender API.

@@ -302,7 +302,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     }
 
     /**
-     * Helper method to change the node names in one go
+     * Helper method to change the UI node names in one go
      * @param newFullPath string
      */
     public async rename(newFullPath: string) {
@@ -310,29 +310,36 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         const hasClosedInstance = await closeOpenedTextFile(currentFilePath);
         this.fullPath = newFullPath;
         this.shortLabel = newFullPath.split("/").pop();
-        if (contextually.isFavorite(this)) {
-            this.shortLabel = `[${this.getProfileName()}]: ${this.shortLabel}`;
-        }
         this.label = this.shortLabel;
         this.tooltip = injectAdditionalDataToTooltip(this, newFullPath);
-
+        // Update the full path of any children already loaded locally
+        if (this.children.length > 0) {
+            this.children.forEach((child) => {
+                const newChildFullPath = newFullPath + "/" + child.shortLabel;
+                child.rename(newChildFullPath);
+            });
+        }
+        await vscode.commands.executeCommand("zowe.uss.refreshUSSInTree", this);
         return hasClosedInstance;
+    }
+
+    /**
+     * Reopens a file if it was closed (e.g. while it was being renamed).
+     * @param hasClosedInstance
+     */
+    public async reopen(hasClosedInstance = false) {
+        if (!this.isFolder && (hasClosedInstance || (this.binary && this.downloaded))) {
+            await vscode.commands.executeCommand("zowe.uss.ZoweUSSNode.open", this);
+        }
     }
 
     /**
      * Refreshes node and reopens it.
      * @param hasClosedInstance
+     * @deprecated To be removed by version 2.0. Use reopen instead.
      */
     public async refreshAndReopen(hasClosedInstance = false) {
-        if (this.isFolder) {
-            await vscode.commands.executeCommand("zowe.uss.refreshAll");
-        } else {
-            await vscode.commands.executeCommand("zowe.uss.refreshUSSInTree", this);
-        }
-
-        if (!this.isFolder && (hasClosedInstance || (this.binary && this.downloaded))) {
-            await vscode.commands.executeCommand("zowe.uss.ZoweUSSNode.open", this);
-        }
+        this.reopen(hasClosedInstance);
     }
 
     /**
