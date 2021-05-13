@@ -141,7 +141,7 @@ These Zowe Conformance criteria are applicable to the lastest Zowe v1 LTS Releas
  </thead>
 
  <tr>
-   <th style="background-color:#555555">1</th>
+   <th style="background-color:#555555">10</th>
    <th style="background-color:#555555">v1</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
@@ -150,7 +150,7 @@ These Zowe Conformance criteria are applicable to the lastest Zowe v1 LTS Releas
  </tr>
 
   <tr>
-   <th style="background-color:#555555">1</th>
+   <th style="background-color:#555555">11</th>
    <th style="background-color:#555555">v1</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
@@ -159,7 +159,7 @@ These Zowe Conformance criteria are applicable to the lastest Zowe v1 LTS Releas
  </tr>
 
   <tr>
-   <th style="background-color:#555555">1</th>
+   <th style="background-color:#555555">12</th>
    <th style="background-color:#555555">v1</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
@@ -181,7 +181,7 @@ These Zowe Conformance criteria are applicable to the lastest Zowe v1 LTS Releas
  </thead>
 
  <tr>
-   <th style="background-color:#555555">1</th>
+   <th style="background-color:#555555">13</th>
    <th style="background-color:#555555">v1</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
@@ -190,7 +190,7 @@ These Zowe Conformance criteria are applicable to the lastest Zowe v1 LTS Releas
  </tr>
 
  <tr>
-   <th style="background-color:#555555">1</th>
+   <th style="background-color:#555555">14</th>
    <th style="background-color:#555555">v1</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
@@ -199,7 +199,7 @@ These Zowe Conformance criteria are applicable to the lastest Zowe v1 LTS Releas
  </tr>
 
  <tr>
-   <th style="background-color:#555555">1</th>
+   <th style="background-color:#555555">15</th>
    <th style="background-color:#555555">v1</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
@@ -208,7 +208,7 @@ These Zowe Conformance criteria are applicable to the lastest Zowe v1 LTS Releas
  </tr>
 
  <tr>
-   <th style="background-color:#555555">1</th>
+   <th style="background-color:#555555">16</th>
    <th style="background-color:#555555">v1</th>
    <th style="background-color:#AAAAAA"></th>
    <th style="background-color:#AAAAAA">x</th>
@@ -218,7 +218,7 @@ These Zowe Conformance criteria are applicable to the lastest Zowe v1 LTS Releas
 
  <tr>
 
-   <th style="background-color:#555555">1</th>
+   <th style="background-color:#555555">17</th>
    <th style="background-color:#555555">v1</th>
    <th style="background-color:#AAAAAA"></th>
    <th style="background-color:#AAAAAA">x</th>
@@ -228,7 +228,7 @@ These Zowe Conformance criteria are applicable to the lastest Zowe v1 LTS Releas
 
  <tr>
 
-   <th style="background-color:#555555">1</th>
+   <th style="background-color:#555555">18</th>
    <th style="background-color:#555555">v1</th>
    <th style="background-color:#AAAAAA"></th>
    <th style="background-color:#AAAAAA">x</th>
@@ -238,7 +238,7 @@ These Zowe Conformance criteria are applicable to the lastest Zowe v1 LTS Releas
 
  <tr>
 
-   <th style="background-color:#555555">1</th>
+   <th style="background-color:#555555">19</th>
    <th style="background-color:#555555">v1</th>
    <th style="background-color:#AAAAAA"></th>
    <th style="background-color:#AAAAAA">x</th>
@@ -260,7 +260,7 @@ These Zowe Conformance criteria are applicable to the lastest Zowe v1 LTS Releas
  </thead>
 
  <tr>
-   <th style="background-color:#555555">1</th>
+   <th style="background-color:#555555">20</th>
    <th style="background-color:#555555">v1</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
