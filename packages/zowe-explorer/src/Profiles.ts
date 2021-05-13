@@ -373,8 +373,8 @@ export class Profiles extends ProfilesCache {
         let updUser: string;
         let updPass: string;
         let updRU: boolean;
-        let updPort: number;
         let updUrl: any;
+        let updPort: any;
 
         const schema: {} = this.getSchema(profileLoaded.type);
         const schemaArray = Object.keys(schema);
@@ -538,7 +538,7 @@ export class Profiles extends ProfilesCache {
         let newPass: string;
         let newRU: boolean;
         let newUrl: any;
-        let newPort: number;
+        let newPort: any;
 
         const newProfileName = profileName.trim();
 
