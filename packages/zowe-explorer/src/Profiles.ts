@@ -394,16 +394,14 @@ export class Profiles extends ProfilesCache {
                         return undefined;
                     }
                     updSchemaValues[value] = updUrl.host;
-                    if (updUrl.port !== 0) {
+                    if (updUrl.port) {
                         updSchemaValues.port = updUrl.port;
-                    } else if (editSession.port === Number("443")) {
-                        updSchemaValues.port = editSession.port;
                     }
                     break;
                 case "port":
                     if (updSchemaValues[value] === undefined) {
                         updPort = await this.portInfo(value, schema);
-                        if (Number.isNaN(updPort)) {
+                        if (Number.isNaN(Number(updPort))) {
                             vscode.window.showInformationMessage(
                                 localize(
                                     "editConnection.undefined.port",
@@ -577,14 +575,14 @@ export class Profiles extends ProfilesCache {
                         return undefined;
                     }
                     schemaValues[value] = newUrl.host;
-                    if (newUrl.port !== 0) {
+                    if (newUrl.port) {
                         schemaValues.port = newUrl.port;
                     }
                     break;
                 case "port":
                     if (schemaValues[value] === undefined) {
                         newPort = await this.portInfo(value, schema);
-                        if (Number.isNaN(newPort)) {
+                        if (Number.isNaN(Number(newPort))) {
                             vscode.window.showInformationMessage(
                                 localize(
                                     "createNewConnection.undefined.port",
@@ -640,7 +638,7 @@ export class Profiles extends ProfilesCache {
                         case "number":
                             options = await this.optionsValue(value, schema);
                             const enteredValue = Number(await vscode.window.showInputBox(options));
-                            if (!Number.isNaN(enteredValue)) {
+                            if (!Number.isNaN(Number(enteredValue))) {
                                 if ((value === "encoding" || value === "responseTimeout") && enteredValue === 0) {
                                     delete schemaValues[value];
                                 } else {

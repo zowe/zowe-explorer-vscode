@@ -689,7 +689,10 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
             new Promise((resolve) => {
                 resolve("https://fake");
             });
-        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        blockMocks.profiles.portInfo = () =>
+            new Promise((resolve) => {
+                resolve("fake");
+            });
 
         await blockMocks.profiles.createNewConnection("fake");
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
@@ -1385,7 +1388,7 @@ describe("Profiles Unit Tests - Function editSession", () => {
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
     });
 
-    it("Tests that editSession fails with invalid port value supplied", async () => {
+    it("Tests that editSession fails if invalid port value supplied", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
@@ -1396,7 +1399,14 @@ describe("Profiles Unit Tests - Function editSession", () => {
         blockMocks.profiles.getSchema = () => blockMocks.testSchemas[1];
         blockMocks.profiles.getUrl = () => Promise.resolve("https://fake");
         globalMocks.mockCreateInputBox.mockReturnValue(blockMocks.inputBox);
-        globalMocks.mockShowInputBox.mockResolvedValueOnce(undefined);
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowQuickPick.mockResolvedValueOnce("False");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("123");
+        globalMocks.mockCreateBasicZosmfSession.mockReturnValue({
+            ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" },
+        });
 
         await blockMocks.profiles.editSession(blockMocks.imperativeProfile, blockMocks.imperativeProfile.name);
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe(
