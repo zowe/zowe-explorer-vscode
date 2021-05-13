@@ -10,9 +10,9 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Updated Theia Tests. Now you need to have Zowe CLI 6.30.0 and the latest .vsix file in the `theia/plugins` folder to run Theia tests [#1268](https://github.com/zowe/vscode-extension-for-zowe/pull/1268). Thanks @deepali-hub
 - Fixed the issue that prevented the `issue STOP command` function from executing correctly [#1304](https://github.com/zowe/vscode-extension-for-zowe/pull/1304). Thanks
   @nickImbirev
-- Fixed the issue that caused the Add Profile icon to disapper [#1307](https://github.com/zowe/vscode-extension-for-zowe/pull/1307). Thanks @lauren-li
+- Fixed the issue that caused the Add Profile icon to disappear [#1307](https://github.com/zowe/vscode-extension-for-zowe/pull/1307). Thanks @lauren-li
 - Fixed the vulnerability in NPM Audit [#1309](https://github.com/zowe/vscode-extension-for-zowe/pull/1309). Thanks @JillieBeanSim
-- Fixed the issue that doubled the occurence of the port prompt [#1298](https://github.com/zowe/vscode-extension-for-zowe/pull/1298). Thanks @katelynienaber
+- Fixed the issue that doubled the occurrence of the port prompt [#1298](https://github.com/zowe/vscode-extension-for-zowe/pull/1298). Thanks @katelynienaber
 - Fixed the issue that triggered the `Delete Job` command even outside Zowe Explorer views [#1310](https://github.com/zowe/vscode-extension-for-zowe/pull/1310). @crawr
 - Fixed the trailing slash issue that caused issues with USS search [#1313](https://github.com/zowe/vscode-extension-for-zowe/pull/1313). Thanks @katelynienaber
 
