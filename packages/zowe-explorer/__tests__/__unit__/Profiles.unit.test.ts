@@ -534,6 +534,25 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile fake was created.");
     });
 
+    it("Tests that createNewConnection stores default port value if 443 is included with hostname", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.profiles.getProfileType = () =>
+            new Promise((resolve) => {
+                resolve("zosmf");
+            });
+        blockMocks.profiles.getSchema = () => blockMocks.testSchemas[0];
+        blockMocks.profiles.getUrl = () => Promise.resolve("https://fake:443");
+        globalMocks.mockShowInputBox.mockResolvedValue("");
+        globalMocks.mockShowQuickPick.mockResolvedValueOnce("False - Accept connections with self-signed certificates");
+
+        await blockMocks.profiles.createNewConnection("fake");
+
+        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile fake was created.");
+    });
+
     it("Tests that createNewConnection creates a new profile twice in a row", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
@@ -1087,6 +1106,27 @@ describe("Profiles Unit Tests - Function editSession", () => {
             });
         blockMocks.profiles.getSchema = () => blockMocks.testSchemas[0];
         blockMocks.profiles.getUrl = () => Promise.resolve("https://fake:143");
+        globalMocks.mockCreateInputBox.mockReturnValue(blockMocks.inputBox);
+        globalMocks.mockShowInputBox.mockResolvedValue("fake");
+        globalMocks.mockShowQuickPick.mockResolvedValueOnce("False - Accept connections with self-signed certificates");
+        globalMocks.mockCreateBasicZosmfSession.mockReturnValue({
+            ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" },
+        });
+
+        await blockMocks.profiles.editSession(blockMocks.imperativeProfile, blockMocks.imperativeProfile.name);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile was successfully updated");
+    });
+
+    it("Tests that editSession stores default port value if 443 is included with hostname", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.profiles.getProfileType = () =>
+            new Promise((resolve) => {
+                resolve("zosmf");
+            });
+        blockMocks.profiles.getSchema = () => blockMocks.testSchemas[0];
+        blockMocks.profiles.getUrl = () => Promise.resolve("https://fake:443");
         globalMocks.mockCreateInputBox.mockReturnValue(blockMocks.inputBox);
         globalMocks.mockShowInputBox.mockResolvedValue("fake");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("False - Accept connections with self-signed certificates");
