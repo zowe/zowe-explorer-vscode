@@ -10,11 +10,14 @@
  */
 
 import * as imperative from "@zowe/imperative";
+import { ZoweExplorerApi } from "./ZoweExplorerApi";
+import * as vscode from "vscode";
 import * as path from "path";
 import * as os from "os";
+import * as fs from "fs";
 import { URL } from "url";
-
-import { ZoweExplorerApi } from "./ZoweExplorerApi";
+import { KeytarCredentialManager } from "./KeytarCredentialManager";
+import { getSecurityModules } from "./CoreUtils";
 
 // TODO: find a home for constants
 export const CONTEXT_PREFIX = "_";
@@ -205,6 +208,45 @@ export class ProfilesCache {
             }
         }
         return baseProfile;
+    }
+
+    public async activateKeytarApis(initialized: boolean, isTheia: boolean): Promise<void> {
+        const scsActive = this.isSecureCredentialPluginActive();
+        if (scsActive) {
+            const keytar = getSecurityModules("keytar", isTheia);
+            if (!initialized && keytar) {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                KeytarCredentialManager.keytar = keytar;
+                const service: string = vscode.workspace.getConfiguration().get("Zowe Security: Credential Key");
+                await imperative.CredentialManagerFactory.initialize({
+                    service: service || "Zowe-Plugin",
+                    Manager: KeytarCredentialManager,
+                    displayName: "Zowe Explorer",
+                });
+            }
+        }
+    }
+
+    public isSecureCredentialPluginActive(): boolean {
+        let imperativeIsSecure = false;
+        try {
+            const fileName = path.join(this.getZoweDir(), "settings", "imperative.json");
+            let settings: Record<string, unknown>;
+            if (fs.existsSync(fileName)) {
+                settings = JSON.parse(fs.readFileSync(fileName, "utf-8")) as Record<string, unknown>;
+            }
+            if (settings) {
+                const baseValue = settings.overrides as Record<string, unknown>;
+                const value1 = baseValue.CredentialManager;
+                const value2 = baseValue["credential-manager"];
+                imperativeIsSecure =
+                    (typeof value1 === "string" && value1.length > 0) ||
+                    (typeof value2 === "string" && value2.length > 0);
+            }
+        } catch (error) {
+            this.log.error(error);
+        }
+        return imperativeIsSecure;
     }
 
     protected async deleteProfileOnDisk(ProfileInfo: imperative.IProfileLoaded): Promise<void> {
