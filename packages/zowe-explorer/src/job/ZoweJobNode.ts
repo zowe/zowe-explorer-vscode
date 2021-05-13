@@ -16,11 +16,12 @@ import * as globals from "../globals";
 import { Session, IProfileLoaded } from "@zowe/imperative";
 import { IZoweJobTreeNode, ZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
-import { errorHandling, refreshTree } from "../utils/ProfilesUtils";
+import { errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
 import { getIconByNode } from "../generators/icons";
 import * as contextually from "../shared/context";
 
 import * as nls from "vscode-nls";
+import { Profiles } from "../Profiles";
 // Set up localization
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
@@ -266,7 +267,9 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                     this.label,
                     localize("getChildren.error.response", "Retrieving response from ") + `zowe.GetJobs`
                 );
-                await refreshTree(sessNode);
+                await syncSessionNode(Profiles.getInstance())((profileValue) =>
+                    ZoweExplorerApiRegister.getJesApi(profileValue).getSession()
+                )(sessNode);
             }
         }
         return jobsInternal;
