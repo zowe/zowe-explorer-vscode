@@ -21,6 +21,7 @@ import { getSecurityModules } from "./CoreUtils";
 
 // TODO: find a home for constants
 export const CONTEXT_PREFIX = "_";
+export const DEFAULT_PORT = 443;
 
 export interface IUrlValidator {
     valid: boolean;
@@ -137,7 +138,12 @@ export class ProfilesCache {
             return validationResult;
         }
 
-        validationResult.port = Number(url.port);
+        if (newUrl.includes(":443")) {
+            validationResult.port = 443;
+        } else {
+            validationResult.port = Number(url.port);
+        }
+
         validationResult.host = url.hostname;
         validationResult.valid = true;
         return validationResult;
