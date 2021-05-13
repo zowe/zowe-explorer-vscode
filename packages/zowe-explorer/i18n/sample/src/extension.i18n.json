@@ -1,6 +1,5 @@
 {
   "initialize.log.debug": "Initialized logger from VSCode extension",
-  "displayName": "Zowe Explorer",
   "initialize.log.error": "Error encountered while activating and initializing logger! ",
   "onDidSaveTextDocument1": "File was saved -- determining whether the file is a USS file or Data set.\n Comparing (case insensitive) ",
   "onDidSaveTextDocument2": " against directory ",
@@ -8,9 +7,5 @@
   "activate.didSaveText.isDataSet": "File is a data set-- saving ",
   "activate.didSaveText.isUSSFile": "File is a USS file -- saving",
   "activate.didSaveText.file": "File ",
-  "activate.didSaveText.notDataSet": " is not a data set or USS file ",
-  "profile.init.read.imperative": "Unable to read imperative file. ",
-  "initialize.module.load": "Credentials not managed, unable to load security file: ",
-  "moveTempFolder.error": "Error encountered when creating temporary folder! ",
-  "deactivate.error": "Unable to delete temporary folder. "
+  "activate.didSaveText.notDataSet": " is not a data set or USS file "
 }
