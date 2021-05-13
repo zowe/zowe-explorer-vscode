@@ -138,7 +138,7 @@ export class ProfilesCache {
             return validationResult;
         }
 
-        if (newUrl.includes("443")) {
+        if (newUrl.includes(":443")) {
             validationResult.port = 443;
         } else {
             validationResult.port = Number(url.port);
