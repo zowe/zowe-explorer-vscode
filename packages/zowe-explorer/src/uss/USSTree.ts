@@ -622,7 +622,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 }
             }
             // Sanitization: Replace multiple preceding forward slashes with just one forward slash
-            const sanitizedPath = remotepath.replace(/\/\/+/, "/").replace(/\/+$/, "");
+            const sanitizedPath = remotepath.replace(/\/+/g, "/").replace(/(\/*)$/, "");
             sessionNode.tooltip = sessionNode.fullPath = sanitizedPath;
             sessionNode.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
             const icon = getIconByNode(sessionNode);
