@@ -137,7 +137,7 @@ describe("syncSession shared util function", () => {
         });
         profiles.getCombinedProfile = jest.fn(() => combinedProfile);
         const expectedSession = new Session({});
-        const sessionFromProfile = (_combinedProfileValue: IProfileLoaded) => expectedSession;
+        const sessionFromProfile = () => expectedSession;
         // when
         await utils.syncSessionNode(profiles)(sessionFromProfile)(sessionNode);
         // then
@@ -153,7 +153,7 @@ describe("syncSession shared util function", () => {
         profiles.getBaseProfile = jest.fn(() => undefined);
         profiles.getCombinedProfile = jest.fn(() => combinedProfile);
         const expectedSession = new Session({});
-        const sessionFromProfile = (_combinedProfileValue: IProfileLoaded) => expectedSession;
+        const sessionFromProfile = () => expectedSession;
         // when
         await utils.syncSessionNode(profiles)(sessionFromProfile)(sessionNode);
         // then
@@ -171,7 +171,7 @@ describe("syncSession shared util function", () => {
         );
         profiles.getBaseProfile = jest.fn(() => undefined);
         // when
-        const dummyFn = (_combinedProfileValue: IProfileLoaded) => new Session({});
+        const dummyFn = () => new Session({});
         await utils.syncSessionNode(profiles)(dummyFn)(sessionNode);
         // then
         const initialSession = sessionNode.getSession();
