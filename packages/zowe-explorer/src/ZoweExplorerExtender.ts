@@ -10,7 +10,10 @@
  */
 
 import * as PromiseQueue from "promise-queue";
-import { IProfileLoaded } from "@zowe/imperative";
+import * as imperative from "@zowe/imperative";
+import * as path from "path";
+import * as os from "os";
+import * as fs from "fs";
 import {
     ZoweExplorerApi,
     ZoweExplorerTreeApi,
@@ -23,6 +26,11 @@ import {
 import { Profiles } from "./Profiles";
 import { getProfile, getLinkedProfile } from "./ProfileLink";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
+import * as nls from "vscode-nls";
+
+// Set up localization
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 /**
  * The Zowe Explorer API Register singleton that gets exposed to other VS Code
@@ -67,7 +75,30 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
         public datasetProvider?: IZoweTree<IZoweDatasetTreeNode>,
         public ussFileProvider?: IZoweTree<IZoweUSSTreeNode>,
         public jobsProvider?: IZoweTree<IZoweJobTreeNode>
-    ) {}
+    ) { }
+
+    public async initForZowe(type: string, meta: imperative.ICommandProfileTypeConfiguration[]) {
+        // Ensure that when a user has not installed the profile type's CLI plugin
+        // and/or created a profile that the profile directory in ~/.zowe/profiles
+        // will be created with the appropriate meta data. If not called the user will
+        // see errors when creating a profile of any type.
+        imperative.ImperativeConfig.instance.loadedConfig = {
+            defaultHome: path.join(os.homedir(), ".zowe"),
+            envVariablePrefix: "ZOWE",
+        };
+        const configOptions = Array.from(meta);
+        const exists = fs.existsSync(path.posix.join(`${os.homedir}/.zowe/profiles/${type}`));
+        if (configOptions && !exists) {
+            await imperative.CliProfileManager.initialize({
+                configuration: configOptions,
+                profileRootDirectory: path.join(imperative.ImperativeConfig.instance.cliHome, "profiles"),
+            });
+        }
+        // sequentially reload the internal profiles cache to satisfy all the newly added profile types
+        await ZoweExplorerExtender.refreshProfilesQueue.add(() =>
+            Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance())
+        );
+    }
 
     /**
      * This method can be used by other VS Code Extensions to access the primary profile.
@@ -76,7 +107,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
      * @return The requested profile
      *
      */
-    public getProfile(primaryNode: IZoweTreeNode): IProfileLoaded {
+    public getProfile(primaryNode: IZoweTreeNode): imperative.IProfileLoaded {
         return getProfile(primaryNode);
     }
 
@@ -88,7 +119,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
      * @param primaryNode represents the Tree item that is being used
      * @return The requested profile
      */
-    public getLinkedProfile(primaryNode: IZoweTreeNode, type: string): Promise<IProfileLoaded> {
+    public getLinkedProfile(primaryNode: IZoweTreeNode, type: string): Promise<imperative.IProfileLoaded> {
         return getLinkedProfile(primaryNode, type);
     }
 
