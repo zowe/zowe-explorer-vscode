@@ -2,7 +2,7 @@
 
 ## `1.15.0`
 
-- Removed the installation pre-requisite of @zowe/zos-ftp-for-zowe-cliFTP for the VS Code Extension
+- Removed the installation pre-requisite of @zowe/zos-ftp-for-zowe-cli the FTP Extension for Zowe Explorer
 
 ## `1.14.0`
 
