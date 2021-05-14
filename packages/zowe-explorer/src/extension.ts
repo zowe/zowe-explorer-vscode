@@ -25,14 +25,14 @@ import {
     IZoweUSSTreeNode,
     IZoweTreeNode,
     IZoweTree,
-    ProfilesCache,
+    KeytarApi,
 } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import { Profiles } from "./Profiles";
 import { errorHandling, getZoweDir } from "./utils/ProfilesUtils";
 import { linkProfileDialog } from "./ProfileLink";
-import { ImperativeError, CliProfileManager } from "@zowe/imperative";
+import { CliProfileManager, ImperativeError } from "@zowe/imperative";
 import { createDatasetTree } from "./dataset/DatasetTree";
 import { createJobsTree } from "./job/ZosJobsProvider";
 import { createUSSTree } from "./uss/USSTree";
@@ -89,8 +89,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         globals.LOG.debug(localize("initialize.log.debug", "Initialized logger from VSCode extension"));
 
         try {
-            const profCache = new ProfilesCache(globals.LOG);
-            await profCache.activateKeytarApis(false, globals.ISTHEIA);
+            const keytarApi = new KeytarApi(globals.LOG);
+            await keytarApi.activateKeytar(false, globals.ISTHEIA);
         } catch (err) {
             throw new ImperativeError({ msg: err.toString() });
         }

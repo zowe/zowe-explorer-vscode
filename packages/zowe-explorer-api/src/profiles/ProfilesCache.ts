@@ -11,13 +11,10 @@
 
 import * as imperative from "@zowe/imperative";
 import { ZoweExplorerApi } from "./ZoweExplorerApi";
-import * as vscode from "vscode";
 import * as path from "path";
 import * as os from "os";
 import * as fs from "fs";
 import { URL } from "url";
-import { KeytarCredentialManager } from "./KeytarCredentialManager";
-import { getSecurityModules } from "./CoreUtils";
 
 // TODO: find a home for constants
 export const CONTEXT_PREFIX = "_";
@@ -54,7 +51,7 @@ export class ProfilesCache {
     protected profilesByType = new Map<string, imperative.IProfileLoaded[]>();
     protected defaultProfileByType = new Map<string, imperative.IProfileLoaded>();
     protected profileManagerByType = new Map<string, imperative.CliProfileManager>();
-    public constructor(protected log: imperative.Logger) {}
+    public constructor(protected log: imperative.Logger) { }
 
     public loadNamedProfile(name: string, type?: string): imperative.IProfileLoaded {
         for (const profile of this.allProfiles) {
@@ -214,23 +211,6 @@ export class ProfilesCache {
             }
         }
         return baseProfile;
-    }
-
-    public async activateKeytarApis(initialized: boolean, isTheia: boolean): Promise<void> {
-        const scsActive = this.isSecureCredentialPluginActive();
-        if (scsActive) {
-            const keytar = getSecurityModules("keytar", isTheia);
-            if (!initialized && keytar) {
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-                KeytarCredentialManager.keytar = keytar;
-                const service: string = vscode.workspace.getConfiguration().get("Zowe Security: Credential Key");
-                await imperative.CredentialManagerFactory.initialize({
-                    service: service || "Zowe-Plugin",
-                    Manager: KeytarCredentialManager,
-                    displayName: "Zowe Explorer",
-                });
-            }
-        }
     }
 
     public isSecureCredentialPluginActive(): boolean {
