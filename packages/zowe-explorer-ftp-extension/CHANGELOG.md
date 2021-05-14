@@ -1,8 +1,8 @@
 # Change Log
 
-## Recent Changes
+## `1.15.0`
 
-- FTP VS Code Extension no longer has an installation pre-requisite of @zowe/zos-ftp-for-zowe-cli
+- Removed the installation pre-requisite of @zowe/zos-ftp-for-zowe-cli for the FTP Extension for Zowe Explorer
 
 ## `1.14.0`
 
