@@ -23,7 +23,7 @@ More information:
 
 ## Contents
 
-- [What's new in Zowe Explorer 1.15](#whats-new-in-zowe-explorer-1.15)
+- [What's new in Zowe Explorer 1.15.0](#whats-new-in-zowe-explorer-1.15.0)
 - [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
 - [Sample Use Cases](#sample-use-cases)
@@ -31,7 +31,7 @@ More information:
 - [Usage Tips](#usage-tips)
 - [Extending Zowe Explorer](#extending-zowe-explorer)
 
-## What's new in Zowe Explorer 1.15
+## What's new in Zowe Explorer 1.15.0
 
 Enhancements:
 
