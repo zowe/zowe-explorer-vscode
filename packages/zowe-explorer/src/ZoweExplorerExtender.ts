@@ -26,6 +26,11 @@ import {
 import { Profiles } from "./Profiles";
 import { getProfile, getLinkedProfile } from "./ProfileLink";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
+import * as nls from "vscode-nls";
+
+// Set up localization
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 /**
  * The Zowe Explorer API Register singleton that gets exposed to other VS Code
