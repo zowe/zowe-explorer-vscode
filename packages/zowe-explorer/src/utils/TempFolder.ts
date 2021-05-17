@@ -14,10 +14,8 @@ import * as path from "path";
 import * as globals from "../globals";
 import * as vscode from "vscode";
 import { moveSync } from "fs-extra";
-declare const __webpack_require__: typeof require;
-declare const __non_webpack_require__: typeof require;
 import * as nls from "vscode-nls";
-import { errorHandling, getZoweDir } from "../utils/ProfilesUtils";
+import { errorHandling } from "../utils/ProfilesUtils";
 
 // Set up localization
 nls.config({
