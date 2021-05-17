@@ -16,7 +16,7 @@ import * as driverChrome from "./theia/extension.theiaChrome";
 
 const TIMEOUT = 45000;
 const SLEEPTIME = 15000;
-const SHORTSLEEPTIME  = 2000;
+const SHORTSLEEPTIME = 2000;
 const wait5sec = 5000;
 declare var it: any;
 const expect = chai.expect;

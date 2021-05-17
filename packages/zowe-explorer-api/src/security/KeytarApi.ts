@@ -10,12 +10,12 @@
  */
 
 import * as imperative from "@zowe/imperative";
-import * as vscode from 'vscode';
+import * as vscode from "vscode";
 import { ProfilesCache } from "../profiles";
 import { KeytarCredentialManager } from "./KeytarCredentialManager";
 
 export class KeytarApi {
-    public constructor(protected log: imperative.Logger) { }
+    public constructor(protected log: imperative.Logger) {}
 
     public async activateKeytar(initialized: boolean, isTheia: boolean): Promise<void> {
         const log = imperative.Logger.getAppLogger();

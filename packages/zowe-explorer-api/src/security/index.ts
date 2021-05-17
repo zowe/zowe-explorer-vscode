@@ -9,5 +9,5 @@
  *                                                                                 *
  */
 
-export * from './KeytarCredentialManager';
-export * from './KeytarApi';
+export * from "./KeytarCredentialManager";
+export * from "./KeytarApi";

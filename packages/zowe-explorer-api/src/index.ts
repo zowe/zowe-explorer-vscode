@@ -18,4 +18,4 @@ export * from "./tree/ZoweTreeNode";
 export * from "./tree/IZoweTree";
 export * from "./tree/IZoweTreeNode";
 export * from "./security/KeytarApi";
-export * from "./security/KeytarCredentialManager"
+export * from "./security/KeytarCredentialManager";

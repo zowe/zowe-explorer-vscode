@@ -217,6 +217,6 @@ export class KeytarCredentialManager extends AbstractCredentialManager {
             `  This could have been caused by any manual removal of credentials from your vault.\n\n` +
             `Resolutions:\n` +
             `  Recreate the credentials in the vault for the particular service in the vault.`
-        )
+        );
     }
 }
