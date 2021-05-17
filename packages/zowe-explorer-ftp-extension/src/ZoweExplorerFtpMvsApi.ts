@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 /*
  * This program and the accompanying materials are made available under the terms of the *
  * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
@@ -26,61 +27,76 @@ import { AbstractFtpApi } from "./ZoweExplorerAbstractFtpApi";
 export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
     public async dataSet(filter: string, options?: zowe.IListOptions): Promise<zowe.IZosFilesResponse> {
         const result = this.getDefaultResponse();
-        const connection = await this.ftpClient(this.checkedProfile());
-        if (connection) {
-            const response: any[] = await DataSetUtils.listDataSets(connection, filter);
-            if (response) {
-                result.success = true;
-                result.apiResponse.items = response.map((element) => ({
-                    dsname: element.dsname,
-                    dsorg: element.dsorg,
-                    volume: element.volume,
-                    recfm: element.recfm,
-                    blksz: element.blksz,
-                    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-                    migr: element.volume && element.volume.toUpperCase() === "MIGRATED" ? "YES" : "NO",
-                }));
+        let connection: any;
+        try {
+            connection = await this.ftpClient(this.checkedProfile());
+            if (connection) {
+                const response: any[] = await DataSetUtils.listDataSets(connection, filter);
+                if (response) {
+                    result.success = true;
+                    result.apiResponse.items = response.map((element) => ({
+                        dsname: element.dsname,
+                        dsorg: element.dsorg,
+                        volume: element.volume,
+                        recfm: element.recfm,
+                        blksz: element.blksz,
+                        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+                        migr: element.volume && element.volume.toUpperCase() === "MIGRATED" ? "YES" : "NO",
+                    }));
+                }
             }
+            return result;
+        } finally {
+            connection.close();
         }
-        return result;
     }
 
     public async allMembers(dataSetName: string, options?: zowe.IListOptions): Promise<zowe.IZosFilesResponse> {
         const result = this.getDefaultResponse();
-        const connection = await this.ftpClient(this.checkedProfile());
-        if (connection) {
-            const response: any[] = await DataSetUtils.listMembers(connection, dataSetName);
-            if (response) {
-                result.success = true;
-                result.apiResponse.items = response.map((element) => ({
-                    member: element.name,
-                    changed: element.changed,
-                    created: element.created,
-                    id: element.id,
-                }));
+        let connection: any;
+        try {
+            connection = await this.ftpClient(this.checkedProfile());
+            if (connection) {
+                const response: any[] = await DataSetUtils.listMembers(connection, dataSetName);
+                if (response) {
+                    result.success = true;
+                    result.apiResponse.items = response.map((element) => ({
+                        member: element.name,
+                        changed: element.changed,
+                        created: element.created,
+                        id: element.id,
+                    }));
+                }
             }
+            return result;
+        } finally {
+            connection.close();
         }
-        return result;
     }
 
     public async getContents(dataSetName: string, options: zowe.IDownloadOptions): Promise<zowe.IZosFilesResponse> {
-        const connection = await this.ftpClient(this.checkedProfile());
         const result = this.getDefaultResponse();
         const targetFile = options.file;
         const transferOptions = {
             transferType: options.binary ? TRANSFER_TYPE_BINARY : TRANSFER_TYPE_ASCII,
             localFile: targetFile,
         };
-        if (connection && targetFile) {
-            imperative.IO.createDirsSyncFromFilePath(targetFile);
-            await DataSetUtils.downloadDataSet(connection, dataSetName, transferOptions);
-            result.success = true;
-            result.commandResponse = "";
-            result.apiResponse.etag = await this.hashFile(targetFile);
-        } else {
-            throw new Error(result.commandResponse);
+        let connection: any;
+        try {
+            connection = await this.ftpClient(this.checkedProfile());
+            if (connection && targetFile) {
+                imperative.IO.createDirsSyncFromFilePath(targetFile);
+                await DataSetUtils.downloadDataSet(connection, dataSetName, transferOptions);
+                result.success = true;
+                result.commandResponse = "";
+                result.apiResponse.etag = await this.hashFile(targetFile);
+            } else {
+                throw new Error(result.commandResponse);
+            }
+            return result;
+        } finally {
+            connection.close();
         }
-        return result;
     }
 
     public async putContents(
@@ -104,30 +120,35 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
             targetDataset = dataSetName + "(" + member + ")";
         }
         const result = this.getDefaultResponse();
-        const connection = await this.ftpClient(this.checkedProfile());
-        if (!connection) {
-            throw new Error(result.commandResponse);
-        }
-        // Save-Save with FTP requires loading the file first
-        if (options.returnEtag && options.etag) {
-            const contentsTag = await this.getContentsTag(dataSetName);
-            if (contentsTag && contentsTag !== options.etag) {
-                // TODO: extension.ts should not check for zosmf errors.
-                throw new Error("Save conflict. Please pull the latest content from mainfram first.");
+        let connection: any;
+        try {
+            connection = await this.ftpClient(this.checkedProfile());
+            if (!connection) {
+                throw new Error(result.commandResponse);
             }
+            // Save-Save with FTP requires loading the file first
+            if (options.returnEtag && options.etag) {
+                const contentsTag = await this.getContentsTag(dataSetName);
+                if (contentsTag && contentsTag !== options.etag) {
+                    // TODO: extension.ts should not check for zosmf errors.
+                    throw new Error("Save conflict. Please pull the latest content from mainfram first.");
+                }
+            }
+            await DataSetUtils.uploadDataSet(connection, targetDataset, transferOptions);
+            result.success = true;
+            if (options.returnEtag) {
+                const contentsTag = await this.getContentsTag(dataSetName);
+                result.apiResponse = [
+                    {
+                        etag: contentsTag,
+                    },
+                ];
+            }
+            result.commandResponse = "Data set uploaded successfully.";
+            return result;
+        } finally {
+            connection.close();
         }
-        await DataSetUtils.uploadDataSet(connection, targetDataset, transferOptions);
-        result.success = true;
-        if (options.returnEtag) {
-            const contentsTag = await this.getContentsTag(dataSetName);
-            result.apiResponse = [
-                {
-                    etag: contentsTag,
-                },
-            ];
-        }
-        result.commandResponse = "Data set uploaded successfully.";
-        return result;
     }
 
     public async createDataSet(
@@ -136,7 +157,6 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
         options?: Partial<zowe.ICreateDataSetOptions>
     ): Promise<zowe.IZosFilesResponse> {
         const result = this.getDefaultResponse();
-        const connection = await this.ftpClient(this.checkedProfile());
         /* eslint-disable @typescript-eslint/restrict-plus-operands */
         const dcbList = [];
         if (options?.alcunit) {
@@ -167,14 +187,20 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
         const allocateOptions = {
             dcb: dcb,
         };
-        if (connection) {
-            await DataSetUtils.allocateDataSet(connection, dataSetName, allocateOptions);
-            result.success = true;
-            result.commandResponse = "Data set created successfully.";
-        } else {
-            throw new Error(result.commandResponse);
+        let connection: any;
+        try {
+            connection = await this.ftpClient(this.checkedProfile());
+            if (connection) {
+                await DataSetUtils.allocateDataSet(connection, dataSetName, allocateOptions);
+                result.success = true;
+                result.commandResponse = "Data set created successfully.";
+            } else {
+                throw new Error(result.commandResponse);
+            }
+            return result;
+        } finally {
+            connection.close();
         }
-        return result;
     }
 
     public async createDataSetMember(
@@ -186,15 +212,20 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
             content: "",
         };
         const result = this.getDefaultResponse();
-        const connection = await this.ftpClient(this.checkedProfile());
-        if (!connection) {
-            throw new Error(result.commandResponse);
-        }
+        let connection: any;
+        try {
+            connection = await this.ftpClient(this.checkedProfile());
+            if (!connection) {
+                throw new Error(result.commandResponse);
+            }
 
-        await DataSetUtils.uploadDataSet(connection, dataSetName, transferOptions);
-        result.success = true;
-        result.commandResponse = "Member created successfully.";
-        return result;
+            await DataSetUtils.uploadDataSet(connection, dataSetName, transferOptions);
+            result.success = true;
+            result.commandResponse = "Member created successfully.";
+            return result;
+        } finally {
+            connection.close();
+        }
     }
 
     public allocateLikeDataSet(dataSetName: string, likeDataSetName: string): Promise<zowe.IZosFilesResponse> {
@@ -211,15 +242,20 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
 
     public async renameDataSet(currentDataSetName: string, newDataSetName: string): Promise<zowe.IZosFilesResponse> {
         const result = this.getDefaultResponse();
-        const connection = await this.ftpClient(this.checkedProfile());
-        if (connection) {
-            await DataSetUtils.renameDataSet(connection, currentDataSetName, newDataSetName);
-            result.success = true;
-            result.commandResponse = "Rename completed successfully.";
-        } else {
-            throw new Error(result.commandResponse);
+        let connection: any;
+        try {
+            connection = await this.ftpClient(this.checkedProfile());
+            if (connection) {
+                await DataSetUtils.renameDataSet(connection, currentDataSetName, newDataSetName);
+                result.success = true;
+                result.commandResponse = "Rename completed successfully.";
+            } else {
+                throw new Error(result.commandResponse);
+            }
+            return result;
+        } finally {
+            connection.close();
         }
-        return result;
     }
 
     public async renameDataSetMember(
@@ -228,17 +264,22 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
         newMemberName: string
     ): Promise<zowe.IZosFilesResponse> {
         const result = this.getDefaultResponse();
-        const connection = await this.ftpClient(this.checkedProfile());
         const currentName = dataSetName + "(" + currentMemberName + ")";
         const newName = dataSetName + "(" + newMemberName + ")";
-        if (connection) {
-            await DataSetUtils.renameDataSet(connection, currentName, newName);
-            result.success = true;
-            result.commandResponse = "Rename completed successfully.";
-        } else {
-            throw new Error(result.commandResponse);
+        let connection: any;
+        try {
+            connection = await this.ftpClient(this.checkedProfile());
+            if (connection) {
+                await DataSetUtils.renameDataSet(connection, currentName, newName);
+                result.success = true;
+                result.commandResponse = "Rename completed successfully.";
+            } else {
+                throw new Error(result.commandResponse);
+            }
+            return result;
+        } finally {
+            connection.close();
         }
-        return result;
     }
 
     public hMigrateDataSet(dataSetName: string): Promise<zowe.IZosFilesResponse> {
@@ -253,15 +294,20 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
         options?: zowe.IDeleteDatasetOptions
     ): Promise<zowe.IZosFilesResponse> {
         const result = this.getDefaultResponse();
-        const connection = await this.ftpClient(this.checkedProfile());
-        if (connection) {
-            await DataSetUtils.deleteDataSet(connection, dataSetName);
-            result.success = true;
-            result.commandResponse = "Delete completed successfully.";
-        } else {
-            throw new Error(result.commandResponse);
+        let connection: any;
+        try {
+            connection = await this.ftpClient(this.checkedProfile());
+            if (connection) {
+                await DataSetUtils.deleteDataSet(connection, dataSetName);
+                result.success = true;
+                result.commandResponse = "Delete completed successfully.";
+            } else {
+                throw new Error(result.commandResponse);
+            }
+            return result;
+        } finally {
+            connection.close();
         }
-        return result;
     }
 
     private async getContentsTag(dataSetName: string): Promise<string> {

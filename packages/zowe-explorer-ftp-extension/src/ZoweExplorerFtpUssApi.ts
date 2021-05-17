@@ -30,20 +30,25 @@ import { AbstractFtpApi } from "./ZoweExplorerAbstractFtpApi";
 export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
     public async fileList(ussFilePath: string): Promise<zowe.IZosFilesResponse> {
         const result = this.getDefaultResponse();
-        const connection = await this.ftpClient(this.checkedProfile());
-        if (connection) {
-            const response: any[] = await UssUtils.listFiles(connection, ussFilePath);
-            if (response) {
-                result.success = true;
-                result.apiResponse.items = response.map((element) => ({
-                    name: element.name,
-                    size: element.size,
-                    mtime: element.lastModified,
-                    mode: element.permissions,
-                }));
+        let connection: any;
+        try {
+            connection = await this.ftpClient(this.checkedProfile());
+            if (connection) {
+                const response: any[] = await UssUtils.listFiles(connection, ussFilePath);
+                if (response) {
+                    result.success = true;
+                    result.apiResponse.items = response.map((element) => ({
+                        name: element.name,
+                        size: element.size,
+                        mtime: element.lastModified,
+                        mode: element.permissions,
+                    }));
+                }
             }
+            return result;
+        } finally {
+            connection.close();
         }
-        return result;
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/require-await, require-await
@@ -52,7 +57,6 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
     }
 
     public async getContents(ussFilePath: string, options: zowe.IDownloadOptions): Promise<zowe.IZosFilesResponse> {
-        const connection = await this.ftpClient(this.checkedProfile());
         const result = this.getDefaultResponse();
         const targetFile = options.file;
         const transferOptions = {
@@ -60,16 +64,22 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
             localFile: targetFile,
             size: 1,
         };
-        if (connection && targetFile) {
-            imperative.IO.createDirsSyncFromFilePath(targetFile);
-            await UssUtils.downloadFile(connection, ussFilePath, transferOptions);
-            result.success = true;
-            result.commandResponse = "";
-            result.apiResponse.etag = await this.hashFile(targetFile);
-        } else {
-            throw new Error(result.commandResponse);
+        let connection: any;
+        try {
+            connection = await this.ftpClient(this.checkedProfile());
+            if (connection && targetFile) {
+                imperative.IO.createDirsSyncFromFilePath(targetFile);
+                await UssUtils.downloadFile(connection, ussFilePath, transferOptions);
+                result.success = true;
+                result.commandResponse = "";
+                result.apiResponse.etag = await this.hashFile(targetFile);
+            } else {
+                throw new Error(result.commandResponse);
+            }
+            return result;
+        } finally {
+            connection.close();
         }
-        return result;
     }
 
     public async putContents(
@@ -85,37 +95,42 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
             localFile: inputFilePath,
         };
         const result = this.getDefaultResponse();
-        const connection = await this.ftpClient(this.checkedProfile());
-        if (!connection) {
-            throw new Error(result.commandResponse);
-        }
-        // Save-Save with FTP requires loading the file first
-        if (returnEtag && etag) {
-            const tmpFileName = tmp.tmpNameSync();
-            const options: zowe.IDownloadOptions = {
-                binary,
-                file: tmpFileName,
-            };
-            const loadResult = await this.getContents(ussFilePath, options);
-            if (
-                loadResult &&
-                loadResult.success &&
-                loadResult.apiResponse &&
-                loadResult.apiResponse.etag &&
-                loadResult.apiResponse.etag !== etag
-            ) {
-                // TODO: extension.ts should not check for zosmf errors.
-                throw new Error("Rest API failure with HTTP(S) status 412");
+        let connection: any;
+        try {
+            connection = await this.ftpClient(this.checkedProfile());
+            if (!connection) {
+                throw new Error(result.commandResponse);
             }
-        }
-        await UssUtils.uploadFile(connection, ussFilePath, transferOptions);
-        result.success = true;
-        if (returnEtag) {
-            result.apiResponse.etag = await this.hashFile(inputFilePath);
-        }
-        result.commandResponse = "File updated.";
+            // Save-Save with FTP requires loading the file first
+            if (returnEtag && etag) {
+                const tmpFileName = tmp.tmpNameSync();
+                const options: zowe.IDownloadOptions = {
+                    binary,
+                    file: tmpFileName,
+                };
+                const loadResult = await this.getContents(ussFilePath, options);
+                if (
+                    loadResult &&
+                    loadResult.success &&
+                    loadResult.apiResponse &&
+                    loadResult.apiResponse.etag &&
+                    loadResult.apiResponse.etag !== etag
+                ) {
+                    // TODO: extension.ts should not check for zosmf errors.
+                    throw new Error("Rest API failure with HTTP(S) status 412");
+                }
+            }
+            await UssUtils.uploadFile(connection, ussFilePath, transferOptions);
+            result.success = true;
+            if (returnEtag) {
+                result.apiResponse.etag = await this.hashFile(inputFilePath);
+            }
+            result.commandResponse = "File updated.";
 
-        return result;
+            return result;
+        } finally {
+            connection.close();
+        }
     }
 
     public async uploadDirectory(
@@ -148,62 +163,82 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
         mode?: string
     ): Promise<zowe.IZosFilesResponse> {
         const result = this.getDefaultResponse();
-        const connection = await this.ftpClient(this.checkedProfile());
-        if (connection && connection.client) {
-            if (type === "directory") {
-                await UssUtils.makeDirectory(connection, ussPath);
-            } else if (type === "File" || type === "file") {
-                const content = Buffer.from(CoreUtils.addCarriageReturns(""));
-                const transferOptions = {
-                    transferType: TRANSFER_TYPE_ASCII,
-                    content: content,
-                };
-                await UssUtils.uploadFile(connection, ussPath, transferOptions);
+        let connection: any;
+        try {
+            connection = await this.ftpClient(this.checkedProfile());
+            if (connection && connection.client) {
+                if (type === "directory") {
+                    await UssUtils.makeDirectory(connection, ussPath);
+                } else if (type === "File" || type === "file") {
+                    const content = Buffer.from(CoreUtils.addCarriageReturns(""));
+                    const transferOptions = {
+                        transferType: TRANSFER_TYPE_ASCII,
+                        content: content,
+                    };
+                    await UssUtils.uploadFile(connection, ussPath, transferOptions);
+                }
+                result.success = true;
+                result.commandResponse = "Directory or file created.";
+            } else {
+                throw new Error(result.commandResponse);
             }
-            result.success = true;
-            result.commandResponse = "Directory or file created.";
-        } else {
-            throw new Error(result.commandResponse);
+            return result;
+        } finally {
+            connection.close();
         }
-        return result;
     }
 
     public async delete(ussPath: string, recursive?: boolean): Promise<zowe.IZosFilesResponse> {
         const result = this.getDefaultResponse();
-        const connection = await this.ftpClient(this.checkedProfile());
-        if (connection) {
-            if (recursive) {
-                await this.deleteDirectory(ussPath, connection);
+        let connection: any;
+        try {
+            connection = await this.ftpClient(this.checkedProfile());
+            if (connection) {
+                if (recursive) {
+                    await this.deleteDirectory(ussPath, connection);
+                } else {
+                    await UssUtils.deleteFile(connection, ussPath);
+                }
+                result.success = true;
+                result.commandResponse = "Delete completed.";
             } else {
-                await UssUtils.deleteFile(connection, ussPath);
+                throw new Error(result.commandResponse);
             }
-            result.success = true;
-            result.commandResponse = "Delete completed.";
-        } else {
-            throw new Error(result.commandResponse);
+            return result;
+        } finally {
+            connection.close();
         }
-        return result;
     }
 
     public async rename(currentUssPath: string, newUssPath: string): Promise<zowe.IZosFilesResponse> {
         const result = this.getDefaultResponse();
-        const connection = await this.ftpClient(this.checkedProfile());
-        if (connection) {
-            await UssUtils.renameFile(connection, currentUssPath, newUssPath);
-            result.success = true;
-            result.commandResponse = "Rename completed.";
-        } else {
-            throw new Error(result.commandResponse);
+        let connection: any;
+        try {
+            connection = await this.ftpClient(this.checkedProfile());
+            if (connection) {
+                await UssUtils.renameFile(connection, currentUssPath, newUssPath);
+                result.success = true;
+                result.commandResponse = "Rename completed.";
+            } else {
+                throw new Error(result.commandResponse);
+            }
+            return result;
+        } finally {
+            connection.close();
         }
-        return result;
     }
 
     private async deleteDirectory(ussPath: string, connection: any): Promise<any> {
         const result = this.getDefaultResponse();
-        const response: any = await UssUtils.deleteDirectory(connection, ussPath);
-        if (response) {
-            result.success = true;
-            result.commandResponse = "Delete Completed";
+        try {
+            connection = await this.ftpClient(this.checkedProfile());
+            const response: any = await UssUtils.deleteDirectory(connection, ussPath);
+            if (response) {
+                result.success = true;
+                result.commandResponse = "Delete Completed";
+            }
+        } finally {
+            connection.close();
         }
     }
 
