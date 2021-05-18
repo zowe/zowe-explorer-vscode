@@ -24,8 +24,6 @@ import { AbstractFtpApi } from "./ZoweExplorerAbstractFtpApi";
 // The Zowe FTP CLI plugin is written and uses mostly JavaScript, so relax the rules here.
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
 export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
     public async fileList(ussFilePath: string): Promise<zowe.IZosFilesResponse> {

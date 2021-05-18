@@ -9,11 +9,8 @@
  *                                                                                 *
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/restrict-plus-operands */
 import * as fs from "fs";
 import * as crypto from "crypto";
 import * as tmp from "tmp";
@@ -42,6 +39,7 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
                         volume: element.volume,
                         recfm: element.recfm,
                         blksz: element.blksz,
+                        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
                         migr: element.volume && element.volume.toUpperCase() === "MIGRATED" ? "YES" : "NO",
                     }));
                 }
@@ -170,24 +168,29 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
             dcbList.push("ALCUNIT=" + options.alcunit);
         }
         if (options?.blksize) {
+            // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
             dcbList.push("BLKSIZE=" + options.blksize);
         }
         if (options?.dirblk) {
+            // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
             dcbList.push("DIRECTORY=" + options.dirblk);
         }
         if (options?.dsorg) {
             dcbList.push("DSORG=" + options.dsorg);
         }
         if (options?.lrecl) {
+            // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
             dcbList.push("LRECL=" + options.lrecl);
         }
         if (options?.primary) {
+            // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
             dcbList.push("PRIMARY=" + options.primary);
         }
         if (options?.recfm) {
             dcbList.push("RECFM=" + options.recfm);
         }
         if (options?.secondary) {
+            // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
             dcbList.push("SECONDARY=" + options.secondary);
         }
         const dcb = dcbList.join(" ");

@@ -11,9 +11,6 @@
 
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars*/
 import * as zowe from "@zowe/cli";
 import * as imperative from "@zowe/imperative";
 
@@ -95,7 +92,7 @@ export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
                 const response: IJobStatus = await JobUtils.findJobByID(connection, jobid);
                 const files: any = response.spoolFiles;
                 if (files) {
-                    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-unsafe-call
                     return files.map((file: ISpoolFile) => {
                         return {
                             /* it’s prepared for the potential change in zftp api, renaming stepname to stepName, procstep to procStep, ddname to ddName. */
