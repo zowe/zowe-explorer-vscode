@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
 /*
  * This program and the accompanying materials are made available under the terms of the *
  * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
@@ -10,6 +9,11 @@
  *                                                                                 *
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/restrict-plus-operands */
 import * as fs from "fs";
 import * as crypto from "crypto";
 import * as tmp from "tmp";
@@ -21,8 +25,6 @@ import { ZoweExplorerApi } from "@zowe/zowe-explorer-api";
 import { DataSetUtils, TRANSFER_TYPE_ASCII, TRANSFER_TYPE_BINARY } from "@zowe/zos-ftp-for-zowe-cli";
 import { AbstractFtpApi } from "./ZoweExplorerAbstractFtpApi";
 // The Zowe FTP CLI plugin is written and uses mostly JavaScript, so relax the rules here.
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
 export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
     public async dataSet(filter: string, options?: zowe.IListOptions): Promise<zowe.IZosFilesResponse> {
@@ -40,14 +42,15 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
                         volume: element.volume,
                         recfm: element.recfm,
                         blksz: element.blksz,
-                        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
                         migr: element.volume && element.volume.toUpperCase() === "MIGRATED" ? "YES" : "NO",
                     }));
                 }
             }
             return result;
         } finally {
-            connection.close();
+            if (connection != null) {
+                this.releaseConnection(connection);
+            }
         }
     }
 
@@ -70,7 +73,9 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
             }
             return result;
         } finally {
-            connection.close();
+            if (connection != null) {
+                this.releaseConnection(connection);
+            }
         }
     }
 
@@ -95,7 +100,9 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
             }
             return result;
         } finally {
-            connection.close();
+            if (connection != null) {
+                this.releaseConnection(connection);
+            }
         }
     }
 
@@ -108,7 +115,6 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
             transferType: options.binary ? TRANSFER_TYPE_BINARY : TRANSFER_TYPE_ASCII,
             localFile: inputFilePath,
         };
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         const file = path.basename(inputFilePath).replace(/[^a-z0-9]+/gi, "");
         const member = file.substr(0, 8);
         let targetDataset;
@@ -147,7 +153,9 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
             result.commandResponse = "Data set uploaded successfully.";
             return result;
         } finally {
-            connection.close();
+            if (connection != null) {
+                this.releaseConnection(connection);
+            }
         }
     }
 
@@ -157,7 +165,6 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
         options?: Partial<zowe.ICreateDataSetOptions>
     ): Promise<zowe.IZosFilesResponse> {
         const result = this.getDefaultResponse();
-        /* eslint-disable @typescript-eslint/restrict-plus-operands */
         const dcbList = [];
         if (options?.alcunit) {
             dcbList.push("ALCUNIT=" + options.alcunit);
@@ -199,7 +206,9 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
             }
             return result;
         } finally {
-            connection.close();
+            if (connection != null) {
+                this.releaseConnection(connection);
+            }
         }
     }
 
@@ -224,7 +233,9 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
             result.commandResponse = "Member created successfully.";
             return result;
         } finally {
-            connection.close();
+            if (connection != null) {
+                this.releaseConnection(connection);
+            }
         }
     }
 
@@ -254,7 +265,9 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
             }
             return result;
         } finally {
-            connection.close();
+            if (connection != null) {
+                this.releaseConnection(connection);
+            }
         }
     }
 
@@ -278,7 +291,9 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
             }
             return result;
         } finally {
-            connection.close();
+            if (connection != null) {
+                this.releaseConnection(connection);
+            }
         }
     }
 
@@ -306,7 +321,9 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
             }
             return result;
         } finally {
-            connection.close();
+            if (connection != null) {
+                this.releaseConnection(connection);
+            }
         }
     }
 

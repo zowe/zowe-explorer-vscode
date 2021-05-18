@@ -9,7 +9,11 @@
  *                                                                                 *
  */
 
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
 import * as imperative from "@zowe/imperative";
 import { FTPConfig, IZosFTPProfile } from "@zowe/zos-ftp-for-zowe-cli";
 import { ZoweExplorerApi } from "@zowe/zowe-explorer-api";
@@ -65,5 +69,9 @@ export abstract class AbstractFtpApi implements ZoweExplorerApi.ICommon {
             port: ftpProfile.port,
             secureFtp: ftpProfile.secureFtp,
         });
+    }
+    public releaseConnection(connection: any) {
+        connection.close();
+        return;
     }
 }

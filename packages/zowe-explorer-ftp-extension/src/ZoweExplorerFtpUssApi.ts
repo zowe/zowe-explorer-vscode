@@ -47,7 +47,9 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
             }
             return result;
         } finally {
-            connection.close();
+            if (connection != null) {
+                this.releaseConnection(connection);
+            }
         }
     }
 
@@ -78,7 +80,9 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
             }
             return result;
         } finally {
-            connection.close();
+            if (connection != null) {
+                this.releaseConnection(connection);
+            }
         }
     }
 
@@ -129,7 +133,9 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
 
             return result;
         } finally {
-            connection.close();
+            if (connection != null) {
+                this.releaseConnection(connection);
+            }
         }
     }
 
@@ -184,7 +190,9 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
             }
             return result;
         } finally {
-            connection.close();
+            if (connection != null) {
+                this.releaseConnection(connection);
+            }
         }
     }
 
@@ -206,7 +214,9 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
             }
             return result;
         } finally {
-            connection.close();
+            if (connection != null) {
+                this.releaseConnection(connection);
+            }
         }
     }
 
@@ -224,7 +234,9 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
             }
             return result;
         } finally {
-            connection.close();
+            if (connection != null) {
+                this.releaseConnection(connection);
+            }
         }
     }
 
@@ -238,7 +250,9 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
                 result.commandResponse = "Delete Completed";
             }
         } finally {
-            connection.close();
+            if (connection != null) {
+                this.releaseConnection(connection);
+            }
         }
     }
 
