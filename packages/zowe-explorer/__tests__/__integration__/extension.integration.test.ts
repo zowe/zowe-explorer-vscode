@@ -204,6 +204,27 @@ describe("Extension Integration Tests", () => {
         }).timeout(TIMEOUT);
     });
 
+    describe("Allocate Like", () => {
+        it("should allocate a copy of the requested data set", async () => {
+            const testOriginalName = pattern + ".EXT.SAMPLE.PDS";
+            const testOriginalNode = new ZoweDatasetNode(
+                testOriginalName,
+                vscode.TreeItemCollapsibleState.Collapsed,
+                sessionNode,
+                session
+            );
+            const testCopyName = pattern + ".EXT.SAMPLE.PDS2";
+
+            const inputStub = sandbox.stub(vscode.window, "showInputBox");
+            inputStub.onCall(0).returns(testCopyName);
+
+            await dsActions.allocateLike(testTree, testOriginalNode);
+
+            const response = await zowe.List.dataSet(sessionNode.getSession(), testCopyName, {});
+            expect(response.success).to.equal(true);
+        }).timeout(TIMEOUT);
+    });
+
     describe("Deactivate", () => {
         it("should clean up the local files when deactivate is invoked", async () => {
             try {
