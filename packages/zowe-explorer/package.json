@@ -73,6 +73,11 @@
         "command": "zowe.deleteJob",
         "key": "delete",
         "when": "focusedView == zowe.jobs && listSupportsMultiselect"
+      },
+      {
+        "command": "zowe.deleteFromDatasetTree",
+        "key": "delete",
+        "when": "focusedView == zowe.explorer && listSupportsMultiselect"
       }
     ],
     "commands": [

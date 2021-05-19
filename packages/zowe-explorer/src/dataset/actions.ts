@@ -177,6 +177,72 @@ export async function uploadFile(node: ZoweDatasetNode, doc: vscode.TextDocument
 }
 
 /**
+ * Deletes nodes from the data set tree & delegates deletion of data sets, members, and profiles
+ *
+ * @export
+ * @param {IZoweDatasetTreeNode} node - The node selected for deletion
+ * @param {DatasetTree} datasetProvider - the tree which contains the nodes
+ */
+export async function deleteFromDatasetTree(
+    node: IZoweDatasetTreeNode,
+    datasetProvider: IZoweTree<IZoweDatasetTreeNode>
+) {
+    const selectedNodes: IZoweDatasetTreeNode[] = datasetProvider.getTreeView().selection;
+    const deletedNodes: string[] = selectedNodes.map((node) => ` ${node.getLabel()}`);
+
+    // Filter out sessions or favorite nodes
+    const nodes: IZoweDatasetTreeNode[] = selectedNodes.filter(
+        (node) => !contextually.isFavorite(node) && !contextually.isSession(node)
+    );
+
+    // Confirm that the user really wants to delete
+    globals.LOG.debug(localize("deleteDataset.log.debug", "Deleting data set(s): ") + deletedNodes.join(","));
+    const quickPickOptions: vscode.QuickPickOptions = {
+        placeHolder: localize(
+            "deleteDataset.quickPickOption",
+            "Delete data set(s)? This will permanently remove them from your system.",
+            node.label
+        ),
+        ignoreFocusOut: true,
+        canPickMany: false,
+    };
+    if (
+        (await vscode.window.showQuickPick(
+            [
+                localize("deleteDataset.showQuickPick.delete", "Delete"),
+                localize("deleteDataset.showQuickPick.Cancel", "Cancel"),
+            ],
+            quickPickOptions
+        )) !== localize("deleteDataset.showQuickPick.delete", "Delete")
+    ) {
+        globals.LOG.debug(
+            localize("deleteDataset.showQuickPick.log.debug", "User picked Cancel. Cancelling delete of data set")
+        );
+        return;
+    }
+
+    // Delete multiple selected nodes
+    if (selectedNodes.length > 0) {
+        for (const node of nodes) {
+            await deleteDataset(node, datasetProvider);
+        }
+        vscode.window.showInformationMessage(
+            localize("deleteMulti.datasetNode", "The following nodes were deleted:") + deletedNodes
+        );
+    }
+
+    // Delete a single node
+    if (node && !(selectedNodes.length > 0)) {
+        await deleteDataset(node, datasetProvider);
+        vscode.window.showInformationMessage(
+            localize("deleteCommand.datasetNode", "Node ") +
+                node.getLabel() +
+                localize("deleteCommand.delete", " deleted")
+        );
+    }
+}
+
+/**
  * Creates a PDS member
  *
  * @export
@@ -777,32 +843,6 @@ export async function submitMember(node: IZoweTreeNode) {
  * @param {IZoweTree<IZoweDatasetTreeNode>} datasetProvider - the tree which contains the nodes
  */
 export async function deleteDataset(node: IZoweTreeNode, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
-    globals.LOG.debug(localize("deleteDataset.log.debug", "Deleting data set ") + node.label);
-    const quickPickOptions: vscode.QuickPickOptions = {
-        placeHolder: localize(
-            "deleteDataset.quickPickOption",
-            "Delete {0}? This will permanently remove it from your system.",
-            node.label
-        ),
-        ignoreFocusOut: true,
-        canPickMany: false,
-    };
-    // confirm that the user really wants to delete
-    if (
-        (await vscode.window.showQuickPick(
-            [
-                localize("deleteDataset.showQuickPick.delete", "Delete"),
-                localize("deleteDataset.showQuickPick.Cancel", "Cancel"),
-            ],
-            quickPickOptions
-        )) !== localize("deleteDataset.showQuickPick.delete", "Delete")
-    ) {
-        globals.LOG.debug(
-            localize("deleteDataset.showQuickPick.log.debug", "User picked Cancel. Cancelling delete of data set")
-        );
-        return;
-    }
-
     let label = "";
     let fav = false;
     try {
