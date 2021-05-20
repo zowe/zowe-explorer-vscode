@@ -14,7 +14,7 @@ import { ZoweTreeProvider } from "../../src/abstract/ZoweTreeProvider";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
 import * as vscode from "vscode";
-import { ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { IZoweNodeType, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { FilterDescriptor } from "../../src/utils/ProfilesUtils";
 import * as zowe from "@zowe/cli";
 
@@ -135,12 +135,13 @@ export function createAltTypeIProfile(): imperative.IProfileLoaded {
     };
 }
 
-export function createTreeView(): vscode.TreeView<ZoweTreeProvider> {
+export function createTreeView(selection?): vscode.TreeView<ZoweTreeProvider> {
+    const currSelection = selection ? selection : [];
     return {
         reveal: jest.fn(),
         onDidExpandElement: jest.fn(),
         onDidCollapseElement: jest.fn(),
-        selection: [],
+        selection: currSelection,
         onDidChangeSelection: jest.fn(),
         visible: true,
         onDidChangeVisibility: jest.fn(),

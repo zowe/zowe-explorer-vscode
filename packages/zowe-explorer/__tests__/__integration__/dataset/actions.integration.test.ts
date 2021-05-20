@@ -93,3 +93,48 @@ describe("dsNodeActions integration test", async () => {
         }).timeout(TIMEOUT);
     });
 });
+
+// it("Should delete one dataset", async () => {
+//     const globalMocks = createGlobalMocks();
+//     const blockMocks = createBlockMocks(globalMocks);
+// });
+
+// it("Should delete one member", async () => {
+//     const globalMocks = createGlobalMocks();
+//     const blockMocks = createBlockMocks(globalMocks);
+// });
+
+// it("Should delete one VSAM", async () => {
+//     const globalMocks = createGlobalMocks();
+//     const blockMocks = createBlockMocks(globalMocks);
+// });
+
+// it("Should delete two datasets", async () => {
+//     const globalMocks = createGlobalMocks();
+//     const blockMocks = createBlockMocks(globalMocks);
+// });
+
+// it("Should delete one dataset and one member", async () => {
+//     const globalMocks = createGlobalMocks();
+//     const blockMocks = createBlockMocks(globalMocks);
+// });
+
+// it("Should not delete a favorite", async () => {
+//     const globalMocks = createGlobalMocks();
+//     const blockMocks = createBlockMocks(globalMocks);
+// });
+
+// it("Should not delete a session", async () => {
+//     const globalMocks = createGlobalMocks();
+//     const blockMocks = createBlockMocks(globalMocks);
+// });
+
+// it("Should fail to delete first dataset and succeed in deleting second dataset", async () => {
+//     const globalMocks = createGlobalMocks();
+//     const blockMocks = createBlockMocks(globalMocks);
+// });
+
+// it("Should cancel deletion if user selects Cancel", async () => {
+//     const globalMocks = createGlobalMocks();
+//     const blockMocks = createBlockMocks(globalMocks);
+// });

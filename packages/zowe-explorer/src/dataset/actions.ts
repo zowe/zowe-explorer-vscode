@@ -243,7 +243,7 @@ export async function deleteDatasetPrompt(
         vscode.window.showInformationMessage(
             localize("deleteCommand.datasetNode", "Node ") +
                 node.getLabel() +
-                localize("deleteCommand.delete", " deleted")
+                localize("deleteCommand.delete", " was deleted.")
         );
     }
 }
