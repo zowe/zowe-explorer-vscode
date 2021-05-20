@@ -120,7 +120,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
 
         if (mProfileInfo.usingTeamConfig) {
             // Initialize profile manager for team config
-            await Profiles.createConfigInstance(globals.LOG, mProfileInfo);
+            await Profiles.createConfigInstance(globals.LOG);
         } else {
             // Initialize profile manager for old-school profiles
             await Profiles.createInstance(globals.LOG);

@@ -9,7 +9,7 @@
  *                                                                                 *
  */
 
-import { IProfileLoaded, Logger, CliProfileManager, IProfile, ImperativeConfig, ProfileInfo } from "@zowe/imperative";
+import { IProfileLoaded, Logger, CliProfileManager, IProfile, ImperativeConfig } from "@zowe/imperative";
 import * as path from "path";
 import * as os from "os";
 import { URL } from "url";
@@ -118,17 +118,18 @@ export class ProfilesCache {
         }
     }
 
-    public refreshConfig(apiRegister: ZoweExplorerApi.IApiRegisterClient, mProfileInfo: ProfileInfo): void {
+    public async refreshConfig(apiRegister: ZoweExplorerApi.IApiRegisterClient): Promise<void> {
         this.allProfiles = [];
         let tmpAllProfiles = [];
         this.allTypes = [];
+        const mProfileInfo = ProfilesConfig.getInstance();
         for (const type of apiRegister.registeredApiTypes()) {
             // Step 1: Get all profiles for each registered type
             const profilesForType = mProfileInfo.getAllProfiles(type);
             if (profilesForType && profilesForType.length > 0) {
                 for (const prof of profilesForType) {
                     // Step 2: Merge args for each profile
-                    const profAttr = ProfilesConfig.getMergedAttrs(mProfileInfo, prof);
+                    const profAttr = await ProfilesConfig.getMergedAttrs(mProfileInfo, prof);
                     // Work-around. TODO: Discuss with imperative team
                     const profileFix: IProfileLoaded = {
                         message: "",

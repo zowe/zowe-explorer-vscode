@@ -9,11 +9,28 @@
  *                                                                                 *
  */
 
-import { IProfAttrs, IProfile, ProfileInfo } from "@zowe/imperative";
+import { IProfileLoaded, Logger, IProfAttrs, IProfile, ProfileInfo } from "@zowe/imperative";
 
+export interface IProfileValidationConfig {
+    status: string;
+    name: string;
+}
+
+export interface IValidationSettingConfig {
+    name: string;
+    setting: boolean;
+}
 export class ProfilesConfig {
+    public profilesForValidation: IProfileValidationConfig[] = [];
+    public profilesValidationSetting: IValidationSettingConfig[] = [];
+    public allProfiles: IProfileLoaded[] = [];
+    protected allTypes: string[];
+    protected profilesByType = new Map<string, IProfileLoaded[]>();
+    protected defaultProfileByType = new Map<string, IProfileLoaded>();
+    public constructor(protected log: Logger) {}
+
     public static createInstance(mProfileInfo: ProfileInfo): ProfileInfo {
-        return ProfilesConfig.info = mProfileInfo;
+        return (ProfilesConfig.info = mProfileInfo);
     }
 
     public static getInstance(): ProfileInfo {
@@ -22,13 +39,13 @@ export class ProfilesConfig {
 
     private static info: ProfileInfo;
 
-    public static getMergedAttrs(mProfileInfo: ProfileInfo, profAttrs: IProfAttrs): IProfile {
+    public static async getMergedAttrs(mProfileInfo: ProfileInfo, profAttrs: IProfAttrs): Promise<IProfile> {
         const profile: IProfile = {};
         if (profAttrs != null) {
             const mergedArgs = mProfileInfo.mergeArgsForProfile(profAttrs);
 
             for (const arg of mergedArgs.knownArgs) {
-                profile[arg.argName] = arg.secure ? mProfileInfo.loadSecureArg(arg) : arg.argValue;
+                profile[arg.argName] = arg.secure ? await mProfileInfo.loadSecureArg(arg) : arg.argValue;
             }
         }
         return profile;
