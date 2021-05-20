@@ -9,8 +9,6 @@
  *                                                                                 *
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import * as zowe from "@zowe/cli";
 import * as imperative from "@zowe/imperative";
 
@@ -20,6 +18,8 @@ import { DownloadJobs, IJobFile } from "@zowe/cli";
 import { IJob, IJobStatus, ISpoolFile } from "@zowe/zos-ftp-for-zowe-cli/lib/api/JobInterface";
 import { AbstractFtpApi } from "./ZoweExplorerAbstractFtpApi";
 // The Zowe FTP CLI plugin is written and uses mostly JavaScript, so relax the rules here.
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
 export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
     public async getJobsByOwnerAndPrefix(owner: string, prefix: string): Promise<zowe.IJob[]> {
@@ -49,9 +49,7 @@ export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
             }
             return [result];
         } finally {
-            if (connection != null) {
-                this.releaseConnection(connection);
-            }
+            this.releaseConnection(connection);
         }
     }
 
@@ -77,9 +75,7 @@ export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
             }
             return result;
         } finally {
-            if (connection != null) {
-                this.releaseConnection(connection);
-            }
+            this.releaseConnection(connection);
         }
     }
 
@@ -110,9 +106,7 @@ export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
             }
             return [result];
         } finally {
-            if (connection != null) {
-                this.releaseConnection(connection);
-            }
+            this.releaseConnection(connection);
         }
     }
     public async downloadSpoolContent(parms: zowe.IDownloadAllSpoolContentParms): Promise<void> {
@@ -159,9 +153,7 @@ export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
                 }
             }
         } finally {
-            if (connection != null) {
-                this.releaseConnection(connection);
-            }
+            this.releaseConnection(connection);
         }
     }
 
@@ -184,9 +176,7 @@ export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
             }
             return "";
         } finally {
-            if (connection != null) {
-                this.releaseConnection(connection);
-            }
+            this.releaseConnection(connection);
         }
     }
 
@@ -216,9 +206,7 @@ export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
             }
             return result;
         } finally {
-            if (connection != null) {
-                this.releaseConnection(connection);
-            }
+            this.releaseConnection(connection);
         }
     }
     public async deleteJob(jobname: string, jobid: string): Promise<void> {
@@ -229,9 +217,7 @@ export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
                 await JobUtils.deleteJob(connection, jobid);
             }
         } finally {
-            if (connection != null) {
-                this.releaseConnection(connection);
-            }
+            this.releaseConnection(connection);
         }
     }
 

@@ -9,8 +9,6 @@
  *                                                                                 *
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import * as fs from "fs";
 import * as crypto from "crypto";
 import * as tmp from "tmp";
@@ -22,6 +20,8 @@ import { ZoweExplorerApi } from "@zowe/zowe-explorer-api";
 import { DataSetUtils, TRANSFER_TYPE_ASCII, TRANSFER_TYPE_BINARY } from "@zowe/zos-ftp-for-zowe-cli";
 import { AbstractFtpApi } from "./ZoweExplorerAbstractFtpApi";
 // The Zowe FTP CLI plugin is written and uses mostly JavaScript, so relax the rules here.
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
 export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
     public async dataSet(filter: string, options?: zowe.IListOptions): Promise<zowe.IZosFilesResponse> {
@@ -46,9 +46,7 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
             }
             return result;
         } finally {
-            if (connection != null) {
-                this.releaseConnection(connection);
-            }
+            this.releaseConnection(connection);
         }
     }
 
@@ -71,9 +69,7 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
             }
             return result;
         } finally {
-            if (connection != null) {
-                this.releaseConnection(connection);
-            }
+            this.releaseConnection(connection);
         }
     }
 
@@ -98,9 +94,7 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
             }
             return result;
         } finally {
-            if (connection != null) {
-                this.releaseConnection(connection);
-            }
+            this.releaseConnection(connection);
         }
     }
 
@@ -151,9 +145,7 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
             result.commandResponse = "Data set uploaded successfully.";
             return result;
         } finally {
-            if (connection != null) {
-                this.releaseConnection(connection);
-            }
+            this.releaseConnection(connection);
         }
     }
 
@@ -209,9 +201,7 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
             }
             return result;
         } finally {
-            if (connection != null) {
-                this.releaseConnection(connection);
-            }
+            this.releaseConnection(connection);
         }
     }
 
@@ -236,9 +226,7 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
             result.commandResponse = "Member created successfully.";
             return result;
         } finally {
-            if (connection != null) {
-                this.releaseConnection(connection);
-            }
+            this.releaseConnection(connection);
         }
     }
 
@@ -268,9 +256,7 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
             }
             return result;
         } finally {
-            if (connection != null) {
-                this.releaseConnection(connection);
-            }
+            this.releaseConnection(connection);
         }
     }
 
@@ -294,9 +280,7 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
             }
             return result;
         } finally {
-            if (connection != null) {
-                this.releaseConnection(connection);
-            }
+            this.releaseConnection(connection);
         }
     }
 
@@ -324,9 +308,7 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
             }
             return result;
         } finally {
-            if (connection != null) {
-                this.releaseConnection(connection);
-            }
+            this.releaseConnection(connection);
         }
     }
 

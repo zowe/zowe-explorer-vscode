@@ -9,7 +9,6 @@
  *                                                                                 *
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import * as imperative from "@zowe/imperative";
 import { FTPConfig, IZosFTPProfile } from "@zowe/zos-ftp-for-zowe-cli";
@@ -67,10 +66,11 @@ export abstract class AbstractFtpApi implements ZoweExplorerApi.ICommon {
             secureFtp: ftpProfile.secureFtp,
         });
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any,@typescript-eslint/explicit-function-return-type
-    public releaseConnection(connection: any) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        connection.close();
-        return;
+    public releaseConnection(connection: any): void {
+        if (connection != null) {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access
+            connection.close();
+            return;
+        }
     }
 }

@@ -45,9 +45,7 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
             }
             return result;
         } finally {
-            if (connection != null) {
-                this.releaseConnection(connection);
-            }
+            this.releaseConnection(connection);
         }
     }
 
@@ -78,9 +76,7 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
             }
             return result;
         } finally {
-            if (connection != null) {
-                this.releaseConnection(connection);
-            }
+            this.releaseConnection(connection);
         }
     }
 
@@ -131,9 +127,7 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
 
             return result;
         } finally {
-            if (connection != null) {
-                this.releaseConnection(connection);
-            }
+            this.releaseConnection(connection);
         }
     }
 
@@ -188,9 +182,7 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
             }
             return result;
         } finally {
-            if (connection != null) {
-                this.releaseConnection(connection);
-            }
+            this.releaseConnection(connection);
         }
     }
 
@@ -212,9 +204,7 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
             }
             return result;
         } finally {
-            if (connection != null) {
-                this.releaseConnection(connection);
-            }
+            this.releaseConnection(connection);
         }
     }
 
@@ -232,9 +222,7 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
             }
             return result;
         } finally {
-            if (connection != null) {
-                this.releaseConnection(connection);
-            }
+            this.releaseConnection(connection);
         }
     }
 
@@ -248,9 +236,7 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
                 result.commandResponse = "Delete Completed";
             }
         } finally {
-            if (connection != null) {
-                this.releaseConnection(connection);
-            }
+            this.releaseConnection(connection);
         }
     }
 
