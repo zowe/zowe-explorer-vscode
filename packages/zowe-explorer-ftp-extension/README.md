@@ -14,26 +14,18 @@ For more information, see [Changelog](https://github.com/zowe/vscode-extension-f
 
 ## Prerequisites
 
-Host-side prerequisites:
+Ensure that you obtain remote access to z/OS FTP service before you can use the extension.
 
-- Obtain remote access to z/OS FTP service.
+**Follow these steps:**
 
-  **Follow these steps:**
+1. Connect to z/OS with the FTP client.
+1. Run the following command in the FTP client:
 
-  1. Connect to z/OS with the FTP client.
-  1. Run the following command in the FTP client:
+   ```bash
+   rstat
+   ```
 
-     ```bash
-     rstat
-     ```
-
-  1. Ensure that the `JESINTERFACELevel` option is set to `2`.
-
-Client-side prerequisites:
-
-- Install the following prerequisites on your local machine:
-  1. [Zowe CLI](https://docs.zowe.org/stable/user-guide/cli-installcli.html)
-  1. [z/OS FTP Plug-in for Zowe CLI](https://github.com/zowe/zowe-cli-ftp-plugin#install-the-zos-ftp-plug-in)
+1. Ensure that the `JESINTERFACELevel` option is set to `2`.
 
 ## Installation
 
