@@ -18,7 +18,7 @@ import * as fsextra from "fs-extra";
 import * as imperative from "@zowe/imperative";
 import * as extension from "../../src/extension";
 import * as globals from "../../src/globals";
-import { ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { ValidProfileEnum, ProfilesConfig } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../src/Profiles";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import { createIProfile, createTreeView } from "../../__mocks__/mockCreators/shared";
@@ -305,6 +305,13 @@ async function createGlobalMocks() {
         value: jest.fn(() => {
             return {
                 "Zowe-Automatic-Validation": true,
+            };
+        }),
+    });
+    Object.defineProperty(ProfilesConfig, "getInstance", {
+        value: jest.fn(() => {
+            return {
+                usingTeamConfig: false,
             };
         }),
     });
