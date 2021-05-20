@@ -459,6 +459,105 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
 
     afterAll(() => jest.restoreAllMocks());
 
+    it("Should delete one dataset", async () => {
+        globals.defineGlobals("");
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        const node = new ZoweDatasetNode(
+            "HLQ.TEST.NODE",
+            vscode.TreeItemCollapsibleState.None,
+            blockMocks.datasetSessionNode,
+            null,
+            undefined,
+            undefined,
+            blockMocks.imperativeProfile
+        );
+
+        mocked(fs.existsSync).mockReturnValueOnce(true);
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Delete" as any);
+        const deleteSpy = jest.spyOn(blockMocks.mvsApi, "deleteDataSet");
+
+        await dsActions.deleteDataset(node, blockMocks.testDatasetTree);
+
+        expect(deleteSpy).toBeCalledWith(node.label);
+        expect(mocked(fs.existsSync)).toBeCalledWith(
+            path.join(globals.DS_DIR, node.getSessionNode().label, node.label)
+        );
+        expect(mocked(fs.unlinkSync)).toBeCalledWith(
+            path.join(globals.DS_DIR, node.getSessionNode().label, node.label)
+        );
+    });
+
+    it("Should delete one member", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+    });
+
+    it("Should delete one VSAM", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+    });
+
+    it("Should delete two datasets", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+    });
+
+    it("Should delete one dataset and one member", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+    });
+
+    it("Should not delete a favorite", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+    });
+
+    it("Should not delete a session", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+    });
+
+    it("Should fail to delete first dataset and succeed in deleting second dataset", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+    });
+
+    it("Should cancel deletion if user selects Cancel", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+    });
+});
+
+describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
+    function createBlockMocks() {
+        const session = createISession();
+        const imperativeProfile = createIProfile();
+        const zosmfSession = createBasicZosmfSession(imperativeProfile);
+        const treeView = createTreeView();
+        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
+        const profileInstance = createInstanceOfProfile(imperativeProfile);
+        const mvsApi = createMvsApi(imperativeProfile);
+        const mockCheckCurrentProfile = jest.fn();
+        bindMvsApi(mvsApi);
+
+        return {
+            session,
+            zosmfSession,
+            treeView,
+            imperativeProfile,
+            datasetSessionNode,
+            profileInstance,
+            mvsApi,
+            testDatasetTree,
+            mockCheckCurrentProfile,
+        };
+    }
+
+    afterAll(() => jest.restoreAllMocks());
+
     it("Checking common PS dataset deletion", async () => {
         globals.defineGlobals("");
         createGlobalMocks();

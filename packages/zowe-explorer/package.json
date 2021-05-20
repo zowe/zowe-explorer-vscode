@@ -75,7 +75,7 @@
         "when": "focusedView == zowe.jobs && listSupportsMultiselect"
       },
       {
-        "command": "zowe.deleteFromDatasetTree",
+        "command": "zowe.deleteDatasetPrompt",
         "key": "delete",
         "when": "focusedView == zowe.explorer && listSupportsMultiselect"
       }

@@ -234,8 +234,8 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
     vscode.commands.registerCommand("zowe.createDataset", (node) => dsActions.createFile(node, datasetProvider));
     vscode.commands.registerCommand("zowe.all.profilelink", (node) => linkProfileDialog(node.getProfile()));
     vscode.commands.registerCommand("zowe.createMember", (node) => dsActions.createMember(node, datasetProvider));
-    vscode.commands.registerCommand("zowe.deleteFromDatasetTree", (node) =>
-        dsActions.deleteFromDatasetTree(node, datasetProvider)
+    vscode.commands.registerCommand("zowe.deleteDatasetPrompt", (node) =>
+        dsActions.deleteDatasetPrompt(node, datasetProvider)
     );
     vscode.commands.registerCommand("zowe.deleteDataset", (node) => dsActions.deleteDataset(node, datasetProvider));
     vscode.commands.registerCommand("zowe.allocateLike", (node) => dsActions.allocateLike(datasetProvider, node));

@@ -183,7 +183,7 @@ export async function uploadFile(node: ZoweDatasetNode, doc: vscode.TextDocument
  * @param {IZoweDatasetTreeNode} node - The node selected for deletion
  * @param {DatasetTree} datasetProvider - the tree which contains the nodes
  */
-export async function deleteFromDatasetTree(
+export async function deleteDatasetPrompt(
     node: IZoweDatasetTreeNode,
     datasetProvider: IZoweTree<IZoweDatasetTreeNode>
 ) {
@@ -192,7 +192,10 @@ export async function deleteFromDatasetTree(
 
     // Filter out sessions or favorite nodes
     const nodes: IZoweDatasetTreeNode[] = selectedNodes.filter(
-        (node) => !contextually.isFavorite(node) && !contextually.isSession(node)
+        (node) =>
+            !contextually.isFavorite(node) &&
+            !contextually.isFavorite(node.getParent()) &&
+            !contextually.isSession(node)
     );
 
     // Confirm that the user really wants to delete
@@ -200,8 +203,7 @@ export async function deleteFromDatasetTree(
     const quickPickOptions: vscode.QuickPickOptions = {
         placeHolder: localize(
             "deleteDataset.quickPickOption",
-            "Delete data set(s)? This will permanently remove them from your system.",
-            node.label
+            "Delete data set(s)? This will permanently remove them from your system."
         ),
         ignoreFocusOut: true,
         canPickMany: false,
@@ -224,7 +226,11 @@ export async function deleteFromDatasetTree(
     // Delete multiple selected nodes
     if (selectedNodes.length > 0) {
         for (const node of nodes) {
-            await deleteDataset(node, datasetProvider);
+            try {
+                await deleteDataset(node, datasetProvider);
+            } catch (err) {
+                // Do nothing
+            }
         }
         vscode.window.showInformationMessage(
             localize("deleteMulti.datasetNode", "The following nodes were deleted:") + deletedNodes
