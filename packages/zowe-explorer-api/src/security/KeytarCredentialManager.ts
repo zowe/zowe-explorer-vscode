@@ -14,12 +14,13 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 
 import { AbstractCredentialManager, ImperativeError, SecureCredential, Logger } from "@zowe/imperative";
+import { getZoweDir } from "@zowe/cli";
+import * as fs from "fs";
+import * as path from "path";
+import * as vscode from "vscode";
 
-import * as nls from "vscode-nls";
-
-// Set up localization
-nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
+declare const __webpack_require__: typeof require;
+declare const __non_webpack_require__: typeof require;
 
 /**
  * Keytar - Securely store user credentials in the system keychain
@@ -66,6 +67,43 @@ export class KeytarCredentialManager extends AbstractCredentialManager {
         this.preferredService = service;
     }
 
+    public static getSecurityModules(moduleName: string, isTheia: boolean): NodeRequire | undefined {
+        let imperativeIsSecure = false;
+        const r = typeof __webpack_require__ === "function" ? __non_webpack_require__ : require;
+        try {
+            const fileName = path.join(getZoweDir(), "settings", "imperative.json");
+            let settings;
+            if (fs.existsSync(fileName)) {
+                settings = JSON.parse(fs.readFileSync(fileName, "utf8")) as Record<string, unknown>;
+            }
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+            const baseValue = settings.overrides as Record<string, unknown>;
+            const value1 = baseValue.CredentialManager;
+            const value2 = baseValue["credential-manager"];
+            imperativeIsSecure =
+                (typeof value1 === "string" && value1.length > 0) || (typeof value2 === "string" && value2.length > 0);
+        } catch (error) {
+            return undefined;
+        }
+        if (imperativeIsSecure) {
+            // Workaround for Theia issue (https://github.com/eclipse-theia/theia/issues/4935)
+            const appRoot = isTheia ? process.cwd() : vscode.env.appRoot;
+            try {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+                return r(`${appRoot}/node_modules/${moduleName}`);
+            } catch (err) {
+                /* Do nothing */
+            }
+            try {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+                return r(`${appRoot}/node_modules.asar/${moduleName}`);
+            } catch (err) {
+                /* Do nothing */
+            }
+        }
+        return undefined;
+    }
+
     /**
      * Calls the keytar deletePassword service with {@link DefaultCredentialManager#service} and the
      * account passed to the function by Imperative.
@@ -79,7 +117,7 @@ export class KeytarCredentialManager extends AbstractCredentialManager {
      */
     protected async deleteCredentials(account: string): Promise<void> {
         if (!(await this.deleteCredentialsHelper(account))) {
-            Logger.getAppLogger().debug(localize("errorHandling.deleteCredentials", "Unable to delete credentials."));
+            Logger.getAppLogger().debug("errorHandling.deleteCredentials", "Unable to delete credentials.");
         }
     }
 
@@ -131,7 +169,7 @@ export class KeytarCredentialManager extends AbstractCredentialManager {
         // Throw an error if credentials could not be found
         if (password == null && !optional) {
             throw new ImperativeError({
-                msg: localize("errorHandling.loadCredentials", "Unable to load credentials."),
+                msg: "Unable to load credentials.",
                 additionalDetails: this.getMissingEntryMessage(account),
             });
         }
@@ -172,22 +210,13 @@ export class KeytarCredentialManager extends AbstractCredentialManager {
     // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
     private getMissingEntryMessage(account: string) {
         return (
-            localize(
-                "credentials.missingEntryMessage.1",
-                "Could not find an entry in the credential vault for the following:\n"
-            ) +
-            localize("credentials.missingEntryMessage.2", "  Service = {0}\n", this.allServices.join(", ")) +
-            localize("credentials.missingEntryMessage.3", "  Account = {0}\n\n", account) +
-            localize("credentials.missingEntryMessage.4", "Possible Causes:\n") +
-            localize(
-                "credentials.missingEntryMessage.5",
-                "  This could have been caused by any manual removal of credentials from your vault.\n\n"
-            ) +
-            localize("credentials.missingEntryMessage.6", "Resolutions:\n") +
-            localize(
-                "credentials.missingEntryMessage.7",
-                "  Recreate the credentials in the vault for the particular service in the vault."
-            )
+            `Could not find an entry in the credential vault for the following:\n` +
+            `  Service = ${this.allServices.join(", ")}\n` +
+            `  Account = ${account}\n\n` +
+            `Possible Causes:\n` +
+            `  This could have been caused by any manual removal of credentials from your vault.\n\n` +
+            `Resolutions:\n` +
+            `  Recreate the credentials in the vault for the particular service in the vault.`
         );
     }
 }

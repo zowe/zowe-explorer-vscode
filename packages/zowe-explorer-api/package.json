@@ -13,10 +13,6 @@
     "lib",
     "src"
   ],
-  "peerDependencies": {
-    "@zowe/imperative": "^=4.8.1 < 5",
-    "@zowe/cli": "^=6.30.0 < 7"
-  },
   "scripts": {
     "build": "yarn clean && tsc -p ./",
     "test": "echo \"zowe-explorer-api: coming soon.\"",
