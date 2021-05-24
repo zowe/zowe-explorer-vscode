@@ -187,16 +187,29 @@ export async function deleteDatasetPrompt(
     node: IZoweDatasetTreeNode,
     datasetProvider: IZoweTree<IZoweDatasetTreeNode>
 ) {
-    const selectedNodes: IZoweDatasetTreeNode[] = datasetProvider.getTreeView().selection;
-    const deletedNodes: string[] = selectedNodes.map((node) => ` ${node.getLabel()}`);
+    const treeView = datasetProvider.getTreeView();
+    const selectedNodes: IZoweDatasetTreeNode[] = treeView.selection;
 
-    // Filter out sessions or favorite nodes
+    if (node) {
+        selectedNodes.push(node);
+    }
+
+    // Filter out sessions, favorite nodes, or information messages
     const nodes: IZoweDatasetTreeNode[] = selectedNodes.filter(
-        (node) =>
-            !contextually.isFavorite(node) &&
-            !contextually.isFavorite(node.getParent()) &&
-            !contextually.isSession(node)
+        (selectedNode) =>
+            selectedNode.getParent() &&
+            !contextually.isFavorite(selectedNode) &&
+            !contextually.isFavorite(selectedNode.getParent()) &&
+            !contextually.isSession(selectedNode) &&
+            !contextually.isInformation(selectedNode)
     );
+
+    // The names of the nodes that should be deleted
+    const deletedNodes: string[] = nodes.map((deletedNode) => {
+        return contextually.isDsMember(deletedNode)
+            ? ` ${deletedNode.getParent().getLabel()}(${deletedNode.getLabel()})`
+            : ` ${deletedNode.getLabel()}`;
+    });
 
     // Confirm that the user really wants to delete
     globals.LOG.debug(localize("deleteDataset.log.debug", "Deleting data set(s): ") + deletedNodes.join(","));
@@ -217,33 +230,42 @@ export async function deleteDatasetPrompt(
             quickPickOptions
         )) !== localize("deleteDataset.showQuickPick.delete", "Delete")
     ) {
-        globals.LOG.debug(
-            localize("deleteDataset.showQuickPick.log.debug", "User picked Cancel. Cancelling delete of data set")
-        );
+        globals.LOG.debug(localize("deleteDataset.showQuickPick.log.debug", "Dataset deletion action was canceled."));
         return;
+    } else {
     }
 
     // Delete multiple selected nodes
-    if (selectedNodes.length > 0) {
-        for (const node of nodes) {
-            try {
-                await deleteDataset(node, datasetProvider);
-            } catch (err) {
-                // Do nothing
+    if (nodes.length > 0) {
+        await vscode.window.withProgress(
+            {
+                location: vscode.ProgressLocation.Notification,
+                title: localize("deleteDatasetPrompt.deleteCounter", "Deleting nodes"),
+                cancellable: true,
+            },
+            async (progress, token) => {
+                token.onCancellationRequested(() => {
+                    // will be returned as undefined
+                    vscode.window.showInformationMessage(
+                        localize("deleteDatasetPrompt.deleteCancelled", "Delete action was cancelled.")
+                    );
+                });
+                const total = 100;
+                for (const [index, currNode] of nodes.entries()) {
+                    progress.report({
+                        message: `Deleting ${index + 1} of ${nodes.length}`,
+                        increment: (index / nodes.length) * total,
+                    });
+                    try {
+                        await deleteDataset(currNode, datasetProvider);
+                    } catch (err) {
+                        // Do nothing
+                    }
+                }
             }
-        }
+        );
         vscode.window.showInformationMessage(
             localize("deleteMulti.datasetNode", "The following nodes were deleted:") + deletedNodes
-        );
-    }
-
-    // Delete a single node
-    if (node && !(selectedNodes.length > 0)) {
-        await deleteDataset(node, datasetProvider);
-        vscode.window.showInformationMessage(
-            localize("deleteCommand.datasetNode", "Node ") +
-                node.getLabel() +
-                localize("deleteCommand.delete", " was deleted.")
         );
     }
 }

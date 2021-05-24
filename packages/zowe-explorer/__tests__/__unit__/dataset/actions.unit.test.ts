@@ -487,16 +487,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         const testMemberNode = new ZoweDatasetNode(
             "MEMB",
             vscode.TreeItemCollapsibleState.None,
-            globalMocks.testDatasetNode,
-            globalMocks.session,
-            globals.DS_MEMBER_CONTEXT,
-            undefined,
-            globalMocks.imperativeProfile
-        );
-        const testFavMemberNode = new ZoweDatasetNode(
-            "MEMB",
-            vscode.TreeItemCollapsibleState.None,
-            globalMocks.testFavoritedNode,
+            testDatasetNode,
             globalMocks.session,
             globals.DS_MEMBER_CONTEXT,
             undefined,
@@ -511,6 +502,15 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
             undefined,
             globalMocks.imperativeProfile
         );
+        const testFavMemberNode = new ZoweDatasetNode(
+            "MEMB",
+            vscode.TreeItemCollapsibleState.None,
+            testFavoritedNode,
+            globalMocks.session,
+            globals.DS_MEMBER_CONTEXT,
+            undefined,
+            globalMocks.imperativeProfile
+        );
 
         testDatasetNode.children.push(testMemberNode);
         testFavoritedNode.children.push(testFavMemberNode);
@@ -518,9 +518,11 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         globalMocks.datasetSessionNode.children.push(testVsamNode);
         globalMocks.datasetSessionFavNode.children.push(testFavoritedNode);
 
-        const deleteDatasetSpy = jest.spyOn(dsActions, "deleteDataset");
-
         mocked(vscode.window.showQuickPick).mockResolvedValue("Delete" as any);
+        // const cancellationToken = new vscode.CancellationTokenSource();
+        mocked(vscode.window.withProgress).mockImplementation((progLocation, callback) => {
+            return null;
+        });
 
         return {
             testDatasetTree,
@@ -529,7 +531,6 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
             testMemberNode,
             testFavMemberNode,
             testFavoritedNode,
-            deleteDatasetSpy,
         };
     }
 
@@ -539,16 +540,10 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
 
-        blockMocks.deleteDatasetSpy.mockResolvedValue(null);
-
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetNode, blockMocks.testDatasetTree);
 
-        expect(blockMocks.deleteDatasetSpy.mock.calls[0]).toBe([
-            blockMocks.testDatasetNode,
-            blockMocks.testDatasetTree,
-        ]);
         expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith(
-            `Node ${blockMocks.testDatasetNode.getLabel()} was deleted.`
+            `The following nodes were deleted: ${blockMocks.testDatasetNode.getLabel()}`
         );
     });
 
@@ -556,13 +551,12 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
 
-        blockMocks.deleteDatasetSpy.mockResolvedValue(null);
-
         await dsActions.deleteDatasetPrompt(blockMocks.testMemberNode, blockMocks.testDatasetTree);
 
-        expect(blockMocks.deleteDatasetSpy.mock.calls[0]).toBe([blockMocks.testMemberNode, blockMocks.testDatasetTree]);
         expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith(
-            `Node ${blockMocks.testMemberNode.getLabel()} was deleted.`
+            `The following nodes were deleted: ${blockMocks.testMemberNode
+                .getParent()
+                .getLabel()}(${blockMocks.testMemberNode.getLabel()})`
         );
     });
 
@@ -570,13 +564,10 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
 
-        blockMocks.deleteDatasetSpy.mockResolvedValue(null);
-
         await dsActions.deleteDatasetPrompt(blockMocks.testVsamNode, blockMocks.testDatasetTree);
 
-        expect(blockMocks.deleteDatasetSpy.mock.calls[0]).toBe([blockMocks.testVsamNode, blockMocks.testDatasetTree]);
         expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith(
-            `Node ${blockMocks.testVsamNode.getLabel()} was deleted.`
+            `The following nodes were deleted: ${blockMocks.testVsamNode.getLabel()}`
         );
     });
 
@@ -584,21 +575,13 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
 
-        blockMocks.deleteDatasetSpy.mockResolvedValue(null);
-
         const selectedNodes = [blockMocks.testDatasetNode, blockMocks.testVsamNode];
         const treeView = createTreeView(selectedNodes);
         blockMocks.testDatasetTree.getTreeView.mockReturnValueOnce(treeView);
 
         await dsActions.deleteDatasetPrompt(null, blockMocks.testDatasetTree);
 
-        expect(blockMocks.deleteDatasetSpy).toHaveBeenCalledTimes(2);
-        expect(blockMocks.deleteDatasetSpy.mock.calls[0]).toBe([
-            blockMocks.testDatasetNode,
-            blockMocks.testDatasetTree,
-        ]);
-        expect(blockMocks.deleteDatasetSpy.mock.calls[1]).toBe([blockMocks.testVsamNode, blockMocks.testDatasetTree]);
-        expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith(
+        expect(mocked(vscode.window.showInformationMessage)).toHaveBeenCalledWith(
             `The following nodes were deleted: ${blockMocks.testDatasetNode.getLabel()}, ${blockMocks.testVsamNode.getLabel()}`
         );
     });
@@ -607,22 +590,14 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
 
-        blockMocks.deleteDatasetSpy.mockResolvedValue(null);
-
-        const selectedNodes = [blockMocks.testDatasetNode, blockMocks.testMemberNode];
+        const selectedNodes = [blockMocks.testMemberNode, blockMocks.testDatasetNode];
         const treeView = createTreeView(selectedNodes);
-        blockMocks.testDatasetTree.getTreeView.mockReturn = treeView;
+        blockMocks.testDatasetTree.getTreeView.mockReturnValueOnce(treeView);
 
         await dsActions.deleteDatasetPrompt(null, blockMocks.testDatasetTree);
 
-        expect(blockMocks.deleteDatasetSpy.mock.calls.length).toBe(2);
-        expect(blockMocks.deleteDatasetSpy.mock.calls[0]).toBe([
-            blockMocks.testDatasetNode,
-            blockMocks.testDatasetTree,
-        ]);
-        expect(blockMocks.deleteDatasetSpy.mock.calls[1]).toBe([blockMocks.testMemberNode, blockMocks.testDatasetTree]);
         expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith(
-            `The following nodes were deleted: ${blockMocks.testDatasetNode.getLabel()}, ${blockMocks.testMemberNode.getLabel()}`
+            `The following nodes were deleted: ${blockMocks.testDatasetNode.getLabel()}(${blockMocks.testMemberNode.getLabel()}), ${blockMocks.testDatasetNode.getLabel()}`
         );
     });
 
@@ -632,7 +607,6 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         await dsActions.deleteDatasetPrompt(blockMocks.testFavoritedNode, blockMocks.testDatasetTree);
 
-        expect(blockMocks.deleteDatasetSpy.mock.calls.length).toBe(0);
         expect(mocked(vscode.window.showInformationMessage)).toBeCalledTimes(0);
     });
 
@@ -642,7 +616,6 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         await dsActions.deleteDatasetPrompt(blockMocks.testFavMemberNode, blockMocks.testDatasetTree);
 
-        expect(blockMocks.deleteDatasetSpy.mock.calls.length).toBe(0);
         expect(mocked(vscode.window.showInformationMessage)).toBeCalledTimes(0);
     });
 
@@ -652,7 +625,6 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         await dsActions.deleteDatasetPrompt(globalMocks.datasetSessionNode, blockMocks.testDatasetTree);
 
-        expect(blockMocks.deleteDatasetSpy.mock.calls.length).toBe(0);
         expect(mocked(vscode.window.showInformationMessage)).toBeCalledTimes(0);
     });
 
@@ -660,20 +632,14 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
 
-        blockMocks.deleteDatasetSpy.mockResolvedValue(null);
-
         const selectedNodes = [blockMocks.testFavoritedNode, blockMocks.testDatasetNode];
-        globalMocks.testDatasetTree.getSelectedNodes;
+        const treeView = createTreeView(selectedNodes);
+        blockMocks.testDatasetTree.getTreeView.mockReturnValueOnce(treeView);
 
         await dsActions.deleteDatasetPrompt(null, blockMocks.testDatasetTree);
 
-        expect(blockMocks.deleteDatasetSpy.mock.calls.length).toBe(1);
-        expect(blockMocks.deleteDatasetSpy).toHaveBeenCalledWith(
-            blockMocks.testDatasetNode,
-            blockMocks.testDatasetTree
-        );
         expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith(
-            `The following nodes were deleted: ${blockMocks.testDatasetNode.getLabel()}}`
+            `The following nodes were deleted: ${blockMocks.testDatasetNode.getLabel()}`
         );
     });
 
@@ -681,11 +647,11 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
 
-        mocked(vscode.window.showQuickPick).mockResolvedValue("Cancel" as any);
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Cancel" as any);
 
         await dsActions.deleteDatasetPrompt(globalMocks.datasetSessionNode, blockMocks.testDatasetTree);
 
-        expect(blockMocks.deleteDatasetSpy.mock.calls.length).toBe(0);
+        expect(mocked(vscode.window.withProgress).mock.calls.length).toBe(0);
     });
 });
 
