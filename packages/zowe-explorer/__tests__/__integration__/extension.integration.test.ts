@@ -25,7 +25,7 @@ import * as sinon from "sinon";
 import * as testConst from "../../resources/testProfileData";
 import * as vscode from "vscode";
 import * as utils from "../../src/utils/ProfilesUtils";
-import * as coreUtils from "../../src/utils/CoreUtils";
+import * as coreUtils from "../../src/utils/TempFolder";
 import { DatasetTree, createDatasetTree } from "../../src/dataset/DatasetTree";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import { USSTree } from "../../src/uss/USSTree";
@@ -228,13 +228,13 @@ describe("Extension Integration Tests", () => {
             try {
                 await zowe.Delete.dataSet(sessionNode.getSession(), dataSetName);
                 // tslint:disable-next-line: no-empty
-            } catch {}
+            } catch { }
         });
         afterEach(async () => {
             try {
                 await zowe.Delete.dataSet(sessionNode.getSession(), dataSetName);
                 // tslint:disable-next-line: no-empty
-            } catch {}
+            } catch { }
         });
         it("should delete a data set if user verified", async () => {
             await zowe.Create.dataSet(

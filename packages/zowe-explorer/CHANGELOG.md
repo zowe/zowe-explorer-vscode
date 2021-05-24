@@ -2,6 +2,10 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## `1.15.1`
+
+- Fixed the issue that required the vscode module to be imported in the API package [#1318](https://github.com/zowe/vscode-extension-for-zowe/pull/1318). Thanks @JillieBeanSim
+
 ## `1.15.0`
 
 - Added the secure credentials support for Extenders API [#1306](https://github.com/zowe/vscode-extension-for-zowe/pull/1306). Thanks @JillieBeanSim
