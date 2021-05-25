@@ -16,6 +16,7 @@ import * as vscode from "vscode";
 import { moveSync } from "fs-extra";
 import * as nls from "vscode-nls";
 import { errorHandling } from "../utils/ProfilesUtils";
+import { checkTextFileIsOpened } from "../utils/workspace";
 
 // Set up localization
 nls.config({
@@ -82,20 +83,29 @@ export function moveTempFolder(previousTempPath: string, currentTempPath: string
  *
  * @param directory path to directory to be deleted
  */
-export function cleanDir(directory) {
+export async function cleanDir(directory) {
     if (!fs.existsSync(directory)) {
         return;
     }
+    const isOpen = await checkTextFileIsOpened(directory);
+    let isEmptyDir = true;
     fs.readdirSync(directory).forEach((file) => {
         const fullpath = path.join(directory, file);
         const lstat = fs.lstatSync(fullpath);
-        if (lstat.isFile()) {
+        if (lstat.isFile() && !isOpen) {
             fs.unlinkSync(fullpath);
         } else {
-            cleanDir(fullpath);
+            if (lstat.isFile() && isOpen) {
+                isEmptyDir = false;
+            }
+            if (!lstat.isFile()) {
+                cleanDir(fullpath);
+            }
         }
     });
-    fs.rmdirSync(directory);
+    if (!isEmptyDir) {
+        fs.rmdirSync(directory);
+    }
 }
 
 /**

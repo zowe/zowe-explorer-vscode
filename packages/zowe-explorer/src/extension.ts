@@ -69,13 +69,15 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     // Call cleanTempDir before continuing
     // this is to handle if the application crashed on a previous execution and
     // VSC didn't get a chance to call our deactivate to cleanup.
-    await deactivate();
+    // await deactivate();
 
     try {
-        fs.mkdirSync(globals.ZOWETEMPFOLDER);
-        fs.mkdirSync(globals.ZOWE_TMP_FOLDER);
-        fs.mkdirSync(globals.USS_DIR);
-        fs.mkdirSync(globals.DS_DIR);
+        if (!fs.existsSync(globals.ZOWETEMPFOLDER)) {
+            fs.mkdirSync(globals.ZOWETEMPFOLDER);
+            fs.mkdirSync(globals.ZOWE_TMP_FOLDER);
+            fs.mkdirSync(globals.USS_DIR);
+            fs.mkdirSync(globals.DS_DIR);
+        }
     } catch (err) {
         await errorHandling(err, null, err.message);
     }
