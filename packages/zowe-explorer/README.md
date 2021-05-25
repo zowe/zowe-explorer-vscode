@@ -23,7 +23,7 @@ More information:
 
 ## Contents
 
-- [What's new in Zowe Explorer 1.15.0](#whats-new-in-zowe-explorer-1.15.0)
+- [What's new in Zowe Explorer 1.15.1](#whats-new-in-zowe-explorer-1.15.1)
 - [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
 - [Sample Use Cases](#sample-use-cases)
@@ -31,31 +31,11 @@ More information:
 - [Usage Tips](#usage-tips)
 - [Extending Zowe Explorer](#extending-zowe-explorer)
 
-## What's new in Zowe Explorer 1.15.0
-
-Enhancements:
-
-- Added the secure credentials support for Extenders API.
-
-- Improved Zowe Explorer extenders. Zowe Explorer extenders can now utilize Extender API to have profile folder and meta file created upon initialization.
-
-- Improved the Command Palette by adding "Zowe Explorer:" before all commands that are related to the extension. Removed some commands from the palette that caused issues.
-
-- Updated Theia Tests. Now you need to have Zowe CLI 6.30.0 and the latest .vsix file in the `theia/plugins` folder to run Theia tests.
+## What's new in Zowe Explorer 1.15.1
 
 Bug fixes:
 
-- Fixed the issue that prevented the `issue STOP command` function from executing correctly.
-
-- Fixed the issue that caused the Add Profile icon to disappear.
-
-- Fixed the vulnerability in NPM Audit.
-
-- Fixed the issue that doubled the occurrence of the port prompt.
-
-- Fixed the issue that triggered the `Delete Job` command even outside Zowe Explorer views.
-
-- Fixed the trailing slash issue that caused issues with USS search.
+- Fixed the issue that required the vscode module to be imported in the API package
 
 For more information, see [Changelog](https://marketplace.visualstudio.com/items/Zowe.vscode-extension-for-zowe/changelog).
 
