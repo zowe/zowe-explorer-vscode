@@ -13,12 +13,13 @@ import * as zowe from "@zowe/cli";
 import * as vscode from "vscode";
 import * as globals from "../globals";
 import { Session, IProfileLoaded } from "@zowe/imperative";
-import { errorHandling, refreshTree } from "../utils/ProfilesUtils";
+import { errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
 import { IZoweDatasetTreeNode, ZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { getIconByNode } from "../generators/icons";
 import * as contextually from "../shared/context";
 import * as nls from "vscode-nls";
+import { Profiles } from "../Profiles";
 // Set up localization
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
@@ -291,7 +292,9 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     this.label,
                     localize("getChildren.error.response", "Retrieving response from ") + `zowe.List`
                 );
-                await refreshTree(sessNode);
+                await syncSessionNode(Profiles.getInstance())((profileValue) =>
+                    ZoweExplorerApiRegister.getMvsApi(profileValue).getSession()
+                )(sessNode);
             } catch (err) {
                 await errorHandling(
                     err,

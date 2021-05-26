@@ -10,14 +10,15 @@
  */
 
 import * as imperative from "@zowe/imperative";
+import { ZoweExplorerApi } from "./ZoweExplorerApi";
 import * as path from "path";
 import * as os from "os";
+import * as fs from "fs";
 import { URL } from "url";
-
-import { ZoweExplorerApi } from "./ZoweExplorerApi";
 
 // TODO: find a home for constants
 export const CONTEXT_PREFIX = "_";
+export const DEFAULT_PORT = 443;
 
 export interface IUrlValidator {
     valid: boolean;
@@ -134,7 +135,12 @@ export class ProfilesCache {
             return validationResult;
         }
 
-        validationResult.port = Number(url.port);
+        if (newUrl.includes(":443")) {
+            validationResult.port = 443;
+        } else {
+            validationResult.port = Number(url.port);
+        }
+
         validationResult.host = url.hostname;
         validationResult.valid = true;
         return validationResult;
@@ -205,6 +211,28 @@ export class ProfilesCache {
             }
         }
         return baseProfile;
+    }
+
+    public isSecureCredentialPluginActive(): boolean {
+        let imperativeIsSecure = false;
+        try {
+            const fileName = path.join(this.getZoweDir(), "settings", "imperative.json");
+            let settings: Record<string, unknown>;
+            if (fs.existsSync(fileName)) {
+                settings = JSON.parse(fs.readFileSync(fileName, "utf-8")) as Record<string, unknown>;
+            }
+            if (settings) {
+                const baseValue = settings.overrides as Record<string, unknown>;
+                const value1 = baseValue.CredentialManager;
+                const value2 = baseValue["credential-manager"];
+                imperativeIsSecure =
+                    (typeof value1 === "string" && value1.length > 0) ||
+                    (typeof value2 === "string" && value2.length > 0);
+            }
+        } catch (error) {
+            this.log.error(error);
+        }
+        return imperativeIsSecure;
     }
 
     protected async deleteProfileOnDisk(ProfileInfo: imperative.IProfileLoaded): Promise<void> {

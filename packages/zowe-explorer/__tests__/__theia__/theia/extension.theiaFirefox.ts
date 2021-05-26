@@ -49,7 +49,7 @@ export async function clickOnJobsTab() {
     await driverFirefox.findElement(By.id(JobsLocators.jobTabId)).click();
 }
 
-export async function clickOnUssPanel(){
+export async function clickOnUssPanel() {
     await driverFirefox.findElement(By.id(UssLocators.ussPanelId)).click();
 }
 
@@ -65,7 +65,7 @@ export async function clickOnAddSessionInJobs() {
     await driverFirefox.findElement(By.id(JobsLocators.jobsAddSessionId)).click();
 }
 
-export async function addProfileDetailsInUss(profileName: string){
+export async function addProfileDetailsInUss(profileName: string) {
     const ussProfileName = await driverFirefox.findElement(By.xpath(UssLocators.emptyInputBoxXpath));
     ussProfileName.sendKeys(profileName);
     ussProfileName.sendKeys(Key.ENTER);
@@ -77,8 +77,10 @@ export async function addProfileDetailsInJobs(profileName: string) {
     jobsProfileName.sendKeys(Key.ENTER);
 }
 
-export async function getUssDefaultProfilename(){
-    const ussProfile = await driverFirefox.wait(until.elementLocated(By.xpath(UssLocators.defaultUssProfileXpath)), WAITTIME).getText();
+export async function getUssDefaultProfilename() {
+    const ussProfile = await driverFirefox
+        .wait(until.elementLocated(By.xpath(UssLocators.defaultUssProfileXpath)), WAITTIME)
+        .getText();
     return ussProfile;
 }
 
@@ -89,8 +91,10 @@ export async function getJobsDefaultProfilename() {
     return jobsProfile;
 }
 
-export async function getUssProfilename(){
-    const ussProfile = await driverFirefox.wait(until.elementLocated(By.xpath(UssLocators.secondUssProfileXpath)), WAITTIME).getText();
+export async function getUssProfilename() {
+    const ussProfile = await driverFirefox
+        .wait(until.elementLocated(By.xpath(UssLocators.secondUssProfileXpath)), WAITTIME)
+        .getText();
     return ussProfile;
 }
 
