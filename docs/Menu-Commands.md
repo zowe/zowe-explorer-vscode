@@ -6,6 +6,7 @@ This page contains developer guidance specific to adding commands in core Zowe E
 
 - [Defining a new command](#defining-a-new-command)
 - [Contributing context menu items](#contributing-context-menu-items)
+  - [Zowe Explorer context menu group naming convention](#zowe-explorer-context-menu-group-naming-convention)
 
 ## Defining a new commmand
 
@@ -27,6 +28,8 @@ In order to add a command to a core Zowe Explorer menu, the command must first b
   - More details on localization can be found in the [Developer's ReadMe](https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/Developer's%20ReadMe.md#adding-strings).
 
 - `category` property: The value of this should be "Zowe Explorer".
+
+**Note:** By default, defined commands will appear in VS Code's Command Palette. If the command being added is not designed to work from the Command Palette, be sure to add an entry for the command in the `contributes.menus.commandPalette` section of `packages/zowe-explorer/package.json`, and specify `"when": "never"`. (For more details, see VS Code's documentation on [specifying command visibility in the Command Palette](https://code.visualstudio.com/api/references/contribution-points#Context-specific-visibility-of-Command-Palette-menu-items).)
 
 ## Contributing context menu items
 
