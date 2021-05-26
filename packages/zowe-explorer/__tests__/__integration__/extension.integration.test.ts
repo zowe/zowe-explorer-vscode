@@ -25,7 +25,7 @@ import * as sinon from "sinon";
 import * as testConst from "../../resources/testProfileData";
 import * as vscode from "vscode";
 import * as utils from "../../src/utils/ProfilesUtils";
-import * as coreUtils from "../../src/utils/CoreUtils";
+import * as coreUtils from "../../src/utils/TempFolder";
 import { DatasetTree, createDatasetTree } from "../../src/dataset/DatasetTree";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import { USSTree } from "../../src/uss/USSTree";

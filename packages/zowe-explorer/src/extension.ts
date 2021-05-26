@@ -25,14 +25,14 @@ import {
     IZoweUSSTreeNode,
     IZoweTreeNode,
     IZoweTree,
-    ProfilesCache,
+    KeytarApi,
 } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import { Profiles } from "./Profiles";
 import { errorHandling, getZoweDir } from "./utils/ProfilesUtils";
 import { linkProfileDialog } from "./ProfileLink";
-import { ImperativeError, CliProfileManager } from "@zowe/imperative";
+import { CliProfileManager, ImperativeError } from "@zowe/imperative";
 import { createDatasetTree } from "./dataset/DatasetTree";
 import { createJobsTree } from "./job/ZosJobsProvider";
 import { createUSSTree } from "./uss/USSTree";
@@ -40,7 +40,7 @@ import { MvsCommandHandler } from "./command/MvsCommandHandler";
 import SpoolProvider from "./SpoolProvider";
 import * as nls from "vscode-nls";
 import { TsoCommandHandler } from "./command/TsoCommandHandler";
-import { cleanTempDir, moveTempFolder } from "./utils/CoreUtils";
+import { cleanTempDir, moveTempFolder } from "./utils/TempFolder";
 
 // Set up localization
 nls.config({
@@ -89,8 +89,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         globals.LOG.debug(localize("initialize.log.debug", "Initialized logger from VSCode extension"));
 
         try {
-            const profCache = new ProfilesCache(globals.LOG);
-            await profCache.activateKeytarApis(false, globals.ISTHEIA);
+            const keytarApi = new KeytarApi(globals.LOG);
+            await keytarApi.activateKeytar(false, globals.ISTHEIA);
         } catch (err) {
             throw new ImperativeError({ msg: err.toString() });
         }
@@ -117,7 +117,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         );
         globals.LOG.error(
             localize("initialize.log.error", "Error encountered while activating and initializing logger! ") +
-            JSON.stringify(err)
+                JSON.stringify(err)
         );
     }
 
@@ -167,11 +167,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
                     "onDidSaveTextDocument1",
                     "File was saved -- determining whether the file is a USS file or Data set.\n Comparing (case insensitive) "
                 ) +
-                savedFile.fileName +
-                localize("onDidSaveTextDocument2", " against directory ") +
-                globals.DS_DIR +
-                localize("onDidSaveTextDocument3", "and") +
-                globals.USS_DIR
+                    savedFile.fileName +
+                    localize("onDidSaveTextDocument2", " against directory ") +
+                    globals.DS_DIR +
+                    localize("onDidSaveTextDocument3", "and") +
+                    globals.USS_DIR
             );
             if (savedFile.fileName.toUpperCase().indexOf(globals.DS_DIR.toUpperCase()) >= 0) {
                 globals.LOG.debug(localize("activate.didSaveText.isDataSet", "File is a data set-- saving "));
@@ -182,8 +182,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             } else {
                 globals.LOG.debug(
                     localize("activate.didSaveText.file", "File ") +
-                    savedFile.fileName +
-                    localize("activate.didSaveText.notDataSet", " is not a data set or USS file ")
+                        savedFile.fileName +
+                        localize("activate.didSaveText.notDataSet", " is not a data set or USS file ")
                 );
             }
         });

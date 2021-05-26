@@ -336,12 +336,15 @@ export function closeBrowser() {
     driverChrome.close();
 }
 
-export async function addProfileDetails(profileName: string){
+export async function addProfileDetails(profileName: string) {
     await driverChrome.findElement(By.id(DatasetsLocators.datasetsAddSessionId)).click();
     await driverChrome.sleep(SHORTSLEEPTIME);
     await driverChrome.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath)).sendKeys(Key.ENTER);
     await driverChrome.sleep(SHORTSLEEPTIME);
-    const datasetProfileName = await driverChrome.wait(until.elementLocated(By.xpath(DatasetsLocators.emptyInputBoxXpath)),WAITTIME);
+    const datasetProfileName = await driverChrome.wait(
+        until.elementLocated(By.xpath(DatasetsLocators.emptyInputBoxXpath)),
+        WAITTIME
+    );
     datasetProfileName.sendKeys(profileName);
     datasetProfileName.sendKeys(Key.ENTER);
     await driverChrome.sleep(SHORTSLEEPTIME);
@@ -374,20 +377,24 @@ export async function addProfileDetails(profileName: string){
     await driverChrome.actions().sendKeys(Key.ENTER).perform();
     await driverChrome.sleep(SHORTSLEEPTIME);
 }
-export async function clickOnDatasetsPanel(){
+export async function clickOnDatasetsPanel() {
     await driverChrome.findElement(By.id(DatasetsLocators.datasetsPanelId)).click();
 }
 
-export async function clickOnAddSessionInDatasets(){
+export async function clickOnAddSessionInDatasets() {
     await driverChrome.findElement(By.id(DatasetsLocators.datasetsAddSessionId)).click();
 }
 
-export async function getDatasetsDefaultProfilename(){
-    const datasetProfile = await driverChrome.wait(until.elementLocated(By.id(DatasetsLocators.defaultDatasetsProfileId)),WAITTIME).getText();
+export async function getDatasetsDefaultProfilename() {
+    const datasetProfile = await driverChrome
+        .wait(until.elementLocated(By.id(DatasetsLocators.defaultDatasetsProfileId)), WAITTIME)
+        .getText();
     return datasetProfile;
 }
 
-export async function getDatasetsProfilename(){
-    const datasetProfile = await driverChrome.wait(until.elementLocated(By.id(DatasetsLocators.secondDatasetProfileId)),WAITTIME).getText();
+export async function getDatasetsProfilename() {
+    const datasetProfile = await driverChrome
+        .wait(until.elementLocated(By.id(DatasetsLocators.secondDatasetProfileId)), WAITTIME)
+        .getText();
     return datasetProfile;
 }
