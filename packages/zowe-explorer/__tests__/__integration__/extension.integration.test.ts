@@ -228,13 +228,13 @@ describe("Extension Integration Tests", () => {
             try {
                 await zowe.Delete.dataSet(sessionNode.getSession(), dataSetName);
                 // tslint:disable-next-line: no-empty
-            } catch { }
+            } catch {}
         });
         afterEach(async () => {
             try {
                 await zowe.Delete.dataSet(sessionNode.getSession(), dataSetName);
                 // tslint:disable-next-line: no-empty
-            } catch { }
+            } catch {}
         });
         it("should delete a data set if user verified", async () => {
             await zowe.Create.dataSet(
