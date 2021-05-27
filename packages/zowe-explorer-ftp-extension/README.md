@@ -4,36 +4,28 @@ Zowe Explorer's FTP extension adds the FTP protocol to the [Zowe Explorer](https
 
 This VS Code extension also serves as a [source code example](https://github.com/zowe/vscode-extension-for-zowe/tree/master/packages/zowe-explorer-ftp-extension) demonstrating how to use the [Zowe Explorer Extensibility API](https://github.com/zowe/vscode-extension-for-zowe/tree/master/packages/zowe-explorer-api) to create VS Code extensions that extend the Zowe Explorer VS Code extensions with new capabilities.
 
-## What's new in 1.13.0
+## What's new in 1.15.0
 
 Enhancements:
 
-- Added a range of data set functionalities including list datasets, list dataset members, edit datasets, upload members, rename datasets, delete datasets and more. You can check [the detailed list of supported functionlilites](#list-of-supported-data-set-functionalities).
+- Removed the installation pre-requisite of @zowe/zos-ftp-for-zowe-cli for the FTP Extension for Zowe Explorer
 
 For more information, see [Changelog](https://github.com/zowe/vscode-extension-for-zowe/blob/master/packages/zowe-explorer-ftp-extension/CHANGELOG.md).
 
 ## Prerequisites
 
-Host-side prerequisites:
+Ensure that you obtain remote access to z/OS FTP service before you can use the extension.
 
-- Obtain remote access to z/OS FTP service.
+**Follow these steps:**
 
-  **Follow these steps:**
+1. Connect to z/OS with the FTP client.
+1. Run the following command in the FTP client:
 
-  1. Connect to z/OS with the FTP client.
-  1. Run the following command in the FTP client:
+   ```bash
+   rstat
+   ```
 
-     ```bash
-     rstat
-     ```
-
-  1. Ensure that the `JESINTERFACELevel` option is set to `2`.
-
-Client-side prerequisites:
-
-- Install the following prerequisites on your local machine:
-  1. [Zowe CLI](https://docs.zowe.org/stable/user-guide/cli-installcli.html)
-  1. [z/OS FTP Plug-in for Zowe CLI](https://github.com/zowe/zowe-cli-ftp-plugin#install-the-zos-ftp-plug-in)
+1. Ensure that the `JESINTERFACELevel` option is set to `2`.
 
 ## Installation
 

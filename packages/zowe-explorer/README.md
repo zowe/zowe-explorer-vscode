@@ -23,7 +23,7 @@ More information:
 
 ## Contents
 
-- [What's new in Zowe Explorer 1.13.1](#whats-new-in-zowe-explorer-1.13.1)
+- [What's new in Zowe Explorer 1.15.1](#whats-new-in-zowe-explorer-1.15.1)
 - [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
 - [Sample Use Cases](#sample-use-cases)
@@ -31,17 +31,11 @@ More information:
 - [Usage Tips](#usage-tips)
 - [Extending Zowe Explorer](#extending-zowe-explorer)
 
-## What's new in Zowe Explorer 1.13.1
-
-Enhancements:
-
-- Updated the dialog text for issuing MVS commands. Now the text of the function is `Zowe: Issue MVS Command`.
-- Added the Prerequisites section to the Zowe Explorer extension for FTP ReadMe.
-- Added Open VSX to the deployment pipeline.
+## What's new in Zowe Explorer 1.15.1
 
 Bug fixes:
 
-- Added the prompt for credentials when issuing MVS commands, using the right click action, against profiles with missing credentials.
+- Fixed the issue that required the vscode module to be imported in the API package
 
 For more information, see [Changelog](https://marketplace.visualstudio.com/items/Zowe.vscode-extension-for-zowe/changelog).
 

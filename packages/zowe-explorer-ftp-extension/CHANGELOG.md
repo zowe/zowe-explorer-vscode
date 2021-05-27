@@ -1,5 +1,14 @@
 # Change Log
 
+## `1.15.0`
+
+- Removed the installation pre-requisite of @zowe/zos-ftp-for-zowe-cli for the FTP Extension for Zowe Explorer
+
+## `1.14.0`
+
+- Added a range of jobs functionalities with zFTP profiles, including submit job, list job by jobID, list spool files, view spool file content, download spool files, and delete job.
+- Added support for listing jobs with prefix `*` and owner `*`.
+
 ## `1.13.0`
 
 - Added a range of data set functionalities including list datasets, list dataset members, edit datasets, upload members, rename datasets, delete datasets and more. For the complete list of added functionalities, see [PR-1219](https://github.com/zowe/vscode-extension-for-zowe/pull/1219).

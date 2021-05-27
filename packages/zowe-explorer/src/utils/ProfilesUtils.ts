@@ -14,10 +14,11 @@
 import * as vscode from "vscode";
 import * as os from "os";
 import * as path from "path";
-import { ISession, IProfile, ImperativeConfig } from "@zowe/imperative";
+import { Session, IProfile, ImperativeConfig, IProfileLoaded } from "@zowe/imperative";
 import { IZoweNodeType, IZoweTree, IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import * as nls from "vscode-nls";
+import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 
 // Set up localization
 nls.config({
@@ -106,25 +107,34 @@ export function isTheia(): boolean {
     return false;
 }
 
-/*************************************************************************************************************
- * Get updated profile and session information
- * @param {sessNode} IZoweTreeNode
- *************************************************************************************************************/
-// This function does not perform any UI refresh; it just gets updated profile information.
-export async function refreshTree(sessNode: IZoweTreeNode) {
-    const profileType = sessNode.getProfile().type;
-    const allProf = Profiles.getInstance().getProfiles(profileType);
-    const baseProf = await Profiles.getInstance().getBaseProfile();
-    for (const profNode of allProf) {
-        if (sessNode.getProfileName() === profNode.name) {
-            setProfile(sessNode, profNode.profile);
-            const combinedSessionProfile = (await Profiles.getInstance().getCombinedProfile(profNode, baseProf))
-                .profile;
-            setSession(sessNode, combinedSessionProfile);
-        }
+/**
+ * Function to update session and profile information in provided node
+ * @param profiles is data source to find profiles
+ * @param getSessionForProfile is a function to build a valid specific session based on provided profile
+ * @param sessionNode is a tree node, containing session information
+ */
+type SessionForProfile = (profile: IProfileLoaded) => Session;
+export const syncSessionNode = (profiles: Profiles) => (getSessionForProfile: SessionForProfile) => async (
+    sessionNode: IZoweTreeNode
+): Promise<void> => {
+    sessionNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+
+    const profileType = sessionNode.getProfile().type;
+    const profileName = sessionNode.getProfileName();
+
+    let profile: IProfileLoaded;
+    try {
+        profile = profiles.loadNamedProfile(profileName, profileType);
+    } catch (e) {
+        return;
     }
-    sessNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
-}
+    sessionNode.setProfileToChoice(profile);
+
+    const baseProfile = profiles.getBaseProfile();
+    const combinedProfile = await profiles.getCombinedProfile(profile, baseProfile);
+    const session = getSessionForProfile(combinedProfile);
+    sessionNode.setSessionToChoice(session);
+};
 
 export async function resolveQuickPickHelper(
     quickpick: vscode.QuickPick<vscode.QuickPickItem>
