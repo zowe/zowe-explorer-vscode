@@ -15,14 +15,14 @@ import * as driverFirefox from "./theia/extension.theiaFirefox";
 import * as driverChrome from "./theia/extension.theiaChrome";
 
 const TIMEOUT = 45000;
-const SLEEPTIME = 10000;
-const SHORTSLEEPTIME  = 2000;
+const SLEEPTIME = 15000;
+const SHORTSLEEPTIME = 2000;
+const wait5sec = 5000;
 declare var it: any;
 const expect = chai.expect;
 chai.use(chaiAsPromised);
 
-describe("Add Default Profile", () => {
-
+describe("Locate Tree Nodes", () => {
     before(async () => {
         await driverFirefox.openBrowser();
         await driverFirefox.sleepTime(SHORTSLEEPTIME);
@@ -51,17 +51,49 @@ describe("Add Default Profile", () => {
         expect(jobsLink).to.equal("JOBS");
     }).timeout(TIMEOUT);
 
-    it("Should Add Default Profile in DATA SETS", async () => {
-        await driverFirefox.clickOnDatasetsPanel();
-        await driverFirefox.clickOnAddSessionInDatasets();
-        await driverFirefox.addProfileDetails("DefaultProfile");
-        const datasetProfile = await driverFirefox.getDatasetsDefaultProfilename();
+    after(async () => driverFirefox.closeBrowser());
+});
+
+describe("Add Default Profile and Profile in DATASETS", () => {
+    before(async () => {
+        await driverChrome.openBrowser();
+        await driverChrome.sleepTime(SHORTSLEEPTIME);
+        await driverChrome.OpenTheiaInChrome();
+        await driverChrome.sleepTime(SLEEPTIME);
+        await driverChrome.clickOnZoweExplorer();
+    });
+
+    it("Should Add Default Profile in DATASETS", async () => {
+        await driverChrome.clickOnDatasetsPanel();
+        await driverChrome.clickOnAddSessionInDatasets();
+        await driverChrome.addProfileDetails("DefaultProfile");
+        const datasetProfile = await driverChrome.getDatasetsDefaultProfilename();
         expect(datasetProfile).to.equal("DefaultProfile");
     });
 
-    it("Should Default profile visible in USS", async () => {
-        await driverFirefox.refreshBrowser();
+    it("Should Add Profile in DATASETS", async () => {
+        await driverChrome.clickOnDatasetsPanel();
+        await driverChrome.clickOnAddSessionInDatasets();
+        await driverChrome.addProfileDetails("TestSeleniumProfile");
+        await driverChrome.sleepTime(SHORTSLEEPTIME);
+        const datasetProfile = await driverChrome.getDatasetsProfilename();
+        expect(datasetProfile).to.equal("TestSeleniumProfile");
+    });
+
+    after(async () => driverChrome.closeBrowser());
+});
+
+describe("Default profile Visible in USS and JOBS", () => {
+    before(async () => {
+        await driverFirefox.openBrowser();
+        await driverFirefox.sleepTime(SHORTSLEEPTIME);
+        await driverFirefox.OpenTheiaInFirefox();
         await driverFirefox.sleepTime(SLEEPTIME);
+        await driverFirefox.clickOnZoweExplorer();
+        await driverFirefox.sleepTime(wait5sec);
+    });
+
+    it("Should Default profile visible in USS", async () => {
         await driverFirefox.clickOnDatasetsTab();
         await driverFirefox.clickOnUssTab();
         const ussProfile = await driverFirefox.getUssDefaultProfilename();
@@ -78,23 +110,14 @@ describe("Add Default Profile", () => {
     after(async () => driverFirefox.closeBrowser());
 });
 
-describe("Add Profiles", () => {
-
+describe("Add Existing Profiles in USS and JOBS", () => {
     before(async () => {
         await driverFirefox.openBrowser();
         await driverFirefox.sleepTime(SHORTSLEEPTIME);
         await driverFirefox.OpenTheiaInFirefox();
         await driverFirefox.sleepTime(SLEEPTIME);
         await driverFirefox.clickOnZoweExplorer();
-    });
-
-    it("Should Add Profile in DATA SETS", async () => {
-        await driverFirefox.clickOnDatasetsPanel();
-        await driverFirefox.clickOnAddSessionInDatasets();
-        await driverFirefox.addProfileDetails("TestSeleniumProfile");
-        await driverFirefox.sleepTime(SHORTSLEEPTIME);
-        const datasetProfile = await driverFirefox.getDatasetsProfilename();
-        expect(datasetProfile).to.equal("TestSeleniumProfile");
+        await driverFirefox.sleepTime(wait5sec);
     });
 
     it("Should Add Existing Profile in USS", async () => {
@@ -129,7 +152,7 @@ describe("Add Profile to Favorites", () => {
         await driverChrome.clickOnZoweExplorer();
     });
 
-    it("Should Add Profile to Favorites under DATA SETS", async () => {
+    it("Should Add Profile to Favorites under DATASETS", async () => {
         await driverChrome.addProfileToFavoritesInDatasets();
         await driverChrome.clickOnFavoriteTabInDatasets();
         const favoriteProfile = await driverChrome.getFavoritePrfileNameFromDatasets();
@@ -204,7 +227,6 @@ describe("Remove Profile from Favorites", () => {
         const favoriteProfile = await driverChrome.verifyRemovedFavoriteProfileInDatasets();
         expect(favoriteProfile).to.equal(true);
     });
-
 
     after(async () => driverChrome.closeBrowser());
 });

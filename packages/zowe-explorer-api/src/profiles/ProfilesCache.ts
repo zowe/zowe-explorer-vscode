@@ -9,15 +9,16 @@
  *                                                                                 *
  */
 
-import { IProfileLoaded, Logger, CliProfileManager, IProfile, ImperativeConfig } from "@zowe/imperative";
+import * as imperative from "@zowe/imperative";
+import { ZoweExplorerApi } from "./ZoweExplorerApi";
 import * as path from "path";
 import * as os from "os";
+import * as fs from "fs";
 import { URL } from "url";
-
-import { ZoweExplorerApi } from "./ZoweExplorerApi";
 
 // TODO: find a home for constants
 export const CONTEXT_PREFIX = "_";
+export const DEFAULT_PORT = 443;
 
 export interface IUrlValidator {
     valid: boolean;
@@ -45,14 +46,14 @@ export enum ValidProfileEnum {
 export class ProfilesCache {
     public profilesForValidation: IProfileValidation[] = [];
     public profilesValidationSetting: IValidationSetting[] = [];
-    public allProfiles: IProfileLoaded[] = [];
+    public allProfiles: imperative.IProfileLoaded[] = [];
     protected allTypes: string[];
-    protected profilesByType = new Map<string, IProfileLoaded[]>();
-    protected defaultProfileByType = new Map<string, IProfileLoaded>();
-    protected profileManagerByType = new Map<string, CliProfileManager>();
-    public constructor(protected log: Logger) {}
+    protected profilesByType = new Map<string, imperative.IProfileLoaded[]>();
+    protected defaultProfileByType = new Map<string, imperative.IProfileLoaded>();
+    protected profileManagerByType = new Map<string, imperative.CliProfileManager>();
+    public constructor(protected log: imperative.Logger) {}
 
-    public loadNamedProfile(name: string, type?: string): IProfileLoaded {
+    public loadNamedProfile(name: string, type?: string): imperative.IProfileLoaded {
         for (const profile of this.allProfiles) {
             if (profile.name === name && (type ? profile.type === type : true)) {
                 return profile;
@@ -61,15 +62,15 @@ export class ProfilesCache {
         throw new Error("Could not find profile named: " + name + ".");
     }
 
-    public getDefaultProfile(type = "zosmf"): IProfileLoaded {
+    public getDefaultProfile(type = "zosmf"): imperative.IProfileLoaded {
         return this.defaultProfileByType.get(type);
     }
 
-    public getProfiles(type = "zosmf"): IProfileLoaded[] {
+    public getProfiles(type = "zosmf"): imperative.IProfileLoaded[] {
         return this.profilesByType.get(type);
     }
 
-    public async refresh(apiRegister: ZoweExplorerApi.IApiRegisterClient): Promise<void> {
+    public async refresh(apiRegister?: ZoweExplorerApi.IApiRegisterClient): Promise<void> {
         this.allProfiles = [];
         this.allTypes = [];
         // TODO: Add Base ProfileType in registeredApiTypes
@@ -98,7 +99,7 @@ export class ProfilesCache {
             if (profilesForType && profilesForType.length > 0) {
                 this.allProfiles.push(...profilesForType);
                 this.profilesByType.set(type, profilesForType);
-                let defaultProfile: IProfileLoaded;
+                let defaultProfile: imperative.IProfileLoaded;
                 try {
                     defaultProfile = await profileManager.load({ loadDefault: true });
                 } catch (error) {
@@ -134,7 +135,12 @@ export class ProfilesCache {
             return validationResult;
         }
 
-        validationResult.port = Number(url.port);
+        if (newUrl.includes(":443")) {
+            validationResult.port = 443;
+        } else {
+            validationResult.port = Number(url.port);
+        }
+
         validationResult.host = url.hostname;
         validationResult.valid = true;
         return validationResult;
@@ -166,8 +172,8 @@ export class ProfilesCache {
         });
     }
 
-    public async directLoad(type: string, name: string): Promise<IProfileLoaded> {
-        let directProfile: IProfileLoaded;
+    public async directLoad(type: string, name: string): Promise<imperative.IProfileLoaded> {
+        let directProfile: imperative.IProfileLoaded;
         const profileManager = this.getCliProfileManager(type);
         if (profileManager) {
             directProfile = await profileManager.load({ name });
@@ -175,11 +181,11 @@ export class ProfilesCache {
         return directProfile;
     }
 
-    public getCliProfileManager(type: string): CliProfileManager {
+    public getCliProfileManager(type: string): imperative.CliProfileManager {
         let profileManager = this.profileManagerByType.get(type);
         if (!profileManager) {
             try {
-                profileManager = new CliProfileManager({
+                profileManager = new imperative.CliProfileManager({
                     profileRootDirectory: path.join(this.getZoweDir(), "profiles"),
                     type,
                 });
@@ -195,8 +201,8 @@ export class ProfilesCache {
         return profileManager;
     }
 
-    public getBaseProfile(): IProfileLoaded {
-        let baseProfile: IProfileLoaded;
+    public getBaseProfile(): imperative.IProfileLoaded {
+        let baseProfile: imperative.IProfileLoaded;
 
         // This functionality will retrieve the saved base profile in the allProfiles array
         for (const baseP of this.allProfiles) {
@@ -207,7 +213,29 @@ export class ProfilesCache {
         return baseProfile;
     }
 
-    protected async deleteProfileOnDisk(ProfileInfo: IProfileLoaded): Promise<void> {
+    public isSecureCredentialPluginActive(): boolean {
+        let imperativeIsSecure = false;
+        try {
+            const fileName = path.join(this.getZoweDir(), "settings", "imperative.json");
+            let settings: Record<string, unknown>;
+            if (fs.existsSync(fileName)) {
+                settings = JSON.parse(fs.readFileSync(fileName, "utf-8")) as Record<string, unknown>;
+            }
+            if (settings) {
+                const baseValue = settings.overrides as Record<string, unknown>;
+                const value1 = baseValue.CredentialManager;
+                const value2 = baseValue["credential-manager"];
+                imperativeIsSecure =
+                    (typeof value1 === "string" && value1.length > 0) ||
+                    (typeof value2 === "string" && value2.length > 0);
+            }
+        } catch (error) {
+            this.log.error(error);
+        }
+        return imperativeIsSecure;
+    }
+
+    protected async deleteProfileOnDisk(ProfileInfo: imperative.IProfileLoaded): Promise<void> {
         await this.getCliProfileManager(ProfileInfo.type).delete({
             profile: ProfileInfo,
             name: ProfileInfo.name,
@@ -219,7 +247,7 @@ export class ProfilesCache {
         profileInfo: Record<string, unknown>,
         profileName: string,
         profileType: string
-    ): Promise<IProfile> {
+    ): Promise<imperative.IProfile> {
         const newProfile = await this.getCliProfileManager(profileType).save({
             profile: profileInfo,
             name: profileName,
@@ -234,10 +262,10 @@ export class ProfilesCache {
      * not initialized it we mock a default value.
      */
     private getZoweDir(): string {
-        ImperativeConfig.instance.loadedConfig = {
+        imperative.ImperativeConfig.instance.loadedConfig = {
             defaultHome: path.join(os.homedir(), ".zowe"),
             envVariablePrefix: "ZOWE",
         };
-        return ImperativeConfig.instance.cliHome;
+        return imperative.ImperativeConfig.instance.cliHome;
     }
 }

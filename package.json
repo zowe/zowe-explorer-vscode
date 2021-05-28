@@ -1,6 +1,6 @@
 {
   "name": "zowe-explorer",
-  "version": "1.14.0",
+  "version": "1.15.1",
   "description": "Monorepo for the Zowe Explorer project.",
   "publisher": "Zowe",
   "author": "Zowe",
@@ -38,6 +38,10 @@
     "prettier": "2.0.5",
     "rimraf": "^3.0.2",
     "yarn": "1.22.10"
+  },
+  "resolutions": {
+    "**/lodash": "^4.17.21",
+    "**/postcss": "^8.2.10"
   },
   "scripts": {
     "prepare": "yarn build",

@@ -23,7 +23,7 @@ More information:
 
 ## Contents
 
-- [What's new in Zowe Explorer 1.14](#whats-new-in-zowe-explorer-1.14)
+- [What's new in Zowe Explorer 1.15.1](#whats-new-in-zowe-explorer-1.15.1)
 - [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
 - [Sample Use Cases](#sample-use-cases)
@@ -31,17 +31,11 @@ More information:
 - [Usage Tips](#usage-tips)
 - [Extending Zowe Explorer](#extending-zowe-explorer)
 
-## What's new in Zowe Explorer 1.14
-
-Enhancements:
-
-- Added the Issue TSO Commands feature.
+## What's new in Zowe Explorer 1.15.1
 
 Bug fixes:
 
-- Fixed the issue that caused the USS tree to collapse after renaming a folder.
-
-- Fixed the issue that prevented jobs with an octothorpe (#) in the name from opening.
+- Fixed the issue that required the vscode module to be imported in the API package
 
 For more information, see [Changelog](https://marketplace.visualstudio.com/items/Zowe.vscode-extension-for-zowe/changelog).
 
