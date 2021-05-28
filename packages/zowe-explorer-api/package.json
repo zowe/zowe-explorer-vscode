@@ -1,6 +1,6 @@
 {
   "name": "@zowe/zowe-explorer-api",
-  "version": "1.13.1",
+  "version": "1.15.1",
   "description": "Extensibility API for Zowe Explorer.",
   "publisher": "Zowe",
   "author": "Zowe",
@@ -13,10 +13,6 @@
     "lib",
     "src"
   ],
-  "peerDependencies": {
-    "@zowe/imperative": "5.0.0-next.202104142114",
-    "@zowe/cli": "7.0.0-next.202104162205"
-  },
   "scripts": {
     "build": "yarn clean && tsc -p ./",
     "test": "echo \"zowe-explorer-api: coming soon.\"",

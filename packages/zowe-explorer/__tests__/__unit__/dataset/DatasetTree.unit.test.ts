@@ -1494,6 +1494,9 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
+                    loadNamedProfile: jest.fn(),
+                    getBaseProfile: jest.fn(),
+                    getCombinedProfile: jest.fn(),
                     checkCurrentProfile: blockMocks.mockCheckCurrentProfile.mockReturnValueOnce({
                         name: blockMocks.imperativeProfile.name,
                         status: "unverified",

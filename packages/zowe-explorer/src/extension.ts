@@ -19,7 +19,6 @@ import * as dsActions from "./dataset/actions";
 import * as jobActions from "./job/actions";
 import * as refreshActions from "./shared/refresh";
 import * as sharedActions from "./shared/actions";
-import { moveSync } from "fs-extra";
 import {
     IZoweDatasetTreeNode,
     IZoweJobTreeNode,
@@ -27,6 +26,7 @@ import {
     IZoweTreeNode,
     IZoweTree,
     ProfilesConfig,
+    KeytarApi,
 } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
@@ -39,8 +39,9 @@ import { createJobsTree } from "./job/ZosJobsProvider";
 import { createUSSTree } from "./uss/USSTree";
 import { MvsCommandHandler } from "./command/MvsCommandHandler";
 import SpoolProvider from "./SpoolProvider";
-import { KeytarCredentialManager } from "./KeytarCredentialManager";
 import * as nls from "vscode-nls";
+import { TsoCommandHandler } from "./command/TsoCommandHandler";
+import { cleanTempDir, moveTempFolder } from "./utils/TempFolder";
 declare const __webpack_require__: typeof require;
 declare const __non_webpack_require__: typeof require;
 
@@ -90,20 +91,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         globals.initLogger(context);
         globals.LOG.debug(localize("initialize.log.debug", "Initialized logger from VSCode extension"));
 
-        const keytar = checkImperativeSecure("keytar");
-        if (keytar) {
-            KeytarCredentialManager.keytar = keytar;
-            const service: string = vscode.workspace.getConfiguration().get("Zowe Security: Credential Key");
-
-            try {
-                await CredentialManagerFactory.initialize({
-                    service: service || "Zowe-Plugin",
-                    Manager: KeytarCredentialManager,
-                    displayName: localize("displayName", "Zowe Explorer"),
-                });
-            } catch (err) {
-                throw new ImperativeError({ msg: err.toString() });
-            }
+        try {
+            const keytarApi = new KeytarApi(globals.LOG);
+            await keytarApi.activateKeytar(false, globals.ISTHEIA);
+        } catch (err) {
+            throw new ImperativeError({ msg: err.toString() });
         }
 
         // Ensure that ~/.zowe folder exists
@@ -139,7 +131,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         );
         globals.LOG.error(
             localize("initialize.log.error", "Error encountered while activating and initializing logger! ") +
-                JSON.stringify(err)
+            JSON.stringify(err)
         );
     }
 
@@ -189,11 +181,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
                     "onDidSaveTextDocument1",
                     "File was saved -- determining whether the file is a USS file or Data set.\n Comparing (case insensitive) "
                 ) +
-                    savedFile.fileName +
-                    localize("onDidSaveTextDocument2", " against directory ") +
-                    globals.DS_DIR +
-                    localize("onDidSaveTextDocument3", "and") +
-                    globals.USS_DIR
+                savedFile.fileName +
+                localize("onDidSaveTextDocument2", " against directory ") +
+                globals.DS_DIR +
+                localize("onDidSaveTextDocument3", "and") +
+                globals.USS_DIR
             );
             if (savedFile.fileName.toUpperCase().indexOf(globals.DS_DIR.toUpperCase()) >= 0) {
                 globals.LOG.debug(localize("activate.didSaveText.isDataSet", "File is a data set-- saving "));
@@ -204,8 +196,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             } else {
                 globals.LOG.debug(
                     localize("activate.didSaveText.file", "File ") +
-                        savedFile.fileName +
-                        localize("activate.didSaveText.notDataSet", " is not a data set or USS file ")
+                    savedFile.fileName +
+                    localize("activate.didSaveText.notDataSet", " is not a data set or USS file ")
                 );
             }
         });
@@ -223,6 +215,20 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         vscode.commands.registerCommand("zowe.jobs.deleteProfile", async (node) =>
             Profiles.getInstance().deleteProfile(datasetProvider, ussFileProvider, jobsProvider, node)
         );
+        vscode.commands.registerCommand("zowe.issueTsoCmd", async (node?, command?) => {
+            if (node) {
+                TsoCommandHandler.getInstance().issueTsoCommand(node.session, command, node);
+            } else {
+                TsoCommandHandler.getInstance().issueTsoCommand();
+            }
+        });
+        vscode.commands.registerCommand("zowe.issueMvsCmd", async (node?, command?) => {
+            if (node) {
+                MvsCommandHandler.getInstance().issueMvsCommand(node.session, command, node);
+            } else {
+                MvsCommandHandler.getInstance().issueMvsCommand();
+            }
+        });
     }
 
     ZoweExplorerExtender.createInstance(datasetProvider, ussFileProvider, jobsProvider);
@@ -390,14 +396,6 @@ function initJobsProvider(context: vscode.ExtensionContext, jobsProvider: IZoweT
     vscode.commands.registerCommand("zowe.jobs.editSession", async (node) =>
         jobsProvider.editSession(node, jobsProvider)
     );
-    // vscode.commands.registerCommand("zowe.issueTsoCmd", async () => MvsCommandHandler.getInstance().issueMvsCommand());
-    vscode.commands.registerCommand("zowe.issueMvsCmd", async (node?, command?) => {
-        if (node) {
-            MvsCommandHandler.getInstance().issueMvsCommand(node.session, command, node);
-        } else {
-            MvsCommandHandler.getInstance().issueMvsCommand();
-        }
-    });
     vscode.commands.registerCommand("zowe.jobs.addFavorite", async (node) => jobsProvider.addFavorite(node));
     vscode.commands.registerCommand("zowe.jobs.removeFavorite", async (node) => jobsProvider.removeFavorite(node));
     vscode.commands.registerCommand("zowe.jobs.saveSearch", async (node) => jobsProvider.saveSearch(node));
@@ -436,36 +434,9 @@ function initSubscribers(context: vscode.ExtensionContext, theProvider: IZoweTre
 }
 
 /**
- * function to check if imperative.json contains
- * information about security or not
- */
-export function checkImperativeSecure(moduleName): NodeModule | undefined {
-    let imperativeIsSecure: boolean = false;
-    try {
-        const fileName = path.join(getZoweDir(), "settings", "imperative.json");
-        let settings: any;
-        if (fs.existsSync(fileName)) {
-            settings = JSON.parse(fs.readFileSync(fileName).toString());
-        }
-        const value1 = settings?.overrides.CredentialManager;
-        const value2 = settings?.overrides["credential-manager"];
-        imperativeIsSecure =
-            (typeof value1 === "string" && value1.length > 0) || (typeof value2 === "string" && value2.length > 0);
-    } catch (error) {
-        globals.LOG.warn(localize("profile.init.read.imperative", "Unable to read imperative file. ") + error.message);
-        vscode.window.showWarningMessage(error.message);
-        return undefined;
-    }
-    if (imperativeIsSecure) {
-        return this.getSecurityModules(moduleName);
-    }
-    return undefined;
-}
-
-/**
  * Imports the neccesary security modules
  */
-export function getSecurityModules(moduleName): NodeModule | undefined {
+ export function getSecurityModules(moduleName): NodeModule | undefined {
     const r = typeof __webpack_require__ === "function" ? __non_webpack_require__ : require;
     // Workaround for Theia issue (https://github.com/eclipse-theia/theia/issues/4935)
     const appRoot = globals.ISTHEIA ? process.cwd() : vscode.env.appRoot;
@@ -483,97 +454,6 @@ export function getSecurityModules(moduleName): NodeModule | undefined {
         localize("initialize.module.load", "Credentials not managed, unable to load security file: ") + moduleName
     );
     return undefined;
-}
-
-/**
- * Moves temp folder to user defined location in preferences
- * @param previousTempPath temp path settings value before updated by user
- * @param currentTempPath temp path settings value after updated by user
- */
-export function moveTempFolder(previousTempPath: string, currentTempPath: string) {
-    // Re-define globals with updated path
-    globals.defineGlobals(currentTempPath);
-
-    if (previousTempPath === "") {
-        previousTempPath = path.join(__dirname, "..", "..", "resources");
-    }
-
-    // Make certain that "temp" folder is cleared
-    cleanTempDir();
-
-    try {
-        fs.mkdirSync(globals.ZOWETEMPFOLDER);
-        fs.mkdirSync(globals.ZOWE_TMP_FOLDER);
-        fs.mkdirSync(globals.USS_DIR);
-        fs.mkdirSync(globals.DS_DIR);
-    } catch (err) {
-        globals.LOG.error(
-            localize("moveTempFolder.error", "Error encountered when creating temporary folder! ") + JSON.stringify(err)
-        );
-        errorHandling(
-            err,
-            null,
-            localize("moveTempFolder.error", "Error encountered when creating temporary folder! ") + err.message
-        );
-    }
-    const previousTemp = path.join(previousTempPath, "temp");
-    try {
-        // If source and destination path are same, exit
-        if (previousTemp === globals.ZOWETEMPFOLDER) {
-            return;
-        }
-
-        // TODO: Possibly remove when supporting "Multiple Instances"
-        // If a second instance has already moved the temp folder, exit
-        // Ideally, `moveSync()` would alert user if path doesn't exist.
-        // However when supporting "Multiple Instances", might not be possible.
-        if (!fs.existsSync(previousTemp)) {
-            return;
-        }
-
-        moveSync(previousTemp, globals.ZOWETEMPFOLDER, { overwrite: true });
-    } catch (err) {
-        globals.LOG.error("Error moving temporary folder! " + JSON.stringify(err));
-        vscode.window.showErrorMessage(err.message);
-    }
-}
-
-/**
- * Recursively deletes directory
- *
- * @param directory path to directory to be deleted
- */
-export function cleanDir(directory) {
-    if (!fs.existsSync(directory)) {
-        return;
-    }
-    fs.readdirSync(directory).forEach((file) => {
-        const fullpath = path.join(directory, file);
-        const lstat = fs.lstatSync(fullpath);
-        if (lstat.isFile()) {
-            fs.unlinkSync(fullpath);
-        } else {
-            cleanDir(fullpath);
-        }
-    });
-    fs.rmdirSync(directory);
-}
-
-/**
- * Cleans up local temp directory
- *
- * @export
- */
-export async function cleanTempDir() {
-    // logger hasn't necessarily been initialized yet, don't use the `log` in this function
-    if (!fs.existsSync(globals.ZOWETEMPFOLDER)) {
-        return;
-    }
-    try {
-        cleanDir(globals.ZOWETEMPFOLDER);
-    } catch (err) {
-        vscode.window.showErrorMessage(localize("deactivate.error", "Unable to delete temporary folder. ") + err);
-    }
 }
 
 /**
