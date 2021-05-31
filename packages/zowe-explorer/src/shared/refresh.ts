@@ -12,7 +12,7 @@
 import { IZoweTree, IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { PersistentFilters } from "../PersistentFilters";
 import { Profiles } from "../Profiles";
-import { refreshTree } from "../utils/ProfilesUtils";
+import { syncSessionNode } from "../utils/ProfilesUtils";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { resetValidationSettings, returnIconState } from "./actions";
 import { labelRefresh } from "./utils";
@@ -32,7 +32,9 @@ export async function refreshAll(treeProvider: IZoweTree<IZoweTreeNode>) {
             labelRefresh(sessNode);
             sessNode.children = [];
             sessNode.dirty = true;
-            refreshTree(sessNode);
+            await syncSessionNode(Profiles.getInstance())((profileValue) =>
+                ZoweExplorerApiRegister.getCommonApi(profileValue).getSession()
+            )(sessNode);
             resetValidationSettings(sessNode, setting);
             returnIconState(sessNode);
         }
