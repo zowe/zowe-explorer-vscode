@@ -105,7 +105,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         });
 
         const mProfileInfo = new ProfileInfo("zowe", {
-            requireKeytar: () => getSecurityModules("keytar"),
+            requireKeytar: () => this.getSecurityModules("keytar"),
         });
         ProfilesConfig.createInstance(mProfileInfo);
         await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir() });
@@ -131,7 +131,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         );
         globals.LOG.error(
             localize("initialize.log.error", "Error encountered while activating and initializing logger! ") +
-            JSON.stringify(err)
+                JSON.stringify(err)
         );
     }
 
@@ -181,11 +181,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
                     "onDidSaveTextDocument1",
                     "File was saved -- determining whether the file is a USS file or Data set.\n Comparing (case insensitive) "
                 ) +
-                savedFile.fileName +
-                localize("onDidSaveTextDocument2", " against directory ") +
-                globals.DS_DIR +
-                localize("onDidSaveTextDocument3", "and") +
-                globals.USS_DIR
+                    savedFile.fileName +
+                    localize("onDidSaveTextDocument2", " against directory ") +
+                    globals.DS_DIR +
+                    localize("onDidSaveTextDocument3", "and") +
+                    globals.USS_DIR
             );
             if (savedFile.fileName.toUpperCase().indexOf(globals.DS_DIR.toUpperCase()) >= 0) {
                 globals.LOG.debug(localize("activate.didSaveText.isDataSet", "File is a data set-- saving "));
@@ -196,8 +196,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             } else {
                 globals.LOG.debug(
                     localize("activate.didSaveText.file", "File ") +
-                    savedFile.fileName +
-                    localize("activate.didSaveText.notDataSet", " is not a data set or USS file ")
+                        savedFile.fileName +
+                        localize("activate.didSaveText.notDataSet", " is not a data set or USS file ")
                 );
             }
         });
@@ -436,7 +436,7 @@ function initSubscribers(context: vscode.ExtensionContext, theProvider: IZoweTre
 /**
  * Imports the neccesary security modules
  */
- export function getSecurityModules(moduleName): NodeModule | undefined {
+export function getSecurityModules(moduleName): NodeModule | undefined {
     const r = typeof __webpack_require__ === "function" ? __non_webpack_require__ : require;
     // Workaround for Theia issue (https://github.com/eclipse-theia/theia/issues/4935)
     const appRoot = globals.ISTHEIA ? process.cwd() : vscode.env.appRoot;

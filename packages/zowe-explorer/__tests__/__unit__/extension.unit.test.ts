@@ -73,7 +73,12 @@ async function createGlobalMocks() {
             return { GetAllProfileNames: globalMocks.mockGetAllProfileNames, Load: globalMocks.mockLoad };
         }),
         mockProfileInfo: jest.fn().mockImplementation(() => {
-            return {};
+            return {
+                mAppName: "",
+                mCredentials: {},
+                mUSingTeamConfig: true,
+                readProfilesFromDisk: jest.fn(),
+            };
         }),
         testTreeView: null,
         enums: jest.fn().mockImplementation(() => {
@@ -355,12 +360,10 @@ async function createGlobalMocks() {
 describe("Extension Unit Tests", () => {
     it("Testing that activate correctly executes", async () => {
         const globalMocks = await createGlobalMocks();
-        jest.spyOn(this as any, "getSecurityModules");
         Object.defineProperty(imperative, "ProfileInfo", {
             value: globalMocks.mockProfileInfo,
             configurable: true,
         });
-        jest.spyOn(this as any, "readProfilesFromDisk");
         // tslint:disable-next-line: no-object-literal-type-assertion
         globalMocks.mockReadFileSync.mockReturnValueOnce('{ "overrides": { "CredentialManager": "Managed by ANO" }}');
         globalMocks.mockExistsSync.mockReturnValueOnce(true);
