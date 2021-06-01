@@ -123,7 +123,6 @@ async function createGlobalMocks() {
             "zowe.all.profilelink",
             "zowe.createMember",
             "zowe.deleteDatasetPrompt",
-            "zowe.deleteDataset",
             "zowe.allocateLike",
             "zowe.uploadDialog",
             "zowe.deleteMember",

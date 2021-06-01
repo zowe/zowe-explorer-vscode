@@ -267,8 +267,8 @@
         "category": "Zowe Explorer"
       },
       {
-        "command": "zowe.deleteDataset",
-        "title": "%deleteDataset%",
+        "command": "zowe.deleteDatasetPrompt",
+        "title": "%deleteDatasetPrompt%",
         "category": "Zowe Explorer"
       },
       {
@@ -982,7 +982,7 @@
         },
         {
           "when": "view == zowe.explorer && viewItem =~ /^ds.*/",
-          "command": "zowe.deleteDataset",
+          "command": "zowe.deleteDatasetPrompt",
           "group": "7_modification@5"
         },
         {
@@ -992,7 +992,7 @@
         },
         {
           "when": "view == zowe.explorer && viewItem =~ /^pds.*/",
-          "command": "zowe.deleteDataset",
+          "command": "zowe.deleteDatasetPrompt",
           "group": "7_modification@5"
         },
         {
@@ -1232,7 +1232,7 @@
           "when": "never"
         },
         {
-          "command": "zowe.deleteDataset",
+          "command": "zowe.deleteDatasetPrompt",
           "when": "never"
         },
         {

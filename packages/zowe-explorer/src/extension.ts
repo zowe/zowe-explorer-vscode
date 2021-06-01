@@ -235,12 +235,11 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
     vscode.commands.registerCommand("zowe.all.profilelink", (node) => linkProfileDialog(node.getProfile()));
     vscode.commands.registerCommand("zowe.createMember", (node) => dsActions.createMember(node, datasetProvider));
     vscode.commands.registerCommand("zowe.deleteDatasetPrompt", (node) =>
-        dsActions.deleteDatasetPrompt(node, datasetProvider)
+        dsActions.deleteDatasetPrompt(datasetProvider)
     );
-    vscode.commands.registerCommand("zowe.deleteDataset", (node) => dsActions.deleteDataset(node, datasetProvider));
     vscode.commands.registerCommand("zowe.allocateLike", (node) => dsActions.allocateLike(datasetProvider, node));
     vscode.commands.registerCommand("zowe.uploadDialog", (node) => dsActions.uploadDialog(node, datasetProvider));
-    vscode.commands.registerCommand("zowe.deleteMember", (node) => dsActions.deleteDataset(node, datasetProvider));
+    vscode.commands.registerCommand("zowe.deleteMember", (node) => dsActions.deleteDatasetPrompt(datasetProvider));
     vscode.commands.registerCommand("zowe.editDataSet", (node) => dsActions.openPS(node, false, datasetProvider));
     vscode.commands.registerCommand("zowe.editMember", (node) => dsActions.openPS(node, false, datasetProvider));
     vscode.commands.registerCommand("zowe.removeSession", async (node) => datasetProvider.deleteSession(node));

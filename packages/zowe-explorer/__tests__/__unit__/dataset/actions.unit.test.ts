@@ -540,7 +540,11 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
 
-        await dsActions.deleteDatasetPrompt(blockMocks.testDatasetNode, blockMocks.testDatasetTree);
+        const selectedNodes = [blockMocks.testDatasetNode];
+        const treeView = createTreeView(selectedNodes);
+        blockMocks.testDatasetTree.getTreeView.mockReturnValueOnce(treeView);
+
+        await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
         expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith(
             `The following nodes were deleted: ${blockMocks.testDatasetNode.getLabel()}`
@@ -551,7 +555,11 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
 
-        await dsActions.deleteDatasetPrompt(blockMocks.testMemberNode, blockMocks.testDatasetTree);
+        const selectedNodes = [blockMocks.testMemberNode];
+        const treeView = createTreeView(selectedNodes);
+        blockMocks.testDatasetTree.getTreeView.mockReturnValueOnce(treeView);
+
+        await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
         expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith(
             `The following nodes were deleted: ${blockMocks.testMemberNode
@@ -564,7 +572,11 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
 
-        await dsActions.deleteDatasetPrompt(blockMocks.testVsamNode, blockMocks.testDatasetTree);
+        const selectedNodes = [blockMocks.testVsamNode];
+        const treeView = createTreeView(selectedNodes);
+        blockMocks.testDatasetTree.getTreeView.mockReturnValueOnce(treeView);
+
+        await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
         expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith(
             `The following nodes were deleted: ${blockMocks.testVsamNode.getLabel()}`
@@ -579,7 +591,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         const treeView = createTreeView(selectedNodes);
         blockMocks.testDatasetTree.getTreeView.mockReturnValueOnce(treeView);
 
-        await dsActions.deleteDatasetPrompt(null, blockMocks.testDatasetTree);
+        await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
         expect(mocked(vscode.window.showInformationMessage)).toHaveBeenCalledWith(
             `The following nodes were deleted: ${blockMocks.testDatasetNode.getLabel()}, ${blockMocks.testVsamNode.getLabel()}`
@@ -594,7 +606,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         const treeView = createTreeView(selectedNodes);
         blockMocks.testDatasetTree.getTreeView.mockReturnValueOnce(treeView);
 
-        await dsActions.deleteDatasetPrompt(null, blockMocks.testDatasetTree);
+        await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
         expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith(
             `The following nodes were deleted: ${blockMocks.testDatasetNode.getLabel()}(${blockMocks.testMemberNode.getLabel()}), ${blockMocks.testDatasetNode.getLabel()}`
@@ -605,7 +617,11 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
 
-        await dsActions.deleteDatasetPrompt(blockMocks.testFavoritedNode, blockMocks.testDatasetTree);
+        const selectedNodes = [blockMocks.testFavoritedNode];
+        const treeView = createTreeView(selectedNodes);
+        blockMocks.testDatasetTree.getTreeView.mockReturnValueOnce(treeView);
+
+        await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
         expect(mocked(vscode.window.showInformationMessage)).toBeCalledTimes(0);
     });
@@ -614,7 +630,11 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
 
-        await dsActions.deleteDatasetPrompt(blockMocks.testFavMemberNode, blockMocks.testDatasetTree);
+        const selectedNodes = [blockMocks.testFavMemberNode];
+        const treeView = createTreeView(selectedNodes);
+        blockMocks.testDatasetTree.getTreeView.mockReturnValueOnce(treeView);
+
+        await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
         expect(mocked(vscode.window.showInformationMessage)).toBeCalledTimes(0);
     });
@@ -623,7 +643,11 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
 
-        await dsActions.deleteDatasetPrompt(globalMocks.datasetSessionNode, blockMocks.testDatasetTree);
+        const selectedNodes = [globalMocks.datasetSessionNode];
+        const treeView = createTreeView(selectedNodes);
+        blockMocks.testDatasetTree.getTreeView.mockReturnValueOnce(treeView);
+
+        await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
         expect(mocked(vscode.window.showInformationMessage)).toBeCalledTimes(0);
     });
@@ -636,7 +660,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         const treeView = createTreeView(selectedNodes);
         blockMocks.testDatasetTree.getTreeView.mockReturnValueOnce(treeView);
 
-        await dsActions.deleteDatasetPrompt(null, blockMocks.testDatasetTree);
+        await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
         expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith(
             `The following nodes were deleted: ${blockMocks.testDatasetNode.getLabel()}`
@@ -649,7 +673,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Cancel" as any);
 
-        await dsActions.deleteDatasetPrompt(globalMocks.datasetSessionNode, blockMocks.testDatasetTree);
+        await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
         expect(mocked(vscode.window.withProgress).mock.calls.length).toBe(0);
     });
@@ -856,7 +880,6 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
 
         expect(deleteSpy).toBeCalledWith(node.label);
         expect(blockMocks.testDatasetTree.removeFavorite).toBeCalledWith(node);
-        expect(blockMocks.testDatasetTree.refreshElement).toBeCalledWith(parent);
         expect(mocked(fs.existsSync)).toBeCalledWith(
             path.join(globals.DS_DIR, parent.getSessionNode().label, "HLQ.TEST.NODE")
         );
@@ -886,7 +909,6 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
 
         expect(deleteSpy).toBeCalledWith(`${child.getParent().label}(${child.label})`);
         expect(blockMocks.testDatasetTree.removeFavorite).toBeCalledWith(child);
-        expect(blockMocks.testDatasetTree.refreshElement).toBeCalledWith(parent);
         expect(mocked(fs.existsSync)).toBeCalledWith(
             path.join(globals.DS_DIR, parent.getSessionNode().label, `${child.getParent().label}(${child.label})`)
         );

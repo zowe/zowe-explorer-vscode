@@ -183,16 +183,9 @@ export async function uploadFile(node: ZoweDatasetNode, doc: vscode.TextDocument
  * @param {IZoweDatasetTreeNode} node - The node selected for deletion
  * @param {DatasetTree} datasetProvider - the tree which contains the nodes
  */
-export async function deleteDatasetPrompt(
-    node: IZoweDatasetTreeNode,
-    datasetProvider: IZoweTree<IZoweDatasetTreeNode>
-) {
+export async function deleteDatasetPrompt(datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
     const treeView = datasetProvider.getTreeView();
     const selectedNodes: IZoweDatasetTreeNode[] = treeView.selection;
-
-    if (node) {
-        selectedNodes.push(node);
-    }
 
     // Filter out sessions, favorite nodes, or information messages
     const nodes: IZoweDatasetTreeNode[] = selectedNodes.filter(
@@ -212,10 +205,10 @@ export async function deleteDatasetPrompt(
     });
 
     // Confirm that the user really wants to delete
-    globals.LOG.debug(localize("deleteDataset.log.debug", "Deleting data set(s): ") + deletedNodes.join(","));
+    globals.LOG.debug(localize("deleteDatasetPrompt.log.debug", "Deleting data set(s): ") + deletedNodes.join(","));
     const quickPickOptions: vscode.QuickPickOptions = {
         placeHolder: localize(
-            "deleteDataset.quickPickOption",
+            "deleteDatasetPrompt.quickPickOption",
             "Delete data set(s)? This will permanently remove them from your system."
         ),
         ignoreFocusOut: true,
@@ -224,19 +217,20 @@ export async function deleteDatasetPrompt(
     if (
         (await vscode.window.showQuickPick(
             [
-                localize("deleteDataset.showQuickPick.delete", "Delete"),
-                localize("deleteDataset.showQuickPick.Cancel", "Cancel"),
+                localize("deleteDatasetPrompt.showQuickPick.delete", "Delete"),
+                localize("deleteDatasetPrompt.showQuickPick.Cancel", "Cancel"),
             ],
             quickPickOptions
-        )) !== localize("deleteDataset.showQuickPick.delete", "Delete")
+        )) !== localize("deleteDatasetPrompt.showQuickPick.delete", "Delete")
     ) {
-        globals.LOG.debug(localize("deleteDataset.showQuickPick.log.debug", "Dataset deletion action was canceled."));
+        globals.LOG.debug(
+            localize("deleteDatasetPrompt.showQuickPick.log.debug", "Dataset deletion action was canceled.")
+        );
         return;
-    } else {
     }
 
-    // Delete multiple selected nodes
     if (nodes.length > 0) {
+        // Delete multiple selected nodes
         await vscode.window.withProgress(
             {
                 location: vscode.ProgressLocation.Notification,
@@ -267,6 +261,9 @@ export async function deleteDatasetPrompt(
         vscode.window.showInformationMessage(
             localize("deleteMulti.datasetNode", "The following nodes were deleted:") + deletedNodes
         );
+
+        // refresh Tree View & favorites
+        datasetProvider.refresh();
     }
 }
 
@@ -925,24 +922,6 @@ export async function deleteDataset(node: IZoweTreeNode, datasetProvider: IZoweT
     } else {
         node.getSessionNode().dirty = true;
         datasetProvider.removeFavorite(node);
-    }
-
-    // refresh Tree View & favorites
-    if (node.getParent() && node.getParent().contextValue !== globals.DS_SESSION_CONTEXT) {
-        datasetProvider.refreshElement(node.getParent());
-        if (contextually.isFavorite(node) || contextually.isFavorite(node.getParent())) {
-            const nonFavNode = datasetProvider.findNonFavoritedNode(node.getParent());
-            if (nonFavNode) {
-                datasetProvider.refreshElement(nonFavNode);
-            }
-        } else {
-            const favNode = datasetProvider.findFavoritedNode(node.getParent());
-            if (favNode) {
-                datasetProvider.refreshElement(favNode);
-            }
-        }
-    } else {
-        datasetProvider.refresh();
     }
 
     // remove local copy of file
