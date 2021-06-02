@@ -66,16 +66,20 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     // Determine the runtime framework to support special behavior for Theia
     globals.defineGlobals(preferencesTempPath);
 
-    // Call cleanTempDir before continuing
-    // this is to handle if the application crashed on a previous execution and
-    // VSC didn't get a chance to call our deactivate to cleanup.
-    // await deactivate();
-
     try {
         if (!fs.existsSync(globals.ZOWETEMPFOLDER)) {
             fs.mkdirSync(globals.ZOWETEMPFOLDER);
             fs.mkdirSync(globals.ZOWE_TMP_FOLDER);
             fs.mkdirSync(globals.USS_DIR);
+            fs.mkdirSync(globals.DS_DIR);
+        }
+        if (!fs.existsSync(globals.ZOWE_TMP_FOLDER)) {
+            fs.mkdirSync(globals.ZOWE_TMP_FOLDER);
+        }
+        if (!fs.existsSync(globals.USS_DIR)) {
+            fs.mkdirSync(globals.USS_DIR);
+        }
+        if (!fs.existsSync(globals.DS_DIR)) {
             fs.mkdirSync(globals.DS_DIR);
         }
     } catch (err) {
@@ -119,7 +123,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         );
         globals.LOG.error(
             localize("initialize.log.error", "Error encountered while activating and initializing logger! ") +
-            JSON.stringify(err)
+                JSON.stringify(err)
         );
     }
 
@@ -169,11 +173,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
                     "onDidSaveTextDocument1",
                     "File was saved -- determining whether the file is a USS file or Data set.\n Comparing (case insensitive) "
                 ) +
-                savedFile.fileName +
-                localize("onDidSaveTextDocument2", " against directory ") +
-                globals.DS_DIR +
-                localize("onDidSaveTextDocument3", "and") +
-                globals.USS_DIR
+                    savedFile.fileName +
+                    localize("onDidSaveTextDocument2", " against directory ") +
+                    globals.DS_DIR +
+                    localize("onDidSaveTextDocument3", "and") +
+                    globals.USS_DIR
             );
             if (savedFile.fileName.toUpperCase().indexOf(globals.DS_DIR.toUpperCase()) >= 0) {
                 globals.LOG.debug(localize("activate.didSaveText.isDataSet", "File is a data set-- saving "));
@@ -184,8 +188,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             } else {
                 globals.LOG.debug(
                     localize("activate.didSaveText.file", "File ") +
-                    savedFile.fileName +
-                    localize("activate.didSaveText.notDataSet", " is not a data set or USS file ")
+                        savedFile.fileName +
+                        localize("activate.didSaveText.notDataSet", " is not a data set or USS file ")
                 );
             }
         });

@@ -103,7 +103,7 @@ export async function cleanDir(directory) {
             }
         }
     });
-    if (!isEmptyDir) {
+    if (isEmptyDir) {
         fs.rmdirSync(directory);
     }
 }
