@@ -26,6 +26,7 @@
   "uploadDialog": "Upload Member...",
   "pattern": "Search Data Sets",
   "refreshNode": "Pull from Mainframe",
+  "refreshDataset": "Refresh",
   "refreshAll": "Refresh Data Sets View",
   "removeFavorite": "Remove Favorite",
   "uss.removeFavorite": "Remove Favorite",

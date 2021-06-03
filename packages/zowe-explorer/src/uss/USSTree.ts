@@ -791,13 +791,11 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                         "Error: You have Zowe USS favorites that refer to a non-existent CLI profile named: "
                     ) +
                     profileName +
-                    localize(
-                        "intializeUSSFavorites.error.profile2",
-                        ". To resolve this, you can create a profile with this name, "
-                    ) +
+                    localize("intializeUSSFavorites.error.profile2", ". To resolve this, you can remove ") +
+                    profileName +
                     localize(
                         "initializeUSSFavorites.error.profile3",
-                        "or remove the favorites with this profile name from the Zowe-USS-Persistent setting, which can be found in your "
+                        " from the Favorites section of Zowe Explorer's USS view. "
                     ) +
                     getAppName(globals.ISTHEIA) +
                     localize("initializeUSSFavorites.error.profile4", " user settings.");
@@ -810,6 +808,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         // Pass loaded profile/session to the parent node's favorites children.
         const profileInFavs = this.findMatchingProfileInArray(this.mFavorites, profileName);
         const favsForProfile = profileInFavs.children;
+
         for (const favorite of favsForProfile) {
             // If profile and session already exists for favorite node, add to updatedFavsForProfile and go to next array item
             if (favorite.getProfile() && favorite.getSession()) {

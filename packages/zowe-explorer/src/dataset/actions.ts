@@ -945,6 +945,21 @@ export async function refreshPS(node: IZoweDatasetTreeNode) {
 }
 
 /**
+ * Refreshes the names of each member within a PDS
+ *
+ * @param {IZoweDatasetTreeNode} node - The node which represents the parent PDS of members
+ * @param datasetProvider
+ */
+export async function refreshDataset(node: IZoweDatasetTreeNode) {
+    try {
+        await node.getChildren();
+        await this.refreshElement(node);
+    } catch (err) {
+        console.error(err.message);
+    }
+}
+
+/**
  * Prompts the user for a pattern, and populates the [TreeView]{@link vscode.TreeView} based on the pattern
  *
  * @param {IZoweDatasetTreeNode} node - The session node
