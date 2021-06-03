@@ -88,8 +88,10 @@ describe("Extension Integration Tests", () => {
     afterEach(async function () {
         this.timeout(TIMEOUT);
         const createTestFileName = pattern + ".EXT.CREATE.DATASET.TEST";
+        const allocateLikeFileName = pattern + ".EXT.ALLOC.LIKE";
         try {
             await zowe.Delete.dataSet(session, createTestFileName);
+            await zowe.Delete.dataSet(session, allocateLikeFileName);
         } catch (err) {
             // Do nothing
         }
@@ -213,7 +215,7 @@ describe("Extension Integration Tests", () => {
                 sessionNode,
                 session
             );
-            const testCopyName = pattern + ".EXT.SAMPLE.PDS2";
+            const testCopyName = pattern + ".EXT.ALLOC.LIKE";
 
             const inputStub = sandbox.stub(vscode.window, "showInputBox");
             inputStub.onCall(0).returns(testCopyName);
