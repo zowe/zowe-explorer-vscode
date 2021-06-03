@@ -950,12 +950,12 @@ export async function refreshPS(node: IZoweDatasetTreeNode) {
  * @param {IZoweDatasetTreeNode} node - The node which represents the parent PDS of members
  * @param datasetProvider
  */
-export async function refreshDataset(node: IZoweDatasetTreeNode) {
+export async function refreshDataset(node: IZoweDatasetTreeNode, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
     try {
         await node.getChildren();
-        await this.refreshElement(node);
+        datasetProvider.refreshElement(node);
     } catch (err) {
-        console.error(err.message);
+        errorHandling(err, node.getProfileName(), err.message);
     }
 }
 
