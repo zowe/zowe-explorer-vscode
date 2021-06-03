@@ -58,8 +58,6 @@ A breakdown of this naming convention is described below.
     - Examples: Search, Issue command, Download from mainframe, Download spool
   - `Create`: Commands related to creation of files or folders.
     - Examples: Create data set, Upload data set member, Create/Upload file or directory
-  - `MvsHsmCommands`: Commands for HSM commands for data sets.
-    - Examples: Migrate/Recall data sets
   - `CutCopyPaste`: Commands related to cutting, copying, and pasting of files or paths.
     - Examples: Copy member/data set, Copy path, Paste
   - `Modification`: Commands related to modification of files or folders. (Not for profiles.)
