@@ -936,39 +936,39 @@
           "group": "06_zowe_mvsCutCopyPaste@7"
         },
         {
-          "when": "view == zowe.explorer && viewItem =~ /^migr.*/",
-          "command": "zowe.hRecallDataSet",
-          "group": "99_zowe_mvsModification@0"
-        },
-        {
-          "when": "view == zowe.explorer && viewItem =~ /^(ds.*|^pds.*)/",
-          "command": "zowe.hMigrateDataSet",
-          "group": "99_zowe_mvsModification@1"
-        },
-        {
           "when": "view == zowe.explorer && viewItem =~ /^ds.*/",
           "command": "zowe.editDataSet",
-          "group": "99_zowe_mvsModification@3"
+          "group": "99_zowe_mvsModification@0"
         },
         {
           "when": "view == zowe.explorer && viewItem =~ /^member.*/",
           "command": "zowe.editMember",
-          "group": "99_zowe_mvsModification@3"
+          "group": "99_zowe_mvsModification@0"
         },
         {
           "when": "view == zowe.explorer && viewItem =~ /^member.*/",
           "command": "zowe.renameDataSetMember",
-          "group": "99_zowe_mvsModification@4"
+          "group": "99_zowe_mvsModification@1"
         },
         {
           "when": "view == zowe.explorer && viewItem =~ /^ds.*/",
           "command": "zowe.renameDataSet",
-          "group": "99_zowe_mvsModification@4"
+          "group": "99_zowe_mvsModification@1"
         },
         {
           "when": "view == zowe.explorer && viewItem =~ /^pds.*/",
           "command": "zowe.renameDataSet",
-          "group": "99_zowe_mvsModification@4"
+          "group": "99_zowe_mvsModification@1"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem =~ /^migr.*/",
+          "command": "zowe.hRecallDataSet",
+          "group": "99_zowe_mvsModification@2"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem =~ /^(ds.*|^pds.*)/",
+          "command": "zowe.hMigrateDataSet",
+          "group": "99_zowe_mvsModification@2"
         },
         {
           "when": "view == zowe.explorer && viewItem =~ /^ds.*/",
