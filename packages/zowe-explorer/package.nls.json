@@ -46,7 +46,7 @@
   "uss.binary": "Toggle Binary",
   "uss.uploadDialog": "Upload Files...",
   "uss.text": "Toggle Text",
-  "jobs.search": "Search Jobs using Attributes",
+  "jobs.search": "Search Jobs",
   "deleteJob": "Delete Job",
   "runModifyCommand": "Issue Modify command",
   "runStopCommand": "Issue Stop command",
