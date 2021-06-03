@@ -62,9 +62,9 @@ export class Profiles extends ProfilesCache {
         return Profiles.loader;
     }
 
-    public static createConfigInstance(log: Logger): Profiles {
+    public static async createConfigInstance(log: Logger): Promise<Profiles> {
         Profiles.loader = new Profiles(log);
-        Profiles.loader.refreshConfig(ZoweExplorerApiRegister.getInstance());
+        await Profiles.loader.refreshConfig(ZoweExplorerApiRegister.getInstance());
         return Profiles.loader;
     }
 
