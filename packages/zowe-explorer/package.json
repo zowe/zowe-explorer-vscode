@@ -1143,7 +1143,7 @@
         {
           "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/",
           "command": "zowe.removeJobsSession",
-          "group": "99_zowe_jobsProfileModification98"
+          "group": "99_zowe_jobsProfileModification@98"
         },
         {
           "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/",
