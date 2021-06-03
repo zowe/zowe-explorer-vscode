@@ -14,7 +14,7 @@
   "deleteDatasetPrompt.showQuickPick.log.debug": "Dataset deletion action was canceled.",
   "deleteDatasetPrompt.deleteCounter": "Deleting nodes",
   "deleteDatasetPrompt.deleteCancelled": "Delete action was cancelled.",
-  "deleteMulti.datasetNode": "The following nodes were deleted:",
+  "deleteMulti.datasetNode": "The following items were deleted:",
   "createMember.inputBox": "Name of Member",
   "createMember.log.debug.createNewDataSet": "creating new data set member of name ",
   "createMember.log.error": "Error encountered when creating member! ",

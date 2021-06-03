@@ -259,7 +259,7 @@ export async function deleteDatasetPrompt(datasetProvider: IZoweTree<IZoweDatase
             }
         );
         vscode.window.showInformationMessage(
-            localize("deleteMulti.datasetNode", "The following nodes were deleted:") + deletedNodes
+            localize("deleteMulti.datasetNode", "The following items were deleted:") + deletedNodes
         );
 
         // refresh Tree View & favorites
