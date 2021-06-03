@@ -997,7 +997,7 @@
         },
         {
           "when": "view == zowe.explorer && viewItem =~ /^(?=.*_validate=false.*)session.*/",
-          "command": "zowe.jobs.enableValidation",
+          "command": "zowe.enableValidation",
           "group": "98_zowe_mvsProfileAuthentication@7"
         },
         {
@@ -1086,16 +1086,6 @@
           "group": "01_zowe_jobsSystemSpecific@2"
         },
         {
-          "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/",
-          "command": "zowe.setOwner",
-          "group": "00_zowe_jobsMainframeInteraction@3"
-        },
-        {
-          "when": "view == zowe.jobs && viewItem =~/^(?!.*_fav.*)server.*/",
-          "command": "zowe.setPrefix",
-          "group": "00_zowe_jobsMainframeInteraction@3"
-        },
-        {
           "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)(server|job).*/",
           "command": "zowe.jobs.addFavorite",
           "group": "02_zowe_jobsWorkspace@0"
@@ -1128,11 +1118,11 @@
         {
           "when": "view == zowe.jobs && viewItem =~ /^(?=.*_validate=true.*)server.*/",
           "command": "zowe.jobs.disableValidation",
-          "group": "98_zowe_ jobsProfileAuthentication@3"
+          "group": "98_zowe_jobsProfileAuthentication@3"
         },
         {
           "when": "view == zowe.jobs && viewItem =~ /^(?=.*_validate=false.*)server.*/",
-          "command": "zowe.enableValidation",
+          "command": "zowe.jobs.enableValidation",
           "group": "98_zowe_jobsProfileAuthentication@4"
         },
         {
