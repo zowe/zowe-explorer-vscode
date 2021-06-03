@@ -788,11 +788,14 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 const errMessage: string =
                     localize(
                         "initializeUSSFavorites.error.profile1",
-                        "Error: You have Zowe USS favorites that refer to a non-existent CLI profile named: "
+                        "Error: You have Zowe USS favorites that refer to a non-existent CLI profile named: {0}",
+                        profileName
                     ) +
-                    profileName +
-                    localize("intializeUSSFavorites.error.profile2", ". To resolve this, you can remove ") +
-                    profileName +
+                    localize(
+                        "intializeUSSFavorites.error.profile2",
+                        ". To resolve this, you can remove {0}",
+                        profileName
+                    ) +
                     localize(
                         "initializeUSSFavorites.error.profile3",
                         " from the Favorites section of Zowe Explorer's USS view. "
