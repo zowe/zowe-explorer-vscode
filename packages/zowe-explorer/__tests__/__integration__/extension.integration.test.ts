@@ -25,6 +25,7 @@ import * as sinon from "sinon";
 import * as testConst from "../../resources/testProfileData";
 import * as vscode from "vscode";
 import * as utils from "../../src/utils/ProfilesUtils";
+import * as coreUtils from "../../src/utils/TempFolder";
 import { DatasetTree, createDatasetTree } from "../../src/dataset/DatasetTree";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import { USSTree } from "../../src/uss/USSTree";
@@ -81,7 +82,7 @@ describe("Extension Integration Tests", () => {
     beforeEach(async function () {
         this.timeout(TIMEOUT);
         sandbox = sinon.createSandbox();
-        await extension.cleanTempDir();
+        await coreUtils.cleanTempDir();
     });
 
     afterEach(async function () {
@@ -988,9 +989,9 @@ describe("Extension Integration Tests", () => {
         const providedPathTwo = path.join(__dirname, "..", "..", "..", "test-folder-two");
 
         // remove directories in case of previously failed tests
-        extension.cleanDir(testingPath);
-        extension.cleanDir(providedPathOne);
-        extension.cleanDir(providedPathTwo);
+        coreUtils.cleanDir(testingPath);
+        coreUtils.cleanDir(providedPathOne);
+        coreUtils.cleanDir(providedPathTwo);
 
         it("should assign the temp folder based on preference", async () => {
             // create target folder
@@ -1007,7 +1008,7 @@ describe("Extension Integration Tests", () => {
             expect(ZOWETEMPFOLDER).to.equal(path.join(testingPath, "temp"));
 
             // Remove directory for subsequent tests
-            extension.cleanDir(testingPath);
+            coreUtils.cleanDir(testingPath);
         }).timeout(TIMEOUT);
 
         it("should update temp folder on preference change", async () => {
@@ -1036,8 +1037,8 @@ describe("Extension Integration Tests", () => {
             expect(ZOWETEMPFOLDER).to.equal(path.join(providedPathTwo, "temp"));
 
             // Remove directory for subsequent tests
-            extension.cleanDir(providedPathOne);
-            extension.cleanDir(providedPathTwo);
+            coreUtils.cleanDir(providedPathOne);
+            coreUtils.cleanDir(providedPathTwo);
         }).timeout(TIMEOUT);
 
         it("should assign default temp folder, if preference is empty", async () => {
