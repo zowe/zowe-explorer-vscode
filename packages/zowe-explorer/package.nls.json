@@ -37,7 +37,6 @@
   "uss.addSession": "Add Profile to USS View",
   "uss.copyPath": "Copy Path",
   "uss.createDirectory": "Create New Directory",
-  "uss.createNode": "Create new file or directory",
   "uss.editFile": "Edit File",
   "uss.fullPath": "Search Unix System Services (USS)",
   "uss.refreshAll": "Refresh USS View",
