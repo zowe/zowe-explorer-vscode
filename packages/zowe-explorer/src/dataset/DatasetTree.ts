@@ -377,16 +377,17 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 const errMessage: string =
                     localize(
                         "loadProfilesForFavorites.error.profile1",
-                        "Error: You have Zowe Data Set favorites that refer to a non-existent CLI profile named: {0}.",
+                        "Error: You have Zowe Data Set favorites that refer to a non-existent CLI profile named: {0}",
                         profileName
                     ) +
                     localize(
                         "loadProfilesForFavorites.error.profile2",
-                        " To resolve this, you can create a profile with this name, "
+                        ". To resolve this, you can remove {0}",
+                        profileName
                     ) +
                     localize(
                         "loadProfilesForFavorites.error.profile3",
-                        "or remove the favorites with this profile name from the Zowe-DS-Persistent setting in your {0} user settings.",
+                        " from the Favorites section of Zowe Explorer's data sets view. ",
                         getAppName(globals.ISTHEIA)
                     );
                 await errorHandling(error, null, errMessage);
