@@ -352,16 +352,17 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 const errMessage: string =
                     localize(
                         "initializeJobsFavorites.error.profile1",
-                        "Error: You have Jobs favorites that refer to a non-existent CLI profile named: "
+                        "Error: You have Zowe Job favorites that refer to a non-existent CLI profile named: {0}",
+                        profileName
                     ) +
-                    profileName +
                     localize(
                         "initializeJobsFavorites.error.profile2",
-                        ". To resolve this, you can create a profile with this name, "
+                        ". To resolve this, you can remove {0}",
+                        profileName
                     ) +
                     localize(
                         "initializeJobsFavorites.error.profile3",
-                        "or remove the favorites with this profile name from the Zowe-Jobs-Persistent setting, which can be found in your "
+                        " from the Favorites section of Zowe Explorer's jobs view. "
                     ) +
                     getAppName(globals.ISTHEIA) +
                     localize("initializeJobsFavorites.error.profile4", " user settings.");
