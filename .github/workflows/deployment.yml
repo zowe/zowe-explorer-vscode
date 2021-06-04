@@ -10,7 +10,7 @@ on:
     inputs:
       version:
         description: Version to be published
-        default: v1.14.0
+        default: v1.15.1
         required: false
       # create_release:
       #   description: Create the release even if publishing already happened

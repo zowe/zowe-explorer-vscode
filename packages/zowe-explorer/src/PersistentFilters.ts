@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import * as zowe from "@zowe/cli";
+import * as globals from "./globals";
 
 /**
  * Standard history and favorite persistance handling routines
@@ -40,7 +40,11 @@ export class PersistentFilters {
     private mFileHistory: string[] = [];
     private mSessions: string[] = [];
 
-    constructor(schema: string, private maxSearchHistory = 5, private maxFileHistory = 10) {
+    constructor(
+        schema: string,
+        private maxSearchHistory = globals.MAX_SEARCH_HISTORY,
+        private maxFileHistory = globals.MAX_FILE_HISTORY
+    ) {
         this.schema = schema;
         this.initialize();
     }

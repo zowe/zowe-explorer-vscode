@@ -14,6 +14,7 @@ import { ZoweExplorerApi } from "@zowe/zowe-explorer-api";
 import { FtpUssApi } from "./ZoweExplorerFtpUssApi";
 import { FtpMvsApi } from "./ZoweExplorerFtpMvsApi";
 import { FtpJesApi } from "./ZoweExplorerFtpJesApi";
+import { CoreUtils } from "@zowe/zos-ftp-for-zowe-cli";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function activate(context: vscode.ExtensionContext): void {
@@ -33,6 +34,11 @@ async function registerFtpApis(): Promise<boolean> {
         importedApi.registerUssApi(new FtpUssApi());
         importedApi.registerMvsApi(new FtpMvsApi());
         importedApi.registerJesApi(new FtpJesApi());
+        // check for getExplorerExtenderApi().initForZowe() to initialize home dir folder if cli not installed
+        if (importedApi.getExplorerExtenderApi && importedApi.getExplorerExtenderApi().initForZowe) {
+            const meta = await CoreUtils.getProfileMeta();
+            await importedApi.getExplorerExtenderApi().initForZowe("zftp", meta);
+        }
         // check as getExplorerExtenderApi().reloadProfiles() was add in Zowe Explorer 1.5 only
         if (importedApi.getExplorerExtenderApi && importedApi.getExplorerExtenderApi().reloadProfiles) {
             await importedApi.getExplorerExtenderApi().reloadProfiles();
