@@ -60,7 +60,7 @@ These Zowe Conformance criteria are applicable to the lastest Zowe v1 LTS Releas
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
    <th></th>
-   <td><b>Support:</b> Extension has a clear documentation on how a user will be provided support. It has a clear instruction on how to report problems that are related to the extension.</td>
+   <td><b>Support:</b> Extension has a clear documentation and clear instructions on how to report problems that are related to the extension.</td>
  </tr>
 
  <tr>
@@ -69,7 +69,7 @@ These Zowe Conformance criteria are applicable to the lastest Zowe v1 LTS Releas
    <th style="background-color:#AAAAAA"></th>
    <th style="background-color:#AAAAAA">x</th>
    <th></th>
-   <td><b>User settings consistency:</b> Extension follows the recommended naming convention for the user settings and configuration settings indicated in the Zowe Explorer extensibility documentation.</td>
+   <td><b>User settings consistency:</b> Extension provides a consistent user experience and follows the recommended naming convention for the user settings and configuration settings indicated in the Zowe Explorer extensibility documentation.</td>
  </tr>
 
  <tr>
@@ -146,7 +146,7 @@ These Zowe Conformance criteria are applicable to the lastest Zowe v1 LTS Releas
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
    <th></th>
-   <td><b>VS Code extension dependency:</b> Extension defines Zowe Explorer as a VSCode extension dependency (Code Example). It includes an extensionDependencies to Zowe Explorer entry in their package.json file and it is only activated once Zowe Explorer is fully activated.</td>
+   <td><b>VS Code extension dependency:</b> Extension defines Zowe Explorer as a VSCode extension dependency (Code Example). It includes an extensionDependencies entry for Zowe Explorer in its package.json file.</td>
  </tr>
 
   <tr>
@@ -164,7 +164,7 @@ These Zowe Conformance criteria are applicable to the lastest Zowe v1 LTS Releas
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
    <th></th>
-   <td><b>Added Profile Type initialization: </b> If the extension has a dependecny on a new Zowe CLI profile type other than the Zowe Explorer default `zosmf`, it is calling the ZoweExplorerApi.IApiRegisterClient.getExplorerExtenderApi().initialize(profileTypeName)to ensure that the profile type is supported and managed by the extension without a Zowe CLI plugin installed.</td>
+   <td><b>Added Profile Type initialization: </b> If the extension has a dependecny on a new Zowe CLI profile type other than the Zowe Explorer default `zosmf`, it is calling the `ZoweExplorerApi.IApiRegisterClient.getExplorerExtenderApi().initialize(profileTypeName)` to ensure that the profile type is supported and managed by the extension without a Zowe CLI plugin installed.</td>
  </tr>
 </table>
 
