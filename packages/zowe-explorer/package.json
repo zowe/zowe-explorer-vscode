@@ -865,7 +865,7 @@
           "group": "1_create@2"
         },
         {
-          "when": "view == zowe.explorer && viewItem =~ /^(ds|pds).*/",
+          "when": "view == zowe.explorer && viewItem =~ /^pds.*/",
           "command": "zowe.refreshDataset",
           "group": "1_create@2"
         },
