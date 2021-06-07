@@ -88,8 +88,10 @@ describe("Extension Integration Tests", () => {
     afterEach(async function () {
         this.timeout(TIMEOUT);
         const createTestFileName = pattern + ".EXT.CREATE.DATASET.TEST";
+        const allocateLikeFileName = pattern + ".EXT.ALLOC.LIKE";
         try {
             await zowe.Delete.dataSet(session, createTestFileName);
+            await zowe.Delete.dataSet(session, allocateLikeFileName);
         } catch (err) {
             // Do nothing
         }
@@ -201,6 +203,27 @@ describe("Extension Integration Tests", () => {
             const allMembers = await zowe.List.allMembers(session, testParentName);
 
             expect(allMembers.apiResponse.items[0].member).to.deep.equal(testFileName);
+        }).timeout(TIMEOUT);
+    });
+
+    describe("Allocate Like", () => {
+        it("should allocate a copy of the requested data set", async () => {
+            const testOriginalName = pattern + ".EXT.SAMPLE.PDS";
+            const testOriginalNode = new ZoweDatasetNode(
+                testOriginalName,
+                vscode.TreeItemCollapsibleState.Collapsed,
+                sessionNode,
+                session
+            );
+            const testCopyName = pattern + ".EXT.ALLOC.LIKE";
+
+            const inputStub = sandbox.stub(vscode.window, "showInputBox");
+            inputStub.onCall(0).returns(testCopyName);
+
+            await dsActions.allocateLike(testTree, testOriginalNode);
+
+            const response = await zowe.List.dataSet(sessionNode.getSession(), testCopyName, {});
+            expect(response.success).to.equal(true);
         }).timeout(TIMEOUT);
     });
 

@@ -63,7 +63,9 @@ export async function allocateLike(datasetProvider: IZoweTree<IZoweDatasetTreeNo
         quickpick.ignoreFocusOut = true;
 
         for (const thisSession of datasetProvider.mSessionNodes) {
-            qpItems.push(new FilterItem(thisSession.label.trim()));
+            if (!thisSession.label.trim().includes("Favorites")) {
+                qpItems.push(new FilterItem(thisSession.label.trim()));
+            }
         }
         quickpick.items = [...qpItems];
 
@@ -73,19 +75,32 @@ export async function allocateLike(datasetProvider: IZoweTree<IZoweDatasetTreeNo
             vscode.window.showInformationMessage(localize("allocateLike.noSelection", "You must select a profile."));
             return;
         } else {
-            currSession = datasetProvider.mSessionNodes.find((thisSession) => thisSession.label === selection.label);
+            currSession = datasetProvider.mSessionNodes.find(
+                (thisSession) => thisSession.label.trim() === selection.label.trim()
+            );
             profile = currSession.getProfile();
         }
         quickpick.dispose();
 
         // The user must enter the name of a data set to copy
+        const currSelection =
+            datasetProvider.getTreeView().selection.length > 0
+                ? datasetProvider.getTreeView().selection[0].label.trim()
+                : null;
         likeDSName = await vscode.window.showInputBox({
             ignoreFocusOut: true,
             placeHolder: localize(
                 "allocateLike.enterLikePattern",
                 "Enter the name of the data set to copy attributes from"
             ),
+            value: currSelection,
         });
+        if (!likeDSName) {
+            vscode.window.showInformationMessage(
+                localize("allocateLike.noNewName", "You must enter a new data set name.")
+            );
+            return;
+        }
     } else {
         // User called allocateLike by right-clicking a node
         profile = node.getProfile();
