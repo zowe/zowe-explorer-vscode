@@ -31,7 +31,7 @@ export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
                 const options = {
                     owner: owner,
                 };
-                const response = (await JobUtils.listJobs(connection, prefix, options)) as IJob[];
+                const response = await JobUtils.listJobs(connection, prefix, options);
                 if (response) {
                     const results = response.map((job: IJob) => {
                         return {
