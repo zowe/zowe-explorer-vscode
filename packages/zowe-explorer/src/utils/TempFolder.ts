@@ -94,18 +94,19 @@ export async function cleanDir(directory) {
         const lstat = fs.lstatSync(fullpath);
         if (lstat.isFile() && !isOpen) {
             fs.unlinkSync(fullpath);
-        } else {
-            if (lstat.isFile() && isOpen) {
-                isEmptyDir = false;
-            }
-            if (!lstat.isFile()) {
-                cleanDir(fullpath);
-            }
+        }
+        if (lstat.isFile() && isOpen) {
+            isEmptyDir = false;
+        }
+        if (!lstat.isFile()) {
+            cleanDir(fullpath);
         }
     });
-    if (isEmptyDir) {
-        fs.rmdirSync(directory);
-    }
+    try {
+        if (isEmptyDir) {
+            fs.rmdirSync(directory);
+        }
+    } catch (error) {}
 }
 
 /**

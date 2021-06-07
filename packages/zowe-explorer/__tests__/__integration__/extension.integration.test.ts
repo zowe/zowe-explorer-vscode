@@ -44,6 +44,7 @@ import {
     FAVORITE_CONTEXT,
     FAV_PROFILE_CONTEXT,
 } from "../../src/globals";
+import { closeOpenedTextFile } from "../../src/utils/workspace";
 
 const TIMEOUT = 45000;
 declare var it: Mocha.ITestDefinition;
@@ -230,15 +231,23 @@ describe("Extension Integration Tests", () => {
     describe("Deactivate", () => {
         it("should clean up the local files when deactivate is invoked", async () => {
             try {
-                fs.mkdirSync(ZOWETEMPFOLDER);
-                fs.mkdirSync(DS_DIR);
+                if (!fs.existsSync(ZOWETEMPFOLDER)) {
+                    fs.mkdirSync(ZOWETEMPFOLDER);
+                }
+                if (!fs.existsSync(DS_DIR)) {
+                    fs.mkdirSync(DS_DIR);
+                }
             } catch (err) {
                 // if operation failed, wait a second and try again
                 await new Promise((resolve) => setTimeout(resolve, 1000));
-                fs.mkdirSync(DS_DIR);
+                if (!fs.existsSync(DS_DIR)) {
+                    fs.mkdirSync(DS_DIR);
+                }
             }
             fs.closeSync(fs.openSync(path.join(DS_DIR, "file1"), "w"));
             fs.closeSync(fs.openSync(path.join(DS_DIR, "file2"), "w"));
+            await closeOpenedTextFile(path.join(DS_DIR, "file1"));
+            await closeOpenedTextFile(path.join(DS_DIR, "file2"));
             await extension.deactivate();
             expect(fs.existsSync(path.join(DS_DIR, "file1"))).to.equal(false);
             expect(fs.existsSync(path.join(DS_DIR, "file2"))).to.equal(false);
@@ -427,6 +436,7 @@ describe("Extension Integration Tests", () => {
                 )
             ).to.equal("");
             expect(fs.existsSync(sharedUtils.getDocumentFilePath(pattern + ".EXT.PS", node))).to.equal(true);
+            await closeOpenedTextFile(sharedUtils.getDocumentFilePath(pattern + ".EXT.PS", node));
         }).timeout(TIMEOUT);
 
         it("should display an error message when openPS is passed an invalid node", async () => {
@@ -471,6 +481,7 @@ describe("Extension Integration Tests", () => {
             // Change contents back
             const originalData = "";
             fs.writeFileSync(path.join(path.join(ZOWETEMPFOLDER, children[1].label)), originalData);
+            await closeOpenedTextFile(path.join(ZOWETEMPFOLDER, children[1].label));
         }).timeout(TIMEOUT);
 
         it("should download, change, and re-upload a PDS member", async () => {
@@ -507,6 +518,9 @@ describe("Extension Integration Tests", () => {
             fs.writeFileSync(
                 path.join(ZOWETEMPFOLDER, children[0].label + "(" + childrenMembers[0].label + ")"),
                 originalData2
+            );
+            await closeOpenedTextFile(
+                path.join(ZOWETEMPFOLDER, children[0].label + "(" + childrenMembers[0].label + ")")
             );
         }).timeout(TIMEOUT);
 
@@ -1005,16 +1019,16 @@ describe("Extension Integration Tests", () => {
         });
     });
 
-    describe("Updating Temp Folder", () => {
+    describe("Updating Temp Folder", async () => {
         // define paths
         const testingPath = path.join(__dirname, "..", "..", "..", "test");
         const providedPathOne = path.join(__dirname, "..", "..", "..", "test-folder-one");
         const providedPathTwo = path.join(__dirname, "..", "..", "..", "test-folder-two");
 
         // remove directories in case of previously failed tests
-        coreUtils.cleanDir(testingPath);
-        coreUtils.cleanDir(providedPathOne);
-        coreUtils.cleanDir(providedPathTwo);
+        await coreUtils.cleanDir(testingPath);
+        await coreUtils.cleanDir(providedPathOne);
+        await coreUtils.cleanDir(providedPathTwo);
 
         it("should assign the temp folder based on preference", async () => {
             // create target folder
@@ -1031,7 +1045,7 @@ describe("Extension Integration Tests", () => {
             expect(ZOWETEMPFOLDER).to.equal(path.join(testingPath, "temp"));
 
             // Remove directory for subsequent tests
-            coreUtils.cleanDir(testingPath);
+            await coreUtils.cleanDir(testingPath);
         }).timeout(TIMEOUT);
 
         it("should update temp folder on preference change", async () => {
@@ -1060,8 +1074,8 @@ describe("Extension Integration Tests", () => {
             expect(ZOWETEMPFOLDER).to.equal(path.join(providedPathTwo, "temp"));
 
             // Remove directory for subsequent tests
-            coreUtils.cleanDir(providedPathOne);
-            coreUtils.cleanDir(providedPathTwo);
+            await coreUtils.cleanDir(providedPathOne);
+            await coreUtils.cleanDir(providedPathTwo);
         }).timeout(TIMEOUT);
 
         it("should assign default temp folder, if preference is empty", async () => {
@@ -1193,7 +1207,7 @@ describe("Extension Integration Tests - USS", () => {
     beforeEach(async function () {
         this.timeout(TIMEOUT);
         sandbox = sinon.createSandbox();
-        await extension.deactivate();
+        await coreUtils.cleanTempDir();
     });
 
     afterEach(async function () {
@@ -1244,15 +1258,23 @@ describe("Extension Integration Tests - USS", () => {
     describe("Deactivate", () => {
         it("should clean up the local files when deactivate is invoked", async () => {
             try {
-                fs.mkdirSync(ZOWETEMPFOLDER);
-                fs.mkdirSync(USS_DIR);
+                if (!fs.existsSync(ZOWETEMPFOLDER)) {
+                    fs.mkdirSync(ZOWETEMPFOLDER);
+                }
+                if (!fs.existsSync(USS_DIR)) {
+                    fs.mkdirSync(USS_DIR);
+                }
             } catch (err) {
                 // if operation failed, wait a second and try again
                 await new Promise((resolve) => setTimeout(resolve, 1000));
-                fs.mkdirSync(USS_DIR);
+                if (!fs.existsSync(USS_DIR)) {
+                    fs.mkdirSync(USS_DIR);
+                }
             }
             fs.closeSync(fs.openSync(path.join(USS_DIR, "file1"), "w"));
             fs.closeSync(fs.openSync(path.join(USS_DIR, "file2"), "w"));
+            await closeOpenedTextFile(path.join(USS_DIR, "file1"));
+            await closeOpenedTextFile(path.join(USS_DIR, "file2"));
             await extension.deactivate();
             expect(fs.existsSync(path.join(USS_DIR, "file1"))).to.equal(false);
             expect(fs.existsSync(path.join(USS_DIR, "file2"))).to.equal(false);
@@ -1329,6 +1351,7 @@ describe("Extension Integration Tests - USS", () => {
             // Change contents back
             fs.writeFileSync(localPath, originalData);
             await ussActions.saveUSSFile(doc, ussTestTree);
+            await closeOpenedTextFile(localPath);
         }).timeout(TIMEOUT);
     });
 });
