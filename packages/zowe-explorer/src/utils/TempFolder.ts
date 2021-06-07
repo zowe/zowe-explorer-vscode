@@ -89,24 +89,27 @@ export async function cleanDir(directory) {
     }
     const isOpen = await checkTextFileIsOpened(directory);
     let isEmptyDir = true;
-    fs.readdirSync(directory).forEach((file) => {
-        const fullpath = path.join(directory, file);
-        const lstat = fs.lstatSync(fullpath);
-        if (lstat.isFile() && !isOpen) {
-            fs.unlinkSync(fullpath);
-        }
-        if (lstat.isFile() && isOpen) {
-            isEmptyDir = false;
-        }
-        if (!lstat.isFile()) {
-            cleanDir(fullpath);
-        }
-    });
     try {
+        fs.readdirSync(directory).forEach((file) => {
+            const fullpath = path.join(directory, file);
+            const lstat = fs.lstatSync(fullpath);
+            if (lstat.isFile() && !isOpen) {
+                fs.unlinkSync(fullpath);
+            }
+            if (lstat.isFile() && isOpen) {
+                isEmptyDir = false;
+            }
+            if (!lstat.isFile()) {
+                cleanDir(fullpath);
+            }
+        });
+
         if (isEmptyDir) {
             fs.rmdirSync(directory);
         }
-    } catch (error) {}
+    } catch (error) {
+        globals.LOG.error("Error cleaning temporary folder! " + JSON.stringify(error));
+    }
 }
 
 /**
