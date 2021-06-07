@@ -1231,10 +1231,6 @@
           "when": "never"
         },
         {
-          "command": "zowe.allocateLike",
-          "when": "never"
-        },
-        {
           "command": "zowe.hMigrateDataSet",
           "when": "never"
         },
