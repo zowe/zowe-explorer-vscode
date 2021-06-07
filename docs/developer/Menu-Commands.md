@@ -16,13 +16,13 @@ In order to add a command to a core Zowe Explorer menu, the command must first b
 
   | Prefix                | Applicable view | Example usage           |
   | --------------------- | --------------- | ----------------------- |
-  | `zowe.<command>`      | Data Sets       | `zowe.addFavorite`      |
+  | `zowe.ds.<command>`   | Data Sets       | `zowe.ds.addFavorite`   |
   | `zowe.uss.<command>`  | USS             | `zowe.uss.addFavorite`  |
   | `zowe.jobs.<command>` | Jobs            | `zowe.jobs.addFavorite` |
 
 - **`title`** property: Be sure to localize the command's title. This can be done by following the steps for adding a new string to the `package.json` file in the [Developer's ReadMe](https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/Developer's%20ReadMe.md#adding-strings).
 
-  - **Tip:** When choosing the command's key name, consider prefixing it with `mvs.`, `uss.`, or `jobs.` to indicate if the key is for the Data Sets, USS, or Jobs view, respectively. (For example, the key `%uss.addFavorite%` is used for the `addFavorite` command in the USS view.) If the command is more related to profiles than to a specific view, consider prefixing the key name with `profile.`.
+  - **Tip:** When choosing the command's key name, consider prefixing it with `ds.`, `uss.`, or `jobs.` to indicate if the key is for the Data Sets, USS, or Jobs view, respectively. (For example, the key `%uss.addFavorite%` is used for the `addFavorite` command in the USS view.) If the command is more related to profiles than to a specific view, consider prefixing the key name with `profile.`.
 
 - **`category`** property: The value of this should be "Zowe Explorer".
 
@@ -41,14 +41,14 @@ For general technical details on grouping context menu items, see the [VS Code d
 
 ## Menu group naming conventions
 
-The prefix `##_zowe_` is reserved for use with core Zowe Explorer command groups (per the Zowe Explorer extender conformance criteria). Group names for Zowe Explorer are formatted as follows: `##_zowe_<view><groupSpecifier>`. For example, commands related to creating items in Zowe Explorer's Data Sets view are in the group named `01_zowe_mvsCreate`.
+The prefix `##_zowe_` is reserved for use with core Zowe Explorer command groups (per the Zowe Explorer extender conformance criteria). Group names for Zowe Explorer are formatted as follows: `##_zowe_<view><groupSpecifier>`. For example, commands related to creating items in Zowe Explorer's Data Sets view are in the group named `01_zowe_dsCreate`.
 
 A breakdown of this naming convention is described below.
 
 - `##` represents a number from 00 - 99. Command groups are organized alphabetically in VS Code, and this numbering helps Zowe Explorer's context menu groups stay in a predefined order that makes sense in the user interface (UI).
 - `_zowe_`is constant between command group names. This is used to help ensure that Zowe Explorer's command groups stay together when displayed in the UI.
 - `<view>` represents which of Zowe Explorer's views the command group applies to.
-  - `mvs`: Use this to specify a command group for the Data Sets view.
+  - `ds`: Use this to specify a command group for the Data Sets view.
   - `uss`: Use this to specify a command group for the USS view.
   - `jobs`: Use this to specify a command group for the Jobs view.
 - `<groupSpecifier>` is a short name describing of what types functional commands the group contains. See below for the current group specifiers used by Zowe Explorer, as well as some examples for each:
