@@ -10,7 +10,7 @@
   "loadProfilesForFavorites.authFailed": "You must authenticate to view favorites.",
   "loadProfilesForFavorites.error.profile1": "Error: You have Zowe Data Set favorites that refer to a non-existent CLI profile named: {0}",
   "loadProfilesForFavorites.error.profile2": ". To resolve this, you can remove {0}",
-  "loadProfilesForFavorites.error.profile3": " from the Favorites section of Zowe Explorer's data sets view. ",
+  "loadProfilesForFavorites.error.profile3": " from the Favorites section of Zowe Explorer's data sets view. Would you like to do this now? ",
   "addFavorite": "PDS already in favorites",
   "removeFavProfile.confirm": "This will remove all favorited Data Sets items for profile {0}. Continue?",
   "removeFavProfile.continue": "Continue",
