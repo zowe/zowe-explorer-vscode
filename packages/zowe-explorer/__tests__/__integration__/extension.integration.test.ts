@@ -295,8 +295,9 @@ describe("Extension Integration Tests", () => {
             const childrenFromTree = await sessionNode.getChildren();
             childrenFromTree.unshift(...(await childrenFromTree[0].getChildren()));
 
-            await testTree.getTreeView().reveal(childrenFromTree[0]);
-            expect(childrenFromTree[0]).to.deep.equal(testTree.getTreeView().selection[0]);
+            await testTree.getTreeView().reveal(childrenFromTree[0], { select: true });
+            const loadedItems = await testTree.getAllLoadedItems();
+            expect(childrenFromTree[0]).to.deep.equal(loadedItems[0]);
         }).timeout(TIMEOUT);
 
         it("should match data sets for multiple patterns", async () => {
@@ -315,7 +316,9 @@ describe("Extension Integration Tests", () => {
 
             for (const child of childrenFromTree) {
                 await testTree.getTreeView().reveal(child);
-                expect(child).to.deep.equal(testTree.getTreeView().selection[0]);
+                const loadedItems = await testTree.getAllLoadedItems();
+                const foundChild = loadedItems.find((item) => item === child);
+                expect(foundChild).to.not.be.equal(undefined);
             }
         }).timeout(TIMEOUT);
 

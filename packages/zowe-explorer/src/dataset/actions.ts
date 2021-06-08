@@ -213,7 +213,7 @@ export async function deleteDatasetPrompt(datasetProvider: IZoweTree<IZoweDatase
     );
 
     // The names of the nodes that should be deleted
-    const deletedNodes: string[] = nodes.map((deletedNode) => {
+    let deletedNodes: string[] = nodes.map((deletedNode) => {
         return contextually.isDsMember(deletedNode)
             ? ` ${deletedNode.getParent().getLabel()}(${deletedNode.getLabel()})`
             : ` ${deletedNode.getLabel()}`;
@@ -268,7 +268,10 @@ export async function deleteDatasetPrompt(datasetProvider: IZoweTree<IZoweDatase
                     try {
                         await deleteDataset(currNode, datasetProvider);
                     } catch (err) {
-                        // Do nothing
+                        const labelToRemove = contextually.isDsMember(currNode)
+                            ? ` ${currNode.getParent().getLabel()}(${currNode.getLabel()})`
+                            : ` ${currNode.getLabel()}`;
+                        deletedNodes = deletedNodes.filter((item) => item.trim() !== labelToRemove.trim());
                     }
                 }
             }
