@@ -1,5 +1,9 @@
 # Change Log
 
+## `1.16.0`
+
+- Added the function that closes a connection
+
 ## `1.15.0`
 
 - Removed the installation pre-requisite of @zowe/zos-ftp-for-zowe-cli for the FTP Extension for Zowe Explorer

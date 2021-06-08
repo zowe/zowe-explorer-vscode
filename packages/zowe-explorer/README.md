@@ -23,7 +23,7 @@ More information:
 
 ## Contents
 
-- [What's new in Zowe Explorer 1.15.1](#whats-new-in-zowe-explorer-1.15.1)
+- [What's new in Zowe Explorer 1.16.0](#whats-new-in-zowe-explorer-1.16.0)
 - [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
 - [Sample Use Cases](#sample-use-cases)
@@ -31,11 +31,22 @@ More information:
 - [Usage Tips](#usage-tips)
 - [Extending Zowe Explorer](#extending-zowe-explorer)
 
-## What's new in Zowe Explorer 1.15.1
+## What's new in Zowe Explorer 1.16.0
 
-Bug fixes:
+**Added**:
 
-- Fixed the issue that required the vscode module to be imported in the API package
+- Added the multiple deletion of data sets and data set members feature.
+- Added the refresh data set member names option. You can now retrieve a new list of members from the mainframe.
+- Added the best practice documentation for error handling.
+- Added the developer guide for adding commands to core Zowe Explorer menus.
+
+**Changed**:
+
+- Standardized context group names.
+
+**Fixed**:
+
+- Fixed the error message that popped up when accessing a profile from Favorites.
 
 For more information, see [Changelog](https://marketplace.visualstudio.com/items/Zowe.vscode-extension-for-zowe/changelog).
 
