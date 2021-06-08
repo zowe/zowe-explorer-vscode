@@ -798,11 +798,14 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                     ) +
                     localize(
                         "initializeUSSFavorites.error.profile3",
-                        " from the Favorites section of Zowe Explorer's USS view. "
-                    ) +
-                    getAppName(globals.ISTHEIA) +
-                    localize("initializeUSSFavorites.error.profile4", " user settings.");
-                errorHandling(error, null, errMessage);
+                        " from the Favorites section of Zowe Explorer's USS view. Would you like to do this now? ",
+                        getAppName(globals.ISTHEIA)
+                    );
+                vscode.window.showErrorMessage(errMessage, "Cancel", "Remove").then(async (selection) => {
+                    if (selection === "Remove") {
+                        await this.removeFavProfile(profileName, true);
+                    }
+                });
                 return;
             }
         }

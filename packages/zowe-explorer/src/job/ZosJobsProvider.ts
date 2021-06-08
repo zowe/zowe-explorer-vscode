@@ -362,11 +362,15 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                     ) +
                     localize(
                         "initializeJobsFavorites.error.profile3",
-                        " from the Favorites section of Zowe Explorer's jobs view. "
-                    ) +
-                    getAppName(globals.ISTHEIA) +
-                    localize("initializeJobsFavorites.error.profile4", " user settings.");
-                errorHandling(error, null, errMessage);
+                        " from the Favorites section of Zowe Explorer's jobs view. Would you like to do this now? ",
+                        getAppName(globals.ISTHEIA)
+                    );
+                vscode.window.showErrorMessage(errMessage, "Cancel", "Remove").then(async (selection) => {
+                    if (selection === "Remove") {
+                        await this.removeFavProfile(profileName, true);
+                    }
+                });
+                return;
             }
         }
         profile = parentNode.getProfile();

@@ -252,6 +252,7 @@ describe("Dataset Tree Unit tests - Function initializeFavChildNodeForProfile", 
         await testTree.initializeFavChildNodeForProfile("BRTVS99.BAD", "badContextValue", favProfileNode);
 
         expect(showErrorMessageSpy).toBeCalledTimes(1);
+        showErrorMessageSpy.mockClear();
     });
 });
 describe("Dataset Tree Unit Tests - Function getChildren", () => {
@@ -497,7 +498,6 @@ describe("Dataset Tree Unit Tests - Function loadProfilesForFavorites", () => {
         expect(resultFavProfileNode).toEqual(expectedFavProfileNode);
     });
     it("Checking that error is handled if profile not successfully loaded for profile grouping node in Favorites", async () => {
-        jest.restoreAllMocks();
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         const favProfileNode = new ZoweDatasetNode(
@@ -521,9 +521,10 @@ describe("Dataset Tree Unit Tests - Function loadProfilesForFavorites", () => {
                 };
             }),
         });
-        mocked(vscode.window.showErrorMessage).mockResolvedValueOnce({ title: "Yes" });
+        mocked(vscode.window.showErrorMessage).mockResolvedValueOnce({ title: "Remove" });
         await testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
         expect(showErrorMessageSpy).toBeCalledTimes(1);
+        showErrorMessageSpy.mockClear();
     });
     it("Checking that favorite nodes with pre-existing profile/session values continue using those values", async () => {
         createGlobalMocks();

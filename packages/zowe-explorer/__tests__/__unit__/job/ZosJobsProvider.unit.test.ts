@@ -224,9 +224,9 @@ describe("ZosJobsProvider unit tests - Function getChildren", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const showErrorMessageSpy = jest.spyOn(vscode.window, "showErrorMessage");
 
         const testTree = new ZosJobsProvider();
-        const log = Logger.getAppLogger();
         const favProfileNode = new Job(
             "sestest",
             vscode.TreeItemCollapsibleState.Collapsed,
@@ -238,11 +238,10 @@ describe("ZosJobsProvider unit tests - Function getChildren", () => {
         favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
         testTree.mFavorites.push(favProfileNode);
 
-        const loadProfilesForFavoritesSpy = jest.spyOn(testTree, "loadProfilesForFavorites");
-
+        mocked(vscode.window.showErrorMessage).mockResolvedValueOnce({ title: "Yes" });
         await testTree.getChildren(favProfileNode);
-
-        expect(loadProfilesForFavoritesSpy).toHaveBeenCalledWith(log, favProfileNode);
+        expect(showErrorMessageSpy).toBeCalledTimes(1);
+        showErrorMessageSpy.mockClear();
     });
     it("Tests that getChildren gets children of a session element", async () => {
         createGlobalMocks();
@@ -435,7 +434,7 @@ describe("ZosJobsProvider unit tests - Function loadProfilesForFavorites", () =>
         );
         favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
         testTree.mFavorites.push(favProfileNode);
-        const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
+        const showErrorMessageSpy = jest.spyOn(vscode.window, "showErrorMessage");
 
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
@@ -446,10 +445,10 @@ describe("ZosJobsProvider unit tests - Function loadProfilesForFavorites", () =>
                 };
             }),
         });
-
+        mocked(vscode.window.showErrorMessage).mockResolvedValueOnce({ title: "Remove" });
         await testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
-
-        expect(errorHandlingSpy).toBeCalledTimes(1);
+        expect(showErrorMessageSpy).toBeCalledTimes(1);
+        showErrorMessageSpy.mockClear();
     });
     it("Checks that favorite nodes with pre-existing profile/session values continue using those values", async () => {
         createGlobalMocks();

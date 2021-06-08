@@ -1521,6 +1521,9 @@ describe("USSTree Unit Tests - Function USSTree.getChildren()", () => {
     });
 });
 
+// Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/master/src/util/testing.ts
+const mocked = <T extends (...args: any[]) => any>(fn: T): jest.Mock<ReturnType<T>> => fn as any;
+
 describe("USSTree Unit Tests - Function USSTree.loadProfilesForFavorites", () => {
     function createBlockMocks(globalMocks) {
         const log = Logger.getAppLogger();
@@ -1601,7 +1604,7 @@ describe("USSTree Unit Tests - Function USSTree.loadProfilesForFavorites", () =>
             undefined
         );
         globalMocks.testTree.mFavorites.push(favProfileNode);
-        const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
+        const showErrorMessageSpy = jest.spyOn(vscode.window, "showErrorMessage");
 
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
@@ -1613,10 +1616,10 @@ describe("USSTree Unit Tests - Function USSTree.loadProfilesForFavorites", () =>
             }),
             configurable: true,
         });
-
+        mocked(vscode.window.showErrorMessage).mockResolvedValueOnce({ title: "Remove" });
         await globalMocks.testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
 
-        expect(errorHandlingSpy).toBeCalledTimes(1);
+        expect(showErrorMessageSpy).toBeCalledTimes(1);
     });
     it("Tests that favorite nodes with pre-existing profile/session values continue using those values", async () => {
         const globalMocks = await createGlobalMocks();
