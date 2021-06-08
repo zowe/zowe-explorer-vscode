@@ -87,19 +87,19 @@ export async function cleanDir(directory) {
     if (!fs.existsSync(directory)) {
         return;
     }
-    const isOpen = await checkTextFileIsOpened(directory);
-    let isEmptyDir = true;
     try {
-        fs.readdirSync(directory).forEach((file) => {
+        let isEmptyDir = true;
+        fs.readdirSync(directory).forEach(async (file) => {
             const fullpath = path.join(directory, file);
             const lstat = fs.lstatSync(fullpath);
-            if (lstat.isFile() && !isOpen) {
-                fs.unlinkSync(fullpath);
-            }
-            if (lstat.isFile() && isOpen) {
-                isEmptyDir = false;
-            }
-            if (!lstat.isFile()) {
+            if (lstat.isFile()) {
+                const isOpen = await checkTextFileIsOpened(fullpath);
+                if (isOpen) {
+                    isEmptyDir = false;
+                } else {
+                    fs.unlinkSync(fullpath);
+                }
+            } else {
                 cleanDir(fullpath);
             }
         });
