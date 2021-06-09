@@ -22,6 +22,8 @@ import * as testConst from "../../resources/testProfileData";
 import { USSTree } from "../../src/uss/USSTree";
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
 import { USS_SESSION_CONTEXT, FAV_PROFILE_CONTEXT } from "../../src/globals";
+import { cleanOpenTextFiles } from "./__cleanup__/cleanTextEditor";
+import * as coreUtils from "../../src/utils/TempFolder";
 
 declare var it: any;
 
@@ -68,6 +70,8 @@ describe("USSTree Integration Tests", async () => {
     const oldSettings = vscode.workspace.getConfiguration("Zowe-USS-Persistent");
 
     after(async () => {
+        await cleanOpenTextFiles();
+        await coreUtils.cleanTempDir();
         await vscode.workspace
             .getConfiguration()
             .update("Zowe-USS-Persistent", oldSettings, vscode.ConfigurationTarget.Global);

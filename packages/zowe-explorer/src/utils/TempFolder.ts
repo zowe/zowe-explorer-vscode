@@ -89,25 +89,30 @@ export async function cleanDir(directory) {
     }
     try {
         let isEmptyDir = true;
-        fs.readdirSync(directory).forEach(async (file) => {
-            const fullpath = path.join(directory, file);
-            const lstat = fs.lstatSync(fullpath);
-            if (lstat.isFile()) {
-                const isOpen = await checkTextFileIsOpened(fullpath);
-                if (isOpen) {
-                    isEmptyDir = false;
+        const files = fs.readdirSync(directory);
+        if (files.length > 0) {
+            files.forEach(async (file) => {
+                const fullpath = path.join(directory, file);
+                const lstat = fs.lstatSync(fullpath);
+                if (lstat.isFile()) {
+                    const isOpen = await checkTextFileIsOpened(fullpath);
+                    if (isOpen) {
+                        isEmptyDir = false;
+                    } else {
+                        fs.unlinkSync(fullpath);
+                    }
                 } else {
-                    fs.unlinkSync(fullpath);
+                    await cleanDir(fullpath);
                 }
-            } else {
-                cleanDir(fullpath);
+            });
+        } else {
+            if (isEmptyDir) {
+                fs.rmdirSync(directory);
             }
-        });
-
-        if (isEmptyDir) {
-            fs.rmdirSync(directory);
         }
     } catch (error) {
+        // tslint:disable-next-line:no-console
+        console.log(error);
         globals.LOG.error("Error cleaning temporary folder! " + JSON.stringify(error));
     }
 }
@@ -123,7 +128,7 @@ export async function cleanTempDir() {
         return;
     }
     try {
-        cleanDir(globals.ZOWETEMPFOLDER);
+        await cleanDir(globals.ZOWETEMPFOLDER);
     } catch (err) {
         vscode.window.showErrorMessage(localize("deactivate.error", "Unable to delete temporary folder. ") + err);
     }

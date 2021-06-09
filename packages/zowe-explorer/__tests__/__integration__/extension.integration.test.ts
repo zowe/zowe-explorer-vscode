@@ -91,10 +91,8 @@ describe("Extension Integration Tests", () => {
     afterEach(async function () {
         this.timeout(TIMEOUT);
         const createTestFileName = pattern + ".EXT.CREATE.DATASET.TEST";
-        const allocateLikeFileName = pattern + ".EXT.ALLOC.LIKE";
         try {
             await zowe.Delete.dataSet(session, createTestFileName);
-            await zowe.Delete.dataSet(session, allocateLikeFileName);
         } catch (err) {
             // Do nothing
         }
@@ -111,6 +109,7 @@ describe("Extension Integration Tests", () => {
     const oldSettings = vscode.workspace.getConfiguration("Zowe-DS-Persistent");
 
     after(async () => {
+        await cleanOpenTextFiles();
         await coreUtils.cleanTempDir();
         await vscode.workspace
             .getConfiguration()
@@ -228,6 +227,13 @@ describe("Extension Integration Tests", () => {
 
             const response = await zowe.List.dataSet(sessionNode.getSession(), testCopyName, {});
             expect(response.success).to.equal(true);
+
+            // Clean up .EXT.ALLOC.LIKE
+            try {
+                await zowe.Delete.dataSet(session, testCopyName);
+            } catch (err) {
+                // Do nothing
+            }
         }).timeout(TIMEOUT);
     });
 
@@ -247,15 +253,17 @@ describe("Extension Integration Tests", () => {
                     fs.mkdirSync(DS_DIR);
                 }
             }
-            fs.closeSync(fs.openSync(path.join(DS_DIR, "file1"), "w"));
-            fs.closeSync(fs.openSync(path.join(DS_DIR, "file2"), "w"));
+            fs.closeSync(fs.openSync(path.join(DS_DIR, "file1.txt"), "w"));
+            fs.closeSync(fs.openSync(path.join(DS_DIR, "file2.txt"), "w"));
 
-            closeOpenedTextFile(path.join(DS_DIR, "file1"));
-            closeOpenedTextFile(path.join(DS_DIR, "file2"));
+            await closeOpenedTextFile(path.join(DS_DIR, "file1.txt"));
+            await closeOpenedTextFile(path.join(DS_DIR, "file2.txt"));
+            // await cleanTextEditor(path.join(DS_DIR));
 
             await extension.deactivate();
-            expect(fs.existsSync(path.join(DS_DIR, "file1"))).to.equal(false);
-            expect(fs.existsSync(path.join(DS_DIR, "file2"))).to.equal(false);
+            await new Promise((resolve) => setTimeout(resolve, 12000));
+            expect(fs.existsSync(path.join(DS_DIR, "file1.txt"))).to.equal(false);
+            expect(fs.existsSync(path.join(DS_DIR, "file2.txt"))).to.equal(false);
         }).timeout(TIMEOUT);
     });
 
@@ -1277,14 +1285,17 @@ describe("Extension Integration Tests - USS", () => {
                     fs.mkdirSync(USS_DIR);
                 }
             }
-            fs.closeSync(fs.openSync(path.join(USS_DIR, "file1"), "w"));
-            fs.closeSync(fs.openSync(path.join(USS_DIR, "file2"), "w"));
+            fs.closeSync(fs.openSync(path.join(USS_DIR, "file1.txt"), "w", 777));
+            fs.closeSync(fs.openSync(path.join(USS_DIR, "file2.txt"), "w", 777));
 
-            await cleanTextEditor(USS_DIR);
+            await closeOpenedTextFile(path.join(USS_DIR, "file1.txt"));
+            await closeOpenedTextFile(path.join(USS_DIR, "file2.txt"));
+            // await cleanTextEditor(USS_DIR);
 
             await extension.deactivate();
-            expect(fs.existsSync(path.join(USS_DIR, "file1"))).to.equal(false);
-            expect(fs.existsSync(path.join(USS_DIR, "file2"))).to.equal(false);
+            await new Promise((resolve) => setTimeout(resolve, 12000));
+            expect(fs.existsSync(path.join(USS_DIR, "file1.txt"))).to.equal(false);
+            expect(fs.existsSync(path.join(USS_DIR, "file2.txt"))).to.equal(false);
         }).timeout(TIMEOUT);
     });
 
@@ -1358,8 +1369,6 @@ describe("Extension Integration Tests - USS", () => {
             // Change contents back
             fs.writeFileSync(localPath, originalData);
             await ussActions.saveUSSFile(doc, ussTestTree);
-            await cleanOpenTextFiles();
-            await coreUtils.cleanTempDir();
         }).timeout(TIMEOUT);
     });
 });

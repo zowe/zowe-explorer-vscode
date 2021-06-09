@@ -30,10 +30,10 @@ export async function cleanTextEditor(directory) {
             if (lstat.isFile()) {
                 const isOpen = await checkTextFileIsOpened(fullpath);
                 if (isOpen) {
-                    closeOpenedTextFile(fullpath);
+                    await closeOpenedTextFile(fullpath);
                 }
             } else {
-                cleanTextEditor(fullpath);
+                await cleanTextEditor(fullpath);
             }
         } catch (err) {
             // do nothing
