@@ -224,9 +224,9 @@ describe("ZosJobsProvider unit tests - Function getChildren", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
-        const showErrorMessageSpy = jest.spyOn(vscode.window, "showErrorMessage");
 
         const testTree = new ZosJobsProvider();
+        const log = Logger.getAppLogger();
         const favProfileNode = new Job(
             "sestest",
             vscode.TreeItemCollapsibleState.Collapsed,
@@ -237,11 +237,12 @@ describe("ZosJobsProvider unit tests - Function getChildren", () => {
         );
         favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
         testTree.mFavorites.push(favProfileNode);
+        const loadProfilesForFavoritesSpy = jest
+            .spyOn(testTree, "loadProfilesForFavorites")
+            .mockImplementationOnce(() => Promise.resolve([]));
 
-        mocked(vscode.window.showErrorMessage).mockResolvedValueOnce({ title: "Yes" });
         await testTree.getChildren(favProfileNode);
-        expect(showErrorMessageSpy).toBeCalledTimes(1);
-        showErrorMessageSpy.mockClear();
+        expect(loadProfilesForFavoritesSpy).toHaveBeenCalledWith(log, favProfileNode);
     });
     it("Tests that getChildren gets children of a session element", async () => {
         createGlobalMocks();

@@ -1618,8 +1618,8 @@ describe("USSTree Unit Tests - Function USSTree.loadProfilesForFavorites", () =>
         });
         mocked(vscode.window.showErrorMessage).mockResolvedValueOnce({ title: "Remove" });
         await globalMocks.testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
-
         expect(showErrorMessageSpy).toBeCalledTimes(1);
+        showErrorMessageSpy.mockClear();
     });
     it("Tests that favorite nodes with pre-existing profile/session values continue using those values", async () => {
         const globalMocks = await createGlobalMocks();

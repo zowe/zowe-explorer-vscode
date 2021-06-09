@@ -387,11 +387,14 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     ) +
                     localize(
                         "loadProfilesForFavorites.error.profile3",
-                        " from the Favorites section of Zowe Explorer's data sets view. Would you like to do this now? ",
+                        " from the Favorites section of Zowe Explorer's Data Sets view. Would you like to do this now? ",
                         getAppName(globals.ISTHEIA)
                     );
-                vscode.window.showErrorMessage(errMessage, "Cancel", "Remove").then(async (selection) => {
-                    if (selection === "Remove") {
+
+                const btnLabelCancel = localize("loadProfilesForFavorites.error.button1", "Cancel");
+                const btnLabelRemove = localize("loadProfilesForFavorites.error.button2", "Remove");
+                vscode.window.showErrorMessage(errMessage, btnLabelCancel, btnLabelRemove).then(async (selection) => {
+                    if (selection === btnLabelRemove) {
                         await this.removeFavProfile(profileName, true);
                     }
                 });
