@@ -452,6 +452,15 @@
         }
       },
       {
+        "command": "zowe.uss.refreshDirectory",
+        "title": "%uss.refreshDirectory%",
+        "category": "Zowe Explorer",
+        "icon": {
+          "light": "./resources/light/download.svg",
+          "dark": "./resources/dark/download.svg"
+        }
+      },
+      {
         "command": "zowe.uss.removeSession",
         "title": "%uss.removeSession%",
         "category": "Zowe Explorer"
@@ -693,6 +702,11 @@
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(directory|ussSession|favorite|profile_fav))/",
           "command": "zowe.uss.refreshUSS",
+          "group": "0_mainframeInteraction"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem =~ /^directory.*/",
+          "command": "zowe.uss.refreshDirectory",
           "group": "0_mainframeInteraction"
         },
         {
@@ -1332,6 +1346,10 @@
         },
         {
           "command": "zowe.uss.refreshUSS",
+          "when": "never"
+        },
+        {
+          "command": "zowe.uss.refreshDirectory",
           "when": "never"
         },
         {

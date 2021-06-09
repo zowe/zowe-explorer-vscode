@@ -289,6 +289,9 @@ function initUSSProvider(context: vscode.ExtensionContext, ussFileProvider: IZow
     vscode.commands.registerCommand("zowe.uss.refreshUSSInTree", (node: IZoweUSSTreeNode) =>
         ussActions.refreshUSSInTree(node, ussFileProvider)
     );
+    vscode.commands.registerCommand("zowe.uss.refreshDirectory", (node: IZoweUSSTreeNode) => {
+        ussActions.refreshDirectory(node, ussFileProvider);
+    });
     vscode.commands.registerCommand("zowe.uss.fullPath", (node: IZoweUSSTreeNode) =>
         ussFileProvider.filterPrompt(node)
     );

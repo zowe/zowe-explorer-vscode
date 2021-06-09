@@ -153,6 +153,7 @@ async function createGlobalMocks() {
             "zowe.uss.refreshAll",
             "zowe.uss.refreshUSS",
             "zowe.uss.refreshUSSInTree",
+            "zowe.uss.refreshDirectory",
             "zowe.uss.fullPath",
             "zowe.uss.editSession",
             "zowe.uss.ZoweUSSNode.open",

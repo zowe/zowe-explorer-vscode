@@ -93,6 +93,8 @@ export async function refreshUSSInTree(node: IZoweUSSTreeNode, ussFileProvider: 
 
 export async function refreshDirectory(node: IZoweUSSTreeNode, ussFileProvider: IZoweTree<IZoweUSSTreeNode>) {
     try {
+        const children = await node.getChildren();
+        ussFileProvider.refreshElement(node);
     } catch (err) {
         errorHandling(err, node.getProfileName(), err.message);
     }
