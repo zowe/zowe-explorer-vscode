@@ -21,7 +21,7 @@
   "initializeUSSFavorites.error.profile1": "Error: You have Zowe USS favorites that refer to a non-existent CLI profile named: {0}",
   "intializeUSSFavorites.error.profile2": ". To resolve this, you can remove {0}",
   "initializeUSSFavorites.error.profile3": " from the Favorites section of Zowe Explorer's USS view. Would you like to do this now? ",
-  "initializeUSSFavorites.error.button1": "Cancel",
-  "initializeUSSFavorites.error.button2": "Remove",
+  "initializeUSSFavorites.error.buttonCancel": "Cancel",
+  "initializeUSSFavorites.error.buttonRemove": "Remove",
   "findUSSItem.unsuccessful": "File does not exist. It may have been deleted."
 }

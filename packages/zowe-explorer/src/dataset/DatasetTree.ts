@@ -391,8 +391,8 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                         getAppName(globals.ISTHEIA)
                     );
 
-                const btnLabelCancel = localize("loadProfilesForFavorites.error.button1", "Cancel");
-                const btnLabelRemove = localize("loadProfilesForFavorites.error.button2", "Remove");
+                const btnLabelCancel = localize("loadProfilesForFavorites.error.buttonCancel", "Cancel");
+                const btnLabelRemove = localize("loadProfilesForFavorites.error.buttonRemove", "Remove");
                 vscode.window.showErrorMessage(errMessage, btnLabelCancel, btnLabelRemove).then(async (selection) => {
                     if (selection === btnLabelRemove) {
                         await this.removeFavProfile(profileName, true);

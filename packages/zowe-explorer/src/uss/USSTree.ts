@@ -801,8 +801,8 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                         " from the Favorites section of Zowe Explorer's USS view. Would you like to do this now? ",
                         getAppName(globals.ISTHEIA)
                     );
-                const btnLabelCancel = localize("initializeUSSFavorites.error.button1", "Cancel");
-                const btnLabelRemove = localize("initializeUSSFavorites.error.button2", "Remove");
+                const btnLabelCancel = localize("initializeUSSFavorites.error.buttonCancel", "Cancel");
+                const btnLabelRemove = localize("initializeUSSFavorites.error.buttonRemove", "Remove");
                 vscode.window.showErrorMessage(errMessage, btnLabelCancel, btnLabelRemove).then(async (selection) => {
                     if (selection === btnLabelRemove) {
                         await this.removeFavProfile(profileName, true);

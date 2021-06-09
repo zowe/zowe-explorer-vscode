@@ -365,8 +365,8 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                         " from the Favorites section of Zowe Explorer's Jobs view. Would you like to do this now? ",
                         getAppName(globals.ISTHEIA)
                     );
-                const btnLabelCancel = localize("initializeJobsFavorites.error.button1", "Cancel");
-                const btnLabelRemove = localize("initializeJobsFavorites.error.button2", "Remove");
+                const btnLabelCancel = localize("initializeJobsFavorites.error.buttonCancel", "Cancel");
+                const btnLabelRemove = localize("initializeJobsFavorites.error.buttonRemove", "Remove");
                 vscode.window.showErrorMessage(errMessage, btnLabelCancel, btnLabelRemove).then(async (selection) => {
                     if (selection === btnLabelRemove) {
                         await this.removeFavProfile(profileName, true);
