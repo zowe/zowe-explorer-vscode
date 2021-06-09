@@ -91,6 +91,13 @@ export async function refreshUSSInTree(node: IZoweUSSTreeNode, ussFileProvider: 
     await ussFileProvider.refreshElement(node);
 }
 
+export async function refreshDirectory(node: IZoweUSSTreeNode, ussFileProvider: IZoweTree<IZoweUSSTreeNode>) {
+    try {
+    } catch (err) {
+        errorHandling(err, node.getProfileName(), err.message);
+    }
+}
+
 export async function createUSSNodeDialog(node: IZoweUSSTreeNode, ussFileProvider: IZoweTree<IZoweUSSTreeNode>) {
     await ussFileProvider.checkCurrentProfile(node);
     if (
