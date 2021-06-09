@@ -96,13 +96,6 @@ describe("Extension Integration Tests", () => {
         } catch (err) {
             // Do nothing
         }
-
-        const deleteTestFileName = pattern + ".EXT.DELETE.DATASET.TEST";
-        try {
-            await zowe.Delete.dataSet(session, deleteTestFileName);
-        } catch (err) {
-            // Do nothing
-        }
         sandbox.restore();
     });
 
@@ -261,7 +254,8 @@ describe("Extension Integration Tests", () => {
             // await cleanTextEditor(path.join(DS_DIR));
 
             await extension.deactivate();
-            await new Promise((resolve) => setTimeout(resolve, 12000));
+            // Tests move faster than deactivate, pause before check
+            await new Promise((resolve) => setTimeout(resolve, 1000));
             expect(fs.existsSync(path.join(DS_DIR, "file1.txt"))).to.equal(false);
             expect(fs.existsSync(path.join(DS_DIR, "file2.txt"))).to.equal(false);
         }).timeout(TIMEOUT);
@@ -1038,6 +1032,12 @@ describe("Extension Integration Tests", () => {
         await coreUtils.cleanDir(providedPathOne);
         await coreUtils.cleanDir(providedPathTwo);
 
+        after(async () => {
+            await coreUtils.cleanDir(testingPath);
+            await coreUtils.cleanDir(providedPathOne);
+            await coreUtils.cleanDir(providedPathTwo);
+        });
+
         it("should assign the temp folder based on preference", async () => {
             // create target folder
             fs.mkdirSync(testingPath);
@@ -1048,12 +1048,7 @@ describe("Extension Integration Tests", () => {
                     { folderPath: `${testingPath}` },
                     vscode.ConfigurationTarget.Global
                 );
-
-            // expect(extension.ZOWETEMPFOLDER).to.equal(`${testingPath}/temp`);
             expect(ZOWETEMPFOLDER).to.equal(path.join(testingPath, "temp"));
-
-            // Remove directory for subsequent tests
-            await coreUtils.cleanDir(testingPath);
         }).timeout(TIMEOUT);
 
         it("should update temp folder on preference change", async () => {
@@ -1077,13 +1072,7 @@ describe("Extension Integration Tests", () => {
                     { folderPath: `${providedPathTwo}` },
                     vscode.ConfigurationTarget.Global
                 );
-
-            // expect(extension.ZOWETEMPFOLDER).to.equal(`${providedPathTwo}/temp`);
             expect(ZOWETEMPFOLDER).to.equal(path.join(providedPathTwo, "temp"));
-
-            // Remove directory for subsequent tests
-            await coreUtils.cleanDir(providedPathOne);
-            await coreUtils.cleanDir(providedPathTwo);
         }).timeout(TIMEOUT);
 
         it("should assign default temp folder, if preference is empty", async () => {
@@ -1290,10 +1279,10 @@ describe("Extension Integration Tests - USS", () => {
 
             await closeOpenedTextFile(path.join(USS_DIR, "file1.txt"));
             await closeOpenedTextFile(path.join(USS_DIR, "file2.txt"));
-            // await cleanTextEditor(USS_DIR);
 
             await extension.deactivate();
-            await new Promise((resolve) => setTimeout(resolve, 12000));
+            // Tests move faster than deactivate, pause before check
+            await new Promise((resolve) => setTimeout(resolve, 1000));
             expect(fs.existsSync(path.join(USS_DIR, "file1.txt"))).to.equal(false);
             expect(fs.existsSync(path.join(USS_DIR, "file2.txt"))).to.equal(false);
         }).timeout(TIMEOUT);
