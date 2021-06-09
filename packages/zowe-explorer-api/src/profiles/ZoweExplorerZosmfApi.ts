@@ -329,8 +329,12 @@ export class ZosmfJesApi extends ZosmfApiCommon implements ZoweExplorerApi.IJes 
  */
 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 export class ZosmfCommandApi extends ZosmfApiCommon implements ZoweExplorerApi.ICommand {
-    public async issueTsoCommand(command: string, acctNum: string): Promise<zowe.IIssueResponse> {
-        return await zowe.IssueTso.issueTsoCommand(this.getSession(), acctNum, command);
+    public async issueTsoCommand(
+        command: string,
+        acctNum: string,
+        startParams: zowe.IStartTsoParms
+    ): Promise<zowe.IIssueResponse> {
+        return await zowe.IssueTso.issueTsoCommand(this.getSession(), acctNum, command, startParams);
     }
 
     public async issueMvsCommand(command: string): Promise<zowe.IConsoleResponse> {

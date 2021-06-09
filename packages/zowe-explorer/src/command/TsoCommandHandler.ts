@@ -19,6 +19,7 @@ import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, FilterDescriptor, FilterItem, resolveQuickPickHelper } from "../utils/ProfilesUtils";
 import { ZoweCommandProvider } from "../abstract/ZoweCommandProvider";
+import { IStartTsoParms } from "@zowe/cli";
 
 // Set up localization
 nls.config({
@@ -128,9 +129,9 @@ export class TsoCommandHandler extends ZoweCommandProvider {
             if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
                 const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(profile);
                 if (commandApi) {
-                    let acctNum: string;
+                    let tsoParams: IStartTsoParms;
                     if (profile.type === "zosmf") {
-                        acctNum = await this.getAccountNumber();
+                        tsoParams = await this.getTsoParams();
                     }
                     let command1: string = command;
                     if (!command) {
@@ -138,7 +139,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                             session && session.ISession ? session.ISession.hostname : "unknown"
                         );
                     }
-                    await this.issueCommand(command1, profile, acctNum);
+                    await this.issueCommand(command1, profile, tsoParams);
                 } else {
                     vscode.window.showErrorMessage(localize("issueTsoCommand.checkProfile", "Profile is invalid"));
                     return;
@@ -230,10 +231,11 @@ export class TsoCommandHandler extends ZoweCommandProvider {
     /**
      * Allow the user to submit an TSO command to the selected server. Response is written
      * to the output channel.
-     * @param session The Session object
      * @param command the command string
+     * @param profile the profile
+     * @param startParams the TSO start parameters
      */
-    private async issueCommand(command: string, profile: imperative.IProfileLoaded, acctNum?: string) {
+    private async issueCommand(command: string, profile: imperative.IProfileLoaded, startParams?: IStartTsoParms) {
         try {
             if (command) {
                 // If the user has started their command with a / then remove it
@@ -247,7 +249,11 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                         title: localize("issueTsoCommand.command.submitted", "TSO command submitted."),
                     },
                     () => {
-                        return ZoweExplorerApiRegister.getCommandApi(profile).issueTsoCommand(command, acctNum);
+                        return ZoweExplorerApiRegister.getCommandApi(profile).issueTsoCommand(
+                            command,
+                            startParams.account,
+                            startParams
+                        );
                     }
                 );
                 if (submitResponse.success) {
@@ -267,10 +273,10 @@ export class TsoCommandHandler extends ZoweCommandProvider {
         }
     }
 
-    private async getAccountNumber(): Promise<string> {
+    private async getTsoParams(): Promise<IStartTsoParms> {
         const tsoProfiles: imperative.IProfileLoaded[] = [];
         let tsoProfile: imperative.IProfileLoaded;
-        let acctNum: string;
+        const tsoParms: IStartTsoParms = {};
         const profileManager = Profiles.getInstance().getCliProfileManager("tso");
         if (profileManager) {
             try {
@@ -314,8 +320,17 @@ export class TsoCommandHandler extends ZoweCommandProvider {
             }
         }
         if (tsoProfile) {
-            acctNum = tsoProfile.profile.account;
+            tsoParms.account = tsoProfile.profile.account;
+            tsoParms.characterSet = tsoProfile.profile.characterSet;
+            tsoParms.codePage = tsoProfile.profile.codePage;
+            tsoParms.columns = tsoProfile.profile.columns;
+            tsoParms.logonProcedure = tsoProfile.profile.logonProcedure;
+            tsoParms.regionSize = tsoProfile.profile.regionSize;
+            tsoParms.rows = tsoProfile.profile.rows;
         } else {
+            // If there is no tso profile an account number is still required, so ask for one.
+            // All other properties of tsoParams will be undefined, so defaults will be utilized.
+            let acctNum: string;
             const InputBoxOptions = {
                 placeHolder: localize("issueTsoCommand.command.account", "Account Number"),
                 prompt: localize(
@@ -330,7 +345,8 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                 vscode.window.showInformationMessage(localize("issueTsoCommand.cancelled", "Operation Cancelled."));
                 return;
             }
+            tsoParms.account = acctNum;
         }
-        return acctNum;
+        return tsoParms;
     }
 }
