@@ -58,12 +58,11 @@ A breakdown of this naming convention is described below.
     - Examples: Search, Issue command, Download from mainframe, Download spool
   - `Create`: Commands related to creation of files or folders.
     - Examples: Create data set, Upload data set member, Create/Upload file or directory
-  - `CutCopyPaste`: Commands related to cutting, copying, and pasting of files or paths.
-    - Examples: Copy member/data set, Copy path, Paste
+    - This category also includes commands related to copying and pasting files.
   - `Modification`: Commands related to modification of files or folders. (Not for profiles.)
     - Examples: Rename/Delete data set or file
   - `SystemSpecific`: Commands specific to the Data Sets, USS, or Jobs view.
-    - Examples: Toggle binary (USS), Issue stop command (Jobs)
+    - Examples: Toggle binary (USS), Copy path (USS), Issue stop command (Jobs)
   - `ProfileAuthentication`: Commands related to authentication of profiles.
     - Examples: Login, Logout, Enable/Disable validation
   - `ProfileModification`: Commands related to modification of profiles.
