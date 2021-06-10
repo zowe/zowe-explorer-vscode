@@ -237,11 +237,11 @@ describe("ZosJobsProvider unit tests - Function getChildren", () => {
         );
         favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
         testTree.mFavorites.push(favProfileNode);
-
-        const loadProfilesForFavoritesSpy = jest.spyOn(testTree, "loadProfilesForFavorites");
+        const loadProfilesForFavoritesSpy = jest
+            .spyOn(testTree, "loadProfilesForFavorites")
+            .mockImplementationOnce(() => Promise.resolve([]));
 
         await testTree.getChildren(favProfileNode);
-
         expect(loadProfilesForFavoritesSpy).toHaveBeenCalledWith(log, favProfileNode);
     });
     it("Tests that getChildren gets children of a session element", async () => {
@@ -435,7 +435,7 @@ describe("ZosJobsProvider unit tests - Function loadProfilesForFavorites", () =>
         );
         favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
         testTree.mFavorites.push(favProfileNode);
-        const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
+        const showErrorMessageSpy = jest.spyOn(vscode.window, "showErrorMessage");
 
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
@@ -446,10 +446,10 @@ describe("ZosJobsProvider unit tests - Function loadProfilesForFavorites", () =>
                 };
             }),
         });
-
+        mocked(vscode.window.showErrorMessage).mockResolvedValueOnce({ title: "Remove" });
         await testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
-
-        expect(errorHandlingSpy).toBeCalledTimes(1);
+        expect(showErrorMessageSpy).toBeCalledTimes(1);
+        showErrorMessageSpy.mockClear();
     });
     it("Checks that favorite nodes with pre-existing profile/session values continue using those values", async () => {
         createGlobalMocks();

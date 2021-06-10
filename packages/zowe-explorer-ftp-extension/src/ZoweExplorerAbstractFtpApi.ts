@@ -66,4 +66,11 @@ export abstract class AbstractFtpApi implements ZoweExplorerApi.ICommon {
             secureFtp: ftpProfile.secureFtp,
         });
     }
+    public releaseConnection(connection: any): void {
+        if (connection != null) {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access
+            connection.close();
+            return;
+        }
+    }
 }
