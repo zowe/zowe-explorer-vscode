@@ -1,46 +1,86 @@
-# Error Handling Best Practices v1
+# Error Handling Best Practices
 
-This document describes error handling best practices for Zowe Explorer extenders.
+This page contains best practices in handling errors for Zowe Explorer extenders.
 
 ## Contents
 
-- [Objectives](#objectives)
-- [Showing Errors to Users](#showing-errors-to-users)
-- [Error Message Format](#error-message-format)
-- [Additional Requirements](#additional-requirements)
+- [Error Handling Best Practices](#error-handling-best-practices)
+  - [Contents](#contents)
+  - [Objectives](#objectives)
+  - [Error Message Format](#error-message-format)
+  - [Logging of Error Message](#logging-of-error-message)
+  - [Showing Errors to Users](#showing-errors-to-users)
 
 ## Objectives
 
-Customers and developers need to see clear error messages when they use Zowe Explorer and its extenders.
+By following this best practices, Zowe Explorer extenders will be able to provide a meaningful error message and help users identify the root cause of the problem quickly and easily.
 
-By following this documentation, Zowe Explorer extenders will help users debug their extensions quickly and easily.
+We encourage extenders to use this guidance in order to:
 
-Zowe Explorer encourages extenders to use this guidance in order to:
 - Help users understand which extension is causing an error, by including the name of the extension in the error message.
 - Give developers more information in error logs.
 - Standardize the error message format across all of Zowe Explorer's extenders.
 
-## Showing Errors to Users
-
-Extenders should use VSCode's API to show messages to users, so that the messages look like standard Zowe & VSCode message boxes.
-- For showing information to the user: [vscode.window.showInformationMessage](https://code.visualstudio.com/api/references/vscode-api#window.showInformationMessage)
-- For showing errors to the user: [vscode.window.showErrorMessage](https://code.visualstudio.com/api/references/vscode-api#window.showErrorMessage)
-
 ## Error Message Format
 
-Error messages shown to the user should have the following format:
+We highly recommend the usage of this Error message format:
 
 ```
 Extension Name Error - Error Message
 ```
 
-Ex. for the Zowe Explorer FTP extension, the message would look like:
+Ex. Zowe Explorer FTP extension, the message would look like:
 
 ```
 Zowe Explorer FTP Extension Error - Unable to delete node…
 ```
 
-## Additional Requirements
+## Logging of Error Message
 
-- If your extender isn't implementing one of Zowe Explorer's APIs, it should throw a `not implemented` error for that API. [See an example of this from the FTP extension](https://github.com/zowe/vscode-extension-for-zowe/blob/8080ae14734eb9673b178687d92df94e203aad35/packages/zowe-explorer-ftp-extension/src/ZoweExplorerFtpMvsApi.ts#L200).
-- Extenders should use [VSCode's localization module](https://github.com/Microsoft/vscode-nls#readme), to ensure that their extension can be translated into other languages.
+We highly recommend the usage of `imperative.Logger` in logging the extenders error messages.
+
+These logs have a stardard format that is used by Zowe Explorer and will have a consistency across Zowe components.
+
+Example:
+
+```
+public constructor(protected log: imperative.Logger) {}
+  try {
+  ...
+  } catch (error) {
+      this.log.error(error);
+  }
+```
+
+## Showing Errors to Users
+
+We highly recomend to use VSCode's API to show messages to users. This will provide a standard format
+that is similar to Zowe Explorer and VSCode.
+
+- For showing information to the user: [vscode.window.showInformationMessage](https://code.visualstudio.com/api/references/vscode-api#window.showInformationMessage)
+
+```
+vscode.window.showInformationMessage(
+                localize("findUSSItem.unsuccessful", "File does not exist. It
+                may have been deleted.")
+            );
+```
+
+- For showing errors to the user: [vscode.window.showErrorMessage](https://code.visualstudio.com/api/references/vscode-api#window.showErrorMessage)
+
+```
+vscode.window.showErrorMessage(
+                localize("deactivate.error", "Unable to delete temporary
+                folder. ") + err
+            );
+```
+
+- If the extender isn't implementing one of Zowe Explorer's APIs, it is very important to throw a `not implemented` error for that API. [See an example of this from the FTP extension](https://github.com/zowe/vscode-extension-for-zowe/blob/8080ae14734eb9673b178687d92df94e203aad35/packages/zowe-explorer-ftp-extension/src/ZoweExplorerFtpMvsApi.ts#L200).
+
+```
+public allocateLikeDataSet(dataSetName: string, likeDataSetName: string):
+                Promise<zowe.IZosFilesResponse> {
+                  throw new Error("Allocate like dataset is not supported in ftp
+                  extension.");
+            }
+```
