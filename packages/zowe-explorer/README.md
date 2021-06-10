@@ -35,7 +35,6 @@ More information:
 
 **Added**:
 
-- Added the multiple deletion of data sets and data set members feature.
 - Added the refresh data set member names option. You can now retrieve a new list of members from the mainframe.
 - Added the best practice documentation for error handling.
 - Added the developer guide for adding commands to core Zowe Explorer menus.

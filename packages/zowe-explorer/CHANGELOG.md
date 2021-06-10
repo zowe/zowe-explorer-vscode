@@ -4,7 +4,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ## `1.16.0`
 
-- Added the multiple deletion of data sets and data set members feature [#1323](https://github.com/zowe/vscode-extension-for-zowe/pull/1323). Thanks @katelynienaber
 - Added the refresh data set member names option. You can now retrieve a new list of members from the mainframe [#1343](https://github.com/zowe/vscode-extension-for-zowe/pull/1343). Thanks @rudyflores
 - Added the best practice documentation for error handling [#1335](https://github.com/zowe/vscode-extension-for-zowe/pull/1335). Thanks @katelynienaber
 - Added the developer guide for adding commands to core Zowe Explorer menus [#1332](https://github.com/zowe/vscode-extension-for-zowe/pull/1332). Thanks @lauren-li
