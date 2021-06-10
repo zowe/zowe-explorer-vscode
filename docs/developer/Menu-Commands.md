@@ -41,11 +41,11 @@ For general technical details on grouping context menu items, see the [VS Code d
 
 ## Menu group naming conventions
 
-The prefix `##_zowe_` is reserved for use with core Zowe Explorer command groups (per the Zowe Explorer extender conformance criteria). Group names for Zowe Explorer are formatted as follows: `##_zowe_<view><groupSpecifier>`. For example, commands related to creating items in Zowe Explorer's Data Sets view are in the group named `01_zowe_dsCreate`.
+The prefix `0##_zowe_` is reserved for use with core Zowe Explorer command groups (per the Zowe Explorer extender conformance criteria). Group names for Zowe Explorer are formatted as follows: `0##_zowe_<view><groupSpecifier>`. For example, commands related to creating items in Zowe Explorer's Data Sets view are in the group named `001_zowe_dsCreate`.
 
 A breakdown of this naming convention is described below.
 
-- `##` represents a number from 00 - 99. Command groups are organized alphabetically in VS Code, and this numbering helps Zowe Explorer's context menu groups stay in a predefined order that makes sense in the user interface (UI).
+- `0##` represents a number from 000 - 099. Command groups are organized alphabetically in VS Code, and this numbering helps Zowe Explorer's context menu groups stay in a predefined order that makes sense in the user interface (UI).
 - `_zowe_`is constant between command group names. This is used to help ensure that Zowe Explorer's command groups stay together when displayed in the UI.
 - `<view>` represents which of Zowe Explorer's views the command group applies to.
   - `ds`: Use this to specify a command group for the Data Sets view.
