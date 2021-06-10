@@ -4,8 +4,6 @@ This page contains best practices in handling errors for Zowe Explorer extenders
 
 ## Contents
 
-- [Error Handling Best Practices](#error-handling-best-practices)
-  - [Contents](#contents)
   - [Objectives](#objectives)
   - [Error Message Format](#error-message-format)
   - [Logging of Error Message](#logging-of-error-message)
@@ -13,7 +11,7 @@ This page contains best practices in handling errors for Zowe Explorer extenders
 
 ## Objectives
 
-By following this best practices, Zowe Explorer extenders will be able to provide a meaningful error message and help users identify the root cause of the problem quickly and easily.
+By following these best practices, Zowe Explorer extenders will be able to provide a meaningful error message and help users identify the root cause of a problem quickly and easily.
 
 We encourage extenders to use this guidance in order to:
 
@@ -23,13 +21,13 @@ We encourage extenders to use this guidance in order to:
 
 ## Error Message Format
 
-We highly recommend the usage of this Error message format:
+We highly recommend the usage of this error message format:
 
 ```
 Extension Name Error - Error Message
 ```
 
-Ex. Zowe Explorer FTP extension, the message would look like:
+Ex. for the Zowe Explorer FTP extension, an error message might look like:
 
 ```
 Zowe Explorer FTP Extension Error - Unable to delete node…
@@ -37,9 +35,9 @@ Zowe Explorer FTP Extension Error - Unable to delete node…
 
 ## Logging of Error Message
 
-We highly recommend the usage of `imperative.Logger` in logging the extenders error messages.
+We highly recommend the usage of `imperative.Logger` when logging an extender's error messages.
 
-These logs have a stardard format that is used by Zowe Explorer and will have a consistency across Zowe components.
+These logs have a stardard format that is used by Zowe Explorer and will be consistent across Zowe components.
 
 Example:
 
@@ -54,7 +52,7 @@ public constructor(protected log: imperative.Logger) {}
 
 ## Showing Errors to Users
 
-We highly recomend to use VSCode's API to show messages to users. This will provide a standard format
+We highly recommend using VSCode's API to show messages to users. This will provide a standard format
 that is similar to Zowe Explorer and VSCode.
 
 - For showing information to the user: [vscode.window.showInformationMessage](https://code.visualstudio.com/api/references/vscode-api#window.showInformationMessage)
@@ -71,7 +69,7 @@ vscode.window.showInformationMessage(
 ```
 vscode.window.showErrorMessage(
                 localize("deactivate.error", "Unable to delete temporary
-                folder. ") + err
+                folder.") + err
             );
 ```
 
