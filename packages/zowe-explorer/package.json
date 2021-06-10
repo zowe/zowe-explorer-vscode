@@ -855,11 +855,6 @@
           "group": "00_zowe_dsMainframeInteraction@0"
         },
         {
-          "when": "view == zowe.explorer && viewItem =~ /^pds.*/",
-          "command": "zowe.refreshDataset",
-          "group": "1_create@2"
-        },
-        {
           "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
           "command": "zowe.issueMvsCmd",
           "group": "00_zowe_dsMainframeInteraction@1"
@@ -868,6 +863,11 @@
           "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
           "command": "zowe.issueTsoCmd",
           "group": "00_zowe_dsMainframeInteraction@2"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem =~ /^pds.*/",
+          "command": "zowe.refreshDataset",
+          "group": "00_zowe_dsMainframeInteraction@3"
         },
         {
           "when": "view == zowe.explorer && viewItem =~ /^(member.*|ds.*)/",
