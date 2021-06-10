@@ -336,6 +336,15 @@
         }
       },
       {
+        "command": "zowe.refreshDataset",
+        "title": "%refreshDataset%",
+        "category": "Zowe Explorer",
+        "icon": {
+          "light": "./resources/light/download.svg",
+          "dark": "./resources/dark/download.svg"
+        }
+      },
+      {
         "command": "zowe.removeFavorite",
         "title": "%removeFavorite%",
         "category": "Zowe Explorer",
@@ -856,6 +865,11 @@
           "group": "1_create@2"
         },
         {
+          "when": "view == zowe.explorer && viewItem =~ /^pds.*/",
+          "command": "zowe.refreshDataset",
+          "group": "1_create@2"
+        },
+        {
           "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
           "command": "zowe.createDataset",
           "group": "1_create@2"
@@ -1168,6 +1182,10 @@
         },
         {
           "command": "zowe.refreshNode",
+          "when": "never"
+        },
+        {
+          "command": "zowe.refreshDataset",
           "when": "never"
         },
         {
