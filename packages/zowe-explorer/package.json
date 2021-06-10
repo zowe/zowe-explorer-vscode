@@ -745,6 +745,11 @@
           "group": "02_zowe_ussSystemSpecific@2"
         },
         {
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(ussSession|favorite|profile_fav))/",
+          "command": "zowe.uss.copyPath",
+          "group": "02_zowe_ussSystemSpecific@4"
+        },
+        {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)(textFile.*|binaryFile.*|directory.*)/",
           "command": "zowe.uss.addFavorite",
           "group": "03_zowe_ussWorkspace@0"
@@ -768,11 +773,6 @@
           "when": "view == zowe.uss.explorer && viewItem == profile_fav",
           "command": "zowe.uss.removeFavProfile",
           "group": "03_zowe_ussWorkspace@5"
-        },
-        {
-          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(ussSession|favorite|profile_fav))/",
-          "command": "zowe.uss.copyPath",
-          "group": "04_zowe_ussCutCopyPaste@4"
         },
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^textFile|binaryFile/",
@@ -910,6 +910,21 @@
           "group": "01_zowe_dsCreate@5"
         },
         {
+          "when": "view == zowe.explorer && viewItem =~ /^member.*/",
+          "command": "zowe.copyMember",
+          "group": "01_zowe_dsCreate@6"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem =~ /^ds.*/",
+          "command": "zowe.copyDataSet",
+          "group": "01_zowe_dsCreate@6"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem =~ /^pds.*/",
+          "command": "zowe.pasteMember",
+          "group": "01_zowe_dsCreate@7"
+        },
+        {
           "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
           "command": "zowe.saveSearch",
           "group": "02_zowe_dsWorkspace@0"
@@ -933,21 +948,6 @@
           "when": "view == zowe.explorer && viewItem == profile_fav",
           "command": "zowe.removeFavProfile",
           "group": "02_zowe_dsWorkspace@4"
-        },
-        {
-          "when": "view == zowe.explorer && viewItem =~ /^member.*/",
-          "command": "zowe.copyMember",
-          "group": "06_zowe_dsCutCopyPaste@6"
-        },
-        {
-          "when": "view == zowe.explorer && viewItem =~ /^ds.*/",
-          "command": "zowe.copyDataSet",
-          "group": "06_zowe_dsCutCopyPaste@6"
-        },
-        {
-          "when": "view == zowe.explorer && viewItem =~ /^pds.*/",
-          "command": "zowe.pasteMember",
-          "group": "06_zowe_dsCutCopyPaste@7"
         },
         {
           "when": "view == zowe.explorer && viewItem =~ /^migr.*/",
