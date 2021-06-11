@@ -46,6 +46,7 @@ More information:
 **Fixed**:
 
 - Fixed the error message that popped up when accessing a profile from Favorites.
+- Fixed the issue that prevented the ALlocate Like feature from working correctly.
 
 For more information, see [Changelog](https://marketplace.visualstudio.com/items/Zowe.vscode-extension-for-zowe/changelog).
 

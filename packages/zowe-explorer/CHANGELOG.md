@@ -9,6 +9,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added the developer guide for adding commands to core Zowe Explorer menus [#1332](https://github.com/zowe/vscode-extension-for-zowe/pull/1332). Thanks @lauren-li
 - Standardized context group names [#1340](https://github.com/zowe/vscode-extension-for-zowe/pull/1340). Thanks @lauren-li
 - Fixed the error message that popped up when accessing a profile from Favorites [#1344](https://github.com/zowe/vscode-extension-for-zowe/pull/1344). Thanks @rudyflores
+- Fixed the issue that prevented the ALlocate Like feature from working correctly [#1322](https://github.com/zowe/vscode-extension-for-zowe/pull/1322). Thanks @katelynienaber
 
 ## `1.15.1`
 
