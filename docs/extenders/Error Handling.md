@@ -4,10 +4,10 @@ This page contains best practices in handling errors for Zowe Explorer extenders
 
 ## Contents
 
-  - [Objectives](#objectives)
-  - [Error Message Format](#error-message-format)
-  - [Logging of Error Message](#logging-of-error-message)
-  - [Showing Errors to Users](#showing-errors-to-users)
+- [Objectives](#objectives)
+- [Error Message Format](#error-message-format)
+- [Logging of Error Message](#logging-of-error-message)
+- [Showing Errors to Users](#showing-errors-to-users)
 
 ## Objectives
 
@@ -27,7 +27,7 @@ We highly recommend the usage of this error message format:
 Extension Name Error - Error Message
 ```
 
-Ex. for the Zowe Explorer FTP extension, an error message might look like:
+Example: For the Zowe Explorer FTP extension, an error message might look like:
 
 ```
 Zowe Explorer FTP Extension Error - Unable to delete node…
@@ -37,7 +37,7 @@ Zowe Explorer FTP Extension Error - Unable to delete node…
 
 We highly recommend the usage of `imperative.Logger` when logging an extender's error messages.
 
-These logs have a stardard format that is used by Zowe Explorer and will be consistent across Zowe components.
+These logs have a standard format that is used by Zowe Explorer and will be consistent across Zowe components.
 
 Example:
 
@@ -58,27 +58,20 @@ that is similar to Zowe Explorer and VSCode.
 - For showing information to the user: [vscode.window.showInformationMessage](https://code.visualstudio.com/api/references/vscode-api#window.showInformationMessage)
 
 ```
-vscode.window.showInformationMessage(
-                localize("findUSSItem.unsuccessful", "File does not exist. It
-                may have been deleted.")
-            );
+vscode.window.showInformationMessage("File does not exist. It may have been deleted.");
 ```
 
 - For showing errors to the user: [vscode.window.showErrorMessage](https://code.visualstudio.com/api/references/vscode-api#window.showErrorMessage)
 
 ```
-vscode.window.showErrorMessage(
-                localize("deactivate.error", "Unable to delete temporary
-                folder.") + err
-            );
+vscode.window.showErrorMessage("Unable to delete temporary folder.");
 ```
 
 - If the extender isn't implementing one of Zowe Explorer's APIs, it is very important to throw a `not implemented` error for that API. [See an example of this from the FTP extension](https://github.com/zowe/vscode-extension-for-zowe/blob/8080ae14734eb9673b178687d92df94e203aad35/packages/zowe-explorer-ftp-extension/src/ZoweExplorerFtpMvsApi.ts#L200).
 
 ```
 public allocateLikeDataSet(dataSetName: string, likeDataSetName: string):
-                Promise<zowe.IZosFilesResponse> {
-                  throw new Error("Allocate like dataset is not supported in ftp
-                  extension.");
-            }
+    Promise<zowe.IZosFilesResponse> {
+        throw new Error("Allocate like dataset is not supported in FTP extension.");
+    }
 ```
