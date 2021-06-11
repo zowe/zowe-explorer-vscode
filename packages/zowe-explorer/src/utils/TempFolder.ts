@@ -16,6 +16,7 @@ import * as vscode from "vscode";
 import { moveSync } from "fs-extra";
 import * as nls from "vscode-nls";
 import { errorHandling } from "../utils/ProfilesUtils";
+import { PersistentFilters } from "../PersistentFilters";
 
 // Set up localization
 nls.config({
@@ -104,8 +105,10 @@ export function cleanDir(directory) {
  * @export
  */
 export async function cleanTempDir() {
+    // Get temp folder location from settings
+    const preferencesTempCleanup = PersistentFilters.getDirectValue("Zowe-Disable-TempFolder-Cleanup") as boolean;
     // logger hasn't necessarily been initialized yet, don't use the `log` in this function
-    if (!fs.existsSync(globals.ZOWETEMPFOLDER)) {
+    if (!fs.existsSync(globals.ZOWETEMPFOLDER) || preferencesTempCleanup) {
         return;
     }
     try {

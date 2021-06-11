@@ -88,26 +88,19 @@ describe("Extension Integration Tests", () => {
     afterEach(async function () {
         this.timeout(TIMEOUT);
         const createTestFileName = pattern + ".EXT.CREATE.DATASET.TEST";
-        const allocateLikeFileName = pattern + ".EXT.ALLOC.LIKE";
         try {
             await zowe.Delete.dataSet(session, createTestFileName);
-            await zowe.Delete.dataSet(session, allocateLikeFileName);
         } catch (err) {
             // Do nothing
         }
 
-        const deleteTestFileName = pattern + ".EXT.DELETE.DATASET.TEST";
-        try {
-            await zowe.Delete.dataSet(session, deleteTestFileName);
-        } catch (err) {
-            // Do nothing
-        }
         sandbox.restore();
     });
 
     const oldSettings = vscode.workspace.getConfiguration("Zowe-DS-Persistent");
 
     after(async () => {
+        await coreUtils.cleanTempDir();
         await vscode.workspace
             .getConfiguration()
             .update("Zowe-DS-Persistent", oldSettings, vscode.ConfigurationTarget.Global);
@@ -224,6 +217,13 @@ describe("Extension Integration Tests", () => {
 
             const response = await zowe.List.dataSet(sessionNode.getSession(), testCopyName, {});
             expect(response.success).to.equal(true);
+
+            // Clean up .EXT.ALLOC.LIKE
+            try {
+                await zowe.Delete.dataSet(session, testCopyName);
+            } catch (err) {
+                // Do nothing
+            }
         }).timeout(TIMEOUT);
     });
 
@@ -1005,7 +1005,7 @@ describe("Extension Integration Tests", () => {
         });
     });
 
-    describe("Updating Temp Folder", () => {
+    describe("Updating Temp Folder", async () => {
         // define paths
         const testingPath = path.join(__dirname, "..", "..", "..", "test");
         const providedPathOne = path.join(__dirname, "..", "..", "..", "test-folder-one");

@@ -1615,6 +1615,12 @@
           },
           "description": "%Zowe-Environment%",
           "scope": "window"
+        },
+        "Zowe-Disable-TempFolder-Cleanup": {
+          "type": "boolean",
+          "default": false,
+          "description": "%Zowe-Disable-TempFolder-Cleanup%",
+          "scope": "window"
         }
       }
     }
