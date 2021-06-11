@@ -8,7 +8,7 @@ This VS Code extension also serves as a [source code example](https://github.com
 
 Added:
 
-- Added the function that closes a connection.
+- Added the function that closes the connection at the end of each FTP operation.
 
 For more information, see [Changelog](https://github.com/zowe/vscode-extension-for-zowe/blob/master/packages/zowe-explorer-ftp-extension/CHANGELOG.md).
 

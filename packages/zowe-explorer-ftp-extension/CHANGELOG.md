@@ -2,7 +2,7 @@
 
 ## `1.16.0`
 
-- Added the function that closes a connection
+- Added the function that closes the connection at the end of each FTP operation
 
 ## `1.15.0`
 
