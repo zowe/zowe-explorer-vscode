@@ -19,7 +19,6 @@ import * as vscode from "vscode";
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
 import * as testConst from "../../resources/testProfileData";
 import { DS_PDS_CONTEXT, USS_SESSION_CONTEXT } from "../../src/globals";
-import { cleanOpenTextFiles } from "./__cleanup__/cleanTextEditor";
 import * as coreUtils from "../../src/utils/TempFolder";
 
 declare var it: any;
@@ -54,12 +53,10 @@ describe("ZoweUSSNode Integration Tests", async () => {
 
     afterEach(async function () {
         this.timeout(TIMEOUT);
-        await cleanOpenTextFiles();
         await coreUtils.cleanTempDir();
     });
 
     after(async () => {
-        await cleanOpenTextFiles();
         await coreUtils.cleanTempDir();
     });
 
