@@ -93,8 +93,33 @@ export async function refreshUSSInTree(node: IZoweUSSTreeNode, ussFileProvider: 
 
 export async function refreshDirectory(node: IZoweUSSTreeNode, ussFileProvider: IZoweTree<IZoweUSSTreeNode>) {
     try {
-        const children = await node.getChildren();
-        ussFileProvider.refreshElement(node);
+        if (node.collapsibleState !== vscode.TreeItemCollapsibleState.Expanded) {
+            // the node is a file and needs to be refreshed from the parent together with siblings
+            if (node.collapsibleState === vscode.TreeItemCollapsibleState.None) {
+                ussFileProvider.refreshElement(node.getParent());
+            }
+            return;
+        } else {
+            // Obtain subdirectories of current iteration inside of tree
+            const subDirectories = (await node.getChildren()).filter(
+                (child) => child.collapsibleState === vscode.TreeItemCollapsibleState.Expanded
+            );
+            const files = (await node.getChildren()).filter(
+                (child) => child.collapsibleState === vscode.TreeItemCollapsibleState.None
+            );
+
+            // go into subdirectory and search for more inner subdirectories in tree
+            if (subDirectories.length > 0) {
+                subDirectories.forEach((subDirectory) => {
+                    refreshDirectory(subDirectory, ussFileProvider);
+                });
+                // refresh each level in tree after search has reached the end
+                refreshDirectory(files[0], ussFileProvider);
+            } else {
+                // refresh on leaf nodes of tree
+                refreshDirectory(files[0], ussFileProvider);
+            }
+        }
     } catch (err) {
         errorHandling(err, node.getProfileName(), err.message);
     }
