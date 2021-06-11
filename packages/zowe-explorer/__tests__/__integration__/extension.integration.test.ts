@@ -1016,6 +1016,12 @@ describe("Extension Integration Tests", () => {
         coreUtils.cleanDir(providedPathOne);
         coreUtils.cleanDir(providedPathTwo);
 
+        after(async () => {
+            coreUtils.cleanDir(testingPath);
+            coreUtils.cleanDir(providedPathOne);
+            coreUtils.cleanDir(providedPathTwo);
+        });
+
         it("should assign the temp folder based on preference", async () => {
             // create target folder
             fs.mkdirSync(testingPath);
