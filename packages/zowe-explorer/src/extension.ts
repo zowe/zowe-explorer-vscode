@@ -73,15 +73,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             fs.mkdirSync(globals.USS_DIR);
             fs.mkdirSync(globals.DS_DIR);
         }
-        if (!fs.existsSync(globals.ZOWE_TMP_FOLDER)) {
-            fs.mkdirSync(globals.ZOWE_TMP_FOLDER);
-        }
-        if (!fs.existsSync(globals.USS_DIR)) {
-            fs.mkdirSync(globals.USS_DIR);
-        }
-        if (!fs.existsSync(globals.DS_DIR)) {
-            fs.mkdirSync(globals.DS_DIR);
-        }
     } catch (err) {
         await errorHandling(err, null, err.message);
     }

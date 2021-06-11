@@ -16,7 +16,7 @@ import * as vscode from "vscode";
 import { moveSync } from "fs-extra";
 import * as nls from "vscode-nls";
 import { errorHandling } from "../utils/ProfilesUtils";
-import { checkTextFileIsOpened } from "../utils/workspace";
+import { PersistentFilters } from "../PersistentFilters";
 
 // Set up localization
 nls.config({
@@ -87,34 +87,16 @@ export async function cleanDir(directory) {
     if (!fs.existsSync(directory)) {
         return;
     }
-    try {
-        let isEmptyDir = true;
-        const files = fs.readdirSync(directory);
-        if (files.length > 0) {
-            files.forEach(async (file) => {
-                const fullpath = path.join(directory, file);
-                const lstat = fs.lstatSync(fullpath);
-                if (lstat.isFile()) {
-                    const isOpen = await checkTextFileIsOpened(fullpath);
-                    if (isOpen) {
-                        isEmptyDir = false;
-                    } else {
-                        fs.unlinkSync(fullpath);
-                    }
-                } else {
-                    await cleanDir(fullpath);
-                }
-            });
+    fs.readdirSync(directory).forEach((file) => {
+        const fullpath = path.join(directory, file);
+        const lstat = fs.lstatSync(fullpath);
+        if (lstat.isFile()) {
+            fs.unlinkSync(fullpath);
         } else {
-            if (isEmptyDir) {
-                fs.rmdirSync(directory);
-            }
+            cleanDir(fullpath);
         }
-    } catch (error) {
-        // tslint:disable-next-line:no-console
-        console.log(error);
-        globals.LOG.error("Error cleaning temporary folder! " + JSON.stringify(error));
-    }
+    });
+    fs.rmdirSync(directory);
 }
 
 /**
@@ -123,8 +105,10 @@ export async function cleanDir(directory) {
  * @export
  */
 export async function cleanTempDir() {
+    // Get temp folder location from settings
+    const preferencesTempCleanup = PersistentFilters.getDirectValue("Zowe-Disable-TempFolder-Cleanup") as boolean;
     // logger hasn't necessarily been initialized yet, don't use the `log` in this function
-    if (!fs.existsSync(globals.ZOWETEMPFOLDER)) {
+    if (!fs.existsSync(globals.ZOWETEMPFOLDER) || preferencesTempCleanup) {
         return;
     }
     try {

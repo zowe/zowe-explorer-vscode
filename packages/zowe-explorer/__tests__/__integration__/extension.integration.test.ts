@@ -44,7 +44,6 @@ import {
     FAVORITE_CONTEXT,
     FAV_PROFILE_CONTEXT,
 } from "../../src/globals";
-import { cleanOpenTextFiles, cleanTextEditor } from "./__cleanup__/cleanTextEditor";
 import { closeOpenedTextFile } from "../../src/utils/workspace";
 
 const TIMEOUT = 45000;
@@ -102,7 +101,6 @@ describe("Extension Integration Tests", () => {
     const oldSettings = vscode.workspace.getConfiguration("Zowe-DS-Persistent");
 
     after(async () => {
-        await cleanOpenTextFiles();
         await coreUtils.cleanTempDir();
         await vscode.workspace
             .getConfiguration()
