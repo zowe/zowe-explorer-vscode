@@ -300,7 +300,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     contextValue,
                     undefined
                 );
-                node.command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [node] };
+                node.command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [node] };
             }
             node.contextValue = contextually.asFavorite(node);
             const icon = getIconByNode(node);
@@ -541,7 +541,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             );
             temp.contextValue = contextually.asFavorite(temp);
             if (contextually.isFavoriteDs(temp)) {
-                temp.command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [temp] };
+                temp.command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [temp] };
             }
 
             const icon = getIconByNode(temp);
@@ -1194,7 +1194,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 fs.unlinkSync(beforeFullPath);
             }
             if (closedOpenedInstance) {
-                vscode.commands.executeCommand("zowe.ZoweNode.openPS", node);
+                vscode.commands.executeCommand("zowe.ds.ZoweNode.openPS", node);
             }
         }
     }
@@ -1241,7 +1241,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 }
 
                 if (closedOpenedInstance) {
-                    vscode.commands.executeCommand("zowe.ZoweNode.openPS", node);
+                    vscode.commands.executeCommand("zowe.ds.ZoweNode.openPS", node);
                 }
             } catch (err) {
                 this.log.error(
