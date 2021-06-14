@@ -70,7 +70,7 @@
         "mac": "cmd+alt+p"
       },
       {
-        "command": "zowe.deleteJob",
+        "command": "zowe.jobs.deleteJob",
         "key": "delete",
         "when": "focusedView == zowe.jobs && listSupportsMultiselect"
       }
@@ -495,7 +495,7 @@
         "category": "Zowe Explorer"
       },
       {
-        "command": "zowe.deleteJob",
+        "command": "zowe.jobs.deleteJob",
         "title": "%deleteJob%",
         "category": "Zowe Explorer",
         "icon": {
@@ -541,27 +541,27 @@
         "category": "Zowe Explorer"
       },
       {
-        "command": "zowe.runModifyCommand",
+        "command": "zowe.jobs.runModifyCommand",
         "title": "%runModifyCommand%",
         "category": "Zowe Explorer"
       },
       {
-        "command": "zowe.runStopCommand",
+        "command": "zowe.jobs.runStopCommand",
         "title": "%runStopCommand%",
         "category": "Zowe Explorer"
       },
       {
-        "command": "zowe.setOwner",
+        "command": "zowe.jobs.setOwner",
         "title": "%setOwner%",
         "category": "Zowe Explorer"
       },
       {
-        "command": "zowe.setPrefix",
+        "command": "zowe.jobs.setPrefix",
         "title": "%setPrefix%",
         "category": "Zowe Explorer"
       },
       {
-        "command": "zowe.refreshJobsServer",
+        "command": "zowe.jobs.refreshJobsServer",
         "title": "%refreshJobsServer%",
         "category": "Zowe Explorer",
         "icon": {
@@ -584,7 +584,7 @@
         "category": "Zowe Explorer"
       },
       {
-        "command": "zowe.refreshAllJobs",
+        "command": "zowe.jobs.refreshAllJobs",
         "title": "%refreshAllJobs%",
         "category": "Zowe Explorer",
         "icon": {
@@ -593,7 +593,7 @@
         }
       },
       {
-        "command": "zowe.addJobsSession",
+        "command": "zowe.jobs.addJobsSession",
         "title": "%addJobsSession%",
         "category": "Zowe Explorer",
         "icon": {
@@ -602,12 +602,12 @@
         }
       },
       {
-        "command": "zowe.removeJobsSession",
+        "command": "zowe.jobs.removeJobsSession",
         "title": "%removeJobsSession%",
         "category": "Zowe Explorer"
       },
       {
-        "command": "zowe.downloadSpool",
+        "command": "zowe.jobs.downloadSpool",
         "title": "%downloadSpool%",
         "category": "Zowe Explorer",
         "icon": {
@@ -616,12 +616,12 @@
         }
       },
       {
-        "command": "zowe.getJobJcl",
+        "command": "zowe.jobs.getJobJcl",
         "title": "%getJobJcl%",
         "category": "Zowe Explorer"
       },
       {
-        "command": "zowe.setJobSpool",
+        "command": "zowe.jobs.setJobSpool",
         "title": "%setJobSpool%",
         "category": "Zowe Explorer"
       },
@@ -669,12 +669,12 @@
         },
         {
           "when": "view == zowe.jobs",
-          "command": "zowe.refreshAllJobs",
+          "command": "zowe.jobs.refreshAllJobs",
           "group": "navigation"
         },
         {
           "when": "view == zowe.jobs",
-          "command": "zowe.addJobsSession",
+          "command": "zowe.jobs.addJobsSession",
           "group": "navigation"
         }
       ],
@@ -1066,7 +1066,7 @@
         },
         {
           "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/",
-          "command": "zowe.refreshJobsServer",
+          "command": "zowe.jobs.refreshJobsServer",
           "group": "000_zowe_jobsMainframeInteraction@1"
         },
         {
@@ -1081,22 +1081,22 @@
         },
         {
           "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)job.*/",
-          "command": "zowe.getJobJcl",
+          "command": "zowe.jobs.getJobJcl",
           "group": "000_zowe_jobsMainframeInteraction@0"
         },
         {
           "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)job.*/",
-          "command": "zowe.downloadSpool",
+          "command": "zowe.jobs.downloadSpool",
           "group": "000_zowe_jobsMainframeInteraction@1"
         },
         {
           "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)job.*/",
-          "command": "zowe.runModifyCommand",
+          "command": "zowe.jobs.runModifyCommand",
           "group": "001_zowe_jobsSystemSpecific@2"
         },
         {
           "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)job.*/",
-          "command": "zowe.runStopCommand",
+          "command": "zowe.jobs.runStopCommand",
           "group": "001_zowe_jobsSystemSpecific@2"
         },
         {
@@ -1121,7 +1121,7 @@
         },
         {
           "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)job.*/",
-          "command": "zowe.deleteJob",
+          "command": "zowe.jobs.deleteJob",
           "group": "099_zowe_jobsModification"
         },
         {
@@ -1156,7 +1156,7 @@
         },
         {
           "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/",
-          "command": "zowe.removeJobsSession",
+          "command": "zowe.jobs.removeJobsSession",
           "group": "099_zowe_jobsProfileModification@98"
         },
         {
@@ -1407,19 +1407,19 @@
           "when": "never"
         },
         {
-          "command": "zowe.setPrefix",
+          "command": "zowe.jobs.setPrefix",
           "when": "never"
         },
         {
-          "command": "zowe.setOwner",
+          "command": "zowe.jobs.setOwner",
           "when": "never"
         },
         {
-          "command": "zowe.setJobSpool",
+          "command": "zowe.jobs.setJobSpool",
           "when": "never"
         },
         {
-          "command": "zowe.refreshJobsServer",
+          "command": "zowe.jobs.refreshJobsServer",
           "when": "never"
         },
         {
@@ -1443,19 +1443,19 @@
           "when": "never"
         },
         {
-          "command": "zowe.getJobJcl",
+          "command": "zowe.jobs.getJobJcl",
           "when": "never"
         },
         {
-          "command": "zowe.runModifyCommand",
+          "command": "zowe.jobs.runModifyCommand",
           "when": "never"
         },
         {
-          "command": "zowe.runStopCommand",
+          "command": "zowe.jobs.runStopCommand",
           "when": "never"
         },
         {
-          "command": "zowe.downloadSpool",
+          "command": "zowe.jobs.downloadSpool",
           "when": "never"
         },
         {
@@ -1463,7 +1463,7 @@
           "when": "never"
         },
         {
-          "command": "zowe.removeJobsSession",
+          "command": "zowe.jobs.removeJobsSession",
           "when": "never"
         },
         {

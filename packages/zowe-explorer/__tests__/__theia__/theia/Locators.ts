@@ -54,7 +54,7 @@ export const JobsLocators = {
     jobTabId: "plugin-view-container:zowe--plugin-view:zowe.jobs",
     jobTabXpath: "//span[@title='Jobs']",
     jobsPanelId: "zowe.jobs",
-    jobsAddSessionId: "__plugin.view.title.action.zowe.addJobsSession",
+    jobsAddSessionId: "__plugin.view.title.action.zowe.jobs.addJobsSession",
     emptyInputBoxXpath: "//*[@class='input empty']",
     defaultJobsProfileXpath: "(//div[@id='/1:DefaultProfile'])[3]",
     secondJobsProfileXpath: "(//div[@id='/2:TestSeleniumProfile'])[3]",
@@ -65,7 +65,7 @@ export const JobsLocators = {
     addToFavoriteOptionXpath: "//li[@data-command='__plugin.menu.action.zowe.jobs.addFavorite:0']",
     favoriteProfileInJobsBeforeRemovingXpath: "//div[@id='/0:Favorites/0:TestSeleniumProfile/0:Prefix:*']",
     removeFavoriteProfileFromJobsOptionXpath: "//li[@data-command='__plugin.menu.action.zowe.jobs.removeFavProfile']",
-    hideProfileFromJobsOptionXpath: "//li[@data-command='__plugin.menu.action.zowe.removeJobsSession']",
+    hideProfileFromJobsOptionXpath: "//li[@data-command='__plugin.menu.action.zowe.jobs.removeJobsSession']",
     secondJobsProfileIdBeforeHidingXpath: "(//div[@id='/2:TestSeleniumProfile'])[2]",
     favoriteprofilexpath: "//div[@id='/0:Favorites/0:TestSeleniumProfile']",
 };
