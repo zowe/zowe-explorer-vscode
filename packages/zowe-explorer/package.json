@@ -208,7 +208,7 @@
         "category": "Zowe Explorer"
       },
       {
-        "command": "zowe.createDataset",
+        "command": "zowe.ds.createDataset",
         "title": "%createDataset%",
         "category": "Zowe Explorer",
         "icon": {
@@ -891,7 +891,7 @@
         },
         {
           "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
-          "command": "zowe.createDataset",
+          "command": "zowe.ds.createDataset",
           "group": "001_zowe_dsCreate@2"
         },
         {
@@ -1179,7 +1179,7 @@
           "when": "never"
         },
         {
-          "command": "zowe.createDataset",
+          "command": "zowe.ds.createDataset",
           "when": "never"
         },
         {
