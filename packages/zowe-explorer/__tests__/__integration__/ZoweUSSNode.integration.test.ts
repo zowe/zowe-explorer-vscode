@@ -19,7 +19,6 @@ import * as vscode from "vscode";
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
 import * as testConst from "../../resources/testProfileData";
 import { DS_PDS_CONTEXT, USS_SESSION_CONTEXT } from "../../src/globals";
-import * as coreUtils from "../../src/utils/TempFolder";
 
 declare var it: any;
 
@@ -50,15 +49,6 @@ describe("ZoweUSSNode Integration Tests", async () => {
     sessNode.dirty = true;
     const path = testConst.ussPattern;
     sessNode.fullPath = path + "/group";
-
-    afterEach(async function () {
-        this.timeout(TIMEOUT);
-        await coreUtils.cleanTempDir();
-    });
-
-    after(async () => {
-        await coreUtils.cleanTempDir();
-    });
 
     /*************************************************************************************************************
      * Creates an ZoweUSSNode and checks that its members are all initialized by the constructor

@@ -44,6 +44,7 @@ import {
     FAVORITE_CONTEXT,
     FAV_PROFILE_CONTEXT,
 } from "../../src/globals";
+import { PersistentFilters } from "../../src/PersistentFilters";
 
 const TIMEOUT = 45000;
 declare var it: Mocha.ITestDefinition;
@@ -57,7 +58,7 @@ const testProfile: IProfileLoaded = {
     failNotFound: false,
 };
 
-describe("Extension Integration Tests", () => {
+describe("Extension Integration Tests", async () => {
     const expect = chai.expect;
     chai.use(chaiAsPromised);
 
@@ -78,6 +79,10 @@ describe("Extension Integration Tests", () => {
     testTree.mSessionNodes.push(sessionNode);
 
     let sandbox;
+    const tempSettings = PersistentFilters.getDirectValue("Zowe-Disable-TempFolder-Cleanup");
+    await vscode.workspace
+        .getConfiguration()
+        .update("Zowe-Disable-TempFolder-Cleanup", false, vscode.ConfigurationTarget.Global);
 
     beforeEach(async function () {
         this.timeout(TIMEOUT);
@@ -97,13 +102,15 @@ describe("Extension Integration Tests", () => {
         sandbox.restore();
     });
 
-    const oldSettings = vscode.workspace.getConfiguration("Zowe-DS-Persistent");
+    const dsSettings = vscode.workspace.getConfiguration("Zowe-DS-Persistent");
 
     after(async () => {
-        await coreUtils.cleanTempDir();
         await vscode.workspace
             .getConfiguration()
-            .update("Zowe-DS-Persistent", oldSettings, vscode.ConfigurationTarget.Global);
+            .update("Zowe-DS-Persistent", dsSettings, vscode.ConfigurationTarget.Global);
+        await vscode.workspace
+            .getConfiguration()
+            .update("Zowe-Disable-TempFolder-Cleanup", tempSettings, vscode.ConfigurationTarget.Global);
     });
 
     describe("Creating a Session", () => {
