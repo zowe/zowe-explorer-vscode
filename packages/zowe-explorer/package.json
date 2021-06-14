@@ -300,7 +300,7 @@
         }
       },
       {
-        "command": "zowe.pattern",
+        "command": "zowe.ds.pattern",
         "title": "%pattern%",
         "category": "Zowe Explorer",
         "icon": {
@@ -318,7 +318,7 @@
         }
       },
       {
-        "command": "zowe.refreshAll",
+        "command": "zowe.ds.refreshAll",
         "title": "%refreshAll%",
         "category": "Zowe Explorer",
         "icon": {
@@ -649,7 +649,7 @@
       "view/title": [
         {
           "when": "view == zowe.explorer",
-          "command": "zowe.refreshAll",
+          "command": "zowe.ds.refreshAll",
           "group": "navigation"
         },
         {
@@ -831,7 +831,7 @@
         },
         {
           "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
-          "command": "zowe.pattern",
+          "command": "zowe.ds.pattern",
           "group": "inline"
         },
         {
@@ -851,7 +851,7 @@
         },
         {
           "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
-          "command": "zowe.pattern",
+          "command": "zowe.ds.pattern",
           "group": "000_zowe_dsMainframeInteraction@0"
         },
         {
@@ -1167,7 +1167,7 @@
       ],
       "commandPalette": [
         {
-          "command": "zowe.pattern",
+          "command": "zowe.ds.pattern",
           "when": "never"
         },
         {

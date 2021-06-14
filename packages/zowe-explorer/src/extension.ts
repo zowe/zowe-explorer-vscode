@@ -226,12 +226,12 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
         datasetProvider.createZoweSession(datasetProvider)
     );
     vscode.commands.registerCommand("zowe.ds.addFavorite", async (node) => datasetProvider.addFavorite(node));
-    vscode.commands.registerCommand("zowe.refreshAll", () => refreshActions.refreshAll(datasetProvider));
+    vscode.commands.registerCommand("zowe.ds.refreshAll", () => refreshActions.refreshAll(datasetProvider));
     vscode.commands.registerCommand("zowe.ds.refreshNode", (node) => dsActions.refreshPS(node));
     vscode.commands.registerCommand("zowe.ds.refreshDataset", (node) =>
         dsActions.refreshDataset(node, datasetProvider)
     );
-    vscode.commands.registerCommand("zowe.pattern", (node) => datasetProvider.filterPrompt(node));
+    vscode.commands.registerCommand("zowe.ds.pattern", (node) => datasetProvider.filterPrompt(node));
     vscode.commands.registerCommand("zowe.ds.editSession", async (node) =>
         datasetProvider.editSession(node, datasetProvider)
     );

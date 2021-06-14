@@ -316,7 +316,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 undefined,
                 undefined
             );
-            node.command = { command: "zowe.pattern", title: "", arguments: [node] };
+            node.command = { command: "zowe.ds.pattern", title: "", arguments: [node] };
             node.contextValue = globals.DS_SESSION_CONTEXT + globals.FAV_SUFFIX;
             const icon = getIconByNode(node);
             if (icon) {
@@ -527,7 +527,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 temp.iconPath = icon.path;
             }
             // add a command to execute the search
-            temp.command = { command: "zowe.pattern", title: "", arguments: [temp] };
+            temp.command = { command: "zowe.ds.pattern", title: "", arguments: [temp] };
         } else {
             // pds | ds
             temp = new ZoweDatasetNode(

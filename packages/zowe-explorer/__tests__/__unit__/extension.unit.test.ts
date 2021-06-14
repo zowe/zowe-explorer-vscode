@@ -114,10 +114,10 @@ async function createGlobalMocks() {
         expectedCommands: [
             "zowe.ds.addSession",
             "zowe.ds.addFavorite",
-            "zowe.refreshAll",
+            "zowe.ds.refreshAll",
             "zowe.ds.refreshNode",
             "zowe.ds.refreshDataset",
-            "zowe.pattern",
+            "zowe.ds.pattern",
             "zowe.ds.editSession",
             "zowe.ZoweNode.openPS",
             "zowe.createDataset",
