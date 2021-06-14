@@ -19,18 +19,18 @@ export const DatasetsLocators = {
     datasetTabId: "plugin-view-container:zowe--plugin-view:zowe.explorer",
     datasetTabXpath: "//span[@title='Data Sets']",
     datasetsPanelId: "plugin-view:zowe.explorer",
-    datasetsAddSessionId: "__plugin.view.title.action.zowe.addSession",
+    datasetsAddSessionId: "__plugin.view.title.action.zowe.ds.addSession",
     emptyInputBoxXpath: "//*[@class='input empty']",
     inputBoxXpath: "//*[@class='input']",
     defaultDatasetsProfileId: "/1:DefaultProfile",
     secondDatasetProfileId: "/2:TestSeleniumProfile",
     favoriteTabId: "/0:Favorites",
     favoriteProfileInDatasetId: "/0:Favorites/0:TestSeleniumProfile",
-    addToFavoriteOptionXpath: "//li[@data-command='__plugin.menu.action.zowe.saveSearch']",
+    addToFavoriteOptionXpath: "//li[@data-command='__plugin.menu.action.zowe.ds.saveSearch']",
     searchSymbolInFavoriteXpath: "//*[@id='/0:Favorites/0:TestSeleniumProfile/0:']",
-    removeFavoriteProfileFromDatasetsOptionXpath: "//li[@data-command='__plugin.menu.action.zowe.removeFavProfile']",
+    removeFavoriteProfileFromDatasetsOptionXpath: "//li[@data-command='__plugin.menu.action.zowe.ds.removeFavProfile']",
     secondDatasetProfileBeforeDeletingId: "/1:TestSeleniumProfile",
-    deleteProfileFromDatasetsXpath: "(//li[@data-command='__plugin.menu.action.zowe.deleteProfile'])",
+    deleteProfileFromDatasetsXpath: "(//li[@data-command='__plugin.menu.action.zowe.ds.deleteProfile'])",
 };
 
 export const UssLocators = {
