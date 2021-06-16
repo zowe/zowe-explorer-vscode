@@ -101,12 +101,11 @@ export async function refreshDirectory(node: IZoweUSSTreeNode, ussFileProvider: 
             return;
         } else {
             // Obtain subdirectories of current iteration inside of tree
-            const subDirectories = (await node.getChildren()).filter(
+            const children = await node.getChildren();
+            const subDirectories = children.filter(
                 (child) => child.collapsibleState === vscode.TreeItemCollapsibleState.Expanded
             );
-            const files = (await node.getChildren()).filter(
-                (child) => child.collapsibleState === vscode.TreeItemCollapsibleState.None
-            );
+            const files = children.filter((child) => child.collapsibleState === vscode.TreeItemCollapsibleState.None);
 
             // go into subdirectory and search for more inner subdirectories in tree
             if (subDirectories.length > 0) {
