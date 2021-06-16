@@ -180,6 +180,7 @@ async function createGlobalMocks() {
             "zowe.runStopCommand",
             "zowe.refreshJobsServer",
             "zowe.refreshAllJobs",
+            "zowe.jobs.refreshJob",
             "zowe.addJobsSession",
             "zowe.setOwner",
             "zowe.setPrefix",
