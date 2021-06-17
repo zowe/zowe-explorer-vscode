@@ -17,8 +17,7 @@ jobs:
       fail-fast: false
       matrix:
         node-version: [10.x, 12.x, 14.x]
-        # order operating systems from best to worst
-        os: [windows-latest, ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest]
 
     steps:
       - name: Check out code
@@ -37,7 +36,6 @@ jobs:
       # run audit on 1 system to avoid overloading the audit API
       - name: Audit from Windows / Node 12.x
         run: yarn audit --production --groups dependencies
-        if: matrix.os == 'windows-latest' && matrix.node-version == '12.x'
 
       - run: yarn test
         env:
@@ -46,14 +44,7 @@ jobs:
 
       - name: Upload test results
         uses: actions/upload-artifact@v1
-        # if: matrix.os == 'windows-latest' && matrix.node-version == '12.x'
         with:
           name: zowe-explorer-results
           path: packages/zowe-explorer/results/
 
-      # Run codecov upload for only one run
-      - name: Upload Results to Codecov from Windows / Node 12.x
-        if: matrix.os == 'windows-latest' && matrix.node-version == '12.x'
-        uses: codecov/codecov-action@v1.0.7
-        with:
-          env_vars: OS,NODE
