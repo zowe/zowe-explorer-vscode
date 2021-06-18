@@ -1,10 +1,12 @@
-# Zowe Explorer Conformance Evaluation Criteria
+# Zowe Explorer Conformance Evaluation Criteria (DRAFT)
 
 The Zowe Conformance Evaluation Criteria is a set of self-certifying and self-service tests to help the development community integrate and extend specific technology into the Zowe framework.
 
 This document describes the requirements of the three available conformance programs. Items marked **(required)** are required for an application to be conformant. Items marked **(best practice)** are considered best practices for conformant applications.
 
-These Zowe Conformance criteria are applicable to the lastest Zowe v1 LTS Release.
+For more details, technical guidance, and code samples for achieving these criteria see the [README-Extending.md](README-Extending.md).
+
+These Zowe Conformance criteria are applicable to the latest Zowe v1 LTS Release.
 
 - [Zowe Explorer - Zowe v1](#zowe-explorer---zowe-v1)
   - [General Extension](#general-extension)
@@ -245,7 +247,7 @@ Criteria for VS Code extensions that extend the Zowe Explorer MVS, USS, or JES t
    <th style="background-color:#AAAAAA"></th>
    <th style="background-color:#AAAAAA">x</th>
    <th></th>
-   <td><b>Secure Credential Store:</b> If the extension supports Zowe's Secure Credential store, it calls the Zowe Explorer-provided method for initialization at startup.</td>
+   <td><b>Secure Credential Store:</b> If the extension supports Zowe CLI's Secure Credential store, it calls the Zowe Explorer-provided method for initialization at startup.</td>
  </tr>
 </table>
 
