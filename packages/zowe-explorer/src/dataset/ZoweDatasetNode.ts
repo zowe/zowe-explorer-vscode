@@ -196,7 +196,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         undefined,
                         this.getProfile()
                     );
-                    temp.command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [temp] };
+                    temp.command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [temp] };
                     elementChildren[temp.label] = temp;
                 } else {
                     // Creates a ZoweDatasetNode for a PDS member
@@ -209,7 +209,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         undefined,
                         this.getProfile()
                     );
-                    temp.command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [temp] };
+                    temp.command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [temp] };
                     elementChildren[temp.label] = temp;
                 }
             }
