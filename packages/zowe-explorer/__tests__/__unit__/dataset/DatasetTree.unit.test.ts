@@ -227,7 +227,7 @@ describe("Dataset Tree Unit tests - Function initializeFavChildNodeForProfile", 
             undefined,
             globals.DS_FAV_CONTEXT
         );
-        node.command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [node] };
+        node.command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [node] };
 
         const favChildNodeForProfile = await testTree.initializeFavChildNodeForProfile(
             "BRTVS99.PS",
@@ -252,6 +252,7 @@ describe("Dataset Tree Unit tests - Function initializeFavChildNodeForProfile", 
         await testTree.initializeFavChildNodeForProfile("BRTVS99.BAD", "badContextValue", favProfileNode);
 
         expect(showErrorMessageSpy).toBeCalledTimes(1);
+        showErrorMessageSpy.mockClear();
     });
 });
 describe("Dataset Tree Unit Tests - Function getChildren", () => {
@@ -352,7 +353,7 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
                 blockMocks.imperativeProfile
             ),
         ];
-        sampleChildren[0].command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [sampleChildren[0]] };
+        sampleChildren[0].command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [sampleChildren[0]] };
 
         const children = await testTree.getChildren(testTree.mSessionNodes[1]);
 
@@ -416,8 +417,8 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
             new ZoweDatasetNode("BRTVS99", vscode.TreeItemCollapsibleState.None, parent, null),
             new ZoweDatasetNode("BRTVS99.DDIR", vscode.TreeItemCollapsibleState.None, parent, null),
         ];
-        sampleChildren[0].command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [sampleChildren[0]] };
-        sampleChildren[1].command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [sampleChildren[1]] };
+        sampleChildren[0].command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [sampleChildren[0]] };
+        sampleChildren[1].command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [sampleChildren[1]] };
 
         const children = await testTree.getChildren(parent);
 
@@ -510,8 +511,7 @@ describe("Dataset Tree Unit Tests - Function loadProfilesForFavorites", () => {
         );
         const testTree = new DatasetTree();
         testTree.mFavorites.push(favProfileNode);
-        const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
-
+        const showErrorMessageSpy = jest.spyOn(vscode.window, "showErrorMessage");
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -521,9 +521,10 @@ describe("Dataset Tree Unit Tests - Function loadProfilesForFavorites", () => {
                 };
             }),
         });
+        mocked(vscode.window.showErrorMessage).mockResolvedValueOnce({ title: "Remove" });
         await testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
-
-        expect(errorHandlingSpy).toBeCalledTimes(1);
+        expect(showErrorMessageSpy).toBeCalledTimes(1);
+        showErrorMessageSpy.mockClear();
     });
     it("Checking that favorite nodes with pre-existing profile/session values continue using those values", async () => {
         createGlobalMocks();

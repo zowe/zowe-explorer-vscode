@@ -189,7 +189,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         });
     }
     if (datasetProvider || ussFileProvider || jobsProvider) {
-        vscode.commands.registerCommand("zowe.deleteProfile", async (node) =>
+        vscode.commands.registerCommand("zowe.ds.deleteProfile", async (node) =>
             Profiles.getInstance().deleteProfile(datasetProvider, ussFileProvider, jobsProvider, node)
         );
         vscode.commands.registerCommand("zowe.cmd.deleteProfile", async () =>
@@ -222,51 +222,56 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
 }
 
 function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
-    vscode.commands.registerCommand("zowe.addSession", async () => datasetProvider.createZoweSession(datasetProvider));
-    vscode.commands.registerCommand("zowe.addFavorite", async (node) => datasetProvider.addFavorite(node));
-    vscode.commands.registerCommand("zowe.refreshAll", () => refreshActions.refreshAll(datasetProvider));
-    vscode.commands.registerCommand("zowe.refreshNode", (node) => dsActions.refreshPS(node));
-    vscode.commands.registerCommand("zowe.pattern", (node) => datasetProvider.filterPrompt(node));
-    vscode.commands.registerCommand("zowe.editSession", async (node) =>
+    vscode.commands.registerCommand("zowe.ds.addSession", async () =>
+        datasetProvider.createZoweSession(datasetProvider)
+    );
+    vscode.commands.registerCommand("zowe.ds.addFavorite", async (node) => datasetProvider.addFavorite(node));
+    vscode.commands.registerCommand("zowe.ds.refreshAll", () => refreshActions.refreshAll(datasetProvider));
+    vscode.commands.registerCommand("zowe.ds.refreshNode", (node) => dsActions.refreshPS(node));
+    vscode.commands.registerCommand("zowe.ds.refreshDataset", (node) =>
+        dsActions.refreshDataset(node, datasetProvider)
+    );
+    vscode.commands.registerCommand("zowe.ds.pattern", (node) => datasetProvider.filterPrompt(node));
+    vscode.commands.registerCommand("zowe.ds.editSession", async (node) =>
         datasetProvider.editSession(node, datasetProvider)
     );
-    vscode.commands.registerCommand("zowe.ZoweNode.openPS", (node) => dsActions.openPS(node, true, datasetProvider));
-    vscode.commands.registerCommand("zowe.createDataset", (node) => dsActions.createFile(node, datasetProvider));
+    vscode.commands.registerCommand("zowe.ds.ZoweNode.openPS", (node) => dsActions.openPS(node, true, datasetProvider));
+    vscode.commands.registerCommand("zowe.ds.createDataset", (node) => dsActions.createFile(node, datasetProvider));
     vscode.commands.registerCommand("zowe.all.profilelink", (node) => linkProfileDialog(node.getProfile()));
-    vscode.commands.registerCommand("zowe.createMember", (node) => dsActions.createMember(node, datasetProvider));
-    vscode.commands.registerCommand("zowe.deleteDataset", (node) => dsActions.deleteDataset(node, datasetProvider));
-    vscode.commands.registerCommand("zowe.allocateLike", (node) => dsActions.allocateLike(datasetProvider, node));
-    vscode.commands.registerCommand("zowe.uploadDialog", (node) => dsActions.uploadDialog(node, datasetProvider));
-    vscode.commands.registerCommand("zowe.deleteMember", (node) => dsActions.deleteDataset(node, datasetProvider));
-    vscode.commands.registerCommand("zowe.editDataSet", (node) => dsActions.openPS(node, false, datasetProvider));
-    vscode.commands.registerCommand("zowe.editMember", (node) => dsActions.openPS(node, false, datasetProvider));
-    vscode.commands.registerCommand("zowe.removeSession", async (node) => datasetProvider.deleteSession(node));
-    vscode.commands.registerCommand("zowe.removeFavorite", async (node) => datasetProvider.removeFavorite(node));
-    vscode.commands.registerCommand("zowe.saveSearch", async (node) => datasetProvider.addFavorite(node));
-    vscode.commands.registerCommand("zowe.removeSavedSearch", async (node) => datasetProvider.removeFavorite(node));
-    vscode.commands.registerCommand("zowe.removeFavProfile", async (node) =>
+    vscode.commands.registerCommand("zowe.ds.createMember", (node) => dsActions.createMember(node, datasetProvider));
+    vscode.commands.registerCommand("zowe.ds.deleteDataset", (node) => dsActions.deleteDataset(node, datasetProvider));
+    vscode.commands.registerCommand("zowe.ds.allocateLike", (node) => dsActions.allocateLike(datasetProvider, node));
+    vscode.commands.registerCommand("zowe.ds.uploadDialog", (node) => dsActions.uploadDialog(node, datasetProvider));
+    vscode.commands.registerCommand("zowe.ds.deleteMember", (node) => dsActions.deleteDataset(node, datasetProvider));
+    vscode.commands.registerCommand("zowe.ds.editDataSet", (node) => dsActions.openPS(node, false, datasetProvider));
+    vscode.commands.registerCommand("zowe.ds.editMember", (node) => dsActions.openPS(node, false, datasetProvider));
+    vscode.commands.registerCommand("zowe.ds.removeSession", async (node) => datasetProvider.deleteSession(node));
+    vscode.commands.registerCommand("zowe.ds.removeFavorite", async (node) => datasetProvider.removeFavorite(node));
+    vscode.commands.registerCommand("zowe.ds.saveSearch", async (node) => datasetProvider.addFavorite(node));
+    vscode.commands.registerCommand("zowe.ds.removeSavedSearch", async (node) => datasetProvider.removeFavorite(node));
+    vscode.commands.registerCommand("zowe.ds.removeFavProfile", async (node) =>
         datasetProvider.removeFavProfile(node.label, true)
     );
-    vscode.commands.registerCommand("zowe.submitJcl", async () => dsActions.submitJcl(datasetProvider));
-    vscode.commands.registerCommand("zowe.submitMember", async (node) => dsActions.submitMember(node));
-    vscode.commands.registerCommand("zowe.showDSAttributes", (node) =>
+    vscode.commands.registerCommand("zowe.ds.submitJcl", async () => dsActions.submitJcl(datasetProvider));
+    vscode.commands.registerCommand("zowe.ds.submitMember", async (node) => dsActions.submitMember(node));
+    vscode.commands.registerCommand("zowe.ds.showDSAttributes", (node) =>
         dsActions.showDSAttributes(node, datasetProvider)
     );
-    vscode.commands.registerCommand("zowe.renameDataSet", (node) => datasetProvider.rename(node));
-    vscode.commands.registerCommand("zowe.copyMember", (node) => dsActions.copyDataSet(node));
-    vscode.commands.registerCommand("zowe.copyDataSet", (node) => dsActions.copyDataSet(node));
-    vscode.commands.registerCommand("zowe.pasteMember", (node) => dsActions.pasteMember(node, datasetProvider));
-    vscode.commands.registerCommand("zowe.renameDataSetMember", (node) => datasetProvider.rename(node));
-    vscode.commands.registerCommand("zowe.hMigrateDataSet", (node) => dsActions.hMigrateDataSet(node));
-    vscode.commands.registerCommand("zowe.hRecallDataSet", (node) => dsActions.hRecallDataSet(node));
-    vscode.commands.registerCommand("zowe.disableValidation", async (node) =>
+    vscode.commands.registerCommand("zowe.ds.renameDataSet", (node) => datasetProvider.rename(node));
+    vscode.commands.registerCommand("zowe.ds.copyMember", (node) => dsActions.copyDataSet(node));
+    vscode.commands.registerCommand("zowe.ds.copyDataSet", (node) => dsActions.copyDataSet(node));
+    vscode.commands.registerCommand("zowe.ds.pasteMember", (node) => dsActions.pasteMember(node, datasetProvider));
+    vscode.commands.registerCommand("zowe.ds.renameDataSetMember", (node) => datasetProvider.rename(node));
+    vscode.commands.registerCommand("zowe.ds.hMigrateDataSet", (node) => dsActions.hMigrateDataSet(node));
+    vscode.commands.registerCommand("zowe.ds.hRecallDataSet", (node) => dsActions.hRecallDataSet(node));
+    vscode.commands.registerCommand("zowe.ds.disableValidation", async (node) =>
         Profiles.getInstance().disableValidation(node)
     );
-    vscode.commands.registerCommand("zowe.enableValidation", async (node) =>
+    vscode.commands.registerCommand("zowe.ds.enableValidation", async (node) =>
         Profiles.getInstance().enableValidation(node)
     );
-    vscode.commands.registerCommand("zowe.ssoLogin", async (node) => datasetProvider.ssoLogin(node));
-    vscode.commands.registerCommand("zowe.ssoLogout", async (node) => datasetProvider.ssoLogout(node));
+    vscode.commands.registerCommand("zowe.ds.ssoLogin", async (node) => datasetProvider.ssoLogin(node));
+    vscode.commands.registerCommand("zowe.ds.ssoLogout", async (node) => datasetProvider.ssoLogout(node));
     vscode.workspace.onDidChangeConfiguration((e) => {
         datasetProvider.onDidChangeConfiguration(e);
     });
@@ -351,23 +356,23 @@ function initUSSProvider(context: vscode.ExtensionContext, ussFileProvider: IZow
 }
 
 function initJobsProvider(context: vscode.ExtensionContext, jobsProvider: IZoweTree<IZoweJobTreeNode>) {
-    vscode.commands.registerCommand("zowe.zosJobsOpenspool", (session, spool) =>
+    vscode.commands.registerCommand("zowe.jobs.zosJobsOpenspool", (session, spool) =>
         jobActions.getSpoolContent(jobsProvider, session, spool)
     );
-    vscode.commands.registerCommand("zowe.deleteJob", async (job) => jobActions.deleteCommand(job, jobsProvider));
-    vscode.commands.registerCommand("zowe.runModifyCommand", (job) => jobActions.modifyCommand(job));
-    vscode.commands.registerCommand("zowe.runStopCommand", (job) => jobActions.stopCommand(job));
-    vscode.commands.registerCommand("zowe.refreshJobsServer", async (job) =>
+    vscode.commands.registerCommand("zowe.jobs.deleteJob", async (job) => jobActions.deleteCommand(job, jobsProvider));
+    vscode.commands.registerCommand("zowe.jobs.runModifyCommand", (job) => jobActions.modifyCommand(job));
+    vscode.commands.registerCommand("zowe.jobs.runStopCommand", (job) => jobActions.stopCommand(job));
+    vscode.commands.registerCommand("zowe.jobs.refreshJobsServer", async (job) =>
         jobActions.refreshJobsServer(job, jobsProvider)
     );
-    vscode.commands.registerCommand("zowe.refreshAllJobs", async () => refreshActions.refreshAll(jobsProvider));
-    vscode.commands.registerCommand("zowe.addJobsSession", () => jobsProvider.createZoweSession(jobsProvider));
-    vscode.commands.registerCommand("zowe.setOwner", (job) => jobActions.setOwner(job, jobsProvider));
-    vscode.commands.registerCommand("zowe.setPrefix", (job) => jobActions.setPrefix(job, jobsProvider));
-    vscode.commands.registerCommand("zowe.removeJobsSession", (job) => jobsProvider.deleteSession(job));
-    vscode.commands.registerCommand("zowe.downloadSpool", (job) => jobActions.downloadSpool(job));
-    vscode.commands.registerCommand("zowe.getJobJcl", (job) => jobActions.downloadJcl(job));
-    vscode.commands.registerCommand("zowe.setJobSpool", async (session, jobid) => {
+    vscode.commands.registerCommand("zowe.jobs.refreshAllJobs", async () => refreshActions.refreshAll(jobsProvider));
+    vscode.commands.registerCommand("zowe.jobs.addJobsSession", () => jobsProvider.createZoweSession(jobsProvider));
+    vscode.commands.registerCommand("zowe.jobs.setOwner", (job) => jobActions.setOwner(job, jobsProvider));
+    vscode.commands.registerCommand("zowe.jobs.setPrefix", (job) => jobActions.setPrefix(job, jobsProvider));
+    vscode.commands.registerCommand("zowe.jobs.removeJobsSession", (job) => jobsProvider.deleteSession(job));
+    vscode.commands.registerCommand("zowe.jobs.downloadSpool", (job) => jobActions.downloadSpool(job));
+    vscode.commands.registerCommand("zowe.jobs.getJobJcl", (job) => jobActions.downloadJcl(job));
+    vscode.commands.registerCommand("zowe.jobs.setJobSpool", async (session, jobid) => {
         const sessionNode: IZoweJobTreeNode = jobsProvider.mSessionNodes.find(
             (jobNode) => jobNode.label.trim() === session.trim()
         );
