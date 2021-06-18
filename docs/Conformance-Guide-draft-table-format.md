@@ -42,7 +42,7 @@ These Zowe Conformance criteria are applicable to the lastest Zowe v1 LTS Releas
    <th style="background-color:#AAAAAA"></th>
    <th style="background-color:#AAAAAA">x</th>
    <th></th>
-   <td><b>User settings consistency:</b> For a consistent user experience we recommend that user settings and configuration settings follow the naming conventions as documented in the Zowe Explorer extensibility documentation.</td>
+   <td><b>No Zowe CLI plugin installation requirement: </b> If the extender makes use of a Zowe CLI profile other than the Zowe Explorer default `zosmf` then the extension must not make any assumptions that a matching Zowe CLI plugin has been installed in the Zowe Explorer user's environment.</td>
  </tr>
 
  <tr>
@@ -266,5 +266,41 @@ These Zowe Conformance criteria are applicable to the lastest Zowe v1 LTS Releas
    <th style="background-color:#AAAAAA"></th>
    <th></th>
    <td><b>Menu Names: </b> If the extension is adding new commands and context menu entries to the Zowe Explorer tree view nodes, it adheres to the Zowe Explorer-provided contextual string format.</td>
+ </tr>
+
+  <tr>
+   <th style="background-color:#555555">21</th>
+   <th style="background-color:#555555">v1</th>
+   <th style="background-color:#AAAAAA">x</th>
+   <th style="background-color:#AAAAAA"></th>
+   <th></th>
+   <td><b>Command operations: </b> If the extension is adding new commands to Zowe Explorer's tree views, the commands must not replace any existing Zowe Explorer commands.</td>
+ </tr>
+
+  <tr>
+   <th style="background-color:#555555">22</th>
+   <th style="background-color:#555555">v1</th>
+   <th style="background-color:#AAAAAA">x</th>
+   <th style="background-color:#AAAAAA"></th>
+   <th></th>
+   <td><b>Command categories: </b> If the extension assigns a value to the `category` property of commands it adds to `contributes.commands` in `package.json`, the `category` value cannot be "Zowe Explorer".</td>
+ </tr>
+
+  <tr>
+   <th style="background-color:#555555">23</th>
+   <th style="background-color:#555555">v1</th>
+   <th style="background-color:#AAAAAA">x</th>
+   <th style="background-color:#AAAAAA"></th>
+   <th></th>
+   <td><b>Context menu groups: </b> If contributing commands to Zowe Explorer's context menus, the extension must add them in new context menu groups that are located below Zowe Explorer's existing context menu groups in the user interface.</td>
+ </tr>
+
+ <tr>
+   <th style="background-color:#555555">23</th>
+   <th style="background-color:#555555">v1</th>
+   <th style="background-color:#AAAAAA">x</th>
+   <th style="background-color:#AAAAAA"></th>
+   <th></th>
+   <td><b>Context menu items: </b> If contributing commands to Zowe Explorer's views (such as Data Sets, USS, or Jobs), the extension should only add them to the view's right-click context menus.</td>
  </tr>
 </table>
