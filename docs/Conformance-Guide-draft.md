@@ -84,7 +84,7 @@ API calls to the Explorer Extender API will be logged by Zowe Explorer and be ve
 
 ## Data Provider extension conformance criteria (2)
 
-A data provider Zowe Explorer extension provides an alternative protocol for Zowe Explorer to interact with z/OS. The default protocol Zowe Explorer uses is the z/OSMF REST APIs and data provider adds support for another API. For example, the Zowe Explorer extension for zFTP, which is maintained by the Zowe Explorer squad is an example for a Zowe Explorer data provider extension that uses FTP instead of z/OSMF for all of its USS and MVS interactions. To achieve such an extension it uses a Zowe CLI Plugin for FTP that implemented the core interactions and provided them as an SDK andd
+A data provider Zowe Explorer extension provides an alternative protocol for Zowe Explorer to interact with z/OS. The default protocol Zowe Explorer uses is the z/OSMF REST APIs and data provider adds support for another API. For example, the Zowe Explorer extension for zFTP, which is maintained by the Zowe Explorer squad is an example for a Zowe Explorer data provider extension that uses FTP instead of z/OSMF for all of its USS and MVS interactions. To achieve such an extension it uses a Zowe CLI Plugin for FTP that implemented the core interactions and provided them as an SDK.
 
 13. (Required) New Zowe CLI profile type: **The extension registers its new API via the ZoweExplorerApi.IApiRegisterClient.registerMvsApi() call as indicated from the Zowe Explorer extensibility documentation**
 

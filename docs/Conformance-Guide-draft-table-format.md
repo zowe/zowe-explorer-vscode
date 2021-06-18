@@ -61,7 +61,7 @@ General conformance criteria for all VS Code extensions that add new capabilitie
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
    <th></th>
-   <td><b>Support:</b> Extension has a clear documentation and clear instructions on how to report problems that are related to the extension.</td>
+   <td><b>Support:</b> Extension has documentation with instructions on how to report problems that are related to the extension and not Zowe Explorer. It needs to explain how users can determine if a problem is related to the extension or Zowe Explorer.</td>
  </tr>
 
  <tr>
@@ -79,7 +79,7 @@ General conformance criteria for all VS Code extensions that add new capabilitie
    <th style="background-color:#AAAAAA"></th>
    <th style="background-color:#AAAAAA">x</th>
    <th></th>
-   <td><b>Error message consistency:</b> Extension follows the recommended error message format indicated in the Zowe Explorer extensibility documentation.</td>
+   <td><b>Error message consistency:</b> Extension follows the recommended error message format indicated in the Zowe Explorer extensibility documentation to provide a consistent user experience with Zowe Explorer.</td>
  </tr>
 
  <tr>
@@ -167,7 +167,7 @@ Criteria for VS Code extensions that want to access the same Zowe CLI profiles t
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
    <th></th>
-   <td><b>Added Profile Type initialization:</b> If the extension has a dependecny on a new Zowe CLI profile type other than the Zowe Explorer default `zosmf`, it is calling the `ZoweExplorerApi.IApiRegisterClient.getExplorerExtenderApi().initialize(profileTypeName)` to ensure that the profile type is supported and managed by the extension without a Zowe CLI plugin installed.</td>
+   <td><b>Added Profile Type initialization:</b> If the extension has a dependency on a new Zowe CLI profile type other than the Zowe Explorer default `zosmf`, it is calling the `ZoweExplorerApi.IApiRegisterClient.getExplorerExtenderApi().initialize(profileTypeName)` to ensure that the profile type is supported and managed by the extension without a Zowe CLI plugin installed.</td>
  </tr>
 </table>
 
@@ -191,7 +191,7 @@ Criteria for VS Code extensions that extend the Zowe Explorer MVS, USS, or JES t
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
    <th></th>
-   <td><b>New Zowe CLI profile type:</b> Extension registers its new API instances with the new profile type name for the different Zowe Explorer views via the `ZoweExplorerApi.IApiRegisterClient.register{Mvs|Uss|Jes}Api(profileTypeName)` call as indicated from the Zowe Explorer extensibility documentation</td>
+   <td><b>New Zowe CLI profile type:</b> Extension registers its new API instances with a new profile type name for the different Zowe Explorer views via the `ZoweExplorerApi.IApiRegisterClient.register{Mvs|Uss|Jes}Api(profileTypeName)` call as indicated from the Zowe Explorer extensibility documentation</td>
  </tr>
 
  <tr>
