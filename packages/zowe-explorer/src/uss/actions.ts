@@ -93,32 +93,8 @@ export async function refreshUSSInTree(node: IZoweUSSTreeNode, ussFileProvider: 
 
 export async function refreshDirectory(node: IZoweUSSTreeNode, ussFileProvider: IZoweTree<IZoweUSSTreeNode>) {
     try {
-        if (node.collapsibleState !== vscode.TreeItemCollapsibleState.Expanded) {
-            // the node is a file and needs to be refreshed from the parent together with siblings
-            if (node.collapsibleState === vscode.TreeItemCollapsibleState.None) {
-                ussFileProvider.refreshElement(node.getParent());
-            }
-            return;
-        } else {
-            // Obtain subdirectories of current iteration inside of tree
-            const children = await node.getChildren();
-            const subDirectories = children.filter(
-                (child) => child.collapsibleState === vscode.TreeItemCollapsibleState.Expanded
-            );
-            const files = children.filter((child) => child.collapsibleState === vscode.TreeItemCollapsibleState.None);
-
-            // go into subdirectory and search for more inner subdirectories in tree
-            if (subDirectories.length > 0) {
-                subDirectories.forEach((subDirectory) => {
-                    refreshDirectory(subDirectory, ussFileProvider);
-                });
-                // refresh each level in tree after search has reached the end
-                refreshDirectory(files[0], ussFileProvider);
-            } else {
-                // refresh on leaf nodes of tree
-                refreshDirectory(files[0], ussFileProvider);
-            }
-        }
+        await node.getChildren();
+        ussFileProvider.refreshElement(node);
     } catch (err) {
         errorHandling(err, node.getProfileName(), err.message);
     }
