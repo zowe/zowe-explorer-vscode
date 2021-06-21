@@ -31,10 +31,7 @@ describe("Zosmf API tests", () => {
 
         const api = new ZosmfMvsApi();
         api.getSession = jest.fn();
-        await api.copyDataSetMember(
-            { dataSetName: "IBM.FROM", memberName: "IEFBR14" },
-            { dataSetName: "IBM.TO", memberName: "IEFBR15" }
-        );
+        await api.copyDataSetMember({ dsn: "IBM.FROM", member: "IEFBR14" }, { dsn: "IBM.TO", member: "IEFBR15" });
     });
 
     it("should test that copy data set uses enq", async () => {
@@ -48,9 +45,9 @@ describe("Zosmf API tests", () => {
         const api = new ZosmfMvsApi();
         api.getSession = jest.fn();
         await api.copyDataSetMember(
-            { dataSetName: "IBM.FROM", memberName: "IEFBR14" },
-            { dataSetName: "IBM.TO", memberName: "IEFBR15" },
-            { enq: "SHR", fromDataSet: { dataSetName: "BROADCOM.FROM" } }
+            { dsn: "IBM.FROM", member: "IEFBR14" },
+            { dsn: "IBM.TO", member: "IEFBR15" },
+            { enq: "SHR", "from-dataset": { dsn: "BROADCOM.FROM" } }
         );
     });
 
@@ -64,11 +61,9 @@ describe("Zosmf API tests", () => {
 
         const api = new ZosmfMvsApi();
         api.getSession = jest.fn();
-        await api.copyDataSetMember(
-            { dataSetName: "IBM.FROM", memberName: "IEFBR14" },
-            { dataSetName: "IBM.TO", memberName: "IEFBR15" },
-            { enq: "SHR" } as any
-        );
+        await api.copyDataSetMember({ dsn: "IBM.FROM", member: "IEFBR14" }, { dsn: "IBM.TO", member: "IEFBR15" }, {
+            enq: "SHR",
+        } as any);
     });
 
     it("should test that common putContent is called by putContents", async () => {

@@ -1735,10 +1735,7 @@ describe("Dataset Actions Unit Tests - Function pasteMember", () => {
 
         await dsActions.pasteMember(node, blockMocks.testDatasetTree);
 
-        expect(copySpy).toHaveBeenCalledWith(
-            { dataSetName: "HLQ.TEST.BEFORE.NODE" },
-            { dataSetName: "HLQ.TEST.TO.NODE" }
-        );
+        expect(copySpy).toHaveBeenCalledWith({ dsn: "HLQ.TEST.BEFORE.NODE" }, { dsn: "HLQ.TEST.TO.NODE" });
     });
     it("Should call zowe.Copy.dataSet when pasting to sequential data set of Unverified profile", async () => {
         globals.defineGlobals("");
@@ -1782,10 +1779,7 @@ describe("Dataset Actions Unit Tests - Function pasteMember", () => {
 
         await dsActions.pasteMember(node, blockMocks.testDatasetTree);
 
-        expect(copySpy).toHaveBeenCalledWith(
-            { dataSetName: "HLQ.TEST.BEFORE.NODE" },
-            { dataSetName: "HLQ.TEST.TO.NODE" }
-        );
+        expect(copySpy).toHaveBeenCalledWith({ dsn: "HLQ.TEST.BEFORE.NODE" }, { dsn: "HLQ.TEST.TO.NODE" });
     });
     it("Should throw an error if invalid clipboard data is supplied when pasting to sequential data set", async () => {
         globals.defineGlobals("");
@@ -1884,8 +1878,8 @@ describe("Dataset Actions Unit Tests - Function pasteMember", () => {
         await dsActions.pasteMember(node, blockMocks.testDatasetTree);
 
         expect(copySpy).toHaveBeenCalledWith(
-            { dataSetName: "HLQ.TEST.BEFORE.NODE" },
-            { dataSetName: "HLQ.TEST.TO.NODE", memberName: "mem1" }
+            { dsn: "HLQ.TEST.BEFORE.NODE" },
+            { dsn: "HLQ.TEST.TO.NODE", member: "mem1" }
         );
         expect(blockMocks.testDatasetTree.findFavoritedNode).toHaveBeenCalledWith(node);
     });
@@ -1975,8 +1969,8 @@ describe("Dataset Actions Unit Tests - Function pasteMember", () => {
         await dsActions.pasteMember(favoritedNode, blockMocks.testDatasetTree);
 
         expect(copySpy).toHaveBeenCalledWith(
-            { dataSetName: "HLQ.TEST.BEFORE.NODE" },
-            { dataSetName: "HLQ.TEST.TO.NODE", memberName: "mem1" }
+            { dsn: "HLQ.TEST.BEFORE.NODE" },
+            { dsn: "HLQ.TEST.TO.NODE", member: "mem1" }
         );
         expect(mocked(blockMocks.testDatasetTree.findNonFavoritedNode)).toHaveBeenCalledWith(favoritedNode);
         expect(mocked(blockMocks.testDatasetTree.refreshElement)).toHaveBeenLastCalledWith(nonFavoritedNode);

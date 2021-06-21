@@ -18,7 +18,7 @@ import * as fsextra from "fs-extra";
 import * as imperative from "@zowe/imperative";
 import * as extension from "../../src/extension";
 import * as globals from "../../src/globals";
-import { ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { ValidProfileEnum, ProfilesConfig } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../src/Profiles";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import { createIProfile, createTreeView } from "../../__mocks__/mockCreators/shared";
@@ -71,6 +71,14 @@ async function createGlobalMocks() {
         mockGetImperativeConfig: jest.fn().mockReturnValue({ profiles: [] }),
         mockCliProfileManager: jest.fn().mockImplementation(() => {
             return { GetAllProfileNames: globalMocks.mockGetAllProfileNames, Load: globalMocks.mockLoad };
+        }),
+        mockProfileInfo: jest.fn().mockImplementation(() => {
+            return {
+                mAppName: "",
+                mCredentials: {},
+                mUSingTeamConfig: true,
+                readProfilesFromDisk: jest.fn(),
+            };
         }),
         testTreeView: null,
         enums: jest.fn().mockImplementation(() => {
@@ -309,6 +317,13 @@ async function createGlobalMocks() {
             };
         }),
     });
+    Object.defineProperty(ProfilesConfig, "getInstance", {
+        value: jest.fn(() => {
+            return {
+                usingTeamConfig: false,
+            };
+        }),
+    });
 
     // Create a mocked extension context
     // tslint:disable-next-line: no-object-literal-type-assertion
@@ -345,7 +360,10 @@ async function createGlobalMocks() {
 describe("Extension Unit Tests", () => {
     it("Testing that activate correctly executes", async () => {
         const globalMocks = await createGlobalMocks();
-
+        Object.defineProperty(imperative, "ProfileInfo", {
+            value: globalMocks.mockProfileInfo,
+            configurable: true,
+        });
         // tslint:disable-next-line: no-object-literal-type-assertion
         globalMocks.mockReadFileSync.mockReturnValueOnce('{ "overrides": { "CredentialManager": "Managed by ANO" }}');
         globalMocks.mockExistsSync.mockReturnValueOnce(true);
