@@ -1681,6 +1681,7 @@
     "jest-stare": "^2.2.0",
     "jsdoc": "^3.6.3",
     "jsdom": "^16.0.0",
+    "json-diff": "0.5.4",
     "keytar": "^7.2.0",
     "log4js": "^3.0.5",
     "markdownlint-cli": "^0.16.0",
