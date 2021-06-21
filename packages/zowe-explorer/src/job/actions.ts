@@ -207,5 +207,5 @@ export async function deleteCommand(job: IZoweJobTreeNode, jobsProvider: IZoweTr
                 localize("deleteCommand.delete", " deleted")
         );
     }
-    await vscode.commands.executeCommand("zowe.refreshAllJobs");
+    await vscode.commands.executeCommand("zowe.jobs.refreshAllJobs");
 }

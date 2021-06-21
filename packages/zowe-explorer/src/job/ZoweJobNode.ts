@@ -128,7 +128,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                             spoolNode.iconPath = icon.path;
                         }
                         spoolNode.command = {
-                            command: "zowe.zosJobsOpenspool",
+                            command: "zowe.jobs.zosJobsOpenspool",
                             title: "",
                             arguments: [sessionName, spool],
                         };

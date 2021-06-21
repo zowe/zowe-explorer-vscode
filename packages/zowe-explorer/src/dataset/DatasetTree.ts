@@ -300,7 +300,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     contextValue,
                     undefined
                 );
-                node.command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [node] };
+                node.command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [node] };
             }
             node.contextValue = contextually.asFavorite(node);
             const icon = getIconByNode(node);
@@ -316,7 +316,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 undefined,
                 undefined
             );
-            node.command = { command: "zowe.pattern", title: "", arguments: [node] };
+            node.command = { command: "zowe.ds.pattern", title: "", arguments: [node] };
             node.contextValue = globals.DS_SESSION_CONTEXT + globals.FAV_SUFFIX;
             const icon = getIconByNode(node);
             if (icon) {
@@ -377,19 +377,28 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 const errMessage: string =
                     localize(
                         "loadProfilesForFavorites.error.profile1",
-                        "Error: You have Zowe Data Set favorites that refer to a non-existent CLI profile named: {0}.",
+                        "Error: You have Zowe Data Set favorites that refer to a non-existent CLI profile named: {0}",
                         profileName
                     ) +
                     localize(
                         "loadProfilesForFavorites.error.profile2",
-                        " To resolve this, you can create a profile with this name, "
+                        ". To resolve this, you can remove {0}",
+                        profileName
                     ) +
                     localize(
                         "loadProfilesForFavorites.error.profile3",
-                        "or remove the favorites with this profile name from the Zowe-DS-Persistent setting in your {0} user settings.",
+                        " from the Favorites section of Zowe Explorer's Data Sets view. Would you like to do this now? ",
                         getAppName(globals.ISTHEIA)
                     );
-                await errorHandling(error, null, errMessage);
+
+                const btnLabelCancel = localize("loadProfilesForFavorites.error.buttonCancel", "Cancel");
+                const btnLabelRemove = localize("loadProfilesForFavorites.error.buttonRemove", "Remove");
+                vscode.window.showErrorMessage(errMessage, btnLabelCancel, btnLabelRemove).then(async (selection) => {
+                    if (selection === btnLabelRemove) {
+                        await this.removeFavProfile(profileName, true);
+                    }
+                });
+                return;
             }
         }
         profile = parentNode.getProfile();
@@ -518,7 +527,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 temp.iconPath = icon.path;
             }
             // add a command to execute the search
-            temp.command = { command: "zowe.pattern", title: "", arguments: [temp] };
+            temp.command = { command: "zowe.ds.pattern", title: "", arguments: [temp] };
         } else {
             // pds | ds
             temp = new ZoweDatasetNode(
@@ -532,7 +541,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             );
             temp.contextValue = contextually.asFavorite(temp);
             if (contextually.isFavoriteDs(temp)) {
-                temp.command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [temp] };
+                temp.command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [temp] };
             }
 
             const icon = getIconByNode(temp);
@@ -1185,7 +1194,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 fs.unlinkSync(beforeFullPath);
             }
             if (closedOpenedInstance) {
-                vscode.commands.executeCommand("zowe.ZoweNode.openPS", node);
+                vscode.commands.executeCommand("zowe.ds.ZoweNode.openPS", node);
             }
         }
     }
@@ -1232,7 +1241,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 }
 
                 if (closedOpenedInstance) {
-                    vscode.commands.executeCommand("zowe.ZoweNode.openPS", node);
+                    vscode.commands.executeCommand("zowe.ds.ZoweNode.openPS", node);
                 }
             } catch (err) {
                 this.log.error(

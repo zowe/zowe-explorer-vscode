@@ -788,20 +788,26 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 const errMessage: string =
                     localize(
                         "initializeUSSFavorites.error.profile1",
-                        "Error: You have Zowe USS favorites that refer to a non-existent CLI profile named: "
+                        "Error: You have Zowe USS favorites that refer to a non-existent CLI profile named: {0}",
+                        profileName
                     ) +
-                    profileName +
                     localize(
                         "intializeUSSFavorites.error.profile2",
-                        ". To resolve this, you can create a profile with this name, "
+                        ". To resolve this, you can remove {0}",
+                        profileName
                     ) +
                     localize(
                         "initializeUSSFavorites.error.profile3",
-                        "or remove the favorites with this profile name from the Zowe-USS-Persistent setting, which can be found in your "
-                    ) +
-                    getAppName(globals.ISTHEIA) +
-                    localize("initializeUSSFavorites.error.profile4", " user settings.");
-                errorHandling(error, null, errMessage);
+                        " from the Favorites section of Zowe Explorer's USS view. Would you like to do this now? ",
+                        getAppName(globals.ISTHEIA)
+                    );
+                const btnLabelCancel = localize("initializeUSSFavorites.error.buttonCancel", "Cancel");
+                const btnLabelRemove = localize("initializeUSSFavorites.error.buttonRemove", "Remove");
+                vscode.window.showErrorMessage(errMessage, btnLabelCancel, btnLabelRemove).then(async (selection) => {
+                    if (selection === btnLabelRemove) {
+                        await this.removeFavProfile(profileName, true);
+                    }
+                });
                 return;
             }
         }
