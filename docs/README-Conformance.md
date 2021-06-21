@@ -304,8 +304,8 @@ Criteria for VS Code extensions adding menu and commands to VS Code that utilize
  <tr>
    <th style="background-color:#555555">23</th>
    <th style="background-color:#555555">v1</th>
-   <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
+   <th style="background-color:#AAAAAA">x</th>
    <th></th>
    <td><b>Context menu items: </b> If contributing commands to Zowe Explorer's views (such as Data Sets, USS, or Jobs), the extension should only add them to the view's right-click context menus.</td>
  </tr>
