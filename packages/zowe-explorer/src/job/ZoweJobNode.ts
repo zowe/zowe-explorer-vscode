@@ -118,26 +118,12 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                         this.job,
                         this
                     );
-                    let prefix = spool.stepname;
-                    if (prefix === undefined) {
-                        prefix = spool.procstep;
-                    }
-                    const sessionName = this.getProfileName();
-                    const spoolNode = new Spool(
-                        `${spool.stepname}:${spool.ddname}(${spool.id})`,
-                        vscode.TreeItemCollapsibleState.None,
-                        this,
-                        this.session,
-                        spool,
-                        this.job,
-                        this
-                    );
                     const icon = getIconByNode(spoolNode);
                     if (icon) {
                         spoolNode.iconPath = icon.path;
                     }
                     spoolNode.command = {
-                        command: "zowe.zosJobsOpenspool",
+                        command: "zowe.jobs.zosJobsOpenspool",
                         title: "",
                         arguments: [sessionName, spool, refreshTimestamp],
                     };
