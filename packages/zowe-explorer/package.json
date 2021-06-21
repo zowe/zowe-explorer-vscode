@@ -716,7 +716,7 @@
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^directory.*/",
           "command": "zowe.uss.refreshDirectory",
-          "group": "0_mainframeInteraction"
+          "group": "000_zowe_ussMainframeInteraction@0"
         },
         {
           "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/",
