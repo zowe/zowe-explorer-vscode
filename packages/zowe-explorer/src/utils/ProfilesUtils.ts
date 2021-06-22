@@ -78,7 +78,6 @@ export function errorHandling(errorDetails: any, label?: string, moreInfo?: stri
 
             if (isTheia()) {
                 vscode.window.showErrorMessage(errMsg);
-                Profiles.getInstance().promptCredentials(label.trim());
             } else {
                 vscode.window.showErrorMessage(errMsg, "Check Credentials").then(async (selection) => {
                     if (selection) {
