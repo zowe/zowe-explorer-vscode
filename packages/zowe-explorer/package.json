@@ -75,7 +75,7 @@
         "when": "focusedView == zowe.jobs && listSupportsMultiselect"
       },
       {
-        "command": "zowe.deleteDatasetPrompt",
+        "command": "zowe.ds.deleteDataset",
         "key": "delete",
         "when": "focusedView == zowe.explorer && listSupportsMultiselect"
       }
@@ -267,8 +267,8 @@
         "category": "Zowe Explorer"
       },
       {
-        "command": "zowe.ds.deleteDatasetPrompt",
-        "title": "%deleteDatasetPrompt%",
+        "command": "zowe.ds.deleteDataset",
+        "title": "%deleteDataset%",
         "category": "Zowe Explorer"
       },
       {
@@ -991,7 +991,7 @@
         },
         {
           "when": "view == zowe.explorer && viewItem =~ /^ds.*/",
-          "command": "zowe.ds.deleteDatasetPrompt",
+          "command": "zowe.ds.deleteDataset",
           "group": "099_zowe_dsModification@5"
         },
         {
@@ -1001,7 +1001,7 @@
         },
         {
           "when": "view == zowe.explorer && viewItem =~ /^pds.*/",
-          "command": "zowe.ds.deleteDatasetPrompt",
+          "command": "zowe.ds.deleteDataset",
           "group": "099_zowe_dsModification@5"
         },
         {
@@ -1240,7 +1240,7 @@
           "when": "never"
         },
         {
-          "command": "zowe.ds.deleteDatasetPrompt",
+          "command": "zowe.ds.deleteDataset",
           "when": "never"
         },
         {

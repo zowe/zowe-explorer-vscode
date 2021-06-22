@@ -17,7 +17,7 @@
   "createDataset": "Create New Data Set",
   "createMember": "Create New Member",
   "showDSAttributes": "Show Data Set Attributes",
-  "deleteDatasetPrompt": "Delete Data Set",
+  "deleteDataset": "Delete Data Set",
   "deleteMember": "Delete Member",
   "allocateLike": "Allocate Like (New Data Set with Same Attributes)",
   "editDataSet": "Edit Data Set",

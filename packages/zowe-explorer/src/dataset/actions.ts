@@ -219,6 +219,24 @@ export async function deleteDatasetPrompt(datasetProvider: IZoweTree<IZoweDatase
             : ` ${deletedNode.getLabel()}`;
     });
 
+    // The member parent nodes that should be refreshed individually
+    const memberParents: IZoweDatasetTreeNode[] = [];
+    for (const deletedNode of nodes) {
+        if (contextually.isDsMember(deletedNode)) {
+            const parent = deletedNode.getParent();
+            if (
+                memberParents.filter((alreadyAddedParent) => alreadyAddedParent.label.trim() === parent.label.trim())
+                    .length === 0
+            ) {
+                memberParents.push(parent);
+            }
+        }
+    }
+
+    nodes.map((deletedNode) => {
+        return contextually.isDsMember(deletedNode) ? deletedNode.getParent() : ` ${deletedNode.getLabel()}`;
+    });
+
     // Confirm that the user really wants to delete
     globals.LOG.debug(localize("deleteDatasetPrompt.log.debug", "Deleting data set(s): ") + deletedNodes.join(","));
     const quickPickOptions: vscode.QuickPickOptions = {
@@ -282,6 +300,9 @@ export async function deleteDatasetPrompt(datasetProvider: IZoweTree<IZoweDatase
 
         // refresh Tree View & favorites
         datasetProvider.refresh();
+        for (const member of memberParents) {
+            datasetProvider.refreshElement(member);
+        }
     }
 }
 
