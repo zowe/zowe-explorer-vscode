@@ -227,7 +227,7 @@ describe("Dataset Tree Unit tests - Function initializeFavChildNodeForProfile", 
             undefined,
             globals.DS_FAV_CONTEXT
         );
-        node.command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [node] };
+        node.command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [node] };
 
         const favChildNodeForProfile = await testTree.initializeFavChildNodeForProfile(
             "BRTVS99.PS",
@@ -353,7 +353,7 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
                 blockMocks.imperativeProfile
             ),
         ];
-        sampleChildren[0].command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [sampleChildren[0]] };
+        sampleChildren[0].command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [sampleChildren[0]] };
 
         const children = await testTree.getChildren(testTree.mSessionNodes[1]);
 
@@ -417,8 +417,8 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
             new ZoweDatasetNode("BRTVS99", vscode.TreeItemCollapsibleState.None, parent, null),
             new ZoweDatasetNode("BRTVS99.DDIR", vscode.TreeItemCollapsibleState.None, parent, null),
         ];
-        sampleChildren[0].command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [sampleChildren[0]] };
-        sampleChildren[1].command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [sampleChildren[1]] };
+        sampleChildren[0].command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [sampleChildren[0]] };
+        sampleChildren[1].command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [sampleChildren[1]] };
 
         const children = await testTree.getChildren(parent);
 
