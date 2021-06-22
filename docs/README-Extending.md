@@ -1,4 +1,4 @@
-# VS Code extensions for Zowe Explorer
+# VS Code extensions for Zowe Explorer (Draft)
 
 Zowe Explorer provides extension APIs that assist third party extenders to create extensions that access Zowe Explorer resource entities to enrich the user experience. There are many ways Zowe Explorer can be extended to support many different use cases. We, the Zowe Explorer core contributors, have defined APIs, guidelines, as well as formal compliance criteria for three popular ways of extending it, but we encourage you to engage with us to discuss other ways for extensions that you envision that we did not yet consider.
 
@@ -23,6 +23,12 @@ Extender packages are created as new VS Code extensions. For general information
 - [vscode-extension-samples](https://github.com/Microsoft/vscode-extension-samples)
 
 I is also recommended to set-up a development environment for Zowe Explorer itself following the instructions in [README-Developer.md](README-Developer.md) to learn its codebase and study of the extensibility API's implementations.
+
+The Zowe Explorer API package provided in this GitHub repository is comprised of three sub-packages for different use cases. Modules from these sub-packages will be used in the description of the various extension cases below:
+
+- [profiles](../packages/zowe-explorer-api/src/profiles): Contains the API declarations as well as an implementation for an in-memory Zowe CLI profiles cache. All modules in this folder have been written completely independent of VS Code and can therefore be reused also in other NPM packages such as Zowe CLI plugins.
+- [tree](../packages/zowe-explorer-api/src/tree): Contains VS Code-specific APIs such as the interfaces used to overlay the VS Code tree views with additional Zowe Explorer data. These interfaces can be used to navigate the Zowe Explorer tree views for the implementation of extensions that implement additional menus and operations.
+- [security](packages/zowe-explorer-api/src/security): Contains VS Code-specific APIs for initializing and accessing the secure credentials store used by Zowe.
 
 ## Zowe Explorer extension dependencies and activation
 
@@ -67,7 +73,7 @@ Then you will be able to get access to initialized Zowe Explorer API objects pro
 ```typescript
 export function activate(context: vscode.ExtensionContext) {
   // this is the main operation to call to retrieve the ZoweExplorerApi.IApiRegisterClient object
-  // use the parameter to specify for which version or newer of Zowe Explorer your extension is written for
+  // use the optional parameter to constrain the version or newer of Zowe Explorer your extension is supporting
   const zoweExplorerApi = ZoweVsCodeExtension.getZoweExplorerApi("1.15.0");
   if (zoweExplorerApi) {
     // access the API such as registering new API implementations
@@ -89,27 +95,60 @@ The operation `IApiRegisterClient.getExplorerExtenderApi(): IApiExplorerExtender
 
 A Zowe CLI profiles access extension is a Zowe Explorer extension that uses the Zowe Extensibility API to conveniently access Zowe CLI profiles loaded by Zowe Explorer itself. This allows the extension to consistently access profile instances of specific types, offer them for edit and updates as well as common refresh operations that apply to all extensions, add more profile types it is using itself for its own custom views (for example a CICS extension adding a CICS explorer view) and other similar use cases related to Zowe CLI profiles. These extensions do **not** have to be VS Code extension if it just wants to use ProfilesCache implementation of Zowe Explorer as all APIs are provided free of any VS Code dependencies. Such an extension could be used for another non-VS Code tool, a Zowe CLI plugin, a Web Server or another technology. However, to access the profiles cache of the actual running VS Code Zowe Explorer the extender needs to be a VS Code extension that has an extension dependency defined to be able to query the extender APIs. Therefore, some of the criteria that are listed here as required are only required if the extender is a VS Code extension.
 
-TBD: _Details and Examples_
+When creating such an extension you need to follow the steps described above for accessing the Zowe Explorer API. Then by calling the `getExplorerExtenderApi()` operation on the returned object you have access to various operations on profiles. See the [ZoweExplorerExtender.ts](../packages/zowe-explorer/src/ZoweExplorerExtender.ts)] file in the main `zowe-explorer` package for details on the implementation of the various operations.
 
-Details about the functions available in the API can be found by looking in the [Zowe Explorer source](../packages/zowe-explorer-api/src/profiles/ZoweExplorerApi.ts)
-Initially, the following access methods were added to provide access to the appropriate profiles.
+Currently provided operations:
+
+- `reloadProfiles(): Promise<void>;`
+- `initForZowe(type: string, meta: ICommandProfileTypeConfiguration[]): Promise<void>;`
 
 ```typescript
-/**
- * Used by other VS Code Extensions to access the primary profile.
- *
- * @param primaryNode represents the Tree item that is being used
- * @return The requested profile
- *
- */
-getProfile(primaryNode: IZoweTreeNode): IProfileLoaded;
+const zoweExplorerApi = ZoweVsCodeExtension.getZoweExplorerApi("1.15.0");
+if (zoweExplorerApi) {
+  // Initialized the users ~/.zowe directory with the metadata for FTP profiles in case
+  // the user does not have the FTP CLI Plugin installed and profiles created, yet.
+  const meta = await CoreUtils.getProfileMeta();
+  await zoweExplorerApi.getExplorerExtenderApi().initForZowe("zftp", meta);
+  await zoweExplorerApi.getExplorerExtenderApi().reloadProfiles();
 ```
+
+TODO:
+
+- Add methods of accessing and manipulating profiles cache
+- Add methods for returning tree views for a profile type
 
 ## Creating an extension that adds a data provider
 
-A data provider Zowe Explorer extension provides an alternative protocol for Zowe Explorer to interact with z/OS. The default protocol Zowe Explorer uses is the z/OSMF REST APIs and data provider adds support for another API. For example, the Zowe Explorer extension for zFTP, which is maintained by the Zowe Explorer squad is an example for a Zowe Explorer data provider extension that uses FTP instead of z/OSMF for all of its USS and MVS interactions. To achieve such an extension it uses a Zowe CLI Plugin for FTP that implemented the core interactions and provided them as an SDK.
+A data provider Zowe Explorer extension that accesses Zowe Explorer profiles as well as provides an alternative protocol for Zowe Explorer to interact with z/OS. The default protocol Zowe Explorer uses is the z/OSMF REST APIs and data provider adds support for another API. For example, the Zowe Explorer extension for zFTP, which is maintained by the Zowe Explorer squad is an example for a Zowe Explorer data provider extension that uses FTP instead of z/OSMF for all of its USS and MVS interactions. To achieve such an extension it uses a Zowe CLI Plugin for FTP that implemented the core interactions and provided them as an SDK. The CLI also defined a new Zowe CLI profile type (zftp) that is used to identify and register the new data provider implementations.
 
-TBD: _Details and Examples_
+To implement as data provider Zowe Explorer extension you need to
+
+1. Implement at least one of the four available interfaces used by the API for data providers (`IUss`, `IMvs`, `IJes`, `ICommand`) as well as the `ICommon` interface as specified in [ZoweExplorerApi.ts](../packages/zowe-explorer-api/src/profiles/ZoweExplorerApi.ts). The new implementation must be using a new Zowe CLI profile type name for identification.
+2. Register your API implementation with the `IApiRegisterClient` returned by Zowe Explorer during activation of your VS Code extension as shown below.
+3. Initialize the user's .zowe directory with meta-data for the new profile type.
+
+```typescript
+const zoweExplorerApi = ZoweVsCodeExtension.getZoweExplorerApi("1.15.0");
+if (zoweExplorerApi) {
+  // Register new implementations of data provider using FTP for three Zowe Explorer views
+  zoweExplorerApi.registerUssApi(new FtpUssApi());
+  zoweExplorerApi.registerMvsApi(new FtpMvsApi());
+  zoweExplorerApi.registerJesApi(new FtpJesApi());
+
+  // Initialized the users ~/.zowe directory with the metadata for FTP profiles in case
+  // the user does not have the FTP CLI Plugin installed and profiles created, yet.
+  const meta = await CoreUtils.getProfileMeta();
+  await zoweExplorerApi.getExplorerExtenderApi().initForZowe("zftp", meta);
+  await zoweExplorerApi.getExplorerExtenderApi().reloadProfiles();
+```
+
+The FTP Zowe Explorer extension provides examples for providing a data provider for the FTP protocol. The extension provides data providers for USS, MVS, as well as JES. There are three modules in the source code that implement the required operations of the Zowe Explorer API for each view in the `packages/zowe-explorer-ftp-extension/src` folder:
+
+- [ZoweExplorerFtpMvsApi.ts](../packages/zowe-explorer-ftp-extension/src/ZoweExplorerFtpMvsApi.ts)
+- [ZoweExplorerFtpUssApi.ts](../packages/zowe-explorer-ftp-extension/src/ZoweExplorerFtpUssApi.ts)
+- [ZoweExplorerFtpJesApi.ts](../packages/zowe-explorer-ftp-extension/src/ZoweExplorerFtpJesApi.ts)
+
+These are parallel implementations of the same operations that are provided by Zowe Explorer itself using the z/OSMF interaction protocol. You can find that implementation for reference in the file [packages/zowe-explorer-api/src/profiles/ZoweExplorerZosmfApi.ts](../packages/zowe-explorer-api/src/profiles/ZoweExplorerZosmfApi.ts).
 
 ## Creating an extension that provides menus and contextual Hooks
 
