@@ -186,7 +186,7 @@ describe("Extension Integration Tests", async () => {
             expect(gotCalled).to.equal(true);
         }).timeout(TIMEOUT);
 
-        it("should create a member when zowe.createMember is invoked", async () => {
+        it("should create a member when zowe.ds.createMember is invoked", async () => {
             const testFileName = "MEMBER";
             const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
             inputBoxStub.returns(testFileName);

@@ -391,7 +391,7 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         expect(mocked(vscode.window.showInformationMessage)).toBeCalled();
         expect(mocked(vscode.window.showInformationMessage).mock.calls.length).toBe(1);
         expect(mocked(vscode.window.showInformationMessage).mock.calls[0][0]).toEqual(
-            "Job submitted [JOB1234](command:zowe.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
+            "Job submitted [JOB1234](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
         );
     });
 
@@ -419,7 +419,7 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         expect(mocked(vscode.window.showInformationMessage)).toBeCalled();
         expect(mocked(vscode.window.showInformationMessage).mock.calls.length).toBe(1);
         expect(mocked(vscode.window.showInformationMessage).mock.calls[0][0]).toEqual(
-            "Job submitted [JOB1234](command:zowe.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
+            "Job submitted [JOB1234](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
         );
     });
 
@@ -488,7 +488,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         expect(submitJobSpy.mock.calls[0][0]).toEqual("dataset(member)");
         expect(mocked(vscode.window.showInformationMessage)).toBeCalled();
         expect(mocked(vscode.window.showInformationMessage).mock.calls[0][0]).toEqual(
-            "Job submitted [JOB1234](command:zowe.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
+            "Job submitted [JOB1234](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
         );
     });
     it("Checking Submit Job for PDS Member content with Unverified Profile", async () => {
@@ -523,7 +523,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         expect(submitJobSpy.mock.calls[0][0]).toEqual("dataset(member)");
         expect(mocked(vscode.window.showInformationMessage)).toBeCalled();
         expect(mocked(vscode.window.showInformationMessage).mock.calls[0][0]).toEqual(
-            "Job submitted [JOB1234](command:zowe.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
+            "Job submitted [JOB1234](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
         );
     });
     it("Checking Submit Job for PS Dataset content", async () => {
@@ -546,7 +546,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         expect(submitJobSpy.mock.calls[0][0]).toEqual("dataset");
         expect(mocked(vscode.window.showInformationMessage)).toBeCalled();
         expect(mocked(vscode.window.showInformationMessage).mock.calls[0][0]).toEqual(
-            "Job submitted [JOB1234](command:zowe.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
+            "Job submitted [JOB1234](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
         );
     });
     it("Checking Submit Job for Favourite PDS Member content", async () => {
@@ -583,7 +583,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         expect(submitJobSpy.mock.calls[0][0]).toEqual("TEST.JCL(pds)");
         expect(mocked(vscode.window.showInformationMessage)).toBeCalled();
         expect(mocked(vscode.window.showInformationMessage).mock.calls[0][0]).toEqual(
-            "Job submitted [JOB1234](command:zowe.setJobSpool?%5B%22test%22%2C%22JOB1234%22%5D)"
+            "Job submitted [JOB1234](command:zowe.jobs.setJobSpool?%5B%22test%22%2C%22JOB1234%22%5D)"
         );
     });
     it("Checking Submit Job for Favourite PS Dataset content", async () => {
@@ -613,7 +613,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         expect(submitJobSpy.mock.calls[0][0]).toEqual("TEST.JCL");
         expect(mocked(vscode.window.showInformationMessage)).toBeCalled();
         expect(mocked(vscode.window.showInformationMessage).mock.calls[0][0]).toEqual(
-            "Job submitted [JOB1234](command:zowe.setJobSpool?%5B%22test%22%2C%22JOB1234%22%5D)"
+            "Job submitted [JOB1234](command:zowe.jobs.setJobSpool?%5B%22test%22%2C%22JOB1234%22%5D)"
         );
     });
     it("Checking Submit Job for unsupported Dataset content", async () => {

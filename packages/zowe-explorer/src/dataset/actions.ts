@@ -713,7 +713,7 @@ export async function submitJcl(datasetProvider: IZoweTree<IZoweDatasetTreeNode>
         try {
             const job = await ZoweExplorerApiRegister.getJesApi(sessProfile).submitJcl(doc.getText());
             const args = [sessProfileName, job.jobid];
-            const setJobCmd = `command:zowe.setJobSpool?${encodeURIComponent(JSON.stringify(args))}`;
+            const setJobCmd = `command:zowe.jobs.setJobSpool?${encodeURIComponent(JSON.stringify(args))}`;
             vscode.window.showInformationMessage(
                 localize("submitJcl.jobSubmitted", "Job submitted ") + `[${job.jobid}](${setJobCmd})`
             );
@@ -770,7 +770,7 @@ export async function submitMember(node: IZoweTreeNode) {
         try {
             const job = await ZoweExplorerApiRegister.getJesApi(sessProfile).submitJob(label);
             const args = [sesName, job.jobid];
-            const setJobCmd = `command:zowe.setJobSpool?${encodeURIComponent(JSON.stringify(args))}`;
+            const setJobCmd = `command:zowe.jobs.setJobSpool?${encodeURIComponent(JSON.stringify(args))}`;
             vscode.window.showInformationMessage(
                 localize("submitMember.jobSubmitted", "Job submitted ") + `[${job.jobid}](${setJobCmd})`
             );
