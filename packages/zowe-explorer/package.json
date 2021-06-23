@@ -709,11 +709,6 @@
           "group": "inline"
         },
         {
-          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(directory|ussSession|favorite|profile_fav))/",
-          "command": "zowe.uss.refreshUSS",
-          "group": "0_mainframeInteraction"
-        },
-        {
           "when": "view == zowe.uss.explorer && viewItem =~ /^directory.*/",
           "command": "zowe.uss.refreshDirectory",
           "group": "000_zowe_ussMainframeInteraction@0"
