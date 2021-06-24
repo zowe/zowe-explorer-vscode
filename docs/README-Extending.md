@@ -150,11 +150,21 @@ The FTP Zowe Explorer extension provides examples for providing a data provider 
 
 These are parallel implementations of the same operations that are provided by Zowe Explorer itself using the z/OSMF interaction protocol. You can find that implementation for reference in the file [packages/zowe-explorer-api/src/profiles/ZoweExplorerZosmfApi.ts](../packages/zowe-explorer-api/src/profiles/ZoweExplorerZosmfApi.ts).
 
-## Creating an extension that provides menus and contextual Hooks
+## Creating an extension that provides menus and contextual hooks
 
-A Zowe Explorer menu extension contributes additional commands to Zowe Explorer's existing menus in VS Code. Typically, these are contributions to the right-click context menus associated with items in one or more of Zowe Explorer's three views (Data Sets, USS, and Jobs). VS Code extensions can define and use commands in the `contributes` section of their `package.json`. By setting the `when` property of a command match the view(s) and context values used by Zowe Explorer, a menu extension can hook into and add commands into Zowe Explorer's existing menus.
+A Zowe Explorer menu extension contributes additional commands to Zowe Explorer's existing menus in VS Code. Typically, these are contributions to the right-click context menus associated with items in one or more of Zowe Explorer's three tree views (Data Sets, USS, and Jobs). VS Code extensions can define and use commands in the `contributes` section of their `package.json`. By setting the `when` property of a command to match the views and context values used by Zowe Explorer, a menu extension can hook into and add commands into Zowe Explorer's existing menus.
 
-To enable menus, extenders can reference the context values associated with the individual Tree Items. Zowe Explorer uses a strategy of adding and removing elements of context to the individual context values if that imparts additional information that could assist with menu triggers. In the example below we are referencing a Job type tree item that has additional information indicated by the _\_rc_ context. This can be used by an extender to trigger a specific menu.
+To specify which view a command contribution should appear in, Zowe Explorer menu extenders can use `view == <zowe.viewName>`, where `<zowe.viewName>` is one of the following view names used by Zowe Explorer:
+
+- Data Sets view: `zowe.explorer`
+- USS view: `zowe.uss.explorer`
+- Jobs view: `zowe.jobs`
+
+To allow for more granular control over which type(s) of tree items a command should be associated with (for example, a USS textfile versus a USS directory), Zowe Explorer uses a strategy of adding and removing context components for an individual Tree Item's context value if that imparts additional information that could assist with menu triggers. Extenders can leverage this when defining a command's `when` property by specifying `viewItem =~ <contextValue>`, where `<contextValue>` is a regular expression that matches the context value of the target Tree Item type(s).
+
+For more information on how to use a command's `when` property, refer to the VS Code [`when` clause contexts](https://code.visualstudio.com/api/references/when-clause-contexts) documentation.
+
+In the example below, we are referencing the Jobs view, and more specifically, a Job type tree item that has additional information indicated by the `_rc` context. This can be used by an extender to trigger a specific menu.
 
 ```json
   "menus": {
@@ -170,4 +180,4 @@ To enable menus, extenders can reference the context values associated with the 
   }
 ```
 
-Notice the syntax we use is for the context value or viewItem above is a regular expression as denoted by the "=~" equal test. Using regular expressions to describe context allows more meaning to be embedded in the context.
+Notice the syntax we use for the context value (or `viewItem`) above is a regular expression as denoted by the `=~` equal test. Using regular expressions to describe context allows more meaning to be embedded in the context.
