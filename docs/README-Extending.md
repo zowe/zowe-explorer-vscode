@@ -156,9 +156,9 @@ A Zowe Explorer menu extension contributes additional commands to Zowe Explorer'
 
 To specify which view a command contribution should appear in, Zowe Explorer menu extenders can use `view == <zowe.viewName>`, where `<zowe.viewName>` is one of the following view names used by Zowe Explorer:
 
-- Data Sets view: `zowe.explorer`
+- Data Sets view: `zowe.ds.explorer`
 - USS view: `zowe.uss.explorer`
-- Jobs view: `zowe.jobs`
+- Jobs view: `zowe.jobs.explorer`
 
 To allow for more granular control over which type(s) of tree items a command should be associated with (for example, a USS textfile versus a USS directory), Zowe Explorer uses a strategy of adding and removing context components for an individual Tree Item's context value if that imparts additional information that could assist with menu triggers. Extenders can leverage this when defining a command's `when` property by specifying `viewItem =~ <contextValue>`, where `<contextValue>` is a regular expression that matches the context value of the target Tree Item type(s).
 
@@ -175,8 +175,8 @@ In the example below, we are referencing the Jobs view, and more specifically, a
         "group": "4_workspace"
       }
           ],
-      ..
-      ..
+      ...
+      ...
   }
 ```
 
