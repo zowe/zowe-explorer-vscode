@@ -307,6 +307,8 @@ Your data set member is uploaded.
 5. Confirm the deletion by clicking **Delete** in the drop-down menu.
 6. You can also delete a data set or member from the context menu.
    Right-click on the item and select **Delete Data Set** or **Delete Member** from the context menu.
+   
+   ![Delete Data Sets and Members](https://user-images.githubusercontent.com/58596139/123250606-8bee0600-d4ea-11eb-86b7-0720ffbba8e4.gif)
    <br /><br />
 
 ### View and access multiple profiles simultaneously
