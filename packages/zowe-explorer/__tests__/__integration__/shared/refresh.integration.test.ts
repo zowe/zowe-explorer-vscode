@@ -18,29 +18,31 @@ import * as sinon from "sinon";
 import * as testConst from "../../../resources/testProfileData";
 import * as vscode from "vscode";
 import { ZosJobsProvider } from "../../../src/job/ZosJobsProvider";
-import * as jobActions from "../../../src/job/actions";
 import * as refreshActions from "../../../src/shared/refresh";
 import { Job } from "../../../src/job/ZoweJobNode";
-import { JOBS_SESSION_CONTEXT } from "../../../src/globals";
+import { DS_SESSION_CONTEXT, JOBS_SESSION_CONTEXT } from "../../../src/globals";
+import { DatasetTree } from "../../../src/dataset/DatasetTree";
+import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
+import { createInstanceOfProfile } from "../../../__mocks__/mockCreators/shared";
 
 const TIMEOUT = 45000;
 declare var it: Mocha.ITestDefinition;
-// declare var describe: any;
-
-const testProfile: IProfileLoaded = {
-    name: testConst.profile.name,
-    profile: testConst.profile,
-    type: testConst.profile.type,
-    message: "",
-    failNotFound: false,
-};
 
 describe("jobNodeActions integration test", async () => {
     const expect = chai.expect;
     chai.use(chaiAsPromised);
 
     const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
-    const sessionNode = new Job(
+    const testProfileLoaded: IProfileLoaded = {
+        name: testConst.profile.name,
+        profile: testConst.profile,
+        type: testConst.profile.type,
+        message: "",
+        failNotFound: false,
+    };
+
+    // Test Jobs session node & tree
+    const jobSessionNode = new Job(
         testConst.profile.name,
         vscode.TreeItemCollapsibleState.Collapsed,
         null,
@@ -48,9 +50,25 @@ describe("jobNodeActions integration test", async () => {
         null,
         null
     );
-    sessionNode.contextValue = JOBS_SESSION_CONTEXT;
-    const testTree = new ZosJobsProvider();
-    testTree.mSessionNodes.push(sessionNode);
+    jobSessionNode.contextValue = JOBS_SESSION_CONTEXT;
+    const testJobsTree = new ZosJobsProvider();
+    testJobsTree.mSessionNodes.push(jobSessionNode);
+
+    // Test Dataset session node & tree
+    const datasetSessionNode = new ZoweDatasetNode(
+        testConst.profile.name,
+        vscode.TreeItemCollapsibleState.Collapsed,
+        null,
+        session,
+        undefined,
+        undefined,
+        testProfileLoaded
+    );
+    datasetSessionNode.contextValue = DS_SESSION_CONTEXT;
+    const pattern = testConst.normalPattern.toUpperCase();
+    datasetSessionNode.pattern = pattern;
+    const testDatasetTree = new DatasetTree();
+    testDatasetTree.mSessionNodes.push(datasetSessionNode);
 
     let sandbox;
 
@@ -72,19 +90,35 @@ describe("jobNodeActions integration test", async () => {
             .update("Zowe-DS-Persistent", oldSettings, vscode.ConfigurationTarget.Global);
     });
 
-    describe("Refresh ALL", async () => {
-        it("It should call the RefreshALL function", async () => {
+    describe("refreshAll", async () => {
+        it("It should call the refreshAll function on a Jobs tree", async () => {
             let eventFired = false;
 
             const listener = () => {
                 eventFired = true;
             };
 
-            const subscription = testTree.mOnDidChangeTreeData.event(listener);
-            await refreshActions.refreshAll(testTree);
+            const subscription = testJobsTree.mOnDidChangeTreeData.event(listener);
+            await refreshActions.refreshAll(testJobsTree);
 
             expect(eventFired).equals(true);
-            // expect(eventFired).toBe(true);
+
+            subscription.dispose();
+        }).timeout(TIMEOUT);
+    });
+
+    describe("refreshAll", async () => {
+        it("It should call the refreshAll function on a Dataset tree", async () => {
+            let eventFired = false;
+
+            const listener = () => {
+                eventFired = true;
+            };
+
+            const subscription = testDatasetTree.mOnDidChangeTreeData.event(listener);
+            await refreshActions.refreshAll(testDatasetTree);
+
+            expect(eventFired).equals(true);
 
             subscription.dispose();
         }).timeout(TIMEOUT);

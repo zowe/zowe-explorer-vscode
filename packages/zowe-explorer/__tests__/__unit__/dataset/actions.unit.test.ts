@@ -51,6 +51,30 @@ function createGlobalMocks() {
         readText: jest.fn().mockImplementation(() => mockClipboardData),
     };
 
+    const newMocks = {
+        imperativeProfile: createIProfile(),
+        profileInstance: null,
+        session: createISession(),
+        treeView: createTreeView(),
+        datasetSessionNode: null,
+        datasetSessionFavNode: null,
+        testFavoritesNode: createDatasetFavoritesNode(),
+        testDatasetTree: null,
+        mvsApi: null,
+    };
+
+    newMocks.profileInstance = createInstanceOfProfile(newMocks.imperativeProfile);
+    newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
+    newMocks.datasetSessionFavNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
+    newMocks.testFavoritesNode.children.push(newMocks.datasetSessionFavNode);
+    newMocks.testDatasetTree = createDatasetTree(
+        newMocks.datasetSessionNode,
+        newMocks.treeView,
+        newMocks.testFavoritesNode
+    );
+    newMocks.mvsApi = createMvsApi(newMocks.imperativeProfile);
+    bindMvsApi(newMocks.mvsApi);
+
     Object.defineProperty(vscode.window, "withProgress", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe, "Upload", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe.Upload, "bufferToDataSet", { value: jest.fn(), configurable: true });
@@ -84,6 +108,10 @@ function createGlobalMocks() {
     Object.defineProperty(vscode, "ProgressLocation", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "createWebviewPanel", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.env, "clipboard", { value: clipboard, configurable: true });
+
+    mocked(Profiles.getInstance).mockReturnValue(newMocks.profileInstance);
+
+    return newMocks;
 }
 
 // Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/master/src/util/testing.ts
@@ -431,6 +459,226 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
     });
 });
 
+describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
+    function createBlockMocks(globalMocks) {
+        const testDatasetTree = createDatasetTree(
+            globalMocks.datasetSessionNode,
+            globalMocks.treeView,
+            globalMocks.testFavoritesNode
+        );
+        const testDatasetNode = new ZoweDatasetNode(
+            "HLQ.TEST.DS",
+            vscode.TreeItemCollapsibleState.None,
+            globalMocks.datasetSessionNode,
+            globalMocks.session,
+            globals.DS_PDS_CONTEXT,
+            undefined,
+            globalMocks.imperativeProfile
+        );
+        const testVsamNode = new ZoweDatasetNode(
+            "HLQ.TEST.VSAM",
+            vscode.TreeItemCollapsibleState.None,
+            globalMocks.datasetSessionNode,
+            globalMocks.session,
+            globals.VSAM_CONTEXT,
+            undefined,
+            globalMocks.imperativeProfile
+        );
+        const testMemberNode = new ZoweDatasetNode(
+            "MEMB",
+            vscode.TreeItemCollapsibleState.None,
+            testDatasetNode,
+            globalMocks.session,
+            globals.DS_MEMBER_CONTEXT,
+            undefined,
+            globalMocks.imperativeProfile
+        );
+        const testFavoritedNode = new ZoweDatasetNode(
+            "HLQ.TEST.FAV",
+            vscode.TreeItemCollapsibleState.None,
+            globalMocks.datasetSessionFavNode,
+            globalMocks.session,
+            globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX,
+            undefined,
+            globalMocks.imperativeProfile
+        );
+        const testFavMemberNode = new ZoweDatasetNode(
+            "MEMB",
+            vscode.TreeItemCollapsibleState.None,
+            testFavoritedNode,
+            globalMocks.session,
+            globals.DS_MEMBER_CONTEXT,
+            undefined,
+            globalMocks.imperativeProfile
+        );
+
+        testDatasetNode.children.push(testMemberNode);
+        testFavoritedNode.children.push(testFavMemberNode);
+        globalMocks.datasetSessionNode.children.push(testDatasetNode);
+        globalMocks.datasetSessionNode.children.push(testVsamNode);
+        globalMocks.datasetSessionFavNode.children.push(testFavoritedNode);
+
+        mocked(vscode.window.showQuickPick).mockResolvedValue("Delete" as any);
+        // const cancellationToken = new vscode.CancellationTokenSource();
+        mocked(vscode.window.withProgress).mockImplementation((progLocation, callback) => {
+            return null;
+        });
+
+        return {
+            testDatasetTree,
+            testDatasetNode,
+            testVsamNode,
+            testMemberNode,
+            testFavMemberNode,
+            testFavoritedNode,
+        };
+    }
+
+    // afterAll(() => jest.restoreAllMocks());
+
+    it("Should delete one dataset", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const selectedNodes = [blockMocks.testDatasetNode];
+        const treeView = createTreeView(selectedNodes);
+        blockMocks.testDatasetTree.getTreeView.mockReturnValueOnce(treeView);
+
+        await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
+
+        expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith(
+            `The following items were deleted: ${blockMocks.testDatasetNode.getLabel()}`
+        );
+    });
+
+    it("Should delete one member", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const selectedNodes = [blockMocks.testMemberNode];
+        const treeView = createTreeView(selectedNodes);
+        blockMocks.testDatasetTree.getTreeView.mockReturnValueOnce(treeView);
+
+        await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
+
+        expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith(
+            `The following items were deleted: ${blockMocks.testMemberNode
+                .getParent()
+                .getLabel()}(${blockMocks.testMemberNode.getLabel()})`
+        );
+    });
+
+    it("Should delete one VSAM", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const selectedNodes = [blockMocks.testVsamNode];
+        const treeView = createTreeView(selectedNodes);
+        blockMocks.testDatasetTree.getTreeView.mockReturnValueOnce(treeView);
+
+        await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
+
+        expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith(
+            `The following items were deleted: ${blockMocks.testVsamNode.getLabel()}`
+        );
+    });
+
+    it("Should delete two datasets", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const selectedNodes = [blockMocks.testDatasetNode, blockMocks.testVsamNode];
+        const treeView = createTreeView(selectedNodes);
+        blockMocks.testDatasetTree.getTreeView.mockReturnValueOnce(treeView);
+
+        await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
+
+        expect(mocked(vscode.window.showInformationMessage)).toHaveBeenCalledWith(
+            `The following items were deleted: ${blockMocks.testDatasetNode.getLabel()}, ${blockMocks.testVsamNode.getLabel()}`
+        );
+    });
+
+    it("Should delete one dataset and one member", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const selectedNodes = [blockMocks.testMemberNode, blockMocks.testDatasetNode];
+        const treeView = createTreeView(selectedNodes);
+        blockMocks.testDatasetTree.getTreeView.mockReturnValueOnce(treeView);
+
+        await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
+
+        expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith(
+            `The following items were deleted: ${blockMocks.testDatasetNode.getLabel()}(${blockMocks.testMemberNode.getLabel()}), ${blockMocks.testDatasetNode.getLabel()}`
+        );
+    });
+
+    it("Should not delete a favorited dataset", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const selectedNodes = [blockMocks.testFavoritedNode];
+        const treeView = createTreeView(selectedNodes);
+        blockMocks.testDatasetTree.getTreeView.mockReturnValueOnce(treeView);
+
+        await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
+
+        expect(mocked(vscode.window.showInformationMessage)).toBeCalledTimes(0);
+    });
+
+    it("Should not delete a favorited member", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const selectedNodes = [blockMocks.testFavMemberNode];
+        const treeView = createTreeView(selectedNodes);
+        blockMocks.testDatasetTree.getTreeView.mockReturnValueOnce(treeView);
+
+        await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
+
+        expect(mocked(vscode.window.showInformationMessage)).toBeCalledTimes(0);
+    });
+
+    it("Should not delete a session", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const selectedNodes = [globalMocks.datasetSessionNode];
+        const treeView = createTreeView(selectedNodes);
+        blockMocks.testDatasetTree.getTreeView.mockReturnValueOnce(treeView);
+
+        await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
+
+        expect(mocked(vscode.window.showInformationMessage)).toBeCalledTimes(0);
+    });
+
+    it("Should fail to delete first dataset and succeed in deleting second dataset", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const selectedNodes = [blockMocks.testFavoritedNode, blockMocks.testDatasetNode];
+        const treeView = createTreeView(selectedNodes);
+        blockMocks.testDatasetTree.getTreeView.mockReturnValueOnce(treeView);
+
+        await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
+
+        expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith(
+            `The following items were deleted: ${blockMocks.testDatasetNode.getLabel()}`
+        );
+    });
+
+    it("Should cancel deletion if user selects Cancel", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Cancel" as any);
+
+        await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
+
+        expect(mocked(vscode.window.withProgress).mock.calls.length).toBe(0);
+    });
+});
+
 describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
     function createBlockMocks() {
         const session = createISession();
@@ -601,31 +849,6 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         await expect(dsActions.deleteDataset(node, blockMocks.testDatasetTree)).rejects.toEqual(Error(""));
         expect(mocked(vscode.window.showErrorMessage)).toBeCalledWith(" Error");
     });
-    it("Checking PS deletion attempt which was rejected by user in the process", async () => {
-        globals.defineGlobals("");
-        createGlobalMocks();
-        const blockMocks = createBlockMocks();
-        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        const node = new ZoweDatasetNode(
-            "HLQ.TEST.NODE",
-            vscode.TreeItemCollapsibleState.None,
-            blockMocks.datasetSessionNode,
-            null,
-            undefined,
-            undefined,
-            blockMocks.imperativeProfile
-        );
-
-        mocked(fs.existsSync).mockReturnValueOnce(true);
-        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Cancel" as any);
-        const deleteSpy = jest.spyOn(blockMocks.mvsApi, "deleteDataSet");
-        deleteSpy.mockClear();
-
-        await dsActions.deleteDataset(node, blockMocks.testDatasetTree);
-
-        expect(mocked(fs.unlinkSync)).not.toBeCalled();
-        expect(deleteSpy).not.toBeCalled();
-    });
     it("Checking Favorite PDS dataset deletion", async () => {
         globals.defineGlobals("");
         createGlobalMocks();
@@ -657,7 +880,6 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
 
         expect(deleteSpy).toBeCalledWith(node.label);
         expect(blockMocks.testDatasetTree.removeFavorite).toBeCalledWith(node);
-        expect(blockMocks.testDatasetTree.refreshElement).toBeCalledWith(parent);
         expect(mocked(fs.existsSync)).toBeCalledWith(
             path.join(globals.DS_DIR, parent.getSessionNode().label, "HLQ.TEST.NODE")
         );
@@ -687,7 +909,6 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
 
         expect(deleteSpy).toBeCalledWith(`${child.getParent().label}(${child.label})`);
         expect(blockMocks.testDatasetTree.removeFavorite).toBeCalledWith(child);
-        expect(blockMocks.testDatasetTree.refreshElement).toBeCalledWith(parent);
         expect(mocked(fs.existsSync)).toBeCalledWith(
             path.join(globals.DS_DIR, parent.getSessionNode().label, `${child.getParent().label}(${child.label})`)
         );
