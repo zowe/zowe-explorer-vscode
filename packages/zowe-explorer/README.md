@@ -141,7 +141,7 @@ Review the following use cases to understand how to work with data sets in Zowe 
 - [Prevent merge conflicts](#use-the-save-option-to-prevent-merge-conflicts): The save option includes a **compare** mechanism letting you resolve potential merge conflicts.
 - [Create data sets and data set members](#create-a-new-data-set-and-add-a-member): Create a new data set and data set members.
 - [Create data sets and specify the parameters](#create-data-sets-and-specify-the-parameters): Create a new data set and specify parameter values.
-- [Delete a data set member and a data set](#delete-a-data-set-member-and-a-data-set): Delete a chosen data set member or an entire data set.
+- [Delete data sets and data set members](#delete-data-sets-and-data-set-members): Delete one or more data sets and data set members.
 - [View and access multiple profiles simultaneously](#view-and-access-multiple-profiles-simultaneously): Work with data sets from multiple profiles.
 - [Allocate Like](#allocate-like): Create a copy of a chosen data set with the same parameters.
 
