@@ -266,7 +266,7 @@ describe("Extension Integration Tests", async () => {
                 // tslint:disable-next-line: no-empty
             } catch {}
         });
-        it("should delete a data set if user verified", async () => {
+        it("should delete a data set", async () => {
             await zowe.Create.dataSet(
                 sessionNode.getSession(),
                 zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL,
@@ -280,67 +280,11 @@ describe("Extension Integration Tests", async () => {
             );
 
             // Mock user selecting first option from list
-            const quickPickStub = sandbox.stub(vscode.window, "showQuickPick");
-            quickPickStub.returns("Yes");
             await dsActions.deleteDataset(testNode, testTree);
 
             const response = await zowe.List.dataSet(session, dataSetName);
 
             expect(response.apiResponse.items).to.deep.equal([]);
-        }).timeout(TIMEOUT);
-        it("should not delete a data set if user did not verify", async () => {
-            await zowe.Create.dataSet(
-                sessionNode.getSession(),
-                zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL,
-                dataSetName
-            );
-            const testNode = new ZoweDatasetNode(
-                dataSetName,
-                vscode.TreeItemCollapsibleState.None,
-                sessionNode,
-                session
-            );
-
-            // Mock user selecting second option from list
-            const quickPickStub = sandbox.stub(vscode.window, "showQuickPick");
-            quickPickStub.returns("No");
-            await dsActions.deleteDataset(testNode, testTree);
-
-            const response = await zowe.List.dataSet(session, dataSetName);
-
-            // Check that dataset was not deleted
-            expect(
-                response.apiResponse.items.filter((entry) => {
-                    return entry.dsname === dataSetName.toUpperCase();
-                }).length
-            ).to.greaterThan(0);
-        }).timeout(TIMEOUT);
-        it("should delete a data set if user cancelled", async () => {
-            await zowe.Create.dataSet(
-                sessionNode.getSession(),
-                zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL,
-                dataSetName
-            );
-            const testNode = new ZoweDatasetNode(
-                dataSetName,
-                vscode.TreeItemCollapsibleState.None,
-                sessionNode,
-                session
-            );
-
-            // Mock user not selecting any option from list
-            const quickPickStub = sandbox.stub(vscode.window, "showQuickPick");
-            quickPickStub.returns(undefined);
-            await dsActions.deleteDataset(testNode, testTree);
-
-            const response = await zowe.List.dataSet(session, dataSetName);
-
-            // Check that dataset was not deleted
-            expect(
-                response.apiResponse.items.filter((entry) => {
-                    return entry.dsname === dataSetName.toUpperCase();
-                }).length
-            ).to.greaterThan(0);
         }).timeout(TIMEOUT);
     });
 
@@ -358,8 +302,9 @@ describe("Extension Integration Tests", async () => {
             const childrenFromTree = await sessionNode.getChildren();
             childrenFromTree.unshift(...(await childrenFromTree[0].getChildren()));
 
-            await testTree.getTreeView().reveal(childrenFromTree[0]);
-            expect(childrenFromTree[0]).to.deep.equal(testTree.getTreeView().selection[0]);
+            await testTree.getTreeView().reveal(childrenFromTree[0], { select: true });
+            const loadedItems = await testTree.getAllLoadedItems();
+            expect(childrenFromTree[0]).to.deep.equal(loadedItems[0]);
         }).timeout(TIMEOUT);
 
         it("should match data sets for multiple patterns", async () => {
@@ -378,7 +323,9 @@ describe("Extension Integration Tests", async () => {
 
             for (const child of childrenFromTree) {
                 await testTree.getTreeView().reveal(child);
-                expect(child).to.deep.equal(testTree.getTreeView().selection[0]);
+                const loadedItems = await testTree.getAllLoadedItems();
+                const foundChild = loadedItems.find((item) => item === child);
+                expect(foundChild).to.not.be.equal(undefined);
             }
         }).timeout(TIMEOUT);
 

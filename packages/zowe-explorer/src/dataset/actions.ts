@@ -192,6 +192,121 @@ export async function uploadFile(node: ZoweDatasetNode, doc: vscode.TextDocument
 }
 
 /**
+ * Deletes nodes from the data set tree & delegates deletion of data sets, members, and profiles
+ *
+ * @export
+ * @param {IZoweDatasetTreeNode} node - The node selected for deletion
+ * @param {DatasetTree} datasetProvider - the tree which contains the nodes
+ */
+export async function deleteDatasetPrompt(datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
+    const treeView = datasetProvider.getTreeView();
+    const selectedNodes: IZoweDatasetTreeNode[] = treeView.selection;
+
+    // Filter out sessions, favorite nodes, or information messages
+    const nodes: IZoweDatasetTreeNode[] = selectedNodes.filter(
+        (selectedNode) =>
+            selectedNode.getParent() &&
+            !contextually.isFavorite(selectedNode) &&
+            !contextually.isFavorite(selectedNode.getParent()) &&
+            !contextually.isSession(selectedNode) &&
+            !contextually.isInformation(selectedNode)
+    );
+
+    // The names of the nodes that should be deleted
+    let deletedNodes: string[] = nodes.map((deletedNode) => {
+        return contextually.isDsMember(deletedNode)
+            ? ` ${deletedNode.getParent().getLabel()}(${deletedNode.getLabel()})`
+            : ` ${deletedNode.getLabel()}`;
+    });
+
+    // The member parent nodes that should be refreshed individually
+    const memberParents: IZoweDatasetTreeNode[] = [];
+    for (const deletedNode of nodes) {
+        if (contextually.isDsMember(deletedNode)) {
+            const parent = deletedNode.getParent();
+            if (
+                memberParents.filter((alreadyAddedParent) => alreadyAddedParent.label.trim() === parent.label.trim())
+                    .length === 0
+            ) {
+                memberParents.push(parent);
+            }
+        }
+    }
+
+    nodes.map((deletedNode) => {
+        return contextually.isDsMember(deletedNode) ? deletedNode.getParent() : ` ${deletedNode.getLabel()}`;
+    });
+
+    // Confirm that the user really wants to delete
+    globals.LOG.debug(localize("deleteDatasetPrompt.log.debug", "Deleting data set(s): ") + deletedNodes.join(","));
+    const quickPickOptions: vscode.QuickPickOptions = {
+        placeHolder: localize(
+            "deleteDatasetPrompt.quickPickOption",
+            "Delete data set(s)? This will permanently remove them from your system."
+        ),
+        ignoreFocusOut: true,
+        canPickMany: false,
+    };
+    if (
+        (await vscode.window.showQuickPick(
+            [
+                localize("deleteDatasetPrompt.showQuickPick.delete", "Delete"),
+                localize("deleteDatasetPrompt.showQuickPick.Cancel", "Cancel"),
+            ],
+            quickPickOptions
+        )) !== localize("deleteDatasetPrompt.showQuickPick.delete", "Delete")
+    ) {
+        globals.LOG.debug(
+            localize("deleteDatasetPrompt.showQuickPick.log.debug", "Dataset deletion action was canceled.")
+        );
+        return;
+    }
+
+    if (nodes.length > 0) {
+        // Delete multiple selected nodes
+        await vscode.window.withProgress(
+            {
+                location: vscode.ProgressLocation.Notification,
+                title: localize("deleteDatasetPrompt.deleteCounter", "Deleting nodes"),
+                cancellable: true,
+            },
+            async (progress, token) => {
+                token.onCancellationRequested(() => {
+                    // will be returned as undefined
+                    vscode.window.showInformationMessage(
+                        localize("deleteDatasetPrompt.deleteCancelled", "Delete action was cancelled.")
+                    );
+                });
+                const total = 100;
+                for (const [index, currNode] of nodes.entries()) {
+                    progress.report({
+                        message: `Deleting ${index + 1} of ${nodes.length}`,
+                        increment: (index / nodes.length) * total,
+                    });
+                    try {
+                        await deleteDataset(currNode, datasetProvider);
+                    } catch (err) {
+                        const labelToRemove = contextually.isDsMember(currNode)
+                            ? ` ${currNode.getParent().getLabel()}(${currNode.getLabel()})`
+                            : ` ${currNode.getLabel()}`;
+                        deletedNodes = deletedNodes.filter((item) => item.trim() !== labelToRemove.trim());
+                    }
+                }
+            }
+        );
+        vscode.window.showInformationMessage(
+            localize("deleteMulti.datasetNode", "The following items were deleted:") + deletedNodes
+        );
+
+        // refresh Tree View & favorites
+        datasetProvider.refresh();
+        for (const member of memberParents) {
+            datasetProvider.refreshElement(member);
+        }
+    }
+}
+
+/**
  * Creates a PDS member
  *
  * @export
@@ -792,32 +907,6 @@ export async function submitMember(node: IZoweTreeNode) {
  * @param {IZoweTree<IZoweDatasetTreeNode>} datasetProvider - the tree which contains the nodes
  */
 export async function deleteDataset(node: IZoweTreeNode, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
-    globals.LOG.debug(localize("deleteDataset.log.debug", "Deleting data set ") + node.label);
-    const quickPickOptions: vscode.QuickPickOptions = {
-        placeHolder: localize(
-            "deleteDataset.quickPickOption",
-            "Delete {0}? This will permanently remove it from your system.",
-            node.label
-        ),
-        ignoreFocusOut: true,
-        canPickMany: false,
-    };
-    // confirm that the user really wants to delete
-    if (
-        (await vscode.window.showQuickPick(
-            [
-                localize("deleteDataset.showQuickPick.delete", "Delete"),
-                localize("deleteDataset.showQuickPick.Cancel", "Cancel"),
-            ],
-            quickPickOptions
-        )) !== localize("deleteDataset.showQuickPick.delete", "Delete")
-    ) {
-        globals.LOG.debug(
-            localize("deleteDataset.showQuickPick.log.debug", "User picked Cancel. Cancelling delete of data set")
-        );
-        return;
-    }
-
     let label = "";
     let fav = false;
     try {
@@ -872,24 +961,6 @@ export async function deleteDataset(node: IZoweTreeNode, datasetProvider: IZoweT
     } else {
         node.getSessionNode().dirty = true;
         datasetProvider.removeFavorite(node);
-    }
-
-    // refresh Tree View & favorites
-    if (node.getParent() && node.getParent().contextValue !== globals.DS_SESSION_CONTEXT) {
-        datasetProvider.refreshElement(node.getParent());
-        if (contextually.isFavorite(node) || contextually.isFavorite(node.getParent())) {
-            const nonFavNode = datasetProvider.findNonFavoritedNode(node.getParent());
-            if (nonFavNode) {
-                datasetProvider.refreshElement(nonFavNode);
-            }
-        } else {
-            const favNode = datasetProvider.findFavoritedNode(node.getParent());
-            if (favNode) {
-                datasetProvider.refreshElement(favNode);
-            }
-        }
-    } else {
-        datasetProvider.refresh();
     }
 
     // remove local copy of file
