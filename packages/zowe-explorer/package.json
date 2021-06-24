@@ -1562,6 +1562,12 @@
           "description": "Zowe-Temp-Folder-Loacation",
           "scope": "window"
         },
+        "Zowe-Hide-Temp-Folder": {
+          "type": "boolean",
+          "default": true,
+          "description": "%Zowe-Hide-Temp-Folder%",
+          "scope": "window"
+        },
         "Zowe Security: Credential Key": {
           "type": "string",
           "default": "",
