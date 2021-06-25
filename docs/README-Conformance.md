@@ -72,7 +72,7 @@ General conformance criteria for all VS Code extensions that add new capabilitie
    <th style="background-color:#AAAAAA"></th>
    <th style="background-color:#AAAAAA">x</th>
    <th></th>
-   <td><b>User settings consistency:</b> Extension provides a consistent user experience and follows the recommended naming convention for the user settings and configuration settings indicated in the Zowe Explorer extensibility documentation.</td>
+   <td><b>User settings consistency:</b> Extender provides a consistent user settings experience. For VS Code extensions, extender follows the recommended naming convention for configuration settings as described in VS Code's <a href="https://code.visualstudio.com/api/references/contribution-points#contributes.configuration">configration contribution</a> documentation, and avoids using the prefix `zowe.` at the front of setting names.</td>
  </tr>
 
  <tr>
