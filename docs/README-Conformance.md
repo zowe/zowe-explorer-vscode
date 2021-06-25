@@ -72,7 +72,7 @@ General conformance criteria for all VS Code extensions that add new capabilitie
    <th style="background-color:#AAAAAA"></th>
    <th style="background-color:#AAAAAA">x</th>
    <th></th>
-   <td><b>User settings consistency:</b> Extender provides a consistent user settings experience. For VS Code extensions, extender follows the recommended naming convention for configuration settings as described in VS Code's <a href="https://code.visualstudio.com/api/references/contribution-points#contributes.configuration">configration contribution</a> documentation, and avoids starting setting names with the prefix `zowe.`, which is reserved for Zowe Explorer.</td>
+   <td><b>User settings consistency:</b> Extender provides a consistent user settings experience. For VS Code extensions, extender follows the recommended naming convention for configuration settings as described in VS Code's <a href="https://code.visualstudio.com/api/references/contribution-points#contributes.configuration">configuration contribution documentation</a>, and avoids starting setting names with the prefix `zowe.`, which is reserved for Zowe Explorer.</td>
  </tr>
 
  <tr>
@@ -298,7 +298,7 @@ Criteria for VS Code extensions adding menu and commands to VS Code that utilize
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
    <th></th>
-   <td><b>Context menu groups: </b> If contributing commands to Zowe Explorer's context menus, the extension must add them in new context menu groups that are located below Zowe Explorer's existing context menu groups in the user interface.</td>
+   <td><b>Context menu groups: </b> If contributing commands to Zowe Explorer's context menus, the extension follows the Zowe Explorer extensibility documentation and adds them in new context menu groups that are located below Zowe Explorer's existing context menu groups in the user interface.</td>
  </tr>
 
  <tr>

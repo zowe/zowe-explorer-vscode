@@ -150,9 +150,13 @@ The FTP Zowe Explorer extension provides examples for providing a data provider 
 
 These are parallel implementations of the same operations that are provided by Zowe Explorer itself using the z/OSMF interaction protocol. You can find that implementation for reference in the file [packages/zowe-explorer-api/src/profiles/ZoweExplorerZosmfApi.ts](../packages/zowe-explorer-api/src/profiles/ZoweExplorerZosmfApi.ts).
 
-## Creating an extension that provides menus and contextual hooks
+## Creating an extension that adds menu commands
 
-A Zowe Explorer menu extension contributes additional commands to Zowe Explorer's existing menus in VS Code. Typically, these are contributions to the right-click context menus associated with items in one or more of Zowe Explorer's three tree views (Data Sets, USS, and Jobs). VS Code extensions can define and use commands in the `contributes` section of their `package.json`. By setting the `when` property of a command to match the views and context values used by Zowe Explorer, a menu extension can hook into and add commands into Zowe Explorer's existing menus.
+A Zowe Explorer menu extension contributes additional commands to Zowe Explorer's existing menus in VS Code. Typically, these are contributions to the right-click context menus associated with items in one or more of Zowe Explorer's three tree views (Data Sets, USS, and Jobs). VS Code extensions can define and use commands in the `contributes` section of their `package.json` as described in VS Code's [command contribution documentation](https://code.visualstudio.com/api/references/contribution-points#contributes.commands). Extenders should ensure that `command` values they define here do not begin the prefix `zowe.`, which is reserved for Zowe Explorer commands.
+
+### Contextual hooks
+
+By setting the `when` property of a command to match the views and context values used by Zowe Explorer, a menu extension can hook into and add commands into Zowe Explorer's existing menus.
 
 To specify which view a command contribution should appear in, Zowe Explorer menu extenders can use `view == <zowe.viewId>`, where `<zowe.viewId>` is one of the following view IDs used by Zowe Explorer:
 
@@ -162,7 +166,7 @@ To specify which view a command contribution should appear in, Zowe Explorer men
 
 To allow for more granular control over which type(s) of tree items a command should be associated with (for example, a USS textfile versus a USS directory), Zowe Explorer uses a strategy of adding and removing context components for an individual Tree Item's context value if that imparts additional information that could assist with menu triggers. Extenders can leverage this when defining a command's `when` property by specifying `viewItem =~ <contextValue>`, where `<contextValue>` is a regular expression that matches the context value of the target Tree Item type(s).
 
-For more information on how to use a command's `when` property, see the VS Code [`when` clause contexts](https://code.visualstudio.com/api/references/when-clause-contexts) documentation.
+For more information on how to use a command's `when` property, see the VS Code [`when` clause contexts documentation](https://code.visualstudio.com/api/references/when-clause-contexts).
 
 In the example below, we are referencing the Jobs view, and more specifically, a Job type tree item that has additional information indicated by the `_rc` context. This can be used by an extender to trigger a specific menu.
 
@@ -171,8 +175,8 @@ In the example below, we are referencing the Jobs view, and more specifically, a
     "view/item/context": [
       {
         "when": "view == zowe.jobs && viewItem =~ /^job.*/ && viewItem =~ /^.*_rc=CC.*/",
-        "command": "zowe.testmule.retcode",
-        "group": "4_workspace"
+        "command": "testmule.retcode",
+        "group": "104_testmule_workspace"
       }
           ],
       ...
@@ -181,3 +185,7 @@ In the example below, we are referencing the Jobs view, and more specifically, a
 ```
 
 Notice the syntax we use for the context value (or `viewItem`) above is a regular expression as denoted by the `=~` equal test. Using regular expressions to describe context allows more meaning to be embedded in the context.
+
+### Grouping menu commands
+
+Extenders can define command groups separated by dividers in VS Code's right-click context menus by using the `group` property for items in `contributes.menus.view/item/context` of their `package.json`. Zowe Explorer prefixes its menu command `group` values with `0##_zowe_`, where `0##` represents numbers 000 - 099. Thus, extenders should avoid using `0##_zowe_` at the beginning of any `group` values they assign for menu commands. Any command groups contributed by extenders should be located below Zowe Explorer's command groups whenever they appear together in the same context menu. This helps keep the core Zowe Explorer context menu commands in a uniform location for users. A recommended extender menu command `group` naming convention would be to prefix the extender's `group` values with `1##_extensionName_`.
