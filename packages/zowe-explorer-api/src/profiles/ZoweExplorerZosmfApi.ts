@@ -225,29 +225,25 @@ export class ZosmfMvsApi extends ZosmfApiCommon implements ZoweExplorerApi.IMvs 
     }
 
     public async copyDataSetMember(
-        { dataSetName: fromDataSetName, memberName: fromMemberName }: zowe.IDataSet,
-        { dataSetName: toDataSetName, memberName: toMemberName }: zowe.IDataSet,
+        { dsn: fromDataSetName, member: fromMemberName }: zowe.IDataSet,
+        { dsn: toDataSetName, member: toMemberName }: zowe.IDataSet,
         options?: zowe.ICopyDatasetOptions
     ): Promise<zowe.IZosFilesResponse> {
         let newOptions: zowe.ICopyDatasetOptions;
         if (options) {
-            if (options.fromDataSet) {
+            if (options["from-dataset"]) {
                 newOptions = options;
             } else {
                 newOptions = {
                     ...options,
-                    ...{ fromDataSet: { dataSetName: fromDataSetName, memberName: fromMemberName } },
+                    ...{ "from-dataset": { dsn: fromDataSetName, member: fromMemberName } },
                 };
             }
         } else {
             // If we decide to match 1:1 the Zowe.Copy.dataSet implementation, we will need to break the interface definition in the ZoweExploreApi
-            newOptions = { fromDataSet: { dataSetName: fromDataSetName, memberName: fromMemberName } };
+            newOptions = { "from-dataset": { dsn: fromDataSetName, member: fromMemberName } };
         }
-        return await zowe.Copy.dataSet(
-            this.getSession(),
-            { dataSetName: toDataSetName, memberName: toMemberName },
-            newOptions
-        );
+        return await zowe.Copy.dataSet(this.getSession(), { dsn: toDataSetName, member: toMemberName }, newOptions);
     }
 
     public async renameDataSet(currentDataSetName: string, newDataSetName: string): Promise<zowe.IZosFilesResponse> {

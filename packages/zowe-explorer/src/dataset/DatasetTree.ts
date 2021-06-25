@@ -961,12 +961,12 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 if (match) {
                     const [, dataSetName, memberName] = match;
                     dataSet = {
-                        dataSetName,
-                        memberName,
+                        dsn: dataSetName,
+                        member: memberName,
                     };
                 } else {
                     dataSet = {
-                        dataSetName: ds.replace(/\s/g, ""),
+                        dsn: ds.replace(/\s/g, ""),
                     };
                 }
                 dsSets.push(dataSet);
