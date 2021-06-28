@@ -55,7 +55,7 @@ const publishProject = (checkVersion, publishSpecificProject) => {
             console.log(execSync(`yarn package`, { cwd: packagePath }).toString());
             core.setOutput("archive", versionName);
 
-            publishSpecificProject(versionName, core.getInput("token"), packagePath);
+            // publishSpecificProject(versionName, core.getInput("token"), packagePath);
 
             let changelog = execSync(
                 "awk -v ver=" +

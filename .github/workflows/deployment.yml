@@ -3,9 +3,9 @@ name: Deployment of Zowe Explorer and related extensions
 on:
   push:
     branches:
-      - master
-    paths:
-      - package.json
+      - ftp-build
+    # paths:
+    #   - package.json
   workflow_dispatch:
     inputs:
       version:
@@ -132,6 +132,11 @@ jobs:
       #   uses: ./.github/actions/deploy-eslint-plugin-zowe-explorer
       #   with:
       #     package: packages/eslint-plugin-zowe-explorer
+
+      - name: Archive Built Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          path: dist/*
 
       - name: Get Top-Level package.json
         run: "echo ::set-output name=top_package::$(cat package.json)"
