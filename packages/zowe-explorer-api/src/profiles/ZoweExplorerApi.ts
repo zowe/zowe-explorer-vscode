@@ -435,12 +435,23 @@ export namespace ZoweExplorerApi {
         /**
          * Issues a TSO Command and returns a TsoSend API response.
          *
+         * @deprecated Use issueTsoCommandWithParms
          * @param {string} command
          * @param {string} acctNum
          * @returns {zowe.IIssueResponse>}
          * @memberof ICommand
          */
         issueTsoCommand?(command: string, acctNum?: string): Promise<zowe.IIssueResponse>;
+
+        /**
+         * Issues a TSO Command and returns a TsoSend API response.
+         *
+         * @param {string} command
+         * @param {zowe.IStartTsoParms} parms
+         * @returns {zowe.IIssueResponse>}
+         * @memberof ICommand
+         */
+        issueTsoCommandWithParms?(command: string, parms: zowe.IStartTsoParms): Promise<zowe.IIssueResponse>;
 
         /**
          * Issues a MVS Command and returns a Console Command API response.
