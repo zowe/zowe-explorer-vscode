@@ -359,8 +359,8 @@ function initUSSProvider(context: vscode.ExtensionContext, ussFileProvider: IZow
 }
 
 function initJobsProvider(context: vscode.ExtensionContext, jobsProvider: IZoweTree<IZoweJobTreeNode>) {
-    vscode.commands.registerCommand("zowe.jobs.zosJobsOpenspool", (session, spool) =>
-        jobActions.getSpoolContent(jobsProvider, session, spool)
+    vscode.commands.registerCommand("zowe.jobs.zosJobsOpenspool", (session, spool, refreshTimestamp) =>
+        jobActions.getSpoolContent(session, spool, refreshTimestamp)
     );
     vscode.commands.registerCommand("zowe.jobs.deleteJob", async (job) => jobActions.deleteCommand(job, jobsProvider));
     vscode.commands.registerCommand("zowe.jobs.runModifyCommand", (job) => jobActions.modifyCommand(job));
@@ -369,6 +369,7 @@ function initJobsProvider(context: vscode.ExtensionContext, jobsProvider: IZoweT
         jobActions.refreshJobsServer(job, jobsProvider)
     );
     vscode.commands.registerCommand("zowe.jobs.refreshAllJobs", async () => refreshActions.refreshAll(jobsProvider));
+    vscode.commands.registerCommand("zowe.jobs.refreshJob", async (job) => jobActions.refreshJob(job, jobsProvider));
     vscode.commands.registerCommand("zowe.jobs.addJobsSession", () => jobsProvider.createZoweSession(jobsProvider));
     vscode.commands.registerCommand("zowe.jobs.setOwner", (job) => jobActions.setOwner(job, jobsProvider));
     vscode.commands.registerCommand("zowe.jobs.setPrefix", (job) => jobActions.setPrefix(job, jobsProvider));

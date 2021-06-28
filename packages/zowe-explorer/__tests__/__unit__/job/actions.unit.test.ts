@@ -61,7 +61,7 @@ function createGlobalMocks() {
     Object.defineProperty(vscode.Uri.parse, "with", { value: jest.fn(), configurable: true });
     const executeCommand = jest.fn();
     Object.defineProperty(vscode.commands, "executeCommand", { value: executeCommand, configurable: true });
-    Object.defineProperty(SpoolProvider, "encodeJobFile", { value: jest.fn(), configurable: true });
+    Object.defineProperty(SpoolProvider, "toUniqueJobFileUri", { value: jest.fn(), configurable: true });
 }
 
 // Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/master/src/util/testing.ts
@@ -689,21 +689,25 @@ describe("Jobs Actions Unit Tests - Function getSpoolContent", () => {
         };
     }
 
-    it("Checking opening of Spool Content", async () => {
+    it("should call showTextDocument with encoded uri", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-
-        mocked(SpoolProvider.encodeJobFile).mockReturnValueOnce(blockMocks.mockUri);
+        const session = "sessionName";
+        const spoolFile = blockMocks.iJobFile;
+        const anyTimestamp = Date.now();
+        mocked(SpoolProvider.toUniqueJobFileUri).mockReturnValueOnce(() => blockMocks.mockUri);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        await jobActions.getSpoolContent(blockMocks.testJobTree, "sessionName", blockMocks.iJobFile);
 
-        expect(mocked(vscode.workspace.openTextDocument)).toBeCalledWith(blockMocks.mockUri);
-        expect(mocked(vscode.window.showTextDocument)).toBeCalled();
+        await jobActions.getSpoolContent(session, spoolFile, anyTimestamp);
+
+        expect(mocked(vscode.window.showTextDocument)).toBeCalledWith(blockMocks.mockUri);
     });
-    it("Checking opening of Spool Content with Unverified profile", async () => {
+    it("should call showTextDocument with encoded uri with unverified profile", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-
+        const session = "sessionName";
+        const spoolFile = blockMocks.iJobFile;
+        const anyTimestamp = Date.now();
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -715,53 +719,43 @@ describe("Jobs Actions Unit Tests - Function getSpoolContent", () => {
                 };
             }),
         });
-
-        mocked(SpoolProvider.encodeJobFile).mockReturnValueOnce(blockMocks.mockUri);
+        mocked(SpoolProvider.toUniqueJobFileUri).mockReturnValueOnce(() => blockMocks.mockUri);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        await jobActions.getSpoolContent(blockMocks.testJobTree, "sessionName", blockMocks.iJobFile);
 
-        expect(mocked(vscode.workspace.openTextDocument)).toBeCalledWith(blockMocks.mockUri);
-        expect(mocked(vscode.window.showTextDocument)).toBeCalled();
+        await jobActions.getSpoolContent(session, spoolFile, anyTimestamp);
+
+        expect(mocked(vscode.window.showTextDocument)).toBeCalledWith(blockMocks.mockUri);
     });
-    it("Checking failed attempt to open Spool Content", async () => {
+    it("should show error message for non existing profile", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-
-        mocked(SpoolProvider.encodeJobFile).mockImplementationOnce(() => {
+        const session = "sessionName";
+        const spoolFile = blockMocks.iJobFile;
+        const anyTimestamp = Date.now();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        mocked(blockMocks.profileInstance.loadNamedProfile).mockImplementationOnce(() => {
             throw new Error("Test");
         });
-        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        await jobActions.getSpoolContent(blockMocks.testJobTree, "sessionName", blockMocks.iJobFile);
 
-        expect(mocked(vscode.workspace.openTextDocument)).not.toBeCalled();
+        await jobActions.getSpoolContent(session, spoolFile, anyTimestamp);
+
         expect(mocked(vscode.window.showTextDocument)).not.toBeCalled();
         expect(mocked(vscode.window.showErrorMessage)).toBeCalledWith("Test Error: Test");
     });
-    it("Checking opening of Spool Content with credentials prompt", async () => {
+    it("should show an error message in case document cannot be shown for some reason", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-
-        blockMocks.profileInstance.promptCredentials.mockReturnValue(["fake", "fake", "fake"]);
-        mocked(SpoolProvider.encodeJobFile).mockReturnValueOnce(blockMocks.mockUri);
+        const session = "sessionName";
+        const spoolFile = blockMocks.iJobFile;
+        const anyTimestamp = Date.now();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        await jobActions.getSpoolContent(blockMocks.testJobTree, "sessionName", blockMocks.iJobFile);
-
-        expect(mocked(vscode.workspace.openTextDocument)).toBeCalledWith(blockMocks.mockUri);
-        expect(mocked(vscode.window.showTextDocument)).toBeCalled();
-    });
-    it("Checking failed attempt to open Spool Content with credentials prompt", async () => {
-        createGlobalMocks();
-        const blockMocks = createBlockMocks();
-
-        blockMocks.profileInstance.promptCredentials.mockReturnValue(["fake", "fake", "fake"]);
-        mocked(SpoolProvider.encodeJobFile).mockImplementationOnce(() => {
+        mocked(SpoolProvider.toUniqueJobFileUri).mockReturnValueOnce(() => blockMocks.mockUri);
+        mocked(vscode.window.showTextDocument).mockImplementationOnce(() => {
             throw new Error("Test");
         });
-        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        await jobActions.getSpoolContent(blockMocks.testJobTree, "sessionName", blockMocks.iJobFile);
 
-        expect(mocked(vscode.workspace.openTextDocument)).not.toBeCalled();
-        expect(mocked(vscode.window.showTextDocument)).not.toBeCalled();
+        await jobActions.getSpoolContent(session, spoolFile, anyTimestamp);
+
         expect(mocked(vscode.window.showErrorMessage)).toBeCalledWith("Test Error: Test");
     });
 });

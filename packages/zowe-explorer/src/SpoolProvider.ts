@@ -36,6 +36,9 @@ export default class SpoolProvider implements vscode.TextDocumentContentProvider
 }
 
 /**
+ * @deprecated because of lack of the VSCode built in cache invalidation support
+ * Please, use the {@link toUniqueJobFileUri} instead
+ *
  * Encode the information needed to get the Spool content.
  *
  * @param session The name of the Zowe profile to use to get the Spool Content
@@ -49,6 +52,25 @@ export function encodeJobFile(session: string, spool: zowe.IJobFile): vscode.Uri
         query,
     });
 }
+
+/**
+ * Encode the information needed to get the Spool content with support of the built in VSCode cache invalidation.
+ *
+ * VSCode built in cache will be applied automatically in case of several requests for the same URI,
+ * so consumers can control the amount of spool content requests by specifying different unique fragments
+ *
+ * Should be used carefully because of the possible memory leaks.
+ *
+ * @param session The name of the Zowe profile to use to get the Spool Content
+ * @param spool The IJobFile to get the spool content for.
+ * @param uniqueFragment The unique fragment of the encoded uri (can be timestamp, for example)
+ */
+export const toUniqueJobFileUri = (session: string, spool: zowe.IJobFile) => (uniqueFragment: string): vscode.Uri => {
+    const encodedUri = encodeJobFile(session, spool);
+    return encodedUri.with({
+        fragment: uniqueFragment,
+    });
+};
 
 /**
  * Decode the information needed to get the Spool content.
