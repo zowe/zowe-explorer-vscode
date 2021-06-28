@@ -133,6 +133,10 @@ jobs:
       #   with:
       #     package: packages/eslint-plugin-zowe-explorer
 
+
+      - name: Create Packages
+        run: yarn package
+
       - name: Archive Built Artifacts
         uses: actions/upload-artifact@v2
         with:
