@@ -102,38 +102,32 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                         );
                     }
                 );
+                const refreshTimestamp = Date.now();
                 spools.forEach((spool) => {
-                    const existing = this.children.find(
-                        (element) => element.label.trim() === `${spool.stepname}:${spool.ddname}(${spool.id})`
-                    );
-                    if (existing) {
-                        elementChildren.push(existing);
-                    } else {
-                        let prefix = spool.stepname;
-                        if (prefix === undefined) {
-                            prefix = spool.procstep;
-                        }
-                        const sessionName = this.getProfileName();
-                        const spoolNode = new Spool(
-                            `${spool.stepname}:${spool.ddname}(${spool.id})`,
-                            vscode.TreeItemCollapsibleState.None,
-                            this,
-                            this.session,
-                            spool,
-                            this.job,
-                            this
-                        );
-                        const icon = getIconByNode(spoolNode);
-                        if (icon) {
-                            spoolNode.iconPath = icon.path;
-                        }
-                        spoolNode.command = {
-                            command: "zowe.jobs.zosJobsOpenspool",
-                            title: "",
-                            arguments: [sessionName, spool],
-                        };
-                        elementChildren.push(spoolNode);
+                    let prefix = spool.stepname;
+                    if (prefix === undefined) {
+                        prefix = spool.procstep;
                     }
+                    const sessionName = this.getProfileName();
+                    const spoolNode = new Spool(
+                        `${spool.stepname}:${spool.ddname}(${spool.id})`,
+                        vscode.TreeItemCollapsibleState.None,
+                        this,
+                        this.session,
+                        spool,
+                        this.job,
+                        this
+                    );
+                    const icon = getIconByNode(spoolNode);
+                    if (icon) {
+                        spoolNode.iconPath = icon.path;
+                    }
+                    spoolNode.command = {
+                        command: "zowe.jobs.zosJobsOpenspool",
+                        title: "",
+                        arguments: [sessionName, spool, refreshTimestamp],
+                    };
+                    elementChildren.push(spoolNode);
                 });
             } else {
                 const jobs = await vscode.window.withProgress(

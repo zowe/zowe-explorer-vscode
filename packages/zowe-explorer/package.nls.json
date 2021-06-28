@@ -100,5 +100,6 @@
   "jobs.ssoLogin": "Log in to Authentication Service",
   "ssoLogout": "Log out from Authentication Service",
   "uss.ssoLogout": "Log out from Authentication Service",
-  "jobs.ssoLogout": "Log out from Authentication Service"
+  "jobs.ssoLogout": "Log out from Authentication Service",
+  "jobs.refreshJob": "Refresh Job"
 }

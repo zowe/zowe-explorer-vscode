@@ -648,6 +648,11 @@
           "light": "./resources/light/pattern.svg",
           "dark": "./resources/dark/pattern.svg"
         }
+      },
+      {
+        "command": "zowe.jobs.refreshJob",
+        "title": "%jobs.refreshJob%",
+        "category": "Zowe Explorer"
       }
     ],
     "menus": {
@@ -1086,13 +1091,18 @@
         },
         {
           "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)job.*/",
-          "command": "zowe.jobs.getJobJcl",
+          "command": "zowe.jobs.refreshJob",
           "group": "000_zowe_jobsMainframeInteraction@0"
         },
         {
           "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)job.*/",
-          "command": "zowe.jobs.downloadSpool",
+          "command": "zowe.jobs.getJobJcl",
           "group": "000_zowe_jobsMainframeInteraction@1"
+        },
+        {
+          "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)job.*/",
+          "command": "zowe.jobs.downloadSpool",
+          "group": "000_zowe_jobsMainframeInteraction@2"
         },
         {
           "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)job.*/",
@@ -1473,6 +1483,10 @@
         },
         {
           "command": "zowe.jobs.deleteProfile",
+          "when": "never"
+        },
+        {
+          "command": "zowe.jobs.refreshJob",
           "when": "never"
         }
       ]
