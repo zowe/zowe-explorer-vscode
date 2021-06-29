@@ -466,6 +466,15 @@
         }
       },
       {
+        "command": "zowe.uss.refreshDirectory",
+        "title": "%uss.refreshDirectory%",
+        "category": "Zowe Explorer",
+        "icon": {
+          "light": "./resources/light/download.svg",
+          "dark": "./resources/dark/download.svg"
+        }
+      },
+      {
         "command": "zowe.uss.removeSession",
         "title": "%uss.removeSession%",
         "category": "Zowe Explorer"
@@ -710,6 +719,11 @@
           "group": "inline"
         },
         {
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(directory.*|ussSession.*)/",
+          "command": "zowe.uss.refreshDirectory",
+          "group": "000_zowe_ussMainframeInteraction@1"
+        },
+        {
           "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/",
           "command": "zowe.uss.fullPath",
           "group": "000_zowe_ussMainframeInteraction@0"
@@ -717,12 +731,12 @@
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)ussSession.*/",
           "command": "zowe.issueMvsCmd",
-          "group": "000_zowe_ussMainframeInteraction@1"
+          "group": "000_zowe_ussMainframeInteraction@2"
         },
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)ussSession.*/",
           "command": "zowe.issueTsoCmd",
-          "group": "000_zowe_ussMainframeInteraction@2"
+          "group": "000_zowe_ussMainframeInteraction@3"
         },
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(directory|ussSession|favorite|profile_fav))/",
@@ -1351,6 +1365,10 @@
         },
         {
           "command": "zowe.uss.refreshUSS",
+          "when": "never"
+        },
+        {
+          "command": "zowe.uss.refreshDirectory",
           "when": "never"
         },
         {
