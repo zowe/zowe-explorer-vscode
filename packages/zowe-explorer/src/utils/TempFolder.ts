@@ -106,11 +106,11 @@ export async function cleanDir(directory) {
  */
 export async function cleanTempDir() {
     // Get temp folder location from settings
-    const preferencesTempCleanupDisabled = PersistentFilters.getDirectValue(
-        "zowe.disableTemporaryDownloadFolderCleanup"
+    const preferencesTempCleanupEnabled = PersistentFilters.getDirectValue(
+        "zowe.files.temporaryDownloadsFolderCleanup"
     ) as boolean;
     // logger hasn't necessarily been initialized yet, don't use the `log` in this function
-    if (!fs.existsSync(globals.ZOWETEMPFOLDER) || preferencesTempCleanupDisabled) {
+    if (!fs.existsSync(globals.ZOWETEMPFOLDER) || !preferencesTempCleanupEnabled) {
         return;
     }
     try {
