@@ -289,7 +289,7 @@ Criteria for VS Code extensions adding menu and commands to VS Code that utilize
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
    <th></th>
-   <td><b>Command categories: </b> If the extension assigns a value to the `category` property of commands it adds to `contributes.commands` in `package.json`, the `category` value cannot be "Zowe Explorer".</td>
+   <td><b>Command categories: </b> If the extension assigns a value to the <code>category</code> property of commands it adds to <code>contributes.commands</code> in <code>package.json</code>, the <code>category</code> value cannot be "Zowe Explorer".</td>
  </tr>
 
   <tr>
