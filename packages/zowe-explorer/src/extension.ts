@@ -67,13 +67,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     // Determine the runtime framework to support special behavior for Theia
     globals.defineGlobals(preferencesTempPath);
 
-    if (PersistentFilters.getDirectValue("Zowe-Hide-Temp-Folder") as boolean) {
+    if (PersistentFilters.getDirectValue("zowe.hideTempFolder") as boolean) {
         vscode.workspace
             .getConfiguration("files")
             .update(
                 "exclude",
                 { [getZoweDir()]: true, [globals.ZOWETEMPFOLDER]: true },
-                vscode.ConfigurationTarget.Workspace
+                vscode.ConfigurationTarget.Global
             );
     }
 
