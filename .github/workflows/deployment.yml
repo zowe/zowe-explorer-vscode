@@ -3,7 +3,7 @@ name: Deployment of Zowe Explorer and related extensions
 on:
   push:
     branches:
-      - v1.16.x
+      - master
     paths:
       - package.json
   workflow_dispatch:
