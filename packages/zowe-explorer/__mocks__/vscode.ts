@@ -79,6 +79,14 @@ export interface CancellationToken {
     onCancellationRequested: Event<any>;
 }
 
+export class CancellationTokenSource {
+    token: CancellationToken;
+    fire(): void {
+        this.token.isCancellationRequested = true;
+    }
+    dispose(): void {}
+}
+
 export namespace window {
     /**
      * Show an information message to users. Optionally provide an array of items which will be presented as

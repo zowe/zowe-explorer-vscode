@@ -17,7 +17,8 @@ import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { ValidProfileEnum, IZoweTree, IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
 import { Job } from "./ZoweJobNode";
 import * as nls from "vscode-nls";
-import { encodeJobFile } from "../SpoolProvider";
+import { toUniqueJobFileUri } from "../SpoolProvider";
+import { IProfileLoaded } from "@zowe/imperative";
 
 // Set up localization
 nls.config({
@@ -56,25 +57,25 @@ export async function downloadSpool(job: IZoweJobTreeNode) {
  *
  * @param session The session to which the job belongs
  * @param spool The IJobFile to get the spool content for
+ * @param refreshTimestamp The timestamp of the last job node refresh
  */
-export async function getSpoolContent(
-    jobsProvider: IZoweTree<IZoweJobTreeNode>,
-    session: string,
-    spool: zowe.IJobFile
-) {
-    const zosmfProfile = Profiles.getInstance().loadNamedProfile(session);
-    // This has a direct access to Profiles checkcurrentProfile() because I am able to get the profile now.
-    await Profiles.getInstance().checkCurrentProfile(zosmfProfile);
-    if (
-        Profiles.getInstance().validProfile === ValidProfileEnum.VALID ||
-        Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED
-    ) {
+export async function getSpoolContent(session: string, spool: zowe.IJobFile, refreshTimestamp: number) {
+    const profiles = Profiles.getInstance();
+    let zosmfProfile: IProfileLoaded;
+    try {
+        zosmfProfile = profiles.loadNamedProfile(session);
+    } catch (error) {
+        errorHandling(error, session, error.message);
+        return;
+    }
+    await profiles.checkCurrentProfile(zosmfProfile);
+    if (profiles.validProfile === ValidProfileEnum.VALID || profiles.validProfile === ValidProfileEnum.UNVERIFIED) {
+        const uri = toUniqueJobFileUri(session, spool)(refreshTimestamp.toString());
         try {
-            const uri = encodeJobFile(session, spool);
-            const document = await vscode.workspace.openTextDocument(uri);
-            await vscode.window.showTextDocument(document);
+            await vscode.window.showTextDocument(uri);
         } catch (error) {
-            await errorHandling(error, session, error.message);
+            errorHandling(error, session, error.message);
+            return;
         }
     }
 }
@@ -93,6 +94,16 @@ export async function refreshJobsServer(node: IZoweJobTreeNode, jobsProvider: IZ
     ) {
         await jobsProvider.refreshElement(node);
     }
+}
+
+/**
+ * Refresh a job node information and spool files in the job tree
+ *
+ * @param job The job node to refresh
+ * @param jobsProvider The tree to which the refreshed node belongs
+ */
+export function refreshJob(job: Job, jobsProvider: IZoweTree<IZoweJobTreeNode>) {
+    jobsProvider.refreshElement(job);
 }
 
 /**
@@ -207,5 +218,5 @@ export async function deleteCommand(job: IZoweJobTreeNode, jobsProvider: IZoweTr
                 localize("deleteCommand.delete", " deleted")
         );
     }
-    await vscode.commands.executeCommand("zowe.refreshAllJobs");
+    await vscode.commands.executeCommand("zowe.jobs.refreshAllJobs");
 }

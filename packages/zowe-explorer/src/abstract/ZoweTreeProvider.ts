@@ -245,16 +245,16 @@ export class ZoweTreeProvider {
 
     public async ssoLogin(node: IZoweTreeNode) {
         await Profiles.getInstance().ssoLogin(node);
-        await vscode.commands.executeCommand("zowe.refreshAll");
+        await vscode.commands.executeCommand("zowe.ds.refreshAll");
         await vscode.commands.executeCommand("zowe.uss.refreshAll");
-        await vscode.commands.executeCommand("zowe.refreshAllJobs");
+        await vscode.commands.executeCommand("zowe.jobs.refreshAllJobs");
     }
 
     public async ssoLogout(node: IZoweTreeNode) {
         await Profiles.getInstance().ssoLogout(node);
-        await vscode.commands.executeCommand("zowe.refreshAll");
+        await vscode.commands.executeCommand("zowe.ds.refreshAll");
         await vscode.commands.executeCommand("zowe.uss.refreshAll");
-        await vscode.commands.executeCommand("zowe.refreshAllJobs");
+        await vscode.commands.executeCommand("zowe.jobs.refreshAllJobs");
     }
 
     public async createZoweSession(zoweFileProvider: IZoweTree<IZoweNodeType>) {
