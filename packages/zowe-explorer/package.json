@@ -1635,10 +1635,10 @@
           "description": "%Zowe-Environment%",
           "scope": "window"
         },
-        "Zowe-Disable-TempFolder-Cleanup": {
+        "zowe.disableTemporaryDownloadFolderCleanup": {
           "type": "boolean",
           "default": false,
-          "description": "%Zowe-Disable-TempFolder-Cleanup%",
+          "description": "%zowe.disableTemporaryDownloadFolderCleanup%",
           "scope": "window"
         }
       }
