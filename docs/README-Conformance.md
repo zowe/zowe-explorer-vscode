@@ -36,7 +36,7 @@ General conformance criteria for all VS Code extensions that add new capabilitie
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
    <th></th>
-   <td><b>Naming:</b> If the extension uses the word "Zowe" in its name, it abides by Linux Foundation's Trademark Usage rules <b>[ADD LINK]</b> to ensure the word Zowe is used in a way intended by the Zowe community.</td>
+   <td><b>Naming:</b> If the extension uses the word "Zowe" in its name, it abides by The Linux Foundation <a href="https://www.linuxfoundation.org/trademark-usage/">Trademark Usage Guidelines</a> and <a href="https://www.openmainframeproject.org/branding-guidelines">Branding Guidelines</a> to ensure the word Zowe is used in a way intended by the Zowe community.</td>
  </tr>
 
  <tr>
@@ -271,7 +271,7 @@ Criteria for VS Code extensions adding menu and commands to VS Code that utilize
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
    <th></th>
-   <td><b>Menu Names:</b> If the extension is adding new commands and context menu entries to the Zowe Explorer tree view nodes, it adheres to the Zowe Explorer-provided contextual string format.</td>
+   <td><b>Command operations: </b> If the extension is adding new commands to Zowe Explorer's tree views, the commands must not replace any existing Zowe Explorer commands.</td>
  </tr>
 
   <tr>
@@ -280,7 +280,7 @@ Criteria for VS Code extensions adding menu and commands to VS Code that utilize
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
    <th></th>
-   <td><b>Command operations: </b> If the extension is adding new commands to Zowe Explorer's tree views, the commands must not replace any existing Zowe Explorer commands.</td>
+   <td><b>Command categories: </b>  If the extension adds to <code>contributes.commands</code> in <code>package.json</code>, the value assigned to the <code>category</code> property contains the extension name and it cannot be "Zowe Explorer".</td>
  </tr>
 
   <tr>
@@ -289,20 +289,20 @@ Criteria for VS Code extensions adding menu and commands to VS Code that utilize
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
    <th></th>
-   <td><b>Command categories: </b> If the extension assigns a value to the <code>category</code> property of commands it adds to <code>contributes.commands</code> in <code>package.json</code>, the <code>category</code> value cannot be "Zowe Explorer".</td>
+   <td><b>Context menu groups: </b> If contributing commands to Zowe Explorer's context menus, the extension follows the Zowe Explorer extensibility documentation and adds them in new context menu groups that are located below Zowe Explorer's existing context menu groups in the user interface.</td>
  </tr>
 
   <tr>
    <th style="background-color:#555555">23</th>
    <th style="background-color:#555555">v1</th>
-   <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
+   <th style="background-color:#AAAAAA">x</th>
    <th></th>
-   <td><b>Context menu groups: </b> If contributing commands to Zowe Explorer's context menus, the extension follows the Zowe Explorer extensibility documentation and adds them in new context menu groups that are located below Zowe Explorer's existing context menu groups in the user interface.</td>
+   <td><b>Menu Names:</b> If the extension is adding new commands and context menu entries to the Zowe Explorer tree view nodes, it adheres to the Zowe Explorer-provided contextual string format.</td>
  </tr>
 
  <tr>
-   <th style="background-color:#555555">23</th>
+   <th style="background-color:#555555">24</th>
    <th style="background-color:#555555">v1</th>
    <th style="background-color:#AAAAAA"></th>
    <th style="background-color:#AAAAAA">x</th>
