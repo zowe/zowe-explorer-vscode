@@ -51,9 +51,9 @@ export const UssLocators = {
 };
 
 export const JobsLocators = {
-    jobTabId: "plugin-view-container:zowe--plugin-view:zowe.jobs",
+    jobTabId: "plugin-view-container:zowe--plugin-view:zowe.jobs.explorer",
     jobTabXpath: "//span[@title='Jobs']",
-    jobsPanelId: "zowe.jobs",
+    jobsPanelId: "zowe.jobs.explorer",
     jobsAddSessionId: "__plugin.view.title.action.zowe.jobs.addJobsSession",
     emptyInputBoxXpath: "//*[@class='input empty']",
     defaultJobsProfileXpath: "(//div[@id='/1:DefaultProfile'])[3]",

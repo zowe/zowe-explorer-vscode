@@ -4,7 +4,7 @@
   "viewsContainers.activitybar": "Zowe",
   "zowe.ds.explorer": "Data Sets",
   "zowe.uss.explorer": "Unix System Services (USS)",
-  "zowe.jobs": "Jobs",
+  "zowe.jobs.explorer": "Jobs",
   "uss.createFile": "Create File",
   "uss.createFolder": "Create Directory",
   "uss.deleteNode": "Delete",

@@ -80,7 +80,10 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             this.mFavoriteSession.iconPath = icon.path;
         }
         this.mSessionNodes = [this.mFavoriteSession];
-        this.treeView = vscode.window.createTreeView("zowe.jobs", { treeDataProvider: this, canSelectMany: true });
+        this.treeView = vscode.window.createTreeView("zowe.jobs.explorer", {
+            treeDataProvider: this,
+            canSelectMany: true,
+        });
     }
 
     public rename(node: IZoweJobTreeNode) {
