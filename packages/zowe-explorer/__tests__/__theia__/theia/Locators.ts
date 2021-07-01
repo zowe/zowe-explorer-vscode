@@ -16,9 +16,9 @@ export const TheiaLocator = {
 };
 
 export const DatasetsLocators = {
-    datasetTabId: "plugin-view-container:zowe--plugin-view:zowe.explorer",
+    datasetTabId: "plugin-view-container:zowe--plugin-view:zowe.ds.explorer",
     datasetTabXpath: "//span[@title='Data Sets']",
-    datasetsPanelId: "plugin-view:zowe.explorer",
+    datasetsPanelId: "plugin-view:zowe.ds.explorer",
     datasetsAddSessionId: "__plugin.view.title.action.zowe.ds.addSession",
     emptyInputBoxXpath: "//*[@class='input empty']",
     inputBoxXpath: "//*[@class='input']",
