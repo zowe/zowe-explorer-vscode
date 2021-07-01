@@ -105,7 +105,7 @@ export async function cleanDir(directory) {
  * @export
  */
 export async function cleanTempDir() {
-    // Get temp folder location from settings
+    // Get temp folder cleanup preference from settings
     const preferencesTempCleanupEnabled = PersistentFilters.getDirectValue(
         "zowe.files.temporaryDownloadsFolderCleanup"
     ) as boolean;
