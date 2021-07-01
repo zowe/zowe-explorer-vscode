@@ -174,7 +174,7 @@ In the example below, we are referencing the Jobs view, and more specifically, a
   "menus": {
     "view/item/context": [
       {
-        "when": "view == zowe.jobs && viewItem =~ /^job.*/ && viewItem =~ /^.*_rc=CC.*/",
+        "when": "view == zowe.jobs.explorer && viewItem =~ /^job.*/ && viewItem =~ /^.*_rc=CC.*/",
         "command": "testmule.retcode",
         "group": "104_testmule_workspace"
       }
