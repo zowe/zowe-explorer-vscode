@@ -16,6 +16,7 @@ import * as vscode from "vscode";
 import { moveSync } from "fs-extra";
 import * as nls from "vscode-nls";
 import { errorHandling } from "../utils/ProfilesUtils";
+import { PersistentFilters } from "../PersistentFilters";
 
 // Set up localization
 nls.config({
@@ -112,5 +113,18 @@ export async function cleanTempDir() {
         cleanDir(globals.ZOWETEMPFOLDER);
     } catch (err) {
         vscode.window.showErrorMessage(localize("deactivate.error", "Unable to delete temporary folder. ") + err);
+    }
+}
+
+/**
+ * Hides local temp directory from workspace
+ *
+ * @export
+ */
+export async function hideTempFolder(zoweDir: string) {
+    if (PersistentFilters.getDirectValue("zowe.files.hideTemporaryDownloadsFolder") as boolean) {
+        vscode.workspace
+            .getConfiguration("files")
+            .update("exclude", { [zoweDir]: true, [globals.ZOWETEMPFOLDER]: true }, vscode.ConfigurationTarget.Global);
     }
 }
