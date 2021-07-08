@@ -252,6 +252,7 @@ describe("Dataset Tree Unit tests - Function initializeFavChildNodeForProfile", 
         await testTree.initializeFavChildNodeForProfile("BRTVS99.BAD", "badContextValue", favProfileNode);
 
         expect(showErrorMessageSpy).toBeCalledTimes(1);
+        showErrorMessageSpy.mockClear();
     });
 });
 describe("Dataset Tree Unit Tests - Function getChildren", () => {
@@ -510,8 +511,7 @@ describe("Dataset Tree Unit Tests - Function loadProfilesForFavorites", () => {
         );
         const testTree = new DatasetTree();
         testTree.mFavorites.push(favProfileNode);
-        const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
-
+        const showErrorMessageSpy = jest.spyOn(vscode.window, "showErrorMessage");
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -521,9 +521,10 @@ describe("Dataset Tree Unit Tests - Function loadProfilesForFavorites", () => {
                 };
             }),
         });
+        mocked(vscode.window.showErrorMessage).mockResolvedValueOnce({ title: "Remove" });
         await testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
-
-        expect(errorHandlingSpy).toBeCalledTimes(1);
+        expect(showErrorMessageSpy).toBeCalledTimes(1);
+        showErrorMessageSpy.mockClear();
     });
     it("Checking that favorite nodes with pre-existing profile/session values continue using those values", async () => {
         createGlobalMocks();

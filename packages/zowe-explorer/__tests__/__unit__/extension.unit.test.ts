@@ -124,6 +124,7 @@ async function createGlobalMocks() {
             "zowe.addFavorite",
             "zowe.refreshAll",
             "zowe.refreshNode",
+            "zowe.refreshDataset",
             "zowe.pattern",
             "zowe.editSession",
             "zowe.ZoweNode.openPS",
