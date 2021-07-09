@@ -1,5 +1,9 @@
 # Change Log
 
+## `1.16.1`
+
+- Removed redundant entry from the `.vscodeignore` file in order to help generate the `extension.js` file for the VS Code Marketplace release
+
 ## `1.16.0`
 
 - Added the function that closes the connection at the end of each FTP operation
