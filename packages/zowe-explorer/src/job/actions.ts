@@ -129,7 +129,7 @@ export async function downloadJcl(job: Job) {
  */
 export const focusOnJob = async (jobsProvider: IZoweTree<IZoweJobTreeNode>, sessionName: string, jobId: string) => {
     let sessionNode: IZoweJobTreeNode | undefined = jobsProvider.mSessionNodes.find(
-        (jobNode) => jobNode.label === sessionName
+        (jobNode) => jobNode.label.trim() === sessionName.trim()
     );
     if (!sessionNode) {
         try {
@@ -140,16 +140,16 @@ export const focusOnJob = async (jobsProvider: IZoweTree<IZoweJobTreeNode>, sess
         }
         sessionNode = jobsProvider.mSessionNodes.find((jobNode) => jobNode.label === sessionName);
     }
+    try {
+        jobsProvider.refreshElement(sessionNode);
+    } catch (error) {
+        errorHandling(error, null, error.message);
+        return;
+    }
     sessionNode.searchId = jobId;
     const jobs: IZoweJobTreeNode[] = await sessionNode.getChildren();
     const job = jobs.find((jobNode) => jobNode.job.jobid === jobId);
     if (job) {
-        try {
-            jobsProvider.refreshElement(sessionNode);
-        } catch (error) {
-            errorHandling(error, null, error.message);
-            return;
-        }
         jobsProvider.setItem(jobsProvider.getTreeView(), job);
     }
 };
