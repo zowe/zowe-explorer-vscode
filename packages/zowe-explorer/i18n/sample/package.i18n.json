@@ -42,6 +42,7 @@
   "uss.fullPath": "Search Unix System Services (USS)",
   "uss.refreshAll": "Refresh USS View",
   "uss.refreshUSS": "Pull from Mainframe",
+  "uss.refreshDirectory": "Refresh Directory",
   "uss.removeSession": "Hide Profile",
   "uss.binary": "Toggle Binary",
   "uss.uploadDialog": "Upload Files...",
