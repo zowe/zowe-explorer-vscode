@@ -122,6 +122,39 @@ export async function downloadJcl(job: Job) {
 }
 
 /**
+ * Focus of the specified job in the tree
+ * @param jobsProvider is a jobs tree
+ * @param sessionName is a profile name to use in the jobs tree
+ * @param jobId is a job to focus on
+ */
+export const focusOnJob = async (jobsProvider: IZoweTree<IZoweJobTreeNode>, sessionName: string, jobId: string) => {
+    let sessionNode: IZoweJobTreeNode | undefined = jobsProvider.mSessionNodes.find(
+        (jobNode) => jobNode.label === sessionName
+    );
+    if (!sessionNode) {
+        try {
+            await jobsProvider.addSession(sessionName);
+        } catch (error) {
+            errorHandling(error, null, error.message);
+            return;
+        }
+        sessionNode = jobsProvider.mSessionNodes.find((jobNode) => jobNode.label === sessionName);
+    }
+    sessionNode.searchId = jobId;
+    const jobs: IZoweJobTreeNode[] = await sessionNode.getChildren();
+    const job = jobs.find((jobNode) => jobNode.job.jobid === jobId);
+    if (job) {
+        try {
+            jobsProvider.refreshElement(sessionNode);
+        } catch (error) {
+            errorHandling(error, null, error.message);
+            return;
+        }
+        jobsProvider.setItem(jobsProvider.getTreeView(), job);
+    }
+};
+
+/**
  * Modify a job command
  *
  * @param job The job on which to modify a command
