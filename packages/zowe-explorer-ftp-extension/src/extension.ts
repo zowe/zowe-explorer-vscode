@@ -38,6 +38,20 @@ async function registerFtpApis(): Promise<boolean> {
         await zoweExplorerApi.getExplorerExtenderApi().reloadProfiles();
 
         void vscode.window.showInformationMessage("Zowe Explorer was modified for FTP support.");
+
+        // TODO: To test Extender API. Remove before merging this PR
+        const profilesCache = zoweExplorerApi.getExplorerExtenderApi().getProfilesCache();
+        const allProfileTypes = profilesCache.getAllTypes();
+        let message = "Found the following available profiles: ";
+        if (!allProfileTypes) {
+            message += "none.";
+        }
+        for (const profileType of allProfileTypes) {
+            const profileNames = await profilesCache.getNamesForType(profileType);
+            message += `${profileType}: ${JSON.stringify(profileNames)} `;
+        }
+        void vscode.window.showInformationMessage(message);
+
         return true;
     }
     void vscode.window.showInformationMessage(
