@@ -6,6 +6,13 @@ This document describes the requirements of the three available conformance prog
 
 For more details, technical guidance, and code samples for achieving these criteria see the [README-Extending.md](README-Extending.md).
 
+Throughout this document you find the following terminology being used:
+
+- _Extender_: The organization or developer producing an extension for Zowe Explorer.
+- _Zowe Explorer Extension_: An installable piece of software that provides new functionality to Zowe Explorer or uses/calls services provided by Zowe Explorer. An extension can be a VS Code extension as well as a Zowe CLI Plugin or an independent piece of software. The conformance criteria below call out conformance requirements for three typical types of Zowe Explorer extensions, but it is possible that more kinds of extensions are possible. If such new extension kinds surface then Zowe Explorer APIs and this document could be expanded to support them in the future.
+- _Zowe Explorer VS Code extension_: Refers to a Zowe Explorer extension that is a VS Code extension that is installed in addition to Zowe Explorer ad that has a VS Code extension dependency to Zowe Explorer.
+- _Zowe SDKs_ are [SDKs published by the Zowe project](https://docs.zowe.org/stable/user-guide/sdks-using) that provides various APIs for writing Zowe-based capabilities in general.
+
 These Zowe Conformance criteria are applicable to the latest Zowe v1 LTS Release.
 
 - [Zowe Explorer - Zowe v1](#zowe-explorer---zowe-v1)
@@ -18,7 +25,7 @@ These Zowe Conformance criteria are applicable to the latest Zowe v1 LTS Release
 
 ### General Extension
 
-General conformance criteria for all VS Code extensions that add new capabilities to Zowe Explorer.
+General conformance criteria for all extensions that add new capabilities to Zowe Explorer.
 
 <table rules="all">
  <thead>

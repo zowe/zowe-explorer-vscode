@@ -119,7 +119,7 @@ TODO:
 
 ## Creating an extension that adds a data provider
 
-A data provider Zowe Explorer extension that accesses Zowe Explorer profiles as well as provides an alternative protocol for Zowe Explorer to interact with z/OS. The default protocol Zowe Explorer uses is the z/OSMF REST APIs and data provider adds support for another API. For example, the Zowe Explorer extension for zFTP, which is maintained by the Zowe Explorer squad is an example for a Zowe Explorer data provider extension that uses FTP instead of z/OSMF for all of its USS and MVS interactions. To achieve such an extension it uses a Zowe CLI Plugin for FTP that implemented the core interactions and provided them as an SDK. The CLI also defined a new Zowe CLI profile type (zftp) that is used to identify and register the new data provider implementations.
+A data provider Zowe Explorer extension is a VS Code extension that accesses Zowe Explorer profiles as well as provides an alternative protocol for Zowe Explorer to interact with z/OS. The default protocol Zowe Explorer uses is the z/OSMF REST APIs and data provider adds support for another API. For example, the Zowe Explorer extension for zFTP, which is maintained by the Zowe Explorer squad is an example for a Zowe Explorer data provider extension that uses FTP instead of z/OSMF for all of its USS and MVS interactions. To achieve such an extension it uses a Zowe CLI Plugin for FTP that implemented the core interactions and provided them as an SDK. The CLI also defined a new Zowe CLI profile type (zftp) that is used to identify and register the new data provider implementations.
 
 To implement as data provider Zowe Explorer extension you need to
 
