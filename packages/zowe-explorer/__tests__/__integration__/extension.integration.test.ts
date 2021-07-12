@@ -79,10 +79,10 @@ describe("Extension Integration Tests", async () => {
     testTree.mSessionNodes.push(sessionNode);
 
     let sandbox;
-    const tempSettings = PersistentFilters.getDirectValue("zowe.files.temporaryDownloadsFolderCleanup");
+    const tempSettings = PersistentFilters.getDirectValue("zowe.files.temporaryDownloadsFolder.cleanup");
     await vscode.workspace
         .getConfiguration()
-        .update("zowe.files.temporaryDownloadsFolderCleanup", true, vscode.ConfigurationTarget.Global);
+        .update("zowe.files.temporaryDownloadsFolder.cleanup", true, vscode.ConfigurationTarget.Global);
 
     beforeEach(async function () {
         this.timeout(TIMEOUT);
@@ -110,7 +110,7 @@ describe("Extension Integration Tests", async () => {
             .update("Zowe-DS-Persistent", dsSettings, vscode.ConfigurationTarget.Global);
         await vscode.workspace
             .getConfiguration()
-            .update("zowe.files.temporaryDownloadsFolderCleanup", tempSettings, vscode.ConfigurationTarget.Global);
+            .update("zowe.files.temporaryDownloadsFolder.cleanup", tempSettings, vscode.ConfigurationTarget.Global);
     });
 
     describe("Creating a Session", () => {
