@@ -22,6 +22,7 @@ import { ZoweUSSNode } from "./ZoweUSSNode";
 import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
 import { getIconByNode } from "../generators/icons";
 import * as contextually from "../shared/context";
+import { syncSessionNode } from "../../src/utils/ProfilesUtils";
 
 import * as nls from "vscode-nls";
 import { resetValidationSettings } from "../shared/actions";
@@ -553,9 +554,10 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             Profiles.getInstance().validProfile === ValidProfileEnum.VALID ||
             Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED
         ) {
-            let sessionNode = node.getSessionNode();
+            let sessionNode;
             let remotepath: string;
             if (contextually.isSessionNotFav(node)) {
+                sessionNode = node;
                 if (this.mHistory.getSearchHistory().length > 0) {
                     const createPick = new FilterDescriptor(USSTree.defaultDialogText);
                     const items: vscode.QuickPickItem[] = this.mHistory
@@ -621,6 +623,10 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                     sessionNode.getSession().ISession.base64EncodedAuth = faveNode.getSession().ISession.base64EncodedAuth;
                 }
             }
+            // Get session for sessionNode
+            await syncSessionNode(Profiles.getInstance())((profileValue) =>
+                ZoweExplorerApiRegister.getUssApi(profileValue).getSession()
+            )(node);
             // Sanitization: Replace multiple forward slashes with just one forward slash
             const sanitizedPath = remotepath.replace(/\/+/g, "/").replace(/(\/*)$/, "");
             sessionNode.tooltip = sessionNode.fullPath = sanitizedPath;
