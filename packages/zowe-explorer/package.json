@@ -1599,6 +1599,12 @@
           "description": "Zowe-Temp-Folder-Loacation",
           "scope": "window"
         },
+        "zowe.files.temporaryDownloadsFolder.hide": {
+          "type": "boolean",
+          "default": false,
+          "description": "%zowe.files.temporaryDownloadsFolder.hide%",
+          "scope": "window"
+        },
         "Zowe Security: Credential Key": {
           "type": "string",
           "default": "",

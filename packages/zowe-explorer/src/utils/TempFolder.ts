@@ -119,3 +119,16 @@ export async function cleanTempDir() {
         vscode.window.showErrorMessage(localize("deactivate.error", "Unable to delete temporary folder. ") + err);
     }
 }
+
+/**
+ * Hides local temp directory from workspace
+ *
+ * @export
+ */
+export async function hideTempFolder(zoweDir: string) {
+    if (PersistentFilters.getDirectValue("zowe.files.temporaryDownloadsFolder.hide") as boolean) {
+        vscode.workspace
+            .getConfiguration("files")
+            .update("exclude", { [zoweDir]: true, [globals.ZOWETEMPFOLDER]: true }, vscode.ConfigurationTarget.Global);
+    }
+}
