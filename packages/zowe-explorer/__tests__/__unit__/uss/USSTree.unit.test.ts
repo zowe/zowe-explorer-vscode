@@ -604,6 +604,18 @@ describe("USSTree Unit Tests - Function USSTree.filterPrompt()", () => {
         expect(globalMocks.testTree.mSessionNodes[1].fullPath).toEqual("/U/HARRY");
     });
 
+    it("Tests that filter() makes the call to get the combined session information", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        blockMocks.qpValue = "/U/HLQ";
+        globalMocks.showInputBox.mockReturnValueOnce("/U/HLQ");
+        const syncSessionNodeSpy = jest.spyOn(utils, "syncSessionNode");
+
+        await globalMocks.testTree.filterPrompt(globalMocks.testTree.mSessionNodes[1]);
+
+        expect(syncSessionNodeSpy).toBeCalledTimes(1);
+    });
+
     it("Tests that filter() works properly when user enters path with Unverified profile", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
