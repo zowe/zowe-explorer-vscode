@@ -406,6 +406,14 @@ describe("Extension Unit Tests", () => {
                 }
             }),
         });
+        globalMocks.mockGetConfiguration.mockReturnValueOnce({
+            get: (setting: string) => "files",
+            // tslint:disable-next-line: no-empty
+            update: jest.fn(() => {
+                {
+                }
+            }),
+        });
 
         await extension.activate(globalMocks.mockExtension);
 
@@ -422,6 +430,14 @@ describe("Extension Unit Tests", () => {
         globalMocks.mockExistsSync.mockReturnValueOnce(false);
         globalMocks.mockGetConfiguration.mockReturnValueOnce({
             get: (setting: string) => "theia",
+            // tslint:disable-next-line: no-empty
+            update: jest.fn(() => {
+                {
+                }
+            }),
+        });
+        globalMocks.mockGetConfiguration.mockReturnValueOnce({
+            get: (setting: string) => "files",
             // tslint:disable-next-line: no-empty
             update: jest.fn(() => {
                 {

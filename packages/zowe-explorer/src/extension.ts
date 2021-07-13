@@ -40,7 +40,7 @@ import { MvsCommandHandler } from "./command/MvsCommandHandler";
 import SpoolProvider from "./SpoolProvider";
 import * as nls from "vscode-nls";
 import { TsoCommandHandler } from "./command/TsoCommandHandler";
-import { cleanTempDir, moveTempFolder } from "./utils/TempFolder";
+import { cleanTempDir, moveTempFolder, hideTempFolder } from "./utils/TempFolder";
 
 // Set up localization
 nls.config({
@@ -65,6 +65,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
 
     // Determine the runtime framework to support special behavior for Theia
     globals.defineGlobals(preferencesTempPath);
+
+    hideTempFolder(getZoweDir());
 
     try {
         if (!fs.existsSync(globals.ZOWETEMPFOLDER)) {
@@ -139,6 +141,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             await refreshActions.refreshAll(datasetProvider);
             await refreshActions.refreshAll(ussFileProvider);
             await refreshActions.refreshAll(jobsProvider);
+        }
+        if (e.affectsConfiguration("zowe.files.temporaryDownloadsFolder.hide")) {
+            hideTempFolder(getZoweDir());
         }
     });
 
