@@ -122,7 +122,7 @@ export async function cleanTempDir() {
  * @export
  */
 export async function hideTempFolder(zoweDir: string) {
-    if (PersistentFilters.getDirectValue("zowe.files.hideTemporaryDownloadsFolder") as boolean) {
+    if (PersistentFilters.getDirectValue("zowe.files.temporaryDownloadsFolder.hide") as boolean) {
         vscode.workspace
             .getConfiguration("files")
             .update("exclude", { [zoweDir]: true, [globals.ZOWETEMPFOLDER]: true }, vscode.ConfigurationTarget.Global);

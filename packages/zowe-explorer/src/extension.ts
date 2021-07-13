@@ -145,7 +145,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             await refreshActions.refreshAll(ussFileProvider);
             await refreshActions.refreshAll(jobsProvider);
         }
-        if (e.affectsConfiguration("zowe.files.hideTemporaryDownloadsFolder")) {
+        if (e.affectsConfiguration("zowe.files.temporaryDownloadsFolder.hide")) {
             hideTempFolder(getZoweDir());
         }
     });
