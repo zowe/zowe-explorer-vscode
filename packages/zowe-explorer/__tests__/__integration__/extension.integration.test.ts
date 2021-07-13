@@ -44,6 +44,7 @@ import {
     FAVORITE_CONTEXT,
     FAV_PROFILE_CONTEXT,
 } from "../../src/globals";
+import { PersistentFilters } from "../../src/PersistentFilters";
 
 const TIMEOUT = 45000;
 declare var it: Mocha.ITestDefinition;
@@ -57,7 +58,7 @@ const testProfile: IProfileLoaded = {
     failNotFound: false,
 };
 
-describe("Extension Integration Tests", () => {
+describe("Extension Integration Tests", async () => {
     const expect = chai.expect;
     chai.use(chaiAsPromised);
 
@@ -78,6 +79,10 @@ describe("Extension Integration Tests", () => {
     testTree.mSessionNodes.push(sessionNode);
 
     let sandbox;
+    const tempSettings = PersistentFilters.getDirectValue("zowe.files.temporaryDownloadsFolder.cleanup");
+    await vscode.workspace
+        .getConfiguration()
+        .update("zowe.files.temporaryDownloadsFolder.cleanup", true, vscode.ConfigurationTarget.Global);
 
     beforeEach(async function () {
         this.timeout(TIMEOUT);
@@ -88,29 +93,24 @@ describe("Extension Integration Tests", () => {
     afterEach(async function () {
         this.timeout(TIMEOUT);
         const createTestFileName = pattern + ".EXT.CREATE.DATASET.TEST";
-        const allocateLikeFileName = pattern + ".EXT.ALLOC.LIKE";
         try {
             await zowe.Delete.dataSet(session, createTestFileName);
-            await zowe.Delete.dataSet(session, allocateLikeFileName);
         } catch (err) {
             // Do nothing
         }
 
-        const deleteTestFileName = pattern + ".EXT.DELETE.DATASET.TEST";
-        try {
-            await zowe.Delete.dataSet(session, deleteTestFileName);
-        } catch (err) {
-            // Do nothing
-        }
         sandbox.restore();
     });
 
-    const oldSettings = vscode.workspace.getConfiguration("Zowe-DS-Persistent");
+    const dsSettings = vscode.workspace.getConfiguration("Zowe-DS-Persistent");
 
     after(async () => {
         await vscode.workspace
             .getConfiguration()
-            .update("Zowe-DS-Persistent", oldSettings, vscode.ConfigurationTarget.Global);
+            .update("Zowe-DS-Persistent", dsSettings, vscode.ConfigurationTarget.Global);
+        await vscode.workspace
+            .getConfiguration()
+            .update("zowe.files.temporaryDownloadsFolder.cleanup", tempSettings, vscode.ConfigurationTarget.Global);
     });
 
     describe("Creating a Session", () => {
@@ -224,6 +224,13 @@ describe("Extension Integration Tests", () => {
 
             const response = await zowe.List.dataSet(sessionNode.getSession(), testCopyName, {});
             expect(response.success).to.equal(true);
+
+            // Clean up .EXT.ALLOC.LIKE
+            try {
+                await zowe.Delete.dataSet(session, testCopyName);
+            } catch (err) {
+                // Do nothing
+            }
         }).timeout(TIMEOUT);
     });
 
@@ -259,7 +266,7 @@ describe("Extension Integration Tests", () => {
                 // tslint:disable-next-line: no-empty
             } catch {}
         });
-        it("should delete a data set if user verified", async () => {
+        it("should delete a data set", async () => {
             await zowe.Create.dataSet(
                 sessionNode.getSession(),
                 zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL,
@@ -273,67 +280,11 @@ describe("Extension Integration Tests", () => {
             );
 
             // Mock user selecting first option from list
-            const quickPickStub = sandbox.stub(vscode.window, "showQuickPick");
-            quickPickStub.returns("Yes");
             await dsActions.deleteDataset(testNode, testTree);
 
             const response = await zowe.List.dataSet(session, dataSetName);
 
             expect(response.apiResponse.items).to.deep.equal([]);
-        }).timeout(TIMEOUT);
-        it("should not delete a data set if user did not verify", async () => {
-            await zowe.Create.dataSet(
-                sessionNode.getSession(),
-                zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL,
-                dataSetName
-            );
-            const testNode = new ZoweDatasetNode(
-                dataSetName,
-                vscode.TreeItemCollapsibleState.None,
-                sessionNode,
-                session
-            );
-
-            // Mock user selecting second option from list
-            const quickPickStub = sandbox.stub(vscode.window, "showQuickPick");
-            quickPickStub.returns("No");
-            await dsActions.deleteDataset(testNode, testTree);
-
-            const response = await zowe.List.dataSet(session, dataSetName);
-
-            // Check that dataset was not deleted
-            expect(
-                response.apiResponse.items.filter((entry) => {
-                    return entry.dsname === dataSetName.toUpperCase();
-                }).length
-            ).to.greaterThan(0);
-        }).timeout(TIMEOUT);
-        it("should delete a data set if user cancelled", async () => {
-            await zowe.Create.dataSet(
-                sessionNode.getSession(),
-                zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL,
-                dataSetName
-            );
-            const testNode = new ZoweDatasetNode(
-                dataSetName,
-                vscode.TreeItemCollapsibleState.None,
-                sessionNode,
-                session
-            );
-
-            // Mock user not selecting any option from list
-            const quickPickStub = sandbox.stub(vscode.window, "showQuickPick");
-            quickPickStub.returns(undefined);
-            await dsActions.deleteDataset(testNode, testTree);
-
-            const response = await zowe.List.dataSet(session, dataSetName);
-
-            // Check that dataset was not deleted
-            expect(
-                response.apiResponse.items.filter((entry) => {
-                    return entry.dsname === dataSetName.toUpperCase();
-                }).length
-            ).to.greaterThan(0);
         }).timeout(TIMEOUT);
     });
 
@@ -351,8 +302,9 @@ describe("Extension Integration Tests", () => {
             const childrenFromTree = await sessionNode.getChildren();
             childrenFromTree.unshift(...(await childrenFromTree[0].getChildren()));
 
-            await testTree.getTreeView().reveal(childrenFromTree[0]);
-            expect(childrenFromTree[0]).to.deep.equal(testTree.getTreeView().selection[0]);
+            await testTree.getTreeView().reveal(childrenFromTree[0], { select: true });
+            const loadedItems = await testTree.getAllLoadedItems();
+            expect(childrenFromTree[0]).to.deep.equal(loadedItems[0]);
         }).timeout(TIMEOUT);
 
         it("should match data sets for multiple patterns", async () => {
@@ -371,7 +323,9 @@ describe("Extension Integration Tests", () => {
 
             for (const child of childrenFromTree) {
                 await testTree.getTreeView().reveal(child);
-                expect(child).to.deep.equal(testTree.getTreeView().selection[0]);
+                const loadedItems = await testTree.getAllLoadedItems();
+                const foundChild = loadedItems.find((item) => item === child);
+                expect(foundChild).to.not.be.equal(undefined);
             }
         }).timeout(TIMEOUT);
 
@@ -1005,7 +959,7 @@ describe("Extension Integration Tests", () => {
         });
     });
 
-    describe("Updating Temp Folder", () => {
+    describe("Updating Temp Folder", async () => {
         // define paths
         const testingPath = path.join(__dirname, "..", "..", "..", "test");
         const providedPathOne = path.join(__dirname, "..", "..", "..", "test-folder-one");
@@ -1015,6 +969,12 @@ describe("Extension Integration Tests", () => {
         coreUtils.cleanDir(testingPath);
         coreUtils.cleanDir(providedPathOne);
         coreUtils.cleanDir(providedPathTwo);
+
+        after(async () => {
+            coreUtils.cleanDir(testingPath);
+            coreUtils.cleanDir(providedPathOne);
+            coreUtils.cleanDir(providedPathTwo);
+        });
 
         it("should assign the temp folder based on preference", async () => {
             // create target folder

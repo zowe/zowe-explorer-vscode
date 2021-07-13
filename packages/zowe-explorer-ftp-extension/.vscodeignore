@@ -1,5 +1,4 @@
 .vscode/**
-src
 .*ignore
 .*rc*
 *.config.js

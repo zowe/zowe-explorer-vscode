@@ -154,6 +154,7 @@ async function createGlobalMocks() {
             "zowe.uss.refreshAll",
             "zowe.uss.refreshUSS",
             "zowe.uss.refreshUSSInTree",
+            "zowe.uss.refreshDirectory",
             "zowe.uss.fullPath",
             "zowe.uss.editSession",
             "zowe.uss.ZoweUSSNode.open",
@@ -180,6 +181,7 @@ async function createGlobalMocks() {
             "zowe.jobs.runStopCommand",
             "zowe.jobs.refreshJobsServer",
             "zowe.jobs.refreshAllJobs",
+            "zowe.jobs.refreshJob",
             "zowe.jobs.addJobsSession",
             "zowe.jobs.setOwner",
             "zowe.jobs.setPrefix",
@@ -349,15 +351,7 @@ describe("Extension Unit Tests", () => {
 
         // tslint:disable-next-line: no-object-literal-type-assertion
         globalMocks.mockReadFileSync.mockReturnValueOnce('{ "overrides": { "CredentialManager": "Managed by ANO" }}');
-        globalMocks.mockExistsSync.mockReturnValueOnce(true);
-        globalMocks.mockExistsSync.mockReturnValueOnce(true);
         globalMocks.mockExistsSync.mockReturnValueOnce(false);
-        globalMocks.mockExistsSync.mockReturnValueOnce(true);
-        globalMocks.mockReaddirSync.mockReturnValueOnce(["firstFile.txt", "secondFile.txt", "firstDir"]);
-        globalMocks.mockReaddirSync.mockReturnValueOnce(["thirdFile.txt"]);
-        globalMocks.mockReaddirSync.mockReturnValue([]);
-        globalMocks.mockIsFile.mockReturnValueOnce(true);
-        globalMocks.mockIsFile.mockReturnValueOnce(false);
         globalMocks.mockGetConfiguration.mockReturnValue({
             persistence: true,
             get: (setting: string) => [
@@ -374,20 +368,6 @@ describe("Extension Unit Tests", () => {
         });
 
         await extension.activate(globalMocks.mockExtension);
-
-        // Check that deactivate() is called successfully
-        // tslint:disable-next-line: no-magic-numbers
-        expect(globalMocks.mockExistsSync.mock.calls.length).toBe(4);
-        expect(globalMocks.mockExistsSync.mock.calls[0][0]).toBe(globals.ZOWETEMPFOLDER);
-        expect(globalMocks.mockReaddirSync.mock.calls.length).toBe(1);
-        expect(globalMocks.mockReaddirSync.mock.calls[0][0]).toBe(globals.ZOWETEMPFOLDER);
-        expect(globalMocks.mockUnlinkSync.mock.calls.length).toBe(2);
-        expect(globalMocks.mockUnlinkSync.mock.calls[0][0]).toBe(path.join(globals.ZOWETEMPFOLDER + "/firstFile.txt"));
-        expect(globalMocks.mockUnlinkSync.mock.calls[1][0]).toBe(path.join(globals.ZOWETEMPFOLDER + "/secondFile.txt"));
-        expect(globalMocks.mockRmdirSync.mock.calls.length).toBe(1);
-        expect(globalMocks.mockRmdirSync.mock.calls[0][0]).toBe(globals.ZOWETEMPFOLDER);
-        // tslint:disable-next-line: no-magic-numbers
-        expect(globalMocks.mockMkdirSync.mock.calls.length).toBe(4);
 
         // Check that tree providers are initialized successfully
         // tslint:disable-next-line: no-magic-numbers
@@ -418,10 +398,6 @@ describe("Extension Unit Tests", () => {
         const globalMocks = await createGlobalMocks();
 
         globalMocks.mockExistsSync.mockReturnValueOnce(false);
-        globalMocks.mockExistsSync.mockReturnValueOnce(true);
-        globalMocks.mockExistsSync.mockReturnValueOnce(true);
-        // tslint:disable-next-line: no-empty
-        globalMocks.mockRmdirSync.mockImplementationOnce(() => {});
         globalMocks.mockGetConfiguration.mockReturnValueOnce({
             get: (setting: string) => [""],
             // tslint:disable-next-line: no-empty
@@ -434,7 +410,6 @@ describe("Extension Unit Tests", () => {
         await extension.activate(globalMocks.mockExtension);
 
         expect(globalMocks.mockExistsSync.mock.calls.length).toBe(2);
-        expect(globalMocks.mockReaddirSync.mock.calls.length).toBe(0);
     });
 
     it("Tests that activate() works correctly for Theia", async () => {
@@ -444,18 +419,7 @@ describe("Extension Unit Tests", () => {
         Object.defineProperty(vscode.env, "uiKind", { value: vscode.UIKind.Web });
         globalMocks.mockExistsSync.mockReset();
         globalMocks.mockReaddirSync.mockReset();
-        globalMocks.mockExistsSync.mockReturnValueOnce(true);
-        globalMocks.mockExistsSync.mockReturnValueOnce(true);
-        globalMocks.mockReaddirSync.mockReturnValueOnce(["firstFile", "secondFile"]);
-        globalMocks.mockUnlinkSync.mockImplementationOnce(() => {
-            return;
-        });
-        globalMocks.mockUnlinkSync.mockImplementationOnce(() => {
-            return;
-        });
-        globalMocks.mockUnlinkSync.mockImplementationOnce(() => {
-            throw Error("testError");
-        });
+        globalMocks.mockExistsSync.mockReturnValueOnce(false);
         globalMocks.mockGetConfiguration.mockReturnValueOnce({
             get: (setting: string) => "theia",
             // tslint:disable-next-line: no-empty

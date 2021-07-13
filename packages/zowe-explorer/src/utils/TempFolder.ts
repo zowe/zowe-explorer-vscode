@@ -16,6 +16,7 @@ import * as vscode from "vscode";
 import { moveSync } from "fs-extra";
 import * as nls from "vscode-nls";
 import { errorHandling } from "../utils/ProfilesUtils";
+import { PersistentFilters } from "../PersistentFilters";
 
 // Set up localization
 nls.config({
@@ -82,7 +83,7 @@ export function moveTempFolder(previousTempPath: string, currentTempPath: string
  *
  * @param directory path to directory to be deleted
  */
-export function cleanDir(directory) {
+export async function cleanDir(directory) {
     if (!fs.existsSync(directory)) {
         return;
     }
@@ -104,12 +105,16 @@ export function cleanDir(directory) {
  * @export
  */
 export async function cleanTempDir() {
+    // Get temp folder cleanup preference from settings
+    const preferencesTempCleanupEnabled = PersistentFilters.getDirectValue(
+        "zowe.files.temporaryDownloadsFolder.cleanup"
+    ) as boolean;
     // logger hasn't necessarily been initialized yet, don't use the `log` in this function
-    if (!fs.existsSync(globals.ZOWETEMPFOLDER)) {
+    if (!fs.existsSync(globals.ZOWETEMPFOLDER) || !preferencesTempCleanupEnabled) {
         return;
     }
     try {
-        cleanDir(globals.ZOWETEMPFOLDER);
+        await cleanDir(globals.ZOWETEMPFOLDER);
     } catch (err) {
         vscode.window.showErrorMessage(localize("deactivate.error", "Unable to delete temporary folder. ") + err);
     }

@@ -89,7 +89,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             this.mFavoriteSession.iconPath = icon.path;
         }
         this.mSessionNodes = [this.mFavoriteSession];
-        this.treeView = vscode.window.createTreeView("zowe.explorer", { treeDataProvider: this });
+        this.treeView = vscode.window.createTreeView("zowe.explorer", { treeDataProvider: this, canSelectMany: true });
     }
 
     /**
