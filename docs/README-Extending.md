@@ -194,7 +194,7 @@ Extenders can define command groups separated by dividers in VS Code's right-cli
 
 ## Footnotes
 
-[<b id="view-ids-upcoming">[1]</b>](#view-ids) In a future version of Zowe Explorer (to be announced), Zowe Explorer's view IDs will be updated to improve the consistency of the formatting. The updated view IDs will be as follows:
+[<b id="view-ids-upcoming">[1]</b>](#view-ids) In a future version of Zowe Explorer (to be decided), Zowe Explorer's view IDs will be updated to improve the consistency of the formatting. The updated view IDs will be as follows:
 
 - Data Sets view: `zowe.ds.explorer`
 - USS view: `zowe.uss.explorer`
