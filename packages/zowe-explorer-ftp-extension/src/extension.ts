@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { ZoweExplorerApi } from "@zowe/zowe-explorer-api";
+import { ZoweExplorerApi, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { FtpUssApi } from "./ZoweExplorerFtpUssApi";
 import { FtpMvsApi } from "./ZoweExplorerFtpMvsApi";
 import { FtpJesApi } from "./ZoweExplorerFtpJesApi";
@@ -27,22 +27,16 @@ export function activate(context: vscode.ExtensionContext): void {
  */
 
 async function registerFtpApis(): Promise<boolean> {
-    const zoweExplorerApi = vscode.extensions.getExtension("Zowe.vscode-extension-for-zowe");
+    const zoweExplorerApi = ZoweVsCodeExtension.getZoweExplorerApi("1.15.0");
+    if (zoweExplorerApi) {
+        zoweExplorerApi.registerUssApi(new FtpUssApi());
+        zoweExplorerApi.registerMvsApi(new FtpMvsApi());
+        zoweExplorerApi.registerJesApi(new FtpJesApi());
 
-    if (zoweExplorerApi && zoweExplorerApi.exports) {
-        const importedApi = zoweExplorerApi.exports as ZoweExplorerApi.IApiRegisterClient;
-        importedApi.registerUssApi(new FtpUssApi());
-        importedApi.registerMvsApi(new FtpMvsApi());
-        importedApi.registerJesApi(new FtpJesApi());
-        // check for getExplorerExtenderApi().initForZowe() to initialize home dir folder if cli not installed
-        if (importedApi.getExplorerExtenderApi && importedApi.getExplorerExtenderApi().initForZowe) {
-            const meta = await CoreUtils.getProfileMeta();
-            await importedApi.getExplorerExtenderApi().initForZowe("zftp", meta);
-        }
-        // check as getExplorerExtenderApi().reloadProfiles() was add in Zowe Explorer 1.5 only
-        if (importedApi.getExplorerExtenderApi && importedApi.getExplorerExtenderApi().reloadProfiles) {
-            await importedApi.getExplorerExtenderApi().reloadProfiles();
-        }
+        const meta = await CoreUtils.getProfileMeta();
+        await zoweExplorerApi.getExplorerExtenderApi().initForZowe("zftp", meta);
+        await zoweExplorerApi.getExplorerExtenderApi().reloadProfiles();
+
         void vscode.window.showInformationMessage("Zowe Explorer was modified for FTP support.");
         return true;
     }
