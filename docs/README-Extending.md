@@ -160,9 +160,11 @@ By setting the `when` property of a command to match the views and context value
 
 To specify which view a command contribution should appear in, Zowe Explorer menu extenders can use `view == <zowe.viewId>`, where `<zowe.viewId>` is one of the following view IDs used by Zowe Explorer:
 
-- Data Sets view: `zowe.ds.explorer`
+- Data Sets view: `zowe.explorer`
 - USS view: `zowe.uss.explorer`
-- Jobs view: `zowe.jobs.explorer`
+- Jobs view: `zowe.jobs`
+
+**Note:** For details on planned upcoming changes to the above view IDs, see the footnote<sup id="view-ids">[1](#view-ids-upcoming)</sup>.
 
 To allow for more granular control over which type(s) of tree items a command should be associated with (for example, a USS textfile versus a USS directory), Zowe Explorer uses a strategy of adding and removing context components for an individual Tree Item's context value if that imparts additional information that could assist with menu triggers. Extenders can leverage this when defining a command's `when` property by specifying `viewItem =~ <contextValue>`, where `<contextValue>` is a regular expression that matches the context value of the target Tree Item type(s).
 
@@ -189,3 +191,11 @@ Notice the syntax we use for the context value (or `viewItem`) above is a regula
 ### Grouping menu commands
 
 Extenders can define command groups separated by dividers in VS Code's right-click context menus by using the `group` property for items in `contributes.menus.view/item/context` of their `package.json`. Zowe Explorer prefixes its menu command `group` values with `0##_zowe_`, where `0##` represents numbers 000 - 099. Thus, extenders should avoid using `0##_zowe_` at the beginning of any `group` values they assign for menu commands. Any command groups contributed by extenders should be located below Zowe Explorer's command groups whenever they appear together in the same context menu. This helps keep the core Zowe Explorer context menu commands in a uniform location for users. A recommended extender menu command `group` naming convention would be to prefix the extender's `group` values with `1##_extensionName_`.
+
+## Footnotes
+
+[<b id="view-ids-upcoming">[1]</b>](#view-ids) In a future version of Zowe Explorer (to be announced), Zowe Explorer's view IDs will be updated to improve the consistency of the formatting. The updated view IDs will be as follows:
+
+- Data Sets view: `zowe.ds.explorer`
+- USS view: `zowe.uss.explorer`
+- Jobs view: `zowe.jobs.explorer`
