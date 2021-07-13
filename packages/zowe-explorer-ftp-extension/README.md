@@ -4,11 +4,11 @@ Zowe Explorer's FTP extension adds the FTP protocol to the [Zowe Explorer](https
 
 This VS Code extension also serves as a [source code example](https://github.com/zowe/vscode-extension-for-zowe/tree/master/packages/zowe-explorer-ftp-extension) demonstrating how to use the [Zowe Explorer Extensibility API](https://github.com/zowe/vscode-extension-for-zowe/tree/master/packages/zowe-explorer-api) to create VS Code extensions that extend the Zowe Explorer VS Code extensions with new capabilities.
 
-## What's new in 1.16.0
+## What's new in 1.16.1
 
-Added:
+Bugfix:
 
-- Added the function that closes the connection at the end of each FTP operation.
+- Generate the `extension.js` file for the VS Code Marketplace release.
 
 For more information, see [Changelog](https://github.com/zowe/vscode-extension-for-zowe/blob/master/packages/zowe-explorer-ftp-extension/CHANGELOG.md).
 
