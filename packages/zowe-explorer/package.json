@@ -1658,6 +1658,12 @@
           },
           "description": "%Zowe-Environment%",
           "scope": "window"
+        },
+        "zowe.files.temporaryDownloadsFolder.cleanup": {
+          "type": "boolean",
+          "default": true,
+          "description": "%zowe.files.temporaryDownloadsFolder.cleanup%",
+          "scope": "window"
         }
       }
     }
