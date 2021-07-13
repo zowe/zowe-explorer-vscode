@@ -42,6 +42,7 @@ import SpoolProvider from "./SpoolProvider";
 import * as nls from "vscode-nls";
 import { TsoCommandHandler } from "./command/TsoCommandHandler";
 import { cleanTempDir, moveTempFolder } from "./utils/TempFolder";
+import { trueCasePathSync } from "true-case-path";
 declare const __webpack_require__: typeof require;
 declare const __non_webpack_require__: typeof require;
 
@@ -108,7 +109,12 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             requireKeytar: () => getSecurityModules("keytar"),
         });
         ProfilesConfig.createInstance(mProfileInfo);
-        await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir() });
+        if (vscode.workspace.workspaceFolders) {
+            const rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
+            await mProfileInfo.readProfilesFromDisk({ projectDir: trueCasePathSync(rootPath) });
+        } else {
+            await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir() });
+        }
 
         if (mProfileInfo.usingTeamConfig) {
             // Initialize profile manager for team config
