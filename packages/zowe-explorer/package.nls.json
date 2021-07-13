@@ -74,6 +74,7 @@
   "Zowe-Default-Commands-Persistent-Favorites": "Toggle if Commands persist locally",
   "Zowe-Environment": "Environment where the extension is running, default is VSCode",
   "Zowe-Automatic-Validation": "Allow automatic validation of profiles.",
+  "zowe.files.temporaryDownloadsFolder.cleanup": "Ensure deletion of downloaded file content to clean up local source files during deactivation (that is, closing a window).  Disable this setting to support using multiple windows with z/OS files opened using Zowe Explorer.",
   "issueTsoCmd": "Issue TSO Command",
   "deleteProfile": "Delete Profile",
   "cmd.deleteProfile": "Delete a Profile Permanently...",
