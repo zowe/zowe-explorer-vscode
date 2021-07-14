@@ -7,7 +7,7 @@ The Zowe Explorer API to handle profiles managed by the Secure Credential Store 
 Initializing the `KeytarApi()` can be done by following the steps:
 
 1. Define a VS Code extension dependency as described in [Zowe Explorer extension dependencies and activation](../README-Extending.md#zowe-explorer-extension-dependencies-and-activation) to ensure that the Zowe Explorer API gets activated and initialized before your extension.
-2. Define an NPM dependency to the Zowe Explorer API in your VS Code extension's `package.json` file to get access to Typescript type definitions provided for the API:
+2. Define an NPM dependency to the Zowe Explorer API in your VS Code extension's `package.json` file to get access to Typescript type definitions provided for the API. Also define an NPM dependency to Zowe CLI to get access to Typescript type definitions provided for Zowe Imperative.
 
    ```json
    "dependencies": {
