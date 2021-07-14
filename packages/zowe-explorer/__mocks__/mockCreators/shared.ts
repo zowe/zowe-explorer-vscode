@@ -56,7 +56,31 @@ export function createISessionWithoutCredentials() {
 }
 
 export function createBasicZosmfSession(profile: imperative.IProfileLoaded) {
-    return zowe.ZosmfSession.createBasicZosmfSession(profile.profile);
+    let cmdArgs: imperative.ICommandArguments;
+    if (profile.profile.tokenValue) {
+        cmdArgs = {
+            $0: "zowe",
+            _: [""],
+            host: profile.profile.host,
+            port: profile.profile.port,
+            basePath: profile.profile.basePath,
+            rejectUnauthorized: profile.profile.rejectUnauthorized,
+            tokenType: profile.profile.tokenType,
+            tokenValue: profile.profile.tokenValue,
+        };
+    } else {
+        cmdArgs = {
+            $0: "zowe",
+            _: [""],
+            host: profile.profile.host,
+            port: profile.profile.port,
+            basePath: profile.profile.basePath,
+            rejectUnauthorized: profile.profile.rejectUnauthorized,
+            user: profile.profile.user,
+            password: profile.profile.password,
+        };
+    }
+    return zowe.ZosmfSession.createSessCfgFromArgs(cmdArgs);
 }
 
 export function removeNodeFromArray(badNode, array) {

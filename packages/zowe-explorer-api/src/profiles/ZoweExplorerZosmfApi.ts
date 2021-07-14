@@ -30,14 +30,26 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
     }
 
     public getSessionFromCommandArgument(cmdArgs: ICommandArguments): Session {
-        return zowe.ZosmfSession.createBasicZosmfSessionFromArguments(cmdArgs);
+        return new Session(zowe.ZosmfSession.createSessCfgFromArgs(cmdArgs));
     }
 
     public getSession(profile?: IProfileLoaded): Session {
         if (!this.session) {
             try {
                 if (!this.profile.profile.tokenValue) {
-                    this.session = zowe.ZosmfSession.createBasicZosmfSession((profile || this.profile).profile);
+                    const serviceProfile = (profile || this.profile).profile;
+                    const cmdArgs: ICommandArguments = {
+                        $0: "zowe",
+                        _: [""],
+                        host: serviceProfile.profile.host,
+                        port: serviceProfile.profile.port,
+                        basePath: serviceProfile.profile.basePath,
+                        rejectUnauthorized: serviceProfile.profile.rejectUnauthorized,
+                        user: serviceProfile.profile.user,
+                        password: serviceProfile.profile.password,
+                    };
+
+                    this.session = this.getSessionFromCommandArgument(cmdArgs);
                 } else {
                     const serviceProfile = this.profile;
                     const cmdArgs: ICommandArguments = {
@@ -79,7 +91,19 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
 
                 validateSession = this.getSessionFromCommandArgument(cmdArgs);
             } else {
-                validateSession = zowe.ZosmfSession.createBasicZosmfSession(validateProfile.profile);
+                const serviceProfile = validateProfile.profile;
+                const cmdArgs: ICommandArguments = {
+                    $0: "zowe",
+                    _: [""],
+                    host: serviceProfile.profile.host,
+                    port: serviceProfile.profile.port,
+                    basePath: serviceProfile.profile.basePath,
+                    rejectUnauthorized: serviceProfile.profile.rejectUnauthorized,
+                    user: serviceProfile.profile.user,
+                    password: serviceProfile.profile.password,
+                };
+
+                validateSession = this.getSessionFromCommandArgument(cmdArgs);
             }
 
             const sessionStatus = await zowe.CheckStatus.getZosmfInfo(validateSession);

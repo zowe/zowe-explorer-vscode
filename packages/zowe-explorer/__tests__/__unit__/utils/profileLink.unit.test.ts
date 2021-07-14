@@ -9,7 +9,7 @@
  *                                                                                 *
  */
 
-import { IProfileLoaded, Logger } from "@zowe/imperative";
+import { IProfileLoaded, Logger, Session, SessConstants } from "@zowe/imperative";
 import * as zowe from "@zowe/cli";
 import * as vscode from "vscode";
 import * as globals from "../../../src/globals";
@@ -57,7 +57,14 @@ const testProfile: IProfileLoaded = {
     failNotFound: false,
 };
 
-const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
+const session = new Session({
+    type: SessConstants.AUTH_TYPE_BASIC,
+    hostname: testConst.profile.host,
+    port: testConst.profile.port,
+    user: testConst.profile.user,
+    password: testConst.profile.password,
+    rejectUnauthorized: testConst.profile.rejectUnauthorized,
+});
 const sessionNode = new ZoweDatasetNode(
     testConst.profile.name,
     vscode.TreeItemCollapsibleState.Expanded,

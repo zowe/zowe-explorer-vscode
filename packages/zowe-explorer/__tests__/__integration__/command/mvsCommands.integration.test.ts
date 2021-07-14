@@ -35,7 +35,14 @@ describe("mvsCommands integration test", async () => {
     const expect = chai.expect;
     chai.use(chaiAsPromised);
     const TEST_CMD = "/D T";
-    const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
+    const session = new imperative.Session({
+        type: imperative.SessConstants.AUTH_TYPE_BASIC,
+        hostname: testConst.profile.host,
+        port: testConst.profile.port,
+        user: testConst.profile.user,
+        password: testConst.profile.password,
+        rejectUnauthorized: testConst.profile.rejectUnauthorized,
+    });
     const testNode = new ZoweDatasetNode(
         "BRTVS99.DDIR",
         vscode.TreeItemCollapsibleState.Collapsed,

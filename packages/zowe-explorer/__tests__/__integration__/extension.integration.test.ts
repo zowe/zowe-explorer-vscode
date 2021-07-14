@@ -11,7 +11,7 @@
 
 // tslint:disable:no-magic-numbers
 import * as zowe from "@zowe/cli";
-import { Logger, CliProfileManager, IProfileLoaded } from "@zowe/imperative";
+import { Logger, CliProfileManager, IProfileLoaded, Session, SessConstants } from "@zowe/imperative";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import * as extension from "../../src/extension";
@@ -61,7 +61,14 @@ describe("Extension Integration Tests", () => {
     const expect = chai.expect;
     chai.use(chaiAsPromised);
 
-    const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
+    const session = new Session({
+        type: SessConstants.AUTH_TYPE_BASIC,
+        hostname: testConst.profile.host,
+        port: testConst.profile.port,
+        user: testConst.profile.user,
+        password: testConst.profile.password,
+        rejectUnauthorized: testConst.profile.rejectUnauthorized,
+    });
     const sessionNode = new ZoweDatasetNode(
         testConst.profile.name,
         vscode.TreeItemCollapsibleState.Expanded,
@@ -1172,7 +1179,14 @@ describe("Extension Integration Tests - USS", () => {
     chai.use(chaiAsPromised);
 
     // Profiles.createInstance(Logger.getAppLogger());
-    const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
+    const session = new Session({
+        type: SessConstants.AUTH_TYPE_BASIC,
+        hostname: testConst.profile.host,
+        port: testConst.profile.port,
+        user: testConst.profile.user,
+        password: testConst.profile.password,
+        rejectUnauthorized: testConst.profile.rejectUnauthorized,
+    });
     const ussSessionNode = new ZoweUSSNode(
         testConst.profile.name,
         vscode.TreeItemCollapsibleState.Expanded,

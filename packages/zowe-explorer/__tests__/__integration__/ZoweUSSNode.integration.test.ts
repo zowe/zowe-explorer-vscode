@@ -10,7 +10,7 @@
  */
 
 import * as zowe from "@zowe/cli";
-import { IProfileLoaded } from "@zowe/imperative";
+import { IProfileLoaded, Session, SessConstants } from "@zowe/imperative";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 // tslint:disable-next-line:no-implicit-dependencies
@@ -35,7 +35,14 @@ describe("ZoweUSSNode Integration Tests", async () => {
     chai.use(chaiAsPromised);
 
     // Uses loaded profile to create a zosmf session with Zowe
-    const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
+    const session = new Session({
+        type: SessConstants.AUTH_TYPE_BASIC,
+        hostname: testConst.profile.host,
+        port: testConst.profile.port,
+        user: testConst.profile.user,
+        password: testConst.profile.password,
+        rejectUnauthorized: testConst.profile.rejectUnauthorized,
+    });
     const sessNode = new ZoweUSSNode(
         testConst.profile.name,
         vscode.TreeItemCollapsibleState.Expanded,

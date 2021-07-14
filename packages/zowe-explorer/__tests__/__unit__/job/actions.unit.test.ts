@@ -45,7 +45,7 @@ function createGlobalMocks() {
     Object.defineProperty(vscode.workspace, "openTextDocument", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showTextDocument", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe, "ZosmfSession", { value: jest.fn(), configurable: true });
-    Object.defineProperty(zowe.ZosmfSession, "createBasicZosmfSession", { value: jest.fn(), configurable: true });
+    Object.defineProperty(zowe.ZosmfSession, "createSessCfgFromArgs", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "activeTextEditor", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showQuickPick", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window.activeTextEditor, "document", {
@@ -370,7 +370,7 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
     it("Checking submit of active text editor content as JCL", async () => {
         createGlobalMocks();
         const blockMocks: any = createBlockMocks();
-        mocked(zowe.ZosmfSession.createBasicZosmfSession).mockReturnValue(blockMocks.session);
+        mocked(zowe.ZosmfSession.createSessCfgFromArgs).mockReturnValue(blockMocks.session);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(vscode.window.showQuickPick).mockReturnValueOnce(
             new Promise((resolve) => {
@@ -398,7 +398,7 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
     it("Checking submit of active text editor content as JCL with Unverified Profile", async () => {
         createGlobalMocks();
         const blockMocks: any = createBlockMocks();
-        mocked(zowe.ZosmfSession.createBasicZosmfSession).mockReturnValue(blockMocks.session);
+        mocked(zowe.ZosmfSession.createSessCfgFromArgs).mockReturnValue(blockMocks.session);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(vscode.window.showQuickPick).mockReturnValueOnce(
             new Promise((resolve) => {
@@ -425,8 +425,8 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
 
     it("Checking failed attempt to submit of active text editor content as JCL", async () => {
         createGlobalMocks();
-        const blockMocks = createBlockMocks();
-        mocked(zowe.ZosmfSession.createBasicZosmfSession).mockReturnValue(blockMocks.session);
+        const blockMocks: any = createBlockMocks();
+        mocked(zowe.ZosmfSession.createSessCfgFromArgs).mockReturnValue(blockMocks.session);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce(null); // Here we imitate the case when no profile was selected
         blockMocks.testDatasetTree.getChildren.mockResolvedValueOnce([
@@ -795,7 +795,7 @@ describe("Jobs Actions Unit Tests - Function refreshJobsServer", () => {
 
     it("Checking common execution of function", async () => {
         createGlobalMocks();
-        const blockMocks = createBlockMocks();
+        const blockMocks: any = createBlockMocks();
 
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const job = new Job(
@@ -807,7 +807,7 @@ describe("Jobs Actions Unit Tests - Function refreshJobsServer", () => {
             blockMocks.imperativeProfile
         );
         job.contextValue = globals.JOBS_SESSION_CONTEXT;
-        mocked(zowe.ZosmfSession.createBasicZosmfSession).mockReturnValueOnce(blockMocks.session);
+        mocked(zowe.ZosmfSession.createSessCfgFromArgs).mockReturnValueOnce(blockMocks.session);
 
         await jobActions.refreshJobsServer(job, blockMocks.testJobTree);
 
@@ -816,7 +816,7 @@ describe("Jobs Actions Unit Tests - Function refreshJobsServer", () => {
     });
     it("Checking common execution of function with Unverified", async () => {
         createGlobalMocks();
-        const blockMocks = createBlockMocks();
+        const blockMocks: any = createBlockMocks();
 
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         Object.defineProperty(Profiles, "getInstance", {
@@ -839,7 +839,7 @@ describe("Jobs Actions Unit Tests - Function refreshJobsServer", () => {
             blockMocks.imperativeProfile
         );
         job.contextValue = globals.JOBS_SESSION_CONTEXT;
-        mocked(zowe.ZosmfSession.createBasicZosmfSession).mockReturnValueOnce(blockMocks.session);
+        mocked(zowe.ZosmfSession.createSessCfgFromArgs).mockReturnValueOnce(blockMocks.session);
 
         await jobActions.refreshJobsServer(job, blockMocks.testJobTree);
 
@@ -848,7 +848,7 @@ describe("Jobs Actions Unit Tests - Function refreshJobsServer", () => {
     });
     it("Checking failed attempt to execute the function", async () => {
         createGlobalMocks();
-        const blockMocks = createBlockMocks();
+        const blockMocks: any = createBlockMocks();
 
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const job = new Job(
@@ -860,7 +860,7 @@ describe("Jobs Actions Unit Tests - Function refreshJobsServer", () => {
             blockMocks.imperativeProfile
         );
         job.contextValue = globals.JOBS_SESSION_CONTEXT;
-        mocked(zowe.ZosmfSession.createBasicZosmfSession).mockReturnValueOnce(blockMocks.session);
+        mocked(zowe.ZosmfSession.createSessCfgFromArgs).mockReturnValueOnce(blockMocks.session);
         blockMocks.testJobTree.checkCurrentProfile.mockImplementationOnce(() => {
             throw Error("test");
         });
@@ -875,7 +875,7 @@ describe("Jobs Actions Unit Tests - Function refreshJobsServer", () => {
     });
     it("Checking execution of function with credential prompt", async () => {
         createGlobalMocks();
-        const blockMocks = createBlockMocks();
+        const blockMocks: any = createBlockMocks();
 
         blockMocks.profileInstance.promptCredentials.mockReturnValue(["fake", "fake", "fake"]);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
@@ -888,7 +888,7 @@ describe("Jobs Actions Unit Tests - Function refreshJobsServer", () => {
             blockMocks.imperativeProfile
         );
         job.contextValue = globals.JOBS_SESSION_CONTEXT;
-        mocked(zowe.ZosmfSession.createBasicZosmfSession).mockReturnValueOnce(blockMocks.session);
+        mocked(zowe.ZosmfSession.createSessCfgFromArgs).mockReturnValueOnce(blockMocks.session);
 
         await jobActions.refreshJobsServer(job, blockMocks.testJobTree);
 
@@ -897,7 +897,7 @@ describe("Jobs Actions Unit Tests - Function refreshJobsServer", () => {
     });
     it("Checking execution of function with credential prompt for favorite", async () => {
         createGlobalMocks();
-        const blockMocks = createBlockMocks();
+        const blockMocks: any = createBlockMocks();
 
         blockMocks.profileInstance.promptCredentials.mockReturnValue(["fake", "fake", "fake"]);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
@@ -910,7 +910,7 @@ describe("Jobs Actions Unit Tests - Function refreshJobsServer", () => {
             blockMocks.imperativeProfile
         );
         job.contextValue = globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX;
-        mocked(zowe.ZosmfSession.createBasicZosmfSession).mockReturnValueOnce(blockMocks.session);
+        mocked(zowe.ZosmfSession.createSessCfgFromArgs).mockReturnValueOnce(blockMocks.session);
 
         await jobActions.refreshJobsServer(job, blockMocks.testJobTree);
 
