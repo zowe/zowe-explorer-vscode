@@ -65,7 +65,6 @@ describe("ZoweUSSNode Integration Tests", async () => {
 
         expect(emptyPONode.label).toBeDefined();
         expect(emptyPONode.collapsibleState).toBeDefined();
-        // sexpect(emptyPONode.getParent()).toBeDefined();
 
         // Tests PS node
         const PSNode = new ZoweUSSNode(
@@ -78,7 +77,6 @@ describe("ZoweUSSNode Integration Tests", async () => {
 
         expect(PSNode.label).toBeDefined();
         expect(PSNode.collapsibleState).toBeDefined();
-        // expect(PSNode.getParent()).toBeDefined();
     });
 
     /*************************************************************************************************************
@@ -90,7 +88,6 @@ describe("ZoweUSSNode Integration Tests", async () => {
 
         expect(edgeNode.label).toBeDefined();
         expect(edgeNode.collapsibleState).toBeDefined();
-        // expect(edgeNode.mParent).toBeDefined();
     });
 
     /*************************************************************************************************************
