@@ -123,11 +123,12 @@ jobs:
 
       - name: Publish the Zowe Explorer APIs
         id: deploy_zowe_explorer_api
-        uses: ./.github/actions/deploy-npm-package-next
+        uses: ./.github/actions/deploy-npm-package
         with:
           name: ${{ fromJson(steps.get_npm_api_info.outputs.package).description }}
           package: packages/zowe-explorer-api
           token: ${{ secrets.NPM_PUBLISHER_TOKEN }}
+          tag: next
 
       # - name: Publish the ESLint plugin for Zowe Explorer
       #   id: deploy_eslint_plugin_zowe_explorer
