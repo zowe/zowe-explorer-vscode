@@ -10,7 +10,7 @@
  */
 
 import * as zowe from "@zowe/cli";
-import { Session, SessConstants, IProfileLoaded, ICommandArguments } from "@zowe/imperative";
+import { Session, SessConstants, IProfileLoaded, ICommandArguments, ConnectionPropsForSessCfg } from "@zowe/imperative";
 import { ZoweExplorerApi } from "./ZoweExplorerApi";
 
 /**
@@ -30,14 +30,17 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
     }
 
     public getSessionFromCommandArgument(cmdArgs: ICommandArguments): Session {
-        return new Session(zowe.ZosmfSession.createSessCfgFromArgs(cmdArgs));
+        const sessCfg = zowe.ZosmfSession.createSessCfgFromArgs(cmdArgs);
+        ConnectionPropsForSessCfg.resolveSessCfgProps(sessCfg, cmdArgs);
+        const sessionToUse = new Session(sessCfg);
+        return sessionToUse;
     }
 
     public getSession(profile?: IProfileLoaded): Session {
         if (!this.session) {
             try {
                 if (!this.profile.profile.tokenValue) {
-                    const serviceProfile = (profile || this.profile).profile;
+                    const serviceProfile = profile || this.profile;
                     const cmdArgs: ICommandArguments = {
                         $0: "zowe",
                         _: [""],
@@ -91,7 +94,7 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
 
                 validateSession = this.getSessionFromCommandArgument(cmdArgs);
             } else {
-                const serviceProfile = validateProfile.profile;
+                const serviceProfile = validateProfile;
                 const cmdArgs: ICommandArguments = {
                     $0: "zowe",
                     _: [""],
