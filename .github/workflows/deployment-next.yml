@@ -173,8 +173,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: v${{ fromJson(steps.get_version.outputs.top_package).version }}-next
-          release_name: v${{ fromJson(steps.get_version.outputs.top_package).version }}-next
+          tag_name: v${{ fromJson(steps.get_version.outputs.top_package).version }}
+          release_name: v${{ fromJson(steps.get_version.outputs.top_package).version }}
           body: |
             ${{ steps.deploy_zowe_explorer_api.outputs.changelog }}
           # body: |
