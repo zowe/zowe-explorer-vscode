@@ -3,7 +3,7 @@ name: Deployment of Zowe Explorer API Next
 on:
   push:
     branches:
-      - next
+      - zowe-explorer-api-next-deployment
     paths:
       - package.json
   workflow_dispatch:

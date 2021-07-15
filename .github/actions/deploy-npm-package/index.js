@@ -32,7 +32,7 @@ const publishSpecificProject = (versionName, token, packagePath, tag) => {
         tag = `latest`;
     }
     console.log(`Publishing: ${versionName}`);
-    console.log(execSync(`npm publish --access public --tag ${tag}`, { cwd: packagePath }).toString());
+    // console.log(execSync(`npm publish --access public --tag ${tag}`, { cwd: packagePath }).toString());
 };
 
 // Call common function to deploy the NPM package
