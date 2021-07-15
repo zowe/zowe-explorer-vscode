@@ -30,7 +30,7 @@ const publishSpecificProject = (versionName, token, packagePath) => {
     console.log(execSync(`echo //registry.npmjs.org/:_authToken=${token} >> .npmrc`, { cwd: packagePath }).toString());
 
     console.log(`Publishing: ${versionName}`);
-    console.log(execSync(`npm publish --access public  --tag next`, { cwd: packagePath }).toString());
+    console.log(execSync(`npm publish --access public --tag next`, { cwd: packagePath }).toString());
 };
 
 // Call common function to deploy the NPM package
