@@ -12,12 +12,12 @@ The Zowe Explorer vNext release enables you to adopt the Team Configuration File
 
 ## Getting Started
 
-Create a profile, review the sample use cases to familiarize yourself with the capabilities of Zowe Explorer, and you are ready to use Zowe Explorer.
+[Create a profile](https://github.com/zowe/vscode-extension-for-zowe/tree/master/packages/zowe-explorer#create-profile), review the [sample use cases](https://github.com/zowe/vscode-extension-for-zowe/tree/master/packages/zowe-explorer#sample-use-cases) to familiarize yourself with the capabilities of Zowe Explorer, and you are ready to use Zowe Explorer.
 
 ### Install the vNext Release version
 
-1. Get the latest pre-release version from the Zowe Explorer Github Releases page
-2. Within VS Code, use **Extensions > Install from vsix**
+1. Get the latest pre-release version from the Zowe Explorer [Github Releases page](https://github.com/zowe/vscode-extension-for-zowe/releases)
+2. Within VS Code, use **File > Preferences > Extensions > Install from vsix**
 3. Select the files you downloaded
 4. Reload your VS Code window.
 
@@ -33,4 +33,4 @@ You can now use all the functionalities of the extension.
 ### Add, Update, and Delete a Profile
 
 1. The add, update, and delete profile options will open the global `zowe.config.json` file for editing
-2. Reload your VS Code window for the changes to take effect
+2. Click **View > Command Palette > Developer: Reload Window** to reload your VS Code window for the changes to take effect.
