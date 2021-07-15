@@ -378,17 +378,9 @@ function initJobsProvider(context: vscode.ExtensionContext, jobsProvider: IZoweT
     vscode.commands.registerCommand("zowe.jobs.removeJobsSession", (job) => jobsProvider.deleteSession(job));
     vscode.commands.registerCommand("zowe.jobs.downloadSpool", (job) => jobActions.downloadSpool(job));
     vscode.commands.registerCommand("zowe.jobs.getJobJcl", (job) => jobActions.downloadJcl(job));
-    vscode.commands.registerCommand("zowe.jobs.setJobSpool", async (session, jobid) => {
-        const sessionNode: IZoweJobTreeNode = jobsProvider.mSessionNodes.find(
-            (jobNode) => jobNode.label.trim() === session.trim()
-        );
-        sessionNode.dirty = true;
-        jobsProvider.refresh();
-        sessionNode.searchId = jobid;
-        const jobs: IZoweJobTreeNode[] = await sessionNode.getChildren();
-        const job: IZoweJobTreeNode = jobs.find((jobNode) => jobNode.job.jobid === jobid);
-        jobsProvider.setItem(jobsProvider.getTreeView(), job);
-    });
+    vscode.commands.registerCommand("zowe.jobs.setJobSpool", async (session, jobId) =>
+        jobActions.focusOnJob(jobsProvider, session, jobId)
+    );
     vscode.commands.registerCommand("zowe.jobs.search", (node) => jobsProvider.filterPrompt(node));
     vscode.commands.registerCommand("zowe.jobs.editSession", async (node) =>
         jobsProvider.editSession(node, jobsProvider)

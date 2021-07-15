@@ -21,7 +21,12 @@ import {
     createTextDocument,
     createInstanceOfProfile,
 } from "../../../__mocks__/mockCreators/shared";
-import { createIJobFile, createIJobObject, createJobsTree } from "../../../__mocks__/mockCreators/jobs";
+import {
+    createIJobFile,
+    createIJobObject,
+    createJobSessionNode,
+    createJobsTree,
+} from "../../../__mocks__/mockCreators/jobs";
 import { createJesApi, bindJesApi } from "../../../__mocks__/mockCreators/api";
 import * as jobActions from "../../../src/job/actions";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
@@ -757,6 +762,72 @@ describe("Jobs Actions Unit Tests - Function getSpoolContent", () => {
         await jobActions.getSpoolContent(session, spoolFile, anyTimestamp);
 
         expect(mocked(vscode.window.showErrorMessage)).toBeCalledWith("Test Error: Test");
+    });
+});
+
+describe("focusing on a job in the tree view", () => {
+    it("should focus on the job in the existing tree view session", async () => {
+        // arrange
+        const submittedJob = createIJobObject();
+        const profile = createIProfile();
+        const session = createISessionWithoutCredentials();
+        const existingJobSession = createJobSessionNode(session, profile);
+        const datasetSessionName = existingJobSession.label;
+        const jobTree = createTreeView();
+        const jobTreeProvider = createJobsTree(session, submittedJob, profile, jobTree);
+        jobTreeProvider.mSessionNodes.push(existingJobSession);
+        const submittedJobNode = new Job(
+            submittedJob.jobid,
+            vscode.TreeItemCollapsibleState.Collapsed,
+            existingJobSession,
+            session,
+            submittedJob,
+            profile
+        );
+        const updatedJobs = [submittedJobNode];
+        existingJobSession.getChildren = jest.fn();
+        mocked(existingJobSession.getChildren).mockReturnValueOnce(Promise.resolve(updatedJobs));
+        // act
+        await jobActions.focusOnJob(jobTreeProvider, datasetSessionName, submittedJob.jobid);
+        // assert
+        expect(mocked(jobTreeProvider.addSession)).not.toHaveBeenCalled();
+        expect(mocked(jobTreeProvider.refreshElement)).toHaveBeenCalledWith(existingJobSession);
+        // comparison between tree views is not working properly
+        // const expectedTreeView = jobTree;
+        const expectedTreeView = expect.anything();
+        expect(mocked(jobTreeProvider.setItem)).toHaveBeenCalledWith(expectedTreeView, submittedJobNode);
+    });
+    it("should add a new tree view session and focus on the job under it", async () => {
+        // arrange
+        const submittedJob = createIJobObject();
+        const profile = createIProfile();
+        const session = createISessionWithoutCredentials();
+        const newJobSession = createJobSessionNode(session, profile);
+        const datasetSessionName = newJobSession.label;
+        const jobTree = createTreeView();
+        const jobTreeProvider = createJobsTree(session, submittedJob, profile, jobTree);
+        mocked(jobTreeProvider.addSession).mockImplementationOnce(() => {
+            jobTreeProvider.mSessionNodes.push(newJobSession);
+        });
+        const submittedJobNode = new Job(
+            submittedJob.jobid,
+            vscode.TreeItemCollapsibleState.Collapsed,
+            newJobSession,
+            session,
+            submittedJob,
+            profile
+        );
+        const updatedJobs = [submittedJobNode];
+        newJobSession.getChildren = jest.fn().mockReturnValueOnce(Promise.resolve(updatedJobs));
+        // act
+        await jobActions.focusOnJob(jobTreeProvider, datasetSessionName, submittedJob.jobid);
+        // assert
+        expect(mocked(jobTreeProvider.addSession)).toHaveBeenCalledWith(datasetSessionName);
+        expect(mocked(jobTreeProvider.refreshElement)).toHaveBeenCalledWith(newJobSession);
+        // comparison between tree views is not working properly
+        // const expectedTreeView = jobTree;
+        const expectedTreeView = expect.anything();
+        expect(mocked(jobTreeProvider.setItem)).toHaveBeenCalledWith(expectedTreeView, submittedJobNode);
     });
 });
 
