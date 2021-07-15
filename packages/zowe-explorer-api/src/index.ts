@@ -17,5 +17,6 @@ export * from "./tree/ZoweExplorerTreeApi";
 export * from "./tree/ZoweTreeNode";
 export * from "./tree/IZoweTree";
 export * from "./tree/IZoweTreeNode";
+export * from "./tree/ZoweVsCodeExtension";
 export * from "./security/KeytarApi";
 export * from "./security/KeytarCredentialManager";

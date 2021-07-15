@@ -1599,6 +1599,12 @@
           "description": "Zowe-Temp-Folder-Loacation",
           "scope": "window"
         },
+        "zowe.files.temporaryDownloadsFolder.hide": {
+          "type": "boolean",
+          "default": false,
+          "description": "%zowe.files.temporaryDownloadsFolder.hide%",
+          "scope": "window"
+        },
         "Zowe Security: Credential Key": {
           "type": "string",
           "default": "",
@@ -1651,6 +1657,12 @@
             "framework": "vscode"
           },
           "description": "%Zowe-Environment%",
+          "scope": "window"
+        },
+        "zowe.files.temporaryDownloadsFolder.cleanup": {
+          "type": "boolean",
+          "default": true,
+          "description": "%zowe.files.temporaryDownloadsFolder.cleanup%",
           "scope": "window"
         }
       }
