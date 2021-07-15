@@ -302,13 +302,16 @@ Your data set member is uploaded.
 1. Navigate to the explorer tree.
 2. Open the **DATA SETS** bar.
 3. Select one or more data sets and/or data set members.
-   (to select more than one item for deletion, hold **CTRL/CMD** key while clicking the items)
-4. Press **DELETE** on your keyboard.
-5. You can also delete a data set or member from the context menu.
-   Right-click on the item and select **Delete Data Set** or **Delete Member** from the context menu.
-6. Confirm the deletion by clicking **Delete** in the drop-down menu.
 
-   ![Delete Data Sets and Members](https://user-images.githubusercontent.com/58596139/123250606-8bee0600-d4ea-11eb-86b7-0720ffbba8e4.gif)
+   **Tip:** Hold **Ctrl/Cmd** key while clicking data sets or data set members to select more than one item for deletion.
+
+4. Press the **Delete** key on your keyboard.
+
+   Alternatively, right-click on the item and select the **Delete Data Set** or **Delete Member** option.
+
+5. Confirm the deletion by clicking **Delete** in the drop-down menu.
+
+   ![Delete Data Sets and Members](/docs/images/ZE-delete-ds2.gif?raw=true "Delete Data Sets and Members")
    <br /><br />
 
 ### View and access multiple profiles simultaneously
