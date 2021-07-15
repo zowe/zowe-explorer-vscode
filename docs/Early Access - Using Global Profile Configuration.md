@@ -12,7 +12,7 @@ The Zowe Explorer vNext release enables you to adopt the Team Configuration File
 
 ## Getting Started
 
-[Create a profile](https://github.com/zowe/vscode-extension-for-zowe/tree/master/packages/zowe-explorer#create-profile), review the [sample use cases](https://github.com/zowe/vscode-extension-for-zowe/tree/master/packages/zowe-explorer#sample-use-cases) to familiarize yourself with the capabilities of Zowe Explorer, and you are ready to use Zowe Explorer.
+Read through the [Zowe Explorer ReadMe file](https://github.com/zowe/vscode-extension-for-zowe/blob/master/packages/zowe-explorer/README.md) to familiarize yourself with the capabilities of Zowe Explorer, and you are ready to use Zowe Explorer.
 
 ### Install the vNext Release version
 
