@@ -18,7 +18,13 @@ import { IProfileLoaded, Logger, Session } from "@zowe/imperative";
 import { ValidProfileEnum, IZoweTree, IZoweDatasetTreeNode, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
-import { FilterDescriptor, FilterItem, resolveQuickPickHelper, errorHandling } from "../utils/ProfilesUtils";
+import {
+    FilterDescriptor,
+    FilterItem,
+    resolveQuickPickHelper,
+    errorHandling,
+    syncSessionNode,
+} from "../utils/ProfilesUtils";
 import { sortTreeItems, getAppName, getDocumentFilePath, labelRefresh } from "../shared/utils";
 import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
@@ -29,7 +35,6 @@ import { resetValidationSettings } from "../shared/actions";
 import { closeOpenedTextFile } from "../utils/workspace";
 import { PersistentFilters } from "../PersistentFilters";
 import { IDataSet, IListOptions } from "@zowe/cli";
-import { syncSessionNode } from "../../src/utils/ProfilesUtils";
 
 // Set up localization
 nls.config({
