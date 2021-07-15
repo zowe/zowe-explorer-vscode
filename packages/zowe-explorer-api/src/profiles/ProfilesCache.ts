@@ -120,19 +120,18 @@ export class ProfilesCache {
         }
     }
 
-    public async refreshConfig(apiRegister: ZoweExplorerApi.IApiRegisterClient): Promise<void> {
+    public refreshConfig(apiRegister: ZoweExplorerApi.IApiRegisterClient): void {
         this.allProfiles = [];
         let tmpAllProfiles = [];
         this.allTypes = [];
         const mProfileInfo = ProfilesConfig.getInstance();
         for (const type of apiRegister.registeredApiTypes()) {
             // Step 1: Get all profiles for each registered type
-            const profilesForType = mProfileInfo.getAllProfiles(type);
+            const profilesForType = mProfileInfo.getAllProfiles(type).filter((temp) => temp.profLoc.osLoc.length !== 0);
             if (profilesForType && profilesForType.length > 0) {
                 for (const prof of profilesForType) {
                     // Step 2: Merge args for each profile
-                    const profAttr = await ProfilesConfig.getMergedAttrs(mProfileInfo, prof);
-                    // Work-around. TODO: Discuss with imperative team
+                    const profAttr = ProfilesConfig.getMergedAttrs(mProfileInfo, prof);
                     const profileFix: imperative.IProfileLoaded = {
                         message: "",
                         name: prof.profName,
@@ -147,13 +146,7 @@ export class ProfilesCache {
                 this.profilesByType.set(type, tmpAllProfiles);
                 tmpAllProfiles = [];
                 const defaultProfAttr = ProfilesConfig.getDefaultProfile(mProfileInfo, type);
-                const defaultProfile: imperative.IProfileLoaded = {
-                    message: "",
-                    name: defaultProfAttr.profName,
-                    type: defaultProfAttr.profType,
-                    profile: defaultProfAttr,
-                    failNotFound: false,
-                };
+                const defaultProfile = imperative.ProfileInfo.profAttrsToProfLoaded(defaultProfAttr);
                 this.defaultProfileByType.set(type, defaultProfile);
             }
             this.allTypes.push(type);

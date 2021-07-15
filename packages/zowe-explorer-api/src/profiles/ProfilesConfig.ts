@@ -39,13 +39,13 @@ export class ProfilesConfig {
 
     private static info: ProfileInfo;
 
-    public static async getMergedAttrs(mProfileInfo: ProfileInfo, profAttrs: IProfAttrs): Promise<IProfile> {
+    public static getMergedAttrs(mProfileInfo: ProfileInfo, profAttrs: IProfAttrs): IProfile {
         const profile: IProfile = {};
         if (profAttrs != null) {
-            const mergedArgs = mProfileInfo.mergeArgsForProfile(profAttrs);
+            const mergedArgs = mProfileInfo.mergeArgsForProfile(profAttrs, { getSecureVals: true });
 
             for (const arg of mergedArgs.knownArgs) {
-                profile[arg.argName] = arg.secure ? await mProfileInfo.loadSecureArg(arg) : arg.argValue;
+                profile[arg.argName] = arg.argValue;
             }
         }
         return profile;
