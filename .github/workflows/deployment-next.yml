@@ -1,4 +1,4 @@
-name: Deployment of Zowe Explorer API next
+name: Deployment of Zowe Explorer API Next
 
 on:
   push:
@@ -123,7 +123,7 @@ jobs:
 
       - name: Publish the Zowe Explorer APIs
         id: deploy_zowe_explorer_api
-        uses: ./.github/actions/deploy-npm-package
+        uses: ./.github/actions/deploy-npm-package-next
         with:
           name: ${{ fromJson(steps.get_npm_api_info.outputs.package).description }}
           package: packages/zowe-explorer-api
