@@ -35,12 +35,13 @@ More information:
 
 **Added**:
 
-- Added the features that automatically includes a missing job session in jobs tree during submitting the job.
-- Added the KeytarApi for Secure Credential Store extender documentation.
-- Add a new setting that enables you to hide temp folder in a workspace.
-- Added the refresh particular job command that enables you to refresh the information about spool files and get the latest spool file content.
+- Added the feature that automatically includes a missing profile in the Jobs view when submitting a job.
+- Added the extender documentation for KeytarApi for Secure Credential Store.
+- Added a new setting that enables you to hide Zowe Explorer's temporary downloads folder from a workspace.
+- Added the command to refresh a particular job and get the latest information and content for its spool files.
 - Added the function that enables you to delete multiple datasets and data set members.
 - Added the feature that enables you to use multiple VS Code windows for files opened via Zowe Explorer.
+- Added the command to refresh USS directory file names without the entire tree collapsing.
 
 **Changed**:
 
@@ -49,7 +50,6 @@ More information:
 **Fixed**:
 
 - Fixed the issue with the USS search and update profile errors for profiles without credentials.
-- Fixed the issue with USS folder contents that caused the collapse of the entire tree upon refresh.
 
 For more information, see [Changelog](https://marketplace.visualstudio.com/items/Zowe.vscode-extension-for-zowe/changelog).
 
