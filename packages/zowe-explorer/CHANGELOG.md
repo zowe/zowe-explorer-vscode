@@ -4,15 +4,15 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ## `1.17.0`
 
-- Added the features that automatically includes a missing job session in jobs tree during submitting the job [#1386](https://github.com/zowe/vscode-extension-for-zowe/pull/1386). Thanks @nickImbirev
-- Added the KeytarApi for Secure Credential Store extender documentation [#1384](https://github.com/zowe/vscode-extension-for-zowe/pull/1384). Thanks @JillieBeanSim
-- Add a new setting that enables you to hide temp folder in a workspace [#1373](https://github.com/zowe/vscode-extension-for-zowe/pull/1373). Thanks @crawr
-- Added the refresh particular job command that enables you to refresh the information about spool files and get the latest spool file content [#1363](https://github.com/zowe/vscode-extension-for-zowe/pull/1363). Thanks @nickImbirev
+- Added the feature that automatically includes a missing profile in the Jobs view when submitting a job [#1386](https://github.com/zowe/vscode-extension-for-zowe/pull/1386). Thanks @nickImbirev
+- Added the extender documentation for KeytarApi for Secure Credential Store [#1384](https://github.com/zowe/vscode-extension-for-zowe/pull/1384). Thanks @JillieBeanSim
+- Added a new setting that enables you to hide Zowe Explorer's temporary downloads folder from a workspace [#1373](https://github.com/zowe/vscode-extension-for-zowe/pull/1373). Thanks @crawr
+- Added the command to refresh a particular job and get the latest information and content for its spool files [#1363](https://github.com/zowe/vscode-extension-for-zowe/pull/1363). Thanks @nickImbirev
 - Added the function that enables you to delete multiple datasets and data set members [#1323](https://github.com/zowe/vscode-extension-for-zowe/pull/1323). Thanks @katelynienaber
 - Added the feature that enables you to use multiple VS Code windows for files opened via Zowe Explorer [#1347](https://github.com/zowe/vscode-extension-for-zowe/pull/1347). Thanks @JillieBeanSim
+- Added the command to refresh USS directory file names without the entire tree collapsing [#1369](https://github.com/zowe/vscode-extension-for-zowe/pull/1369). Thanks @rudyflores
 - Removed non-functioning code from invalid credentials for Theia [#1371](https://github.com/zowe/vscode-extension-for-zowe/pull/1371). Thanks @lauren-li
-- Fixed the issue with the USS search and update profile errors for profiles without credentials [#1391](https://github.com/zowe/vscode-extension-for-zowe/pull/1391). Thanks @lauren-li
-- Fixed the issue with USS folder contents that caused the collapse of the entire tree upon refresh [#1369](https://github.com/zowe/vscode-extension-for-zowe/pull/1369). Thanks @rudyflores
+- Fixed the issue with USS Search and Update Profile errors for profiles without credentials [#1391](https://github.com/zowe/vscode-extension-for-zowe/pull/1391). Thanks @lauren-li
 
 ## `1.16.0`
 
