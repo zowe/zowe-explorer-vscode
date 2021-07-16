@@ -1222,9 +1222,11 @@ export class Profiles extends ProfilesCache {
     public async ssoLogout(node: IZoweNodeType): Promise<void> {
         const baseProfile = this.getBaseProfile();
         const serviceProfile = node.getProfile();
+        // tslint:disable-next-line:no-console
+        console.log(serviceProfile);
 
         // Skip if there is no base profile
-        if (!baseProfile) {
+        if (!baseProfile && !serviceProfile.profile.tokenType) {
             vscode.window.showInformationMessage(localize("ssoLogout.noBase", "This profile does not support logout."));
             return;
         }
@@ -1237,6 +1239,7 @@ export class Profiles extends ProfilesCache {
 
         // This check is for optional credentials
         if (
+            !serviceProfile.profile.tokenType &&
             baseProfile &&
             serviceProfile.profile.host &&
             serviceProfile.profile.port &&
@@ -1268,7 +1271,7 @@ export class Profiles extends ProfilesCache {
                 localize("ssoLogout.successful", "Logout from authentication service was successful.")
             );
 
-            try {
+            if (!serviceProfile.profile.tokenType) {
                 this.getCliProfileManager(baseProfile.type).save({
                     name: baseProfile.name,
                     type: baseProfile.type,
@@ -1279,8 +1282,6 @@ export class Profiles extends ProfilesCache {
                         tokenValue: undefined,
                     },
                 });
-            } catch (error) {
-                vscode.window.showErrorMessage(error.message);
             }
         } catch (error) {
             vscode.window.showErrorMessage(localize("ssoLogout.unableToLogout", "Unable to log out. ") + error.message);
