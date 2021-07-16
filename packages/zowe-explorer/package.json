@@ -1664,6 +1664,138 @@
           "default": true,
           "description": "%zowe.files.temporaryDownloadsFolder.cleanup%",
           "scope": "window"
+        },
+        "zowe.ds.default.binary": {
+          "default": {
+            "dsorg": "PO",
+            "alcunit": "CYL",
+            "primary": 10,
+            "secondary": 10,
+            "dirblk": 25,
+            "recfm": "U",
+            "blksize": 27998,
+            "lrecl": 27998
+          },
+          "description": "%zowe.ds.default.binary%",
+          "scope": "window"
+        },
+        "zowe.ds.default.c": {
+          "default": {
+            "dsorg": "PO",
+            "alcunit": "CYL",
+            "primary": 1,
+            "secondary": 1,
+            "dirblk": 25,
+            "recfm": "VB",
+            "blksize": 32760,
+            "lrecl": 260
+          },
+          "description": "%zowe.ds.default.c%",
+          "scope": "window"
+        },
+        "zowe.ds.default.classic": {
+          "default": {
+            "dsorg": "PO",
+            "alcunit": "CYL",
+            "primary": 1,
+            "secondary": 1,
+            "dirblk": 25,
+            "recfm": "FB",
+            "blksize": 6160,
+            "lrecl": 80
+          },
+          "description": "%zowe.ds.default.classic%",
+          "scope": "window"
+        },
+        "zowe.ds.default.pds": {
+          "default": {
+            "dsorg": "PO",
+            "alcunit": "CYL",
+            "primary": 1,
+            "secondary": 1,
+            "dirblk": 5,
+            "recfm": "FB",
+            "blksize": 6160,
+            "lrecl": 80
+          },
+          "description": "%zowe.ds.default.pds%",
+          "scope": "window"
+        },
+        "zowe.ds.default.ps": {
+          "default": {
+            "dsorg": "PS",
+            "alcunit": "CYL",
+            "primary": 1,
+            "secondary": 1,
+            "recfm": "FB",
+            "blksize": 6160,
+            "lrecl": 80
+          },
+          "description": "%zowe.ds.default.ps%",
+          "scope": "window"
+        },
+        "zowe.ds.history": {
+          "default": {
+            "persistence": true,
+            "favorites": [],
+            "history": [],
+            "sessions": []
+          },
+          "description": "%zowe.ds.history%",
+          "scope": "window"
+        },
+        "zowe.files.temporaryDownloadsFolder.path": {
+          "default": {
+            "folderPath": ""
+          },
+          "description": "zowe.files.temporaryDownloadsFolder.path",
+          "scope": "window"
+        },
+        "zowe.security.credentialPlugin": {
+          "type": "string",
+          "default": "",
+          "description": "%zowe.security.credentialPlugin%",
+          "scope": "window"
+        },
+        "zowe.uss.history": {
+          "default": {
+            "persistence": true,
+            "favorites": [],
+            "history": [],
+            "sessions": []
+          },
+          "description": "%zowe.uss.history%",
+          "scope": "window"
+        },
+        "zowe.jobs.history": {
+          "default": {
+            "persistence": true,
+            "favorites": [],
+            "history": [],
+            "sessions": []
+          },
+          "description": "%zowe.jobs.history%",
+          "scope": "window"
+        },
+        "zowe.commands.alwaysEdit": {
+          "type": "boolean",
+          "default": true,
+          "description": "Allow editing of commands before submitting",
+          "scope": "window"
+        },
+        "zowe.commands.history": {
+          "default": {
+            "persistence": true,
+            "history": []
+          },
+          "description": "%Zowe-Default-Commands-Persistent-Favorites%",
+          "scope": "window"
+        },
+        "zowe.automaticProfileValidation": {
+          "type": "boolean",
+          "default": true,
+          "description": "%Zowe-Automatic-Validation%",
+          "scope": "window"
         }
       }
     }
