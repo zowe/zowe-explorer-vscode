@@ -23,7 +23,7 @@ More information:
 
 ## Contents
 
-- [What's new in Zowe Explorer 1.16.0](#whats-new-in-zowe-explorer-1.16.0)
+- [What's new in Zowe Explorer 1.17.0](#whats-new-in-zowe-explorer-1.17.0)
 - [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
 - [Sample Use Cases](#sample-use-cases)
@@ -31,22 +31,25 @@ More information:
 - [Usage Tips](#usage-tips)
 - [Extending Zowe Explorer](#extending-zowe-explorer)
 
-## What's new in Zowe Explorer 1.16.0
+## What's new in Zowe Explorer 1.17.0
 
 **Added**:
 
-- Added the refresh data set member names option. You can now retrieve a new list of members from the mainframe.
-- Added the best practice documentation for error handling.
-- Added the developer guide for adding commands to core Zowe Explorer menus.
+- Added the feature that automatically includes a missing profile in the Jobs view when submitting a job.
+- Added the extender documentation for KeytarApi for Secure Credential Store.
+- Added a new setting that enables you to hide Zowe Explorer's temporary downloads folder from a workspace.
+- Added the command to refresh a particular job and get the latest information and content for its spool files.
+- Added the function that enables you to delete multiple datasets and data set members.
+- Added the feature that enables you to use multiple VS Code windows for files opened via Zowe Explorer.
+- Added the command to refresh USS directory file names without the entire tree collapsing.
 
 **Changed**:
 
-- Standardized context group names.
+- Removed non-functioning code from invalid credentials for Theia.
 
 **Fixed**:
 
-- Fixed the error message that popped up when accessing a profile from Favorites.
-- Fixed the issue that prevented the Allocate Like feature from working correctly.
+- Fixed the issue with the USS search and update profile errors for profiles without credentials.
 
 For more information, see [Changelog](https://marketplace.visualstudio.com/items/Zowe.vscode-extension-for-zowe/changelog).
 
