@@ -1225,7 +1225,7 @@ export class Profiles extends ProfilesCache {
         // tslint:disable-next-line:no-console
         console.log(serviceProfile);
 
-        // Skip if there is no base profile
+        // Skip if there is no base profile or service profile token
         if (!baseProfile && !serviceProfile.profile.tokenType) {
             vscode.window.showInformationMessage(localize("ssoLogout.noBase", "This profile does not support logout."));
             return;
@@ -1239,10 +1239,7 @@ export class Profiles extends ProfilesCache {
 
         // This check is for optional credentials
         if (
-            !serviceProfile.profile.tokenType &&
             baseProfile &&
-            serviceProfile.profile.host &&
-            serviceProfile.profile.port &&
             ((baseProfile.profile.host !== serviceProfile.profile.host &&
                 baseProfile.profile.port !== serviceProfile.profile.port) ||
                 (baseProfile.profile.host === serviceProfile.profile.host &&
@@ -1253,8 +1250,13 @@ export class Profiles extends ProfilesCache {
         }
 
         try {
-            const profiles = Profiles.getInstance();
-            const combinedProfile = await profiles.getCombinedProfile(serviceProfile, baseProfile);
+            let combinedProfile: IProfileLoaded;
+            if (serviceProfile.profile.tokenType) {
+                combinedProfile = serviceProfile;
+            } else {
+                const profiles = Profiles.getInstance();
+                combinedProfile = await profiles.getCombinedProfile(serviceProfile, baseProfile);
+            }
             const loginTokenType = ZoweExplorerApiRegister.getInstance()
                 .getCommonApi(serviceProfile)
                 .getTokenTypeName();
