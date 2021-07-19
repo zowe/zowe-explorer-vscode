@@ -1222,6 +1222,8 @@ export class Profiles extends ProfilesCache {
     public async ssoLogout(node: IZoweNodeType): Promise<void> {
         const baseProfile = this.getBaseProfile();
         const serviceProfile = node.getProfile();
+        // tslint:disable-next-line:no-console
+        console.log(serviceProfile);
 
         // Skip if there is no base profile
         if (!baseProfile) {
