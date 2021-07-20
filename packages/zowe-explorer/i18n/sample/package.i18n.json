@@ -42,6 +42,7 @@
   "uss.fullPath": "Search Unix System Services (USS)",
   "uss.refreshAll": "Refresh USS View",
   "uss.refreshUSS": "Pull from Mainframe",
+  "uss.refreshDirectory": "Refresh Directory",
   "uss.removeSession": "Hide Profile",
   "uss.binary": "Toggle Binary",
   "uss.uploadDialog": "Upload Files...",
@@ -67,12 +68,14 @@
   "Zowe-Default-Datasets-PS": "Default values of Sequential data set creation",
   "Zowe-Default-Datasets-Favorites": "Toggle if favorite files persist locally",
   "Zowe-Temp-Folder-Loacation": "Path to temporary folder location",
+  "zowe.files.temporaryDownloadsFolder.hide": "Hide the Zowe temporary folder from the workspace",
   "Zowe-Builtin-Security": "Built-in Security. Specify a service of either 'Zowe-Plugin' when using the Secure Credentials Store plugin or @zowe/cli to describe a keytar based solution. The Default 'blank' represents no security. User names and passwords are stored in the clear.",
   "Zowe-Default-USS-Persistent-Favorites": "Toggle if USS favorite files persist locally",
   "Zowe-Default-Jobs-Persistent-Favorites": "Toggle if Jobs favorite files persist locally",
   "Zowe-Default-Commands-Persistent-Favorites": "Toggle if Commands persist locally",
   "Zowe-Environment": "Environment where the extension is running, default is VSCode",
   "Zowe-Automatic-Validation": "Allow automatic validation of profiles.",
+  "zowe.files.temporaryDownloadsFolder.cleanup": "Ensure deletion of downloaded file content to clean up local source files during deactivation (that is, closing a window).  Disable this setting to support using multiple windows with z/OS files opened using Zowe Explorer.",
   "issueTsoCmd": "Issue TSO Command",
   "deleteProfile": "Delete Profile",
   "cmd.deleteProfile": "Delete a Profile Permanently...",
@@ -99,5 +102,6 @@
   "jobs.ssoLogin": "Log in to Authentication Service",
   "ssoLogout": "Log out from Authentication Service",
   "uss.ssoLogout": "Log out from Authentication Service",
-  "jobs.ssoLogout": "Log out from Authentication Service"
+  "jobs.ssoLogout": "Log out from Authentication Service",
+  "jobs.refreshJob": "Refresh Job"
 }
