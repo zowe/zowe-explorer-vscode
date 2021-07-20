@@ -444,7 +444,7 @@ export function getDataSetTypeAndOptions(type: string) {
             break;
         case localize("createFile.dataSetPartitioned", "Data Set Partitioned"):
             typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED;
-            createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-PDS");
+            createOptions = vscode.workspace.getConfiguration("zowe.ds.default.pds");
             break;
         case localize("createFile.dataSetSequential", "Data Set Sequential"):
             typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL;
