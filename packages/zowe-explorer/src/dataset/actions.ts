@@ -440,7 +440,7 @@ export function getDataSetTypeAndOptions(type: string) {
             break;
         case localize("createFile.dataSetClassic", "Data Set Classic"):
             typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_CLASSIC;
-            createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-Classic");
+            createOptions = vscode.workspace.getConfiguration("zowe.ds.default.classic");
             break;
         case localize("createFile.dataSetPartitioned", "Data Set Partitioned"):
             typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED;

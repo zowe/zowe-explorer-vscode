@@ -2475,7 +2475,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Classic" as any);
         await dsActions.createFile(blockMocks.datasetSessionNode, blockMocks.testDatasetTree);
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("Zowe-Default-Datasets-Classic");
+        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("zowe.ds.default.classic");
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Partitioned" as any);
         await dsActions.createFile(blockMocks.datasetSessionNode, blockMocks.testDatasetTree);
@@ -2523,7 +2523,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Classic" as any);
         await dsActions.createFile(node, blockMocks.testDatasetTree);
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("Zowe-Default-Datasets-Classic");
+        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("zowe.ds.default.classic");
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Partitioned" as any);
         await dsActions.createFile(node, blockMocks.testDatasetTree);
@@ -2571,7 +2571,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Classic" as any);
         await dsActions.createFile(node, blockMocks.testDatasetTree);
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("Zowe-Default-Datasets-Classic");
+        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("zowe.ds.default.classic");
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Partitioned" as any);
         await dsActions.createFile(node, blockMocks.testDatasetTree);
