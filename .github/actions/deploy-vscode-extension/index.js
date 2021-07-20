@@ -35,7 +35,7 @@ const publishSpecificProject = (versionName, token, packagePath, tag) => {
         console.log(execSync(`vsce publish --yarn -p ${token.split(" ")[0]}`, { cwd: packagePath }).toString());
         console.log(execSync(`ovsx publish ${versionName}.vsix -p ${token.split(" ")[1]}`, { cwd: "dist" }).toString());
     } else {
-        console.log(`Not publishing the .vsix with the next tag`);
+        console.log(`Not publishing ${versionName}.vsix with the "next" tag.`);
     }
 };
 

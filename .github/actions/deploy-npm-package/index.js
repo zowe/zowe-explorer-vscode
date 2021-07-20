@@ -28,12 +28,8 @@ const checkVersion = (packageJson, version) => {
 const publishSpecificProject = (versionName, token, packagePath, tag) => {
     console.log(execSync(`echo registry=https://registry.npmjs.org/ > .npmrc`, { cwd: packagePath }).toString());
     console.log(execSync(`echo //registry.npmjs.org/:_authToken=${token} >> .npmrc`, { cwd: packagePath }).toString());
-    if (!tag) {
-        tag = `latest`;
-    }
     console.log(`Publishing: ${versionName}`);
-    // console.log(execSync(`npm publish --access public --tag ${tag}`, { cwd: packagePath }).toString());
-    console.log(`Just testing, not publishing.`);
+    console.log(execSync(`npm publish --access public --tag ${tag}`, { cwd: packagePath }).toString());
 };
 
 // Call common function to deploy the NPM package

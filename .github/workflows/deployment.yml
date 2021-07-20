@@ -4,8 +4,7 @@ on:
   push:
     branches:
       - master
-      # - next
-      - zowe-explorer-api-next-deployment
+      - next
     paths:
       - package.json
   workflow_dispatch:
