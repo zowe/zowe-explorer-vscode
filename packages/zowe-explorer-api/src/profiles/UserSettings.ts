@@ -13,7 +13,7 @@
  * The types of persistence schemas wich are available in settings.json
  */
 export enum PersistenceSchemaEnum {
-    Dataset = "Zowe-DS-Persistent",
+    Dataset = "zowe.ds.history",
     USS = "Zowe-USS-Persistent",
     Job = "Zowe-Jobs-Persistent",
 }
