@@ -448,7 +448,7 @@ export function getDataSetTypeAndOptions(type: string) {
             break;
         case localize("createFile.dataSetSequential", "Data Set Sequential"):
             typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL;
-            createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-PS");
+            createOptions = vscode.workspace.getConfiguration("zowe.ds.default.ps");
             break;
     }
     return {

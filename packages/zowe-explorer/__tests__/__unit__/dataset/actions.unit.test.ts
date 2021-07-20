@@ -2483,7 +2483,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Sequential" as any);
         await dsActions.createFile(blockMocks.datasetSessionNode, blockMocks.testDatasetTree);
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("Zowe-Default-Datasets-PS");
+        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("zowe.ds.default.ps");
 
         // tslint:disable-next-line:no-magic-numbers
         expect(createDataSetSpy).toHaveBeenCalledTimes(5);
@@ -2531,7 +2531,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Sequential" as any);
         await dsActions.createFile(node, blockMocks.testDatasetTree);
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("Zowe-Default-Datasets-PS");
+        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("zowe.ds.default.ps");
 
         // tslint:disable-next-line:no-magic-numbers
         expect(createDataSetSpy).toHaveBeenCalledTimes(5);
@@ -2579,7 +2579,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Sequential" as any);
         await dsActions.createFile(node, blockMocks.testDatasetTree);
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("Zowe-Default-Datasets-PS");
+        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("zowe.ds.default.ps");
 
         // tslint:disable-next-line:no-magic-numbers
         expect(createDataSetSpy).toHaveBeenCalledTimes(5);
@@ -2608,7 +2608,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Sequential" as any);
         await dsActions.createFile(node, blockMocks.testDatasetTree);
 
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("Zowe-Default-Datasets-PS");
+        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("zowe.ds.default.ps");
         expect(createDataSetSpy).toHaveBeenCalledWith(zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, "TEST", {
             alcunit: "CYL",
             blksize: 6160,
@@ -2662,7 +2662,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         expect(mocked(vscode.window.showErrorMessage)).toHaveBeenCalledWith(
             "Error encountered when creating data set! Generic Error Error: Generic Error"
         );
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("Zowe-Default-Datasets-PS");
+        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("zowe.ds.default.ps");
         expect(createDataSetSpy).toHaveBeenCalledWith(zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, "TEST", {
             alcunit: "CYL",
             blksize: 6160,
