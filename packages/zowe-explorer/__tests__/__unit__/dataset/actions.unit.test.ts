@@ -2467,7 +2467,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Binary" as any);
         await dsActions.createFile(blockMocks.datasetSessionNode, blockMocks.testDatasetTree);
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("Zowe-Default-Datasets-Binary");
+        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("zowe.ds.default.binary");
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set C" as any);
         await dsActions.createFile(blockMocks.datasetSessionNode, blockMocks.testDatasetTree);
@@ -2515,7 +2515,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Binary" as any);
         await dsActions.createFile(node, blockMocks.testDatasetTree);
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("Zowe-Default-Datasets-Binary");
+        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("zowe.ds.default.binary");
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set C" as any);
         await dsActions.createFile(node, blockMocks.testDatasetTree);
@@ -2563,7 +2563,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Binary" as any);
         await dsActions.createFile(node, blockMocks.testDatasetTree);
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("Zowe-Default-Datasets-Binary");
+        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("zowe.ds.default.binary");
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set C" as any);
         await dsActions.createFile(node, blockMocks.testDatasetTree);

@@ -432,7 +432,7 @@ export function getDataSetTypeAndOptions(type: string) {
     switch (type) {
         case localize("createFile.dataSetBinary", "Data Set Binary"):
             typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_BINARY;
-            createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-Binary");
+            createOptions = vscode.workspace.getConfiguration("zowe.ds.default.binary");
             break;
         case localize("createFile.dataSetC", "Data Set C"):
             typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_C;
