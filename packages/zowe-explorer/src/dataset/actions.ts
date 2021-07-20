@@ -436,7 +436,7 @@ export function getDataSetTypeAndOptions(type: string) {
             break;
         case localize("createFile.dataSetC", "Data Set C"):
             typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_C;
-            createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-C");
+            createOptions = vscode.workspace.getConfiguration("zowe.ds.default.c");
             break;
         case localize("createFile.dataSetClassic", "Data Set Classic"):
             typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_CLASSIC;
