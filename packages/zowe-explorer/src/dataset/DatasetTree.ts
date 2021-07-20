@@ -245,7 +245,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     localize("initializeFavorites.invalidDsFavorite1", "Invalid Data Sets favorite: {0}.", line) +
                         localize(
                             "initializeFavorites.invalidDsFavorite2",
-                            " Please check formatting of the Zowe-DS-Persistent 'favorites' settings in the {0} user settings.",
+                            " Please check formatting of the zowe.ds.history 'favorites' settings in the {0} user settings.",
                             getAppName(globals.ISTHEIA)
                         )
                 );

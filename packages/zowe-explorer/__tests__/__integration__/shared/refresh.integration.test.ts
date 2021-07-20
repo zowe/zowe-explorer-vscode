@@ -82,12 +82,12 @@ describe("jobNodeActions integration test", async () => {
         sandbox.restore();
     });
 
-    const oldSettings = vscode.workspace.getConfiguration("Zowe-DS-Persistent");
+    const oldSettings = vscode.workspace.getConfiguration("zowe.ds.history");
 
     after(async () => {
         await vscode.workspace
             .getConfiguration()
-            .update("Zowe-DS-Persistent", oldSettings, vscode.ConfigurationTarget.Global);
+            .update("zowe.ds.history", oldSettings, vscode.ConfigurationTarget.Global);
     });
 
     describe("refreshAll", async () => {
