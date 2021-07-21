@@ -26,7 +26,7 @@ export class KeytarApi {
             if (!initialized && keytar) {
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                 KeytarCredentialManager.keytar = keytar;
-                const service: string = vscode.workspace.getConfiguration().get("Zowe Security: Credential Key");
+                const service: string = vscode.workspace.getConfiguration().get("zowe.security.credentialPlugin");
                 await imperative.CredentialManagerFactory.initialize({
                     service: service || "Zowe-Plugin",
                     Manager: KeytarCredentialManager,
