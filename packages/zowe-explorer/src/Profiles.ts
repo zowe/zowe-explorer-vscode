@@ -69,7 +69,7 @@ export class Profiles extends ProfilesCache {
     public validProfile: ValidProfileEnum = ValidProfileEnum.INVALID;
     private dsSchema: string = "zowe.ds.history";
     private ussSchema: string = "zowe.uss.history";
-    private jobsSchema: string = "Zowe-Jobs-Persistent";
+    private jobsSchema: string = "zowe.jobs.history";
     public constructor(log: Logger) {
         super(log);
     }
