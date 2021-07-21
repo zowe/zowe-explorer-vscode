@@ -63,12 +63,12 @@ describe("ussNodeActions integration test", async () => {
         sandbox.restore();
     });
 
-    const oldSettings = vscode.workspace.getConfiguration("Zowe-USS-Persistent");
+    const oldSettings = vscode.workspace.getConfiguration("zowe.uss.history");
 
     after(async () => {
         await vscode.workspace
             .getConfiguration()
-            .update("Zowe-USS-Persistent", oldSettings, vscode.ConfigurationTarget.Global);
+            .update("zowe.uss.history", oldSettings, vscode.ConfigurationTarget.Global);
     });
 
     describe("Initialize USS Favorites", async () => {
@@ -87,7 +87,7 @@ describe("ussNodeActions integration test", async () => {
             ];
             await vscode.workspace
                 .getConfiguration()
-                .update("Zowe-USS-Persistent", { persistence: true, favorites }, vscode.ConfigurationTarget.Global);
+                .update("zowe.uss.history", { persistence: true, favorites }, vscode.ConfigurationTarget.Global);
             await testTree.initializeFavorites(Logger.getAppLogger());
             const initializedFavProfileLabels = [`${profileName}`, "badProfileName"];
             const goodProfileFavLabels = ["tester1", "testfile1", "tester2", "testfile2"];

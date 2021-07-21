@@ -65,12 +65,12 @@ describe("USSTree Integration Tests", async () => {
         sandbox.restore();
     });
 
-    const oldSettings = vscode.workspace.getConfiguration("Zowe-USS-Persistent");
+    const oldSettings = vscode.workspace.getConfiguration("zowe.uss.history");
 
     after(async () => {
         await vscode.workspace
             .getConfiguration()
-            .update("Zowe-USS-Persistent", oldSettings, vscode.ConfigurationTarget.Global);
+            .update("zowe.uss.history", oldSettings, vscode.ConfigurationTarget.Global);
     });
 
     /*************************************************************************************************************
