@@ -1240,6 +1240,9 @@ export class Profiles extends ProfilesCache {
         // This check is for optional credentials
         if (
             baseProfile &&
+            !serviceProfile.profile.tokenType &&
+            serviceProfile.profile.host &&
+            serviceProfile.profile.port &&
             ((baseProfile.profile.host !== serviceProfile.profile.host &&
                 baseProfile.profile.port !== serviceProfile.profile.port) ||
                 (baseProfile.profile.host === serviceProfile.profile.host &&
