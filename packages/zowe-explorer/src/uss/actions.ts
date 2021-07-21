@@ -183,7 +183,7 @@ export async function uploadFile(node: IZoweUSSTreeNode, doc: vscode.TextDocumen
                 task,
             };
             if (prof.profile.encoding) {
-                options.localEncoding = prof.profile.encoding.toString();
+                options.encoding = prof.profile.encoding;
             }
             await ZoweExplorerApiRegister.getUssApi(prof).putContent(doc.fileName, ussName, options);
         } else {
