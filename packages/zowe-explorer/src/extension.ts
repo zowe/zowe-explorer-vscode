@@ -61,7 +61,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     let preferencesTempPath: string = vscode.workspace
         .getConfiguration()
         /* tslint:disable:no-string-literal */
-        .get("Zowe-Temp-Folder-Location")["folderPath"];
+        .get("zowe.files.temporaryDownloadsFolder.path")["folderPath"];
 
     // Determine the runtime framework to support special behavior for Theia
     globals.defineGlobals(preferencesTempPath);
@@ -129,11 +129,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     // Register functions & event listeners
     vscode.workspace.onDidChangeConfiguration(async (e) => {
         // If the temp folder location has been changed, update current temp folder preference
-        if (e.affectsConfiguration("Zowe-Temp-Folder-Location")) {
+        if (e.affectsConfiguration("zowe.files.temporaryDownloadsFolder.path")) {
             const updatedPreferencesTempPath: string = vscode.workspace
                 .getConfiguration()
                 /* tslint:disable:no-string-literal */
-                .get("Zowe-Temp-Folder-Location")["folderPath"];
+                .get("zowe.files.temporaryDownloadsFolder.path");
             moveTempFolder(preferencesTempPath, updatedPreferencesTempPath);
             preferencesTempPath = updatedPreferencesTempPath;
         }

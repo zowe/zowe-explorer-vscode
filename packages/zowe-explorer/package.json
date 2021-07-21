@@ -1745,9 +1745,8 @@
           "scope": "window"
         },
         "zowe.files.temporaryDownloadsFolder.path": {
-          "default": {
-            "folderPath": ""
-          },
+          "type": "string",
+          "default": "",
           "description": "zowe.files.temporaryDownloadsFolder.path",
           "scope": "window"
         },

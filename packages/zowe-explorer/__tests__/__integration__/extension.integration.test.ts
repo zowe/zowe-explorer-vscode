@@ -981,11 +981,7 @@ describe("Extension Integration Tests", async () => {
             fs.mkdirSync(testingPath);
             await vscode.workspace
                 .getConfiguration()
-                .update(
-                    "Zowe-Temp-Folder-Location",
-                    { folderPath: `${testingPath}` },
-                    vscode.ConfigurationTarget.Global
-                );
+                .update("zowe.files.temporaryDownloadsFolder.path", testingPath, vscode.ConfigurationTarget.Global);
 
             // expect(extension.ZOWETEMPFOLDER).to.equal(`${testingPath}/temp`);
             expect(ZOWETEMPFOLDER).to.equal(path.join(testingPath, "temp"));
@@ -1001,20 +997,12 @@ describe("Extension Integration Tests", async () => {
             // set first preference
             await vscode.workspace
                 .getConfiguration()
-                .update(
-                    "Zowe-Temp-Folder-Location",
-                    { folderPath: `${providedPathOne}` },
-                    vscode.ConfigurationTarget.Global
-                );
+                .update("zowe.files.temporaryDownloadsFolder.path", providedPathOne, vscode.ConfigurationTarget.Global);
 
             // change preference and test for update
             await vscode.workspace
                 .getConfiguration()
-                .update(
-                    "Zowe-Temp-Folder-Location",
-                    { folderPath: `${providedPathTwo}` },
-                    vscode.ConfigurationTarget.Global
-                );
+                .update("zowe.files.temporaryDownloadsFolder.path", providedPathTwo, vscode.ConfigurationTarget.Global);
 
             // expect(extension.ZOWETEMPFOLDER).to.equal(`${providedPathTwo}/temp`);
             expect(ZOWETEMPFOLDER).to.equal(path.join(providedPathTwo, "temp"));
@@ -1028,7 +1016,7 @@ describe("Extension Integration Tests", async () => {
             const expectedDefaultTemp = path.join(__dirname, "..", "..", "..", "resources", "temp");
             await vscode.workspace
                 .getConfiguration()
-                .update("Zowe-Temp-Folder-Location", { folderPath: "" }, vscode.ConfigurationTarget.Global);
+                .update("zowe.files.temporaryDownloadsFolder.path", "", vscode.ConfigurationTarget.Global);
             expect(ZOWETEMPFOLDER).to.equal(expectedDefaultTemp);
         }).timeout(TIMEOUT);
     });
