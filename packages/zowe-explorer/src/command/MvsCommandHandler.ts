@@ -156,7 +156,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
 
     private async getQuickPick(hostname: string) {
         let response = "";
-        const alwaysEdit = PersistentFilters.getDirectValue("Zowe Commands: Always edit") as boolean;
+        const alwaysEdit = PersistentFilters.getDirectValue("zowe.commands.alwaysEdit") as boolean;
         if (this.history.getSearchHistory().length > 0) {
             const createPick = new FilterDescriptor(MvsCommandHandler.defaultDialogText);
             const items: vscode.QuickPickItem[] = this.history
