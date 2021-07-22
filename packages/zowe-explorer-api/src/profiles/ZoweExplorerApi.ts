@@ -451,7 +451,7 @@ export namespace ZoweExplorerApi {
          * @returns {zowe.IIssueResponse>}
          * @memberof ICommand
          */
-        issueTsoCommandWithParms?(command: string, parms: zowe.IStartTsoParms): Promise<zowe.IIssueResponse>;
+        issueTsoCommandWithParms?(command: string, parms?: zowe.IStartTsoParms): Promise<zowe.IIssueResponse>;
 
         /**
          * Issues a MVS Command and returns a Console Command API response.

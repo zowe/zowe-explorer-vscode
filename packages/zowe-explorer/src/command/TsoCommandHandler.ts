@@ -235,7 +235,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
      * @param profile profile to be used
      * @param tsoParams parameters (from TSO profile, when used)
      */
-    private async issueCommand(command: string, profile: imperative.IProfileLoaded, tsoParams: IStartTsoParms) {
+    private async issueCommand(command: string, profile: imperative.IProfileLoaded, tsoParams?: IStartTsoParms) {
         try {
             if (command) {
                 // If the user has started their command with a / then remove it
@@ -255,10 +255,13 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                                 tsoParams
                             );
                         } else {
-                            return ZoweExplorerApiRegister.getCommandApi(profile).issueTsoCommand(
-                                command,
-                                tsoParams.account
-                            );
+                            let acctNum: string;
+                            if (!tsoParams) {
+                                acctNum = undefined;
+                            } else {
+                                acctNum = tsoParams.account;
+                            }
+                            return ZoweExplorerApiRegister.getCommandApi(profile).issueTsoCommand(command, acctNum);
                         }
                     }
                 );
