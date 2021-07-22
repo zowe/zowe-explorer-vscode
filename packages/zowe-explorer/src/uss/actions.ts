@@ -91,6 +91,15 @@ export async function refreshUSSInTree(node: IZoweUSSTreeNode, ussFileProvider: 
     await ussFileProvider.refreshElement(node);
 }
 
+export async function refreshDirectory(node: IZoweUSSTreeNode, ussFileProvider: IZoweTree<IZoweUSSTreeNode>) {
+    try {
+        await node.getChildren();
+        ussFileProvider.refreshElement(node);
+    } catch (err) {
+        errorHandling(err, node.getProfileName(), err.message);
+    }
+}
+
 export async function createUSSNodeDialog(node: IZoweUSSTreeNode, ussFileProvider: IZoweTree<IZoweUSSTreeNode>) {
     await ussFileProvider.checkCurrentProfile(node);
     if (
@@ -174,7 +183,7 @@ export async function uploadFile(node: IZoweUSSTreeNode, doc: vscode.TextDocumen
                 task,
             };
             if (prof.profile.encoding) {
-                options.localEncoding = prof.profile.encoding.toString();
+                options.encoding = prof.profile.encoding;
             }
             await ZoweExplorerApiRegister.getUssApi(prof).putContent(doc.fileName, ussName, options);
         } else {

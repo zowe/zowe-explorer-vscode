@@ -29,7 +29,7 @@ export let USS_DIR;
 export let DS_DIR;
 export let ISTHEIA: boolean = false; // set during activate
 export let LOG: Logger;
-export const COMMAND_COUNT = 94;
+export const COMMAND_COUNT = 96;
 export const MAX_SEARCH_HISTORY = 5;
 export const MAX_FILE_HISTORY = 10;
 export const CONTEXT_PREFIX = "_";
