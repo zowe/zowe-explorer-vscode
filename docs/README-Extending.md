@@ -107,8 +107,8 @@ Here is a simple example for loading and navigating the available profiles by ty
 
 ```typescript
 // Retrieve the Zowe Explorer API object from the currently running instance.
-// It must be at least Zowe Explorer 1.15.0 or newer or undefined will returned.
-const zoweExplorerApi = ZoweVsCodeExtension.getZoweExplorerApi("1.15.0");
+// It must be at least Zowe Explorer 1.18.0 or newer or undefined will returned.
+const zoweExplorerApi = ZoweVsCodeExtension.getZoweExplorerApi("1.18.0");
 if (zoweExplorerApi) {
   // Initialized the users ~/.zowe directory with the metadata for FTP profiles in case
   // the user does not have the FTP CLI Plugin installed and profiles created, yet.
@@ -145,7 +145,7 @@ To implement as data provider Zowe Explorer extension you need to
 3. Initialize the user's .zowe directory with meta-data for the new profile type.
 
 ```typescript
-const zoweExplorerApi = ZoweVsCodeExtension.getZoweExplorerApi("1.16.1");
+const zoweExplorerApi = ZoweVsCodeExtension.getZoweExplorerApi("1.17.0");
 if (zoweExplorerApi) {
   // Register new implementations of data provider using FTP for three Zowe Explorer views
   zoweExplorerApi.registerUssApi(new FtpUssApi());
