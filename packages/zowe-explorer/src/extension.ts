@@ -137,7 +137,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             moveTempFolder(preferencesTempPath, updatedPreferencesTempPath);
             preferencesTempPath = updatedPreferencesTempPath;
         }
-        if (e.affectsConfiguration("Zowe-Automatic-Validation")) {
+        if (e.affectsConfiguration("zowe.automaticProfileValidation")) {
             await refreshActions.refreshAll(datasetProvider);
             await refreshActions.refreshAll(ussFileProvider);
             await refreshActions.refreshAll(jobsProvider);

@@ -27,7 +27,7 @@ import * as contextually from "../shared/context";
 export async function refreshAll(treeProvider: IZoweTree<IZoweTreeNode>) {
     await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
     treeProvider.mSessionNodes.forEach(async (sessNode) => {
-        const setting = (await PersistentFilters.getDirectValue("Zowe-Automatic-Validation")) as boolean;
+        const setting = (await PersistentFilters.getDirectValue("zowe.automaticProfileValidation")) as boolean;
         if (contextually.isSessionNotFav(sessNode)) {
             labelRefresh(sessNode);
             sessNode.children = [];

@@ -158,7 +158,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      * @param {string} [sessionName] - optional; loads default profile if not passed
      */
     public async addSession(sessionName?: string, profileType?: string) {
-        const setting = PersistentFilters.getDirectValue("Zowe-Automatic-Validation") as boolean;
+        const setting = PersistentFilters.getDirectValue("zowe.automaticProfileValidation") as boolean;
         // Loads profile associated with passed sessionName, default if none passed
         if (sessionName) {
             const theProfile: IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);

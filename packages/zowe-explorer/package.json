@@ -1787,13 +1787,13 @@
             "persistence": true,
             "history": []
           },
-          "description": "%Zowe-Default-Commands-Persistent-Favorites%",
+          "description": "%zowe.commands.history%",
           "scope": "window"
         },
         "zowe.automaticProfileValidation": {
           "type": "boolean",
           "default": true,
-          "description": "%Zowe-Automatic-Validation%",
+          "description": "%zowe.automaticProfileValidation%",
           "scope": "window"
         }
       }

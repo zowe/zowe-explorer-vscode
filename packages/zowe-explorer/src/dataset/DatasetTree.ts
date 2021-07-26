@@ -441,7 +441,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * @param {string} [sessionName] - optional; loads default profile if not passed
      */
     public async addSession(sessionName?: string, profileType?: string) {
-        const setting = PersistentFilters.getDirectValue("Zowe-Automatic-Validation") as boolean;
+        const setting = PersistentFilters.getDirectValue("zowe.automaticProfileValidation") as boolean;
         // Loads profile associated with passed sessionName, default if none passed
         if (sessionName) {
             const profile: IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
