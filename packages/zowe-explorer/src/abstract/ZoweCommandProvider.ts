@@ -30,7 +30,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export class ZoweCommandProvider {
     private static readonly totalFilters: number = 10;
-    private static readonly persistenceSchema: string = "Zowe Commands: History";
+    private static readonly persistenceSchema: string = "zowe.commands.history";
 
     public outputChannel: vscode.OutputChannel;
     public history: PersistentFilters;
