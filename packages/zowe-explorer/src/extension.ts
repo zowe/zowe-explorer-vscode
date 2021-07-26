@@ -40,7 +40,7 @@ import { MvsCommandHandler } from "./command/MvsCommandHandler";
 import SpoolProvider from "./SpoolProvider";
 import * as nls from "vscode-nls";
 import { TsoCommandHandler } from "./command/TsoCommandHandler";
-import { cleanTempDir, moveTempFolder } from "./utils/TempFolder";
+import { cleanTempDir, moveTempFolder, hideTempFolder } from "./utils/TempFolder";
 
 // Set up localization
 nls.config({
@@ -66,16 +66,15 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     // Determine the runtime framework to support special behavior for Theia
     globals.defineGlobals(preferencesTempPath);
 
-    // Call cleanTempDir before continuing
-    // this is to handle if the application crashed on a previous execution and
-    // VSC didn't get a chance to call our deactivate to cleanup.
-    await deactivate();
+    hideTempFolder(getZoweDir());
 
     try {
-        fs.mkdirSync(globals.ZOWETEMPFOLDER);
-        fs.mkdirSync(globals.ZOWE_TMP_FOLDER);
-        fs.mkdirSync(globals.USS_DIR);
-        fs.mkdirSync(globals.DS_DIR);
+        if (!fs.existsSync(globals.ZOWETEMPFOLDER)) {
+            fs.mkdirSync(globals.ZOWETEMPFOLDER);
+            fs.mkdirSync(globals.ZOWE_TMP_FOLDER);
+            fs.mkdirSync(globals.USS_DIR);
+            fs.mkdirSync(globals.DS_DIR);
+        }
     } catch (err) {
         await errorHandling(err, null, err.message);
     }
@@ -142,6 +141,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             await refreshActions.refreshAll(datasetProvider);
             await refreshActions.refreshAll(ussFileProvider);
             await refreshActions.refreshAll(jobsProvider);
+        }
+        if (e.affectsConfiguration("zowe.files.temporaryDownloadsFolder.hide")) {
+            hideTempFolder(getZoweDir());
         }
     });
 
@@ -376,17 +378,9 @@ function initJobsProvider(context: vscode.ExtensionContext, jobsProvider: IZoweT
     vscode.commands.registerCommand("zowe.jobs.removeJobsSession", (job) => jobsProvider.deleteSession(job));
     vscode.commands.registerCommand("zowe.jobs.downloadSpool", (job) => jobActions.downloadSpool(job));
     vscode.commands.registerCommand("zowe.jobs.getJobJcl", (job) => jobActions.downloadJcl(job));
-    vscode.commands.registerCommand("zowe.jobs.setJobSpool", async (session, jobid) => {
-        const sessionNode: IZoweJobTreeNode = jobsProvider.mSessionNodes.find(
-            (jobNode) => jobNode.label.trim() === session.trim()
-        );
-        sessionNode.dirty = true;
-        jobsProvider.refresh();
-        sessionNode.searchId = jobid;
-        const jobs: IZoweJobTreeNode[] = await sessionNode.getChildren();
-        const job: IZoweJobTreeNode = jobs.find((jobNode) => jobNode.job.jobid === jobid);
-        jobsProvider.setItem(jobsProvider.getTreeView(), job);
-    });
+    vscode.commands.registerCommand("zowe.jobs.setJobSpool", async (session, jobId) =>
+        jobActions.focusOnJob(jobsProvider, session, jobId)
+    );
     vscode.commands.registerCommand("zowe.jobs.search", (node) => jobsProvider.filterPrompt(node));
     vscode.commands.registerCommand("zowe.jobs.editSession", async (node) =>
         jobsProvider.editSession(node, jobsProvider)

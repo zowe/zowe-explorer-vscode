@@ -22,7 +22,7 @@ Extender packages are created as new VS Code extensions. For general information
 - [VS Code Extension API](https://code.visualstudio.com/api)
 - [vscode-extension-samples](https://github.com/Microsoft/vscode-extension-samples)
 
-I is also recommended to set-up a development environment for Zowe Explorer itself following the instructions in [README-Developer.md](README-Developer.md) to learn its codebase and study of the extensibility API's implementations.
+It is also recommended to set-up a development environment for Zowe Explorer itself following the instructions in [README-Developer.md](README-Developer.md) to learn its codebase and study the extensibility API's implementations.
 
 The Zowe Explorer API package provided in this GitHub repository is comprised of three sub-packages for different use cases. Modules from these sub-packages will be used in the description of the various extension cases below:
 
@@ -42,18 +42,18 @@ Although not required for all types of Zowe Explorer extensions, when creating a
 
 This dependency has then two important effects:
 
-1. It will enforce that the Zowe Explorer is a pre-requisite package for the Zowe Explorer extension, which will automatically install Zowe Explorer when the Zowe Explorer extension is installed in case it is not yet present.
+1. It will enforce that Zowe Explorer is a pre-requisite package for the Zowe Explorer extension, which will automatically co-install Zowe Explorer if it is not yet present when the Zowe Explorer extension is installed.
 1. It will enforce that Zowe Explorer is activated first at startup before the dependent Zowe Explorer extension. This ensures that important data structures related to the extensibility API have been properly initialized and can be called in the activation of the Zowe Explorer extensions own activation.
 
 ## About Zowe CLI profiles
 
 Zowe Explorer's main capability is to provide access to z/OS resources in MVS, USS, JES as well as execution of various commands such as TSO commands. To realize these interactions it builds on Zowe CLI. One could say that Zowe Explorer provides a graphical user interface for most of the core Zowe CLI commands in form of tree view navigators, menus and pop-up dialogs. The core concept that defines a connection to z/OS in Zowe CLI is the profile. Profiles are created for different interaction protocols such as z/OSMF or FTP and stored for the current user in a location defined by Zowe CLI. Zowe Explorer accesses this same profile store.
 
-Zowe Explorer extension can also access this profiles store via Zowe Explorer APIs, as well as extend the profiles store with new types of profiles for supporting new or alternative interaction protocols.
+A Zowe Explorer extension can also access this profiles store via Zowe Explorer APIs, as well as extend the profiles store with new types of profiles for supporting new or alternative interaction protocols.
 
 In case a new profile type is provided it is a recommended practice, but not required, to also provide a Zowe CLI plugin for this new profile type that implements the capabilities provided by the new profile type, which then can be reused when writing the Zowe Explorer extension. A Zowe CLI plugin is just a normal npm package that can be imported into VS Code extensions for reuse to enable code sharing between CLI plugin and VS Code extension. However, when such a Zowe CLI Plugin is provided by the extender the Zowe Explorer VS Code extension must not make the assumption that this Plugin is actually installed on the user's machine. All the code for creating and using the profile needs to be included into the VS Code extension to allow using it on development machines that did not install Zowe CLI as well.
 
-In other words the extension must be full self-contained including all the code of the Zowe CLI Plugin that implements the new profile. This will not only simplify the end user experience, but also ensures that the extension can run in other VS Code compatible environments such as Cloud IDEs such as Eclipse Che that might or might not come with a sidecar that provide Zowe CLI. To test this requirement a user shall be able start the extension and use it without having Nodejs and Zowe CLI installed locally. Zowe Explorer provides APIs to call that ensure that the users can store and access new profile types in the Zowe home directory folders as well as the common secure credentials store, which should be utilized by the Zowe Explorer extensions as well.
+In other words the extension must be fully self-contained including all the code of the Zowe CLI Plugin that implements the new profile. This will not only simplify the end user experience, but also ensures that the extension can run in other VS Code compatible environments such as Cloud IDEs such as Eclipse Che that might or might not come with a sidecar that provide Zowe CLI. To test this requirement a user shall be able start the extension and use it without having Nodejs and Zowe CLI installed locally. Zowe Explorer provides APIs to call that ensure that the users can store and access new profile types in the Zowe home directory folders as well as the common secure credentials store, which should be utilized by the Zowe Explorer extensions as well.
 
 ## Accessing the Zowe Explorer Extender API
 
@@ -64,7 +64,7 @@ To create a VS Code extension that accesses the Zowe Explorer API you need to
 
 ```json
 "dependencies": {
-    "@zowe/zowe-explorer-api": "1.16.0"
+    "@zowe/zowe-explorer-api": "1.16.1"
 }
 ```
 
@@ -74,7 +74,7 @@ Then you will be able to get access to initialized Zowe Explorer API objects pro
 export function activate(context: vscode.ExtensionContext) {
   // this is the main operation to call to retrieve the ZoweExplorerApi.IApiRegisterClient object
   // use the optional parameter to constrain the version or newer of Zowe Explorer your extension is supporting
-  const zoweExplorerApi = ZoweVsCodeExtension.getZoweExplorerApi("1.15.0");
+  const zoweExplorerApi = ZoweVsCodeExtension.getZoweExplorerApi("1.16.1");
   if (zoweExplorerApi) {
     // access the API such as registering new API implementations
     // <your code here>
@@ -85,7 +85,7 @@ export function activate(context: vscode.ExtensionContext) {
 }
 ```
 
-Once you have access to the `ZoweExplorerApi.IApiRegisterClient` instance return by the call shown above you have access to various methods. Check all the declarations in the [interface specification in the source code](../packages/zowe-explorer-api/src/profiles/ZoweExplorerApi.ts).
+Once you have access to the `ZoweExplorerApi.IApiRegisterClient` instance returned by the call shown above you have access to various methods. Check all the declarations in the [interface specification in the source code](../packages/zowe-explorer-api/src/profiles/ZoweExplorerApi.ts).
 
 Most of the operations listed are needed for registering new implementations of a new data provider as described further below in the Section [Creating an extension that adds a data provider](#creating-an-extension-that-adds-a-data-provider).
 
@@ -145,7 +145,7 @@ To implement as data provider Zowe Explorer extension you need to
 3. Initialize the user's .zowe directory with meta-data for the new profile type.
 
 ```typescript
-const zoweExplorerApi = ZoweVsCodeExtension.getZoweExplorerApi("1.15.0");
+const zoweExplorerApi = ZoweVsCodeExtension.getZoweExplorerApi("1.16.1");
 if (zoweExplorerApi) {
   // Register new implementations of data provider using FTP for three Zowe Explorer views
   zoweExplorerApi.registerUssApi(new FtpUssApi());
@@ -177,9 +177,11 @@ By setting the `when` property of a command to match the views and context value
 
 To specify which view a command contribution should appear in, Zowe Explorer menu extenders can use `view == <zowe.viewId>`, where `<zowe.viewId>` is one of the following view IDs used by Zowe Explorer:
 
-- Data Sets view: `zowe.ds.explorer`
+- Data Sets view: `zowe.explorer`
 - USS view: `zowe.uss.explorer`
-- Jobs view: `zowe.jobs.explorer`
+- Jobs view: `zowe.jobs`
+
+**Note:** For details on planned upcoming changes to the above view IDs, see the footnote<sup id="view-ids">[1](#view-ids-upcoming)</sup>.
 
 To allow for more granular control over which type(s) of tree items a command should be associated with (for example, a USS textfile versus a USS directory), Zowe Explorer uses a strategy of adding and removing context components for an individual Tree Item's context value if that imparts additional information that could assist with menu triggers. Extenders can leverage this when defining a command's `when` property by specifying `viewItem =~ <contextValue>`, where `<contextValue>` is a regular expression that matches the context value of the target Tree Item type(s).
 
@@ -206,3 +208,11 @@ Notice the syntax we use for the context value (or `viewItem`) above is a regula
 ### Grouping menu commands
 
 Extenders can define command groups separated by dividers in VS Code's right-click context menus by using the `group` property for items in `contributes.menus.view/item/context` of their `package.json`. Zowe Explorer prefixes its menu command `group` values with `0##_zowe_`, where `0##` represents numbers 000 - 099. Thus, extenders should avoid using `0##_zowe_` at the beginning of any `group` values they assign for menu commands. Any command groups contributed by extenders should be located below Zowe Explorer's command groups whenever they appear together in the same context menu. This helps keep the core Zowe Explorer context menu commands in a uniform location for users. A recommended extender menu command `group` naming convention would be to prefix the extender's `group` values with `1##_extensionName_`.
+
+## Footnotes
+
+[<b id="view-ids-upcoming">[1]</b>](#view-ids) In a future version of Zowe Explorer (to be decided), Zowe Explorer's view IDs will be updated to improve the consistency of the formatting. The updated view IDs will be as follows:
+
+- Data Sets view: `zowe.ds.explorer`
+- USS view: `zowe.uss.explorer`
+- Jobs view: `zowe.jobs.explorer`
