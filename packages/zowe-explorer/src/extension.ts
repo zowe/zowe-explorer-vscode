@@ -57,6 +57,38 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  * @returns {Promise<ZoweExplorerApiRegister>}
  */
 export async function activate(context: vscode.ExtensionContext): Promise<ZoweExplorerApiRegister> {
+    // Carry over old settings to new standardized settings
+    let configurations = vscode.workspace.getConfiguration();
+    let zoweOldConfigurations = Object.keys(configurations).filter((key) => key.match(new RegExp("Zowe*", "g")));
+    let configurationDictionary = {
+        "Zowe-Default-Datasets-Binary": "zowe.ds.default.binary",
+        "Zowe-Default-Datasets-C": "zowe.ds.default.c",
+        "Zowe-Default-Datasets-Classic": "zowe.ds.default.classic",
+        "Zowe-Default-Datasets-PDS": "zowe.ds.default.pds",
+        "Zowe-Default-Datasets-PS": "zowe.ds.default.ps",
+        "Zowe-Temp-Folder-Loacation": "zowe.temporaryDownloadsFolder.path",
+        "Zowe Security: Credential Key": "zowe.security.credentialPlugin",
+        "Zowe Commands: History": "zowe.commands.history",
+        "Zowe Commands: Always edit": "zowe.commands.alwaysEdit",
+        "Zowe-Automatic-Validation": "zowe.automaticProfileValidation",
+        "Zowe-DS-Persistent": "zowe.ds.history",
+        "Zowe-USS-Persistent": "zowe.uss.history",
+        "Zowe-Jobs-Persistent": "zowe.jobs.history",
+    };
+
+    // Migrate old settings to new configurations if any old configuration exists
+    if (zoweOldConfigurations.length > 0) {
+        zoweOldConfigurations.forEach((configuration) => {
+            const oldSettings = configurations[configuration];
+            configurations.update(
+                configurationDictionary[configuration],
+                oldSettings,
+                vscode.ConfigurationTarget.Global
+            );
+            configurations.update(configuration, undefined, vscode.ConfigurationTarget.Global);
+        });
+    }
+
     // Get temp folder location from settings
     let preferencesTempPath: string = vscode.workspace
         .getConfiguration()
