@@ -25,7 +25,23 @@
     "*"
   ],
   "main": "./out/src/extension.js",
-  "contributes": {},
+  "contributes": {
+    "commands": [
+      {
+        "command": "zftp.test",
+        "title": "zftp test",
+        "category": "Zowe Explorer Extension for FTP"
+      }
+    ],
+    "menus": {
+      "view/item/context": [
+        {
+          "when": "view == zowe.explorer || view == zowe.uss.explorer",
+          "command": "zftp.test"
+        }
+      ]
+    }
+  },
   "extensionDependencies": [
     "Zowe.vscode-extension-for-zowe"
   ],
