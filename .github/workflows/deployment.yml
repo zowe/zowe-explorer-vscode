@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - next
     paths:
       - package.json
   workflow_dispatch:
