@@ -8,6 +8,9 @@ inputs:
     required: true
   token:
     required: true
+  tag:
+    description: Release tag
+    required: false
 outputs:
   archive:
     description: The TGZ file to be uploaded to GH Releases
