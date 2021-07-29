@@ -97,7 +97,7 @@ A Zowe CLI profiles access extension is a Zowe Explorer extension that uses the 
 
 When creating such an extension you need to follow the steps described above for accessing the Zowe Explorer API. Then by calling the `getExplorerExtenderApi()` operation on the returned object you have access to various operations on profiles. See the [ZoweExplorerExtender.ts](../packages/zowe-explorer/src/ZoweExplorerExtender.ts)] file in the main `zowe-explorer` package for details on the implementation of the various operations.
 
-The currently provided operations initialize the user's profiles directory with any new profile types provided by the extender, trigger a reload from disk to pick up any newly registered profile types as well as pick up any external user changes, such as after the user adding/changing profiles via Zowe CLI, as well as full access to all currently loaded profiles available in Zowe Explorer.
+The currently provided operations initialize the user's profiles directory with any new profile types provided by the extender, trigger a reload from disk to pick up any newly registered profile types and external user changes (for example, after the user adds/updates profiles via Zowe CLI), as well as provide full access to all currently loaded profiles available in Zowe Explorer.
 
 - `initForZowe(profileType: string, profileTypeConfigurations: ICommandProfileTypeConfiguration[]): Promise<void>`
 - `reloadProfiles(): Promise<void>`
@@ -124,14 +124,15 @@ if (zoweExplorerApi) {
   const allProfileTypes = profilesCache.getAllTypes();
   let message = "Found the following available profiles: ";
   if (!allProfileTypes) {
-      message += "none.";
+    message += "none.";
   } else {
     for (const profileType of allProfileTypes) {
-        const profileNames = await profilesCache.getNamesForType(profileType);
-        message += `${profileType}: ${JSON.stringify(profileNames)} `;
+      const profileNames = await profilesCache.getNamesForType(profileType);
+      message += `${profileType}: ${JSON.stringify(profileNames)} `;
     }
   }
   void vscode.window.showInformationMessage(message);
+}
 ```
 
 ## Creating an extension that adds a data provider
