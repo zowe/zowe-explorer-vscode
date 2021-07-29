@@ -157,8 +157,6 @@ export class ZoweTreeProvider {
     public async editSession(node: IZoweTreeNode, zoweFileProvider: IZoweTree<IZoweNodeType>) {
         const profile = node.getProfile();
         const profileName = node.getProfileName();
-        // Check what happens is inactive
-        await Profiles.getInstance().getProfileSetting(profile);
         const EditSession = await Profiles.getInstance().editSession(profile, profileName);
         if (EditSession) {
             node.getProfile().profile = EditSession as IProfile;
