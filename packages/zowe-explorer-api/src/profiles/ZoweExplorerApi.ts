@@ -12,6 +12,8 @@
 import * as zowe from "@zowe/cli";
 import { IProfileLoaded, Session, ICommandArguments, ICommandProfileTypeConfiguration } from "@zowe/imperative";
 
+import { ProfilesCache } from "./ProfilesCache";
+
 /**
  * This namespace provides interfaces for all the external APIs provided by this VS Code Extension.
  * Other VS Code Extension can implement these and use the IApiRegister interface to register themselves.
@@ -460,6 +462,18 @@ export namespace ZoweExplorerApi {
      */
     export interface IApiExplorerExtender {
         /**
+         * Allows extenders access to the profiles loaded into Zowe Explorer.
+         * This includes profiles of other extenders. Called reloadProfiles()
+         * in case other extensions might have registered themselves before accessing.
+         * See the ProfilesCache class for the available accessors. When making changes
+         * to the profile in this cache remember that it shared with Zowe Explorer and
+         * all other Zowe Explorer extensions
+         * @version 1.18 or newer of Zowe Explorer
+         * @returns {ProfilesCache}
+         */
+        getProfilesCache(): ProfilesCache;
+
+        /**
          * After an extenders registered all its API extensions it
          * might want to request that profiles should get reloaded
          * to make them automatically appears in the Explorer drop-
@@ -469,10 +483,18 @@ export namespace ZoweExplorerApi {
 
         /**
          * After an extenders registered all its API extensions it
-         * might want to check for an existing profile folder with meta-file
-         * or to create them automatically if it is non-existant.
+         * needs to check if the user's .zowe folder contains a profiles
+         * folder with a valid <profileType>_meta.yaml file or let it
+         * be created by this call. This is required if the user does not
+         * have a matching Zowe CLI profile installed and only uses the new
+         * profileType via the Zowe Explorer extension.
+         *
+         * @param {string} profileType the string identifier of the profile type used by the extension
+         * @param {imperative.ICommandProfileTypeConfiguration[]} profileTypeConfigurations
+         *        the contents of the imperative.ts file for the new profile type that will be
+         *        used for the <profileType>_meta.yaml file. Use CoreUtils.getProfileMeta() to retrieve.
          */
-        initForZowe(type: string, meta: ICommandProfileTypeConfiguration[]): Promise<void>;
+        initForZowe(profileType: string, profileTypeConfigurations: ICommandProfileTypeConfiguration[]): Promise<void>;
     }
 
     /**
