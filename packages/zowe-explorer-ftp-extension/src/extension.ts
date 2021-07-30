@@ -10,17 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import * as imperative from "@zowe/imperative";
-import {
-    ZoweExplorerApi,
-    ZoweTreeNode,
-    ZoweVsCodeExtension,
-    IZoweTreeNode,
-    IZoweDatasetTreeNode,
-    IZoweUSSTreeNode,
-    IZoweJobTreeNode,
-    IZoweNodeType,
-} from "@zowe/zowe-explorer-api";
+import { ZoweExplorerApi, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { FtpUssApi } from "./ZoweExplorerFtpUssApi";
 import { FtpMvsApi } from "./ZoweExplorerFtpMvsApi";
 import { FtpJesApi } from "./ZoweExplorerFtpJesApi";
@@ -29,19 +19,8 @@ import { CoreUtils } from "@zowe/zos-ftp-for-zowe-cli";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function activate(context: vscode.ExtensionContext): void {
     void registerFtpApis();
-    vscode.commands.registerCommand("zftp.test", (node) => nodeInfoTest(node));
 }
 
-async function nodeInfoTest(node: IZoweTreeNode): Promise<void> {
-    // await vscode.window.showInformationMessage(node.getLabel());
-    const children = await node.getChildren();
-
-    await vscode.window.showInformationMessage(children[0].getLabel());
-    // eslint-disable-next-line no-console
-    console.log(children);
-    // eslint-disable-next-line no-console
-    console.log(node.getLabel());
-}
 /**
  * Function that searches for the Zowe VS Code Extension and if found
  * registers the additional USS API implementation provided by this extension.
