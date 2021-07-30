@@ -48,6 +48,7 @@ export class ProfilesCache {
     public profilesValidationSetting: IValidationSetting[] = [];
     public allProfiles: imperative.IProfileLoaded[] = [];
     protected allTypes: string[];
+    protected allExternalTypes = new Set<string>();
     protected profilesByType = new Map<string, imperative.IProfileLoaded[]>();
     protected defaultProfileByType = new Map<string, imperative.IProfileLoaded>();
     protected profileManagerByType = new Map<string, imperative.CliProfileManager>();
@@ -59,7 +60,7 @@ export class ProfilesCache {
                 return profile;
             }
         }
-        throw new Error("Could not find profile named: " + name + ".");
+        throw new Error(`Zowe Explorer Profiles Cache error: Could not find profile named: ${name}`);
     }
 
     public getDefaultProfile(type = "zosmf"): imperative.IProfileLoaded {
@@ -70,12 +71,20 @@ export class ProfilesCache {
         return this.profilesByType.get(type);
     }
 
-    public async refresh(apiRegister?: ZoweExplorerApi.IApiRegisterClient): Promise<void> {
+    public registerCustomProfilesType(profileTypeName: string): void {
+        const exists = fs.existsSync(path.posix.join(`${os.homedir()}/.zowe/profiles/${profileTypeName}`));
+        if (!exists) {
+            throw new Error(
+                `Zowe Explorer Profiles Cache error: Tried to register a custom profile type named: ${profileTypeName} that does not yet exist. Extenders must call "zoweExplorerApi.getExplorerExtenderApi().initForZowe()" first.`
+            );
+        }
+        this.allExternalTypes.add(profileTypeName);
+    }
+
+    public async refresh(apiRegister: ZoweExplorerApi.IApiRegisterClient): Promise<void> {
         this.allProfiles = [];
         this.allTypes = [];
-        // TODO: Add Base ProfileType in registeredApiTypes
-        // This process retrieves the base profile if there's any and stores it in an array
-        // If base is added in registeredApiType maybe this process can be removed
+
         try {
             const profileManagerA = this.getCliProfileManager("base");
             if (profileManagerA) {
@@ -91,7 +100,9 @@ export class ProfilesCache {
         } catch (error) {
             this.log.error(error);
         }
-        for (const type of apiRegister.registeredApiTypes()) {
+
+        const allProfileTypes = [...apiRegister.registeredApiTypes(), ...this.allExternalTypes];
+        for (const type of allProfileTypes) {
             const profileManager = this.getCliProfileManager(type);
             const profilesForType = (await profileManager.loadAll()).filter((profile) => {
                 return profile.type === type;
