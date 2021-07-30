@@ -194,7 +194,7 @@ In the example below, we are referencing the Jobs view, and more specifically, a
   "menus": {
     "view/item/context": [
       {
-        "when": "view == zowe.jobs.explorer && viewItem =~ /^job.*/ && viewItem =~ /^.*_rc=CC.*/",
+        "when": "view == zowe.jobs && viewItem =~ /^job.*/ && viewItem =~ /^.*_rc=CC.*/",
         "command": "testmule.retcode",
         "group": "104_testmule_workspace"
       }
@@ -209,6 +209,35 @@ Notice the syntax we use for the context value (or `viewItem`) above is a regula
 ### Grouping menu commands
 
 Extenders can define command groups separated by dividers in VS Code's right-click context menus by using the `group` property for items in `contributes.menus.view/item/context` of their `package.json`. Zowe Explorer prefixes its menu command `group` values with `0##_zowe_`, where `0##` represents numbers 000 - 099. Thus, extenders should avoid using `0##_zowe_` at the beginning of any `group` values they assign for menu commands. Any command groups contributed by extenders should be located below Zowe Explorer's command groups whenever they appear together in the same context menu. This helps keep the core Zowe Explorer context menu commands in a uniform location for users. A recommended extender menu command `group` naming convention would be to prefix the extender's `group` values with `1##_extensionName_`.
+
+### Accessing Zowe Explorer tree item information
+
+When adding a command to the right-click context menu of an item in Zowe Explorer's Data Sets, USS, or Jobs tree view, extenders may want to access information specific to that item (or "node"). This can be done by importing that item's node type, and then specifying that same node type when defining the node as a parameter for the command's callback function. The node types for items in each of Zowe Explorer's three tree views are as follows:
+
+- Data Sets View items: `IZoweDatasetTreeNode`
+- USS View items: `IZoweUSSTreeNode`
+- Jobs View items: `IZoweJobTreeNode`
+
+For a more general Zowe Explorer tree node type that is not specific to any particular view, extenders can use `IZoweTreeNode`.
+
+In the example below, the extender imports `IZoweTreeNode` from Zowe Explorer's API, and then registers the command `testmule.nodeInfoTest` with the callback function `nodeInfoTest()`. In the function definition for `nodeInfoTest()`, the `node` parameter is listed with `IZoweTreeNode` as its type. This allows the extender to access `IZoweTreeNode`'s `getLabel()` method for the node. (In this case, the VS Code extension simply displays the node's label as an information message.)
+
+```typescript
+// Import the node type from Zowe Explorer API
+import { IZoweTreeNode } from "@zowe/zowe-explorer-api";
+
+export function activate(context: vscode.ExtensionContext) {
+  ... // Other registration/activation code ...
+
+  // Register the command with the callback function
+  context.subscriptions.push(vscode.commands.registerCommand("testmule.nodeInfoTest", (node) => nodeInfoTest(node)));
+}
+
+// Declare the node type when defining the node as a parameter for the function
+async function nodeInfoTest(node: IZoweTreeNode): Promise<void> {
+  await vscode.window.showInformationMessage(node.getLabel());
+}
+```
 
 ## Footnotes
 
