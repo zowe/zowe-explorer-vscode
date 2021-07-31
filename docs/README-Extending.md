@@ -168,6 +168,37 @@ The FTP Zowe Explorer extension provides examples for providing a data provider 
 
 These are parallel implementations of the same operations that are provided by Zowe Explorer itself using the z/OSMF interaction protocol. You can find that implementation for reference in the file [packages/zowe-explorer-api/src/profiles/ZoweExplorerZosmfApi.ts](../packages/zowe-explorer-api/src/profiles/ZoweExplorerZosmfApi.ts).
 
+## Using the Zowe Explorer ProfilesCache for their own unrelated profiles
+
+In the previous two sections we outlined how extenders can access the cached profiles of Zowe Explorer and can provide new profile types for a new data providers for any of the three Zowe Explorer tree views. Another use case would be that a Zowe Explorer extender does not add a new data provider to Zowe Explorer, but instead an all out new fourth (or more) tree view(s) showing data from a different data source that is not data sets, USS, or JES. The extender would still want to use the same ProfilesCache than Zowe Explorer to be able to react to the same refresh operations, i.e. when the user clicks the Refresh Explorer button in any of the tree view that all profiles including the custom ones should be reloaded.
+
+To support that the Zowe Explorer profiles cache that you can access as described above offers register method that allows adding a profile type to the cache that is not associated with any of the three APIs list above. Note, that the profile type must be valid Zowe CLI profile that is installed on the end user's home directory. The extension needs to therefore make sure it called the `initForZowe()` before trying to register a custom type.
+
+```typescript
+// Retrieve the Zowe Explorer API object from the currently running instance.
+// It must be at least Zowe Explorer 1.18.0 or newer or undefined will returned.
+const zoweExplorerApi = ZoweVsCodeExtension.getZoweExplorerApi("1.18.0");
+if (zoweExplorerApi) {
+  // Initialized the users ~/.zowe directory with the metadata for FTP profiles in case
+  // the user does not have the CICS CLI Plugin installed and profiles created, yet.
+  const meta = await CoreUtils.getProfileMeta();
+  await zoweExplorerApi.getExplorerExtenderApi().initForZowe("cics", meta);
+
+  // Get the IApiExplorerExtender instance from the API that extenders can used
+  // to interact with Zowe Explorer such as accessing all the loaded profiles
+  const profilesCache = zoweExplorerApi.getExplorerExtenderApi().getProfilesCache();
+
+  // Important that this method is called after initForZowe() to avoid an exception
+  profilesCache.registerCustomProfilesType("cics");
+  // Explicit reload is required as registering does not do it automatically
+  await zoweExplorerApi.getExplorerExtenderApi().reloadProfiles();
+
+  // some examples for access the profiles loaded for cics from disk
+  const defaultCicsProfile = profilesCache.getDefaultProfile("cics")
+  const profileNames = profilesCache.getNamesForType("cics");
+  const profileName = profilesCache.loadNamedProfile(profileNames[0]);
+```
+
 ## Creating an extension that adds menu commands
 
 A Zowe Explorer menu extension contributes additional commands to Zowe Explorer's existing menus in VS Code. Typically, these are contributions to the right-click context menus associated with items in one or more of Zowe Explorer's three tree views (Data Sets, USS, and Jobs). VS Code extensions can define and use commands in the `contributes` section of their `package.json` as described in VS Code's [command contribution documentation](https://code.visualstudio.com/api/references/contribution-points#contributes.commands). Extenders should ensure that `command` values they define here do not begin the prefix `zowe.`, which is reserved for Zowe Explorer commands.
