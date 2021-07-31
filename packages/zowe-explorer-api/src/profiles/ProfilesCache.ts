@@ -60,7 +60,7 @@ export class ProfilesCache {
                 return profile;
             }
         }
-        throw new Error(`Zowe Explorer Profiles Cache error: Could not find profile named: ${name}`);
+        throw new Error(`Zowe Explorer Profiles Cache error: Could not find profile named: ${name}.`);
     }
 
     public getDefaultProfile(type = "zosmf"): imperative.IProfileLoaded {
