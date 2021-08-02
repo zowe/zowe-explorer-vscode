@@ -1607,7 +1607,7 @@
         "zowe.files.temporaryDownloadsFolder.path": {
           "type": "string",
           "default": "",
-          "description": "zowe.files.temporaryDownloadsFolder.path",
+          "description": "%zowe.files.temporaryDownloadsFolder.path%",
           "scope": "window"
         },
         "zowe.security.credentialPlugin": {
@@ -1654,6 +1654,11 @@
           "type": "boolean",
           "default": true,
           "description": "%zowe.automaticProfileValidation%",
+          "scope": "window"
+        },
+        "zowe.settings.version": {
+          "type": "integer",
+          "description": "%zowe.settings.version%",
           "scope": "window"
         }
       }

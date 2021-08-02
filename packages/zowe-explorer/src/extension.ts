@@ -41,6 +41,7 @@ import SpoolProvider from "./SpoolProvider";
 import * as nls from "vscode-nls";
 import { TsoCommandHandler } from "./command/TsoCommandHandler";
 import { cleanTempDir, moveTempFolder, hideTempFolder } from "./utils/TempFolder";
+import { config } from "yargs";
 
 // Set up localization
 nls.config({
@@ -59,14 +60,16 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 export async function activate(context: vscode.ExtensionContext): Promise<ZoweExplorerApiRegister> {
     // Carry over old settings to new standardized settings
     let configurations = vscode.workspace.getConfiguration();
-    let zoweOldConfigurations = Object.keys(configurations).filter((key) => key.match(new RegExp("Zowe*", "g")));
+    let zoweOldConfigurations = Object.keys(configurations).filter((key) =>
+        key.match(new RegExp("Zowe-*|Zowe\\s*", "g"))
+    );
     let configurationDictionary = {
         "Zowe-Default-Datasets-Binary": "zowe.ds.default.binary",
         "Zowe-Default-Datasets-C": "zowe.ds.default.c",
         "Zowe-Default-Datasets-Classic": "zowe.ds.default.classic",
         "Zowe-Default-Datasets-PDS": "zowe.ds.default.pds",
         "Zowe-Default-Datasets-PS": "zowe.ds.default.ps",
-        "Zowe-Temp-Folder-Loacation": "zowe.temporaryDownloadsFolder.path",
+        "Zowe-Temp-Folder-Location": "zowe.files.temporaryDownloadsFolder.path",
         "Zowe Security: Credential Key": "zowe.security.credentialPlugin",
         "Zowe Commands: History": "zowe.commands.history",
         "Zowe Commands: Always edit": "zowe.commands.alwaysEdit",
@@ -76,16 +79,30 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         "Zowe-Jobs-Persistent": "zowe.jobs.history",
     };
 
-    // Migrate old settings to new configurations if any old configuration exists
-    if (zoweOldConfigurations.length > 0) {
+    // Migrate old settings to new settings if any old settings exist and migration has not been run yet
+    if (zoweOldConfigurations.length > 0 && configurations.get("zowe.settings.version") !== 2) {
         zoweOldConfigurations.forEach((configuration) => {
-            const oldSettings = configurations[configuration];
-            configurations.update(
-                configurationDictionary[configuration],
-                oldSettings,
-                vscode.ConfigurationTarget.Global
-            );
-            configurations.update(configuration, undefined, vscode.ConfigurationTarget.Global);
+            // Handle special case where Zowe-Temp-Folder-Location schema was changed with migration
+            const oldSetting =
+                configuration === "Zowe-Temp-Folder-Location"
+                    ? configurations[configuration].folderPath
+                    : configurations[configuration];
+            const newSetting = configurationDictionary[configuration];
+            const configurationWorkspaceValue = configurations.inspect(configuration).workspaceValue;
+            const configurationGlobalValue = configurations.inspect(configuration).globalValue;
+
+            // Handle case where a configuration could be in either workspace or global settings
+            if (configurationWorkspaceValue === undefined && configurationGlobalValue !== undefined) {
+                configurations.update(newSetting, oldSetting, vscode.ConfigurationTarget.Global);
+            } else if (configurationGlobalValue === undefined && configurationWorkspaceValue !== undefined) {
+                configurations.update(newSetting, oldSetting, vscode.ConfigurationTarget.Workspace);
+            } else {
+                configurations.update(newSetting, oldSetting, vscode.ConfigurationTarget.Global);
+                configurations.update(newSetting, oldSetting, vscode.ConfigurationTarget.Workspace);
+            }
+
+            // Confirm migration is completed so it will not run more than once
+            configurations.update("zowe.settings.version", 2, vscode.ConfigurationTarget.Global);
         });
     }
 
@@ -93,7 +110,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     let preferencesTempPath: string = vscode.workspace
         .getConfiguration()
         /* tslint:disable:no-string-literal */
-        .get("zowe.files.temporaryDownloadsFolder.path")["folderPath"];
+        .get("zowe.files.temporaryDownloadsFolder.path");
 
     // Determine the runtime framework to support special behavior for Theia
     globals.defineGlobals(preferencesTempPath);

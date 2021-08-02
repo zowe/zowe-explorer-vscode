@@ -75,6 +75,7 @@
   "zowe.jobs.history": "Toggle if Jobs favorite files persist locally",
   "zowe.commands.history": "Toggle if Commands persist locally",
   "zowe.automaticProfileValidation": "Allow automatic validation of profiles.",
+  "zowe.settings.version": "Track if migration has been processed",
   "issueTsoCmd": "Issue TSO Command",
   "deleteProfile": "Delete Profile",
   "cmd.deleteProfile": "Delete a Profile Permanently...",
