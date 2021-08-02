@@ -21,6 +21,7 @@ export async function createSystemTestEnvironment() {
     await createDataset(CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, `${normalPattern}.EXT.PS`);
 
     await createDataset(CreateDataSetTypeEnum.DATA_SET_PARTITIONED, `${normalPattern}.EXT.SAMPLE.PDS`);
+    await createDataset(CreateDataSetTypeEnum.DATA_SET_PARTITIONED, `${normalPattern}.DELETE.TEST`);
 
     await createDataset(CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, `${normalPattern}.PUBLIC.BIN`);
 
@@ -55,6 +56,7 @@ export async function cleanupSystemTestEnvironment() {
     await deleteDataset(`${normalPattern}.EXT.PDS`);
     await deleteDataset(`${normalPattern}.EXT.PS`);
     await deleteDataset(`${normalPattern}.EXT.SAMPLE.PDS`);
+    await deleteDataset(`${normalPattern}.DELETE.TEST`);
     await deleteDataset(`${normalPattern}.PUBLIC.BIN`);
     await deleteDataset(`${normalPattern}.PUBLIC.TCLASSIC`);
     await deleteDataset(`${normalPattern}.PUBLIC.TPDS`);
