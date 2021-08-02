@@ -55,7 +55,7 @@ export function createISessionWithoutCredentials() {
     });
 }
 
-export function createBasicZosmfSession(profile: imperative.IProfileLoaded) {
+export function createSessCfgFromArgs(profile: imperative.IProfileLoaded) {
     let cmdArgs: imperative.ICommandArguments;
     if (profile.profile.tokenValue) {
         cmdArgs = {

@@ -54,7 +54,7 @@ async function createGlobalMocks() {
         mockShowErrorMessage: jest.fn(),
         mockShowWarningMessage: jest.fn(),
         mockZosmfSession: jest.fn(),
-        mockCreateBasicZosmfSession: jest.fn(),
+        mockCreateSessCfgFromArgs: jest.fn(),
         mockUtilities: jest.fn(),
         mockShowInformationMessage: jest.fn(),
         mockGetConfiguration: jest.fn(),
@@ -268,8 +268,8 @@ async function createGlobalMocks() {
         configurable: true,
     });
     Object.defineProperty(zowe, "ZosmfSession", { value: globalMocks.mockZosmfSession, configurable: true });
-    Object.defineProperty(globalMocks.mockZosmfSession, "createBasicZosmfSession", {
-        value: globalMocks.mockCreateBasicZosmfSession,
+    Object.defineProperty(globalMocks.mockZosmfSession, "createSessCfgFromArgs", {
+        value: globalMocks.mockCreateSessCfgFromArgs,
         configurable: true,
     });
     Object.defineProperty(vscode.window, "showInformationMessage", {
@@ -338,7 +338,7 @@ async function createGlobalMocks() {
     globalMocks.mockExtension = new mockExtensionCreator();
 
     globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.testProfile);
-    globalMocks.mockCreateBasicZosmfSession.mockReturnValue(globalMocks.testSession);
+    globalMocks.mockCreateSessCfgFromArgs.mockReturnValue(globalMocks.testSession);
     globalMocks.mockCreateTreeView.mockReturnValue(createTreeView());
     globalMocks.mockReadFileSync.mockReturnValue("");
     globalMocks.testProfileOps.getDefaultProfile = globalMocks.mockLoadNamedProfile;

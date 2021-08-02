@@ -15,7 +15,7 @@ import * as imperative from "./imperative";
 
 // tslint:disable-next-line:no-namespace
 export namespace ZosmfSession {
-    export function createBasicZosmfSession(profile: imperative.Profile) {
+    export function createSessCfgFromArgs(profile: imperative.Profile) {
         return {
             type: "basic",
             user: "fake",
