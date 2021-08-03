@@ -33,6 +33,7 @@ import {
     IValidationSetting,
     ValidProfileEnum,
     ProfilesCache,
+    IUrlValidator,
 } from "@zowe/zowe-explorer-api";
 import { errorHandling, FilterDescriptor, FilterItem, resolveQuickPickHelper, isTheia } from "./utils/ProfilesUtils";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
@@ -374,7 +375,7 @@ export class Profiles extends ProfilesCache {
         let updUser: string;
         let updPass: string;
         let updRU: boolean;
-        let updUrl: any;
+        let updUrl: IUrlValidator | undefined;
         let updPort: any;
 
         const schema: {} = this.getSchema(profileLoaded.type);
@@ -538,7 +539,7 @@ export class Profiles extends ProfilesCache {
         let newUser: string;
         let newPass: string;
         let newRU: boolean;
-        let newUrl: any;
+        let newUrl: IUrlValidator | undefined;
         let newPort: any;
 
         const newProfileName = profileName.trim();
@@ -1336,7 +1337,7 @@ export class Profiles extends ProfilesCache {
 
     // ** Functions for handling Profile Information */
 
-    private async urlInfo(input?) {
+    private async urlInfo(input?): Promise<IUrlValidator | undefined> {
         let zosURL: string;
         if (input) {
             zosURL = input;
