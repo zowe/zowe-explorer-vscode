@@ -97,25 +97,43 @@ A Zowe CLI profiles access extension is a Zowe Explorer extension that uses the 
 
 When creating such an extension you need to follow the steps described above for accessing the Zowe Explorer API. Then by calling the `getExplorerExtenderApi()` operation on the returned object you have access to various operations on profiles. See the [ZoweExplorerExtender.ts](../packages/zowe-explorer/src/ZoweExplorerExtender.ts)] file in the main `zowe-explorer` package for details on the implementation of the various operations.
 
-Currently provided operations:
+The currently provided operations initialize the user's profiles directory with any new profile types provided by the extender, trigger a reload from disk to pick up any newly registered profile types and external user changes (for example, after the user adds/updates profiles via Zowe CLI), as well as provide full access to all currently loaded profiles available in Zowe Explorer.
 
-- `reloadProfiles(): Promise<void>;`
-- `initForZowe(type: string, meta: ICommandProfileTypeConfiguration[]): Promise<void>;`
+- `initForZowe(profileType: string, profileTypeConfigurations: ICommandProfileTypeConfiguration[]): Promise<void>`
+- `reloadProfiles(): Promise<void>`
+- `getProfilesCache(): ProfilesCache`
+
+Here is a simple example for loading and navigating the available profiles by type.
 
 ```typescript
-const zoweExplorerApi = ZoweVsCodeExtension.getZoweExplorerApi("1.16.1");
+// Retrieve the Zowe Explorer API object from the currently running instance.
+// It must be at least Zowe Explorer 1.18.0 or newer or undefined will returned.
+const zoweExplorerApi = ZoweVsCodeExtension.getZoweExplorerApi("1.18.0");
 if (zoweExplorerApi) {
   // Initialized the users ~/.zowe directory with the metadata for FTP profiles in case
   // the user does not have the FTP CLI Plugin installed and profiles created, yet.
   const meta = await CoreUtils.getProfileMeta();
   await zoweExplorerApi.getExplorerExtenderApi().initForZowe("zftp", meta);
   await zoweExplorerApi.getExplorerExtenderApi().reloadProfiles();
+
+  // Get the IApiExplorerExtender instance from the API that extenders can used
+  // to interact with Zowe Explorer such as accessing all the loaded profiles
+  const profilesCache = zoweExplorerApi.getExplorerExtenderApi().getProfilesCache();
+
+  // Example for iterating over the profiles loaded by Zowe Explorer by type
+  const allProfileTypes = profilesCache.getAllTypes();
+  let message = "Found the following available profiles: ";
+  if (!allProfileTypes) {
+    message += "none.";
+  } else {
+    for (const profileType of allProfileTypes) {
+      const profileNames = await profilesCache.getNamesForType(profileType);
+      message += `${profileType}: ${JSON.stringify(profileNames)} `;
+    }
+  }
+  void vscode.window.showInformationMessage(message);
+}
 ```
-
-TODO:
-
-- Add methods of accessing and manipulating profiles cache
-- Add methods for returning tree views for a profile type
 
 ## Creating an extension that adds a data provider
 
@@ -128,7 +146,7 @@ To implement as data provider Zowe Explorer extension you need to
 3. Initialize the user's .zowe directory with meta-data for the new profile type.
 
 ```typescript
-const zoweExplorerApi = ZoweVsCodeExtension.getZoweExplorerApi("1.16.1");
+const zoweExplorerApi = ZoweVsCodeExtension.getZoweExplorerApi("1.17.0");
 if (zoweExplorerApi) {
   // Register new implementations of data provider using FTP for three Zowe Explorer views
   zoweExplorerApi.registerUssApi(new FtpUssApi());
