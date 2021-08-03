@@ -39,7 +39,6 @@ import { errorHandling, FilterDescriptor, FilterItem, resolveQuickPickHelper, is
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 
 import * as nls from "vscode-nls";
-import { hostname } from "os";
 
 // TODO: find a home for constants
 export const CONTEXT_PREFIX = "_";
