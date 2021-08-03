@@ -180,17 +180,17 @@ describe("ZoweExplorerApiRegister unit testing", () => {
                 return;
             }
         );
-        const mockRefreshConfig = jest.fn(
-            async (): Promise<void> => {
-                return;
-            }
-        );
+        // const mockRefreshConfig = jest.fn(
+        //     async (): Promise<void> => {
+        //         return;
+        //     }
+        // );
         const profilesForValidation = { status: "active", name: "fake" };
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
                     refresh: mockRefresh,
-                    refreshConfig: mockRefreshConfig,
+                    // refreshConfig: mockRefreshConfig,
                     checkCurrentProfile: jest.fn(() => {
                         return profilesForValidation;
                     }),

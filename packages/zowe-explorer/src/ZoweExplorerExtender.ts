@@ -135,11 +135,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
     public async reloadProfiles(profileType?: string): Promise<void> {
         // sequentially reload the internal profiles cache to satisfy all the newly added profile types
         await ZoweExplorerExtender.refreshProfilesQueue.add((): any => {
-            if (ProfilesCache.getConfigInstance().usingTeamConfig) {
-                Profiles.getInstance().refreshConfig(ZoweExplorerApiRegister.getInstance());
-            } else {
-                Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
-            }
+            Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
         });
         // profileType is used to load a default extender profile if no other profiles are populating the trees
         this.datasetProvider?.addSession(undefined, profileType);

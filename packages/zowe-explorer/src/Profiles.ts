@@ -57,11 +57,7 @@ export class Profiles extends ProfilesCache {
     // Processing stops if there are no profiles detected
     public static async createInstance(log: Logger, mProfileInfo?: ProfileInfo): Promise<Profiles> {
         Profiles.loader = new Profiles(log);
-        if (mProfileInfo.usingTeamConfig) {
-            await Profiles.loader.refreshConfig(ZoweExplorerApiRegister.getInstance());
-        } else {
-            await Profiles.loader.refresh(ZoweExplorerApiRegister.getInstance());
-        }
+        await Profiles.loader.refresh(ZoweExplorerApiRegister.getInstance());
         return Profiles.loader;
     }
 
@@ -413,11 +409,7 @@ export class Profiles extends ProfilesCache {
             }
             if (newprofile) {
                 try {
-                    if (ProfilesCache.getConfigInstance().usingTeamConfig) {
-                        await Profiles.getInstance().refreshConfig(ZoweExplorerApiRegister.getInstance());
-                    } else {
-                        await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
-                    }
+                    await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
                 } catch (error) {
                     await errorHandling(error, newprofile, error.message);
                 }
