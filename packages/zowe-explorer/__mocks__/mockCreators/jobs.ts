@@ -104,6 +104,7 @@ export function createJobsTree(
         getProfileName: jest.fn(),
         getSession: jest.fn(),
         delete: jest.fn(),
+        setItem: jest.fn(),
     };
     testJobsTree.mSessionNodes = [];
     testJobsTree.mSessionNodes.push(jobNode);

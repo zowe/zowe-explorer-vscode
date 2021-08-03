@@ -23,7 +23,7 @@ More information:
 
 ## Contents
 
-- [What's new in Zowe Explorer 1.16.0](#whats-new-in-zowe-explorer-1.16.0)
+- [What's new in Zowe Explorer 1.17.0](#whats-new-in-zowe-explorer-1.17.0)
 - [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
 - [Sample Use Cases](#sample-use-cases)
@@ -31,22 +31,25 @@ More information:
 - [Usage Tips](#usage-tips)
 - [Extending Zowe Explorer](#extending-zowe-explorer)
 
-## What's new in Zowe Explorer 1.16.0
+## What's new in Zowe Explorer 1.17.0
 
 **Added**:
 
-- Added the refresh data set member names option. You can now retrieve a new list of members from the mainframe.
-- Added the best practice documentation for error handling.
-- Added the developer guide for adding commands to core Zowe Explorer menus.
+- Added the feature that automatically includes a missing profile in the Jobs view when submitting a job.
+- Added the extender documentation for KeytarApi for Secure Credential Store.
+- Added a new setting that enables you to hide Zowe Explorer's temporary downloads folder from a workspace.
+- Added the command to refresh a particular job and get the latest information and content for its spool files.
+- Added the function that enables you to delete multiple datasets and data set members.
+- Added the feature that enables you to use multiple VS Code windows for files opened via Zowe Explorer.
+- Added the command to refresh USS directory file names without the entire tree collapsing.
 
 **Changed**:
 
-- Standardized context group names.
+- Removed non-functioning code from invalid credentials for Theia.
 
 **Fixed**:
 
-- Fixed the error message that popped up when accessing a profile from Favorites.
-- Fixed the issue that prevented the Allocate Like feature from working correctly.
+- Fixed the issue with the USS search and update profile errors for profiles without credentials.
 
 For more information, see [Changelog](https://marketplace.visualstudio.com/items/Zowe.vscode-extension-for-zowe/changelog).
 
@@ -141,7 +144,7 @@ Review the following use cases to understand how to work with data sets in Zowe 
 - [Prevent merge conflicts](#use-the-save-option-to-prevent-merge-conflicts): The save option includes a **compare** mechanism letting you resolve potential merge conflicts.
 - [Create data sets and data set members](#create-a-new-data-set-and-add-a-member): Create a new data set and data set members.
 - [Create data sets and specify the parameters](#create-data-sets-and-specify-the-parameters): Create a new data set and specify parameter values.
-- [Delete a data set member and a data set](#delete-a-data-set-member-and-a-data-set): Delete a chosen data set member or an entire data set.
+- [Delete data sets and data set members](#delete-data-sets-and-data-set-members): Delete one or more data sets and data set members.
 - [View and access multiple profiles simultaneously](#view-and-access-multiple-profiles-simultaneously): Work with data sets from multiple profiles.
 - [Allocate Like](#allocate-like): Create a copy of a chosen data set with the same parameters.
 
@@ -297,22 +300,22 @@ Your data set member is uploaded.
    ![Parameters](/docs/images/ZE-set-params.gif?raw=true "Parameters")
    <br /><br />
 
-### Delete a data set member and a data set
+### Delete data sets and data set members
 
 1. Navigate to the explorer tree.
 2. Open the **DATA SETS** bar.
-3. Open the profile and a data set containing the member.
-4. Right-click the data set member that you want to delete and select **Delete Member**.
+3. Select one or more data sets and/or data set members.
+
+   **Tip:** Hold **Ctrl/Cmd** key while clicking data sets or data set members to select more than one item for deletion.
+
+4. Press the **Delete** key on your keyboard.
+
+   Alternatively, right-click on the item and select the **Delete Data Set** or **Delete Member** option.
+
 5. Confirm the deletion by clicking **Delete** in the drop-down menu.
 
-   **Note:** Alternatively, you can select **Cancel** to cancel the deletion.
-
-6. To delete a data set, right-click the data set and click **Delete Data Set**, then confirm the deletion.
-
-   **Note:** You can delete a data set before you delete the data set members.
-
-![Delete](/docs/images/ZE-delete-ds.gif?raw=true "Delete")
-<br /><br />
+   ![Delete Data Sets and Members](/docs/images/ZE-delete-ds2.gif?raw=true "Delete Data Sets and Members")
+   <br /><br />
 
 ### View and access multiple profiles simultaneously
 
