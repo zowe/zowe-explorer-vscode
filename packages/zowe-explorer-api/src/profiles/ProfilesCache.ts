@@ -15,7 +15,6 @@ import * as path from "path";
 import * as os from "os";
 import * as fs from "fs";
 import { URL } from "url";
-import { ProfilesConfig } from "./ProfilesConfig";
 
 // TODO: find a home for constants
 export const CONTEXT_PREFIX = "_";
@@ -54,6 +53,16 @@ export class ProfilesCache {
     protected profileManagerByType = new Map<string, imperative.CliProfileManager>();
     public constructor(protected log: imperative.Logger) {}
 
+    public static createConfigInstance(mProfileInfo: imperative.ProfileInfo): imperative.ProfileInfo {
+        return (ProfilesCache.info = mProfileInfo);
+    }
+
+    public static getConfigInstance(): imperative.ProfileInfo {
+        return ProfilesCache.info;
+    }
+
+    private static info: imperative.ProfileInfo;
+
     public loadNamedProfile(name: string, type?: string): imperative.IProfileLoaded {
         for (const profile of this.allProfiles) {
             if (profile.name === name && (type ? profile.type === type : true)) {
@@ -65,6 +74,10 @@ export class ProfilesCache {
 
     public getDefaultProfile(type = "zosmf"): imperative.IProfileLoaded {
         return this.defaultProfileByType.get(type);
+    }
+
+    public getDefaultConfigProfile(mProfileInfo: imperative.ProfileInfo, profileType: string): imperative.IProfAttrs {
+        return mProfileInfo.getDefaultProfile(profileType);
     }
 
     public getProfiles(type = "zosmf"): imperative.IProfileLoaded[] {
@@ -124,14 +137,14 @@ export class ProfilesCache {
         this.allProfiles = [];
         let tmpAllProfiles = [];
         this.allTypes = [];
-        const mProfileInfo = ProfilesConfig.getInstance();
+        const mProfileInfo = ProfilesCache.getConfigInstance();
         for (const type of apiRegister.registeredApiTypes()) {
             // Step 1: Get all profiles for each registered type
             const profilesForType = mProfileInfo.getAllProfiles(type);
             if (profilesForType && profilesForType.length > 0) {
                 for (const prof of profilesForType) {
                     // Step 2: Merge args for each profile
-                    const profAttr = await ProfilesConfig.getMergedAttrs(mProfileInfo, prof);
+                    const profAttr = await this.getMergedAttrs(mProfileInfo, prof);
                     // Work-around. TODO: Discuss with imperative team
                     const profileFix: imperative.IProfileLoaded = {
                         message: "",
@@ -146,7 +159,7 @@ export class ProfilesCache {
                 }
                 this.profilesByType.set(type, tmpAllProfiles);
                 tmpAllProfiles = [];
-                const defaultProfAttr = ProfilesConfig.getDefaultProfile(mProfileInfo, type);
+                const defaultProfAttr = this.getDefaultConfigProfile(mProfileInfo, type);
                 const defaultProfile: imperative.IProfileLoaded = {
                     message: "",
                     name: defaultProfAttr.profName,
@@ -255,6 +268,21 @@ export class ProfilesCache {
             }
         }
         return baseProfile;
+    }
+
+    public async getMergedAttrs(
+        mProfileInfo: imperative.ProfileInfo,
+        profAttrs: imperative.IProfAttrs
+    ): Promise<imperative.IProfile> {
+        const profile: imperative.IProfile = {};
+        if (profAttrs != null) {
+            const mergedArgs = mProfileInfo.mergeArgsForProfile(profAttrs);
+
+            for (const arg of mergedArgs.knownArgs) {
+                profile[arg.argName] = arg.secure ? await mProfileInfo.loadSecureArg(arg) : arg.argValue;
+            }
+        }
+        return profile;
     }
 
     public isSecureCredentialPluginActive(): boolean {

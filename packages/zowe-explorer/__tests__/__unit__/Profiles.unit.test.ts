@@ -30,7 +30,7 @@ import * as utils from "../../src/utils/ProfilesUtils";
 import * as child_process from "child_process";
 import { Logger } from "@zowe/imperative";
 import * as globals from "../../src/globals";
-import { ValidProfileEnum, IZoweNodeType, ProfilesConfig } from "@zowe/zowe-explorer-api";
+import { ValidProfileEnum, IZoweNodeType, ProfilesCache } from "@zowe/zowe-explorer-api";
 import { ZosmfSession } from "@zowe/cli";
 import { ZoweExplorerApiRegister } from "../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../src/Profiles";
@@ -116,7 +116,7 @@ async function createGlobalMocks() {
     Object.defineProperty(vscode, "ProgressLocation", { value: newMocks.ProgressLocation, configurable: true });
     Object.defineProperty(vscode.window, "withProgress", { value: newMocks.withProgress, configurable: true });
 
-    Object.defineProperty(ProfilesConfig, "getInstance", {
+    Object.defineProperty(ProfilesCache, "getConfigInstance", {
         value: jest.fn(() => {
             return {
                 usingTeamConfig: false,

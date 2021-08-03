@@ -9,7 +9,7 @@
  *                                                                                 *
  */
 
-import { IZoweTree, IZoweTreeNode, ProfilesConfig } from "@zowe/zowe-explorer-api";
+import { IZoweTree, IZoweTreeNode, ProfilesCache } from "@zowe/zowe-explorer-api";
 import { PersistentFilters } from "../PersistentFilters";
 import { Profiles } from "../Profiles";
 import { syncSessionNode } from "../utils/ProfilesUtils";
@@ -25,7 +25,7 @@ import * as contextually from "../shared/context";
  * @param {IZoweTree} treeProvider
  */
 export async function refreshAll(treeProvider: IZoweTree<IZoweTreeNode>) {
-    if (ProfilesConfig.getInstance().usingTeamConfig) {
+    if (ProfilesCache.getConfigInstance().usingTeamConfig) {
         await Profiles.getInstance().refreshConfig(ZoweExplorerApiRegister.getInstance());
     } else {
         await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());

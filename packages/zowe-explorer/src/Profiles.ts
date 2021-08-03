@@ -35,7 +35,6 @@ import {
     IValidationSetting,
     ValidProfileEnum,
     ProfilesCache,
-    ProfilesConfig,
 } from "@zowe/zowe-explorer-api";
 import { errorHandling, FilterDescriptor, FilterItem, resolveQuickPickHelper, isTheia } from "./utils/ProfilesUtils";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
@@ -56,15 +55,13 @@ let InputBoxOptions: vscode.InputBoxOptions;
 
 export class Profiles extends ProfilesCache {
     // Processing stops if there are no profiles detected
-    public static async createInstance(log: Logger): Promise<Profiles> {
+    public static async createInstance(log: Logger, mProfileInfo?: ProfileInfo): Promise<Profiles> {
         Profiles.loader = new Profiles(log);
-        await Profiles.loader.refresh(ZoweExplorerApiRegister.getInstance());
-        return Profiles.loader;
-    }
-
-    public static async createConfigInstance(log: Logger): Promise<Profiles> {
-        Profiles.loader = new Profiles(log);
-        await Profiles.loader.refreshConfig(ZoweExplorerApiRegister.getInstance());
+        if (mProfileInfo.usingTeamConfig) {
+            await Profiles.loader.refreshConfig(ZoweExplorerApiRegister.getInstance());
+        } else {
+            await Profiles.loader.refresh(ZoweExplorerApiRegister.getInstance());
+        }
         return Profiles.loader;
     }
 
@@ -92,15 +89,17 @@ export class Profiles extends ProfilesCache {
                     this.profilesForValidation.splice(index, 1);
                 }
             });
-            if (ProfilesConfig.getInstance().usingTeamConfig) {
-                const configAllProfiles = ProfilesConfig.getInstance().getAllProfiles();
+            if (ProfilesCache.getConfigInstance().usingTeamConfig) {
+                const configAllProfiles = ProfilesCache.getConfigInstance().getAllProfiles();
                 const currentProfile = configAllProfiles.filter(
                     (temprofile) => temprofile.profName === theProfile.name
                 )[0];
-                const mergedArgs = ProfilesConfig.getInstance().mergeArgsForProfile(currentProfile);
+                const mergedArgs = ProfilesCache.getConfigInstance().mergeArgsForProfile(currentProfile);
                 const profile: IProfile = {};
                 for (const arg of mergedArgs.knownArgs) {
-                    profile[arg.argName] = arg.secure ? ProfilesConfig.getInstance().loadSecureArg(arg) : arg.argValue;
+                    profile[arg.argName] = arg.secure
+                        ? ProfilesCache.getConfigInstance().loadSecureArg(arg)
+                        : arg.argValue;
                 }
                 for (const arg of mergedArgs.missingArgs) {
                     let response: string;
@@ -376,9 +375,9 @@ export class Profiles extends ProfilesCache {
         }
 
         if (chosenProfile === "") {
-            if (ProfilesConfig.getInstance().usingTeamConfig) {
-                const configHomeDir = ProfilesConfig.getInstance().getTeamConfig().mHomeDir;
-                const configName = ProfilesConfig.getInstance().getTeamConfig().configName;
+            if (ProfilesCache.getConfigInstance().usingTeamConfig) {
+                const configHomeDir = ProfilesCache.getConfigInstance().getTeamConfig().mHomeDir;
+                const configName = ProfilesCache.getConfigInstance().getTeamConfig().configName;
                 const filePath = path.join(configHomeDir, configName);
                 const document = await vscode.workspace.openTextDocument(filePath);
                 await vscode.window.showTextDocument(document);
@@ -414,7 +413,7 @@ export class Profiles extends ProfilesCache {
             }
             if (newprofile) {
                 try {
-                    if (ProfilesConfig.getInstance().usingTeamConfig) {
+                    if (ProfilesCache.getConfigInstance().usingTeamConfig) {
                         await Profiles.getInstance().refreshConfig(ZoweExplorerApiRegister.getInstance());
                     } else {
                         await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
@@ -438,8 +437,8 @@ export class Profiles extends ProfilesCache {
     }
 
     public async editSession(profileLoaded: IProfileLoaded, profileName: string): Promise<any | undefined> {
-        if (ProfilesConfig.getInstance().usingTeamConfig) {
-            const configAllProfiles = ProfilesConfig.getInstance().getAllProfiles();
+        if (ProfilesCache.getConfigInstance().usingTeamConfig) {
+            const configAllProfiles = ProfilesCache.getConfigInstance().getAllProfiles();
             const currentProfile = configAllProfiles.filter(
                 (temprofile) => temprofile.profName === profileLoaded.name
             )[0];
@@ -906,8 +905,8 @@ export class Profiles extends ProfilesCache {
         }
         deleteLabel = deletedProfile.name;
 
-        if (ProfilesConfig.getInstance().usingTeamConfig) {
-            const configAllProfiles = ProfilesConfig.getInstance().getAllProfiles();
+        if (ProfilesCache.getConfigInstance().usingTeamConfig) {
+            const configAllProfiles = ProfilesCache.getConfigInstance().getAllProfiles();
             const currentProfile = configAllProfiles.filter((temprofile) => temprofile.profName === deleteLabel)[0];
             const filePath = currentProfile.profLoc.osLoc[0];
             const document = await vscode.workspace.openTextDocument(filePath);
