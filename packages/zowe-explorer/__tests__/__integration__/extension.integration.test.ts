@@ -241,7 +241,7 @@ describe("Extension Integration Tests", async () => {
             for (const child of childrenFromTree) {
                 await testTree.getTreeView().reveal(child);
                 const loadedItems = await testTree.getAllLoadedItems();
-                const foundChild = loadedItems.find((item) => item == child);
+                const foundChild = loadedItems.find((item) => item === child);
                 expect(foundChild).to.not.be.equal(undefined);
             }
         }).timeout(TIMEOUT);
@@ -1103,7 +1103,7 @@ async function getAllNodes(nodes: IZoweTreeNode[]) {
 
     for (const node of nodes) {
         let nodeChildren = await node.getChildren();
-        nodeChildren = nodeChildren.filter((node) => !node.label.includes("No datasets found"));
+        nodeChildren = nodeChildren.filter((item) => !item.label.includes("No datasets found"));
         allNodes = allNodes.concat(await getAllNodes(nodeChildren));
         allNodes.push(node);
     }
