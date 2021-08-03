@@ -1338,12 +1338,15 @@ export class Profiles extends ProfilesCache {
 
     private async urlInfo(input?) {
         let zosURL: string;
+        if (input) {
+            zosURL = input;
+        }
         zosURL = await vscode.window.showInputBox({
             prompt: localize(
                 "createNewConnection.option.prompt.url",
                 "Enter a z/OS URL in the format 'https://url:port'."
             ),
-            value: input,
+            value: zosURL,
             ignoreFocusOut: true,
             placeHolder: localize("createNewConnection.option.prompt.url.placeholder", "https://url:port"),
             validateInput: (text: string): string | undefined => {
