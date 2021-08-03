@@ -59,11 +59,11 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  */
 export async function activate(context: vscode.ExtensionContext): Promise<ZoweExplorerApiRegister> {
     // Carry over old settings to new standardized settings
-    let configurations = vscode.workspace.getConfiguration();
-    let zoweOldConfigurations = Object.keys(configurations).filter((key) =>
+    const configurations = vscode.workspace.getConfiguration();
+    const zoweOldConfigurations = Object.keys(configurations).filter((key) =>
         key.match(new RegExp("Zowe-*|Zowe\\s*", "g"))
     );
-    let configurationDictionary = {
+    const configurationDictionary = {
         "Zowe-Default-Datasets-Binary": "zowe.ds.default.binary",
         "Zowe-Default-Datasets-C": "zowe.ds.default.c",
         "Zowe-Default-Datasets-Classic": "zowe.ds.default.classic",
