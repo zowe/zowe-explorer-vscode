@@ -321,8 +321,7 @@ export class Profiles extends ProfilesCache {
                 const configHomeDir = ProfilesCache.getConfigInstance().getTeamConfig().mHomeDir;
                 const configName = ProfilesCache.getConfigInstance().getTeamConfig().configName;
                 const filePath = path.join(configHomeDir, configName);
-                const document = await vscode.workspace.openTextDocument(filePath);
-                await vscode.window.showTextDocument(document);
+                await this.openConfigFile(filePath);
                 return;
             }
             let newprofile: any;
@@ -377,7 +376,8 @@ export class Profiles extends ProfilesCache {
     public async editSession(profileLoaded: IProfileLoaded, profileName: string): Promise<any | undefined> {
         if (ProfilesCache.getConfigInstance().usingTeamConfig) {
             const currentProfile = this.getProfileFromConfig(profileLoaded.name);
-            await this.openConfigFile(currentProfile);
+            const filePath = currentProfile.profLoc.osLoc[0];
+            await this.openConfigFile(filePath);
             return;
         }
         const editSession = profileLoaded.profile;
@@ -843,8 +843,12 @@ export class Profiles extends ProfilesCache {
             profile,
             failNotFound: false,
         };
-        const updSession = await ZoweExplorerApiRegister.getMvsApi(profileFix).getSession();
-        return [updSession.ISession.user, updSession.ISession.password, updSession.ISession.base64EncodedAuth];
+        try {
+            const updSession = await ZoweExplorerApiRegister.getMvsApi(profileFix).getSession();
+            return [updSession.ISession.user, updSession.ISession.password, updSession.ISession.base64EncodedAuth];
+        } catch (error) {
+            await errorHandling(error.message);
+        }
     }
 
     public async getDeleteProfile() {
@@ -895,7 +899,8 @@ export class Profiles extends ProfilesCache {
 
         if (ProfilesCache.getConfigInstance().usingTeamConfig) {
             const currentProfile = this.getProfileFromConfig(deleteLabel);
-            await this.openConfigFile(currentProfile);
+            const filePath = currentProfile.profLoc.osLoc[0];
+            await this.openConfigFile(filePath);
             return;
         }
 
@@ -1728,8 +1733,7 @@ export class Profiles extends ProfilesCache {
         }
     }
 
-    private async openConfigFile(profile: IProfAttrs) {
-        const filePath = profile.profLoc.osLoc[0];
+    private async openConfigFile(filePath: string) {
         const document = await vscode.workspace.openTextDocument(filePath);
         await vscode.window.showTextDocument(document);
     }
