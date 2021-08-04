@@ -18,7 +18,6 @@ import {
     SessConstants,
     IUpdateProfile,
     IProfile,
-    IProfAttrs,
     IProfMergedArg,
 } from "@zowe/imperative";
 import * as vscode from "vscode";
