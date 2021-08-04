@@ -113,7 +113,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         .get("zowe.files.temporaryDownloadsFolder.path");
 
     // Determine the runtime framework to support special behavior for Theia
-    globals.defineGlobals(preferencesTempPath);
+    globals.defineGlobals(preferencesTempPath[0]);
 
     hideTempFolder(getZoweDir());
 
