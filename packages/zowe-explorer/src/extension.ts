@@ -110,7 +110,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir() });
 
         // Initialize profile manager
-        await Profiles.createInstance(globals.LOG, mProfileInfo);
+        await Profiles.createInstance(globals.LOG);
 
         // Initialize dataset provider
         datasetProvider = await createDatasetTree(globals.LOG);

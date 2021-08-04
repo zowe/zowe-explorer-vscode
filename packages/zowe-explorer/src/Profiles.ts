@@ -55,7 +55,7 @@ let InputBoxOptions: vscode.InputBoxOptions;
 
 export class Profiles extends ProfilesCache {
     // Processing stops if there are no profiles detected
-    public static async createInstance(log: Logger, mProfileInfo?: ProfileInfo): Promise<Profiles> {
+    public static async createInstance(log: Logger): Promise<Profiles> {
         Profiles.loader = new Profiles(log);
         await Profiles.loader.refresh(ZoweExplorerApiRegister.getInstance());
         return Profiles.loader;

@@ -155,6 +155,14 @@ describe("ZoweExplorerApiRegister unit testing", () => {
 
     const registry = ZoweExplorerApiRegister.getInstance();
 
+    Object.defineProperty(ProfilesCache, "getConfigInstance", {
+        value: jest.fn(() => {
+            return {
+                usingTeamConfig: false,
+            };
+        }),
+    });
+
     it("registers an API only once per profile type", async () => {
         const defaultProfile = profiles.getDefaultProfile();
 

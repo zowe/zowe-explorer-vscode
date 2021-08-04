@@ -85,8 +85,7 @@ export class ProfilesCache {
     }
 
     public async refresh(apiRegister?: ZoweExplorerApi.IApiRegisterClient): Promise<void> {
-        const mProfileInfo = ProfilesCache.getConfigInstance();
-        if (mProfileInfo.usingTeamConfig) {
+        if (ProfilesCache.getConfigInstance().usingTeamConfig) {
             await this.refreshConfig(apiRegister);
         } else {
             this.allProfiles = [];

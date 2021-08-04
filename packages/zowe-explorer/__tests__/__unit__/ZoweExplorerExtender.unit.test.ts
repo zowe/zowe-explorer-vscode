@@ -38,18 +38,18 @@ describe("ZoweExplorerExtender unit tests", () => {
         };
         newMocks.profiles = await Profiles.createInstance(newMocks.log);
         Object.defineProperty(vscode.window, "createTreeView", { value: jest.fn(), configurable: true });
-        Object.defineProperty(ProfilesCache, "getConfigInstance", {
-            value: jest.fn(() => {
-                return {
-                    usingTeamConfig: false,
-                };
-            }),
-        });
+
         return newMocks;
     }
-    afterEach(async () => {
-        jest.resetAllMocks();
+
+    Object.defineProperty(ProfilesCache, "getConfigInstance", {
+        value: jest.fn(() => {
+            return {
+                usingTeamConfig: false,
+            };
+        }),
     });
+
     it("calls DatasetTree addSession when extender profiles are reloaded", async () => {
         const blockMocks = await createBlockMocks();
         const datasetSessionNode = createDatasetSessionNode(blockMocks.session, blockMocks.altTypeProfile);
