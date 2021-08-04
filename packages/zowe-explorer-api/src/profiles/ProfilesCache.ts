@@ -199,6 +199,12 @@ export class ProfilesCache {
         return directProfile;
     }
 
+    public getProfileFromConfig(profileName: string): imperative.IProfAttrs {
+        const configAllProfiles = ProfilesCache.getConfigInstance().getAllProfiles();
+        const currentProfile = configAllProfiles.filter((temprofile) => temprofile.profName === profileName)[0];
+        return currentProfile;
+    }
+
     public getCliProfileManager(type: string): imperative.CliProfileManager {
         let profileManager = this.profileManagerByType.get(type);
         if (!profileManager) {

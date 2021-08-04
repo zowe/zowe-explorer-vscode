@@ -86,10 +86,7 @@ export class Profiles extends ProfilesCache {
                 }
             });
             if (ProfilesCache.getConfigInstance().usingTeamConfig) {
-                const configAllProfiles = ProfilesCache.getConfigInstance().getAllProfiles();
-                const currentProfile = configAllProfiles.filter(
-                    (temprofile) => temprofile.profName === theProfile.name
-                )[0];
+                const currentProfile = this.getProfileFromConfig(theProfile.name);
                 const mergedArgs = ProfilesCache.getConfigInstance().mergeArgsForProfile(currentProfile);
                 const profile: IProfile = {};
                 for (const arg of mergedArgs.knownArgs) {
@@ -430,10 +427,7 @@ export class Profiles extends ProfilesCache {
 
     public async editSession(profileLoaded: IProfileLoaded, profileName: string): Promise<any | undefined> {
         if (ProfilesCache.getConfigInstance().usingTeamConfig) {
-            const configAllProfiles = ProfilesCache.getConfigInstance().getAllProfiles();
-            const currentProfile = configAllProfiles.filter(
-                (temprofile) => temprofile.profName === profileLoaded.name
-            )[0];
+            const currentProfile = this.getProfileFromConfig(profileLoaded.name);
             const filePath = currentProfile.profLoc.osLoc[0];
             const document = await vscode.workspace.openTextDocument(filePath);
             await vscode.window.showTextDocument(document);
@@ -898,8 +892,7 @@ export class Profiles extends ProfilesCache {
         deleteLabel = deletedProfile.name;
 
         if (ProfilesCache.getConfigInstance().usingTeamConfig) {
-            const configAllProfiles = ProfilesCache.getConfigInstance().getAllProfiles();
-            const currentProfile = configAllProfiles.filter((temprofile) => temprofile.profName === deleteLabel)[0];
+            const currentProfile = this.getProfileFromConfig(deleteLabel);
             const filePath = currentProfile.profLoc.osLoc[0];
             const document = await vscode.workspace.openTextDocument(filePath);
             await vscode.window.showTextDocument(document);
