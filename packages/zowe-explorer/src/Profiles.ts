@@ -18,7 +18,7 @@ import {
     SessConstants,
     IUpdateProfile,
     IProfile,
-    ProfileInfo,
+    IProfAttrs,
 } from "@zowe/imperative";
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
@@ -428,9 +428,7 @@ export class Profiles extends ProfilesCache {
     public async editSession(profileLoaded: IProfileLoaded, profileName: string): Promise<any | undefined> {
         if (ProfilesCache.getConfigInstance().usingTeamConfig) {
             const currentProfile = this.getProfileFromConfig(profileLoaded.name);
-            const filePath = currentProfile.profLoc.osLoc[0];
-            const document = await vscode.workspace.openTextDocument(filePath);
-            await vscode.window.showTextDocument(document);
+            await this.openConfigFile(currentProfile);
             return;
         }
         const editSession = profileLoaded.profile;
@@ -893,9 +891,7 @@ export class Profiles extends ProfilesCache {
 
         if (ProfilesCache.getConfigInstance().usingTeamConfig) {
             const currentProfile = this.getProfileFromConfig(deleteLabel);
-            const filePath = currentProfile.profLoc.osLoc[0];
-            const document = await vscode.workspace.openTextDocument(filePath);
-            await vscode.window.showTextDocument(document);
+            await this.openConfigFile(currentProfile);
             return;
         }
 
@@ -1726,5 +1722,11 @@ export class Profiles extends ProfilesCache {
         } catch (error) {
             vscode.window.showErrorMessage(error.message);
         }
+    }
+
+    private async openConfigFile(profile: IProfAttrs) {
+        const filePath = profile.profLoc.osLoc[0];
+        const document = await vscode.workspace.openTextDocument(filePath);
+        await vscode.window.showTextDocument(document);
     }
 }
