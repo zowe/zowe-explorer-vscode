@@ -169,13 +169,9 @@ export class ZoweTreeProvider {
                 zoweFileProvider.addSession(node.getProfileName());
             }
             this.refresh();
-        }
-        try {
             // Remove the edited profile from profilesForValidation
             // Revalidate updated profile and update the validation icon
             await this.checkCurrentProfile(node);
-        } catch (error) {
-            await errorHandling(error);
         }
     }
 
