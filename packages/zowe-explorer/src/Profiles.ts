@@ -33,6 +33,7 @@ import {
     IValidationSetting,
     ValidProfileEnum,
     ProfilesCache,
+    IUrlValidator,
 } from "@zowe/zowe-explorer-api";
 import { errorHandling, FilterDescriptor, FilterItem, resolveQuickPickHelper, isTheia } from "./utils/ProfilesUtils";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
@@ -373,7 +374,7 @@ export class Profiles extends ProfilesCache {
         let updUser: string;
         let updPass: string;
         let updRU: boolean;
-        let updUrl: any;
+        let updUrl: IUrlValidator | undefined;
         let updPort: any;
 
         const schema: {} = this.getSchema(profileLoaded.type);
@@ -537,7 +538,7 @@ export class Profiles extends ProfilesCache {
         let newUser: string;
         let newPass: string;
         let newRU: boolean;
-        let newUrl: any;
+        let newUrl: IUrlValidator | undefined;
         let newPort: any;
 
         const newProfileName = profileName.trim();
@@ -1335,59 +1336,54 @@ export class Profiles extends ProfilesCache {
 
     // ** Functions for handling Profile Information */
 
-    private async urlInfo(input?) {
+    private async urlInfo(input?): Promise<IUrlValidator | undefined> {
         let zosURL: string;
-
-        const urlInputBox = vscode.window.createInputBox();
         if (input) {
-            urlInputBox.value = input;
+            zosURL = input;
         }
-        urlInputBox.ignoreFocusOut = true;
-        urlInputBox.placeholder = localize("createNewConnection.option.prompt.url.placeholder", "https://url:port");
-        urlInputBox.prompt = localize(
-            "createNewConnection.option.prompt.url",
-            "Enter a z/OS URL in the format 'https://url:port'."
-        );
-
-        urlInputBox.show();
-        zosURL = await this.getUrl(urlInputBox);
-        urlInputBox.dispose();
-
-        if (!zosURL) {
-            return undefined;
-        }
-
-        return this.validateAndParseUrl(zosURL);
-    }
-
-    private async getUrl(urlInputBox): Promise<string | undefined> {
-        return new Promise<string | undefined>((resolve, reject) => {
-            urlInputBox.onDidHide(() => {
-                reject(undefined);
-                resolve(urlInputBox.value);
-            });
-            urlInputBox.onDidAccept(() => {
-                let host: string;
-                if (urlInputBox.value.includes(":")) {
-                    if (urlInputBox.value.includes("/")) {
-                        host = urlInputBox.value;
-                    } else {
-                        host = `https://${urlInputBox.value}`;
-                    }
-                } else {
-                    host = `https://${urlInputBox.value}`;
-                }
-
+        zosURL = await vscode.window.showInputBox({
+            prompt: localize(
+                "createNewConnection.option.prompt.url",
+                "Enter a z/OS URL in the format 'https://url:port'."
+            ),
+            value: zosURL,
+            ignoreFocusOut: true,
+            placeHolder: localize("createNewConnection.option.prompt.url.placeholder", "https://url:port"),
+            validateInput: (text: string): string | undefined => {
+                const host = this.getUrl(text);
                 if (this.validateAndParseUrl(host).valid) {
-                    resolve(host);
+                    return undefined;
                 } else {
-                    urlInputBox.validationMessage = localize(
+                    return localize(
                         "createNewConnection.invalidzosURL",
                         "Please enter a valid host URL in the format 'company.com'."
                     );
                 }
-            });
+            },
         });
+
+        let hostName: string;
+        if (!zosURL) {
+            return undefined;
+        } else {
+            hostName = this.getUrl(zosURL);
+        }
+
+        return this.validateAndParseUrl(hostName);
+    }
+
+    private getUrl(host: string): string {
+        let url: string;
+        if (host.includes(":")) {
+            if (host.includes("/")) {
+                url = host;
+            } else {
+                url = `https://${host}`;
+            }
+        } else {
+            url = `https://${host}`;
+        }
+        return url;
     }
 
     private async portInfo(input: string, schema: {}) {

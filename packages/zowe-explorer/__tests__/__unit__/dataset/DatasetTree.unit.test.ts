@@ -1590,6 +1590,7 @@ describe("Dataset Tree Unit Tests - Function editSession", () => {
             profile: null,
             mockGetProfileSetting: jest.fn(),
             mockEditSession: jest.fn(),
+            mockCheckCurrentProfile: jest.fn(),
         };
 
         newMocks.datasetSessionNode = await createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
@@ -1606,6 +1607,10 @@ describe("Dataset Tree Unit Tests - Function editSession", () => {
                         status: "active",
                     }),
                     editSession: newMocks.mockEditSession.mockReturnValueOnce("testProfile"),
+                    checkCurrentProfile: newMocks.mockCheckCurrentProfile.mockReturnValue({
+                        status: "active",
+                        name: "testProfile",
+                    }),
                 };
             }),
         });
