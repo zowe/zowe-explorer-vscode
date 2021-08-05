@@ -41,7 +41,8 @@
   },
   "resolutions": {
     "**/lodash": "^4.17.21",
-    "**/postcss": "^8.2.10"
+    "**/postcss": "^8.2.10",
+    "**/tar": "^6.1.2"
   },
   "scripts": {
     "prepare": "yarn build",
