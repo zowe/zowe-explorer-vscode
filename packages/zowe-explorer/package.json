@@ -1690,7 +1690,8 @@
     "clean": "gulp clean",
     "lintErrors": "echo \"zowe-explorer: lintErrors coming soon with eslint.\"",
     "pretty": "prettier --write .",
-    "createTestProfileData": "ts-node ./scripts/createTestProfileData.ts"
+    "createTestProfileData": "ts-node ./scripts/createTestProfileData.ts",
+    "createDemoNodes": "ts-node ./scripts/createDemoNodes.ts"
   },
   "engines": {
     "vscode": "^1.43.0"
