@@ -184,7 +184,7 @@ To specify which view a command contribution should appear in, Zowe Explorer men
 
 **Note:** For details on planned upcoming changes to the above view IDs, see the footnote<sup id="view-ids">[1](#view-ids-upcoming)</sup>.
 
-To allow for more granular control over which type(s) of tree items a command should be associated with (for example, a USS textfile versus a USS directory), Zowe Explorer uses a strategy of adding and removing context components for an individual Tree Item's context value if that imparts additional information that could assist with menu triggers. Extenders can leverage this when defining a command's `when` property by specifying `viewItem =~ <contextValue>`, where `<contextValue>` is a regular expression that matches the context value of the target Tree Item type(s).
+To allow for more granular control over which type(s) of tree items a command should be associated with (for example, a USS textfile versus a USS directory), Zowe Explorer uses a strategy of adding and removing context components for an individual Tree Item's context value if that imparts additional information that could assist with menu triggers. Extenders can leverage this when defining a command's `when` property by specifying `viewItem =~ <contextValue>`, where `<contextValue>` is a regular expression that matches the context value of the target Tree Item type(s). Examples of available context components can be found in Zowe Explorer's [`globals.ts` file](https://github.com/zowe/vscode-extension-for-zowe/blob/master/packages/zowe-explorer/src/globals.ts#L35), as values for exported constants whose names contain `CONTEXT`.
 
 For more information on how to use a command's `when` property, see the VS Code [`when` clause contexts documentation](https://code.visualstudio.com/api/references/when-clause-contexts).
 
@@ -218,7 +218,7 @@ In the basic example below, the extender imports `IZoweTreeNode` from Zowe Explo
 
 ```typescript
 // Import the node type from Zowe Explorer API
-import { IZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { IZoweTreeNode, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 
 export function activate(context: vscode.ExtensionContext) {
   ... // Other registration/activation code ...
@@ -240,6 +240,64 @@ The node types for items in each of Zowe Explorer's three tree views are as foll
 - Data Sets View items: `IZoweDatasetTreeNode`
 - USS View items: `IZoweUSSTreeNode`
 - Jobs View items: `IZoweJobTreeNode`
+
+The example below shows a more complex use case in the Data Sets view with `IZoweDatasetTreeNode`.
+
+```typescript
+// Import the node type from Zowe Explorer API
+import { IZoweDatasetTreeNode, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { IProfileLoaded } from "@zowe/imperative"; // Imported from Zowe Imperative to allow working with profiles
+
+export function activate(context: vscode.ExtensionContext) {
+  ... // Other registration/activation code ...
+
+  // Register the command with the callback function
+  context.subscriptions.push(vscode.commands.registerCommand("testmule.createTestPdsWithMembers", (node) => createTestPdsWithMembers(node)));
+}
+
+async function createTestPdsWithMembers(node: IZoweDatasetTreeNode): Promise<void> {
+    let pdsNode: IZoweDatasetTreeNode; // A partitioned data set (PDS) node
+    let newPdsMemberNames: string[] = []; // An array of member names to be used by the new PDS
+
+    // Get the node's context value
+    const nodeContext = node.contextValue;
+    if (!nodeContext) {
+        return; // Exit if nodeContext is undefined
+    }
+    // Use nodeContext to check if the node is a PDS or a PDS member.
+    const isPds = new RegExp("^(pds)").test(nodeContext); // Will be replaced by API in the future
+    const isPdsMember = new RegExp("^(member)").test(nodeContext); // Will be replaced by API in the future
+    if (!isPds && !isPdsMember) {
+        return; // Exit if node is not a PDS or PDS member
+    }
+
+    // Get the PDS node depending on whether the PDS itself versus one of its members was selected
+    // Then, add the name(s) that for the new PDS
+    if (isPdsMember) {
+        pdsNode = node.getParent(); // If node is a PDS member, get its parent PDS node.
+        newPdsMemberNames.push(node.getLabel()); // Add the label of the selected PDS member to the array
+    } else {
+        pdsNode = node; // Node is a PDS if not a PDS member
+        const pdsChildren = await node.getChildren(); // Get the members belonging to the PDS
+        newPdsMemberNames = pdsChildren.map((pdsChild) => {
+            return pdsChild.getLabel(); // Add the labels for all members of the selected PDS to the array
+        });
+    }
+
+    // Get the label for the data set node
+    const pdsNodeLabel = pdsNode.getLabel();
+
+    // Get profile for the data set node
+    const pdsProfile = pdsNode.getProfile();
+
+    // Run function using values obtained from the node
+    await createTestPds(pdsNodeLabel, pdsProfile, newPdsMemberNames);
+}
+
+async function createTestPds(pdsName: string, profile: IProfileLoaded, pdsMemberNames?: string[]): Promise<void> {
+   ... // Extender code that uses the profile's connection information to interact with z/OS and create a test PDS with zero or more members ...
+}
+```
 
 ## Footnotes
 
