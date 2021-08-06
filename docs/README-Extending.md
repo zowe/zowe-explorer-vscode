@@ -212,15 +212,9 @@ Extenders can define command groups separated by dividers in VS Code's right-cli
 
 ### Accessing Zowe Explorer tree item information
 
-When adding a command to the right-click context menu of an item in Zowe Explorer's Data Sets, USS, or Jobs tree view, extenders may want to access information specific to that item (or "node"). This can be done by importing that item's node type, and then specifying that same node type when defining the node as a parameter for the command's callback function. The node types for items in each of Zowe Explorer's three tree views are as follows:
+When adding a command to the right-click context menu of an item in Zowe Explorer's Data Sets, USS, or Jobs tree view, extenders may want to access information specific to that item (or "node"). This can be done by importing that item's node type, and then specifying that same node type when defining the node as a parameter for the command's callback function.
 
-- Data Sets View items: `IZoweDatasetTreeNode`
-- USS View items: `IZoweUSSTreeNode`
-- Jobs View items: `IZoweJobTreeNode`
-
-For a more general Zowe Explorer tree node type that is not specific to any particular view, extenders can use `IZoweTreeNode`.
-
-In the example below, the extender imports `IZoweTreeNode` from Zowe Explorer's API, and then registers the command `testmule.nodeInfoTest` with the callback function `nodeInfoTest()`. In the function definition for `nodeInfoTest()`, the `node` parameter is listed with `IZoweTreeNode` as its type. This allows the extender to access `IZoweTreeNode`'s `getLabel()` method for the node. (In this case, the VS Code extension simply displays the node's label as an information message.)
+In the basic example below, the extender imports `IZoweTreeNode` from Zowe Explorer's API, and then registers the command `testmule.nodeInfoTest` with the callback function `nodeInfoTest()`. In the function definition for `nodeInfoTest()`, the `node` parameter is listed with `IZoweTreeNode` as its type. This allows the extender to access `IZoweTreeNode`'s `getLabel()` method for the node. (In this case, the VS Code extension simply displays the node's label as an information message.)
 
 ```typescript
 // Import the node type from Zowe Explorer API
@@ -238,6 +232,14 @@ async function nodeInfoTest(node: IZoweTreeNode): Promise<void> {
   await vscode.window.showInformationMessage(node.getLabel());
 }
 ```
+
+`IZoweTreeNode` is a general Zowe Explorer tree node type that is not specific to any particular view. To access view-specific properties and methods for nodes in the Data Sets, USS, or Jobs view, extenders can also import the node type specific to that view.
+
+The node types for items in each of Zowe Explorer's three tree views are as follows:
+
+- Data Sets View items: `IZoweDatasetTreeNode`
+- USS View items: `IZoweUSSTreeNode`
+- Jobs View items: `IZoweJobTreeNode`
 
 ## Footnotes
 
