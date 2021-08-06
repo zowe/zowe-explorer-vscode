@@ -97,7 +97,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
             envVariablePrefix: "ZOWE",
         };
         const configOptions = Array.from(profileTypeConfigurations);
-        const exists = fs.existsSync(path.posix.join(`${os.homedir}/.zowe/profiles/${profileType}`));
+        const exists = fs.existsSync(path.posix.join(`${os.homedir()}/.zowe/profiles/${profileType}`));
         if (configOptions && !exists) {
             await imperative.CliProfileManager.initialize({
                 configuration: configOptions,
