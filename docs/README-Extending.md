@@ -241,60 +241,81 @@ The node types for items in each of Zowe Explorer's three tree views are as foll
 - USS View items: `IZoweUSSTreeNode`
 - Jobs View items: `IZoweJobTreeNode`
 
-The example below shows a more complex use case in the Data Sets view with `IZoweDatasetTreeNode`.
+The following example shows a more complex use case in the Data Sets view with the `IZoweDatasetTreeNode` node type. In this scenario, the extender wishes to implement a command that allows the user to select a partitioned data set (PDS) or PDS member, and then create a test PDS with members based on the selected PDS or PDS member. The code sample below supports the following specifications:
+
+- If the user selects the command from the right-click context menu of an existing PDS, a new test PDS should be created with the same number of members as the selected PDS. The names of the new test PDS and its members should be based on the name of the selected PDS and its members.
+- If the user selects the command from the right-click context menu of a PDS member, then the new test PDS should be created with only one member. The names of the new test PDS member and test PDS should be based on the names of the selected PDS member and its parent PDS, respectively.
+
+To implement the functionality described above, the extender registers the command `testmule.createTestPdsFromSelection` with the callback function `createTestPdsFromSelection()`. In the function definition for `createTestPdsFromSelection()`, the `node` parameter is listed with `IZoweDatasetTreeNode` as its type. This allows the extender to access `IZoweDatasetTreeNode`'s properties and methods for the node.
 
 ```typescript
-// Import the node type from Zowe Explorer API
+// Import the data set node type from Zowe Explorer API
 import { IZoweDatasetTreeNode, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
-import { IProfileLoaded } from "@zowe/imperative"; // Imported from Zowe Imperative to allow working with profiles
+import { IProfileLoaded } from "@zowe/imperative"; // (Imported from Zowe Imperative to allow working with Zowe profiles)
 
 export function activate(context: vscode.ExtensionContext) {
   ... // Other registration/activation code ...
 
-  // Register the command with the callback function
-  context.subscriptions.push(vscode.commands.registerCommand("testmule.createTestPdsWithMembers", (node) => createTestPdsWithMembers(node)));
+  // Register the command testmule.createTestPdsFromSelection with the callback function createTestPdsFromSelection()
+  context.subscriptions.push(vscode.commands.registerCommand("testmule.createTestPdsFromSelection", (node) => createTestPdsFromSelection(node)));
 }
 
-async function createTestPdsWithMembers(node: IZoweDatasetTreeNode): Promise<void> {
-    let pdsNode: IZoweDatasetTreeNode; // A partitioned data set (PDS) node
-    let newPdsMemberNames: string[] = []; // An array of member names to be used by the new PDS
+/**
+ * The `createTestPdsFromSelection()` function creates a test PDS with members based on the selected PDS or PDS member node.
+ *
+ * @param {IZoweDatasetTreeNode} node The selected PDS or PDS member node
+ */
+async function createTestPdsFromSelection(node: IZoweDatasetTreeNode): Promise<void> {
+  // Initialize variables
+    let pdsNode: IZoweDatasetTreeNode; // The existing PDS node to be used as a basis for creating the test PDS
+    let newPdsMemberNames: string[] = []; // An array of member names to be used by the new test PDS
 
-    // Get the node's context value
+    // Get the selected node's context value
     const nodeContext = node.contextValue;
     if (!nodeContext) {
         return; // Exit if nodeContext is undefined
     }
-    // Use nodeContext to check if the node is a PDS or a PDS member.
-    const isPds = new RegExp("^(pds)").test(nodeContext); // Will be replaced by API in the future
-    const isPdsMember = new RegExp("^(member)").test(nodeContext); // Will be replaced by API in the future
+    // Use the context value to check if the selected node is a PDS or a PDS member.
+    // Each RegExp(ABC).test(XYZ) returns true if regex pattern ABC matches XYZ, and returns false otherwise.
+    // (In the future, such context value parsing will be added to Zowe Explorer's API.)
+    const isPds = new RegExp("^(pds)").test(nodeContext); // Check if the selected node is a PDS.
+    const isPdsMember = new RegExp("^(member)").test(nodeContext); // Check if the selected node is a PDS member.
     if (!isPds && !isPdsMember) {
-        return; // Exit if node is not a PDS or PDS member
+        return; // Exit if selected node is not a PDS or PDS member
     }
 
-    // Get the PDS node depending on whether the PDS itself versus one of its members was selected
-    // Then, add the name(s) that for the new PDS
+    // Depending on if a PDS member versus a PDS was selected, get the relevant PDS node to base the test PDS on.
+    // Then, add the relevant PDS member name(s) to the array of names to be used by the new PDS.
     if (isPdsMember) {
-        pdsNode = node.getParent(); // If node is a PDS member, get its parent PDS node.
-        newPdsMemberNames.push(node.getLabel()); // Add the label of the selected PDS member to the array
+        pdsNode = node.getParent(); // If selected node is a PDS member, get its parent PDS node.
+        newPdsMemberNames.push(node.getLabel()); // Add the label of the selected PDS member to the array of names.
     } else {
-        pdsNode = node; // Node is a PDS if not a PDS member
-        const pdsChildren = await node.getChildren(); // Get the members belonging to the PDS
+        pdsNode = node; // The relevant PDS node is the selected PDS node.
+        const pdsChildren = await node.getChildren(); // Get the members belonging to the PDS.
         newPdsMemberNames = pdsChildren.map((pdsChild) => {
-            return pdsChild.getLabel(); // Add the labels for all members of the selected PDS to the array
+            return pdsChild.getLabel(); // Add the labels for all members of the selected PDS to the array of names.
         });
     }
 
-    // Get the label for the data set node
+    // Get the label for the relevant PDS node. (The name of the new test PDS will be based on this.)
     const pdsNodeLabel = pdsNode.getLabel();
 
-    // Get profile for the data set node
+    // Get profile for the relevant PDS node.
+    // (The profile's connection information is needed to communicate with the z/OS back end when creating the new test PDS and its member(s).)
     const pdsProfile = pdsNode.getProfile();
 
-    // Run function using values obtained from the node
+    // Run the function to create a test PDS and member(s) using values obtained from the selected node.
     await createTestPds(pdsNodeLabel, pdsProfile, newPdsMemberNames);
 }
 
-async function createTestPds(pdsName: string, profile: IProfileLoaded, pdsMemberNames?: string[]): Promise<void> {
+/**
+ * The `createTestPds()` function creates a test PDS with zero or more members.
+ *
+ * @param {string} pdsName A string that will be used as the basis for naming the test PDS
+ * @param {IProfileLoaded} profile A profile with connection information to interact with the z/OS server
+ * @param {string[]} pdsMemberNames An array of member names to be used by the new test PDS
+ */
+async function createTestPds(pdsName: string, profile: IProfileLoaded, pdsMemberNames: string[]): Promise<void> {
    ... // Extender code that uses the profile's connection information to interact with z/OS and create a test PDS with zero or more members ...
 }
 ```
