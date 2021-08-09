@@ -2036,7 +2036,9 @@ describe("Profiles Unit Tests - Function loadNamedProfile", () => {
         try {
             profiles.loadNamedProfile("profile3");
         } catch (error) {
-            expect(error.message).toEqual("Could not find profile named: profile3.");
+            expect(error.message).toEqual(
+                "Zowe Explorer Profiles Cache error: Could not find profile named: profile3."
+            );
             success = true;
         }
         expect(success).toBe(true);

@@ -95,7 +95,7 @@ The operation `IApiRegisterClient.getExplorerExtenderApi(): IApiExplorerExtender
 
 A Zowe CLI profiles access extension is a Zowe Explorer extension that uses the Zowe Extensibility API to conveniently access Zowe CLI profiles loaded by Zowe Explorer itself. This allows the extension to consistently access profile instances of specific types, offer them for edit and updates as well as common refresh operations that apply to all extensions, add more profile types it is using itself for its own custom views (for example a CICS extension adding a CICS explorer view) and other similar use cases related to Zowe CLI profiles. These extensions do **not** have to be VS Code extension if it just wants to use ProfilesCache implementation of Zowe Explorer as all APIs are provided free of any VS Code dependencies. Such an extension could be used for another non-VS Code tool, a Zowe CLI plugin, a Web Server or another technology. However, to access the profiles cache of the actual running VS Code Zowe Explorer the extender needs to be a VS Code extension that has an extension dependency defined to be able to query the extender APIs. Therefore, some of the criteria that are listed here as required are only required if the extender is a VS Code extension.
 
-When creating such an extension you need to follow the steps described above for accessing the Zowe Explorer API. Then by calling the `getExplorerExtenderApi()` operation on the returned object you have access to various operations on profiles. See the [ZoweExplorerExtender.ts](../packages/zowe-explorer/src/ZoweExplorerExtender.ts)] file in the main `zowe-explorer` package for details on the implementation of the various operations.
+When creating such an extension you need to follow the steps described above for accessing the Zowe Explorer API. Then by calling the `getExplorerExtenderApi()` operation on the returned object you have access to various operations on profiles. See the [ZoweExplorerExtender.ts](../packages/zowe-explorer/src/ZoweExplorerExtender.ts) file in the main `zowe-explorer` package for details on the implementation of the various operations.
 
 The currently provided operations initialize the user's profiles directory with any new profile types provided by the extender, trigger a reload from disk to pick up any newly registered profile types and external user changes (for example, after the user adds/updates profiles via Zowe CLI), as well as provide full access to all currently loaded profiles available in Zowe Explorer.
 
@@ -167,6 +167,39 @@ The FTP Zowe Explorer extension provides examples for providing a data provider 
 - [ZoweExplorerFtpJesApi.ts](../packages/zowe-explorer-ftp-extension/src/ZoweExplorerFtpJesApi.ts)
 
 These are parallel implementations of the same operations that are provided by Zowe Explorer itself using the z/OSMF interaction protocol. You can find that implementation for reference in the file [packages/zowe-explorer-api/src/profiles/ZoweExplorerZosmfApi.ts](../packages/zowe-explorer-api/src/profiles/ZoweExplorerZosmfApi.ts).
+
+## Using the Zowe Explorer ProfilesCache for an extender's own unrelated profiles
+
+The previous two sections outlined how extenders can access the cached profiles of Zowe Explorer and provide new profile types for a new data provider for any of the three Zowe Explorer tree views. Another use case would be that a Zowe Explorer extender does not add a new data provider to Zowe Explorer, but instead adds a new fourth (or more) tree view(s) showing data from a different data source that is not Data Sets, USS, or Jobs. The extender would still want to use the same ProfilesCache as Zowe Explorer to be able to react to the same refresh operations - for example, when the user clicks the Refresh View button in any of the tree views, all profiles including the custom ones should be reloaded.
+
+To support the Zowe Explorer profiles cache that extenders can access as described above, Zowe Explorer API offers `registerCustomProfilesType()`, a register method that allows adding a profile type to the cache that is not associated with any of the three APIs listed above. Note, that the profile type must be a valid Zowe CLI profile type that is installed on the end user's home directory. The extension needs to therefore make sure it called the `initForZowe()` before trying to register a custom type.
+
+The following example uses the `registerCustomProfilesType()` method to register Zowe CICS (`cics`) profiles as a custom profile type:
+
+```typescript
+// Retrieve the Zowe Explorer API object from the currently running instance.
+// It must be at least Zowe Explorer 1.18.0 or newer or undefined will returned.
+const zoweExplorerApi = ZoweVsCodeExtension.getZoweExplorerApi("1.18.0");
+if (zoweExplorerApi) {
+  // Initialized the users ~/.zowe directory with the metadata for CICS profiles in case
+  // the user does not have the CICS CLI Plugin installed and profiles created, yet.
+  const meta = await CoreUtils.getProfileMeta();
+  await zoweExplorerApi.getExplorerExtenderApi().initForZowe("cics", meta);
+
+  // Get the IApiExplorerExtender instance from the API that extenders can used
+  // to interact with Zowe Explorer such as accessing all the loaded profiles
+  const profilesCache = zoweExplorerApi.getExplorerExtenderApi().getProfilesCache();
+
+  // Important that this method is called after initForZowe() to avoid an exception
+  profilesCache.registerCustomProfilesType("cics");
+  // Explicit reload is required as registering does not do it automatically
+  await zoweExplorerApi.getExplorerExtenderApi().reloadProfiles();
+
+  // some examples for access the profiles loaded for cics from disk
+  const defaultCicsProfile = profilesCache.getDefaultProfile("cics");
+  const profileNames = await profilesCache.getNamesForType("cics");
+  const firstProfile = profilesCache.loadNamedProfile(profileNames[0]);
+```
 
 ## Creating an extension that adds menu commands
 
