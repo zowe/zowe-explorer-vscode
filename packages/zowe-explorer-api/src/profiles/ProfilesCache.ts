@@ -48,6 +48,7 @@ export class ProfilesCache {
     public profilesValidationSetting: IValidationSetting[] = [];
     public allProfiles: imperative.IProfileLoaded[] = [];
     protected allTypes: string[];
+    protected allExternalTypes = new Set<string>();
     protected profilesByType = new Map<string, imperative.IProfileLoaded[]>();
     protected defaultProfileByType = new Map<string, imperative.IProfileLoaded>();
     protected profileManagerByType = new Map<string, imperative.CliProfileManager>();
@@ -69,7 +70,7 @@ export class ProfilesCache {
                 return profile;
             }
         }
-        throw new Error("Could not find profile named: " + name + ".");
+        throw new Error(`Zowe Explorer Profiles Cache error: Could not find profile named: ${name}.`);
     }
 
     public getDefaultProfile(type = "zosmf"): imperative.IProfileLoaded {
@@ -82,6 +83,16 @@ export class ProfilesCache {
 
     public getProfiles(type = "zosmf"): imperative.IProfileLoaded[] {
         return this.profilesByType.get(type);
+    }
+
+    public registerCustomProfilesType(profileTypeName: string): void {
+        const exists = fs.existsSync(path.posix.join(`${os.homedir()}/.zowe/profiles/${profileTypeName}`));
+        if (!exists) {
+            throw new Error(
+                `Zowe Explorer Profiles Cache error: Tried to register a custom profile type named: ${profileTypeName} that does not yet exist. Extenders must call "zoweExplorerApi.getExplorerExtenderApi().initForZowe()" first.`
+            );
+        }
+        this.allExternalTypes.add(profileTypeName);
     }
 
     public async refresh(apiRegister?: ZoweExplorerApi.IApiRegisterClient): Promise<void> {
