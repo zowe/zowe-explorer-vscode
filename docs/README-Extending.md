@@ -246,7 +246,7 @@ The following example shows a more complex use case in the Data Sets view with t
 - If the user selects the command from the right-click context menu of an existing PDS, a new test PDS should be created with the same number of members as the selected PDS. The names of the new test PDS and its members should be based on the name of the selected PDS and its members.
 - If the user selects the command from the right-click context menu of a PDS member, then the new test PDS should be created with only one member. The names of the new test PDS member and test PDS should be based on the names of the selected PDS member and its parent PDS, respectively.
 
-To implement the functionality described above, the extender registers the command `testmule.createTestPdsFromSelection` with the callback function `createTestPdsFromSelection()`. In the function definition for `createTestPdsFromSelection()`, the `node` parameter is listed with `IZoweDatasetTreeNode` as its type. This allows the extender to access `IZoweDatasetTreeNode`'s properties and methods for the node.
+To implement the functionality described above, the extender registers the command `testmule.createTestPdsFromSelection` with the callback function `createTestPdsFromSelection()`. In the function definition for `createTestPdsFromSelection()`, the `node` parameter is listed with `IZoweDatasetTreeNode` as its type. This allows the extender to access `IZoweDatasetTreeNode`'s properties and methods for the node. This example uses the node's `contextValue` property, and accesses its `getParent()`, `getLabel()`, `getChildren()`, and `getProfile()` methods.
 
 ```typescript
 // Import the data set node type from Zowe Explorer API
@@ -254,10 +254,14 @@ import { IZoweDatasetTreeNode, ZoweVsCodeExtension } from "@zowe/zowe-explorer-a
 import { IProfileLoaded } from "@zowe/imperative"; // (Imported from Zowe Imperative to allow working with Zowe profiles)
 
 export function activate(context: vscode.ExtensionContext) {
-  ... // Other registration/activation code ...
+    ... // Other registration/activation code ...
 
-  // Register the command testmule.createTestPdsFromSelection with the callback function createTestPdsFromSelection()
-  context.subscriptions.push(vscode.commands.registerCommand("testmule.createTestPdsFromSelection", (node) => createTestPdsFromSelection(node)));
+    // Register the command testmule.createTestPdsFromSelection with the callback function createTestPdsFromSelection()
+    context.subscriptions.push(
+        vscode.commands.registerCommand("testmule.createTestPdsFromSelection", (node) =>
+            createTestPdsFromSelection(node)
+        )
+    );
 }
 
 /**
@@ -266,7 +270,7 @@ export function activate(context: vscode.ExtensionContext) {
  * @param {IZoweDatasetTreeNode} node The selected PDS or PDS member node
  */
 async function createTestPdsFromSelection(node: IZoweDatasetTreeNode): Promise<void> {
-  // Initialize variables
+    // Initialize variables
     let pdsNode: IZoweDatasetTreeNode; // The existing PDS node to be used as a basis for creating the test PDS
     let newPdsMemberNames: string[] = []; // An array of member names to be used by the new test PDS
 
@@ -300,8 +304,8 @@ async function createTestPdsFromSelection(node: IZoweDatasetTreeNode): Promise<v
     // Get the label for the relevant PDS node. (The name of the new test PDS will be based on this.)
     const pdsNodeLabel = pdsNode.getLabel();
 
-    // Get profile for the relevant PDS node.
-    // (The profile's connection information is needed to communicate with the z/OS back end when creating the new test PDS and its member(s).)
+    // Get the relevant PDS node's profile, which has connection information.
+    // This is needed to communicate with the z/OS back end when creating the new test PDS and its member(s).)
     const pdsProfile = pdsNode.getProfile();
 
     // Run the function to create a test PDS and member(s) using values obtained from the selected node.
@@ -316,7 +320,7 @@ async function createTestPdsFromSelection(node: IZoweDatasetTreeNode): Promise<v
  * @param {string[]} pdsMemberNames An array of member names to be used by the new test PDS
  */
 async function createTestPds(pdsName: string, profile: IProfileLoaded, pdsMemberNames: string[]): Promise<void> {
-   ... // Extender code that uses the profile's connection information to interact with z/OS and create a test PDS with zero or more members ...
+   ... // Extender code for creating a test PDS with zero or more members ...
 }
 ```
 
