@@ -8,7 +8,7 @@ This page contains developer guidance specific to adding commands in core Zowe E
 - [Contributing menu items](#contributing-menu-items)
 - [Menu group naming conventions](#menu-group-naming-conventions)
 
-## Defining a new commmand
+## Defining a new command
 
 In order to add a command to a core Zowe Explorer menu, the command must first be defined in `packages/zowe-explorer/package.json`, under [`contributes.commands`](https://code.visualstudio.com/api/references/contribution-points#contributes.commands). The following conventions should be used when defining the respective command properties:
 
