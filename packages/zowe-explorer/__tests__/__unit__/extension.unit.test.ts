@@ -120,48 +120,49 @@ async function createGlobalMocks() {
         mockExtension: null,
         appName: vscode.env.appName,
         expectedCommands: [
-            "zowe.addSession",
-            "zowe.addFavorite",
-            "zowe.refreshAll",
-            "zowe.refreshNode",
-            "zowe.refreshDataset",
-            "zowe.pattern",
-            "zowe.editSession",
-            "zowe.ZoweNode.openPS",
-            "zowe.createDataset",
+            "zowe.ds.addSession",
+            "zowe.ds.addFavorite",
+            "zowe.ds.refreshAll",
+            "zowe.ds.refreshNode",
+            "zowe.ds.refreshDataset",
+            "zowe.ds.pattern",
+            "zowe.ds.editSession",
+            "zowe.ds.ZoweNode.openPS",
+            "zowe.ds.createDataset",
             "zowe.all.profilelink",
-            "zowe.createMember",
-            "zowe.deleteDataset",
-            "zowe.allocateLike",
-            "zowe.uploadDialog",
-            "zowe.deleteMember",
-            "zowe.editDataSet",
-            "zowe.editMember",
-            "zowe.removeSession",
-            "zowe.removeFavorite",
-            "zowe.saveSearch",
-            "zowe.removeSavedSearch",
-            "zowe.removeFavProfile",
-            "zowe.submitJcl",
-            "zowe.submitMember",
-            "zowe.showDSAttributes",
-            "zowe.renameDataSet",
-            "zowe.copyMember",
-            "zowe.copyDataSet",
-            "zowe.pasteMember",
-            "zowe.renameDataSetMember",
-            "zowe.hMigrateDataSet",
-            "zowe.hRecallDataSet",
-            "zowe.disableValidation",
-            "zowe.enableValidation",
-            "zowe.ssoLogin",
-            "zowe.ssoLogout",
+            "zowe.ds.createMember",
+            "zowe.ds.deleteDataset",
+            "zowe.ds.allocateLike",
+            "zowe.ds.uploadDialog",
+            "zowe.ds.deleteMember",
+            "zowe.ds.editDataSet",
+            "zowe.ds.editMember",
+            "zowe.ds.removeSession",
+            "zowe.ds.removeFavorite",
+            "zowe.ds.saveSearch",
+            "zowe.ds.removeSavedSearch",
+            "zowe.ds.removeFavProfile",
+            "zowe.ds.submitJcl",
+            "zowe.ds.submitMember",
+            "zowe.ds.showDSAttributes",
+            "zowe.ds.renameDataSet",
+            "zowe.ds.copyMember",
+            "zowe.ds.copyDataSet",
+            "zowe.ds.pasteMember",
+            "zowe.ds.renameDataSetMember",
+            "zowe.ds.hMigrateDataSet",
+            "zowe.ds.hRecallDataSet",
+            "zowe.ds.disableValidation",
+            "zowe.ds.enableValidation",
+            "zowe.ds.ssoLogin",
+            "zowe.ds.ssoLogout",
             "zowe.uss.addFavorite",
             "zowe.uss.removeFavorite",
             "zowe.uss.addSession",
             "zowe.uss.refreshAll",
             "zowe.uss.refreshUSS",
             "zowe.uss.refreshUSSInTree",
+            "zowe.uss.refreshDirectory",
             "zowe.uss.fullPath",
             "zowe.uss.editSession",
             "zowe.uss.ZoweUSSNode.open",
@@ -182,19 +183,20 @@ async function createGlobalMocks() {
             "zowe.uss.enableValidation",
             "zowe.uss.ssoLogin",
             "zowe.uss.ssoLogout",
-            "zowe.zosJobsOpenspool",
-            "zowe.deleteJob",
-            "zowe.runModifyCommand",
-            "zowe.runStopCommand",
-            "zowe.refreshJobsServer",
-            "zowe.refreshAllJobs",
-            "zowe.addJobsSession",
-            "zowe.setOwner",
-            "zowe.setPrefix",
-            "zowe.removeJobsSession",
-            "zowe.downloadSpool",
-            "zowe.getJobJcl",
-            "zowe.setJobSpool",
+            "zowe.jobs.zosJobsOpenspool",
+            "zowe.jobs.deleteJob",
+            "zowe.jobs.runModifyCommand",
+            "zowe.jobs.runStopCommand",
+            "zowe.jobs.refreshJobsServer",
+            "zowe.jobs.refreshAllJobs",
+            "zowe.jobs.refreshJob",
+            "zowe.jobs.addJobsSession",
+            "zowe.jobs.setOwner",
+            "zowe.jobs.setPrefix",
+            "zowe.jobs.removeJobsSession",
+            "zowe.jobs.downloadSpool",
+            "zowe.jobs.getJobJcl",
+            "zowe.jobs.setJobSpool",
             "zowe.jobs.search",
             "zowe.jobs.editSession",
             "zowe.jobs.addFavorite",
@@ -208,7 +210,7 @@ async function createGlobalMocks() {
             "zowe.jobs.ssoLogout",
             "zowe.openRecentMember",
             "zowe.searchInAllLoadedItems",
-            "zowe.deleteProfile",
+            "zowe.ds.deleteProfile",
             "zowe.cmd.deleteProfile",
             "zowe.uss.deleteProfile",
             "zowe.jobs.deleteProfile",
@@ -367,15 +369,7 @@ describe("Extension Unit Tests", () => {
         });
         // tslint:disable-next-line: no-object-literal-type-assertion
         globalMocks.mockReadFileSync.mockReturnValueOnce('{ "overrides": { "CredentialManager": "Managed by ANO" }}');
-        globalMocks.mockExistsSync.mockReturnValueOnce(true);
-        globalMocks.mockExistsSync.mockReturnValueOnce(true);
         globalMocks.mockExistsSync.mockReturnValueOnce(false);
-        globalMocks.mockExistsSync.mockReturnValueOnce(true);
-        globalMocks.mockReaddirSync.mockReturnValueOnce(["firstFile.txt", "secondFile.txt", "firstDir"]);
-        globalMocks.mockReaddirSync.mockReturnValueOnce(["thirdFile.txt"]);
-        globalMocks.mockReaddirSync.mockReturnValue([]);
-        globalMocks.mockIsFile.mockReturnValueOnce(true);
-        globalMocks.mockIsFile.mockReturnValueOnce(false);
         globalMocks.mockGetConfiguration.mockReturnValue({
             persistence: true,
             get: (setting: string) => [
@@ -392,20 +386,6 @@ describe("Extension Unit Tests", () => {
         });
 
         await extension.activate(globalMocks.mockExtension);
-
-        // Check that deactivate() is called successfully
-        // tslint:disable-next-line: no-magic-numbers
-        expect(globalMocks.mockExistsSync.mock.calls.length).toBe(4);
-        expect(globalMocks.mockExistsSync.mock.calls[0][0]).toBe(globals.ZOWETEMPFOLDER);
-        expect(globalMocks.mockReaddirSync.mock.calls.length).toBe(1);
-        expect(globalMocks.mockReaddirSync.mock.calls[0][0]).toBe(globals.ZOWETEMPFOLDER);
-        expect(globalMocks.mockUnlinkSync.mock.calls.length).toBe(2);
-        expect(globalMocks.mockUnlinkSync.mock.calls[0][0]).toBe(path.join(globals.ZOWETEMPFOLDER + "/firstFile.txt"));
-        expect(globalMocks.mockUnlinkSync.mock.calls[1][0]).toBe(path.join(globals.ZOWETEMPFOLDER + "/secondFile.txt"));
-        expect(globalMocks.mockRmdirSync.mock.calls.length).toBe(1);
-        expect(globalMocks.mockRmdirSync.mock.calls[0][0]).toBe(globals.ZOWETEMPFOLDER);
-        // tslint:disable-next-line: no-magic-numbers
-        expect(globalMocks.mockMkdirSync.mock.calls.length).toBe(4);
 
         // Check that tree providers are initialized successfully
         // tslint:disable-next-line: no-magic-numbers
@@ -436,12 +416,16 @@ describe("Extension Unit Tests", () => {
         const globalMocks = await createGlobalMocks();
 
         globalMocks.mockExistsSync.mockReturnValueOnce(false);
-        globalMocks.mockExistsSync.mockReturnValueOnce(true);
-        globalMocks.mockExistsSync.mockReturnValueOnce(true);
-        // tslint:disable-next-line: no-empty
-        globalMocks.mockRmdirSync.mockImplementationOnce(() => {});
         globalMocks.mockGetConfiguration.mockReturnValueOnce({
             get: (setting: string) => [""],
+            // tslint:disable-next-line: no-empty
+            update: jest.fn(() => {
+                {
+                }
+            }),
+        });
+        globalMocks.mockGetConfiguration.mockReturnValueOnce({
+            get: (setting: string) => "files",
             // tslint:disable-next-line: no-empty
             update: jest.fn(() => {
                 {
@@ -452,7 +436,6 @@ describe("Extension Unit Tests", () => {
         await extension.activate(globalMocks.mockExtension);
 
         expect(globalMocks.mockExistsSync.mock.calls.length).toBe(2);
-        expect(globalMocks.mockReaddirSync.mock.calls.length).toBe(0);
     });
 
     it("Tests that activate() works correctly for Theia", async () => {
@@ -462,20 +445,17 @@ describe("Extension Unit Tests", () => {
         Object.defineProperty(vscode.env, "uiKind", { value: vscode.UIKind.Web });
         globalMocks.mockExistsSync.mockReset();
         globalMocks.mockReaddirSync.mockReset();
-        globalMocks.mockExistsSync.mockReturnValueOnce(true);
-        globalMocks.mockExistsSync.mockReturnValueOnce(true);
-        globalMocks.mockReaddirSync.mockReturnValueOnce(["firstFile", "secondFile"]);
-        globalMocks.mockUnlinkSync.mockImplementationOnce(() => {
-            return;
-        });
-        globalMocks.mockUnlinkSync.mockImplementationOnce(() => {
-            return;
-        });
-        globalMocks.mockUnlinkSync.mockImplementationOnce(() => {
-            throw Error("testError");
-        });
+        globalMocks.mockExistsSync.mockReturnValueOnce(false);
         globalMocks.mockGetConfiguration.mockReturnValueOnce({
             get: (setting: string) => "theia",
+            // tslint:disable-next-line: no-empty
+            update: jest.fn(() => {
+                {
+                }
+            }),
+        });
+        globalMocks.mockGetConfiguration.mockReturnValueOnce({
+            get: (setting: string) => "files",
             // tslint:disable-next-line: no-empty
             update: jest.fn(() => {
                 {
