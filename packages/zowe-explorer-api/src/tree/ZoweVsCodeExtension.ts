@@ -42,7 +42,7 @@ export class ZoweVsCodeExtension {
      * Reveal an error in VSCode, and log the error to the Imperative log
      *
      */
-    public showVscodeError(zoweError: IZoweError, logger: IZoweLogger) {
+    public static showVscodeError(zoweError: IZoweError, logger: IZoweLogger) {
         const errorMessage = `${logger.getExtensionName()} error: ${zoweError.error.message}`;
         if (zoweError.severity < 3) {
             vscode.window.showInformationMessage(errorMessage);
