@@ -472,7 +472,7 @@ export namespace ZoweExplorerApi {
          * might want to check for an existing profile folder with meta-file
          * or to create them automatically if it is non-existant.
          */
-        initForZowe(type: string, meta: ICommandProfileTypeConfiguration[]): Promise<void>;
+        initForZowe(type: string, meta?: ICommandProfileTypeConfiguration[]): Promise<void>;
     }
 
     /**
