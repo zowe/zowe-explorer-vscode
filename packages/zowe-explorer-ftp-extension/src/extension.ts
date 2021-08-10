@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { ZoweExplorerApi, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { ZoweExplorerApi, ZoweVsCodeExtension, IZoweLogger } from "@zowe/zowe-explorer-api";
 import { FtpUssApi } from "./ZoweExplorerFtpUssApi";
 import { FtpMvsApi } from "./ZoweExplorerFtpMvsApi";
 import { FtpJesApi } from "./ZoweExplorerFtpJesApi";
@@ -19,6 +19,7 @@ import { CoreUtils } from "@zowe/zos-ftp-for-zowe-cli";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function activate(context: vscode.ExtensionContext): void {
     void registerFtpApis();
+    const imperativeLogger = new IZoweLogger();
 }
 
 /**
