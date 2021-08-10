@@ -22,11 +22,6 @@ export enum MessageSeverityEnum {
     FATAL = 5,
 }
 
-export interface IZoweMessage {
-    message: string;
-    severity: MessageSeverityEnum;
-}
-
 /**
  * Creates an instance of the Imperative logger for exxtenders to use
  *
@@ -64,26 +59,26 @@ export class IZoweLogger {
      * Log an error to the Imperative log
      *
      */
-    public logImperativeError(zoweMessage: IZoweMessage): void {
-        const message = `${this.extensionName} error: ${zoweMessage.message}`;
-        switch (zoweMessage.severity) {
+    public logImperativeMessage(message: string, severity: MessageSeverityEnum): void {
+        const messageWithExtensionName = `Error in extension ${this.extensionName}: ${message}`;
+        switch (severity) {
             case 0:
-                this.log.trace(message);
+                this.log.trace(messageWithExtensionName);
                 break;
             case 1:
-                this.log.debug(message);
+                this.log.debug(messageWithExtensionName);
                 break;
             case 2:
-                this.log.info(message);
+                this.log.info(messageWithExtensionName);
                 break;
             case 3:
-                this.log.warn(message);
+                this.log.warn(messageWithExtensionName);
                 break;
             case 4:
-                this.log.error(message);
+                this.log.error(messageWithExtensionName);
                 break;
             case 5:
-                this.log.fatal(message);
+                this.log.fatal(messageWithExtensionName);
                 break;
         }
     }
