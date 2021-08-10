@@ -9,7 +9,7 @@
  *                                                                                 *
  */
 
-import * as loggerConfig from "../../log4jsconfig.json";
+import * as loggerConfig from "../log4jsconfig.json";
 import * as path from "path";
 import { Logger } from "@zowe/imperative";
 
@@ -54,6 +54,10 @@ export class IZoweLogger {
 
     public getExtensionName() {
         return this.extensionName;
+    }
+
+    public getImperativeLogger() {
+        return this.log;
     }
 
     /**
