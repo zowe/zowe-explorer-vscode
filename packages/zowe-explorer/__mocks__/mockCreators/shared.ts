@@ -271,3 +271,20 @@ export function createWorkspaceConfiguration(): vscode.WorkspaceConfiguration {
         inspect: jest.fn(),
     };
 }
+
+export function createIProfAttrs() {
+    return [
+        {
+            profName: "sesttest",
+            profType: "zosmf",
+            isDefaultProfile: true,
+            profLoc: undefined,
+        },
+        {
+            profName: "altTypeProfile",
+            profType: "alternativeType",
+            isDefaultProfile: true,
+            profLoc: undefined,
+        },
+    ];
+}

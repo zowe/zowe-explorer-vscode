@@ -47,6 +47,7 @@ Object.defineProperty(ProfilesCache, "getConfigInstance", {
     value: jest.fn(() => {
         return {
             usingTeamConfig: false,
+            getAllProfiles: jest.fn(),
         };
     }),
 });
