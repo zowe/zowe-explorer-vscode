@@ -40,7 +40,7 @@ export class IZoweLogger {
      * Creates an instance of the Imperative logger
      *
      */
-    constructor(extensionName: string, loggingPath: string) {
+    public constructor(extensionName: string, loggingPath: string) {
         for (const appenderName of Object.keys(loggerConfig.log4jsConfig.appenders)) {
             loggerConfig.log4jsConfig.appenders[appenderName].filename = path.join(
                 loggingPath,
@@ -52,11 +52,11 @@ export class IZoweLogger {
         this.log = Logger.getAppLogger();
     }
 
-    public getExtensionName() {
+    public getExtensionName(): string {
         return this.extensionName;
     }
 
-    public getImperativeLogger() {
+    public getImperativeLogger(): Logger {
         return this.log;
     }
 
@@ -64,21 +64,27 @@ export class IZoweLogger {
      * Log an error to the Imperative log
      *
      */
-    public logImperativeError(zoweError: IZoweError) {
+    public logImperativeError(zoweError: IZoweError): void {
         const errorMessage = `${this.extensionName} error: ${zoweError.error.message}`;
         switch (zoweError.severity) {
             case 0:
                 this.log.trace(errorMessage);
+                break;
             case 1:
                 this.log.debug(errorMessage);
+                break;
             case 2:
                 this.log.info(errorMessage);
+                break;
             case 3:
                 this.log.warn(errorMessage);
+                break;
             case 4:
                 this.log.error(errorMessage);
+                break;
             case 5:
                 this.log.fatal(errorMessage);
+                break;
         }
     }
 }
