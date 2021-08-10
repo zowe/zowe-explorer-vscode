@@ -2,6 +2,22 @@
 
 Zowe Explorer provides extension APIs that assist third party extenders to create extensions that access Zowe Explorer resource entities to enrich the user experience. There are many ways Zowe Explorer can be extended to support many different use cases. We, the Zowe Explorer core contributors, have defined APIs, guidelines, as well as formal compliance criteria for three popular ways of extending it, but we encourage you to engage with us to discuss other ways for extensions that you envision that we did not yet consider.
 
+Table of contents:
+
+- [Kinds of extensions](#kinds-of-extensions)
+- [Getting Started with extending Zowe Explorer](#getting-started-with-extending-zowe-explorer)
+- [Zowe Explorer extension dependencies and activation](#zowe-explorer-extension-dependencies-and-activation)
+- [About Zowe CLI profiles](#about-zowe-cli-profiles)
+- [Accessing the Zowe Explorer Extender API](#accessing-the-zowe-explorer-extender-api)
+- [Creating an extension that accesses Zowe Explorer profiles](#creating-an-extension-that-accesses-zowe-explorer-profiles)
+- [Creating an extension that adds a data provider](#creating-an-extension-that-adds-a-data-provider)
+- [Using the Zowe Explorer ProfilesCache for an extender's own unrelated profiles](#using-the-zowe-explorer-profilescache-for-an-extenders-own-unrelated-profiles)
+- [Creating an extension that adds menu commands](#creating-an-extension-that-adds-menu-commands)
+  - [Contextual hooks](#contextual-hooks)
+  - [Grouping menu commands](#grouping-menu-commands)
+  - [Accessing Zowe Explorer tree item information](#accessing-zowe-explorer-tree-item-information)
+- [Footnotes](#footnotes)
+
 ## Kinds of extensions
 
 The following kinds of extensions can be certified as compliant for Zowe Explorer. See the [README-Conformance.md](README-Conformance.md) file for
