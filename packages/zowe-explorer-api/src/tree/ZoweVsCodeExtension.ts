@@ -12,6 +12,7 @@
 import * as semver from "semver";
 import * as vscode from "vscode";
 import { ZoweExplorerApi } from "../profiles";
+import { IZoweError, IZoweLogger } from "./IZoweLogger";
 
 /**
  * Collection of utility functions for writing Zowe Explorer VS Code extensions.
@@ -35,5 +36,20 @@ export class ZoweVsCodeExtension {
             return zoweExplorerApi.exports as ZoweExplorerApi.IApiRegisterClient;
         }
         return undefined;
+    }
+
+    /**
+     * Reveal an error in VSCode, and log the error to the Imperative log
+     *
+     */
+    public showVscodeError(zoweError: IZoweError, logger: IZoweLogger) {
+        const errorMessage = `${logger.getExtensionName()} error: ${zoweError.error.message}`;
+        if (zoweError.severity < 3) {
+            vscode.window.showInformationMessage(errorMessage);
+        } else {
+            vscode.window.showErrorMessage(errorMessage);
+        }
+
+        logger.logImperativeError(zoweError);
     }
 }

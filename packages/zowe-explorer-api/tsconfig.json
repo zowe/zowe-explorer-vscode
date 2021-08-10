@@ -11,7 +11,8 @@
     "removeComments": false,
     "pretty": true,
     "sourceMap": true,
-    "newLine": "lf"
+    "newLine": "lf",
+    "resolveJsonModule": true
   },
   "include": ["src/**/*"],
   "exclude": ["lib", "node_modules"]
