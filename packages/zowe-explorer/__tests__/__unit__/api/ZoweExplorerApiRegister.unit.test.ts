@@ -172,10 +172,6 @@ describe("ZoweExplorerApiRegister unit testing", () => {
         return newMocks;
     }
 
-    beforeEach(async () => {
-        jest.fn().mockReset;
-    });
-
     it("registers an API only once per profile type", async () => {
         const blockMocks = await createBlockMocks();
 

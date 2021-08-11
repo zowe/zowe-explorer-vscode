@@ -818,10 +818,6 @@ describe("Profiles Unit Tests - Function promptCredentials", () => {
         return newMocks;
     }
 
-    beforeEach(async () => {
-        jest.fn().mockReset;
-    });
-
     it("Tests that promptCredentials is executed successfully", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
@@ -1811,10 +1807,6 @@ describe("Profiles Unit Tests - Function createInstance", () => {
 
         return newMocks;
     }
-
-    beforeEach(async () => {
-        jest.fn().mockReset;
-    });
 
     it("Tests that createInstance executes successfully", async () => {
         const globalMocks = await createGlobalMocks();

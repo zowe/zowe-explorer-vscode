@@ -43,10 +43,6 @@ describe("ZoweExplorerExtender unit tests", () => {
         return newMocks;
     }
 
-    beforeEach(async () => {
-        jest.fn().mockReset;
-    });
-
     Object.defineProperty(ProfilesCache, "getConfigInstance", {
         value: jest.fn(() => {
             return createConfigInstance();
