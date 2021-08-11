@@ -17,7 +17,11 @@ import { Logger, IProfileLoaded, Session } from "@zowe/imperative";
 import { ZoweExplorerApi, ZosmfUssApi, ZosmfJesApi, ZosmfMvsApi, ProfilesCache } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
-import { createInstanceOfProfile, createValidIProfile } from "../../../__mocks__/mockCreators/shared";
+import {
+    createConfigInstance,
+    createInstanceOfProfile,
+    createValidIProfile,
+} from "../../../__mocks__/mockCreators/shared";
 
 class MockUssApi1 implements ZoweExplorerApi.IUss {
     public profile?: IProfileLoaded;
@@ -160,11 +164,7 @@ describe("ZoweExplorerApiRegister unit testing", () => {
 
         Object.defineProperty(ProfilesCache, "getConfigInstance", {
             value: jest.fn(() => {
-                return {
-                    usingTeamConfig: false,
-                    getAllProfiles: jest.fn(),
-                    mergeArgsForProfile: jest.fn(),
-                };
+                return createConfigInstance();
             }),
             configurable: true,
         });

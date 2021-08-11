@@ -17,6 +17,7 @@ import {
     createAltTypeIProfile,
     createTreeView,
     createIProfile,
+    createConfigInstance,
 } from "../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../__mocks__/mockCreators/datasets";
 import { createUSSSessionNode, createUSSTree } from "../../__mocks__/mockCreators/uss";
@@ -48,11 +49,7 @@ describe("ZoweExplorerExtender unit tests", () => {
 
     Object.defineProperty(ProfilesCache, "getConfigInstance", {
         value: jest.fn(() => {
-            return {
-                usingTeamConfig: false,
-                getAllProfiles: jest.fn(),
-                mergeArgsForProfile: jest.fn(),
-            };
+            return createConfigInstance();
         }),
         configurable: true,
     });

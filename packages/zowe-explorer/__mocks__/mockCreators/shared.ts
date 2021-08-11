@@ -89,8 +89,8 @@ export function createInvalidIProfile(): imperative.IProfileLoaded {
             type: "zosmf",
             host: null,
             port: 1443,
-            user: null,
-            password: null,
+            user: "fake",
+            password: "fake",
             rejectUnauthorized: false,
             name: "testName",
         },
@@ -272,19 +272,10 @@ export function createWorkspaceConfiguration(): vscode.WorkspaceConfiguration {
     };
 }
 
-export function createIProfAttrs() {
-    return [
-        {
-            profName: "sesttest",
-            profType: "zosmf",
-            isDefaultProfile: true,
-            profLoc: undefined,
-        },
-        {
-            profName: "altTypeProfile",
-            profType: "alternativeType",
-            isDefaultProfile: true,
-            profLoc: undefined,
-        },
-    ];
+export function createConfigInstance() {
+    return {
+        getAllProfiles: jest.fn(),
+        getDefaultProfile: jest.fn(),
+        usingTeamConfig: false,
+    };
 }

@@ -22,6 +22,7 @@ import {
     createInvalidIProfile,
     createValidIProfile,
     createISession,
+    createConfigInstance,
 } from "../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../__mocks__/mockCreators/datasets";
 import { createProfileManager, createTestSchemas } from "../../__mocks__/mockCreators/profiles";
@@ -115,13 +116,11 @@ async function createGlobalMocks() {
     });
     Object.defineProperty(vscode, "ProgressLocation", { value: newMocks.ProgressLocation, configurable: true });
     Object.defineProperty(vscode.window, "withProgress", { value: newMocks.withProgress, configurable: true });
-
     Object.defineProperty(ProfilesCache, "getConfigInstance", {
         value: jest.fn(() => {
-            return {
-                usingTeamConfig: false,
-            };
+            return createConfigInstance();
         }),
+        configurable: true,
     });
 
     return newMocks;
@@ -811,11 +810,16 @@ describe("Profiles Unit Tests - Function promptCredentials", () => {
         newMocks.imperativeProfile.profile.password = "1234";
         newMocks.profiles = await Profiles.createInstance(newMocks.log);
         newMocks.profileInstance = createInstanceOfProfile(newMocks.imperativeProfile);
-        newMocks.profiles.allProfiles[1].profile = { user: "test", password: "test" };
-        newMocks.profiles.loadNamedProfile = newMocks.mockLoadNamedProfile;
+        newMocks.profileInstance.allProfiles[1].profile = { user: "test", password: "test" };
+        newMocks.profileInstance.loadNamedProfile = newMocks.mockLoadNamedProfile;
+        globalMocks.mockGetInstance.mockReturnValue(newMocks.profileInstance);
 
         return newMocks;
     }
+
+    beforeEach(async () => {
+        jest.fn().mockReset;
+    });
 
     it("Tests that promptCredentials is executed successfully", async () => {
         const globalMocks = await createGlobalMocks();
@@ -823,11 +827,13 @@ describe("Profiles Unit Tests - Function promptCredentials", () => {
 
         blockMocks.imperativeProfile.profile = { user: undefined, password: undefined };
         blockMocks.mockLoadNamedProfile.mockReturnValue(blockMocks.imperativeProfile);
+
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+
         globalMocks.mockCreateBasicZosmfSession.mockReturnValue({
             ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" },
         });
-        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
-        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
 
         const res = await blockMocks.profiles.promptCredentials(blockMocks.imperativeProfile.name);
         expect(res).toEqual(["fake", "fake", "fake"]);
@@ -1972,7 +1978,7 @@ describe("Profiles Unit Tests - Function getAllTypes", () => {
         const theProfiles = await Profiles.createInstance(blockMocks.log);
 
         const types = theProfiles.getAllTypes();
-        expect(types).toEqual(["zosmf", "banana"]);
+        expect(types).toEqual(["zosmf", "alternate"]);
     });
 });
 
@@ -1993,9 +1999,7 @@ describe("Profiles Unit Tests - Function loadNamedProfile", () => {
     it("Tests that loadNamedProfile returns the profile with the specified name", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
-
-        const profiles = await Profiles.createInstance(blockMocks.log);
-        const loadedProfile = profiles.loadNamedProfile("profile2");
+        const loadedProfile = blockMocks.profileInstance.loadNamedProfile("profile2");
         expect(loadedProfile).toEqual({ name: "profile2", profile: {}, type: "zosmf" });
     });
 
@@ -2854,6 +2858,12 @@ describe("Profiles Unit Tests - Function ssoLogin", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
+        Object.defineProperty(blockMocks.profiles, "loadNamedProfile", {
+            value: jest.fn(() => {
+                return blockMocks.imperativeProfile;
+            }),
+        });
+
         const ussSessionNode = createUSSSessionNode(blockMocks.session, blockMocks.imperativeProfile);
         const ussTree = createUSSTree([], [ussSessionNode], blockMocks.treeView);
         const resultNode: IZoweNodeType = blockMocks.datasetSessionNode;
@@ -2991,6 +3001,12 @@ describe("Profiles Unit Tests - Function ssoLogout", () => {
     it("Tests that sso logout is skipped if service profile contains user/password", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
+
+        Object.defineProperty(blockMocks.profiles, "loadNamedProfile", {
+            value: jest.fn(() => {
+                return blockMocks.imperativeProfile;
+            }),
+        });
 
         const ussSessionNode = createUSSSessionNode(blockMocks.session, blockMocks.imperativeProfile);
         const ussTree = createUSSTree([], [ussSessionNode], blockMocks.treeView);
