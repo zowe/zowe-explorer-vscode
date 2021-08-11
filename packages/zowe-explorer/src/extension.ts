@@ -58,52 +58,80 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  * @returns {Promise<ZoweExplorerApiRegister>}
  */
 export async function activate(context: vscode.ExtensionContext): Promise<ZoweExplorerApiRegister> {
-    // Carry over old settings to new standardized settings
+    // Carry over old settings to new standardized settings only if the migration has not been performed once already on workspace or global scope
     const configurations = vscode.workspace.getConfiguration();
-    const zoweOldConfigurations = Object.keys(configurations).filter((key) =>
-        key.match(new RegExp("Zowe-*|Zowe\\s*", "g"))
-    );
-    const configurationDictionary = {
-        "Zowe-Default-Datasets-Binary": "zowe.ds.default.binary",
-        "Zowe-Default-Datasets-C": "zowe.ds.default.c",
-        "Zowe-Default-Datasets-Classic": "zowe.ds.default.classic",
-        "Zowe-Default-Datasets-PDS": "zowe.ds.default.pds",
-        "Zowe-Default-Datasets-PS": "zowe.ds.default.ps",
-        "Zowe-Temp-Folder-Location": "zowe.files.temporaryDownloadsFolder.path",
-        "Zowe Security: Credential Key": "zowe.security.credentialPlugin",
-        "Zowe Commands: History": "zowe.commands.history",
-        "Zowe Commands: Always edit": "zowe.commands.alwaysEdit",
-        "Zowe-Automatic-Validation": "zowe.automaticProfileValidation",
-        "Zowe-DS-Persistent": "zowe.ds.history",
-        "Zowe-USS-Persistent": "zowe.uss.history",
-        "Zowe-Jobs-Persistent": "zowe.jobs.history",
-    };
+    const currentVersionNumber = vscode.extensions.getExtension("zowe.vscode-extension-for-zowe").packageJSON.version;
+    const zoweSettingsVersionGlobal = configurations.inspect("zowe.settings.version").globalValue;
+    const zoweSettingsVersionWorkspace = configurations.inspect("zowe.settings.version").workspaceValue;
 
-    // Migrate old settings to new settings if any old settings exist and migration has not been run yet
-    if (zoweOldConfigurations.length > 0 && configurations.get("zowe.settings.version") !== 2) {
-        zoweOldConfigurations.forEach((configuration) => {
-            // Handle special case where Zowe-Temp-Folder-Location schema was changed with migration
-            const oldSetting =
-                configuration === "Zowe-Temp-Folder-Location"
-                    ? configurations[configuration].folderPath
-                    : configurations[configuration];
-            const newSetting = configurationDictionary[configuration];
-            const configurationWorkspaceValue = configurations.inspect(configuration).workspaceValue;
-            const configurationGlobalValue = configurations.inspect(configuration).globalValue;
+    if (zoweSettingsVersionGlobal !== currentVersionNumber || zoweSettingsVersionWorkspace !== currentVersionNumber) {
+        const zoweOldConfigurations = Object.keys(configurations).filter((key) =>
+            key.match(new RegExp("Zowe-*|Zowe\\s*", "g"))
+        );
 
-            // Handle case where a configuration could be in either workspace or global settings
-            if (configurationWorkspaceValue === undefined && configurationGlobalValue !== undefined) {
-                configurations.update(newSetting, oldSetting, vscode.ConfigurationTarget.Global);
-            } else if (configurationGlobalValue === undefined && configurationWorkspaceValue !== undefined) {
-                configurations.update(newSetting, oldSetting, vscode.ConfigurationTarget.Workspace);
-            } else {
-                configurations.update(newSetting, oldSetting, vscode.ConfigurationTarget.Global);
-                configurations.update(newSetting, oldSetting, vscode.ConfigurationTarget.Workspace);
+        // Dictionary describing translation from old configuration names to new standardized names
+        const configurationDictionary = {
+            "Zowe-Default-Datasets-Binary": "zowe.ds.default.binary",
+            "Zowe-Default-Datasets-C": "zowe.ds.default.c",
+            "Zowe-Default-Datasets-Classic": "zowe.ds.default.classic",
+            "Zowe-Default-Datasets-PDS": "zowe.ds.default.pds",
+            "Zowe-Default-Datasets-PS": "zowe.ds.default.ps",
+            "Zowe-Temp-Folder-Location": "zowe.files.temporaryDownloadsFolder.path",
+            "Zowe Security: Credential Key": "zowe.security.credentialPlugin",
+            "Zowe Commands: History": "zowe.commands.history",
+            "Zowe Commands: Always edit": "zowe.commands.alwaysEdit",
+            "Zowe-Automatic-Validation": "zowe.automaticProfileValidation",
+            "Zowe-DS-Persistent": "zowe.ds.history",
+            "Zowe-USS-Persistent": "zowe.uss.history",
+            "Zowe-Jobs-Persistent": "zowe.jobs.history",
+        };
+
+        // Track whether global, workspace or both settings have been migrated to standardized configurations
+        let globalWasMigrated = false;
+        let workspaceWasMigrated = false;
+
+        // Migrate old settings to new settings if any old settings exist and migration has not been run yet
+        if (zoweOldConfigurations.length > 0) {
+            zoweOldConfigurations.forEach((configuration) => {
+                let workspaceValue: any = configurations.inspect(configuration).workspaceValue;
+                let globalValue: any = configurations.inspect(configuration).globalValue;
+
+                // Handle edge case where Zowe-Temp-Folder-Location is migrated but has new schema
+                // Reassign value only if object retrieved is not undefined
+                if (configuration === "Zowe-Temp-Folder-Location") {
+                    globalValue = globalValue ? globalValue.folderPath : globalValue;
+                    workspaceValue = workspaceValue ? workspaceValue.folderPath : workspaceValue;
+                }
+
+                const newSetting = configurationDictionary[configuration];
+
+                // Handle case where a configuration could be in either workspace or global settings and determine where to migrate
+                if (workspaceValue === undefined && globalValue !== undefined) {
+                    configurations.update(newSetting, globalValue, vscode.ConfigurationTarget.Global);
+                    globalWasMigrated = true;
+                } else if (globalValue === undefined && workspaceValue !== undefined) {
+                    configurations.update(newSetting, workspaceValue, vscode.ConfigurationTarget.Workspace);
+                    workspaceWasMigrated = true;
+                } else {
+                    configurations.update(newSetting, globalValue, vscode.ConfigurationTarget.Global);
+                    configurations.update(newSetting, workspaceValue, vscode.ConfigurationTarget.Workspace);
+                    globalWasMigrated = true;
+                    workspaceWasMigrated = true;
+                }
+            });
+
+            // Confirm migration is completed so it will not run more than once for either global or workspace settings
+            if (globalWasMigrated) {
+                configurations.update("zowe.settings.version", currentVersionNumber, vscode.ConfigurationTarget.Global);
             }
-
-            // Confirm migration is completed so it will not run more than once
-            configurations.update("zowe.settings.version", 2, vscode.ConfigurationTarget.Global);
-        });
+            if (workspaceWasMigrated) {
+                configurations.update(
+                    "zowe.settings.version",
+                    currentVersionNumber,
+                    vscode.ConfigurationTarget.Workspace
+                );
+            }
+        }
     }
 
     // Get temp folder location from settings
@@ -113,7 +141,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         .get("zowe.files.temporaryDownloadsFolder.path");
 
     // Determine the runtime framework to support special behavior for Theia
-    globals.defineGlobals(preferencesTempPath[0]);
+    globals.defineGlobals(preferencesTempPath);
 
     hideTempFolder(getZoweDir());
 
