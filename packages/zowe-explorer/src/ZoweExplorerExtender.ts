@@ -86,7 +86,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
      */
     public async initForZowe(
         profileType: string,
-        profileTypeConfigurations: imperative.ICommandProfileTypeConfiguration[]
+        profileTypeConfigurations?: imperative.ICommandProfileTypeConfiguration[]
     ) {
         // Ensure that when a user has not installed the profile type's CLI plugin
         // and/or created a profile that the profile directory in ~/.zowe/profiles
@@ -96,13 +96,15 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
             defaultHome: path.join(os.homedir(), ".zowe"),
             envVariablePrefix: "ZOWE",
         };
-        const configOptions = Array.from(profileTypeConfigurations);
-        const exists = fs.existsSync(path.posix.join(`${os.homedir()}/.zowe/profiles/${profileType}`));
-        if (configOptions && !exists) {
-            await imperative.CliProfileManager.initialize({
-                configuration: configOptions,
-                profileRootDirectory: path.join(imperative.ImperativeConfig.instance.cliHome, "profiles"),
-            });
+        if (profileTypeConfigurations) {
+            const configOptions = Array.from(profileTypeConfigurations);
+            const exists = fs.existsSync(path.posix.join(`${os.homedir()}/.zowe/profiles/${profileType}`));
+            if (configOptions && !exists) {
+                await imperative.CliProfileManager.initialize({
+                    configuration: configOptions,
+                    profileRootDirectory: path.join(imperative.ImperativeConfig.instance.cliHome, "profiles"),
+                });
+            }
         }
         // sequentially reload the internal profiles cache to satisfy all the newly added profile types
         await ZoweExplorerExtender.refreshProfilesQueue.add(() =>

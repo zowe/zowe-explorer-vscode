@@ -31,6 +31,7 @@ import {
     createWorkspaceConfiguration,
     createPersistentConfig,
     createValidIProfile,
+    createConfigInstance,
 } from "../../../__mocks__/mockCreators/shared";
 import {
     createDatasetSessionNode,
@@ -104,9 +105,7 @@ function createGlobalMocks() {
     });
     Object.defineProperty(ProfilesCache, "getConfigInstance", {
         value: jest.fn(() => {
-            return {
-                usingTeamConfig: false,
-            };
+            return createConfigInstance();
         }),
     });
 

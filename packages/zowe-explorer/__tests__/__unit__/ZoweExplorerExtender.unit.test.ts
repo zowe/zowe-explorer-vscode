@@ -17,6 +17,7 @@ import {
     createAltTypeIProfile,
     createTreeView,
     createIProfile,
+    createConfigInstance,
 } from "../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../__mocks__/mockCreators/datasets";
 import { createUSSSessionNode, createUSSTree } from "../../__mocks__/mockCreators/uss";
@@ -44,10 +45,9 @@ describe("ZoweExplorerExtender unit tests", () => {
 
     Object.defineProperty(ProfilesCache, "getConfigInstance", {
         value: jest.fn(() => {
-            return {
-                usingTeamConfig: false,
-            };
+            return createConfigInstance();
         }),
+        configurable: true,
     });
 
     it("calls DatasetTree addSession when extender profiles are reloaded", async () => {
@@ -61,6 +61,12 @@ describe("ZoweExplorerExtender unit tests", () => {
     });
     it("calls USSTree addSession when extender profiles are reloaded", async () => {
         const blockMocks = await createBlockMocks();
+        Object.defineProperty(blockMocks.profiles, "loadNamedProfile", {
+            value: jest.fn(() => {
+                return blockMocks.imperativeProfile;
+            }),
+        });
+
         const ussSessionNode = createUSSSessionNode(blockMocks.session, blockMocks.imperativeProfile);
         const ussTree = createUSSTree([], [ussSessionNode], blockMocks.treeView);
         ZoweExplorerExtender.createInstance(undefined, ussTree, undefined);
