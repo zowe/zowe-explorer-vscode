@@ -1,25 +1,33 @@
-# Using global profile configuration with Zowe Explorer
+# Zowe Explorer Profile Configuration
 
-## Feature overview
+Zowe Explorer vNext enables you to use the team configuration file that centralizes and simplifies your profile management.
 
-The Zowe Explorer vNext release enables you to adopt the Team Configuration File (recently developed by the [Zowe CLI Squad](https://github.com/zowe/zowe-cli/blob/next/docs/Early%20Access%20-%20Using%20Global%20Profile%20Configuration.md)) - designed to make profile management more centralized and much simpler.
+> vNext is developed by the [Zowe CLI Squad](https://github.com/zowe/zowe-cli/blob/next/docs/Early%20Access%20-%20Using%20Global%20Profile%20Configuration.md).
+
+You can configure global profiles and project-specific profiles.
 
 ## Prerequisites
 
-- Install [Zowe CLI @next version](https://github.com/zowe/zowe-cli/blob/next/docs/Early%20Access%20-%20Using%20Global%20Profile%20Configuration.md#installing-next-version).
-- [Initialize](https://github.com/zowe/zowe-cli/blob/next/docs/Early%20Access%20-%20Using%20Global%20Profile%20Configuration.md#initializing-global-configuration) the Global Configuration file. The resulting `zowe.config.json` and `zowe.schema.json` files will be placed in your Zowe home directory.
-- [Customize](https://github.com/zowe/zowe-cli/blob/next/docs/Early%20Access%20-%20Using%20Global%20Profile%20Configuration.md#editing-configuration) the Global Configuration file.
+Meet the following software requirements before you use the team configuration file:
 
-## Getting Started
+1. Install [Zowe CLI @next version](https://github.com/zowe/zowe-cli/blob/next/docs/Early%20Access%20-%20Using%20Global%20Profile%20Configuration.md#installing-next-version).
+2. [Initialize](https://github.com/zowe/zowe-cli/blob/next/docs/Early%20Access%20-%20Using%20Global%20Profile%20Configuration.md#initializing-global-configuration) the Global Configuration file.
 
-Read through the [Zowe Explorer ReadMe file](https://github.com/zowe/vscode-extension-for-zowe/blob/master/packages/zowe-explorer/README.md) to familiarize yourself with the capabilities of Zowe Explorer, and you are ready to use Zowe Explorer.
+   Your Zowe home directory should contain the `zowe.config.json` and `zowe.schema.json` files.
 
-### Install the vNext Release version
+3. [Customize](https://github.com/zowe/zowe-cli/blob/next/docs/Early%20Access%20-%20Using%20Global%20Profile%20Configuration.md#editing-configuration) the Global Configuration file.
 
-1. Get the latest pre-release version from the Zowe Explorer [Github Releases page](https://github.com/zowe/vscode-extension-for-zowe/releases)
-2. Within VS Code, use **File > Preferences > Extensions > Install from vsix**
-3. Select the files you downloaded
-4. Reload your VS Code window.
+## Install the vNext Release version
+
+Install vNext.
+
+**Follow these steps**:
+
+1. Download the latest [vNext release version](https://github.com/zowe/vscode-extension-for-zowe/releases) from the Zowe Explorer Github release page.
+2. Open VS Code.
+3. Navigate to **File** > **Preferences** > **Extensions** > **Install from vsix\*\***.
+4. Select the .vsix file to install.
+5. Reload your VS Code window.
 
 ### Load a Profile
 
@@ -28,9 +36,18 @@ Read through the [Zowe Explorer ReadMe file](https://github.com/zowe/vscode-exte
 3. Click the **+** icon.
 4. From the drop-down menu, select the profile that you want to use.
 
-You can now use all the functionalities of the extension.
+You can now configure your global or project-specific profile.
 
-### Add, Update, and Delete a Profile
+## Global Profile Configuration
 
-1. The add, update, and delete profile options will open the global `zowe.config.json` file for editing
-2. Click **View > Command Palette > Developer: Reload Window** to reload your VS Code window for the changes to take effect.
+The global profile functionality simplifies profile management by enabling you to edit, store, and share mainframe configuration details in one location. You can use a text editor to populate configuration files with connection details for your mainframe services.
+
+### Manage a Profile
+
+1. Right-click on your profile.
+2. To edit the global `zowe.config.json` file, select add, update, or delete profile options.
+3. Reload your VS Code window by clicking **View** > **Command Palette** > **Developer: Reload Window** so that the changes take effect.
+
+## Project-Level Profile Configuration
+
+A project-level configuration file is located in the main directory of your project. To initialize the configuration file, {TODO continue here}.
