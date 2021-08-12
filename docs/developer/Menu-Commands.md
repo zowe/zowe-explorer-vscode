@@ -4,11 +4,11 @@ This page contains developer guidance specific to adding commands in core Zowe E
 
 ## Contents
 
-- [Defining a new command](#defining-a-new-commmand)
+- [Defining a new command](#defining-a-new-command)
 - [Contributing menu items](#contributing-menu-items)
 - [Menu group naming conventions](#menu-group-naming-conventions)
 
-## Defining a new commmand
+## Defining a new command
 
 In order to add a command to a core Zowe Explorer menu, the command must first be defined in `packages/zowe-explorer/package.json`, under [`contributes.commands`](https://code.visualstudio.com/api/references/contribution-points#contributes.commands). The following conventions should be used when defining the respective command properties:
 
@@ -30,7 +30,7 @@ In order to add a command to a core Zowe Explorer menu, the command must first b
 
 ## Contributing menu items
 
-Context menus appear when the user right-clicks on an item (for example, a data set or profile). For Zowe Explorer, commands are most commonly added to the menus that appear in its three tree views (Data Sets, USS, and Jobs). To add a command into these views, create an entry for the [defined command](#defining-a-new-commmand) in the `contributes.menus.view/item/context` section of `packages/zowe-explorer/package.json`.
+Context menus appear when the user right-clicks on an item (for example, a data set or profile). For Zowe Explorer, commands are most commonly added to the menus that appear in its three tree views (Data Sets, USS, and Jobs). To add a command into these views, create an entry for the [defined command](#defining-a-new-command) in the `contributes.menus.view/item/context` section of `packages/zowe-explorer/package.json`.
 
 - If adding a command to a Zowe Explorer context menu, be sure to assign a value to the `group` property of the entry. This helps provide visual separation between different command categories in the UI. You can see examples of context menu groups in the current menu items in Zowe Explorer's `package.json`. Follow the steps below when assigning an entry's `group` property:
 
