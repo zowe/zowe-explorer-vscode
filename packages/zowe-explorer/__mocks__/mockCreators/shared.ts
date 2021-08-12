@@ -89,8 +89,8 @@ export function createInvalidIProfile(): imperative.IProfileLoaded {
             type: "zosmf",
             host: null,
             port: 1443,
-            user: "fake",
-            password: "fake",
+            user: null,
+            password: null,
             rejectUnauthorized: false,
             name: "testName",
         },
@@ -173,11 +173,7 @@ export function createTextDocument(name: string, sessionNode?: ZoweDatasetNode |
 
 export function createInstanceOfProfile(profile: imperative.IProfileLoaded) {
     return {
-        allProfiles: [
-            { name: "sestest", profile: {}, type: "zosmf" },
-            { name: "profile1", profile: {}, type: "zosmf" },
-            { name: "profile2", profile: {}, type: "zosmf" },
-        ],
+        allProfiles: [{ name: "sestest" }, { name: "profile1" }, { name: "profile2" }],
         defaultProfile: { name: "sestest" },
         getDefaultProfile: jest.fn(),
         promptCredentials: jest.fn(),
@@ -273,13 +269,5 @@ export function createWorkspaceConfiguration(): vscode.WorkspaceConfiguration {
         update: jest.fn(),
         has: jest.fn(),
         inspect: jest.fn(),
-    };
-}
-
-export function createConfigInstance() {
-    return {
-        getAllProfiles: jest.fn(),
-        getDefaultProfile: jest.fn(),
-        usingTeamConfig: false,
     };
 }

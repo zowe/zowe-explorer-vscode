@@ -17,11 +17,6 @@ import { Logger, IProfileLoaded, Session } from "@zowe/imperative";
 import { ZoweExplorerApi, ZosmfUssApi, ZosmfJesApi, ZosmfMvsApi, ProfilesCache } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
-import {
-    createConfigInstance,
-    createInstanceOfProfile,
-    createValidIProfile,
-} from "../../../__mocks__/mockCreators/shared";
 
 class MockUssApi1 implements ZoweExplorerApi.IUss {
     public profile?: IProfileLoaded;
@@ -152,47 +147,42 @@ class MockUssApi2 implements ZoweExplorerApi.IUss {
 }
 
 describe("ZoweExplorerApiRegister unit testing", () => {
-    async function createBlockMocks() {
-        const newMocks = {
-            log: Logger.getAppLogger(),
-            testProfile: createValidIProfile(),
-            registry: ZoweExplorerApiRegister.getInstance(),
-        };
+    const log = Logger.getAppLogger();
+    let profiles: Profiles;
+    beforeEach(async () => {
+        profiles = await Profiles.createInstance(log);
+    });
 
-        const mockProfileInstance = jest.fn();
-        mockProfileInstance.mockReturnValue(createInstanceOfProfile(newMocks.testProfile));
+    const registry = ZoweExplorerApiRegister.getInstance();
 
-        Object.defineProperty(ProfilesCache, "getConfigInstance", {
-            value: jest.fn(() => {
-                return createConfigInstance();
-            }),
-            configurable: true,
-        });
-
-        return newMocks;
-    }
+    Object.defineProperty(ProfilesCache, "getConfigInstance", {
+        value: jest.fn(() => {
+            return {
+                usingTeamConfig: false,
+            };
+        }),
+    });
 
     it("registers an API only once per profile type", async () => {
-        const blockMocks = await createBlockMocks();
+        const defaultProfile = profiles.getDefaultProfile();
 
-        const defaultUssApi = blockMocks.registry.getUssApi(blockMocks.testProfile);
-        blockMocks.registry.registerUssApi(new ZosmfUssApi());
-        const anotherUssApiInstance = blockMocks.registry.getUssApi(blockMocks.testProfile);
+        const defaultUssApi = registry.getUssApi(defaultProfile);
+        registry.registerUssApi(new ZosmfUssApi());
+        const anotherUssApiInstance = registry.getUssApi(defaultProfile);
         expect(anotherUssApiInstance).toEqual(defaultUssApi);
 
-        const defaultMvsApi = blockMocks.registry.getMvsApi(blockMocks.testProfile);
-        blockMocks.registry.registerMvsApi(new ZosmfMvsApi());
-        const anotherMvsApiInstance = blockMocks.registry.getMvsApi(blockMocks.testProfile);
+        const defaultMvsApi = registry.getMvsApi(defaultProfile);
+        registry.registerMvsApi(new ZosmfMvsApi());
+        const anotherMvsApiInstance = registry.getMvsApi(defaultProfile);
         expect(anotherMvsApiInstance).toEqual(defaultMvsApi);
 
-        const defaultJesApi = blockMocks.registry.getJesApi(blockMocks.testProfile);
-        blockMocks.registry.registerJesApi(new ZosmfJesApi());
-        const anotherJesApiInstance = blockMocks.registry.getJesApi(blockMocks.testProfile);
+        const defaultJesApi = registry.getJesApi(defaultProfile);
+        registry.registerJesApi(new ZosmfJesApi());
+        const anotherJesApiInstance = registry.getJesApi(defaultProfile);
         expect(anotherJesApiInstance).toEqual(defaultJesApi);
     });
 
     it("registers multiple API instances in parallel", async () => {
-        const blockMocks = await createBlockMocks();
         const mockRefresh = jest.fn(
             async (): Promise<void> => {
                 return;
@@ -210,65 +200,70 @@ describe("ZoweExplorerApiRegister unit testing", () => {
                 };
             }),
         });
+        Object.defineProperty(ProfilesCache, "getConfigInstance", {
+            value: jest.fn(() => {
+                return {
+                    usingTeamConfig: false,
+                };
+            }),
+        });
 
         const api1 = new MockUssApi1();
         const api2 = new MockUssApi2();
 
-        blockMocks.registry.registerUssApi(api1);
-        blockMocks.registry.getExplorerExtenderApi().reloadProfiles();
-        blockMocks.registry.registerUssApi(api2);
-        await blockMocks.registry.getExplorerExtenderApi().reloadProfiles();
+        registry.registerUssApi(api1);
+        registry.getExplorerExtenderApi().reloadProfiles();
+        registry.registerUssApi(api2);
+        await registry.getExplorerExtenderApi().reloadProfiles();
 
         expect(mockRefresh.mock.calls.length).toBe(2);
     });
 
-    it("throws errors when registering invalid APIs", async () => {
-        const blockMocks = await createBlockMocks();
+    it("throws errors when registering invalid APIs", () => {
         const api1 = new MockUssApi1();
         const mockGetProfileTypeName = jest.fn(() => undefined);
         api1.getProfileTypeName = mockGetProfileTypeName;
         expect(() => {
-            blockMocks.registry.registerUssApi(api1);
+            registry.registerUssApi(api1);
         }).toThrow();
         expect(() => {
-            blockMocks.registry.registerUssApi(undefined);
+            registry.registerUssApi(undefined);
         }).toThrow();
 
         const mvsApi = new ZosmfMvsApi();
         mvsApi.getProfileTypeName = mockGetProfileTypeName;
         expect(() => {
-            blockMocks.registry.registerMvsApi(mvsApi);
+            registry.registerMvsApi(mvsApi);
         }).toThrow();
         expect(() => {
-            blockMocks.registry.registerMvsApi(undefined);
+            registry.registerMvsApi(undefined);
         }).toThrow();
 
         const jesApi = new ZosmfJesApi();
         jesApi.getProfileTypeName = mockGetProfileTypeName;
         expect(() => {
-            blockMocks.registry.registerJesApi(jesApi);
+            registry.registerJesApi(jesApi);
         }).toThrow();
         expect(() => {
-            blockMocks.registry.registerJesApi(undefined);
+            registry.registerJesApi(undefined);
         }).toThrow();
     });
 
-    it("throws errors when invalid APIs requested", async () => {
-        const blockMocks = await createBlockMocks();
+    it("throws errors when invalid APIs requested", () => {
         expect(() => {
-            blockMocks.registry.getUssApi(undefined);
+            registry.getUssApi(undefined);
         }).toThrow();
         expect(() => {
-            blockMocks.registry.getMvsApi(undefined);
+            registry.getMvsApi(undefined);
         }).toThrow();
         expect(() => {
-            blockMocks.registry.getJesApi(undefined);
+            registry.getJesApi(undefined);
         }).toThrow();
     });
 
-    it("provides access to the common api for a profile registered to any api regsitry", async () => {
-        const blockMocks = await createBlockMocks();
-        const ussApi = ZoweExplorerApiRegister.getUssApi(blockMocks.testProfile);
+    it("provides access to the common api for a profile registered to any api regsitry", () => {
+        const defaultProfile = profiles.getDefaultProfile();
+        const ussApi = ZoweExplorerApiRegister.getUssApi(defaultProfile);
         const profileUnused: IProfileLoaded = {
             name: "profileUnused",
             profile: {
@@ -280,10 +275,8 @@ describe("ZoweExplorerApiRegister unit testing", () => {
             failNotFound: false,
         };
 
-        expect(ZoweExplorerApiRegister.getCommonApi(blockMocks.testProfile)).toEqual(ussApi);
-        expect(ZoweExplorerApiRegister.getCommonApi(blockMocks.testProfile).getProfileTypeName()).toEqual(
-            blockMocks.testProfile.type
-        );
+        expect(ZoweExplorerApiRegister.getCommonApi(defaultProfile)).toEqual(ussApi);
+        expect(ZoweExplorerApiRegister.getCommonApi(defaultProfile).getProfileTypeName()).toEqual(defaultProfile.type);
         expect(() => {
             ZoweExplorerApiRegister.getCommonApi(profileUnused);
         }).toThrow();

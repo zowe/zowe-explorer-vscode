@@ -21,7 +21,6 @@ import {
     createISession,
     createFileResponse,
     createInstanceOfProfile,
-    createConfigInstance,
 } from "../../../__mocks__/mockCreators/shared";
 import { ProfilesCache } from "@zowe/zowe-explorer-api";
 import { createDatasetSessionNode } from "../../../__mocks__/mockCreators/datasets";
@@ -46,7 +45,9 @@ async function createGlobalMocks() {
 
 Object.defineProperty(ProfilesCache, "getConfigInstance", {
     value: jest.fn(() => {
-        return createConfigInstance();
+        return {
+            usingTeamConfig: false,
+        };
     }),
 });
 
