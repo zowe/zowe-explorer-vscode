@@ -21,7 +21,7 @@ import * as globals from "../../src/globals";
 import { ValidProfileEnum, ProfilesCache } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../src/Profiles";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
-import { createConfigInstance, createIProfile, createTreeView } from "../../__mocks__/mockCreators/shared";
+import { createIProfile, createTreeView } from "../../__mocks__/mockCreators/shared";
 import { PersistentFilters } from "../../src/PersistentFilters";
 
 jest.mock("vscode");
@@ -322,7 +322,9 @@ async function createGlobalMocks() {
     });
     Object.defineProperty(ProfilesCache, "getConfigInstance", {
         value: jest.fn(() => {
-            return createConfigInstance();
+            return {
+                usingTeamConfig: false,
+            };
         }),
     });
 
