@@ -23,7 +23,7 @@ More information:
 
 ## Contents
 
-- [What's new in Zowe Explorer 1.17.0](#whats-new-in-zowe-explorer-1.17.0)
+- [What's new in Zowe Explorer 1.18.0](#whats-new-in-zowe-explorer-1.18.0)
 - [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
 - [Sample Use Cases](#sample-use-cases)
@@ -31,25 +31,23 @@ More information:
 - [Usage Tips](#usage-tips)
 - [Extending Zowe Explorer](#extending-zowe-explorer)
 
-## What's new in Zowe Explorer 1.17.0
+## What's new in Zowe Explorer 1.18.0
 
 **Added**:
 
-- Added the feature that automatically includes a missing profile in the Jobs view when submitting a job.
-- Added the extender documentation for KeytarApi for Secure Credential Store.
-- Added a new setting that enables you to hide Zowe Explorer's temporary downloads folder from a workspace.
-- Added the command to refresh a particular job and get the latest information and content for its spool files.
-- Added the function that enables you to delete multiple datasets and data set members.
-- Added the feature that enables you to use multiple VS Code windows for files opened via Zowe Explorer.
-- Added the command to refresh USS directory file names without the entire tree collapsing.
+- Added the ability to register custom profile types in `ProfilesCache` for extenders.
+- Added the ability to pass account and other information from tso profile.
+- Add profiles cache to extenders.
 
 **Changed**:
 
-- Removed non-functioning code from invalid credentials for Theia.
+- Status icons now reset when refreshing the explorer views.
 
 **Fixed**:
 
-- Fixed the issue with the USS search and update profile errors for profiles without credentials.
+- Fixed the issue that prevented the expected error message `No valid value for z/OS URL. Operation Cancelled` from being displayed while escaping the host text box during the creation or update of a profile.
+- Fixed the issue that invoked profile validation before updating a profile. Now a profile is validated only after the update.
+- Fixed the issue of Zowe profiles encoding value when opening a USS file in the text editor.
 
 For more information, see [Changelog](https://marketplace.visualstudio.com/items/Zowe.vscode-extension-for-zowe/changelog).
 
