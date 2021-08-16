@@ -60,7 +60,8 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 export async function activate(context: vscode.ExtensionContext): Promise<ZoweExplorerApiRegister> {
     // Carry over old settings to new standardized settings only if the migration has not been performed once already on workspace or global scope
     const configurations = vscode.workspace.getConfiguration();
-    const currentVersionNumber = vscode.extensions.getExtension("zowe.vscode-extension-for-zowe").packageJSON.version;
+    // const currentVersionNumber = vscode.extensions.getExtension("zowe.vscode-extension-for-zowe").packageJSON.version;
+    const currentVersionNumber = 2;
     const zoweSettingsVersionGlobal = configurations.inspect("zowe.settings.version").globalValue;
     const zoweSettingsVersionWorkspace = configurations.inspect("zowe.settings.version").workspaceValue;
 
@@ -93,6 +94,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         // Migrate old settings to new settings if any old settings exist and migration has not been run yet
         if (zoweOldConfigurations.length > 0) {
             zoweOldConfigurations.forEach((configuration) => {
+                // Retrieve the old setting for both scopes
                 let workspaceValue: any = configurations.inspect(configuration).workspaceValue;
                 let globalValue: any = configurations.inspect(configuration).globalValue;
 
@@ -106,17 +108,30 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
                 const newSetting = configurationDictionary[configuration];
 
                 // Handle case where a configuration could be in either workspace or global settings and determine where to migrate
-                if (workspaceValue === undefined && globalValue !== undefined) {
+                if (
+                    workspaceValue === undefined &&
+                    globalValue !== undefined &&
+                    zoweSettingsVersionGlobal !== currentVersionNumber
+                ) {
                     configurations.update(newSetting, globalValue, vscode.ConfigurationTarget.Global);
                     globalWasMigrated = true;
-                } else if (globalValue === undefined && workspaceValue !== undefined) {
+                } else if (
+                    globalValue === undefined &&
+                    workspaceValue !== undefined &&
+                    zoweSettingsVersionWorkspace !== currentVersionNumber
+                ) {
                     configurations.update(newSetting, workspaceValue, vscode.ConfigurationTarget.Workspace);
                     workspaceWasMigrated = true;
                 } else {
-                    configurations.update(newSetting, globalValue, vscode.ConfigurationTarget.Global);
-                    configurations.update(newSetting, workspaceValue, vscode.ConfigurationTarget.Workspace);
-                    globalWasMigrated = true;
-                    workspaceWasMigrated = true;
+                    if (zoweSettingsVersionGlobal !== currentVersionNumber) {
+                        configurations.update(newSetting, globalValue, vscode.ConfigurationTarget.Global);
+                        globalWasMigrated = true;
+                    }
+                    if (zoweSettingsVersionWorkspace !== currentVersionNumber) {
+                        // console.log(workspaceValue);
+                        configurations.update(newSetting, workspaceValue, vscode.ConfigurationTarget.Workspace);
+                        workspaceWasMigrated = true;
+                    }
                 }
             });
 

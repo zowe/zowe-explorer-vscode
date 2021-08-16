@@ -26,5 +26,26 @@
   "eslint.workingDirectories": [
     { "directory": "packages/zowe-explorer-ftp-extension", "changeProcessCWD": true },
     { "directory": "packages/zowe-explorer-api", "changeProcessCWD": true }
-  ]
+  ],
+  "Zowe-Temp-Folder-Location": {
+    "folderPath": "/Users/rflores"
+  },
+  "Zowe-DS-Persistent": {
+    "persistence": true,
+    "favorites": [],
+    "history": [],
+    "sessions": ["zoweCLI", "testWorkspace"]
+  },
+  "Zowe-USS-Persistent": {
+    "persistence": true,
+    "favorites": [],
+    "history": [],
+    "sessions": ["zoweCLI", "testWorkspace"]
+  },
+  "Zowe-Jobs-Persistent": {
+    "persistence": true,
+    "favorites": [],
+    "history": [],
+    "sessions": ["zoweCLI", "testWorkspace"]
+  }
 }
