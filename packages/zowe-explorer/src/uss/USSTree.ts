@@ -21,7 +21,13 @@ import {
     syncSessionNode,
 } from "../utils/ProfilesUtils";
 import { sortTreeItems, getAppName, checkIfChildPath } from "../shared/utils";
-import { IZoweTree, IZoweUSSTreeNode, ValidProfileEnum, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
+import {
+    IZoweTree,
+    IZoweUSSTreeNode,
+    ValidProfileEnum,
+    PersistenceSchemaEnum,
+    ProfilesCache,
+} from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { ZoweUSSNode } from "./ZoweUSSNode";
@@ -32,6 +38,8 @@ import * as contextually from "../shared/context";
 import * as nls from "vscode-nls";
 import { resetValidationSettings } from "../shared/actions";
 import { PersistentFilters } from "../PersistentFilters";
+import { allocateLike } from "../dataset/actions";
+import { Profile } from "selenium-webdriver/firefox";
 // Set up localization
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
@@ -297,6 +305,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      * Adds a new session to the uss files tree
      *
      * @param {string} [sessionName] - optional; loads persisted profiles or default if not passed
+     * @param {string} [profileType] - optional; loads profiles of a certain type if passed
      */
     public async addSession(sessionName?: string, profileType?: string) {
         const setting = PersistentFilters.getDirectValue("Zowe-Automatic-Validation") as boolean;
@@ -314,8 +323,13 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 }
             }
         } else {
-            const allProfiles: IProfileLoaded[] = Profiles.getInstance().allProfiles;
-            for (const theProfile of allProfiles) {
+            let profiles: IProfileLoaded[];
+            if (profileType) {
+                profiles = Profiles.getInstance().getProfiles(profileType);
+            } else {
+                profiles = Profiles.getInstance().allProfiles;
+            }
+            for (const theProfile of profiles) {
                 // If session is already added, do nothing
                 if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === theProfile.name)) {
                     continue;
@@ -914,15 +928,17 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      */
     private async addSingleSession(profile: IProfileLoaded) {
         if (profile) {
-            // If baseProfile exists, combine that information first before adding the session to the tree
-            // TODO: Move addSession to abstract/ZoweTreeProvider (similar to editSession)
-            const baseProfile = Profiles.getInstance().getBaseProfile();
-            if (baseProfile) {
-                try {
-                    const combinedProfile = await Profiles.getInstance().getCombinedProfile(profile, baseProfile);
-                    profile = combinedProfile;
-                } catch (error) {
-                    throw error;
+            if (!ProfilesCache.getConfigInstance().usingTeamConfig) {
+                // If baseProfile exists, combine that information first before adding the session to the tree
+                // TODO: Move addSession to abstract/ZoweTreeProvider (similar to editSession)
+                const baseProfile = Profiles.getInstance().getBaseProfile();
+                if (baseProfile) {
+                    try {
+                        const combinedProfile = await Profiles.getInstance().getCombinedProfile(profile, baseProfile);
+                        profile = combinedProfile;
+                    } catch (error) {
+                        throw error;
+                    }
                 }
             }
             // If session is already added, do nothing
@@ -931,15 +947,26 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             }
             // Uses loaded profile to create a session with the USS API
             const session = ZoweExplorerApiRegister.getUssApi(profile).getSession();
+            let profExists = false;
+            Profiles.getInstance().allProfiles.forEach((aProfile) => {
+                if (aProfile.name === profile.name) {
+                    profExists = true;
+                }
+            });
+            if (!profExists) {
+                Profiles.getInstance().allProfiles.push(profile);
+            }
             // Creates ZoweNode to track new session and pushes it to mSessionNodes
             const node = new ZoweUSSNode(
                 profile.name,
                 vscode.TreeItemCollapsibleState.Collapsed,
                 null,
                 session,
-                "",
+                null,
                 false,
-                profile.name
+                profile.name,
+                null,
+                profile
             );
             node.contextValue = globals.USS_SESSION_CONTEXT;
             const icon = getIconByNode(node);

@@ -248,7 +248,7 @@ export class Profiles extends ProfilesCache {
      * @param {USSTree} zoweFileProvider - either the USS, MVS, JES tree
      */
     public async createZoweSession(zoweFileProvider: IZoweTree<IZoweTreeNode>) {
-        const allProfiles = (await Profiles.getInstance()).allProfiles;
+        const allProfiles = Profiles.getInstance().allProfiles;
         const createNewProfile = "Create a New Connection to z/OS";
         let chosenProfile: string = "";
 
