@@ -60,12 +60,15 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 export async function activate(context: vscode.ExtensionContext): Promise<ZoweExplorerApiRegister> {
     // Carry over old settings to new standardized settings only if the migration has not been performed once already on workspace or global scope
     const configurations = vscode.workspace.getConfiguration();
+
+    // Track whether global, workspace or both settings have been migrated to standardized configurations
     // const currentVersionNumber = vscode.extensions.getExtension("zowe.vscode-extension-for-zowe").packageJSON.version;
     const currentVersionNumber = 2;
-    const zoweSettingsVersionGlobal = configurations.inspect("zowe.settings.version").globalValue;
-    const zoweSettingsVersionWorkspace = configurations.inspect("zowe.settings.version").workspaceValue;
+    let globalIsNotMigrated = configurations.inspect("zowe.settings.version").globalValue !== currentVersionNumber;
+    let workspaceIsNotMigrated =
+        configurations.inspect("zowe.settings.version").workspaceValue !== currentVersionNumber;
 
-    if (zoweSettingsVersionGlobal !== currentVersionNumber || zoweSettingsVersionWorkspace !== currentVersionNumber) {
+    if (globalIsNotMigrated || workspaceIsNotMigrated) {
         const zoweOldConfigurations = Object.keys(configurations).filter((key) =>
             key.match(new RegExp("Zowe-*|Zowe\\s*", "g"))
         );
@@ -87,16 +90,16 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             "Zowe-Jobs-Persistent": "zowe.jobs.history",
         };
 
-        // Track whether global, workspace or both settings have been migrated to standardized configurations
-        let globalWasMigrated = false;
-        let workspaceWasMigrated = false;
-
         // Migrate old settings to new settings if any old settings exist and migration has not been run yet
         if (zoweOldConfigurations.length > 0) {
             zoweOldConfigurations.forEach((configuration) => {
                 // Retrieve the old setting for both scopes
-                let workspaceValue: any = configurations.inspect(configuration).workspaceValue;
-                let globalValue: any = configurations.inspect(configuration).globalValue;
+                let globalValue: any = globalIsNotMigrated
+                    ? configurations.inspect(configuration).globalValue
+                    : undefined;
+                let workspaceValue: any = workspaceIsNotMigrated
+                    ? configurations.inspect(configuration).workspaceValue
+                    : undefined;
 
                 // Handle edge case where Zowe-Temp-Folder-Location is migrated but has new schema
                 // Reassign value only if object retrieved is not undefined
@@ -108,38 +111,30 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
                 const newSetting = configurationDictionary[configuration];
 
                 // Handle case where a configuration could be in either workspace or global settings and determine where to migrate
+                if (globalIsNotMigrated && globalValue !== undefined && workspaceValue === undefined) {
+                    configurations.update(newSetting, globalValue, vscode.ConfigurationTarget.Global);
+                    globalIsNotMigrated = true;
+                }
+                if (workspaceIsNotMigrated && workspaceValue !== undefined && globalValue === undefined) {
+                    configurations.update(newSetting, workspaceValue, vscode.ConfigurationTarget.Workspace);
+                    workspaceIsNotMigrated = true;
+                }
                 if (
-                    workspaceValue === undefined &&
-                    globalValue !== undefined &&
-                    zoweSettingsVersionGlobal !== currentVersionNumber
+                    workspaceIsNotMigrated &&
+                    globalIsNotMigrated &&
+                    workspaceValue !== undefined &&
+                    globalValue !== undefined
                 ) {
                     configurations.update(newSetting, globalValue, vscode.ConfigurationTarget.Global);
-                    globalWasMigrated = true;
-                } else if (
-                    globalValue === undefined &&
-                    workspaceValue !== undefined &&
-                    zoweSettingsVersionWorkspace !== currentVersionNumber
-                ) {
                     configurations.update(newSetting, workspaceValue, vscode.ConfigurationTarget.Workspace);
-                    workspaceWasMigrated = true;
-                } else {
-                    if (zoweSettingsVersionGlobal !== currentVersionNumber) {
-                        configurations.update(newSetting, globalValue, vscode.ConfigurationTarget.Global);
-                        globalWasMigrated = true;
-                    }
-                    if (zoweSettingsVersionWorkspace !== currentVersionNumber) {
-                        // console.log(workspaceValue);
-                        configurations.update(newSetting, workspaceValue, vscode.ConfigurationTarget.Workspace);
-                        workspaceWasMigrated = true;
-                    }
                 }
             });
 
             // Confirm migration is completed so it will not run more than once for either global or workspace settings
-            if (globalWasMigrated) {
+            if (globalIsNotMigrated) {
                 configurations.update("zowe.settings.version", currentVersionNumber, vscode.ConfigurationTarget.Global);
             }
-            if (workspaceWasMigrated) {
+            if (workspaceIsNotMigrated) {
                 configurations.update(
                     "zowe.settings.version",
                     currentVersionNumber,
