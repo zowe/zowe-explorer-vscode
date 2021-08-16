@@ -9,7 +9,7 @@
  *                                                                                 *
  */
 
-import { IZoweUSSTreeNode, ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { IZoweUSSTreeNode, ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
@@ -149,6 +149,14 @@ async function createGlobalMocks() {
     globalMocks.testUSSNode = createUSSNode(globalMocks.testSession, globalMocks.testProfile);
     globalMocks.testTree.mSessionNodes.push(ussSessionTestNode);
     globalMocks.testTree.addSearchHistory("/u/myuser");
+
+    Object.defineProperty(ProfilesCache, "getConfigInstance", {
+        value: jest.fn(() => {
+            return {
+                usingTeamConfig: false,
+            };
+        }),
+    });
 
     return globalMocks;
 }
