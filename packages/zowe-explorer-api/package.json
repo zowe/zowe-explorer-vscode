@@ -17,6 +17,7 @@
     "@types/semver": "^7.3.6"
   },
   "dependencies": {
+    "@zowe/cli": "^6.31.1",
     "semver": "^7.3.5"
   },
   "scripts": {
