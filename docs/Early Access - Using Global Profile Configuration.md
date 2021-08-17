@@ -1,8 +1,8 @@
 # Zowe Explorer Profile Configuration
 
-Zowe Explorer vNext enables you to use the team configuration file that centralizes and simplifies your profile management.
+Zowe Explorer @Next enables you to use the team configuration file that centralizes and simplifies your profile management.
 
-> vNext is developed by the [Zowe CLI Squad](https://github.com/zowe/zowe-cli/blob/next/docs/Early%20Access%20-%20Using%20Global%20Profile%20Configuration.md).
+> @Next is developed by the [Zowe CLI Squad](https://github.com/zowe/zowe-cli/blob/next/docs/Early%20Access%20-%20Using%20Global%20Profile%20Configuration.md).
 
 You can configure global profiles and project-specific profiles.
 
@@ -11,19 +11,22 @@ You can configure global profiles and project-specific profiles.
 Meet the following software requirements before you use the team configuration file:
 
 1. Install [Zowe CLI @next version](https://github.com/zowe/zowe-cli/blob/next/docs/Early%20Access%20-%20Using%20Global%20Profile%20Configuration.md#installing-next-version).
+
+   Ensure that the CLI and @Next versions are compatible.
+
 2. [Initialize](https://github.com/zowe/zowe-cli/blob/next/docs/Early%20Access%20-%20Using%20Global%20Profile%20Configuration.md#initializing-global-configuration) the Global Configuration file.
 
    Your Zowe home directory should contain the `zowe.config.json` and `zowe.schema.json` files.
 
 3. [Customize](https://github.com/zowe/zowe-cli/blob/next/docs/Early%20Access%20-%20Using%20Global%20Profile%20Configuration.md#editing-configuration) the Global Configuration file.
 
-## Install the vNext Release version
+## Install the @Next Release version
 
-Install vNext.
+Install @Next.
 
 **Follow these steps**:
 
-1. Download the latest [vNext release version](https://github.com/zowe/vscode-extension-for-zowe/releases) from the Zowe Explorer Github release page.
+1. Download the latest [@Next release version](https://github.com/zowe/vscode-extension-for-zowe/releases) from the Zowe Explorer Github release page.
 2. Open VS Code.
 3. Navigate to **File** > **Preferences** > **Extensions** > **Install from vsix\*\***.
 4. Select the .vsix file to install.
@@ -31,23 +34,32 @@ Install vNext.
 
 ### Load a Profile
 
+**Follow these steps**:
+
 1. Navigate to the explorer tree.
 2. Hover over **DATA SETS**, **USS**, or **JOBS**.
 3. Click the **+** icon.
 4. From the drop-down menu, select the profile that you want to use.
 
-You can now configure your global or project-specific profile.
+You can now use your global or project-specific profile.
 
-## Global Profile Configuration
+## Profile Configuration
 
-The global profile functionality simplifies profile management by enabling you to edit, store, and share mainframe configuration details in one location. You can use a text editor to populate configuration files with connection details for your mainframe services.
+The global profile functionality simplifies profile management by enabling you to edit, store, and share mainframe configuration details in one location. You can use a text editor or an IDE to populate configuration files with connection details for your mainframe services. By default, your global configuration profile is located in .zowe home folder, whereas a project-level configuration file is located in the main directory of your project.
+
+**Note**: A project context takes precedence over global configuration.
 
 ### Manage a Profile
 
+You can edit your project-level or global configuration profiles.
+
+**Follow these steps**:
+
 1. Right-click on your profile.
-2. To edit the global `zowe.config.json` file, select add, update, or delete profile options.
+2. Select the **Add**, **Update**, or **Delete Profile** options to edit the global `zowe.config.json` file.
+
+   **Tip**: Use the Intellisense prompts if you need assistance with filling parameters in the .json file.
+
 3. Reload your VS Code window by clicking **View** > **Command Palette** > **Developer: Reload Window** so that the changes take effect.
 
-## Project-Level Profile Configuration
-
-A project-level configuration file is located in the main directory of your project. To initialize the configuration file, {TODO continue here}.
+You successfully edited your configuration profile.
