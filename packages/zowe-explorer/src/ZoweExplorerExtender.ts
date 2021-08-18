@@ -118,7 +118,10 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
         }
         // sequentially reload the internal profiles cache to satisfy all the newly added profile types
         await ZoweExplorerExtender.refreshProfilesQueue.add(
-            async () => await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance())
+            async (): Promise<void> => {
+                // eslint-disable-next-line no-return-await
+                await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
+            }
         );
     }
 
@@ -168,7 +171,8 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
     public async reloadProfiles(profileType?: string): Promise<void> {
         // sequentially reload the internal profiles cache to satisfy all the newly added profile types
         await ZoweExplorerExtender.refreshProfilesQueue.add(
-            async (): Promise<any> => {
+            async (): Promise<void> => {
+                // eslint-disable-next-line no-return-await
                 await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
             }
         );
