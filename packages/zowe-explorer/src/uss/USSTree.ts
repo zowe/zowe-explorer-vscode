@@ -38,8 +38,7 @@ import * as contextually from "../shared/context";
 import * as nls from "vscode-nls";
 import { resetValidationSettings } from "../shared/actions";
 import { PersistentFilters } from "../PersistentFilters";
-import { allocateLike } from "../dataset/actions";
-import { Profile } from "selenium-webdriver/firefox";
+
 // Set up localization
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
@@ -323,12 +322,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 }
             }
         } else {
-            let profiles: IProfileLoaded[];
-            if (profileType) {
-                profiles = Profiles.getInstance().getProfiles(profileType);
-            } else {
-                profiles = Profiles.getInstance().allProfiles;
-            }
+            const profiles = Profiles.getInstance().allProfiles;
             for (const theProfile of profiles) {
                 // If session is already added, do nothing
                 if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === theProfile.name)) {
@@ -947,15 +941,6 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             }
             // Uses loaded profile to create a session with the USS API
             const session = ZoweExplorerApiRegister.getUssApi(profile).getSession();
-            let profExists = false;
-            Profiles.getInstance().allProfiles.forEach((aProfile) => {
-                if (aProfile.name === profile.name) {
-                    profExists = true;
-                }
-            });
-            if (!profExists) {
-                Profiles.getInstance().allProfiles.push(profile);
-            }
             // Creates ZoweNode to track new session and pushes it to mSessionNodes
             const node = new ZoweUSSNode(
                 profile.name,

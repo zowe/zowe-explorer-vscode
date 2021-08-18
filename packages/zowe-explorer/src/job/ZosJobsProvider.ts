@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import * as jobUtils from "../job/utils";
 import * as globals from "../globals";
-import { ZosmfSession, IJob } from "@zowe/cli";
+import { IJob } from "@zowe/cli";
 import { IProfileLoaded, Logger, IProfile, Session } from "@zowe/imperative";
 import {
     ValidProfileEnum,
@@ -179,12 +179,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 }
             }
         } else {
-            let allProfiles: IProfileLoaded[];
-            if (profileType) {
-                allProfiles = Profiles.getInstance().getProfiles(profileType);
-            } else {
-                allProfiles = Profiles.getInstance().allProfiles;
-            }
+            const allProfiles = Profiles.getInstance().allProfiles;
             for (const sessionProfile of allProfiles) {
                 // If session is already added, do nothing
                 if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === sessionProfile.name)) {
