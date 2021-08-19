@@ -1602,7 +1602,7 @@
             "sessions": []
           },
           "description": "%zowe.ds.history%",
-          "scope": "window"
+          "scope": "application"
         },
         "zowe.files.temporaryDownloadsFolder.path": {
           "type": "string",
@@ -1624,7 +1624,7 @@
             "sessions": []
           },
           "description": "%zowe.uss.history%",
-          "scope": "window"
+          "scope": "application"
         },
         "zowe.jobs.history": {
           "default": {
@@ -1634,7 +1634,7 @@
             "sessions": []
           },
           "description": "%zowe.jobs.history%",
-          "scope": "window"
+          "scope": "application"
         },
         "zowe.commands.alwaysEdit": {
           "type": "boolean",
@@ -1648,7 +1648,7 @@
             "history": []
           },
           "description": "%zowe.commands.history%",
-          "scope": "window"
+          "scope": "application"
         },
         "zowe.automaticProfileValidation": {
           "type": "boolean",

@@ -62,7 +62,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     const configurations = vscode.workspace.getConfiguration();
 
     // Track whether global, workspace or both settings have been migrated to standardized configurations
-    // const currentVersionNumber = vscode.extensions.getExtension("zowe.vscode-extension-for-zowe").packageJSON.version;
     const currentVersionNumber = 2;
     let globalIsNotMigrated = configurations.inspect("zowe.settings.version").globalValue !== currentVersionNumber;
     let workspaceIsNotMigrated =
@@ -114,12 +113,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
                 if (globalIsNotMigrated && globalValue !== undefined && workspaceValue === undefined) {
                     configurations.update(newSetting, globalValue, vscode.ConfigurationTarget.Global);
                     globalIsNotMigrated = true;
-                }
-                if (workspaceIsNotMigrated && workspaceValue !== undefined && globalValue === undefined) {
+                } else if (workspaceIsNotMigrated && workspaceValue !== undefined && globalValue === undefined) {
                     configurations.update(newSetting, workspaceValue, vscode.ConfigurationTarget.Workspace);
                     workspaceIsNotMigrated = true;
-                }
-                if (
+                } else if (
                     workspaceIsNotMigrated &&
                     globalIsNotMigrated &&
                     workspaceValue !== undefined &&
