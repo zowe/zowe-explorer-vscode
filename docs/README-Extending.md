@@ -2,6 +2,22 @@
 
 Zowe Explorer provides extension APIs that assist third party extenders to create extensions that access Zowe Explorer resource entities to enrich the user experience. There are many ways Zowe Explorer can be extended to support many different use cases. We, the Zowe Explorer core contributors, have defined APIs, guidelines, as well as formal compliance criteria for three popular ways of extending it, but we encourage you to engage with us to discuss other ways for extensions that you envision that we did not yet consider.
 
+Table of contents:
+
+- [Kinds of extensions](#kinds-of-extensions)
+- [Getting Started with extending Zowe Explorer](#getting-started-with-extending-zowe-explorer)
+- [Zowe Explorer extension dependencies and activation](#zowe-explorer-extension-dependencies-and-activation)
+- [About Zowe CLI profiles](#about-zowe-cli-profiles)
+- [Accessing the Zowe Explorer Extender API](#accessing-the-zowe-explorer-extender-api)
+- [Creating an extension that accesses Zowe Explorer profiles](#creating-an-extension-that-accesses-zowe-explorer-profiles)
+- [Creating an extension that adds a data provider](#creating-an-extension-that-adds-a-data-provider)
+- [Using the Zowe Explorer ProfilesCache for an extender's own unrelated profiles](#using-the-zowe-explorer-profilescache-for-an-extenders-own-unrelated-profiles)
+- [Creating an extension that adds menu commands](#creating-an-extension-that-adds-menu-commands)
+  - [Contextual hooks](#contextual-hooks)
+  - [Grouping menu commands](#grouping-menu-commands)
+  - [Accessing Zowe Explorer tree item information](#accessing-zowe-explorer-tree-item-information)
+- [Footnotes](#footnotes)
+
 ## Kinds of extensions
 
 The following kinds of extensions can be certified as compliant for Zowe Explorer. See the [README-Conformance.md](README-Conformance.md) file for
@@ -217,7 +233,7 @@ To specify which view a command contribution should appear in, Zowe Explorer men
 
 **Note:** For details on planned upcoming changes to the above view IDs, see the footnote<sup id="view-ids">[1](#view-ids-upcoming)</sup>.
 
-To allow for more granular control over which type(s) of tree items a command should be associated with (for example, a USS textfile versus a USS directory), Zowe Explorer uses a strategy of adding and removing context components for an individual Tree Item's context value if that imparts additional information that could assist with menu triggers. Extenders can leverage this when defining a command's `when` property by specifying `viewItem =~ <contextValue>`, where `<contextValue>` is a regular expression that matches the context value of the target Tree Item type(s).
+To allow for more granular control over which type(s) of tree items a command should be associated with (for example, a USS textfile versus a USS directory), Zowe Explorer uses a strategy of adding and removing context components for an individual Tree Item's context value if that imparts additional information that could assist with menu triggers. Extenders can leverage this when defining a command's `when` property by specifying `viewItem =~ <contextValue>`, where `<contextValue>` is a regular expression that matches the context value of the target Tree Item type(s). Examples of available context components can be found in Zowe Explorer's [`globals.ts` file](https://github.com/zowe/vscode-extension-for-zowe/blob/master/packages/zowe-explorer/src/globals.ts#L35), as values for exported constants whose names contain `CONTEXT`.
 
 For more information on how to use a command's `when` property, see the VS Code [`when` clause contexts documentation](https://code.visualstudio.com/api/references/when-clause-contexts).
 
@@ -227,7 +243,7 @@ In the example below, we are referencing the Jobs view, and more specifically, a
   "menus": {
     "view/item/context": [
       {
-        "when": "view == zowe.jobs.explorer && viewItem =~ /^job.*/ && viewItem =~ /^.*_rc=CC.*/",
+        "when": "view == zowe.jobs && viewItem =~ /^job.*/ && viewItem =~ /^.*_rc=CC.*/",
         "command": "testmule.retcode",
         "group": "104_testmule_workspace"
       }
@@ -242,6 +258,120 @@ Notice the syntax we use for the context value (or `viewItem`) above is a regula
 ### Grouping menu commands
 
 Extenders can define command groups separated by dividers in VS Code's right-click context menus by using the `group` property for items in `contributes.menus.view/item/context` of their `package.json`. Zowe Explorer prefixes its menu command `group` values with `0##_zowe_`, where `0##` represents numbers 000 - 099. Thus, extenders should avoid using `0##_zowe_` at the beginning of any `group` values they assign for menu commands. Any command groups contributed by extenders should be located below Zowe Explorer's command groups whenever they appear together in the same context menu. This helps keep the core Zowe Explorer context menu commands in a uniform location for users. A recommended extender menu command `group` naming convention would be to prefix the extender's `group` values with `1##_extensionName_`.
+
+### Accessing Zowe Explorer tree item information
+
+When adding a command to the right-click context menu of an item in Zowe Explorer's Data Sets, USS, or Jobs tree view, extenders may want to access information specific to that item (or "node"). This can be done by importing that item's node type, and then specifying that same node type when defining the node as a parameter for the command's callback function.
+
+In the basic example below, the extender imports `IZoweTreeNode` from Zowe Explorer's API, and then registers the command `testmule.nodeInfoTest` with the callback function `nodeInfoTest()`. In the function definition for `nodeInfoTest()`, the `node` parameter is listed with `IZoweTreeNode` as its type. This allows the extender to access `IZoweTreeNode`'s `getLabel()` method for the node. (In this case, the VS Code extension simply displays the node's label as an information message.)
+
+```typescript
+// Import the node type from Zowe Explorer API
+import { IZoweTreeNode, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+
+export function activate(context: vscode.ExtensionContext) {
+  ... // Other registration/activation code ...
+
+  // Register the command with the callback function
+  context.subscriptions.push(vscode.commands.registerCommand("testmule.nodeInfoTest", (node) => nodeInfoTest(node)));
+}
+
+// Declare the node type when defining the node as a parameter for the function
+async function nodeInfoTest(node: IZoweTreeNode): Promise<void> {
+  await vscode.window.showInformationMessage(node.getLabel());
+}
+```
+
+`IZoweTreeNode` is a general Zowe Explorer tree node type that is not specific to any particular view. To access view-specific properties and methods for nodes in the Data Sets, USS, or Jobs view, extenders can also import the node type specific to that view.
+
+The node types for items in each of Zowe Explorer's three tree views are as follows:
+
+- Data Sets View items: `IZoweDatasetTreeNode`
+- USS View items: `IZoweUSSTreeNode`
+- Jobs View items: `IZoweJobTreeNode`
+
+The following example shows a more complex use case in the Data Sets view with the `IZoweDatasetTreeNode` node type. In this scenario, the extender wishes to implement a command that allows the user to select a partitioned data set (PDS) or PDS member, and then create a test PDS with members based on the selected PDS or PDS member. The code sample below supports the following specifications:
+
+- If the user selects the command from the right-click context menu of an existing PDS, a new test PDS should be created with the same number of members as the selected PDS. The names of the new test PDS and its members should be based on the name of the selected PDS and its members.
+- If the user selects the command from the right-click context menu of a PDS member, then the new test PDS should be created with only one member. The names of the new test PDS member and test PDS should be based on the names of the selected PDS member and its parent PDS, respectively.
+
+To implement the functionality described above, the extender registers the command `testmule.createTestPdsFromSelection` with the callback function `createTestPdsFromSelection()`. In the function definition for `createTestPdsFromSelection()`, the `node` parameter is listed with `IZoweDatasetTreeNode` as its type. This allows the extender to access `IZoweDatasetTreeNode`'s properties and methods for the node. This example uses the node's `contextValue` property, and accesses its `getParent()`, `getLabel()`, `getChildren()`, and `getProfile()` methods.
+
+```typescript
+// Import the data set node type from Zowe Explorer API
+import { IZoweDatasetTreeNode, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { IProfileLoaded } from "@zowe/imperative"; // (Imported from Zowe Imperative to allow working with Zowe profiles)
+
+export function activate(context: vscode.ExtensionContext) {
+    ... // Other registration/activation code ...
+
+    // Register the command testmule.createTestPdsFromSelection with the callback function createTestPdsFromSelection()
+    context.subscriptions.push(
+        vscode.commands.registerCommand("testmule.createTestPdsFromSelection", (node) =>
+            createTestPdsFromSelection(node)
+        )
+    );
+}
+
+/**
+ * The `createTestPdsFromSelection()` function creates a test PDS with members based on the selected PDS or PDS member node.
+ *
+ * @param {IZoweDatasetTreeNode} node The selected PDS or PDS member node
+ */
+async function createTestPdsFromSelection(node: IZoweDatasetTreeNode): Promise<void> {
+    // Initialize variables
+    let pdsNode: IZoweDatasetTreeNode; // The existing PDS node to be used as a basis for creating the test PDS
+    let newPdsMemberNames: string[] = []; // An array of member names to be used by the new test PDS
+
+    // Get the selected node's context value
+    const nodeContext = node.contextValue;
+    if (!nodeContext) {
+        return; // Exit if nodeContext is undefined
+    }
+    // Use the context value to check if the selected node is a PDS or a PDS member.
+    // Each RegExp(ABC).test(XYZ) returns true if regex pattern ABC matches XYZ, and returns false otherwise.
+    // (In the future, such context value parsing will be added to Zowe Explorer's API.)
+    const isPds = new RegExp("^(pds)").test(nodeContext); // Check if the selected node is a PDS.
+    const isPdsMember = new RegExp("^(member)").test(nodeContext); // Check if the selected node is a PDS member.
+    if (!isPds && !isPdsMember) {
+        return; // Exit if selected node is not a PDS or PDS member
+    }
+
+    // Depending on if a PDS member versus a PDS was selected, get the relevant PDS node to base the test PDS on.
+    // Then, add the relevant PDS member name(s) to the array of names to be used by the new PDS.
+    if (isPdsMember) {
+        pdsNode = node.getParent(); // If selected node is a PDS member, get its parent PDS node.
+        newPdsMemberNames.push(node.getLabel()); // Add the label of the selected PDS member to the array of names.
+    } else {
+        pdsNode = node; // The relevant PDS node is the selected PDS node.
+        const pdsChildren = await node.getChildren(); // Get the members belonging to the PDS.
+        newPdsMemberNames = pdsChildren.map((pdsChild) => {
+            return pdsChild.getLabel(); // Add the labels for all members of the selected PDS to the array of names.
+        });
+    }
+
+    // Get the label for the relevant PDS node. (The name of the new test PDS will be based on this.)
+    const pdsNodeLabel = pdsNode.getLabel();
+
+    // Get the relevant PDS node's profile, which has connection information.
+    // This is needed to communicate with the z/OS back end when creating the new test PDS and its member(s).)
+    const pdsProfile = pdsNode.getProfile();
+
+    // Run the function to create a test PDS and member(s) using values obtained from the selected node.
+    await createTestPds(pdsNodeLabel, pdsProfile, newPdsMemberNames);
+}
+
+/**
+ * The `createTestPds()` function creates a test PDS with zero or more members.
+ *
+ * @param {string} pdsName A string that will be used as the basis for naming the test PDS
+ * @param {IProfileLoaded} profile A profile with connection information to interact with the z/OS server
+ * @param {string[]} pdsMemberNames An array of member names to be used by the new test PDS
+ */
+async function createTestPds(pdsName: string, profile: IProfileLoaded, pdsMemberNames: string[]): Promise<void> {
+   ... // Extender code for creating a test PDS with zero or more members ...
+}
+```
 
 ## Footnotes
 
