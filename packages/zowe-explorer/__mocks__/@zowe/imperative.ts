@@ -36,6 +36,27 @@ export interface ISessionOptions {
     type: string;
 }
 
+interface NodeModule {
+    exports: any;
+    require: NodeRequireFunction;
+    id: string;
+    filename: string;
+    loaded: boolean;
+    parent: NodeModule | null;
+    children: NodeModule[];
+    paths: string[];
+}
+export interface IProfOpts {
+    overrideWithEnv?: boolean;
+    requireKeytar?: () => NodeModule;
+}
+
+export interface IConfigOpts {
+    homeDir?: string;
+    projectDir?: string;
+    vault?: string;
+}
+
 export class BrightProfile {
     constructor(public profile: Profile) {}
 }
@@ -109,6 +130,14 @@ export class CliProfileManager {
                 },
             },
         ];
+    }
+}
+
+export class ProfileInfo {
+    constructor(appName: string, profInfoOpts?: IProfOpts) {}
+
+    public readProfilesFromDisk(teamCfgOpts?: IConfigOpts) {
+        return;
     }
 }
 

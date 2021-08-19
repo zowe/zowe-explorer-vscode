@@ -7,5 +7,6 @@
   "activate.didSaveText.isDataSet": "File is a data set-- saving ",
   "activate.didSaveText.isUSSFile": "File is a USS file -- saving",
   "activate.didSaveText.file": "File ",
-  "activate.didSaveText.notDataSet": " is not a data set or USS file "
+  "activate.didSaveText.notDataSet": " is not a data set or USS file ",
+  "initialize.module.load": "Credentials not managed, unable to load security file: "
 }

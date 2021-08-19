@@ -9,7 +9,7 @@
  *                                                                                 *
  */
 
-import { IZoweTree, IZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { IZoweTree, IZoweTreeNode, ProfilesConfig } from "@zowe/zowe-explorer-api";
 import { PersistentFilters } from "../PersistentFilters";
 import { Profiles } from "../Profiles";
 import { syncSessionNode } from "../utils/ProfilesUtils";
@@ -25,7 +25,11 @@ import * as contextually from "../shared/context";
  * @param {IZoweTree} treeProvider
  */
 export async function refreshAll(treeProvider: IZoweTree<IZoweTreeNode>) {
-    await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
+    if (ProfilesConfig.getInstance().usingTeamConfig) {
+        await Profiles.getInstance().refreshConfig(ZoweExplorerApiRegister.getInstance());
+    } else {
+        await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
+    }
     treeProvider.mSessionNodes.forEach(async (sessNode) => {
         const setting = (await PersistentFilters.getDirectValue("zowe.automaticProfileValidation")) as boolean;
         if (contextually.isSessionNotFav(sessNode)) {

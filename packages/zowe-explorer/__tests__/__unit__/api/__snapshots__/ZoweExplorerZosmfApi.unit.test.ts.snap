@@ -8,9 +8,9 @@ Object {
 
 exports[`Zosmf API tests should test that copy data set uses default options 1`] = `
 Object {
-  "fromDataSet": Object {
-    "dataSetName": "IBM.FROM",
-    "memberName": "IEFBR14",
+  "from-dataset": Object {
+    "dsn": "IBM.FROM",
+    "member": "IEFBR14",
   },
 }
 `;
@@ -18,8 +18,8 @@ Object {
 exports[`Zosmf API tests should test that copy data set uses enq 1`] = `
 Object {
   "enq": "SHR",
-  "fromDataSet": Object {
-    "dataSetName": "BROADCOM.FROM",
+  "from-dataset": Object {
+    "dsn": "BROADCOM.FROM",
   },
 }
 `;
@@ -27,9 +27,9 @@ Object {
 exports[`Zosmf API tests should test that copy data set uses enq only 1`] = `
 Object {
   "enq": "SHR",
-  "fromDataSet": Object {
-    "dataSetName": "IBM.FROM",
-    "memberName": "IEFBR14",
+  "from-dataset": Object {
+    "dsn": "IBM.FROM",
+    "member": "IEFBR14",
   },
 }
 `;
