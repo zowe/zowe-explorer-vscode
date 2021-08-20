@@ -46,7 +46,8 @@
         "--extensionTestsPath=${workspaceFolder}/packages/zowe-explorer/out/__tests__/__integration__/index"
       ],
       "outFiles": ["${workspaceFolder}/out/__tests__/**/*.js"],
-      "preLaunchTask": "Pretest"
+      "preLaunchTask": "Build",
+      "postDebugTask": "Posttest"
     }
   ]
 }
