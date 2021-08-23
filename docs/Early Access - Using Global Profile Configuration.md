@@ -63,3 +63,69 @@ You can edit your project-level or global configuration profiles.
 3. Reload your VS Code window by clicking **View** > **Command Palette** > **Developer: Reload Window** so that the changes take effect.
 
 You successfully edited your configuration profile.
+
+### Sample Profile Configuration
+
+Here is an example profile configuration json file. Within Zowe Explorer, the default `lpar1.zosmf` profile will be loaded upon activation.
+
+**Note**: Make sure to customize the host and port values from the sample to suit your own environment.
+
+```json
+{
+  "$schema": "./zowe.schema.json",
+  "profiles": {
+    "lpar1": {
+      "properties": {
+        "host": "192.86.32.67"
+      },
+      "profiles": {
+        "zosmf": {
+          "type": "zosmf",
+          "properties": {
+            "port": 10443
+          },
+          "secure": []
+        },
+        "tso": {
+          "type": "tso",
+          "properties": {
+            "account": "",
+            "codePage": "1047",
+            "logonProcedure": "IZUFPROC"
+          },
+          "secure": []
+        },
+        "ssh": {
+          "type": "ssh",
+          "properties": {
+            "port": 22
+          },
+          "secure": []
+        },
+        "zftp": {
+          "type": "zftp",
+          "properties": {
+            "port": 21
+          },
+          "secure": []
+        }
+      }
+    },
+    "my_base": {
+      "type": "base",
+      "properties": {
+        "rejectUnauthorized": false
+      },
+      "secure": ["user", "password"]
+    }
+  },
+  "defaults": {
+    "zosmf": "lpar1.zosmf",
+    "tso": "lpar1.tso",
+    "ssh": "lpar1.ssh",
+    "zftp": "lpar1.zftp",
+    "base": "my_base"
+  },
+  "plugins": []
+}
+```
