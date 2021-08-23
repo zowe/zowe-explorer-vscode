@@ -85,21 +85,25 @@ export class Profiles extends ProfilesCache {
                     this.profilesForValidation.splice(index, 1);
                 }
             });
-            try {
-                const values = await Profiles.getInstance().promptCredentials(theProfile.name, true);
-                if (values !== undefined) {
-                    theProfile.profile.user = values[0];
-                    theProfile.profile.password = values[1];
-                    theProfile.profile.base64EncodedAuth = values[2];
+            if (ProfilesCache.getConfigInstance().usingTeamConfig) {
+                profileStatus = await this.checkProfileConfig(theProfile);
+            } else {
+                try {
+                    const values = await Profiles.getInstance().promptCredentials(theProfile.name, true);
+                    if (values !== undefined) {
+                        theProfile.profile.user = values[0];
+                        theProfile.profile.password = values[1];
+                        theProfile.profile.base64EncodedAuth = values[2];
+                    }
+                } catch (error) {
+                    errorHandling(
+                        error,
+                        theProfile.name,
+                        localize("checkCurrentProfile.error", "Error encountered in ") +
+                            `checkCurrentProfile.optionalProfiles!`
+                    );
+                    return profileStatus;
                 }
-            } catch (error) {
-                errorHandling(
-                    error,
-                    theProfile.name,
-                    localize("checkCurrentProfile.error", "Error encountered in ") +
-                        `checkCurrentProfile.optionalProfiles!`
-                );
-                return profileStatus;
             }
             // Validate profile
             profileStatus = await this.getProfileSetting(theProfile);
@@ -724,94 +728,82 @@ export class Profiles extends ProfilesCache {
         let newUser: string;
         let newPass: string;
 
-        if (ProfilesCache.getConfigInstance().usingTeamConfig) {
-            const currentProfile = this.getProfileFromConfig(sessName);
-            const mergedArgs = ProfilesCache.getConfigInstance().mergeArgsForProfile(currentProfile);
-            const confValues = await this.promptCredsConfig(
-                mergedArgs,
-                currentProfile.profName,
-                currentProfile.profType
+        try {
+            loadProfile = this.loadNamedProfile(sessName.trim());
+            loadSession = loadProfile.profile as ISession;
+        } catch (error) {
+            await errorHandling(error.message);
+        }
+
+        if (rePrompt) {
+            repromptUser = loadSession.user;
+            repromptPass = loadSession.password;
+        }
+
+        if (!loadSession.user || rePrompt) {
+            newUser = await this.userInfo(repromptUser);
+            loadSession.user = loadProfile.profile.user = newUser;
+        } else {
+            newUser = loadSession.user = loadProfile.profile.user;
+        }
+
+        if (newUser === undefined || (rePrompt && newUser === "")) {
+            vscode.window.showInformationMessage(
+                localize("promptCredentials.undefined.username", "Operation Cancelled")
             );
-            return confValues;
+            await this.refresh(ZoweExplorerApiRegister.getInstance());
+            return undefined;
+        } else {
+            if (!loadSession.password || rePrompt) {
+                newPass = await this.passwordInfo(repromptPass);
+                loadSession.password = loadProfile.profile.password = newPass;
+            } else {
+                newPass = loadSession.password = loadProfile.profile.password;
+            }
+        }
+
+        if (newPass === undefined || (rePrompt && newUser === "")) {
+            vscode.window.showInformationMessage(
+                localize("promptCredentials.undefined.password", "Operation Cancelled")
+            );
+            await this.refresh(ZoweExplorerApiRegister.getInstance());
+            return undefined;
         } else {
             try {
-                loadProfile = this.loadNamedProfile(sessName.trim());
-                loadSession = loadProfile.profile as ISession;
+                const updSession = await ZoweExplorerApiRegister.getMvsApi(loadProfile).getSession();
+                if (rePrompt) {
+                    const saveButton = localize("promptCredentials.saveCredentials.button", "Save Credentials");
+                    const doNotSaveButton = localize("promptCredentials.doNotSave.button", "Do Not Save");
+                    const infoMsg = localize(
+                        "promptCredentials.saveCredentials.infoMessage",
+                        "Save entered credentials for future use with profile: {0}? Saving credentials will update the local yaml file.",
+                        loadProfile.name
+                    );
+                    await vscode.window
+                        .showInformationMessage(infoMsg, ...[saveButton, doNotSaveButton])
+                        .then((selection) => {
+                            if (selection === saveButton) {
+                                rePrompt = false;
+                            }
+                        });
+                    await this.updateProfile(loadProfile, rePrompt);
+                }
+                return [updSession.ISession.user, updSession.ISession.password, updSession.ISession.base64EncodedAuth];
             } catch (error) {
                 await errorHandling(error.message);
-            }
-
-            if (rePrompt) {
-                repromptUser = loadSession.user;
-                repromptPass = loadSession.password;
-            }
-
-            if (!loadSession.user || rePrompt) {
-                newUser = await this.userInfo(repromptUser);
-                loadSession.user = loadProfile.profile.user = newUser;
-            } else {
-                newUser = loadSession.user = loadProfile.profile.user;
-            }
-
-            if (newUser === undefined || (rePrompt && newUser === "")) {
-                vscode.window.showInformationMessage(
-                    localize("promptCredentials.undefined.username", "Operation Cancelled")
-                );
-                await this.refresh(ZoweExplorerApiRegister.getInstance());
-                return undefined;
-            } else {
-                if (!loadSession.password || rePrompt) {
-                    newPass = await this.passwordInfo(repromptPass);
-                    loadSession.password = loadProfile.profile.password = newPass;
-                } else {
-                    newPass = loadSession.password = loadProfile.profile.password;
-                }
-            }
-
-            if (newPass === undefined || (rePrompt && newUser === "")) {
-                vscode.window.showInformationMessage(
-                    localize("promptCredentials.undefined.password", "Operation Cancelled")
-                );
-                await this.refresh(ZoweExplorerApiRegister.getInstance());
-                return undefined;
-            } else {
-                try {
-                    const updSession = await ZoweExplorerApiRegister.getMvsApi(loadProfile).getSession();
-                    if (rePrompt) {
-                        const saveButton = localize("promptCredentials.saveCredentials.button", "Save Credentials");
-                        const doNotSaveButton = localize("promptCredentials.doNotSave.button", "Do Not Save");
-                        const infoMsg = localize(
-                            "promptCredentials.saveCredentials.infoMessage",
-                            "Save entered credentials for future use with profile: {0}? Saving credentials will update the local yaml file.",
-                            loadProfile.name
-                        );
-                        await vscode.window
-                            .showInformationMessage(infoMsg, ...[saveButton, doNotSaveButton])
-                            .then((selection) => {
-                                if (selection === saveButton) {
-                                    rePrompt = false;
-                                }
-                            });
-                        await this.updateProfile(loadProfile, rePrompt);
-                    }
-                    return [
-                        updSession.ISession.user,
-                        updSession.ISession.password,
-                        updSession.ISession.base64EncodedAuth,
-                    ];
-                } catch (error) {
-                    await errorHandling(error.message);
-                }
             }
         }
     }
 
-    public async promptCredsConfig(args: IProfMergedArg, profileName: string, profileType: string): Promise<string[]> {
+    public async checkProfileConfig(theProfile: IProfileLoaded): Promise<IProfileValidation> {
+        const configAllProfiles = ProfilesCache.getConfigInstance().getAllProfiles();
+        const currentProfile = configAllProfiles.filter((temprofile) => temprofile.profName === theProfile.name)[0];
+        const mergedArgs = ProfilesCache.getConfigInstance().mergeArgsForProfile(currentProfile);
         const profile: IProfile = {};
-        for (const arg of args.knownArgs) {
+        for (const arg of mergedArgs.knownArgs) {
             profile[arg.argName] = arg.secure ? ProfilesCache.getConfigInstance().loadSecureArg(arg) : arg.argValue;
         }
-        for (const arg of args.missingArgs) {
+        for (const arg of mergedArgs.missingArgs) {
             let response: string;
             switch (arg.dataType) {
                 case "string":
@@ -837,17 +829,18 @@ export class Profiles extends ProfilesCache {
         }
         const profileFix: IProfileLoaded = {
             message: "",
-            name: profileName,
-            type: profileType,
+            name: theProfile.name,
+            type: theProfile.type,
             profile,
             failNotFound: false,
         };
-        try {
-            const updSession = await ZoweExplorerApiRegister.getMvsApi(profileFix).getSession();
-            return [updSession.ISession.user, updSession.ISession.password, updSession.ISession.base64EncodedAuth];
-        } catch (error) {
-            await errorHandling(error.message);
-        }
+        // Validate profile
+        const profileStatus = await this.getProfileSetting(profileFix);
+        const updSession = await ZoweExplorerApiRegister.getMvsApi(profileFix).getSession();
+        theProfile.profile.user = updSession.ISession.user;
+        theProfile.profile.password = updSession.ISession.password;
+        theProfile.profile.base64EncodedAuth = updSession.ISession.base64EncodedAuth;
+        return profileStatus;
     }
 
     public async getDeleteProfile() {
