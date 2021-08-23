@@ -23,7 +23,7 @@ More information:
 
 ## Contents
 
-- [What's new in Zowe Explorer 1.18.0](#whats-new-in-zowe-explorer-1.18.0)
+- [What's new in Zowe Explorer 1.18.1](#whats-new-in-zowe-explorer-1.18.1)
 - [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
 - [Sample Use Cases](#sample-use-cases)
@@ -31,23 +31,21 @@ More information:
 - [Usage Tips](#usage-tips)
 - [Extending Zowe Explorer](#extending-zowe-explorer)
 
-## What's new in Zowe Explorer 1.18.0
+## What's new in Zowe Explorer 1.18.1
 
-**Added**:
+Added:
 
-- Added the ability to register custom profile types in `ProfilesCache` for extenders.
-- Added the ability to pass account and other information from tso profile.
-- Add profiles cache to extenders.
+- Added a reminder to the PR template to create a PR from `master` to `next` after PR is merged into `master` branch.
+- Added cli dependency to API.
 
 **Changed**:
 
-- Status icons now reset when refreshing the explorer views.
+- Improved integration tests for greater efficiency.
+- Introduced improvements for @dependabot. Bumped path-parse from 1.0.6 to 1.0.7
 
 **Fixed**:
 
-- Fixed the issue that prevented the expected error message `No valid value for z/OS URL. Operation Cancelled` from being displayed while escaping the host text box during the creation or update of a profile.
-- Fixed the issue that invoked profile validation before updating a profile. Now a profile is validated only after the update.
-- Fixed the issue of Zowe profiles encoding value when opening a USS file in the text editor.
+- Fix for the issue that caused mismatching of GitHub VSIX Zowe Explorer releases.
 
 For more information, see [Changelog](https://marketplace.visualstudio.com/items/Zowe.vscode-extension-for-zowe/changelog).
 

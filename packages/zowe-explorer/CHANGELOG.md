@@ -2,6 +2,14 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## `1.18.1`
+
+- Improved integration tests for greater efficiency [#1430](https://github.com/zowe/vscode-extension-for-zowe/pull/1430). Thanks @katelynienaber
+- Introduced improvements for @dependabot. Bumped path-parse from 1.0.6 to 1.0.7 [#1441](https://github.com/zowe/vscode-extension-for-zowe/pull/1441). Thanks @lauren-li
+- Added a reminder to the PR template to create a PR from `master` to `next` after PR is merged into `master` branch [#1446](https://github.com/zowe/vscode-extension-for-zowe/pull/1446). Thanks @JillieBeanSim
+- Added cli dependency to api [#1445](https://github.com/zowe/vscode-extension-for-zowe/pull/1445). Thanks @phaumer
+- Fix for the issue that caused mismatching of GitHub VSIX Zowe Explorer releases [#1442](https://github.com/zowe/vscode-extension-for-zowe/pull/1442). Thanks @katelynienaber
+
 ## `1.18.0`
 
 - Added the ability to register custom profile types in `ProfilesCache` for extenders [#1419](https://github.com/zowe/vscode-extension-for-zowe/pull/1419). Thanks @phaumer
