@@ -66,9 +66,9 @@ You successfully edited your configuration profile.
 
 ### Sample Profile Configuration
 
-Here is an example profile configuration json file. Within Zowe Explorer, the default `lpar1.zosmf` profile will be loaded upon activation.
+View the profile configuration sample. In the sample, the default `lpar1.zosmf` profile will be loaded upon activation.
 
-**Note**: Make sure to customize the host and port values from the sample to suit your own environment.
+You can use the sample to customize you profile configuration file. Ensure that you edit the `host` and `port` values before you work in your environment.
 
 ```json
 {
