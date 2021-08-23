@@ -68,7 +68,7 @@ You successfully edited your configuration profile.
 
 View the profile configuration sample. In the sample, the default `lpar1.zosmf` profile will be loaded upon activation.
 
-You can use the sample to customize you profile configuration file. Ensure that you edit the `host` and `port` values before you work in your environment.
+You can use the sample to customize your profile configuration file. Ensure that you edit the `host` and `port` values before you work in your environment.
 
 ```json
 {
