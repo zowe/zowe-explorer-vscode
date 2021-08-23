@@ -23,6 +23,7 @@ import { createUSSSessionNode, createUSSTree } from "../../__mocks__/mockCreator
 import { createJobsTree, createIJobObject } from "../../__mocks__/mockCreators/jobs";
 import { ZoweExplorerExtender } from "../../src/ZoweExplorerExtender";
 import { Profiles } from "../../src/Profiles";
+import { ProfilesConfig } from "@zowe/zowe-explorer-api";
 
 describe("ZoweExplorerExtender unit tests", () => {
     async function createBlockMocks() {
@@ -37,6 +38,13 @@ describe("ZoweExplorerExtender unit tests", () => {
         };
         newMocks.profiles = await Profiles.createInstance(newMocks.log);
         Object.defineProperty(vscode.window, "createTreeView", { value: jest.fn(), configurable: true });
+        Object.defineProperty(ProfilesConfig, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    usingTeamConfig: false,
+                };
+            }),
+        });
         return newMocks;
     }
     afterEach(async () => {

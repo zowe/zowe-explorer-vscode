@@ -15,6 +15,7 @@ import * as path from "path";
 import * as os from "os";
 import * as fs from "fs";
 import { URL } from "url";
+import { ProfilesConfig } from "./ProfilesConfig";
 
 // TODO: find a home for constants
 export const CONTEXT_PREFIX = "_";
@@ -113,6 +114,49 @@ export class ProfilesCache {
                     this.allTypes.push(element.type);
                 }
             }
+        }
+        while (this.profilesForValidation.length > 0) {
+            this.profilesForValidation.pop();
+        }
+    }
+
+    public async refreshConfig(apiRegister: ZoweExplorerApi.IApiRegisterClient): Promise<void> {
+        this.allProfiles = [];
+        let tmpAllProfiles = [];
+        this.allTypes = [];
+        const mProfileInfo = ProfilesConfig.getInstance();
+        for (const type of apiRegister.registeredApiTypes()) {
+            // Step 1: Get all profiles for each registered type
+            const profilesForType = mProfileInfo.getAllProfiles(type);
+            if (profilesForType && profilesForType.length > 0) {
+                for (const prof of profilesForType) {
+                    // Step 2: Merge args for each profile
+                    const profAttr = await ProfilesConfig.getMergedAttrs(mProfileInfo, prof);
+                    // Work-around. TODO: Discuss with imperative team
+                    const profileFix: imperative.IProfileLoaded = {
+                        message: "",
+                        name: prof.profName,
+                        type: prof.profType,
+                        profile: profAttr,
+                        failNotFound: false,
+                    };
+                    // Step 3: Update allProfiles list
+                    this.allProfiles.push(profileFix);
+                    tmpAllProfiles.push(profileFix);
+                }
+                this.profilesByType.set(type, tmpAllProfiles);
+                tmpAllProfiles = [];
+                const defaultProfAttr = ProfilesConfig.getDefaultProfile(mProfileInfo, type);
+                const defaultProfile: imperative.IProfileLoaded = {
+                    message: "",
+                    name: defaultProfAttr.profName,
+                    type: defaultProfAttr.profType,
+                    profile: defaultProfAttr,
+                    failNotFound: false,
+                };
+                this.defaultProfileByType.set(type, defaultProfile);
+            }
+            this.allTypes.push(type);
         }
         while (this.profilesForValidation.length > 0) {
             this.profilesForValidation.pop();
