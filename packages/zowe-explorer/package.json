@@ -1537,7 +1537,7 @@
             "lrecl": 27998
           },
           "description": "%zowe.ds.default.binary%",
-          "scope": "window"
+          "scope": "resource"
         },
         "zowe.ds.default.c": {
           "default": {
@@ -1551,7 +1551,7 @@
             "lrecl": 260
           },
           "description": "%zowe.ds.default.c%",
-          "scope": "window"
+          "scope": "resource"
         },
         "zowe.ds.default.classic": {
           "default": {
@@ -1565,7 +1565,7 @@
             "lrecl": 80
           },
           "description": "%zowe.ds.default.classic%",
-          "scope": "window"
+          "scope": "resource"
         },
         "zowe.ds.default.pds": {
           "default": {
@@ -1579,7 +1579,7 @@
             "lrecl": 80
           },
           "description": "%zowe.ds.default.pds%",
-          "scope": "window"
+          "scope": "resource"
         },
         "zowe.ds.default.ps": {
           "default": {
@@ -1592,7 +1592,7 @@
             "lrecl": 80
           },
           "description": "%zowe.ds.default.ps%",
-          "scope": "window"
+          "scope": "resource"
         },
         "zowe.ds.history": {
           "default": {
@@ -1614,7 +1614,7 @@
           "type": "string",
           "default": "",
           "description": "%zowe.security.credentialPlugin%",
-          "scope": "window"
+          "scope": "resource"
         },
         "zowe.uss.history": {
           "default": {

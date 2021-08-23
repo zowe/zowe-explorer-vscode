@@ -13,3 +13,7 @@
 ## What Will Happen To My Old Setting Configurations?
 
 - The old settings will be migrated to the new settings as long as they are present in their old configuration names and were not under the default settings whether they were stored under the user, workspace, or both settings in VSCode.
+
+## What To Do With My Old Settings?
+
+- Upon loading up vscode Zowe Explorer will performed an automated migration of the old user settings to the new standardized settings. After this is completed, the older settings will appear greyed out meaning they can be manually removed since they will no longer be of use.
