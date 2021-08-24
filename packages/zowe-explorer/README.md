@@ -36,7 +36,7 @@ More information:
 **Added**:
 
 - Added a reminder to the PR template to create a PR from `master` to `next` after PR is merged into `master` branch.
-- Added CLI dependency to API.
+- Added @zowe/cli dependency to API.
 
 **Changed**:
 

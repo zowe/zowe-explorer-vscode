@@ -6,7 +6,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 - Improved integration tests for greater efficiency [#1430](https://github.com/zowe/vscode-extension-for-zowe/pull/1430). Thanks @katelynienaber
 - Added a reminder to the PR template to create a PR from `master` to `next` after PR is merged into `master` branch [#1446](https://github.com/zowe/vscode-extension-for-zowe/pull/1446). Thanks @JillieBeanSim
-- Added CLI dependency to API [#1445](https://github.com/zowe/vscode-extension-for-zowe/pull/1445). Thanks @phaumer
+- Added @zowe/cli dependency to API [#1445](https://github.com/zowe/vscode-extension-for-zowe/pull/1445). Thanks @phaumer
 - Fix for the issue that caused mismatching of GitHub VSIX Zowe Explorer releases [#1442](https://github.com/zowe/vscode-extension-for-zowe/pull/1442). Thanks @katelynienaber
 
 ## `1.18.0`
