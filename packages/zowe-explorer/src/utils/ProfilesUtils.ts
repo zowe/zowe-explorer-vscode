@@ -33,7 +33,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  * @param {label} - additional information such as profile name, credentials, messageID etc
  * @param {moreInfo} - additional/customized error messages
  *************************************************************************************************************/
-export function errorHandling(errorDetails: any, label?: string, moreInfo?: string) {
+export async function errorHandling(errorDetails: any, label?: string, moreInfo?: string) {
     let httpErrCode = null;
     const errMsg = localize(
         "errorHandling.invalid.credentials",
@@ -47,6 +47,17 @@ export function errorHandling(errorDetails: any, label?: string, moreInfo?: stri
 
     if (errorDetails.mDetails !== undefined) {
         httpErrCode = errorDetails.mDetails.errorCode;
+        // open config file for missing hostname error
+        const msg = errorDetails.toString();
+        if (msg.includes("hostname")) {
+            if (ProfilesCache.getConfigInstance().usingTeamConfig) {
+                vscode.window.showErrorMessage(errorDetails.toString());
+                const currentProfile = Profiles.getInstance().getProfileFromConfig(label.trim());
+                const filePath = currentProfile.profLoc.osLoc[0];
+                await Profiles.getInstance().openConfigFile(filePath);
+                return;
+            }
+        }
     }
 
     switch (httpErrCode) {
@@ -79,9 +90,13 @@ export function errorHandling(errorDetails: any, label?: string, moreInfo?: stri
             if (isTheia()) {
                 vscode.window.showErrorMessage(errMsg);
             } else {
-                vscode.window.showErrorMessage(errMsg, "Check Credentials").then(async (selection) => {
+                await vscode.window.showErrorMessage(errMsg, "Check Credentials").then(async (selection) => {
                     if (selection) {
-                        await Profiles.getInstance().promptCredentials(label.trim(), true);
+                        if (ProfilesCache.getConfigInstance().usingTeamConfig) {
+                            await Profiles.getInstance().promptCredsConfig(label.trim(), true);
+                        } else {
+                            await Profiles.getInstance().promptCredentials(label.trim(), true);
+                        }
                     }
                 });
             }
