@@ -11,7 +11,7 @@ on:
     inputs:
       version:
         description: Version to be published
-        default: v1.18.0
+        default: v1.18.1
         required: false
       # create_release:
       #   description: Create the release even if publishing already happened
@@ -146,19 +146,27 @@ jobs:
       - name: Get Top-Level package.json
         run: "echo ::set-output name=top_package::$(cat package.json)"
         id: get_version
+      - name: Get most recent GitHub release version
+        run: "echo ::set-output name=gh_version::$(git describe --tags $(git rev-list --tags --max-count=1))"
+        id: get_gh_version
 
-      - name: Check if files were staged
-        run: "echo ::set-output name=files_staged::$(git diff --cached --quiet || echo $?)"
+      # Removed step because of issues with publishing
+      # - name: Check if files were staged
+      #   run: "echo ::set-output name=files_staged::$(git diff --cached --quiet || echo $?)"
+      #   id: check_project
+
+      - name: Check version is bumped
+        run: "echo ::set-output name=version_bumped::$(fromJson(steps.get_version.outputs.top_package).version !== v + steps.get_gh_version.outputs.gh_version || echo $?)"
         id: check_project
 
       # Each individual action should git-add the desired files
       - name: Update Project Files with new Version
-        if: steps.check_project.outputs.files_staged == 1
+        if: steps.check_project.outputs.version_bumped == true
         run: |
           git status
           git commit -m "Version Bumped to ${{ fromJson(steps.get_version.outputs.top_package).version }}" --signoff
       - name: Push changes
-        if: steps.check_project.outputs.files_staged == 1
+        if: steps.check_project.outputs.version_bumped == true
         uses: ad-m/github-push-action@master
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -166,7 +174,7 @@ jobs:
           branch: ${{ github.ref }}
 
       - name: Create the Release
-        if: steps.check_project.outputs.files_staged == 1
+        if: steps.check_project.outputs.version_bumped == true
         id: create_release
         uses: actions/create-release@v1
         env:
@@ -184,9 +192,9 @@ jobs:
 
       - name: Upload the Zowe Explorer Assets
         if: |
-          steps.check_project.outputs.files_staged == 1 &&
+          steps.check_project.outputs.version_bumped == true &&
           steps.deploy_zowe_explorer.outputs.archive != null
-        # steps.check_project.outputs.files_staged == 1 || github.event.input.create_release == 'true') &&
+        # steps.check_project.outputs.version_bumped == true || github.event.input.create_release == 'true') &&
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -198,9 +206,9 @@ jobs:
 
       - name: Upload the FTP Extension for Zowe Explorer Assets
         if: |
-          steps.check_project.outputs.files_staged == 1 &&
+          steps.check_project.outputs.version_bumped == true &&
           steps.deploy_zowe_explorer_ftp_extension.outputs.archive != null
-        # steps.check_project.outputs.files_staged == 1 || github.event.input.create_release == 'true') &&
+        # steps.check_project.outputs.version_bumped == true || github.event.input.create_release == 'true') &&
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -212,9 +220,9 @@ jobs:
 
       - name: Upload the Zowe Explorer APIs Assets
         if: |
-          steps.check_project.outputs.files_staged == 1 &&
+          steps.check_project.outputs.version_bumped == true &&
           steps.deploy_zowe_explorer_api.outputs.archive != null
-        # steps.check_project.outputs.files_staged == 1 || github.event.input.create_release == 'true') &&
+        # steps.check_project.outputs.version_bumped == true || github.event.input.create_release == 'true') &&
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -226,9 +234,9 @@ jobs:
 
       - name: Upload the ESLint plugin for Zowe Explorer Assets
         if: |
-          steps.check_project.outputs.files_staged == 1 &&
+          steps.check_project.outputs.version_bumped == true &&
           steps.deploy_eslint_plugin_zowe_explorer.outputs.archive != null
-        # steps.check_project.outputs.files_staged == 1 || github.event.input.create_release == 'true') &&
+        # steps.check_project.outputs.version_bumped == true || github.event.input.create_release == 'true') &&
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
