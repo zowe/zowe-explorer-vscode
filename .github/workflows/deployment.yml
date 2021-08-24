@@ -156,7 +156,12 @@ jobs:
       #   id: check_project
 
       - name: Check version is bumped
-        run: "echo ::set-output name=version_bumped::$(fromJson(steps.get_version.outputs.top_package).version !== v + steps.get_gh_version.outputs.gh_version || echo $?)"
+        run: |
+          if [[ fromJson(steps.get_version.outputs.top_package).version !== v + steps.get_gh_version.outputs.gh_version ]]; then
+            echo "::set-output name=version_bumped::true"
+          else
+            echo "::set-output name=version_bumped::false"
+          fi
         id: check_project
 
       # Each individual action should git-add the desired files
