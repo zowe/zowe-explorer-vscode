@@ -41,7 +41,6 @@ Added:
 **Changed**:
 
 - Improved integration tests for greater efficiency.
-- Introduced improvements for @dependabot. Bumped path-parse from 1.0.6 to 1.0.7
 
 **Fixed**:
 
