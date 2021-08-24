@@ -23,7 +23,7 @@ More information:
 
 ## Contents
 
-- [What's new in Zowe Explorer 1.18.1](#whats-new-in-zowe-explorer-1.18.1)
+- [What's new in Zowe Explorer 1.18.1](#whats-new-in-zowe-explorer-1181)
 - [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
 - [Sample Use Cases](#sample-use-cases)
