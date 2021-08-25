@@ -65,6 +65,9 @@ export const ICON_STATE_CLOSED = "closed";
 export const FILTER_SEARCH = "isFilterSearch";
 export const VSCODE_APPNAME: string[] = ["Visual Studio Code", "VSCodium"];
 export const ROOTPATH = path.join(__dirname, "..", "..");
+export const SETTINGS_VERSION = "zowe.settings.version";
+export const SETTINGS_TEMP_FOLDER_PATH = "zowe.files.temporaryDownloadsFolder.path";
+
 export enum CreateDataSetTypeWithKeysEnum {
     DATA_SET_BINARY = 0,
     DATA_SET_C = 1,

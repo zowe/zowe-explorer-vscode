@@ -43,6 +43,7 @@ import * as nls from "vscode-nls";
 import { TsoCommandHandler } from "./command/TsoCommandHandler";
 import { cleanTempDir, moveTempFolder, hideTempFolder } from "./utils/TempFolder";
 import { config } from "yargs";
+import * as semver from "semver";
 declare const __webpack_require__: typeof require;
 declare const __non_webpack_require__: typeof require;
 
@@ -65,10 +66,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     const configurations = vscode.workspace.getConfiguration();
 
     // Track whether global, workspace or both settings have been migrated to standardized configurations
-    const currentVersionNumber = 2;
-    let globalIsNotMigrated = configurations.inspect("zowe.settings.version").globalValue !== currentVersionNumber;
+    const currentVersionNumber = semver.major(
+        vscode.extensions.getExtension("zowe.vscode-extension-for-zowe").packageJSON.version
+    );
+    // const currentVersionNumber = 2;
+    let globalIsNotMigrated = configurations.inspect(globals.SETTINGS_VERSION).globalValue !== currentVersionNumber;
     let workspaceIsNotMigrated =
-        configurations.inspect("zowe.settings.version").workspaceValue !== currentVersionNumber;
+        configurations.inspect(globals.SETTINGS_VERSION).workspaceValue !== currentVersionNumber;
 
     if (globalIsNotMigrated || workspaceIsNotMigrated) {
         const zoweOldConfigurations = Object.keys(configurations).filter((key) =>
@@ -132,11 +136,15 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
 
             // Confirm migration is completed so it will not run more than once for either global or workspace settings
             if (globalIsNotMigrated) {
-                configurations.update("zowe.settings.version", currentVersionNumber, vscode.ConfigurationTarget.Global);
+                configurations.update(
+                    globals.SETTINGS_VERSION,
+                    currentVersionNumber,
+                    vscode.ConfigurationTarget.Global
+                );
             }
             if (workspaceIsNotMigrated) {
                 configurations.update(
-                    "zowe.settings.version",
+                    globals.SETTINGS_VERSION,
                     currentVersionNumber,
                     vscode.ConfigurationTarget.Workspace
                 );
@@ -148,7 +156,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     let preferencesTempPath: string = vscode.workspace
         .getConfiguration()
         /* tslint:disable:no-string-literal */
-        .get("zowe.files.temporaryDownloadsFolder.path");
+        .get(globals.SETTINGS_TEMP_FOLDER_PATH);
 
     // Determine the runtime framework to support special behavior for Theia
     globals.defineGlobals(preferencesTempPath);
@@ -227,11 +235,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     // Register functions & event listeners
     vscode.workspace.onDidChangeConfiguration(async (e) => {
         // If the temp folder location has been changed, update current temp folder preference
-        if (e.affectsConfiguration("zowe.files.temporaryDownloadsFolder.path")) {
+        if (e.affectsConfiguration(globals.SETTINGS_TEMP_FOLDER_PATH)) {
             const updatedPreferencesTempPath: string = vscode.workspace
                 .getConfiguration()
                 /* tslint:disable:no-string-literal */
-                .get("zowe.files.temporaryDownloadsFolder.path");
+                .get(globals.SETTINGS_TEMP_FOLDER_PATH);
             moveTempFolder(preferencesTempPath, updatedPreferencesTempPath);
             preferencesTempPath = updatedPreferencesTempPath;
         }
