@@ -69,7 +69,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     const currentVersionNumber = semver.major(
         vscode.extensions.getExtension("zowe.vscode-extension-for-zowe").packageJSON.version
     );
-    // const currentVersionNumber = 2;
+
     let globalIsNotMigrated = configurations.inspect(globals.SETTINGS_VERSION).globalValue !== currentVersionNumber;
     let workspaceIsNotMigrated =
         configurations.inspect(globals.SETTINGS_VERSION).workspaceValue !== currentVersionNumber;
