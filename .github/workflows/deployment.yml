@@ -162,20 +162,6 @@ jobs:
         run: echo "::set-output name=version_bumped::true"
         id: check_project
 
-      # Each individual action should git-add the desired files
-      - name: Update Project Files with new Version
-        if: steps.check_project.outputs.version_bumped
-        run: |
-          git status
-          git commit -m "Version Bumped to ${{ fromJson(steps.get_version.outputs.top_package).version }}" --signoff
-      - name: Push changes
-        if: steps.check_project.outputs.version_bumped
-        uses: ad-m/github-push-action@master
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          force: true
-          branch: ${{ github.ref }}
-
       - name: Create the Release
         if: steps.check_project.outputs.version_bumped
         id: create_release
