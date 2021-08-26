@@ -63,23 +63,23 @@ const publishProject = (checkVersion, publishSpecificProject) => {
             }
 
             publishSpecificProject(versionName, core.getInput("token"), packagePath, tag);
+        }
 
-            let changelog = execSync(
-                "awk -v ver=" +
-                    topPackageJson.version +
-                    " '/## / {if (p) { exit }; if ($2 ~ ver) { p=1; next} } p && NF' CHANGELOG.md | sed -z \"s/'/'\\\\\\''/g\" | sed -z 's/\"/\\\"/g' | sed -z 's/\\n/\\\\n/g'",
-                { cwd: packagePath }
-            ).toString();
-            if (changelog != "") {
-                changelog = `#### ${core.getInput("name")}\n${changelog}`;
-                console.log("changelog", changelog);
-                core.setOutput("changelog", changelog);
-            } else {
-                // No changelog for this version
-                console.log("No changelog available for version:", topPackageJson.version);
+        let changelog = execSync(
+            "awk -v ver=" +
+                topPackageJson.version +
+                " '/## / {if (p) { exit }; if ($2 ~ ver) { p=1; next} } p && NF' CHANGELOG.md | sed -z \"s/'/'\\\\\\''/g\" | sed -z 's/\"/\\\"/g' | sed -z 's/\\n/\\\\n/g'",
+            { cwd: packagePath }
+        ).toString();
+        if (changelog != "") {
+            changelog = `#### ${core.getInput("name")}\n${changelog}`;
+            console.log("changelog", changelog);
+            core.setOutput("changelog", changelog);
+        } else {
+            // No changelog for this version
+            console.log("No changelog available for version:", topPackageJson.version);
 
-                // TODO: Decide whether to use `Recent Changes` method (similar to CLIs)
-            }
+            // TODO: Decide whether to use `Recent Changes` method (similar to CLIs)
         }
     } catch (err) {
         // Fail the workflow if any commands threw an error
