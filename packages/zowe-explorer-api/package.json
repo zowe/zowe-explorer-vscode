@@ -1,6 +1,6 @@
 {
   "name": "@zowe/zowe-explorer-api",
-  "version": "1.18.0",
+  "version": "1.18.1",
   "description": "Extensibility API for Zowe Explorer.",
   "publisher": "Zowe",
   "author": "Zowe",
@@ -17,6 +17,7 @@
     "@types/semver": "^7.3.6"
   },
   "dependencies": {
+    "@zowe/cli": "6.31.1",
     "semver": "^7.3.5"
   },
   "scripts": {
