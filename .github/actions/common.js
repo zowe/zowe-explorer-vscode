@@ -25,6 +25,9 @@ const publishProject = (checkVersion, publishSpecificProject) => {
         const packagePath = path.normalize(core.getInput("package"));
         const topPackageJson = JSON.parse(readFileSync("package.json"));
         const packageJson = JSON.parse(readFileSync(path.join(packagePath, "package.json")));
+        let versionName = `${packageJson.name}-${topPackageJson.version}`;
+        versionName = versionName.replace("@", "").replace("/", "-");
+        core.setOutput("archive", versionName);
 
         // Check if there is a new version to publish (looking at the top level package.json for version)
         if (checkVersion(packageJson, topPackageJson.version)) {
@@ -49,11 +52,8 @@ const publishProject = (checkVersion, publishSpecificProject) => {
                 console.log(execSync(`git add package.json`, { cwd: packagePath }).toString());
             }
 
-            let versionName = `${packageJson.name}-${topPackageJson.version}`;
-            versionName = versionName.replace("@", "").replace("/", "-");
             console.log(`Generate: ${versionName}`);
             console.log(execSync(`yarn package`, { cwd: packagePath }).toString());
-            core.setOutput("archive", versionName);
             // set tag for deployment
             let tag = "";
             if (versionName.includes("next")) {
