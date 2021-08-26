@@ -2,11 +2,18 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## `1.18.1`
+
+- Improved integration tests for greater efficiency [#1430](https://github.com/zowe/vscode-extension-for-zowe/pull/1430). Thanks @katelynienaber
+- Added a reminder to the PR template to create a PR from `master` to `next` after PR is merged into `master` branch [#1446](https://github.com/zowe/vscode-extension-for-zowe/pull/1446). Thanks @JillieBeanSim
+- Added @zowe/cli dependency to API [#1445](https://github.com/zowe/vscode-extension-for-zowe/pull/1445). Thanks @phaumer
+- Fix for the issue that caused mismatching of GitHub VSIX Zowe Explorer releases [#1442](https://github.com/zowe/vscode-extension-for-zowe/pull/1442). Thanks @katelynienaber
+
 ## `1.18.0`
 
 - Added the ability to register custom profile types in `ProfilesCache` for extenders [#1419](https://github.com/zowe/vscode-extension-for-zowe/pull/1419). Thanks @phaumer
 - Added the ability to pass account and other information from tso profile [#1378](https://github.com/zowe/vscode-extension-for-zowe/pull/1378). Thanks @fswarbrick
-- Add profiles cache to extenders [#1390](https://github.com/zowe/vscode-extension-for-zowe/pull/1390). Thanks @phaumer
+- Added profiles cache to extenders [#1390](https://github.com/zowe/vscode-extension-for-zowe/pull/1390). Thanks @phaumer
 - Status icons now reset when refreshing the explorer views [#1404](https://github.com/zowe/vscode-extension-for-zowe/pull/1404). Thanks @lauren-li
 - Fixed the issue that prevented the expected error message `No valid value for z/OS URL. Operation Cancelled` from being displayed while escaping the host text box during the creation or update of a profile [#1426](https://github.com/zowe/vscode-extension-for-zowe/pull/1426). Thanks @JillieBeanSim
 - Fixed the issue that invoked profile validation before updating a profile. Now a profile is validated only after the update [#1415](https://github.com/zowe/vscode-extension-for-zowe/pull/1415). Thanks @JillieBeanSim
