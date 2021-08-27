@@ -19,52 +19,33 @@ We encourage extenders to use this guidance in order to:
 - Give developers more information in error logs.
 - Standardize the error message format across all of Zowe Explorer's extenders.
 
-## Error Message Format
-
-We highly recommend the usage of this error message format:
-
-```
-Extension Name Error - Error Message
-```
-
-Example: For the Zowe Explorer FTP extension, an error message might look like:
-
-```
-Zowe Explorer FTP Extension Error - Unable to delete node…
-```
-
 ## Logging of Error Message
 
-We highly recommend the usage of `imperative.Logger` when logging an extender's error messages.
+We highly recommend the usage of our API function when logging an extender's error messages.
 
-These logs have a standard format that is used by Zowe Explorer and will be consistent across Zowe components.
+This function logs messages in a standard format, which is used by Zowe Explorer and will be consistent across Zowe components.
 
 Example:
 
 ```
-public constructor(protected log: imperative.Logger) {}
-  try {
-  ...
-  } catch (error) {
-      this.log.error(error);
-  }
+// The logger must be initialized before calling the logging function
+const zoweLogger = new IZoweLogger("Extender Name", "path/to/logging/location");
+
+zoweLogger.logImperativeMessage("Test log message!", MessageSeverityEnum.TRACE);
 ```
 
 ## Showing Errors to Users
 
-We highly recommend using VSCode's API to show messages to users. This will provide a standard format
-that is similar to Zowe Explorer and VSCode.
+We highly recommend using our API function to show messages to users. This will provide a standard format
+that is similar to Zowe Explorer and VSCode. It will also make sure the error is written to the log file.
 
-- For showing information to the user: [vscode.window.showInformationMessage](https://code.visualstudio.com/api/references/vscode-api#window.showInformationMessage)
-
-```
-vscode.window.showInformationMessage("File does not exist. It may have been deleted.");
-```
-
-- For showing errors to the user: [vscode.window.showErrorMessage](https://code.visualstudio.com/api/references/vscode-api#window.showErrorMessage)
+Example:
 
 ```
-vscode.window.showErrorMessage("Unable to delete temporary folder.");
+// The logger must be initialized before calling the showVsCodeMessage function
+const zoweLogger = new IZoweLogger("Extender Name", "path/to/logging/location");
+
+ZoweVsCodeExtension.showVsCodeMessage("Test display message!", MessageSeverityEnum.TRACE, zoweLogger);
 ```
 
 - If the extender isn't implementing one of Zowe Explorer's APIs, it is very important to throw a `not implemented` error for that API. [See an example of this from the FTP extension](https://github.com/zowe/vscode-extension-for-zowe/blob/8080ae14734eb9673b178687d92df94e203aad35/packages/zowe-explorer-ftp-extension/src/ZoweExplorerFtpMvsApi.ts#L200).
