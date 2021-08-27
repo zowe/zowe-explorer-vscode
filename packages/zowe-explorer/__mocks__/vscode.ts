@@ -87,6 +87,16 @@ export class CancellationTokenSource {
     dispose(): void {}
 }
 
+export namespace extensions {
+    export function getExtension(identifier: string) {
+        return {
+            packageJSON: {
+                version: "2.0.0",
+            },
+        };
+    }
+}
+
 export namespace window {
     /**
      * Show an information message to users. Optionally provide an array of items which will be presented as
