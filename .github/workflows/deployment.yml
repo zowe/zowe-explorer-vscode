@@ -67,6 +67,8 @@ jobs:
     steps:
       - name: Checkout the Source Code
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - name: Setup NodeJS
         uses: actions/setup-node@v1
@@ -147,8 +149,8 @@ jobs:
         run: "echo ::set-output name=top_package::$(cat package.json)"
         id: get_version
       - name: Get most recent GitHub release version
-        run: "echo ::set-output name=gh_version::$(git describe --tags $(git rev-list --tags --max-count=1))"
         id: get_gh_version
+        uses: "WyriHaximus/github-action-get-previous-tag@v1"
 
       # Removed step because of issues with publishing
       # - name: Check if files were staged
@@ -156,25 +158,12 @@ jobs:
       #   id: check_project
 
       - name: Check version is bumped
-        run: "echo ::set-output name=version_bumped::$(fromJson(steps.get_version.outputs.top_package).version !== v + steps.get_gh_version.outputs.gh_version || echo $?)"
+        if: ${{ !contains(steps.get_gh_version.outputs.tag, fromJson(steps.get_version.outputs.top_package).version) }}
+        run: echo "::set-output name=version_bumped::true"
         id: check_project
 
-      # Each individual action should git-add the desired files
-      - name: Update Project Files with new Version
-        if: steps.check_project.outputs.version_bumped == true
-        run: |
-          git status
-          git commit -m "Version Bumped to ${{ fromJson(steps.get_version.outputs.top_package).version }}" --signoff
-      - name: Push changes
-        if: steps.check_project.outputs.version_bumped == true
-        uses: ad-m/github-push-action@master
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          force: true
-          branch: ${{ github.ref }}
-
       - name: Create the Release
-        if: steps.check_project.outputs.version_bumped == true
+        if: steps.check_project.outputs.version_bumped
         id: create_release
         uses: actions/create-release@v1
         env:
@@ -191,10 +180,7 @@ jobs:
           prerelease: false
 
       - name: Upload the Zowe Explorer Assets
-        if: |
-          steps.check_project.outputs.version_bumped == true &&
-          steps.deploy_zowe_explorer.outputs.archive != null
-        # steps.check_project.outputs.version_bumped == true || github.event.input.create_release == 'true') &&
+        if: steps.check_project.outputs.version_bumped
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -205,10 +191,7 @@ jobs:
           asset_content_type: application/octet-stream
 
       - name: Upload the FTP Extension for Zowe Explorer Assets
-        if: |
-          steps.check_project.outputs.version_bumped == true &&
-          steps.deploy_zowe_explorer_ftp_extension.outputs.archive != null
-        # steps.check_project.outputs.version_bumped == true || github.event.input.create_release == 'true') &&
+        if: steps.check_project.outputs.version_bumped
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -219,10 +202,7 @@ jobs:
           asset_content_type: application/octet-stream
 
       - name: Upload the Zowe Explorer APIs Assets
-        if: |
-          steps.check_project.outputs.version_bumped == true &&
-          steps.deploy_zowe_explorer_api.outputs.archive != null
-        # steps.check_project.outputs.version_bumped == true || github.event.input.create_release == 'true') &&
+        if: steps.check_project.outputs.version_bumped
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -233,10 +213,7 @@ jobs:
           asset_content_type: application/octet-stream
 
       - name: Upload the ESLint plugin for Zowe Explorer Assets
-        if: |
-          steps.check_project.outputs.version_bumped == true &&
-          steps.deploy_eslint_plugin_zowe_explorer.outputs.archive != null
-        # steps.check_project.outputs.version_bumped == true || github.event.input.create_release == 'true') &&
+        if: steps.check_project.outputs.version_bumped
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
