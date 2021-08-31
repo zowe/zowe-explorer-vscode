@@ -27,7 +27,7 @@ const publishProject = (checkVersion, publishSpecificProject) => {
         const packageJson = JSON.parse(readFileSync(path.join(packagePath, "package.json")));
 
         // Check if there is a new version to publish (looking at the top level package.json for version)
-        if (checkVersion(packageJson, topPackageJson.version)) {
+        if (checkVersion(packageJson, topPackageJson.version) || topPackageJson.version.includes(`SNAPSHOT`)) {
             console.log(`No new version to publish at this time. Current version: ${topPackageJson.version}`);
             if (topPackageJson.version != packageJson.version) {
                 console.log(
