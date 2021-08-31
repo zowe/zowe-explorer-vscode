@@ -659,6 +659,11 @@
         }
       },
       {
+        "command": "zowe.config.init",
+        "title": "zowe config init",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.jobs.refreshJob",
         "title": "%jobs.refreshJob%",
         "category": "Zowe Explorer"
