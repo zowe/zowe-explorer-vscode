@@ -17,7 +17,7 @@ import {
     createQuickPickItem,
     createQuickPickContent,
     createInputBox,
-    createBasicZosmfSession,
+    createSessCfgFromArgs,
     createPersistentConfig,
     createInvalidIProfile,
     createValidIProfile,
@@ -1486,7 +1486,7 @@ describe("Profiles Unit Tests - Function deleteProfile", () => {
             ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" },
         });
         newMocks.profiles = await Profiles.createInstance(newMocks.log);
-        newMocks.session = createBasicZosmfSession(newMocks.imperativeProfile);
+        newMocks.session = createSessCfgFromArgs(newMocks.imperativeProfile);
         newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
         newMocks.mockLoadNamedProfile.mockReturnValue(newMocks.imperativeProfile);
         globalMocks.mockGetInstance.mockReturnValue(newMocks.profileInstance);

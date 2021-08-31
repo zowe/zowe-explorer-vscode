@@ -582,8 +582,8 @@ export class Profiles extends ProfilesCache {
         }
 
         try {
-            const updSession = await zowe.ZosmfSession.createBasicZosmfSession(updSchemaValues);
-            updSchemaValues.base64EncodedAuth = updSession.ISession.base64EncodedAuth;
+            const updSession = await zowe.ZosmfSession.createSessCfgFromArgs(updSchemaValues);
+            updSchemaValues.base64EncodedAuth = updSession.base64EncodedAuth;
             await this.updateProfile({
                 profile: updSchemaValues,
                 name: profileName,

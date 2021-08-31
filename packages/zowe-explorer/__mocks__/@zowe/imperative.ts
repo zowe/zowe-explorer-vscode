@@ -36,6 +36,15 @@ export interface ISessionOptions {
     type: string;
 }
 
+export interface ICommandArguments {
+    user?: string;
+    password?: string;
+    hostname: string;
+    port: number;
+    tokenType?: string;
+    tokenValue?: string;
+}
+
 interface NodeModule {
     exports: any;
     require: NodeRequireFunction;
