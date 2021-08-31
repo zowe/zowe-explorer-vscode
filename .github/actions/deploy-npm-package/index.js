@@ -25,12 +25,11 @@ const checkVersion = (packageJson, version) => {
 };
 
 // NPM package specific publishing steps
-const publishSpecificProject = (versionName, token, packagePath) => {
+const publishSpecificProject = (versionName, token, packagePath, tag) => {
     console.log(execSync(`echo registry=https://registry.npmjs.org/ > .npmrc`, { cwd: packagePath }).toString());
     console.log(execSync(`echo //registry.npmjs.org/:_authToken=${token} >> .npmrc`, { cwd: packagePath }).toString());
-
     console.log(`Publishing: ${versionName}`);
-    console.log(execSync(`npm publish --access public`, { cwd: packagePath }).toString());
+    console.log(execSync(`npm publish --access public --tag ${tag}`, { cwd: packagePath }).toString());
 };
 
 // Call common function to deploy the NPM package

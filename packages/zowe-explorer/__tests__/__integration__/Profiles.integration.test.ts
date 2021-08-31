@@ -57,15 +57,14 @@ describe("Create profiles integration tests", async () => {
     it("Tests if profile is created successfully", async () => {
         const getProfType = sandbox.stub(profiles, "getProfileType");
         getProfType.returns("zosmf");
-        const getUrlStub = sandbox.stub(profiles, "getUrl");
-        getUrlStub.returns("https://testurl.com:1001");
+        const getUrlStub = sandbox.stub(profiles, "urlInfo");
+        getUrlStub.returns({
+            valid: true,
+            protocol: "https",
+            host: "testurl.com",
+            port: 1001,
+        });
         const showInputStub = sandbox.stub(vscode.window, "showInputBox");
-        // showInputStub.onCall(0).returns("testUser");
-        // showInputStub.onCall(1).returns("testPass");
-        // showInputStub.onCall(2).returns("basePath");
-        // showInputStub.onCall(3).returns("encoding");
-        // showInputStub.onCall(4).returns("timeOut");
-
         const returnVals = ["testUser", "testPass", "basePath", "encoding", "timeOut"];
         returnVals.forEach((value, index) => {
             showInputStub.onCall(index).returns(value);
@@ -83,7 +82,7 @@ describe("Create profiles integration tests", async () => {
         const showInfoSpy = sandbox.spy(vscode.window, "showInformationMessage");
         const getProfType = sandbox.stub(profiles, "getProfileType");
         getProfType.returns("zosmf");
-        const getUrlStub = sandbox.stub(profiles, "getUrl");
+        const getUrlStub = sandbox.stub(profiles, "urlInfo");
         getUrlStub.returns(undefined);
 
         const response = await profiles.createNewConnection("testProfileIntegration");
@@ -96,8 +95,13 @@ describe("Create profiles integration tests", async () => {
         const showInfoSpy = sandbox.spy(vscode.window, "showInformationMessage");
         const getProfType = sandbox.stub(profiles, "getProfileType");
         getProfType.returns("zosmf");
-        const getUrlStub = sandbox.stub(profiles, "getUrl");
-        getUrlStub.returns("https://testurl.com:1001");
+        const getUrlStub = sandbox.stub(profiles, "urlInfo");
+        getUrlStub.returns({
+            valid: true,
+            protocol: "https",
+            host: "testurl.com",
+            port: 1001,
+        });
         const showInputStub = sandbox.stub(vscode.window, "showInputBox");
         showInputStub.returns(undefined);
 
@@ -111,8 +115,13 @@ describe("Create profiles integration tests", async () => {
         const showInfoSpy = sandbox.spy(vscode.window, "showInformationMessage");
         const getProfType = sandbox.stub(profiles, "getProfileType");
         getProfType.returns("zosmf");
-        const getUrlStub = sandbox.stub(profiles, "getUrl");
-        getUrlStub.returns("https://testurl.com:1001");
+        const getUrlStub = sandbox.stub(profiles, "urlInfo");
+        getUrlStub.returns({
+            valid: true,
+            protocol: "https",
+            host: "testurl.com",
+            port: 1001,
+        });
         const showInputStub = sandbox.stub(vscode.window, "showInputBox");
         showInputStub.onCall(0).returns("testUser");
         showInputStub.onCall(1).returns(undefined);
@@ -127,8 +136,13 @@ describe("Create profiles integration tests", async () => {
         const showInfoSpy = sandbox.spy(vscode.window, "showInformationMessage");
         const getProfType = sandbox.stub(profiles, "getProfileType");
         getProfType.returns("zosmf");
-        const getUrlStub = sandbox.stub(profiles, "getUrl");
-        getUrlStub.returns("https://testurl.com:1001");
+        const getUrlStub = sandbox.stub(profiles, "urlInfo");
+        getUrlStub.returns({
+            valid: true,
+            protocol: "https",
+            host: "testurl.com",
+            port: 1001,
+        });
         const showInputStub = sandbox.stub(vscode.window, "showInputBox");
         showInputStub.onCall(0).returns("testUser");
         showInputStub.onCall(1).returns("testPass");
@@ -146,8 +160,13 @@ describe("Create profiles integration tests", async () => {
         await profiles.allProfiles.push(testProfileLoaded);
         const getProfType = sandbox.stub(profiles, "getProfileType");
         getProfType.returns("zosmf");
-        const getUrlStub = sandbox.stub(profiles, "getUrl");
-        getUrlStub.returns("https://testurl.com:1001");
+        const getUrlStub = sandbox.stub(profiles, "urlInfo");
+        getUrlStub.returns({
+            valid: true,
+            protocol: "https",
+            host: "testurl.com",
+            port: 1001,
+        });
         const showInputStub = sandbox.stub(vscode.window, "showInputBox");
         const returnVals = ["testUser", "testPass", "basePath", "encoding", "timeOut"];
         returnVals.forEach((value, index) => {
