@@ -38,6 +38,7 @@ async function registerFtpApis(): Promise<boolean> {
         await zoweExplorerApi.getExplorerExtenderApi().reloadProfiles();
 
         void vscode.window.showInformationMessage("Zowe Explorer was modified for FTP support.");
+
         return true;
     }
     void vscode.window.showInformationMessage(
