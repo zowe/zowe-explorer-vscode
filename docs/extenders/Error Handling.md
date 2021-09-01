@@ -6,8 +6,9 @@ This page contains best practices in handling errors for Zowe Explorer extenders
 
 - [Objectives](#objectives)
 - [Error Message Format](#error-message-format)
-- [Logging of Error Message](#logging-of-error-message)
-- [Showing Errors to Users](#showing-errors-to-users)
+- [Logging of Error or Message](#logging-of-error-message)
+- [Showing Messages to Users](#showing-errors-to-users)
+- [Message Severity](#message-types)
 
 ## Objectives
 
@@ -37,7 +38,7 @@ zoweLogger.logImperativeMessage("Test log message!", MessageSeverityEnum.TRACE);
 ## Showing Errors to Users
 
 We highly recommend using our API function to show messages to users. This will provide a standard format
-that is similar to Zowe Explorer and VSCode. It will also make sure the error is written to the log file.
+that is similar to Zowe Explorer and VSCode. _It will also write the error to the log file, so an extra call to function `logImperativeMessage` is unneccessary._
 
 Example:
 
@@ -45,6 +46,7 @@ Example:
 // The logger must be initialized before calling the showVsCodeMessage function
 const zoweLogger = new IZoweLogger("Extender Name", "path/to/logging/location");
 
+// This function will also log the error to the log file, so you do not need
 ZoweVsCodeExtension.showVsCodeMessage("Test display message!", MessageSeverityEnum.TRACE, zoweLogger);
 ```
 
@@ -55,4 +57,19 @@ public allocateLikeDataSet(dataSetName: string, likeDataSetName: string):
     Promise<zowe.IZosFilesResponse> {
         throw new Error("Allocate like dataset is not supported in FTP extension.");
     }
+```
+
+## Message Severity
+
+The severity of a message or error is defined by the enum `MessageSeverityEnum`. An enum of this type must be passed into the Zowe Explorer functions shown above. There are six severity levels available:
+
+```
+export enum MessageSeverityEnum {
+    TRACE = 0,
+    DEBUG = 1,
+    INFO = 2,
+    WARN = 3,
+    ERROR = 4,
+    FATAL = 5,
+}
 ```
