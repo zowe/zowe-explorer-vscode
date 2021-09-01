@@ -5,6 +5,7 @@ on:
     branches:
       - master
       - next
+      - quick-fix-pt2
     paths:
       - package.json
   workflow_dispatch:
