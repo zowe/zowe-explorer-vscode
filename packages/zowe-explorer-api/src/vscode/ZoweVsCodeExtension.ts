@@ -12,7 +12,7 @@
 import * as semver from "semver";
 import * as vscode from "vscode";
 import { ZoweExplorerApi } from "../profiles";
-import { IZoweLogger, MessageSeverityEnum } from "../tree/IZoweLogger";
+import { IZoweLogger, MessageSeverityEnum } from "../logger/IZoweLogger";
 
 /**
  * Collection of utility functions for writing Zowe Explorer VS Code extensions.
