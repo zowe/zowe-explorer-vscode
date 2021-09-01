@@ -51,7 +51,7 @@ jobs:
       - name: Verify that Deployment is Required
         run: "echo ::set-output name=should_publish::true"
         if: |
-          !endsWith(fromJson(steps.get_info.outputs.package).version, 'SNAPSHOT') &&
+          ${{ !endsWith(fromJson(steps.get_info.outputs.package).version, 'SNAPSHOT') }} &&
           fromJson(steps.get_info.outputs.market_ze).versions[0].version != fromJson(steps.get_ze_package.outputs.package).version ||
           fromJson(steps.get_info.outputs.market_ze).versions[0].version != fromJson(steps.get_ze_ftp_package.outputs.package).version ||
           fromJson(steps.get_info.outputs.market_ze).versions[0].version != fromJson(steps.get_ze_api_package.outputs.package).version
