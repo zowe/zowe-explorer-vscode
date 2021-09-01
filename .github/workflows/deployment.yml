@@ -158,7 +158,9 @@ jobs:
       #   id: check_project
 
       - name: Check version is bumped
-        if: ${{ !contains(steps.get_gh_version.outputs.tag, fromJson(steps.get_version.outputs.top_package).version) }}
+        if: |
+          ${{ !contains(steps.get_gh_version.outputs.tag, fromJson(steps.get_version.outputs.top_package).version) }} && 
+          ${{ !contains("SNAPSHOT", fromJson(steps.get_version.outputs.top_package).version))}}
         run: echo "::set-output name=version_bumped::true"
         id: check_project
 
@@ -211,14 +213,13 @@ jobs:
           asset_path: ./dist/${{ steps.deploy_zowe_explorer_api.outputs.archive }}.tgz
           asset_name: ${{ steps.deploy_zowe_explorer_api.outputs.archive }}.tgz
           asset_content_type: application/octet-stream
-
-      - name: Upload the ESLint plugin for Zowe Explorer Assets
-        if: steps.check_project.outputs.version_bumped
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist/${{ steps.deploy_eslint_plugin_zowe_explorer.outputs.archive }}.tgz
-          asset_name: ${{ steps.deploy_eslint_plugin_zowe_explorer.outputs.archive }}.tgz
-          asset_content_type: application/octet-stream
+      # - name: Upload the ESLint plugin for Zowe Explorer Assets
+      #   if: steps.check_project.outputs.version_bumped
+      #   uses: actions/upload-release-asset@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     upload_url: ${{ steps.create_release.outputs.upload_url }}
+      #     asset_path: ./dist/${{ steps.deploy_eslint_plugin_zowe_explorer.outputs.archive }}.tgz
+      #     asset_name: ${{ steps.deploy_eslint_plugin_zowe_explorer.outputs.archive }}.tgz
+      #     asset_content_type: application/octet-stream
