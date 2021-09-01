@@ -11,3 +11,43 @@ Zowe Explorer's view IDs have been updated to improve the consistency of the for
 | Data Sets view | `zowe.explorer`     | `zowe.ds.explorer`   |
 | USS view       | `zowe.uss.explorer` | `zowe.uss.explorer`  |
 | Jobs view      | `zowe.jobs`         | `zowe.jobs.explorer` |
+
+## Migration of old settings to new standardized settings in Zowe Explorer
+
+### Overview of new standardized name settings
+
+The following table describes the changes from old to new standardized names for Zowe Explorer configurations:
+
+| Version 1 Setting Name          | Version 2 Setting Name                     |
+| ------------------------------- | ------------------------------------------ |
+| `Zowe-Default-Datasets-Binary`  | `zowe.ds.default.binary`                   |
+| `Zowe-Default-Datasets-C`       | `zowe.ds.default.c`                        |
+| `Zowe-Default-Datasets-Classic` | `zowe.ds.default.classic`                  |
+| `Zowe-Default-Datasets-PDS`     | `zowe.ds.default.pds`                      |
+| `Zowe-Default-Datasets-PS`      | `zowe.ds.default.ps`                       |
+| `Zowe-Temp-Folder-Location`     | `zowe.files.temporaryDownloadsFolder.path` |
+| `Zowe Security: Credential Key` | `zowe.security.credentialPlugin`           |
+| `Zowe Commands: History`        | `zowe.commands.history`                    |
+| `Zowe Commands: Always Edit`    | `zowe.commands.alwaysEdit`                 |
+| `Zowe-Automatic-Validation`     | `zowe.automaticProfileValidation`          |
+| `Zowe-DS-Persistent`            | `zowe.ds.history`                          |
+| `Zowe-USS-Persistent`           | `zowe.uss.history`                         |
+| `Zowe-Jobs-Persistent`          | `zowe.jobs.history`                        |
+
+### Feature Overview
+
+- Migration of old Zowe settings is performed upon activation of the extension automatically and is run only once since the migration has no need to be performed multiple times.
+
+- A change of scope for all history based settings have been made as well, these settings have been changed from the **window** scope to the **application** scope. The affected settings would be the following:
+  - `zowe.ds.history` (Zowe-DS-Persistent)
+  - `zowe.uss.history` (Zowe-USS-Persistent)
+  - `zowe.jobs.history` (Zowe-Jobs-Persistent)
+  - `zowe.commands.history` (Zowe Commands: History)
+
+### What Will Happen To My Old Setting Configurations?
+
+- The old settings will be migrated to the new settings as long as they are present in their old configuration names and were not under the default settings whether they were stored under the user, workspace, or both settings in VSCode.
+
+### What To Do With My Old Settings?
+
+- Upon loading up vscode Zowe Explorer will performed an automated migration of the old user settings to the new standardized settings. After this is completed, the older settings will appear greyed out meaning they can be manually removed since they will no longer be of use.
