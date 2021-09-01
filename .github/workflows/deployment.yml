@@ -159,14 +159,17 @@ jobs:
       #   id: check_project
 
       - name: Check version is bumped
-        if:
-          ${{ !contains(steps.get_gh_version.outputs.tag, fromJson(steps.get_version.outputs.top_package).version) }} ||
-          ${{ !endsWith(fromJson(steps.get_version.outputs.top_package).version, 'SNAPSHOT') }}
+        if: ${{ !contains(steps.get_gh_version.outputs.tag, fromJson(steps.get_version.outputs.top_package).version) }}
         run: echo "::set-output name=version_bumped::true"
         id: check_project
 
+      - name: Check version isn't a pre-release
+        if: ${{ endsWith(fromJson(steps.get_version.outputs.top_package).version, 'SNAPSHOT') }}
+        run: echo "::set-output name=pre_release::true"
+        id: is_pre_release
+
       - name: Create the Release
-        if: steps.check_project.outputs.version_bumped
+        if: steps.check_project.outputs.version_bumped && !steps.is_pre_release.outputs.pre_release
         id: create_release
         uses: actions/create-release@v1
         env:
@@ -183,7 +186,7 @@ jobs:
           prerelease: false
 
       - name: Upload the Zowe Explorer Assets
-        if: steps.check_project.outputs.version_bumped
+        if: steps.check_project.outputs.version_bumped && !steps.is_pre_release.outputs.pre_release
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -194,7 +197,7 @@ jobs:
           asset_content_type: application/octet-stream
 
       - name: Upload the FTP Extension for Zowe Explorer Assets
-        if: steps.check_project.outputs.version_bumped
+        if: steps.check_project.outputs.version_bumped && !steps.is_pre_release.outputs.pre_release
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -205,7 +208,7 @@ jobs:
           asset_content_type: application/octet-stream
 
       - name: Upload the Zowe Explorer APIs Assets
-        if: steps.check_project.outputs.version_bumped
+        if: steps.check_project.outputs.version_bumped && !steps.is_pre_release.outputs.pre_release
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
