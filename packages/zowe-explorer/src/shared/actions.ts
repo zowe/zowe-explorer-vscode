@@ -229,9 +229,14 @@ export async function openRecentMemberPrompt(
 }
 
 export async function returnIconState(node: IZoweNodeType) {
-    const activePath = getIconById(IconId.sessionActive);
-    const inactivePath = getIconById(IconId.sessionInactive);
-    if (node.iconPath === activePath.path || node.iconPath === inactivePath.path) {
+    const activePathClosed = getIconById(IconId.sessionActive);
+    const activePathOpen = getIconById(IconId.sessionActiveOpen);
+    const inactivePathClosed = getIconById(IconId.sessionInactive); // So far, we only ever reference the closed inactive icon, not the open one
+    if (
+        node.iconPath === activePathClosed.path ||
+        node.iconPath === activePathOpen.path ||
+        node.iconPath === inactivePathClosed.path
+    ) {
         const sessionIcon = getIconById(IconId.session);
         if (sessionIcon) {
             node.iconPath = sessionIcon.path;
@@ -243,6 +248,8 @@ export async function returnIconState(node: IZoweNodeType) {
 export async function resetValidationSettings(node: IZoweNodeType, setting: boolean) {
     if (setting) {
         await Profiles.getInstance().enableValidationContext(node);
+        // Ensure validation status is also reset
+        node.contextValue = node.contextValue.replace(/(_Active)/g, "").replace(/(_Inactive)/g, "");
     } else {
         await Profiles.getInstance().disableValidationContext(node);
     }

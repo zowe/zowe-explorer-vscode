@@ -498,6 +498,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                                 file: documentFilePath,
                                 binary: chooseBinary,
                                 returnEtag: true,
+                                encoding: profile.profile.encoding,
                             });
                         }
                     );
