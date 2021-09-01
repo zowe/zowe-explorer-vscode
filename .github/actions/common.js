@@ -25,6 +25,9 @@ const publishProject = (checkVersion, publishSpecificProject) => {
         const packagePath = path.normalize(core.getInput("package"));
         const topPackageJson = JSON.parse(readFileSync("package.json"));
         const packageJson = JSON.parse(readFileSync(path.join(packagePath, "package.json")));
+        let versionName = `${packageJson.name}-${topPackageJson.version}`;
+        versionName = versionName.replace("@", "").replace("/", "-");
+        core.setOutput("archive", versionName);
 
         // Check if there is a new version to publish (looking at the top level package.json for version)
         if (checkVersion(packageJson, topPackageJson.version) || topPackageJson.version.includes(`SNAPSHOT`)) {
@@ -49,11 +52,8 @@ const publishProject = (checkVersion, publishSpecificProject) => {
                 console.log(execSync(`git add package.json`, { cwd: packagePath }).toString());
             }
 
-            let versionName = `${packageJson.name}-${topPackageJson.version}`;
-            versionName = versionName.replace("@", "").replace("/", "-");
             console.log(`Generate: ${versionName}`);
             console.log(execSync(`yarn package`, { cwd: packagePath }).toString());
-            core.setOutput("archive", versionName);
             // set tag for deployment
             let tag = "";
             if (versionName.includes("next")) {
@@ -63,23 +63,23 @@ const publishProject = (checkVersion, publishSpecificProject) => {
             }
 
             publishSpecificProject(versionName, core.getInput("token"), packagePath, tag);
+        }
 
-            let changelog = execSync(
-                "awk -v ver=" +
-                    topPackageJson.version +
-                    " '/## / {if (p) { exit }; if ($2 ~ ver) { p=1; next} } p && NF' CHANGELOG.md | sed -z \"s/'/'\\\\\\''/g\" | sed -z 's/\"/\\\"/g' | sed -z 's/\\n/\\\\n/g'",
-                { cwd: packagePath }
-            ).toString();
-            if (changelog != "") {
-                changelog = `#### ${core.getInput("name")}\n${changelog}`;
-                console.log("changelog", changelog);
-                core.setOutput("changelog", changelog);
-            } else {
-                // No changelog for this version
-                console.log("No changelog available for version:", topPackageJson.version);
+        let changelog = execSync(
+            "awk -v ver=" +
+                topPackageJson.version +
+                " '/## / {if (p) { exit }; if ($2 ~ ver) { p=1; next} } p && NF' CHANGELOG.md | sed -z \"s/'/'\\\\\\''/g\" | sed -z 's/\"/\\\"/g' | sed -z 's/\\n/\\\\n/g'",
+            { cwd: packagePath }
+        ).toString();
+        if (changelog != "") {
+            changelog = `#### ${core.getInput("name")}\n${changelog}`;
+            console.log("changelog", changelog);
+            core.setOutput("changelog", changelog);
+        } else {
+            // No changelog for this version
+            console.log("No changelog available for version:", topPackageJson.version);
 
-                // TODO: Decide whether to use `Recent Changes` method (similar to CLIs)
-            }
+            // TODO: Decide whether to use `Recent Changes` method (similar to CLIs)
         }
     } catch (err) {
         // Fail the workflow if any commands threw an error
