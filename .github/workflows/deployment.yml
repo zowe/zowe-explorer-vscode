@@ -159,8 +159,8 @@ jobs:
       #   id: check_project
 
       - name: Check version is bumped
-        if: |
-          ${{ !contains(steps.get_gh_version.outputs.tag, fromJson(steps.get_version.outputs.top_package).version) }} && 
+        if:
+          ${{ !contains(steps.get_gh_version.outputs.tag, fromJson(steps.get_version.outputs.top_package).version) }} &&
           ${{ !contains(fromJson(steps.get_version.outputs.top_package).version, 'SNAPSHOT') }}
         run: echo "::set-output name=version_bumped::true"
         id: check_project
