@@ -42,8 +42,7 @@ import SpoolProvider from "./SpoolProvider";
 import * as nls from "vscode-nls";
 import { TsoCommandHandler } from "./command/TsoCommandHandler";
 import { cleanTempDir, moveTempFolder, hideTempFolder } from "./utils/TempFolder";
-import { config } from "yargs";
-import * as semver from "semver";
+import { standardizeSettings } from "./utils/SettingsConfig";
 declare const __webpack_require__: typeof require;
 declare const __non_webpack_require__: typeof require;
 
@@ -62,95 +61,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  * @returns {Promise<ZoweExplorerApiRegister>}
  */
 export async function activate(context: vscode.ExtensionContext): Promise<ZoweExplorerApiRegister> {
-    // Carry over old settings to new standardized settings only if the migration has not been performed once already on workspace or global scope
-    const configurations = vscode.workspace.getConfiguration();
-
-    // Track whether global, workspace or both settings have been migrated to standardized configurations
-    const currentVersionNumber = semver.major(
-        vscode.extensions.getExtension("zowe.vscode-extension-for-zowe").packageJSON.version
-    );
-
-    let globalIsNotMigrated = configurations.inspect(globals.SETTINGS_VERSION).globalValue !== currentVersionNumber;
-    let workspaceIsNotMigrated =
-        configurations.inspect(globals.SETTINGS_VERSION).workspaceValue !== currentVersionNumber;
-
-    if (globalIsNotMigrated || workspaceIsNotMigrated) {
-        const zoweOldConfigurations = Object.keys(configurations).filter((key) =>
-            key.match(new RegExp("Zowe-*|Zowe\\s*", "g"))
-        );
-
-        // Dictionary describing translation from old configuration names to new standardized names
-        const configurationDictionary = {
-            "Zowe-Default-Datasets-Binary": "zowe.ds.default.binary",
-            "Zowe-Default-Datasets-C": "zowe.ds.default.c",
-            "Zowe-Default-Datasets-Classic": "zowe.ds.default.classic",
-            "Zowe-Default-Datasets-PDS": "zowe.ds.default.pds",
-            "Zowe-Default-Datasets-PS": "zowe.ds.default.ps",
-            "Zowe-Temp-Folder-Location": "zowe.files.temporaryDownloadsFolder.path",
-            "Zowe Security: Credential Key": "zowe.security.credentialPlugin",
-            "Zowe Commands: History": "zowe.commands.history",
-            "Zowe Commands: Always edit": "zowe.commands.alwaysEdit",
-            "Zowe-Automatic-Validation": "zowe.automaticProfileValidation",
-            "Zowe-DS-Persistent": "zowe.ds.history",
-            "Zowe-USS-Persistent": "zowe.uss.history",
-            "Zowe-Jobs-Persistent": "zowe.jobs.history",
-        };
-
-        // Migrate old settings to new settings if any old settings exist and migration has not been run yet
-        if (zoweOldConfigurations.length > 0) {
-            zoweOldConfigurations.forEach((configuration) => {
-                // Retrieve the old setting for both scopes
-                let globalValue: any = globalIsNotMigrated
-                    ? configurations.inspect(configuration).globalValue
-                    : undefined;
-                let workspaceValue: any = workspaceIsNotMigrated
-                    ? configurations.inspect(configuration).workspaceValue
-                    : undefined;
-
-                // Handle edge case where Zowe-Temp-Folder-Location is migrated but has new schema
-                // Reassign value only if object retrieved is not undefined
-                if (configuration === "Zowe-Temp-Folder-Location") {
-                    globalValue = globalValue ? globalValue.folderPath : globalValue;
-                    workspaceValue = workspaceValue ? workspaceValue.folderPath : workspaceValue;
-                }
-
-                const newSetting = configurationDictionary[configuration];
-
-                // Handle case where a configuration could be in either workspace or global settings and determine where to migrate
-                if (globalIsNotMigrated && globalValue !== undefined && workspaceValue === undefined) {
-                    configurations.update(newSetting, globalValue, vscode.ConfigurationTarget.Global);
-                    globalIsNotMigrated = true;
-                } else if (workspaceIsNotMigrated && workspaceValue !== undefined && globalValue === undefined) {
-                    configurations.update(newSetting, workspaceValue, vscode.ConfigurationTarget.Workspace);
-                    workspaceIsNotMigrated = true;
-                } else if (
-                    workspaceIsNotMigrated &&
-                    globalIsNotMigrated &&
-                    workspaceValue !== undefined &&
-                    globalValue !== undefined
-                ) {
-                    configurations.update(newSetting, globalValue, vscode.ConfigurationTarget.Global);
-                    configurations.update(newSetting, workspaceValue, vscode.ConfigurationTarget.Workspace);
-                }
-            });
-
-            // Confirm migration is completed so it will not run more than once for either global or workspace settings
-            if (globalIsNotMigrated) {
-                configurations.update(
-                    globals.SETTINGS_VERSION,
-                    currentVersionNumber,
-                    vscode.ConfigurationTarget.Global
-                );
-            }
-            if (workspaceIsNotMigrated) {
-                configurations.update(
-                    globals.SETTINGS_VERSION,
-                    currentVersionNumber,
-                    vscode.ConfigurationTarget.Workspace
-                );
-            }
-        }
-    }
+    await standardizeSettings();
 
     // Get temp folder location from settings
     let preferencesTempPath: string = vscode.workspace
