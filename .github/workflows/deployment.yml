@@ -5,7 +5,6 @@ on:
     branches:
       - master
       - next
-      - quick-fix-pt2
     paths:
       - package.json
   workflow_dispatch:
@@ -163,7 +162,7 @@ jobs:
         run: echo "::set-output name=version_bumped::true"
         id: check_project
 
-      - name: Check version isn't a pre-release
+      - name: Check version is a pre-release
         if: ${{ endsWith(fromJson(steps.get_version.outputs.top_package).version, 'SNAPSHOT') }}
         run: echo "::set-output name=pre_release::true"
         id: is_pre_release
