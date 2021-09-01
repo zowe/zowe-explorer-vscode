@@ -11,7 +11,6 @@
 
 export * from "./profiles/UserSettings";
 export * from "./profiles/ProfilesCache";
-export * from "./profiles/ProfilesConfig";
 export * from "./profiles/ZoweExplorerApi";
 export * from "./profiles/ZoweExplorerZosmfApi";
 export * from "./tree/ZoweExplorerTreeApi";

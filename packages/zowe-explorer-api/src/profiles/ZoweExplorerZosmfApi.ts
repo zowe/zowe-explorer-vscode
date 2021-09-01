@@ -329,6 +329,10 @@ export class ZosmfCommandApi extends ZosmfApiCommon implements ZoweExplorerApi.I
         return await zowe.IssueTso.issueTsoCommand(this.getSession(), acctNum, command);
     }
 
+    public async issueTsoCommandWithParms(command: string, parms: zowe.IStartTsoParms): Promise<zowe.IIssueResponse> {
+        return await zowe.IssueTso.issueTsoCommand(this.getSession(), parms.account, command, parms);
+    }
+
     public async issueMvsCommand(command: string): Promise<zowe.IConsoleResponse> {
         return await zowe.IssueCommand.issueSimple(this.getSession(), command);
     }
