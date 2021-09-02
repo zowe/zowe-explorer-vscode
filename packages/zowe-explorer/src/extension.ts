@@ -26,7 +26,6 @@ import {
     IZoweTreeNode,
     IZoweTree,
     KeytarApi,
-    ZoweVsCodeExtension,
 } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
