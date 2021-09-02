@@ -16,7 +16,6 @@ import * as loggerConfig from "../log4jsconfig.json";
 
 // Set up localization
 import * as nls from "vscode-nls";
-import { IZoweLogger } from "../../zowe-explorer-api/lib";
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
     bundleFormat: nls.BundleFormat.standalone,

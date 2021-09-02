@@ -119,11 +119,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             localize("initialize.log.error", "Error encountered while activating and initializing logger! ") +
                 JSON.stringify(err)
         );
-        // globals.LOG.getImperativeLogger().error(
-        //     localize("initialize.log.error", "Error encountered while activating and initializing logger! ") +
-        //         JSON.stringify(err)
-        // );
-        // ZoweVsCodeExtension.showVsCodeMessage(localize("initialize.log.debug", "Initialized logger from VSCode extension"), 4, globals.LOG);
     }
 
     const spoolProvider = new SpoolProvider();
