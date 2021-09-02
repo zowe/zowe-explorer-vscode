@@ -390,7 +390,7 @@ describe("Extension Unit Tests", () => {
         // Check that tree providers are initialized successfully
         // tslint:disable-next-line: no-magic-numbers
         expect(globalMocks.mockCreateTreeView.mock.calls.length).toBe(3);
-        expect(globalMocks.mockCreateTreeView.mock.calls[0][0]).toBe("zowe.explorer");
+        expect(globalMocks.mockCreateTreeView.mock.calls[0][0]).toBe("zowe.ds.explorer");
         expect(globalMocks.mockCreateTreeView.mock.calls[1][0]).toBe("zowe.uss.explorer");
 
         // Check that CLI Profile Manager is initialized successfully
