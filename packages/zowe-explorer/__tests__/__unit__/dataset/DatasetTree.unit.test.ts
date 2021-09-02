@@ -16,7 +16,7 @@ import * as zowe from "@zowe/cli";
 import { Logger } from "@zowe/imperative";
 import { DatasetTree } from "../../../src/dataset/DatasetTree";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
-import { IZoweDatasetTreeNode, ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { IZoweDatasetTreeNode, ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
@@ -99,6 +99,13 @@ function createGlobalMocks() {
         value: jest.fn(() => {
             return {
                 "Zowe-Automatic-Validation": true,
+            };
+        }),
+    });
+    Object.defineProperty(ProfilesCache, "getConfigInstance", {
+        value: jest.fn(() => {
+            return {
+                usingTeamConfig: false,
             };
         }),
     });
@@ -1590,6 +1597,7 @@ describe("Dataset Tree Unit Tests - Function editSession", () => {
             profile: null,
             mockGetProfileSetting: jest.fn(),
             mockEditSession: jest.fn(),
+            mockCheckCurrentProfile: jest.fn(),
         };
 
         newMocks.datasetSessionNode = await createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
@@ -1606,6 +1614,10 @@ describe("Dataset Tree Unit Tests - Function editSession", () => {
                         status: "active",
                     }),
                     editSession: newMocks.mockEditSession.mockReturnValueOnce("testProfile"),
+                    checkCurrentProfile: newMocks.mockCheckCurrentProfile.mockReturnValue({
+                        status: "active",
+                        name: "testProfile",
+                    }),
                 };
             }),
         });
