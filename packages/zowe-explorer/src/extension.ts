@@ -87,8 +87,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     try {
         globals.initLogger(context);
         globals.LOG.debug(localize("initialize.log.debug", "Initialized logger from VSCode extension"));
-        // globals.initLogger();
-        // globals.LOG.logImperativeMessage(localize("initialize.log.debug", "Initialized logger from VSCode extension"), 1);
 
         try {
             const keytarApi = new KeytarApi(globals.LOG);

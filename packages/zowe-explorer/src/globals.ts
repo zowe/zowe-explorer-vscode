@@ -219,8 +219,3 @@ export function initLogger(context: vscode.ExtensionContext) {
     Logger.initLogger(loggerConfig);
     this.LOG = Logger.getAppLogger();
 }
-
-// export function initLogger() {
-//     const logLocation = ZOWETEMPFOLDER ? path.join(ZOWETEMPFOLDER, "/logs/ZE") : path.join(ROOTPATH, "/logs/ZE");
-//     this.LOG = new IZoweLogger("Zowe Explorer", logLocation);
-// }
