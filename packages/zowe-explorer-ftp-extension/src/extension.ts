@@ -35,7 +35,7 @@ async function registerFtpApis(): Promise<boolean> {
 
         const meta = await CoreUtils.getProfileMeta();
         await zoweExplorerApi.getExplorerExtenderApi().initForZowe("zftp", meta);
-        await zoweExplorerApi.getExplorerExtenderApi().reloadProfiles();
+        await zoweExplorerApi.getExplorerExtenderApi().reloadProfiles("zftp");
 
         void vscode.window.showInformationMessage("Zowe Explorer was modified for FTP support.");
 

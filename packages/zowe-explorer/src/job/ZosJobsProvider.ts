@@ -12,9 +12,15 @@
 import * as vscode from "vscode";
 import * as jobUtils from "../job/utils";
 import * as globals from "../globals";
-import { ZosmfSession, IJob } from "@zowe/cli";
+import { IJob } from "@zowe/cli";
 import { IProfileLoaded, Logger, IProfile, Session } from "@zowe/imperative";
-import { ValidProfileEnum, IZoweTree, IZoweJobTreeNode, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
+import {
+    ValidProfileEnum,
+    IZoweTree,
+    IZoweJobTreeNode,
+    PersistenceSchemaEnum,
+    ProfilesCache,
+} from "@zowe/zowe-explorer-api";
 import { FilterItem, FilterDescriptor, resolveQuickPickHelper, errorHandling } from "../utils/ProfilesUtils";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
@@ -159,6 +165,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      * Adds a session to the data set tree
      *
      * @param {string} [sessionName] - optional; loads default profile if not passed
+     * @param {string} [profileType] - optional; loads profiles of a certain type if passed
      */
     public async addSession(sessionName?: string, profileType?: string) {
         const setting = PersistentFilters.getDirectValue("zowe.automaticProfileValidation") as boolean;
@@ -175,7 +182,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 }
             }
         } else {
-            const allProfiles: IProfileLoaded[] = Profiles.getInstance().allProfiles;
+            const allProfiles = Profiles.getInstance().allProfiles;
             for (const sessionProfile of allProfiles) {
                 // If session is already added, do nothing
                 if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === sessionProfile.name)) {
@@ -839,15 +846,20 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      */
     private async addSingleSession(zosmfProfile: IProfileLoaded) {
         if (zosmfProfile) {
-            // If baseProfile exists, combine that information first before adding the session to the tree
-            // TODO: Move addSession to abstract/ZoweTreeProvider (similar to editSession)
-            const baseProfile = Profiles.getInstance().getBaseProfile();
-            if (baseProfile) {
-                try {
-                    const combinedProfile = await Profiles.getInstance().getCombinedProfile(zosmfProfile, baseProfile);
-                    zosmfProfile = combinedProfile;
-                } catch (error) {
-                    throw error;
+            if (!ProfilesCache.getConfigInstance().usingTeamConfig) {
+                // If baseProfile exists, combine that information first before adding the session to the tree
+                // TODO: Move addSession to abstract/ZoweTreeProvider (similar to editSession)
+                const baseProfile = Profiles.getInstance().getBaseProfile();
+                if (baseProfile) {
+                    try {
+                        const combinedProfile = await Profiles.getInstance().getCombinedProfile(
+                            zosmfProfile,
+                            baseProfile
+                        );
+                        zosmfProfile = combinedProfile;
+                    } catch (error) {
+                        throw error;
+                    }
                 }
             }
             // If session is already added, do nothing
@@ -856,7 +868,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             }
             // Uses loaded profile to create a zosmf session with Zowe
             // const session = ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
-            const session = ZoweExplorerApiRegister.getMvsApi(zosmfProfile).getSession();
+            const session = ZoweExplorerApiRegister.getJesApi(zosmfProfile).getSession();
             // Creates ZoweNode to track new session and pushes it to mSessionNodes
             const node = new Job(
                 zosmfProfile.name,
