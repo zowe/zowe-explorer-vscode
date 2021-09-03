@@ -16,7 +16,6 @@ Table of contents:
   - [Contextual hooks](#contextual-hooks)
   - [Grouping menu commands](#grouping-menu-commands)
   - [Accessing Zowe Explorer tree item information](#accessing-zowe-explorer-tree-item-information)
-- [Footnotes](#footnotes)
 
 ## Kinds of extensions
 
@@ -227,11 +226,9 @@ By setting the `when` property of a command to match the views and context value
 
 To specify which view a command contribution should appear in, Zowe Explorer menu extenders can use `view == <zowe.viewId>`, where `<zowe.viewId>` is one of the following view IDs used by Zowe Explorer:
 
-- Data Sets view: `zowe.explorer`
+- Data Sets view: `zowe.ds.explorer`
 - USS view: `zowe.uss.explorer`
-- Jobs view: `zowe.jobs`
-
-**Note:** For details on planned upcoming changes to the above view IDs, see the footnote<sup id="view-ids">[1](#view-ids-upcoming)</sup>.
+- Jobs view: `zowe.jobs.explorer`
 
 To allow for more granular control over which type(s) of tree items a command should be associated with (for example, a USS textfile versus a USS directory), Zowe Explorer uses a strategy of adding and removing context components for an individual Tree Item's context value if that imparts additional information that could assist with menu triggers. Extenders can leverage this when defining a command's `when` property by specifying `viewItem =~ <contextValue>`, where `<contextValue>` is a regular expression that matches the context value of the target Tree Item type(s). Examples of available context components can be found in Zowe Explorer's [`globals.ts` file](https://github.com/zowe/vscode-extension-for-zowe/blob/master/packages/zowe-explorer/src/globals.ts#L35), as values for exported constants whose names contain `CONTEXT`.
 
@@ -243,7 +240,7 @@ In the example below, we are referencing the Jobs view, and more specifically, a
   "menus": {
     "view/item/context": [
       {
-        "when": "view == zowe.jobs && viewItem =~ /^job.*/ && viewItem =~ /^.*_rc=CC.*/",
+        "when": "view == zowe.jobs.explorer && viewItem =~ /^job.*/ && viewItem =~ /^.*_rc=CC.*/",
         "command": "testmule.retcode",
         "group": "104_testmule_workspace"
       }
@@ -372,11 +369,3 @@ async function createTestPds(pdsName: string, profile: IProfileLoaded, pdsMember
    ... // Extender code for creating a test PDS with zero or more members ...
 }
 ```
-
-## Footnotes
-
-[<b id="view-ids-upcoming">[1]</b>](#view-ids) In a future version of Zowe Explorer (to be decided), Zowe Explorer's view IDs will be updated to improve the consistency of the formatting. The updated view IDs will be as follows:
-
-- Data Sets view: `zowe.ds.explorer`
-- USS view: `zowe.uss.explorer`
-- Jobs view: `zowe.jobs.explorer`
