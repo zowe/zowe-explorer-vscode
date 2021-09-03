@@ -313,9 +313,9 @@ export class ProfilesCache {
                         failNotFound: false,
                     };
                     // Step 3: Update allProfiles list
-                    this.allProfiles.push(profileFix);
                     tmpAllProfiles.push(profileFix);
                 }
+                this.allProfiles.push(...tmpAllProfiles);
                 this.profilesByType.set(type, tmpAllProfiles);
                 tmpAllProfiles = [];
                 const defaultProfAttr = this.getDefaultConfigProfile(mProfileInfo, type);

@@ -490,7 +490,7 @@ export namespace ZoweExplorerApi {
          * to make them automatically appears in the Explorer drop-
          * down dialogs.
          */
-        reloadProfiles(): Promise<void>;
+        reloadProfiles(profileType?: string): Promise<void>;
 
         /**
          * After an extenders registered all its API extensions it

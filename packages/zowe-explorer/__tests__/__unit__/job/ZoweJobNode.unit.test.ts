@@ -18,7 +18,7 @@ import * as globals from "../../../src/globals";
 import { Logger } from "@zowe/imperative";
 import { createIJobFile, createIJobObject, createJobSessionNode } from "../../../__mocks__/mockCreators/jobs";
 import { Job } from "../../../src/job/ZoweJobNode";
-import { ValidProfileEnum, IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
+import { ValidProfileEnum, IZoweJobTreeNode, ProfilesCache } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
@@ -180,6 +180,14 @@ async function createGlobalMocks() {
 
     // Reset getConfiguration because we called it when testJobsProvider was assigned
     globalMocks.getConfiguration.mockClear();
+
+    Object.defineProperty(ProfilesCache, "getConfigInstance", {
+        value: jest.fn(() => {
+            return {
+                usingTeamConfig: false,
+            };
+        }),
+    });
 
     return globalMocks;
 }
