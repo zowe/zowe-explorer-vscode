@@ -25,14 +25,12 @@ import {
     IZoweUSSTreeNode,
     IZoweTreeNode,
     IZoweTree,
-    ProfilesCache,
     KeytarApi,
-    getSecurityModules,
 } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import { Profiles } from "./Profiles";
-import { errorHandling, getZoweDir } from "./utils/ProfilesUtils";
+import { errorHandling, getProfileInfo, getZoweDir } from "./utils/ProfilesUtils";
 import { linkProfileDialog } from "./ProfileLink";
 import { ImperativeError, CliProfileManager, ProfileInfo } from "@zowe/imperative";
 import { createDatasetTree } from "./dataset/DatasetTree";
@@ -102,11 +100,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             profileRootDirectory: path.join(getZoweDir(), "profiles"),
         });
 
-        const mProfileInfo = new ProfileInfo("zowe", {
-            requireKeytar: () => getSecurityModules("keytar", globals.ISTHEIA),
-        });
-        ProfilesCache.createConfigInstance(mProfileInfo);
-        await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir() });
+        await getProfileInfo(globals.ISTHEIA);
 
         // Initialize profile manager
         await Profiles.createInstance(globals.LOG);
