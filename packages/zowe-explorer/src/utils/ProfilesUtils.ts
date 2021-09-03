@@ -17,7 +17,6 @@ import * as path from "path";
 import { Session, IProfile, ImperativeConfig, IProfileLoaded, ProfileInfo } from "@zowe/imperative";
 import { getSecurityModules, IZoweNodeType, IZoweTree, IZoweTreeNode, ProfilesCache } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
-import { trueCasePathSync } from "true-case-path";
 import * as nls from "vscode-nls";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 
@@ -214,11 +213,5 @@ export async function getProfileInfo(envTheia: boolean): Promise<ProfileInfo> {
         requireKeytar: () => getSecurityModules("keytar", envTheia),
     });
     ProfilesCache.createConfigInstance(mProfileInfo);
-    if (vscode.workspace.workspaceFolders) {
-        const rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
-        await mProfileInfo.readProfilesFromDisk({ projectDir: trueCasePathSync(rootPath) });
-    } else {
-        await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir() });
-    }
     return mProfileInfo;
 }

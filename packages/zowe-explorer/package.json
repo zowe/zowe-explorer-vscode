@@ -1736,7 +1736,6 @@
     "run-sequence": "^2.2.1",
     "selenium-webdriver": "^3.6.0",
     "sinon": "^6.1.0",
-    "true-case-path": "2.2.1",
     "ts-jest": "^25.3.0",
     "ts-loader": "^7.0.1",
     "ts-node": "^8.10.1",
@@ -1751,6 +1750,7 @@
     "js-yaml": "3.13.1",
     "moment": "2.24.0",
     "promise-queue": "2.2.5",
+    "true-case-path": "2.2.1",
     "yamljs": "0.3.0"
   },
   "jest": {
