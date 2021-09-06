@@ -25,15 +25,14 @@ import {
     IZoweUSSTreeNode,
     IZoweTreeNode,
     IZoweTree,
-    ProfilesConfig,
     KeytarApi,
 } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import { Profiles } from "./Profiles";
-import { errorHandling, getZoweDir } from "./utils/ProfilesUtils";
+import { errorHandling, getProfileInfo, getZoweDir } from "./utils/ProfilesUtils";
 import { linkProfileDialog } from "./ProfileLink";
-import { CredentialManagerFactory, ImperativeError, CliProfileManager, ProfileInfo } from "@zowe/imperative";
+import { ImperativeError, CliProfileManager, ProfileInfo } from "@zowe/imperative";
 import { createDatasetTree } from "./dataset/DatasetTree";
 import { createJobsTree } from "./job/ZosJobsProvider";
 import { createUSSTree } from "./uss/USSTree";
@@ -42,8 +41,7 @@ import SpoolProvider from "./SpoolProvider";
 import * as nls from "vscode-nls";
 import { TsoCommandHandler } from "./command/TsoCommandHandler";
 import { cleanTempDir, moveTempFolder, hideTempFolder } from "./utils/TempFolder";
-declare const __webpack_require__: typeof require;
-declare const __non_webpack_require__: typeof require;
+import { trueCasePathSync } from "true-case-path";
 
 // Set up localization
 nls.config({
@@ -103,19 +101,17 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             profileRootDirectory: path.join(getZoweDir(), "profiles"),
         });
 
-        const mProfileInfo = new ProfileInfo("zowe", {
-            requireKeytar: () => getSecurityModules("keytar"),
-        });
-        ProfilesConfig.createInstance(mProfileInfo);
-        await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir() });
-
-        if (mProfileInfo.usingTeamConfig) {
-            // Initialize profile manager for team config
-            await Profiles.createConfigInstance(globals.LOG);
+        const mProfileInfo = await getProfileInfo(globals.ISTHEIA);
+        if (vscode.workspace.workspaceFolders) {
+            const rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
+            await mProfileInfo.readProfilesFromDisk({ projectDir: trueCasePathSync(rootPath) });
         } else {
-            // Initialize profile manager for old-school profiles
-            await Profiles.createInstance(globals.LOG);
+            await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir() });
         }
+
+        // Initialize profile manager
+        await Profiles.createInstance(globals.LOG);
+
         // Initialize dataset provider
         datasetProvider = await createDatasetTree(globals.LOG);
         // Initialize uss provider
@@ -435,29 +431,6 @@ function initSubscribers(context: vscode.ExtensionContext, theProvider: IZoweTre
             await theProvider.flipState(e.element, true);
         });
     }
-}
-
-/**
- * Imports the neccesary security modules
- */
-export function getSecurityModules(moduleName): NodeModule | undefined {
-    const r = typeof __webpack_require__ === "function" ? __non_webpack_require__ : require;
-    // Workaround for Theia issue (https://github.com/eclipse-theia/theia/issues/4935)
-    const appRoot = globals.ISTHEIA ? process.cwd() : vscode.env.appRoot;
-    try {
-        return r(`${appRoot}/node_modules/${moduleName}`);
-    } catch (err) {
-        /* Do nothing */
-    }
-    try {
-        return r(`${appRoot}/node_modules.asar/${moduleName}`);
-    } catch (err) {
-        /* Do nothing */
-    }
-    vscode.window.showWarningMessage(
-        localize("initialize.module.load", "Credentials not managed, unable to load security file: ") + moduleName
-    );
-    return undefined;
 }
 
 /**

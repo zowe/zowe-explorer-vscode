@@ -18,7 +18,7 @@ import * as fsextra from "fs-extra";
 import * as imperative from "@zowe/imperative";
 import * as extension from "../../src/extension";
 import * as globals from "../../src/globals";
-import { ValidProfileEnum, ProfilesConfig } from "@zowe/zowe-explorer-api";
+import { ValidProfileEnum, ProfilesCache } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../src/Profiles";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import { createIProfile, createTreeView } from "../../__mocks__/mockCreators/shared";
@@ -320,7 +320,7 @@ async function createGlobalMocks() {
             };
         }),
     });
-    Object.defineProperty(ProfilesConfig, "getInstance", {
+    Object.defineProperty(ProfilesCache, "getConfigInstance", {
         value: jest.fn(() => {
             return {
                 usingTeamConfig: false,
@@ -390,7 +390,7 @@ describe("Extension Unit Tests", () => {
         // Check that tree providers are initialized successfully
         // tslint:disable-next-line: no-magic-numbers
         expect(globalMocks.mockCreateTreeView.mock.calls.length).toBe(3);
-        expect(globalMocks.mockCreateTreeView.mock.calls[0][0]).toBe("zowe.explorer");
+        expect(globalMocks.mockCreateTreeView.mock.calls[0][0]).toBe("zowe.ds.explorer");
         expect(globalMocks.mockCreateTreeView.mock.calls[1][0]).toBe("zowe.uss.explorer");
 
         // Check that CLI Profile Manager is initialized successfully

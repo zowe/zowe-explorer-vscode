@@ -14,6 +14,8 @@ import * as imperative from "@zowe/imperative";
 import * as path from "path";
 import * as os from "os";
 import * as fs from "fs";
+import * as zowe from "@zowe/cli";
+import * as globals from "./globals";
 import {
     ZoweExplorerApi,
     ZoweExplorerTreeApi,
@@ -22,12 +24,13 @@ import {
     IZoweDatasetTreeNode,
     IZoweUSSTreeNode,
     IZoweJobTreeNode,
-    ProfilesConfig,
+    ProfilesCache,
 } from "@zowe/zowe-explorer-api";
 import { Profiles } from "./Profiles";
 import { getProfile, getLinkedProfile } from "./ProfileLink";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import * as nls from "vscode-nls";
+import { getProfileInfo, getZoweDir } from "./utils/ProfilesUtils";
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
@@ -78,7 +81,16 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
         public jobsProvider?: IZoweTree<IZoweJobTreeNode>
     ) {}
 
-    public async initForZowe(type: string, meta: imperative.ICommandProfileTypeConfiguration[]) {
+    /**
+     *
+     * @implements ZoweExplorerApi.IApiExplorerExtender.initForZowe()
+     * @param {string} profileType
+     * @param {imperative.ICommandProfileTypeConfiguration[]} profileTypeConfigurations
+     */
+    public async initForZowe(
+        profileType: string,
+        profileTypeConfigurations?: imperative.ICommandProfileTypeConfiguration[]
+    ) {
         // Ensure that when a user has not installed the profile type's CLI plugin
         // and/or created a profile that the profile directory in ~/.zowe/profiles
         // will be created with the appropriate meta data. If not called the user will
@@ -87,17 +99,29 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
             defaultHome: path.join(os.homedir(), ".zowe"),
             envVariablePrefix: "ZOWE",
         };
-        const configOptions = Array.from(meta);
-        const exists = fs.existsSync(path.posix.join(`${os.homedir}/.zowe/profiles/${type}`));
-        if (configOptions && !exists) {
+        const mProfileInfo = await getProfileInfo(globals.ISTHEIA);
+        if (profileTypeConfigurations && !mProfileInfo.usingTeamConfig) {
+            const configOptions = Array.from(profileTypeConfigurations);
+            const exists = fs.existsSync(path.posix.join(`${os.homedir()}/.zowe/profiles/${profileType}`));
+            if (configOptions && !exists) {
+                await imperative.CliProfileManager.initialize({
+                    configuration: configOptions,
+                    profileRootDirectory: path.join(imperative.ImperativeConfig.instance.cliHome, "profiles"),
+                });
+            }
+        } else {
+            // Ensure that ~/.zowe folder exists
             await imperative.CliProfileManager.initialize({
-                configuration: configOptions,
-                profileRootDirectory: path.join(imperative.ImperativeConfig.instance.cliHome, "profiles"),
+                configuration: zowe.getImperativeConfig().profiles,
+                profileRootDirectory: path.join(getZoweDir(), "profiles"),
             });
         }
         // sequentially reload the internal profiles cache to satisfy all the newly added profile types
-        await ZoweExplorerExtender.refreshProfilesQueue.add(() =>
-            Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance())
+        await ZoweExplorerExtender.refreshProfilesQueue.add(
+            async (): Promise<void> => {
+                // eslint-disable-next-line no-return-await
+                await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
+            }
         );
     }
 
@@ -117,6 +141,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
      * profile types that can be employed in conjunction with the primary profile to provide
      * alternative support.
      *
+     * @deprecated
      * @param primaryNode represents the Tree item that is being used
      * @return The requested profile
      */
@@ -125,22 +150,32 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
     }
 
     /**
+     * Gives extenders access to the profiles loaded into memory by Zowe Explorer.
+     *
+     * @implements ZoweExplorerApi.IApiExplorerExtender.getProfilesCache()
+     * @returns {ProfilesCache}
+     */
+    public getProfilesCache(): ProfilesCache {
+        return Profiles.getInstance();
+    }
+
+    /**
      * After an extenders registered all its API extensions it
      * might want to request that profiles should get reloaded
      * to make them automatically appears in the Explorer drop-
      * down dialogs.
      *
+     * @implements ZoweExplorerApi.IApiExplorerExtender.reloadProfiles()
      * @param profileType optional profile type that the extender can specify
      */
     public async reloadProfiles(profileType?: string): Promise<void> {
         // sequentially reload the internal profiles cache to satisfy all the newly added profile types
-        await ZoweExplorerExtender.refreshProfilesQueue.add((): any => {
-            if (ProfilesConfig.getInstance().usingTeamConfig) {
-                Profiles.getInstance().refreshConfig(ZoweExplorerApiRegister.getInstance());
-            } else {
-                Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
+        await ZoweExplorerExtender.refreshProfilesQueue.add(
+            async (): Promise<void> => {
+                // eslint-disable-next-line no-return-await
+                await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
             }
-        });
+        );
         // profileType is used to load a default extender profile if no other profiles are populating the trees
         this.datasetProvider?.addSession(undefined, profileType);
         this.ussFileProvider?.addSession(undefined, profileType);
