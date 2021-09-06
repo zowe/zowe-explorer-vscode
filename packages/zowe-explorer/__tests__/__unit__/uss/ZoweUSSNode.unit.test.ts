@@ -57,7 +57,7 @@ async function createGlobalMocks() {
         Delete: jest.fn(),
         Utilities: jest.fn(),
         withProgress: jest.fn(),
-        createBasicZosmfSession: jest.fn(),
+        createSessCfgFromArgs: jest.fn(),
         ZosmfSession: jest.fn(),
         getUssApiMock: jest.fn(),
         ProgressLocation: jest.fn().mockImplementation(() => {
@@ -121,8 +121,8 @@ async function createGlobalMocks() {
     Object.defineProperty(vscode.window, "showInputBox", { value: globalMocks.showInputBox, configurable: true });
     Object.defineProperty(vscode.window, "createTreeView", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe, "ZosmfSession", { value: globalMocks.ZosmfSession, configurable: true });
-    Object.defineProperty(globalMocks.ZosmfSession, "createBasicZosmfSession", {
-        value: globalMocks.createBasicZosmfSession,
+    Object.defineProperty(globalMocks.ZosmfSession, "createSessCfgFromArgs", {
+        value: globalMocks.createSessCfgFromArgs,
         configurable: true,
     });
     Object.defineProperty(zowe, "Download", { value: globalMocks.Download, configurable: true });
@@ -1010,7 +1010,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
         );
 
         newMocks.testUSSTree.getTreeView.mockReturnValue(createTreeView());
-        globalMocks.createBasicZosmfSession.mockReturnValue(globalMocks.session);
+        globalMocks.createSessCfgFromArgs.mockReturnValue(globalMocks.session);
         globalMocks.ussFile.mockReturnValue(globalMocks.response);
         globalMocks.withProgress.mockReturnValue(globalMocks.response);
         globalMocks.openTextDocument.mockResolvedValue("test.doc");
