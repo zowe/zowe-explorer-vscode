@@ -25,14 +25,12 @@ import {
     IZoweUSSTreeNode,
     IZoweTreeNode,
     IZoweTree,
-    ProfilesCache,
     KeytarApi,
-    getSecurityModules,
 } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import { Profiles } from "./Profiles";
-import { errorHandling, getZoweDir } from "./utils/ProfilesUtils";
+import { errorHandling, getProfileInfo, getZoweDir } from "./utils/ProfilesUtils";
 import { linkProfileDialog } from "./ProfileLink";
 import { ImperativeError, CliProfileManager, ProfileInfo } from "@zowe/imperative";
 import { createDatasetTree } from "./dataset/DatasetTree";
@@ -43,6 +41,7 @@ import SpoolProvider from "./SpoolProvider";
 import * as nls from "vscode-nls";
 import { TsoCommandHandler } from "./command/TsoCommandHandler";
 import { cleanTempDir, moveTempFolder, hideTempFolder } from "./utils/TempFolder";
+import { trueCasePathSync } from "true-case-path";
 
 // Set up localization
 nls.config({
@@ -102,11 +101,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             profileRootDirectory: path.join(getZoweDir(), "profiles"),
         });
 
-        const mProfileInfo = new ProfileInfo("zowe", {
-            requireKeytar: () => getSecurityModules("keytar", globals.ISTHEIA),
-        });
-        ProfilesCache.createConfigInstance(mProfileInfo);
-        await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir() });
+        const mProfileInfo = await getProfileInfo(globals.ISTHEIA);
+        if (vscode.workspace.workspaceFolders) {
+            const rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
+            await mProfileInfo.readProfilesFromDisk({ projectDir: trueCasePathSync(rootPath) });
+        } else {
+            await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir() });
+        }
 
         // Initialize profile manager
         await Profiles.createInstance(globals.LOG);

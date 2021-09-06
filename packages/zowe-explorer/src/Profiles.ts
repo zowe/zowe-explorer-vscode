@@ -252,7 +252,7 @@ export class Profiles extends ProfilesCache {
      * @param {USSTree} zoweFileProvider - either the USS, MVS, JES tree
      */
     public async createZoweSession(zoweFileProvider: IZoweTree<IZoweTreeNode>) {
-        const allProfiles = (await Profiles.getInstance()).allProfiles;
+        const allProfiles = Profiles.getInstance().allProfiles;
         const createNewProfile = "Create a New Connection to z/OS";
         let chosenProfile: string = "";
 
@@ -322,9 +322,14 @@ export class Profiles extends ProfilesCache {
 
         if (chosenProfile === "") {
             if (ProfilesCache.getConfigInstance().usingTeamConfig) {
-                const configHomeDir = ProfilesCache.getConfigInstance().getTeamConfig().mHomeDir;
+                let configDir;
+                if (vscode.workspace.workspaceFolders) {
+                    configDir = ProfilesCache.getConfigInstance().getTeamConfig().mProjectDir;
+                } else {
+                    configDir = ProfilesCache.getConfigInstance().getTeamConfig().mHomeDir;
+                }
                 const configName = ProfilesCache.getConfigInstance().getTeamConfig().configName;
-                const filePath = path.join(configHomeDir, configName);
+                const filePath = path.join(configDir, configName);
                 await this.openConfigFile(filePath);
                 return;
             }

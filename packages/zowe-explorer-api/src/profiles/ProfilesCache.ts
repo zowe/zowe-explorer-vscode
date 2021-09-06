@@ -299,7 +299,7 @@ export class ProfilesCache {
         const mProfileInfo = ProfilesCache.getConfigInstance();
         for (const type of apiRegister.registeredApiTypes()) {
             // Step 1: Get all profiles for each registered type
-            const profilesForType = mProfileInfo.getAllProfiles(type);
+            const profilesForType = mProfileInfo.getAllProfiles(type).filter((temp) => temp.profLoc.osLoc.length !== 0);
             if (profilesForType && profilesForType.length > 0) {
                 for (const prof of profilesForType) {
                     // Step 2: Merge args for each profile
@@ -313,9 +313,9 @@ export class ProfilesCache {
                         failNotFound: false,
                     };
                     // Step 3: Update allProfiles list
-                    this.allProfiles.push(profileFix);
                     tmpAllProfiles.push(profileFix);
                 }
+                this.allProfiles.push(...tmpAllProfiles);
                 this.profilesByType.set(type, tmpAllProfiles);
                 tmpAllProfiles = [];
                 const defaultProfAttr = this.getDefaultConfigProfile(mProfileInfo, type);
