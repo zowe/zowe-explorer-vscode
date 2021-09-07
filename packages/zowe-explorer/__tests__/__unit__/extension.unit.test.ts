@@ -418,7 +418,7 @@ describe("Extension Unit Tests", () => {
 
         globalMocks.mockExistsSync.mockReturnValueOnce(false);
         globalMocks.mockGetConfiguration.mockReturnValueOnce({
-            get: (setting: string) => [""],
+            get: (setting: string) => "",
             // tslint:disable-next-line: no-empty
             update: jest.fn(() => {
                 {

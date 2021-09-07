@@ -350,6 +350,14 @@ export class EventEmitter<T> {
  * the editor-process so that they should be always used instead of nodejs-equivalents.
  */
 export namespace workspace {
+    export function getConfiguration(configuration: string) {
+        return {
+            inspect: () => {
+                return {};
+            },
+        };
+    }
+
     /**
      * ~~The folder that is open in the editor. `undefined` when no folder
      * has been opened.~~
