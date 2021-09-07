@@ -234,7 +234,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
 }
 
 function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
-    vscode.commands.registerCommand("zowe.config.init", async () => datasetProvider.createZoweSchema(datasetProvider));
+    vscode.commands.registerCommand("zowe.all.config.init", async () =>
+        datasetProvider.createZoweSchema(datasetProvider)
+    );
     vscode.commands.registerCommand("zowe.ds.addSession", async () =>
         datasetProvider.createZoweSession(datasetProvider)
     );

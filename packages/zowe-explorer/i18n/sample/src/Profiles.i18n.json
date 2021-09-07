@@ -17,6 +17,8 @@
   "editConnection.default": "Operation Cancelled",
   "editConnection.success": "Profile was successfully updated",
   "createNewConnection.option.prompt.type.placeholder": "Profile Type",
+  "createZoweSchema.reload.button": "Reload Window",
+  "createZoweSchema.reload.infoMessage": "Team Configuration file created. Location: {0}. \n Please reload your window.",
   "createNewConnection.profileName": "Profile name was not supplied. Operation Cancelled",
   "createNewConnection.profileType": "No profile type was chosen. Operation Cancelled",
   "createNewConnection.zosmfURL": "No valid value for z/OS URL. Operation Cancelled",

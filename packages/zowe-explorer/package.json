@@ -659,8 +659,8 @@
         }
       },
       {
-        "command": "zowe.config.init",
-        "title": "zowe config init",
+        "command": "zowe.all.config.init",
+        "title": "%all.configInit%",
         "category": "Zowe Explorer"
       },
       {
