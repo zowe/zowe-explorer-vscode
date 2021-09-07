@@ -213,6 +213,5 @@ export async function getProfileInfo(envTheia: boolean): Promise<ProfileInfo> {
         requireKeytar: () => getSecurityModules("keytar", envTheia),
     });
     ProfilesCache.createConfigInstance(mProfileInfo);
-    await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir() });
     return mProfileInfo;
 }

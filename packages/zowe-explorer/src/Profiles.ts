@@ -322,9 +322,14 @@ export class Profiles extends ProfilesCache {
 
         if (chosenProfile === "") {
             if (ProfilesCache.getConfigInstance().usingTeamConfig) {
-                const configHomeDir = ProfilesCache.getConfigInstance().getTeamConfig().mHomeDir;
+                let configDir;
+                if (vscode.workspace.workspaceFolders) {
+                    configDir = ProfilesCache.getConfigInstance().getTeamConfig().mProjectDir;
+                } else {
+                    configDir = ProfilesCache.getConfigInstance().getTeamConfig().mHomeDir;
+                }
                 const configName = ProfilesCache.getConfigInstance().getTeamConfig().configName;
-                const filePath = path.join(configHomeDir, configName);
+                const filePath = path.join(configDir, configName);
                 await this.openConfigFile(filePath);
                 return;
             }

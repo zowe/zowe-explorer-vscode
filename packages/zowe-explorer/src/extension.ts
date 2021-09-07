@@ -42,6 +42,7 @@ import * as nls from "vscode-nls";
 import { TsoCommandHandler } from "./command/TsoCommandHandler";
 import { cleanTempDir, moveTempFolder, hideTempFolder } from "./utils/TempFolder";
 import { standardizeSettings } from "./utils/SettingsConfig";
+import { trueCasePathSync } from "true-case-path";
 
 // Set up localization
 nls.config({
@@ -103,7 +104,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             profileRootDirectory: path.join(getZoweDir(), "profiles"),
         });
 
-        await getProfileInfo(globals.ISTHEIA);
+        const mProfileInfo = await getProfileInfo(globals.ISTHEIA);
+        if (vscode.workspace.workspaceFolders) {
+            const rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
+            await mProfileInfo.readProfilesFromDisk({ projectDir: trueCasePathSync(rootPath) });
+        } else {
+            await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir() });
+        }
 
         // Initialize profile manager
         await Profiles.createInstance(globals.LOG);
