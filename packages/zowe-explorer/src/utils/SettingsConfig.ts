@@ -77,7 +77,6 @@ export async function standardizeWorkspaceSettings() {
         zoweOldConfigurations
             .filter((c) => !c.match(new RegExp("Zowe-[A-Za-z]+-Persistent|Zowe Commands: History", "g")))
             .forEach(async (configuration) => {
-                console.log(configuration);
                 let workspaceValue: any = await configurations.inspect(configuration).workspaceValue;
 
                 if (configuration === "Zowe-Temp-Folder-Location") {
@@ -109,6 +108,10 @@ export async function standardizeSettings() {
         (await configurations.inspect(globals.SETTINGS_VERSION).workspaceValue) !== currentVersionNumber;
     const workspaceIsOpen = vscode.workspace.workspaceFolders !== undefined;
 
-    if (globalIsNotMigrated) standardizeGlobalSettings();
-    if (workspaceIsNotMigrated && workspaceIsOpen) standardizeWorkspaceSettings();
+    if (globalIsNotMigrated) {
+        standardizeGlobalSettings();
+    }
+    if (workspaceIsNotMigrated && workspaceIsOpen) {
+        standardizeWorkspaceSettings();
+    }
 }
