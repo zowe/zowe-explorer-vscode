@@ -9,7 +9,7 @@
  *                                                                                 *
  */
 
-import { IProfileLoaded, Logger, ICommandArguments, ConnectionPropsForSessCfg, Session } from "@zowe/imperative";
+import { IProfileLoaded, Logger, ICommandArguments, Session } from "@zowe/imperative";
 import * as zowe from "@zowe/cli";
 import * as vscode from "vscode";
 import * as globals from "../../../src/globals";
@@ -68,7 +68,6 @@ const cmdArgs: ICommandArguments = {
     password: testProfile.profile.password,
 };
 const sessCfg = zowe.ZosmfSession.createSessCfgFromArgs(cmdArgs);
-ConnectionPropsForSessCfg.resolveSessCfgProps(sessCfg, cmdArgs);
 const session = new Session(sessCfg);
 const sessionNode = new ZoweDatasetNode(
     testConst.profile.name,

@@ -67,7 +67,6 @@ export function createSessCfgFromArgs(testProfile: imperative.IProfileLoaded) {
         password: testProfile.profile.password,
     };
     const sessCfg = zowe.ZosmfSession.createSessCfgFromArgs(cmdArgs);
-    imperative.ConnectionPropsForSessCfg.resolveSessCfgProps(sessCfg, cmdArgs);
     const session = new imperative.Session(sessCfg);
     return session;
 }
