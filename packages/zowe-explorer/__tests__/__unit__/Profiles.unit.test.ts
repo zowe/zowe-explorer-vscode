@@ -62,6 +62,7 @@ async function createGlobalMocks() {
         mockConfigurationTarget: jest.fn(),
         mockCreateSessCfgFromArgs: jest.fn(),
         testProfile: createValidIProfile(),
+        testSession: createISession(),
         mockCliProfileManager: createProfileManager(),
         ProgressLocation: jest.fn().mockImplementation(() => {
             return {
@@ -842,6 +843,13 @@ describe("Profiles Unit Tests - Function promptCredentials", () => {
         newMocks.profiles.allProfiles[1].profile = { user: "test", password: "test" };
         newMocks.profiles.loadNamedProfile = newMocks.mockLoadNamedProfile;
 
+        const mockMvsApi = await ZoweExplorerApiRegister.getMvsApi(globalMocks.testProfile);
+        const getMvsApiMock = jest.fn();
+        getMvsApiMock.mockReturnValue(mockMvsApi);
+        globalMocks.testSession.ISession.base64EncodedAuth = "fake";
+        ZoweExplorerApiRegister.getMvsApi = getMvsApiMock.bind(ZoweExplorerApiRegister);
+        jest.spyOn(mockMvsApi, "getSession").mockReturnValue(globalMocks.testSession);
+
         return newMocks;
     }
 
@@ -889,6 +897,7 @@ describe("Profiles Unit Tests - Function promptCredentials", () => {
         });
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("oldfake");
+        globalMocks.testSession.ISession.password = "oldfake";
 
         const res = await blockMocks.profiles.promptCredentials(blockMocks.imperativeProfile.name);
         expect(res).toEqual(["fake", "oldfake", "fake"]);
@@ -905,6 +914,7 @@ describe("Profiles Unit Tests - Function promptCredentials", () => {
         });
         globalMocks.mockShowInputBox.mockResolvedValueOnce("oldfake");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.testSession.ISession.user = "oldfake";
 
         const res = await blockMocks.profiles.promptCredentials(blockMocks.imperativeProfile.name);
         expect(res).toEqual(["oldfake", "fake", "fake"]);

@@ -208,8 +208,6 @@ describe("ZoweJobNode unit tests - Function addSession", () => {
     it("Tests that addSession adds the session to the tree", async () => {
         const globalMocks = await createGlobalMocks();
 
-        globalMocks.testJobsProvider.mSessionNodes.pop();
-
         await globalMocks.testJobsProvider.addSession("sestest");
 
         expect(globalMocks.testJobsProvider.mSessionNodes[1]).toBeDefined();
@@ -220,7 +218,6 @@ describe("ZoweJobNode unit tests - Function addSession", () => {
     it("Tests that addSession adds the session to the tree with disabled global setting", async () => {
         const globalMocks = await createGlobalMocks();
 
-        globalMocks.testJobsProvider.mSessionNodes.pop();
         globalMocks.mockProfileInstance.checkProfileValidationSetting = globalMocks.mockValidationSetting.mockReturnValueOnce(
             false
         );
