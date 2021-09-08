@@ -35,8 +35,6 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  * @class TSOCommandHandler
  */
 export class TsoCommandHandler extends ZoweCommandProvider {
-    public outputChannel: vscode.OutputChannel;
-
     /**
      * Implements access singleton
      * for {TsoCommandHandler}.
@@ -53,6 +51,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
     private static readonly defaultDialogText: string =
         "\uFF0B " + localize("command.option.prompt.search", "Create a new TSO Command");
     private static instance: TsoCommandHandler;
+    public outputChannel: vscode.OutputChannel;
 
     constructor() {
         super();
