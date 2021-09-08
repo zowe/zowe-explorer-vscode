@@ -34,8 +34,6 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  * @class MvsCommandHandler
  */
 export class MvsCommandHandler extends ZoweCommandProvider {
-    public outputChannel: vscode.OutputChannel;
-
     /**
      * Implements access singleton
      * for {MvsCommandHandler}.
@@ -52,6 +50,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
     private static readonly defaultDialogText: string =
         "\uFF0B " + localize("command.option.prompt.search", "Create a new MVS Command");
     private static instance: MvsCommandHandler;
+    public outputChannel: vscode.OutputChannel;
 
     constructor() {
         super();
