@@ -35,6 +35,8 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  * @class TSOCommandHandler
  */
 export class TsoCommandHandler extends ZoweCommandProvider {
+    public outputChannel: vscode.OutputChannel;
+
     /**
      * Implements access singleton
      * for {TsoCommandHandler}.
@@ -54,6 +56,10 @@ export class TsoCommandHandler extends ZoweCommandProvider {
 
     constructor() {
         super();
+
+        this.outputChannel = vscode.window.createOutputChannel(
+            localize("issueTsoCommand.outputchannel.title", "Zowe TSO Command")
+        );
     }
 
     /**

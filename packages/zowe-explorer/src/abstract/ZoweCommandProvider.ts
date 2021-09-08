@@ -32,7 +32,6 @@ export class ZoweCommandProvider {
     private static readonly totalFilters: number = 10;
     private static readonly persistenceSchema: string = "Zowe Commands: History";
 
-    public outputChannel: vscode.OutputChannel;
     public history: PersistentFilters;
     // Event Emitters used to notify subscribers that the refresh event has fired
     public mOnDidChangeTreeData: vscode.EventEmitter<IZoweTreeNode | void> = new vscode.EventEmitter<
@@ -42,9 +41,6 @@ export class ZoweCommandProvider {
     private log: Logger = Logger.getAppLogger();
 
     constructor() {
-        this.outputChannel = vscode.window.createOutputChannel(
-            localize("issueCommand.outputchannel.title", "Zowe Command")
-        );
         this.history = new PersistentFilters(ZoweCommandProvider.persistenceSchema, ZoweCommandProvider.totalFilters);
     }
 

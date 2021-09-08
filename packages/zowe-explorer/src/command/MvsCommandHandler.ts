@@ -34,6 +34,8 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  * @class MvsCommandHandler
  */
 export class MvsCommandHandler extends ZoweCommandProvider {
+    public outputChannel: vscode.OutputChannel;
+
     /**
      * Implements access singleton
      * for {MvsCommandHandler}.
@@ -53,6 +55,10 @@ export class MvsCommandHandler extends ZoweCommandProvider {
 
     constructor() {
         super();
+
+        this.outputChannel = vscode.window.createOutputChannel(
+            localize("issueMvsCommand.outputchannel.title", "Zowe MVS Command")
+        );
     }
 
     /**
