@@ -804,56 +804,77 @@ export class Profiles extends ProfilesCache {
     }
 
     public async promptCredsConfig(sessname, rePrompt?: boolean): Promise<string[]> {
-        const configAllProfiles = ProfilesCache.getConfigInstance().getAllProfiles();
-        const currentProfile = configAllProfiles.filter((temprofile) => temprofile.profName === sessname.trim())[0];
-        const mergedArgs = ProfilesCache.getConfigInstance().mergeArgsForProfile(currentProfile);
-        const profile: IProfile = {};
-        for (const arg of mergedArgs.knownArgs) {
-            profile[arg.argName] = arg.secure ? ProfilesCache.getConfigInstance().loadSecureArg(arg) : arg.argValue;
-        }
-        for (const arg of mergedArgs.missingArgs) {
-            if (arg.argName === "password") {
-                const pass = await vscode.window.showInputBox({
-                    prompt: `Enter a ${arg.dataType} value for "${arg.argName}"`,
-                    value: arg.argValue?.toString(),
-                    password: arg.secure,
-                });
-                if (pass != null) {
-                    profile[arg.argName] = pass;
-                }
+        let loadedProfile = this.getLoadedProfConfig(sessname);
+        // const configAllProfiles = ProfilesCache.getConfigInstance().getAllProfiles();
+        // const currentProfile = configAllProfiles.filter((temprofile) => temprofile.profName === sessname.trim())[0];
+        // const mergedArgs = ProfilesCache.getConfigInstance().mergeArgsForProfile(currentProfile);
+        // const profile: IProfile = {};
+        // for (const arg of mergedArgs.knownArgs) {
+        //     profile[arg.argName] = arg.secure ? ProfilesCache.getConfigInstance().loadSecureArg(arg) : arg.argValue;
+        // }
+        // const promptArg = [];
+        // for (const arg of mergedArgs.missingArgs) {
+        //     if (arg.argName === "password") {
+        //         promptArg.push(arg.argName);
+        //     }
+        //     if (arg.argName === "user") {
+        //         promptArg.push(arg.argName);
+        //     }
+        // }
+        if (!loadedProfile.profile.user || rePrompt) {
+            const user = await vscode.window.showInputBox({
+                prompt: `Enter a value for "user"`,
+                value: loadedProfile.profile.user?.toString(),
+            });
+            if (user != null) {
+                loadedProfile.profile.user = user;
+            } else {
+                vscode.window.showInformationMessage(
+                    localize("promptCredentials.undefined.username", "Operation Cancelled")
+                );
+                return;
             }
-            if (arg.argName === "user") {
-                const user = await vscode.window.showInputBox({
-                    prompt: `Enter a ${arg.dataType} value for "${arg.argName}"`,
-                    value: arg.argValue?.toString(),
-                });
-                if (user != null) {
-                    profile[arg.argName] = user;
-                }
+        }
+        if (!loadedProfile.profile.password || rePrompt) {
+            const pass = await vscode.window.showInputBox({
+                prompt: `Enter a value for "password"`,
+                value: loadedProfile.profile.password?.toString(),
+                password: loadedProfile.profile.password,
+            });
+            if (pass != null) {
+                loadedProfile.profile.password = pass;
+            } else {
+                vscode.window.showInformationMessage(
+                    localize("promptCredentials.undefined.password", "Operation Cancelled")
+                );
+                return;
             }
         }
-        const profileFix: IProfileLoaded = {
-            message: "",
-            name: currentProfile.profName,
-            type: currentProfile.profType,
-            profile,
-            failNotFound: false,
-        };
+        // const profileFix: IProfileLoaded = {
+        //     message: "",
+        //     name: currentProfile.profName,
+        //     type: currentProfile.profType,
+        //     profile,
+        //     failNotFound: false,
+        // };
         try {
-            const updSession = await ZoweExplorerApiRegister.getMvsApi(profileFix).getSession();
+            const updSession = await ZoweExplorerApiRegister.getMvsApi(loadedProfile).getSession();
             if (rePrompt) {
                 const infoMsg = localize(
                     "promptCredentials.updateConfigCreds.infoMessage",
                     "Credentials for future use with profile {0} will need to be updated in the config file or by using the command 'zowe config secure'.",
-                    currentProfile.profName
+                    loadedProfile.name
                 );
                 vscode.window.showInformationMessage(infoMsg);
+                const profArray = [];
                 for (const theprofile of this.allProfiles) {
-                    if (theprofile.name === profileFix.name) {
-                        this.allProfiles.pop();
+                    if (theprofile.name !== loadedProfile.name) {
+                        profArray.push(theprofile);
                     }
                 }
-                this.allProfiles.push(profileFix);
+                profArray.push(loadedProfile);
+                this.allProfiles = profArray;
+                console.log(this.allProfiles);
             }
             return [updSession.ISession.user, updSession.ISession.password, updSession.ISession.base64EncodedAuth];
         } catch (error) {

@@ -99,8 +99,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
             defaultHome: path.join(os.homedir(), ".zowe"),
             envVariablePrefix: "ZOWE",
         };
-        const mProfileInfo = await getProfileInfo(globals.ISTHEIA);
-        if (profileTypeConfigurations && !mProfileInfo.usingTeamConfig) {
+        if (profileTypeConfigurations) {
             const configOptions = Array.from(profileTypeConfigurations);
             const exists = fs.existsSync(path.posix.join(`${os.homedir()}/.zowe/profiles/${profileType}`));
             if (configOptions && !exists) {
@@ -109,17 +108,10 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
                     profileRootDirectory: path.join(imperative.ImperativeConfig.instance.cliHome, "profiles"),
                 });
             }
-        } else {
-            // Ensure that ~/.zowe folder exists
-            await imperative.CliProfileManager.initialize({
-                configuration: zowe.getImperativeConfig().profiles,
-                profileRootDirectory: path.join(getZoweDir(), "profiles"),
-            });
         }
         // sequentially reload the internal profiles cache to satisfy all the newly added profile types
         await ZoweExplorerExtender.refreshProfilesQueue.add(
             async (): Promise<void> => {
-                // eslint-disable-next-line no-return-await
                 await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
             }
         );
