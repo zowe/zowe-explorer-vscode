@@ -92,11 +92,7 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
             } else {
                 await vscode.window.showErrorMessage(errMsg, "Check Credentials").then(async (selection) => {
                     if (selection) {
-                        if (ProfilesCache.getConfigInstance().usingTeamConfig) {
-                            await Profiles.getInstance().promptCredsConfig(label.trim(), true);
-                        } else {
-                            await Profiles.getInstance().promptCredentials(label.trim(), true);
-                        }
+                        await Profiles.getInstance().promptCredentials(label.trim(), true);
                     }
                 });
             }
