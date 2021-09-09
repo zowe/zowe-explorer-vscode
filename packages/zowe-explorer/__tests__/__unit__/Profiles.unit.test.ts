@@ -858,6 +858,7 @@ describe("Profiles Unit Tests - Function promptCredentials", () => {
         });
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowInformationMessage.mockResolvedValueOnce([1]);
 
         const res = await blockMocks.profiles.promptCredentials(blockMocks.imperativeProfile.name);
         expect(res).toEqual(["fake", "fake", "fake"]);
@@ -875,6 +876,7 @@ describe("Profiles Unit Tests - Function promptCredentials", () => {
         });
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowInformationMessage.mockResolvedValueOnce([1]);
 
         const res = await blockMocks.profiles.promptCredentials(blockMocks.imperativeProfile.name, true);
         expect(res).toEqual(["fake", "fake", "fake"]);
@@ -891,6 +893,7 @@ describe("Profiles Unit Tests - Function promptCredentials", () => {
         });
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("oldfake");
+        globalMocks.mockShowInformationMessage.mockResolvedValueOnce([1]);
 
         const res = await blockMocks.profiles.promptCredentials(blockMocks.imperativeProfile.name);
         expect(res).toEqual(["fake", "oldfake", "fake"]);
@@ -907,6 +910,7 @@ describe("Profiles Unit Tests - Function promptCredentials", () => {
         });
         globalMocks.mockShowInputBox.mockResolvedValueOnce("oldfake");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowInformationMessage.mockResolvedValueOnce([1]);
 
         const res = await blockMocks.profiles.promptCredentials(blockMocks.imperativeProfile.name);
         expect(res).toEqual(["oldfake", "fake", "fake"]);
