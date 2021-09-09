@@ -183,6 +183,11 @@ export class Logger {
 }
 
 // tslint:disable-next-line:max-classes-per-file
+export class ConnectionPropsForSessCfg {
+    public static resolveSessCfgProps(): void {}
+}
+
+// tslint:disable-next-line:max-classes-per-file
 export class TextUtils {
     public static prettyJson(object: any, options?: any, color?: boolean, append?: string): string {
         return JSON.stringify(object);

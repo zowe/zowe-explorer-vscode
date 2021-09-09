@@ -2786,10 +2786,15 @@ describe("Profiles Unit Tests - Function getCombinedProfile", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        globalMocks.testProfile.profile.user = null;
-        globalMocks.testProfile.profile.password = null;
-        blockMocks.testBaseProfile.profile.host = globalMocks.testProfile.profile.host;
-        blockMocks.testBaseProfile.profile.port = globalMocks.testProfile.profile.port;
+        globalMocks.testProfile.profile.user = "fake";
+        globalMocks.testProfile.profile.password = "fake";
+        globalMocks.testProfile.profile.host = "fake";
+        blockMocks.testBaseProfile.profile.host = "fake";
+        blockMocks.testBaseProfile.profile.port = 1443;
+        globalMocks.testProfile.profile.type = "basic";
+        globalMocks.testProfile.profile.protocol = "https";
+        globalMocks.testProfile.profile.tokenType = "testTokenType";
+        globalMocks.testProfile.profile.tokenValue = "testTokenValue";
 
         const response = await (await blockMocks.mockProfileInstance).getCombinedProfile(
             globalMocks.testProfile,
