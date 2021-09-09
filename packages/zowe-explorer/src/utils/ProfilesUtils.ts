@@ -51,7 +51,7 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
         const msg = errorDetails.toString();
         if (msg.includes("hostname")) {
             if (ProfilesCache.getConfigInstance().usingTeamConfig) {
-                vscode.window.showErrorMessage(errorDetails.toString());
+                vscode.window.showErrorMessage("Required parameter 'hostname' must not be blank");
                 const currentProfile = Profiles.getInstance().getProfileFromConfig(label.trim());
                 const filePath = currentProfile.profLoc.osLoc[0];
                 await Profiles.getInstance().openConfigFile(filePath);

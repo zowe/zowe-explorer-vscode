@@ -88,7 +88,7 @@ export class Profiles extends ProfilesCache {
             });
             let values: string[];
             try {
-                values = await Profiles.getInstance().promptCredentials(theProfile.name, true);
+                values = await Profiles.getInstance().promptCredentials(theProfile.name);
             } catch (error) {
                 errorHandling(
                     error,
@@ -777,43 +777,40 @@ export class Profiles extends ProfilesCache {
             await this.refresh(ZoweExplorerApiRegister.getInstance());
             return undefined;
         } else {
-            try {
-                const updSession = await ZoweExplorerApiRegister.getMvsApi(loadProfile).getSession(loadProfile);
-                if (rePrompt) {
-                    if (ProfilesCache.getConfigInstance().usingTeamConfig) {
-                        const infoMsg = localize(
-                            "promptCredentials.updateConfigCreds.infoMessage",
-                            "Credentials for future use with profile {0} will need to be updated in the config file or by using the command 'zowe config secure'.",
-                            loadProfile.name
-                        );
-                        vscode.window.showInformationMessage(infoMsg);
-                        for (const theprofile of this.allProfiles) {
-                            if (theprofile.name === loadProfile.name) {
-                                this.allProfiles.pop();
-                            }
-                        }
-                        this.allProfiles.push(loadProfile);
-                    } else {
-                        const saveButton = localize("promptCredentials.saveCredentials.button", "Save Credentials");
-                        const doNotSaveButton = localize("promptCredentials.doNotSave.button", "Do Not Save");
-                        const infoMsg = localize(
-                            "promptCredentials.saveCredentials.infoMessage",
-                            "Save entered credentials for future use with profile: {0}? Saving credentials will update the local yaml file.",
-                            loadProfile.name
-                        );
-                        await vscode.window
-                            .showInformationMessage(infoMsg, ...[saveButton, doNotSaveButton])
-                            .then((selection) => {
-                                if (selection === saveButton) {
-                                    rePrompt = false;
-                                }
-                            });
-                        await this.updateProfile(loadProfile, rePrompt);
+            const updSession = await ZoweExplorerApiRegister.getMvsApi(loadProfile).getSession();
+            if (ProfilesCache.getConfigInstance().usingTeamConfig) {
+                for (const theprofile of this.allProfiles) {
+                    if (theprofile.name === loadProfile.name) {
+                        this.allProfiles.pop();
                     }
                 }
+                this.allProfiles.push(loadProfile);
+                if (rePrompt) {
+                    const infoMsg = localize(
+                        "promptCredentials.updateConfigCreds.infoMessage",
+                        "Credentials for future use with profile {0} will need to be updated in the config file or by using the command 'zowe config secure'.",
+                        loadProfile.name
+                    );
+                    vscode.window.showInformationMessage(infoMsg);
+                }
                 return [updSession.ISession.user, updSession.ISession.password, updSession.ISession.base64EncodedAuth];
-            } catch (error) {
-                await errorHandling(error.message);
+            } else {
+                const saveButton = localize("promptCredentials.saveCredentials.button", "Save Credentials");
+                const doNotSaveButton = localize("promptCredentials.doNotSave.button", "Do Not Save");
+                const infoMsg = localize(
+                    "promptCredentials.saveCredentials.infoMessage",
+                    "Save entered credentials for future use with profile: {0}? Saving credentials will update the local yaml file.",
+                    loadProfile.name
+                );
+                await vscode.window
+                    .showInformationMessage(infoMsg, ...[saveButton, doNotSaveButton])
+                    .then((selection) => {
+                        if (selection === saveButton) {
+                            rePrompt = false;
+                        }
+                    });
+                await this.updateProfile(loadProfile, rePrompt);
+                return [updSession.ISession.user, updSession.ISession.password, updSession.ISession.base64EncodedAuth];
             }
         }
     }
