@@ -159,7 +159,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 await originalNode.reopen(hasClosedTab);
                 this.updateFavorites();
             } catch (err) {
-                errorHandling(
+                await errorHandling(
                     err,
                     originalNode.mProfileName,
                     localize("renameUSS.error", "Unable to rename node: ") + err.message

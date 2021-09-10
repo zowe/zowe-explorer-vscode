@@ -15,10 +15,9 @@ import * as vscode from "vscode";
 import * as os from "os";
 import * as path from "path";
 import { Session, IProfile, ImperativeConfig, IProfileLoaded } from "@zowe/imperative";
-import { IZoweNodeType, IZoweTree, IZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import * as nls from "vscode-nls";
-import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 
 // Set up localization
 nls.config({
@@ -33,7 +32,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  * @param {label} - additional information such as profile name, credentials, messageID etc
  * @param {moreInfo} - additional/customized error messages
  *************************************************************************************************************/
-export function errorHandling(errorDetails: any, label?: string, moreInfo?: string) {
+export async function errorHandling(errorDetails: any, label?: string, moreInfo?: string) {
     let httpErrCode = null;
     const errMsg = localize(
         "errorHandling.invalid.credentials",
@@ -64,13 +63,15 @@ export function errorHandling(errorDetails: any, label?: string, moreInfo?: stri
                             await Profiles.getInstance().ssoLogin(null, label);
                         });
                     } else {
-                        vscode.window
-                            .showErrorMessage(errToken, "Log in to Authentication Service")
-                            .then(async (selection) => {
-                                if (selection) {
-                                    await Profiles.getInstance().ssoLogin(null, label);
-                                }
-                            });
+                        const message = localize(
+                            "ErrorHandling.authentication.login",
+                            "Log in to Authentication Service"
+                        );
+                        vscode.window.showErrorMessage(errToken, message).then(async (selection) => {
+                            if (selection) {
+                                await Profiles.getInstance().ssoLogin(null, label);
+                            }
+                        });
                     }
                     break;
                 }
@@ -79,11 +80,14 @@ export function errorHandling(errorDetails: any, label?: string, moreInfo?: stri
             if (isTheia()) {
                 vscode.window.showErrorMessage(errMsg);
             } else {
-                vscode.window.showErrorMessage(errMsg, "Check Credentials").then(async (selection) => {
-                    if (selection) {
-                        await Profiles.getInstance().promptCredentials(label.trim(), true);
-                    }
-                });
+                const checkCredsButton = localize("ErrorHandling.checkCredentials.button", "Check Credentials");
+                await vscode.window
+                    .showErrorMessage(errMsg, { modal: true }, ...[checkCredsButton])
+                    .then(async (selection) => {
+                        if (selection === checkCredsButton) {
+                            await Profiles.getInstance().promptCredentials(label.trim(), true);
+                        }
+                    });
             }
             break;
         default:
