@@ -343,9 +343,11 @@ export async function deleteDatasetPrompt(
                 }
             }
         );
-        vscode.window.showInformationMessage(
-            localize("deleteMulti.datasetNode", "The following items were deleted: ") + nodesDeleted
-        );
+        if (nodesDeleted.length > 0) {
+            vscode.window.showInformationMessage(
+                localize("deleteMulti.datasetNode", "The following items were deleted: ") + nodesDeleted
+            );
+        }
 
         // refresh Tree View & favorites
         datasetProvider.refresh();
