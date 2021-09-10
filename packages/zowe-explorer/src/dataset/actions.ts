@@ -305,14 +305,14 @@ export async function deleteDatasetPrompt(
                 cancellable: true,
             },
             async (progress, token) => {
-                token.onCancellationRequested(() => {
-                    // will be returned as undefined
-                    vscode.window.showInformationMessage(
-                        localize("deleteDatasetPrompt.deleteCancelled", "Delete action was cancelled.")
-                    );
-                });
                 const total = 100;
                 for (const [index, currNode] of nodes.entries()) {
+                    if (token.isCancellationRequested) {
+                        vscode.window.showInformationMessage(
+                            localize("deleteDatasetPrompt.deleteCancelled", "Delete action was cancelled.")
+                        );
+                        return;
+                    }
                     progress.report({
                         message: `Deleting ${index + 1} of ${nodes.length}`,
                         increment: (index / nodes.length) * total,
