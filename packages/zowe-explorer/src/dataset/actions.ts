@@ -284,7 +284,7 @@ export async function deleteDatasetPrompt(
 
     // Confirm that the user really wants to delete
     globals.LOG.debug(localize("deleteDatasetPrompt.log.debug", "Deleting data set(s): ") + deletedNodes.join(","));
-    const deleteButton = localize("deleteDatasetPrompt.delete.confirmation", "Delete");
+    const deleteButton = localize("deleteDatasetPrompt.confirmation.delete", "Delete");
     const message = localize(
         "deleteDatasetPrompt.confirmation.message",
         "Are you sure you want to delete these items?\nThis will permanently remove these data sets and/or members from your system.\n\n{0}",
@@ -293,7 +293,7 @@ export async function deleteDatasetPrompt(
     await vscode.window.showWarningMessage(message, { modal: true }, ...[deleteButton]).then((selection) => {
         if (!selection || selection === "Cancel") {
             globals.LOG.debug(
-                localize("deleteDatasetPrompt.showQuickPick.log.debug", "Dataset deletion action was canceled.")
+                localize("deleteDatasetPrompt.confirmation.cancel.log.debug", "Dataset deletion action was canceled.")
             );
             nodes = [];
             return;
