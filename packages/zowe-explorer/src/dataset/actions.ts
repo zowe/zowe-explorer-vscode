@@ -357,7 +357,7 @@ export async function deleteDatasetPrompt(
     }
     if (nodesDeleted.length > 0) {
         vscode.window.showInformationMessage(
-            localize("deleteMulti.datasetNode", "The following items were deleted: ") + nodesDeleted
+            localize("deleteMulti.datasetNode", "The following items were deleted:") + nodesDeleted
         );
     }
 
