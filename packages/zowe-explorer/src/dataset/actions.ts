@@ -254,11 +254,12 @@ export async function deleteDatasetPrompt(
     }
 
     // The names of the nodes that should be deleted
-    let deletedNodes: string[] = nodes.map((deletedNode) => {
+    let nodesToDelete: string[] = nodes.map((deletedNode) => {
         return contextually.isDsMember(deletedNode)
             ? ` ${deletedNode.getParent().getLabel()}(${deletedNode.getLabel()})`
             : ` ${deletedNode.getLabel()}`;
     });
+    const nodesDeleted: string[] = [];
 
     // The member parent nodes that should be refreshed individually
     const memberParents: IZoweDatasetTreeNode[] = [];
@@ -279,12 +280,12 @@ export async function deleteDatasetPrompt(
     });
 
     // Confirm that the user really wants to delete
-    globals.LOG.debug(localize("deleteDatasetPrompt.log.debug", "Deleting data set(s): ") + deletedNodes.join(","));
+    globals.LOG.debug(localize("deleteDatasetPrompt.log.debug", "Deleting data set(s): ") + nodesToDelete.join(","));
     const deleteButton = localize("deleteDatasetPrompt.confirmation.delete", "Delete");
     const message = localize(
         "deleteDatasetPrompt.confirmation.message",
         "Are you sure you want to delete these items?\nThis will permanently remove these data sets and/or members from your system.\n\n{0}",
-        deletedNodes.toString().replace(/(,)/g, "\n")
+        nodesToDelete.toString().replace(/(,)/g, "\n")
     );
     await vscode.window.showWarningMessage(message, { modal: true }, ...[deleteButton]).then((selection) => {
         if (!selection || selection === "Cancel") {
@@ -319,17 +320,18 @@ export async function deleteDatasetPrompt(
                     });
                     try {
                         await deleteDataset(currNode, datasetProvider);
-                    } catch (err) {
-                        const labelToRemove = contextually.isDsMember(currNode)
+                        const deleteItemName = contextually.isDsMember(currNode)
                             ? ` ${currNode.getParent().getLabel()}(${currNode.getLabel()})`
                             : ` ${currNode.getLabel()}`;
-                        deletedNodes = deletedNodes.filter((item) => item.trim() !== labelToRemove.trim());
+                        nodesDeleted.push(deleteItemName);
+                    } catch (err) {
+                        // do nothing; delete next
                     }
                 }
             }
         );
         vscode.window.showInformationMessage(
-            localize("deleteMulti.datasetNode", "The following items were deleted:") + deletedNodes
+            localize("deleteMulti.datasetNode", "The following items were deleted: ") + nodesDeleted
         );
 
         // refresh Tree View & favorites
