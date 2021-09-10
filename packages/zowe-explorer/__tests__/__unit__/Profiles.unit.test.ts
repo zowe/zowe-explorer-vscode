@@ -2790,6 +2790,7 @@ describe("Profiles Unit Tests - Function getCombinedProfile", () => {
         globalMocks.testProfile.profile.password = "fake";
         globalMocks.testProfile.profile.host = "fake";
         blockMocks.testBaseProfile.profile.host = "fake";
+        // tslint:disable:no-magic-numbers
         blockMocks.testBaseProfile.profile.port = 1443;
         globalMocks.testProfile.profile.type = "basic";
         globalMocks.testProfile.profile.protocol = "https";
