@@ -304,8 +304,8 @@ export async function deleteDatasetPrompt(
                     try {
                         await deleteDataset(currNode, datasetProvider);
                         const deleteItemName = contextually.isDsMember(currNode)
-                            ? ` ${currNode.getParent().getLabel()}(${currNode.getLabel()})`
-                            : ` ${currNode.getLabel()}`;
+                            ? `${currNode.getParent().getLabel()}(${currNode.getLabel()})`
+                            : `${currNode.getLabel()}`;
                         nodesDeleted.push(deleteItemName);
                     } catch (err) {
                         // do nothing; delete next
