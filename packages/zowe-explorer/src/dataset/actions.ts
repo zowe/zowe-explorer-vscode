@@ -236,6 +236,19 @@ export async function deleteDatasetPrompt(
         }
     }
 
+    // tslint:disable-next-line:no-console
+    console.log(nodes);
+    // Check that there are items to be deleted, this can be cause by trying to delete favorites right now
+    if (!nodes || nodes.length === 0) {
+        vscode.window.showInformationMessage(
+            localize(
+                "deleteDatasetPrompt.nodesToDelete.empty",
+                "Deleting data sets or members from the Favorites section is currently not supported."
+            )
+        );
+        return;
+    }
+
     // The names of the nodes that should be deleted
     const nodesToDelete: string[] = nodes.map((deletedNode) => {
         return contextually.isDsMember(deletedNode)
