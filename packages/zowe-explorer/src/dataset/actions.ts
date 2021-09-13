@@ -271,7 +271,8 @@ export async function deleteDatasetPrompt(
     const deleteButton = localize("deleteDatasetPrompt.confirmation.delete", "Delete");
     const message = localize(
         "deleteDatasetPrompt.confirmation.message",
-        "Are you sure you want to delete the following items?\nThis will permanently remove these data sets and/or members from your system.\n\n{0}",
+        "Are you sure you want to delete the following {0} item(s)?\nThis will permanently remove these data sets and/or members from your system.\n\n{1}",
+        nodesToDelete.length,
         nodesToDelete.toString().replace(/(,)/g, "\n")
     );
     await vscode.window.showWarningMessage(message, { modal: true }, ...[deleteButton]).then((selection) => {
