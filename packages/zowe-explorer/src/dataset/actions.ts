@@ -240,9 +240,7 @@ export async function deleteDatasetPrompt(
         }
     }
 
-    // tslint:disable-next-line:no-console
-    console.log(nodes);
-    // Check that there are items to be deleted, this can be cause by trying to delete favorites right now
+    // Check that there are items to be deleted, this can be caused by trying to delete favorites right now
     if (!nodes || nodes.length === 0) {
         vscode.window.showInformationMessage(
             localize(
