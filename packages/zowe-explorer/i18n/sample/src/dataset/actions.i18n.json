@@ -9,7 +9,7 @@
   "enterPattern.pattern": "You must enter a pattern.",
   "deleteDatasetPrompt.log.debug": "Deleting data set(s): ",
   "deleteDatasetPrompt.confirmation.delete": "Delete",
-  "deleteDatasetPrompt.confirmation.message": "Are you sure you want to delete these items?\nThis will permanently remove these data sets and/or members from your system.\n\n{0}",
+  "deleteDatasetPrompt.confirmation.message": "Are you sure you want to delete the following items?\nThis will permanently remove these data sets and/or members from your system.\n\n{0}",
   "deleteDatasetPrompt.confirmation.cancel.log.debug": "Dataset deletion action was canceled.",
   "deleteDatasetPrompt.deleteCounter": "Deleting nodes",
   "deleteDatasetPrompt.deleteCancelled": "Delete action was cancelled.",
