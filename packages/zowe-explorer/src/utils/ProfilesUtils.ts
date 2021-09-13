@@ -86,6 +86,10 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
                     .then(async (selection) => {
                         if (selection === checkCredsButton) {
                             await Profiles.getInstance().promptCredentials(label.trim(), true);
+                        } else {
+                            vscode.window.showInformationMessage(
+                                localize("ErrorHandling.checkCredentials.cancelled", "Operation Cancelled")
+                            );
                         }
                     });
             }
