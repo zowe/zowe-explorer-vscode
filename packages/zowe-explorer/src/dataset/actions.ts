@@ -308,8 +308,8 @@ export async function deleteDatasetPrompt(
                     try {
                         await deleteDataset(currNode, datasetProvider);
                         const deleteItemName = contextually.isDsMember(currNode)
-                            ? `${currNode.getParent().getLabel()}(${currNode.getLabel()})`
-                            : `${currNode.getLabel()}`;
+                            ? ` ${currNode.getParent().getLabel()}(${currNode.getLabel()})`
+                            : ` ${currNode.getLabel()}`;
                         nodesDeleted.push(deleteItemName);
                     } catch (err) {
                         // do nothing; delete next
@@ -318,7 +318,7 @@ export async function deleteDatasetPrompt(
             }
         );
         vscode.window.showInformationMessage(
-            localize("deleteMulti.datasetNode", "The following items were deleted: ") + nodesDeleted
+            localize("deleteMulti.datasetNode", "The following items were deleted:") + nodesDeleted
         );
 
         // refresh Tree View & favorites
