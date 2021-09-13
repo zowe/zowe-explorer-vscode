@@ -522,10 +522,17 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         globalMocks.datasetSessionNode.children.push(testVsamNode);
         globalMocks.datasetSessionFavNode.children.push(testFavoritedNode);
 
-        mocked(vscode.window.showQuickPick).mockResolvedValue("Delete" as any);
-        // const cancellationToken = new vscode.CancellationTokenSource();
         mocked(vscode.window.withProgress).mockImplementation((progLocation, callback) => {
-            return null;
+            const progress = {
+                report: (message) => {
+                    return;
+                },
+            };
+            const token = {
+                isCancellationRequested: false,
+                onCancellationRequested: undefined,
+            };
+            return callback(progress, token);
         });
 
         return {
@@ -552,7 +559,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
         expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith(
-            `The following items were deleted: ${blockMocks.testDatasetNode.getLabel()}`
+            `The following items were deleted:  ${blockMocks.testDatasetNode.getLabel()}`
         );
     });
 
@@ -568,7 +575,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
         expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith(
-            `The following items were deleted: ${blockMocks.testMemberNode
+            `The following items were deleted:  ${blockMocks.testMemberNode
                 .getParent()
                 .getLabel()}(${blockMocks.testMemberNode.getLabel()})`
         );
@@ -586,7 +593,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
         expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith(
-            `The following items were deleted: ${blockMocks.testVsamNode.getLabel()}`
+            `The following items were deleted:  ${blockMocks.testVsamNode.getLabel()}`
         );
     });
 
@@ -602,11 +609,11 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
         expect(mocked(vscode.window.showInformationMessage)).toHaveBeenCalledWith(
-            `The following items were deleted: ${blockMocks.testDatasetNode.getLabel()}, ${blockMocks.testVsamNode.getLabel()}`
+            `The following items were deleted:  ${blockMocks.testDatasetNode.getLabel()}, ${blockMocks.testVsamNode.getLabel()}`
         );
     });
 
-    it("Should delete only member since parent is selected data set", async () => {
+    it("Should delete one dataset and one member", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
 
@@ -618,7 +625,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
         expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith(
-            `The following items were deleted: ${blockMocks.testDatasetNode.getLabel()}(${blockMocks.testMemberNode.getLabel()})`
+            `The following items were deleted:  ${blockMocks.testDatasetNode.getLabel()}(${blockMocks.testMemberNode.getLabel()}), ${blockMocks.testDatasetNode.getLabel()}`
         );
     });
 
@@ -676,7 +683,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
         expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith(
-            `The following items were deleted: ${blockMocks.testDatasetNode.getLabel()}`
+            `The following items were deleted:  ${blockMocks.testDatasetNode.getLabel()}`
         );
     });
 
