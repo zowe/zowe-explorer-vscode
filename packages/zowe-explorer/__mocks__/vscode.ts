@@ -352,6 +352,9 @@ export class EventEmitter<T> {
 export namespace workspace {
     export function getConfiguration(configuration: string) {
         return {
+            update: () => {
+                return;
+            },
             inspect: () => {
                 return {};
             },
