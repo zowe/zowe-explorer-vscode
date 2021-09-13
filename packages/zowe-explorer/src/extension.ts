@@ -59,8 +59,6 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  * @returns {Promise<ZoweExplorerApiRegister>}
  */
 export async function activate(context: vscode.ExtensionContext): Promise<ZoweExplorerApiRegister> {
-    await standardizeSettings();
-
     // Get temp folder location from settings
     let preferencesTempPath: string = vscode.workspace
         .getConfiguration()
@@ -233,6 +231,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     }
 
     ZoweExplorerExtender.createInstance(datasetProvider, ussFileProvider, jobsProvider);
+
+    await standardizeSettings();
     return ZoweExplorerApiRegister.getInstance();
 }
 

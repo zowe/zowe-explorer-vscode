@@ -109,9 +109,9 @@ export async function standardizeSettings() {
     const workspaceIsOpen = vscode.workspace.workspaceFolders !== undefined;
 
     if (globalIsNotMigrated) {
-        standardizeGlobalSettings();
+        await standardizeGlobalSettings();
     }
     if (workspaceIsNotMigrated && workspaceIsOpen) {
-        standardizeWorkspaceSettings();
+        await standardizeWorkspaceSettings();
     }
 }
