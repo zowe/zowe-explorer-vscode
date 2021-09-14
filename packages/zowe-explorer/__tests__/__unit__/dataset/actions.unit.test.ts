@@ -557,7 +557,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
         expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith(
-            `The following items were deleted: ${blockMocks.testDatasetNode.getLabel()}`
+            `The following 1 item(s) were deleted: ${blockMocks.testDatasetNode.getLabel()}`
         );
     });
 
@@ -573,7 +573,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
         expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith(
-            `The following items were deleted: ${blockMocks.testMemberNode
+            `The following 1 item(s) were deleted: ${blockMocks.testMemberNode
                 .getParent()
                 .getLabel()}(${blockMocks.testMemberNode.getLabel()})`
         );
@@ -591,7 +591,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
         expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith(
-            `The following items were deleted: ${blockMocks.testVsamNode.getLabel()}`
+            `The following 1 item(s) were deleted: ${blockMocks.testVsamNode.getLabel()}`
         );
     });
 
@@ -607,7 +607,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
         expect(mocked(vscode.window.showInformationMessage)).toHaveBeenCalledWith(
-            `The following items were deleted: ${blockMocks.testDatasetNode.getLabel()}, ${blockMocks.testVsamNode.getLabel()}`
+            `The following 2 item(s) were deleted: ${blockMocks.testDatasetNode.getLabel()}, ${blockMocks.testVsamNode.getLabel()}`
         );
     });
 
@@ -623,7 +623,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
         expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith(
-            `The following items were deleted: ${blockMocks.testDatasetNode.getLabel()}(${blockMocks.testMemberNode.getLabel()}), ${blockMocks.testDatasetNode.getLabel()}`
+            `The following 2 item(s) were deleted: ${blockMocks.testDatasetNode.getLabel()}(${blockMocks.testMemberNode.getLabel()}), ${blockMocks.testDatasetNode.getLabel()}`
         );
     });
 
@@ -639,7 +639,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
         expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith(
-            "Deleting data sets or members from the Favorites section is currently not supported."
+            "Deleting data sets and members from the Favorites section is currently not supported."
         );
     });
 
@@ -655,7 +655,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
         expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith(
-            "Deleting data sets or members from the Favorites section is currently not supported."
+            "Deleting data sets and members from the Favorites section is currently not supported."
         );
     });
 
@@ -671,7 +671,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
         expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith(
-            "Deleting data sets or members from the Favorites section is currently not supported."
+            "Deleting data sets and members from the Favorites section is currently not supported."
         );
     });
 
@@ -687,7 +687,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
         expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith(
-            `The following items were deleted: ${blockMocks.testDatasetNode.getLabel()}`
+            `The following 1 item(s) were deleted: ${blockMocks.testDatasetNode.getLabel()}`
         );
     });
 
