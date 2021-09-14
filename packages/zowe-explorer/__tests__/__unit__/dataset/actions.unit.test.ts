@@ -14,7 +14,7 @@ import * as zowe from "@zowe/cli";
 import * as imperative from "@zowe/imperative";
 import { ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import {
-    createBasicZosmfSession,
+    createSessCfgFromArgs,
     createInstanceOfProfile,
     createIProfile,
     createISession,
@@ -121,7 +121,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
     function createBlockMocks() {
         const session = createISession();
         const imperativeProfile = createIProfile();
-        const zosmfSession = createBasicZosmfSession(imperativeProfile);
+        const zosmfSession = createSessCfgFromArgs(imperativeProfile);
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
         const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
@@ -249,7 +249,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
     function createBlockMocks() {
         const session = createISession();
         const imperativeProfile = createIProfile();
-        const zosmfSession = createBasicZosmfSession(imperativeProfile);
+        const zosmfSession = createSessCfgFromArgs(imperativeProfile);
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
         const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
@@ -683,7 +683,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
     function createBlockMocks() {
         const session = createISession();
         const imperativeProfile = createIProfile();
-        const zosmfSession = createBasicZosmfSession(imperativeProfile);
+        const zosmfSession = createSessCfgFromArgs(imperativeProfile);
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
         const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
@@ -994,7 +994,7 @@ describe("Dataset Actions Unit Tests - Function enterPattern", () => {
     function createBlockMocks() {
         const session = createISession();
         const imperativeProfile = createIProfile();
-        const zosmfSession = createBasicZosmfSession(imperativeProfile);
+        const zosmfSession = createSessCfgFromArgs(imperativeProfile);
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
         const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
@@ -1073,7 +1073,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         const sessionWithoutCredentials = createISessionWithoutCredentials();
         const imperativeProfile = createIProfile();
         const profileInstance = createInstanceOfProfile(imperativeProfile);
-        const zosmfSession = createBasicZosmfSession(imperativeProfile);
+        const zosmfSession = createSessCfgFromArgs(imperativeProfile);
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
         const datasetFavoritesNode = createDatasetFavoritesNode();
@@ -1569,7 +1569,7 @@ describe("Dataset Actions Unit Tests - Function showDSAttributes", () => {
         const sessionWithoutCredentials = createISessionWithoutCredentials();
         const imperativeProfile = createIProfile();
         const profileInstance = createInstanceOfProfile(imperativeProfile);
-        const zosmfSession = createBasicZosmfSession(imperativeProfile);
+        const zosmfSession = createSessCfgFromArgs(imperativeProfile);
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
         const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
@@ -1803,7 +1803,7 @@ describe("Dataset Actions Unit Tests - Function copyDataSet", () => {
         const sessionWithoutCredentials = createISessionWithoutCredentials();
         const imperativeProfile = createIProfile();
         const profileInstance = createInstanceOfProfile(imperativeProfile);
-        const zosmfSession = createBasicZosmfSession(imperativeProfile);
+        const zosmfSession = createSessCfgFromArgs(imperativeProfile);
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
         const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
@@ -1901,7 +1901,7 @@ describe("Dataset Actions Unit Tests - Function pasteMember", () => {
         const sessionWithoutCredentials = createISessionWithoutCredentials();
         const imperativeProfile = createIProfile();
         const profileInstance = createInstanceOfProfile(imperativeProfile);
-        const zosmfSession = createBasicZosmfSession(imperativeProfile);
+        const zosmfSession = createSessCfgFromArgs(imperativeProfile);
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
         const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
@@ -2204,7 +2204,7 @@ describe("Dataset Actions Unit Tests - Function hMigrateDataSet", () => {
         const sessionWithoutCredentials = createISessionWithoutCredentials();
         const imperativeProfile = createIProfile();
         const profileInstance = createInstanceOfProfile(imperativeProfile);
-        const zosmfSession = createBasicZosmfSession(imperativeProfile);
+        const zosmfSession = createSessCfgFromArgs(imperativeProfile);
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
         const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
@@ -2321,7 +2321,7 @@ describe("Dataset Actions Unit Tests - Function hRecallDataSet", () => {
         const sessionWithoutCredentials = createISessionWithoutCredentials();
         const imperativeProfile = createIProfile();
         const profileInstance = createInstanceOfProfile(imperativeProfile);
-        const zosmfSession = createBasicZosmfSession(imperativeProfile);
+        const zosmfSession = createSessCfgFromArgs(imperativeProfile);
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
         const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
@@ -2419,7 +2419,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         const sessionWithoutCredentials = createISessionWithoutCredentials();
         const imperativeProfile = createIProfile();
         const profileInstance = createInstanceOfProfile(imperativeProfile);
-        const zosmfSession = createBasicZosmfSession(imperativeProfile);
+        const zosmfSession = createSessCfgFromArgs(imperativeProfile);
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
         const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
@@ -2849,7 +2849,7 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
         const sessionWithoutCredentials = createISessionWithoutCredentials();
         const imperativeProfile = createIProfile();
         const profileInstance = createInstanceOfProfile(imperativeProfile);
-        const zosmfSession = createBasicZosmfSession(imperativeProfile);
+        const zosmfSession = createSessCfgFromArgs(imperativeProfile);
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
         const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
