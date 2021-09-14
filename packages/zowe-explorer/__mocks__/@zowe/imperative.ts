@@ -36,6 +36,15 @@ export interface ISessionOptions {
     type: string;
 }
 
+export interface ICommandArguments {
+    user?: string;
+    password?: string;
+    hostname: string;
+    port: number;
+    tokenType?: string;
+    tokenValue?: string;
+}
+
 interface NodeModule {
     exports: any;
     require: NodeRequireFunction;
@@ -171,6 +180,11 @@ export class Logger {
     public static getAppLogger(): Logger {
         return log4js.getLogger("app");
     }
+}
+
+// tslint:disable-next-line:max-classes-per-file
+export class ConnectionPropsForSessCfg {
+    public static resolveSessCfgProps(): void {}
 }
 
 // tslint:disable-next-line:max-classes-per-file

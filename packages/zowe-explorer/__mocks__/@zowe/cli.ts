@@ -15,15 +15,11 @@ import * as imperative from "./imperative";
 
 // tslint:disable-next-line:no-namespace
 export namespace ZosmfSession {
-    export function createBasicZosmfSession(profile: imperative.Profile) {
+    export function createSessCfgFromArgs(cmdArgs: imperative.ICommandArguments) {
         return {
-            type: "basic",
             user: "fake",
             password: "fake",
             hostname: "fake",
-            protocol: "https",
-            base64EncodedAuth: "",
-            rejectUnauthorized: false,
             port: 2,
         };
     }

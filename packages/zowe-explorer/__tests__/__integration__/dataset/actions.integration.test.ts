@@ -11,7 +11,7 @@
 
 // tslint:disable:no-magic-numbers
 import * as zowe from "@zowe/cli";
-import { IProfileLoaded } from "@zowe/imperative";
+import { IProfileLoaded, ICommandArguments, Session, ConnectionPropsForSessCfg } from "@zowe/imperative";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import * as sinon from "sinon";
@@ -39,7 +39,19 @@ describe("dsNodeActions integration test", async () => {
     const expect = chai.expect;
     chai.use(chaiAsPromised);
 
-    const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
+    const cmdArgs: ICommandArguments = {
+        $0: "zowe",
+        _: [""],
+        host: testProfile.profile.host,
+        port: testProfile.profile.port,
+        basePath: testProfile.profile.basePath,
+        rejectUnauthorized: testProfile.profile.rejectUnauthorized,
+        user: testProfile.profile.user,
+        password: testProfile.profile.password,
+    };
+    const sessCfg = zowe.ZosmfSession.createSessCfgFromArgs(cmdArgs);
+    ConnectionPropsForSessCfg.resolveSessCfgProps(sessCfg, cmdArgs);
+    const session = new Session(sessCfg);
     const sessionNode = new ZoweDatasetNode(
         testConst.profile.name,
         vscode.TreeItemCollapsibleState.Collapsed,

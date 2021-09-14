@@ -99,7 +99,12 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
             defaultHome: path.join(os.homedir(), ".zowe"),
             envVariablePrefix: "ZOWE",
         };
-        if (profileTypeConfigurations) {
+        // const mProfileInfo = await getProfileInfo(globals.ISTHEIA);
+        let mProfileInfo = await ProfilesCache.getConfigInstance();
+        if (!mProfileInfo) {
+            mProfileInfo = await getProfileInfo(globals.ISTHEIA);
+        }
+        if (profileTypeConfigurations && !mProfileInfo.usingTeamConfig) {
             const configOptions = Array.from(profileTypeConfigurations);
             const exists = fs.existsSync(path.posix.join(`${os.homedir()}/.zowe/profiles/${profileType}`));
             if (configOptions && !exists) {
