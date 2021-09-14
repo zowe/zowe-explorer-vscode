@@ -283,7 +283,7 @@ export class Profiles extends ProfilesCache {
         const quickpick = vscode.window.createQuickPick();
         const placeholder = localize(
             "addSession.quickPickOption",
-            'Choose "Create new..." to define a new profile or select an existing profile to Add to the USS Explorer'
+            'Choose "Create new..." to define a new profile or select an existing profile to add to the DATA SETS Explorer'
         );
 
         if (isTheia()) {
