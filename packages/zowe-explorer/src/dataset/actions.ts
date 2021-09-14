@@ -241,7 +241,7 @@ export async function deleteDatasetPrompt(
         vscode.window.showInformationMessage(
             localize(
                 "deleteDatasetPrompt.nodesToDelete.empty",
-                "Deleting data sets or members from the Favorites section is currently not supported."
+                "Deleting data sets and members from the Favorites section is currently not supported."
             )
         );
         return;
@@ -284,9 +284,7 @@ export async function deleteDatasetPrompt(
     );
     await vscode.window.showWarningMessage(message, { modal: true }, ...[deleteButton]).then((selection) => {
         if (!selection || selection === "Cancel") {
-            globals.LOG.debug(
-                localize("deleteDatasetPrompt.confirmation.cancel.log.debug", "Dataset deletion action was canceled.")
-            );
+            globals.LOG.debug(localize("deleteDatasetPrompt.deleteCancelled", "Delete action was cancelled."));
             nodes = [];
             return;
         }
@@ -326,7 +324,12 @@ export async function deleteDatasetPrompt(
             }
         );
         vscode.window.showInformationMessage(
-            localize("deleteMulti.datasetNode", "The following items were deleted:") + nodesDeleted
+            localize(
+                "deleteMulti.datasetNode",
+                "The following {0} item(s) were deleted:{1}",
+                nodesDeleted.length,
+                nodesDeleted.toString()
+            )
         );
 
         // refresh Tree View & favorites
