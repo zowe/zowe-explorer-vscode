@@ -135,7 +135,7 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
             imperativeProfile: createIProfile(),
             quickPickItem: createQuickPickItem(),
             qpPlaceholder:
-                'Choose "Create new..." to define a new profile or select an existing profile to Add to the Data Set Explorer',
+                'Choose "Create new..." to define a new profile or select an existing profile to add to the Data Set Explorer',
             profiles: null,
             testJobNode: createIJobObject(),
             testDatasetSessionNode: null,
