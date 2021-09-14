@@ -1000,7 +1000,10 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             const response = await this.getChildren(nonFaveNode);
             if (!response) {
                 vscode.window.showErrorMessage(
-                    localize("datasetFilterPrompt.responses.error", "The response from Zowe CLI was not successful")
+                    localize(
+                        "datasetFilterPrompt.responses.error",
+                        "The response from the z/OS server was not successful"
+                    )
                 );
                 return;
             }
