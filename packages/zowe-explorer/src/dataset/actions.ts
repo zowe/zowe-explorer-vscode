@@ -236,6 +236,17 @@ export async function deleteDatasetPrompt(
         }
     }
 
+    // Check that there are items to be deleted, this can be caused by trying to delete favorites right now
+    if (!nodes || nodes.length === 0) {
+        vscode.window.showInformationMessage(
+            localize(
+                "deleteDatasetPrompt.nodesToDelete.empty",
+                "Deleting data sets and members from the Favorites section is currently not supported."
+            )
+        );
+        return;
+    }
+
     // The names of the nodes that should be deleted
     const nodesToDelete: string[] = nodes.map((deletedNode) => {
         return contextually.isDsMember(deletedNode)
@@ -273,9 +284,7 @@ export async function deleteDatasetPrompt(
     );
     await vscode.window.showWarningMessage(message, { modal: true }, ...[deleteButton]).then((selection) => {
         if (!selection || selection === "Cancel") {
-            globals.LOG.debug(
-                localize("deleteDatasetPrompt.confirmation.cancel.log.debug", "Dataset deletion action was canceled.")
-            );
+            globals.LOG.debug(localize("deleteDatasetPrompt.deleteCancelled", "Delete action was cancelled."));
             nodes = [];
             return;
         }
@@ -328,7 +337,12 @@ export async function deleteDatasetPrompt(
     }
     if (nodesDeleted.length > 0) {
         vscode.window.showInformationMessage(
-            localize("deleteMulti.datasetNode", "The following items were deleted:") + nodesDeleted
+            localize(
+                "deleteMulti.datasetNode",
+                "The following {0} item(s) were deleted:{1}",
+                nodesDeleted.length,
+                nodesDeleted.toString()
+            )
         );
     }
 
