@@ -294,7 +294,18 @@ export async function deleteDatasetPrompt(
         }
     });
 
-    if (nodes.length > 0) {
+    if (nodes.length === 0) {
+        return;
+    }
+    if (nodes.length === 1) {
+        // no multi-select available in Theia
+        await deleteDataset(nodes[0], datasetProvider);
+        const deleteItemName = contextually.isDsMember(nodes[0])
+            ? ` ${nodes[0].getParent().getLabel()}(${nodes[0].getLabel()})`
+            : ` ${nodes[0].getLabel()}`;
+        nodesDeleted.push(deleteItemName);
+    }
+    if (nodes.length > 1) {
         // Delete multiple selected nodes
         await vscode.window.withProgress(
             {
@@ -327,6 +338,8 @@ export async function deleteDatasetPrompt(
                 }
             }
         );
+    }
+    if (nodesDeleted.length > 0) {
         vscode.window.showInformationMessage(
             localize(
                 "deleteMulti.datasetNode",
@@ -335,12 +348,12 @@ export async function deleteDatasetPrompt(
                 nodesDeleted.toString()
             )
         );
+    }
 
-        // refresh Tree View & favorites
-        datasetProvider.refresh();
-        for (const member of memberParents) {
-            datasetProvider.refreshElement(member);
-        }
+    // refresh Tree View & favorites
+    datasetProvider.refresh();
+    for (const member of memberParents) {
+        datasetProvider.refreshElement(member);
     }
 }
 
