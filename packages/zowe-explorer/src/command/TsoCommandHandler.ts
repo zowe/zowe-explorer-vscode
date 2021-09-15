@@ -137,6 +137,9 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                     let tsoParams: IStartTsoParms;
                     if (profile.type === "zosmf") {
                         tsoParams = await this.getTsoParams();
+                        if (!tsoParams) {
+                            return;
+                        }
                     }
                     let command1: string = command;
                     if (!command) {
