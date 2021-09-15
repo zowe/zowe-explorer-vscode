@@ -65,9 +65,13 @@ describe("Add Default Profile and Profile in DATASETS", () => {
 
     it("Should Add Default Profile in DATASETS", async () => {
         await driverChrome.clickOnDatasetsPanel();
+        console.error("clickOnDatasetsPanel");
         await driverChrome.clickOnAddSessionInDatasets();
+        console.error("clickOnAddSessionInDatasets");
         await driverChrome.addProfileDetails("DefaultProfile");
+        console.error("addProfileDetails");
         const datasetProfile = await driverChrome.getDatasetsDefaultProfilename();
+        console.error("getDatasetsDefaultProfilename");
         expect(datasetProfile).to.equal("DefaultProfile");
     });
 

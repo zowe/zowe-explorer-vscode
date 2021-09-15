@@ -105,10 +105,31 @@
       "isBackground": false,
       "type": "shell",
       "options": {
+        "cwd": "scripts"
+      },
+      "command": "ts-node create-env.ts"
+    },
+    {
+      "label": "Build",
+      "group": "build",
+      "isBackground": false,
+      "type": "shell",
+      "options": {
         "cwd": "packages/zowe-explorer"
       },
       "command": "yarn",
-      "args": ["build:integration"]
+      "args": ["build:integration"],
+      "dependsOn": "Pretest"
+    },
+    {
+      "label": "Posttest",
+      "group": "build",
+      "isBackground": false,
+      "type": "shell",
+      "options": {
+        "cwd": "scripts"
+      },
+      "command": "ts-node clean-env.ts"
     }
   ]
 }

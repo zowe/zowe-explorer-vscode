@@ -962,6 +962,7 @@ export async function deleteDataset(node: IZoweTreeNode, datasetProvider: IZoweT
         node.getSessionNode().dirty = true;
         datasetProvider.removeFavorite(node);
     }
+    datasetProvider.refreshElement(node.getSessionNode());
 
     // remove local copy of file
     const fileName = getDocumentFilePath(label, node);

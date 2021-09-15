@@ -76,26 +76,15 @@ To test the extension, the mainframe data sets under `normalPattern` must match 
   - "TCHILD2"
 - `normalPattern` + ".PUBLIC.TPS"
 
-The `./scripts` folder contains the following scripts to help you set up the required file structure. You can execute the scripts when the `ts-node` package is installed globally.
-
-- [create-env](/scripts/create-env.ts): Creates the proper data sets on the mainframe.
-- [clean-env](/scripts/clean-env.ts): Cleans up the data sets created on the mainframe.
-
-**Note:** The scripts use the profile that you specified in `testProfileData`.
-
-##### Execute the setup scripts
-
-1. Issue the following command to install `ts-node` globally:
-
-   `npm install -g ts-node`
-
-2. Issue the following command to execute script as if it were a node script.
-
-   `ts-node ./scripts/clean-env.ts` or `ts-node ./scripts/create-env.ts`
-
 #### Or pattern
 
 There is no required structure for the mainframe data sets under `orPattern`.
+
+#### Prerequisites
+
+To run the system tests, ensure that you have `ts-node` insalled globally by running the following command:
+
+`npm install -g ts-node`
 
 ### Executing from VSC
 

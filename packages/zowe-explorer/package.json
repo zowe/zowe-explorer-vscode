@@ -1675,8 +1675,6 @@
     "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
     "test:theia": "mocha ./out/__tests__/__theia__/*.theia.test.js --timeout 50000",
     "test": "yarn test:unit",
-    "pretest:integration": "ts-node ../../scripts/create-env.ts",
-    "posttest:integration": "ts-node ../../scripts/clean-env.ts",
     "updateStrings": "node ../../scripts/stringUpdateScript.js && prettier --write  --loglevel warn ./i18n package.nls*",
     "package": "vsce package --yarn && node ../../scripts/mv-pack.js vscode-extension-for-zowe vsix",
     "license": "node ../../scripts/license.js",
@@ -1690,7 +1688,8 @@
     "clean": "gulp clean",
     "lintErrors": "echo \"zowe-explorer: lintErrors coming soon with eslint.\"",
     "pretty": "prettier --write .",
-    "createTestProfileData": "ts-node ./scripts/createTestProfileData.ts"
+    "createTestProfileData": "ts-node ./scripts/createTestProfileData.ts",
+    "createDemoNodes": "ts-node ./scripts/createDemoNodes.ts"
   },
   "engines": {
     "vscode": "^1.43.0"
