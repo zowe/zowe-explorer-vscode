@@ -31,6 +31,7 @@ import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import * as path from "path";
 import * as os from "os";
+import * as fs from "fs";
 import {
     IZoweTree,
     IZoweNodeType,
@@ -47,7 +48,6 @@ import {
 } from "@zowe/zowe-explorer-api";
 import { errorHandling, FilterDescriptor, FilterItem, resolveQuickPickHelper, isTheia } from "./utils/ProfilesUtils";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
-import { trueCasePathSync } from "true-case-path";
 
 import * as nls from "vscode-nls";
 
@@ -612,7 +612,7 @@ export class Profiles extends ProfilesCache {
                     rootPath = vscode.workspace.workspaceFolders?.[0].uri.fsPath;
                 }
             }
-            const config = await Config.load("zowe", { projectDir: trueCasePathSync(rootPath) });
+            const config = await Config.load("zowe", { projectDir: fs.realpathSync(rootPath) });
 
             const impConfig: IImperativeConfig = zowe.getImperativeConfig();
             const knownCliConfig: ICommandProfileTypeConfiguration[] = impConfig.profiles;
