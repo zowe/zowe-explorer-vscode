@@ -583,9 +583,35 @@ export class Profiles extends ProfilesCache {
                 envVariablePrefix: "ZOWE",
             };
 
-            // If there are no workspaces already opened, default to the cliHome
-            const rootPath = vscode.workspace.workspaceFolders?.[0].uri.fsPath || ImperativeConfig.instance.cliHome;
-            // true-case-path may or may not be needed. Better safe than sorry : )
+            let rootPath = ImperativeConfig.instance.cliHome;
+            if (vscode.workspace.workspaceFolders) {
+                const quickPickOptions: vscode.QuickPickOptions = {
+                    placeHolder: localize(
+                        "createZoweSchema.quickPickOption",
+                        "Select the location where the config file will be initialized"
+                    ),
+                    ignoreFocusOut: true,
+                    canPickMany: false,
+                };
+                const globalText = localize(
+                    "createZoweSchema.showQuickPick.global",
+                    "Global: in the Zowe home directory "
+                );
+                const projectText = localize(
+                    "createZoweSchema.showQuickPick.project",
+                    "Project: in the current working directory"
+                );
+                const location = await vscode.window.showQuickPick([globalText, projectText], quickPickOptions);
+                if (location === undefined) {
+                    vscode.window.showInformationMessage(
+                        localize("createZoweSchema.undefined.location", "Operation Cancelled")
+                    );
+                    return;
+                }
+                if (location === projectText) {
+                    rootPath = vscode.workspace.workspaceFolders?.[0].uri.fsPath;
+                }
+            }
             const config = await Config.load("zowe", { projectDir: trueCasePathSync(rootPath) });
 
             const impConfig: IImperativeConfig = zowe.getImperativeConfig();
