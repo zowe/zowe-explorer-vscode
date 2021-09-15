@@ -134,7 +134,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
                 .getConfiguration()
                 /* tslint:disable:no-string-literal */
                 .get("Zowe-Temp-Folder-Location")["folderPath"];
-            moveTempFolder(preferencesTempPath, updatedPreferencesTempPath);
+            await moveTempFolder(preferencesTempPath, updatedPreferencesTempPath);
             preferencesTempPath = updatedPreferencesTempPath;
         }
         if (e.affectsConfiguration("Zowe-Automatic-Validation")) {

@@ -159,6 +159,9 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             await Profiles.getInstance().checkCurrentProfile(element.getProfile());
             const finalResponse: IZoweDatasetTreeNode[] = [];
             const response = await element.getChildren();
+            if (!response) {
+                return undefined;
+            }
             for (const item of response) {
                 if (item.pattern && item.memberPattern) {
                     finalResponse.push(item);
@@ -995,6 +998,15 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 nonFaveNode.tooltip = nonFaveNode.pattern = pattern.toUpperCase();
             }
             const response = await this.getChildren(nonFaveNode);
+            if (!response) {
+                vscode.window.showErrorMessage(
+                    localize(
+                        "datasetFilterPrompt.responses.error",
+                        "The response from the z/OS server was not successful"
+                    )
+                );
+                return;
+            }
             // reset and remove previous search patterns for each child of getChildren
             for (const child of response) {
                 let resetIcon: IIconItem;

@@ -77,7 +77,7 @@ export async function createUSSNode(
             await ussFileProvider.getTreeView().reveal(node, { select: true, focus: true });
             ussFileProvider.getTreeView().reveal(newNode, { select: true, focus: true });
         } catch (err) {
-            errorHandling(
+            await errorHandling(
                 err,
                 node.mProfileName,
                 localize("createUSSNode.error.create", "Unable to create node: ") + err.message
@@ -96,7 +96,7 @@ export async function refreshDirectory(node: IZoweUSSTreeNode, ussFileProvider: 
         await node.getChildren();
         ussFileProvider.refreshElement(node);
     } catch (err) {
-        errorHandling(err, node.getProfileName(), err.message);
+        await errorHandling(err, node.getProfileName(), err.message);
     }
 }
 
@@ -162,7 +162,7 @@ export async function uploadBinaryFile(node: IZoweUSSTreeNode, filePath: string)
         const ussName = `${node.fullPath}/${localFileName}`;
         await ZoweExplorerApiRegister.getUssApi(node.getProfile()).putContents(filePath, ussName, true);
     } catch (e) {
-        errorHandling(e, node.mProfileName, e.message);
+        await errorHandling(e, node.mProfileName, e.message);
     }
 }
 
@@ -190,7 +190,7 @@ export async function uploadFile(node: IZoweUSSTreeNode, doc: vscode.TextDocumen
             await ZoweExplorerApiRegister.getUssApi(prof).putContents(doc.fileName, ussName);
         }
     } catch (e) {
-        errorHandling(e, node.mProfileName, e.message);
+        await errorHandling(e, node.mProfileName, e.message);
     }
 }
 

@@ -23,6 +23,7 @@
   "enterPattern.pattern": "No selection made.",
   "enterPattern.options.prompt": "Search Data Sets: use a comma to separate multiple patterns",
   "datasetFilterPrompt.enterPattern": "You must enter a pattern.",
+  "datasetFilterPrompt.responses.error": "The response from the z/OS server was not successful",
   "renameDataSet.cancelled": "Rename operation cancelled.",
   "renameDataSet.log.debug": "Renaming data set ",
   "renameDataSet.log.error": "Error encountered when renaming data set! ",
