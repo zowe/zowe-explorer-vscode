@@ -40,6 +40,8 @@ import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 
 import * as nls from "vscode-nls";
 
+// trying to get all tests to run to see if theia test is fixed
+
 // TODO: find a home for constants
 export const CONTEXT_PREFIX = "_";
 const VALIDATE_SUFFIX = CONTEXT_PREFIX + "validate=";
