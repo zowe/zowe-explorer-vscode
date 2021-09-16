@@ -322,13 +322,17 @@ export class Profiles extends ProfilesCache {
 
         if (chosenProfile === "") {
             if (ProfilesCache.getConfigInstance().usingTeamConfig) {
-                let configDir;
-                if (vscode.workspace.workspaceFolders) {
-                    configDir = ProfilesCache.getConfigInstance().getTeamConfig().mProjectDir;
-                } else {
-                    configDir = ProfilesCache.getConfigInstance().getTeamConfig().mHomeDir;
-                }
                 const configName = ProfilesCache.getConfigInstance().getTeamConfig().configName;
+                let configDir = ProfilesCache.getConfigInstance().getTeamConfig().mHomeDir;
+                if (vscode.workspace.workspaceFolders) {
+                    // Check if config file is present in the workspace
+                    const uri = await vscode.workspace.findFiles(
+                        new vscode.RelativePattern(vscode.workspace.workspaceFolders[0], configName)
+                    );
+                    if (uri.length > 0) {
+                        configDir = ProfilesCache.getConfigInstance().getTeamConfig().mProjectDir;
+                    }
+                }
                 const filePath = path.join(configDir, configName);
                 await this.openConfigFile(filePath);
                 return;
@@ -523,8 +527,8 @@ export class Profiles extends ProfilesCache {
         }
 
         try {
-            const updSession = await zowe.ZosmfSession.createBasicZosmfSession(updSchemaValues);
-            updSchemaValues.base64EncodedAuth = updSession.ISession.base64EncodedAuth;
+            const updSession = await zowe.ZosmfSession.createSessCfgFromArgs(updSchemaValues);
+            updSchemaValues.base64EncodedAuth = updSession.base64EncodedAuth;
             await this.updateProfile({
                 profile: updSchemaValues,
                 name: profileName,

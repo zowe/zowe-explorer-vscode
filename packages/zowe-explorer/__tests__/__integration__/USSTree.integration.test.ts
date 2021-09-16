@@ -11,7 +11,7 @@
 
 // tslint:disable:no-magic-numbers
 import * as zowe from "@zowe/cli";
-import { Logger, IProfileLoaded } from "@zowe/imperative";
+import { Logger, IProfileLoaded, ICommandArguments, ConnectionPropsForSessCfg, Session } from "@zowe/imperative";
 import * as chai from "chai";
 import * as sinon from "sinon";
 import * as chaiAsPromised from "chai-as-promised";
@@ -38,7 +38,19 @@ describe("USSTree Integration Tests", async () => {
     chai.use(chaiAsPromised);
 
     // Uses loaded profile to create a zosmf session with Zowe
-    const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
+    const cmdArgs: ICommandArguments = {
+        $0: "zowe",
+        _: [""],
+        host: testProfile.profile.host,
+        port: testProfile.profile.port,
+        basePath: testProfile.profile.basePath,
+        rejectUnauthorized: testProfile.profile.rejectUnauthorized,
+        user: testProfile.profile.user,
+        password: testProfile.profile.password,
+    };
+    const sessCfg = zowe.ZosmfSession.createSessCfgFromArgs(cmdArgs);
+    ConnectionPropsForSessCfg.resolveSessCfgProps(sessCfg, cmdArgs);
+    const session = new Session(sessCfg);
     const sessNode = new ZoweUSSNode(
         testConst.profile.name,
         vscode.TreeItemCollapsibleState.Expanded,

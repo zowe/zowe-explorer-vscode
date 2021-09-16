@@ -17,7 +17,7 @@ import {
     createQuickPickItem,
     createQuickPickContent,
     createInputBox,
-    createBasicZosmfSession,
+    createSessCfgFromArgs,
     createPersistentConfig,
     createInvalidIProfile,
     createValidIProfile,
@@ -60,9 +60,9 @@ async function createGlobalMocks() {
         mockDebug: jest.fn(),
         mockError: jest.fn(),
         mockConfigurationTarget: jest.fn(),
-        mockCreateBasicZosmfSession: jest.fn(),
-        mockCreateBasicZosmfSessionFromArguments: jest.fn(),
+        mockCreateSessCfgFromArgs: jest.fn(),
         testProfile: createValidIProfile(),
+        testSession: createISession(),
         mockCliProfileManager: createProfileManager(),
         ProgressLocation: jest.fn().mockImplementation(() => {
             return {
@@ -103,9 +103,8 @@ async function createGlobalMocks() {
     Object.defineProperty(globals, "LOG", { value: newMocks.mockLog, configurable: true });
     Object.defineProperty(vscode.window, "createInputBox", { value: newMocks.mockCreateInputBox, configurable: true });
     Object.defineProperty(globals.LOG, "debug", { value: newMocks.mockDebug, configurable: true });
-    Object.defineProperty(ZosmfSession, "createBasicZosmfSession", { value: newMocks.mockCreateBasicZosmfSession });
-    Object.defineProperty(ZosmfSession, "createBasicZosmfSessionFromArguments", {
-        value: newMocks.mockCreateBasicZosmfSessionFromArguments,
+    Object.defineProperty(ZosmfSession, "createSessCfgFromArgs", {
+        value: newMocks.mockCreateSessCfgFromArgs,
         configurable: true,
     });
     Object.defineProperty(globals.LOG, "error", { value: newMocks.mockError, configurable: true });
@@ -817,7 +816,7 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         globalMocks.mockCreateInputBox.mockReturnValue(blockMocks.inputBox);
         globalMocks.mockShowInputBox.mockResolvedValueOnce(Number("143"));
         globalMocks.mockShowInputBox.mockResolvedValueOnce("");
-        globalMocks.mockCreateBasicZosmfSession.mockReturnValue({
+        globalMocks.mockCreateSessCfgFromArgs.mockReturnValue({
             ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" },
         });
 
@@ -844,6 +843,13 @@ describe("Profiles Unit Tests - Function promptCredentials", () => {
         newMocks.profiles.allProfiles[1].profile = { user: "test", password: "test" };
         newMocks.profiles.loadNamedProfile = newMocks.mockLoadNamedProfile;
 
+        const mockMvsApi = await ZoweExplorerApiRegister.getMvsApi(globalMocks.testProfile);
+        const getMvsApiMock = jest.fn();
+        getMvsApiMock.mockReturnValue(mockMvsApi);
+        globalMocks.testSession.ISession.base64EncodedAuth = "fake";
+        ZoweExplorerApiRegister.getMvsApi = getMvsApiMock.bind(ZoweExplorerApiRegister);
+        jest.spyOn(mockMvsApi, "getSession").mockReturnValue(globalMocks.testSession);
+
         return newMocks;
     }
 
@@ -853,7 +859,7 @@ describe("Profiles Unit Tests - Function promptCredentials", () => {
 
         blockMocks.imperativeProfile.profile = { user: undefined, password: undefined };
         blockMocks.mockLoadNamedProfile.mockReturnValue(blockMocks.imperativeProfile);
-        globalMocks.mockCreateBasicZosmfSession.mockReturnValue({
+        globalMocks.mockCreateSessCfgFromArgs.mockReturnValue({
             ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" },
         });
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
@@ -870,7 +876,7 @@ describe("Profiles Unit Tests - Function promptCredentials", () => {
         blockMocks.imperativeProfile.profile = { user: "fake", password: "fake" };
         blockMocks.mockLoadNamedProfile.mockReturnValue(blockMocks.imperativeProfile);
         globalMocks.mockShowInformationMessage.mockResolvedValueOnce("Save Credentials");
-        globalMocks.mockCreateBasicZosmfSession.mockReturnValue({
+        globalMocks.mockCreateSessCfgFromArgs.mockReturnValue({
             ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" },
         });
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
@@ -886,11 +892,12 @@ describe("Profiles Unit Tests - Function promptCredentials", () => {
 
         blockMocks.imperativeProfile.profile = { user: undefined, password: "oldfake" };
         blockMocks.mockLoadNamedProfile.mockReturnValue(blockMocks.imperativeProfile);
-        globalMocks.mockCreateBasicZosmfSession.mockReturnValue({
+        globalMocks.mockCreateSessCfgFromArgs.mockReturnValue({
             ISession: { user: "fake", password: "oldfake", base64EncodedAuth: "fake" },
         });
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("oldfake");
+        globalMocks.testSession.ISession.password = "oldfake";
 
         const res = await blockMocks.profiles.promptCredentials(blockMocks.imperativeProfile.name);
         expect(res).toEqual(["fake", "oldfake", "fake"]);
@@ -902,11 +909,12 @@ describe("Profiles Unit Tests - Function promptCredentials", () => {
 
         blockMocks.imperativeProfile.profile = { user: "oldfake", password: undefined };
         blockMocks.mockLoadNamedProfile.mockReturnValue(blockMocks.imperativeProfile);
-        globalMocks.mockCreateBasicZosmfSession.mockReturnValue({
+        globalMocks.mockCreateSessCfgFromArgs.mockReturnValue({
             ISession: { user: "oldfake", password: "fake", base64EncodedAuth: "fake" },
         });
         globalMocks.mockShowInputBox.mockResolvedValueOnce("oldfake");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.testSession.ISession.user = "oldfake";
 
         const res = await blockMocks.profiles.promptCredentials(blockMocks.imperativeProfile.name);
         expect(res).toEqual(["oldfake", "fake", "fake"]);
@@ -918,7 +926,7 @@ describe("Profiles Unit Tests - Function promptCredentials", () => {
 
         blockMocks.imperativeProfile.profile = { user: "oldfake", password: "oldfake" };
         blockMocks.mockLoadNamedProfile.mockReturnValue(blockMocks.imperativeProfile);
-        globalMocks.mockCreateBasicZosmfSession.mockReturnValue({
+        globalMocks.mockCreateSessCfgFromArgs.mockReturnValue({
             ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" },
         });
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
@@ -1147,7 +1155,7 @@ describe("Profiles Unit Tests - Function editSession", () => {
         globalMocks.mockCreateInputBox.mockReturnValue(blockMocks.inputBox);
         globalMocks.mockShowInputBox.mockResolvedValue("fake");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("False - Accept connections with self-signed certificates");
-        globalMocks.mockCreateBasicZosmfSession.mockReturnValue({
+        globalMocks.mockCreateSessCfgFromArgs.mockReturnValue({
             ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" },
         });
 
@@ -1168,7 +1176,7 @@ describe("Profiles Unit Tests - Function editSession", () => {
         globalMocks.mockCreateInputBox.mockReturnValue(blockMocks.inputBox);
         globalMocks.mockShowInputBox.mockResolvedValue("fake");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("False - Accept connections with self-signed certificates");
-        globalMocks.mockCreateBasicZosmfSession.mockReturnValue({
+        globalMocks.mockCreateSessCfgFromArgs.mockReturnValue({
             ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" },
         });
 
@@ -1192,7 +1200,7 @@ describe("Profiles Unit Tests - Function editSession", () => {
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("False");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("123");
-        globalMocks.mockCreateBasicZosmfSession.mockReturnValue({
+        globalMocks.mockCreateSessCfgFromArgs.mockReturnValue({
             ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" },
         });
 
@@ -1217,7 +1225,7 @@ describe("Profiles Unit Tests - Function editSession", () => {
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("False");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("123");
-        globalMocks.mockCreateBasicZosmfSession.mockReturnValue({
+        globalMocks.mockCreateSessCfgFromArgs.mockReturnValue({
             ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" },
         });
 
@@ -1241,7 +1249,7 @@ describe("Profiles Unit Tests - Function editSession", () => {
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("False");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("");
-        globalMocks.mockCreateBasicZosmfSession.mockReturnValue({
+        globalMocks.mockCreateSessCfgFromArgs.mockReturnValue({
             ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" },
         });
 
@@ -1262,7 +1270,7 @@ describe("Profiles Unit Tests - Function editSession", () => {
         globalMocks.mockCreateInputBox.mockReturnValue(blockMocks.inputBox);
         globalMocks.mockShowInputBox.mockResolvedValueOnce("");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("");
-        globalMocks.mockCreateBasicZosmfSession.mockReturnValue({
+        globalMocks.mockCreateSessCfgFromArgs.mockReturnValue({
             ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" },
         });
 
@@ -1283,7 +1291,7 @@ describe("Profiles Unit Tests - Function editSession", () => {
         globalMocks.mockCreateInputBox.mockReturnValue(blockMocks.inputBox);
         globalMocks.mockShowInputBox.mockResolvedValueOnce("False");
         globalMocks.mockShowInputBox.mockResolvedValueOnce(undefined);
-        globalMocks.mockCreateBasicZosmfSession.mockReturnValue({
+        globalMocks.mockCreateSessCfgFromArgs.mockReturnValue({
             ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" },
         });
 
@@ -1306,7 +1314,7 @@ describe("Profiles Unit Tests - Function editSession", () => {
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("False");
-        globalMocks.mockCreateBasicZosmfSession.mockReturnValue({
+        globalMocks.mockCreateSessCfgFromArgs.mockReturnValue({
             ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" },
         });
 
@@ -1327,7 +1335,7 @@ describe("Profiles Unit Tests - Function editSession", () => {
         globalMocks.mockCreateInputBox.mockReturnValue(blockMocks.inputBox);
         globalMocks.mockShowInputBox.mockResolvedValueOnce("123");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("");
-        globalMocks.mockCreateBasicZosmfSession.mockReturnValue({
+        globalMocks.mockCreateSessCfgFromArgs.mockReturnValue({
             ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" },
         });
 
@@ -1348,7 +1356,7 @@ describe("Profiles Unit Tests - Function editSession", () => {
         globalMocks.mockCreateInputBox.mockReturnValue(blockMocks.inputBox);
         globalMocks.mockShowInputBox.mockResolvedValueOnce("123");
         globalMocks.mockShowInputBox.mockResolvedValueOnce(undefined);
-        globalMocks.mockCreateBasicZosmfSession.mockReturnValue({
+        globalMocks.mockCreateSessCfgFromArgs.mockReturnValue({
             ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" },
         });
 
@@ -1488,7 +1496,7 @@ describe("Profiles Unit Tests - Function editSession", () => {
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("False");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("123");
-        globalMocks.mockCreateBasicZosmfSession.mockReturnValue({
+        globalMocks.mockCreateSessCfgFromArgs.mockReturnValue({
             ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" },
         });
 
@@ -1518,11 +1526,11 @@ describe("Profiles Unit Tests - Function deleteProfile", () => {
             testSchemas: createTestSchemas(),
             profileInstance: null,
         };
-        globalMocks.mockCreateBasicZosmfSession.mockReturnValue({
+        globalMocks.mockCreateSessCfgFromArgs.mockReturnValue({
             ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" },
         });
         newMocks.profiles = await Profiles.createInstance(newMocks.log);
-        newMocks.session = createBasicZosmfSession(newMocks.imperativeProfile);
+        newMocks.session = createSessCfgFromArgs(newMocks.imperativeProfile);
         newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
         newMocks.mockLoadNamedProfile.mockReturnValue(newMocks.imperativeProfile);
         globalMocks.mockGetInstance.mockReturnValue(newMocks.profileInstance);
@@ -2732,7 +2740,7 @@ describe("Profiles Unit Tests - Function getCombinedProfile", () => {
         newMocks.testCombinedProfile.profile.protocol = "https";
         newMocks.testCombinedProfile.profile.host = "fake";
         newMocks.testCombinedProfile.profile.type = "basic";
-        globalMocks.mockCreateBasicZosmfSessionFromArguments.mockResolvedValue(newMocks.testCombinedSession);
+        globalMocks.mockCreateSessCfgFromArgs.mockResolvedValue(newMocks.testCombinedSession);
         jest.spyOn(newMocks.mockProfileInstance, "getSchema").mockReturnValue(newMocks.testSchemas[0]);
 
         // Mock the Common API so that getSession returns the correct value
@@ -2778,10 +2786,16 @@ describe("Profiles Unit Tests - Function getCombinedProfile", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        globalMocks.testProfile.profile.user = null;
-        globalMocks.testProfile.profile.password = null;
-        blockMocks.testBaseProfile.profile.host = globalMocks.testProfile.profile.host;
-        blockMocks.testBaseProfile.profile.port = globalMocks.testProfile.profile.port;
+        globalMocks.testProfile.profile.user = "fake";
+        globalMocks.testProfile.profile.password = "fake";
+        globalMocks.testProfile.profile.host = "fake";
+        blockMocks.testBaseProfile.profile.host = "fake";
+        // tslint:disable:no-magic-numbers
+        blockMocks.testBaseProfile.profile.port = 1443;
+        globalMocks.testProfile.profile.type = "basic";
+        globalMocks.testProfile.profile.protocol = "https";
+        globalMocks.testProfile.profile.tokenType = "testTokenType";
+        globalMocks.testProfile.profile.tokenValue = "testTokenValue";
 
         const response = await (await blockMocks.mockProfileInstance).getCombinedProfile(
             globalMocks.testProfile,
@@ -2851,7 +2865,7 @@ describe("Profiles Unit Tests - Function ssoLogin", () => {
         newMocks.testOptionalProfile.profile.port = "1443";
         newMocks.testOptionalProfile.profile.user = undefined;
         newMocks.testOptionalProfile.profile.password = undefined;
-        globalMocks.mockCreateBasicZosmfSessionFromArguments.mockResolvedValue(newMocks.testCombinedSession);
+        globalMocks.mockCreateSessCfgFromArgs.mockResolvedValue(newMocks.testCombinedSession);
         newMocks.datasetSessionNodeToken = createDatasetSessionNode(
             newMocks.testCombinedSession,
             newMocks.testCombinedProfile
@@ -2990,7 +3004,7 @@ describe("Profiles Unit Tests - Function ssoLogout", () => {
         newMocks.testCombinedProfile.profile.protocol = "https";
         newMocks.testCombinedProfile.profile.host = "fake";
         newMocks.testCombinedProfile.profile.type = "basic";
-        globalMocks.mockCreateBasicZosmfSessionFromArguments.mockResolvedValue(newMocks.testCombinedSession);
+        globalMocks.mockCreateSessCfgFromArgs.mockResolvedValue(newMocks.testCombinedSession);
         newMocks.datasetSessionNodeToken = createDatasetSessionNode(
             newMocks.testCombinedSession,
             newMocks.testCombinedProfile

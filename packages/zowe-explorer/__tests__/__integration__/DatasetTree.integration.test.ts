@@ -11,7 +11,7 @@
 
 // tslint:disable:no-magic-numbers
 import * as zowe from "@zowe/cli";
-import { IProfileLoaded } from "@zowe/imperative";
+import { IProfileLoaded, ICommandArguments, Session, ConnectionPropsForSessCfg } from "@zowe/imperative";
 import * as expect from "expect";
 import * as vscode from "vscode";
 import { DatasetTree } from "../../src/dataset/DatasetTree";
@@ -36,7 +36,19 @@ describe("DatasetTree Integration Tests", async () => {
     const TIMEOUT = 120000;
     chai.use(chaiAsPromised);
     // Uses loaded profile to create a zosmf session with Zowe
-    const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
+    const cmdArgs: ICommandArguments = {
+        $0: "zowe",
+        _: [""],
+        host: testProfile.profile.host,
+        port: testProfile.profile.port,
+        basePath: testProfile.profile.basePath,
+        rejectUnauthorized: testProfile.profile.rejectUnauthorized,
+        user: testProfile.profile.user,
+        password: testProfile.profile.password,
+    };
+    const sessCfg = zowe.ZosmfSession.createSessCfgFromArgs(cmdArgs);
+    ConnectionPropsForSessCfg.resolveSessCfgProps(sessCfg, cmdArgs);
+    const session = new Session(sessCfg);
     const sessNode = new ZoweDatasetNode(
         testConst.profile.name,
         vscode.TreeItemCollapsibleState.Expanded,

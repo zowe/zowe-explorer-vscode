@@ -36,7 +36,19 @@ describe("tsoCommands integration test", async () => {
     const expect = chai.expect;
     chai.use(chaiAsPromised);
     const TEST_CMD = "/PROFILE";
-    const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
+    const cmdArgs: imperative.ICommandArguments = {
+        $0: "zowe",
+        _: [""],
+        host: testProfile.profile.host,
+        port: testProfile.profile.port,
+        basePath: testProfile.profile.basePath,
+        rejectUnauthorized: testProfile.profile.rejectUnauthorized,
+        user: testProfile.profile.user,
+        password: testProfile.profile.password,
+    };
+    const sessCfg = zowe.ZosmfSession.createSessCfgFromArgs(cmdArgs);
+    imperative.ConnectionPropsForSessCfg.resolveSessCfgProps(sessCfg, cmdArgs);
+    const session = new imperative.Session(sessCfg);
     const testNode = new ZoweDatasetNode(
         "BRTVS99.DDIR",
         vscode.TreeItemCollapsibleState.Collapsed,
