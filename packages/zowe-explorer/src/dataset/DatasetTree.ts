@@ -15,7 +15,13 @@ import * as nls from "vscode-nls";
 import * as globals from "../globals";
 import * as dsActions from "./actions";
 import { IProfileLoaded, Logger, Session } from "@zowe/imperative";
-import { ValidProfileEnum, IZoweTree, IZoweDatasetTreeNode, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
+import {
+    ValidProfileEnum,
+    IZoweTree,
+    IZoweDatasetTreeNode,
+    PersistenceSchemaEnum,
+    ProfilesCache,
+} from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import {
@@ -94,7 +100,10 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             this.mFavoriteSession.iconPath = icon.path;
         }
         this.mSessionNodes = [this.mFavoriteSession];
-        this.treeView = vscode.window.createTreeView("zowe.explorer", { treeDataProvider: this, canSelectMany: true });
+        this.treeView = vscode.window.createTreeView("zowe.ds.explorer", {
+            treeDataProvider: this,
+            canSelectMany: true,
+        });
     }
 
     /**
@@ -442,6 +451,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * Adds a new session to the data set tree
      *
      * @param {string} [sessionName] - optional; loads default profile if not passed
+     * @param {string} [profileType] - optional; loads profiles of a certain type if passed
      */
     public async addSession(sessionName?: string, profileType?: string) {
         const setting = PersistentFilters.getDirectValue("Zowe-Automatic-Validation") as boolean;
@@ -458,7 +468,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 }
             }
         } else {
-            const profiles: IProfileLoaded[] = Profiles.getInstance().allProfiles;
+            const profiles = Profiles.getInstance().allProfiles;
             for (const theProfile of profiles) {
                 // If session is already added, do nothing
                 if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === theProfile.name)) {
@@ -969,12 +979,12 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 if (match) {
                     const [, dataSetName, memberName] = match;
                     dataSet = {
-                        dataSetName,
-                        memberName,
+                        dsn: dataSetName,
+                        member: memberName,
                     };
                 } else {
                     dataSet = {
-                        dataSetName: ds.replace(/\s/g, ""),
+                        dsn: ds.replace(/\s/g, ""),
                     };
                 }
                 dsSets.push(dataSet);
@@ -1273,16 +1283,18 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      */
     private async addSingleSession(profile: IProfileLoaded) {
         if (profile) {
-            // If baseProfile exists, combine that information first before adding the session to the tree
-            // TODO: Move addSession to abstract/ZoweTreeProvider (similar to editSession)
-            const baseProfile = Profiles.getInstance().getBaseProfile();
+            if (!ProfilesCache.getConfigInstance().usingTeamConfig) {
+                // If baseProfile exists, combine that information first before adding the session to the tree
+                // TODO: Move addSession to abstract/ZoweTreeProvider (similar to editSession)
+                const baseProfile = Profiles.getInstance().getBaseProfile();
 
-            if (baseProfile) {
-                try {
-                    const combinedProfile = await Profiles.getInstance().getCombinedProfile(profile, baseProfile);
-                    profile = combinedProfile;
-                } catch (error) {
-                    throw error;
+                if (baseProfile) {
+                    try {
+                        const combinedProfile = await Profiles.getInstance().getCombinedProfile(profile, baseProfile);
+                        profile = combinedProfile;
+                    } catch (error) {
+                        throw error;
+                    }
                 }
             }
             // If session is already added, do nothing

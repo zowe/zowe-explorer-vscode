@@ -13,7 +13,8 @@
       "args": ["--extensionDevelopmentPath=${workspaceFolder}/packages/zowe-explorer", "--verbose"],
       "outFiles": ["${workspaceFolder}/packages/zowe-explorer/out/**/*.js"],
       "preLaunchTask": "build dev watch",
-      "smartStep": true
+      "smartStep": true,
+      "skipFiles": ["<node_internals>/**"]
     },
     {
       "name": "Run Zowe Explorer FTP VS Code Extension",
@@ -23,7 +24,8 @@
       "args": ["--extensionDevelopmentPath=${workspaceFolder}/packages/zowe-explorer-ftp-extension", "--verbose"],
       "outFiles": ["${workspaceFolder}/packages/zowe-explorer-ftp-extension/out/**/*.js"],
       "preLaunchTask": "build dev watch ftp",
-      "smartStep": true
+      "smartStep": true,
+      "skipFiles": ["<node_internals>/**"]
     },
     {
       "type": "node",
@@ -33,7 +35,9 @@
       "args": ["--runInBand"],
       "cwd": "${workspaceFolder}/packages/zowe-explorer",
       "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen"
+      "internalConsoleOptions": "neverOpen",
+      "smartStep": true,
+      "skipFiles": ["<node_internals>/**"]
     },
     {
       "name": "Zowe Explorer Integration Tests (Mocha)",

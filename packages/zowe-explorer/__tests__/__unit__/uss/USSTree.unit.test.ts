@@ -9,7 +9,7 @@
  *                                                                                 *
  */
 
-import { IZoweUSSTreeNode, ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { IZoweUSSTreeNode, ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
@@ -49,7 +49,7 @@ async function createGlobalMocks() {
         createQuickPick: jest.fn(),
         getConfiguration: jest.fn(),
         ZosmfSession: jest.fn(),
-        createBasicZosmfSession: jest.fn(),
+        createSessCfgFromArgs: jest.fn(),
         mockValidationSetting: jest.fn(),
         mockDisableValidationContext: jest.fn(),
         mockEnableValidationContext: jest.fn(),
@@ -106,8 +106,8 @@ async function createGlobalMocks() {
         value: globalMocks.showInformationMessage,
         configurable: true,
     });
-    Object.defineProperty(globalMocks.ZosmfSession, "createBasicZosmfSession", {
-        value: globalMocks.createBasicZosmfSession,
+    Object.defineProperty(globalMocks.ZosmfSession, "createSessCfgFromArgs", {
+        value: globalMocks.createSessCfgFromArgs,
         configurable: true,
     });
     Object.defineProperty(zowe, "ZosmfSession", { value: globalMocks.ZosmfSession, configurable: true });
@@ -149,6 +149,14 @@ async function createGlobalMocks() {
     globalMocks.testUSSNode = createUSSNode(globalMocks.testSession, globalMocks.testProfile);
     globalMocks.testTree.mSessionNodes.push(ussSessionTestNode);
     globalMocks.testTree.addSearchHistory("/u/myuser");
+
+    Object.defineProperty(ProfilesCache, "getConfigInstance", {
+        value: jest.fn(() => {
+            return {
+                usingTeamConfig: false,
+            };
+        }),
+    });
 
     return globalMocks;
 }
@@ -730,7 +738,7 @@ describe("USSTree Unit Tests - Function USSTree.filterPrompt()", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         const sessionWithCred = createISession();
-        globalMocks.createBasicZosmfSession.mockReturnValue(sessionWithCred);
+        globalMocks.createSessCfgFromArgs.mockReturnValue(sessionWithCred);
         const dsNode = new ZoweUSSNode(
             "/u/myFile.txt",
             vscode.TreeItemCollapsibleState.Expanded,
@@ -757,7 +765,7 @@ describe("USSTree Unit Tests - Function USSTree.filterPrompt()", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         const sessionNoCred = createISessionWithoutCredentials();
-        globalMocks.createBasicZosmfSession.mockReturnValue(sessionNoCred);
+        globalMocks.createSessCfgFromArgs.mockReturnValue(sessionNoCred);
         const dsNode = new ZoweUSSNode(
             "/u/myFile.txt",
             vscode.TreeItemCollapsibleState.Expanded,

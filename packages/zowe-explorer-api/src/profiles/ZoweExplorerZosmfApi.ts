@@ -10,7 +10,7 @@
  */
 
 import * as zowe from "@zowe/cli";
-import { Session, SessConstants, IProfileLoaded, ICommandArguments } from "@zowe/imperative";
+import { Session, SessConstants, IProfileLoaded, ICommandArguments, ConnectionPropsForSessCfg } from "@zowe/imperative";
 import { ZoweExplorerApi } from "./ZoweExplorerApi";
 
 /**
@@ -30,14 +30,29 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
     }
 
     public getSessionFromCommandArgument(cmdArgs: ICommandArguments): Session {
-        return zowe.ZosmfSession.createBasicZosmfSessionFromArguments(cmdArgs);
+        const sessCfg = zowe.ZosmfSession.createSessCfgFromArgs(cmdArgs);
+        ConnectionPropsForSessCfg.resolveSessCfgProps(sessCfg, cmdArgs);
+        const sessionToUse = new Session(sessCfg);
+        return sessionToUse;
     }
 
     public getSession(profile?: IProfileLoaded): Session {
         if (!this.session) {
             try {
                 if (!this.profile.profile.tokenValue) {
-                    this.session = zowe.ZosmfSession.createBasicZosmfSession((profile || this.profile).profile);
+                    const serviceProfile = profile || this.profile;
+                    const cmdArgs: ICommandArguments = {
+                        $0: "zowe",
+                        _: [""],
+                        host: serviceProfile.profile.host,
+                        port: serviceProfile.profile.port,
+                        basePath: serviceProfile.profile.basePath,
+                        rejectUnauthorized: serviceProfile.profile.rejectUnauthorized,
+                        user: serviceProfile.profile.user,
+                        password: serviceProfile.profile.password,
+                    };
+
+                    this.session = this.getSessionFromCommandArgument(cmdArgs);
                 } else {
                     const serviceProfile = this.profile;
                     const cmdArgs: ICommandArguments = {
@@ -79,7 +94,19 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
 
                 validateSession = this.getSessionFromCommandArgument(cmdArgs);
             } else {
-                validateSession = zowe.ZosmfSession.createBasicZosmfSession(validateProfile.profile);
+                const serviceProfile = validateProfile;
+                const cmdArgs: ICommandArguments = {
+                    $0: "zowe",
+                    _: [""],
+                    host: serviceProfile.profile.host,
+                    port: serviceProfile.profile.port,
+                    basePath: serviceProfile.profile.basePath,
+                    rejectUnauthorized: serviceProfile.profile.rejectUnauthorized,
+                    user: serviceProfile.profile.user,
+                    password: serviceProfile.profile.password,
+                };
+
+                validateSession = this.getSessionFromCommandArgument(cmdArgs);
             }
 
             const sessionStatus = await zowe.CheckStatus.getZosmfInfo(validateSession);
@@ -225,29 +252,25 @@ export class ZosmfMvsApi extends ZosmfApiCommon implements ZoweExplorerApi.IMvs 
     }
 
     public async copyDataSetMember(
-        { dataSetName: fromDataSetName, memberName: fromMemberName }: zowe.IDataSet,
-        { dataSetName: toDataSetName, memberName: toMemberName }: zowe.IDataSet,
+        { dsn: fromDataSetName, member: fromMemberName }: zowe.IDataSet,
+        { dsn: toDataSetName, member: toMemberName }: zowe.IDataSet,
         options?: zowe.ICopyDatasetOptions
     ): Promise<zowe.IZosFilesResponse> {
         let newOptions: zowe.ICopyDatasetOptions;
         if (options) {
-            if (options.fromDataSet) {
+            if (options["from-dataset"]) {
                 newOptions = options;
             } else {
                 newOptions = {
                     ...options,
-                    ...{ fromDataSet: { dataSetName: fromDataSetName, memberName: fromMemberName } },
+                    ...{ "from-dataset": { dsn: fromDataSetName, member: fromMemberName } },
                 };
             }
         } else {
             // If we decide to match 1:1 the Zowe.Copy.dataSet implementation, we will need to break the interface definition in the ZoweExploreApi
-            newOptions = { fromDataSet: { dataSetName: fromDataSetName, memberName: fromMemberName } };
+            newOptions = { "from-dataset": { dsn: fromDataSetName, member: fromMemberName } };
         }
-        return await zowe.Copy.dataSet(
-            this.getSession(),
-            { dataSetName: toDataSetName, memberName: toMemberName },
-            newOptions
-        );
+        return await zowe.Copy.dataSet(this.getSession(), { dsn: toDataSetName, member: toMemberName }, newOptions);
     }
 
     public async renameDataSet(currentDataSetName: string, newDataSetName: string): Promise<zowe.IZosFilesResponse> {

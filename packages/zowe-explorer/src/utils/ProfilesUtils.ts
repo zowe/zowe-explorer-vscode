@@ -14,8 +14,8 @@
 import * as vscode from "vscode";
 import * as os from "os";
 import * as path from "path";
-import { Session, IProfile, ImperativeConfig, IProfileLoaded } from "@zowe/imperative";
-import { IZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { Session, IProfile, ImperativeConfig, IProfileLoaded, ProfileInfo } from "@zowe/imperative";
+import { getSecurityModules, IZoweNodeType, IZoweTree, IZoweTreeNode, ProfilesCache } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import * as nls from "vscode-nls";
 
@@ -214,4 +214,12 @@ export async function setSession(node: IZoweTreeNode, combinedSessionProfile: IP
             sessionNode.ISession[prop] = combinedSessionProfile[prop];
         }
     }
+}
+
+export async function getProfileInfo(envTheia: boolean): Promise<ProfileInfo> {
+    const mProfileInfo = new ProfileInfo("zowe", {
+        requireKeytar: () => getSecurityModules("keytar", envTheia),
+    });
+    ProfilesCache.createConfigInstance(mProfileInfo);
+    return mProfileInfo;
 }

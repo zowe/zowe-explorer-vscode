@@ -18,7 +18,7 @@ import * as fsextra from "fs-extra";
 import * as imperative from "@zowe/imperative";
 import * as extension from "../../src/extension";
 import * as globals from "../../src/globals";
-import { ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { ValidProfileEnum, ProfilesCache } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../src/Profiles";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import { createIProfile, createTreeView } from "../../__mocks__/mockCreators/shared";
@@ -54,7 +54,7 @@ async function createGlobalMocks() {
         mockShowErrorMessage: jest.fn(),
         mockShowWarningMessage: jest.fn(),
         mockZosmfSession: jest.fn(),
-        mockCreateBasicZosmfSession: jest.fn(),
+        mockCreateSessCfgFromArgs: jest.fn(),
         mockUtilities: jest.fn(),
         mockShowInformationMessage: jest.fn(),
         mockGetConfiguration: jest.fn(),
@@ -71,6 +71,14 @@ async function createGlobalMocks() {
         mockGetImperativeConfig: jest.fn().mockReturnValue({ profiles: [] }),
         mockCliProfileManager: jest.fn().mockImplementation(() => {
             return { GetAllProfileNames: globalMocks.mockGetAllProfileNames, Load: globalMocks.mockLoad };
+        }),
+        mockProfileInfo: jest.fn().mockImplementation(() => {
+            return {
+                mAppName: "",
+                mCredentials: {},
+                mUSingTeamConfig: true,
+                readProfilesFromDisk: jest.fn(),
+            };
         }),
         testTreeView: null,
         enums: jest.fn().mockImplementation(() => {
@@ -262,8 +270,8 @@ async function createGlobalMocks() {
         configurable: true,
     });
     Object.defineProperty(zowe, "ZosmfSession", { value: globalMocks.mockZosmfSession, configurable: true });
-    Object.defineProperty(globalMocks.mockZosmfSession, "createBasicZosmfSession", {
-        value: globalMocks.mockCreateBasicZosmfSession,
+    Object.defineProperty(globalMocks.mockZosmfSession, "createSessCfgFromArgs", {
+        value: globalMocks.mockCreateSessCfgFromArgs,
         configurable: true,
     });
     Object.defineProperty(vscode.window, "showInformationMessage", {
@@ -312,6 +320,13 @@ async function createGlobalMocks() {
             };
         }),
     });
+    Object.defineProperty(ProfilesCache, "getConfigInstance", {
+        value: jest.fn(() => {
+            return {
+                usingTeamConfig: false,
+            };
+        }),
+    });
 
     // Create a mocked extension context
     // tslint:disable-next-line: no-object-literal-type-assertion
@@ -325,7 +340,7 @@ async function createGlobalMocks() {
     globalMocks.mockExtension = new mockExtensionCreator();
 
     globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.testProfile);
-    globalMocks.mockCreateBasicZosmfSession.mockReturnValue(globalMocks.testSession);
+    globalMocks.mockCreateSessCfgFromArgs.mockReturnValue(globalMocks.testSession.ISession);
     globalMocks.mockCreateTreeView.mockReturnValue(createTreeView());
     globalMocks.mockReadFileSync.mockReturnValue("");
     globalMocks.testProfileOps.getDefaultProfile = globalMocks.mockLoadNamedProfile;
@@ -348,7 +363,10 @@ async function createGlobalMocks() {
 describe("Extension Unit Tests", () => {
     it("Testing that activate correctly executes", async () => {
         const globalMocks = await createGlobalMocks();
-
+        Object.defineProperty(imperative, "ProfileInfo", {
+            value: globalMocks.mockProfileInfo,
+            configurable: true,
+        });
         // tslint:disable-next-line: no-object-literal-type-assertion
         globalMocks.mockReadFileSync.mockReturnValueOnce('{ "overrides": { "CredentialManager": "Managed by ANO" }}');
         globalMocks.mockExistsSync.mockReturnValueOnce(false);
@@ -372,7 +390,7 @@ describe("Extension Unit Tests", () => {
         // Check that tree providers are initialized successfully
         // tslint:disable-next-line: no-magic-numbers
         expect(globalMocks.mockCreateTreeView.mock.calls.length).toBe(3);
-        expect(globalMocks.mockCreateTreeView.mock.calls[0][0]).toBe("zowe.explorer");
+        expect(globalMocks.mockCreateTreeView.mock.calls[0][0]).toBe("zowe.ds.explorer");
         expect(globalMocks.mockCreateTreeView.mock.calls[1][0]).toBe("zowe.uss.explorer");
 
         // Check that CLI Profile Manager is initialized successfully

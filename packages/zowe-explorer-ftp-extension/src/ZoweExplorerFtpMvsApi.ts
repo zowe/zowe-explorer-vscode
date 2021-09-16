@@ -235,8 +235,8 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
     }
 
     public copyDataSetMember(
-        { dataSetName: fromDataSetName, memberName: fromMemberName }: zowe.IDataSet,
-        { dataSetName: toDataSetName, memberName: toMemberName }: zowe.IDataSet,
+        { dsn: fromDataSetName, member: fromMemberName }: zowe.IDataSet,
+        { dsn: toDataSetName, member: toMemberName }: zowe.IDataSet,
         options?: { replace?: boolean }
     ): Promise<zowe.IZosFilesResponse> {
         throw new Error("Copy dataset is not supported in ftp extension.");

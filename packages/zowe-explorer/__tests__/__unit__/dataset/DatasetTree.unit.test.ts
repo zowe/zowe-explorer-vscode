@@ -16,7 +16,7 @@ import * as zowe from "@zowe/cli";
 import { Logger } from "@zowe/imperative";
 import { DatasetTree } from "../../../src/dataset/DatasetTree";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
-import { IZoweDatasetTreeNode, ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { IZoweDatasetTreeNode, ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
@@ -99,6 +99,13 @@ function createGlobalMocks() {
         value: jest.fn(() => {
             return {
                 "Zowe-Automatic-Validation": true,
+            };
+        }),
+    });
+    Object.defineProperty(ProfilesCache, "getConfigInstance", {
+        value: jest.fn(() => {
+            return {
+                usingTeamConfig: false,
             };
         }),
     });
@@ -1487,7 +1494,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
         expect(testTree.mSessionNodes[1].contextValue).toEqual(globals.DS_SESSION_CONTEXT + globals.ACTIVE_CONTEXT);
-        expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD1");
+        expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD1(MEMBER)");
     });
     it("Checking adding of new filter with Unverified profile", async () => {
         const globalMocks = await createGlobalMocks();

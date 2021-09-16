@@ -18,9 +18,11 @@ import {
     SessConstants,
     IUpdateProfile,
     IProfile,
+    IProfMergedArg,
 } from "@zowe/imperative";
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
+import * as path from "path";
 import {
     IZoweTree,
     IZoweNodeType,
@@ -84,23 +86,26 @@ export class Profiles extends ProfilesCache {
                     this.profilesForValidation.splice(index, 1);
                 }
             });
-            try {
-                const values = await Profiles.getInstance().promptCredentials(theProfile.name, true);
-                if (values !== undefined) {
-                    theProfile.profile.user = values[0];
-                    theProfile.profile.password = values[1];
-                    theProfile.profile.base64EncodedAuth = values[2];
+            if (ProfilesCache.getConfigInstance().usingTeamConfig) {
+                profileStatus = await this.checkProfileConfig(theProfile);
+            } else {
+                try {
+                    const values = await Profiles.getInstance().promptCredentials(theProfile.name, true);
+                    if (values !== undefined) {
+                        theProfile.profile.user = values[0];
+                        theProfile.profile.password = values[1];
+                        theProfile.profile.base64EncodedAuth = values[2];
+                    }
+                } catch (error) {
+                    errorHandling(
+                        error,
+                        theProfile.name,
+                        localize("checkCurrentProfile.error", "Error encountered in ") +
+                            `checkCurrentProfile.optionalProfiles!`
+                    );
+                    return profileStatus;
                 }
-            } catch (error) {
-                errorHandling(
-                    error,
-                    theProfile.name,
-                    localize("checkCurrentProfile.error", "Error encountered in ") +
-                        `checkCurrentProfile.optionalProfiles!`
-                );
-                return profileStatus;
             }
-
             // Validate profile
             profileStatus = await this.getProfileSetting(theProfile);
         } else {
@@ -247,7 +252,7 @@ export class Profiles extends ProfilesCache {
      * @param {USSTree} zoweFileProvider - either the USS, MVS, JES tree
      */
     public async createZoweSession(zoweFileProvider: IZoweTree<IZoweTreeNode>) {
-        const allProfiles = (await Profiles.getInstance()).allProfiles;
+        const allProfiles = Profiles.getInstance().allProfiles;
         const createNewProfile = "Create a New Connection to z/OS";
         let chosenProfile: string = "";
 
@@ -316,6 +321,22 @@ export class Profiles extends ProfilesCache {
         }
 
         if (chosenProfile === "") {
+            if (ProfilesCache.getConfigInstance().usingTeamConfig) {
+                const configName = ProfilesCache.getConfigInstance().getTeamConfig().configName;
+                let configDir = ProfilesCache.getConfigInstance().getTeamConfig().mHomeDir;
+                if (vscode.workspace.workspaceFolders) {
+                    // Check if config file is present in the workspace
+                    const uri = await vscode.workspace.findFiles(
+                        new vscode.RelativePattern(vscode.workspace.workspaceFolders[0], configName)
+                    );
+                    if (uri.length > 0) {
+                        configDir = ProfilesCache.getConfigInstance().getTeamConfig().mProjectDir;
+                    }
+                }
+                const filePath = path.join(configDir, configName);
+                await this.openConfigFile(filePath);
+                return;
+            }
             let newprofile: any;
             let profileName: string;
             if (quickpick.value) {
@@ -366,6 +387,12 @@ export class Profiles extends ProfilesCache {
     }
 
     public async editSession(profileLoaded: IProfileLoaded, profileName: string): Promise<any | undefined> {
+        if (ProfilesCache.getConfigInstance().usingTeamConfig) {
+            const currentProfile = this.getProfileFromConfig(profileLoaded.name);
+            const filePath = currentProfile.profLoc.osLoc[0];
+            await this.openConfigFile(filePath);
+            return;
+        }
         const editSession = profileLoaded.profile;
         const editURL = editSession.host + ":" + editSession.port;
         const editUser = editSession.user;
@@ -500,8 +527,8 @@ export class Profiles extends ProfilesCache {
         }
 
         try {
-            const updSession = await zowe.ZosmfSession.createBasicZosmfSession(updSchemaValues);
-            updSchemaValues.base64EncodedAuth = updSession.ISession.base64EncodedAuth;
+            const updSession = await zowe.ZosmfSession.createSessCfgFromArgs(updSchemaValues);
+            updSchemaValues.base64EncodedAuth = updSession.base64EncodedAuth;
             await this.updateProfile({
                 profile: updSchemaValues,
                 name: profileName,
@@ -790,6 +817,54 @@ export class Profiles extends ProfilesCache {
         }
     }
 
+    public async checkProfileConfig(theProfile: IProfileLoaded): Promise<IProfileValidation> {
+        const configAllProfiles = ProfilesCache.getConfigInstance().getAllProfiles();
+        const currentProfile = configAllProfiles.filter((temprofile) => temprofile.profName === theProfile.name)[0];
+        const mergedArgs = ProfilesCache.getConfigInstance().mergeArgsForProfile(currentProfile);
+        const profile: IProfile = {};
+        for (const arg of mergedArgs.knownArgs) {
+            profile[arg.argName] = arg.secure ? ProfilesCache.getConfigInstance().loadSecureArg(arg) : arg.argValue;
+        }
+        for (const arg of mergedArgs.missingArgs) {
+            let response: string;
+            switch (arg.dataType) {
+                case "string":
+                case "number":
+                    response = await vscode.window.showInputBox({
+                        prompt: `Enter a ${arg.dataType} value for "${arg.argName}"`,
+                        value: arg.argValue?.toString(),
+                        password: arg.secure,
+                    });
+                    if (response != null) {
+                        profile[arg.argName] = arg.dataType === "number" ? parseInt(response, 10) : response;
+                    }
+                    break;
+                case "boolean":
+                    response = await vscode.window.showQuickPick(arg.argValue ? ["True", "False"] : ["False", "True"], {
+                        placeHolder: `Select a boolean value for "${arg.argName}"`,
+                    });
+                    if (response != null) {
+                        profile[arg.argName] = response === "True";
+                    }
+                    break;
+            }
+        }
+        const profileFix: IProfileLoaded = {
+            message: "",
+            name: theProfile.name,
+            type: theProfile.type,
+            profile,
+            failNotFound: false,
+        };
+        // Validate profile
+        const profileStatus = await this.getProfileSetting(profileFix);
+        const updSession = await ZoweExplorerApiRegister.getMvsApi(profileFix).getSession();
+        theProfile.profile.user = updSession.ISession.user;
+        theProfile.profile.password = updSession.ISession.password;
+        theProfile.profile.base64EncodedAuth = updSession.ISession.base64EncodedAuth;
+        return profileStatus;
+    }
+
     public async getDeleteProfile() {
         const allProfiles: IProfileLoaded[] = this.allProfiles;
         const profileNamesList = allProfiles.map((temprofile) => {
@@ -835,6 +910,13 @@ export class Profiles extends ProfilesCache {
             return;
         }
         deleteLabel = deletedProfile.name;
+
+        if (ProfilesCache.getConfigInstance().usingTeamConfig) {
+            const currentProfile = this.getProfileFromConfig(deleteLabel);
+            const filePath = currentProfile.profLoc.osLoc[0];
+            await this.openConfigFile(filePath);
+            return;
+        }
 
         const deleteSuccess = await this.deletePrompt(deletedProfile);
         if (!deleteSuccess) {
@@ -1605,23 +1687,23 @@ export class Profiles extends ProfilesCache {
 
     // ** Functions that Calls Get CLI Profile Manager  */
 
-    private async updateProfile(ProfileInfo, rePrompt?: boolean) {
-        if (ProfileInfo.type !== undefined) {
-            const profileManager = this.getCliProfileManager(ProfileInfo.type);
+    private async updateProfile(updProfileInfo, rePrompt?: boolean) {
+        if (updProfileInfo.type !== undefined) {
+            const profileManager = this.getCliProfileManager(updProfileInfo.type);
             this.loadedProfile = await profileManager.load({
-                name: ProfileInfo.name,
+                name: updProfileInfo.name,
             });
         } else {
             for (const type of ZoweExplorerApiRegister.getInstance().registeredApiTypes()) {
                 const profileManager = this.getCliProfileManager(type);
                 this.loadedProfile = await profileManager.load({
-                    name: ProfileInfo.name,
+                    name: updProfileInfo.name,
                 });
             }
         }
 
         const OrigProfileInfo = this.loadedProfile.profile;
-        const NewProfileInfo = ProfileInfo.profile;
+        const NewProfileInfo = updProfileInfo.profile;
 
         // Update the currently-loaded profile with the new info
         const profileArray = Object.keys(this.loadedProfile.profile);
@@ -1658,5 +1740,10 @@ export class Profiles extends ProfilesCache {
         } catch (error) {
             vscode.window.showErrorMessage(error.message);
         }
+    }
+
+    private async openConfigFile(filePath: string) {
+        const document = await vscode.workspace.openTextDocument(filePath);
+        await vscode.window.showTextDocument(document);
     }
 }

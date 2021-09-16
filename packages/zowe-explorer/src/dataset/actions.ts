@@ -1266,8 +1266,8 @@ export async function pasteMember(node: IZoweDatasetTreeNode, datasetProvider: I
             }
             try {
                 await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).copyDataSetMember(
-                    { dataSetName: beforeDataSetName, memberName: beforeMemberName },
-                    { dataSetName, memberName }
+                    { dsn: beforeDataSetName, member: beforeMemberName },
+                    { dsn: dataSetName, member: memberName }
                 );
             } catch (err) {
                 vscode.window.showErrorMessage(err.message);
