@@ -1082,9 +1082,11 @@ export class Profiles extends ProfilesCache {
                 _: [""],
             };
             for (const prop of Object.keys(profSchema)) {
-                cmdArgs[prop] = serviceProfile.profile[prop] ? serviceProfile.profile[prop] : baseProfile.profile[prop];
+                cmdArgs[prop] = serviceProfile.profile[prop]
+                    ? serviceProfile.profile[prop]
+                    : baseProfile?.profile[prop];
             }
-            if (baseProfile) {
+            if (baseProfile || (serviceProfile.profile.tokenType && serviceProfile.profile.tokenValue)) {
                 cmdArgs.tokenType = serviceProfile.profile.tokenType
                     ? serviceProfile.profile.tokenType
                     : baseProfile.profile.tokenType;
