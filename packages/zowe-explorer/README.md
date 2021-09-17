@@ -40,7 +40,6 @@ More information:
 - Added the profile validation and credentials check functionalities to the Zowe Explorer FTP extension.
 - Added Imperative logger access for extenders.
 - Added documentation for Imperative logger for extenders.
-- Added support for the validate profile and credential features.
 
 **Changed**:
 
