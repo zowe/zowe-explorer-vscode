@@ -37,7 +37,6 @@ More information:
 
 **Added**:
 
-- Added the profile validation and credentials check functionalities to the Zowe Explorer FTP extension.
 - Added Imperative logger access for extenders.
 - Added documentation for Imperative logger for extenders.
 - Added the function that checks whether a base profile exists before running the function that combines base and service profiles
