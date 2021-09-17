@@ -138,8 +138,10 @@ export const syncSessionNode = (profiles: Profiles) => (getSessionForProfile: Se
     sessionNode.setProfileToChoice(profile);
 
     const baseProfile = profiles.getBaseProfile();
-    const combinedProfile = await profiles.getCombinedProfile(profile, baseProfile);
-    const session = getSessionForProfile(combinedProfile);
+    if (baseProfile) {
+        profile = await profiles.getCombinedProfile(profile, baseProfile);
+    }
+    const session = getSessionForProfile(profile);
     sessionNode.setSessionToChoice(session);
 };
 
