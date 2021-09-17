@@ -4,14 +4,15 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ## `1.19.0`
 
+- Added the function that checks whether a base profile exists before running the function that combines base and service profiles [#1500](https://github.com/zowe/vscode-extension-for-zowe/pull/1500). Thanks @lauren-li
 - Added Imperative logger access for extenders [#1433](https://github.com/zowe/vscode-extension-for-zowe/pull/1433). Thanks @katelynienaber
 - Added documentation for Imperative logger for extenders [#1467](https://github.com/zowe/vscode-extension-for-zowe/pull/1467). Thanks @katelynienaber
-- Added the profile validation and credentials check functionalities to the Zowe Explorer FTP extension [#1284](https://github.com/zowe/vscode-extension-for-zowe/pull/1284). Thanks @lauren-li
+- Added the profile validation and credentials check functionalities to the Zowe Explorer FTP extension [#1284](https://github.com/zowe/vscode-extension-for-zowe/issues/1284). Thanks @tiantn
 - Implemented separate console windows for TSO and MVS commands [#1478](https://github.com/zowe/vscode-extension-for-zowe/pull/1478). Thanks @katelynienaber
 - Fixed the bug that caused the check credentials pop-up to disappear too quickly [#1486](https://github.com/zowe/vscode-extension-for-zowe/pull/1486). Thanks @JillieBeanSim
 - Fixed the bug that kept the command text box while escaping the process of entering a TSO command. Now the command text box does not pop up if you cancel entering a TSO command [#1479](https://github.com/zowe/vscode-extension-for-zowe/pull/1479). Thanks @katelynienaber
 - Fixed the bug that caused issues with deleting data set members in Ecplipse Theia or Che [#1487](https://github.com/zowe/vscode-extension-for-zowe/pull/1478). Thanks @phaumer
-- Fixed the bug that caused a pop-up confirming the deletion of multiple data sets to display while removing a single data set member [#1483](https://github.com/zowe/vscode-extension-for-zowe/pull/1483). Thanks @JillieBeanSim
+- Fixed the bug that caused the deletion of selected data sets while removing a single data set member by using the right-click action. [#1483](https://github.com/zowe/vscode-extension-for-zowe/pull/1483). Thanks @JillieBeanSim
 
 ## `1.18.0`
 
