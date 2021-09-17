@@ -7,7 +7,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added the function that checks whether a base profile exists before running the function that combines base and service profiles [#1500](https://github.com/zowe/vscode-extension-for-zowe/pull/1500). Thanks @lauren-li
 - Added Imperative logger access for extenders [#1433](https://github.com/zowe/vscode-extension-for-zowe/pull/1433). Thanks @katelynienaber
 - Added documentation for Imperative logger for extenders [#1467](https://github.com/zowe/vscode-extension-for-zowe/pull/1467). Thanks @katelynienaber
-- Added the profile validation and credentials check functionalities to the Zowe Explorer FTP extension [#1284](https://github.com/zowe/vscode-extension-for-zowe/issues/1284). Thanks @tiantn
 - Implemented separate console windows for TSO and MVS commands [#1478](https://github.com/zowe/vscode-extension-for-zowe/pull/1478). Thanks @katelynienaber
 - Fixed the bug that caused the check credentials pop-up to disappear too quickly [#1486](https://github.com/zowe/vscode-extension-for-zowe/pull/1486). Thanks @JillieBeanSim
 - Fixed the bug that kept the command text box while escaping the process of entering a TSO command. Now the command text box does not pop up if you cancel entering a TSO command [#1479](https://github.com/zowe/vscode-extension-for-zowe/pull/1479). Thanks @katelynienaber
