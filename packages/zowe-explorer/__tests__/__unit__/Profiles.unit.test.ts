@@ -2705,6 +2705,7 @@ describe("Profiles Unit Tests - Function refresh", () => {
 describe("Profiles Unit Tests - Function getCombinedProfile", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
+            testServiceProfile: createValidIProfile(),
             testBaseProfile: createValidIProfile(),
             mockCommonApi: await ZoweExplorerApiRegister.getCommonApi(globalMocks.testProfile),
             testSchemas: createTestSchemas(),
@@ -2800,6 +2801,25 @@ describe("Profiles Unit Tests - Function getCombinedProfile", () => {
         );
 
         expect(response.profile.tokenValue).toEqual(undefined);
+    });
+    it("Tests that getCombinedProfile assigns service profile tokens if no baseProfile present", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        const tokenType = "testTokenType";
+        const tokenValue = "testTokenValue";
+
+        blockMocks.testServiceProfile.profile.user = null;
+        blockMocks.testServiceProfile.profile.password = null;
+        blockMocks.testServiceProfile.profile.tokenType = tokenType;
+        blockMocks.testServiceProfile.profile.tokenValue = tokenValue;
+
+        const response = await (await blockMocks.mockProfileInstance).getCombinedProfile(
+            blockMocks.testServiceProfile,
+            undefined
+        );
+
+        expect(response.profile.tokenType).toEqual(tokenType);
+        expect(response.profile.tokenValue).toEqual(tokenValue);
     });
 });
 
