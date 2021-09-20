@@ -1,5 +1,9 @@
 # Change Log
 
+## `1.19.0`
+
+- Added support for the validate profile and credential features [#1443](https://github.com/zowe/vscode-extension-for-zowe/pull/1443). Thanks @tiantn
+
 ## `1.16.1`
 
 - Removed redundant entry from the `.vscodeignore` file in order to help generate the `extension.js` file for the VS Code Marketplace release
