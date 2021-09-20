@@ -39,7 +39,7 @@ More information:
 
 - Added Imperative logger access for extenders.
 - Added documentation for Imperative logger for extenders.
-- Added the function that checks whether a base profile exists before running the function that combines base and service profiles
+- Added a check to ensure that a base profile exists before running the function that combines base and service profiles
 
 **Changed**:
 
