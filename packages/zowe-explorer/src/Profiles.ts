@@ -780,42 +780,46 @@ export class Profiles extends ProfilesCache {
             await this.refresh(ZoweExplorerApiRegister.getInstance());
             return undefined;
         } else {
-            const updSession = await ZoweExplorerApiRegister.getMvsApi(loadProfile).getSession();
-            if (ProfilesCache.getConfigInstance().usingTeamConfig) {
-                const profArray = [];
-                for (const theprofile of this.allProfiles) {
-                    if (theprofile.name !== loadProfile.name) {
-                        profArray.push(theprofile);
+            try {
+                const updSession = await ZoweExplorerApiRegister.getMvsApi(loadProfile).getSession();
+                if (ProfilesCache.getConfigInstance().usingTeamConfig) {
+                    const profArray = [];
+                    for (const theprofile of this.allProfiles) {
+                        if (theprofile.name !== loadProfile.name) {
+                            profArray.push(theprofile);
+                        }
                     }
-                }
-                profArray.push(loadProfile);
-                this.allProfiles = profArray;
-                if (rePrompt) {
+                    profArray.push(loadProfile);
+                    this.allProfiles = profArray;
+                    if (rePrompt) {
+                        const infoMsg = localize(
+                            "promptCredentials.updateConfigCreds.infoMessage",
+                            "Credentials for future use with profile {0} will need to be updated in the config file or by using the command 'zowe config secure'.",
+                            loadProfile.name
+                        );
+                        vscode.window.showInformationMessage(infoMsg);
+                    }
+                } else {
+                    const saveButton = localize("promptCredentials.saveCredentials.button", "Save Credentials");
+                    const doNotSaveButton = localize("promptCredentials.doNotSave.button", "Do Not Save");
                     const infoMsg = localize(
-                        "promptCredentials.updateConfigCreds.infoMessage",
-                        "Credentials for future use with profile {0} will need to be updated in the config file or by using the command 'zowe config secure'.",
+                        "promptCredentials.saveCredentials.infoMessage",
+                        "Save entered credentials for future use with profile: {0}? Saving credentials will update the local yaml file.",
                         loadProfile.name
                     );
-                    vscode.window.showInformationMessage(infoMsg);
+                    await vscode.window
+                        .showInformationMessage(infoMsg, ...[saveButton, doNotSaveButton])
+                        .then((selection) => {
+                            if (selection === saveButton) {
+                                rePrompt = false;
+                            }
+                        });
+                    await this.updateProfile(loadProfile, rePrompt);
                 }
-            } else {
-                const saveButton = localize("promptCredentials.saveCredentials.button", "Save Credentials");
-                const doNotSaveButton = localize("promptCredentials.doNotSave.button", "Do Not Save");
-                const infoMsg = localize(
-                    "promptCredentials.saveCredentials.infoMessage",
-                    "Save entered credentials for future use with profile: {0}? Saving credentials will update the local yaml file.",
-                    loadProfile.name
-                );
-                await vscode.window
-                    .showInformationMessage(infoMsg, ...[saveButton, doNotSaveButton])
-                    .then((selection) => {
-                        if (selection === saveButton) {
-                            rePrompt = false;
-                        }
-                    });
-                await this.updateProfile(loadProfile, rePrompt);
+                return [updSession.ISession.user, updSession.ISession.password, updSession.ISession.base64EncodedAuth];
+            } catch (error) {
+                await errorHandling(error.message);
             }
-            return [updSession.ISession.user, updSession.ISession.password, updSession.ISession.base64EncodedAuth];
         }
     }
 
