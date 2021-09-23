@@ -269,7 +269,7 @@ export async function deleteDatasetPrompt(
     }
 
     // The names of the nodes that should be deleted
-    const nodesToDelete: string[] = nodes.map((deletedNode) => {
+    let nodesToDelete: string[] = nodes.map((deletedNode) => {
         return contextually.isDsMember(deletedNode)
             ? ` ${deletedNode.getParent().getLabel()}(${deletedNode.getLabel()})`
             : ` ${deletedNode.getLabel()}`;
@@ -299,8 +299,7 @@ export async function deleteDatasetPrompt(
     const deleteButton = localize("deleteDatasetPrompt.confirmation.delete", "Delete");
     const message = localize(
         "deleteDatasetPrompt.confirmation.message",
-        "Are you sure you want to delete the following {0} item(s)?\nThis will permanently remove these data sets and/or members from your system.\n\n{1}",
-        nodesToDelete.length,
+        "Are you sure you want to delete these items?\nThis will permanently remove these data sets and/or members from your system.\n\n{0}",
         nodesToDelete.toString().replace(/(,)/g, "\n")
     );
     await vscode.window.showWarningMessage(message, { modal: true }, ...[deleteButton]).then((selection) => {
@@ -345,12 +344,7 @@ export async function deleteDatasetPrompt(
             }
         );
         vscode.window.showInformationMessage(
-            localize(
-                "deleteMulti.datasetNode",
-                "The following {0} item(s) were deleted:{1}",
-                nodesDeleted.length,
-                nodesDeleted.toString()
-            )
+            localize("deleteMulti.datasetNode", "The following items were deleted: ") + nodesDeleted
         );
 
         // refresh Tree View & favorites
