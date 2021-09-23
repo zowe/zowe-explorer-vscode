@@ -354,24 +354,47 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     }
 
     public async deleteUSSNode(ussFileProvider: IZoweTree<IZoweUSSTreeNode>, filePath: string) {
-        const quickPickOptions: vscode.QuickPickOptions = {
-            placeHolder: localize(
-                "deleteUSSNode.quickPickOption",
-                "Delete {0}? This will permanently remove it from your system.",
-                this.label
-            ),
-            ignoreFocusOut: true,
-            canPickMany: false,
-        };
-        if (
-            (await vscode.window.showQuickPick(
-                [
-                    localize("deleteUSSNode.showQuickPick.delete", "Delete"),
-                    localize("deleteUSSNode.showQuickPick.cancel", "Cancel"),
-                ],
-                quickPickOptions
-            )) !== localize("deleteUSSNode.showQuickPick.delete", "Delete")
-        ) {
+        // const quickPickOptions: vscode.QuickPickOptions = {
+        //     placeHolder: localize(
+        //         "deleteUSSNode.quickPickOption",
+        //         "Delete {0}? This will permanently remove it from your system.",
+        //         this.label
+        //     ),
+        //     ignoreFocusOut: true,
+        //     canPickMany: false,
+        // };
+        // if (
+        //     (await vscode.window.showQuickPick(
+        //         [
+        //             localize("deleteUSSNode.showQuickPick.delete", "Delete"),
+        //             localize("deleteUSSNode.showQuickPick.cancel", "Cancel"),
+        //         ],
+        //         quickPickOptions
+        //     )) !== localize("deleteUSSNode.showQuickPick.delete", "Delete")
+        // ) {
+        //     return;
+        // }
+
+        const deleteButton = localize("deleteUssPrompt.confirmation.delete", "Delete");
+        const message = localize(
+            "deleteUssPrompt.confirmation.message",
+            "Are you sure you want to delete the following item?\nThis will permanently remove the following file or folder from your system.\n\n{0}",
+            this.label
+        );
+        let cancelled = false;
+        await vscode.window.showWarningMessage(message, { modal: true }, ...[deleteButton]).then((selection) => {
+            if (!selection || selection === "Cancel") {
+                globals.LOG.debug(
+                    localize("deleteUssPrompt.confirmation.cancel.log.debug", "Delete action was canceled.")
+                );
+                cancelled = true;
+                return;
+            }
+        });
+        if (cancelled) {
+            vscode.window.showInformationMessage(
+                localize("deleteUssPrompt.deleteCancelled", "Delete action was cancelled.")
+            );
             return;
         }
         try {
@@ -392,6 +415,10 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             );
             throw err;
         }
+
+        vscode.window.showInformationMessage(
+            localize("deleteUssNode.itemDeleted", "The item {0} has been deleted.", this.label)
+        );
 
         // Remove node from the USS Favorites tree
         ussFileProvider.removeFavorite(this);
