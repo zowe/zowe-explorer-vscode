@@ -227,23 +227,6 @@ export async function deleteDatasetPrompt(
                 !contextually.isSession(selectedNode) &&
                 !contextually.isInformation(selectedNode)
         );
-        // Check that child and parent aren't both in array
-        const newNodeList: IZoweDatasetTreeNode[] = [];
-        for (const item of nodes) {
-            if (!contextually.isDsMember(item)) {
-                for (const parent of nodes) {
-                    const possParent = parent.getLabel().trim();
-                    const childParent = item.getParent().getLabel().trim();
-                    if (possParent !== childParent) {
-                        newNodeList.push(parent);
-                    }
-                }
-            }
-        }
-
-        if (newNodeList.length > 0) {
-            nodes = newNodeList;
-        }
     } else {
         if (
             node.getParent() &&
@@ -269,7 +252,7 @@ export async function deleteDatasetPrompt(
     }
 
     // The names of the nodes that should be deleted
-    let nodesToDelete: string[] = nodes.map((deletedNode) => {
+    const nodesToDelete: string[] = nodes.map((deletedNode) => {
         return contextually.isDsMember(deletedNode)
             ? ` ${deletedNode.getParent().getLabel()}(${deletedNode.getLabel()})`
             : ` ${deletedNode.getLabel()}`;
@@ -299,7 +282,8 @@ export async function deleteDatasetPrompt(
     const deleteButton = localize("deleteDatasetPrompt.confirmation.delete", "Delete");
     const message = localize(
         "deleteDatasetPrompt.confirmation.message",
-        "Are you sure you want to delete these items?\nThis will permanently remove these data sets and/or members from your system.\n\n{0}",
+        "Are you sure you want to delete the following {0} item(s)?\nThis will permanently remove these data sets and/or members from your system.\n\n{1}",
+        nodesToDelete.length,
         nodesToDelete.toString().replace(/(,)/g, "\n")
     );
     await vscode.window.showWarningMessage(message, { modal: true }, ...[deleteButton]).then((selection) => {
@@ -357,7 +341,12 @@ export async function deleteDatasetPrompt(
     }
     if (nodesDeleted.length > 0) {
         vscode.window.showInformationMessage(
-            localize("deleteMulti.datasetNode", "The following items were deleted:") + nodesDeleted
+            localize(
+                "deleteMulti.datasetNode",
+                "The following {0} item(s) were deleted:{1}",
+                nodesDeleted.length,
+                nodesDeleted.toString()
+            )
         );
     }
 
