@@ -83,7 +83,10 @@ function createGlobalMocks() {
     Object.defineProperty(vscode.window, "showErrorMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showInformationMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "setStatusBarMessage", { value: jest.fn(), configurable: true });
-    Object.defineProperty(vscode.window, "showWarningMessage", { value: jest.fn(), configurable: true });
+    Object.defineProperty(vscode.window, "showWarningMessage", {
+        value: newMocks.mockShowWarningMessage,
+        configurable: true,
+    });
     Object.defineProperty(vscode.window, "showInputBox", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.workspace, "openTextDocument", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.workspace, "getConfiguration", { value: jest.fn(), configurable: true });
