@@ -227,6 +227,23 @@ export async function deleteDatasetPrompt(
                 !contextually.isSession(selectedNode) &&
                 !contextually.isInformation(selectedNode)
         );
+        // Check that child and parent aren't both in array
+        const newNodeList: IZoweDatasetTreeNode[] = [];
+        for (const item of nodes) {
+            if (!contextually.isDsMember(item)) {
+                for (const parent of nodes) {
+                    const possParent = parent.getLabel().trim();
+                    const childParent = item.getParent().getLabel().trim();
+                    if (possParent !== childParent) {
+                        newNodeList.push(parent);
+                    }
+                }
+            }
+        }
+
+        if (newNodeList.length > 0) {
+            nodes = newNodeList;
+        }
     } else {
         if (
             node.getParent() &&
