@@ -65,7 +65,7 @@ export async function getSpoolContent(session: string, spool: zowe.IJobFile, ref
     try {
         zosmfProfile = profiles.loadNamedProfile(session);
     } catch (error) {
-        errorHandling(error, session, error.message);
+        await errorHandling(error, session, error.message);
         return;
     }
     await profiles.checkCurrentProfile(zosmfProfile);
@@ -74,7 +74,7 @@ export async function getSpoolContent(session: string, spool: zowe.IJobFile, ref
         try {
             await vscode.window.showTextDocument(uri);
         } catch (error) {
-            errorHandling(error, session, error.message);
+            await errorHandling(error, session, error.message);
             return;
         }
     }
@@ -135,7 +135,7 @@ export const focusOnJob = async (jobsProvider: IZoweTree<IZoweJobTreeNode>, sess
         try {
             await jobsProvider.addSession(sessionName);
         } catch (error) {
-            errorHandling(error, null, error.message);
+            await errorHandling(error, null, error.message);
             return;
         }
         sessionNode = jobsProvider.mSessionNodes.find((jobNode) => jobNode.label === sessionName);
@@ -143,7 +143,7 @@ export const focusOnJob = async (jobsProvider: IZoweTree<IZoweJobTreeNode>, sess
     try {
         jobsProvider.refreshElement(sessionNode);
     } catch (error) {
-        errorHandling(error, null, error.message);
+        await errorHandling(error, null, error.message);
         return;
     }
     sessionNode.searchId = jobId;
