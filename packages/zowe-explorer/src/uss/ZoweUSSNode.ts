@@ -367,7 +367,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     localize("deleteUssPrompt.confirmation.cancel.log.debug", "Delete action was canceled.")
                 );
                 cancelled = true;
-                return;
             }
         });
         if (cancelled) {

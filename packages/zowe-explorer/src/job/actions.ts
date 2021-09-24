@@ -250,13 +250,13 @@ export async function deleteCommand(job: IZoweJobTreeNode, jobsProvider: IZoweTr
     let cancelled = false;
     await vscode.window.showWarningMessage(message, { modal: true }, ...[deleteButton]).then((selection) => {
         if (!selection || selection === "Cancel") {
-            globals.LOG.debug(localize("deleteUssPrompt.confirmation.cancel.log.debug", "Delete action was canceled."));
+            globals.LOG.debug(localize("deleteJobPrompt.confirmation.cancel.log.debug", "Delete action was canceled."));
             cancelled = true;
         }
     });
     if (cancelled) {
         vscode.window.showInformationMessage(
-            localize("deleteUssPrompt.deleteCancelled", "Delete action was cancelled.")
+            localize("deleteJobPrompt.deleteCancelled", "Delete action was cancelled.")
         );
         return;
     }
