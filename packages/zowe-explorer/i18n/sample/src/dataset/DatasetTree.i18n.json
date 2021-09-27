@@ -15,7 +15,6 @@
   "addFavorite": "PDS already in favorites",
   "removeFavProfile.confirm": "This will remove all favorited Data Sets items for profile {0}. Continue?",
   "removeFavProfile.continue": "Continue",
-  "removeFavProfile.cancel": "Cancel",
   "findParentNode.unsuccessful": "Node does not exist. It may have been deleted.",
   "enterPattern.log.debug.prompt": "Prompting the user for a data set pattern",
   "searchHistory.options.prompt": "Select a filter",

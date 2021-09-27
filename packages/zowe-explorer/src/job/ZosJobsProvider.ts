@@ -368,7 +368,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 const btnLabelRemove = localize("initializeJobsFavorites.error.buttonRemove", "Remove");
                 vscode.window.showErrorMessage(errMessage, { modal: true }, btnLabelRemove).then(async (selection) => {
                     if (selection === btnLabelRemove) {
-                        await this.removeFavProfile(profileName, true);
+                        await this.removeFavProfile(profileName, false);
                     }
                 });
                 return;
@@ -503,6 +503,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      */
     public async removeFavProfile(profileName: string, userSelected: boolean) {
         // If user selected the "Remove profile from Favorites option", confirm they are okay with deleting all favorited items for that profile.
+        let cancelled = false;
         if (userSelected) {
             const checkConfirmation = localize(
                 "removeFavProfile.confirm",
@@ -510,18 +511,16 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 profileName
             );
             const continueRemove = localize("removeFavProfile.continue", "Continue");
-            const cancelRemove = localize("removeFavProfile.cancel", "Cancel");
-            const quickPickOptions: vscode.QuickPickOptions = {
-                placeHolder: checkConfirmation,
-                ignoreFocusOut: true,
-                canPickMany: false,
-            };
-            // If user did not select "Continue", do nothing.
-            if (
-                (await vscode.window.showQuickPick([continueRemove, cancelRemove], quickPickOptions)) !== continueRemove
-            ) {
-                return;
-            }
+            await vscode.window
+                .showWarningMessage(checkConfirmation, { modal: true }, ...[continueRemove])
+                .then((selection) => {
+                    if (!selection || selection === "Cancel") {
+                        cancelled = true;
+                    }
+                });
+        }
+        if (cancelled) {
+            return;
         }
 
         // Remove favorited profile from UI
