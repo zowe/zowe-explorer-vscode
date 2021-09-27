@@ -398,10 +398,8 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                         " from the Favorites section of Zowe Explorer's Data Sets view. Would you like to do this now? ",
                         getAppName(globals.ISTHEIA)
                     );
-
-                const btnLabelCancel = localize("loadProfilesForFavorites.error.buttonCancel", "Cancel");
                 const btnLabelRemove = localize("loadProfilesForFavorites.error.buttonRemove", "Remove");
-                vscode.window.showErrorMessage(errMessage, btnLabelCancel, btnLabelRemove).then(async (selection) => {
+                vscode.window.showErrorMessage(errMessage, { modal: true }, btnLabelRemove).then(async (selection) => {
                     if (selection === btnLabelRemove) {
                         await this.removeFavProfile(profileName, true);
                     }
