@@ -134,7 +134,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
                 .getConfiguration()
                 /* tslint:disable:no-string-literal */
                 .get("Zowe-Temp-Folder-Location")["folderPath"];
-            moveTempFolder(preferencesTempPath, updatedPreferencesTempPath);
+            await moveTempFolder(preferencesTempPath, updatedPreferencesTempPath);
             preferencesTempPath = updatedPreferencesTempPath;
         }
         if (e.affectsConfiguration("Zowe-Automatic-Validation")) {
@@ -241,10 +241,14 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
     vscode.commands.registerCommand("zowe.ds.createDataset", (node) => dsActions.createFile(node, datasetProvider));
     vscode.commands.registerCommand("zowe.all.profilelink", (node) => linkProfileDialog(node.getProfile()));
     vscode.commands.registerCommand("zowe.ds.createMember", (node) => dsActions.createMember(node, datasetProvider));
-    vscode.commands.registerCommand("zowe.ds.deleteDataset", () => dsActions.deleteDatasetPrompt(datasetProvider));
+    vscode.commands.registerCommand("zowe.ds.deleteDataset", (node?) =>
+        dsActions.deleteDatasetPrompt(datasetProvider, node)
+    );
     vscode.commands.registerCommand("zowe.ds.allocateLike", (node) => dsActions.allocateLike(datasetProvider, node));
     vscode.commands.registerCommand("zowe.ds.uploadDialog", (node) => dsActions.uploadDialog(node, datasetProvider));
-    vscode.commands.registerCommand("zowe.ds.deleteMember", () => dsActions.deleteDatasetPrompt(datasetProvider));
+    vscode.commands.registerCommand("zowe.ds.deleteMember", (node?) =>
+        dsActions.deleteDatasetPrompt(datasetProvider, node)
+    );
     vscode.commands.registerCommand("zowe.ds.editDataSet", (node) => dsActions.openPS(node, false, datasetProvider));
     vscode.commands.registerCommand("zowe.ds.editMember", (node) => dsActions.openPS(node, false, datasetProvider));
     vscode.commands.registerCommand("zowe.ds.removeSession", async (node) => datasetProvider.deleteSession(node));
