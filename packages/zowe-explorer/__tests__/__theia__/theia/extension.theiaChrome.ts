@@ -99,7 +99,12 @@ export async function removeFavoriteProfileFromDatasets() {
         .wait(until.elementLocated(By.xpath(DatasetsLocators.removeFavoriteProfileFromDatasetsOptionXpath)), WAITTIME)
         .click();
     await driverChrome.sleep(SHORTSLEEPTIME);
-    await driverChrome.switchTo().alert().accept();
+    await driverChrome
+        .wait(
+            until.elementLocated(By.xpath(TheiaNotificationMessages.removeFavoriteProfileConfirmationXpath)),
+            WAITTIME
+        )
+        .click();
     // const removeFavoriteInputBox = await driverChrome.wait(
     //     until.elementLocated(By.xpath(DatasetsLocators.emptyInputBoxXpath)),
     //     WAITTIME
@@ -120,7 +125,12 @@ export async function removeFavoriteProfileFromUss() {
         .wait(until.elementLocated(By.xpath(UssLocators.removeFavoriteProfileFromUssOptionXpath)), WAITTIME)
         .click();
     await driverChrome.sleep(SHORTSLEEPTIME);
-    await driverChrome.switchTo().alert().accept();
+    await driverChrome
+        .wait(
+            until.elementLocated(By.xpath(TheiaNotificationMessages.removeFavoriteProfileConfirmationXpath)),
+            WAITTIME
+        )
+        .click();
     // const removeFavoriteInputBox = await driverChrome.wait(
     //     until.elementLocated(By.xpath(UssLocators.emptyInputBoxXpath)),
     //     WAITTIME
@@ -141,7 +151,12 @@ export async function removeFavoriteProfileFromJobs() {
         .wait(until.elementLocated(By.xpath(JobsLocators.removeFavoriteProfileFromJobsOptionXpath)), WAITTIME)
         .click();
     await driverChrome.sleep(SHORTSLEEPTIME);
-    await driverChrome.switchTo().alert().accept();
+    await driverChrome
+        .wait(
+            until.elementLocated(By.xpath(TheiaNotificationMessages.removeFavoriteProfileConfirmationXpath)),
+            WAITTIME
+        )
+        .click();
     // const removeFavoriteInputBox = await driverChrome.wait(
     //     until.elementLocated(By.xpath(JobsLocators.emptyInputBoxXpath)),
     //     WAITTIME
