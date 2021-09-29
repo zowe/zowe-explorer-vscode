@@ -165,9 +165,9 @@ export async function modifyCommand(job: Job) {
             prompt: localize("modifyCommand.command.prompt", "Modify Command"),
         });
         if (command !== undefined) {
-            const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(this.profile);
+            const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(job.getProfile());
             if (commandApi) {
-                const response = await ZoweExplorerApiRegister.getCommandApi(this.profile).issueMvsCommand(
+                const response = await ZoweExplorerApiRegister.getCommandApi(job.getProfile()).issueMvsCommand(
                     `f ${job.job.jobname},${command}`
                 );
                 vscode.window.showInformationMessage(
@@ -187,9 +187,9 @@ export async function modifyCommand(job: Job) {
  */
 export async function stopCommand(job: Job) {
     try {
-        const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(this.profile);
+        const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(job.getProfile());
         if (commandApi) {
-            const response = await ZoweExplorerApiRegister.getCommandApi(this.profile).issueMvsCommand(
+            const response = await ZoweExplorerApiRegister.getCommandApi(job.getProfile()).issueMvsCommand(
                 `p ${job.job.jobname}`
             );
             vscode.window.showInformationMessage(
