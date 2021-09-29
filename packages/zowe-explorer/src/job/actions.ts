@@ -165,10 +165,15 @@ export async function modifyCommand(job: Job) {
             prompt: localize("modifyCommand.command.prompt", "Modify Command"),
         });
         if (command !== undefined) {
-            const response = await zowe.IssueCommand.issueSimple(job.getSession(), `f ${job.job.jobname},${command}`);
-            vscode.window.showInformationMessage(
-                localize("modifyCommand.response", "Command response: ") + response.commandResponse
-            );
+            const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(this.profile);
+            if (commandApi) {
+                const response = await ZoweExplorerApiRegister.getCommandApi(this.profile).issueMvsCommand(
+                    `f ${job.job.jobname},${command}`
+                );
+                vscode.window.showInformationMessage(
+                    localize("modifyCommand.response", "Command response: ") + response.commandResponse
+                );
+            }
         }
     } catch (error) {
         await errorHandling(error, null, error.message);
@@ -182,10 +187,15 @@ export async function modifyCommand(job: Job) {
  */
 export async function stopCommand(job: Job) {
     try {
-        const response = await zowe.IssueCommand.issueSimple(job.getSession(), `p ${job.job.jobname}`);
-        vscode.window.showInformationMessage(
-            localize("stopCommand.response", "Command response: ") + response.commandResponse
-        );
+        const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(this.profile);
+        if (commandApi) {
+            const response = await ZoweExplorerApiRegister.getCommandApi(this.profile).issueMvsCommand(
+                `p ${job.job.jobname}`
+            );
+            vscode.window.showInformationMessage(
+                localize("modifyCommand.response", "Command response: ") + response.commandResponse
+            );
+        }
     } catch (error) {
         await errorHandling(error, null, error.message);
     }
