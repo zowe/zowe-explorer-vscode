@@ -311,7 +311,7 @@ export class ProfilesCache {
         return newProfile.profile;
     }
 
-    protected async refreshConfig(apiRegister?: ZoweExplorerApi.IApiRegisterClient): Promise<void> {
+    protected async refreshConfig(apiRegister: ZoweExplorerApi.IApiRegisterClient): Promise<void> {
         this.allProfiles = [];
         let tmpAllProfiles = [];
         this.allTypes = [];

@@ -794,7 +794,7 @@ export class Profiles extends ProfilesCache {
                     if (rePrompt) {
                         const infoMsg = localize(
                             "promptCredentials.updateConfigCreds.infoMessage",
-                            "Credentials for future use with profile {0} will need to be updated in the config file or by using the command 'zowe config secure'.",
+                            "Credentials for future use with profile {0} will need to be updated in the Zowe config file or by using the command 'zowe config secure'.",
                             loadProfile.name
                         );
                         vscode.window.showInformationMessage(infoMsg);
