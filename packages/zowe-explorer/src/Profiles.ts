@@ -613,6 +613,10 @@ export class Profiles extends ProfilesCache {
                 }
             }
             const config = await Config.load("zowe", { projectDir: fs.realpathSync(rootPath) });
+            if (vscode.workspace.workspaceFolders) {
+                config.mActive.global = false;
+                config.mActive.user = true;
+            }
 
             const impConfig: IImperativeConfig = zowe.getImperativeConfig();
             const knownCliConfig: ICommandProfileTypeConfiguration[] = impConfig.profiles;
