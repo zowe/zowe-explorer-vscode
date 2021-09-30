@@ -28,6 +28,7 @@
   "createNewConnection.duplicateProfileName": "Profile name already exists. Please create a profile using a different name",
   "promptCredentials.undefined.username": "Operation Cancelled",
   "promptCredentials.undefined.password": "Operation Cancelled",
+  "promptCredentials.updateConfigCreds.infoMessage": "Credentials for future use with profile {0} will need to be updated in the Zowe config file or by using the command 'zowe config secure'.",
   "promptCredentials.saveCredentials.button": "Save Credentials",
   "promptCredentials.doNotSave.button": "Do Not Save",
   "promptCredentials.saveCredentials.infoMessage": "Save entered credentials for future use with profile: {0}? Saving credentials will update the local yaml file.",
