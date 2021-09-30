@@ -9,7 +9,7 @@
  *                                                                                 *
  */
 
-import { IZoweTree, IZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { IZoweTree, IZoweTreeNode, ProfilesCache } from "@zowe/zowe-explorer-api";
 import { PersistentFilters } from "../PersistentFilters";
 import { Profiles } from "../Profiles";
 import { syncSessionNode } from "../utils/ProfilesUtils";

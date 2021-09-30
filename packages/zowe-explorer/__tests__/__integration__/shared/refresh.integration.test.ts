@@ -11,7 +11,7 @@
 
 // tslint:disable:no-magic-numbers
 import * as zowe from "@zowe/cli";
-import { IProfileLoaded } from "@zowe/imperative";
+import { IProfileLoaded, ICommandArguments, ConnectionPropsForSessCfg, Session } from "@zowe/imperative";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import * as sinon from "sinon";
@@ -32,7 +32,19 @@ describe("jobNodeActions integration test", async () => {
     const expect = chai.expect;
     chai.use(chaiAsPromised);
 
-    const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
+    const cmdArgs: ICommandArguments = {
+        $0: "zowe",
+        _: [""],
+        host: testConst.profile.host,
+        port: testConst.profile.port,
+        basePath: testConst.profile.basePath,
+        rejectUnauthorized: testConst.profile.rejectUnauthorized,
+        user: testConst.profile.user,
+        password: testConst.profile.password,
+    };
+    const sessCfg = zowe.ZosmfSession.createSessCfgFromArgs(cmdArgs);
+    ConnectionPropsForSessCfg.resolveSessCfgProps(sessCfg, cmdArgs);
+    const session = new Session(sessCfg);
     const testProfileLoaded: IProfileLoaded = {
         name: testConst.profile.name,
         profile: testConst.profile,

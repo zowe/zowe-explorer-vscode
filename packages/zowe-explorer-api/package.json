@@ -1,6 +1,6 @@
 {
   "name": "@zowe/zowe-explorer-api",
-  "version": "1.19.0",
+  "version": "2.0.0-next.202107151328",
   "description": "Extensibility API for Zowe Explorer.",
   "publisher": "Zowe",
   "author": "Zowe",

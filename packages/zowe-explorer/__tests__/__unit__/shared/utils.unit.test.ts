@@ -22,6 +22,7 @@ import {
     createFileResponse,
     createInstanceOfProfile,
 } from "../../../__mocks__/mockCreators/shared";
+import { ProfilesCache } from "@zowe/zowe-explorer-api";
 import { createDatasetSessionNode } from "../../../__mocks__/mockCreators/datasets";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
 import { Job } from "../../../src/job/ZoweJobNode";
@@ -41,6 +42,14 @@ async function createGlobalMocks() {
 
     return newVariables;
 }
+
+Object.defineProperty(ProfilesCache, "getConfigInstance", {
+    value: jest.fn(() => {
+        return {
+            usingTeamConfig: false,
+        };
+    }),
+});
 
 describe("Shared Utils Unit Tests - Function node.concatChildNodes()", () => {
     it("Checks that concatChildNodes returns the proper array of children", async () => {
