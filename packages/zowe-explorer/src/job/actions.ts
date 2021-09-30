@@ -162,7 +162,7 @@ export const focusOnJob = async (jobsProvider: IZoweTree<IZoweJobTreeNode>, sess
 export async function modifyCommand(job: Job) {
     try {
         const command = await vscode.window.showInputBox({
-            prompt: localize("modifyCommand.command.prompt", "Modify Command"),
+            prompt: localize("jobActions.modifyCommand.command.prompt", "Modify Command"),
         });
         if (command !== undefined) {
             const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(job.getProfile());
@@ -171,12 +171,19 @@ export async function modifyCommand(job: Job) {
                     `f ${job.job.jobname},${command}`
                 );
                 vscode.window.showInformationMessage(
-                    localize("modifyCommand.response", "Command response: ") + response.commandResponse
+                    localize("jobActions.modifyCommand.response", "Command response: ") + response.commandResponse
                 );
             }
         }
     } catch (error) {
-        await errorHandling(error, null, error.message);
+        if (error.toString().includes("non-existing")) {
+            vscode.window.showErrorMessage(
+                localize("jobActions.modifyCommand.apiNonExisting", "Not implemented yet for profile of type: ") +
+                    job.getProfile().type
+            );
+        } else {
+            await errorHandling(error.toString(), job.getProfile().name, error.message.toString());
+        }
     }
 }
 
@@ -193,11 +200,18 @@ export async function stopCommand(job: Job) {
                 `p ${job.job.jobname}`
             );
             vscode.window.showInformationMessage(
-                localize("modifyCommand.response", "Command response: ") + response.commandResponse
+                localize("jobActions.stopCommand.response", "Command response: ") + response.commandResponse
             );
         }
     } catch (error) {
-        await errorHandling(error, null, error.message);
+        if (error.toString().includes("non-existing")) {
+            vscode.window.showErrorMessage(
+                localize("jobActions.stopCommand.apiNonExisting", "Not implemented yet for profile of type: ") +
+                    job.getProfile().type
+            );
+        } else {
+            await errorHandling(error.toString(), job.getProfile().name, error.message.toString());
+        }
     }
 }
 
