@@ -52,7 +52,7 @@ export class ProfilesCache {
     protected profilesByType = new Map<string, imperative.IProfileLoaded[]>();
     protected defaultProfileByType = new Map<string, imperative.IProfileLoaded>();
     protected profileManagerByType = new Map<string, imperative.CliProfileManager>();
-    public constructor(protected log: imperative.Logger) {}
+    public constructor(protected log: imperative.Logger) { }
 
     public static createConfigInstance(mProfileInfo: imperative.ProfileInfo): imperative.ProfileInfo {
         return (ProfilesCache.info = mProfileInfo);
@@ -95,7 +95,7 @@ export class ProfilesCache {
         this.allExternalTypes.add(profileTypeName);
     }
 
-    public async refresh(apiRegister?: ZoweExplorerApi.IApiRegisterClient): Promise<void> {
+    public async refresh(apiRegister: ZoweExplorerApi.IApiRegisterClient): Promise<void> {
         if (ProfilesCache.getConfigInstance().usingTeamConfig) {
             await this.refreshConfig(apiRegister);
         } else {
