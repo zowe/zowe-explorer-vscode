@@ -93,7 +93,7 @@ export class Profiles extends ProfilesCache {
                     error,
                     theProfile.name,
                     localize("checkCurrentProfile.error", "Error encountered in ") +
-                        `checkCurrentProfile.optionalProfiles!`
+                    `checkCurrentProfile.optionalProfiles!`
                 );
                 return profileStatus;
             }
@@ -781,7 +781,6 @@ export class Profiles extends ProfilesCache {
             return undefined;
         } else {
             try {
-                let cancel = false;
                 const updSession = await ZoweExplorerApiRegister.getMvsApi(loadProfile).getSession();
                 if (ProfilesCache.getConfigInstance().usingTeamConfig) {
                     const profArray = [];
@@ -805,28 +804,17 @@ export class Profiles extends ProfilesCache {
                     const doNotSaveButton = localize("promptCredentials.doNotSave.button", "Do Not Save");
                     const infoMsg = localize(
                         "promptCredentials.saveCredentials.infoMessage",
-                        "Save entered credentials for future use with profile: {0}?\nSaving credentials will update the local yaml file.",
+                        "Save entered credentials for future use with profile: {0}? Saving credentials will update the local yaml file.",
                         loadProfile.name
                     );
                     await vscode.window
-                        .showInformationMessage(infoMsg, { modal: true }, ...[saveButton, doNotSaveButton])
-                        .then(async (selection) => {
+                        .showInformationMessage(infoMsg, ...[saveButton, doNotSaveButton])
+                        .then((selection) => {
                             if (selection === saveButton) {
                                 rePrompt = false;
                             }
-                            if (!selection || selection === "Cancel") {
-                                cancel = true;
-                                vscode.window.showInformationMessage(
-                                    localize("promptCredentials.saveCredentials.cancelled", "Operation Cancelled")
-                                );
-                                await this.refresh(ZoweExplorerApiRegister.getInstance());
-                                return;
-                            }
                         });
                     await this.updateProfile(loadProfile, rePrompt);
-                }
-                if (cancel) {
-                    return undefined;
                 }
                 return [updSession.ISession.user, updSession.ISession.password, updSession.ISession.base64EncodedAuth];
             } catch (error) {
@@ -1391,7 +1379,7 @@ export class Profiles extends ProfilesCache {
         } catch (error) {
             this.log.error(
                 localize("deleteProfile.delete.log.error", "Error encountered when deleting profile! ") +
-                    JSON.stringify(error)
+                JSON.stringify(error)
             );
             await errorHandling(error, profileName, error.message);
             throw error;
