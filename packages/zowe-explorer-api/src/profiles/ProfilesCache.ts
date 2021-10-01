@@ -216,6 +216,25 @@ export class ProfilesCache {
         return currentProfile;
     }
 
+    public getLoadedProfConfig(profileName: string): imperative.IProfileLoaded {
+        const configAllProfiles = ProfilesCache.getConfigInstance().getAllProfiles();
+        const currentProfile = configAllProfiles.filter((temprofile) => temprofile.profName === profileName.trim())[0];
+        const mergedArgs = ProfilesCache.getConfigInstance().mergeArgsForProfile(currentProfile);
+        const profile: imperative.IProfile = {};
+        for (const arg of mergedArgs.knownArgs) {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            profile[arg.argName] = arg.secure ? ProfilesCache.getConfigInstance().loadSecureArg(arg) : arg.argValue;
+        }
+        const profileFix: imperative.IProfileLoaded = {
+            message: "",
+            name: currentProfile.profName,
+            type: currentProfile.profType,
+            profile,
+            failNotFound: false,
+        };
+        return profileFix;
+    }
+
     public getCliProfileManager(type: string): imperative.CliProfileManager {
         let profileManager = this.profileManagerByType.get(type);
         if (!profileManager) {
