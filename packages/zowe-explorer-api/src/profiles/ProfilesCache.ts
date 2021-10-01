@@ -54,16 +54,6 @@ export class ProfilesCache {
     protected profileManagerByType = new Map<string, imperative.CliProfileManager>();
     public constructor(protected log: imperative.Logger) { }
 
-    public static createConfigInstance(mProfileInfo: imperative.ProfileInfo): imperative.ProfileInfo {
-        return (ProfilesCache.info = mProfileInfo);
-    }
-
-    public static getConfigInstance(): imperative.ProfileInfo {
-        return ProfilesCache.info;
-    }
-
-    private static info: imperative.ProfileInfo;
-
     public loadNamedProfile(name: string, type?: string): imperative.IProfileLoaded {
         for (const profile of this.allProfiles) {
             if (profile.name === name && (type ? profile.type === type : true)) {
@@ -75,10 +65,6 @@ export class ProfilesCache {
 
     public getDefaultProfile(type = "zosmf"): imperative.IProfileLoaded {
         return this.defaultProfileByType.get(type);
-    }
-
-    public getDefaultConfigProfile(mProfileInfo: imperative.ProfileInfo, profileType: string): imperative.IProfAttrs {
-        return mProfileInfo.getDefaultProfile(profileType);
     }
 
     public getProfiles(type = "zosmf"): imperative.IProfileLoaded[] {
@@ -96,50 +82,46 @@ export class ProfilesCache {
     }
 
     public async refresh(apiRegister: ZoweExplorerApi.IApiRegisterClient): Promise<void> {
-        if (ProfilesCache.getConfigInstance().usingTeamConfig) {
-            await this.refreshConfig(apiRegister);
-        } else {
-            this.allProfiles = [];
-            this.allTypes = [];
-            // TODO: Add Base ProfileType in registeredApiTypes
-            // This process retrieves the base profile if there's any and stores it in an array
-            // If base is added in registeredApiType maybe this process can be removed
-            try {
-                const profileManagerA = this.getCliProfileManager("base");
-                if (profileManagerA) {
-                    try {
-                        const baseProfile = await profileManagerA.load({ loadDefault: true });
-                        this.allProfiles.push(baseProfile);
-                    } catch (error) {
-                        if (!error?.message?.includes(`No default profile set for type "base"`)) {
-                            this.log.error(error);
-                        }
-                    }
-                }
-            } catch (error) {
-                this.log.error(error);
-            }
-            for (const type of apiRegister.registeredApiTypes()) {
-                const profileManager = this.getCliProfileManager(type);
-                const profilesForType = (await profileManager.loadAll()).filter((profile) => {
-                    return profile.type === type;
-                });
-                if (profilesForType && profilesForType.length > 0) {
-                    this.allProfiles.push(...profilesForType);
-                    this.profilesByType.set(type, profilesForType);
-                    let defaultProfile: imperative.IProfileLoaded;
-                    try {
-                        defaultProfile = await profileManager.load({ loadDefault: true });
-                    } catch (error) {
+        this.allProfiles = [];
+        this.allTypes = [];
+
+        try {
+            const profileManagerA = this.getCliProfileManager("base");
+            if (profileManagerA) {
+                try {
+                    const baseProfile = await profileManagerA.load({ loadDefault: true });
+                    this.allProfiles.push(baseProfile);
+                } catch (error) {
+                    if (!error?.message?.includes(`No default profile set for type "base"`)) {
                         this.log.error(error);
                     }
-                    this.defaultProfileByType.set(type, defaultProfile);
                 }
-                // This is in the loop because I need an instantiated profile manager config
-                if (profileManager.configurations && this.allTypes.length === 0) {
-                    for (const element of profileManager.configurations) {
-                        this.allTypes.push(element.type);
-                    }
+            }
+        } catch (error) {
+            this.log.error(error);
+        }
+
+        const allProfileTypes = [...apiRegister.registeredApiTypes(), ...this.allExternalTypes];
+        for (const type of allProfileTypes) {
+            const profileManager = this.getCliProfileManager(type);
+            const profilesForType = (await profileManager.loadAll()).filter((profile) => {
+                return profile.type === type;
+            });
+            if (profilesForType && profilesForType.length > 0) {
+                this.allProfiles.push(...profilesForType);
+                this.profilesByType.set(type, profilesForType);
+                let defaultProfile: imperative.IProfileLoaded;
+                try {
+                    defaultProfile = await profileManager.load({ loadDefault: true });
+                } catch (error) {
+                    this.log.error(error);
+                }
+                this.defaultProfileByType.set(type, defaultProfile);
+            }
+            // This is in the loop because I need an instantiated profile manager config
+            if (profileManager.configurations && this.allTypes.length === 0) {
+                for (const element of profileManager.configurations) {
+                    this.allTypes.push(element.type);
                 }
             }
         }
@@ -208,31 +190,6 @@ export class ProfilesCache {
             directProfile = await profileManager.load({ name });
         }
         return directProfile;
-    }
-
-    public getProfileFromConfig(profileName: string): imperative.IProfAttrs {
-        const configAllProfiles = ProfilesCache.getConfigInstance().getAllProfiles();
-        const currentProfile = configAllProfiles.filter((temprofile) => temprofile.profName === profileName)[0];
-        return currentProfile;
-    }
-
-    public getLoadedProfConfig(profileName: string): imperative.IProfileLoaded {
-        const configAllProfiles = ProfilesCache.getConfigInstance().getAllProfiles();
-        const currentProfile = configAllProfiles.filter((temprofile) => temprofile.profName === profileName.trim())[0];
-        const mergedArgs = ProfilesCache.getConfigInstance().mergeArgsForProfile(currentProfile);
-        const profile: imperative.IProfile = {};
-        for (const arg of mergedArgs.knownArgs) {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-            profile[arg.argName] = arg.secure ? ProfilesCache.getConfigInstance().loadSecureArg(arg) : arg.argValue;
-        }
-        const profileFix: imperative.IProfileLoaded = {
-            message: "",
-            name: currentProfile.profName,
-            type: currentProfile.profType,
-            profile,
-            failNotFound: false,
-        };
-        return profileFix;
     }
 
     public getCliProfileManager(type: string): imperative.CliProfileManager {
@@ -309,61 +266,6 @@ export class ProfilesCache {
             overwrite: true,
         });
         return newProfile.profile;
-    }
-
-    protected async refreshConfig(apiRegister: ZoweExplorerApi.IApiRegisterClient): Promise<void> {
-        this.allProfiles = [];
-        let tmpAllProfiles = [];
-        this.allTypes = [];
-        const mProfileInfo = ProfilesCache.getConfigInstance();
-        for (const type of apiRegister.registeredApiTypes()) {
-            // Step 1: Get all profiles for each registered type
-            const profilesForType = mProfileInfo.getAllProfiles(type).filter((temp) => temp.profLoc.osLoc.length !== 0);
-            if (profilesForType && profilesForType.length > 0) {
-                for (const prof of profilesForType) {
-                    // Step 2: Merge args for each profile
-                    const profAttr = await this.getMergedAttrs(mProfileInfo, prof);
-                    // Work-around. TODO: Discuss with imperative team
-                    const profileFix: imperative.IProfileLoaded = {
-                        message: "",
-                        name: prof.profName,
-                        type: prof.profType,
-                        profile: profAttr,
-                        failNotFound: false,
-                    };
-                    // Step 3: Update allProfiles list
-                    tmpAllProfiles.push(profileFix);
-                }
-                this.allProfiles.push(...tmpAllProfiles);
-                this.profilesByType.set(type, tmpAllProfiles);
-                tmpAllProfiles = [];
-                const defaultProfAttr = this.getDefaultConfigProfile(mProfileInfo, type);
-                const defaultProfile: imperative.IProfileLoaded = {
-                    message: "",
-                    name: defaultProfAttr.profName,
-                    type: defaultProfAttr.profType,
-                    profile: defaultProfAttr,
-                    failNotFound: false,
-                };
-                this.defaultProfileByType.set(type, defaultProfile);
-            }
-            this.allTypes.push(type);
-        }
-    }
-
-    protected async getMergedAttrs(
-        mProfileInfo: imperative.ProfileInfo,
-        profAttrs: imperative.IProfAttrs
-    ): Promise<imperative.IProfile> {
-        const profile: imperative.IProfile = {};
-        if (profAttrs != null) {
-            const mergedArgs = mProfileInfo.mergeArgsForProfile(profAttrs);
-
-            for (const arg of mergedArgs.knownArgs) {
-                profile[arg.argName] = arg.secure ? await mProfileInfo.loadSecureArg(arg) : arg.argValue;
-            }
-        }
-        return profile;
     }
 
     /**
