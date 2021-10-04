@@ -23,6 +23,7 @@ import {
     createFileResponse,
     createInstanceOfProfile,
     createValidIProfile,
+    createTreeView,
 } from "../../../__mocks__/mockCreators/shared";
 import * as globals from "../../../src/globals";
 import * as vscode from "vscode";
@@ -114,6 +115,7 @@ async function createGlobalMocks() {
     Object.defineProperty(globalMocks.filters, "getFilters", { value: globalMocks.getFilters, configurable: true });
     Object.defineProperty(vscode.window, "createQuickPick", { value: globalMocks.createQuickPick, configurable: true });
     Object.defineProperty(zowe, "Utilities", { value: globalMocks.Utilities, configurable: true });
+    Object.defineProperty(zowe.Utilities, "isFileTagBinOrAscii", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showErrorMessage", {
         value: globalMocks.showErrorMessage,
         configurable: true,
@@ -145,6 +147,7 @@ async function createGlobalMocks() {
         }),
     });
     globalMocks.testTree = new USSTree();
+    globalMocks.testTree.treeView = createTreeView();
     const ussSessionTestNode = createUSSSessionNode(globalMocks.testSession, globalMocks.testProfile);
     globalMocks.testUSSNode = createUSSNode(globalMocks.testSession, globalMocks.testProfile);
     globalMocks.testTree.mSessionNodes.push(ussSessionTestNode);
@@ -1094,7 +1097,7 @@ describe("USSTree Unit Tests - Function USSTree.rename()", () => {
         globalMocks.showInputBox.mockReturnValueOnce("new name");
         Object.defineProperty(globalMocks.testTree, "findFavoritedNode", {
             value: jest.fn(() => {
-                return { ussFavNode };
+                return ussFavNode;
             }),
         });
 
@@ -1177,7 +1180,7 @@ describe("USSTree Unit Tests - Function USSTree.rename()", () => {
         try {
             await globalMocks.testTree.rename(globalMocks.testUSSNode);
             // tslint:disable-next-line:no-empty
-        } catch (err) {}
+        } catch (err) { }
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(1);
     });
 });
@@ -1757,7 +1760,9 @@ describe("USSTree Unit Tests - Function USSTree.editSession()", () => {
             vscode.TreeItemCollapsibleState.Collapsed,
             null,
             globalMocks.testSession,
-            null
+            null,
+            false,
+            globalMocks.testProfile.name
         );
         const checkSession = jest.spyOn(globalMocks.testTree, "editSession");
         Object.defineProperty(Profiles, "getInstance", {
@@ -1789,6 +1794,8 @@ describe("USSTree Unit Tests - Function USSTree.editSession()", () => {
             vscode.TreeItemCollapsibleState.Collapsed,
             null,
             globalMocks.testSession,
+            null,
+            false,
             globalMocks.testProfile.name
         );
         const checkSession = jest.spyOn(globalMocks.testTree, "editSession");

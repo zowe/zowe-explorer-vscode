@@ -110,7 +110,10 @@ export function getAppName(isTheia: boolean) {
  * @param {IZoweTreeNode} node
  */
 export function getDocumentFilePath(label: string, node: IZoweTreeNode) {
-    return path.join(globals.DS_DIR, "/" + node.getProfileName() + "/" + appendSuffix(label));
+    const dsDir = globals.DS_DIR;
+    const profName = node.getProfileName();
+    const suffix = appendSuffix(label);
+    return path.join(dsDir, "/" + profName + "/" + suffix);
 }
 
 /**

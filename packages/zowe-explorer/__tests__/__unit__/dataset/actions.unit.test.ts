@@ -46,6 +46,7 @@ let mockClipboardData = null;
 let clipboard;
 
 function createGlobalMocks() {
+    globals.defineGlobals("");
     clipboard = {
         writeText: jest.fn().mockImplementation((value) => (mockClipboardData = value)),
         readText: jest.fn().mockImplementation(() => mockClipboardData),
@@ -193,7 +194,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
         try {
             await dsActions.createMember(parent, blockMocks.testDatasetTree);
             // tslint:disable-next-line:no-empty
-        } catch (err) {}
+        } catch (err) { }
 
         expect(mocked(vscode.window.showErrorMessage)).toBeCalledWith("Unable to create member: test Error: test");
     });
@@ -3103,7 +3104,7 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
         try {
             await dsActions.openPS(node, true, blockMocks.testDatasetTree);
             // tslint:disable-next-line:no-empty
-        } catch (err) {}
+        } catch (err) { }
 
         expect(mocked(vscode.window.showErrorMessage)).toBeCalledWith("openPS() called from invalid node.");
     });

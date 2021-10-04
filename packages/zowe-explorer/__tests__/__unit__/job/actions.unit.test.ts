@@ -51,6 +51,8 @@ function createGlobalMocks() {
     Object.defineProperty(vscode.window, "showTextDocument", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe, "ZosmfSession", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe.ZosmfSession, "createSessCfgFromArgs", { value: jest.fn(), configurable: true });
+    Object.defineProperty(zowe, "DownloadJobs", { value: jest.fn(), configurable: true });
+    Object.defineProperty(zowe.DownloadJobs, "downloadAllSpoolContentCommon", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "activeTextEditor", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showQuickPick", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window.activeTextEditor, "document", {

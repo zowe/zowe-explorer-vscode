@@ -1791,7 +1791,10 @@
       "text",
       "cobertura"
     ],
-    "coverageDirectory": "<rootDir>/results/unit/coverage"
+    "coverageDirectory": "<rootDir>/results/unit/coverage",
+    "setupFilesAfterEnv": [
+      "<rootDir>/__tests__/__unit__/jest.setup.ts"
+    ]
   },
   "jest-html-reporter": {
     "pageTitle": "Zowe Extension Tests",

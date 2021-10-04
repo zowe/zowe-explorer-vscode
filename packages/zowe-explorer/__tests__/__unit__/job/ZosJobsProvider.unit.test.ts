@@ -16,7 +16,7 @@ import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import * as globals from "../../../src/globals";
 import { Logger } from "@zowe/imperative";
-import { IZoweJobTreeNode, ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { IZoweJobTreeNode, ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import {
     createIJobFile,
     createIJobObject,
@@ -27,7 +27,6 @@ import {
 import { Job } from "../../../src/job/ZoweJobNode";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
-import * as utils from "../../../src/utils/ProfilesUtils";
 import {
     createIProfile,
     createISession,
@@ -85,6 +84,18 @@ async function createGlobalMocks() {
         }),
     };
 
+    Object.defineProperty(ProfilesCache, "getConfigInstance", {
+        value: jest.fn(() => {
+            return {
+                usingTeamConfig: false,
+            };
+        }),
+        configurable: true
+    });
+    Object.defineProperty(ProfilesCache, "allProfiles", {
+        value: [globalMocks.testProfile],
+        configurable: true
+    });
     Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true });
     Object.defineProperty(vscode.window, "withProgress", { value: globalMocks.withProgress, configurable: true });
     Object.defineProperty(zowe, "GetJobs", { value: globalMocks.mockGetJobs, configurable: true });
@@ -109,10 +120,6 @@ async function createGlobalMocks() {
         value: globalMocks.mockGetConfiguration,
         configurable: true,
     });
-    Object.defineProperty(Profiles, "getInstance", {
-        value: jest.fn(() => globalMocks.mockProfileInstance),
-        configurable: true,
-    });
     Object.defineProperty(zowe, "DeleteJobs", { value: globalMocks.mockDeleteJobs, configurable: true });
     Object.defineProperty(vscode.window, "createQuickPick", {
         value: globalMocks.mockCreateQuickPick,
@@ -128,8 +135,13 @@ async function createGlobalMocks() {
     globalMocks.mockGetSpoolFiles.mockReturnValue([globalMocks.mockIJobFile]);
     globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.testProfile);
     globalMocks.mockProfileInstance.loadNamedProfile = globalMocks.mockLoadNamedProfile;
+    globalMocks.mockProfileInstance.allProfiles = [globalMocks.testProfile];
     globalMocks.mockLoadDefaultProfile.mockReturnValue(globalMocks.testProfile);
     globalMocks.mockProfileInstance.getDefaultProfile = globalMocks.mockLoadDefaultProfile;
+    Object.defineProperty(Profiles, "getInstance", {
+        value: jest.fn(() => globalMocks.mockProfileInstance),
+        configurable: true,
+    });
 
     // Jes API mocks
     globalMocks.jesApi = ZoweExplorerApiRegister.getJesApi(globalMocks.testProfile);

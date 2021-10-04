@@ -385,7 +385,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     fs.unlinkSync(filePath);
                 }
                 // tslint:disable-next-line: no-empty
-            } catch (err) {}
+            } catch (err) { }
         } catch (err) {
             vscode.window.showErrorMessage(
                 localize("deleteUSSNode.error.node", "Unable to delete node: ") + err.message
@@ -580,8 +580,8 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             if (err.message.includes(localize("refreshUSS.error.notFound", "not found"))) {
                 vscode.window.showInformationMessage(
                     localize("refreshUSS.file1", "Unable to find file: ") +
-                        label +
-                        localize("refreshUSS.file2", " was probably deleted.")
+                    label +
+                    localize("refreshUSS.file2", " was probably deleted.")
                 );
             } else {
                 await errorHandling(err, this.mProfileName, err.message);

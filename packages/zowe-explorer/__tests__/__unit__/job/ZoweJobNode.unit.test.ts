@@ -83,6 +83,13 @@ async function createGlobalMocks() {
         }),
     };
 
+    Object.defineProperty(ProfilesCache, "getConfigInstance", {
+        value: jest.fn(() => {
+            return {
+                usingTeamConfig: false,
+            };
+        }),
+    });
     Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true });
     Object.defineProperty(vscode.window, "withProgress", { value: globalMocks.withProgress, configurable: true });
     Object.defineProperty(zowe, "GetJobs", { value: globalMocks.mockGetJobs, configurable: true });
@@ -180,14 +187,6 @@ async function createGlobalMocks() {
 
     // Reset getConfiguration because we called it when testJobsProvider was assigned
     globalMocks.getConfiguration.mockClear();
-
-    Object.defineProperty(ProfilesCache, "getConfigInstance", {
-        value: jest.fn(() => {
-            return {
-                usingTeamConfig: false,
-            };
-        }),
-    });
 
     return globalMocks;
 }

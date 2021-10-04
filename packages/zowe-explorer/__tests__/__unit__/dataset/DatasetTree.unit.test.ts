@@ -45,6 +45,8 @@ jest.mock("fs");
 jest.mock("util");
 
 function createGlobalMocks() {
+    globals.defineGlobals("");
+
     const globalMocks = {
         isTheia: jest.fn(),
         testProfileLoaded: createValidIProfile(),
@@ -55,7 +57,9 @@ function createGlobalMocks() {
 
     Object.defineProperty(vscode.window, "createTreeView", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showInformationMessage", { value: jest.fn(), configurable: true });
+    Object.defineProperty(vscode.window, "showTextDocument", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.workspace, "getConfiguration", { value: jest.fn(), configurable: true });
+    Object.defineProperty(vscode.workspace, "openTextDocument", { value: jest.fn(), configurable: true });
     Object.defineProperty(Profiles, "getInstance", {
         value: jest.fn().mockReturnValue(globalMocks.mockProfileInstance),
         configurable: true,
@@ -66,7 +70,11 @@ function createGlobalMocks() {
     Object.defineProperty(zowe, "Rename", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe.Rename, "dataSet", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe.Rename, "dataSetMember", { value: jest.fn(), configurable: true });
+    Object.defineProperty(zowe, "Download", { value: jest.fn(), configurable: true });
     Object.defineProperty(globals, "ISTHEIA", { get: globalMocks.isTheia, configurable: true });
+    Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
+    Object.defineProperty(globals.LOG, "debug", { value: jest.fn(), configurable: true });
+    Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
     Object.defineProperty(fs, "unlinkSync", { value: jest.fn(), configurable: true });
     Object.defineProperty(fs, "existsSync", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.commands, "executeCommand", { value: jest.fn(), configurable: true });
@@ -108,6 +116,28 @@ function createGlobalMocks() {
                 usingTeamConfig: false,
             };
         }),
+    });
+    Object.defineProperty(zowe.Download, "dataSet", {
+        value: jest.fn(() => {
+            return {
+                success: true,
+                commandResponse: null,
+                apiResponse: {
+                    etag: "123",
+                },
+            }
+        }), configurable: true
+    });
+    Object.defineProperty(zowe.Download, "dataSetMember", {
+        value: jest.fn(() => {
+            return {
+                success: true,
+                commandResponse: null,
+                apiResponse: {
+                    etag: "123",
+                },
+            }
+        }), configurable: true
     });
 
     return globalMocks;
@@ -483,6 +513,9 @@ describe("Dataset Tree Unit Tests - Function loadProfilesForFavorites", () => {
                     loadNamedProfile: jest.fn(() => {
                         return blockMocks.imperativeProfile;
                     }),
+                    getBaseProfile: jest.fn(() => {
+                        return blockMocks.imperativeProfile;
+                    }),
                     checkCurrentProfile: jest.fn(() => {
                         return {
                             name: blockMocks.imperativeProfile.name,
@@ -524,6 +557,9 @@ describe("Dataset Tree Unit Tests - Function loadProfilesForFavorites", () => {
                 return {
                     loadNamedProfile: jest.fn(() => {
                         throw new Error();
+                    }),
+                    getBaseProfile: jest.fn(() => {
+                        return blockMocks.imperativeProfile;
                     }),
                 };
             }),
@@ -1608,6 +1644,7 @@ describe("Dataset Tree Unit Tests - Function editSession", () => {
                 return {
                     allProfiles: [newMocks.imperativeProfile, { name: "firstName" }, { name: "secondName" }],
                     getDefaultProfile: newMocks.mockDefaultProfile,
+                    getBaseProfile: jest.fn(),
                     validProfile: ValidProfileEnum.VALID,
                     getProfileSetting: newMocks.mockGetProfileSetting.mockReturnValue({
                         name: newMocks.imperativeProfile.name,
@@ -2151,6 +2188,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
                         status: "unverified",
                     }),
                     validProfile: ValidProfileEnum.UNVERIFIED,
+                    getBaseProfile: jest.fn(),
                 };
             }),
         });

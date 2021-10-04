@@ -13,7 +13,7 @@ jest.mock("fs");
 
 import * as zowe from "@zowe/cli";
 import { IProfileLoaded } from "@zowe/imperative";
-import { ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import * as ussNodeActions from "../../../src/uss/actions";
 import {
     createUSSTree,
@@ -86,10 +86,10 @@ function createGlobalMocks() {
     // tslint:disable-next-line: no-object-literal-type-assertion
     const extensionMock = jest.fn(
         () =>
-            ({
-                subscriptions: [],
-                extensionPath: path.join(__dirname, "..", ".."),
-            } as vscode.ExtensionContext)
+        ({
+            subscriptions: [],
+            extensionPath: path.join(__dirname, "..", ".."),
+        } as vscode.ExtensionContext)
     );
     const mock = new extensionMock();
     const profilesForValidation = { status: "active", name: "fake" };
@@ -107,6 +107,7 @@ function createGlobalMocks() {
     Object.defineProperty(sharedUtils, "concatChildNodes", { value: globalMocks.concatChildNodes, configurable: true });
     Object.defineProperty(globalMocks.Create, "uss", { value: globalMocks.uss, configurable: true });
     Object.defineProperty(vscode.window, "showOpenDialog", { value: globalMocks.showOpenDialog, configurable: true });
+    Object.defineProperty(vscode.workspace, "getConfiguration", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.workspace, "openTextDocument", {
         value: globalMocks.openTextDocument,
         configurable: true,
@@ -161,6 +162,13 @@ function createGlobalMocks() {
                 profilesForValidation: [],
                 validateProfiles: jest.fn(),
                 loadNamedProfile: globalMocks.mockLoadNamedProfile,
+            };
+        }),
+    });
+    Object.defineProperty(ProfilesCache, "getConfigInstance", {
+        value: jest.fn(() => {
+            return {
+                usingTeamConfig: false,
             };
         }),
     });
@@ -599,7 +607,7 @@ describe("USS Action Unit Tests - Functions uploadDialog & uploadFile", () => {
         try {
             await ussNodeActions.uploadDialog(blockMocks.ussNode, blockMocks.testUSSTree);
             // tslint:disable-next-line:no-empty
-        } catch (err) {}
+        } catch (err) { }
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(1);
     });
 });
