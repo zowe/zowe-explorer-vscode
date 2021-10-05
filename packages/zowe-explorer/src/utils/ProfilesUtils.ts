@@ -18,7 +18,6 @@ import { Session, IProfile, ImperativeConfig, IProfileLoaded, ProfileInfo } from
 import { getSecurityModules, IZoweNodeType, IZoweTree, IZoweTreeNode, ProfilesCache } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import * as nls from "vscode-nls";
-import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 
 // Set up localization
 nls.config({
@@ -75,13 +74,15 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
                             await Profiles.getInstance().ssoLogin(null, label);
                         });
                     } else {
-                        vscode.window
-                            .showErrorMessage(errToken, "Log in to Authentication Service")
-                            .then(async (selection) => {
-                                if (selection) {
-                                    await Profiles.getInstance().ssoLogin(null, label);
-                                }
-                            });
+                        const message = localize(
+                            "ErrorHandling.authentication.login",
+                            "Log in to Authentication Service"
+                        );
+                        vscode.window.showErrorMessage(errToken, message).then(async (selection) => {
+                            if (selection) {
+                                await Profiles.getInstance().ssoLogin(null, label);
+                            }
+                        });
                     }
                     break;
                 }
@@ -90,11 +91,18 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
             if (isTheia()) {
                 vscode.window.showErrorMessage(errMsg);
             } else {
-                await vscode.window.showErrorMessage(errMsg, "Check Credentials").then(async (selection) => {
-                    if (selection) {
-                        await Profiles.getInstance().promptCredentials(label.trim(), true);
-                    }
-                });
+                const checkCredsButton = localize("ErrorHandling.checkCredentials.button", "Check Credentials");
+                await vscode.window
+                    .showErrorMessage(errMsg, { modal: true }, ...[checkCredsButton])
+                    .then(async (selection) => {
+                        if (selection === checkCredsButton) {
+                            await Profiles.getInstance().promptCredentials(label.trim(), true);
+                        } else {
+                            vscode.window.showInformationMessage(
+                                localize("ErrorHandling.checkCredentials.cancelled", "Operation Cancelled")
+                            );
+                        }
+                    });
             }
             break;
         default:
@@ -141,8 +149,10 @@ export const syncSessionNode = (profiles: Profiles) => (getSessionForProfile: Se
     sessionNode.setProfileToChoice(profile);
 
     const baseProfile = profiles.getBaseProfile();
-    const combinedProfile = await profiles.getCombinedProfile(profile, baseProfile);
-    const session = getSessionForProfile(combinedProfile);
+    if (baseProfile) {
+        profile = await profiles.getCombinedProfile(profile, baseProfile);
+    }
+    const session = getSessionForProfile(profile);
     sessionNode.setSessionToChoice(session);
 };
 

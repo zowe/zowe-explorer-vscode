@@ -77,6 +77,7 @@ describe("Utils Unit Tests - Function errorHandling", () => {
 
         expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(
             `Invalid Credentials. Please ensure the username and password for ${label} are valid or this may lead to a lock-out.`,
+            { modal: true },
             "Check Credentials"
         );
     });
@@ -90,6 +91,7 @@ describe("Utils Unit Tests - Function errorHandling", () => {
 
         expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(
             `Invalid Credentials. Please ensure the username and password for ${label} are valid or this may lead to a lock-out.`,
+            { modal: true },
             "Check Credentials"
         );
     });
@@ -108,6 +110,7 @@ describe("Utils Unit Tests - Function errorHandling", () => {
         // TODO: check why this return two messages?
         expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(
             `Invalid Credentials. Please ensure the username and password for ${label} are valid or this may lead to a lock-out.`,
+            { modal: true },
             "Check Credentials"
         );
     });

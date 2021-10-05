@@ -80,7 +80,7 @@ Use the following list with the description and links to find the topics of your
 
 **Note**: Zowe Explorer FTP extension is an example that shows how the extensibility API is used to add new capabilities to Zowe Explorer.
 
-[Zowe Explorer Developer's ReadMe](https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/Developer's%20ReadMe.md) — contains information on how to install, build, and test Zowe Explorer.
+[Zowe Explorer Developer's ReadMe](https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/README-Developer.md) — contains information on how to install, build, and test Zowe Explorer.
 
 [Zowe Explorer in Theia ReadMe](https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/README-Theia.md) — contains information on how to develop for the Web-based IDE Eclipse Theia.
 

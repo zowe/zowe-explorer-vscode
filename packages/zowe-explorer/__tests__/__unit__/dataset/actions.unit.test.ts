@@ -46,6 +46,7 @@ let mockClipboardData = null;
 let clipboard;
 
 function createGlobalMocks() {
+    globals.defineGlobals("");
     clipboard = {
         writeText: jest.fn().mockImplementation((value) => (mockClipboardData = value)),
         readText: jest.fn().mockImplementation(() => mockClipboardData),
@@ -61,6 +62,7 @@ function createGlobalMocks() {
         testFavoritesNode: createDatasetFavoritesNode(),
         testDatasetTree: null,
         mvsApi: null,
+        mockShowWarningMessage: jest.fn(),
     };
 
     newMocks.profileInstance = createInstanceOfProfile(newMocks.imperativeProfile);
@@ -81,7 +83,10 @@ function createGlobalMocks() {
     Object.defineProperty(zowe.Upload, "pathToDataSet", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showErrorMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showInformationMessage", { value: jest.fn(), configurable: true });
-    Object.defineProperty(vscode.window, "showWarningMessage", { value: jest.fn(), configurable: true });
+    Object.defineProperty(vscode.window, "showWarningMessage", {
+        value: newMocks.mockShowWarningMessage,
+        configurable: true,
+    });
     Object.defineProperty(vscode.window, "showInputBox", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.workspace, "openTextDocument", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.workspace, "getConfiguration", { value: jest.fn(), configurable: true });
@@ -518,10 +523,17 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         globalMocks.datasetSessionNode.children.push(testVsamNode);
         globalMocks.datasetSessionFavNode.children.push(testFavoritedNode);
 
-        mocked(vscode.window.showQuickPick).mockResolvedValue("Delete" as any);
-        // const cancellationToken = new vscode.CancellationTokenSource();
         mocked(vscode.window.withProgress).mockImplementation((progLocation, callback) => {
-            return null;
+            const progress = {
+                report: (message) => {
+                    return;
+                },
+            };
+            const token = {
+                isCancellationRequested: false,
+                onCancellationRequested: undefined,
+            };
+            return callback(progress, token);
         });
 
         return {
@@ -543,11 +555,12 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         const selectedNodes = [blockMocks.testDatasetNode];
         const treeView = createTreeView(selectedNodes);
         blockMocks.testDatasetTree.getTreeView.mockReturnValueOnce(treeView);
+        globalMocks.mockShowWarningMessage.mockResolvedValueOnce("Delete");
 
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
         expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith(
-            `The following items were deleted: ${blockMocks.testDatasetNode.getLabel()}`
+            `The following 1 item(s) were deleted: ${blockMocks.testDatasetNode.getLabel()}`
         );
     });
 
@@ -558,11 +571,12 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         const selectedNodes = [blockMocks.testMemberNode];
         const treeView = createTreeView(selectedNodes);
         blockMocks.testDatasetTree.getTreeView.mockReturnValueOnce(treeView);
+        globalMocks.mockShowWarningMessage.mockResolvedValueOnce("Delete");
 
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
         expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith(
-            `The following items were deleted: ${blockMocks.testMemberNode
+            `The following 1 item(s) were deleted: ${blockMocks.testMemberNode
                 .getParent()
                 .getLabel()}(${blockMocks.testMemberNode.getLabel()})`
         );
@@ -575,11 +589,12 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         const selectedNodes = [blockMocks.testVsamNode];
         const treeView = createTreeView(selectedNodes);
         blockMocks.testDatasetTree.getTreeView.mockReturnValueOnce(treeView);
+        globalMocks.mockShowWarningMessage.mockResolvedValueOnce("Delete");
 
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
         expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith(
-            `The following items were deleted: ${blockMocks.testVsamNode.getLabel()}`
+            `The following 1 item(s) were deleted: ${blockMocks.testVsamNode.getLabel()}`
         );
     });
 
@@ -590,11 +605,12 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         const selectedNodes = [blockMocks.testDatasetNode, blockMocks.testVsamNode];
         const treeView = createTreeView(selectedNodes);
         blockMocks.testDatasetTree.getTreeView.mockReturnValueOnce(treeView);
+        globalMocks.mockShowWarningMessage.mockResolvedValueOnce("Delete");
 
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
         expect(mocked(vscode.window.showInformationMessage)).toHaveBeenCalledWith(
-            `The following items were deleted: ${blockMocks.testDatasetNode.getLabel()}, ${blockMocks.testVsamNode.getLabel()}`
+            `The following 2 item(s) were deleted: ${blockMocks.testDatasetNode.getLabel()}, ${blockMocks.testVsamNode.getLabel()}`
         );
     });
 
@@ -605,11 +621,12 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         const selectedNodes = [blockMocks.testMemberNode, blockMocks.testDatasetNode];
         const treeView = createTreeView(selectedNodes);
         blockMocks.testDatasetTree.getTreeView.mockReturnValueOnce(treeView);
+        globalMocks.mockShowWarningMessage.mockResolvedValueOnce("Delete");
 
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
         expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith(
-            `The following items were deleted: ${blockMocks.testDatasetNode.getLabel()}(${blockMocks.testMemberNode.getLabel()}), ${blockMocks.testDatasetNode.getLabel()}`
+            `The following 2 item(s) were deleted: ${blockMocks.testDatasetNode.getLabel()}(${blockMocks.testMemberNode.getLabel()}), ${blockMocks.testDatasetNode.getLabel()}`
         );
     });
 
@@ -620,10 +637,13 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         const selectedNodes = [blockMocks.testFavoritedNode];
         const treeView = createTreeView(selectedNodes);
         blockMocks.testDatasetTree.getTreeView.mockReturnValueOnce(treeView);
+        globalMocks.mockShowWarningMessage.mockResolvedValueOnce("Cancel");
 
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
-        expect(mocked(vscode.window.showInformationMessage)).toBeCalledTimes(0);
+        expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith(
+            "Deleting data sets and members from the Favorites section is currently not supported."
+        );
     });
 
     it("Should not delete a favorited member", async () => {
@@ -633,10 +653,13 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         const selectedNodes = [blockMocks.testFavMemberNode];
         const treeView = createTreeView(selectedNodes);
         blockMocks.testDatasetTree.getTreeView.mockReturnValueOnce(treeView);
+        globalMocks.mockShowWarningMessage.mockResolvedValueOnce("Cancel");
 
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
-        expect(mocked(vscode.window.showInformationMessage)).toBeCalledTimes(0);
+        expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith(
+            "Deleting data sets and members from the Favorites section is currently not supported."
+        );
     });
 
     it("Should not delete a session", async () => {
@@ -646,10 +669,13 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         const selectedNodes = [globalMocks.datasetSessionNode];
         const treeView = createTreeView(selectedNodes);
         blockMocks.testDatasetTree.getTreeView.mockReturnValueOnce(treeView);
+        globalMocks.mockShowWarningMessage.mockResolvedValueOnce("Cancel");
 
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
-        expect(mocked(vscode.window.showInformationMessage)).toBeCalledTimes(0);
+        expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith(
+            "Deleting data sets and members from the Favorites section is currently not supported."
+        );
     });
 
     it("Should fail to delete first dataset and succeed in deleting second dataset", async () => {
@@ -659,11 +685,12 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         const selectedNodes = [blockMocks.testFavoritedNode, blockMocks.testDatasetNode];
         const treeView = createTreeView(selectedNodes);
         blockMocks.testDatasetTree.getTreeView.mockReturnValueOnce(treeView);
+        globalMocks.mockShowWarningMessage.mockResolvedValueOnce("Delete");
 
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
         expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith(
-            `The following items were deleted: ${blockMocks.testDatasetNode.getLabel()}`
+            `The following 1 item(s) were deleted: ${blockMocks.testDatasetNode.getLabel()}`
         );
     });
 
@@ -671,7 +698,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
 
-        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Cancel" as any);
+        globalMocks.mockShowWarningMessage.mockResolvedValueOnce("Cancel");
 
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
