@@ -659,6 +659,11 @@
         }
       },
       {
+        "command": "zowe.all.config.init",
+        "title": "%all.configInit%",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.jobs.refreshJob",
         "title": "%jobs.refreshJob%",
         "category": "Zowe Explorer"
@@ -1749,7 +1754,6 @@
     "js-yaml": "3.13.1",
     "moment": "2.24.0",
     "promise-queue": "2.2.5",
-    "true-case-path": "2.2.1",
     "yamljs": "0.3.0"
   },
   "jest": {

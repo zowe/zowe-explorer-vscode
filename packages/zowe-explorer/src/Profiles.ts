@@ -18,10 +18,20 @@ import {
     SessConstants,
     IUpdateProfile,
     IProfile,
+    ProfileInfo,
+    ConfigSchema,
+    ConfigBuilder,
+    ImperativeConfig,
+    IImperativeConfig,
+    Config,
+    IConfig,
+    ICommandProfileTypeConfiguration,
 } from "@zowe/imperative";
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import * as path from "path";
+import * as os from "os";
+import * as fs from "fs";
 import {
     IZoweTree,
     IZoweNodeType,
@@ -251,6 +261,7 @@ export class Profiles extends ProfilesCache {
     public async createZoweSession(zoweFileProvider: IZoweTree<IZoweTreeNode>) {
         const allProfiles = Profiles.getInstance().allProfiles;
         const createNewProfile = "Create a New Connection to z/OS";
+        const createNewConfig = "Create a New Team Configuration File";
         let chosenProfile: string = "";
 
         // Get all profiles
@@ -281,6 +292,7 @@ export class Profiles extends ProfilesCache {
             );
         }
         const createPick = new FilterDescriptor("\uFF0B " + createNewProfile);
+        const configPick = new FilterDescriptor("\uFF0B " + createNewConfig);
         const items: vscode.QuickPickItem[] = profileNamesList.map((element) => new FilterItem(element));
         const quickpick = vscode.window.createQuickPick();
         const placeholder = localize(
@@ -293,14 +305,14 @@ export class Profiles extends ProfilesCache {
                 placeHolder: placeholder,
             };
             // get user selection
-            const choice = await vscode.window.showQuickPick([createPick, ...items], options);
+            const choice = await vscode.window.showQuickPick([createPick, configPick, ...items], options);
             if (!choice) {
                 vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
                 return;
             }
             chosenProfile = choice === createPick ? "" : choice.label;
         } else {
-            quickpick.items = [createPick, ...items];
+            quickpick.items = [createPick, configPick, ...items];
             quickpick.placeholder = placeholder;
             quickpick.ignoreFocusOut = true;
             quickpick.show();
@@ -308,6 +320,10 @@ export class Profiles extends ProfilesCache {
             quickpick.hide();
             if (!choice) {
                 vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
+                return;
+            }
+            if (choice === configPick) {
+                this.createZoweSchema(zoweFileProvider);
                 return;
             }
             if (choice instanceof FilterDescriptor) {
@@ -556,6 +572,80 @@ export class Profiles extends ProfilesCache {
             profileType = await vscode.window.showQuickPick(typeOptions, quickPickTypeOptions);
         }
         return profileType;
+    }
+
+    public async createZoweSchema(zoweFileProvider: IZoweTree<IZoweTreeNode>) {
+        try {
+            ImperativeConfig.instance.loadedConfig = {
+                defaultHome: path.join(os.homedir(), ".zowe"),
+                envVariablePrefix: "ZOWE",
+            };
+
+            let rootPath = ImperativeConfig.instance.cliHome;
+            if (vscode.workspace.workspaceFolders) {
+                const quickPickOptions: vscode.QuickPickOptions = {
+                    placeHolder: localize(
+                        "createZoweSchema.quickPickOption",
+                        "Select the location where the config file will be initialized"
+                    ),
+                    ignoreFocusOut: true,
+                    canPickMany: false,
+                };
+                const globalText = localize(
+                    "createZoweSchema.showQuickPick.global",
+                    "Global: in the Zowe home directory "
+                );
+                const projectText = localize(
+                    "createZoweSchema.showQuickPick.project",
+                    "Project: in the current working directory"
+                );
+                const location = await vscode.window.showQuickPick([globalText, projectText], quickPickOptions);
+                if (location === undefined) {
+                    vscode.window.showInformationMessage(
+                        localize("createZoweSchema.undefined.location", "Operation Cancelled")
+                    );
+                    return;
+                }
+                if (location === projectText) {
+                    rootPath = vscode.workspace.workspaceFolders?.[0].uri.fsPath;
+                }
+            }
+            const config = await Config.load("zowe", { projectDir: fs.realpathSync(rootPath) });
+            if (vscode.workspace.workspaceFolders) {
+                config.mActive.global = false;
+                config.mActive.user = false;
+            }
+
+            const impConfig: IImperativeConfig = zowe.getImperativeConfig();
+            const knownCliConfig: ICommandProfileTypeConfiguration[] = impConfig.profiles;
+            knownCliConfig.push(impConfig.baseProfile);
+            config.setSchema(ConfigSchema.buildSchema(knownCliConfig));
+
+            // Note: IConfigBuilderOpts not exported
+            // const opts: IConfigBuilderOpts = {
+            const opts: any = {
+                // getSecureValue: this.promptForProp.bind(this),
+                populateProperties: true,
+            };
+
+            // Build new config and merge with existing layer
+            const newConfig: IConfig = await ConfigBuilder.build(impConfig, opts);
+            config.api.layers.merge(newConfig);
+            await config.save(false);
+            const reloadButton = localize("createZoweSchema.reload.button", "Reload Window");
+            const infoMsg = localize(
+                "createZoweSchema.reload.infoMessage",
+                "Team Configuration file created. Location: {0}. \n Please reload your window.",
+                rootPath
+            );
+            await vscode.window.showInformationMessage(infoMsg, ...[reloadButton]).then(async (selection) => {
+                if (selection === reloadButton) {
+                    await vscode.commands.executeCommand("workbench.action.reloadWindow");
+                }
+            });
+        } catch (err) {
+            vscode.window.showErrorMessage("Error in creating team configuration file: " + err.message);
+        }
     }
 
     public async createNewConnection(profileName: string, requestedProfileType?: string): Promise<string | undefined> {
