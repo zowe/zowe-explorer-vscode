@@ -255,11 +255,11 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             if (!(favoriteDataSetPattern.test(line) || favoriteSearchPattern.test(line))) {
                 this.log.warn(
                     localize("initializeFavorites.invalidDsFavorite1", "Invalid Data Sets favorite: {0}.", line) +
-                    localize(
-                        "initializeFavorites.invalidDsFavorite2",
-                        " Please check formatting of the Zowe-DS-Persistent 'favorites' settings in the {0} user settings.",
-                        getAppName(globals.ISTHEIA)
-                    )
+                        localize(
+                            "initializeFavorites.invalidDsFavorite2",
+                            " Please check formatting of the Zowe-DS-Persistent 'favorites' settings in the {0} user settings.",
+                            getAppName(globals.ISTHEIA)
+                        )
                 );
                 continue;
             }
@@ -1189,7 +1189,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             } catch (err) {
                 this.log.error(
                     localize("renameDataSet.log.error", "Error encountered when renaming data set! ") +
-                    JSON.stringify(err)
+                        JSON.stringify(err)
                 );
                 await errorHandling(
                     err,
@@ -1269,7 +1269,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             } catch (err) {
                 this.log.error(
                     localize("renameDataSet.log.error", "Error encountered when renaming data set! ") +
-                    JSON.stringify(err)
+                        JSON.stringify(err)
                 );
                 await errorHandling(
                     err,

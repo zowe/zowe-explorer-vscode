@@ -333,10 +333,10 @@ async function createGlobalMocks() {
     // tslint:disable-next-line: no-object-literal-type-assertion
     const mockExtensionCreator = jest.fn(
         () =>
-        ({
-            subscriptions: [],
-            extensionPath: path.join(__dirname, ".."),
-        } as vscode.ExtensionContext)
+            ({
+                subscriptions: [],
+                extensionPath: path.join(__dirname, ".."),
+            } as vscode.ExtensionContext)
     );
     globalMocks.mockExtension = new mockExtensionCreator();
 

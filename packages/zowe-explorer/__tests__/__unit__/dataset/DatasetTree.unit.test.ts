@@ -125,8 +125,9 @@ function createGlobalMocks() {
                 apiResponse: {
                     etag: "123",
                 },
-            }
-        }), configurable: true
+            };
+        }),
+        configurable: true,
     });
     Object.defineProperty(zowe.Download, "dataSetMember", {
         value: jest.fn(() => {
@@ -136,8 +137,9 @@ function createGlobalMocks() {
                 apiResponse: {
                     etag: "123",
                 },
-            }
-        }), configurable: true
+            };
+        }),
+        configurable: true,
     });
 
     return globalMocks;

@@ -90,11 +90,11 @@ async function createGlobalMocks() {
                 usingTeamConfig: false,
             };
         }),
-        configurable: true
+        configurable: true,
     });
     Object.defineProperty(ProfilesCache, "allProfiles", {
         value: [globalMocks.testProfile],
-        configurable: true
+        configurable: true,
     });
     Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true });
     Object.defineProperty(vscode.window, "withProgress", { value: globalMocks.withProgress, configurable: true });

@@ -86,10 +86,10 @@ function createGlobalMocks() {
     // tslint:disable-next-line: no-object-literal-type-assertion
     const extensionMock = jest.fn(
         () =>
-        ({
-            subscriptions: [],
-            extensionPath: path.join(__dirname, "..", ".."),
-        } as vscode.ExtensionContext)
+            ({
+                subscriptions: [],
+                extensionPath: path.join(__dirname, "..", ".."),
+            } as vscode.ExtensionContext)
     );
     const mock = new extensionMock();
     const profilesForValidation = { status: "active", name: "fake" };
@@ -607,7 +607,7 @@ describe("USS Action Unit Tests - Functions uploadDialog & uploadFile", () => {
         try {
             await ussNodeActions.uploadDialog(blockMocks.ussNode, blockMocks.testUSSTree);
             // tslint:disable-next-line:no-empty
-        } catch (err) { }
+        } catch (err) {}
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(1);
     });
 });

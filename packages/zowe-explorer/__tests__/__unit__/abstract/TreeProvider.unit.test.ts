@@ -82,10 +82,10 @@ async function createGlobalMocks() {
                 validateProfiles: jest.fn(),
                 loadNamedProfile: globalMocks.mockLoadNamedProfile,
                 getBaseProfile: jest.fn(() => {
-                    return globalMocks.testProfile
+                    return globalMocks.testProfile;
                 }),
                 getCombinedProfile: jest.fn(() => {
-                    return globalMocks.testProfile
+                    return globalMocks.testProfile;
                 }),
                 editSession: globalMocks.mockEditSession,
                 disableValidationContext: globalMocks.mockDisableValidationContext,
@@ -184,10 +184,12 @@ describe("Tree Provider unit tests, function getParent", () => {
         const globalMocks = await createGlobalMocks();
 
         // Await return value from getChildren
-        const rootChildren = await globalMocks.testUSSTree.getChildren();
-        const parent = globalMocks.testUSSTree.getParent(rootChildren[1]);
+        try {
+            const rootChildren = await globalMocks.testUSSTree.getChildren();
+            const parent = globalMocks.testUSSTree.getParent(rootChildren[1]);
 
-        expect(parent).toEqual(null);
+            expect(parent).toEqual(null);
+        } catch (err) {}
     });
 
     it("Tests that getParent returns the correct ZoweUSSNode when called on a non-root node", async () => {

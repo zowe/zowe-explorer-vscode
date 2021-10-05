@@ -352,7 +352,7 @@ describe("Test force upload", () => {
                     Notification: 15,
                 };
             }),
-            mockDoc: createTextDocument('mocDoc')
+            mockDoc: createTextDocument("mocDoc"),
         };
 
         Object.defineProperty(vscode.window, "showInformationMessage", {
@@ -373,8 +373,18 @@ describe("Test force upload", () => {
         });
         Object.defineProperty(vscode.window, "withProgress", { value: newVariables.withProgress, configurable: true });
         Object.defineProperty(vscode.window, "activeTextEditor", { value: { edit: jest.fn() }, configurable: true });
-        Object.defineProperty(vscode, "Position", { value: jest.fn(() => { return {} }), configurable: true });
-        Object.defineProperty(vscode, "Range", { value: jest.fn(() => { return {} }), configurable: true });
+        Object.defineProperty(vscode, "Position", {
+            value: jest.fn(() => {
+                return {};
+            }),
+            configurable: true,
+        });
+        Object.defineProperty(vscode, "Range", {
+            value: jest.fn(() => {
+                return {};
+            }),
+            configurable: true,
+        });
         Object.defineProperty(vscode, "ProgressLocation", { value: newVariables.ProgressLocation, configurable: true });
 
         return newVariables;
