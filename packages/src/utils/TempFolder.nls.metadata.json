@@ -1,13 +1,9 @@
 {
-	"messages": [
-		"Error encountered when creating temporary folder! ",
-		"Error encountered when creating temporary folder! ",
-		"Unable to delete temporary folder. "
-	],
-	"keys": [
-		"moveTempFolder.error",
-		"moveTempFolder.error",
-		"deactivate.error"
-	],
-	"filePath": "src\\utils\\TempFolder"
+  "messages": [
+    "Error encountered when creating temporary folder! ",
+    "Error encountered when creating temporary folder! ",
+    "Unable to delete temporary folder. "
+  ],
+  "keys": ["moveTempFolder.error", "moveTempFolder.error", "deactivate.error"],
+  "filePath": "src\\utils\\TempFolder"
 }

@@ -1,23 +1,23 @@
 {
-	"messages": [
-		"Uploading USS file",
-		"Saving data set...",
-		"Saving file...",
-		"A merge conflict has been detected. Since you are running inside Theia editor, a merge conflict resolution is not available yet.",
-		"Would you like to overwrite the remote file?",
-		"Yes",
-		"No",
-		"Yes"
-	],
-	"keys": [
-		"uploadContent.putContents",
-		"saveFile.response.save.title",
-		"saveUSSFile.response.title",
-		"saveFile.error.theiaDetected",
-		"saveFile.info.confirmUpload",
-		"saveFile.overwriteConfirmation.yes",
-		"saveFile.overwriteConfirmation.no",
-		"saveFile.overwriteConfirmation.yes"
-	],
-	"filePath": "src\\shared\\utils"
+  "messages": [
+    "Uploading USS file",
+    "Saving data set...",
+    "Saving file...",
+    "A merge conflict has been detected. Since you are running inside Theia editor, a merge conflict resolution is not available yet.",
+    "Would you like to overwrite the remote file?",
+    "Yes",
+    "No",
+    "Yes"
+  ],
+  "keys": [
+    "uploadContent.putContents",
+    "saveFile.response.save.title",
+    "saveUSSFile.response.title",
+    "saveFile.error.theiaDetected",
+    "saveFile.info.confirmUpload",
+    "saveFile.overwriteConfirmation.yes",
+    "saveFile.overwriteConfirmation.no",
+    "saveFile.overwriteConfirmation.yes"
+  ],
+  "filePath": "src\\shared\\utils"
 }

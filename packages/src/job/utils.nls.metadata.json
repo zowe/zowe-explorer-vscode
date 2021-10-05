@@ -1,11 +1,5 @@
 {
-	"messages": [
-		"Job Id search",
-		"Owner/Prefix Job Search"
-	],
-	"keys": [
-		"zosJobsProvider.option.prompt.createId",
-		"zosJobsProvider.option.prompt.createOwner"
-	],
-	"filePath": "src\\job\\utils"
+  "messages": ["Job Id search", "Owner/Prefix Job Search"],
+  "keys": ["zosJobsProvider.option.prompt.createId", "zosJobsProvider.option.prompt.createOwner"],
+  "filePath": "src\\job\\utils"
 }

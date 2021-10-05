@@ -52,7 +52,7 @@ export class ProfilesCache {
     protected profilesByType = new Map<string, imperative.IProfileLoaded[]>();
     protected defaultProfileByType = new Map<string, imperative.IProfileLoaded>();
     protected profileManagerByType = new Map<string, imperative.CliProfileManager>();
-    public constructor(protected log: imperative.Logger) { }
+    public constructor(protected log: imperative.Logger) {}
 
     public static createConfigInstance(mProfileInfo: imperative.ProfileInfo): imperative.ProfileInfo {
         return (ProfilesCache.info = mProfileInfo);

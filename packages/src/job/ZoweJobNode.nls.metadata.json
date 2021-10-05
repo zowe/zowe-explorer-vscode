@@ -1,15 +1,15 @@
 {
-	"messages": [
-		"Use the search button to display jobs",
-		"Get Job Spool files command submitted.",
-		"Get Jobs command submitted.",
-		"Retrieving response from "
-	],
-	"keys": [
-		"getChildren.search",
-		"ZoweJobNode.getJobs.spoolfiles",
-		"ZoweJobNode.getJobs.jobs",
-		"getChildren.error.response"
-	],
-	"filePath": "src\\job\\ZoweJobNode"
+  "messages": [
+    "Use the search button to display jobs",
+    "Get Job Spool files command submitted.",
+    "Get Jobs command submitted.",
+    "Retrieving response from "
+  ],
+  "keys": [
+    "getChildren.search",
+    "ZoweJobNode.getJobs.spoolfiles",
+    "ZoweJobNode.getJobs.jobs",
+    "getChildren.error.response"
+  ],
+  "filePath": "src\\job\\ZoweJobNode"
 }
