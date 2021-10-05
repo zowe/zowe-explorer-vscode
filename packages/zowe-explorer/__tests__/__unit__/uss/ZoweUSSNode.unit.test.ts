@@ -70,6 +70,7 @@ async function createGlobalMocks() {
         profileOps: null,
         response: createFileResponse({ etag: "123" }),
         ussApi: null,
+        mockShowWarningMessage: jest.fn(),
     };
 
     globalMocks.openTextDocument.mockResolvedValue(globalMocks.mockTextDocument);
@@ -114,6 +115,10 @@ async function createGlobalMocks() {
         value: globalMocks.showErrorMessage,
         configurable: true,
     });
+    Object.defineProperty(vscode.window, "showWarningMessage", {
+        value: globalMocks.mockShowWarningMessage,
+        configurable: true,
+    });
     Object.defineProperty(globalMocks.Utilities, "isFileTagBinOrAscii", {
         value: globalMocks.isFileTagBinOrAscii,
         configurable: true,
@@ -142,6 +147,8 @@ async function createGlobalMocks() {
     });
     Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true });
     Object.defineProperty(vscode.window, "withProgress", { value: globalMocks.withProgress, configurable: true });
+    Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
+    Object.defineProperty(globals.LOG, "debug", { value: jest.fn(), configurable: true });
 
     return globalMocks;
 }
@@ -702,8 +709,7 @@ describe("ZoweUSSNode Unit Tests - Function node.deleteUSSNode()", () => {
     it("Tests that node is deleted if user verified", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
-
-        globalMocks.showQuickPick.mockResolvedValueOnce("Delete");
+        globalMocks.mockShowWarningMessage.mockResolvedValueOnce("Delete");
         await blockMocks.ussNode.deleteUSSNode(blockMocks.testUSSTree, "");
         expect(blockMocks.testUSSTree.refresh).toHaveBeenCalled();
     });
@@ -711,8 +717,7 @@ describe("ZoweUSSNode Unit Tests - Function node.deleteUSSNode()", () => {
     it("Tests that node is not deleted if user did not verify", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
-
-        globalMocks.showQuickPick.mockResolvedValueOnce("Cancel");
+        globalMocks.mockShowWarningMessage.mockResolvedValueOnce("Cancel");
         await blockMocks.ussNode.deleteUSSNode(blockMocks.testUSSTree, "");
         expect(blockMocks.testUSSTree.refresh).not.toHaveBeenCalled();
     });
@@ -720,8 +725,7 @@ describe("ZoweUSSNode Unit Tests - Function node.deleteUSSNode()", () => {
     it("Tests that node is not deleted if user cancelled", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
-
-        globalMocks.showQuickPick.mockResolvedValueOnce(undefined);
+        globalMocks.mockShowWarningMessage.mockResolvedValueOnce(undefined);
         await blockMocks.ussNode.deleteUSSNode(blockMocks.testUSSTree, "");
         expect(blockMocks.testUSSTree.refresh).not.toHaveBeenCalled();
     });
@@ -729,8 +733,7 @@ describe("ZoweUSSNode Unit Tests - Function node.deleteUSSNode()", () => {
     it("Tests that node is not deleted if an error thrown", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
-
-        globalMocks.showQuickPick.mockResolvedValueOnce("Delete");
+        globalMocks.mockShowWarningMessage.mockResolvedValueOnce("Delete");
         globalMocks.ussFile.mockImplementationOnce(() => {
             throw Error("testError");
         });
