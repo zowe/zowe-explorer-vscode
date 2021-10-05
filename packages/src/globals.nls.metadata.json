@@ -1,0 +1,41 @@
+{
+  "messages": [
+    "Enter an allocation unit",
+    "Enter the average block length (if allocation unit = BLK)",
+    "Enter a block size",
+    "Enter an SMS data class",
+    "Enter a device type (unit)",
+    "Enter the number of directory blocks",
+    "Specify the data set type (DSNTYPE)",
+    "Enter the SMS management class",
+    "Enter a data set name",
+    "Select a data set organization (DSORG)",
+    "Enter the primary space allocation",
+    "Enter the data set's record format",
+    "Enter the logical record length",
+    "Enter the secondary space allocation",
+    "Enter the size of the data set",
+    "Enter the SMS storage class",
+    "Enter the volume serial on which the data set should be placed"
+  ],
+  "keys": [
+    "createFile.attribute.alcunit",
+    "createFile.attribute.avgblk",
+    "createFile.attribute.blksize",
+    "createFile.attribute.dataclass",
+    "createFile.attribute.unit",
+    "createFile.attribute.dirblk",
+    "createFile.attribute.dsntype",
+    "createFile.attribute.mgntclass",
+    "createFile.attribute.dsName",
+    "createFile.attribute.dsorg",
+    "createFile.attribute.primary",
+    "createFile.attribute.recfm",
+    "createFile.attribute.lrecl",
+    "createFile.attribute.secondary",
+    "createFile.attribute.size",
+    "createFile.attribute.storclass",
+    "createFile.attribute.volser"
+  ],
+  "filePath": "src\\globals"
+}

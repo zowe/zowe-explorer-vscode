@@ -1,0 +1,27 @@
+{
+  "messages": [
+    "Enter a filter",
+    "No items are loaded in the tree.",
+    "You must enter a pattern.",
+    "Prompting the user to choose a recent member for editing",
+    "Select a recent member to open",
+    "Select a recent member to open",
+    "No selection made.",
+    "Select a recent member to open",
+    "No selection made.",
+    "No recent members found."
+  ],
+  "keys": [
+    "searchHistory.options.prompt",
+    "searchInAllLoadedItems.noneLoaded",
+    "searchInAllLoadedItems.enterPattern",
+    "enterPattern.log.debug.prompt",
+    "memberHistory.option.prompt.open",
+    "memberHistory.options.prompt",
+    "enterPattern.pattern",
+    "memberHistory.options.prompt",
+    "enterPattern.pattern",
+    "getRecentMembers.empty"
+  ],
+  "filePath": "src\\shared\\actions"
+}

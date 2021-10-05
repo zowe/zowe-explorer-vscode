@@ -1,0 +1,27 @@
+{
+  "messages": [
+    "Initialized logger from VSCode extension",
+    "Error encountered while activating and initializing logger! ",
+    "Error encountered while activating and initializing logger! ",
+    "File was saved -- determining whether the file is a USS file or Data set.\n Comparing (case insensitive) ",
+    " against directory ",
+    "and",
+    "File is a data set-- saving ",
+    "File is a USS file -- saving",
+    "File ",
+    " is not a data set or USS file "
+  ],
+  "keys": [
+    "initialize.log.debug",
+    "initialize.log.error",
+    "initialize.log.error",
+    "onDidSaveTextDocument1",
+    "onDidSaveTextDocument2",
+    "onDidSaveTextDocument3",
+    "activate.didSaveText.isDataSet",
+    "activate.didSaveText.isUSSFile",
+    "activate.didSaveText.file",
+    "activate.didSaveText.notDataSet"
+  ],
+  "filePath": "src\\extension"
+}

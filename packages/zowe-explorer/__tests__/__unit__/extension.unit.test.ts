@@ -106,6 +106,7 @@ async function createGlobalMocks() {
             allProfiles: [{ name: "firstName" }, { name: "secondName" }],
             defaultProfile: { name: "firstName" },
             getDefaultProfile: null,
+            getBaseProfile: jest.fn(),
             loadNamedProfile: null,
             validProfile: ValidProfileEnum.VALID,
             checkCurrentProfile: jest.fn(),

@@ -1,0 +1,44 @@
+{
+  "log4jsConfig": {
+    "appenders": {
+      "default": {
+        "type": "fileSync",
+        "layout": {
+          "type": "pattern",
+          "pattern": "[%d{yyyy/MM/dd} %d{hh:mm:ss.SSS}] [%p] %m"
+        },
+        "filename": "logs/imperative.log"
+      },
+      "imperative": {
+        "type": "fileSync",
+        "layout": {
+          "type": "pattern",
+          "pattern": "[%d{yyyy/MM/dd} %d{hh:mm:ss.SSS}] [%p] %m"
+        },
+        "filename": "logs/imperative.log"
+      },
+      "app": {
+        "type": "fileSync",
+        "layout": {
+          "type": "pattern",
+          "pattern": "[%d{yyyy/MM/dd} %d{hh:mm:ss.SSS}] [%p] %m"
+        },
+        "filename": "logs/zowe.log"
+      }
+    },
+    "categories": {
+      "default": {
+        "appenders": ["default"],
+        "level": "DEBUG"
+      },
+      "imperative": {
+        "appenders": ["imperative"],
+        "level": "DEBUG"
+      },
+      "app": {
+        "appenders": ["app"],
+        "level": "DEBUG"
+      }
+    }
+  }
+}

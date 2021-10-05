@@ -13,4 +13,3 @@ export * from "./ZoweExplorerTreeApi";
 export * from "./ZoweTreeNode";
 export * from "./IZoweTree";
 export * from "./IZoweTreeNode";
-export * from "./ZoweVsCodeExtension";

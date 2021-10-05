@@ -78,7 +78,7 @@ describe("tsoCommands integration test", async () => {
             const spy = sandbox.spy(vscode.window, "createOutputChannel");
             await TsoCommandHandler.getInstance().issueTsoCommand(session, TEST_CMD, testNode);
 
-            const gotCalled = spy.calledWith("Zowe Command");
+            const gotCalled = spy.calledWith("Zowe TSO Command");
             expect(gotCalled).to.equal(true);
         }).timeout(TIMEOUT);
     });
