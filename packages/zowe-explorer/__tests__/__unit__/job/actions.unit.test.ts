@@ -182,12 +182,20 @@ describe("Jobs Actions Unit Tests - Function stopCommand", () => {
     it("Checking failed attempt to issue stop command for Job Node.", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
+        const node = new Job(
+            "job",
+            vscode.TreeItemCollapsibleState.None,
+            null,
+            blockMocks.session,
+            undefined,
+            blockMocks.imperativeProfile
+        );
         mocked(zowe.IssueCommand.issueSimple).mockResolvedValueOnce({
             success: false,
             zosmfResponse: [],
             commandResponse: "fake response",
         });
-        await jobActions.stopCommand(undefined);
+        await jobActions.stopCommand(node);
         expect(mocked(vscode.window.showErrorMessage).mock.calls.length).toBe(1);
     });
 });
@@ -232,13 +240,21 @@ describe("Jobs Actions Unit Tests - Function modifyCommand", () => {
     it("Checking failed attempt to modify Job Node", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
+        const node = new Job(
+            "job",
+            vscode.TreeItemCollapsibleState.None,
+            null,
+            blockMocks.session,
+            undefined,
+            blockMocks.imperativeProfile
+        );
         mocked(vscode.window.showInputBox).mockResolvedValue("modify");
         mocked(zowe.IssueCommand.issueSimple).mockResolvedValueOnce({
             success: false,
             zosmfResponse: [],
             commandResponse: "fake response",
         });
-        await jobActions.modifyCommand(undefined);
+        await jobActions.modifyCommand(node);
         expect(mocked(vscode.window.showErrorMessage).mock.calls.length).toBe(1);
     });
 });

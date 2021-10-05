@@ -163,16 +163,28 @@ export const focusOnJob = async (jobsProvider: IZoweTree<IZoweJobTreeNode>, sess
 export async function modifyCommand(job: Job) {
     try {
         const command = await vscode.window.showInputBox({
-            prompt: localize("modifyCommand.command.prompt", "Modify Command"),
+            prompt: localize("jobActions.modifyCommand.command.prompt", "Modify Command"),
         });
         if (command !== undefined) {
-            const response = await zowe.IssueCommand.issueSimple(job.getSession(), `f ${job.job.jobname},${command}`);
-            vscode.window.showInformationMessage(
-                localize("modifyCommand.response", "Command response: ") + response.commandResponse
-            );
+            const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(job.getProfile());
+            if (commandApi) {
+                const response = await ZoweExplorerApiRegister.getCommandApi(job.getProfile()).issueMvsCommand(
+                    `f ${job.job.jobname},${command}`
+                );
+                vscode.window.showInformationMessage(
+                    localize("jobActions.modifyCommand.response", "Command response: ") + response.commandResponse
+                );
+            }
         }
     } catch (error) {
-        await errorHandling(error, null, error.message);
+        if (error.toString().includes("non-existing")) {
+            vscode.window.showErrorMessage(
+                localize("jobActions.modifyCommand.apiNonExisting", "Not implemented yet for profile of type: ") +
+                    job.getProfile().type
+            );
+        } else {
+            await errorHandling(error.toString(), job.getProfile().name, error.message.toString());
+        }
     }
 }
 
@@ -183,12 +195,24 @@ export async function modifyCommand(job: Job) {
  */
 export async function stopCommand(job: Job) {
     try {
-        const response = await zowe.IssueCommand.issueSimple(job.getSession(), `p ${job.job.jobname}`);
-        vscode.window.showInformationMessage(
-            localize("stopCommand.response", "Command response: ") + response.commandResponse
-        );
+        const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(job.getProfile());
+        if (commandApi) {
+            const response = await ZoweExplorerApiRegister.getCommandApi(job.getProfile()).issueMvsCommand(
+                `p ${job.job.jobname}`
+            );
+            vscode.window.showInformationMessage(
+                localize("jobActions.stopCommand.response", "Command response: ") + response.commandResponse
+            );
+        }
     } catch (error) {
-        await errorHandling(error, null, error.message);
+        if (error.toString().includes("non-existing")) {
+            vscode.window.showErrorMessage(
+                localize("jobActions.stopCommand.apiNonExisting", "Not implemented yet for profile of type: ") +
+                    job.getProfile().type
+            );
+        } else {
+            await errorHandling(error.toString(), job.getProfile().name, error.message.toString());
+        }
     }
 }
 
