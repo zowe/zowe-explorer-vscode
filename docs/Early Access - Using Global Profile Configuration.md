@@ -53,6 +53,18 @@ The global profile functionality simplifies profile management by enabling you t
 
 **Note**: A project context takes precedence over global configuration.
 
+### Create a Team Configuration File
+
+Create a team configuration file.
+
+1. Navigate to the explorer tree.
+2. Hover over **DATA SETS**, **USS**, or **JOBS**.
+3. Click the **+** icon.
+4. Select **Create a New Team Configuration File**.
+5. Follow the instructions to complete the team configuration profile creation.
+
+Your team configuration file appears in your `.zowe` folder.
+
 ### Manage a Profile
 
 You can edit your project-level or global configuration profiles.
