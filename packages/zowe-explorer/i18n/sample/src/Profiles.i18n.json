@@ -1,6 +1,6 @@
 {
   "checkCurrentProfile.error": "Error encountered in ",
-  "addSession.quickPickOption": "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the USS Explorer",
+  "addSession.quickPickOption": "Choose \"Create new...\" to define a new profile or select an existing profile to add to the DATA SETS Explorer",
   "enterPattern.pattern": "No selection made.",
   "createNewConnection.option.prompt.profileName.placeholder": "Connection Name",
   "createNewConnection.option.prompt.profileName": "Enter a name for the connection",
