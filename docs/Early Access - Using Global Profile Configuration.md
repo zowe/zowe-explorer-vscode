@@ -62,6 +62,7 @@ Create a team configuration file.
 3. Click the **+** icon.
 4. Select **Create a New Team Configuration File**.
 5. Follow the instructions to complete the team configuration profile creation.
+6. Reload your VS Code when prompted.
 
 Your team configuration file appears in your `.zowe` folder.
 
