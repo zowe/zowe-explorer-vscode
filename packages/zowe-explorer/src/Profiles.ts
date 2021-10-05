@@ -615,7 +615,7 @@ export class Profiles extends ProfilesCache {
             const config = await Config.load("zowe", { projectDir: fs.realpathSync(rootPath) });
             if (vscode.workspace.workspaceFolders) {
                 config.mActive.global = false;
-                config.mActive.user = true;
+                config.mActive.user = false;
             }
 
             const impConfig: IImperativeConfig = zowe.getImperativeConfig();
