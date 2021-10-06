@@ -12,6 +12,13 @@
 import * as vscode from "vscode";
 import * as semver from "semver";
 import * as globals from "../globals";
+import * as nls from "vscode-nls";
+
+nls.config({
+    messageFormat: nls.MessageFormat.bundle,
+    bundleFormat: nls.BundleFormat.standalone,
+})();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 // Dictionary describing translation from old configuration names to new standardized names
 const configurationDictionary = {
@@ -40,6 +47,20 @@ const currentVersionNumber = semver.major(
     vscode.extensions.getExtension("zowe.vscode-extension-for-zowe").packageJSON.version
 );
 
+async function promptReload() {
+    // Prompt user to reload VS Code window
+    const reloadButton = localize("standardization.reload.button", "Reload Window");
+    const infoMsg = localize(
+        "standardization.reload.infoMessage",
+        "Settings have been migrated successfully, please reload VS Code window."
+    );
+    await vscode.window.showInformationMessage(infoMsg, ...[reloadButton]).then(async (selection) => {
+        if (selection === reloadButton) {
+            await vscode.commands.executeCommand("workbench.action.reloadWindow");
+        }
+    });
+}
+
 export async function standardizeGlobalSettings() {
     let globalIsMigrated =
         (await configurations.inspect(globals.SETTINGS_VERSION).globalValue) !== currentVersionNumber;
@@ -65,6 +86,7 @@ export async function standardizeGlobalSettings() {
 
     if (globalIsMigrated) {
         await configurations.update(globals.SETTINGS_VERSION, currentVersionNumber, vscode.ConfigurationTarget.Global);
+        await promptReload();
     }
 }
 
@@ -108,10 +130,11 @@ export async function standardizeSettings() {
         (await configurations.inspect(globals.SETTINGS_VERSION).workspaceValue) !== currentVersionNumber;
     const workspaceIsOpen = vscode.workspace.workspaceFolders !== undefined;
 
-    if (globalIsNotMigrated) {
-        await standardizeGlobalSettings();
-    }
     if (workspaceIsNotMigrated && workspaceIsOpen) {
         await standardizeWorkspaceSettings();
+    }
+
+    if (globalIsNotMigrated) {
+        await standardizeGlobalSettings();
     }
 }

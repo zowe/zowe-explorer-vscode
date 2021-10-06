@@ -1,0 +1,4 @@
+{
+  "standardization.reload.button": "Reload Window",
+  "standardization.reload.infoMessage": "Settings have been migrated successfully, please reload VS Code window."
+}
