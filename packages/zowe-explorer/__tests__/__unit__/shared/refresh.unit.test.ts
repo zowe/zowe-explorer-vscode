@@ -28,6 +28,7 @@ function createGlobalMocks() {
     const globalMocks = {
         session: createISessionWithoutCredentials(),
         createTreeView: jest.fn(),
+        mockGetConfiguration: jest.fn(),
         mockLoadNamedProfile: jest.fn(),
         testProfile: createIProfile(),
     };
@@ -47,9 +48,21 @@ function createGlobalMocks() {
                 }),
                 profilesForValidation: [],
                 validateProfiles: jest.fn(),
+                refresh: jest.fn(),
+                enableValidationContext: jest.fn(),
+                getBaseProfile: jest.fn(() => {
+                    return globalMocks.testProfile;
+                }),
+                getCombinedProfile: jest.fn(() => {
+                    return globalMocks.testProfile;
+                }),
                 loadNamedProfile: globalMocks.mockLoadNamedProfile,
             };
         }),
+    });
+    Object.defineProperty(vscode.workspace, "getConfiguration", {
+        value: globalMocks.mockGetConfiguration,
+        configurable: true,
     });
 
     Object.defineProperty(PersistentFilters, "getDirectValue", {

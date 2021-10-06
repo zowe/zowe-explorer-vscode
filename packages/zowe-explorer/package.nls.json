@@ -17,8 +17,8 @@
   "createDataset": "Create New Data Set",
   "createMember": "Create New Member",
   "showDSAttributes": "Show Data Set Attributes",
-  "deleteDataset": "Delete Data Set",
-  "deleteMember": "Delete Member",
+  "deleteDataset": "Delete",
+  "deleteMember": "Delete",
   "allocateLike": "Allocate Like (New Data Set with Same Attributes)",
   "editDataSet": "Edit Data Set",
   "editMember": "Edit Member",
@@ -103,5 +103,8 @@
   "ssoLogout": "Log out from Authentication Service",
   "uss.ssoLogout": "Log out from Authentication Service",
   "jobs.ssoLogout": "Log out from Authentication Service",
-  "jobs.refreshJob": "Refresh Job"
+  "jobs.refreshJob": "Refresh Job",
+  "all.configInit": "Initialize Team Configuration File",
+  "createZoweSchema.reload.button": "Reload Window",
+  "createZoweSchema.reload.infoMessage": "Team Configuration file created. Location: {0}. \n Please reload your window."
 }

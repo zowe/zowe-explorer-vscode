@@ -226,88 +226,6 @@ describe("Extension Integration Tests", async () => {
         }).timeout(TIMEOUT);
     });
 
-    describe("Allocate Like", () => {
-        it("should allocate a copy of the requested data set", async () => {
-            const testOriginalName = pattern + ".EXT.SAMPLE.PDS";
-            const testOriginalNode = new ZoweDatasetNode(
-                testOriginalName,
-                vscode.TreeItemCollapsibleState.Collapsed,
-                sessionNode,
-                session
-            );
-            const testCopyName = pattern + ".EXT.ALLOC.LIKE";
-
-            const inputStub = sandbox.stub(vscode.window, "showInputBox");
-            inputStub.onCall(0).returns(testCopyName);
-
-            await dsActions.allocateLike(testTree, testOriginalNode);
-
-            const response = await zowe.List.dataSet(sessionNode.getSession(), testCopyName, {});
-            expect(response.success).to.equal(true);
-
-            // Clean up .EXT.ALLOC.LIKE
-            try {
-                await zowe.Delete.dataSet(session, testCopyName);
-            } catch (err) {
-                // Do nothing
-            }
-        }).timeout(TIMEOUT);
-    });
-
-    describe("Deactivate", () => {
-        it("should clean up the local files when deactivate is invoked", async () => {
-            try {
-                fs.mkdirSync(ZOWETEMPFOLDER);
-                fs.mkdirSync(DS_DIR);
-            } catch (err) {
-                // if operation failed, wait a second and try again
-                await new Promise((resolve) => setTimeout(resolve, 1000));
-                fs.mkdirSync(DS_DIR);
-            }
-            fs.closeSync(fs.openSync(path.join(DS_DIR, "file1"), "w"));
-            fs.closeSync(fs.openSync(path.join(DS_DIR, "file2"), "w"));
-            await extension.deactivate();
-            expect(fs.existsSync(path.join(DS_DIR, "file1"))).to.equal(false);
-            expect(fs.existsSync(path.join(DS_DIR, "file2"))).to.equal(false);
-        }).timeout(TIMEOUT);
-    });
-
-    describe("Tests for Deleting Data Sets", () => {
-        const dataSetName = pattern + ".EXT.DELETE.DATASET.TEST";
-        beforeEach(async () => {
-            try {
-                await zowe.Delete.dataSet(sessionNode.getSession(), dataSetName);
-                // tslint:disable-next-line: no-empty
-            } catch {}
-        });
-        afterEach(async () => {
-            try {
-                await zowe.Delete.dataSet(sessionNode.getSession(), dataSetName);
-                // tslint:disable-next-line: no-empty
-            } catch {}
-        });
-        it("should delete a data set", async () => {
-            await zowe.Create.dataSet(
-                sessionNode.getSession(),
-                zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL,
-                dataSetName
-            );
-            const testNode = new ZoweDatasetNode(
-                dataSetName,
-                vscode.TreeItemCollapsibleState.None,
-                sessionNode,
-                session
-            );
-
-            // Mock user selecting first option from list
-            await dsActions.deleteDataset(testNode, testTree);
-
-            const response = await zowe.List.dataSet(session, dataSetName);
-
-            expect(response.apiResponse.items).to.deep.equal([]);
-        }).timeout(TIMEOUT);
-    });
-
     describe("Enter Pattern", () => {
         it("should output data sets that match the user-provided pattern", async () => {
             const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
@@ -320,7 +238,6 @@ describe("Extension Integration Tests", async () => {
             expect(testTree.mSessionNodes[1].collapsibleState).to.equal(vscode.TreeItemCollapsibleState.Expanded);
 
             const childrenFromTree = await sessionNode.getChildren();
-            childrenFromTree.unshift(...(await childrenFromTree[0].getChildren()));
 
             await testTree.getTreeView().reveal(childrenFromTree[0], { select: true });
             const loadedItems = await testTree.getAllLoadedItems();
@@ -382,6 +299,71 @@ describe("Extension Integration Tests", async () => {
             inputBoxStub.returns(pattern);
 
             await dsActions.enterPattern(sessionNode, testTree);
+        }).timeout(TIMEOUT);
+    });
+
+    describe("Allocate Like", () => {
+        it("should allocate a copy of the requested data set", async () => {
+            const testOriginalName = pattern + ".EXT.SAMPLE.PDS";
+            const testOriginalNode = new ZoweDatasetNode(
+                testOriginalName,
+                vscode.TreeItemCollapsibleState.Collapsed,
+                sessionNode,
+                session
+            );
+            const testCopyName = pattern + ".ALLOC.LIKE";
+
+            const inputStub = sandbox.stub(vscode.window, "showInputBox");
+            inputStub.onCall(0).returns(testCopyName);
+
+            await dsActions.allocateLike(testTree, testOriginalNode);
+
+            const response = await zowe.List.dataSet(sessionNode.getSession(), testCopyName, {});
+            expect(response.success).to.equal(true);
+
+            // Clean up .ALLOC.LIKE
+            try {
+                await zowe.Delete.dataSet(session, testCopyName);
+            } catch (err) {
+                // Do nothing
+            }
+        }).timeout(TIMEOUT);
+    });
+
+    describe("Tests for Deleting Data Sets", () => {
+        const dataSetName = pattern + ".DELETE.TEST";
+        it("should delete a data set", async () => {
+            const testNode = new ZoweDatasetNode(
+                dataSetName,
+                vscode.TreeItemCollapsibleState.None,
+                sessionNode,
+                session
+            );
+
+            // Mock user selecting first option from list
+            await dsActions.deleteDataset(testNode, testTree);
+
+            const response = await zowe.List.dataSet(session, dataSetName);
+
+            expect(response.apiResponse.items).to.deep.equal([]);
+        }).timeout(TIMEOUT);
+    });
+
+    describe("Deactivate", () => {
+        it("should clean up the local files when deactivate is invoked", async () => {
+            try {
+                fs.mkdirSync(ZOWETEMPFOLDER);
+                fs.mkdirSync(DS_DIR);
+            } catch (err) {
+                // if operation failed, wait a second and try again
+                await new Promise((resolve) => setTimeout(resolve, 1000));
+                fs.mkdirSync(DS_DIR);
+            }
+            fs.closeSync(fs.openSync(path.join(DS_DIR, "file1"), "w"));
+            fs.closeSync(fs.openSync(path.join(DS_DIR, "file2"), "w"));
+            await extension.deactivate();
+            expect(fs.existsSync(path.join(DS_DIR, "file1"))).to.equal(false);
+            expect(fs.existsSync(path.join(DS_DIR, "file2"))).to.equal(false);
         }).timeout(TIMEOUT);
     });
 
@@ -1144,13 +1126,14 @@ async function getAllNodes(nodes: IZoweTreeNode[]) {
     let allNodes = new Array<IZoweTreeNode>();
 
     for (const node of nodes) {
-        allNodes = allNodes.concat(await getAllNodes(await node.getChildren()));
+        let nodeChildren = await node.getChildren();
+        nodeChildren = nodeChildren.filter((item) => !item.label.includes("No datasets found"));
+        allNodes = allNodes.concat(await getAllNodes(nodeChildren));
         allNodes.push(node);
     }
 
     return allNodes;
 }
-
 describe("Extension Integration Tests - USS", () => {
     const expect = chai.expect;
     chai.use(chaiAsPromised);

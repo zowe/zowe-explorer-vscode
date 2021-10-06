@@ -1,0 +1,8 @@
+{
+  "messages": [
+    "Invalid Credentials. Please ensure the username and password for {0} are valid or this may lead to a lock-out.",
+    "Your connection is no longer active. Please log in to an authentication service to restore the connection."
+  ],
+  "keys": ["errorHandling.invalid.credentials", "errorHandling.invalid.token"],
+  "filePath": "src\\utils\\ProfilesUtils"
+}

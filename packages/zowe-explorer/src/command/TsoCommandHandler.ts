@@ -51,9 +51,14 @@ export class TsoCommandHandler extends ZoweCommandProvider {
     private static readonly defaultDialogText: string =
         "\uFF0B " + localize("command.option.prompt.search", "Create a new TSO Command");
     private static instance: TsoCommandHandler;
+    public outputChannel: vscode.OutputChannel;
 
     constructor() {
         super();
+
+        this.outputChannel = vscode.window.createOutputChannel(
+            localize("issueTsoCommand.outputchannel.title", "Zowe TSO Command")
+        );
     }
 
     /**
@@ -132,6 +137,9 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                     let tsoParams: IStartTsoParms;
                     if (profile.type === "zosmf") {
                         tsoParams = await this.getTsoParams();
+                        if (!tsoParams) {
+                            return;
+                        }
                     }
                     let command1: string = command;
                     if (!command) {

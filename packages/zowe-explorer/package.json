@@ -659,6 +659,11 @@
         }
       },
       {
+        "command": "zowe.all.config.init",
+        "title": "%all.configInit%",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.jobs.refreshJob",
         "title": "%jobs.refreshJob%",
         "category": "Zowe Explorer"
@@ -1671,8 +1676,6 @@
     "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
     "test:theia": "mocha ./out/__tests__/__theia__/*.theia.test.js --timeout 50000",
     "test": "yarn test:unit",
-    "pretest:integration": "ts-node ../../scripts/create-env.ts",
-    "posttest:integration": "ts-node ../../scripts/clean-env.ts",
     "updateStrings": "node ../../scripts/stringUpdateScript.js && prettier --write  --loglevel warn ./i18n package.nls*",
     "package": "vsce package --yarn && node ../../scripts/mv-pack.js vscode-extension-for-zowe vsix",
     "license": "node ../../scripts/license.js",
@@ -1686,7 +1689,8 @@
     "clean": "gulp clean",
     "lintErrors": "echo \"zowe-explorer: lintErrors coming soon with eslint.\"",
     "pretty": "prettier --write .",
-    "createTestProfileData": "ts-node ./scripts/createTestProfileData.ts"
+    "createTestProfileData": "ts-node ./scripts/createTestProfileData.ts",
+    "createDemoNodes": "ts-node ./scripts/createDemoNodes.ts"
   },
   "engines": {
     "vscode": "^1.43.0"
@@ -1746,7 +1750,6 @@
     "js-yaml": "3.13.1",
     "moment": "2.24.0",
     "promise-queue": "2.2.5",
-    "true-case-path": "2.2.1",
     "yamljs": "0.3.0"
   },
   "jest": {
@@ -1788,7 +1791,10 @@
       "text",
       "cobertura"
     ],
-    "coverageDirectory": "<rootDir>/results/unit/coverage"
+    "coverageDirectory": "<rootDir>/results/unit/coverage",
+    "setupFilesAfterEnv": [
+      "<rootDir>/__tests__/__unit__/jest.setup.ts"
+    ]
   },
   "jest-html-reporter": {
     "pageTitle": "Zowe Extension Tests",

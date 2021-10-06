@@ -21,6 +21,7 @@ import {
     createISession,
     createFileResponse,
     createInstanceOfProfile,
+    createTextDocument,
 } from "../../../__mocks__/mockCreators/shared";
 import { ProfilesCache } from "@zowe/zowe-explorer-api";
 import { createDatasetSessionNode } from "../../../__mocks__/mockCreators/datasets";
@@ -114,7 +115,7 @@ describe("Shared Utils Unit Tests - Function node.labelRefresh()", () => {
     });
 });
 
-describe("syncSession shared util function", () => {
+describe("syncSessionNode shared util function", () => {
     const serviceProfileName = "test";
     const serviceProfileValue = {
         name: serviceProfileName,
@@ -187,6 +188,21 @@ describe("syncSession shared util function", () => {
         const initialProfile = sessionNode.getProfile();
         expect(sessionNode.getSession()).toEqual(initialSession);
         expect(sessionNode.getProfile()).toEqual(initialProfile);
+        expect(sessionNode.collapsibleState).toEqual(vscode.TreeItemCollapsibleState.Collapsed);
+    });
+    it("should not try to combine service and base profiles when no base profile exists", async () => {
+        const getCombinedProfileSpy = jest.spyOn(Profiles.getInstance(), "getCombinedProfile");
+        const profiles = createInstanceOfProfile(serviceProfile);
+        profiles.loadNamedProfile = jest.fn(() => serviceProfileValue);
+        profiles.getBaseProfile = jest.fn(() => undefined);
+        const expectedSession = new Session({});
+        const sessionFromProfile = () => expectedSession;
+        // when
+        await utils.syncSessionNode(profiles)(sessionFromProfile)(sessionNode);
+        // then
+        expect(getCombinedProfileSpy).toBeCalledTimes(0);
+        expect(sessionNode.getSession()).toEqual(expectedSession);
+        expect(sessionNode.getProfile()).toEqual(serviceProfileValue);
         expect(sessionNode.collapsibleState).toEqual(vscode.TreeItemCollapsibleState.Collapsed);
     });
 });
@@ -330,12 +346,13 @@ describe("Test force upload", () => {
             getMvsApi: jest.fn(),
             getUssApi: jest.fn(),
             withProgress: jest.fn(),
-            fileResponse: createFileResponse({ etag: null }),
+            fileResponse: createFileResponse([{ etag: null }]),
             ProgressLocation: jest.fn().mockImplementation(() => {
                 return {
                     Notification: 15,
                 };
             }),
+            mockDoc: createTextDocument("mocDoc"),
         };
 
         Object.defineProperty(vscode.window, "showInformationMessage", {
@@ -355,6 +372,19 @@ describe("Test force upload", () => {
             configurable: true,
         });
         Object.defineProperty(vscode.window, "withProgress", { value: newVariables.withProgress, configurable: true });
+        Object.defineProperty(vscode.window, "activeTextEditor", { value: { edit: jest.fn() }, configurable: true });
+        Object.defineProperty(vscode, "Position", {
+            value: jest.fn(() => {
+                return {};
+            }),
+            configurable: true,
+        });
+        Object.defineProperty(vscode, "Range", {
+            value: jest.fn(() => {
+                return {};
+            }),
+            configurable: true,
+        });
         Object.defineProperty(vscode, "ProgressLocation", { value: newVariables.ProgressLocation, configurable: true });
 
         return newVariables;
@@ -364,7 +394,7 @@ describe("Test force upload", () => {
         const blockMocks = await createBlockMocks();
         blockMocks.showInformationMessage.mockResolvedValueOnce("Yes");
         blockMocks.withProgress.mockResolvedValueOnce(blockMocks.fileResponse);
-        await sharedUtils.willForceUpload(blockMocks.ussNode, null, null);
+        await sharedUtils.willForceUpload(blockMocks.ussNode, blockMocks.mockDoc, null);
         expect(blockMocks.withProgress).toBeCalledWith(
             {
                 location: vscode.ProgressLocation.Notification,
@@ -378,7 +408,7 @@ describe("Test force upload", () => {
         const blockMocks = await createBlockMocks();
         blockMocks.showInformationMessage.mockResolvedValueOnce("Yes");
         blockMocks.withProgress.mockResolvedValueOnce(blockMocks.fileResponse);
-        await sharedUtils.willForceUpload(blockMocks.dsNode, null, null);
+        await sharedUtils.willForceUpload(blockMocks.dsNode, blockMocks.mockDoc, null);
         expect(blockMocks.withProgress).toBeCalledWith(
             {
                 location: vscode.ProgressLocation.Notification,
@@ -391,7 +421,7 @@ describe("Test force upload", () => {
     it("should cancel upload if user clicks 'No'", async () => {
         const blockMocks = await createBlockMocks();
         blockMocks.showInformationMessage.mockResolvedValueOnce("No");
-        await sharedUtils.willForceUpload(blockMocks.dsNode, null, null);
+        await sharedUtils.willForceUpload(blockMocks.dsNode, blockMocks.mockDoc, null);
         expect(blockMocks.showInformationMessage.mock.calls[1][0]).toBe("Upload cancelled.");
     });
 
@@ -399,7 +429,7 @@ describe("Test force upload", () => {
         const blockMocks = await createBlockMocks();
         Object.defineProperty(globals, "ISTHEIA", { value: true });
         blockMocks.showInformationMessage.mockResolvedValueOnce("No");
-        await sharedUtils.willForceUpload(blockMocks.dsNode, null, null);
+        await sharedUtils.willForceUpload(blockMocks.dsNode, blockMocks.mockDoc, null);
         expect(blockMocks.showWarningMessage.mock.calls[0][0]).toBe(
             "A merge conflict has been detected. Since you are running inside Theia editor, a merge conflict resolution is not available yet."
         );

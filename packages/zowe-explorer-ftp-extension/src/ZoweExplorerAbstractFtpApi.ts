@@ -66,11 +66,44 @@ export abstract class AbstractFtpApi implements ZoweExplorerApi.ICommon {
             secureFtp: ftpProfile.secureFtp,
         });
     }
+
     public releaseConnection(connection: any): void {
         if (connection != null) {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access
             connection.close();
             return;
+        }
+    }
+
+    public async getStatus(validateProfile?: imperative.IProfileLoaded, profileType?: string): Promise<string> {
+        if (profileType === "zftp") {
+            let sessionStatus;
+            /* check the ftp connection to validate the profile */
+            try {
+                sessionStatus = await this.ftpClient(this.checkedProfile());
+            } catch (e) {
+                /* The errMsg should be consistent with the errMsg in ProfilesUtils.ts of zowe-explorer */
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access
+                if (e.message.indexOf("failed") !== -1 || e.message.indexOf("missing") !== -1) {
+                    const errMsg =
+                        // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
+                        "Invalid Credentials. Please ensure the username and password for " +
+                        validateProfile?.name +
+                        " are valid or this may lead to a lock-out.";
+
+                    throw new imperative.ImperativeError({ msg: errMsg, causeErrors: [e] });
+                } else {
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+                    throw new imperative.ImperativeError({ msg: e.message, causeErrors: [e] });
+                }
+            }
+            if (sessionStatus) {
+                return "active";
+            } else {
+                return "inactive";
+            }
+        } else {
+            return "unverified";
         }
     }
 }

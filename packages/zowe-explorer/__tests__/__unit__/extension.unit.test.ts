@@ -106,6 +106,7 @@ async function createGlobalMocks() {
             allProfiles: [{ name: "firstName" }, { name: "secondName" }],
             defaultProfile: { name: "firstName" },
             getDefaultProfile: null,
+            getBaseProfile: jest.fn(),
             loadNamedProfile: null,
             validProfile: ValidProfileEnum.VALID,
             checkCurrentProfile: jest.fn(),
@@ -120,6 +121,7 @@ async function createGlobalMocks() {
         mockExtension: null,
         appName: vscode.env.appName,
         expectedCommands: [
+            "zowe.all.config.init",
             "zowe.ds.addSession",
             "zowe.ds.addFavorite",
             "zowe.ds.refreshAll",

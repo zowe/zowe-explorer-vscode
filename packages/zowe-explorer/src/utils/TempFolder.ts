@@ -30,7 +30,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 //  * @param previousTempPath temp path settings value before updated by user
 //  * @param currentTempPath temp path settings value after updated by user
 //  */
-export function moveTempFolder(previousTempPath: string, currentTempPath: string) {
+export async function moveTempFolder(previousTempPath: string, currentTempPath: string) {
     // Re-define globals with updated path
     globals.defineGlobals(currentTempPath);
 
@@ -50,7 +50,7 @@ export function moveTempFolder(previousTempPath: string, currentTempPath: string
         globals.LOG.error(
             localize("moveTempFolder.error", "Error encountered when creating temporary folder! ") + JSON.stringify(err)
         );
-        errorHandling(
+        await errorHandling(
             err,
             null,
             localize("moveTempFolder.error", "Error encountered when creating temporary folder! ") + err.message
