@@ -16,10 +16,11 @@ import * as tmp from "tmp";
 import * as zowe from "@zowe/cli";
 import * as imperative from "@zowe/imperative";
 
-import { ZoweExplorerApi } from "@zowe/zowe-explorer-api";
+import { MessageSeverityEnum, ZoweExplorerApi } from "@zowe/zowe-explorer-api";
 import { CoreUtils, UssUtils, TRANSFER_TYPE_ASCII, TRANSFER_TYPE_BINARY } from "@zowe/zos-ftp-for-zowe-cli";
 import { Buffer } from "buffer";
 import { AbstractFtpApi } from "./ZoweExplorerAbstractFtpApi";
+import { ZoweLogger } from "./extension";
 
 // The Zowe FTP CLI plugin is written and uses mostly JavaScript, so relax the rules here.
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
@@ -72,6 +73,7 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
                 result.commandResponse = "";
                 result.apiResponse.etag = await this.hashFile(targetFile);
             } else {
+                ZoweLogger.logImperativeMessage(result.commandResponse, MessageSeverityEnum.ERROR);
                 throw new Error(result.commandResponse);
             }
             return result;
@@ -97,6 +99,7 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
         try {
             connection = await this.ftpClient(this.checkedProfile());
             if (!connection) {
+                ZoweLogger.logImperativeMessage(result.commandResponse, MessageSeverityEnum.ERROR);
                 throw new Error(result.commandResponse);
             }
             // Save-Save with FTP requires loading the file first
@@ -115,6 +118,10 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
                     loadResult.apiResponse.etag !== etag
                 ) {
                     // TODO: extension.ts should not check for zosmf errors.
+                    ZoweLogger.logImperativeMessage(
+                        "Rest API failure with HTTP(S) status 412",
+                        MessageSeverityEnum.ERROR
+                    );
                     throw new Error("Rest API failure with HTTP(S) status 412");
                 }
             }
@@ -141,6 +148,10 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
 
         // Check if inputDirectory is directory
         if (!imperative.IO.isDir(inputDirectoryPath)) {
+            ZoweLogger.logImperativeMessage(
+                "The local directory path provided does not exist.",
+                MessageSeverityEnum.ERROR
+            );
             throw new Error("The local directory path provided does not exist.");
         }
         // getting list of files from directory
@@ -178,6 +189,7 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
                 result.success = true;
                 result.commandResponse = "Directory or file created.";
             } else {
+                ZoweLogger.logImperativeMessage(result.commandResponse, MessageSeverityEnum.ERROR);
                 throw new Error(result.commandResponse);
             }
             return result;
@@ -200,6 +212,7 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
                 result.success = true;
                 result.commandResponse = "Delete completed.";
             } else {
+                ZoweLogger.logImperativeMessage(result.commandResponse, MessageSeverityEnum.ERROR);
                 throw new Error(result.commandResponse);
             }
             return result;
@@ -218,6 +231,7 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
                 result.success = true;
                 result.commandResponse = "Rename completed.";
             } else {
+                ZoweLogger.logImperativeMessage(result.commandResponse, MessageSeverityEnum.ERROR);
                 throw new Error(result.commandResponse);
             }
             return result;

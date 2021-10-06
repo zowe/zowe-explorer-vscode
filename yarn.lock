@@ -2102,6 +2102,13 @@
   resolved "https://registry.npmjs.org/@zowe/zosmf-for-zowe-sdk/-/zosmf-for-zowe-sdk-6.31.1.tgz#e7eb5af29ce8f3ce16ce3e3043cf1e39a875ed72"
   integrity sha512-yopao1OgY0L10KMnTiGKFTErLy/o9sNcGjSudC+UZ4tO84350qOekvv0vZEuSAVii5n4rAMnqlP2yFQzcvM0oA==
 
+"@zowe/zowe-explorer-api@file:dist/zowe-zowe-explorer-api-1.20.0-SNAPSHOT.tgz":
+  version "1.20.0-SNAPSHOT"
+  resolved "file:dist/zowe-zowe-explorer-api-1.20.0-SNAPSHOT.tgz#7e121e92747937321bc166455718baed7b596ab1"
+  dependencies:
+    "@zowe/cli" "6.31.1"
+    semver "^7.3.5"
+
 abab@^2.0.0, abab@^2.0.3:
   version "2.0.5"
   resolved "https://registry.npmjs.org/abab/-/abab-2.0.5.tgz#c0b678fb32d60fc1219c784d6a826fe385aeb79a"

@@ -12,12 +12,13 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import * as imperative from "@zowe/imperative";
 import { FTPConfig, IZosFTPProfile } from "@zowe/zos-ftp-for-zowe-cli";
-import { ZoweExplorerApi } from "@zowe/zowe-explorer-api";
+import { MessageSeverityEnum, ZoweExplorerApi } from "@zowe/zowe-explorer-api";
+import { ZoweLogger } from "./extension";
 
 export abstract class AbstractFtpApi implements ZoweExplorerApi.ICommon {
     private session?: imperative.Session;
 
-    public constructor(public profile?: imperative.IProfileLoaded) {}
+    public constructor(public profile?: imperative.IProfileLoaded) { }
 
     public static getProfileTypeName(): string {
         return "zftp";
@@ -27,6 +28,10 @@ export abstract class AbstractFtpApi implements ZoweExplorerApi.ICommon {
         if (!this.session) {
             const ftpProfile = (profile || this.profile)?.profile;
             if (!ftpProfile) {
+                ZoweLogger.logImperativeMessage(
+                    "Internal error: ZoweVscFtpRestApi instance was not initialized with a valid Zowe profile.",
+                    MessageSeverityEnum.FATAL
+                );
                 throw new Error(
                     "Internal error: ZoweVscFtpRestApi instance was not initialized with a valid Zowe profile."
                 );
@@ -48,6 +53,10 @@ export abstract class AbstractFtpApi implements ZoweExplorerApi.ICommon {
 
     public checkedProfile(): imperative.IProfileLoaded {
         if (!this.profile?.profile) {
+            ZoweLogger.logImperativeMessage(
+                "Internal error: ZoweVscFtpRestApi instance was not initialized with a valid Zowe profile.",
+                MessageSeverityEnum.FATAL
+            );
             throw new Error(
                 "Internal error: ZoweVscFtpRestApi instance was not initialized with a valid Zowe profile."
             );
@@ -91,9 +100,11 @@ export abstract class AbstractFtpApi implements ZoweExplorerApi.ICommon {
                         validateProfile?.name +
                         " are valid or this may lead to a lock-out.";
 
+                    ZoweLogger.logImperativeMessage(errMsg, MessageSeverityEnum.ERROR);
                     throw new imperative.ImperativeError({ msg: errMsg, causeErrors: [e] });
                 } else {
                     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+                    ZoweLogger.logImperativeMessage(e.message, MessageSeverityEnum.ERROR);
                     throw new imperative.ImperativeError({ msg: e.message, causeErrors: [e] });
                 }
             }
