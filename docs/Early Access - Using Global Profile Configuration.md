@@ -1,8 +1,8 @@
 # Zowe Explorer Profile Configuration
 
-Zowe Explorer @Next enables you to use the team configuration file that centralizes and simplifies your profile management.
+Zowe Explorer vNext enables you to use the team configuration file that centralizes and simplifies your profile management.
 
-> @Next is developed by the [Zowe CLI Squad](https://github.com/zowe/zowe-cli/blob/next/docs/Early%20Access%20-%20Using%20Global%20Profile%20Configuration.md).
+> vNext is developed by the [Zowe CLI Squad](https://github.com/zowe/zowe-cli/blob/next/docs/Early%20Access%20-%20Using%20Global%20Profile%20Configuration.md).
 
 You can configure global profiles and project-specific profiles.
 
@@ -10,13 +10,14 @@ You can configure global profiles and project-specific profiles.
 
 Meet the following software requirements before you use the team configuration file:
 
-1. Install [Zowe CLI @next version](https://github.com/zowe/zowe-cli/blob/next/docs/Early%20Access%20-%20Using%20Global%20Profile%20Configuration.md#installing-next-version).
+1. Install [Zowe CLI vNext version](https://github.com/zowe/zowe-cli/blob/next/docs/Early%20Access%20-%20Using%20Global%20Profile%20Configuration.md#installing-next-version).
 
-   Ensure that the CLI and @Next versions are compatible.
+   Ensure that Zowe Explorer and the CLI versions are compatible.
 
-   | Zowe Explorer Version    | Zowe SDK Version        |
+   | Zowe Explorer version    | Zowe CLI version        |
    | ------------------------ | ----------------------- |
    | v2.0.0-next.202107151328 | 7.0.0-next.202106012053 |
+   | v2.0.0-next.tbd          | 7.0.0-next.202108202027 |
 
 2. [Initialize](https://github.com/zowe/zowe-cli/blob/next/docs/Early%20Access%20-%20Using%20Global%20Profile%20Configuration.md#initializing-global-configuration) the Global Configuration file.
 
@@ -24,13 +25,13 @@ Meet the following software requirements before you use the team configuration f
 
 3. [Customize](https://github.com/zowe/zowe-cli/blob/next/docs/Early%20Access%20-%20Using%20Global%20Profile%20Configuration.md#editing-configuration) the Global Configuration file.
 
-## Install the @Next Release version
+## Install the vNext Release version
 
-Install @Next.
+Install vNext.
 
 **Follow these steps**:
 
-1. Download the latest [@Next release version](https://github.com/zowe/vscode-extension-for-zowe/releases) from the Zowe Explorer Github release page.
+1. Download the latest [vNext release version](https://github.com/zowe/vscode-extension-for-zowe/releases) from the Zowe Explorer Github release page.
 2. Open VS Code.
 3. Navigate to **File** > **Preferences** > **Extensions** > **Install from vsix\*\***.
 4. Select the .vsix file to install.
@@ -49,13 +50,26 @@ You can now use your global or project-specific profile.
 
 ## Profile Configuration
 
-The global profile functionality simplifies profile management by enabling you to edit, store, and share mainframe configuration details in one location. You can use a text editor or an IDE to populate configuration files with connection details for your mainframe services. By default, your global configuration profile is located in .zowe home folder, whereas a project-level configuration file is located in the main directory of your project.
+The global profile functionality simplifies profile management by enabling you to edit, store, and share mainframe configuration details in one location. You can use a text editor or an IDE to populate configuration files with connection details for your mainframe services. By default, your global configuration file is located in .zowe home folder, whereas a project-level configuration file is located in the main directory of your project.
 
 **Note**: A project context takes precedence over global configuration.
 
+### Create a Team Configuration File
+
+Create a team configuration file.
+
+1. Navigate to the explorer tree.
+2. Hover over **DATA SETS**, **USS**, or **JOBS**.
+3. Click the **+** icon.
+4. Select **Create a New Team Configuration File**.
+5. Chose either a global configuration file or a project-level configuration file.
+6. Reload your VS Code window when prompted.
+
+Your team configuration file appears either in your `.zowe` folder if you choose the global configuration file option, or in your workspace directory if you choose the project-level configuration file option.
+
 ### Manage a Profile
 
-You can edit your project-level or global configuration profiles.
+You can edit your project-level or global configuration files.
 
 **Follow these steps**:
 
@@ -66,7 +80,9 @@ You can edit your project-level or global configuration profiles.
 
 3. Reload your VS Code window by clicking **View** > **Command Palette** > **Developer: Reload Window** so that the changes take effect.
 
-You successfully edited your configuration profile.
+   Alternatively, press F1 to open the command palette, type and execute the **Developer: Reload Window** option.
+
+You successfully edited your configuration file.
 
 ### Sample Profile Configuration
 
