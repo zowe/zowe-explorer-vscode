@@ -15,19 +15,19 @@ import * as globals from "../globals";
 
 // Dictionary describing translation from old configuration names to new standardized names
 const configurationDictionary = {
-    "Zowe-Default-Datasets-Binary": "zowe.ds.default.binary",
-    "Zowe-Default-Datasets-C": "zowe.ds.default.c",
-    "Zowe-Default-Datasets-Classic": "zowe.ds.default.classic",
-    "Zowe-Default-Datasets-PDS": "zowe.ds.default.pds",
-    "Zowe-Default-Datasets-PS": "zowe.ds.default.ps",
-    "Zowe-Temp-Folder-Location": "zowe.files.temporaryDownloadsFolder.path",
-    "Zowe Security: Credential Key": "zowe.security.credentialPlugin",
-    "Zowe Commands: History": "zowe.commands.history",
-    "Zowe Commands: Always edit": "zowe.commands.alwaysEdit",
-    "Zowe-Automatic-Validation": "zowe.automaticProfileValidation",
-    "Zowe-DS-Persistent": "zowe.ds.history",
-    "Zowe-USS-Persistent": "zowe.uss.history",
-    "Zowe-Jobs-Persistent": "zowe.jobs.history",
+    "Zowe-Default-Datasets-Binary": globals.SETTINGS_DS_DEFAULT_BINARY,
+    "Zowe-Default-Datasets-C": globals.SETTINGS_DS_DEFAULT_C,
+    "Zowe-Default-Datasets-Classic": globals.SETTINGS_DS_DEFAULT_CLASSIC,
+    "Zowe-Default-Datasets-PDS": globals.SETTINGS_DS_DEFAULT_PDS,
+    "Zowe-Default-Datasets-PS": globals.SETTINGS_DS_DEFAULT_PS,
+    "Zowe-Temp-Folder-Location": globals.SETTINGS_TEMP_FOLDER_PATH,
+    "Zowe Security: Credential Key": globals.SETTINGS_SECURITY_CREDENTIAL_PLUGIN,
+    "Zowe Commands: History": globals.SETTINGS_COMMANDS_HISTORY,
+    "Zowe Commands: Always edit": globals.SETTINGS_COMMANDS_ALWAYS_EDIT,
+    "Zowe-Automatic-Validation": globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION,
+    "Zowe-DS-Persistent": globals.SETTINGS_DS_HISTORY,
+    "Zowe-USS-Persistent": globals.SETTINGS_USS_HISTORY,
+    "Zowe-Jobs-Persistent": globals.SETTINGS_JOBS_HISTORY,
 };
 
 const configurations = vscode.workspace.getConfiguration();

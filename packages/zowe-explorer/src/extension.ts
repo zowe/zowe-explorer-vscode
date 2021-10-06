@@ -148,12 +148,12 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             moveTempFolder(preferencesTempPath, updatedPreferencesTempPath);
             preferencesTempPath = updatedPreferencesTempPath;
         }
-        if (e.affectsConfiguration("zowe.automaticProfileValidation")) {
+        if (e.affectsConfiguration(globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION)) {
             await refreshActions.refreshAll(datasetProvider);
             await refreshActions.refreshAll(ussFileProvider);
             await refreshActions.refreshAll(jobsProvider);
         }
-        if (e.affectsConfiguration("zowe.files.temporaryDownloadsFolder.hide")) {
+        if (e.affectsConfiguration(globals.SETTINGS_TEMP_FOLDER_HIDE)) {
             hideTempFolder(getZoweDir());
         }
     });

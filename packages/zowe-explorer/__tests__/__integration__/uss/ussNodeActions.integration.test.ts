@@ -19,7 +19,7 @@ import * as testConst from "../../../resources/testProfileData";
 import * as vscode from "vscode";
 import { USSTree } from "../../../src/uss/USSTree";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
-import { DS_SESSION_CONTEXT } from "../../../src/globals";
+import * as globals from "../../../src/globals";
 
 const TIMEOUT = 45000;
 declare var it: Mocha.ITestDefinition;
@@ -59,7 +59,7 @@ describe("ussNodeActions integration test", async () => {
         false,
         testProfile.name
     );
-    sessionNode.contextValue = DS_SESSION_CONTEXT;
+    sessionNode.contextValue = globals.DS_SESSION_CONTEXT;
     const testTree = new USSTree();
     testTree.mSessionNodes.push(sessionNode);
 
@@ -75,12 +75,12 @@ describe("ussNodeActions integration test", async () => {
         sandbox.restore();
     });
 
-    const oldSettings = vscode.workspace.getConfiguration("zowe.uss.history");
+    const oldSettings = vscode.workspace.getConfiguration(globals.SETTINGS_USS_HISTORY);
 
     after(async () => {
         await vscode.workspace
             .getConfiguration()
-            .update("zowe.uss.history", oldSettings, vscode.ConfigurationTarget.Global);
+            .update(globals.SETTINGS_USS_HISTORY, oldSettings, vscode.ConfigurationTarget.Global);
     });
 
     describe("Initialize USS Favorites", async () => {
@@ -99,7 +99,11 @@ describe("ussNodeActions integration test", async () => {
             ];
             await vscode.workspace
                 .getConfiguration()
-                .update("zowe.uss.history", { persistence: true, favorites }, vscode.ConfigurationTarget.Global);
+                .update(
+                    globals.SETTINGS_USS_HISTORY,
+                    { persistence: true, favorites },
+                    vscode.ConfigurationTarget.Global
+                );
             await testTree.initializeFavorites(Logger.getAppLogger());
             const initializedFavProfileLabels = [`${profileName}`, "badProfileName"];
             const goodProfileFavLabels = ["tester1", "testfile1", "tester2", "testfile2"];

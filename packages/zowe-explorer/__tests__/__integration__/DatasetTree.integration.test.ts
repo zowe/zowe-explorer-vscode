@@ -20,7 +20,7 @@ import * as testConst from "../../resources/testProfileData";
 import * as sinon from "sinon";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
-import { DS_SESSION_CONTEXT, FAV_PROFILE_CONTEXT } from "../../src/globals";
+import * as globals from "../../src/globals";
 
 declare var it: any;
 
@@ -58,17 +58,17 @@ describe("DatasetTree Integration Tests", async () => {
         undefined,
         testProfile
     );
-    sessNode.contextValue = DS_SESSION_CONTEXT;
+    sessNode.contextValue = globals.DS_SESSION_CONTEXT;
     const pattern = testConst.normalPattern.toUpperCase();
     sessNode.pattern = pattern + ".PUBLIC";
     const testTree = new DatasetTree();
     testTree.mSessionNodes.splice(-1, 0, sessNode);
-    const oldSettings = vscode.workspace.getConfiguration("zowe.ds.history");
+    const oldSettings = vscode.workspace.getConfiguration(globals.SETTINGS_DS_HISTORY);
 
     after(async () => {
         await vscode.workspace
             .getConfiguration()
-            .update("zowe.ds.history", oldSettings, vscode.ConfigurationTarget.Global);
+            .update(globals.SETTINGS_DS_HISTORY, oldSettings, vscode.ConfigurationTarget.Global);
     });
     let sandbox;
 
@@ -212,7 +212,7 @@ describe("DatasetTree Integration Tests", async () => {
     it("Tests the addSession() function by adding the default history, deleting, then adding a passed session then deleting", async () => {
         let len: number;
         for (const sess of testTree.mSessionNodes) {
-            if (sess.contextValue === DS_SESSION_CONTEXT) {
+            if (sess.contextValue === globals.DS_SESSION_CONTEXT) {
                 testTree.deleteSession(sess);
             }
         }
@@ -221,7 +221,7 @@ describe("DatasetTree Integration Tests", async () => {
         expect(testTree.mSessionNodes.length).toBeGreaterThan(len);
         len = testTree.mSessionNodes.length;
         for (const sess of testTree.mSessionNodes) {
-            if (sess.contextValue === DS_SESSION_CONTEXT) {
+            if (sess.contextValue === globals.DS_SESSION_CONTEXT) {
                 testTree.deleteSession(sess);
             }
         }
@@ -236,7 +236,7 @@ describe("DatasetTree Integration Tests", async () => {
                 vscode.TreeItemCollapsibleState.Expanded,
                 null,
                 session,
-                FAV_PROFILE_CONTEXT,
+                globals.FAV_PROFILE_CONTEXT,
                 undefined,
                 testProfile
             );
@@ -419,7 +419,7 @@ describe("DatasetTree Integration Tests", async () => {
                         vscode.TreeItemCollapsibleState.Expanded,
                         null,
                         session,
-                        FAV_PROFILE_CONTEXT,
+                        globals.FAV_PROFILE_CONTEXT,
                         undefined,
                         testProfile
                     );

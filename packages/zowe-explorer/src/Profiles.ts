@@ -39,6 +39,7 @@ import {
 } from "@zowe/zowe-explorer-api";
 import { errorHandling, FilterDescriptor, FilterItem, resolveQuickPickHelper, isTheia } from "./utils/ProfilesUtils";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
+import * as globals from "./globals";
 
 import * as nls from "vscode-nls";
 
@@ -70,9 +71,9 @@ export class Profiles extends ProfilesCache {
 
     public loadedProfile: IProfileLoaded;
     public validProfile: ValidProfileEnum = ValidProfileEnum.INVALID;
-    private dsSchema: string = "zowe.ds.history";
-    private ussSchema: string = "zowe.uss.history";
-    private jobsSchema: string = "zowe.jobs.history";
+    private dsSchema: string = globals.SETTINGS_DS_HISTORY;
+    private ussSchema: string = globals.SETTINGS_USS_HISTORY;
+    private jobsSchema: string = globals.SETTINGS_JOBS_HISTORY;
     public constructor(log: Logger) {
         super(log);
     }

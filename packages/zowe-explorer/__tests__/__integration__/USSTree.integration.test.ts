@@ -21,7 +21,7 @@ import * as vscode from "vscode";
 import * as testConst from "../../resources/testProfileData";
 import { USSTree } from "../../src/uss/USSTree";
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
-import { USS_SESSION_CONTEXT, FAV_PROFILE_CONTEXT } from "../../src/globals";
+import * as globals from "../../src/globals";
 
 declare var it: any;
 
@@ -60,7 +60,7 @@ describe("USSTree Integration Tests", async () => {
         false,
         testProfile.name
     );
-    sessNode.contextValue = USS_SESSION_CONTEXT;
+    sessNode.contextValue = globals.USS_SESSION_CONTEXT;
     const path = testConst.ussPattern;
     sessNode.fullPath = path;
     const testTree = new USSTree();
@@ -77,12 +77,12 @@ describe("USSTree Integration Tests", async () => {
         sandbox.restore();
     });
 
-    const oldSettings = vscode.workspace.getConfiguration("zowe.uss.history");
+    const oldSettings = vscode.workspace.getConfiguration(globals.SETTINGS_USS_HISTORY);
 
     after(async () => {
         await vscode.workspace
             .getConfiguration()
-            .update("zowe.uss.history", oldSettings, vscode.ConfigurationTarget.Global);
+            .update(globals.SETTINGS_USS_HISTORY, oldSettings, vscode.ConfigurationTarget.Global);
     });
 
     /*************************************************************************************************************
@@ -260,7 +260,7 @@ describe("USSTree Integration Tests", async () => {
                 null,
                 null
             );
-            favProfileNode.contextValue = FAV_PROFILE_CONTEXT;
+            favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
             testTree.mFavorites.push(favProfileNode);
         });
         afterEach(() => {

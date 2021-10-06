@@ -52,6 +52,7 @@ import {
     FAV_PROFILE_CONTEXT,
 } from "../../src/globals";
 import { PersistentFilters } from "../../src/PersistentFilters";
+import * as globals from "../../src/globals";
 
 const TIMEOUT = 45000;
 declare var it: Mocha.ITestDefinition;
@@ -98,10 +99,10 @@ describe("Extension Integration Tests", async () => {
     testTree.mSessionNodes.push(sessionNode);
 
     let sandbox;
-    const tempSettings = PersistentFilters.getDirectValue("zowe.files.temporaryDownloadsFolder.cleanup");
+    const tempSettings = PersistentFilters.getDirectValue(globals.SETTINGS_TEMP_FOLDER_CLEANUP);
     await vscode.workspace
         .getConfiguration()
-        .update("zowe.files.temporaryDownloadsFolder.cleanup", true, vscode.ConfigurationTarget.Global);
+        .update(globals.SETTINGS_TEMP_FOLDER_CLEANUP, true, vscode.ConfigurationTarget.Global);
 
     beforeEach(async function () {
         this.timeout(TIMEOUT);
@@ -121,15 +122,15 @@ describe("Extension Integration Tests", async () => {
         sandbox.restore();
     });
 
-    const dsSettings = vscode.workspace.getConfiguration("zowe.ds.history");
+    const dsSettings = vscode.workspace.getConfiguration(globals.SETTINGS_DS_HISTORY);
 
     after(async () => {
         await vscode.workspace
             .getConfiguration()
-            .update("zowe.ds.history", dsSettings, vscode.ConfigurationTarget.Global);
+            .update(globals.SETTINGS_DS_HISTORY, dsSettings, vscode.ConfigurationTarget.Global);
         await vscode.workspace
             .getConfiguration()
-            .update("zowe.files.temporaryDownloadsFolder.cleanup", tempSettings, vscode.ConfigurationTarget.Global);
+            .update(globals.SETTINGS_TEMP_FOLDER_CLEANUP, tempSettings, vscode.ConfigurationTarget.Global);
     });
 
     describe("Creating a Session", () => {
@@ -1000,7 +1001,7 @@ describe("Extension Integration Tests", async () => {
             fs.mkdirSync(testingPath);
             await vscode.workspace
                 .getConfiguration()
-                .update("zowe.files.temporaryDownloadsFolder.path", testingPath, vscode.ConfigurationTarget.Global);
+                .update(globals.SETTINGS_TEMP_FOLDER_PATH, testingPath, vscode.ConfigurationTarget.Global);
 
             // expect(extension.ZOWETEMPFOLDER).to.equal(`${testingPath}/temp`);
             expect(ZOWETEMPFOLDER).to.equal(path.join(testingPath, "temp"));
@@ -1016,12 +1017,12 @@ describe("Extension Integration Tests", async () => {
             // set first preference
             await vscode.workspace
                 .getConfiguration()
-                .update("zowe.files.temporaryDownloadsFolder.path", providedPathOne, vscode.ConfigurationTarget.Global);
+                .update(globals.SETTINGS_TEMP_FOLDER_PATH, providedPathOne, vscode.ConfigurationTarget.Global);
 
             // change preference and test for update
             await vscode.workspace
                 .getConfiguration()
-                .update("zowe.files.temporaryDownloadsFolder.path", providedPathTwo, vscode.ConfigurationTarget.Global);
+                .update(globals.SETTINGS_TEMP_FOLDER_PATH, providedPathTwo, vscode.ConfigurationTarget.Global);
 
             // expect(extension.ZOWETEMPFOLDER).to.equal(`${providedPathTwo}/temp`);
             expect(ZOWETEMPFOLDER).to.equal(path.join(providedPathTwo, "temp"));
@@ -1035,7 +1036,7 @@ describe("Extension Integration Tests", async () => {
             const expectedDefaultTemp = path.join(__dirname, "..", "..", "..", "resources", "temp");
             await vscode.workspace
                 .getConfiguration()
-                .update("zowe.files.temporaryDownloadsFolder.path", "", vscode.ConfigurationTarget.Global);
+                .update(globals.SETTINGS_TEMP_FOLDER_PATH, "", vscode.ConfigurationTarget.Global);
             expect(ZOWETEMPFOLDER).to.equal(expectedDefaultTemp);
         }).timeout(TIMEOUT);
     });
@@ -1045,7 +1046,11 @@ describe("Extension Integration Tests", async () => {
             const log = Logger.getAppLogger();
             await vscode.workspace
                 .getConfiguration()
-                .update("zowe.ds.history", { persistence: true, favorites: [] }, vscode.ConfigurationTarget.Global);
+                .update(
+                    globals.SETTINGS_DS_HISTORY,
+                    { persistence: true, favorites: [] },
+                    vscode.ConfigurationTarget.Global
+                );
             const testTree3 = await createDatasetTree(log);
             expect(testTree3.mFavorites).to.deep.equal([]);
         }).timeout(TIMEOUT);
@@ -1061,7 +1066,11 @@ describe("Extension Integration Tests", async () => {
             ];
             await vscode.workspace
                 .getConfiguration()
-                .update("zowe.ds.history", { persistence: true, favorites }, vscode.ConfigurationTarget.Global);
+                .update(
+                    globals.SETTINGS_DS_HISTORY,
+                    { persistence: true, favorites },
+                    vscode.ConfigurationTarget.Global
+                );
             const testTree3 = await createDatasetTree(log);
             const initializedFavLabels = [
                 `${pattern}.EXT.PDS`,
@@ -1078,7 +1087,11 @@ describe("Extension Integration Tests", async () => {
             const favorites = [pattern + ".EXT.PDS[profileName]{pds}", corruptedFavorite];
             await vscode.workspace
                 .getConfiguration()
-                .update("zowe.ds.history", { persistence: true, favorites }, vscode.ConfigurationTarget.Global);
+                .update(
+                    globals.SETTINGS_DS_HISTORY,
+                    { persistence: true, favorites },
+                    vscode.ConfigurationTarget.Global
+                );
             const logWarnStub = sandbox.spy(log, "warn");
             await createDatasetTree(log);
             expect(logWarnStub.gotCalledOnce);
@@ -1099,7 +1112,11 @@ describe("Extension Integration Tests", async () => {
             ];
             await vscode.workspace
                 .getConfiguration()
-                .update("zowe.ds.history", { persistence: true, favorites }, vscode.ConfigurationTarget.Global);
+                .update(
+                    globals.SETTINGS_DS_HISTORY,
+                    { persistence: true, favorites },
+                    vscode.ConfigurationTarget.Global
+                );
             await testTree.initializeFavorites(log);
             const initializedFavProfileLabels = [`${profileName}`, "badProfileName"];
             const goodProfileFavLabels = [

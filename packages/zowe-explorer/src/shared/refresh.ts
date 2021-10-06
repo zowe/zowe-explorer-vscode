@@ -17,6 +17,7 @@ import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { resetValidationSettings, returnIconState } from "./actions";
 import { labelRefresh } from "./utils";
 import * as contextually from "../shared/context";
+import * as globals from "../globals";
 
 /**
  * View (DATA SETS, JOBS, USS) refresh button
@@ -27,7 +28,9 @@ import * as contextually from "../shared/context";
 export async function refreshAll(treeProvider: IZoweTree<IZoweTreeNode>) {
     await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
     treeProvider.mSessionNodes.forEach(async (sessNode) => {
-        const setting = (await PersistentFilters.getDirectValue("zowe.automaticProfileValidation")) as boolean;
+        const setting = (await PersistentFilters.getDirectValue(
+            globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION
+        )) as boolean;
         if (contextually.isSessionNotFav(sessNode)) {
             labelRefresh(sessNode);
             sessNode.children = [];

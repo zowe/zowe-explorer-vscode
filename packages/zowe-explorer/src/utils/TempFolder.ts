@@ -107,7 +107,7 @@ export async function cleanDir(directory) {
 export async function cleanTempDir() {
     // Get temp folder cleanup preference from settings
     const preferencesTempCleanupEnabled = PersistentFilters.getDirectValue(
-        "zowe.files.temporaryDownloadsFolder.cleanup"
+        globals.SETTINGS_TEMP_FOLDER_CLEANUP
     ) as boolean;
     // logger hasn't necessarily been initialized yet, don't use the `log` in this function
     if (!fs.existsSync(globals.ZOWETEMPFOLDER) || !preferencesTempCleanupEnabled) {
@@ -126,7 +126,7 @@ export async function cleanTempDir() {
  * @export
  */
 export async function hideTempFolder(zoweDir: string) {
-    if (PersistentFilters.getDirectValue("zowe.files.temporaryDownloadsFolder.hide") as boolean) {
+    if (PersistentFilters.getDirectValue(globals.SETTINGS_TEMP_FOLDER_HIDE) as boolean) {
         vscode.workspace
             .getConfiguration("files")
             .update("exclude", { [zoweDir]: true, [globals.ZOWETEMPFOLDER]: true }, vscode.ConfigurationTarget.Global);
