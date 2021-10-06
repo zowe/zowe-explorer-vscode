@@ -41,6 +41,7 @@ async function createGlobalMocks() {
         showQuickPick: jest.fn(),
         renameUSSFile: jest.fn(),
         showInformationMessage: jest.fn(),
+        mockShowWarningMessage: jest.fn(),
         showErrorMessage: jest.fn(),
         showInputBox: jest.fn(),
         filters: jest.fn(),
@@ -90,7 +91,10 @@ async function createGlobalMocks() {
         { name: "firstName" },
         { name: "secondName" },
     ];
-
+    Object.defineProperty(vscode.window, "showWarningMessage", {
+        value: globalMocks.mockShowWarningMessage,
+        configurable: true,
+    });
     Object.defineProperty(workspaceUtils, "closeOpenedTextFile", {
         value: globalMocks.closeOpenedTextFile,
         configurable: true,
@@ -445,7 +449,7 @@ describe("USSTree Unit Tests - Function USSTree.removeFavProfile", () => {
         // Make sure favorite is added before the actual unit test
         expect(globalMocks.testTree.mFavorites.length).toEqual(1);
 
-        globalMocks.showQuickPick.mockResolvedValueOnce("Continue");
+        globalMocks.mockShowWarningMessage.mockResolvedValueOnce("Continue");
         await globalMocks.testTree.removeFavProfile(blockMocks.profileNodeInFavs.label, true);
 
         // Check that favorite is removed from UI
@@ -460,7 +464,7 @@ describe("USSTree Unit Tests - Function USSTree.removeFavProfile", () => {
         expect(globalMocks.testTree.mFavorites.length).toEqual(1);
         const expectedFavProfileNode = globalMocks.testTree.mFavorites[0];
 
-        globalMocks.showQuickPick.mockResolvedValueOnce("Cancel");
+        globalMocks.mockShowWarningMessage.mockResolvedValueOnce("Cancel");
         await globalMocks.testTree.removeFavProfile(blockMocks.profileNodeInFavs.label, true);
 
         expect(globalMocks.testTree.mFavorites.length).toEqual(1);

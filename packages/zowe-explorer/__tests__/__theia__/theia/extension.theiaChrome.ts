@@ -98,13 +98,13 @@ export async function removeFavoriteProfileFromDatasets() {
     await driverChrome
         .wait(until.elementLocated(By.xpath(DatasetsLocators.removeFavoriteProfileFromDatasetsOptionXpath)), WAITTIME)
         .click();
-    const removeFavoriteInputBox = await driverChrome.wait(
-        until.elementLocated(By.xpath(DatasetsLocators.emptyInputBoxXpath)),
-        WAITTIME
-    );
-    removeFavoriteInputBox.sendKeys("Continue");
     await driverChrome.sleep(SHORTSLEEPTIME);
-    removeFavoriteInputBox.sendKeys(Key.ENTER);
+    await driverChrome
+        .wait(
+            until.elementLocated(By.xpath(TheiaNotificationMessages.removeFavoriteProfileConfirmationXpath)),
+            WAITTIME
+        )
+        .click();
 }
 
 export async function removeFavoriteProfileFromUss() {
@@ -117,13 +117,13 @@ export async function removeFavoriteProfileFromUss() {
     await driverChrome
         .wait(until.elementLocated(By.xpath(UssLocators.removeFavoriteProfileFromUssOptionXpath)), WAITTIME)
         .click();
-    const removeFavoriteInputBox = await driverChrome.wait(
-        until.elementLocated(By.xpath(UssLocators.emptyInputBoxXpath)),
-        WAITTIME
-    );
-    removeFavoriteInputBox.sendKeys("Continue");
     await driverChrome.sleep(SHORTSLEEPTIME);
-    removeFavoriteInputBox.sendKeys(Key.ENTER);
+    await driverChrome
+        .wait(
+            until.elementLocated(By.xpath(TheiaNotificationMessages.removeFavoriteProfileConfirmationXpath)),
+            WAITTIME
+        )
+        .click();
 }
 
 export async function removeFavoriteProfileFromJobs() {
@@ -136,12 +136,13 @@ export async function removeFavoriteProfileFromJobs() {
     await driverChrome
         .wait(until.elementLocated(By.xpath(JobsLocators.removeFavoriteProfileFromJobsOptionXpath)), WAITTIME)
         .click();
-    const removeFavoriteInputBox = await driverChrome.wait(
-        until.elementLocated(By.xpath(JobsLocators.emptyInputBoxXpath)),
-        WAITTIME
-    );
-    removeFavoriteInputBox.sendKeys("Continue");
-    removeFavoriteInputBox.sendKeys(Key.ENTER);
+    await driverChrome.sleep(SHORTSLEEPTIME);
+    await driverChrome
+        .wait(
+            until.elementLocated(By.xpath(TheiaNotificationMessages.removeFavoriteProfileConfirmationXpath)),
+            WAITTIME
+        )
+        .click();
 }
 
 export async function addProfileToFavoritesInDatasets() {
