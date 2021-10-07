@@ -52,9 +52,9 @@ async function promptReload() {
     const reloadButton = localize("standardization.reload.button", "Reload Window");
     const infoMsg = localize(
         "standardization.reload.infoMessage",
-        "Settings have been migrated successfully, please reload VS Code window."
+        "Settings have been successfully migrated for Zowe Explorer version 2 and above. To apply these settings, please reload your VS Code window."
     );
-    await vscode.window.showInformationMessage(infoMsg, ...[reloadButton]).then(async (selection) => {
+    await vscode.window.showInformationMessage(infoMsg, ...[reloadButton])?.then(async (selection) => {
         if (selection === reloadButton) {
             await vscode.commands.executeCommand("workbench.action.reloadWindow");
         }
