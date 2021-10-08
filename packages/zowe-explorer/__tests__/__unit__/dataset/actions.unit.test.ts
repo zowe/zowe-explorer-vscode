@@ -613,7 +613,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         );
     });
 
-    it("Should delete one dataset and one member", async () => {
+    it("Should delete one dataset and one member but only the parent will be listed in output", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
 
@@ -625,7 +625,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
         expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith(
-            `The following 2 item(s) were deleted: ${blockMocks.testDatasetNode.getLabel()}(${blockMocks.testMemberNode.getLabel()}), ${blockMocks.testDatasetNode.getLabel()}`
+            `The following 1 item(s) were deleted: ${blockMocks.testDatasetNode.getLabel()}`
         );
     });
 
