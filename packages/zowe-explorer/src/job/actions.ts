@@ -298,13 +298,20 @@ export async function deleteCommand(job: IZoweJobTreeNode, jobsProvider: IZoweTr
                 deletedNodes.toString().replace(/(,)/g, ", ")
             )
         );
+        await Promise.all(
+            nodes
+                .map((node) => node.getSessionNode())
+                .filter((jobSession, index, jobSessions) => jobSessions.indexOf(jobSession) === index)
+                .map((jobSession) => refreshJobsServer(jobSession, jobsProvider))
+        );
     }
     // Delete a single job node
     if (job && nodes.length <= 0) {
-        jobsProvider.delete(job);
+        await jobsProvider.delete(job);
         vscode.window.showInformationMessage(
             localize("deleteCommand.job", "Job {0} deleted.", `${job.job.jobname}(${job.job.jobid})`)
         );
+        const jobSession = job.getSessionNode();
+        await refreshJobsServer(jobSession, jobsProvider);
     }
-    await vscode.commands.executeCommand("zowe.jobs.refreshAllJobs");
 }
