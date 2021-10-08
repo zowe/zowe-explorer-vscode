@@ -16,7 +16,6 @@
 const path = require("path");
 var webpack = require("webpack");
 var fs = require("fs");
-const { features } = require("process");
 
 /**@type {import('webpack').Configuration}*/
 const config = {
