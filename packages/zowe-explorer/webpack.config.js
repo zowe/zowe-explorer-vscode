@@ -16,6 +16,7 @@
 const path = require("path");
 var webpack = require("webpack");
 var fs = require("fs");
+const { features } = require("process");
 
 /**@type {import('webpack').Configuration}*/
 const config = {
@@ -36,6 +37,7 @@ const config = {
         "spdx-exceptions": "commonjs spdx-exceptions",
         "spdx-license-ids": "commonjs spdx-license-ids",
         "spdx-license-ids/deprecated": "commonjs spdx-license-ids/deprecated",
+        "cpu-features": "commonjs cpu-features",
     },
     resolve: {
         // support reading TypeScript and JavaScript files, 📖 -> https://github.com/TypeStrong/ts-loader
