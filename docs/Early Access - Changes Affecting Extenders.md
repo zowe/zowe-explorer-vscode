@@ -16,7 +16,7 @@ Zowe Explorer's view IDs have been updated to improve the consistency of the for
 
 ### Overview of new standardized name settings
 
-The following table describes the changes from old to new standardized names for Zowe Explorer configurations:
+The following table describes the changes from old to new standardized names for Zowe Explorer configurations, These changes were made to conform to VS Code's [configuration schema](https://code.visualstudio.com/api/references/contribution-points#Configuration-schema):
 
 | Version 1 Setting Name          | Version 2 Setting Name                     |
 | ------------------------------- | ------------------------------------------ |
@@ -46,8 +46,8 @@ The following table describes the changes from old to new standardized names for
 
 ### What Will Happen To My Old Setting Configurations?
 
-- The old settings will be migrated to the new settings as long as they are present in their old configuration names and were not under the default settings whether they were stored under the user, workspace, or both settings in VSCode.
+- The old settings will be migrated to the new settings as long as they are present in their old configuration names and were not under the default settings whether they were stored under the user, workspace, or both settings in VS Code.
 
 ### What To Do With My Old Settings?
 
-- Upon loading up vscode Zowe Explorer will performed an automated migration of the old user settings to the new standardized settings. After this is completed, the older settings will appear greyed out meaning they can be manually removed since they will no longer be of use.
+- Upon loading up VS Code Zowe Explorer will performed an automated migration of the old user settings to the new standardized settings. After this is completed, the older settings will appear greyed out meaning they can be manually removed since they will no longer be of use.
