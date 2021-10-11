@@ -12,7 +12,7 @@
 import * as zowe from "@zowe/cli";
 import * as imperative from "@zowe/imperative";
 
-import { MessageSeverityEnum, ZoweExplorerApi } from "@zowe/zowe-explorer-api";
+import { MessageSeverityEnum, ZoweExplorerApi, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { JobUtils, DataSetUtils, TRANSFER_TYPE_ASCII } from "@zowe/zos-ftp-for-zowe-cli";
 import { DownloadJobs, IJobFile } from "@zowe/cli";
 import { IJob, IJobStatus, ISpoolFile } from "@zowe/zos-ftp-for-zowe-cli/lib/api/JobInterface";
@@ -119,7 +119,12 @@ export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
                 const destination = parms.outDir == null ? "./output/" : parms.outDir;
                 const jobDetails = await JobUtils.findJobByID(connection, parms.jobid);
                 if (jobDetails.spoolFiles == null || jobDetails.spoolFiles.length === 0) {
-                    throw new Error("No spool files were available.");
+                    ZoweVsCodeExtension.showVsCodeMessage(
+                        "No spool files were available.",
+                        MessageSeverityEnum.ERROR,
+                        ZoweLogger
+                    );
+                    throw new Error();
                 }
                 const fullSpoolFiles = await JobUtils.getSpoolFiles(connection, jobDetails.jobid);
                 for (const spoolFileToDownload of fullSpoolFiles) {
@@ -183,13 +188,21 @@ export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
     }
 
     public getJclForJob(job: zowe.IJob): Promise<string> {
-        ZoweLogger.logImperativeMessage("Get jcl is not supported in the FTP extension.", MessageSeverityEnum.ERROR);
-        throw new Error("Get jcl is not supported in the FTP extension.");
+        ZoweVsCodeExtension.showVsCodeMessage(
+            "Get jcl is not supported in the FTP extension.",
+            MessageSeverityEnum.ERROR,
+            ZoweLogger
+        );
+        throw new Error();
     }
 
     public submitJcl(jcl: string, internalReaderRecfm?: string, internalReaderLrecl?: string): Promise<zowe.IJob> {
-        ZoweLogger.logImperativeMessage("Submit jcl is not supported in the FTP extension.", MessageSeverityEnum.ERROR);
-        throw new Error("Submit jcl is not supported in the FTP extension.");
+        ZoweVsCodeExtension.showVsCodeMessage(
+            "Submit jcl is not supported in the FTP extension.",
+            MessageSeverityEnum.ERROR,
+            ZoweLogger
+        );
+        throw new Error();
     }
 
     public async submitJob(jobDataSet: string): Promise<zowe.IJob> {

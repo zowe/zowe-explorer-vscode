@@ -60,7 +60,12 @@ export class IZoweLogger {
      *
      */
     public logImperativeMessage(message: string, severity: MessageSeverityEnum): void {
-        const messageWithExtensionName = `Error in extension ${this.extensionName}: ${message}`;
+        let messageWithExtensionName;
+        if (severity < 3) {
+            messageWithExtensionName = `Info from extension ${this.extensionName}: ${message}`;
+        } else {
+            messageWithExtensionName = `Error in extension ${this.extensionName}: ${message}`;
+        }
         switch (severity) {
             case MessageSeverityEnum.TRACE:
                 this.log.trace(messageWithExtensionName);

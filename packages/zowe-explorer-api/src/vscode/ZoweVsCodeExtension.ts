@@ -45,10 +45,11 @@ export class ZoweVsCodeExtension {
     public static showVsCodeMessage(message: string, severity: MessageSeverityEnum, logger: IZoweLogger): void {
         logger.logImperativeMessage(message, severity);
 
-        const errorMessage = `${logger.getExtensionName()} error: ${message}`;
         if (severity < 3) {
+            const errorMessage = `${logger.getExtensionName()} info: ${message}`;
             void vscode.window.showInformationMessage(errorMessage);
         } else {
+            const errorMessage = `${logger.getExtensionName()} error: ${message}`;
             void vscode.window.showErrorMessage(errorMessage);
         }
     }

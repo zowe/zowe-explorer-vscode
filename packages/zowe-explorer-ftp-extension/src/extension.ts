@@ -10,13 +10,17 @@
  */
 
 import * as vscode from "vscode";
+import * as path from "path";
 import { IZoweLogger, MessageSeverityEnum, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { FtpUssApi } from "./ZoweExplorerFtpUssApi";
 import { FtpMvsApi } from "./ZoweExplorerFtpMvsApi";
 import { FtpJesApi } from "./ZoweExplorerFtpJesApi";
 import { CoreUtils } from "@zowe/zos-ftp-for-zowe-cli";
 
-export const ZoweLogger = new IZoweLogger("Zowe Explorer FTP Extension", "./zowe-explorer-ftp-extension");
+export const ZoweLogger = new IZoweLogger(
+    "Zowe Explorer FTP Extension",
+    path.join(__dirname, "..", "..", "imperative-logs")
+);
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function activate(context: vscode.ExtensionContext): void {
