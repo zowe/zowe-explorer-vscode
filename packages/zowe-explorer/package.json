@@ -1518,7 +1518,19 @@
       "type": "object",
       "title": "%configuration.title%",
       "properties": {
-        "Zowe-Default-Datasets-Binary": {
+        "zowe.files.temporaryDownloadsFolder.hide": {
+          "type": "boolean",
+          "default": false,
+          "description": "%zowe.files.temporaryDownloadsFolder.hide%",
+          "scope": "window"
+        },
+        "zowe.files.temporaryDownloadsFolder.cleanup": {
+          "type": "boolean",
+          "default": true,
+          "description": "%zowe.files.temporaryDownloadsFolder.cleanup%",
+          "scope": "window"
+        },
+        "zowe.ds.default.binary": {
           "default": {
             "dsorg": "PO",
             "alcunit": "CYL",
@@ -1529,10 +1541,10 @@
             "blksize": 27998,
             "lrecl": 27998
           },
-          "description": "%Zowe-Default-Datasets-Binary%",
-          "scope": "window"
+          "description": "%zowe.ds.default.binary%",
+          "scope": "resource"
         },
-        "Zowe-Default-Datasets-C": {
+        "zowe.ds.default.c": {
           "default": {
             "dsorg": "PO",
             "alcunit": "CYL",
@@ -1543,10 +1555,10 @@
             "blksize": 32760,
             "lrecl": 260
           },
-          "description": "%Zowe-Default-Datasets-C%",
-          "scope": "window"
+          "description": "%zowe.ds.default.c%",
+          "scope": "resource"
         },
-        "Zowe-Default-Datasets-Classic": {
+        "zowe.ds.default.classic": {
           "default": {
             "dsorg": "PO",
             "alcunit": "CYL",
@@ -1557,10 +1569,10 @@
             "blksize": 6160,
             "lrecl": 80
           },
-          "description": "%Zowe-Default-Datasets-Classic%",
-          "scope": "window"
+          "description": "%zowe.ds.default.classic%",
+          "scope": "resource"
         },
-        "Zowe-Default-Datasets-PDS": {
+        "zowe.ds.default.pds": {
           "default": {
             "dsorg": "PO",
             "alcunit": "CYL",
@@ -1571,10 +1583,10 @@
             "blksize": 6160,
             "lrecl": 80
           },
-          "description": "%Zowe-Default-Datasets-PDS%",
-          "scope": "window"
+          "description": "%zowe.ds.default.pds%",
+          "scope": "resource"
         },
-        "Zowe-Default-Datasets-PS": {
+        "zowe.ds.default.ps": {
           "default": {
             "dsorg": "PS",
             "alcunit": "CYL",
@@ -1584,90 +1596,74 @@
             "blksize": 6160,
             "lrecl": 80
           },
-          "description": "%Zowe-Default-Datasets-PS%",
-          "scope": "window"
+          "description": "%zowe.ds.default.ps%",
+          "scope": "resource"
         },
-        "Zowe-DS-Persistent": {
+        "zowe.ds.history": {
           "default": {
             "persistence": true,
             "favorites": [],
             "history": [],
             "sessions": []
           },
-          "description": "%Zowe-Default-Datasets-Favorites%",
-          "scope": "window"
+          "description": "%zowe.ds.history%",
+          "scope": "application"
         },
-        "Zowe-Temp-Folder-Location": {
-          "default": {
-            "folderPath": ""
-          },
-          "description": "Zowe-Temp-Folder-Loacation",
-          "scope": "window"
-        },
-        "zowe.files.temporaryDownloadsFolder.hide": {
-          "type": "boolean",
-          "default": false,
-          "description": "%zowe.files.temporaryDownloadsFolder.hide%",
-          "scope": "window"
-        },
-        "Zowe Security: Credential Key": {
+        "zowe.files.temporaryDownloadsFolder.path": {
           "type": "string",
           "default": "",
-          "description": "%Zowe-Builtin-Security%",
+          "description": "%zowe.files.temporaryDownloadsFolder.path%",
           "scope": "window"
         },
-        "Zowe-USS-Persistent": {
+        "zowe.security.credentialPlugin": {
+          "type": "string",
+          "default": "",
+          "description": "%zowe.security.credentialPlugin%",
+          "scope": "resource"
+        },
+        "zowe.uss.history": {
           "default": {
             "persistence": true,
             "favorites": [],
             "history": [],
             "sessions": []
           },
-          "description": "%Zowe-Default-USS-Persistent-Favorites%",
-          "scope": "window"
+          "description": "%zowe.uss.history%",
+          "scope": "application"
         },
-        "Zowe-Jobs-Persistent": {
+        "zowe.jobs.history": {
           "default": {
             "persistence": true,
             "favorites": [],
             "history": [],
             "sessions": []
           },
-          "description": "%Zowe-Default-Jobs-Persistent-Favorites%",
-          "scope": "window"
+          "description": "%zowe.jobs.history%",
+          "scope": "application"
         },
-        "Zowe Commands: Always edit": {
+        "zowe.commands.alwaysEdit": {
           "type": "boolean",
           "default": true,
           "description": "Allow editing of commands before submitting",
           "scope": "window"
         },
-        "Zowe Commands: History": {
+        "zowe.commands.history": {
           "default": {
             "persistence": true,
             "history": []
           },
-          "description": "%Zowe-Default-Commands-Persistent-Favorites%",
-          "scope": "window"
+          "description": "%zowe.commands.history%",
+          "scope": "application"
         },
-        "Zowe-Automatic-Validation": {
+        "zowe.automaticProfileValidation": {
           "type": "boolean",
           "default": true,
-          "description": "%Zowe-Automatic-Validation%",
+          "description": "%zowe.automaticProfileValidation%",
           "scope": "window"
         },
-        "Zowe-Environment": {
-          "default": {
-            "persistence": true,
-            "framework": "vscode"
-          },
-          "description": "%Zowe-Environment%",
-          "scope": "window"
-        },
-        "zowe.files.temporaryDownloadsFolder.cleanup": {
-          "type": "boolean",
-          "default": true,
-          "description": "%zowe.files.temporaryDownloadsFolder.cleanup%",
+        "zowe.settings.version": {
+          "type": "integer",
+          "description": "%zowe.settings.version%",
           "scope": "window"
         }
       }

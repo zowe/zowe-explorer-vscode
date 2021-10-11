@@ -2488,23 +2488,23 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Binary" as any);
         await dsActions.createFile(blockMocks.datasetSessionNode, blockMocks.testDatasetTree);
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("Zowe-Default-Datasets-Binary");
+        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_BINARY);
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set C" as any);
         await dsActions.createFile(blockMocks.datasetSessionNode, blockMocks.testDatasetTree);
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("Zowe-Default-Datasets-C");
+        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_C);
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Classic" as any);
         await dsActions.createFile(blockMocks.datasetSessionNode, blockMocks.testDatasetTree);
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("Zowe-Default-Datasets-Classic");
+        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_CLASSIC);
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Partitioned" as any);
         await dsActions.createFile(blockMocks.datasetSessionNode, blockMocks.testDatasetTree);
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("Zowe-Default-Datasets-PDS");
+        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_PDS);
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Sequential" as any);
         await dsActions.createFile(blockMocks.datasetSessionNode, blockMocks.testDatasetTree);
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("Zowe-Default-Datasets-PS");
+        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_PS);
 
         // tslint:disable-next-line:no-magic-numbers
         expect(createDataSetSpy).toHaveBeenCalledTimes(5);
@@ -2536,23 +2536,23 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Binary" as any);
         await dsActions.createFile(node, blockMocks.testDatasetTree);
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("Zowe-Default-Datasets-Binary");
+        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_BINARY);
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set C" as any);
         await dsActions.createFile(node, blockMocks.testDatasetTree);
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("Zowe-Default-Datasets-C");
+        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_C);
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Classic" as any);
         await dsActions.createFile(node, blockMocks.testDatasetTree);
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("Zowe-Default-Datasets-Classic");
+        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_CLASSIC);
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Partitioned" as any);
         await dsActions.createFile(node, blockMocks.testDatasetTree);
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("Zowe-Default-Datasets-PDS");
+        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_PDS);
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Sequential" as any);
         await dsActions.createFile(node, blockMocks.testDatasetTree);
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("Zowe-Default-Datasets-PS");
+        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_PS);
 
         // tslint:disable-next-line:no-magic-numbers
         expect(createDataSetSpy).toHaveBeenCalledTimes(5);
@@ -2584,23 +2584,23 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Binary" as any);
         await dsActions.createFile(node, blockMocks.testDatasetTree);
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("Zowe-Default-Datasets-Binary");
+        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_BINARY);
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set C" as any);
         await dsActions.createFile(node, blockMocks.testDatasetTree);
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("Zowe-Default-Datasets-C");
+        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_C);
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Classic" as any);
         await dsActions.createFile(node, blockMocks.testDatasetTree);
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("Zowe-Default-Datasets-Classic");
+        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_CLASSIC);
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Partitioned" as any);
         await dsActions.createFile(node, blockMocks.testDatasetTree);
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("Zowe-Default-Datasets-PDS");
+        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_PDS);
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Sequential" as any);
         await dsActions.createFile(node, blockMocks.testDatasetTree);
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("Zowe-Default-Datasets-PS");
+        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_PS);
 
         // tslint:disable-next-line:no-magic-numbers
         expect(createDataSetSpy).toHaveBeenCalledTimes(5);
@@ -2629,7 +2629,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Sequential" as any);
         await dsActions.createFile(node, blockMocks.testDatasetTree);
 
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("Zowe-Default-Datasets-PS");
+        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_PS);
         expect(createDataSetSpy).toHaveBeenCalledWith(zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, "TEST", {
             alcunit: "CYL",
             blksize: 6160,
@@ -2683,7 +2683,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         expect(mocked(vscode.window.showErrorMessage)).toHaveBeenCalledWith(
             "Error encountered when creating data set! Generic Error Error: Generic Error"
         );
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("Zowe-Default-Datasets-PS");
+        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_PS);
         expect(createDataSetSpy).toHaveBeenCalledWith(zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, "TEST", {
             alcunit: "CYL",
             blksize: 6160,

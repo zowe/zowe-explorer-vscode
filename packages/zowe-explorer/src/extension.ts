@@ -41,6 +41,7 @@ import SpoolProvider from "./SpoolProvider";
 import * as nls from "vscode-nls";
 import { TsoCommandHandler } from "./command/TsoCommandHandler";
 import { cleanTempDir, moveTempFolder, hideTempFolder } from "./utils/TempFolder";
+import { standardizeSettings } from "./utils/SettingsConfig";
 import { trueCasePathSync } from "true-case-path";
 
 // Set up localization
@@ -62,7 +63,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     let preferencesTempPath: string = vscode.workspace
         .getConfiguration()
         /* tslint:disable:no-string-literal */
-        .get("Zowe-Temp-Folder-Location")["folderPath"];
+        .get(globals.SETTINGS_TEMP_FOLDER_PATH);
 
     // Determine the runtime framework to support special behavior for Theia
     globals.defineGlobals(preferencesTempPath);
@@ -139,20 +140,20 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     // Register functions & event listeners
     vscode.workspace.onDidChangeConfiguration(async (e) => {
         // If the temp folder location has been changed, update current temp folder preference
-        if (e.affectsConfiguration("Zowe-Temp-Folder-Location")) {
+        if (e.affectsConfiguration(globals.SETTINGS_TEMP_FOLDER_PATH)) {
             const updatedPreferencesTempPath: string = vscode.workspace
                 .getConfiguration()
                 /* tslint:disable:no-string-literal */
-                .get("Zowe-Temp-Folder-Location")["folderPath"];
-            await moveTempFolder(preferencesTempPath, updatedPreferencesTempPath);
+                .get(globals.SETTINGS_TEMP_FOLDER_PATH);
+            moveTempFolder(preferencesTempPath, updatedPreferencesTempPath);
             preferencesTempPath = updatedPreferencesTempPath;
         }
-        if (e.affectsConfiguration("Zowe-Automatic-Validation")) {
+        if (e.affectsConfiguration(globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION)) {
             await refreshActions.refreshAll(datasetProvider);
             await refreshActions.refreshAll(ussFileProvider);
             await refreshActions.refreshAll(jobsProvider);
         }
-        if (e.affectsConfiguration("zowe.files.temporaryDownloadsFolder.hide")) {
+        if (e.affectsConfiguration(globals.SETTINGS_TEMP_FOLDER_HIDE)) {
             hideTempFolder(getZoweDir());
         }
     });
@@ -230,6 +231,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     }
 
     ZoweExplorerExtender.createInstance(datasetProvider, ussFileProvider, jobsProvider);
+
+    await standardizeSettings();
     return ZoweExplorerApiRegister.getInstance();
 }
 

@@ -30,7 +30,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export class ZoweCommandProvider {
     private static readonly totalFilters: number = 10;
-    private static readonly persistenceSchema: string = "Zowe Commands: History";
+    private static readonly persistenceSchema: string = globals.SETTINGS_COMMANDS_HISTORY;
 
     public history: PersistentFilters;
     // Event Emitters used to notify subscribers that the refresh event has fired
