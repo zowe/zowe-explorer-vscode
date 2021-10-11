@@ -16,7 +16,7 @@ Zowe Explorer's view IDs have been updated to improve the consistency of the for
 
 ### Overview of new standardized name settings
 
-The following table describes the changes from old to new standardized names for Zowe Explorer configurations, These changes were made to conform to VS Code's [configuration schema](https://code.visualstudio.com/api/references/contribution-points#Configuration-schema):
+The following table describes the changes from old to new standardized names for Zowe Explorer configurations. These changes were made to conform to VS Code's [configuration schema](https://code.visualstudio.com/api/references/contribution-points#Configuration-schema):
 
 | Version 1 Setting Name          | Version 2 Setting Name                     |
 | ------------------------------- | ------------------------------------------ |
