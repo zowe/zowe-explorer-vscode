@@ -87,6 +87,16 @@ export class CancellationTokenSource {
     dispose(): void {}
 }
 
+export namespace extensions {
+    export function getExtension(identifier: string) {
+        return {
+            packageJSON: {
+                version: "2.0.0",
+            },
+        };
+    }
+}
+
 export namespace window {
     /**
      * Show an information message to users. Optionally provide an array of items which will be presented as
@@ -96,8 +106,8 @@ export namespace window {
      * @param items A set of items that will be rendered as actions in the message.
      * @return A thenable that resolves to the selected item or `undefined` when being dismissed.
      */
-    export function showInformationMessage(message: string, ...items: string[]): undefined {
-        return undefined;
+    export function showInformationMessage(message: string, ...items: string[]): Thenable<string> {
+        return Promise.resolve("");
     }
 
     export function showErrorMessage(message: string, ...items: string[]): undefined {
@@ -340,6 +350,17 @@ export class EventEmitter<T> {
  * the editor-process so that they should be always used instead of nodejs-equivalents.
  */
 export namespace workspace {
+    export function getConfiguration(configuration: string) {
+        return {
+            update: () => {
+                return;
+            },
+            inspect: () => {
+                return {};
+            },
+        };
+    }
+
     /**
      * ~~The folder that is open in the editor. `undefined` when no folder
      * has been opened.~~

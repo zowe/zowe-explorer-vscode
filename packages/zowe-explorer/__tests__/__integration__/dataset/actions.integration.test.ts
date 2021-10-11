@@ -21,7 +21,7 @@ import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import { DatasetTree } from "../../../src/dataset/DatasetTree";
 import * as dsActions from "../../../src/dataset/actions";
 import * as refreshActions from "../../../src/shared/refresh";
-import { DS_SESSION_CONTEXT } from "../../../src/globals";
+import * as globals from "../../../src/globals";
 
 const TIMEOUT = 45000;
 declare var it: Mocha.ITestDefinition;
@@ -61,7 +61,7 @@ describe("dsNodeActions integration test", async () => {
         undefined,
         testProfile
     );
-    sessionNode.contextValue = DS_SESSION_CONTEXT;
+    sessionNode.contextValue = globals.DS_SESSION_CONTEXT;
     const pattern = testConst.normalPattern.toUpperCase();
     sessionNode.pattern = pattern;
     const testTree = new DatasetTree();
@@ -79,12 +79,12 @@ describe("dsNodeActions integration test", async () => {
         sandbox.restore();
     });
 
-    const oldSettings = vscode.workspace.getConfiguration("Zowe-DS-Persistent");
+    const oldSettings = vscode.workspace.getConfiguration(globals.SETTINGS_DS_HISTORY);
 
     after(async () => {
         await vscode.workspace
             .getConfiguration()
-            .update("Zowe-DS-Persistent", oldSettings, vscode.ConfigurationTarget.Global);
+            .update(globals.SETTINGS_DS_HISTORY, oldSettings, vscode.ConfigurationTarget.Global);
     });
 
     describe("Refresh ALL", async () => {

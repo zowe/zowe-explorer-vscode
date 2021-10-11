@@ -106,7 +106,7 @@ function createGlobalMocks() {
     Object.defineProperty(PersistentFilters, "getDirectValue", {
         value: jest.fn(() => {
             return {
-                "Zowe-Automatic-Validation": true,
+                "zowe.automaticProfileValidation": true,
             };
         }),
     });
