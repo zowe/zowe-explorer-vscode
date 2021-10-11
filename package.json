@@ -19,8 +19,7 @@
   },
   "dependencies": {
     "@zowe/cli": "6.33.3",
-    "vscode-nls": "4.1.2",
-    "node-loader": "^2.0.0"
+    "vscode-nls": "4.1.2"
   },
   "devDependencies": {
     "@types/mocha": "^2.2.42",

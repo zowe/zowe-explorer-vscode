@@ -71,10 +71,6 @@ const config = {
                     },
                 ],
             },
-            {
-                test: /\.node$/,
-                loader: "node-loader",
-            },
         ],
     },
     plugins: [new webpack.BannerPlugin(fs.readFileSync("../../scripts/banner.txt", "utf8"))],
