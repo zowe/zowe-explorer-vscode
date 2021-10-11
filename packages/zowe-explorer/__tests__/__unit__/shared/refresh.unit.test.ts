@@ -68,7 +68,7 @@ function createGlobalMocks() {
     Object.defineProperty(PersistentFilters, "getDirectValue", {
         value: jest.fn(() => {
             return {
-                "Zowe-Automatic-Validation": true,
+                "zowe.automaticProfileValidation": true,
             };
         }),
     });
@@ -108,7 +108,7 @@ describe("Refresh Unit Tests - Function refreshAll", () => {
         Object.defineProperty(PersistentFilters, "getDirectValue", {
             value: jest.fn(() => {
                 return {
-                    "Zowe-Automatic-Validation": true,
+                    "zowe.automaticProfileValidation": true,
                 };
             }),
         });

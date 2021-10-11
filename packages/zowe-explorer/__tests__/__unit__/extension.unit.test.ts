@@ -318,7 +318,7 @@ async function createGlobalMocks() {
     Object.defineProperty(PersistentFilters, "getDirectValue", {
         value: jest.fn(() => {
             return {
-                "Zowe-Automatic-Validation": true,
+                "zowe.automaticProfileValidation": true,
             };
         }),
     });
@@ -374,17 +374,18 @@ describe("Extension Unit Tests", () => {
         globalMocks.mockExistsSync.mockReturnValueOnce(false);
         globalMocks.mockGetConfiguration.mockReturnValue({
             persistence: true,
-            get: (setting: string) => [
-                "[test]: /u/myUser{directory}",
-                "[test]: /u/myUser{directory}",
-                "[test]: /u/myUser/file.txt{file}",
-                "[test]: /u{session}",
-            ],
+            get: (setting: string) => "",
             // tslint:disable-next-line: no-empty
             update: jest.fn(() => {
                 {
                 }
             }),
+            inspect: (configuration: string) => {
+                return {
+                    workspaceValue: undefined,
+                    globalValue: undefined,
+                };
+            },
         });
 
         await extension.activate(globalMocks.mockExtension);
@@ -419,12 +420,18 @@ describe("Extension Unit Tests", () => {
 
         globalMocks.mockExistsSync.mockReturnValueOnce(false);
         globalMocks.mockGetConfiguration.mockReturnValueOnce({
-            get: (setting: string) => [""],
+            get: (setting: string) => "",
             // tslint:disable-next-line: no-empty
             update: jest.fn(() => {
                 {
                 }
             }),
+            inspect: (configuration: string) => {
+                return {
+                    workspaceValue: undefined,
+                    globalValue: undefined,
+                };
+            },
         });
         globalMocks.mockGetConfiguration.mockReturnValueOnce({
             get: (setting: string) => "files",
@@ -433,6 +440,12 @@ describe("Extension Unit Tests", () => {
                 {
                 }
             }),
+            inspect: (configuration: string) => {
+                return {
+                    workspaceValue: undefined,
+                    globalValue: undefined,
+                };
+            },
         });
 
         await extension.activate(globalMocks.mockExtension);
@@ -455,6 +468,12 @@ describe("Extension Unit Tests", () => {
                 {
                 }
             }),
+            inspect: (configuration: string) => {
+                return {
+                    workspaceValue: undefined,
+                    globalValue: undefined,
+                };
+            },
         });
         globalMocks.mockGetConfiguration.mockReturnValueOnce({
             get: (setting: string) => "files",
@@ -463,6 +482,12 @@ describe("Extension Unit Tests", () => {
                 {
                 }
             }),
+            inspect: (configuration: string) => {
+                return {
+                    workspaceValue: undefined,
+                    globalValue: undefined,
+                };
+            },
         });
 
         await extension.activate(globalMocks.mockExtension);

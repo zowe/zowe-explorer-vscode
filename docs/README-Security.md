@@ -48,7 +48,7 @@ Although our recommendation is for users to use the latest SCS plugin, this is n
 
 - Click on extensions and select Zowe Explorer (at the very bottom of the list).
 
-- Confirm that the "Zowe Security: Credential Key is set to "Zowe-Plugin".
+- Confirm that the "zowe.security.credentialPlugin is set to "Zowe-Plugin".
 
 <img src="images/ZE-Settings.jpg" width="975">
 
