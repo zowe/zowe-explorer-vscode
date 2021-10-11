@@ -19,7 +19,7 @@ Meet the following software requirements before you use the team configuration f
    | v2.0.0-next.202107151328 | 7.0.0-next.202106012053 |
    | v2.0.0-next.tbd          | 7.0.0-next.202108202027 |
 
-2. Initialize the Global Configuration file by using either [the Zowe CLI](https://github.com/zowe/zowe-cli/blob/next/docs/Early%20Access%20-%20Using%20Global%20Profile%20Configuration.md#initializing-global-configuration) or [Zowe Explorer](#manage-a-profile).
+2. Initialize the Global Configuration file by using either [the Zowe CLI](https://github.com/zowe/zowe-cli/blob/next/docs/Early%20Access%20-%20Using%20Global%20Profile%20Configuration.md#initializing-global-configuration) or [Zowe Explorer](#create-a-team-configuration-file).
 
    Your Zowe home directory should contain the `zowe.config.json` and `zowe.schema.json` files.
 
