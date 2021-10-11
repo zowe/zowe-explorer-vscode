@@ -894,7 +894,7 @@ export class Profiles extends ProfilesCache {
                     const doNotSaveButton = localize("promptCredentials.doNotSave.button", "Do Not Save");
                     const infoMsg = localize(
                         "promptCredentials.saveCredentials.infoMessage",
-                        "Save entered credentials for future use with profile: {0}? Saving credentials will update the local yaml file.",
+                        "Save entered credentials for future use with profile: {0}?\nSaving credentials will update the local yaml file.",
                         loadProfile.name
                     );
                     await vscode.window
