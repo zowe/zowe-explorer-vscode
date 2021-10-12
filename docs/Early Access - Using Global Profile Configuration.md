@@ -17,7 +17,7 @@ Meet the following software requirements before you use the team configuration f
    | Zowe Explorer version    | Zowe CLI version        |
    | ------------------------ | ----------------------- |
    | v2.0.0-next.202107151328 | 7.0.0-next.202106012053 |
-   | v2.0.0-next.tbd          | 7.0.0-next.202108202027 |
+   | v2.0.0-next.tbd          | 7.0.0-next.202109281609 |
 
 2. [Initialize](https://github.com/zowe/zowe-cli/blob/next/docs/Early%20Access%20-%20Using%20Global%20Profile%20Configuration.md#initializing-global-configuration) the Global Configuration file.
 

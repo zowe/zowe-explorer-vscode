@@ -17,8 +17,8 @@
     "@types/semver": "^7.3.6"
   },
   "dependencies": {
-    "semver": "^7.3.5",
-    "@zowe/cli": "7.0.0-next.202108202027"
+    "@zowe/cli": "7.0.0-next.202109281609",
+    "semver": "^7.3.5"
   },
   "scripts": {
     "build": "yarn clean && tsc -p ./",
