@@ -19,11 +19,11 @@ Meet the following software requirements before you use the team configuration f
    | v2.0.0-next.202107151328 | 7.0.0-next.202106012053 |
    | v2.0.0-next.tbd          | 7.0.0-next.202109281609 |
 
-2. [Initialize](https://github.com/zowe/zowe-cli/blob/next/docs/Early%20Access%20-%20Using%20Global%20Profile%20Configuration.md#initializing-global-configuration) the Global Configuration file.
+2. Initialize the Global Configuration file by using either [the Zowe CLI](https://github.com/zowe/zowe-cli/blob/next/docs/Early%20Access%20-%20Using%20Global%20Profile%20Configuration.md#initializing-global-configuration) or [Zowe Explorer](#create-a-team-configuration-file).
 
    Your Zowe home directory should contain the `zowe.config.json` and `zowe.schema.json` files.
 
-3. [Customize](https://github.com/zowe/zowe-cli/blob/next/docs/Early%20Access%20-%20Using%20Global%20Profile%20Configuration.md#editing-configuration) the Global Configuration file.
+3. Customize the Global Configuration file by using either [the Zowe CLI](https://github.com/zowe/zowe-cli/blob/next/docs/Early%20Access%20-%20Using%20Global%20Profile%20Configuration.md#editing-configuration) or [Zowe Explorer](#manage-a-profile).
 
 ## Install the vNext Release version
 
@@ -31,7 +31,7 @@ Install vNext.
 
 **Follow these steps**:
 
-1. Download the latest [vNext release version](https://github.com/zowe/vscode-extension-for-zowe/releases) from the Zowe Explorer Github release page.
+1. Download the [vNext-enabled Zowe Explorer version](https://github.com/zowe/vscode-extension-for-zowe/releases) from the Zowe Explorer Github release page.
 2. Open VS Code.
 3. Navigate to **File** > **Preferences** > **Extensions** > **Install from vsix\*\***.
 4. Select the .vsix file to install.
