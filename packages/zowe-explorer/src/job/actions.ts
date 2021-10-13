@@ -305,8 +305,8 @@ const deleteMultipleJobs = async (
         jobs.length,
         jobs.map(toJobname).toString().replace(/(,)/g, "\n")
     );
-    const result = await vscode.window.showWarningMessage(message, { modal: true }, deleteButton);
-    if (!result || result === "Cancel") {
+    const deleteChoice = await vscode.window.showWarningMessage(message, { modal: true }, deleteButton);
+    if (!deleteChoice || deleteChoice === "Cancel") {
         globals.LOG.debug(localize("deleteJobPrompt.confirmation.cancel.log.debug", "Delete action was canceled."));
         vscode.window.showInformationMessage(
             localize("deleteJobPrompt.deleteCancelled", "Delete action was cancelled.")
@@ -325,7 +325,9 @@ const deleteMultipleJobs = async (
     );
     const deletedJobs: ReadonlyArray<IZoweJobTreeNode> = deletionResult
         .map((result) => {
-            if (result instanceof Error) return undefined;
+            if (result instanceof Error) {
+                return undefined;
+            }
             return result;
         })
         .filter((result) => result !== undefined);
