@@ -46,7 +46,7 @@
   },
   "dependencies": {
     "@zowe/zos-ftp-for-zowe-cli": "1.5.0",
-    "@zowe/zowe-explorer-api": "file:../../dist/zowe-zowe-explorer-api-1.20.0-SNAPSHOT.tgz",
+    "@zowe/zowe-explorer-api": "1.20.0-SNAPSHOT",
     "tmp": "0.2.1"
   },
   "devDependencies": {
