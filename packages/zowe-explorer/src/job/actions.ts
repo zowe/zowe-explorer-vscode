@@ -282,7 +282,12 @@ const deleteSingleJob = async (job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZ
         );
         return;
     }
-    await jobsProvider.delete(job);
+    try {
+        await jobsProvider.delete(job);
+    } catch (error) {
+        await errorHandling(error.toString(), job.getProfile().name, error.message.toString());
+        return;
+    }
     const jobSession = job.getSessionNode();
     await refreshJobsServer(jobSession, jobsProvider);
     vscode.window.showInformationMessage(localize("deleteCommand.job", "Job {0} deleted.", jobName));
@@ -308,18 +313,49 @@ const deleteMultipleJobs = async (
         );
         return;
     }
-    await Promise.all(jobs.map((job) => jobsProvider.delete(job)));
-    await Promise.all(
-        jobs
-            .map((jobNode) => jobNode.getSessionNode())
-            .filter((jobSession, index, jobSessions) => jobSessions.indexOf(jobSession) === index)
-            .map((jobSession) => refreshJobsServer(jobSession, jobsProvider))
+    const deletionResult: ReadonlyArray<IZoweJobTreeNode | Error> = await Promise.all(
+        jobs.map(async (job) => {
+            try {
+                await jobsProvider.delete(job);
+                return job;
+            } catch (error) {
+                return error;
+            }
+        })
     );
-    vscode.window.showInformationMessage(
-        localize(
-            "deleteCommand.multipleJobs",
-            "The following jobs were deleted: {0}",
-            jobs.map(toJobname).toString().replace(/(,)/g, ", ")
-        )
-    );
+    const deletedJobs: ReadonlyArray<IZoweJobTreeNode> = deletionResult
+        .map((result) => {
+            if (result instanceof Error) return undefined;
+            return result;
+        })
+        .filter((result) => result !== undefined);
+    if (deletedJobs.length) {
+        await Promise.all(
+            deletedJobs
+                .map((jobNode) => jobNode.getSessionNode())
+                .filter((jobSession, index, jobSessions) => jobSessions.indexOf(jobSession) === index)
+                .map((jobSession) => refreshJobsServer(jobSession, jobsProvider))
+        );
+        vscode.window.showInformationMessage(
+            localize(
+                "deleteCommand.multipleJobs",
+                "The following jobs were deleted: {0}",
+                deletedJobs.map(toJobname).toString().replace(/(,)/g, ", ")
+            )
+        );
+    }
+    const deletionErrors: ReadonlyArray<Error> = deletionResult
+        .map((result) => {
+            if (result instanceof Error) {
+                const error = result;
+                return error;
+            }
+            return undefined;
+        })
+        .filter((result) => result !== undefined);
+    if (deletionErrors.length) {
+        const errorMessages = deletionErrors.map((error) => error.message).join(", ");
+        const userMessage = `There were errors during jobs deletion: ${errorMessages}`;
+        await errorHandling(userMessage);
+    }
 };
