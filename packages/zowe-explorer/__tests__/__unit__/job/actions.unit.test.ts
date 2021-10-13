@@ -999,3 +999,65 @@ describe("Jobs Actions Unit Tests - Function refreshJobsServer", () => {
         expect(blockMocks.testJobTree.refreshElement).toHaveBeenCalledWith(job);
     });
 });
+
+describe("job deletion command", () => {
+    // general mocks
+    createGlobalMocks();
+    const session = createISession();
+    const profile = createIProfile();
+    const job = createIJobObject();
+
+    it("should delete a job from the jobs provider and refresh the current job session", async () => {
+        // arrange
+        const warningDialogStub = jest.fn();
+        Object.defineProperty(vscode.window, "showWarningMessage", {
+            value: warningDialogStub,
+            configurable: true,
+        });
+        warningDialogStub.mockResolvedValueOnce("Delete");
+        const jobsProvider = createJobsTree(session, job, profile, createTreeView());
+        jobsProvider.delete.mockResolvedValueOnce(Promise.resolve());
+        const jobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, null, session, job, profile);
+        // act
+        await jobActions.deleteCommand(jobsProvider, jobNode);
+        // assert
+        expect(mocked(jobsProvider.delete)).toBeCalledWith(jobNode);
+        expect(mocked(jobsProvider.refreshElement)).toBeCalledWith(jobNode.getSessionNode());
+    });
+
+    it("should not delete a job in case user cancelled deletion", async () => {
+        // arrange
+        const warningDialogStub = jest.fn();
+        Object.defineProperty(vscode.window, "showWarningMessage", {
+            value: warningDialogStub,
+            configurable: true,
+        });
+        warningDialogStub.mockResolvedValueOnce("Cancel");
+        const jobsProvider = createJobsTree(session, job, profile, createTreeView());
+        jobsProvider.delete.mockResolvedValueOnce(Promise.resolve());
+        const jobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, null, session, job, profile);
+        // act
+        await jobActions.deleteCommand(jobsProvider, jobNode);
+        // assert
+        expect(mocked(jobsProvider.delete)).not.toBeCalled();
+        expect(mocked(jobsProvider.refreshElement)).not.toBeCalled();
+    });
+
+    it("should not refresh the current job session after an error during job deletion", async () => {
+        // arrange
+        const warningDialogStub = jest.fn();
+        Object.defineProperty(vscode.window, "showWarningMessage", {
+            value: warningDialogStub,
+            configurable: true,
+        });
+        warningDialogStub.mockResolvedValueOnce("Delete");
+        const jobsProvider = createJobsTree(session, job, profile, createTreeView());
+        jobsProvider.delete.mockResolvedValueOnce(Promise.reject(new Error("something went wrong!")));
+        const jobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, null, session, job, profile);
+        // act
+        await jobActions.deleteCommand(jobsProvider, jobNode);
+        // assert
+        expect(mocked(jobsProvider.delete)).toBeCalledWith(jobNode);
+        expect(mocked(jobsProvider.refreshElement)).not.toBeCalled();
+    });
+});
