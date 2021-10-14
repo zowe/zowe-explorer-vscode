@@ -121,12 +121,16 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         responses = await vscode.window.withProgress(
             {
                 location: vscode.ProgressLocation.Notification,
-                title: localize("ZoweJobNode.getJobs.progress", "Get Dataset list command submitted."),
+                title: localize("getChildren.getDatasets.progress", "Get Dataset list command submitted."),
             },
             () => {
                 return this.getDatasets();
             }
         );
+
+        if (responses.length === 0) {
+            return undefined;
+        }
 
         // push nodes to an object with property names to avoid duplicates
         const elementChildren = {};
@@ -285,22 +289,14 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 responses.push(await ZoweExplorerApiRegister.getMvsApi(this.getProfile()).allMembers(label, options));
             }
         } catch (err) {
-            try {
-                await errorHandling(
-                    err,
-                    this.label,
-                    localize("getChildren.error.response", "Retrieving response from ") + `zowe.List`
-                );
-                await syncSessionNode(Profiles.getInstance())((profileValue) =>
-                    ZoweExplorerApiRegister.getMvsApi(profileValue).getSession()
-                )(sessNode);
-            } catch (err) {
-                await errorHandling(
-                    err,
-                    this.label,
-                    localize("getChildren.error.response", "Retrieving response from ") + `zowe.List`
-                );
-            }
+            await errorHandling(
+                err,
+                this.label,
+                localize("getChildren.error.response", "Retrieving response from ") + `zowe.List`
+            );
+            await syncSessionNode(Profiles.getInstance())((profileValue) =>
+                ZoweExplorerApiRegister.getMvsApi(profileValue).getSession()
+            )(sessNode);
         }
         return responses;
     }

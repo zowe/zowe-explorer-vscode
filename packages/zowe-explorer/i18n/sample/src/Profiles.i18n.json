@@ -1,6 +1,6 @@
 {
   "checkCurrentProfile.error": "Error encountered in ",
-  "addSession.quickPickOption": "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the USS Explorer",
+  "addSession.quickPickOption": "Choose \"Create new...\" to define or select a profile to add to the Job Views Explorer",
   "enterPattern.pattern": "No selection made.",
   "createNewConnection.option.prompt.profileName.placeholder": "Connection Name",
   "createNewConnection.option.prompt.profileName": "Enter a name for the connection",
@@ -30,7 +30,8 @@
   "promptCredentials.undefined.password": "Operation Cancelled",
   "promptCredentials.saveCredentials.button": "Save Credentials",
   "promptCredentials.doNotSave.button": "Do Not Save",
-  "promptCredentials.saveCredentials.infoMessage": "Save entered credentials for future use with profile: {0}? Saving credentials will update the local yaml file.",
+  "promptCredentials.saveCredentials.infoMessage": "Save entered credentials for future use with profile: {0}?\nSaving credentials will update the local yaml file.",
+  "promptCredentials.saveCredentials.cancelled": "Operation Cancelled",
   "deleteProfile.noProfilesLoaded": "No profiles available",
   "deleteProfile.quickPickOption": "Delete {0}? This will permanently remove it from your system.",
   "deleteProfile.undefined.profilename": "Operation Cancelled",

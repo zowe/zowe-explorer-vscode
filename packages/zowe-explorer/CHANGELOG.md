@@ -2,12 +2,16 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
-## `1.18.1`
+## `1.19.0`
 
-- Improved integration tests for greater efficiency [#1430](https://github.com/zowe/vscode-extension-for-zowe/pull/1430). Thanks @katelynienaber
-- Added a reminder to the PR template to create a PR from `master` to `next` after PR is merged into `master` branch [#1446](https://github.com/zowe/vscode-extension-for-zowe/pull/1446). Thanks @JillieBeanSim
-- Added @zowe/cli dependency to API [#1445](https://github.com/zowe/vscode-extension-for-zowe/pull/1445). Thanks @phaumer
-- Fix for the issue that caused mismatching of GitHub VSIX Zowe Explorer releases [#1442](https://github.com/zowe/vscode-extension-for-zowe/pull/1442). Thanks @katelynienaber
+- Added a check to ensure that a base profile exists before running the function that combines base and service profiles [#1500](https://github.com/zowe/vscode-extension-for-zowe/pull/1500). Thanks @lauren-li
+- Added Imperative logger access for extenders [#1433](https://github.com/zowe/vscode-extension-for-zowe/pull/1433). Thanks @katelynienaber
+- Added documentation for Imperative logger for extenders [#1467](https://github.com/zowe/vscode-extension-for-zowe/pull/1467). Thanks @katelynienaber
+- Implemented separate console windows for TSO and MVS commands [#1478](https://github.com/zowe/vscode-extension-for-zowe/pull/1478). Thanks @katelynienaber
+- Fixed the bug that caused the check credentials pop-up to disappear too quickly [#1486](https://github.com/zowe/vscode-extension-for-zowe/pull/1486). Thanks @JillieBeanSim
+- Fixed the bug that kept the command text box while escaping the process of entering a TSO command. Now the command text box does not pop up if you cancel entering a TSO command [#1479](https://github.com/zowe/vscode-extension-for-zowe/pull/1479). Thanks @katelynienaber
+- Fixed the bug that caused issues with deleting data set members in Ecplipse Theia or Che [#1487](https://github.com/zowe/vscode-extension-for-zowe/pull/1478). Thanks @phaumer
+- Fixed the bug that caused the deletion of selected data sets while removing a single data set member by using the right-click action. [#1483](https://github.com/zowe/vscode-extension-for-zowe/pull/1483). Thanks @JillieBeanSim
 
 ## `1.18.0`
 

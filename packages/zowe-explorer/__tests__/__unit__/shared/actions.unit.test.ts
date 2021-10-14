@@ -34,7 +34,7 @@ import { getIconById, IconId, getIconByNode } from "../../../src/generators/icon
 async function createGlobalMocks() {
     const globalMocks = {
         qpPlaceholder:
-            'Choose "Create new..." to define a new profile or select an existing profile to Add to the Data Set Explorer',
+            'Choose "Create new..." to define a new profile or select an existing profile to add to the Data Set Explorer',
     };
 
     Object.defineProperty(vscode.window, "createTreeView", { value: jest.fn(), configurable: true });

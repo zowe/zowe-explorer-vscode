@@ -123,7 +123,11 @@ export async function allocateLike(datasetProvider: IZoweTree<IZoweDatasetTreeNo
             globals.LOG.error(
                 localize("createDataSet.log.error", "Error encountered when creating data set! ") + JSON.stringify(err)
             );
-            errorHandling(err, newDSName, localize("createDataSet.error", "Unable to create data set: ") + err.message);
+            await errorHandling(
+                err,
+                newDSName,
+                localize("createDataSet.error", "Unable to create data set: ") + err.message
+            );
             throw err;
         }
     }
@@ -187,7 +191,7 @@ export async function uploadFile(node: ZoweDatasetNode, doc: vscode.TextDocument
             encoding: prof.profile.encoding,
         });
     } catch (e) {
-        errorHandling(e, node.getProfileName(), e.message);
+        await errorHandling(e, node.getProfileName(), e.message);
     }
 }
 
@@ -198,26 +202,62 @@ export async function uploadFile(node: ZoweDatasetNode, doc: vscode.TextDocument
  * @param {IZoweDatasetTreeNode} node - The node selected for deletion
  * @param {DatasetTree} datasetProvider - the tree which contains the nodes
  */
-export async function deleteDatasetPrompt(datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
+export async function deleteDatasetPrompt(
+    datasetProvider: IZoweTree<IZoweDatasetTreeNode>,
+    node?: IZoweDatasetTreeNode
+) {
+    let nodes: IZoweDatasetTreeNode[];
     const treeView = datasetProvider.getTreeView();
     const selectedNodes: IZoweDatasetTreeNode[] = treeView.selection;
+    let includedSelection = false;
+    if (node) {
+        for (const item of selectedNodes) {
+            if (node.getLabel() === item.getLabel()) {
+                includedSelection = true;
+            }
+        }
+    }
+    if (includedSelection || !node) {
+        // Filter out sessions, favorite nodes, or information messages
+        nodes = selectedNodes.filter(
+            (selectedNode) =>
+                selectedNode.getParent() &&
+                !contextually.isFavorite(selectedNode) &&
+                !contextually.isFavorite(selectedNode.getParent()) &&
+                !contextually.isSession(selectedNode) &&
+                !contextually.isInformation(selectedNode)
+        );
+    } else {
+        if (
+            node.getParent() &&
+            !contextually.isFavorite(node) &&
+            !contextually.isFavorite(node.getParent()) &&
+            !contextually.isSession(node) &&
+            !contextually.isInformation(node)
+        ) {
+            nodes = [];
+            nodes.push(node);
+        }
+    }
 
-    // Filter out sessions, favorite nodes, or information messages
-    const nodes: IZoweDatasetTreeNode[] = selectedNodes.filter(
-        (selectedNode) =>
-            selectedNode.getParent() &&
-            !contextually.isFavorite(selectedNode) &&
-            !contextually.isFavorite(selectedNode.getParent()) &&
-            !contextually.isSession(selectedNode) &&
-            !contextually.isInformation(selectedNode)
-    );
+    // Check that there are items to be deleted, this can be caused by trying to delete favorites right now
+    if (!nodes || nodes.length === 0) {
+        vscode.window.showInformationMessage(
+            localize(
+                "deleteDatasetPrompt.nodesToDelete.empty",
+                "Deleting data sets and members from the Favorites section is currently not supported."
+            )
+        );
+        return;
+    }
 
     // The names of the nodes that should be deleted
-    let deletedNodes: string[] = nodes.map((deletedNode) => {
+    const nodesToDelete: string[] = nodes.map((deletedNode) => {
         return contextually.isDsMember(deletedNode)
             ? ` ${deletedNode.getParent().getLabel()}(${deletedNode.getLabel()})`
             : ` ${deletedNode.getLabel()}`;
     });
+    const nodesDeleted: string[] = [];
 
     // The member parent nodes that should be refreshed individually
     const memberParents: IZoweDatasetTreeNode[] = [];
@@ -238,31 +278,34 @@ export async function deleteDatasetPrompt(datasetProvider: IZoweTree<IZoweDatase
     });
 
     // Confirm that the user really wants to delete
-    globals.LOG.debug(localize("deleteDatasetPrompt.log.debug", "Deleting data set(s): ") + deletedNodes.join(","));
-    const quickPickOptions: vscode.QuickPickOptions = {
-        placeHolder: localize(
-            "deleteDatasetPrompt.quickPickOption",
-            "Delete data set(s)? This will permanently remove them from your system."
-        ),
-        ignoreFocusOut: true,
-        canPickMany: false,
-    };
-    if (
-        (await vscode.window.showQuickPick(
-            [
-                localize("deleteDatasetPrompt.showQuickPick.delete", "Delete"),
-                localize("deleteDatasetPrompt.showQuickPick.Cancel", "Cancel"),
-            ],
-            quickPickOptions
-        )) !== localize("deleteDatasetPrompt.showQuickPick.delete", "Delete")
-    ) {
-        globals.LOG.debug(
-            localize("deleteDatasetPrompt.showQuickPick.log.debug", "Dataset deletion action was canceled.")
-        );
+    globals.LOG.debug(localize("deleteDatasetPrompt.log.debug", "Deleting data set(s): ") + nodesToDelete.join(","));
+    const deleteButton = localize("deleteDatasetPrompt.confirmation.delete", "Delete");
+    const message = localize(
+        "deleteDatasetPrompt.confirmation.message",
+        "Are you sure you want to delete the following {0} item(s)?\nThis will permanently remove these data sets and/or members from your system.\n\n{1}",
+        nodesToDelete.length,
+        nodesToDelete.toString().replace(/(,)/g, "\n")
+    );
+    await vscode.window.showWarningMessage(message, { modal: true }, ...[deleteButton]).then((selection) => {
+        if (!selection || selection === "Cancel") {
+            globals.LOG.debug(localize("deleteDatasetPrompt.deleteCancelled", "Delete action was cancelled."));
+            nodes = [];
+            return;
+        }
+    });
+
+    if (nodes.length === 0) {
         return;
     }
-
-    if (nodes.length > 0) {
+    if (nodes.length === 1) {
+        // no multi-select available in Theia
+        await deleteDataset(nodes[0], datasetProvider);
+        const deleteItemName = contextually.isDsMember(nodes[0])
+            ? ` ${nodes[0].getParent().getLabel()}(${nodes[0].getLabel()})`
+            : ` ${nodes[0].getLabel()}`;
+        nodesDeleted.push(deleteItemName);
+    }
+    if (nodes.length > 1) {
         // Delete multiple selected nodes
         await vscode.window.withProgress(
             {
@@ -271,38 +314,46 @@ export async function deleteDatasetPrompt(datasetProvider: IZoweTree<IZoweDatase
                 cancellable: true,
             },
             async (progress, token) => {
-                token.onCancellationRequested(() => {
-                    // will be returned as undefined
-                    vscode.window.showInformationMessage(
-                        localize("deleteDatasetPrompt.deleteCancelled", "Delete action was cancelled.")
-                    );
-                });
                 const total = 100;
                 for (const [index, currNode] of nodes.entries()) {
+                    if (token.isCancellationRequested) {
+                        vscode.window.showInformationMessage(
+                            localize("deleteDatasetPrompt.deleteCancelled", "Delete action was cancelled.")
+                        );
+                        return;
+                    }
                     progress.report({
                         message: `Deleting ${index + 1} of ${nodes.length}`,
                         increment: (index / nodes.length) * total,
                     });
                     try {
                         await deleteDataset(currNode, datasetProvider);
-                    } catch (err) {
-                        const labelToRemove = contextually.isDsMember(currNode)
+                        const deleteItemName = contextually.isDsMember(currNode)
                             ? ` ${currNode.getParent().getLabel()}(${currNode.getLabel()})`
                             : ` ${currNode.getLabel()}`;
-                        deletedNodes = deletedNodes.filter((item) => item.trim() !== labelToRemove.trim());
+                        nodesDeleted.push(deleteItemName);
+                    } catch (err) {
+                        // do nothing; delete next
                     }
                 }
             }
         );
+    }
+    if (nodesDeleted.length > 0) {
         vscode.window.showInformationMessage(
-            localize("deleteMulti.datasetNode", "The following items were deleted:") + deletedNodes
+            localize(
+                "deleteMulti.datasetNode",
+                "The following {0} item(s) were deleted:{1}",
+                nodesDeleted.length,
+                nodesDeleted.toString()
+            )
         );
+    }
 
-        // refresh Tree View & favorites
-        datasetProvider.refresh();
-        for (const member of memberParents) {
-            datasetProvider.refreshElement(member);
-        }
+    // refresh Tree View & favorites
+    datasetProvider.refresh();
+    for (const member of memberParents) {
+        datasetProvider.refreshElement(member);
     }
 }
 
@@ -326,7 +377,7 @@ export async function createMember(parent: IZoweDatasetTreeNode, datasetProvider
             globals.LOG.error(
                 localize("createMember.log.error", "Error encountered when creating member! ") + JSON.stringify(err)
             );
-            errorHandling(err, label, localize("createMember.error", "Unable to create member: ") + err.message);
+            await errorHandling(err, label, localize("createMember.error", "Unable to create member: ") + err.message);
             throw err;
         }
         parent.dirty = true;
@@ -420,7 +471,7 @@ export async function openPS(
                 localize("openPS.log.error.openDataSet", "Error encountered when opening data set! ") +
                     JSON.stringify(err)
             );
-            errorHandling(err, node.getProfileName(), err.message);
+            await errorHandling(err, node.getProfileName(), err.message);
             throw err;
         }
     }
@@ -626,7 +677,7 @@ export async function createFile(node: IZoweDatasetTreeNode, datasetProvider: IZ
             globals.LOG.error(
                 localize("createDataSet.error", "Error encountered when creating data set! ") + JSON.stringify(err)
             );
-            errorHandling(
+            await errorHandling(
                 err,
                 node.getProfileName(),
                 localize("createDataSet.error", "Error encountered when creating data set! ") + err.message
@@ -715,7 +766,7 @@ export async function showDSAttributes(parent: IZoweDatasetTreeNode, datasetProv
                 localize("showDSAttributes.log.error", "Error encountered when listing attributes! ") +
                     JSON.stringify(err)
             );
-            errorHandling(
+            await errorHandling(
                 err,
                 parent.getProfileName(),
                 localize("showDSAttributes.error", "Unable to list attributes: ") + err.message
@@ -833,7 +884,7 @@ export async function submitJcl(datasetProvider: IZoweTree<IZoweDatasetTreeNode>
                 localize("submitJcl.jobSubmitted", "Job submitted ") + `[${job.jobid}](${setJobCmd})`
             );
         } catch (error) {
-            errorHandling(
+            await errorHandling(
                 error,
                 sessProfileName,
                 localize("submitJcl.jobSubmissionFailed", "Job submission failed\n") + error.message
@@ -890,7 +941,7 @@ export async function submitMember(node: IZoweTreeNode) {
                 localize("submitMember.jobSubmitted", "Job submitted ") + `[${job.jobid}](${setJobCmd})`
             );
         } catch (error) {
-            errorHandling(
+            await errorHandling(
                 error,
                 sesName,
                 localize("submitMember.jobSubmissionFailed", "Job submission failed\n") + error.message
@@ -945,7 +996,7 @@ export async function deleteDataset(node: IZoweTreeNode, datasetProvider: IZoweT
                     localize("deleteDataSet.notFound.error2", " was probably already deleted.")
             );
         } else {
-            errorHandling(err, node.getProfileName(), err.message);
+            await errorHandling(err, node.getProfileName(), err.message);
         }
         throw err;
     }
@@ -1026,7 +1077,7 @@ export async function refreshPS(node: IZoweDatasetTreeNode) {
                     localize("refreshPS.file2", " was probably deleted.")
             );
         } else {
-            errorHandling(err, node.getProfileName(), err.message);
+            await errorHandling(err, node.getProfileName(), err.message);
         }
     }
 }
@@ -1042,7 +1093,7 @@ export async function refreshDataset(node: IZoweDatasetTreeNode, datasetProvider
         await node.getChildren();
         datasetProvider.refreshElement(node);
     } catch (err) {
-        errorHandling(err, node.getProfileName(), err.message);
+        await errorHandling(err, node.getProfileName(), err.message);
     }
 }
 
@@ -1308,7 +1359,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweT
                 );
             }
         } catch (err) {
-            errorHandling(err, sesName, err.message);
+            await errorHandling(err, sesName, err.message);
         }
     }
     // Get specific node based on label and parent tree (session / favorites)

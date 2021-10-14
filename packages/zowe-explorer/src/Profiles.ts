@@ -281,10 +281,21 @@ export class Profiles extends ProfilesCache {
         const createPick = new FilterDescriptor("\uFF0B " + createNewProfile);
         const items: vscode.QuickPickItem[] = profileNamesList.map((element) => new FilterItem(element));
         const quickpick = vscode.window.createQuickPick();
-        const placeholder = localize(
+        let placeholder = localize(
             "addSession.quickPickOption",
-            'Choose "Create new..." to define a new profile or select an existing profile to Add to the USS Explorer'
+            'Choose "Create new..." to define or select a profile to add to the USS Explorer'
         );
+        if (zoweFileProvider.getTreeType() === PersistenceSchemaEnum.Dataset) {
+            placeholder = localize(
+                "addSession.quickPickOption",
+                'Choose "Create new..." to define or select a profile to add to the DATA SETS Explorer'
+            );
+        } else if (zoweFileProvider.getTreeType() === PersistenceSchemaEnum.Job) {
+            placeholder = localize(
+                "addSession.quickPickOption",
+                'Choose "Create new..." to define or select a profile to add to the Job Views Explorer'
+            );
+        }
 
         if (isTheia()) {
             const options: vscode.QuickPickOptions = {
@@ -753,23 +764,35 @@ export class Profiles extends ProfilesCache {
             return undefined;
         } else {
             try {
+                let cancel = false;
                 const updSession = await ZoweExplorerApiRegister.getMvsApi(loadProfile).getSession();
                 if (rePrompt) {
                     const saveButton = localize("promptCredentials.saveCredentials.button", "Save Credentials");
                     const doNotSaveButton = localize("promptCredentials.doNotSave.button", "Do Not Save");
                     const infoMsg = localize(
                         "promptCredentials.saveCredentials.infoMessage",
-                        "Save entered credentials for future use with profile: {0}? Saving credentials will update the local yaml file.",
+                        "Save entered credentials for future use with profile: {0}?\nSaving credentials will update the local yaml file.",
                         loadProfile.name
                     );
                     await vscode.window
-                        .showInformationMessage(infoMsg, ...[saveButton, doNotSaveButton])
-                        .then((selection) => {
+                        .showInformationMessage(infoMsg, { modal: true }, ...[saveButton, doNotSaveButton])
+                        .then(async (selection) => {
                             if (selection === saveButton) {
                                 rePrompt = false;
                             }
+                            if (!selection || selection === "Cancel") {
+                                cancel = true;
+                                vscode.window.showInformationMessage(
+                                    localize("promptCredentials.saveCredentials.cancelled", "Operation Cancelled")
+                                );
+                                await this.refresh(ZoweExplorerApiRegister.getInstance());
+                                return;
+                            }
                         });
                     await this.updateProfile(loadProfile, rePrompt);
+                }
+                if (cancel) {
+                    return undefined;
                 }
                 return [updSession.ISession.user, updSession.ISession.password, updSession.ISession.base64EncodedAuth];
             } catch (error) {
