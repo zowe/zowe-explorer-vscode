@@ -443,7 +443,7 @@ export async function openPS(
             if (!fs.existsSync(documentFilePath)) {
                 const response = await vscode.window.withProgress(
                     {
-                        location: vscode.ProgressLocation.Notification,
+                        location: vscode.ProgressLocation.Window,
                         title: "Opening data set...",
                     },
                     function downloadDataset() {
