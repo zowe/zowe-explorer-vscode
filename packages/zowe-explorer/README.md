@@ -23,7 +23,7 @@ More information:
 
 ## Contents
 
-- [What's new in Zowe Explorer 1.19.0](#whats-new-in-zowe-explorer-1190)
+- [Early Access Features](#early-access-features)
 - [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
 - [Sample Use Cases](#sample-use-cases)
@@ -31,28 +31,14 @@ More information:
 - [Usage Tips](#usage-tips)
 - [Extending Zowe Explorer](#extending-zowe-explorer)
 
-## What's new in Zowe Explorer 1.19.0
+## Early Access Features
 
-> Zowe Explorer is compatible only with Theia 1.15.0 or earlier versions.
+This version may receive breaking changes and is intended to gather early feedback on what may become a future LTS release.
 
-**Added**:
+For documentation about these features, see these files:
 
-- Added Imperative logger access for extenders.
-- Added documentation for Imperative logger for extenders.
-- Added a check to ensure that a base profile exists before running the function that combines base and service profiles
-
-**Changed**:
-
-- Implemented separate console windows for TSO and MVS commands.
-
-**Fixed**:
-
-- Fixed the bug that caused the check credentials pop-up to disappear too quickly.
-- Fixed the bug that kept the command text box while escaping the process of entering a TSO command. Now the command text box does not pop up if you cancel entering a TSO command.
-- Fixed the bug that caused issues with deleting data set members in Ecplipse Theia or Che.
-- Fixed the bug that caused a pop-up confirming the deletion of multiple data sets to display while removing a single data set member.
-
-For more information, see [Changelog](https://marketplace.visualstudio.com/items/Zowe.vscode-extension-for-zowe/changelog).
+- [Changes Affecting Zowe Explorer Extenders](https://github.com/zowe/vscode-extension-for-zowe/blob/next/docs/Early%20Access%20-%20Changes%20Affecting%20Extenders.md)
+- [Using Global Profile Configuration](https://github.com/zowe/vscode-extension-for-zowe/blob/next/docs/Early%20Access%20-%20Using%20Global%20Profile%20Configuration.md)
 
 ## Prerequisites
 
