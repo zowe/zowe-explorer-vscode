@@ -1256,7 +1256,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
 
         expect(mocked(sharedUtils.concatChildNodes)).toBeCalled();
         expect(mockSetEtag).toHaveBeenCalledWith("123");
-        expect(mocked(vscode.window.setStatusBarMessage)).toBeCalledWith("success");
+        expect(mocked(vscode.window.setStatusBarMessage)).toBeCalledWith("success", 5000);
     });
     it("Checking common dataset failed saving attempt", async () => {
         globals.defineGlobals("");
@@ -1365,7 +1365,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         await dsActions.saveFile(testDocument, blockMocks.testDatasetTree);
 
         expect(mocked(sharedUtils.concatChildNodes)).toBeCalled();
-        expect(mocked(vscode.window.setStatusBarMessage)).toBeCalledWith("success");
+        expect(mocked(vscode.window.setStatusBarMessage)).toBeCalledWith("success", 5000);
     });
     it("Checking favorite PDS Member saving", async () => {
         globals.defineGlobals("");
@@ -1459,7 +1459,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
 
         expect(mocked(sharedUtils.concatChildNodes)).toBeCalled();
         expect(mockSetEtag).toHaveBeenCalledWith("123");
-        expect(mocked(vscode.window.setStatusBarMessage)).toBeCalledWith("success");
+        expect(mocked(vscode.window.setStatusBarMessage)).toBeCalledWith("success", 5000);
         expect(blockMocks.profileInstance.loadNamedProfile).toBeCalledWith(blockMocks.imperativeProfile.name);
     });
     it("Checking common dataset failed saving attempt due to incorrect document path", async () => {
@@ -1532,7 +1532,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         await dsActions.saveFile(testDocument, blockMocks.testDatasetTree);
 
         expect(mocked(sharedUtils.concatChildNodes)).toBeCalled();
-        expect(mocked(vscode.window.setStatusBarMessage)).toBeCalledWith("success");
+        expect(mocked(vscode.window.setStatusBarMessage)).toBeCalledWith("success", 5000);
     });
     it("Checking common dataset saving failed due to conflict with server version", async () => {
         globals.defineGlobals("");
