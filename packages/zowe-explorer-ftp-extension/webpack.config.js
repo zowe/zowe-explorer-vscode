@@ -36,6 +36,7 @@ const config = {
         "spdx-exceptions": "commonjs spdx-exceptions",
         "spdx-license-ids": "commonjs spdx-license-ids",
         "spdx-license-ids/deprecated": "commonjs spdx-license-ids/deprecated",
+        "cpu-features": "commonjs cpu-features",
     },
     resolve: {
         // support reading TypeScript and JavaScript files, 📖 -> https://github.com/TypeStrong/ts-loader
