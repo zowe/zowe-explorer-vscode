@@ -17,10 +17,7 @@ import { FtpMvsApi } from "./ZoweExplorerFtpMvsApi";
 import { FtpJesApi } from "./ZoweExplorerFtpJesApi";
 import { CoreUtils } from "@zowe/zos-ftp-for-zowe-cli";
 
-export const ZoweLogger = new IZoweLogger(
-    "Zowe Explorer FTP Extension",
-    path.join(__dirname, "..", "..", "imperative-logs")
-);
+export const ZoweLogger = new IZoweLogger("Zowe Explorer FTP Extension", path.join(__dirname, "..", ".."));
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function activate(context: vscode.ExtensionContext): void {
