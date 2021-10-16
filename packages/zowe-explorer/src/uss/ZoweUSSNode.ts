@@ -157,7 +157,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             responses.push(
                 await vscode.window.withProgress(
                     {
-                        location: vscode.ProgressLocation.Window,
+                        location: vscode.ProgressLocation.Notification,
                         title: localize("ZoweUssNode.getList.progress", "Get USS file list command submitted."),
                     },
                     () => {
