@@ -81,6 +81,7 @@ function createGlobalMocks() {
     Object.defineProperty(zowe.Upload, "pathToDataSet", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showErrorMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showInformationMessage", { value: jest.fn(), configurable: true });
+    Object.defineProperty(vscode.window, "setStatusBarMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showWarningMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showInputBox", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.workspace, "openTextDocument", { value: jest.fn(), configurable: true });
@@ -1229,7 +1230,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
 
         expect(mocked(sharedUtils.concatChildNodes)).toBeCalled();
         expect(mockSetEtag).toHaveBeenCalledWith("123");
-        expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith("success");
+        expect(mocked(vscode.window.setStatusBarMessage)).toBeCalledWith("success", 5000);
     });
     it("Checking common dataset failed saving attempt", async () => {
         globals.defineGlobals("");
@@ -1338,7 +1339,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         await dsActions.saveFile(testDocument, blockMocks.testDatasetTree);
 
         expect(mocked(sharedUtils.concatChildNodes)).toBeCalled();
-        expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith("success");
+        expect(mocked(vscode.window.setStatusBarMessage)).toBeCalledWith("success", 5000);
     });
     it("Checking favorite PDS Member saving", async () => {
         globals.defineGlobals("");
@@ -1432,7 +1433,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
 
         expect(mocked(sharedUtils.concatChildNodes)).toBeCalled();
         expect(mockSetEtag).toHaveBeenCalledWith("123");
-        expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith("success");
+        expect(mocked(vscode.window.setStatusBarMessage)).toBeCalledWith("success", 5000);
         expect(blockMocks.profileInstance.loadNamedProfile).toBeCalledWith(blockMocks.imperativeProfile.name);
     });
     it("Checking common dataset failed saving attempt due to incorrect document path", async () => {
@@ -1505,7 +1506,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         await dsActions.saveFile(testDocument, blockMocks.testDatasetTree);
 
         expect(mocked(sharedUtils.concatChildNodes)).toBeCalled();
-        expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith("success");
+        expect(mocked(vscode.window.setStatusBarMessage)).toBeCalledWith("success", 5000);
     });
     it("Checking common dataset saving failed due to conflict with server version", async () => {
         globals.defineGlobals("");

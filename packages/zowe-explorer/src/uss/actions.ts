@@ -295,7 +295,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
             }
         );
         if (uploadResponse.success) {
-            vscode.window.showInformationMessage(uploadResponse.commandResponse);
+            vscode.window.setStatusBarMessage(uploadResponse.commandResponse, 5000);
             // set local etag with the new etag from the updated file on mainframe
             if (node) {
                 node.setEtag(uploadResponse.apiResponse.etag);
