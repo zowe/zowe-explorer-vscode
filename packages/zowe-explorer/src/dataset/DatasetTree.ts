@@ -159,6 +159,9 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             await Profiles.getInstance().checkCurrentProfile(element.getProfile());
             const finalResponse: IZoweDatasetTreeNode[] = [];
             const response = await element.getChildren();
+            if (!response) {
+                return undefined;
+            }
             for (const item of response) {
                 if (item.pattern && item.memberPattern) {
                     finalResponse.push(item);
@@ -395,12 +398,10 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                         " from the Favorites section of Zowe Explorer's Data Sets view. Would you like to do this now? ",
                         getAppName(globals.ISTHEIA)
                     );
-
-                const btnLabelCancel = localize("loadProfilesForFavorites.error.buttonCancel", "Cancel");
                 const btnLabelRemove = localize("loadProfilesForFavorites.error.buttonRemove", "Remove");
-                vscode.window.showErrorMessage(errMessage, btnLabelCancel, btnLabelRemove).then(async (selection) => {
+                vscode.window.showErrorMessage(errMessage, { modal: true }, btnLabelRemove).then(async (selection) => {
                     if (selection === btnLabelRemove) {
-                        await this.removeFavProfile(profileName, true);
+                        await this.removeFavProfile(profileName, false);
                     }
                 });
                 return;
@@ -680,6 +681,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      */
     public async removeFavProfile(profileName: string, userSelected: boolean) {
         // If user selected the "Remove profile from Favorites option", confirm they are okay with deleting all favorited items for that profile.
+        let cancelled = false;
         if (userSelected) {
             const checkConfirmation = localize(
                 "removeFavProfile.confirm",
@@ -687,18 +689,16 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 profileName
             );
             const continueRemove = localize("removeFavProfile.continue", "Continue");
-            const cancelRemove = localize("removeFavProfile.cancel", "Cancel");
-            const quickPickOptions: vscode.QuickPickOptions = {
-                placeHolder: checkConfirmation,
-                ignoreFocusOut: true,
-                canPickMany: false,
-            };
-            // If user did not select "Continue", do nothing.
-            if (
-                (await vscode.window.showQuickPick([continueRemove, cancelRemove], quickPickOptions)) !== continueRemove
-            ) {
-                return;
-            }
+            await vscode.window
+                .showWarningMessage(checkConfirmation, { modal: true }, ...[continueRemove])
+                .then((selection) => {
+                    if (!selection || selection === "Cancel") {
+                        cancelled = true;
+                    }
+                });
+        }
+        if (cancelled) {
+            return;
         }
 
         // Remove favorited profile from UI
@@ -995,87 +995,88 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 nonFaveNode.tooltip = nonFaveNode.pattern = pattern.toUpperCase();
             }
             const response = await this.getChildren(nonFaveNode);
-            // reset and remove previous search patterns for each child of getChildren
-            for (const child of response) {
-                let resetIcon: IIconItem;
-                if (child.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed) {
-                    resetIcon = getIconById(IconId.folder);
-                }
-                if (child.collapsibleState === vscode.TreeItemCollapsibleState.Expanded) {
-                    resetIcon = getIconById(IconId.folderOpen);
-                }
-                if (resetIcon) {
-                    child.iconPath = resetIcon.path;
-                }
+            if (response) {
+                // reset and remove previous search patterns for each child of getChildren
+                for (const child of response) {
+                    let resetIcon: IIconItem;
+                    if (child.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed) {
+                        resetIcon = getIconById(IconId.folder);
+                    }
+                    if (child.collapsibleState === vscode.TreeItemCollapsibleState.Expanded) {
+                        resetIcon = getIconById(IconId.folderOpen);
+                    }
+                    if (resetIcon) {
+                        child.iconPath = resetIcon.path;
+                    }
 
-                // remove any previous search memberPatterns
-                if (child.contextValue.includes(globals.FILTER_SEARCH)) {
-                    child.contextValue = child.contextValue.replace(globals.FILTER_SEARCH, "");
-                    child.memberPattern = "";
-                    child.pattern = "";
-                    this.refreshElement(child);
+                    // remove any previous search memberPatterns
+                    if (child.contextValue.includes(globals.FILTER_SEARCH)) {
+                        child.contextValue = child.contextValue.replace(globals.FILTER_SEARCH, "");
+                        child.memberPattern = "";
+                        child.pattern = "";
+                        this.refreshElement(child);
+                    }
                 }
-            }
-            // set new search patterns for each child of getChildren
-            for (const child of response) {
-                for (const item of dsSets) {
-                    const label = child.label.trim();
-                    if (item.memberName && label !== "No datasets found") {
-                        const dsn = item.dataSetName.split(".");
-                        const name = label.split(".");
-                        let index = 0;
-                        let includes = false;
-                        if (!child.pattern) {
-                            for (const each of dsn) {
-                                let inc = false;
-                                inc = await this.checkFilterPattern(name[index], each);
-                                if (inc) {
-                                    child.pattern = item.dataSetName;
-                                    includes = true;
-                                } else {
-                                    child.pattern = "";
-                                    includes = false;
+                // set new search patterns for each child of getChildren
+                for (const child of response) {
+                    for (const item of dsSets) {
+                        const label = child.label.trim();
+                        if (item.memberName && label !== "No datasets found") {
+                            const dsn = item.dataSetName.split(".");
+                            const name = label.split(".");
+                            let index = 0;
+                            let includes = false;
+                            if (!child.pattern) {
+                                for (const each of dsn) {
+                                    let inc = false;
+                                    inc = await this.checkFilterPattern(name[index], each);
+                                    if (inc) {
+                                        child.pattern = item.dataSetName;
+                                        includes = true;
+                                    } else {
+                                        child.pattern = "";
+                                        includes = false;
+                                    }
+                                    index++;
                                 }
-                                index++;
                             }
-                        }
-                        if (includes && child.contextValue.includes("pds")) {
-                            const options: IListOptions = {};
-                            options.pattern = item.memberPattern;
-                            options.attributes = true;
-                            const memResponse = await ZoweExplorerApiRegister.getMvsApi(child.getProfile()).allMembers(
-                                label,
-                                options
-                            );
-                            let existing = false;
-                            for (const mem of memResponse.apiResponse.items) {
-                                existing = await this.checkFilterPattern(mem.member, item.memberName);
-                                if (existing) {
-                                    child.memberPattern = item.memberName;
-                                    if (!child.contextValue.includes(globals.FILTER_SEARCH)) {
-                                        child.contextValue = child.contextValue + globals.FILTER_SEARCH;
+                            if (includes && child.contextValue.includes("pds")) {
+                                const options: IListOptions = {};
+                                options.pattern = item.memberPattern;
+                                options.attributes = true;
+                                const memResponse = await ZoweExplorerApiRegister.getMvsApi(
+                                    child.getProfile()
+                                ).allMembers(label, options);
+                                let existing = false;
+                                for (const mem of memResponse.apiResponse.items) {
+                                    existing = await this.checkFilterPattern(mem.member, item.memberName);
+                                    if (existing) {
+                                        child.memberPattern = item.memberName;
+                                        if (!child.contextValue.includes(globals.FILTER_SEARCH)) {
+                                            child.contextValue = child.contextValue + globals.FILTER_SEARCH;
+                                        }
+                                        let setIcon: IIconItem;
+                                        if (child.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed) {
+                                            setIcon = getIconById(IconId.filterFolder);
+                                        }
+                                        if (child.collapsibleState === vscode.TreeItemCollapsibleState.Expanded) {
+                                            setIcon = getIconById(IconId.filterFolderOpen);
+                                        }
+                                        if (setIcon) {
+                                            child.iconPath = setIcon.path;
+                                        }
+                                        this.refreshElement(child);
                                     }
-                                    let setIcon: IIconItem;
-                                    if (child.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed) {
-                                        setIcon = getIconById(IconId.filterFolder);
-                                    }
-                                    if (child.collapsibleState === vscode.TreeItemCollapsibleState.Expanded) {
-                                        setIcon = getIconById(IconId.filterFolderOpen);
-                                    }
-                                    if (setIcon) {
-                                        child.iconPath = setIcon.path;
-                                    }
-                                    this.refreshElement(child);
                                 }
                             }
                         }
                     }
-                }
-                nonFaveNode.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
-                nonFaveNode.dirty = true;
-                const icon = getIconByNode(nonFaveNode);
-                if (icon) {
-                    nonFaveNode.iconPath = icon.path;
+                    nonFaveNode.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+                    nonFaveNode.dirty = true;
+                    const icon = getIconByNode(nonFaveNode);
+                    if (icon) {
+                        nonFaveNode.iconPath = icon.path;
+                    }
                 }
             }
             this.addSearchHistory(pattern);

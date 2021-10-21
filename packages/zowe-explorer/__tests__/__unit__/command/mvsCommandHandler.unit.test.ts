@@ -56,7 +56,7 @@ describe("mvsCommandActions unit testing", () => {
 
     createQuickPick.mockReturnValue({
         placeholder:
-            'Choose "Create new..." to define a new profile or select an existing profile to Add to the Data Set Explorer',
+            'Choose "Create new..." to define a new profile or select an existing profile to add to the Data Set Explorer',
         activeItems: [qpItem2],
         ignoreFocusOut: true,
         items: [qpItem, qpItem2],
@@ -388,7 +388,7 @@ describe("mvsCommandActions unit testing", () => {
         });
         createQuickPick.mockReturnValueOnce({
             placeholder:
-                'Choose "Create new..." to define a new profile or select an existing profile to Add to the Data Set Explorer',
+                'Choose "Create new..." to define a new profile or select an existing profile to add to the Data Set Explorer',
             activeItems: [qpItem2],
             ignoreFocusOut: true,
             items: [qpItem, qpItem2],
