@@ -60,7 +60,7 @@ export class IZoweLogger {
      *
      */
     public logImperativeMessage(message: string, severity: MessageSeverityEnum): void {
-        let messageWithExtensionName = `message from extension ${this.extensionName}: ${message}`;
+        const messageWithExtensionName = `message from extension ${this.extensionName}: ${message}`;
         switch (severity) {
             case MessageSeverityEnum.TRACE:
                 this.log.trace(`TRACE ${messageWithExtensionName}`);
