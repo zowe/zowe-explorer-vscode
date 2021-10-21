@@ -293,7 +293,7 @@ export class Profiles extends ProfilesCache {
         } else if (zoweFileProvider.getTreeType() === PersistenceSchemaEnum.Job) {
             placeholder = localize(
                 "jobs.addSession.quickPickOption",
-                'Choose "Create new..." to define or select a profile to add to the Job Views Explorer'
+                'Choose "Create new..." to define or select a profile to add to the JOBS Explorer'
             );
         }
 
