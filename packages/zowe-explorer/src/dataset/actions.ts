@@ -1355,7 +1355,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweT
             }
         );
         if (uploadResponse.success) {
-            vscode.window.setStatusBarMessage(uploadResponse.commandResponse, 5000);
+            vscode.window.setStatusBarMessage(uploadResponse.commandResponse, globals.STATUS_BAR_TIMEOUT_MS);
             // set local etag with the new etag from the updated file on mainframe
             if (node) {
                 node.setEtag(uploadResponse.apiResponse[0].etag);
