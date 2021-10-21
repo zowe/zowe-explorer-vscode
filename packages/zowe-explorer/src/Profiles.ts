@@ -282,17 +282,17 @@ export class Profiles extends ProfilesCache {
         const items: vscode.QuickPickItem[] = profileNamesList.map((element) => new FilterItem(element));
         const quickpick = vscode.window.createQuickPick();
         let placeholder = localize(
-            "addSession.quickPickOption",
+            "uss.addSession.quickPickOption",
             'Choose "Create new..." to define or select a profile to add to the USS Explorer'
         );
         if (zoweFileProvider.getTreeType() === PersistenceSchemaEnum.Dataset) {
             placeholder = localize(
-                "addSession.quickPickOption",
+                "ds.addSession.quickPickOption",
                 'Choose "Create new..." to define or select a profile to add to the DATA SETS Explorer'
             );
         } else if (zoweFileProvider.getTreeType() === PersistenceSchemaEnum.Job) {
             placeholder = localize(
-                "addSession.quickPickOption",
+                "jobs.addSession.quickPickOption",
                 'Choose "Create new..." to define or select a profile to add to the Job Views Explorer'
             );
         }
