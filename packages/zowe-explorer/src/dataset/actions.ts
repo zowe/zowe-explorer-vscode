@@ -208,7 +208,7 @@ export async function deleteDatasetPrompt(
 ) {
     let nodes: IZoweDatasetTreeNode[];
     const treeView = datasetProvider.getTreeView();
-    const selectedNodes: IZoweDatasetTreeNode[] = treeView.selection;
+    let selectedNodes: IZoweDatasetTreeNode[] = treeView.selection;
     let includedSelection = false;
     if (node) {
         for (const item of selectedNodes) {
@@ -217,6 +217,21 @@ export async function deleteDatasetPrompt(
             }
         }
     }
+
+    // Check that child and parent aren't both in array, removing children whose parents are in
+    // array to avoid errors from host when deleting none=existent children.
+    const childArray: IZoweDatasetTreeNode[] = [];
+    for (const item of selectedNodes) {
+        if (contextually.isDsMember(item)) {
+            for (const parent of selectedNodes) {
+                if (parent.getLabel() === item.getParent().getLabel()) {
+                    childArray.push(item);
+                }
+            }
+        }
+    }
+    selectedNodes = selectedNodes.filter((val) => !childArray.includes(val));
+
     if (includedSelection || !node) {
         // Filter out sessions, favorite nodes, or information messages
         nodes = selectedNodes.filter(
@@ -257,6 +272,8 @@ export async function deleteDatasetPrompt(
             ? ` ${deletedNode.getParent().getLabel()}(${deletedNode.getLabel()})`
             : ` ${deletedNode.getLabel()}`;
     });
+    nodesToDelete.sort();
+
     const nodesDeleted: string[] = [];
 
     // The member parent nodes that should be refreshed individually
@@ -340,6 +357,7 @@ export async function deleteDatasetPrompt(
         );
     }
     if (nodesDeleted.length > 0) {
+        nodesDeleted.sort();
         vscode.window.showInformationMessage(
             localize(
                 "deleteMulti.datasetNode",
