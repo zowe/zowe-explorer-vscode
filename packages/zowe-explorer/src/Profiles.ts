@@ -613,8 +613,7 @@ export class Profiles extends ProfilesCache {
             }
             const config = await Config.load("zowe", { projectDir: fs.realpathSync(rootPath) });
             if (vscode.workspace.workspaceFolders) {
-                config.mActive.global = false;
-                config.mActive.user = false;
+                config.api.layers.activate(false, false, rootPath);
             }
 
             const impConfig: IImperativeConfig = zowe.getImperativeConfig();
@@ -890,6 +889,17 @@ export class Profiles extends ProfilesCache {
                         );
                         vscode.window.showInformationMessage(infoMsg);
                     }
+                    const config = ProfilesCache.getConfigInstance().getTeamConfig();
+                    const secureFields = await config.api.secure.secureFields();
+                    secureFields.forEach((prop) => {
+                        if (prop.includes("user")) {
+                            config.set(prop, updSession.ISession.user);
+                        }
+                        if (prop.includes("password")) {
+                            config.set(prop, updSession.ISession.password);
+                        }
+                    });
+                    await config.save(false);
                 } else {
                     const saveButton = localize("promptCredentials.saveCredentials.button", "Save Credentials");
                     const doNotSaveButton = localize("promptCredentials.doNotSave.button", "Do Not Save");
