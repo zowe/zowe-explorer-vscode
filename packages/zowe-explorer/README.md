@@ -39,7 +39,6 @@ More information:
 
 **Changed**:
 
-- Optimized the frequency of the notifications in the status bar.
 - Updated the @zowe/cli version to 6.33.3 to fix the SSH2 audit failure.
 - Updated the Jobs Issue Stop and Issue Modify commands so that they can be consumed by Extenders with the `issueMvsCommand` API.
 - Updated the error message pop-up with the Remove and Cancel buttons. Now the Data Set, USS, and Jobs trees have the VS Code standard confirmation message design.
