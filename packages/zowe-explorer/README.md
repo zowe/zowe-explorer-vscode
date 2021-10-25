@@ -48,7 +48,7 @@ More information:
 
 **Fixed**:
 
-- Fixed the Not Found issue resulted from attempts to delete a member whose parent data set has already been deleted using multi-delete.
+- Fixed the Not Found issue that resulted from attempts to delete a member whose parent data set was already deleted using multi-delete.
 
 For more information, see [Changelog](https://marketplace.visualstudio.com/items/Zowe.vscode-extension-for-zowe/changelog).
 
