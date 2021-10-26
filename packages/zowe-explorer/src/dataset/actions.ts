@@ -1412,7 +1412,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweT
     try {
         const uploadResponse = await vscode.window.withProgress(
             {
-                location: vscode.ProgressLocation.Notification,
+                location: vscode.ProgressLocation.Window,
                 title: localize("saveFile.response.save.title", "Saving data set..."),
             },
             () => {

@@ -287,7 +287,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
         }
         const uploadResponse: zowe.IZosFilesResponse = await vscode.window.withProgress(
             {
-                location: vscode.ProgressLocation.Notification,
+                location: vscode.ProgressLocation.Window,
                 title: localize("saveUSSFile.response.title", "Saving file..."),
             },
             () => {
