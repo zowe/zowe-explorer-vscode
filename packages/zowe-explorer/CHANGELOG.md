@@ -2,6 +2,37 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## `1.20.0`
+
+- Added a Github action bot that automates the issue triage [#1530](https://github.com/zowe/vscode-extension-for-zowe/pull/1530). Thanks @crawr
+- Updated the @zowe/cli version to 6.33.3 to fix the SSH2 audit failure [#1522](https://github.com/zowe/vscode-extension-for-zowe/pull/1522). Thanks @JillieBeanSim
+- Updated the Jobs Issue Stop and Issue Modify commands so that they can be consumed by Extenders with the `issueMvsCommand` API [#1508](https://github.com/zowe/vscode-extension-for-zowe/pull/1508). Thanks @JillieBeanSim
+- Use Visual Studio Code's standard confirmation prompt for the Data Sets, USS, and Job trees when clicking on a Favorited profile that does not exist [#1506](https://github.com/zowe/vscode-extension-for-zowe/pull/1506). Thanks @JillieBeanSim
+- Updated the deletion prompt for the USS and Jobs trees [#1505](https://github.com/zowe/vscode-extension-for-zowe/pull/1505). Thanks @JillieBeanSim
+- Updated the placeholder text in the `Add Profile` entry field [#1490](https://github.com/zowe/vscode-extension-for-zowe/pull/1490). Thanks @anokhikastiaIBM
+- Fixed the Not Found issue that resulted from attempts to delete a member whose parent data set was already deleted using multi-delete [#1525](https://github.com/zowe/vscode-extension-for-zowe/pull/1525). Thanks @JillieBeanSim
+
+## `1.19.0`
+
+- Added a check to ensure that a base profile exists before running the function that combines base and service profiles [#1500](https://github.com/zowe/vscode-extension-for-zowe/pull/1500). Thanks @lauren-li
+- Added Imperative logger access for extenders [#1433](https://github.com/zowe/vscode-extension-for-zowe/pull/1433). Thanks @katelynienaber
+- Added documentation for Imperative logger for extenders [#1467](https://github.com/zowe/vscode-extension-for-zowe/pull/1467). Thanks @katelynienaber
+- Implemented separate console windows for TSO and MVS commands [#1478](https://github.com/zowe/vscode-extension-for-zowe/pull/1478). Thanks @katelynienaber
+- Fixed the bug that caused the check credentials pop-up to disappear too quickly [#1486](https://github.com/zowe/vscode-extension-for-zowe/pull/1486). Thanks @JillieBeanSim
+- Fixed the bug that kept the command text box while escaping the process of entering a TSO command. Now the command text box does not pop up if you cancel entering a TSO command [#1479](https://github.com/zowe/vscode-extension-for-zowe/pull/1479). Thanks @katelynienaber
+- Fixed the bug that caused issues with deleting data set members in Ecplipse Theia or Che [#1487](https://github.com/zowe/vscode-extension-for-zowe/pull/1478). Thanks @phaumer
+- Fixed the bug that caused the deletion of selected data sets while removing a single data set member by using the right-click action. [#1483](https://github.com/zowe/vscode-extension-for-zowe/pull/1483). Thanks @JillieBeanSim
+
+## `1.18.0`
+
+- Added the ability to register custom profile types in `ProfilesCache` for extenders [#1419](https://github.com/zowe/vscode-extension-for-zowe/pull/1419). Thanks @phaumer
+- Added the ability to pass account and other information from tso profile [#1378](https://github.com/zowe/vscode-extension-for-zowe/pull/1378). Thanks @fswarbrick
+- Added profiles cache to extenders [#1390](https://github.com/zowe/vscode-extension-for-zowe/pull/1390). Thanks @phaumer
+- Status icons now reset when refreshing the explorer views [#1404](https://github.com/zowe/vscode-extension-for-zowe/pull/1404). Thanks @lauren-li
+- Fixed the issue that prevented the expected error message `No valid value for z/OS URL. Operation Cancelled` from being displayed while escaping the host text box during the creation or update of a profile [#1426](https://github.com/zowe/vscode-extension-for-zowe/pull/1426). Thanks @JillieBeanSim
+- Fixed the issue that invoked profile validation before updating a profile. Now a profile is validated only after the update [#1415](https://github.com/zowe/vscode-extension-for-zowe/pull/1415). Thanks @JillieBeanSim
+- Fixed the issue of Zowe profiles encoding value when opening a USS file in the text editor [#1400](https://github.com/zowe/vscode-extension-for-zowe/pull/1400). Thanks @JillieBeanSim
+
 ## `1.17.0`
 
 - Added the feature that automatically includes a missing profile in the Jobs view when submitting a job [#1386](https://github.com/zowe/vscode-extension-for-zowe/pull/1386). Thanks @nickImbirev

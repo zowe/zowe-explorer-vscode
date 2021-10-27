@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "types": ["node", "jest"],
+    "types": ["node"],
     "target": "es2015",
     "module": "commonjs",
     "declaration": true,
@@ -11,7 +11,8 @@
     "removeComments": false,
     "pretty": true,
     "sourceMap": true,
-    "newLine": "lf"
+    "newLine": "lf",
+    "resolveJsonModule": true
   },
   "include": ["src/**/*"],
   "exclude": ["lib", "node_modules"]

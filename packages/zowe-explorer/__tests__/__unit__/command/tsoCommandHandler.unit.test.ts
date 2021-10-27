@@ -56,7 +56,7 @@ describe("TsoCommandHandler unit testing", () => {
 
     createQuickPick.mockReturnValue({
         placeholder:
-            'Choose "Create new..." to define a new profile or select an existing profile to Add to the Data Set Explorer',
+            'Choose "Create new..." to define a new profile or select an existing profile to add to the Data Set Explorer',
         activeItems: [qpItem2],
         ignoreFocusOut: true,
         items: [qpItem, qpItem2],
@@ -138,7 +138,7 @@ describe("TsoCommandHandler unit testing", () => {
     const tsoActions = TsoCommandHandler.getInstance();
     const profilesForValidation = { status: "active", name: "fake" };
 
-    Object.defineProperty(tsoActions, "getAccountNumber", {
+    Object.defineProperty(tsoActions, "getTsoParams", {
         value: jest.fn(() => {
             return "acctNum";
         }),
@@ -175,7 +175,7 @@ describe("TsoCommandHandler unit testing", () => {
         getCommandApiMock.mockReturnValue(mockCommandApi);
         apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
         showInputBox.mockReturnValueOnce("/d iplinfo1");
-        jest.spyOn(mockCommandApi, "issueTsoCommand").mockReturnValue("iplinfo1" as any);
+        jest.spyOn(mockCommandApi, "issueTsoCommandWithParms").mockReturnValue("iplinfo1" as any);
 
         await tsoActions.issueTsoCommand();
 
@@ -220,7 +220,7 @@ describe("TsoCommandHandler unit testing", () => {
         getCommandApiMock.mockReturnValue(mockCommandApi);
         apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
         jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(() => Promise.resolve(qpItem2));
-        jest.spyOn(mockCommandApi, "issueTsoCommand").mockReturnValue("iplinfo0" as any);
+        jest.spyOn(mockCommandApi, "issueTsoCommandWithParms").mockReturnValue("iplinfo0" as any);
 
         await tsoActions.issueTsoCommand();
 
@@ -267,7 +267,7 @@ describe("TsoCommandHandler unit testing", () => {
         getCommandApiMock.mockReturnValue(mockCommandApi);
         apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
         jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(() => Promise.resolve(qpItem));
-        jest.spyOn(mockCommandApi, "issueTsoCommand").mockReturnValue("iplinfo3" as any);
+        jest.spyOn(mockCommandApi, "issueTsoCommandWithParms").mockReturnValue("iplinfo3" as any);
 
         await tsoActions.issueTsoCommand();
 
@@ -390,7 +390,7 @@ describe("TsoCommandHandler unit testing", () => {
         });
         createQuickPick.mockReturnValueOnce({
             placeholder:
-                'Choose "Create new..." to define a new profile or select an existing profile to Add to the Data Set Explorer',
+                'Choose "Create new..." to define a new profile or select an existing profile to add to the Data Set Explorer',
             activeItems: [qpItem2],
             ignoreFocusOut: true,
             items: [qpItem, qpItem2],
@@ -480,7 +480,7 @@ describe("TsoCommandHandler unit testing", () => {
         apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
 
         jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(() => Promise.resolve(qpItem));
-        jest.spyOn(mockCommandApi, "issueTsoCommand").mockReturnValue("iplinfo" as any);
+        jest.spyOn(mockCommandApi, "issueTsoCommandWithParms").mockReturnValue("iplinfo" as any);
 
         await tsoActions.issueTsoCommand();
 
@@ -525,7 +525,7 @@ describe("TsoCommandHandler unit testing", () => {
         getCommandApiMock.mockReturnValue(mockCommandApi);
         apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
         jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(() => Promise.resolve(qpItem));
-        jest.spyOn(mockCommandApi, "issueTsoCommand").mockReturnValue("iplinfo5" as any);
+        jest.spyOn(mockCommandApi, "issueTsoCommandWithParms").mockReturnValue("iplinfo5" as any);
 
         await tsoActions.issueTsoCommand();
 
@@ -616,7 +616,7 @@ describe("TsoCommandHandler unit testing", () => {
         apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
 
         showInputBox.mockReturnValueOnce("/d iplinfo1");
-        jest.spyOn(mockCommandApi, "issueTsoCommand").mockReturnValue("iplinfo1" as any);
+        jest.spyOn(mockCommandApi, "issueTsoCommandWithParms").mockReturnValue("iplinfo1" as any);
 
         await tsoActions.issueTsoCommand(session, null, testNode);
 

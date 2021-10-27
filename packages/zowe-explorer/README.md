@@ -23,7 +23,7 @@ More information:
 
 ## Contents
 
-- [What's new in Zowe Explorer 1.17.0](#whats-new-in-zowe-explorer-1.17.0)
+- [What's new in Zowe Explorer 1.20.0](#whats-new-in-zowe-explorer-1200)
 - [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
 - [Sample Use Cases](#sample-use-cases)
@@ -31,25 +31,23 @@ More information:
 - [Usage Tips](#usage-tips)
 - [Extending Zowe Explorer](#extending-zowe-explorer)
 
-## What's new in Zowe Explorer 1.17.0
+## What's new in Zowe Explorer 1.20.0
 
 **Added**:
 
-- Added the feature that automatically includes a missing profile in the Jobs view when submitting a job.
-- Added the extender documentation for KeytarApi for Secure Credential Store.
-- Added a new setting that enables you to hide Zowe Explorer's temporary downloads folder from a workspace.
-- Added the command to refresh a particular job and get the latest information and content for its spool files.
-- Added the function that enables you to delete multiple datasets and data set members.
-- Added the feature that enables you to use multiple VS Code windows for files opened via Zowe Explorer.
-- Added the command to refresh USS directory file names without the entire tree collapsing.
+- Added a Github action bot that automates the issue triage.
 
 **Changed**:
 
-- Removed non-functioning code from invalid credentials for Theia.
+- Updated the @zowe/cli version to 6.33.3 to fix the SSH2 audit failure.
+- Updated the Jobs Issue Stop and Issue Modify commands so that they can be consumed by Extenders with the `issueMvsCommand` API.
+- Update to use Visual Studio Code's standard confirmation prompt for the Data Sets, USS, and Job trees when clicking on a Favorited profile that does not exist.
+- Updated the deletion prompt for the USS and Jobs trees.
+- Updated the placeholder text in the `Add Profile` entry field
 
 **Fixed**:
 
-- Fixed the issue with the USS search and update profile errors for profiles without credentials.
+- Fixed the Not Found issue that resulted from attempts to delete a member whose parent data set was already deleted using multi-delete.
 
 For more information, see [Changelog](https://marketplace.visualstudio.com/items/Zowe.vscode-extension-for-zowe/changelog).
 
