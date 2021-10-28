@@ -10,6 +10,7 @@
  */
 
 // Change a file to get the GHA tests to run
+// test 2
 
 import {
     IProfileLoaded,
