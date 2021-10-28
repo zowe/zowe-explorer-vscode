@@ -52,7 +52,8 @@ jobs:
 
       - run: yarn lint
 
-      - run: docker exec -i theia chmod g+w /home/theia/.theia
+      - run: docker exec -i theia mkdir /home/theia/.theia
+      - run: docker exec -i theia chmod 02775 /home/theia/.theia
 
       - name: Verify plugin loaded
         run: docker exec -i theia ls -la /home/theia/plugins
