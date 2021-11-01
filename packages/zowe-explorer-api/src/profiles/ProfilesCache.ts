@@ -119,7 +119,8 @@ export class ProfilesCache {
             } catch (error) {
                 this.log.error(error);
             }
-            for (const type of apiRegister.registeredApiTypes()) {
+            const allTypes = this.getAllProfileTypes(apiRegister.registeredApiTypes());
+            for (const type of allTypes) {
                 const profileManager = this.getCliProfileManager(type);
                 const profilesForType = (await profileManager.loadAll()).filter((profile) => {
                     return profile.type === type;
@@ -316,7 +317,8 @@ export class ProfilesCache {
         let tmpAllProfiles = [];
         this.allTypes = [];
         const mProfileInfo = ProfilesCache.getConfigInstance();
-        for (const type of apiRegister.registeredApiTypes()) {
+        const allTypes = this.getAllProfileTypes(apiRegister.registeredApiTypes());
+        for (const type of allTypes) {
             // Step 1: Get all profiles for each registered type
             const profilesForType = mProfileInfo.getAllProfiles(type).filter((temp) => temp.profLoc.osLoc.length !== 0);
             if (profilesForType && profilesForType.length > 0) {
@@ -364,6 +366,16 @@ export class ProfilesCache {
             }
         }
         return profile;
+    }
+
+    // create an array that includes registered types from apiRegister.registeredApiTypes()
+    // and allExternalTypes
+    private getAllProfileTypes(registeredTypes: string[]): string[] {
+        const externalTypeArray: string[] = Array.from(this.allExternalTypes);
+        const allTypes = registeredTypes.concat(
+            externalTypeArray.filter((exType) => registeredTypes.every((type) => type !== exType))
+        );
+        return allTypes;
     }
 
     /**
