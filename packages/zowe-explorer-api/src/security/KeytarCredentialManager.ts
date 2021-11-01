@@ -18,6 +18,7 @@ import { getZoweDir } from "@zowe/cli";
 import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
+import * as globals from "../globals";
 
 declare const __webpack_require__: typeof require;
 declare const __non_webpack_require__: typeof require;
@@ -40,7 +41,12 @@ export class KeytarCredentialManager extends AbstractCredentialManager {
     /**
      * Combined list of services that credentials may be stored under
      */
-    private allServices: string[] = ["Zowe-Plugin", "@brightside/core", "@zowe/cli", "Broadcom-Plugin"];
+    private allServices: string[] = [
+        globals.SETTINGS_SCS_DEFAULT,
+        globals.SCS_BRIGHTSIDE,
+        globals.SCS_ZOWE_CLI,
+        globals.SCS_BROADCOM_PLUGIN,
+    ];
 
     /**
      * Preferred service name to store credentials with
