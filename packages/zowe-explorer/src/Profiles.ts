@@ -249,6 +249,7 @@ export class Profiles extends ProfilesCache {
     public async createZoweSession(zoweFileProvider: IZoweTree<IZoweTreeNode>) {
         const allProfiles = (await Profiles.getInstance()).allProfiles;
         const createNewProfile = "Create a New Connection to z/OS";
+        let addProfilePlaceholder: string = "";
         let chosenProfile: string = "";
 
         // Get all profiles
@@ -281,25 +282,29 @@ export class Profiles extends ProfilesCache {
         const createPick = new FilterDescriptor("\uFF0B " + createNewProfile);
         const items: vscode.QuickPickItem[] = profileNamesList.map((element) => new FilterItem(element));
         const quickpick = vscode.window.createQuickPick();
-        let placeholder = localize(
-            "uss.addSession.quickPickOption",
-            'Choose "Create new..." to define or select a profile to add to the USS Explorer'
-        );
-        if (zoweFileProvider.getTreeType() === PersistenceSchemaEnum.Dataset) {
-            placeholder = localize(
-                "ds.addSession.quickPickOption",
-                'Choose "Create new..." to define or select a profile to add to the DATA SETS Explorer'
-            );
-        } else if (zoweFileProvider.getTreeType() === PersistenceSchemaEnum.Job) {
-            placeholder = localize(
-                "jobs.addSession.quickPickOption",
-                'Choose "Create new..." to define or select a profile to add to the JOBS Explorer'
-            );
+        switch (zoweFileProvider.getTreeType()) {
+            case PersistenceSchemaEnum.Dataset:
+                addProfilePlaceholder = localize(
+                    "ds.addSession.quickPickOption",
+                    'Choose "Create new..." to define or select a profile to add to the DATA SETS Explorer'
+                );
+                break;
+            case PersistenceSchemaEnum.Job:
+                addProfilePlaceholder = localize(
+                    "jobs.addSession.quickPickOption",
+                    'Choose "Create new..." to define or select a profile to add to the JOBS Explorer'
+                );
+                break;
+            default:
+                // Use USS View as default for placeholder text
+                addProfilePlaceholder = localize(
+                    "uss.addSession.quickPickOption",
+                    'Choose "Create new..." to define or select a profile to add to the USS Explorer'
+                );
         }
-
         if (isTheia()) {
             const options: vscode.QuickPickOptions = {
-                placeHolder: placeholder,
+                placeHolder: addProfilePlaceholder,
             };
             // get user selection
             const choice = await vscode.window.showQuickPick([createPick, ...items], options);
@@ -310,7 +315,7 @@ export class Profiles extends ProfilesCache {
             chosenProfile = choice === createPick ? "" : choice.label;
         } else {
             quickpick.items = [createPick, ...items];
-            quickpick.placeholder = placeholder;
+            quickpick.placeholder = addProfilePlaceholder;
             quickpick.ignoreFocusOut = true;
             quickpick.show();
             const choice = await resolveQuickPickHelper(quickpick);
