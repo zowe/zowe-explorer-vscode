@@ -104,6 +104,10 @@ export namespace window {
         return undefined;
     }
 
+    export function setStatusBarMessage(message: string, ...items: string[]): undefined {
+        return undefined;
+    }
+
     /**
      * Options to configure the behavior of the message.
      *
