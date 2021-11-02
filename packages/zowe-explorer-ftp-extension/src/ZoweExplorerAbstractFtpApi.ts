@@ -12,7 +12,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import * as imperative from "@zowe/imperative";
 import { FTPConfig, IZosFTPProfile } from "@zowe/zos-ftp-for-zowe-cli";
-import { ZoweExplorerApi } from "@zowe/zowe-explorer-api";
+import { MessageSeverityEnum, ZoweExplorerApi, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { ZoweLogger } from "./extension";
 
 export abstract class AbstractFtpApi implements ZoweExplorerApi.ICommon {
     private session?: imperative.Session;
@@ -27,9 +28,12 @@ export abstract class AbstractFtpApi implements ZoweExplorerApi.ICommon {
         if (!this.session) {
             const ftpProfile = (profile || this.profile)?.profile;
             if (!ftpProfile) {
-                throw new Error(
-                    "Internal error: ZoweVscFtpRestApi instance was not initialized with a valid Zowe profile."
+                ZoweVsCodeExtension.showVsCodeMessage(
+                    "Internal error: ZoweVscFtpRestApi instance was not initialized with a valid Zowe profile.",
+                    MessageSeverityEnum.FATAL,
+                    ZoweLogger
                 );
+                throw new Error();
             }
             this.session = new imperative.Session({
                 hostname: ftpProfile.host,
@@ -48,9 +52,12 @@ export abstract class AbstractFtpApi implements ZoweExplorerApi.ICommon {
 
     public checkedProfile(): imperative.IProfileLoaded {
         if (!this.profile?.profile) {
-            throw new Error(
-                "Internal error: ZoweVscFtpRestApi instance was not initialized with a valid Zowe profile."
+            ZoweVsCodeExtension.showVsCodeMessage(
+                "Internal error: ZoweVscFtpRestApi instance was not initialized with a valid Zowe profile.",
+                MessageSeverityEnum.FATAL,
+                ZoweLogger
             );
+            throw new Error();
         }
         return this.profile;
     }
@@ -90,11 +97,12 @@ export abstract class AbstractFtpApi implements ZoweExplorerApi.ICommon {
                         "Invalid Credentials. Please ensure the username and password for " +
                         validateProfile?.name +
                         " are valid or this may lead to a lock-out.";
-
-                    throw new imperative.ImperativeError({ msg: errMsg, causeErrors: [e] });
+                    ZoweVsCodeExtension.showVsCodeMessage(errMsg, MessageSeverityEnum.ERROR, ZoweLogger);
+                    throw new Error();
                 } else {
                     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-                    throw new imperative.ImperativeError({ msg: e.message, causeErrors: [e] });
+                    ZoweVsCodeExtension.showVsCodeMessage(e.message, MessageSeverityEnum.ERROR, ZoweLogger);
+                    throw new Error();
                 }
             }
             if (sessionStatus) {
