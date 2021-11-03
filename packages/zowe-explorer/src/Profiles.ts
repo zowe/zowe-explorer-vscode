@@ -456,6 +456,12 @@ export class Profiles extends ProfilesCache {
                     }
                     updSchemaValues[value] = updRU;
                     break;
+                // for extenders that have their own token authentication methods with values in schema
+                // tokenType & tokenValue does not need to be presented to user as this is collected via login
+                case "tokenType":
+                    break;
+                case "tokenValue":
+                    break;
                 default:
                     let options: vscode.InputBoxOptions;
                     const response = await this.checkType(schema[value].type);
@@ -642,6 +648,12 @@ export class Profiles extends ProfilesCache {
                         return undefined;
                     }
                     schemaValues[value] = newRU;
+                    break;
+                // for extenders that have their own token authentication methods with values in schema
+                // tokenType & tokenValue does not need to be presented to user as this is collected via login
+                case "tokenType":
+                    break;
+                case "tokenValue":
                     break;
                 default:
                     let options: vscode.InputBoxOptions;
@@ -1146,29 +1158,8 @@ export class Profiles extends ProfilesCache {
             serviceProfile = this.loadNamedProfile(label.trim());
         }
 
-        // Skip if there is no base profile
-        if (!baseProfile) {
-            vscode.window.showInformationMessage(localize("ssoLogin.noBase", "This profile does not support login."));
-            return;
-        }
-
-        // This check will handle service profiles that have username and password
-        if (serviceProfile.profile.user && serviceProfile.profile.password) {
-            vscode.window.showInformationMessage(localize("ssoLogin.noBase", "This profile does not support login."));
-            return;
-        }
-
-        // This check is for optional credentials
-        if (
-            baseProfile &&
-            serviceProfile.profile.host &&
-            serviceProfile.profile.port &&
-            ((baseProfile.profile.host !== serviceProfile.profile.host &&
-                baseProfile.profile.port !== serviceProfile.profile.port) ||
-                (baseProfile.profile.host === serviceProfile.profile.host &&
-                    baseProfile.profile.port !== serviceProfile.profile.port))
-        ) {
-            vscode.window.showInformationMessage(localize("ssoLogin.noBase", "This profile does not support login."));
+        const checksPassed = this.optionalCredChecks(serviceProfile, baseProfile);
+        if (!checksPassed) {
             return;
         }
 
@@ -1244,72 +1235,41 @@ export class Profiles extends ProfilesCache {
     }
 
     public async ssoLogout(node: IZoweNodeType): Promise<void> {
-        const baseProfile = this.getBaseProfile();
         const serviceProfile = node.getProfile();
-
-        // tslint:disable-next-line:no-console
-        console.log(serviceProfile);
-
-        const checksPassed = this.optionalCredChecks(serviceProfile, baseProfile);
-        // tslint:disable-next-line:no-console
-        console.log(checksPassed);
-        if (!checksPassed) {
-            return;
-        }
-
-        // Skip if there is no base profile or service profile token
-        // if (!baseProfile && !serviceProfile.profile.tokenType) {
-        //     vscode.window.showInformationMessage(localize("ssoLogout.noBase", "This profile does not support logout."));
-        //     return;
-        // }
-
-        // This check will handle service profiles that have username and password
-        // if (serviceProfile.profile.user && serviceProfile.profile.password) {
-        //     vscode.window.showInformationMessage(localize("ssoLogout.noBase", "This profile does not support logout."));
-        //     return;
-        // }
-
-        // This check is for optional credentials
-        // if (
-        //     baseProfile &&
-        //     !serviceProfile.profile.tokenType &&
-        //     serviceProfile.profile.host &&
-        //     serviceProfile.profile.port &&
-        //     ((baseProfile.profile.host !== serviceProfile.profile.host &&
-        //         baseProfile.profile.port !== serviceProfile.profile.port) ||
-        //         (baseProfile.profile.host === serviceProfile.profile.host &&
-        //             baseProfile.profile.port !== serviceProfile.profile.port))
-        // ) {
-        //     vscode.window.showInformationMessage(localize("ssoLogout.noBase", "This profile does not support logout."));
-        //     return;
-        // }
-
         try {
-            let combinedProfile: IProfileLoaded;
-            if (serviceProfile.profile.tokenType) {
-                combinedProfile = serviceProfile;
+            if (serviceProfile.type !== "zosmf" && serviceProfile.profile.tokenValue !== undefined) {
+                const session = new Session({
+                    hostname: serviceProfile.profile.host,
+                    port: serviceProfile.profile.port,
+                    rejectUnauthorized: serviceProfile.profile.rejectUnauthorized,
+                    tokenType: serviceProfile.profile.tokenType,
+                    tokenValue: serviceProfile.profile.tokenValue,
+                    type: SessConstants.AUTH_TYPE_TOKEN,
+                });
+                // tslint:disable-next-line:no-console
+                console.log(session);
+                await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).logout(session);
             } else {
-                const profiles = Profiles.getInstance();
-                combinedProfile = await profiles.getCombinedProfile(serviceProfile, baseProfile);
-            }
-            const loginTokenType = ZoweExplorerApiRegister.getInstance()
-                .getCommonApi(serviceProfile)
-                .getTokenTypeName();
+                const baseProfile = this.getBaseProfile();
+                const checksPassed = this.optionalCredChecks(serviceProfile, baseProfile);
+                if (!checksPassed) {
+                    return;
+                }
 
-            const updSession = new Session({
-                hostname: combinedProfile.profile.host,
-                port: combinedProfile.profile.port,
-                rejectUnauthorized: combinedProfile.profile.rejectUnauthorized,
-                tokenType: loginTokenType,
-                type: SessConstants.AUTH_TYPE_TOKEN,
-                tokenValue: combinedProfile.profile.tokenValue,
-            });
-            await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).logout(updSession);
-            vscode.window.showInformationMessage(
-                localize("ssoLogout.successful", "Logout from authentication service was successful.")
-            );
+                const combinedProfile = await this.getCombinedProfile(serviceProfile, baseProfile);
+                const loginTokenType = ZoweExplorerApiRegister.getInstance()
+                    .getCommonApi(serviceProfile)
+                    .getTokenTypeName();
+                const updSession = new Session({
+                    hostname: combinedProfile.profile.host,
+                    port: combinedProfile.profile.port,
+                    rejectUnauthorized: combinedProfile.profile.rejectUnauthorized,
+                    tokenType: loginTokenType,
+                    tokenValue: combinedProfile.profile.tokenValue,
+                    type: SessConstants.AUTH_TYPE_TOKEN,
+                });
+                await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).logout(updSession);
 
-            if (loginTokenType === SessConstants.TOKEN_TYPE_APIML) {
                 this.getCliProfileManager(baseProfile.type).save({
                     name: baseProfile.name,
                     type: baseProfile.type,
@@ -1321,6 +1281,9 @@ export class Profiles extends ProfilesCache {
                     },
                 });
             }
+            vscode.window.showInformationMessage(
+                localize("ssoLogout.successful", "Logout from authentication service was successful.")
+            );
         } catch (error) {
             vscode.window.showErrorMessage(localize("ssoLogout.unableToLogout", "Unable to log out. ") + error.message);
             return;
@@ -1328,23 +1291,25 @@ export class Profiles extends ProfilesCache {
     }
 
     private optionalCredChecks(serviceProfile?: IProfileLoaded, baseProfile?: IProfileLoaded): boolean {
-        let passed = true;
-        // Skip if there is no base profile or service profile token
-        if (!baseProfile && !serviceProfile.profile.tokenType) {
-            passed = false;
-            vscode.window.showInformationMessage(localize("ssoLogout.noBase", "This profile does not support logout."));
+        // Skip if there is no base profile
+        if (!baseProfile) {
+            vscode.window.showInformationMessage(
+                localize("ssoAuth.noBase", "This profile does not support apiml token authentication.")
+            );
+            return false;
         }
 
         // This check will handle service profiles that have username and password
         if (serviceProfile.profile.user && serviceProfile.profile.password) {
-            passed = false;
-            vscode.window.showInformationMessage(localize("ssoLogout.noBase", "This profile does not support logout."));
+            vscode.window.showInformationMessage(
+                localize("ssoAuth.noBase", "This profile does not support apiml token authentication.")
+            );
+            return false;
         }
 
         // This check is for optional credentials
         if (
             baseProfile &&
-            !serviceProfile.profile.tokenType &&
             serviceProfile.profile.host &&
             serviceProfile.profile.port &&
             ((baseProfile.profile.host !== serviceProfile.profile.host &&
@@ -1352,10 +1317,12 @@ export class Profiles extends ProfilesCache {
                 (baseProfile.profile.host === serviceProfile.profile.host &&
                     baseProfile.profile.port !== serviceProfile.profile.port))
         ) {
-            passed = false;
-            vscode.window.showInformationMessage(localize("ssoLogout.noBase", "This profile does not support logout."));
+            vscode.window.showInformationMessage(
+                localize("ssoAuth.noBase", "This profile does not support apiml token authentication.")
+            );
+            return false;
         }
-        return passed;
+        return true;
     }
 
     private async deletePrompt(deletedProfile: IProfileLoaded) {
