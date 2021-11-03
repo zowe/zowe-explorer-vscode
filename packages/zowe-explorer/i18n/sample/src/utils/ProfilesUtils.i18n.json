@@ -3,5 +3,6 @@
   "errorHandling.invalid.token": "Your connection is no longer active. Please log in to an authentication service to restore the connection.",
   "ErrorHandling.authentication.login": "Log in to Authentication Service",
   "ErrorHandling.checkCredentials.button": "Check Credentials",
-  "ErrorHandling.checkCredentials.cancelled": "Operation Cancelled"
+  "ErrorHandling.checkCredentials.cancelled": "Operation Cancelled",
+  "getProfile.notTreeItem": "Tree Item is not a Zowe Explorer item."
 }
