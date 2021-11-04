@@ -1245,6 +1245,7 @@ export class Profiles extends ProfilesCache {
                     tokenType: serviceProfile.profile.tokenType,
                     tokenValue: serviceProfile.profile.tokenValue,
                     type: SessConstants.AUTH_TYPE_TOKEN,
+                    basePath: serviceProfile.profile.basePath,
                 });
                 // tslint:disable-next-line:no-console
                 console.log(session);
