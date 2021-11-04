@@ -208,7 +208,7 @@ export async function deleteDatasetPrompt(
 ) {
     let nodes: IZoweDatasetTreeNode[];
     const treeView = datasetProvider.getTreeView();
-    const selectedNodes: IZoweDatasetTreeNode[] = treeView.selection;
+    let selectedNodes: IZoweDatasetTreeNode[] = treeView.selection;
     let includedSelection = false;
     if (node) {
         for (const item of selectedNodes) {
@@ -217,6 +217,21 @@ export async function deleteDatasetPrompt(
             }
         }
     }
+
+    // Check that child and parent aren't both in array, removing children whose parents are in
+    // array to avoid errors from host when deleting none=existent children.
+    const childArray: IZoweDatasetTreeNode[] = [];
+    for (const item of selectedNodes) {
+        if (contextually.isDsMember(item)) {
+            for (const parent of selectedNodes) {
+                if (parent.getLabel() === item.getParent().getLabel()) {
+                    childArray.push(item);
+                }
+            }
+        }
+    }
+    selectedNodes = selectedNodes.filter((val) => !childArray.includes(val));
+
     if (includedSelection || !node) {
         // Filter out sessions, favorite nodes, or information messages
         nodes = selectedNodes.filter(
@@ -257,6 +272,8 @@ export async function deleteDatasetPrompt(
             ? ` ${deletedNode.getParent().getLabel()}(${deletedNode.getLabel()})`
             : ` ${deletedNode.getLabel()}`;
     });
+    nodesToDelete.sort();
+
     const nodesDeleted: string[] = [];
 
     // The member parent nodes that should be refreshed individually
@@ -340,6 +357,7 @@ export async function deleteDatasetPrompt(
         );
     }
     if (nodesDeleted.length > 0) {
+        nodesDeleted.sort();
         vscode.window.showInformationMessage(
             localize(
                 "deleteMulti.datasetNode",
@@ -1394,7 +1412,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweT
     try {
         const uploadResponse = await vscode.window.withProgress(
             {
-                location: vscode.ProgressLocation.Notification,
+                location: vscode.ProgressLocation.Window,
                 title: localize("saveFile.response.save.title", "Saving data set..."),
             },
             () => {
@@ -1406,7 +1424,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweT
             }
         );
         if (uploadResponse.success) {
-            vscode.window.showInformationMessage(uploadResponse.commandResponse);
+            vscode.window.setStatusBarMessage(uploadResponse.commandResponse, globals.STATUS_BAR_TIMEOUT_MS);
             // set local etag with the new etag from the updated file on mainframe
             if (node) {
                 node.setEtag(uploadResponse.apiResponse[0].etag);

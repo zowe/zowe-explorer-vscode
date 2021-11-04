@@ -23,7 +23,7 @@ More information:
 
 ## Contents
 
-- [What's new in Zowe Explorer 1.19.0](#whats-new-in-zowe-explorer-1190)
+- [What's new in Zowe Explorer 1.20.0](#whats-new-in-zowe-explorer-1200)
 - [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
 - [Sample Use Cases](#sample-use-cases)
@@ -31,26 +31,23 @@ More information:
 - [Usage Tips](#usage-tips)
 - [Extending Zowe Explorer](#extending-zowe-explorer)
 
-## What's new in Zowe Explorer 1.19.0
-
-> Zowe Explorer is compatible only with Theia 1.15.0 or earlier versions.
+## What's new in Zowe Explorer 1.20.0
 
 **Added**:
 
-- Added Imperative logger access for extenders.
-- Added documentation for Imperative logger for extenders.
-- Added a check to ensure that a base profile exists before running the function that combines base and service profiles
+- Added a Github action bot that automates the issue triage.
 
 **Changed**:
 
-- Implemented separate console windows for TSO and MVS commands.
+- Updated the @zowe/cli version to 6.33.3 to fix the SSH2 audit failure.
+- Updated the Jobs Issue Stop and Issue Modify commands so that they can be consumed by Extenders with the `issueMvsCommand` API.
+- Update to use Visual Studio Code's standard confirmation prompt for the Data Sets, USS, and Job trees when clicking on a Favorited profile that does not exist.
+- Updated the deletion prompt for the USS and Jobs trees.
+- Updated the placeholder text in the `Add Profile` entry field
 
 **Fixed**:
 
-- Fixed the bug that caused the check credentials pop-up to disappear too quickly.
-- Fixed the bug that kept the command text box while escaping the process of entering a TSO command. Now the command text box does not pop up if you cancel entering a TSO command.
-- Fixed the bug that caused issues with deleting data set members in Ecplipse Theia or Che.
-- Fixed the bug that caused a pop-up confirming the deletion of multiple data sets to display while removing a single data set member.
+- Fixed the Not Found issue that resulted from attempts to delete a member whose parent data set was already deleted using multi-delete.
 
 For more information, see [Changelog](https://marketplace.visualstudio.com/items/Zowe.vscode-extension-for-zowe/changelog).
 

@@ -57,6 +57,7 @@ async function createGlobalMocks() {
         mockCreateBasicZosmfSession: jest.fn(),
         mockUtilities: jest.fn(),
         mockShowInformationMessage: jest.fn(),
+        mockSetStatusBarMessage: jest.fn(),
         mockGetConfiguration: jest.fn(),
         mockIsFile: jest.fn(),
         mockLoad: jest.fn(),
@@ -268,6 +269,10 @@ async function createGlobalMocks() {
     });
     Object.defineProperty(vscode.window, "showInformationMessage", {
         value: globalMocks.mockShowInformationMessage,
+        configurable: true,
+    });
+    Object.defineProperty(vscode.window, "setStatusBarMessage", {
+        value: globalMocks.mockSetStatusBarMessage,
         configurable: true,
     });
     Object.defineProperty(zowe, "Utilities", { value: globalMocks.mockUtilities, configurable: true });
