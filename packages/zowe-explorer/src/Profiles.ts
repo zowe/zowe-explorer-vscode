@@ -881,21 +881,16 @@ export class Profiles extends ProfilesCache {
                     }
                     profArray.push(loadProfile);
                     this.allProfiles = profArray;
-                    if (rePrompt) {
-                        const infoMsg = localize(
-                            "promptCredentials.updateConfigCreds.infoMessage",
-                            "Credentials for future use with profile {0} will need to be updated in the Zowe config file or by using the command 'zowe config secure'.",
-                            loadProfile.name
-                        );
-                        vscode.window.showInformationMessage(infoMsg);
-                    }
                     const config = ProfilesCache.getConfigInstance().getTeamConfig();
                     const secureFields = await config.api.secure.secureFields();
+                    const propName = loadProfile.name.trim();
+                    const userProp = `profiles.` + propName + `.properties.user`;
+                    const passProp = `profiles.` + propName + `.properties.password`;
                     secureFields.forEach((prop) => {
-                        if (prop.includes("user")) {
+                        if (prop === userProp) {
                             config.set(prop, updSession.ISession.user);
                         }
-                        if (prop.includes("password")) {
+                        if (prop === passProp) {
                             config.set(prop, updSession.ISession.password);
                         }
                     });
