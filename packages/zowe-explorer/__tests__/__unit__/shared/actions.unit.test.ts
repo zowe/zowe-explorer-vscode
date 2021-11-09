@@ -42,7 +42,7 @@ async function createGlobalMocks() {
             };
         }),
         qpPlaceholder:
-            'Choose "Create new..." to define a new profile or select an existing profile to Add to the Data Set Explorer',
+            'Choose "Create new..." to define a new profile or select an existing profile to add to the Data Set Explorer',
     };
 
     globalMocks.withProgress = jest.fn().mockImplementation((progLocation, callback) => {

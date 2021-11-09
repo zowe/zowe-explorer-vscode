@@ -296,10 +296,21 @@ export class Profiles extends ProfilesCache {
         const configPick = new FilterDescriptor("\uFF0B " + createNewConfig);
         const items: vscode.QuickPickItem[] = profileNamesList.map((element) => new FilterItem(element));
         const quickpick = vscode.window.createQuickPick();
-        const placeholder = localize(
+        let placeholder = localize(
             "addSession.quickPickOption",
-            'Choose "Create new..." to define a new profile or select an existing profile to Add to the USS Explorer'
+            'Choose "Create new..." to define or select a profile to add to the USS Explorer'
         );
+        if (zoweFileProvider.getTreeType() === PersistenceSchemaEnum.Dataset) {
+            placeholder = localize(
+                "addSession.quickPickOption",
+                'Choose "Create new..." to define or select a profile to add to the DATA SETS Explorer'
+            );
+        } else if (zoweFileProvider.getTreeType() === PersistenceSchemaEnum.Job) {
+            placeholder = localize(
+                "addSession.quickPickOption",
+                'Choose "Create new..." to define or select a profile to add to the Job Views Explorer'
+            );
+        }
 
         if (isTheia()) {
             const options: vscode.QuickPickOptions = {

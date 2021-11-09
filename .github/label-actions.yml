@@ -1,0 +1,8 @@
+bug:
+  comment: |
+    Thank you for creating a bug report. If you haven't already, please ensure you have provided steps to reproduce it and as much context as possible.
+enhancement:
+  comment: |
+    Thank you for raising this issue. 
+    The community has 30 days to upvote 👍 the issue.
+    If it receives 10 upvotes, we will move it to our backlog. If not, we will close it.
