@@ -15,7 +15,14 @@ import * as vscode from "vscode";
 import * as os from "os";
 import * as path from "path";
 import { Session, IProfile, ImperativeConfig, IProfileLoaded, ProfileInfo } from "@zowe/imperative";
-import { getSecurityModules, IZoweNodeType, IZoweTree, IZoweTreeNode, ProfilesCache } from "@zowe/zowe-explorer-api";
+import {
+    getSecurityModules,
+    IZoweNodeType,
+    IZoweTree,
+    IZoweTreeNode,
+    ProfilesCache,
+    ZoweTreeNode,
+} from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import * as nls from "vscode-nls";
 
@@ -235,4 +242,11 @@ export async function getProfileInfo(envTheia: boolean): Promise<ProfileInfo> {
     });
     ProfilesCache.createConfigInstance(mProfileInfo);
     return mProfileInfo;
+}
+
+export function getProfile(node: vscode.TreeItem) {
+    if (node instanceof ZoweTreeNode) {
+        return (node as ZoweTreeNode).getProfile();
+    }
+    throw new Error(localize("getProfile.notTreeItem", "Tree Item is not a Zowe Explorer item."));
 }

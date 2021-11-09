@@ -31,7 +31,6 @@ import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import { Profiles } from "./Profiles";
 import { errorHandling, getProfileInfo, getZoweDir } from "./utils/ProfilesUtils";
-import { linkProfileDialog } from "./ProfileLink";
 import { ImperativeError, CliProfileManager, ProfileInfo } from "@zowe/imperative";
 import { createDatasetTree } from "./dataset/DatasetTree";
 import { createJobsTree } from "./job/ZosJobsProvider";
@@ -255,7 +254,6 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
     );
     vscode.commands.registerCommand("zowe.ds.ZoweNode.openPS", (node) => dsActions.openPS(node, true, datasetProvider));
     vscode.commands.registerCommand("zowe.ds.createDataset", (node) => dsActions.createFile(node, datasetProvider));
-    vscode.commands.registerCommand("zowe.all.profilelink", (node) => linkProfileDialog(node.getProfile()));
     vscode.commands.registerCommand("zowe.ds.createMember", (node) => dsActions.createMember(node, datasetProvider));
     vscode.commands.registerCommand("zowe.ds.deleteDataset", (node?) =>
         dsActions.deleteDatasetPrompt(datasetProvider, node)
