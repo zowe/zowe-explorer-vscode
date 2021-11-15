@@ -372,6 +372,7 @@ export class Profiles extends ProfilesCache {
                 placeHolder: localize("createNewConnection.option.prompt.profileName.placeholder", "Connection Name"),
                 prompt: localize("createNewConnection.option.prompt.profileName", "Enter a name for the connection"),
                 value: profileName,
+                validateInput: (value) => null,
             };
             profileName = await vscode.window.showInputBox(options);
             if (!profileName) {

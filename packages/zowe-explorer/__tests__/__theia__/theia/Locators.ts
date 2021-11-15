@@ -21,6 +21,7 @@ export const DatasetsLocators = {
     datasetsPanelId: "plugin-view:zowe.ds.explorer",
     datasetsAddSessionId: "__plugin.view.title.action.zowe.ds.addSession",
     emptyInputBoxXpath: "//*[@class='input empty']",
+    createNewConnectionListXpath: "//*[@class='quick-input-list']",
     inputBoxXpath: "//*[@class='input']",
     defaultDatasetsProfileId: "/1:DefaultProfile",
     secondDatasetProfileId: "/2:TestSeleniumProfile",
