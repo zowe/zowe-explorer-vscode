@@ -32,7 +32,8 @@
   "scripts": {
     "prepare": "yarn build",
     "build": "yarn clean && webpack --mode development",
-    "test": "echo \"zowe-explorer-ftp-extension: Tests coming soon.\"",
+    "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
+    "test": "yarn test:unit",
     "lint": "concurrently -n \"_eslint_,prettier\" \"eslint . --ext .ts\" \"prettier --check .\"",
     "pretty": "prettier --write .",
     "watch": "webpack --mode development --watch --info-verbosity verbose",
@@ -54,5 +55,46 @@
     "concurrently": "^5.2.0",
     "webpack": "^4.42.1",
     "webpack-cli": "^3.3.11"
+  },
+  "jest": {
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js"
+    ],
+    "testPathIgnorePatterns": [
+      "<rootDir>/src/decorators"
+    ],
+    "watchPathIgnorePatterns": [
+      "<rootDir>/results/unit"
+    ],
+    "transform": {
+      "^.+\\.(ts|tsx)$": "ts-jest"
+    },
+    "globals": {
+      "ts-jest": {
+        "tsConfig": "tsconfig.json",
+        "diagnostics": false
+      }
+    },
+    "testRegex": "__tests__.*\\.(spec|test)\\.ts$",
+    "modulePathIgnorePatterns": [
+      "__tests__/__integration__/",
+      "__tests__/__theia__/",
+      "out/"
+    ],
+    "reporters": [
+      "default",
+      "jest-junit",
+      "jest-stare",
+      "jest-html-reporter"
+    ],
+    "coverageReporters": [
+      "json",
+      "lcov",
+      "text",
+      "cobertura"
+    ],
+    "coverageDirectory": "<rootDir>/results/unit/coverage"
   }
 }
