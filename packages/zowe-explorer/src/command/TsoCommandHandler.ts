@@ -226,6 +226,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                 prompt: localize("issueTsoCommand.command", "Enter or update the TSO command"),
                 value: response,
                 valueSelection: response ? [response.length, response.length] : undefined,
+                validateInput: (value) => null,
             };
             // get user input
             response = await vscode.window.showInputBox(options2);
@@ -355,6 +356,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                 ),
                 ignoreFocusOut: true,
                 value: tsoParms.account,
+                validateInput: (value) => null,
             };
             tsoParms.account = await vscode.window.showInputBox(InputBoxOptions);
             if (!tsoParms.account) {

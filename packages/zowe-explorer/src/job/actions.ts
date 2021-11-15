@@ -164,6 +164,7 @@ export async function modifyCommand(job: Job) {
     try {
         const command = await vscode.window.showInputBox({
             prompt: localize("jobActions.modifyCommand.command.prompt", "Modify Command"),
+            validateInput: (value) => null,
         });
         if (command !== undefined) {
             const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(job.getProfile());
@@ -224,7 +225,10 @@ export async function stopCommand(job: Job) {
  */
 // Is this redundant with the setter in the Job class (ZoweJobNode.ts)?
 export async function setOwner(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>) {
-    const newOwner = await vscode.window.showInputBox({ prompt: localize("setOwner.newOwner.prompt.owner", "Owner") });
+    const newOwner = await vscode.window.showInputBox({
+        prompt: localize("setOwner.newOwner.prompt.owner", "Owner"),
+        validateInput: (value) => null,
+    });
     job.owner = newOwner;
     jobsProvider.refreshElement(job);
 }
@@ -238,6 +242,7 @@ export async function setOwner(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZ
 export async function setPrefix(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>) {
     const newPrefix = await vscode.window.showInputBox({
         prompt: localize("setOwner.newOwner.prompt.prefix", "Prefix"),
+        validateInput: (value) => null,
     });
     job.prefix = newPrefix;
     jobsProvider.refreshElement(job);

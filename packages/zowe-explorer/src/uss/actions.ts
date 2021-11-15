@@ -57,12 +57,14 @@ export async function createUSSNode(
             placeHolder: localize("createUSSNode.fileLocation.placeholder", "{0} location", nodeType),
             prompt: localize("createUSSNode.fileLocation.prompt", "Choose a location to create the {0}", nodeType),
             value: node.tooltip,
+            validateInput: (value) => null,
         });
     } else {
         filePath = node.fullPath;
     }
     const name = await vscode.window.showInputBox({
         placeHolder: localize("createUSSNode.name", "Name of file or directory"),
+        validateInput: (value) => null,
     });
     if (name && filePath) {
         try {

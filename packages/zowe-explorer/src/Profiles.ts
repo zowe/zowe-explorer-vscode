@@ -1421,11 +1421,13 @@ export class Profiles extends ProfilesCache {
             options = {
                 prompt: schema[input].optionDefinition.description.toString(),
                 value: schema[input].optionDefinition.defaultValue.toString(),
+                validateInput: (value) => null,
             };
         } else {
             options = {
                 placeHolder: localize("createNewConnection.option.prompt.port.placeholder", "Port Number"),
                 prompt: schema[input].optionDefinition.description.toString(),
+                validateInput: (value) => null,
             };
         }
         port = Number(await vscode.window.showInputBox(options));
@@ -1452,6 +1454,7 @@ export class Profiles extends ProfilesCache {
             ),
             ignoreFocusOut: true,
             value: userName,
+            validateInput: (value) => null,
         };
         userName = await vscode.window.showInputBox(InputBoxOptions);
 
@@ -1481,6 +1484,7 @@ export class Profiles extends ProfilesCache {
             password: true,
             ignoreFocusOut: true,
             value: passWord,
+            validateInput: (value) => null,
         };
         passWord = await vscode.window.showInputBox(InputBoxOptions);
 
@@ -1578,16 +1582,19 @@ export class Profiles extends ProfilesCache {
             options = {
                 prompt: description,
                 value: editValue,
+                validateInput: (item) => null,
             };
         } else if (schema[value].optionDefinition.hasOwnProperty("defaultValue")) {
             options = {
                 prompt: description,
                 value: schema[value].optionDefinition.defaultValue,
+                validateInput: (item) => null,
             };
         } else {
             options = {
                 placeHolder: description,
                 prompt: description,
+                validateInput: (item) => null,
             };
         }
         return options;

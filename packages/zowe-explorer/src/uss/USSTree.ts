@@ -607,6 +607,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 const options: vscode.InputBoxOptions = {
                     prompt: localize("filterPrompt.option.prompt.search", "Create a new filter"),
                     value: remotepath,
+                    validateInput: (value) => null,
                 };
                 // get user input
                 remotepath = await vscode.window.showInputBox(options);

@@ -94,6 +94,7 @@ export async function allocateLike(datasetProvider: IZoweTree<IZoweDatasetTreeNo
                 "Enter the name of the data set to copy attributes from"
             ),
             value: currSelection,
+            validateInput: (value) => null,
         });
         if (!likeDSName) {
             vscode.window.showInformationMessage(
@@ -111,6 +112,7 @@ export async function allocateLike(datasetProvider: IZoweTree<IZoweDatasetTreeNo
     const newDSName = await vscode.window.showInputBox({
         ignoreFocusOut: true,
         placeHolder: localize("allocateLike.enterPattern", "Enter a name for the new data set"),
+        validateInput: (value) => null,
     });
     if (!newDSName) {
         vscode.window.showInformationMessage(localize("allocateLike.noNewName", "You must enter a new data set name."));
@@ -383,7 +385,10 @@ export async function deleteDatasetPrompt(
  * @param {DatasetTree} datasetProvider - the tree which contains the nodes
  */
 export async function createMember(parent: IZoweDatasetTreeNode, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
-    const name = await vscode.window.showInputBox({ placeHolder: localize("createMember.inputBox", "Name of Member") });
+    const name = await vscode.window.showInputBox({
+        placeHolder: localize("createMember.inputBox", "Name of Member"),
+        validateInput: (value) => null,
+    });
     globals.LOG.debug(
         localize("createMember.log.debug.createNewDataSet", "creating new data set member of name ") + name
     );
@@ -572,6 +577,7 @@ export async function createFile(node: IZoweDatasetTreeNode, datasetProvider: IZ
         dsName = await vscode.window.showInputBox({
             placeHolder: localize("dataset.name", "Name of Data Set"),
             ignoreFocusOut: true,
+            validateInput: (value) => null,
         });
         if (dsName) {
             dsName = dsName.trim().toUpperCase();
@@ -743,6 +749,7 @@ async function handleUserSelection(newDSProperties, dsType): Promise<string> {
                 newDSProperties.find((prop) => prop.label === pattern).value = await vscode.window.showInputBox({
                     value: newDSProperties.find((prop) => prop.label === pattern).value,
                     placeHolder: newDSProperties.find((prop) => prop.label === pattern).placeHolder,
+                    validateInput: (value) => null,
                 });
                 break;
         }
@@ -1136,6 +1143,7 @@ export async function enterPattern(node: IZoweDatasetTreeNode, datasetProvider: 
                 "Search Data Sets: use a comma to separate multiple patterns"
             ),
             value: node.pattern,
+            validateInput: (value) => null,
         };
         // get user input
         pattern = await vscode.window.showInputBox(options);
@@ -1265,6 +1273,7 @@ export async function pasteMember(node: IZoweDatasetTreeNode, datasetProvider: I
             memberName = await vscode.window.showInputBox({
                 value: beforeMemberName,
                 placeHolder: localize("renameDataSet.name", "Name of Data Set Member"),
+                validateInput: (value) => null,
             });
             if (!memberName) {
                 return;

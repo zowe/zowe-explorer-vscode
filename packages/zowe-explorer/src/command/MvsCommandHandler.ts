@@ -222,6 +222,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
                 prompt: localize("issueMvsCommand.command", "Enter or update the MVS command"),
                 value: response,
                 valueSelection: response ? [response.length, response.length] : undefined,
+                validateInput: (value) => null,
             };
             // get user input
             response = await vscode.window.showInputBox(options2);
