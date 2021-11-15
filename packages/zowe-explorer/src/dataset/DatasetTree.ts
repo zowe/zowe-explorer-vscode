@@ -943,6 +943,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                         "Search Data Sets: use a comma to separate multiple patterns"
                     ),
                     value: pattern,
+                    validateInput: (value) => null,
                 };
                 // get user input
                 pattern = await vscode.window.showInputBox(options2);

@@ -649,6 +649,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                     options = {
                         prompt: localize("jobsFilterPrompt.option.prompt.prefix", "Enter a Job prefix. Default is *."),
                         value: prefix,
+                        validateInput: (value) => null,
                     };
                     // get user input
                     prefix = await vscode.window.showInputBox(options);
@@ -666,6 +667,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                         options = {
                             prompt: localize("jobsFilterPrompt.option.prompt.jobid", "Enter a Job id"),
                             value: jobid,
+                            validateInput: (value) => null,
                         };
                         // get user input
                         jobid = await vscode.window.showInputBox(options);
@@ -681,6 +683,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                     options = {
                         prompt: localize("jobsFilterPrompt.option.prompt.jobid", "Enter a Job id"),
                         value: jobid,
+                        validateInput: (value) => null,
                     };
                     // get user input
                     jobid = await vscode.window.showInputBox(options);
