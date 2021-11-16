@@ -35,6 +35,7 @@ import * as globals from "../../../src/globals";
 import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
 import { Profiles } from "../../../src/Profiles";
 import * as SpoolProvider from "../../../src/SpoolProvider";
+import * as refreshActions from "../../../src/shared/refresh";
 
 const activeTextEditorDocument = jest.fn();
 
@@ -1015,6 +1016,7 @@ describe("job deletion command", () => {
             configurable: true,
         });
         warningDialogStub.mockResolvedValueOnce("Delete");
+        jest.spyOn(refreshActions, "refreshAll");
         const jobsProvider = createJobsTree(session, job, profile, createTreeView());
         jobsProvider.delete.mockResolvedValueOnce(Promise.resolve());
         const jobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, null, session, job, profile);
@@ -1022,7 +1024,7 @@ describe("job deletion command", () => {
         await jobActions.deleteCommand(jobsProvider, jobNode);
         // assert
         expect(mocked(jobsProvider.delete)).toBeCalledWith(jobNode);
-        expect(mocked(jobsProvider.refreshElement)).toBeCalledWith(jobNode.getSessionNode());
+        expect(refreshActions.refreshAll).toHaveBeenCalledWith(jobsProvider);
     });
 
     it("should not delete a job in case user cancelled deletion", async () => {
@@ -1040,7 +1042,6 @@ describe("job deletion command", () => {
         await jobActions.deleteCommand(jobsProvider, jobNode);
         // assert
         expect(mocked(jobsProvider.delete)).not.toBeCalled();
-        expect(mocked(jobsProvider.refreshElement)).not.toBeCalled();
     });
 
     it("should not refresh the current job session after an error during job deletion", async () => {
@@ -1058,6 +1059,5 @@ describe("job deletion command", () => {
         await jobActions.deleteCommand(jobsProvider, jobNode);
         // assert
         expect(mocked(jobsProvider.delete)).toBeCalledWith(jobNode);
-        expect(mocked(jobsProvider.refreshElement)).not.toBeCalled();
     });
 });

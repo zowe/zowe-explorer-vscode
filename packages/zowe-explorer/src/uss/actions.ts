@@ -69,6 +69,7 @@ export async function createUSSNode(
             filePath = `${filePath}/${name}`;
             await ZoweExplorerApiRegister.getUssApi(node.getProfile()).create(filePath, nodeType);
             if (isTopLevel) {
+                await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
                 refreshAll(ussFileProvider);
             } else {
                 ussFileProvider.refreshElement(node);

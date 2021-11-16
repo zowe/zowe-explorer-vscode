@@ -20,6 +20,7 @@ import * as nls from "vscode-nls";
 import { toUniqueJobFileUri } from "../SpoolProvider";
 import { IProfileLoaded } from "@zowe/imperative";
 import * as globals from "../globals";
+import { refreshAll as refreshAllJobs } from "../shared/refresh";
 
 // Set up localization
 nls.config({
@@ -288,8 +289,7 @@ const deleteSingleJob = async (job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZ
         await errorHandling(error.toString(), job.getProfile().name, error.message.toString());
         return;
     }
-    const jobSession = job.getSessionNode();
-    await refreshJobsServer(jobSession, jobsProvider);
+    await refreshAllJobs(jobsProvider);
     vscode.window.showInformationMessage(localize("deleteCommand.job", "Job {0} deleted.", jobName));
 };
 
@@ -332,12 +332,7 @@ const deleteMultipleJobs = async (
         })
         .filter((result) => result !== undefined);
     if (deletedJobs.length) {
-        await Promise.all(
-            deletedJobs
-                .map((jobNode) => jobNode.getSessionNode())
-                .filter((jobSession, index, jobSessions) => jobSessions.indexOf(jobSession) === index)
-                .map((jobSession) => refreshJobsServer(jobSession, jobsProvider))
-        );
+        await refreshAllJobs(jobsProvider);
         vscode.window.showInformationMessage(
             localize(
                 "deleteCommand.multipleJobs",
