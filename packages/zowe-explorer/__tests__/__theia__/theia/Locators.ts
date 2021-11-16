@@ -63,7 +63,7 @@ export const JobsLocators = {
     favoriteTabAfterRefreshXpath: "(//div[@id='/0:Favorites'])[2]",
     favoriteProfileInJobsXpath: "(//div[@id='/0:Favorites/0:TestSeleniumProfile'])[3]",
     favoriteprofile: "(//div[@id='/0:Favorites/0:TestSeleniumProfile'])",
-    addToFavoriteOptionXpath: "//li[@data-command='__plugin.menu.action.zowe.jobs.addFavorite:0']",
+    addToFavoriteOptionId: "__plugin.menu.action.zowe.jobs.addFavorite",
     favoriteProfileInJobsBeforeRemovingXpath: "//div[@id='/0:Favorites/0:TestSeleniumProfile/0:Prefix:*']",
     removeFavoriteProfileFromJobsOptionXpath: "//li[@data-command='__plugin.menu.action.zowe.jobs.removeFavProfile']",
     hideProfileFromJobsOptionXpath: "//li[@data-command='__plugin.menu.action.zowe.jobs.removeJobsSession']",
