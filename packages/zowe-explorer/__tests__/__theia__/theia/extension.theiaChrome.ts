@@ -174,7 +174,7 @@ export async function addProfileToFavoritesInJobs() {
     );
     await driverChrome.actions().click(addTofavorite, Button.RIGHT).perform();
     await driverChrome.sleep(SHORTSLEEPTIME);
-    await driverChrome.wait(until.elementLocated(By.id(JobsLocators.addToFavoriteOptionId)), WAITTIME).click();
+    await driverChrome.wait(until.elementLocated(By.xpath(JobsLocators.addToFavoriteOptionXpath)), WAITTIME).click();
 }
 
 export async function hideProfileInUss() {
