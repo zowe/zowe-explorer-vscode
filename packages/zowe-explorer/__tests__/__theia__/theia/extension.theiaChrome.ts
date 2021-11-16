@@ -340,7 +340,7 @@ export function closeBrowser() {
 export async function addProfileDetails(profileName: string) {
     await driverChrome.findElement(By.id(DatasetsLocators.datasetsAddSessionId)).click();
     await driverChrome.sleep(SHORTSLEEPTIME);
-    await driverChrome.findElement(By.xpath(DatasetsLocators.createNewConnectionListXpath)).sendKeys(Key.ENTER);
+    await driverChrome.findElement(By.xpath(DatasetsLocators.createNewConnectionListXpath)).click();
     await driverChrome.sleep(SHORTSLEEPTIME);
     const datasetProfileName = await driverChrome.wait(
         until.elementLocated(By.xpath(DatasetsLocators.emptyInputBoxXpath)),
