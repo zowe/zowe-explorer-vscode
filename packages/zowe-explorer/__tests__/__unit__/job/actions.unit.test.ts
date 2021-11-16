@@ -184,12 +184,20 @@ describe("Jobs Actions Unit Tests - Function stopCommand", () => {
     it("Checking failed attempt to issue stop command for Job Node.", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
+        const node = new Job(
+            "job",
+            vscode.TreeItemCollapsibleState.None,
+            null,
+            blockMocks.session,
+            undefined,
+            blockMocks.imperativeProfile
+        );
         mocked(zowe.IssueCommand.issueSimple).mockResolvedValueOnce({
             success: false,
             zosmfResponse: [],
             commandResponse: "fake response",
         });
-        await jobActions.stopCommand(undefined);
+        await jobActions.stopCommand(node);
         expect(mocked(vscode.window.showErrorMessage).mock.calls.length).toBe(1);
     });
 });
@@ -234,13 +242,21 @@ describe("Jobs Actions Unit Tests - Function modifyCommand", () => {
     it("Checking failed attempt to modify Job Node", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
+        const node = new Job(
+            "job",
+            vscode.TreeItemCollapsibleState.None,
+            null,
+            blockMocks.session,
+            undefined,
+            blockMocks.imperativeProfile
+        );
         mocked(vscode.window.showInputBox).mockResolvedValue("modify");
         mocked(zowe.IssueCommand.issueSimple).mockResolvedValueOnce({
             success: false,
             zosmfResponse: [],
             commandResponse: "fake response",
         });
-        await jobActions.modifyCommand(undefined);
+        await jobActions.modifyCommand(node);
         expect(mocked(vscode.window.showErrorMessage).mock.calls.length).toBe(1);
     });
 });
@@ -988,18 +1004,27 @@ describe("Jobs Actions Unit Tests - Function refreshJobsServer", () => {
 
 describe("Jobs Actions Unit Tests - Function deleteCommand", () => {
     function createBlockMocks() {
-        const session = createISession();
-        const treeView = createTreeView();
-        const iJob = createIJobObject();
-        const imperativeProfile = createIProfile();
-
-        return {
-            session,
-            treeView,
-            iJob,
-            imperativeProfile,
-            testJobsTree: createJobsTree(session, iJob, imperativeProfile, treeView),
+        const newMocks = {
+            mockShowWarningMessage: jest.fn(),
+            session: createISession(),
+            treeView: createTreeView(),
+            iJob: createIJobObject(),
+            imperativeProfile: createIProfile(),
+            testJobsTree: null,
         };
+        newMocks.testJobsTree = createJobsTree(
+            newMocks.session,
+            newMocks.iJob,
+            newMocks.imperativeProfile,
+            newMocks.treeView
+        );
+
+        Object.defineProperty(vscode.window, "showWarningMessage", {
+            value: newMocks.mockShowWarningMessage,
+            configurable: true,
+        });
+
+        return newMocks;
     }
     it("Tests that delete informs the user that a job was deleted", async () => {
         createGlobalMocks();
@@ -1012,11 +1037,46 @@ describe("Jobs Actions Unit Tests - Function deleteCommand", () => {
             blockMocks.iJob,
             blockMocks.imperativeProfile
         );
+        blockMocks.mockShowWarningMessage.mockResolvedValueOnce("Delete");
 
         await jobActions.deleteCommand(node, blockMocks.testJobsTree);
         expect(mocked(vscode.window.showInformationMessage).mock.calls.length).toBe(1);
         expect(mocked(vscode.window.showInformationMessage).mock.calls[0][0]).toEqual(
-            `Job ${node.job.jobname}(${node.job.jobid}) deleted`
+            `Job ${node.job.jobname}(${node.job.jobid}) deleted.`
         );
+    });
+    it("Tests that delete informs the user that a job deletion was cancelled", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const node = new Job(
+            "jobtest",
+            vscode.TreeItemCollapsibleState.Expanded,
+            null,
+            blockMocks.session,
+            blockMocks.iJob,
+            blockMocks.imperativeProfile
+        );
+        blockMocks.mockShowWarningMessage.mockResolvedValueOnce("Cancel");
+
+        await jobActions.deleteCommand(node, blockMocks.testJobsTree);
+        expect(mocked(vscode.window.showInformationMessage).mock.calls.length).toBe(1);
+        expect(mocked(vscode.window.showInformationMessage).mock.calls[0][0]).toEqual(`Delete action was cancelled.`);
+    });
+    it("Tests that delete informs the user that a job deletion was cancelled if confirmation was exited", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const node = new Job(
+            "jobtest",
+            vscode.TreeItemCollapsibleState.Expanded,
+            null,
+            blockMocks.session,
+            blockMocks.iJob,
+            blockMocks.imperativeProfile
+        );
+        blockMocks.mockShowWarningMessage.mockResolvedValueOnce(undefined);
+
+        await jobActions.deleteCommand(node, blockMocks.testJobsTree);
+        expect(mocked(vscode.window.showInformationMessage).mock.calls.length).toBe(1);
+        expect(mocked(vscode.window.showInformationMessage).mock.calls[0][0]).toEqual(`Delete action was cancelled.`);
     });
 });

@@ -51,6 +51,7 @@ async function createGlobalMocks() {
         mockDeleteJob: jest.fn(),
         mockGetJobsByOwnerAndPrefix: jest.fn(),
         mockShowInformationMessage: jest.fn(),
+        mockShowWarningMessage: jest.fn(),
         mockLoadNamedProfile: jest.fn(),
         mockCreateQuickPick: jest.fn(),
         mockLoadDefaultProfile: jest.fn(),
@@ -101,6 +102,10 @@ async function createGlobalMocks() {
     Object.defineProperty(zowe, "GetJobs", { value: globalMocks.mockGetJobs, configurable: true });
     Object.defineProperty(vscode.window, "showInformationMessage", {
         value: globalMocks.mockShowInformationMessage,
+        configurable: true,
+    });
+    Object.defineProperty(vscode.window, "showWarningMessage", {
+        value: globalMocks.mockShowWarningMessage,
         configurable: true,
     });
     Object.defineProperty(globalMocks.mockGetJobs, "getJob", { value: globalMocks.mockGetJob, configurable: true });
@@ -591,7 +596,7 @@ describe("ZosJobsProvider unit tests - Function removeFavProfile", () => {
         // Make sure favorite is added before the actual unit test
         expect(globalMocks.testJobsProvider.mFavorites.length).toEqual(1);
 
-        globalMocks.mockShowQuickPick.mockResolvedValueOnce("Continue");
+        globalMocks.mockShowWarningMessage.mockResolvedValueOnce("Continue");
         await globalMocks.testJobsProvider.removeFavProfile(blockMocks.profileNodeInFavs.label, true);
 
         // Check that favorite is removed from UI
@@ -605,8 +610,8 @@ describe("ZosJobsProvider unit tests - Function removeFavProfile", () => {
         // Make sure favorite is added before the actual unit test
         expect(globalMocks.testJobsProvider.mFavorites.length).toEqual(1);
 
-        globalMocks.mockShowQuickPick.mockResolvedValueOnce("Cancel");
         const expectedFavProfileNode = globalMocks.testJobsProvider.mFavorites[0];
+        globalMocks.mockShowWarningMessage.mockResolvedValueOnce("Cancel");
 
         await globalMocks.testJobsProvider.removeFavProfile(blockMocks.profileNodeInFavs.label, true);
 

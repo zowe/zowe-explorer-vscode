@@ -73,4 +73,5 @@ export const JobsLocators = {
 export const TheiaNotificationMessages = {
     closeTheiaNotificationWarningMsgXpath: "/html/body/div[3]/div/div[1]/div/div/div/div/ul/li",
     deleteProfileNotificationMsg: "/html/body/div[3]/div/div[1]/div/div/div/div/div[2]/span",
+    removeFavoriteProfileConfirmationXpath: `//*[@id="theia-dialog-shell"]/div/div[3]/button[1]`,
 };
