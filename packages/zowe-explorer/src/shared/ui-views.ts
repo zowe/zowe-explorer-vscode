@@ -11,6 +11,9 @@
 
 import * as vscode from "vscode";
 
+// This class will hold all UI/GUI actions like input boxes, dialog boxes, pop up messages, and so on.
+// This will keep vs code user interaction code separate from logic code.
+// NOTE: This refactor is still under construction
 export class UIViews {
     public static async inputBox(inputBoxOptions: vscode.InputBoxOptions): Promise<string> {
         if (!inputBoxOptions.validateInput) {
