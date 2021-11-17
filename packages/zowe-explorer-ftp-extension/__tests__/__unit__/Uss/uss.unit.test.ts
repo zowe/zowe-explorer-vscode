@@ -9,12 +9,18 @@
  *                                                                                 *
  */
 
-/* eslint-disable @typescript-eslint/unbound-method */
 import { FtpUssApi } from "../../../../zowe-explorer-ftp-extension/src/ZoweExplorerFtpUssApi";
 import { UssUtils } from "@zowe/zos-ftp-for-zowe-cli";
 import TestUtils from "./TestUtils";
 import * as zowe from "@zowe/cli";
 
+jest.mock("../../../__mocks__/@zowe/zowe-explorer-api.ts");
+jest.mock("../../../src/extension.ts");
+
+const steam = require("stream");
+const readbaleStream = steam.Readable.from([]);
+const fs = require("fs");
+fs.createReadStream = jest.fn().mockReturnValue(readbaleStream);
 const UssApi = new FtpUssApi();
 
 describe("Uss unit test", () => {
@@ -34,7 +40,6 @@ describe("Uss unit test", () => {
             ussFilePath: "/a/b/c",
         };
         const result = await UssApi.fileList(mockParams.ussFilePath);
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         expect(result.apiResponse.items[0].name).toContain("file1");
         expect(UssUtils.listFiles).toBeCalledTimes(1);
         expect(UssApi.releaseConnection).toBeCalled();
@@ -42,7 +47,6 @@ describe("Uss unit test", () => {
 
     it("should view uss files.", async () => {
         const localFile = "/tmp/testfile1.txt";
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const response = TestUtils.getSingleLineStream();
         UssUtils.downloadFile = jest.fn().mockReturnValue(response);
 
@@ -53,20 +57,17 @@ describe("Uss unit test", () => {
             },
         };
         const result = await UssApi.getContents(mockParams.ussFilePath, mockParams.options);
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         expect(result.apiResponse.etag).toHaveLength(40);
         expect(UssUtils.downloadFile).toBeCalledTimes(1);
         expect(UssApi.releaseConnection).toBeCalled();
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-call
         expect(response._readableState.buffer.head.data.toString()).toContain("Hello world");
     });
 
     it("should upload uss files.", async () => {
         const localFile = "/tmp/testfile1.txt";
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const response = TestUtils.getSingleLineStream();
         UssUtils.uploadFile = jest.fn().mockReturnValue(response);
-        UssUtils.downloadFile = jest.fn().mockReturnValue(response);
+        UssApi.getContents = jest.fn().mockReturnValue({ apiResponse: { etag: "123" } });
         const mockParams = {
             inputFilePath: localFile,
             ussFilePath: "/a/b/c.txt",
@@ -76,13 +77,8 @@ describe("Uss unit test", () => {
                 file: localFile,
             },
         };
-        const loadResult = await UssApi.getContents(mockParams.ussFilePath, mockParams.options);
         const result = await UssApi.putContents(mockParams.inputFilePath, mockParams.ussFilePath);
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        expect(loadResult.apiResponse.etag).toHaveLength(40);
         expect(result.commandResponse).toContain("File updated.");
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        expect(result.apiResponse.etag).not.toEqual(loadResult.apiResponse.etag);
         expect(UssUtils.downloadFile).toBeCalledTimes(1);
         expect(UssUtils.uploadFile).toBeCalledTimes(1);
         expect(UssApi.releaseConnection).toBeCalled();
