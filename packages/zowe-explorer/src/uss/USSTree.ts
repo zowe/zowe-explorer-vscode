@@ -32,6 +32,7 @@ import * as contextually from "../shared/context";
 import * as nls from "vscode-nls";
 import { resetValidationSettings } from "../shared/actions";
 import { PersistentFilters } from "../PersistentFilters";
+import { UIViews } from "../shared/ui-views";
 // Set up localization
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
@@ -135,7 +136,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             ignoreFocusOut: true,
             validateInput: (value) => this.checkDuplicateLabel(parentPath + value, loadedNodes),
         };
-        const newName = await vscode.window.showInputBox(options);
+        const newName = await UIViews.inputBox(options);
         if (newName && parentPath + newName !== originalNode.fullPath) {
             try {
                 const newNamePath = path.posix.join(parentPath, newName);
@@ -607,10 +608,9 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 const options: vscode.InputBoxOptions = {
                     prompt: localize("filterPrompt.option.prompt.search", "Create a new filter"),
                     value: remotepath,
-                    validateInput: (value) => null,
                 };
                 // get user input
-                remotepath = await vscode.window.showInputBox(options);
+                remotepath = await UIViews.inputBox(options);
                 if (!remotepath || remotepath.length === 0) {
                     vscode.window.showInformationMessage(localize("filterPrompt.enterPath", "You must enter a path."));
                     return;

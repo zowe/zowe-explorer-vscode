@@ -29,6 +29,7 @@ import { getIconByNode } from "../generators/icons";
 import { returnIconState, resetValidationSettings } from "../shared/actions";
 import { PersistentFilters } from "../PersistentFilters";
 import { refreshAll } from "../shared/refresh";
+import { UIViews } from "../shared/ui-views";
 
 // Set up localization
 nls.config({
@@ -53,19 +54,19 @@ export async function createUSSNode(
     await ussFileProvider.checkCurrentProfile(node);
     let filePath;
     if (contextually.isSession(node)) {
-        filePath = await vscode.window.showInputBox({
-            placeHolder: localize("createUSSNode.fileLocation.placeholder", "{0} location", nodeType),
-            prompt: localize("createUSSNode.fileLocation.prompt", "Choose a location to create the {0}", nodeType),
+        const filePathOptions: vscode.InputBoxOptions = {
+            placeHolder: localize("createUSSNode.inputBox.placeholder", "{0} location", nodeType),
+            prompt: localize("createUSSNode.inputBox.prompt", "Choose a location to create the {0}", nodeType),
             value: node.tooltip,
-            validateInput: (value) => null,
-        });
+        };
+        filePath = await UIViews.inputBox(filePathOptions);
     } else {
         filePath = node.fullPath;
     }
-    const name = await vscode.window.showInputBox({
+    const nameOptions: vscode.InputBoxOptions = {
         placeHolder: localize("createUSSNode.name", "Name of file or directory"),
-        validateInput: (value) => null,
-    });
+    };
+    const name = await UIViews.inputBox(nameOptions);
     if (name && filePath) {
         try {
             filePath = `${filePath}/${name}`;
