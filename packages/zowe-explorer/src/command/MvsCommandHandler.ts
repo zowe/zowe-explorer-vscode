@@ -19,6 +19,7 @@ import { FilterDescriptor, FilterItem, resolveQuickPickHelper, errorHandling } f
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import * as nls from "vscode-nls";
 import { ZoweCommandProvider } from "../abstract/ZoweCommandProvider";
+import { UIViews } from "../shared/ui-views";
 
 // Set up localization
 nls.config({
@@ -222,10 +223,9 @@ export class MvsCommandHandler extends ZoweCommandProvider {
                 prompt: localize("issueMvsCommand.command", "Enter or update the MVS command"),
                 value: response,
                 valueSelection: response ? [response.length, response.length] : undefined,
-                validateInput: (value) => null,
             };
             // get user input
-            response = await vscode.window.showInputBox(options2);
+            response = await UIViews.inputBox(options2);
             if (!response) {
                 vscode.window.showInformationMessage(localize("issueMvsCommand.enter.command", "No command entered."));
                 return;
