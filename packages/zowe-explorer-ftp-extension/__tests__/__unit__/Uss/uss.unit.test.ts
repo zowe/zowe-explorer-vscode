@@ -9,21 +9,28 @@
  *                                                                                 *
  */
 
+/* eslint-disable @typescript-eslint/unbound-method */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-var-requires */
+
 import { FtpUssApi } from "../../../../zowe-explorer-ftp-extension/src/ZoweExplorerFtpUssApi";
 import { UssUtils } from "@zowe/zos-ftp-for-zowe-cli";
 import TestUtils from "./TestUtils";
 import * as zowe from "@zowe/cli";
 
+// two methods to mock modules: create a __mocks__ file for zowe-explorer-api.ts and direct mock for extension.ts
 jest.mock("../../../__mocks__/@zowe/zowe-explorer-api.ts");
 jest.mock("../../../src/extension.ts");
 
 const steam = require("stream");
+// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-call
 const readbaleStream = steam.Readable.from([]);
 const fs = require("fs");
+// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 fs.createReadStream = jest.fn().mockReturnValue(readbaleStream);
 const UssApi = new FtpUssApi();
 
-describe("Uss unit test", () => {
+describe("FtpUssApi", () => {
     beforeAll(() => {
         UssApi.checkedProfile = jest.fn().mockReturnValue({ message: "success", type: "zftp", failNotFound: false });
         UssApi.ftpClient = jest.fn().mockReturnValue({ host: "", user: "", password: "", port: "" });
@@ -40,6 +47,7 @@ describe("Uss unit test", () => {
             ussFilePath: "/a/b/c",
         };
         const result = await UssApi.fileList(mockParams.ussFilePath);
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         expect(result.apiResponse.items[0].name).toContain("file1");
         expect(UssUtils.listFiles).toBeCalledTimes(1);
         expect(UssApi.releaseConnection).toBeCalled();
@@ -57,9 +65,11 @@ describe("Uss unit test", () => {
             },
         };
         const result = await UssApi.getContents(mockParams.ussFilePath, mockParams.options);
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         expect(result.apiResponse.etag).toHaveLength(40);
         expect(UssUtils.downloadFile).toBeCalledTimes(1);
         expect(UssApi.releaseConnection).toBeCalled();
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-call
         expect(response._readableState.buffer.head.data.toString()).toContain("Hello world");
     });
 

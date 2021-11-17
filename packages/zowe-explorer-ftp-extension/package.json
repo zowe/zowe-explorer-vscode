@@ -79,8 +79,6 @@
     },
     "testRegex": "__tests__.*\\.(spec|test)\\.ts$",
     "modulePathIgnorePatterns": [
-      "__tests__/__integration__/",
-      "__tests__/__theia__/",
       "out/"
     ],
     "reporters": [
