@@ -20,7 +20,6 @@ import * as nls from "vscode-nls";
 import { toUniqueJobFileUri } from "../SpoolProvider";
 import { IProfileLoaded } from "@zowe/imperative";
 import * as globals from "../globals";
-import * as contextually from "../shared/context";
 
 // Set up localization
 nls.config({
