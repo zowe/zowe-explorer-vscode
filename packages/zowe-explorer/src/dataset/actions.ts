@@ -341,7 +341,7 @@ export async function deleteDatasetPrompt(
                     }
                     progress.report({
                         message: `Deleting ${index + 1} of ${nodes.length}`,
-                        increment: (index / nodes.length) * total,
+                        increment: total / nodes.length,
                     });
                     try {
                         await deleteDataset(currNode, datasetProvider);
