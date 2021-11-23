@@ -273,15 +273,16 @@ describe("Delete Profiles", () => {
     });
 
     it("Should Delete Default Profile from DATA SETS", async () => {
-        const deleteConfrmationMsg = await driverChrome.deleteDefaultProfileInDatasets();
-        expect(deleteConfrmationMsg).to.equal("Profile DefaultProfile was deleted.");
+        await driverChrome.deleteDefaultProfileInDatasets();
+        await driverChrome.sleepTime(SHORTSLEEPTIME);
+        const deletedDefaultProfile = await driverChrome.verifyRemovedDefaultProfileInDataSet();
+        expect(deletedDefaultProfile).to.equal(true);
     });
 
     it("Should Delete Profile from DATA SETS", async () => {
         await driverChrome.closeNotificationMessage();
         await driverChrome.deleteProfileInDatasets();
-        const deletedDefaultProfile = await driverChrome.verifyRemovedDefaultProfileInDataSet();
-        expect(deletedDefaultProfile).to.equal(true);
+        await driverChrome.sleepTime(SHORTSLEEPTIME);
         const deletedSecondProfile = await driverChrome.verifyRemovedOtherProfileInDataSet();
         expect(deletedSecondProfile).to.equal(true);
     });

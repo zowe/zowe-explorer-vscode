@@ -237,11 +237,7 @@ export async function deleteDefaultProfileInDatasets() {
     );
     deleteProfile.sendKeys("Delete");
     deleteProfile.sendKeys(Key.ENTER);
-    await driverChrome.sleep(SHORTSLEEPTIME);
-    const deleteConfrmationMsg = await driverChrome
-        .wait(until.elementLocated(By.xpath(TheiaNotificationMessages.deleteProfileNotificationMsg)), WAITTIME)
-        .getText();
-    return deleteConfrmationMsg;
+    return;
 }
 
 export async function deleteProfileInDatasets() {
@@ -260,7 +256,7 @@ export async function deleteProfileInDatasets() {
     );
     deleteProfile.sendKeys("Delete");
     deleteProfile.sendKeys(Key.ENTER);
-    await driverChrome.sleep(SHORTSLEEPTIME);
+    return;
 }
 
 export async function verifyRemovedFavoriteProfileInDatasets() {
