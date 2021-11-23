@@ -242,6 +242,8 @@ describe("Hide Profiles", () => {
     });
 
     it("Should Hide Profile from USS", async () => {
+        await driverChrome.clickOnDatasetsTab();
+        await driverChrome.sleepTime(SHORTSLEEPTIME);
         await driverChrome.clickOnUssTabs();
         await driverChrome.sleepTime(SHORTSLEEPTIME);
         await driverChrome.hideProfileInUss();
@@ -250,6 +252,8 @@ describe("Hide Profiles", () => {
         expect(hiddenProfile).to.equal(true);
     });
     it("Should Hide Profile from JOBS", async () => {
+        await driverChrome.clickOnUssTabs();
+        await driverChrome.sleepTime(SHORTSLEEPTIME);
         await driverChrome.clickOnJobsTab();
         await driverChrome.sleepTime(SHORTSLEEPTIME);
         await driverChrome.hideProfileInJobs();
