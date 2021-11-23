@@ -131,7 +131,7 @@ describe("Add Existing Profiles in USS and JOBS", () => {
     });
 
     it("Should Add Existing Profile in JOBS", async () => {
-        await driverFirefox.clickOnUssTabs();
+        // await driverFirefox.clickOnUssTabs();
         await driverFirefox.clickOnJobsTab();
         await driverFirefox.clickOnJobsPanel();
         await driverFirefox.clickOnAddSessionInJobs();
