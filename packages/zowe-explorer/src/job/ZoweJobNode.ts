@@ -102,39 +102,52 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                         );
                     }
                 );
-                const refreshTimestamp = Date.now();
-                spools
+                spools = spools
                     // filter out all the objects which do not seem to be correct Job File Document types
                     // see an issue #845 for the details
                     .filter(
                         (item) => !(item.id === undefined && item.ddname === undefined && item.stepname === undefined)
-                    )
-                    .forEach((spool) => {
-                        let prefix = spool.stepname;
-                        if (prefix === undefined) {
-                            prefix = spool.procstep;
-                        }
-                        const sessionName = this.getProfileName();
-                        const spoolNode = new Spool(
-                            `${spool.stepname}:${spool.ddname}(${spool.id})`,
-                            vscode.TreeItemCollapsibleState.None,
-                            this,
-                            this.session,
-                            spool,
-                            this.job,
-                            this
-                        );
-                        const icon = getIconByNode(spoolNode);
-                        if (icon) {
-                            spoolNode.iconPath = icon.path;
-                        }
-                        spoolNode.command = {
-                            command: "zowe.jobs.zosJobsOpenspool",
-                            title: "",
-                            arguments: [sessionName, spool, refreshTimestamp],
-                        };
-                        elementChildren.push(spoolNode);
-                    });
+                    );
+                if (!spools.length) {
+                    const noSpoolNode = new Spool(
+                        localize("getChildren.noSpoolFiles", "There are no JES spool messages to display"),
+                        vscode.TreeItemCollapsibleState.None,
+                        this,
+                        null,
+                        null,
+                        null,
+                        this
+                    );
+                    noSpoolNode.iconPath = null;
+                    return [noSpoolNode];
+                }
+                const refreshTimestamp = Date.now();
+                spools.forEach((spool) => {
+                    let prefix = spool.stepname;
+                    if (prefix === undefined) {
+                        prefix = spool.procstep;
+                    }
+                    const sessionName = this.getProfileName();
+                    const spoolNode = new Spool(
+                        `${spool.stepname}:${spool.ddname}(${spool.id})`,
+                        vscode.TreeItemCollapsibleState.None,
+                        this,
+                        this.session,
+                        spool,
+                        this.job,
+                        this
+                    );
+                    const icon = getIconByNode(spoolNode);
+                    if (icon) {
+                        spoolNode.iconPath = icon.path;
+                    }
+                    spoolNode.command = {
+                        command: "zowe.jobs.zosJobsOpenspool",
+                        title: "",
+                        arguments: [sessionName, spool, refreshTimestamp],
+                    };
+                    elementChildren.push(spoolNode);
+                });
             } else {
                 const jobs = await vscode.window.withProgress(
                     {
