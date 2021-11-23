@@ -280,7 +280,6 @@ describe("Delete Profiles", () => {
     });
 
     it("Should Delete Profile from DATA SETS", async () => {
-        await driverChrome.closeNotificationMessage();
         await driverChrome.deleteProfileInDatasets();
         await driverChrome.sleepTime(SHORTSLEEPTIME);
         const deletedSecondProfile = await driverChrome.verifyRemovedOtherProfileInDataSet();
