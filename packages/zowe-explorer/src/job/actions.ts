@@ -267,7 +267,7 @@ export async function deleteCommand(
     }
 }
 
-const deleteSingleJob = async (job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>): Promise<void> => {
+async function deleteSingleJob(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>): Promise<void> {
     const jobName = `${job.job.jobname}(${job.job.jobid})`;
     const message = localize(
         "deleteJobPrompt.confirmation.message",
@@ -291,12 +291,12 @@ const deleteSingleJob = async (job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZ
     }
     await refreshAllJobs(jobsProvider);
     vscode.window.showInformationMessage(localize("deleteCommand.job", "Job {0} deleted.", jobName));
-};
+}
 
-const deleteMultipleJobs = async (
+async function deleteMultipleJobs(
     jobs: ReadonlyArray<IZoweJobTreeNode>,
     jobsProvider: IZoweTree<IZoweJobTreeNode>
-): Promise<void> => {
+): Promise<void> {
     const deleteButton = localize("deleteJobPrompt.confirmation.delete", "Delete");
     const toJobname = (jobNode: IZoweJobTreeNode) => `${jobNode.job.jobname}(${jobNode.job.jobid})`;
     const message = localize(
@@ -355,4 +355,4 @@ const deleteMultipleJobs = async (
         const userMessage = `There were errors during jobs deletion: ${errorMessages}`;
         await errorHandling(userMessage);
     }
-};
+}
