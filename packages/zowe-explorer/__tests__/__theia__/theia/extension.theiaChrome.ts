@@ -82,10 +82,9 @@ export async function getFavoritePrfileNameFromUss() {
 }
 
 export async function getFavoritePrfileNameFromJobs() {
-    const favoriteProfile = await driverChrome
+    return driverChrome
         .wait(until.elementLocated(By.xpath(JobsLocators.favoriteProfileInJobsXpath)), WAITTIME)
         .getText();
-    return favoriteProfile;
 }
 
 export async function removeFavoriteProfileFromDatasets() {
