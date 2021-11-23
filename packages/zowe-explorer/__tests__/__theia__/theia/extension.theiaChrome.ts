@@ -14,7 +14,7 @@ import { Builder, By, Key, until, Button } from "selenium-webdriver";
 import * as chrome from "selenium-webdriver/chrome";
 import { TheiaLocator, DatasetsLocators, UssLocators, JobsLocators, TheiaNotificationMessages } from "./Locators";
 
-const WAITTIME = 40000;
+const WAITTIME = 30000;
 const SHORTSLEEPTIME = 2000;
 let driverChrome: any;
 
