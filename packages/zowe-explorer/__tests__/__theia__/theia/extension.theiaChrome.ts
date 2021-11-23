@@ -261,10 +261,6 @@ export async function deleteProfileInDatasets() {
     deleteProfile.sendKeys("Delete");
     deleteProfile.sendKeys(Key.ENTER);
     await driverChrome.sleep(SHORTSLEEPTIME);
-    const deleteConfrmationMsg = await driverChrome
-        .wait(until.elementLocated(By.xpath(TheiaNotificationMessages.deleteProfileNotificationMsg)), WAITTIME)
-        .getText();
-    return deleteConfrmationMsg;
 }
 
 export async function verifyRemovedFavoriteProfileInDatasets() {
@@ -294,6 +290,28 @@ export async function verifyRemovedFavoriteProfileInJobs() {
         .findElements(By.xpath(JobsLocators.favoriteProfileInJobsXpath))
         .then((found) => !!found.length);
     if (!favoriteProfile) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+export async function verifyRemovedDefaultProfileInDataSet() {
+    const defaultProfile = await driverChrome
+        .findElements(By.id(DatasetsLocators.defaultDatasetsProfileId))
+        .then((found) => !!found.length);
+    if (!defaultProfile) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+export async function verifyRemovedOtherProfileInDataSet() {
+    const defaultProfile = await driverChrome
+        .findElements(By.id(DatasetsLocators.secondDatasetProfileId))
+        .then((found) => !!found.length);
+    if (!defaultProfile) {
         return true;
     } else {
         return false;

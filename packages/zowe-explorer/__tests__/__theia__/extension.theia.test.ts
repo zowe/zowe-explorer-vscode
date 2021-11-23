@@ -279,8 +279,11 @@ describe("Delete Profiles", () => {
 
     it("Should Delete Profile from DATA SETS", async () => {
         await driverChrome.closeNotificationMessage();
-        const deleteConfrmationMsg = await driverChrome.deleteProfileInDatasets();
-        expect(deleteConfrmationMsg).to.equal("Profile TestSeleniumProfile was deleted.");
+        await driverChrome.deleteProfileInDatasets();
+        const deletedDefaultProfile = await driverChrome.verifyRemovedDefaultProfileInDataSet();
+        expect(deletedDefaultProfile).to.equal(true);
+        const deletedSecondProfile = await driverChrome.verifyRemovedOtherProfileInDataSet();
+        expect(deletedSecondProfile).to.equal(true);
     });
 
     it("Should Default Profile deleted from USS", async () => {
