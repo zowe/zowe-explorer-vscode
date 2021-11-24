@@ -310,7 +310,7 @@ export async function deleteCommand(job: IZoweJobTreeNode, jobsProvider: IZoweTr
                         await jobsProvider.delete(currNode);
                         deletedNodes.push(`${currNode.job.jobname}(${currNode.job.jobid})`);
                     } catch (err) {
-                        // do nothing; delete next
+                        this.log.error(err);
                     }
                 }
             }
