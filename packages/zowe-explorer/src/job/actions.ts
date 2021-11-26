@@ -330,7 +330,8 @@ export async function deleteCommand(job: IZoweJobTreeNode, jobsProvider: IZoweTr
         );
     }
     // Delete a single job node
-    if (job && nodes.length <= 1) {
+    else {
+        job = job ? job : nodes[0];
         await jobsProvider.delete(job);
         vscode.window.showInformationMessage(
             localize("deleteCommand.job", "Job {0} deleted.", `${job.job.jobname}(${job.job.jobid})`)
