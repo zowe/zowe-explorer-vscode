@@ -350,7 +350,7 @@ export async function deleteDatasetPrompt(
                             : ` ${currNode.getLabel()}`;
                         nodesDeleted.push(deleteItemName);
                     } catch (err) {
-                        this.log.error(err);
+                        globals.LOG.error(err);
                     }
                 }
             }
