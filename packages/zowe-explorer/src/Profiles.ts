@@ -39,6 +39,7 @@ import { errorHandling, FilterDescriptor, FilterItem, resolveQuickPickHelper, is
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 
 import * as nls from "vscode-nls";
+import { UIViews } from "./shared/ui-views";
 
 // TODO: find a home for constants
 export const CONTEXT_PREFIX = "_";
@@ -343,7 +344,7 @@ export class Profiles extends ProfilesCache {
                 prompt: localize("createNewConnection.option.prompt.profileName", "Enter a name for the connection"),
                 value: profileName,
             };
-            profileName = await vscode.window.showInputBox(options);
+            profileName = await UIViews.inputBox(options);
             if (!profileName) {
                 vscode.window.showInformationMessage(
                     localize(
@@ -467,7 +468,7 @@ export class Profiles extends ProfilesCache {
                     switch (response) {
                         case "number":
                             options = await this.optionsValue(value, schema, editSession[value]);
-                            const updValue = await vscode.window.showInputBox(options);
+                            const updValue = await UIViews.inputBox(options);
                             if (!Number.isNaN(Number(updValue))) {
                                 updSchemaValues[value] = Number(updValue);
                             } else {
@@ -499,7 +500,7 @@ export class Profiles extends ProfilesCache {
                             break;
                         default:
                             options = await this.optionsValue(value, schema, editSession[value]);
-                            const updDefValue = await vscode.window.showInputBox(options);
+                            const updDefValue = await UIViews.inputBox(options);
                             if (updDefValue === undefined) {
                                 vscode.window.showInformationMessage(
                                     localize("editConnection.default", "Operation Cancelled")
@@ -654,7 +655,7 @@ export class Profiles extends ProfilesCache {
                     switch (response) {
                         case "number":
                             options = await this.optionsValue(value, schema);
-                            const enteredValue = Number(await vscode.window.showInputBox(options));
+                            const enteredValue = Number(await UIViews.inputBox(options));
                             if (!Number.isNaN(Number(enteredValue))) {
                                 if ((value === "encoding" || value === "responseTimeout") && enteredValue === 0) {
                                     delete schemaValues[value];
@@ -682,7 +683,7 @@ export class Profiles extends ProfilesCache {
                             break;
                         default:
                             options = await this.optionsValue(value, schema);
-                            const defValue = await vscode.window.showInputBox(options);
+                            const defValue = await UIViews.inputBox(options);
                             if (defValue === undefined) {
                                 vscode.window.showInformationMessage(
                                     localize("createNewConnection.default", "Operation Cancelled")
@@ -1369,7 +1370,7 @@ export class Profiles extends ProfilesCache {
         if (input) {
             zosURL = input;
         }
-        zosURL = await vscode.window.showInputBox({
+        const options: vscode.InputBoxOptions = {
             prompt: localize(
                 "createNewConnection.option.prompt.url",
                 "Enter a z/OS URL in the format 'https://url:port'."
@@ -1388,7 +1389,8 @@ export class Profiles extends ProfilesCache {
                     );
                 }
             },
-        });
+        };
+        zosURL = await UIViews.inputBox(options);
 
         let hostName: string;
         if (!zosURL) {
@@ -1428,7 +1430,7 @@ export class Profiles extends ProfilesCache {
                 prompt: schema[input].optionDefinition.description.toString(),
             };
         }
-        port = Number(await vscode.window.showInputBox(options));
+        port = Number(await UIViews.inputBox(options));
 
         if (port === 0 && schema[input].optionDefinition.hasOwnProperty("defaultValue")) {
             port = Number(schema[input].optionDefinition.defaultValue.toString());
@@ -1453,7 +1455,7 @@ export class Profiles extends ProfilesCache {
             ignoreFocusOut: true,
             value: userName,
         };
-        userName = await vscode.window.showInputBox(InputBoxOptions);
+        userName = await UIViews.inputBox(InputBoxOptions);
 
         if (userName === undefined) {
             vscode.window.showInformationMessage(
@@ -1482,7 +1484,7 @@ export class Profiles extends ProfilesCache {
             ignoreFocusOut: true,
             value: passWord,
         };
-        passWord = await vscode.window.showInputBox(InputBoxOptions);
+        passWord = await UIViews.inputBox(InputBoxOptions);
 
         if (passWord === undefined) {
             vscode.window.showInformationMessage(
