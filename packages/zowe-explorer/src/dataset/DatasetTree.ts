@@ -35,6 +35,7 @@ import { resetValidationSettings } from "../shared/actions";
 import { closeOpenedTextFile } from "../utils/workspace";
 import { PersistentFilters } from "../PersistentFilters";
 import { IDataSet, IListOptions } from "@zowe/cli";
+import { UIViews } from "../shared/ui-views";
 
 // Set up localization
 nls.config({
@@ -931,7 +932,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     value: pattern,
                 };
                 // get user input
-                pattern = await vscode.window.showInputBox(options2);
+                pattern = await UIViews.inputBox(options2);
                 if (!pattern) {
                     vscode.window.showInformationMessage(
                         localize("datasetFilterPrompt.enterPattern", "You must enter a pattern.")
@@ -1149,8 +1150,8 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     private async renameDataSetMember(node: IZoweDatasetTreeNode) {
         const beforeMemberName = node.label.trim();
         const dataSetName = node.getParent().getLabel();
-
-        let afterMemberName = await vscode.window.showInputBox({ value: beforeMemberName });
+        const options: vscode.InputBoxOptions = { value: beforeMemberName };
+        let afterMemberName = await UIViews.inputBox(options);
         if (!afterMemberName) {
             vscode.window.showInformationMessage(localize("renameDataSet.cancelled", "Rename operation cancelled."));
             return;
@@ -1212,8 +1213,8 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      */
     private async renameDataSet(node: IZoweDatasetTreeNode) {
         const beforeDataSetName = node.label.trim();
-
-        let afterDataSetName = await vscode.window.showInputBox({ value: beforeDataSetName });
+        const options: vscode.InputBoxOptions = { value: beforeDataSetName };
+        let afterDataSetName = await UIViews.inputBox(options);
         if (!afterDataSetName) {
             vscode.window.showInformationMessage(localize("renameDataSet.cancelled", "Rename operation cancelled."));
             return;

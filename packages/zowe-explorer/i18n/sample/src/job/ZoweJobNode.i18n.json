@@ -1,6 +1,7 @@
 {
   "getChildren.search": "Use the search button to display jobs",
   "ZoweJobNode.getJobs.spoolfiles": "Get Job Spool files command submitted.",
+  "getChildren.noSpoolFiles": "There are no JES spool messages to display",
   "ZoweJobNode.getJobs.jobs": "Get Jobs command submitted.",
   "getChildren.error.response": "Retrieving response from "
 }
