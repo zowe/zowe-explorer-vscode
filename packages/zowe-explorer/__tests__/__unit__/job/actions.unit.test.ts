@@ -36,6 +36,7 @@ import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/
 import { Profiles } from "../../../src/Profiles";
 import * as SpoolProvider from "../../../src/SpoolProvider";
 import * as refreshActions from "../../../src/shared/refresh";
+import { UIViews } from "../../../src/shared/ui-views";
 
 const activeTextEditorDocument = jest.fn();
 
@@ -94,14 +95,15 @@ describe("Jobs Actions Unit Tests - Function setPrefix", () => {
         const blockMocks = createBlockMocks();
         const node = new Job("job", vscode.TreeItemCollapsibleState.None, null, blockMocks.session, null, null);
 
-        mocked(vscode.window.showInputBox).mockResolvedValueOnce("*");
+        const mySpy = jest.spyOn(UIViews, "inputBox").mockImplementationOnce(() => Promise.resolve("*"));
         await jobActions.setPrefix(node, blockMocks.testJobsTree);
 
-        expect(mocked(vscode.window.showInputBox).mock.calls.length).toBe(1);
-        expect(mocked(vscode.window.showInputBox).mock.calls[0][0]).toEqual({
+        expect(mySpy.mock.calls.length).toBe(1);
+        expect(mySpy).toHaveBeenCalledWith({
             prompt: "Prefix",
         });
-        expect(mocked(vscode.window.showInformationMessage).mock.calls.length).toBe(0);
+
+        mySpy.mockRestore();
     });
 });
 
@@ -133,14 +135,15 @@ describe("Jobs Actions Unit Tests - Function setOwner", () => {
             blockMocks.imperativeProfile
         );
 
-        mocked(vscode.window.showInputBox).mockResolvedValueOnce("OWNER");
+        const mySpy = jest.spyOn(UIViews, "inputBox").mockImplementationOnce(() => Promise.resolve("OWNER"));
         await jobActions.setOwner(node, blockMocks.testJobsTree);
 
-        expect(mocked(vscode.window.showInputBox).mock.calls.length).toBe(1);
-        expect(mocked(vscode.window.showInputBox).mock.calls[0][0]).toEqual({
+        expect(mySpy.mock.calls.length).toBe(1);
+        expect(mySpy).toHaveBeenCalledWith({
             prompt: "Owner",
         });
-        expect(mocked(vscode.window.showInformationMessage).mock.calls.length).toBe(0);
+
+        mySpy.mockRestore();
     });
 });
 
