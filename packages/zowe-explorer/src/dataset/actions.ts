@@ -15,15 +15,9 @@ import * as fs from "fs";
 import * as zowe from "@zowe/cli";
 import * as globals from "../globals";
 import * as path from "path";
+import * as api from "@zowe/zowe-explorer-api";
 import { FilterItem, errorHandling, resolveQuickPickHelper } from "../utils/ProfilesUtils";
 import { getDocumentFilePath, concatChildNodes, checkForAddedSuffix, willForceUpload } from "../shared/utils";
-import {
-    IZoweDatasetTreeNode,
-    IZoweTreeNode,
-    IZoweNodeType,
-    IZoweTree,
-    ValidProfileEnum,
-} from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Profiles } from "../Profiles";
 import { TextUtils, IProfileLoaded, Session } from "@zowe/imperative";
@@ -32,7 +26,7 @@ import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { DatasetTree } from "./DatasetTree";
 import * as contextually from "../shared/context";
 import { setFileSaved } from "../utils/workspace";
-import { PersistentFilters } from "../PersistentFilters";
+import { UIViews } from "../shared/ui-views";
 
 // Set up localization
 import * as nls from "vscode-nls";
@@ -46,10 +40,13 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  * Allocates a copy of a data set or member
  *
  */
-export async function allocateLike(datasetProvider: IZoweTree<IZoweDatasetTreeNode>, node?: IZoweDatasetTreeNode) {
+export async function allocateLike(
+    datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>,
+    node?: api.IZoweDatasetTreeNode
+) {
     let profile: IProfileLoaded;
     let likeDSName: string;
-    let currSession: IZoweDatasetTreeNode;
+    let currSession: api.IZoweDatasetTreeNode;
 
     // User called allocateLike from the command palette
     if (!node) {
@@ -87,14 +84,15 @@ export async function allocateLike(datasetProvider: IZoweTree<IZoweDatasetTreeNo
             datasetProvider.getTreeView().selection.length > 0
                 ? datasetProvider.getTreeView().selection[0].label.trim()
                 : null;
-        likeDSName = await vscode.window.showInputBox({
+        const inputBoxOptions: vscode.InputBoxOptions = {
             ignoreFocusOut: true,
             placeHolder: localize(
-                "allocateLike.enterLikePattern",
+                "allocateLike.inputBox.placeHolder",
                 "Enter the name of the data set to copy attributes from"
             ),
             value: currSelection,
-        });
+        };
+        likeDSName = await UIViews.inputBox(inputBoxOptions);
         if (!likeDSName) {
             vscode.window.showInformationMessage(
                 localize("allocateLike.noNewName", "You must enter a new data set name.")
@@ -108,10 +106,11 @@ export async function allocateLike(datasetProvider: IZoweTree<IZoweDatasetTreeNo
     }
 
     // Get new data set name
-    const newDSName = await vscode.window.showInputBox({
+    const options: vscode.InputBoxOptions = {
         ignoreFocusOut: true,
-        placeHolder: localize("allocateLike.enterPattern", "Enter a name for the new data set"),
-    });
+        placeHolder: localize("allocateLike.inputBox.placeHolder", "Enter a name for the new data set"),
+    };
+    const newDSName = await UIViews.inputBox(options);
     if (!newDSName) {
         vscode.window.showInformationMessage(localize("allocateLike.noNewName", "You must enter a new data set name."));
         return;
@@ -147,7 +146,7 @@ export async function allocateLike(datasetProvider: IZoweTree<IZoweDatasetTreeNo
     datasetProvider.getTreeView().reveal(newNode, { select: true, focus: true });
 }
 
-export async function uploadDialog(node: ZoweDatasetNode, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
+export async function uploadDialog(node: ZoweDatasetNode, datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>) {
     const fileOpenOptions = {
         canSelectFiles: true,
         openLabel: "Upload File",
@@ -203,12 +202,12 @@ export async function uploadFile(node: ZoweDatasetNode, doc: vscode.TextDocument
  * @param {DatasetTree} datasetProvider - the tree which contains the nodes
  */
 export async function deleteDatasetPrompt(
-    datasetProvider: IZoweTree<IZoweDatasetTreeNode>,
-    node?: IZoweDatasetTreeNode
+    datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>,
+    node?: api.IZoweDatasetTreeNode
 ) {
-    let nodes: IZoweDatasetTreeNode[];
+    let nodes: api.IZoweDatasetTreeNode[];
     const treeView = datasetProvider.getTreeView();
-    let selectedNodes: IZoweDatasetTreeNode[] = treeView.selection;
+    let selectedNodes: api.IZoweDatasetTreeNode[] = treeView.selection;
     let includedSelection = false;
     if (node) {
         for (const item of selectedNodes) {
@@ -220,7 +219,7 @@ export async function deleteDatasetPrompt(
 
     // Check that child and parent aren't both in array, removing children whose parents are in
     // array to avoid errors from host when deleting none=existent children.
-    const childArray: IZoweDatasetTreeNode[] = [];
+    const childArray: api.IZoweDatasetTreeNode[] = [];
     for (const item of selectedNodes) {
         if (contextually.isDsMember(item)) {
             for (const parent of selectedNodes) {
@@ -277,7 +276,7 @@ export async function deleteDatasetPrompt(
     const nodesDeleted: string[] = [];
 
     // The member parent nodes that should be refreshed individually
-    const memberParents: IZoweDatasetTreeNode[] = [];
+    const memberParents: api.IZoweDatasetTreeNode[] = [];
     for (const deletedNode of nodes) {
         if (contextually.isDsMember(deletedNode)) {
             const parent = deletedNode.getParent();
@@ -341,7 +340,7 @@ export async function deleteDatasetPrompt(
                     }
                     progress.report({
                         message: `Deleting ${index + 1} of ${nodes.length}`,
-                        increment: (index / nodes.length) * total,
+                        increment: total / nodes.length,
                     });
                     try {
                         await deleteDataset(currNode, datasetProvider);
@@ -350,7 +349,7 @@ export async function deleteDatasetPrompt(
                             : ` ${currNode.getLabel()}`;
                         nodesDeleted.push(deleteItemName);
                     } catch (err) {
-                        // do nothing; delete next
+                        globals.LOG.error(err);
                     }
                 }
             }
@@ -382,8 +381,14 @@ export async function deleteDatasetPrompt(
  * @param {IZoweDatasetTreeNode} parent - The parent Node
  * @param {DatasetTree} datasetProvider - the tree which contains the nodes
  */
-export async function createMember(parent: IZoweDatasetTreeNode, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
-    const name = await vscode.window.showInputBox({ placeHolder: localize("createMember.inputBox", "Name of Member") });
+export async function createMember(
+    parent: api.IZoweDatasetTreeNode,
+    datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>
+) {
+    const options: vscode.InputBoxOptions = {
+        placeHolder: localize("createMember.inputBox.placeholder", "Name of Member"),
+    };
+    const name = await UIViews.inputBox(options);
     globals.LOG.debug(
         localize("createMember.log.debug.createNewDataSet", "creating new data set member of name ") + name
     );
@@ -423,17 +428,14 @@ export async function createMember(parent: IZoweDatasetTreeNode, datasetProvider
  * @param {IZoweDatasetTreeNode} node
  */
 export async function openPS(
-    node: IZoweDatasetTreeNode,
+    node: api.IZoweDatasetTreeNode,
     previewMember: boolean,
-    datasetProvider?: IZoweTree<IZoweDatasetTreeNode>
+    datasetProvider?: api.IZoweTree<api.IZoweDatasetTreeNode>
 ) {
     if (datasetProvider) {
         await datasetProvider.checkCurrentProfile(node);
     }
-    if (
-        Profiles.getInstance().validProfile === ValidProfileEnum.VALID ||
-        Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED
-    ) {
+    if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
         try {
             let label: string;
             switch (true) {
@@ -535,7 +537,10 @@ export function getDataSetTypeAndOptions(type: string) {
  * @param {IZoweDatasetTreeNode} node - Desired Zowe session
  * @param {DatasetTree} datasetProvider - the tree which contains the nodes
  */
-export async function createFile(node: IZoweDatasetTreeNode, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
+export async function createFile(
+    node: api.IZoweDatasetTreeNode,
+    datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>
+) {
     let dsName: string;
     let typeEnum: number;
     let propertiesFromDsType: any;
@@ -564,15 +569,13 @@ export async function createFile(node: IZoweDatasetTreeNode, datasetProvider: IZ
     let newDSProperties = JSON.parse(JSON.stringify(globals.DATA_SET_PROPERTIES));
 
     datasetProvider.checkCurrentProfile(node);
-    if (
-        Profiles.getInstance().validProfile === ValidProfileEnum.VALID ||
-        Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED
-    ) {
+    if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
         // 1st step: Get data set name
-        dsName = await vscode.window.showInputBox({
-            placeHolder: localize("dataset.name", "Name of Data Set"),
+        const options: vscode.InputBoxOptions = {
+            placeHolder: localize("createFile.inputBox.placeHolder", "Name of Data Set"),
             ignoreFocusOut: true,
-        });
+        };
+        dsName = await UIViews.inputBox(options);
         if (dsName) {
             dsName = dsName.trim().toUpperCase();
             newDSProperties.forEach((property) => {
@@ -740,10 +743,11 @@ async function handleUserSelection(newDSProperties, dsType): Promise<string> {
             case " + Allocate Data Set":
                 return new Promise((resolve) => resolve(` + Allocate Data Set`));
             default:
-                newDSProperties.find((prop) => prop.label === pattern).value = await vscode.window.showInputBox({
+                const options: vscode.InputBoxOptions = {
                     value: newDSProperties.find((prop) => prop.label === pattern).value,
                     placeHolder: newDSProperties.find((prop) => prop.label === pattern).placeHolder,
-                });
+                };
+                newDSProperties.find((prop) => prop.label === pattern).value = await UIViews.inputBox(options);
                 break;
         }
         return Promise.resolve(handleUserSelection(newDSProperties, dsType));
@@ -757,12 +761,12 @@ async function handleUserSelection(newDSProperties, dsType): Promise<string> {
  * @param {IZoweDatasetTreeNode} parent - The parent Node
  * @param {DatasetTree} datasetProvider - the tree which contains the nodes
  */
-export async function showDSAttributes(parent: IZoweDatasetTreeNode, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
+export async function showDSAttributes(
+    parent: api.IZoweDatasetTreeNode,
+    datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>
+) {
     await datasetProvider.checkCurrentProfile(parent);
-    if (
-        Profiles.getInstance().validProfile === ValidProfileEnum.VALID ||
-        Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED
-    ) {
+    if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
         const label = parent.label.trim();
         globals.LOG.debug(localize("showDSAttributes.debug", "showing attributes of data set ") + label);
         let attributes: any;
@@ -834,7 +838,7 @@ export async function showDSAttributes(parent: IZoweDatasetTreeNode, datasetProv
  * @param {DatasetTree} datasetProvider - our DatasetTree object
  */
 // This function does not appear to currently be made available in the UI
-export async function submitJcl(datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
+export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>) {
     if (!vscode.window.activeTextEditor) {
         vscode.window.showErrorMessage(
             localize(
@@ -890,10 +894,7 @@ export async function submitJcl(datasetProvider: IZoweTree<IZoweDatasetTreeNode>
         return;
     }
     await Profiles.getInstance().checkCurrentProfile(sessProfile);
-    if (
-        Profiles.getInstance().validProfile === ValidProfileEnum.VALID ||
-        Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED
-    ) {
+    if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
         try {
             const job = await ZoweExplorerApiRegister.getJesApi(sessProfile).submitJcl(doc.getText());
             const args = [sessProfileName, job.jobid];
@@ -920,16 +921,13 @@ export async function submitJcl(datasetProvider: IZoweTree<IZoweDatasetTreeNode>
  * @export
  * @param node The dataset member
  */
-export async function submitMember(node: IZoweTreeNode) {
+export async function submitMember(node: api.IZoweTreeNode) {
     let label: string;
     let sesName: string;
     let sessProfile: IProfileLoaded;
     const profiles = Profiles.getInstance();
     await profiles.checkCurrentProfile(node.getProfile());
-    if (
-        Profiles.getInstance().validProfile === ValidProfileEnum.VALID ||
-        Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED
-    ) {
+    if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
         switch (true) {
             // For favorited or non-favorited sequential DS:
             case contextually.isFavorite(node):
@@ -975,7 +973,7 @@ export async function submitMember(node: IZoweTreeNode) {
  * @param {IZoweTreeNode} node - The node to be deleted
  * @param {IZoweTree<IZoweDatasetTreeNode>} datasetProvider - the tree which contains the nodes
  */
-export async function deleteDataset(node: IZoweTreeNode, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
+export async function deleteDataset(node: api.IZoweTreeNode, datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>) {
     let label = "";
     let fav = false;
     try {
@@ -994,10 +992,7 @@ export async function deleteDataset(node: IZoweTreeNode, datasetProvider: IZoweT
             throw Error(localize("deleteDataSet.invalidNode.error", "deleteDataSet() called from invalid node."));
         }
         await datasetProvider.checkCurrentProfile(node);
-        if (
-            Profiles.getInstance().validProfile === ValidProfileEnum.VALID ||
-            Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED
-        ) {
+        if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
             await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).deleteDataSet(label);
         } else {
             return;
@@ -1050,7 +1045,7 @@ export async function deleteDataset(node: IZoweTreeNode, datasetProvider: IZoweT
  * @param {IZoweDatasetTreeNode} node - The node which represents the dataset
  */
 // This is not a UI refresh.
-export async function refreshPS(node: IZoweDatasetTreeNode) {
+export async function refreshPS(node: api.IZoweDatasetTreeNode) {
     let label: string;
     try {
         switch (true) {
@@ -1106,7 +1101,10 @@ export async function refreshPS(node: IZoweDatasetTreeNode) {
  * @param {IZoweDatasetTreeNode} node - The node which represents the parent PDS of members
  * @param datasetProvider
  */
-export async function refreshDataset(node: IZoweDatasetTreeNode, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
+export async function refreshDataset(
+    node: api.IZoweDatasetTreeNode,
+    datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>
+) {
     try {
         await node.getChildren();
         datasetProvider.refreshElement(node);
@@ -1123,7 +1121,7 @@ export async function refreshDataset(node: IZoweDatasetTreeNode, datasetProvider
  * @returns {Promise<void>}
  */
 // This function does not appear to be called by anything except unit and integration tests.
-export async function enterPattern(node: IZoweDatasetTreeNode, datasetProvider: DatasetTree) {
+export async function enterPattern(node: api.IZoweDatasetTreeNode, datasetProvider: DatasetTree) {
     if (globals.LOG) {
         globals.LOG.debug(localize("enterPattern.log.debug.prompt", "Prompting the user for a data set pattern"));
     }
@@ -1132,13 +1130,13 @@ export async function enterPattern(node: IZoweDatasetTreeNode, datasetProvider: 
         // manually entering a search
         const options: vscode.InputBoxOptions = {
             prompt: localize(
-                "enterPattern.options.prompt",
+                "enterPattern.inputBox.prompt",
                 "Search Data Sets: use a comma to separate multiple patterns"
             ),
             value: node.pattern,
         };
         // get user input
-        pattern = await vscode.window.showInputBox(options);
+        pattern = await UIViews.inputBox(options);
         if (!pattern) {
             vscode.window.showInformationMessage(localize("enterPattern.pattern", "You must enter a pattern."));
             return;
@@ -1172,7 +1170,7 @@ export async function enterPattern(node: IZoweDatasetTreeNode, datasetProvider: 
  * @export
  * @param {IZoweNodeType} node - The node to copy
  */
-export async function copyDataSet(node: IZoweNodeType) {
+export async function copyDataSet(node: api.IZoweNodeType) {
     return vscode.env.clipboard.writeText(JSON.stringify(dsUtils.getNodeLabels(node)));
 }
 
@@ -1184,10 +1182,7 @@ export async function copyDataSet(node: IZoweNodeType) {
  */
 export async function hMigrateDataSet(node: ZoweDatasetNode) {
     await Profiles.getInstance().checkCurrentProfile(node.getProfile());
-    if (
-        Profiles.getInstance().validProfile === ValidProfileEnum.VALID ||
-        Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED
-    ) {
+    if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
         const { dataSetName } = dsUtils.getNodeLabels(node);
         vscode.window.showInformationMessage(
             localize("hMigrate.requestSent1", "Migration of dataset: ") +
@@ -1214,10 +1209,7 @@ export async function hMigrateDataSet(node: ZoweDatasetNode) {
  */
 export async function hRecallDataSet(node: ZoweDatasetNode) {
     await Profiles.getInstance().checkCurrentProfile(node.getProfile());
-    if (
-        Profiles.getInstance().validProfile === ValidProfileEnum.VALID ||
-        Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED
-    ) {
+    if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
         const { dataSetName } = dsUtils.getNodeLabels(node);
         vscode.window.showInformationMessage(
             localize("hRecall.requestSent1", "Recall of dataset: ") +
@@ -1243,7 +1235,10 @@ export async function hRecallDataSet(node: ZoweDatasetNode) {
  * @param {ZoweNode} node - The node to paste to
  * @param {DatasetTree} datasetProvider - the tree which contains the nodes
  */
-export async function pasteMember(node: IZoweDatasetTreeNode, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
+export async function pasteMember(
+    node: api.IZoweDatasetTreeNode,
+    datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>
+) {
     const { profileName, dataSetName } = dsUtils.getNodeLabels(node);
     let memberName;
     let beforeDataSetName;
@@ -1251,7 +1246,7 @@ export async function pasteMember(node: IZoweDatasetTreeNode, datasetProvider: I
     let beforeMemberName;
 
     await Profiles.getInstance().checkCurrentProfile(node.getProfile());
-    if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
+    if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
         try {
             ({
                 dataSetName: beforeDataSetName,
@@ -1262,10 +1257,11 @@ export async function pasteMember(node: IZoweDatasetTreeNode, datasetProvider: I
             throw Error("Invalid clipboard. Copy from data set first");
         }
         if (node.contextValue.includes(globals.DS_PDS_CONTEXT)) {
-            memberName = await vscode.window.showInputBox({
+            const inputBoxOptions: vscode.InputBoxOptions = {
                 value: beforeMemberName,
-                placeHolder: localize("renameDataSet.name", "Name of Data Set Member"),
-            });
+                placeHolder: localize("pasteMember.inputBox.placeHolder", "Name of Data Set Member"),
+            };
+            memberName = await UIViews.inputBox(inputBoxOptions);
             if (!memberName) {
                 return;
             }
@@ -1315,7 +1311,7 @@ export async function pasteMember(node: IZoweDatasetTreeNode, datasetProvider: I
  * @export
  * @param {vscode.TextDocument} doc - TextDocument that is being saved
  */
-export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
+export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>) {
     // Check if file is a data set, instead of some other file
     globals.LOG.debug(localize("saveFile.log.debug.request", "requested to save data set: ") + doc.fileName);
     const docPath = path.join(doc.fileName, "..");
@@ -1341,7 +1337,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweT
 
     // get session from session name
     let documentSession: Session;
-    let node: IZoweDatasetTreeNode;
+    let node: api.IZoweDatasetTreeNode;
     const sesNode = (await datasetProvider.getChildren()).find((child) => child.label.trim() === sesName);
     if (sesNode) {
         globals.LOG.debug(localize("saveFile.log.debug.load", "Loading session from session node in saveFile()"));
@@ -1381,7 +1377,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweT
         }
     }
     // Get specific node based on label and parent tree (session / favorites)
-    let nodes: IZoweNodeType[];
+    let nodes: api.IZoweNodeType[];
     if (!sesNode || sesNode.children.length === 0) {
         // saving from favorites
         nodes = concatChildNodes(datasetProvider.mFavorites);
@@ -1412,7 +1408,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweT
     try {
         const uploadResponse = await vscode.window.withProgress(
             {
-                location: vscode.ProgressLocation.Notification,
+                location: vscode.ProgressLocation.Window,
                 title: localize("saveFile.response.save.title", "Saving data set..."),
             },
             () => {
@@ -1424,7 +1420,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweT
             }
         );
         if (uploadResponse.success) {
-            vscode.window.showInformationMessage(uploadResponse.commandResponse);
+            vscode.window.setStatusBarMessage(uploadResponse.commandResponse, globals.STATUS_BAR_TIMEOUT_MS);
             // set local etag with the new etag from the updated file on mainframe
             if (node) {
                 node.setEtag(uploadResponse.apiResponse[0].etag);

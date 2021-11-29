@@ -27,6 +27,7 @@ import * as contextually from "../shared/context";
 import * as nls from "vscode-nls";
 import { resetValidationSettings } from "../shared/actions";
 import { PersistentFilters } from "../PersistentFilters";
+import { UIViews } from "../shared/ui-views";
 // Set up localization
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
@@ -614,7 +615,10 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 if (!hasHistory || choice === this.createOwner || searchCriteria.match(/Owner:/)) {
                     // User has selected owner/prefix option
                     options = {
-                        prompt: localize("jobsFilterPrompt.option.prompt.owner", "Enter the Job Owner. Default is *."),
+                        prompt: localize(
+                            "jobsFilterPrompt.inputBox.prompt.owner",
+                            "Enter the Job Owner. Default is *."
+                        ),
                         validateInput: (value: string) =>
                             value.match(/ /g)
                                 ? localize(
@@ -625,7 +629,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                         value: owner,
                     };
                     // get user input
-                    owner = await vscode.window.showInputBox(options);
+                    owner = await UIViews.inputBox(options);
                     if (owner === undefined) {
                         vscode.window.showInformationMessage(
                             localize("jobsFilterPrompt.enterPrefix", "Search Cancelled")
@@ -637,11 +641,14 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                     }
                     owner = owner.toUpperCase();
                     options = {
-                        prompt: localize("jobsFilterPrompt.option.prompt.prefix", "Enter a Job prefix. Default is *."),
+                        prompt: localize(
+                            "jobsFilterPrompt.inputBox.prompt.prefix",
+                            "Enter a Job prefix. Default is *."
+                        ),
                         value: prefix,
                     };
                     // get user input
-                    prefix = await vscode.window.showInputBox(options);
+                    prefix = await UIViews.inputBox(options);
                     if (prefix === undefined) {
                         vscode.window.showInformationMessage(
                             localize("jobsFilterPrompt.enterPrefix", "Search Cancelled")
@@ -654,11 +661,11 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                     prefix = prefix.toUpperCase();
                     if (!hasHistory || choice === this.createId) {
                         options = {
-                            prompt: localize("jobsFilterPrompt.option.prompt.jobid", "Enter a Job id"),
+                            prompt: localize("jobsFilterPrompt.inputBox.prompt.jobid", "Enter a Job id"),
                             value: jobid,
                         };
                         // get user input
-                        jobid = await vscode.window.showInputBox(options);
+                        jobid = await UIViews.inputBox(options);
                         if (jobid === undefined) {
                             vscode.window.showInformationMessage(
                                 localize("jobsFilterPrompt.enterPrefix", "Search Cancelled")
@@ -669,11 +676,11 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 } else {
                     // User has selected JobId option
                     options = {
-                        prompt: localize("jobsFilterPrompt.option.prompt.jobid", "Enter a Job id"),
+                        prompt: localize("jobsFilterPrompt.inputBox.prompt.jobid", "Enter a Job id"),
                         value: jobid,
                     };
                     // get user input
-                    jobid = await vscode.window.showInputBox(options);
+                    jobid = await UIViews.inputBox(options);
                     if (!jobid) {
                         vscode.window.showInformationMessage(
                             localize("jobsFilterPrompt.enterPrefix", "Search Cancelled")
