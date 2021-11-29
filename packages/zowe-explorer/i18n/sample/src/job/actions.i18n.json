@@ -11,6 +11,7 @@
   "deleteJobPrompt.confirmation.message": "Are you sure you want to delete the following {0} item(s)?\nThis will permanently remove the following job(s) from your system.\n\n{1}",
   "deleteJobPrompt.confirmation.cancel.log.debug": "Delete action was canceled.",
   "deleteJobPrompt.deleteCancelled": "Delete action was cancelled.",
+  "deleteJobPrompt.deleteCounter": "Deleting nodes",
   "deleteCommand.multipleJobs": "The following jobs were deleted: {0}",
   "deleteCommand.job": "Job {0} deleted."
 }
