@@ -83,6 +83,19 @@
     ],
     "reporters": [
       "default"
-    ]
+    ],
+    "coverageDirectory": "<rootDir>/results/unit/coverage"
+  },
+  "jest-html-reporter": {
+    "pageTitle": "Zowe FTP Extension Tests",
+    "outputPath": "results/unit/results.html"
+  },
+  "jest-stare": {
+    "resultDir": "results/unit/jest-stare",
+    "coverageLink": "../coverage/lcov-report/index.html"
+  },
+  "jest-junit": {
+    "outputDirectory": "<rootDir>/results/unit",
+    "outputName": "junit.xml"
   }
 }
