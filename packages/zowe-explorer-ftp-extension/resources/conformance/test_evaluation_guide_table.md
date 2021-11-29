@@ -10,7 +10,7 @@ Throughout this document you will find the following terminology being used:
 
 - _Extender_: The organization or developer producing an extension for Zowe Explorer.
 - _Zowe Explorer Extension_: An installable piece of software that provides new functionality to Zowe Explorer or uses/calls services provided by Zowe Explorer. Also simply referred to here as an "extension", this can be a VS Code extension as well as a Zowe CLI Plugin or an independent piece of software. The conformance criteria below call out conformance requirements for three common types of Zowe Explorer extensions, but it is possible that more kinds of extensions can be created. If such new extension kinds surface, then Zowe Explorer APIs and this document can be expanded to support them in the future.
-- _Zowe Explorer VS Code extension_: Refers to a Zowe Explorer extension that is a VS Code extension that is installed in addition to Zowe Explorer ad that has a VS Code extension dependency to Zowe Explorer.
+- _Zowe Explorer VS Code extension_: Refers to a Zowe Explorer extension that is a VS Code extension that is installed in addition to Zowe Explorer and that has a VS Code extension dependency to Zowe Explorer.
 - _Zowe SDKs_ are [SDKs published by the Zowe project](https://docs.zowe.org/stable/user-guide/sdks-using) that provides various APIs for writing Zowe-based capabilities in general.
 
 These Zowe Conformance criteria are applicable to the latest Zowe v1 LTS Release.
