@@ -102,6 +102,25 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                         );
                     }
                 );
+                spools = spools
+                    // filter out all the objects which do not seem to be correct Job File Document types
+                    // see an issue #845 for the details
+                    .filter(
+                        (item) => !(item.id === undefined && item.ddname === undefined && item.stepname === undefined)
+                    );
+                if (!spools.length) {
+                    const noSpoolNode = new Spool(
+                        localize("getChildren.noSpoolFiles", "There are no JES spool messages to display"),
+                        vscode.TreeItemCollapsibleState.None,
+                        this,
+                        null,
+                        null,
+                        null,
+                        this
+                    );
+                    noSpoolNode.iconPath = null;
+                    return [noSpoolNode];
+                }
                 const refreshTimestamp = Date.now();
                 spools.forEach((spool) => {
                     let prefix = spool.stepname;

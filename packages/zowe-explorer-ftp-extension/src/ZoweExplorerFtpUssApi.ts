@@ -177,7 +177,7 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
         let connection: any;
         try {
             connection = await this.ftpClient(this.checkedProfile());
-            if (connection && connection.client) {
+            if (connection) {
                 if (type === "directory") {
                     await UssUtils.makeDirectory(connection, ussPath);
                 } else if (type === "File" || type === "file") {
