@@ -47,6 +47,7 @@ import {
     IUrlValidator,
 } from "@zowe/zowe-explorer-api";
 import { errorHandling, FilterDescriptor, FilterItem, resolveQuickPickHelper, isTheia } from "./utils/ProfilesUtils";
+import { refreshAll } from "./shared/refresh";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import * as globals from "./globals";
 
@@ -325,6 +326,7 @@ export class Profiles extends ProfilesCache {
             }
             if (choice === configPick) {
                 this.createZoweSchema(zoweFileProvider);
+                zoweFileProvider.refresh();
                 return;
             }
             if (choice instanceof FilterDescriptor) {

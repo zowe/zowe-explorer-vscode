@@ -12,12 +12,14 @@
 import { IZoweTree, IZoweTreeNode, ProfilesCache } from "@zowe/zowe-explorer-api";
 import { PersistentFilters } from "../PersistentFilters";
 import { Profiles } from "../Profiles";
-import { syncSessionNode } from "../utils/ProfilesUtils";
+import { syncSessionNode, getProfileInfo, getZoweDir } from "../utils/ProfilesUtils";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { resetValidationSettings, returnIconState } from "./actions";
 import { labelRefresh } from "./utils";
 import * as contextually from "../shared/context";
 import * as globals from "../globals";
+import * as vscode from "vscode";
+import * as fs from "fs";
 
 /**
  * View (DATA SETS, JOBS, USS) refresh button
@@ -26,6 +28,16 @@ import * as globals from "../globals";
  * @param {IZoweTree} treeProvider
  */
 export async function refreshAll(treeProvider: IZoweTree<IZoweTreeNode>) {
+    const mProfileInfo = await getProfileInfo(globals.ISTHEIA);
+    if (mProfileInfo.usingTeamConfig) {
+        if (vscode.workspace.workspaceFolders) {
+            const rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
+            await mProfileInfo.readProfilesFromDisk({ projectDir: fs.realpathSync(rootPath) });
+        } else {
+            await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir() });
+        }
+        await getProfileInfo(globals.ISTHEIA);
+    }
     await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
     treeProvider.mSessionNodes.forEach(async (sessNode) => {
         const setting = (await PersistentFilters.getDirectValue(
