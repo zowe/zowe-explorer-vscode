@@ -101,23 +101,8 @@ By just running Zowe Explorer as a vsix file in Theia you can test functionality
 
 For the following steps we assume that you have cloned the Zowe Explorer's Github repo into a parallel directory to Theia and have it all setup, built and can run it from the workspace. We also assume that you have them both (Theia and Zowe Explorer) open in two separate VS Code windows and can switch back and forth between them. If you do not plan to set break points in Theia itself, just Zowe Explorer then you can just use a command shell for building and starting Theia.
 
-- Make sure Zowe Explorer is fully build with `npm run build`.
-- Optionally, you can start watching the Zowe Explorer extension for code changes you make with `npm run watch`. However, when you save changes in Zowe Explorer you need to stop and start the Theia Hosted Plugin as described below, because watch will automatically build changes, but not deploy them into Theia.
-- Make sure that the Zowe Explorer vsix file is not inside the `plugins` directory anymore, if you ran the steps in the previous section.
-- Build and start Theia:
-  - `yarn` (in the main directory)
-  - `cd examples/browser`
-  - `yarn start`
-- Open a browser and go to <http://localhost:3000>.
-- In that browser the Theia IDE will appear and you will use Theia's and not VS Code's Debugger to actually debug the VS Code extension.
-- In Theia open your Zowe Explorer development workspace with `File > Open..`, e.g. select the `vscode-extension-for-zowe` in the file dialog.
-- You can now open files and set breakpoints. Changes you make in VS Code will appear here and vice versa as both editors have file watchers.
-- To start debugging you need to do commands that you start using the `F1` function key in Theia and then start typing the command until it appears:
-  - `Hosted Plugin: Select Path`: it opens a dialog in which you need to select again the folder of the Zowe Explorer VS Code extension.
-  - `Hosted Plugin: Debug Instance`: it will prompt you to open an new browser window with a new Theia instance that has now the VS Code extension that you selected loaded.
-- In that new Theia browser window you can now load your test files and use the extension. If it hits a breakpoint it will show that in the other, first Theia editor. Make sure you open them as two separate browser windows on different computer screens if available, so that you can switch back and forth easily.
-- In the Theia editor with your breakpoints open the Debug view for stepping through the code and inspecting variables.
-- You see at the bottom of the Theia editor with the Debug view a green bar labeled `Hosted Plugin:...` that shows the status.
-- Click on it to stop and start this debug session. For example, if you make code changes in the VS Code editor that has the Zowe Explorer VS Code extension on watch you still need to stop and start the debug session for the changes to take effect.
-
-There is also a gif video with all of these steps [here in the Theia Github repo](https://github.com/theia-ide/theia/issues/3251#issuecomment-461484406).
+1. Make sure Zowe Explorer is fully build with `npm run build`.
+2. Run the extension development host with the specific launch configuration named `Run Zowe Explorer VS Code Extension (Theia)` and press the play button.
+3. Once the extension development host is displayed an error message will appear on the bottom left corner that mentions activation of the extension failing. Close the extension development host after this error has popped up.
+4. Press the `stop` button located in the same place where the extension development host was launched, it should be a red square icon to stop the development extension host.
+5. Load the extension development host once more by pressing the play button.
