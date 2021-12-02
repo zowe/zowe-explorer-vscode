@@ -21,6 +21,7 @@ import * as sinon from "sinon";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import * as globals from "../../src/globals";
+const Buffer = require("safer-buffer").Buffer;
 
 declare var it: any;
 
