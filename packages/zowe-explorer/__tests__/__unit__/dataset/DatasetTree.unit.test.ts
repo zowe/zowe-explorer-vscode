@@ -1528,7 +1528,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
         expect(testTree.mSessionNodes[1].contextValue).toEqual(globals.DS_SESSION_CONTEXT + globals.ACTIVE_CONTEXT);
-        expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD1(MEMBER)");
+        expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD1");
     });
     it("Checking adding of new filter with Unverified profile", async () => {
         const globalMocks = await createGlobalMocks();
