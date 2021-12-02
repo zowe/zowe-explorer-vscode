@@ -1156,23 +1156,22 @@ export class Profiles extends ProfilesCache {
     }
 
     public async ssoLogin(node?: IZoweNodeType, label?: string): Promise<void> {
+        let newUser: string;
+        let newPass: string;
+        let loginToken: string;
         const baseProfile = this.getBaseProfile();
         let serviceProfile: IProfileLoaded;
         if (node) {
-            serviceProfile = node.getProfile();
+            serviceProfile = await node.getProfile();
         } else {
-            serviceProfile = this.loadNamedProfile(label.trim());
+            serviceProfile = await this.loadNamedProfile(label.trim());
         }
 
-        const checksPassed = this.optionalCredChecks(serviceProfile, baseProfile);
-        if (!checksPassed) {
-            return;
-        }
+        const loginTokenType = await ZoweExplorerApiRegister.getInstance()
+            .getCommonApi(serviceProfile)
+            .getTokenTypeName();
 
-        let newUser: string;
-        let newPass: string;
-
-        if (baseProfile) {
+        if (loginTokenType !== SessConstants.TOKEN_TYPE_APIML) {
             newUser = await this.userInfo();
             if (newUser === undefined) {
                 vscode.window.showInformationMessage(localize("ssoLogin.undefined.username", "Operation Cancelled"));
@@ -1186,76 +1185,104 @@ export class Profiles extends ProfilesCache {
                     return;
                 }
             }
+            loginToken = await ZoweExplorerApiRegister.getInstance()
+                .getCommonApi(serviceProfile)
+                .login(node.getSession());
+        } else {
+            const checksPassed = this.optionalCredChecks(serviceProfile, baseProfile);
+            if (!checksPassed) {
+                return;
+            }
 
-            try {
-                const combinedProfile = await Profiles.getInstance().getCombinedProfile(serviceProfile, baseProfile);
-                const loginTokenType = ZoweExplorerApiRegister.getInstance()
-                    .getCommonApi(serviceProfile)
-                    .getTokenTypeName();
-                const updSession = new Session({
-                    hostname: combinedProfile.profile.host,
-                    port: combinedProfile.profile.port,
-                    user: newUser,
-                    password: newPass,
-                    rejectUnauthorized: combinedProfile.profile.rejectUnauthorized,
-                    tokenType: loginTokenType,
-                    type: SessConstants.AUTH_TYPE_TOKEN,
-                });
-                const loginToken = await ZoweExplorerApiRegister.getInstance()
-                    .getCommonApi(serviceProfile)
-                    .login(updSession);
-                const profileManager = Profiles.getInstance().getCliProfileManager(baseProfile.type);
-                const updBaseProfile: IProfile = {
-                    tokenType: loginTokenType,
-                    tokenValue: loginToken,
-                };
-
-                const updateParms: IUpdateProfile = {
-                    name: baseProfile.name,
-                    merge: true,
-                    profile: updBaseProfile,
-                };
+            if (baseProfile) {
+                newUser = await this.userInfo();
+                if (newUser === undefined) {
+                    vscode.window.showInformationMessage(
+                        localize("ssoLogin.undefined.username", "Operation Cancelled")
+                    );
+                    return;
+                } else {
+                    newPass = await this.passwordInfo();
+                    if (newPass === undefined) {
+                        vscode.window.showInformationMessage(
+                            localize("ssoLogin.undefined.username", "Operation Cancelled")
+                        );
+                        return;
+                    }
+                }
 
                 try {
-                    await profileManager.update(updateParms);
+                    const combinedProfile = await Profiles.getInstance().getCombinedProfile(
+                        serviceProfile,
+                        baseProfile
+                    );
+                    // const loginTokenType = ZoweExplorerApiRegister.getInstance()
+                    //     .getCommonApi(serviceProfile)
+                    //     .getTokenTypeName();
+                    const updSession = new Session({
+                        hostname: combinedProfile.profile.host,
+                        port: combinedProfile.profile.port,
+                        user: newUser,
+                        password: newPass,
+                        rejectUnauthorized: combinedProfile.profile.rejectUnauthorized,
+                        tokenType: loginTokenType,
+                        type: SessConstants.AUTH_TYPE_TOKEN,
+                    });
+                    loginToken = await ZoweExplorerApiRegister.getInstance()
+                        .getCommonApi(serviceProfile)
+                        .login(updSession);
+                    const profileManager = Profiles.getInstance().getCliProfileManager(baseProfile.type);
+                    const updBaseProfile: IProfile = {
+                        tokenType: loginTokenType,
+                        tokenValue: loginToken,
+                    };
+
+                    const updateParms: IUpdateProfile = {
+                        name: baseProfile.name,
+                        merge: true,
+                        profile: updBaseProfile,
+                    };
+
+                    try {
+                        await profileManager.update(updateParms);
+                    } catch (error) {
+                        vscode.window.showErrorMessage(
+                            localize("ssoLogin.unableToLogin", "Unable to log in. ") + error.message
+                        );
+                        return;
+                    }
+                    // }
+                    //     vscode.window.showInformationMessage(
+                    //         localize("ssoLogin.successful", "Login to authentication service was successful.")
+                    //     );
+                    //     this.allProfiles = this.allProfiles.map((item) => {
+                    //         item.profile.tokenValue = loginToken;
+                    //         return item;
+                    //     });
                 } catch (error) {
                     vscode.window.showErrorMessage(
                         localize("ssoLogin.unableToLogin", "Unable to log in. ") + error.message
                     );
                     return;
                 }
-                vscode.window.showInformationMessage(
-                    localize("ssoLogin.successful", "Login to authentication service was successful.")
-                );
-                this.allProfiles = this.allProfiles.map((item) => {
-                    item.profile.tokenValue = loginToken;
-                    return item;
-                });
-            } catch (error) {
-                vscode.window.showErrorMessage(
-                    localize("ssoLogin.unableToLogin", "Unable to log in. ") + error.message
-                );
-                return;
             }
+            vscode.window.showInformationMessage(
+                localize("ssoLogin.successful", "Login to authentication service was successful.")
+            );
+            this.allProfiles = this.allProfiles.map((item) => {
+                item.profile.tokenValue = loginToken;
+                return item;
+            });
         }
     }
 
     public async ssoLogout(node: IZoweNodeType): Promise<void> {
-        const serviceProfile = node.getProfile();
+        const serviceProfile = await node.getProfile();
         try {
             if (serviceProfile.type !== "zosmf" && serviceProfile.profile.tokenValue !== undefined) {
-                const session = new Session({
-                    hostname: serviceProfile.profile.host,
-                    port: serviceProfile.profile.port,
-                    rejectUnauthorized: serviceProfile.profile.rejectUnauthorized,
-                    tokenType: serviceProfile.profile.tokenType,
-                    tokenValue: serviceProfile.profile.tokenValue,
-                    type: SessConstants.AUTH_TYPE_TOKEN,
-                    basePath: serviceProfile.profile.basePath,
-                });
-                // tslint:disable-next-line:no-console
-                console.log(session);
-                await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).logout(session);
+                await ZoweExplorerApiRegister.getInstance()
+                    .getCommonApi(serviceProfile)
+                    .logout(await node.getSession());
             } else {
                 const baseProfile = this.getBaseProfile();
                 const checksPassed = this.optionalCredChecks(serviceProfile, baseProfile);
