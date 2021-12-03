@@ -112,11 +112,12 @@ git clone https://github.com/eclipse-theia/theia \
 && yarn browser start
 ```
 
-2. Make sure Zowe Explorer is fully build with `yarn`.
-3. Open the Theia browser instance by entering `localhost:3000` in your preferred browser.
-4. Run the extension development host with the specific launch configuration named `Run Zowe Explorer VS Code Extension (Theia)` and press the play button.
-5. if a new tab with the extension development host is not opened automatically, open a new tab and go to `localhost:3030`.
-6. Once the extension development host is displayed an error message will appear on the bottom left corner that mentions activation of the extension failing. Close the extension development host after this error has popped up.
-7. Press the `stop` button located in the same place where the extension development host was launched, it should be a red square icon to stop the development extension host.
-8. Load the extension development host once more by pressing the play button.
-9. If the extension development host is not opened automatically repeat step 5.
+2. Open the Theia browser instance by entering `localhost:3000` in your preferred browser.
+3. Inside of Theia in the browser, open the Zowe Explorer repository.
+4. Make sure Zowe Explorer is fully built with `yarn`.
+5. Run the extension development host with the specific launch configuration named `Run Zowe Explorer VS Code Extension (Theia)` and press the play button.
+6. if a new tab with the extension development host is not opened automatically, open a new tab and go to `localhost:3030`.
+7. Once the extension development host is displayed an error message will appear on the bottom left corner that mentions activation of the extension failing. Close the extension development host after this error has popped up.
+8. Press the `stop` button located in the same place where the extension development host was launched, it should be a red square icon to stop the development extension host.
+9. Load the extension development host once more by pressing the play button.
+10. If the extension development host is not opened automatically repeat step 5.
