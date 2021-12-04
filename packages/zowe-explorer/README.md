@@ -23,7 +23,7 @@ More information:
 
 ## Contents
 
-- [What's new in Zowe Explorer 1.20.0](#whats-new-in-zowe-explorer-1200)
+- [What's new in Zowe Explorer 1.21.0](#whats-new-in-zowe-explorer-1210)
 - [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
 - [Sample Use Cases](#sample-use-cases)
@@ -31,23 +31,21 @@ More information:
 - [Usage Tips](#usage-tips)
 - [Extending Zowe Explorer](#extending-zowe-explorer)
 
-## What's new in Zowe Explorer 1.20.0
+## What's new in Zowe Explorer 1.21.0
 
 **Added**:
 
-- Added a Github action bot that automates the issue triage.
+- Add a progress bar for the simultaneous deletion of multiple jobs
 
 **Changed**:
 
-- Updated the @zowe/cli version to 6.33.3 to fix the SSH2 audit failure.
-- Updated the Jobs Issue Stop and Issue Modify commands so that they can be consumed by Extenders with the `issueMvsCommand` API.
-- Update to use Visual Studio Code's standard confirmation prompt for the Data Sets, USS, and Job trees when clicking on a Favorited profile that does not exist.
-- Updated the deletion prompt for the USS and Jobs trees.
-- Updated the placeholder text in the `Add Profile` entry field
+- Changed the `DataSet uploaded successfully` message type. Now messages are shown in the status bar instead of the notification pop-up
 
 **Fixed**:
 
-- Fixed the Not Found issue that resulted from attempts to delete a member whose parent data set was already deleted using multi-delete.
+- Fixed the issue that caused JCL errors in the JOBS tree to be displayed as `undefined:undefined(undefined)`
+- Fixed the Theia input box issue
+- Fixed the issue that caused the removal of unsaved credentials of a profile in the Jobs tree after deleting a job. Now when you delete a job from the Jobs tree with a profile that does not have the stored credentials, the profile keeps the cached credentials
 
 For more information, see [Changelog](https://marketplace.visualstudio.com/items/Zowe.vscode-extension-for-zowe/changelog).
 
