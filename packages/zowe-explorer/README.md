@@ -35,16 +35,19 @@ More information:
 
 **Added**:
 
-- Add a progress bar for the simultaneous deletion of multiple jobs
+- Added a progress bar for the simultaneous deletion of multiple jobs
+- Added the note about the deprecation of the associate profile feature to the Associate Profile section to Zowe Docs and to the Zowe Explorer Readme
 
 **Changed**:
 
 - Changed the `DataSet uploaded successfully` message type. Now messages are shown in the status bar instead of the notification pop-up
+- Updated dependencies for improved security
+- Updated Theia tests to use the latest Theia version
 
 **Fixed**:
 
 - Fixed the issue that caused JCL errors in the JOBS tree to be displayed as `undefined:undefined(undefined)`
-- Fixed the Theia input box issue
+- Fixed the Theia input box issue that caused entered values to be incorrectly validated
 - Fixed the issue that caused the removal of unsaved credentials of a profile in the Jobs tree after deleting a job. Now when you delete a job from the Jobs tree with a profile that does not have the stored credentials, the profile keeps the cached credentials
 
 For more information, see [Changelog](https://marketplace.visualstudio.com/items/Zowe.vscode-extension-for-zowe/changelog).

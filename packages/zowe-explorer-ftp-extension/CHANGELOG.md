@@ -1,5 +1,10 @@
 # Change Log
 
+## `1.21.0`
+
+- Added unit tests for the FTP USS functionality [#1582](https://github.com/zowe/vscode-extension-for-zowe/pull/1582) and [1596](https://github.com/zowe/vscode-extension-for-zowe/pull/1596). Thanks @tiantn and JillieBeanSim
+- Added the new logger API. You can now use the Zowe Explorer API logger functions to standardize messages and specify message severity [#1518](https://github.com/zowe/vscode-extension-for-zowe/pull/1518). Thanks @katelynienaber
+
 ## `1.19.0`
 
 - Added support for the validate profile and credential features [#1443](https://github.com/zowe/vscode-extension-for-zowe/pull/1443). Thanks @tiantn
