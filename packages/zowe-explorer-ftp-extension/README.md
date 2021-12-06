@@ -9,7 +9,7 @@ This VS Code extension also serves as a [source code example](https://github.com
 **Added**:
 
 - Added unit tests for the FTP USS functionality
-- Added the new logger API. You can now use the Zowe Explorer API logger functions to standardize messages and specify message severity
+- Standardized the user interface and log messages with severity specifications using the Zowe Explorer API logger functions
 
 For more information, see [Changelog](https://github.com/zowe/vscode-extension-for-zowe/blob/master/packages/zowe-explorer-ftp-extension/CHANGELOG.md).
 
