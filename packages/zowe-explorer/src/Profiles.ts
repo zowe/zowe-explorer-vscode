@@ -1156,109 +1156,96 @@ export class Profiles extends ProfilesCache {
     }
 
     public async ssoLogin(node?: IZoweNodeType, label?: string): Promise<void> {
-        let newUser: string;
-        let newPass: string;
         let loginToken: string;
-        const baseProfile = this.getBaseProfile();
+        let loginTokenType: string;
+        let creds: string[];
         let serviceProfile: IProfileLoaded;
+        let session: Session;
         if (node) {
-            serviceProfile = await node.getProfile();
+            serviceProfile = node.getProfile();
         } else {
-            serviceProfile = await this.loadNamedProfile(label.trim());
+            serviceProfile = this.loadNamedProfile(label.trim());
+        }
+        const api = ZoweExplorerApiRegister.getInstance();
+        // This check will handle service profiles that have username and password
+        if (serviceProfile.profile.user && serviceProfile.profile.password) {
+            vscode.window.showInformationMessage(
+                localize("ssoAuth.noBase", "This profile does not support token authentication.")
+            );
+            return;
         }
 
-        const loginTokenType = await ZoweExplorerApiRegister.getInstance()
-            .getCommonApi(serviceProfile)
-            .getTokenTypeName();
-
-        if (loginTokenType !== SessConstants.TOKEN_TYPE_APIML) {
-            newUser = await this.userInfo();
-            if (newUser === undefined) {
-                vscode.window.showInformationMessage(localize("ssoLogin.undefined.username", "Operation Cancelled"));
-                return;
+        try {
+            loginTokenType = api.getCommonApi(serviceProfile).getTokenTypeName();
+        } catch (error) {
+            vscode.window.showInformationMessage(
+                localize("ssoAuth.noBase", "This profile does not support token authentication.")
+            );
+            return;
+        }
+        if (loginTokenType && loginTokenType !== SessConstants.TOKEN_TYPE_APIML) {
+            // this will handle extenders
+            if (node) {
+                session = node.getSession();
             } else {
-                newPass = await this.passwordInfo();
-                if (newPass === undefined) {
-                    vscode.window.showInformationMessage(
-                        localize("ssoLogin.undefined.username", "Operation Cancelled")
-                    );
-                    return;
-                }
+                session = api.getCommonApi(serviceProfile).getSession();
             }
-            loginToken = await ZoweExplorerApiRegister.getInstance()
-                .getCommonApi(serviceProfile)
-                .login(node.getSession());
+            creds = await this.loginCredentialPrompt();
+            if (!creds) {
+                return;
+            }
+            session.ISession.user = creds[0];
+            session.ISession.password = creds[1];
+            try {
+                loginToken = await api.getCommonApi(serviceProfile).login(session);
+            } catch (error) {
+                vscode.window.showErrorMessage(
+                    localize("ssoLogin.unableToLogin", "Unable to log in. ") + error.message
+                );
+                return;
+            }
         } else {
+            const baseProfile = this.getBaseProfile();
+            // this will handle base profiles apiml tokens
             const checksPassed = this.optionalCredChecks(serviceProfile, baseProfile);
             if (!checksPassed) {
+                vscode.window.showInformationMessage(
+                    localize("ssoAuth.noBase", "This profile does not support token authentication.")
+                );
                 return;
             }
-
             if (baseProfile) {
-                newUser = await this.userInfo();
-                if (newUser === undefined) {
-                    vscode.window.showInformationMessage(
-                        localize("ssoLogin.undefined.username", "Operation Cancelled")
-                    );
+                creds = await this.loginCredentialPrompt();
+                if (!creds) {
                     return;
-                } else {
-                    newPass = await this.passwordInfo();
-                    if (newPass === undefined) {
-                        vscode.window.showInformationMessage(
-                            localize("ssoLogin.undefined.username", "Operation Cancelled")
-                        );
-                        return;
-                    }
                 }
-
                 try {
                     const combinedProfile = await Profiles.getInstance().getCombinedProfile(
                         serviceProfile,
                         baseProfile
                     );
-                    // const loginTokenType = ZoweExplorerApiRegister.getInstance()
-                    //     .getCommonApi(serviceProfile)
-                    //     .getTokenTypeName();
                     const updSession = new Session({
                         hostname: combinedProfile.profile.host,
                         port: combinedProfile.profile.port,
-                        user: newUser,
-                        password: newPass,
+                        user: creds[0],
+                        password: creds[1],
                         rejectUnauthorized: combinedProfile.profile.rejectUnauthorized,
                         tokenType: loginTokenType,
                         type: SessConstants.AUTH_TYPE_TOKEN,
                     });
-                    loginToken = await ZoweExplorerApiRegister.getInstance()
-                        .getCommonApi(serviceProfile)
-                        .login(updSession);
-                    const profileManager = Profiles.getInstance().getCliProfileManager(baseProfile.type);
+                    loginToken = await api.getCommonApi(serviceProfile).login(updSession);
                     const updBaseProfile: IProfile = {
                         tokenType: loginTokenType,
                         tokenValue: loginToken,
                     };
-
-                    const updateParms: IUpdateProfile = {
-                        name: baseProfile.name,
-                        merge: true,
-                        profile: updBaseProfile,
-                    };
-
-                    try {
-                        await profileManager.update(updateParms);
-                    } catch (error) {
-                        vscode.window.showErrorMessage(
-                            localize("ssoLogin.unableToLogin", "Unable to log in. ") + error.message
-                        );
-                        return;
-                    }
-                    // }
-                    //     vscode.window.showInformationMessage(
-                    //         localize("ssoLogin.successful", "Login to authentication service was successful.")
-                    //     );
-                    //     this.allProfiles = this.allProfiles.map((item) => {
-                    //         item.profile.tokenValue = loginToken;
-                    //         return item;
-                    //     });
+                    await this.updateBaseProfileFile(baseProfile, updBaseProfile);
+                    // update all profiles affiliated with the base profile
+                    this.allProfiles.forEach((item) => {
+                        const passed = this.optionalCredChecks(item, baseProfile);
+                        if (passed) {
+                            item.profile.tokenValue = loginToken;
+                        }
+                    });
                 } catch (error) {
                     vscode.window.showErrorMessage(
                         localize("ssoLogin.unableToLogin", "Unable to log in. ") + error.message
@@ -1266,34 +1253,39 @@ export class Profiles extends ProfilesCache {
                     return;
                 }
             }
-            vscode.window.showInformationMessage(
-                localize("ssoLogin.successful", "Login to authentication service was successful.")
-            );
-            this.allProfiles = this.allProfiles.map((item) => {
-                item.profile.tokenValue = loginToken;
-                return item;
-            });
         }
+        vscode.window.showInformationMessage(
+            localize("ssoLogin.successful", "Login to authentication service was successful.")
+        );
     }
 
     public async ssoLogout(node: IZoweNodeType): Promise<void> {
         const serviceProfile = await node.getProfile();
+        const api = ZoweExplorerApiRegister.getInstance();
+        // This check will handle service profiles that have username and password
+        if (serviceProfile.profile.user && serviceProfile.profile.password) {
+            vscode.window.showInformationMessage(
+                localize("ssoAuth.noBase", "This profile does not support token authentication.")
+            );
+            return;
+        }
         try {
+            // this will handle extenders
             if (serviceProfile.type !== "zosmf" && serviceProfile.profile.tokenValue !== undefined) {
-                await ZoweExplorerApiRegister.getInstance()
-                    .getCommonApi(serviceProfile)
-                    .logout(await node.getSession());
+                await api.getCommonApi(serviceProfile).logout(await node.getSession());
             } else {
+                // this will handle base profile apiml tokens
                 const baseProfile = this.getBaseProfile();
                 const checksPassed = this.optionalCredChecks(serviceProfile, baseProfile);
                 if (!checksPassed) {
+                    vscode.window.showInformationMessage(
+                        localize("ssoAuth.noBase", "This profile does not support token authentication.")
+                    );
                     return;
                 }
 
                 const combinedProfile = await this.getCombinedProfile(serviceProfile, baseProfile);
-                const loginTokenType = ZoweExplorerApiRegister.getInstance()
-                    .getCommonApi(serviceProfile)
-                    .getTokenTypeName();
+                const loginTokenType = api.getCommonApi(serviceProfile).getTokenTypeName();
                 const updSession = new Session({
                     hostname: combinedProfile.profile.host,
                     port: combinedProfile.profile.port,
@@ -1302,7 +1294,7 @@ export class Profiles extends ProfilesCache {
                     tokenValue: combinedProfile.profile.tokenValue,
                     type: SessConstants.AUTH_TYPE_TOKEN,
                 });
-                await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).logout(updSession);
+                await api.getCommonApi(serviceProfile).logout(updSession);
 
                 this.getCliProfileManager(baseProfile.type).save({
                     name: baseProfile.name,
@@ -1324,23 +1316,40 @@ export class Profiles extends ProfilesCache {
         }
     }
 
+    private async updateBaseProfileFile(baseProfile: IProfileLoaded, updBaseProfile: IProfile) {
+        const profileManager = Profiles.getInstance().getCliProfileManager(baseProfile.type);
+        const updateParms: IUpdateProfile = {
+            name: baseProfile.name,
+            merge: true,
+            profile: updBaseProfile,
+        };
+        await profileManager.update(updateParms);
+    }
+
+    private async loginCredentialPrompt(): Promise<string[]> {
+        let newPass: string;
+        const newUser = await this.userInfo();
+        if (!newUser) {
+            vscode.window.showInformationMessage(localize("ssoLogin.undefined.username", "Operation Cancelled"));
+            return;
+        } else {
+            newPass = await this.passwordInfo();
+            if (!newPass) {
+                vscode.window.showInformationMessage(localize("ssoLogin.undefined.username", "Operation Cancelled"));
+                return;
+            }
+        }
+        return [newUser, newPass];
+    }
+
     private optionalCredChecks(serviceProfile?: IProfileLoaded, baseProfile?: IProfileLoaded): boolean {
+        if (serviceProfile.profile.user && serviceProfile.profile.password) {
+            return false;
+        }
         // Skip if there is no base profile
         if (!baseProfile) {
-            vscode.window.showInformationMessage(
-                localize("ssoAuth.noBase", "This profile does not support apiml token authentication.")
-            );
             return false;
         }
-
-        // This check will handle service profiles that have username and password
-        if (serviceProfile.profile.user && serviceProfile.profile.password) {
-            vscode.window.showInformationMessage(
-                localize("ssoAuth.noBase", "This profile does not support apiml token authentication.")
-            );
-            return false;
-        }
-
         // This check is for optional credentials
         if (
             baseProfile &&
@@ -1351,9 +1360,6 @@ export class Profiles extends ProfilesCache {
                 (baseProfile.profile.host === serviceProfile.profile.host &&
                     baseProfile.profile.port !== serviceProfile.profile.port))
         ) {
-            vscode.window.showInformationMessage(
-                localize("ssoAuth.noBase", "This profile does not support apiml token authentication.")
-            );
             return false;
         }
         return true;
