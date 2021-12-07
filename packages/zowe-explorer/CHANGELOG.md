@@ -5,13 +5,13 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ## `1.21.0`
 
 - Add a progress bar for the simultaneous deletion of multiple jobs [#1583](https://github.com/zowe/vscode-extension-for-zowe/pull/1583). Thanks @uzuko01
-- Added the note about the deprecation of the associate profile feature to the Associate Profile section to Zowe Docs and to the Zowe Explorer Readme [#1575](https://github.com/zowe/vscode-extension-for-zowe/pull/1575). Thanks @IgorCATech
+- Added the note about the deprecation of the associate profile feature to the Associate Profile section of Zowe Docs and to the Zowe Explorer Readme [#1575](https://github.com/zowe/vscode-extension-for-zowe/pull/1575). Thanks @IgorCATech
 - Changed the `DataSet uploaded successfully` message type. Now messages are shown in the status bar instead of the notification pop-up [#1542](https://github.com/zowe/vscode-extension-for-zowe/pull/1542). Thanks @anokhikastiaIBM
 - Updated dependencies for improved security [#1591](https://github.com/zowe/vscode-extension-for-zowe/pull/1591) and [#1601](https://github.com/zowe/vscode-extension-for-zowe/pull/1601). Thanks @lauren-li
 - Updated Theia tests to use the latest Theia version [#1566](https://github.com/zowe/vscode-extension-for-zowe/pull/1566). Thanks @JillieBeanSim
 - Fixed the issue that caused JCL errors in the JOBS tree to be displayed as `undefined:undefined(undefined)` [#1584](https://github.com/zowe/vscode-extension-for-zowe/pull/1584). Thanks @roman-kupriyanov
 - Fixed the Theia input box issue that caused entered values to be incorrectly validated [#1580](https://github.com/zowe/vscode-extension-for-zowe/pull/1580). Thanks @JillieBeanSim
-- Fixed the issue that caused the removal of unsaved credentials of a profile in the Jobs tree after deleting a job. Now when you delete a job from the Jobs tree with a profile that does not have the stored credentials, the profile keeps the cached credentials [#1449](https://github.com/zowe/vscode-extension-for-zowe/pull/1449). Thanks @nickImbirev
+- Fixed the issue that caused the removal of unsaved credentials of a profile in the Jobs tree after deleting a job. Now when you delete a job from the Jobs tree with a profile that does not have the stored credentials, the profile keeps the cached credentials [#1524](https://github.com/zowe/vscode-extension-for-zowe/pull/1524). Thanks @nickImbirev
 
 ## `1.20.0`
 
