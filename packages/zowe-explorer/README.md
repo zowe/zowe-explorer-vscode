@@ -345,8 +345,6 @@ For more information about SCS, see [Secure Credential Store Plug-in for Zowe Ex
 
 - **Hide a profile**: You can hide a profile from the profile tree by right-clicking the profile and selecting the **Hide Profile** option. To add the profile back, click the **+** button and select the profile from the quick pick list.
 
-- **Associate profiles**: You can create a secondary association by right-clicking the profile and selecting the **Associate profiles** icon. For more information, see [the Associate profiles section](https://docs.zowe.org/stable/user-guide/ze-profiles.html#associate-profile) in Zowe Docs.
-
 - **Open recent members**: Zowe Explorer lets you open a list of members you worked on earlier. You can access the list by pressing Ctrl+Alt+R (Windows) or Command+Option+R (Mac).
 
 For the comprehensive Zowe Explorer documentation that also includes information about USS and Jobs interactions, see [the Zowe Explorer documentation](https://docs.zowe.org/stable/user-guide/ze-install.html) in Zowe Docs.

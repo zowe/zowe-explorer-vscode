@@ -29,7 +29,7 @@ export let USS_DIR;
 export let DS_DIR;
 export let ISTHEIA: boolean = false; // set during activate
 export let LOG: Logger;
-export const COMMAND_COUNT = 97;
+export const COMMAND_COUNT = 96;
 export const MAX_SEARCH_HISTORY = 5;
 export const MAX_FILE_HISTORY = 10;
 export const CONTEXT_PREFIX = "_";
@@ -212,9 +212,7 @@ export function defineGlobals(tempPath: string | undefined) {
     }
 
     // Set temp path & folder paths
-    tempPath !== "" && tempPath !== undefined
-        ? (ZOWETEMPFOLDER = path.join(tempPath, "temp"))
-        : (ZOWETEMPFOLDER = path.join(__dirname, "..", "..", "resources", "temp"));
+    ZOWETEMPFOLDER = tempPath ? path.join(tempPath, "temp") : path.join(__dirname, "..", "..", "resources", "temp");
 
     ZOWE_TMP_FOLDER = path.join(ZOWETEMPFOLDER, "tmp");
     USS_DIR = path.join(ZOWETEMPFOLDER, "_U_");

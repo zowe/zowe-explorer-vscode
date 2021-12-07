@@ -314,15 +314,6 @@
         }
       },
       {
-        "command": "zowe.all.profilelink",
-        "title": "Associate profiles",
-        "category": "Zowe Explorer",
-        "icon": {
-          "light": "./resources/light/link.svg",
-          "dark": "./resources/dark/link.svg"
-        }
-      },
-      {
         "command": "zowe.ds.refreshAll",
         "title": "%refreshAll%",
         "category": "Zowe Explorer",
@@ -819,11 +810,6 @@
           "group": "099_zowe_ussModification:@4"
         },
         {
-          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)ussSession.*/",
-          "command": "zowe.all.profilelink",
-          "group": "098_zowe_ussProfileAuthentication@0"
-        },
-        {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?=.*_validate=true.*)ussSession.*/",
           "command": "zowe.uss.disableValidation",
           "group": "098_zowe_ussProfileAuthentication@1"
@@ -1029,11 +1015,6 @@
           "group": "099_zowe_dsModification@5"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
-          "command": "zowe.all.profilelink",
-          "group": "098_zowe_dsProfileAuthentication@1"
-        },
-        {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(?=.*_validate=true.*)session.*/",
           "command": "zowe.ds.disableValidation",
           "group": "098_zowe_dsProfileAuthentication@6"
@@ -1159,11 +1140,6 @@
           "group": "099_zowe_jobsModification"
         },
         {
-          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/",
-          "command": "zowe.all.profilelink",
-          "group": "098_zowe_jobsProfileAuthentication@0"
-        },
-        {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?=.*_validate=true.*)server.*/",
           "command": "zowe.jobs.disableValidation",
           "group": "098_zowe_jobsProfileAuthentication@3"
@@ -1226,10 +1202,6 @@
         },
         {
           "command": "zowe.ds.editSession",
-          "when": "never"
-        },
-        {
-          "command": "zowe.all.profilelink",
           "when": "never"
         },
         {

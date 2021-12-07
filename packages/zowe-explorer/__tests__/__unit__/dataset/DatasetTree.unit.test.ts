@@ -51,6 +51,7 @@ function createGlobalMocks() {
         isTheia: jest.fn(),
         testProfileLoaded: createValidIProfile(),
         mockProfileInstance: null,
+        mockShowWarningMessage: jest.fn(),
     };
 
     globalMocks.mockProfileInstance = createInstanceOfProfile(globalMocks.testProfileLoaded);
@@ -139,6 +140,10 @@ function createGlobalMocks() {
                 },
             };
         }),
+        configurable: true,
+    });
+    Object.defineProperty(vscode.window, "showWarningMessage", {
+        value: globalMocks.mockShowWarningMessage,
         configurable: true,
     });
 
@@ -1214,18 +1219,13 @@ describe("Dataset Tree Unit Tests - Function  - Function removeFavProfile", () =
         };
     }
     it("Tests successful removal of profile node in Favorites when user confirms they want to Continue removing it", async () => {
-        createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks();
         const updateFavoritesSpy = jest.spyOn(blockMocks.testTree, "updateFavorites");
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         // Make sure favorite is added before the actual unit test
         expect(blockMocks.testTree.mFavorites.length).toEqual(1);
-
-        Object.defineProperty(vscode.window, "showQuickPick", {
-            value: jest.fn(() => {
-                return "Continue";
-            }),
-        });
+        globalMocks.mockShowWarningMessage.mockResolvedValueOnce("Continue");
 
         await blockMocks.testTree.removeFavProfile(blockMocks.profileNodeInFavs.label, true);
 
@@ -1235,18 +1235,14 @@ describe("Dataset Tree Unit Tests - Function  - Function removeFavProfile", () =
         expect(updateFavoritesSpy).toBeCalledTimes(1);
     });
     it("Tests that removeFavProfile leaves profile node in Favorites when user cancels", async () => {
-        createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         // Make sure favorite is added before the actual unit test
         expect(blockMocks.testTree.mFavorites.length).toEqual(1);
 
-        Object.defineProperty(vscode.window, "showQuickPick", {
-            value: jest.fn(() => {
-                return "Cancel";
-            }),
-        });
         const expectedFavProfileNode = blockMocks.testTree.mFavorites[0];
+        globalMocks.mockShowWarningMessage.mockResolvedValueOnce("Cancel");
 
         await blockMocks.testTree.removeFavProfile(blockMocks.profileNodeInFavs.label, true);
 
@@ -1389,7 +1385,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
             datasetSessionNode: null,
             mockResetValidationSettings: jest.fn(),
             qpPlaceholder:
-                'Choose "Create new..." to define a new profile or select an existing profile to Add to the Data Set Explorer',
+                'Choose "Create new..." to define a new profile or select an existing profile to add to the Data Set Explorer',
             mockEnableValidationContext: jest.fn(),
         };
 

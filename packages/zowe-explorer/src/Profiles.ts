@@ -297,10 +297,21 @@ export class Profiles extends ProfilesCache {
         const configPick = new FilterDescriptor("\uFF0B " + createNewConfig);
         const items: vscode.QuickPickItem[] = profileNamesList.map((element) => new FilterItem(element));
         const quickpick = vscode.window.createQuickPick();
-        const placeholder = localize(
+        let placeholder = localize(
             "addSession.quickPickOption",
-            'Choose "Create new..." to define a new profile or select an existing profile to Add to the USS Explorer'
+            'Choose "Create new..." to define or select a profile to add to the USS Explorer'
         );
+        if (zoweFileProvider.getTreeType() === PersistenceSchemaEnum.Dataset) {
+            placeholder = localize(
+                "addSession.quickPickOption",
+                'Choose "Create new..." to define or select a profile to add to the DATA SETS Explorer'
+            );
+        } else if (zoweFileProvider.getTreeType() === PersistenceSchemaEnum.Job) {
+            placeholder = localize(
+                "addSession.quickPickOption",
+                'Choose "Create new..." to define or select a profile to add to the Job Views Explorer'
+            );
+        }
 
         if (isTheia()) {
             const options: vscode.QuickPickOptions = {
@@ -615,8 +626,7 @@ export class Profiles extends ProfilesCache {
             }
             const config = await Config.load("zowe", { projectDir: fs.realpathSync(rootPath) });
             if (vscode.workspace.workspaceFolders) {
-                config.mActive.global = false;
-                config.mActive.user = false;
+                config.api.layers.activate(false, false, rootPath);
             }
 
             const impConfig: IImperativeConfig = zowe.getImperativeConfig();
@@ -884,14 +894,20 @@ export class Profiles extends ProfilesCache {
                     }
                     profArray.push(loadProfile);
                     this.allProfiles = profArray;
-                    if (rePrompt) {
-                        const infoMsg = localize(
-                            "promptCredentials.updateConfigCreds.infoMessage",
-                            "Credentials for future use with profile {0} will need to be updated in the Zowe config file or by using the command 'zowe config secure'.",
-                            loadProfile.name
-                        );
-                        vscode.window.showInformationMessage(infoMsg);
-                    }
+                    const config = ProfilesCache.getConfigInstance().getTeamConfig();
+                    const secureFields = await config.api.secure.secureFields();
+                    const propName = loadProfile.name.trim();
+                    const userProp = `profiles.` + propName + `.properties.user`;
+                    const passProp = `profiles.` + propName + `.properties.password`;
+                    secureFields.forEach((prop) => {
+                        if (prop === userProp) {
+                            config.set(prop, updSession.ISession.user);
+                        }
+                        if (prop === passProp) {
+                            config.set(prop, updSession.ISession.password);
+                        }
+                    });
+                    await config.save(false);
                 } else {
                     const saveButton = localize("promptCredentials.saveCredentials.button", "Save Credentials");
                     const doNotSaveButton = localize("promptCredentials.doNotSave.button", "Do Not Save");

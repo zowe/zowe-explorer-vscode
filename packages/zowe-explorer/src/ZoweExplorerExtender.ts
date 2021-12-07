@@ -27,10 +27,9 @@ import {
     ProfilesCache,
 } from "@zowe/zowe-explorer-api";
 import { Profiles } from "./Profiles";
-import { getProfile, getLinkedProfile } from "./ProfileLink";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import * as nls from "vscode-nls";
-import { getProfileInfo, getZoweDir } from "./utils/ProfilesUtils";
+import { getProfileInfo, getZoweDir, getProfile } from "./utils/ProfilesUtils";
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
@@ -131,19 +130,6 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
      */
     public getProfile(primaryNode: IZoweTreeNode): imperative.IProfileLoaded {
         return getProfile(primaryNode);
-    }
-
-    /**
-     * This method can be used by other VS Code Extensions to access an alternative
-     * profile types that can be employed in conjunction with the primary profile to provide
-     * alternative support.
-     *
-     * @deprecated
-     * @param primaryNode represents the Tree item that is being used
-     * @return The requested profile
-     */
-    public getLinkedProfile(primaryNode: IZoweTreeNode, type: string): Promise<imperative.IProfileLoaded> {
-        return getLinkedProfile(primaryNode, type);
     }
 
     /**
