@@ -40,6 +40,7 @@ import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 
 import * as nls from "vscode-nls";
 import { UIViews } from "./shared/ui-views";
+import { constants } from "os";
 
 // TODO: find a home for constants
 export const CONTEXT_PREFIX = "_";
@@ -1166,7 +1167,6 @@ export class Profiles extends ProfilesCache {
         } else {
             serviceProfile = this.loadNamedProfile(label.trim());
         }
-        const api = ZoweExplorerApiRegister.getInstance();
         // This check will handle service profiles that have username and password
         if (serviceProfile.profile.user && serviceProfile.profile.password) {
             vscode.window.showInformationMessage(
@@ -1176,7 +1176,7 @@ export class Profiles extends ProfilesCache {
         }
 
         try {
-            loginTokenType = api.getCommonApi(serviceProfile).getTokenTypeName();
+            loginTokenType = ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).getTokenTypeName();
         } catch (error) {
             vscode.window.showInformationMessage(
                 localize("ssoAuth.noBase", "This profile does not support token authentication.")
@@ -1188,7 +1188,7 @@ export class Profiles extends ProfilesCache {
             if (node) {
                 session = node.getSession();
             } else {
-                session = api.getCommonApi(serviceProfile).getSession();
+                session = ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).getSession();
             }
             creds = await this.loginCredentialPrompt();
             if (!creds) {
@@ -1197,7 +1197,7 @@ export class Profiles extends ProfilesCache {
             session.ISession.user = creds[0];
             session.ISession.password = creds[1];
             try {
-                loginToken = await api.getCommonApi(serviceProfile).login(session);
+                loginToken = await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).login(session);
             } catch (error) {
                 vscode.window.showErrorMessage(
                     localize("ssoLogin.unableToLogin", "Unable to log in. ") + error.message
@@ -1233,7 +1233,9 @@ export class Profiles extends ProfilesCache {
                         tokenType: loginTokenType,
                         type: SessConstants.AUTH_TYPE_TOKEN,
                     });
-                    loginToken = await api.getCommonApi(serviceProfile).login(updSession);
+                    loginToken = await ZoweExplorerApiRegister.getInstance()
+                        .getCommonApi(serviceProfile)
+                        .login(updSession);
                     const updBaseProfile: IProfile = {
                         tokenType: loginTokenType,
                         tokenValue: loginToken,
@@ -1260,8 +1262,7 @@ export class Profiles extends ProfilesCache {
     }
 
     public async ssoLogout(node: IZoweNodeType): Promise<void> {
-        const serviceProfile = await node.getProfile();
-        const api = ZoweExplorerApiRegister.getInstance();
+        const serviceProfile = node.getProfile();
         // This check will handle service profiles that have username and password
         if (serviceProfile.profile.user && serviceProfile.profile.password) {
             vscode.window.showInformationMessage(
@@ -1272,7 +1273,9 @@ export class Profiles extends ProfilesCache {
         try {
             // this will handle extenders
             if (serviceProfile.type !== "zosmf" && serviceProfile.profile.tokenValue !== undefined) {
-                await api.getCommonApi(serviceProfile).logout(await node.getSession());
+                await ZoweExplorerApiRegister.getInstance()
+                    .getCommonApi(serviceProfile)
+                    .logout(await node.getSession());
             } else {
                 // this will handle base profile apiml tokens
                 const baseProfile = this.getBaseProfile();
@@ -1285,7 +1288,9 @@ export class Profiles extends ProfilesCache {
                 }
 
                 const combinedProfile = await this.getCombinedProfile(serviceProfile, baseProfile);
-                const loginTokenType = api.getCommonApi(serviceProfile).getTokenTypeName();
+                const loginTokenType = ZoweExplorerApiRegister.getInstance()
+                    .getCommonApi(serviceProfile)
+                    .getTokenTypeName();
                 const updSession = new Session({
                     hostname: combinedProfile.profile.host,
                     port: combinedProfile.profile.port,
@@ -1294,7 +1299,7 @@ export class Profiles extends ProfilesCache {
                     tokenValue: combinedProfile.profile.tokenValue,
                     type: SessConstants.AUTH_TYPE_TOKEN,
                 });
-                await api.getCommonApi(serviceProfile).logout(updSession);
+                await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).logout(updSession);
 
                 this.getCliProfileManager(baseProfile.type).save({
                     name: baseProfile.name,
