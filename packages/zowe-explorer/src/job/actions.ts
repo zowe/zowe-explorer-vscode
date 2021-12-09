@@ -278,7 +278,6 @@ async function deleteSingleJob(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZ
         );
         return;
     }
-    // confirmation message for deletion
     try {
         await jobsProvider.delete(job);
     } catch (error) {
@@ -318,7 +317,7 @@ async function deleteMultipleJobs(
         async (progress, token) => {
             const total = 100;
             return Promise.all(
-                jobs.map(async (job, index) => {
+                jobs.map(async (job) => {
                     if (token.isCancellationRequested) {
                         vscode.window.showInformationMessage(
                             localize("deleteJobPrompt.deleteCancelled", "Delete action was cancelled.")
