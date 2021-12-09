@@ -285,12 +285,36 @@ export async function deleteCommand(job: IZoweJobTreeNode, jobsProvider: IZoweTr
         return;
     }
 
-    // delete selected nodes
-    if (nodes.length > 0) {
-        for (const node of nodes) {
-            await jobsProvider.delete(node);
-            deletedNodes.push(`${node.job.jobname}(${node.job.jobid})`);
-        }
+    // delete selected multiple nodes
+    if (nodes.length > 1) {
+        await vscode.window.withProgress(
+            {
+                location: vscode.ProgressLocation.Notification,
+                title: localize("deleteJobPrompt.deleteCounter", "Deleting nodes"),
+                cancellable: true,
+            },
+            async (progress, token) => {
+                const total = 100;
+                for (const [index, currNode] of nodes.entries()) {
+                    if (token.isCancellationRequested) {
+                        vscode.window.showInformationMessage(
+                            localize("deleteJobPrompt.deleteCancelled", "Delete action was cancelled.")
+                        );
+                        return;
+                    }
+                    progress.report({
+                        message: `Deleting ${index + 1} of ${nodes.length}`,
+                        increment: total / nodes.length,
+                    });
+                    try {
+                        await jobsProvider.delete(currNode);
+                        deletedNodes.push(`${currNode.job.jobname}(${currNode.job.jobid})`);
+                    } catch (err) {
+                        globals.LOG.error(err);
+                    }
+                }
+            }
+        );
         vscode.window.showInformationMessage(
             localize(
                 "deleteCommand.multipleJobs",
@@ -300,8 +324,9 @@ export async function deleteCommand(job: IZoweJobTreeNode, jobsProvider: IZoweTr
         );
     }
     // Delete a single job node
-    if (job && nodes.length <= 0) {
-        jobsProvider.delete(job);
+    else {
+        job = job ? job : nodes[0];
+        await jobsProvider.delete(job);
         vscode.window.showInformationMessage(
             localize("deleteCommand.job", "Job {0} deleted.", `${job.job.jobname}(${job.job.jobid})`)
         );
