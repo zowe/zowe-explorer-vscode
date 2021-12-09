@@ -21,6 +21,7 @@ import { toUniqueJobFileUri } from "../SpoolProvider";
 import { IProfileLoaded } from "@zowe/imperative";
 import * as globals from "../globals";
 import { refreshAll as refreshAllJobs } from "../shared/refresh";
+import { UIViews } from "../shared/ui-views";
 
 // Set up localization
 nls.config({
@@ -163,9 +164,10 @@ export const focusOnJob = async (jobsProvider: IZoweTree<IZoweJobTreeNode>, sess
  */
 export async function modifyCommand(job: Job) {
     try {
-        const command = await vscode.window.showInputBox({
-            prompt: localize("jobActions.modifyCommand.command.prompt", "Modify Command"),
-        });
+        const options: vscode.InputBoxOptions = {
+            prompt: localize("modifyCommand.inputBox.prompt", "Modify Command"),
+        };
+        const command = await UIViews.inputBox(options);
         if (command !== undefined) {
             const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(job.getProfile());
             if (commandApi) {
@@ -225,7 +227,10 @@ export async function stopCommand(job: Job) {
  */
 // Is this redundant with the setter in the Job class (ZoweJobNode.ts)?
 export async function setOwner(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>) {
-    const newOwner = await vscode.window.showInputBox({ prompt: localize("setOwner.newOwner.prompt.owner", "Owner") });
+    const options: vscode.InputBoxOptions = {
+        prompt: localize("setOwner.inputBox.prompt", "Owner"),
+    };
+    const newOwner = await UIViews.inputBox(options);
     job.owner = newOwner;
     jobsProvider.refreshElement(job);
 }
@@ -237,9 +242,10 @@ export async function setOwner(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZ
  * @param jobsProvider The tree to which the updated node belongs
  */
 export async function setPrefix(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>) {
-    const newPrefix = await vscode.window.showInputBox({
-        prompt: localize("setOwner.newOwner.prompt.prefix", "Prefix"),
-    });
+    const options: vscode.InputBoxOptions = {
+        prompt: localize("setPrefix.inputBox.prompt", "Prefix"),
+    };
+    const newPrefix = await UIViews.inputBox(options);
     job.prefix = newPrefix;
     jobsProvider.refreshElement(job);
 }

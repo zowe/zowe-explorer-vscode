@@ -38,6 +38,7 @@ import * as fs from "fs";
 import * as sharedUtils from "../../../src/shared/utils";
 import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
+import { UIViews } from "../../../src/shared/ui-views";
 
 // Missing the definition of path module, because I need the original logic for tests
 jest.mock("fs");
@@ -156,7 +157,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
             blockMocks.session
         );
 
-        mocked(vscode.window.showInputBox).mockResolvedValue("testMember");
+        const mySpy = jest.spyOn(UIViews, "inputBox").mockImplementationOnce(() => Promise.resolve("testMember"));
         mocked(vscode.window.withProgress).mockImplementation((progLocation, callback) => {
             return callback();
         });
@@ -170,7 +171,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
 
         await dsActions.createMember(parent, blockMocks.testDatasetTree);
 
-        expect(mocked(vscode.window.showInputBox)).toBeCalledWith({ placeHolder: "Name of Member" });
+        expect(mySpy).toBeCalledWith({ placeHolder: "Name of Member" });
         expect(mocked(zowe.Upload.bufferToDataSet)).toBeCalledWith(
             blockMocks.zosmfSession,
             Buffer.from(""),
@@ -226,7 +227,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
         parent.label = `${parent.label}`;
         parent.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
 
-        mocked(vscode.window.showInputBox).mockResolvedValue("testMember");
+        const mySpy = jest.spyOn(UIViews, "inputBox").mockImplementationOnce(() => Promise.resolve("testMember"));
         mocked(vscode.window.withProgress).mockImplementation((progLocation, callback) => {
             return callback();
         });
@@ -240,7 +241,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
 
         await dsActions.createMember(parent, blockMocks.testDatasetTree);
 
-        expect(mocked(vscode.window.showInputBox)).toBeCalledWith({ placeHolder: "Name of Member" });
+        expect(mySpy).toBeCalledWith({ placeHolder: "Name of Member" });
         expect(mocked(zowe.Upload.bufferToDataSet)).toBeCalledWith(
             blockMocks.zosmfSession,
             Buffer.from(""),
@@ -1053,10 +1054,10 @@ describe("Dataset Actions Unit Tests - Function enterPattern", () => {
         node.pattern = "TEST";
         node.contextValue = globals.DS_SESSION_CONTEXT;
 
-        mocked(vscode.window.showInputBox).mockResolvedValueOnce("test");
+        const mySpy = jest.spyOn(UIViews, "inputBox").mockImplementationOnce(() => Promise.resolve("test"));
         await dsActions.enterPattern(node, blockMocks.testDatasetTree);
 
-        expect(mocked(vscode.window.showInputBox)).toBeCalledWith({
+        expect(mySpy).toBeCalledWith({
             prompt: "Search Data Sets: use a comma to separate multiple patterns",
             value: node.pattern,
         });
