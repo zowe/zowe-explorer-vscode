@@ -20,6 +20,7 @@ import * as nls from "vscode-nls";
 import { toUniqueJobFileUri } from "../SpoolProvider";
 import { IProfileLoaded } from "@zowe/imperative";
 import * as globals from "../globals";
+import { refreshAll as refreshAllJobs } from "../shared/refresh";
 
 // Set up localization
 nls.config({
@@ -243,93 +244,133 @@ export async function setPrefix(job: IZoweJobTreeNode, jobsProvider: IZoweTree<I
     jobsProvider.refreshElement(job);
 }
 
-/**
- * Delete the selected jobs command
- *
- * @param jobsProvider The tree to which the node belongs
- */
-export async function deleteCommand(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>) {
-    const nodesToDelete: string[] = [];
-    const deletedNodes: string[] = [];
-    const selectedNodes: IZoweJobTreeNode[] = jobsProvider.getTreeView().selection;
-    const nodes: IZoweJobTreeNode[] = selectedNodes.filter(
-        (jobNode) => jobNode.job !== undefined && jobNode.job !== null
-    );
-
-    if (nodes.length > 0) {
-        for (const node of nodes) {
-            nodesToDelete.push(`${node.job.jobname}(${node.job.jobid})`);
-        }
-    } else if (job) {
-        nodesToDelete.push(`${job.job.jobname}(${job.job.jobid})`);
+export async function deleteCommand(
+    jobsProvider: IZoweTree<IZoweJobTreeNode>,
+    job?: IZoweJobTreeNode,
+    jobs?: IZoweJobTreeNode[]
+) {
+    if (jobs && jobs.length) {
+        await deleteMultipleJobs(
+            jobs.filter((jobNode) => jobNode.job !== undefined && jobNode.job !== null),
+            jobsProvider
+        );
+        return;
     }
-    // confirmation message for deletion
-    const deleteButton = localize("deleteJobPrompt.confirmation.delete", "Delete");
+    if (job) {
+        await deleteSingleJob(job, jobsProvider);
+        return;
+    }
+}
+
+async function deleteSingleJob(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>): Promise<void> {
+    const jobName = `${job.job.jobname}(${job.job.jobid})`;
     const message = localize(
         "deleteJobPrompt.confirmation.message",
-        "Are you sure you want to delete the following {0} item(s)?\nThis will permanently remove the following job(s) from your system.\n\n{1}",
-        nodesToDelete.length,
-        nodesToDelete.toString().replace(/(,)/g, "\n")
+        "Are you sure you want to delete the following item?\nThis will permanently remove the following job from your system.\n\n{0}",
+        jobName.replace(/(,)/g, "\n")
     );
-    let cancelled = false;
-    await vscode.window.showWarningMessage(message, { modal: true }, ...[deleteButton]).then((selection) => {
-        if (!selection || selection === "Cancel") {
-            globals.LOG.debug(localize("deleteJobPrompt.confirmation.cancel.log.debug", "Delete action was canceled."));
-            cancelled = true;
-        }
-    });
-    if (cancelled) {
+    const deleteButton = localize("deleteJobPrompt.confirmation.delete", "Delete");
+    const result = await vscode.window.showWarningMessage(message, { modal: true }, deleteButton);
+    if (!result || result === "Cancel") {
+        globals.LOG.debug(localize("deleteJobPrompt.confirmation.cancel.log.debug", "Delete action was canceled."));
         vscode.window.showInformationMessage(
             localize("deleteJobPrompt.deleteCancelled", "Delete action was cancelled.")
         );
         return;
     }
+    // confirmation message for deletion
+    try {
+        await jobsProvider.delete(job);
+    } catch (error) {
+        await errorHandling(error.toString(), job.getProfile().name, error.message.toString());
+        return;
+    }
+    await refreshAllJobs(jobsProvider);
+    vscode.window.showInformationMessage(localize("deleteCommand.job", "Job {0} deleted.", jobName));
+}
 
-    // delete selected multiple nodes
-    if (nodes.length > 1) {
-        await vscode.window.withProgress(
-            {
-                location: vscode.ProgressLocation.Notification,
-                title: localize("deleteJobPrompt.deleteCounter", "Deleting nodes"),
-                cancellable: true,
-            },
-            async (progress, token) => {
-                const total = 100;
-                for (const [index, currNode] of nodes.entries()) {
+async function deleteMultipleJobs(
+    jobs: ReadonlyArray<IZoweJobTreeNode>,
+    jobsProvider: IZoweTree<IZoweJobTreeNode>
+): Promise<void> {
+    const deleteButton = localize("deleteJobPrompt.confirmation.delete", "Delete");
+    const toJobname = (jobNode: IZoweJobTreeNode) => `${jobNode.job.jobname}(${jobNode.job.jobid})`;
+    const message = localize(
+        "deleteJobPrompt.confirmation.message",
+        "Are you sure you want to delete the following {0} items?\nThis will permanently remove the following jobs from your system.\n\n{1}",
+        jobs.length,
+        jobs.map(toJobname).toString().replace(/(,)/g, "\n")
+    );
+    const deleteChoice = await vscode.window.showWarningMessage(message, { modal: true }, deleteButton);
+    if (!deleteChoice || deleteChoice === "Cancel") {
+        globals.LOG.debug(localize("deleteJobPrompt.confirmation.cancel.log.debug", "Delete action was canceled."));
+        vscode.window.showInformationMessage(
+            localize("deleteJobPrompt.deleteCancelled", "Delete action was cancelled.")
+        );
+        return;
+    }
+    const deletionResult: ReadonlyArray<IZoweJobTreeNode | Error> = await vscode.window.withProgress(
+        {
+            location: vscode.ProgressLocation.Notification,
+            title: localize("deleteJobPrompt.deleteCounter", "Deleting nodes"),
+            cancellable: true,
+        },
+        async (progress, token) => {
+            const total = 100;
+            return Promise.all(
+                jobs.map(async (job, index) => {
                     if (token.isCancellationRequested) {
                         vscode.window.showInformationMessage(
                             localize("deleteJobPrompt.deleteCancelled", "Delete action was cancelled.")
                         );
                         return;
                     }
-                    progress.report({
-                        message: `Deleting ${index + 1} of ${nodes.length}`,
-                        increment: total / nodes.length,
-                    });
                     try {
-                        await jobsProvider.delete(currNode);
-                        deletedNodes.push(`${currNode.job.jobname}(${currNode.job.jobid})`);
-                    } catch (err) {
-                        globals.LOG.error(err);
+                        await jobsProvider.delete(job);
+                        progress.report({
+                            increment: total / jobs.length,
+                        });
+                        return job;
+                    } catch (error) {
+                        progress.report({
+                            increment: total / jobs.length,
+                        });
+                        return error;
                     }
-                }
+                })
+            );
+        }
+    );
+    const deletedJobs: ReadonlyArray<IZoweJobTreeNode> = deletionResult
+        .map((result) => {
+            if (result instanceof Error) {
+                return undefined;
             }
-        );
+            return result;
+        })
+        .filter((result) => result !== undefined);
+    if (deletedJobs.length) {
+        await refreshAllJobs(jobsProvider);
         vscode.window.showInformationMessage(
             localize(
                 "deleteCommand.multipleJobs",
                 "The following jobs were deleted: {0}",
-                deletedNodes.toString().replace(/(,)/g, ", ")
+                deletedJobs.map(toJobname).toString().replace(/(,)/g, ", ")
             )
         );
     }
-    // Delete a single job node
-    else {
-        job = job ? job : nodes[0];
-        await jobsProvider.delete(job);
-        vscode.window.showInformationMessage(
-            localize("deleteCommand.job", "Job {0} deleted.", `${job.job.jobname}(${job.job.jobid})`)
-        );
+    const deletionErrors: ReadonlyArray<Error> = deletionResult
+        .map((result) => {
+            if (result instanceof Error) {
+                const error = result;
+                return error;
+            }
+            return undefined;
+        })
+        .filter((result) => result !== undefined);
+    if (deletionErrors.length) {
+        const errorMessages = deletionErrors.map((error) => error.message).join(", ");
+        const userMessage = `There were errors during jobs deletion: ${errorMessages}`;
+        await errorHandling(userMessage);
     }
-    await vscode.commands.executeCommand("zowe.jobs.refreshAllJobs");
 }
