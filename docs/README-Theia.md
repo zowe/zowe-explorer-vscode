@@ -101,23 +101,21 @@ By just running Zowe Explorer as a vsix file in Theia you can test functionality
 
 For the following steps we assume that you have cloned the Zowe Explorer's Github repo into a parallel directory to Theia and have it all setup, built and can run it from the workspace. We also assume that you have them both (Theia and Zowe Explorer) open in two separate VS Code windows and can switch back and forth between them. If you do not plan to set break points in Theia itself, just Zowe Explorer then you can just use a command shell for building and starting Theia.
 
-1. Run the following in order to clone and run Theia in the browser:
+1. Run Theia in the browser by using the command line to navigate to the Theia folder, and then run the following commands:
 
-```bash
-git clone https://github.com/eclipse-theia/theia \
-&& cd theia \
-&& yarn \
-&& yarn download:plugins \
-&& yarn browser build \
-&& yarn browser start
-```
+   ```bash
+   yarn \
+   && yarn download:plugins \
+   && yarn browser build \
+   && yarn browser start
+   ```
 
 2. Open the Theia browser instance by entering `localhost:3000` in your preferred browser.
 3. Inside of Theia in the browser, open the Zowe Explorer repository.
 4. Make sure Zowe Explorer is fully built with `yarn`.
 5. Run the extension development host with the specific launch configuration named `Run Zowe Explorer VS Code Extension (Theia)` and press the play button.
-6. if a new tab with the extension development host is not opened automatically, open a new tab and go to `localhost:3030`.
-7. Once the extension development host is displayed an error message will appear on the bottom left corner that mentions activation of the extension failing. Close the extension development host after this error has popped up.
-8. Press the `stop` button located in the same place where the extension development host was launched, it should be a red square icon to stop the development extension host.
+6. If a new tab with the extension development host is not opened automatically, open a new tab and go to `localhost:3030`.
+7. Once the extension development host is displayed, an error message will appear on the bottom left corner that mentions activation of the extension failing. Close the extension development host after this error has popped up.
+8. Press the `stop` button located in the same place where the extension development host was launched. It should be a red square icon to stop the extension development host.
 9. Load the extension development host once more by pressing the play button.
-10. If the extension development host is not opened automatically repeat step 5.
+10. If the extension development host is not opened automatically, repeat step 5.
