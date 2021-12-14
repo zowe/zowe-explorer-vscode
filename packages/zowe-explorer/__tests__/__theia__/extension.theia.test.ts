@@ -131,7 +131,6 @@ describe("Add Existing Profiles in USS and JOBS", () => {
     });
 
     it("Should Add Existing Profile in JOBS", async () => {
-        await driverFirefox.clickOnUssTabs();
         await driverFirefox.clickOnJobsTab();
         await driverFirefox.clickOnJobsPanel();
         await driverFirefox.clickOnAddSessionInJobs();
@@ -154,7 +153,9 @@ describe("Add Profile to Favorites", () => {
 
     it("Should Add Profile to Favorites under DATASETS", async () => {
         await driverChrome.addProfileToFavoritesInDatasets();
+        await driverChrome.sleepTime(SHORTSLEEPTIME);
         await driverChrome.clickOnFavoriteTabInDatasets();
+        await driverChrome.sleepTime(SHORTSLEEPTIME);
         const favoriteProfile = await driverChrome.getFavoritePrfileNameFromDatasets();
         expect(favoriteProfile).to.equal("TestSeleniumProfile");
     });
@@ -165,6 +166,7 @@ describe("Add Profile to Favorites", () => {
         await driverChrome.clickOnUssTabs();
         await driverChrome.sleepTime(SHORTSLEEPTIME);
         await driverChrome.addProfileToFavoritesInUss();
+        await driverChrome.sleepTime(SHORTSLEEPTIME);
         await driverChrome.clickOnFavoriteTabInUss();
         await driverChrome.sleepTime(SHORTSLEEPTIME);
         const favoriteProfile = await driverChrome.getFavoritePrfileNameFromUss();
@@ -175,6 +177,7 @@ describe("Add Profile to Favorites", () => {
         await driverChrome.clickOnUssTabs();
         await driverChrome.sleepTime(SHORTSLEEPTIME);
         await driverChrome.clickOnJobsTab();
+        await driverChrome.sleepTime(SHORTSLEEPTIME);
         await driverChrome.addProfileToFavoritesInJobs();
         await driverChrome.sleepTime(SHORTSLEEPTIME);
         await driverChrome.clickOnFavoriteTabInJobs();
@@ -205,11 +208,10 @@ describe("Remove Profile from Favorites", () => {
     });
 
     it("Should Remove Profile from Favorites under USS", async () => {
-        await driverChrome.clickOnDatasetsTab();
-        await driverChrome.sleepTime(SHORTSLEEPTIME);
         await driverChrome.clickOnUssTabs();
         await driverChrome.sleepTime(SHORTSLEEPTIME);
         await driverChrome.clickOnFavoriteTabInUss();
+        await driverChrome.sleepTime(SHORTSLEEPTIME);
         await driverChrome.removeFavoriteProfileFromUss();
         await driverChrome.sleepTime(SHORTSLEEPTIME);
         const favoriteProfile = await driverChrome.verifyRemovedFavoriteProfileInUss();
@@ -217,9 +219,8 @@ describe("Remove Profile from Favorites", () => {
     });
 
     it("Should Remove Profile from Favorites under JOBS", async () => {
-        await driverChrome.clickOnUssTabs();
-        await driverChrome.sleepTime(SHORTSLEEPTIME);
         await driverChrome.clickOnJobsTab();
+        await driverChrome.sleepTime(SHORTSLEEPTIME);
         await driverChrome.clickOnFavoriteTabInJobs();
         await driverChrome.sleepTime(SHORTSLEEPTIME);
         await driverChrome.removeFavoriteProfileFromJobs();
@@ -254,6 +255,7 @@ describe("Hide Profiles", () => {
         await driverChrome.clickOnUssTabs();
         await driverChrome.sleepTime(SHORTSLEEPTIME);
         await driverChrome.clickOnJobsTab();
+        await driverChrome.sleepTime(SHORTSLEEPTIME);
         await driverChrome.hideProfileInJobs();
         await driverChrome.sleepTime(SHORTSLEEPTIME);
         const hiddenProfile = await driverChrome.verifyProfileIsHideInJobs();
@@ -273,14 +275,17 @@ describe("Delete Profiles", () => {
     });
 
     it("Should Delete Default Profile from DATA SETS", async () => {
-        const deleteConfrmationMsg = await driverChrome.deleteDefaultProfileInDatasets();
-        expect(deleteConfrmationMsg).to.equal("Profile DefaultProfile was deleted.");
+        await driverChrome.deleteDefaultProfileInDatasets();
+        await driverChrome.sleepTime(SHORTSLEEPTIME);
+        const deletedDefaultProfile = await driverChrome.verifyRemovedDefaultProfileInDataSet();
+        expect(deletedDefaultProfile).to.equal(true);
     });
 
     it("Should Delete Profile from DATA SETS", async () => {
-        await driverChrome.closeNotificationMessage();
-        const deleteConfrmationMsg = await driverChrome.deleteProfileInDatasets();
-        expect(deleteConfrmationMsg).to.equal("Profile TestSeleniumProfile was deleted.");
+        await driverChrome.deleteProfileInDatasets();
+        await driverChrome.sleepTime(SHORTSLEEPTIME);
+        const deletedSecondProfile = await driverChrome.verifyRemovedOtherProfileInDataSet();
+        expect(deletedSecondProfile).to.equal(true);
     });
 
     it("Should Default Profile deleted from USS", async () => {

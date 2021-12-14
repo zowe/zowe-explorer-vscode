@@ -20,6 +20,7 @@ import * as nls from "vscode-nls";
 import { toUniqueJobFileUri } from "../SpoolProvider";
 import { IProfileLoaded } from "@zowe/imperative";
 import * as globals from "../globals";
+import { UIViews } from "../shared/ui-views";
 
 // Set up localization
 nls.config({
@@ -162,9 +163,10 @@ export const focusOnJob = async (jobsProvider: IZoweTree<IZoweJobTreeNode>, sess
  */
 export async function modifyCommand(job: Job) {
     try {
-        const command = await vscode.window.showInputBox({
-            prompt: localize("jobActions.modifyCommand.command.prompt", "Modify Command"),
-        });
+        const options: vscode.InputBoxOptions = {
+            prompt: localize("modifyCommand.inputBox.prompt", "Modify Command"),
+        };
+        const command = await UIViews.inputBox(options);
         if (command !== undefined) {
             const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(job.getProfile());
             if (commandApi) {
@@ -224,7 +226,10 @@ export async function stopCommand(job: Job) {
  */
 // Is this redundant with the setter in the Job class (ZoweJobNode.ts)?
 export async function setOwner(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>) {
-    const newOwner = await vscode.window.showInputBox({ prompt: localize("setOwner.newOwner.prompt.owner", "Owner") });
+    const options: vscode.InputBoxOptions = {
+        prompt: localize("setOwner.inputBox.prompt", "Owner"),
+    };
+    const newOwner = await UIViews.inputBox(options);
     job.owner = newOwner;
     jobsProvider.refreshElement(job);
 }
@@ -236,9 +241,10 @@ export async function setOwner(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZ
  * @param jobsProvider The tree to which the updated node belongs
  */
 export async function setPrefix(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>) {
-    const newPrefix = await vscode.window.showInputBox({
-        prompt: localize("setOwner.newOwner.prompt.prefix", "Prefix"),
-    });
+    const options: vscode.InputBoxOptions = {
+        prompt: localize("setPrefix.inputBox.prompt", "Prefix"),
+    };
+    const newPrefix = await UIViews.inputBox(options);
     job.prefix = newPrefix;
     jobsProvider.refreshElement(job);
 }
@@ -285,12 +291,36 @@ export async function deleteCommand(job: IZoweJobTreeNode, jobsProvider: IZoweTr
         return;
     }
 
-    // delete selected nodes
-    if (nodes.length > 0) {
-        for (const node of nodes) {
-            await jobsProvider.delete(node);
-            deletedNodes.push(`${node.job.jobname}(${node.job.jobid})`);
-        }
+    // delete selected multiple nodes
+    if (nodes.length > 1) {
+        await vscode.window.withProgress(
+            {
+                location: vscode.ProgressLocation.Notification,
+                title: localize("deleteJobPrompt.deleteCounter", "Deleting nodes"),
+                cancellable: true,
+            },
+            async (progress, token) => {
+                const total = 100;
+                for (const [index, currNode] of nodes.entries()) {
+                    if (token.isCancellationRequested) {
+                        vscode.window.showInformationMessage(
+                            localize("deleteJobPrompt.deleteCancelled", "Delete action was cancelled.")
+                        );
+                        return;
+                    }
+                    progress.report({
+                        message: `Deleting ${index + 1} of ${nodes.length}`,
+                        increment: total / nodes.length,
+                    });
+                    try {
+                        await jobsProvider.delete(currNode);
+                        deletedNodes.push(`${currNode.job.jobname}(${currNode.job.jobid})`);
+                    } catch (err) {
+                        globals.LOG.error(err);
+                    }
+                }
+            }
+        );
         vscode.window.showInformationMessage(
             localize(
                 "deleteCommand.multipleJobs",
@@ -300,8 +330,9 @@ export async function deleteCommand(job: IZoweJobTreeNode, jobsProvider: IZoweTr
         );
     }
     // Delete a single job node
-    if (job && nodes.length <= 0) {
-        jobsProvider.delete(job);
+    else {
+        job = job ? job : nodes[0];
+        await jobsProvider.delete(job);
         vscode.window.showInformationMessage(
             localize("deleteCommand.job", "Job {0} deleted.", `${job.job.jobname}(${job.job.jobid})`)
         );
