@@ -39,7 +39,7 @@ General conformance criteria for all extensions that add new capabilities to Zow
 
  <tr>
    <th style="background-color:#555555">1</th>
-   <th style="background-color:#555555">v1</th>
+   <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
    <th></th>
@@ -48,16 +48,16 @@ General conformance criteria for all extensions that add new capabilities to Zow
 
  <tr>
    <th style="background-color:#555555">2</th>
-   <th style="background-color:#555555">v1</th>
-   <th style="background-color:#AAAAAA">x</th>
+   <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA"></th>
+   <th style="background-color:#AAAAAA">x</th>
    <th></th>
    <td><b>No Zowe CLI plugin installation requirement: </b> If the extender makes use of a Zowe CLI profile other than the Zowe Explorer default `zosmf` then the extension must not make any assumptions that a matching Zowe CLI plugin has been installed in the Zowe Explorer user's environment.</td>
  </tr>
 
  <tr>
    <th style="background-color:#555555">3</th>
-   <th style="background-color:#555555">v1</th>
+   <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
    <th></th>
@@ -66,7 +66,7 @@ General conformance criteria for all extensions that add new capabilities to Zow
 
  <tr>
    <th style="background-color:#555555">4</th>
-   <th style="background-color:#555555">v1</th>
+   <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
    <th></th>
@@ -75,7 +75,7 @@ General conformance criteria for all extensions that add new capabilities to Zow
 
  <tr>
    <th style="background-color:#555555">5</th>
-   <th style="background-color:#555555">v1</th>
+   <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
    <th></th>
@@ -84,7 +84,7 @@ General conformance criteria for all extensions that add new capabilities to Zow
 
  <tr>
    <th style="background-color:#555555">6</th>
-   <th style="background-color:#555555">v1</th>
+   <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
    <th></th>
@@ -93,16 +93,16 @@ General conformance criteria for all extensions that add new capabilities to Zow
 
  <tr>
    <th style="background-color:#555555">7</th>
-   <th style="background-color:#555555">v1</th>
-   <th style="background-color:#AAAAAA">x</th>
+   <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA"></th>
+   <th style="background-color:#AAAAAA">x</th>
    <th></th>
    <td><b>Zowe SDK usage:</b> Extension utilizes the available Zowe SDKs that standardize z/OS interactions as well as other common capabilities that are used by many other Zowe extensions and tools unless the extension's goal is to provide a new implementation with clearly stated goals.</td>
  </tr>
 
  <tr>
    <th style="background-color:#555555">8</th>
-   <th style="background-color:#555555">v1</th>
+   <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
    <th></th>
@@ -154,7 +154,7 @@ Criteria for VS Code extensions that want to access the same Zowe CLI profiles t
 
  <tr>
    <th style="background-color:#555555">10</th>
-   <th style="background-color:#555555">v1</th>
+   <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
    <th></th>
@@ -163,7 +163,7 @@ Criteria for VS Code extensions that want to access the same Zowe CLI profiles t
 
   <tr>
    <th style="background-color:#555555">11</th>
-   <th style="background-color:#555555">v1</th>
+   <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
    <th></th>
@@ -172,7 +172,7 @@ Criteria for VS Code extensions that want to access the same Zowe CLI profiles t
 
   <tr>
    <th style="background-color:#555555">12</th>
-   <th style="background-color:#555555">v1</th>
+   <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
    <th></th>
@@ -196,7 +196,7 @@ Criteria for VS Code extensions that extend the Zowe Explorer MVS, USS, or JES t
 
  <tr>
    <th style="background-color:#555555">13</th>
-   <th style="background-color:#555555">v1</th>
+   <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
    <th></th>
@@ -205,16 +205,16 @@ Criteria for VS Code extensions that extend the Zowe Explorer MVS, USS, or JES t
 
  <tr>
    <th style="background-color:#555555">14</th>
-   <th style="background-color:#555555">v1</th>
-   <th style="background-color:#AAAAAA">x</th>
+   <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA"></th>
+   <th style="background-color:#AAAAAA">x</th>
    <th></th>
    <td><b>Matching Zowe CLI Plugin:</b> Provide a Zowe CLI Plugin for the data provider's new profile type that implements the core capabilities required for the new protocol that users can then also use to interact with the protocol outside of the Zowe Explorer extension using Zowe CLI commands.</td>
  </tr>
 
  <tr>
    <th style="background-color:#555555">15</th>
-   <th style="background-color:#555555">v1</th>
+   <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
    <th></th>
@@ -223,25 +223,25 @@ Criteria for VS Code extensions that extend the Zowe Explorer MVS, USS, or JES t
 
  <tr>
    <th style="background-color:#555555">16</th>
-   <th style="background-color:#555555">v1</th>
-   <th style="background-color:#AAAAAA">x</th>
+   <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA"></th>
+   <th style="background-color:#AAAAAA">x</th>
    <th></th>
    <td><b>API test suite implementation:</b>  If the extension implements a Zowe Explorer API data provider interface, it should implement a test suite that calls each of the implemented API methods.</td>
  </tr>
 
  <tr>
    <th style="background-color:#555555">17</th>
-   <th style="background-color:#555555">v1</th>
-   <th style="background-color:#AAAAAA">x</th>
+   <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA"></th>
+   <th style="background-color:#AAAAAA">x</th>
    <th></th>
    <td><b>Base Profile and Tokens:</b> Extension supports base profiles and tokens (For more information, click here)</td>
  </tr>
 
  <tr>
    <th style="background-color:#555555">18</th>
-   <th style="background-color:#555555">v1</th>
+   <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
    <th></th>
@@ -250,9 +250,9 @@ Criteria for VS Code extensions that extend the Zowe Explorer MVS, USS, or JES t
 
  <tr>
    <th style="background-color:#555555">19</th>
-   <th style="background-color:#555555">v1</th>
-   <th style="background-color:#AAAAAA">x</th>
+   <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA"></th>
+   <th style="background-color:#AAAAAA">x</th>
    <th></th>
    <td><b>Secure Credential Store:</b> If the extension supports Zowe CLI's Secure Credential store, it calls the Zowe Explorer-provided method for initialization at startup.</td>
  </tr>
@@ -274,7 +274,7 @@ Criteria for VS Code extensions adding menu and commands to VS Code that utilize
 
  <tr>
    <th style="background-color:#555555">20</th>
-   <th style="background-color:#555555">v1</th>
+   <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
    <th></th>
@@ -283,7 +283,7 @@ Criteria for VS Code extensions adding menu and commands to VS Code that utilize
 
   <tr>
    <th style="background-color:#555555">21</th>
-   <th style="background-color:#555555">v1</th>
+   <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
    <th></th>
@@ -292,7 +292,7 @@ Criteria for VS Code extensions adding menu and commands to VS Code that utilize
 
   <tr>
    <th style="background-color:#555555">22</th>
-   <th style="background-color:#555555">v1</th>
+   <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
    <th></th>
@@ -301,7 +301,7 @@ Criteria for VS Code extensions adding menu and commands to VS Code that utilize
 
   <tr>
    <th style="background-color:#555555">23</th>
-   <th style="background-color:#555555">v1</th>
+   <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
    <th></th>
@@ -310,7 +310,7 @@ Criteria for VS Code extensions adding menu and commands to VS Code that utilize
 
  <tr>
    <th style="background-color:#555555">24</th>
-   <th style="background-color:#555555">v1</th>
+   <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
    <th></th>
