@@ -26,7 +26,6 @@ import * as globals from "../globals";
  * @param {IZoweTree} treeProvider
  */
 export async function refreshAll(treeProvider: IZoweTree<IZoweTreeNode>) {
-    await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
     treeProvider.mSessionNodes.forEach(async (sessNode) => {
         const setting = (await PersistentFilters.getDirectValue(
             globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION
