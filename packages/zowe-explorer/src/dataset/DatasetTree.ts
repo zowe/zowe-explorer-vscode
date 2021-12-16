@@ -996,11 +996,12 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             nonFaveNode.label.trim();
             let datasets: string;
             for (const item of dsSets) {
-                if (item.dataSetName) {
+                const newItem = item;
+                if (newItem.dsn) {
                     if (datasets) {
-                        datasets += `, ${item.dataSetName}`;
+                        datasets += `, ${item.dsn}`;
                     } else {
-                        datasets = `${item.dataSetName}`;
+                        datasets = `${item.dsn}`;
                     }
                 }
             }
@@ -1036,8 +1037,8 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 for (const child of response) {
                     for (const item of dsSets) {
                         const label = child.label.trim();
-                        if (item.memberName && label !== "No datasets found") {
-                            const dsn = item.dataSetName.split(".");
+                        if (item.member && label !== "No datasets found") {
+                            const dsn = item.dsn.split(".");
                             const name = label.split(".");
                             let index = 0;
                             let includes = false;
@@ -1046,7 +1047,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                                     let inc = false;
                                     inc = await this.checkFilterPattern(name[index], each);
                                     if (inc) {
-                                        child.pattern = item.dataSetName;
+                                        child.pattern = item.dsn;
                                         includes = true;
                                     } else {
                                         child.pattern = "";
@@ -1064,9 +1065,9 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                                 ).allMembers(label, options);
                                 let existing = false;
                                 for (const mem of memResponse.apiResponse.items) {
-                                    existing = await this.checkFilterPattern(mem.member, item.memberName);
+                                    existing = await this.checkFilterPattern(mem.member, item.member);
                                     if (existing) {
-                                        child.memberPattern = item.memberName;
+                                        child.memberPattern = item.member;
                                         if (!child.contextValue.includes(globals.FILTER_SEARCH)) {
                                             child.contextValue = child.contextValue + globals.FILTER_SEARCH;
                                         }
