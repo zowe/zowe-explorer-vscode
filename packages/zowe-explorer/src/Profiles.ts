@@ -646,17 +646,11 @@ export class Profiles extends ProfilesCache {
             const newConfig: IConfig = await ConfigBuilder.build(impConfig, opts);
             config.api.layers.merge(newConfig);
             await config.save(false);
-            const reloadButton = localize("createZoweSchema.reload.button", "Reload Window");
             const infoMsg = localize(
                 "createZoweSchema.reload.infoMessage",
-                "Team Configuration file created. Location: {0}. \n Please reload your window.",
+                "Team Configuration file created. Location: {0}.",
                 rootPath
             );
-            await vscode.window.showInformationMessage(infoMsg, ...[reloadButton]).then(async (selection) => {
-                if (selection === reloadButton) {
-                    await vscode.commands.executeCommand("workbench.action.reloadWindow");
-                }
-            });
         } catch (err) {
             vscode.window.showErrorMessage("Error in creating team configuration file: " + err.message);
         }
