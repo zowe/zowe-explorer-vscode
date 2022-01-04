@@ -3174,4 +3174,5 @@ describe("Profiles Unit Tests - Function ssoLogout", () => {
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe(
             "Logout from authentication service was successful."
         );
+    });
 });
