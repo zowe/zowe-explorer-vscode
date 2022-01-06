@@ -150,7 +150,7 @@ export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
                         parms.outDir
                     );
                     imperative.IO.createDirsSyncFromFilePath(destinationFile);
-                    imperative.IO.writeFile(destinationFile, spoolFileToDownload.contents as Buffer);
+                    imperative.IO.writeFile(destinationFile, spoolFileToDownload.contents);
                 }
             }
         } finally {

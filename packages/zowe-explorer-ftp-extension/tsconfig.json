@@ -3,12 +3,29 @@
     "module": "commonjs",
     "target": "es6",
     "outDir": "out",
-    "lib": ["es6"],
+    "jsx": "react",
+    "lib": ["es6", "dom"],
     "skipLibCheck": true,
     "sourceMap": true,
-    "rootDir": "src",
-    "strict": true,
-    "noImplicitReturns": true
+    /* Strict Type-Checking Option */
+    "strict": false /* enable all strict type-checking options */,
+    /* Additional Checks */
+    "noUnusedLocals": false /* Report errors on unused locals. */,
+    // "noImplicitReturns": true, /* Report error when not all code paths in function return a value. */
+    // "noFallthroughCasesInSwitch": true, /* Report errors for fallthrough cases in switch statement. */
+    // "noUnusedParameters": true,  /* Report errors on unused parameters. */
+    "experimentalDecorators": true,
+    "removeComments": true,
+    "resolveJsonModule": true,
+    "rootDir": "."
   },
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", ".vscode-test"],
+  "include": [
+    "src/**/*.ts",
+    // Needed in production for vscode-nls localization to work:
+    "./node_modules/vscode/vscode.d.ts",
+    "./node_modules/vscode/lib/*",
+    "__tests__",
+    "__mocks__"
+  ]
 }

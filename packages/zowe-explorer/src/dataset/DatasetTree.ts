@@ -41,6 +41,7 @@ import { resetValidationSettings } from "../shared/actions";
 import { closeOpenedTextFile } from "../utils/workspace";
 import { PersistentFilters } from "../PersistentFilters";
 import { IDataSet, IListOptions } from "@zowe/cli";
+import { UIViews } from "../shared/ui-views";
 
 // Set up localization
 nls.config({
@@ -945,7 +946,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     value: pattern,
                 };
                 // get user input
-                pattern = await vscode.window.showInputBox(options2);
+                pattern = await UIViews.inputBox(options2);
                 if (!pattern) {
                     vscode.window.showInformationMessage(
                         localize("datasetFilterPrompt.enterPattern", "You must enter a pattern.")
@@ -995,11 +996,12 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             nonFaveNode.label.trim();
             let datasets: string;
             for (const item of dsSets) {
-                if (item.dataSetName) {
+                const newItem = item;
+                if (newItem.dsn) {
                     if (datasets) {
-                        datasets += `, ${item.dataSetName}`;
+                        datasets += `, ${item.dsn}`;
                     } else {
-                        datasets = `${item.dataSetName}`;
+                        datasets = `${item.dsn}`;
                     }
                 }
             }
@@ -1035,8 +1037,8 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 for (const child of response) {
                     for (const item of dsSets) {
                         const label = child.label.trim();
-                        if (item.memberName && label !== "No datasets found") {
-                            const dsn = item.dataSetName.split(".");
+                        if (item.member && label !== "No datasets found") {
+                            const dsn = item.dsn.split(".");
                             const name = label.split(".");
                             let index = 0;
                             let includes = false;
@@ -1045,7 +1047,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                                     let inc = false;
                                     inc = await this.checkFilterPattern(name[index], each);
                                     if (inc) {
-                                        child.pattern = item.dataSetName;
+                                        child.pattern = item.dsn;
                                         includes = true;
                                     } else {
                                         child.pattern = "";
@@ -1063,9 +1065,9 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                                 ).allMembers(label, options);
                                 let existing = false;
                                 for (const mem of memResponse.apiResponse.items) {
-                                    existing = await this.checkFilterPattern(mem.member, item.memberName);
+                                    existing = await this.checkFilterPattern(mem.member, item.member);
                                     if (existing) {
-                                        child.memberPattern = item.memberName;
+                                        child.memberPattern = item.member;
                                         if (!child.contextValue.includes(globals.FILTER_SEARCH)) {
                                             child.contextValue = child.contextValue + globals.FILTER_SEARCH;
                                         }
@@ -1163,8 +1165,8 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     private async renameDataSetMember(node: IZoweDatasetTreeNode) {
         const beforeMemberName = node.label.trim();
         const dataSetName = node.getParent().getLabel();
-
-        let afterMemberName = await vscode.window.showInputBox({ value: beforeMemberName });
+        const options: vscode.InputBoxOptions = { value: beforeMemberName };
+        let afterMemberName = await UIViews.inputBox(options);
         if (!afterMemberName) {
             vscode.window.showInformationMessage(localize("renameDataSet.cancelled", "Rename operation cancelled."));
             return;
@@ -1226,8 +1228,8 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      */
     private async renameDataSet(node: IZoweDatasetTreeNode) {
         const beforeDataSetName = node.label.trim();
-
-        let afterDataSetName = await vscode.window.showInputBox({ value: beforeDataSetName });
+        const options: vscode.InputBoxOptions = { value: beforeDataSetName };
+        let afterDataSetName = await UIViews.inputBox(options);
         if (!afterDataSetName) {
             vscode.window.showInformationMessage(localize("renameDataSet.cancelled", "Rename operation cancelled."));
             return;
