@@ -36,8 +36,8 @@ export async function refreshAll(treeProvider: IZoweTree<IZoweTreeNode>) {
         } else {
             await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir() });
         }
-        await getProfileInfo(globals.ISTHEIA);
     }
+    await getProfileInfo(globals.ISTHEIA);
     treeProvider.mSessionNodes.forEach(async (sessNode) => {
         const setting = (await PersistentFilters.getDirectValue(
             globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION
