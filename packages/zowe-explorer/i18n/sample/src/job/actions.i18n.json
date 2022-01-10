@@ -7,11 +7,11 @@
   "jobActions.stopCommand.apiNonExisting": "Not implemented yet for profile of type: ",
   "setOwner.inputBox.prompt": "Owner",
   "setPrefix.inputBox.prompt": "Prefix",
+  "deleteJobPrompt.confirmation.message": "Are you sure you want to delete the following {0} items?\nThis will permanently remove the following jobs from your system.\n\n{1}",
   "deleteJobPrompt.confirmation.delete": "Delete",
-  "deleteJobPrompt.confirmation.message": "Are you sure you want to delete the following {0} item(s)?\nThis will permanently remove the following job(s) from your system.\n\n{1}",
   "deleteJobPrompt.confirmation.cancel.log.debug": "Delete action was canceled.",
   "deleteJobPrompt.deleteCancelled": "Delete action was cancelled.",
+  "deleteCommand.job": "Job {0} deleted.",
   "deleteJobPrompt.deleteCounter": "Deleting nodes",
-  "deleteCommand.multipleJobs": "The following jobs were deleted: {0}",
-  "deleteCommand.job": "Job {0} deleted."
+  "deleteCommand.multipleJobs": "The following jobs were deleted: {0}"
 }
