@@ -15,7 +15,7 @@
 
 import { FtpUssApi } from "../../../../zowe-explorer-ftp-extension/src/ZoweExplorerFtpUssApi";
 import { UssUtils } from "@zowe/zos-ftp-for-zowe-cli";
-import TestUtils from "./TestUtils";
+import TestUtils from "../TestUtils";
 import * as zowe from "@zowe/cli";
 
 // two methods to mock modules: create a __mocks__ file for zowe-explorer-api.ts and direct mock for extension.ts
