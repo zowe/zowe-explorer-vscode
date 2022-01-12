@@ -251,10 +251,10 @@ Criteria for VS Code extensions that extend the Zowe Explorer MVS, USS, or JES t
  <tr>
    <th style="background-color:#555555">19</th>
    <th style="background-color:#555555">v2</th>
-   <th style="background-color:#AAAAAA"></th>
    <th style="background-color:#AAAAAA">x</th>
+   <th style="background-color:#AAAAAA"></th>
    <th></th>
-   <td><b>Secure Credential Store:</b> If the extension supports Zowe CLI's Secure Credential store, it calls the Zowe Explorer-provided method for initialization at startup.</td>
+   <td><b>Secure Credentials:</b> The extension calls the Zowe Explorer-provided method for initialization of secure credentials at startup.</td>
  </tr>
 </table>
 
