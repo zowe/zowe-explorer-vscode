@@ -1026,6 +1026,7 @@ describe("job deletion command", () => {
             value: refreshAllStub,
             configurable: true,
         });
+        jest.spyOn(refreshActions, "refreshAll");
         const jobsProvider = createJobsTree(session, job, profile, createTreeView());
         jobsProvider.delete.mockResolvedValueOnce(Promise.resolve());
         const jobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, null, session, job, profile);
@@ -1033,7 +1034,7 @@ describe("job deletion command", () => {
         await jobActions.deleteCommand(jobsProvider, jobNode);
         // assert
         expect(mocked(jobsProvider.delete)).toBeCalledWith(jobNode);
-        expect(refreshAllStub).toHaveBeenCalledWith(jobsProvider);
+        expect(refreshActions.refreshAll).toHaveBeenCalledWith(jobsProvider);
     });
 
     it("should not delete a job in case user cancelled deletion", async () => {

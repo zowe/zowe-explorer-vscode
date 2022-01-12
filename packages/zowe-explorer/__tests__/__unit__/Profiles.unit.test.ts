@@ -22,13 +22,14 @@ import {
     createInvalidIProfile,
     createValidIProfile,
     createISession,
+    createAltTypeIProfile,
 } from "../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../__mocks__/mockCreators/datasets";
 import { createProfileManager, createTestSchemas } from "../../__mocks__/mockCreators/profiles";
 import * as vscode from "vscode";
 import * as utils from "../../src/utils/ProfilesUtils";
 import * as child_process from "child_process";
-import { Logger } from "@zowe/imperative";
+import { Logger, SessConstants } from "@zowe/imperative";
 import * as globals from "../../src/globals";
 import { ValidProfileEnum, IZoweNodeType, ProfilesCache } from "@zowe/zowe-explorer-api";
 import { ZosmfSession } from "@zowe/cli";
@@ -2853,6 +2854,9 @@ describe("Profiles Unit Tests - Function ssoLogin", () => {
             testCombinedSession: createISession(),
             testCombinedProfile: createValidIProfile(),
             testOptionalProfile: createValidIProfile(),
+            datasetSessionNodeAltToken: null,
+            testAltTypeProfile: createAltTypeIProfile(),
+            testAltSession: createISession(),
         };
         newMocks.testBaseProfile.profile.tokenType = "testTokenType";
         newMocks.testBaseProfile.profile.tokenValue = "testTokenValue";
@@ -2869,10 +2873,21 @@ describe("Profiles Unit Tests - Function ssoLogin", () => {
         newMocks.testOptionalProfile.profile.port = "1443";
         newMocks.testOptionalProfile.profile.user = undefined;
         newMocks.testOptionalProfile.profile.password = undefined;
+        newMocks.testOptionalProfile.type = "zosmf";
+        newMocks.testAltSession.ISession.tokenType = "altTokenType";
+        newMocks.testAltSession.ISession.tokenValue = "altTokenValue";
+        newMocks.testAltTypeProfile.profile.user = undefined;
+        newMocks.testAltTypeProfile.profile.password = undefined;
+        newMocks.testAltTypeProfile.profile.tokenType = "altTokenType";
+        newMocks.testAltTypeProfile.profile.tokenValue = "altTokenValue";
         globalMocks.mockCreateSessCfgFromArgs.mockResolvedValue(newMocks.testCombinedSession);
         newMocks.datasetSessionNodeToken = createDatasetSessionNode(
             newMocks.testCombinedSession,
             newMocks.testCombinedProfile
+        );
+        newMocks.datasetSessionNodeAltToken = createDatasetSessionNode(
+            newMocks.testAltSession,
+            newMocks.testAltTypeProfile
         );
         newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
         newMocks.optionalCredNode = createDatasetSessionNode(newMocks.session, newMocks.testOptionalProfile);
@@ -2918,10 +2933,12 @@ describe("Profiles Unit Tests - Function ssoLogin", () => {
         const response = await theProfiles.ssoLogin(resultNode);
 
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
-        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("This profile does not support login.");
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe(
+            "This profile does not support token authentication."
+        );
     });
 
-    it("Tests that sso login with token", async () => {
+    it("Tests that sso login with token for base profile", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
@@ -2947,7 +2964,7 @@ describe("Profiles Unit Tests - Function ssoLogin", () => {
 
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
-        const response = await theProfiles.ssoLogin(resultNode);
+        await theProfiles.ssoLogin(resultNode);
 
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe(
@@ -2959,6 +2976,11 @@ describe("Profiles Unit Tests - Function ssoLogin", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
         const theProfiles = await Profiles.createInstance(blockMocks.log);
+        const mockCommonApi = await ZoweExplorerApiRegister.getInstance().getCommonApi(blockMocks.testCombinedProfile);
+        const getCommonApiMock = jest.fn();
+        getCommonApiMock.mockReturnValue(mockCommonApi);
+        ZoweExplorerApiRegister.getInstance().getCommonApi = getCommonApiMock.bind(ZoweExplorerApiRegister);
+        jest.spyOn(mockCommonApi, "getTokenTypeName").mockReturnValue(SessConstants.TOKEN_TYPE_APIML);
         Object.defineProperty(theProfiles, "getBaseProfile", {
             value: jest.fn(() => {
                 return blockMocks.testBaseProfile;
@@ -2967,10 +2989,34 @@ describe("Profiles Unit Tests - Function ssoLogin", () => {
 
         const resultNode: IZoweNodeType = blockMocks.optionalCredNode;
 
-        const response = await theProfiles.ssoLogin(resultNode);
+        await theProfiles.ssoLogin(resultNode);
 
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
-        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("This profile does not support login.");
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe(
+            "This profile does not support token authentication."
+        );
+    });
+
+    it("Tests that sso login with token for alternate profile", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        const resultNode: IZoweNodeType = blockMocks.datasetSessionNodeAltToken;
+        const theProfiles = await Profiles.createInstance(blockMocks.log);
+
+        const mockCommonApi = await ZoweExplorerApiRegister.getInstance().getCommonApi(blockMocks.testCombinedProfile);
+        const getCommonApiMock = jest.fn();
+        getCommonApiMock.mockReturnValue(mockCommonApi);
+        ZoweExplorerApiRegister.getInstance().getCommonApi = getCommonApiMock.bind(ZoweExplorerApiRegister);
+        jest.spyOn(mockCommonApi, "getTokenTypeName").mockReturnValue("altTokenType");
+
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        await theProfiles.ssoLogin(resultNode);
+
+        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe(
+            "Login to authentication service was successful."
+        );
     });
 });
 
@@ -2996,22 +3042,36 @@ describe("Profiles Unit Tests - Function ssoLogout", () => {
             testBaseProfile: createValidIProfile(),
             testCombinedSession: createISession(),
             testCombinedProfile: createValidIProfile(),
+            datasetSessionNodeAltToken: null,
+            testAltTypeProfile: createAltTypeIProfile(),
+            testAltSession: createISession(),
         };
-        newMocks.testBaseProfile.profile.tokenType = "testTokenType";
+        newMocks.testBaseProfile.profile.tokenType = "apimlAuthenticationToken";
         newMocks.testBaseProfile.profile.tokenValue = "testTokenValue";
         newMocks.testCombinedSession.ISession.tokenType = "testTokenType";
         newMocks.testCombinedSession.ISession.tokenValue = "testTokenValue";
-        newMocks.testCombinedProfile.profile.tokenType = "testTokenType";
+        newMocks.testBaseProfile.profile.host = "fake";
+        newMocks.testCombinedSession.ISession.tokenType = "apimlAuthenticationToken";
         newMocks.testCombinedProfile.profile.tokenValue = "testTokenValue";
+        newMocks.testCombinedProfile.profile.tokenType = "apimlAuthenticationToken";
         newMocks.testCombinedProfile.profile.user = undefined;
         newMocks.testCombinedProfile.profile.password = undefined;
         newMocks.testCombinedProfile.profile.protocol = "https";
         newMocks.testCombinedProfile.profile.host = "fake";
-        newMocks.testCombinedProfile.profile.type = "basic";
+        newMocks.testAltSession.ISession.tokenType = "altTokenType";
+        newMocks.testAltSession.ISession.tokenValue = "altTokenValue";
+        newMocks.testAltTypeProfile.profile.user = undefined;
+        newMocks.testAltTypeProfile.profile.password = undefined;
+        newMocks.testAltTypeProfile.profile.tokenType = "altTokenType";
+        newMocks.testAltTypeProfile.profile.tokenValue = "altTokenValue";
         globalMocks.mockCreateSessCfgFromArgs.mockResolvedValue(newMocks.testCombinedSession);
         newMocks.datasetSessionNodeToken = createDatasetSessionNode(
             newMocks.testCombinedSession,
             newMocks.testCombinedProfile
+        );
+        newMocks.datasetSessionNodeAltToken = createDatasetSessionNode(
+            newMocks.testAltSession,
+            newMocks.testAltTypeProfile
         );
         newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
         newMocks.mockNode = newMocks.datasetSessionNode;
@@ -3056,10 +3116,12 @@ describe("Profiles Unit Tests - Function ssoLogout", () => {
         const response = await theProfiles.ssoLogout(resultNode);
 
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
-        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("This profile does not support logout.");
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe(
+            "This profile does not support token authentication."
+        );
     });
 
-    it("Tests that sso logout with token", async () => {
+    it("Tests that sso logout with token in base profile", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
@@ -3073,7 +3135,7 @@ describe("Profiles Unit Tests - Function ssoLogout", () => {
 
         Object.defineProperty(theProfiles, "getCombinedProfile", {
             value: jest.fn(async () => {
-                Promise.resolve(blockMocks.testCombinedProfile);
+                return blockMocks.testCombinedProfile;
             }),
         });
 
@@ -3081,10 +3143,32 @@ describe("Profiles Unit Tests - Function ssoLogout", () => {
         const getCommonApiMock = jest.fn();
         getCommonApiMock.mockReturnValue(mockCommonApi);
         ZoweExplorerApiRegister.getInstance().getCommonApi = getCommonApiMock.bind(ZoweExplorerApiRegister);
-        jest.spyOn(mockCommonApi, "getTokenTypeName").mockReturnValue("token");
+        jest.spyOn(mockCommonApi, "getTokenTypeName").mockReturnValue("apimlAuthenticationToken");
         jest.spyOn(mockCommonApi, "logout").mockReturnValue("logout success");
 
-        const response = await theProfiles.ssoLogout(resultNode);
+        await theProfiles.ssoLogout(resultNode);
+
+        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe(
+            "Logout from authentication service was successful."
+        );
+    });
+
+    it("Tests that sso logout with token in alternate profile", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const resultNode: IZoweNodeType = blockMocks.datasetSessionNodeAltToken;
+        const theProfiles = await Profiles.createInstance(blockMocks.log);
+        const mockCommonApi = await ZoweExplorerApiRegister.getInstance().getCommonApi(blockMocks.testCombinedProfile);
+        const getCommonApiMock = jest.fn();
+        getCommonApiMock.mockReturnValue(mockCommonApi);
+        ZoweExplorerApiRegister.getInstance().getCommonApi = getCommonApiMock.bind(ZoweExplorerApiRegister);
+        jest.spyOn(mockCommonApi, "getTokenTypeName").mockReturnValue("altTokenType");
+
+        jest.spyOn(mockCommonApi, "logout").mockReturnValue("logout success");
+
+        await theProfiles.ssoLogout(resultNode);
 
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe(
