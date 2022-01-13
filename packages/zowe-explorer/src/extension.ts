@@ -294,8 +294,10 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
     vscode.commands.registerCommand("zowe.ds.enableValidation", async (node) =>
         Profiles.getInstance().enableValidation(node)
     );
-    vscode.commands.registerCommand("zowe.ds.ssoLogin", async (node) => datasetProvider.ssoLogin(node));
-    vscode.commands.registerCommand("zowe.ds.ssoLogout", async (node) => datasetProvider.ssoLogout(node));
+    vscode.commands.registerCommand("zowe.ds.ssoLogin", async (node: IZoweTreeNode) => datasetProvider.ssoLogin(node));
+    vscode.commands.registerCommand("zowe.ds.ssoLogout", async (node: IZoweTreeNode) =>
+        datasetProvider.ssoLogout(node)
+    );
     vscode.workspace.onDidChangeConfiguration((e) => {
         datasetProvider.onDidChangeConfiguration(e);
     });
@@ -376,8 +378,10 @@ function initUSSProvider(context: vscode.ExtensionContext, ussFileProvider: IZow
     vscode.commands.registerCommand("zowe.uss.enableValidation", async (node) =>
         Profiles.getInstance().enableValidation(node)
     );
-    vscode.commands.registerCommand("zowe.uss.ssoLogin", async (node) => ussFileProvider.ssoLogin(node));
-    vscode.commands.registerCommand("zowe.uss.ssoLogout", async (node) => ussFileProvider.ssoLogout(node));
+    vscode.commands.registerCommand("zowe.uss.ssoLogin", async (node: IZoweTreeNode) => ussFileProvider.ssoLogin(node));
+    vscode.commands.registerCommand("zowe.uss.ssoLogout", async (node: IZoweTreeNode) =>
+        ussFileProvider.ssoLogout(node)
+    );
     vscode.workspace.onDidChangeConfiguration((e) => {
         ussFileProvider.onDidChangeConfiguration(e);
     });
@@ -430,8 +434,8 @@ function initJobsProvider(context: vscode.ExtensionContext, jobsProvider: IZoweT
     vscode.commands.registerCommand("zowe.jobs.enableValidation", async (node) =>
         Profiles.getInstance().enableValidation(node)
     );
-    vscode.commands.registerCommand("zowe.jobs.ssoLogin", async (node) => jobsProvider.ssoLogin(node));
-    vscode.commands.registerCommand("zowe.jobs.ssoLogout", async (node) => jobsProvider.ssoLogout(node));
+    vscode.commands.registerCommand("zowe.jobs.ssoLogin", async (node: IZoweTreeNode) => jobsProvider.ssoLogin(node));
+    vscode.commands.registerCommand("zowe.jobs.ssoLogout", async (node: IZoweTreeNode) => jobsProvider.ssoLogout(node));
     vscode.workspace.onDidChangeConfiguration((e) => {
         jobsProvider.onDidChangeConfiguration(e);
     });
