@@ -649,8 +649,7 @@ export class Profiles extends ProfilesCache {
             config.api.layers.merge(newConfig);
             await config.save(false);
             const configName = ProfilesCache.getConfigInstance().getTeamConfig().configName;
-            const filePath = path.join(rootPath, configName);
-            await this.openConfigFile(filePath);
+            await this.openConfigFile(path.join(rootPath, configName));
             const reloadButton = localize("createZoweSchema.reload.button", "Reload Window");
             const infoMsg = localize(
                 "createZoweSchema.reload.infoMessage",
