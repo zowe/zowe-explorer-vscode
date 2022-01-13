@@ -648,10 +648,13 @@ export class Profiles extends ProfilesCache {
             const newConfig: IConfig = await ConfigBuilder.build(impConfig, opts);
             config.api.layers.merge(newConfig);
             await config.save(false);
+            const configName = ProfilesCache.getConfigInstance().getTeamConfig().configName;
+            const filePath = path.join(rootPath, configName);
+            await this.openConfigFile(filePath);
             const reloadButton = localize("createZoweSchema.reload.button", "Reload Window");
             const infoMsg = localize(
                 "createZoweSchema.reload.infoMessage",
-                "Team Configuration file created. Location: {0}. \n Please reload your window.",
+                "Team Configuration file created. Location: {0}. \n Please update file and reload your window.",
                 rootPath
             );
             await vscode.window.showInformationMessage(infoMsg, ...[reloadButton]).then(async (selection) => {
