@@ -638,6 +638,10 @@ export class Profiles extends ProfilesCache {
 
             const impConfig: IImperativeConfig = zowe.getImperativeConfig();
             const knownCliConfig: ICommandProfileTypeConfiguration[] = impConfig.profiles;
+            // add extenders config info from global variable
+            globals.EXTENDER_CONFIG.forEach((item) => {
+                knownCliConfig.push(item);
+            });
             knownCliConfig.push(impConfig.baseProfile);
             config.setSchema(ConfigSchema.buildSchema(knownCliConfig));
 
@@ -652,9 +656,12 @@ export class Profiles extends ProfilesCache {
             const newConfig: IConfig = await ConfigBuilder.build(impConfig, opts);
             config.api.layers.merge(newConfig);
             await config.save(false);
+            const configName = ProfilesCache.getConfigInstance().getTeamConfig().configName;
+            await this.openConfigFile(path.join(rootPath, configName));
+            const reloadButton = localize("createZoweSchema.reload.button", "Reload Window");
             const infoMsg = localize(
                 "createZoweSchema.reload.infoMessage",
-                "Team Configuration file created. Location: {0}.",
+                "Team Configuration file created. Location: {0}. \n Please update file and reload your window.",
                 rootPath
             );
         } catch (err) {
