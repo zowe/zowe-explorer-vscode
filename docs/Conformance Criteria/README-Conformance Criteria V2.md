@@ -76,10 +76,10 @@ General conformance criteria for all extensions that add new capabilities to Zow
  <tr>
    <th style="background-color:#555555">5</th>
    <th style="background-color:#555555">v2</th>
-   <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
+   <th style="background-color:#AAAAAA">x</th>
    <th></th>
-   <td><b>User settings consistency:</b> Extender provides a consistent user settings experience. For VS Code extensions, extender follows the recommended naming convention for configuration settings as described in VS Code's <a href="https://code.visualstudio.com/api/references/contribution-points#contributes.configuration">configuration contribution documentation</a>, and avoids starting setting names with the prefix `zowe.`, which is reserved for Zowe Explorer.</td>
+   <td><b>User settings consistency:</b> Extender provides a consistent user settings experience. For VS Code extensions, extender follows the recommended naming convention for configuration settings as described in VS Code's <a href="https://code.visualstudio.com/api/references/contribution-points#contributes.configuration">configuration contribution documentation</a></td>
  </tr>
 
  <tr>
@@ -88,7 +88,8 @@ General conformance criteria for all extensions that add new capabilities to Zow
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
    <th></th>
-   <td><b>Error message consistency:</b> Extension follows the recommended error message format indicated in the Zowe Explorer extensibility documentation to provide a consistent user experience with Zowe Explorer.</td>
+   <td><b>Using .zowe in user settings:</b> Extender avoids starting setting names with the prefix `zowe.`, which is reserved for Zowe Explorer and and other extensions maintained by the Zowe Project
+.</td>
  </tr>
 
  <tr>
@@ -97,19 +98,38 @@ General conformance criteria for all extensions that add new capabilities to Zow
    <th style="background-color:#AAAAAA"></th>
    <th style="background-color:#AAAAAA">x</th>
    <th></th>
-   <td><b>Zowe SDK usage:</b> Extension utilizes the available Zowe SDKs that standardize z/OS interactions as well as other common capabilities that are used by many other Zowe extensions and tools unless the extension's goal is to provide a new implementation with clearly stated goals.</td>
+   <td><b>Error message consistency:</b> Extension follows the recommended error message format indicated in the <a href=https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/extenders/Error%20Handling.md>Zowe Explorer extensibility documentation</a> to provide a consistent user experience with Zowe Explorer.</td>
  </tr>
 
  <tr>
    <th style="background-color:#555555">8</th>
+   <th style="background-color:#555555">v2</th>
+   <th style="background-color:#AAAAAA"></th>
+   <th style="background-color:#AAAAAA">x</th>
+   <th></th>
+   <td><b>Zowe SDK usage:</b> Extension utilizes the available Zowe SDKs that standardize z/OS interactions as well as other common capabilities that are used by many other Zowe extensions and tools unless the extension's goal is to provide a new implementation with clearly stated goals.</td>
+ </tr>
+
+ <tr>
+   <th style="background-color:#555555">9</th>
    <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
    <th></th>
    <td><b>Sharing of profiles with Zowe CLI:</b> Extensions that utilize Zowe CLI profiles must share the created profile instances between Zowe CLI and the Zowe Explorer extension that utilize them.</td>
  </tr>
+
  <tr>
-   <th style="background-color:#555555" rowspan=5>9</th>
+   <th style="background-color:#555555">10</th>
+   <th style="background-color:#555555">v2</th>
+   <th style="background-color:#AAAAAA"></th>
+   <th style="background-color:#AAAAAA">x</th>
+   <th></th>
+   <td><b>v1 Profile Support:</b>Extension has a backwards compatibility and it is able to support v1 type of profiles.</td>
+ </tr>
+
+ <tr>
+   <th style="background-color:#555555" rowspan=5>11</th>
    <th style="background-color:#555555"></th>
    <th style="background-color:#AAAAAA" colspan=2>Mark (a) or (b) or (c)</th>
    <th style="background-color:#AAAAAA"></th>
@@ -153,7 +173,7 @@ Criteria for VS Code extensions that want to access the same Zowe CLI profiles t
  </thead>
 
  <tr>
-   <th style="background-color:#555555">10</th>
+   <th style="background-color:#555555">12</th>
    <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
@@ -162,7 +182,7 @@ Criteria for VS Code extensions that want to access the same Zowe CLI profiles t
  </tr>
 
   <tr>
-   <th style="background-color:#555555">11</th>
+   <th style="background-color:#555555">13</th>
    <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
@@ -171,12 +191,38 @@ Criteria for VS Code extensions that want to access the same Zowe CLI profiles t
  </tr>
 
   <tr>
-   <th style="background-color:#555555">12</th>
+   <th style="background-color:#555555">14</th>
    <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
    <th></th>
    <td><b>Added Profile Type initialization:</b> If the extension has a dependency on a new Zowe CLI profile type other than the Zowe Explorer default `zosmf`, it is calling the `ZoweExplorerApi.IApiRegisterClient.getExplorerExtenderApi().initialize(profileTypeName)` to ensure that the profile type is supported and managed by the extension without a Zowe CLI plugin installed.</td>
+ </tr>
+ <tr>
+   <th style="background-color:#555555">15</th>
+   <th style="background-color:#555555">v2</th>
+   <th style="background-color:#AAAAAA"></th>
+   <th style="background-color:#AAAAAA">x</th>
+   <th></th>
+   <td><b>Base Profile and Tokens:</b> Extension supports <a href=https://docs.zowe.org/stable/user-guide/cli-usingcli/#base-profiles>base profiles</a> and <a href=https://docs.zowe.org/stable/user-guide/cli-usingcli#integrating-with-api-mediation-layer>tokens</a></td>
+ </tr>
+
+ <tr>
+   <th style="background-color:#555555">16</th>
+   <th style="background-color:#555555">v2</th>
+   <th style="background-color:#AAAAAA">x</th>
+   <th style="background-color:#AAAAAA"></th>
+   <th></th>
+   <td><b>Team Configuration File:</b> Extension supports the Zowe CLI 7 team configuration file format.</td>
+ </tr>
+
+ <tr>
+   <th style="background-color:#555555">17</th>
+   <th style="background-color:#555555">v2</th>
+   <th style="background-color:#AAAAAA">x</th>
+   <th style="background-color:#AAAAAA"></th>
+   <th></th>
+   <td><b>Secure Credential Store:</b> Extension calls the <a href=https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/extenders/SecureCredentials.md>Zowe Explorer-provided method</a> for initialization of secure credentials at startup.</td>
  </tr>
 </table>
 
@@ -195,16 +241,16 @@ Criteria for VS Code extensions that extend the Zowe Explorer MVS, USS, or JES t
  </thead>
 
  <tr>
-   <th style="background-color:#555555">13</th>
+   <th style="background-color:#555555">18</th>
    <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
    <th></th>
-   <td><b>New Zowe CLI profile type:</b> Extension registers its new API instances with a new profile type name for the different Zowe Explorer views via the `ZoweExplorerApi.IApiRegisterClient.register{Mvs|Uss|Jes}Api(profileTypeName)` call as indicated from the Zowe Explorer extensibility documentation</td>
+   <td><b>New Zowe CLI profile type:</b> Extension registers its new API instances with a new profile type name for the different Zowe Explorer views via the `ZoweExplorerApi.IApiRegisterClient.register{Mvs|Uss|Jes}Api(profileTypeName)` call as indicated from the <a href=https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/README-Extending.md#using-the-zowe-explorer-profilescache-for-an-extenders-own-unrelated-profiles>Zowe Explorer extensibility documentation</a></td>
  </tr>
 
  <tr>
-   <th style="background-color:#555555">14</th>
+   <th style="background-color:#555555">19</th>
    <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA"></th>
    <th style="background-color:#AAAAAA">x</th>
@@ -213,7 +259,7 @@ Criteria for VS Code extensions that extend the Zowe Explorer MVS, USS, or JES t
  </tr>
 
  <tr>
-   <th style="background-color:#555555">15</th>
+   <th style="background-color:#555555">20</th>
    <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
@@ -222,39 +268,12 @@ Criteria for VS Code extensions that extend the Zowe Explorer MVS, USS, or JES t
  </tr>
 
  <tr>
-   <th style="background-color:#555555">16</th>
+   <th style="background-color:#555555">21</th>
    <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA"></th>
    <th style="background-color:#AAAAAA">x</th>
    <th></th>
    <td><b>API test suite implementation:</b>  If the extension implements a Zowe Explorer API data provider interface, it should implement a test suite that calls each of the implemented API methods.</td>
- </tr>
-
- <tr>
-   <th style="background-color:#555555">17</th>
-   <th style="background-color:#555555">v2</th>
-   <th style="background-color:#AAAAAA"></th>
-   <th style="background-color:#AAAAAA">x</th>
-   <th></th>
-   <td><b>Base Profile and Tokens:</b> Extension supports base profiles and tokens (For more information, click here)</td>
- </tr>
-
- <tr>
-   <th style="background-color:#555555">18</th>
-   <th style="background-color:#555555">v2</th>
-   <th style="background-color:#AAAAAA">x</th>
-   <th style="background-color:#AAAAAA"></th>
-   <th></th>
-   <td><b>Team Configuration File:</b> Extension supports the Zowe CLI 7 team configuration file format as an alternative to the Zowe CLI 6 profiles file format.</td>
- </tr>
-
- <tr>
-   <th style="background-color:#555555">19</th>
-   <th style="background-color:#555555">v2</th>
-   <th style="background-color:#AAAAAA">x</th>
-   <th style="background-color:#AAAAAA"></th>
-   <th></th>
-   <td><b>Secure Credentials:</b> The extension calls the Zowe Explorer-provided method for initialization of secure credentials at startup.</td>
  </tr>
 </table>
 
@@ -273,7 +292,7 @@ Criteria for VS Code extensions adding menu and commands to VS Code that utilize
  </thead>
 
  <tr>
-   <th style="background-color:#555555">20</th>
+   <th style="background-color:#555555">22</th>
    <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
@@ -282,7 +301,7 @@ Criteria for VS Code extensions adding menu and commands to VS Code that utilize
  </tr>
 
   <tr>
-   <th style="background-color:#555555">21</th>
+   <th style="background-color:#555555">23</th>
    <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
@@ -291,25 +310,36 @@ Criteria for VS Code extensions adding menu and commands to VS Code that utilize
  </tr>
 
   <tr>
-   <th style="background-color:#555555">22</th>
+   <th style="background-color:#555555">24</th>
    <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
    <th></th>
-   <td><b>Context menu groups: </b> If contributing commands to Zowe Explorer's context menus, the extension follows the Zowe Explorer extensibility documentation and adds them in new context menu groups that are located below Zowe Explorer's existing context menu groups in the user interface.</td>
+   <td><b>Context menu groups: </b> If contributing commands to Zowe Explorer's context menus, the extension follows the <a href=https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/README-Extending.md#grouping-menu-commands>Zowe Explorer extensibility documentation</a> and adds them in new context menu groups that are located below Zowe Explorer's existing context menu groups in the user interface.</td>
  </tr>
 
   <tr>
-   <th style="background-color:#555555">23</th>
+   <th style="background-color:#555555">25</th>
+   <th style="background-color:#555555">v2</th>
+   <th style="background-color:#AAAAAA"></th>
+   <th style="background-color:#AAAAAA">x</th>
+   <th></th>
+   <td><b>Adding New Menu Items:</b> If the extension is adding new commands and context menu entries to the Zowe Explorer tree view nodes, the new command name is consistent with the terminology and naming conventions of the existing Zowe Explorer menu entries. More information is provided in the <a href=https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/README-Extending.md#creating-an-extension-that-adds-menu-commands
+>Zowe Explorer extensibility documentation.</a></td>
+ </tr>
+
+   <tr>
+   <th style="background-color:#555555">26</th>
    <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
    <th></th>
-   <td><b>Menu Names:</b> If the extension is adding new commands and context menu entries to the Zowe Explorer tree view nodes, the new command name is consistent with the terminology and naming conventions of the existing Zowe Explorer menu entries.</td>
+   <td><b>Existing Menu Items:</b> Extension does not overwrite any existing Zowe Explorer command and context menu entries
+</td>
  </tr>
 
  <tr>
-   <th style="background-color:#555555">24</th>
+   <th style="background-color:#555555">27</th>
    <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
