@@ -318,6 +318,7 @@ export class ProfilesCache {
         this.allTypes = [];
         const mProfileInfo = ProfilesCache.getConfigInstance();
         const allTypes = this.getAllProfileTypes(apiRegister.registeredApiTypes());
+        allTypes.push("base");
         for (const type of allTypes) {
             // Step 1: Get all profiles for each registered type
             const profilesForType = mProfileInfo.getAllProfiles(type).filter((temp) => temp.profLoc.osLoc.length !== 0);
@@ -326,13 +327,14 @@ export class ProfilesCache {
                     // Step 2: Merge args for each profile
                     const profAttr = await this.getMergedAttrs(mProfileInfo, prof);
                     // Work-around. TODO: Discuss with imperative team
-                    const profileFix: imperative.IProfileLoaded = {
-                        message: "",
-                        name: prof.profName,
-                        type: prof.profType,
-                        profile: profAttr,
-                        failNotFound: false,
-                    };
+                    // const profileFix: imperative.IProfileLoaded = {
+                    //     message: "",
+                    //     name: prof.profName,
+                    //     type: prof.profType,
+                    //     profile: profAttr,
+                    //     failNotFound: false,
+                    // };
+                    const profileFix = imperative.ProfileInfo.profAttrsToProfLoaded(prof, profAttr);
                     // Step 3: Update allProfiles list
                     tmpAllProfiles.push(profileFix);
                 }
@@ -360,8 +362,8 @@ export class ProfilesCache {
         const profile: imperative.IProfile = {};
         if (profAttrs != null) {
             const mergedArgs = mProfileInfo.mergeArgsForProfile(profAttrs);
-
             for (const arg of mergedArgs.knownArgs) {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                 profile[arg.argName] = arg.secure ? await mProfileInfo.loadSecureArg(arg) : arg.argValue;
             }
         }

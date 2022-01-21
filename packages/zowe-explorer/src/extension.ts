@@ -31,7 +31,7 @@ import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import { Profiles } from "./Profiles";
 import { errorHandling, getProfileInfo, getZoweDir } from "./utils/ProfilesUtils";
-import { ImperativeError, CliProfileManager, ProfileInfo } from "@zowe/imperative";
+import { ImperativeError, CliProfileManager } from "@zowe/imperative";
 import { createDatasetTree } from "./dataset/DatasetTree";
 import { createJobsTree } from "./job/ZosJobsProvider";
 import { createUSSTree } from "./uss/USSTree";
@@ -102,11 +102,15 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         });
 
         const mProfileInfo = await getProfileInfo(globals.ISTHEIA);
+        let rootPath;
         if (vscode.workspace.workspaceFolders) {
-            const rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
+            rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
             await mProfileInfo.readProfilesFromDisk({ projectDir: trueCasePathSync(rootPath) });
         } else {
             await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir() });
+        }
+        if (mProfileInfo.usingTeamConfig) {
+            globals.setConfigPath(rootPath);
         }
 
         // Initialize profile manager
