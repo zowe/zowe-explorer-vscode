@@ -13,7 +13,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-var-requires */
 
-import { FtpUssApi } from "../../../../zowe-explorer-ftp-extension/src/ZoweExplorerFtpUssApi";
+import { FtpUssApi } from "../../../src/ZoweExplorerFtpUssApi";
 import { UssUtils } from "@zowe/zos-ftp-for-zowe-cli";
 import TestUtils from "../utils/TestUtils";
 import * as zowe from "@zowe/cli";
