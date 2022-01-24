@@ -363,11 +363,11 @@ export class ProfilesCache {
         if (profAttrs != null) {
             const mergedArgs = mProfileInfo.mergeArgsForProfile(profAttrs);
             try {
-                mergedArgs.missingArgs.forEach((field) => {
-                    if (field.argName === "tokenValue") {
-                        mergedArgs.knownArgs.push(field);
-                    }
-                });
+                // mergedArgs.missingArgs.forEach((field) => {
+                //     if (field.argName === "tokenValue") {
+                //         mergedArgs.knownArgs.push(field);
+                //     }
+                // });
                 for (const arg of mergedArgs.knownArgs) {
                     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                     profile[arg.argName] = arg.secure ? await mProfileInfo.loadSecureArg(arg) : arg.argValue;

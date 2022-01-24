@@ -53,8 +53,7 @@
     "**/node-notifier": "^8.0.1",
     "**/yargs-parser": "^5.0.1",
     "**/minimist": "^0.2.1",
-    "**/diff": "^3.5.0",
-    "**/markdown-it": "^12.3.2"
+    "**/diff": "^3.5.0"
   },
   "scripts": {
     "prepare": "yarn build",

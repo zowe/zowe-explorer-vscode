@@ -52,8 +52,6 @@ import * as globals from "./globals";
 
 import * as nls from "vscode-nls";
 import { UIViews } from "./shared/ui-views";
-import { getZoweDir } from "@zowe/cli";
-import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 
 // TODO: find a home for constants
 export const CONTEXT_PREFIX = "_";
@@ -1249,11 +1247,11 @@ export class Profiles extends ProfilesCache {
         if (
             baseProfile &&
             serviceProfile.profile.host &&
-            // serviceProfile.profile.port &&
-            baseProfile.profile.host !== serviceProfile.profile.host
-            // baseProfile.profile.port !== serviceProfile.profile.port) ||
-            // (baseProfile.profile.host === serviceProfile.profile.host &&
-            //     baseProfile.profile.port !== serviceProfile.profile.port))
+            serviceProfile.profile.port &&
+            ((baseProfile.profile.host !== serviceProfile.profile.host &&
+                baseProfile.profile.port !== serviceProfile.profile.port) ||
+                (baseProfile.profile.host === serviceProfile.profile.host &&
+                    baseProfile.profile.port !== serviceProfile.profile.port))
         ) {
             return serviceProfile;
         }
@@ -1486,7 +1484,7 @@ export class Profiles extends ProfilesCache {
             const rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
             await mProfileInfo.readProfilesFromDisk({ projectDir: trueCasePathSync(rootPath) });
         } else {
-            await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir() });
+            await mProfileInfo.readProfilesFromDisk({ homeDir: zowe.getZoweDir() });
         }
     }
 
@@ -1573,11 +1571,11 @@ export class Profiles extends ProfilesCache {
         if (
             baseProfile &&
             serviceProfile.profile.host &&
-            // serviceProfile.profile.port &&
-            baseProfile.profile.host !== serviceProfile.profile.host
-            // baseProfile.profile.port !== serviceProfile.profile.port) ||
-            // (baseProfile.profile.host === serviceProfile.profile.host &&
-            //     baseProfile.profile.port !== serviceProfile.profile.port))
+            serviceProfile.profile.port &&
+            ((baseProfile.profile.host !== serviceProfile.profile.host &&
+                baseProfile.profile.port !== serviceProfile.profile.port) ||
+                (baseProfile.profile.host === serviceProfile.profile.host &&
+                    baseProfile.profile.port !== serviceProfile.profile.port))
         ) {
             return false;
         }
