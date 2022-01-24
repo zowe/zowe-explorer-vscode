@@ -31,7 +31,6 @@ import * as zowe from "@zowe/cli";
 import * as path from "path";
 import * as os from "os";
 import * as fs from "fs";
-import { trueCasePathSync } from "true-case-path";
 import {
     IZoweTree,
     IZoweNodeType,
@@ -46,10 +45,16 @@ import {
     ProfilesCache,
     IUrlValidator,
 } from "@zowe/zowe-explorer-api";
-import { errorHandling, FilterDescriptor, FilterItem, resolveQuickPickHelper, isTheia } from "./utils/ProfilesUtils";
+import {
+    errorHandling,
+    FilterDescriptor,
+    FilterItem,
+    resolveQuickPickHelper,
+    isTheia,
+    readConfigFromDisk,
+} from "./utils/ProfilesUtils";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import * as globals from "./globals";
-
 import * as nls from "vscode-nls";
 import { UIViews } from "./shared/ui-views";
 
@@ -1377,7 +1382,7 @@ export class Profiles extends ProfilesCache {
                         tokenValue: loginToken,
                     };
                     await this.updateBaseProfileFileLogin(baseProfile, updBaseProfile);
-                    await this.readConfigFromDisk();
+                    await readConfigFromDisk();
                     await this.refresh(ZoweExplorerApiRegister.getInstance());
                 } catch (error) {
                     vscode.window.showErrorMessage(
@@ -1433,7 +1438,7 @@ export class Profiles extends ProfilesCache {
                 await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).logout(updSession);
 
                 await this.updateBaseProfileFileLogout(baseProfile);
-                await this.readConfigFromDisk();
+                await readConfigFromDisk();
                 await this.refresh(ZoweExplorerApiRegister.getInstance());
             }
             vscode.window.showInformationMessage(
@@ -1448,16 +1453,6 @@ export class Profiles extends ProfilesCache {
     public async openConfigFile(filePath: string) {
         const document = await vscode.workspace.openTextDocument(filePath);
         await vscode.window.showTextDocument(document);
-    }
-
-    public async readConfigFromDisk(): Promise<void> {
-        const mProfileInfo = ProfilesCache.getConfigInstance();
-        if (vscode.workspace.workspaceFolders) {
-            const rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
-            await mProfileInfo.readProfilesFromDisk({ projectDir: trueCasePathSync(rootPath) });
-        } else {
-            await mProfileInfo.readProfilesFromDisk({ homeDir: zowe.getZoweDir() });
-        }
     }
 
     private async updateBaseProfileFileLogin(baseProfile: IProfileLoaded, updBaseProfile: IProfile) {
