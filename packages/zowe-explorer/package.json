@@ -1729,7 +1729,7 @@
     "jsdoc": "^3.6.3",
     "jsdom": "^16.0.0",
     "keytar": "^7.2.0",
-    "log4js": "^3.0.5",
+    "log4js": "^6.4.0",
     "markdownlint-cli": "^0.16.0",
     "mem": "^6.0.1",
     "run-sequence": "^2.2.1",
