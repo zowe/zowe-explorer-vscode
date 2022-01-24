@@ -70,7 +70,6 @@ export class Profiles extends ProfilesCache {
     public static async createInstance(log: Logger): Promise<Profiles> {
         Profiles.loader = new Profiles(log);
         await Profiles.loader.refresh(ZoweExplorerApiRegister.getInstance());
-        console.log(Profiles.loader.allProfiles);
         return Profiles.loader;
     }
 
@@ -354,24 +353,6 @@ export class Profiles extends ProfilesCache {
         }
 
         if (chosenProfile === "") {
-            // const mProfileInfo = ProfilesCache.getConfigInstance();
-            // if (mProfileInfo.usingTeamConfig) {
-            //     const config = mProfileInfo.getTeamConfig();
-            //     const configName = config.configName;
-            //     let configDir = config.configDir;
-            //     if (vscode.workspace.workspaceFolders) {
-            //         // Check if config file is present in the workspace
-            //         const uri = await vscode.workspace.findFiles(
-            //             new vscode.RelativePattern(vscode.workspace.workspaceFolders[0], configName)
-            //         );
-            //         // if (uri.length > 0) {
-            //         //     configDir = ProfilesCache.getConfigInstance().getTeamConfig().mProjectDir;
-            //         // }
-            //     }
-            //     const filePath = path.join(configDir, configName);
-            //     await this.openConfigFile(filePath);
-            //     return;
-            // }
             let newprofile: any;
             let profileName: string;
             if (quickpick.value) {
@@ -1398,14 +1379,6 @@ export class Profiles extends ProfilesCache {
                     await this.updateBaseProfileFileLogin(baseProfile, updBaseProfile);
                     await this.readConfigFromDisk();
                     await this.refresh(ZoweExplorerApiRegister.getInstance());
-                    // update all profiles affiliated with the base profile
-                    // this.allProfiles.forEach(async (item) => {
-                    //     const passed = this.optionalCredChecks(item, baseProfile);
-                    //     if (passed) {
-                    //         item.profile.tokenValue = loginToken;
-                    //     }
-                    // });
-                    console.log(this.allProfiles);
                 } catch (error) {
                     vscode.window.showErrorMessage(
                         localize("ssoLogin.unableToLogin", "Unable to log in. ") + error.message
@@ -1462,7 +1435,6 @@ export class Profiles extends ProfilesCache {
                 await this.updateBaseProfileFileLogout(baseProfile);
                 await this.readConfigFromDisk();
                 await this.refresh(ZoweExplorerApiRegister.getInstance());
-                console.log(this.allProfiles);
             }
             vscode.window.showInformationMessage(
                 localize("ssoLogout.successful", "Logout from authentication service was successful.")
@@ -1497,7 +1469,6 @@ export class Profiles extends ProfilesCache {
                 mProfileInfo.getTeamConfig().api.profiles.exists(baseProfile.name) && profileProps.length > 0;
             if (profileExists) {
                 const profilePath = mProfileInfo.getTeamConfig().api.profiles.expandPath(baseProfile.name);
-                console.log(profilePath);
                 mProfileInfo.getTeamConfig().set(`${profilePath}.properties.tokenType`, updBaseProfile.tokenType);
                 mProfileInfo
                     .getTeamConfig()
