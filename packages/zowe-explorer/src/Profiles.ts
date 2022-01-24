@@ -1485,6 +1485,7 @@ export class Profiles extends ProfilesCache {
     private async updateBaseProfileFileLogout(baseProfile: IProfileLoaded) {
         const mProfileInfo = ProfilesCache.getConfigInstance();
         if (mProfileInfo.usingTeamConfig) {
+            // remove tokenType and TokenValue from config file
             const profileProps = Object.keys(mProfileInfo.getTeamConfig().api.profiles.get(baseProfile.name));
             const profileExists =
                 mProfileInfo.getTeamConfig().api.profiles.exists(baseProfile.name) && profileProps.length > 0;
