@@ -327,14 +327,14 @@ export class ProfilesCache {
                     // Step 2: Merge args for each profile
                     const profAttr = await this.getMergedAttrs(mProfileInfo, prof);
                     // Work-around. TODO: Discuss with imperative team
-                    // const profileFix: imperative.IProfileLoaded = {
-                    //     message: "",
-                    //     name: prof.profName,
-                    //     type: prof.profType,
-                    //     profile: profAttr,
-                    //     failNotFound: false,
-                    // };
-                    const profileFix = imperative.ProfileInfo.profAttrsToProfLoaded(prof, profAttr);
+                    const profileFix: imperative.IProfileLoaded = {
+                        message: "",
+                        name: prof.profName,
+                        type: prof.profType,
+                        profile: profAttr,
+                        failNotFound: false,
+                    };
+
                     // Step 3: Update allProfiles list
                     tmpAllProfiles.push(profileFix);
                 }
@@ -362,11 +362,22 @@ export class ProfilesCache {
         const profile: imperative.IProfile = {};
         if (profAttrs != null) {
             const mergedArgs = mProfileInfo.mergeArgsForProfile(profAttrs);
-            for (const arg of mergedArgs.knownArgs) {
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-                profile[arg.argName] = arg.secure ? await mProfileInfo.loadSecureArg(arg) : arg.argValue;
+            try {
+                mergedArgs.missingArgs.forEach((field) => {
+                    if (field.argName === "tokenValue") {
+                        mergedArgs.knownArgs.push(field);
+                    }
+                });
+                for (const arg of mergedArgs.knownArgs) {
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                    profile[arg.argName] = arg.secure ? await mProfileInfo.loadSecureArg(arg) : arg.argValue;
+                }
+            } catch (error) {
+                // do nothing
             }
         }
+        // eslint-disable-next-line no-console
+        console.log(profile);
         return profile;
     }
 

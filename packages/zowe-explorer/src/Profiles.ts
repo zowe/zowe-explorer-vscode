@@ -53,6 +53,7 @@ import * as globals from "./globals";
 import * as nls from "vscode-nls";
 import { UIViews } from "./shared/ui-views";
 import { getZoweDir } from "@zowe/cli";
+import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 
 // TODO: find a home for constants
 export const CONTEXT_PREFIX = "_";
@@ -1396,16 +1397,17 @@ export class Profiles extends ProfilesCache {
                         tokenType: loginTokenType,
                         tokenValue: loginToken,
                     };
-                    await this.updateBaseProfileFile(baseProfile, updBaseProfile);
+                    await this.updateBaseProfileFileLogin(baseProfile, updBaseProfile);
+                    await this.readConfigFromDisk();
+                    await this.refresh(ZoweExplorerApiRegister.getInstance());
                     // update all profiles affiliated with the base profile
-                    this.allProfiles.forEach(async (item) => {
-                        const passed = this.optionalCredChecks(item, baseProfile);
-                        if (passed) {
-                            item.profile.tokenValue = loginToken;
-                            // await Profiles.getInstance().getCombinedProfile(serviceProfile, baseProfile);
-                            console.log(this.allProfiles);
-                        }
-                    });
+                    // this.allProfiles.forEach(async (item) => {
+                    //     const passed = this.optionalCredChecks(item, baseProfile);
+                    //     if (passed) {
+                    //         item.profile.tokenValue = loginToken;
+                    //     }
+                    // });
+                    console.log(this.allProfiles);
                 } catch (error) {
                     vscode.window.showErrorMessage(
                         localize("ssoLogin.unableToLogin", "Unable to log in. ") + error.message
@@ -1459,16 +1461,10 @@ export class Profiles extends ProfilesCache {
                 });
                 await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).logout(updSession);
 
-                this.getCliProfileManager(baseProfile.type).save({
-                    name: baseProfile.name,
-                    type: baseProfile.type,
-                    overwrite: true,
-                    profile: {
-                        ...baseProfile.profile,
-                        tokenType: undefined,
-                        tokenValue: undefined,
-                    },
-                });
+                await this.updateBaseProfileFileLogout(baseProfile);
+                await this.readConfigFromDisk();
+                await this.refresh(ZoweExplorerApiRegister.getInstance());
+                console.log(this.allProfiles);
             }
             vscode.window.showInformationMessage(
                 localize("ssoLogout.successful", "Logout from authentication service was successful.")
@@ -1494,29 +1490,22 @@ export class Profiles extends ProfilesCache {
         }
     }
 
-    private async updateBaseProfileFile(baseProfile: IProfileLoaded, updBaseProfile: IProfile) {
+    private async updateBaseProfileFileLogin(baseProfile: IProfileLoaded, updBaseProfile: IProfile) {
         const mProfileInfo = ProfilesCache.getConfigInstance();
         if (mProfileInfo.usingTeamConfig) {
             // write to config file to add tokenType & tokenValue fields
-            // const config = ImperativeConfig.instance.config;
-            let config: Config;
-            if (globals.CONFIG_PATH.includes("./zowe")) {
-                config = await Config.load("zowe", { homeDir: globals.CONFIG_PATH });
-            } else {
-                config = await Config.load("zowe", { projectDir: globals.CONFIG_PATH });
-            }
-            const profileProps = Object.keys(config.api.profiles.get(baseProfile.name));
-            const profileExists = config.api.profiles.exists(baseProfile.name) && profileProps.length > 0;
+            const profileProps = Object.keys(mProfileInfo.getTeamConfig().api.profiles.get(baseProfile.name));
+            const profileExists =
+                mProfileInfo.getTeamConfig().api.profiles.exists(baseProfile.name) && profileProps.length > 0;
             if (profileExists) {
-                const profilePath = config.api.profiles.expandPath(baseProfile.name);
+                const profilePath = mProfileInfo.getTeamConfig().api.profiles.expandPath(baseProfile.name);
                 console.log(profilePath);
-                config.set(`${profilePath}.properties.tokenType`, updBaseProfile.tokenType);
-                config.set(`${profilePath}.properties.tokenValue`, updBaseProfile.tokenValue, { secure: true });
-                await config.save(false);
+                mProfileInfo.getTeamConfig().set(`${profilePath}.properties.tokenType`, updBaseProfile.tokenType);
+                mProfileInfo
+                    .getTeamConfig()
+                    .set(`${profilePath}.properties.tokenValue`, updBaseProfile.tokenValue, { secure: true });
+                await mProfileInfo.getTeamConfig().save(false);
             }
-            await this.readConfigFromDisk();
-            await this.refresh(ZoweExplorerApiRegister.getInstance());
-            console.log(this.allProfiles);
         } else {
             // write to yaml file to add tokenType & tokenValue fields
             const profileManager = Profiles.getInstance().getCliProfileManager(baseProfile.type);
@@ -1526,6 +1515,33 @@ export class Profiles extends ProfilesCache {
                 profile: updBaseProfile,
             };
             await profileManager.update(updateParms);
+        }
+    }
+
+    private async updateBaseProfileFileLogout(baseProfile: IProfileLoaded) {
+        const mProfileInfo = ProfilesCache.getConfigInstance();
+        if (mProfileInfo.usingTeamConfig) {
+            const profileProps = Object.keys(mProfileInfo.getTeamConfig().api.profiles.get(baseProfile.name));
+            const profileExists =
+                mProfileInfo.getTeamConfig().api.profiles.exists(baseProfile.name) && profileProps.length > 0;
+            if (profileExists) {
+                const profilePath = mProfileInfo.getTeamConfig().api.profiles.expandPath(baseProfile.name);
+                mProfileInfo.getTeamConfig().delete(`${profilePath}.properties.tokenType`);
+                mProfileInfo.getTeamConfig().delete(`${profilePath}.properties.tokenValue`);
+                await mProfileInfo.getTeamConfig().save(false);
+            }
+        } else {
+            // remove tokenType and TokenValue from old-style yaml profiles
+            this.getCliProfileManager(baseProfile.type).save({
+                name: baseProfile.name,
+                type: baseProfile.type,
+                overwrite: true,
+                profile: {
+                    ...baseProfile.profile,
+                    tokenType: undefined,
+                    tokenValue: undefined,
+                },
+            });
         }
     }
 
