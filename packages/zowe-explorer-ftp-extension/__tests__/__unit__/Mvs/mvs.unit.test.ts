@@ -15,18 +15,18 @@
 
 import { FtpMvsApi } from "../../../src/ZoweExplorerFtpMvsApi";
 import { DataSetUtils } from "@zowe/zos-ftp-for-zowe-cli";
-import TestUtils from "../TestUtils";
+import TestUtils from "../utils/TestUtils";
 
 // two methods to mock modules: create a __mocks__ file for zowe-explorer-api.ts and direct mock for extension.ts
 jest.mock("../../../__mocks__/@zowe/zowe-explorer-api.ts");
 jest.mock("../../../src/extension.ts");
 
-const steam = require("stream");
+const stream = require("stream");
 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-call
-const readbaleStream = steam.Readable.from([]);
+const readableStream = stream.Readable.from([]);
 const fs = require("fs");
 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-fs.createReadStream = jest.fn().mockReturnValue(readbaleStream);
+fs.createReadStream = jest.fn().mockReturnValue(readableStream);
 const MvsApi = new FtpMvsApi();
 
 describe("FtpMvsApi", () => {

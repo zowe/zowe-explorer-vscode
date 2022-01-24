@@ -15,7 +15,7 @@
 
 import { FtpJesApi } from "../../../src/ZoweExplorerFtpJesApi";
 import { DataSetUtils, JobUtils } from "@zowe/zos-ftp-for-zowe-cli";
-import TestUtils from "../TestUtils";
+import TestUtils from "../utils/TestUtils";
 import { DownloadJobs } from "@zowe/cli";
 import * as imperative from "@zowe/imperative";
 
