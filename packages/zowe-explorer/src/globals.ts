@@ -10,7 +10,7 @@
  */
 
 import * as path from "path";
-import { Logger } from "@zowe/imperative";
+import { Logger, ICommandProfileTypeConfiguration } from "@zowe/imperative";
 import * as vscode from "vscode";
 import * as loggerConfig from "../log4jsconfig.json";
 
@@ -82,6 +82,7 @@ export const SETTINGS_AUTOMATIC_PROFILE_VALIDATION = "zowe.automaticProfileValid
 export const SETTINGS_DS_HISTORY = "zowe.ds.history";
 export const SETTINGS_USS_HISTORY = "zowe.uss.history";
 export const SETTINGS_JOBS_HISTORY = "zowe.jobs.history";
+export const EXTENDER_CONFIG: ICommandProfileTypeConfiguration[] = [];
 
 export enum CreateDataSetTypeWithKeysEnum {
     DATA_SET_BINARY = 0,
