@@ -18,7 +18,7 @@
     "vscode": "^1.43.0"
   },
   "dependencies": {
-    "@zowe/cli": "7.0.0-next.202109281609",
+    "@zowe/cli": "7.0.0-next.202112102143",
     "vscode-nls": "4.1.2",
     "true-case-path": "2.2.1"
   },
@@ -54,7 +54,9 @@
     "**/yargs-parser": "^5.0.1",
     "**/minimist": "^0.2.1",
     "**/diff": "^3.5.0",
-    "**/markdown-it": "^12.3.2"
+    "**/markdown-it": "^12.3.2",
+    "**/log4js": "^6.4.0",
+    "**/nanoid": "^3.1.31"
   },
   "scripts": {
     "prepare": "yarn build",
