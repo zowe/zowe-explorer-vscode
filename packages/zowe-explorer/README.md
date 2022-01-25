@@ -54,7 +54,6 @@ For more information, see [Changelog](https://marketplace.visualstudio.com/items
 
 ## Prerequisites
 
-- Install [Node.js](https://nodejs.org/en/download/) v12.0 or later.
 - Configure TSO/E address space services, z/OS data set, file REST interface and z/OS jobs REST interface. For more information, see [z/OS Requirements](https://docs.zowe.org/stable/user-guide/systemrequirements-zosmf.html#z-os-requirements).
 - Create a Zowe Explorer profile.
 
