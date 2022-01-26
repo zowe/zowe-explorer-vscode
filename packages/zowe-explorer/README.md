@@ -38,7 +38,7 @@ More information:
 **Added**:
 
 - Added a progress bar for the simultaneous deletion of multiple jobs
-- Added the note about the deprecation of the associate profile feature to the Associate Profile section to Zowe Docs and to the Zowe Explorer Readme
+- Added the note about the deprecation of the associate profile feature to the Associate Profile section of Zowe Docs and to the Zowe Explorer Readme
 
 **Changed**:
 
