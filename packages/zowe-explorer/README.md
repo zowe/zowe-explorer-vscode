@@ -33,6 +33,8 @@ More information:
 
 ## What's new in Zowe Explorer 1.21.0
 
+> Zowe Explorer is compatible only with Theia 1.18.0 or higher.
+
 **Added**:
 
 - Added a progress bar for the simultaneous deletion of multiple jobs
