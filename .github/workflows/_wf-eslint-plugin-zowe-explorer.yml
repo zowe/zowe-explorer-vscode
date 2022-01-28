@@ -11,11 +11,9 @@ on:
         type: string
 
 jobs:
-    build:
+  build:
     runs-on: ${{ inputs.os }}
-
     timeout-minutes: 60
-
     concurrency:
       group: ${{ inputs.os }}-node-${{ inputs.node-version }}-eslint-ci-${{ github.ref }}
       cancel-in-progress: true
