@@ -1,0 +1,50 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      # Continue to run tests on the other systems if one fails
+      fail-fast: false
+      matrix:
+        node-version: [12.x, 14.x]
+        # order operating systems from best to worst
+        os: [windows-latest, ubuntu-latest, macos-latest]
+
+    timeout-minutes: 60
+
+    concurrency:
+      group: ${{ matrix.os }}-node-${{ matrix.node-version }}-ci-${{ github.ref }}
+      cancel-in-progress: true
+
+    if: (github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository) && !contains(github.event.head_commit.message, '[ci skip]')
+
+    steps:
+      - name: ESLint Plugin for ZE Build
+        uses: zowe/vscode-extension-for-zowe/.github/workflows/_wf-eslint-plugin-zowe-explorer.yml
+        with:
+          node-version: ${{ matrix.node-version }}
+          os: ${{ matrix.os }}
+
+      - name: ZE API Build
+        uses: zowe/vscode-extension-for-zowe/.github/workflows/_wf-zowe-explorer-api.yml
+        with:
+          node-version: ${{ matrix.node-version }}
+          os: ${{ matrix.os }}
+
+
+      - name: ZE FTP Build
+        uses: zowe/vscode-extension-for-zowe/.github/workflows/_wf-zowe-explorer-ftp.yml
+        with:
+          node-version: ${{ matrix.node-version }}
+          os: ${{ matrix.os }}
+
+
+      - name: ZE Build
+        uses: zowe/vscode-extension-for-zowe/.github/workflows/_wf-zowe-explorer.yml
+        with:
+          node-version: ${{ matrix.node-version }}
+          os: ${{ matrix.os }}
