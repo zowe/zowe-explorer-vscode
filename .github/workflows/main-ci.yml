@@ -21,28 +21,28 @@ jobs:
       - id: setup-os
         run: echo "::set-output name=list::${{ toJson(env.OS) }}"
 
-  eslint-build:
+  eslint:
     needs: setup
     uses: zowe/vscode-extension-for-zowe/.github/workflows/_wf-eslint-plugin-zowe-explorer.yml@test-gha-combined
     with:
       node-version: ${{ needs.setup.outputs.node-version }}
       os: ${{ needs.setup.outputs.os }}
 
-  ze-api-build:
+  ze-api:
     needs: setup
     uses: zowe/vscode-extension-for-zowe/.github/workflows/_wf-zowe-explorer-api.yml@test-gha-combined
     with:
       node-version: ${{ needs.setup.outputs.node-version }}
       os: ${{ needs.setup.outputs.os }}
 
-  ze-ftp-build:
+  ze-ftp:
     needs: setup
     uses: zowe/vscode-extension-for-zowe/.github/workflows/_wf-zowe-explorer-ftp.yml@test-gha-combined
     with:
       node-version: ${{ needs.setup.outputs.node-version }}
       os: ${{ needs.setup.outputs.os }}
 
-  ze-build:
+  ze:
     needs: setup
     uses: zowe/vscode-extension-for-zowe/.github/workflows/_wf-zowe-explorer.yml@test-gha-combined
     with:
