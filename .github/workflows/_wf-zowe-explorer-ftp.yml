@@ -1,34 +1,28 @@
-name: ESLint Plugin for Zowe Explorer CI
+name: Zowe Explorer FTP (Reusable)
 
 on:
-  push:
-    paths:
-      - .github/**
-      - packages/zowe-explorer/**
-  pull_request:
-    paths:
-      - .github/**
-      - packages/zowe-explorer/**
+  workflow_call:
+    inputs:
+      node-version:
+        required: true
+        type: string
+      os:
+        required: true
+        type: string
 
 jobs:
-  ze-build:
+  build:
     runs-on: ${{ matrix.os }}
-
     strategy:
-      # Continue to run tests on the other systems if one fails
       fail-fast: false
       matrix:
-        node-version: [12.x, 14.x]
-        # order operating systems from best to worst
-        os: [windows-latest, ubuntu-latest, macos-latest]
+        node-version: ${{ fromJson(inputs.node-version) }}
+        os: ${{ fromJson(inputs.os) }}
 
     timeout-minutes: 60
-
     concurrency:
-      group: ${{ matrix.os }}-node-${{ matrix.node-version }}-eslint-ci-${{ github.ref }}
+      group: ${{ matrix.os }}-node-${{ matrix.node-version }}-ftp-ze-ci-${{ github.ref }}
       cancel-in-progress: true
-
-    if: (github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository) && !contains(github.event.head_commit.message, '[ci skip]')
 
     steps:
       - name: Check out code
@@ -44,19 +38,17 @@ jobs:
 
       - run: yarn install --frozen-lockfile
 
-      - run: yarn workspace eslint-plugin-zowe-explorer test
+      - run: yarn workspace zowe-explorer-ftp-extension test
         env:
           CI: true
           NODE_OPTIONS: --max_old_space_size=4096
-
       # - name: Upload test results
       #   uses: actions/upload-artifact@v1
       #   # if: matrix.os == 'windows-latest' && matrix.node-version == '12.x'
       #   with:
-      #     name: zowe-explorer-results
-      #     path: packages/zowe-explorer/results/
-
-      # # Run codecov upload for only one run
+      #     name: zowe-explorer-ftp-extension-results
+      #     path: packages/zowe-explorer-ftp-extension/results/
+      # Run codecov upload for only one run
       # - name: Upload Results to Codecov from Windows / Node 12.x
       #   if: matrix.os == 'windows-latest' && matrix.node-version == '12.x'
       #   uses: codecov/codecov-action@v1.0.7

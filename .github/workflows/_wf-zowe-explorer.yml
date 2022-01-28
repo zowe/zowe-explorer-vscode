@@ -1,41 +1,35 @@
-name: Zowe Explorer CI
+name: Zowe Explorer (Reusable)
 
 on:
-  push:
-    paths:
-      - .github/**
-      - packages/zowe-explorer/**
-  pull_request:
-    paths:
-      - .github/**
-      - packages/zowe-explorer/**
+  workflow_call:
+    inputs:
+      node-version:
+        required: true
+        type: string
+      os:
+        required: true
+        type: string
 
 jobs:
-  ze-build:
+  build:
     runs-on: ${{ matrix.os }}
-
     strategy:
-      # Continue to run tests on the other systems if one fails
       fail-fast: false
       matrix:
-        node-version: [12.x, 14.x]
-        # order operating systems from best to worst
-        os: [windows-latest, ubuntu-latest, macos-latest]
+        node-version: ${{ fromJson(inputs.node-version) }}
+        os: ${{ fromJson(inputs.os) }}
 
     timeout-minutes: 60
-
     concurrency:
       group: ${{ matrix.os }}-node-${{ matrix.node-version }}-ze-ci-${{ github.ref }}
       cancel-in-progress: true
-
-    if: (github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository) && !contains(github.event.head_commit.message, '[ci skip]')
 
     steps:
       - name: Check out code
         uses: actions/checkout@v2
 
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node-version }}
 

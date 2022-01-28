@@ -1,0 +1,50 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  setup:
+    env:
+      NODE_VERSION: '["12.x", "14.x"]'
+      OS: '["windows-latest", "ubuntu-latest", "macos-latest"]'
+
+    runs-on: ubuntu-latest
+    outputs:
+      node-version: ${{steps.setup-node-version.outputs.list}}
+      os: ${{steps.setup-os.outputs.list}}
+
+    if: (github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository) && !contains(github.event.head_commit.message, '[ci skip]')
+
+    steps:
+      - id: setup-node-version
+        run: echo "::set-output name=list::${{ toJson(env.NODE_VERSION) }}"
+      - id: setup-os
+        run: echo "::set-output name=list::${{ toJson(env.OS) }}"
+
+  eslint:
+    needs: setup
+    uses: zowe/vscode-extension-for-zowe/.github/workflows/_wf-eslint-plugin-zowe-explorer.yml@test-gha-combined
+    with:
+      node-version: ${{ needs.setup.outputs.node-version }}
+      os: ${{ needs.setup.outputs.os }}
+
+  ze-api:
+    needs: setup
+    uses: zowe/vscode-extension-for-zowe/.github/workflows/_wf-zowe-explorer-api.yml@test-gha-combined
+    with:
+      node-version: ${{ needs.setup.outputs.node-version }}
+      os: ${{ needs.setup.outputs.os }}
+
+  ze-ftp:
+    needs: setup
+    uses: zowe/vscode-extension-for-zowe/.github/workflows/_wf-zowe-explorer-ftp.yml@test-gha-combined
+    with:
+      node-version: ${{ needs.setup.outputs.node-version }}
+      os: ${{ needs.setup.outputs.os }}
+
+  ze:
+    needs: setup
+    uses: zowe/vscode-extension-for-zowe/.github/workflows/_wf-zowe-explorer.yml@test-gha-combined
+    with:
+      node-version: ${{ needs.setup.outputs.node-version }}
+      os: ${{ needs.setup.outputs.os }}
