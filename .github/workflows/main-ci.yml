@@ -24,27 +24,27 @@ jobs:
 
     steps:
       - name: ESLint Plugin for ZE Build
-        uses: zowe/vscode-extension-for-zowe/.github/workflows/_wf-eslint-plugin-zowe-explorer.yml
+        uses: zowe/vscode-extension-for-zowe/.github/workflows/_wf-eslint-plugin-zowe-explorer.yml@test-gha-combined
         with:
           node-version: ${{ matrix.node-version }}
           os: ${{ matrix.os }}
 
       - name: ZE API Build
-        uses: zowe/vscode-extension-for-zowe/.github/workflows/_wf-zowe-explorer-api.yml
+        uses: zowe/vscode-extension-for-zowe/.github/workflows/_wf-zowe-explorer-api.yml@test-gha-combined
         with:
           node-version: ${{ matrix.node-version }}
           os: ${{ matrix.os }}
 
 
       - name: ZE FTP Build
-        uses: zowe/vscode-extension-for-zowe/.github/workflows/_wf-zowe-explorer-ftp.yml
+        uses: zowe/vscode-extension-for-zowe/.github/workflows/_wf-zowe-explorer-ftp.yml@test-gha-combined
         with:
           node-version: ${{ matrix.node-version }}
           os: ${{ matrix.os }}
 
 
       - name: ZE Build
-        uses: zowe/vscode-extension-for-zowe/.github/workflows/_wf-zowe-explorer.yml
+        uses: zowe/vscode-extension-for-zowe/.github/workflows/_wf-zowe-explorer.yml@test-gha-combined
         with:
           node-version: ${{ matrix.node-version }}
           os: ${{ matrix.os }}
