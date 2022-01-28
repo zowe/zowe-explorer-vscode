@@ -7,48 +7,45 @@ jobs:
     env:
       node-version: '["12.x", "14.x"]'
       os: '["windows-latest", "ubuntu-latest", "macos-latest"]'
+
+    runs-on: ubuntu-latest
+    outputs:
+      node-version: ${{steps.setup-node-version.outputs.list}}
+      os: ${{steps.setup-os.outputs.list}}
+
     steps:
       - run: |
-        echo "Node Version : ${{ env.node-version }}"
-        echo "OS : ${{ env.os }}"
-  # setup:
-  #   runs-on: ubuntu-latest
-  #   outputs:
-  #     node-version: ${{steps.setup-node-version.outputs.list}}
-  #     os: ${{steps.setup-os.outputs.list}}
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #     - id: setup-node-version
-  #       run: echo "::set-output name=list::${{ env.node-version }}"
-  #     - id: setup-os
-  #       run: echo "::set-output name=list::[windows-latest,ubuntu-latest,macos-latest]"
+        echo "Node Version : ${{ jobs.setup.env.node-version }}"
+        echo "OS : ${{ jobs.setup.env.os }}"
+      - id: setup-node-version
+        run: echo "::set-output name=list::${{ jobs.setup.env.node-version }}"
+      - id: setup-os
+        run: echo "::set-output name=list::${{ jobs.setup.env.os }}"
 
   eslint-build:
     needs: setup
     uses: zowe/vscode-extension-for-zowe/.github/workflows/_wf-eslint-plugin-zowe-explorer.yml@test-gha-combined
     with:
-      # node-version: ${{ needs.setup.outputs.node-version }}
-      # os: ${{ needs.setup.outputs.os }}
-      node-version: ${{ jobs.setup.env.node-version }}
-      os: ${{ jobs.setup.env.os }}
+      node-version: ${{ needs.setup.outputs.node-version }}
+      os: ${{ needs.setup.outputs.os }}
 
-  # ze-api-build:
-  #   needs: setup
-  #   uses: zowe/vscode-extension-for-zowe/.github/workflows/_wf-zowe-explorer-api.yml@test-gha-combined
-  #   with:
-  #     node-version: ${{ needs.setup.outputs.node-version }}
-  #     os: ${{ needs.setup.outputs.os }}
+  ze-api-build:
+    needs: setup
+    uses: zowe/vscode-extension-for-zowe/.github/workflows/_wf-zowe-explorer-api.yml@test-gha-combined
+    with:
+      node-version: ${{ needs.setup.outputs.node-version }}
+      os: ${{ needs.setup.outputs.os }}
 
-  # ze-ftp-build:
-  #   needs: setup
-  #   uses: zowe/vscode-extension-for-zowe/.github/workflows/_wf-zowe-explorer-ftp.yml@test-gha-combined
-  #   with:
-  #     node-version: ${{ needs.setup.outputs.node-version }}
-  #     os: ${{ needs.setup.outputs.os }}
+  ze-ftp-build:
+    needs: setup
+    uses: zowe/vscode-extension-for-zowe/.github/workflows/_wf-zowe-explorer-ftp.yml@test-gha-combined
+    with:
+      node-version: ${{ needs.setup.outputs.node-version }}
+      os: ${{ needs.setup.outputs.os }}
 
-  # ze-build:
-  #   needs: setup
-  #   uses: zowe/vscode-extension-for-zowe/.github/workflows/_wf-zowe-explorer.yml@test-gha-combined
-  #   with:
-  #     node-version: ${{ needs.setup.outputs.node-version }}
-  #     os: ${{ needs.setup.outputs.os }}
+  ze-build:
+    needs: setup
+    uses: zowe/vscode-extension-for-zowe/.github/workflows/_wf-zowe-explorer.yml@test-gha-combined
+    with:
+      node-version: ${{ needs.setup.outputs.node-version }}
+      os: ${{ needs.setup.outputs.os }}
