@@ -20,6 +20,14 @@ jobs:
         # order operating systems from best to worst
         os: [windows-latest, ubuntu-latest, macos-latest]
 
+    timeout-minutes: 60
+
+    concurrency:
+      group: ${{ matrix.os }}-node-${{ matrix.node-version }}-ze-ci-${{ github.ref }}
+      cancel-in-progress: true
+
+    if: (!contains(github.event.head_commit.message, '[ci skip]'))
+
     steps:
       - name: Check out code
         uses: actions/checkout@v2
