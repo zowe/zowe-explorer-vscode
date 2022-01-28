@@ -5,8 +5,8 @@ on: [push, pull_request]
 jobs:
   setup:
     env:
-      node-version: '["12.x", "14.x"]'
-      os: '["windows-latest", "ubuntu-latest", "macos-latest"]'
+      NODE_VERSION: '["12.x", "14.x"]'
+      OS: '["windows-latest", "ubuntu-latest", "macos-latest"]'
 
     runs-on: ubuntu-latest
     outputs:
@@ -15,12 +15,12 @@ jobs:
 
     steps:
       - run: |
-        echo "Node Version = ${{ jobs.setup.env.node-version }}"
-        echo "OS = ${{ jobs.setup.env.os }}"
+        echo "Node Version = ${{ jobs.setup.env.NODE_VERSION }}"
+        echo "OS = ${{ jobs.setup.env.OS }}"
       - id: setup-node-version
-        run: echo "::set-output name=list::${{ jobs.setup.env.node-version }}"
+        run: echo "::set-output name=list::${{ jobs.setup.env.NODE_VERSION }}"
       - id: setup-os
-        run: echo "::set-output name=list::${{ jobs.setup.env.os }}"
+        run: echo "::set-output name=list::${{ jobs.setup.env.OS }}"
 
   eslint-build:
     needs: setup
