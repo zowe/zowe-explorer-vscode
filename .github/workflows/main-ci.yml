@@ -5,8 +5,8 @@ on: [push, pull_request]
 jobs:
   setup:
     env:
-      NODE_VERSION: '["12.x", "14.x"]'
-      OS: '["windows-latest", "ubuntu-latest", "macos-latest"]'
+      NODE_VERSION: '[["12.x", "14.x"]]'
+      OS: '[["windows-latest", "ubuntu-latest", "macos-latest"]]'
 
     runs-on: ubuntu-latest
     outputs:
@@ -25,26 +25,26 @@ jobs:
     needs: setup
     uses: zowe/vscode-extension-for-zowe/.github/workflows/_wf-eslint-plugin-zowe-explorer.yml@test-gha-combined
     with:
-      node-version: ${{ jobs.setup.outputs.node-version }}
-      os: ${{ jobs.setup.outputs.os }}
+      node-version: ${{ needs.setup.outputs.node-version }}
+      os: ${{ needs.setup.outputs.os }}
 
   ze-api-build:
     needs: setup
     uses: zowe/vscode-extension-for-zowe/.github/workflows/_wf-zowe-explorer-api.yml@test-gha-combined
     with:
-      node-version: ${{ jobs.setup.outputs.node-version }}
-      os: ${{ jobs.setup.outputs.os }}
+      node-version: ${{ needs.setup.outputs.node-version }}
+      os: ${{ needs.setup.outputs.os }}
 
   ze-ftp-build:
     needs: setup
     uses: zowe/vscode-extension-for-zowe/.github/workflows/_wf-zowe-explorer-ftp.yml@test-gha-combined
     with:
-      node-version: ${{ jobs.setup.outputs.node-version }}
-      os: ${{ jobs.setup.outputs.os }}
+      node-version: ${{ needs.setup.outputs.node-version }}
+      os: ${{ needs.setup.outputs.os }}
 
   ze-build:
     needs: setup
     uses: zowe/vscode-extension-for-zowe/.github/workflows/_wf-zowe-explorer.yml@test-gha-combined
     with:
-      node-version: ${{ jobs.setup.outputs.node-version }}
-      os: ${{ jobs.setup.outputs.os }}
+      node-version: ${{ needs.setup.outputs.node-version }}
+      os: ${{ needs.setup.outputs.os }}
