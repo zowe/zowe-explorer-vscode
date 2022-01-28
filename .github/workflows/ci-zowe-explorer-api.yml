@@ -25,7 +25,7 @@ jobs:
     timeout-minutes: 60
 
     concurrency:
-      group: ${{ matrix.os }}-node-${{ matrix.node-version }}-ze-ci-${{ github.ref }}
+      group: ${{ matrix.os }}-node-${{ matrix.node-version }}-api-ze-ci-${{ github.ref }}
       cancel-in-progress: true
 
     if: (github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository) && !contains(github.event.head_commit.message, '[ci skip]')
@@ -49,16 +49,16 @@ jobs:
           CI: true
           NODE_OPTIONS: --max_old_space_size=4096
 
-      - name: Upload test results
-        uses: actions/upload-artifact@v1
-        # if: matrix.os == 'windows-latest' && matrix.node-version == '12.x'
-        with:
-          name: zowe-explorer-results
-          path: packages/zowe-explorer/results/
+      # - name: Upload test results
+      #   uses: actions/upload-artifact@v1
+      #   # if: matrix.os == 'windows-latest' && matrix.node-version == '12.x'
+      #   with:
+      #     name: zowe-explorer-results
+      #     path: packages/zowe-explorer/results/
 
-      # Run codecov upload for only one run
-      - name: Upload Results to Codecov from Windows / Node 12.x
-        if: matrix.os == 'windows-latest' && matrix.node-version == '12.x'
-        uses: codecov/codecov-action@v1.0.7
-        with:
-          env_vars: OS,NODE
+      # # Run codecov upload for only one run
+      # - name: Upload Results to Codecov from Windows / Node 12.x
+      #   if: matrix.os == 'windows-latest' && matrix.node-version == '12.x'
+      #   uses: codecov/codecov-action@v1.0.7
+      #   with:
+      #     env_vars: OS,NODE

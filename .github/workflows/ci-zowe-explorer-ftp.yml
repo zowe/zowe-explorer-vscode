@@ -25,7 +25,7 @@ jobs:
     timeout-minutes: 60
 
     concurrency:
-      group: ${{ matrix.os }}-node-${{ matrix.node-version }}-zftp-ci-${{ github.ref }}
+      group: ${{ matrix.os }}-node-${{ matrix.node-version }}-ftp-ze-ci-${{ github.ref }}
       cancel-in-progress: true
 
     if: (github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository) && !contains(github.event.head_commit.message, '[ci skip]')
