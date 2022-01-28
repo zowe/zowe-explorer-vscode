@@ -3,10 +3,12 @@ name: Audit
 on:
   push:
     paths:
+      - .github/**
       - packages/zowe-explorer/**
       - packages/zowe-explorer-ftp-extension/**
   pull_request:
     paths:
+      - .github/**
       - packages/zowe-explorer/**
       - packages/zowe-explorer-ftp-extension/**
 

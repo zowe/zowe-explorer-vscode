@@ -3,9 +3,11 @@ name: Zowe Explorer FTP CI
 on:
   push:
     paths:
+      - .github/**
       - packages/zowe-explorer-ftp-extension/**
   pull_request:
     paths:
+      - .github/**
       - packages/zowe-explorer-ftp-extension/**
 
 jobs:
@@ -26,7 +28,7 @@ jobs:
       group: ${{ matrix.os }}-node-${{ matrix.node-version }}-zftp-ci-${{ github.ref }}
       cancel-in-progress: true
 
-    if: (!contains(github.event.head_commit.message, '[ci skip]'))
+    if: (github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository) && !contains(github.event.head_commit.message, '[ci skip]')
 
     steps:
       - name: Check out code
