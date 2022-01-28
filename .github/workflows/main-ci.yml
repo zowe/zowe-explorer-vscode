@@ -16,9 +16,6 @@ jobs:
     if: (github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository) && !contains(github.event.head_commit.message, '[ci skip]')
 
     steps:
-      - run: |
-          echo "Node Version = ${{ env.NODE_VERSION }}"
-          echo "OS = ${{ env.OS }}"
       - id: setup-node-version
         run: echo "::set-output name=list::${{ env.NODE_VERSION }}"
       - id: setup-os
@@ -28,26 +25,26 @@ jobs:
     needs: setup
     uses: zowe/vscode-extension-for-zowe/.github/workflows/_wf-eslint-plugin-zowe-explorer.yml@test-gha-combined
     with:
-      node-version: ${{ needs.setup.outputs.node-version }}
-      os: ${{ needs.setup.outputs.os }}
+      node-version: ${{ jobs.setup.outputs.node-version }}
+      os: ${{ jobs.setup.outputs.os }}
 
   ze-api-build:
     needs: setup
     uses: zowe/vscode-extension-for-zowe/.github/workflows/_wf-zowe-explorer-api.yml@test-gha-combined
     with:
-      node-version: ${{ needs.setup.outputs.node-version }}
-      os: ${{ needs.setup.outputs.os }}
+      node-version: ${{ jobs.setup.outputs.node-version }}
+      os: ${{ jobs.setup.outputs.os }}
 
   ze-ftp-build:
     needs: setup
     uses: zowe/vscode-extension-for-zowe/.github/workflows/_wf-zowe-explorer-ftp.yml@test-gha-combined
     with:
-      node-version: ${{ needs.setup.outputs.node-version }}
-      os: ${{ needs.setup.outputs.os }}
+      node-version: ${{ jobs.setup.outputs.node-version }}
+      os: ${{ jobs.setup.outputs.os }}
 
   ze-build:
     needs: setup
     uses: zowe/vscode-extension-for-zowe/.github/workflows/_wf-zowe-explorer.yml@test-gha-combined
     with:
-      node-version: ${{ needs.setup.outputs.node-version }}
-      os: ${{ needs.setup.outputs.os }}
+      node-version: ${{ jobs.setup.outputs.node-version }}
+      os: ${{ jobs.setup.outputs.os }}
