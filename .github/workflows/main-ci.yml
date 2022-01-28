@@ -15,12 +15,12 @@ jobs:
 
     steps:
       - run: |
-          echo "Node Version = ${{ jobs.setup.env.NODE_VERSION }}"
-          echo "OS = ${{ jobs.setup.env.OS }}"
+          echo "Node Version = ${{ env.NODE_VERSION }}"
+          echo "OS = ${{ env.OS }}"
       - id: setup-node-version
-        run: echo "::set-output name=list::${{ jobs.setup.env.NODE_VERSION }}"
+        run: echo "::set-output name=list::${{ env.NODE_VERSION }}"
       - id: setup-os
-        run: echo "::set-output name=list::${{ jobs.setup.env.OS }}"
+        run: echo "::set-output name=list::${{ env.OS }}"
 
   eslint-build:
     needs: setup
