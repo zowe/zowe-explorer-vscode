@@ -44,7 +44,7 @@ jobs:
 
       - run: yarn install --frozen-lockfile
 
-      - run: yarn test
+      - run: yarn workspace vscode-extension-for-zowe test
         env:
           CI: true
           NODE_OPTIONS: --max_old_space_size=4096
