@@ -23,28 +23,28 @@ jobs:
 
   eslint:
     needs: setup
-    uses: zowe/vscode-extension-for-zowe/.github/workflows/_wf-eslint-plugin-zowe-explorer.yml@test-gha-combined
+    uses: zowe/vscode-extension-for-zowe/.github/workflows/_wf-eslint-plugin-zowe-explorer.yml@dependabot/npm_and_yarn/log4js-6.4.0
     with:
       node-version: ${{ needs.setup.outputs.node-version }}
       os: ${{ needs.setup.outputs.os }}
 
   ze-api:
     needs: setup
-    uses: zowe/vscode-extension-for-zowe/.github/workflows/_wf-zowe-explorer-api.yml@test-gha-combined
+    uses: zowe/vscode-extension-for-zowe/.github/workflows/_wf-zowe-explorer-api.yml@dependabot/npm_and_yarn/log4js-6.4.0
     with:
       node-version: ${{ needs.setup.outputs.node-version }}
       os: ${{ needs.setup.outputs.os }}
 
   ze-ftp:
     needs: setup
-    uses: zowe/vscode-extension-for-zowe/.github/workflows/_wf-zowe-explorer-ftp.yml@test-gha-combined
+    uses: zowe/vscode-extension-for-zowe/.github/workflows/_wf-zowe-explorer-ftp.yml@dependabot/npm_and_yarn/log4js-6.4.0
     with:
       node-version: ${{ needs.setup.outputs.node-version }}
       os: ${{ needs.setup.outputs.os }}
 
   ze:
     needs: setup
-    uses: zowe/vscode-extension-for-zowe/.github/workflows/_wf-zowe-explorer.yml@test-gha-combined
+    uses: zowe/vscode-extension-for-zowe/.github/workflows/_wf-zowe-explorer.yml@dependabot/npm_and_yarn/log4js-6.4.0
     with:
       node-version: ${{ needs.setup.outputs.node-version }}
       os: ${{ needs.setup.outputs.os }}
