@@ -2,49 +2,48 @@ name: CI
 
 on: [push, pull_request]
 
+env:
+  node-version: [12.x, 14.x]
+  os: [windows-latest, ubuntu-latest, macos-latest]
 jobs:
-  build:
-    runs-on: ${{ matrix.os }}
+  # setup:
+  #   runs-on: ubuntu-latest
+  #   outputs:
+  #     node-version: ${{steps.setup-node-version.outputs.list}}
+  #     os: ${{steps.setup-os.outputs.list}}
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - id: setup-node-version
+  #       run: echo "::set-output name=list::${{ env.node-version }}"
+  #     - id: setup-os
+  #       run: echo "::set-output name=list::[windows-latest,ubuntu-latest,macos-latest]"
 
-    strategy:
-      # Continue to run tests on the other systems if one fails
-      fail-fast: false
-      matrix:
-        node-version: [12.x, 14.x]
-        # order operating systems from best to worst
-        os: [windows-latest, ubuntu-latest, macos-latest]
+  eslint-build:
+    needs: setup
+    uses: zowe/vscode-extension-for-zowe/.github/workflows/_wf-eslint-plugin-zowe-explorer.yml@test-gha-combined
+    with:
+      # node-version: ${{ needs.setup.outputs.node-version }}
+      # os: ${{ needs.setup.outputs.os }}
+      node-version: ${{ env.node-version }}
+      os: ${{ env.os }}
 
-    timeout-minutes: 60
+  # ze-api-build:
+  #   needs: setup
+  #   uses: zowe/vscode-extension-for-zowe/.github/workflows/_wf-zowe-explorer-api.yml@test-gha-combined
+  #   with:
+  #     node-version: ${{ needs.setup.outputs.node-version }}
+  #     os: ${{ needs.setup.outputs.os }}
 
-    concurrency:
-      group: ${{ matrix.os }}-node-${{ matrix.node-version }}-ci-${{ github.ref }}
-      cancel-in-progress: true
+  # ze-ftp-build:
+  #   needs: setup
+  #   uses: zowe/vscode-extension-for-zowe/.github/workflows/_wf-zowe-explorer-ftp.yml@test-gha-combined
+  #   with:
+  #     node-version: ${{ needs.setup.outputs.node-version }}
+  #     os: ${{ needs.setup.outputs.os }}
 
-    if: (github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository) && !contains(github.event.head_commit.message, '[ci skip]')
-
-    steps:
-      - name: ESLint Plugin for ZE Build
-        uses: zowe/vscode-extension-for-zowe/.github/workflows/_wf-eslint-plugin-zowe-explorer.yml@test-gha-combined
-        with:
-          node-version: ${{ matrix.node-version }}
-          os: ${{ matrix.os }}
-
-      - name: ZE API Build
-        uses: zowe/vscode-extension-for-zowe/.github/workflows/_wf-zowe-explorer-api.yml@test-gha-combined
-        with:
-          node-version: ${{ matrix.node-version }}
-          os: ${{ matrix.os }}
-
-
-      - name: ZE FTP Build
-        uses: zowe/vscode-extension-for-zowe/.github/workflows/_wf-zowe-explorer-ftp.yml@test-gha-combined
-        with:
-          node-version: ${{ matrix.node-version }}
-          os: ${{ matrix.os }}
-
-
-      - name: ZE Build
-        uses: zowe/vscode-extension-for-zowe/.github/workflows/_wf-zowe-explorer.yml@test-gha-combined
-        with:
-          node-version: ${{ matrix.node-version }}
-          os: ${{ matrix.os }}
+  # ze-build:
+  #   needs: setup
+  #   uses: zowe/vscode-extension-for-zowe/.github/workflows/_wf-zowe-explorer.yml@test-gha-combined
+  #   with:
+  #     node-version: ${{ needs.setup.outputs.node-version }}
+  #     os: ${{ needs.setup.outputs.os }}

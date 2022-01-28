@@ -12,10 +12,16 @@ on:
 
 jobs:
   build:
-    runs-on: ${{ inputs.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: ${{ fromJson(inputs.node-version) }}
+        os: ${{ fromJson(inputs.os) }}
+
     timeout-minutes: 60
     concurrency:
-      group: ${{ inputs.os }}-node-${{ inputs.node-version }}-ze-ci-${{ github.ref }}
+      group: ${{ matrix.os }}-node-${{ matrix.node-version }}-ze-ci-${{ github.ref }}
       cancel-in-progress: true
 
     if: (github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository) && !contains(github.event.head_commit.message, '[ci skip]')
@@ -24,10 +30,10 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v2
 
-      - name: Use Node.js ${{ inputs.node-version }}
+      - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v2
         with:
-          node-version: ${{ inputs.node-version }}
+          node-version: ${{ matrix.node-version }}
 
       # install yarn
       - run: npm install -g yarn
@@ -41,14 +47,14 @@ jobs:
 
       - name: Upload test results
         uses: actions/upload-artifact@v1
-        # if: inputs.os == 'windows-latest' && inputs.node-version == '12.x'
+        # if: matrix.os == 'windows-latest' && matrix.node-version == '12.x'
         with:
           name: zowe-explorer-results
           path: packages/zowe-explorer/results/
 
       # Run codecov upload for only one run
       - name: Upload Results to Codecov from Windows / Node 12.x
-        if: inputs.os == 'windows-latest' && inputs.node-version == '12.x'
+        if: matrix.os == 'windows-latest' && matrix.node-version == '12.x'
         uses: codecov/codecov-action@v1.0.7
         with:
           env_vars: OS,NODE
