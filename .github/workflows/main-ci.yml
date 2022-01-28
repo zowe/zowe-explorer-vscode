@@ -5,8 +5,8 @@ on: [push, pull_request]
 jobs:
   setup:
     env:
-      NODE_VERSION: '[["12.x", "14.x"]]'
-      OS: '[["windows-latest", "ubuntu-latest", "macos-latest"]]'
+      NODE_VERSION: '[12, 14]'
+      OS: '[windows-latest, ubuntu-latest, macos-latest]'
 
     runs-on: ubuntu-latest
     outputs:
