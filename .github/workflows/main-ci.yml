@@ -3,8 +3,8 @@ name: CI
 on: [push, pull_request]
 
 env:
-  node-version: [12.x, 14.x]
-  os: [windows-latest, ubuntu-latest, macos-latest]
+  node-version: '["12.x", "14.x"]'
+  os: '["windows-latest", "ubuntu-latest", "macos-latest"]'
 jobs:
   # setup:
   #   runs-on: ubuntu-latest
