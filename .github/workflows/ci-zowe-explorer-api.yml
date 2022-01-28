@@ -1,4 +1,4 @@
-name: Zowe Explorer CI
+name: Zowe Explorer API CI
 
 on:
   push:

@@ -1,4 +1,4 @@
-name: Zowe Explorer CI
+name: ESLint Plugin for Zowe Explorer CI
 
 on:
   push:
