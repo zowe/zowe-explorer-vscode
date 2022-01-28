@@ -14,7 +14,7 @@ Initialize the `KeytarApi()`.
 
    ```json
    "dependencies": {
-       "@zowe/cli": "6.30.0",
+       "@zowe/cli": "6.37.5",
        "@zowe/zowe-explorer-api": "1.16.0"
    }
    ```
