@@ -9,17 +9,11 @@ jobs:
       OS: '["windows-latest", "ubuntu-latest", "macos-latest"]'
 
     runs-on: ubuntu-latest
-    outputs:
-      node-version: ${{steps.setup-node-version.outputs.list}}
-      os: ${{steps.setup-os.outputs.list}}
-
     if: (github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository) && !contains(github.event.head_commit.message, '[ci skip]')
 
-    steps:
-      - id: setup-node-version
-        run: echo "::set-output name=list::${{ env.NODE_VERSION }}"
-      - id: setup-os
-        run: echo "::set-output name=list::${{ env.OS }}"
+    outputs:
+      node-version: ${{ env.NODE_VERSION }}
+      os: ${{ env.OS }}
 
   eslint-build:
     needs: setup
