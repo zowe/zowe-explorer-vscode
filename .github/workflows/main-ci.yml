@@ -15,8 +15,8 @@ jobs:
 
     steps:
       - run: |
-        echo "Node Version : ${{ jobs.setup.env.node-version }}"
-        echo "OS : ${{ jobs.setup.env.os }}"
+        echo "Node Version = ${{ jobs.setup.env.node-version }}"
+        echo "OS = ${{ jobs.setup.env.os }}"
       - id: setup-node-version
         run: echo "::set-output name=list::${{ jobs.setup.env.node-version }}"
       - id: setup-os
