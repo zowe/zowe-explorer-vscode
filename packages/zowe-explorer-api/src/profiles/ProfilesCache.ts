@@ -361,25 +361,29 @@ export class ProfilesCache {
         const baseProfile = this.defaultProfileByType.get("base");
         const allProfiles: imperative.IProfileLoaded[] = [];
         this.allTypes.forEach((type) => {
-            const allProfilesByType: imperative.IProfileLoaded[] = [];
-            const profByType = this.profilesByType.get(type);
-            profByType.forEach((profile) => {
-                if (
-                    (baseProfile?.profile.host !== profile?.profile.host ||
-                        baseProfile?.profile.port !== profile?.profile.port) &&
-                    profile?.profile.tokenType == "apimlAuthenticationToken"
-                ) {
-                    profile.profile.tokenType = undefined;
-                    profile.profile.tokenValue = undefined;
-                    // update default profile of type if changed
-                    if (profile.name === this.defaultProfileByType.get(type).name) {
-                        this.defaultProfileByType.set(type, profile);
+            try {
+                const allProfilesByType: imperative.IProfileLoaded[] = [];
+                const profByType = this.profilesByType.get(type);
+                profByType.forEach((profile) => {
+                    if (
+                        (baseProfile?.profile.host !== profile?.profile.host ||
+                            baseProfile?.profile.port !== profile?.profile.port) &&
+                        profile?.profile.tokenType == "apimlAuthenticationToken"
+                    ) {
+                        profile.profile.tokenType = undefined;
+                        profile.profile.tokenValue = undefined;
+                        // update default profile of type if changed
+                        if (profile.name === this.defaultProfileByType.get(type).name) {
+                            this.defaultProfileByType.set(type, profile);
+                        }
                     }
-                }
-                allProfiles.push(profile);
-                allProfilesByType.push(profile);
-            });
-            this.profilesByType.set(type, allProfilesByType);
+                    allProfiles.push(profile);
+                    allProfilesByType.push(profile);
+                });
+                this.profilesByType.set(type, allProfilesByType);
+            } catch (error) {
+                // do nothing, skip if profile type is not included in config file
+            }
         });
         this.allProfiles = [];
         this.allProfiles.push(...allProfiles);
