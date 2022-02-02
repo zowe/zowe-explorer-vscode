@@ -250,6 +250,11 @@ export async function setPrefix(job: IZoweJobTreeNode, jobsProvider: IZoweTree<I
     jobsProvider.refreshElement(job);
 }
 
+/**
+ * Delete the selected jobs command
+ *
+ * @param jobsProvider The tree to which the node belongs
+ */
 export async function deleteCommand(
     jobsProvider: IZoweTree<IZoweJobTreeNode>,
     job?: IZoweJobTreeNode,
@@ -314,37 +319,15 @@ async function deleteMultipleJobs(
         );
         return;
     }
-    const deletionResult: ReadonlyArray<IZoweJobTreeNode | Error> = await vscode.window.withProgress(
-        {
-            location: vscode.ProgressLocation.Notification,
-            title: localize("deleteJobPrompt.deleteCounter", "Deleting nodes"),
-            cancellable: true,
-        },
-        async (progress, token) => {
-            const total = 100;
-            return Promise.all(
-                jobs.map(async (job) => {
-                    if (token.isCancellationRequested) {
-                        vscode.window.showInformationMessage(
-                            localize("deleteJobPrompt.deleteCancelled", "Delete action was cancelled.")
-                        );
-                        return;
-                    }
-                    try {
-                        await jobsProvider.delete(job);
-                        progress.report({
-                            increment: total / jobs.length,
-                        });
-                        return job;
-                    } catch (error) {
-                        progress.report({
-                            increment: total / jobs.length,
-                        });
-                        return error;
-                    }
-                })
-            );
-        }
+    const deletionResult: ReadonlyArray<IZoweJobTreeNode | Error> = await Promise.all(
+        jobs.map(async (job) => {
+            try {
+                await jobsProvider.delete(job);
+                return job;
+            } catch (error) {
+                return error;
+            }
+        })
     );
     const deletedJobs: ReadonlyArray<IZoweJobTreeNode> = deletionResult
         .map((result) => {
