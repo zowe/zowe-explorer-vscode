@@ -1,6 +1,8 @@
 {
   "checkCurrentProfile.error": "Error encountered in ",
-  "addSession.quickPickOption": "Choose \"Create new...\" to define or select a profile to add to the Job Views Explorer",
+  "ds.addSession.quickPickOption": "Choose \"Create new...\" to define or select a profile to add to the DATA SETS Explorer",
+  "jobs.addSession.quickPickOption": "Choose \"Create new...\" to define or select a profile to add to the JOBS Explorer",
+  "uss.addSession.quickPickOption": "Choose \"Create new...\" to define or select a profile to add to the USS Explorer",
   "enterPattern.pattern": "No selection made.",
   "createNewConnection.option.prompt.profileName.placeholder": "Connection Name",
   "createNewConnection.option.prompt.profileName": "Enter a name for the connection",
