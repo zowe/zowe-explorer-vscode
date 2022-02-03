@@ -33,7 +33,11 @@ More information:
 
 ## Early Access Features
 
+> Zowe Explorer is compatible only with Theia 1.18.0 or higher.
+
 This version may receive breaking changes and is intended to gather early feedback on what may become a future LTS release.
+
+**Added**:
 
 For documentation about these features, see these files:
 
@@ -83,8 +87,8 @@ Before using the base profile functionality, ensure that you have [Zowe CLI](htt
 **Follow these steps:**
 
 1. Open Zowe CLI and run the following command: `zowe auth login apiml`
-2. Follow the instructions to complete the login.  
-   A local base profile is created that contains your token.  
+2. Follow the instructions to complete the login.
+   A local base profile is created that contains your token.
    **Note:** For more information about the process, see [Token Management](https://docs.zowe.org/stable/user-guide/cli-usingcli.html#how-token-management-works).
 
 3. Run Zowe Explorer and click the **+** icon.
