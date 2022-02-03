@@ -37,7 +37,11 @@ More information:
 
 This version may receive breaking changes and is intended to gather early feedback on what may become a future LTS release.
 
+
 **Added**:
+
+- Added a progress bar for the simultaneous deletion of multiple jobs
+- Added the note about the deprecation of the associate profile feature to the Associate Profile section of Zowe Docs and to the Zowe Explorer Readme
 
 For documentation about these features, see these files:
 
