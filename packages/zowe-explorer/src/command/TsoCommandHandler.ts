@@ -208,7 +208,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                 quickpick.hide();
                 if (!choice) {
                     vscode.window.showInformationMessage(
-                        localize("issueTsoCommand.options.noselection", "No selection made.")
+                        localize("issueTsoCommand.options.noselection", "No selection made. Operation cancelled.")
                     );
                     return;
                 }
