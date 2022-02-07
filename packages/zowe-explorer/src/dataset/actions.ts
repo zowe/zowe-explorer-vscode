@@ -1408,7 +1408,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
     try {
         const uploadResponse = await vscode.window.withProgress(
             {
-                location: vscode.ProgressLocation.Notification,
+                location: vscode.ProgressLocation.Window,
                 title: localize("saveFile.response.save.title", "Saving data set..."),
             },
             () => {
@@ -1420,7 +1420,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
             }
         );
         if (uploadResponse.success) {
-            vscode.window.showInformationMessage(uploadResponse.commandResponse);
+            vscode.window.setStatusBarMessage(uploadResponse.commandResponse, globals.STATUS_BAR_TIMEOUT_MS);
             // set local etag with the new etag from the updated file on mainframe
             if (node) {
                 node.setEtag(uploadResponse.apiResponse[0].etag);
