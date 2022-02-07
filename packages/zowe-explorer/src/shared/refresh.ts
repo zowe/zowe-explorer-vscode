@@ -32,13 +32,19 @@ export async function refreshAll(treeProvider: IZoweTree<IZoweTreeNode>) {
     await readConfigFromDisk();
     await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
     let repaintTree = true;
-    treeProvider.mSessionNodes.forEach((node) => {
-        Profiles.getInstance().allProfiles.forEach((profile) => {
-            if (node.getLabel().toString() === profile.name) {
-                repaintTree = false;
-            }
-        });
-    });
+    if (treeProvider.mSessionNodes) {
+        try {
+            treeProvider.mSessionNodes.forEach((node) => {
+                Profiles.getInstance().allProfiles.forEach((profile) => {
+                    if (node.getLabel().toString() === profile.name) {
+                        repaintTree = false;
+                    }
+                });
+            });
+        } catch (error) {
+            globals.LOG.error(error);
+        }
+    }
     if (repaintTree) {
         // Initialize dataset provider
         await createDatasetTree(globals.LOG);
