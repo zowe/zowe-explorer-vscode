@@ -4,11 +4,12 @@ Zowe Explorer's FTP extension adds the FTP protocol to the [Zowe Explorer](https
 
 This VS Code extension also serves as a [source code example](https://github.com/zowe/vscode-extension-for-zowe/tree/master/packages/zowe-explorer-ftp-extension) demonstrating how to use the [Zowe Explorer Extensibility API](https://github.com/zowe/vscode-extension-for-zowe/tree/master/packages/zowe-explorer-api) to create VS Code extensions that extend the Zowe Explorer VS Code extensions with new capabilities.
 
-## What's new in 1.19.0
+## What's new in 1.21.0
 
 **Added**:
 
-- Added the profile validation and credentials check functionalities.
+- Added unit tests for the FTP USS functionality
+- Standardized the user interface and log messages with severity specifications using the Zowe Explorer API logger functions
 
 For more information, see [Changelog](https://github.com/zowe/vscode-extension-for-zowe/blob/master/packages/zowe-explorer-ftp-extension/CHANGELOG.md).
 
