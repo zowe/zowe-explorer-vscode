@@ -7,7 +7,7 @@
   "issueTsoCommand.apiNonExisting": "Not implemented yet for profile of type: ",
   "issueTsoCommand.command.hostname": "Select a TSO command to run immediately against ",
   "issueTsoCommand.command.edit": " (An option to edit will follow)",
-  "issueTsoCommand.options.noselection": "No selection made.",
+  "issueTsoCommand.options.noselection": "No selection made. Operation cancelled.",
   "issueTsoCommand.command.hostnameAlt": "Select a TSO command to run against ",
   "issueTsoCommand.command": "Enter or update the TSO command",
   "issueTsoCommand.enter.command": "No command entered.",
