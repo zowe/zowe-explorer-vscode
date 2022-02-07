@@ -34,7 +34,7 @@ export async function refreshAll(treeProvider: IZoweTree<IZoweTreeNode>) {
     let repaintTree = true;
     treeProvider.mSessionNodes.forEach((node) => {
         Profiles.getInstance().allProfiles.forEach((profile) => {
-            if (node.getLabel().toString() == profile.name) {
+            if (node.getLabel().toString() === profile.name) {
                 repaintTree = false;
             }
         });
