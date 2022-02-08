@@ -160,9 +160,10 @@ export const syncSessionNode = (profiles: Profiles) => (getSessionForProfile: Se
 export async function resolveQuickPickHelper(
     quickpick: vscode.QuickPick<vscode.QuickPickItem>
 ): Promise<vscode.QuickPickItem | undefined> {
-    return new Promise<vscode.QuickPickItem | undefined>((c) =>
-        quickpick.onDidAccept(() => c(quickpick.activeItems[0]))
-    );
+    return new Promise<vscode.QuickPickItem | undefined>((c) => {
+        quickpick.onDidAccept(() => c(quickpick.activeItems[0]));
+        quickpick.onDidHide(() => c(undefined));
+    });
 }
 
 // tslint:disable-next-line: max-classes-per-file
