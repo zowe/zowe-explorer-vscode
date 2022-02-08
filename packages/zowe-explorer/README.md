@@ -33,6 +33,8 @@ More information:
 
 ## What's new in Zowe Explorer 1.21.0
 
+> Zowe Explorer is compatible only with Theia 1.18.0 or higher.
+
 **Added**:
 
 - Added a progress bar for the simultaneous deletion of multiple jobs
@@ -54,7 +56,6 @@ For more information, see [Changelog](https://marketplace.visualstudio.com/items
 
 ## Prerequisites
 
-- Install [Node.js](https://nodejs.org/en/download/) v8.0 or later.
 - Configure TSO/E address space services, z/OS data set, file REST interface and z/OS jobs REST interface. For more information, see [z/OS Requirements](https://docs.zowe.org/stable/user-guide/systemrequirements-zosmf.html#z-os-requirements).
 - Create a Zowe Explorer profile.
 
