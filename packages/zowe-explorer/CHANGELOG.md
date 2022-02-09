@@ -5,14 +5,11 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ## `1.22.0`
 
 *   Added: Unit tests for the MVS and JES functionality [#1632](https://github.com/zowe/vscode-extension-for-zowe/pull/1632).
-*   Added: Zowe Explorer is compatible with only Theia 1.18.0 or higher [#1643](https://github.com/zowe/vscode-extension-for-zowe/pull/1643).
-*   Added: Zowe Explorer now contains an Eclipse Public License 2.0 license file. Users can view the license file in the root directory of the Zowe Explorer repository [#1626](https://github.com/zowe/vscode-extension-for-zowe/pull/1626).
-*  Added: Zowe Explorer now contains extensible capabilities for logging in and logging out of APl Mediation Layer. [#1606](https://github.com/zowe/vscode-extension-for-zowe/pull/1606) and [#1255](https://github.com/zowe/vscode-extension-for-zowe/issues/1255).
-*   Updated: The Requirements section of the Zowe Explorer Readme file was updated to indicate that Node.js v12.0 or higher is  required to install the product. We no longer support running the product on earlier versions (10.x and earlier) of Node.js [#1640](https://github.com/zowe/vscode-extension-for-zowe/pull/1640).
-*   Updated: The version of copy-props that Zowe Explorer uses was updated from v2.0.4 to v2.0.5 [#1638](https://github.com/zowe/vscode-extension-for-zowe/pull/1638).
-*   Updated: The version of Nano ID that Zowe Explorer uses was updated from v3.1.23 to v3.2.0 [#1636](https://github.com/zowe/vscode-extension-for-zowe/pull/1636).
-*   Updated: A work around was developed to help users debug Zowe Explorer VS Code extension on Theia. For more information, see **Work around for debugging in Theia** [#1576](https://github.com/zowe/vscode-extension-for-zowe/pull/1576).
-*   Fixed: The `log4js` and `markdown-it` dependencies were updated to improve security alerting [#1649](https://github.com/zowe/vscode-extension-for-zowe/pull/1649).
+*   Added: Eclipse Public License file. Users can view the license file in the root directory of the Zowe Explorer repository [#1626](https://github.com/zowe/vscode-extension-for-zowe/pull/1626).
+*  Added: Extensible Login and Logout capabilities for Zowe extenders to utilize for token based authentication. [#1606](https://github.com/zowe/vscode-extension-for-zowe/pull/1606) and [#1255](https://github.com/zowe/vscode-extension-for-zowe/issues/1255).
+*   Updated: Supported Node.js version was changed to v12 or higher. We no longer support running the product on earlier versions (10.x and earlier) of Node.js [#1640](https://github.com/zowe/vscode-extension-for-zowe/pull/1640).
+*   Updated: Security updates for `copy-props`, `nanoid`, and `markdown-it` dependencies were changed to improve security alerting [#1638](https://github.com/zowe/vscode-extension-for-zowe/pull/1638), [#1636](https://github.com/zowe/vscode-extension-for-zowe/pull/1636), and [#1649](https://github.com/zowe/vscode-extension-for-zowe/pull/1649).    
+*   Updated: A work around was developed to help developers debug Zowe Explorer VS Code extension on Theia. For more information, see **Work around for debugging in Theia** [#1576](https://github.com/zowe/vscode-extension-for-zowe/pull/1576).
 *   Fixed: The Zowe Explorer deployment script was updated to use vsce (Visual Studio Code Extension Manager) version 1.103.1 to help ensure that it is compatible with Node v12 [#1608](https://github.com/zowe/vscode-extension-for-zowe/pull/1608).
 *   Fixed: Fixed the Theia input box issue that caused entered values to be validated incorrectly [#1580](https://github.com/zowe/vscode-extension-for-zowe/pull/1580).
 
