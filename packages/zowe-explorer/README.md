@@ -37,20 +37,20 @@ More information:
 
 **Added**:
 
-*   Added unit tests for the MVS and JES functionality.
-*   Added an Eclipse Public License file. Users can view the license file in the root directory of the Zowe Explorer repository.
-*   Added extensible Login and Logout capabilities for Zowe extenders to utilize for token based authentication.
+- Added unit tests for the MVS and JES functionality.
+- Added an Eclipse Public License file. Users can view the license file in the root directory of the Zowe Explorer repository.
+- Added extensible Login and Logout capabilities for Zowe extenders to utilize for token based authentication.
 
 **Changed**:
 
-*   Changed the Supported Node.js version to v12 or higher. We no longer support running the product on earlier versions (10.x and earlier) of Node.js.
-*   Changed the dependencies of `copy-props`, `nanoid`, and `markdown-it` to improve security alerting.    
-*   A work around was developed to help developers debug Zowe Explorer VS Code extension on Theia. For more information, see [Work around for debugging in Theia](https://github.com/zowe/vscode-extension-for-zowe/pull/1576).
+- Changed the Supported Node.js version to v12 or higher. We no longer support running the product on earlier versions (10.x and earlier) of Node.js.
+- Changed the dependencies of `copy-props`, `nanoid`, and `markdown-it` to improve security alerting.
+- A work around was developed to help developers debug Zowe Explorer VS Code extension on Theia. For more information, see [Work around for debugging in Theia](https://github.com/zowe/vscode-extension-for-zowe/pull/1576).
 
 **Fixed**:
 
-*   Fixed the Zowe Explorer deployment script by updating it to use vsce (Visual Studio Code Extension Manager) version 1.103.1 to help ensure that it is compatible with Node v12 [#1608](https://github.com/zowe/vscode-extension-for-zowe/pull/1608).
-*   Fixed the Theia input box issue that caused entered values to be validated incorrectly.
+- Fixed the Zowe Explorer deployment script by updating it to use vsce (Visual Studio Code Extension Manager) version 1.103.1 to help ensure that it is compatible with Node v12 [#1608](https://github.com/zowe/vscode-extension-for-zowe/pull/1608).
+- Fixed the Theia input box issue that caused entered values to be validated incorrectly.
 
 ## Prerequisites
 

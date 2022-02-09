@@ -2,7 +2,7 @@
 
 ## `1.22.0`
 
-*   Added unit tests for the MVS and JES functionality [#1632](https://github.com/zowe/vscode-extension-for-zowe/pull/1632).
+- Added unit tests for the MVS and JES functionality [#1632](https://github.com/zowe/vscode-extension-for-zowe/pull/1632).
 
 ## `1.21.0`
 

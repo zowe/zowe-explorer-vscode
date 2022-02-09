@@ -8,7 +8,7 @@ This VS Code extension also serves as a [source code example](https://github.com
 
 **Added:**
 
-*   Added unit tests for the MVS and JES functionality.
+- Added unit tests for the MVS and JES functionality.
 
 ## Prerequisites
 
