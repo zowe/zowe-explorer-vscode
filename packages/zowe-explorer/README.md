@@ -37,9 +37,8 @@ More information:
 
 **Added**:
 
-- Added unit tests for the MVS and JES functionality.
-- Added an Eclipse Public License file. Users can view the license file in the root directory of the Zowe Explorer repository.
 - Added extensible Login and Logout capabilities for Zowe extenders to utilize for token based authentication.
+- Added an Eclipse Public License file. Users can view the license file in the root directory of the Zowe Explorer repository.
 
 **Changed**:
 
