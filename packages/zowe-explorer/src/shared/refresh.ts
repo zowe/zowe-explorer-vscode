@@ -33,40 +33,39 @@ export async function refreshAll(treeProvider: IZoweTree<IZoweTreeNode>) {
     await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
     let repaintTree = true;
     if (treeProvider.mSessionNodes) {
-        try {
-            treeProvider.mSessionNodes.forEach((node) => {
-                Profiles.getInstance().allProfiles.forEach((profile) => {
+        treeProvider.mSessionNodes.forEach(async (node) => {
+            const allProfiles = await Profiles.getInstance().allProfiles;
+            if (allProfiles) {
+                allProfiles.forEach(async (profile) => {
                     if (node.getLabel().toString() === profile.name) {
                         repaintTree = false;
                     }
                 });
-            });
-            if (repaintTree) {
-                // Initialize dataset provider
-                await createDatasetTree(globals.LOG);
-                // Initialize uss provider
-                await createUSSTree(globals.LOG);
-                // Initialize Jobs provider with the created session and the selected pattern
-                await createJobsTree(globals.LOG);
             }
-            treeProvider.mSessionNodes.forEach(async (sessNode) => {
-                const setting = (await PersistentFilters.getDirectValue(
-                    globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION
-                )) as boolean;
-                if (contextually.isSessionNotFav(sessNode)) {
-                    labelRefresh(sessNode);
-                    sessNode.children = [];
-                    sessNode.dirty = true;
-                    resetValidationSettings(sessNode, setting);
-                    returnIconState(sessNode);
-                    await syncSessionNode(Profiles.getInstance())((profileValue) =>
-                        ZoweExplorerApiRegister.getCommonApi(profileValue).getSession()
-                    )(sessNode);
-                }
-            });
-        } catch (error) {
-            globals.LOG.error(error);
+        });
+        if (repaintTree) {
+            // Initialize dataset provider
+            await createDatasetTree(globals.LOG);
+            // Initialize uss provider
+            await createUSSTree(globals.LOG);
+            // Initialize Jobs provider with the created session and the selected pattern
+            await createJobsTree(globals.LOG);
         }
+        treeProvider.mSessionNodes.forEach(async (sessNode) => {
+            const setting = (await PersistentFilters.getDirectValue(
+                globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION
+            )) as boolean;
+            if (contextually.isSessionNotFav(sessNode)) {
+                labelRefresh(sessNode);
+                sessNode.children = [];
+                sessNode.dirty = true;
+                resetValidationSettings(sessNode, setting);
+                returnIconState(sessNode);
+                await syncSessionNode(Profiles.getInstance())((profileValue) =>
+                    ZoweExplorerApiRegister.getCommonApi(profileValue).getSession()
+                )(sessNode);
+            }
+        });
     }
     treeProvider.refresh();
 }

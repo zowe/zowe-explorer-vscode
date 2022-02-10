@@ -23,11 +23,15 @@ import { createFavoriteUSSNode, createUSSNode, createUSSTree } from "../../../__
 import { createIJobObject, createJobsTree } from "../../../__mocks__/mockCreators/jobs";
 import * as refreshActions from "../../../src/shared/refresh";
 import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
+import * as globals from "../../../src/globals";
 
 function createGlobalMocks() {
     const globalMocks = {
         session: createISessionWithoutCredentials(),
         createTreeView: jest.fn(),
+        mockLog: jest.fn(),
+        mockDebug: jest.fn(),
+        mockError: jest.fn(),
         mockGetConfiguration: jest.fn(),
         mockLoadNamedProfile: jest.fn(),
         testProfile: createIProfile(),
@@ -72,6 +76,9 @@ function createGlobalMocks() {
             };
         }),
     });
+    Object.defineProperty(globals, "LOG", { value: globalMocks.mockLog, configurable: true });
+    Object.defineProperty(globals.LOG, "debug", { value: globalMocks.mockDebug, configurable: true });
+    Object.defineProperty(globals.LOG, "error", { value: globalMocks.mockError, configurable: true });
 
     return globalMocks;
 }
