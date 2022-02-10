@@ -35,6 +35,8 @@ More information:
 
 > Zowe Explorer is compatible only with Theia 1.18.0 or higher.
 
+> Zowe Explorer could experience possible unexpected behaviors with the latest Theia releases.
+
 **Added**:
 
 - Added extensible Login and Logout capabilities for Zowe extenders to utilize for token based authentication.
