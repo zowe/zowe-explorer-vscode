@@ -18,9 +18,8 @@
     "vscode": "^1.43.0"
   },
   "dependencies": {
-    "@zowe/cli": "7.0.0-next.202112102143",
-    "vscode-nls": "4.1.2",
-    "true-case-path": "2.2.1"
+    "@zowe/cli": "7.0.0-next.202201261615",
+    "vscode-nls": "4.1.2"
   },
   "devDependencies": {
     "@types/mocha": "^2.2.42",
@@ -54,7 +53,6 @@
     "**/yargs-parser": "^5.0.1",
     "**/minimist": "^0.2.1",
     "**/diff": "^3.5.0",
-    "**/markdown-it": "^12.3.2",
     "**/log4js": "^6.4.0",
     "**/simple-get": "^4.0.1"
   },

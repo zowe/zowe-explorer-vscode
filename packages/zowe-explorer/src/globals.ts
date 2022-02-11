@@ -16,6 +16,8 @@ import * as loggerConfig from "../log4jsconfig.json";
 
 // Set up localization
 import * as nls from "vscode-nls";
+import { getZoweDir } from "@zowe/cli";
+
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
     bundleFormat: nls.BundleFormat.standalone,
@@ -27,6 +29,7 @@ export let ZOWETEMPFOLDER;
 export let ZOWE_TMP_FOLDER;
 export let USS_DIR;
 export let DS_DIR;
+export let CONFIG_PATH; // set during activate
 export let ISTHEIA: boolean = false; // set during activate
 export let LOG: Logger;
 export const COMMAND_COUNT = 96;
@@ -219,6 +222,14 @@ export function defineGlobals(tempPath: string | undefined) {
     ZOWE_TMP_FOLDER = path.join(ZOWETEMPFOLDER, "tmp");
     USS_DIR = path.join(ZOWETEMPFOLDER, "_U_");
     DS_DIR = path.join(ZOWETEMPFOLDER, "_D_");
+}
+
+export function setConfigPath(configPath: string | undefined): void {
+    if (configPath) {
+        CONFIG_PATH = configPath;
+    } else {
+        CONFIG_PATH = getZoweDir();
+    }
 }
 
 /**
