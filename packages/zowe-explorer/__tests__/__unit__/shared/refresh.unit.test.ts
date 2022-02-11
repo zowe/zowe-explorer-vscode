@@ -32,6 +32,7 @@ function createGlobalMocks() {
         mockLog: jest.fn(),
         mockDebug: jest.fn(),
         mockError: jest.fn(),
+        mockCreateTreeView: jest.fn(),
         mockGetConfiguration: jest.fn(),
         mockLoadNamedProfile: jest.fn(),
         testProfile: createIProfile(),
@@ -61,6 +62,7 @@ function createGlobalMocks() {
                     return globalMocks.testProfile;
                 }),
                 loadNamedProfile: globalMocks.mockLoadNamedProfile,
+                getDefaultProfile: jest.fn(),
             };
         }),
     });
@@ -122,6 +124,8 @@ describe("Refresh Unit Tests - Function refreshAll", () => {
 
         return newMocks;
     }
+
+    afterAll(() => jest.restoreAllMocks());
 
     it("Tests that refreshAll() executed successfully with ussTreeProvider passed", async () => {
         const globalMocks = createGlobalMocks();
