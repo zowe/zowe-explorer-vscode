@@ -26,6 +26,8 @@ jobs:
         # order operating systems from best to worst
         os: [windows-latest, ubuntu-latest, macos-latest]
 
+    if: (github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository) && !contains(github.event.head_commit.message, '[ci skip]')
+
     steps:
       - name: Check out code
         uses: actions/checkout@v2
