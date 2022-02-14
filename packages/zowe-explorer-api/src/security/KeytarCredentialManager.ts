@@ -18,6 +18,7 @@ import { getZoweDir } from "@zowe/cli";
 import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
+import * as globals from "../globals";
 
 declare const __webpack_require__: typeof require;
 declare const __non_webpack_require__: typeof require;
@@ -40,7 +41,12 @@ export class KeytarCredentialManager extends AbstractCredentialManager {
     /**
      * Combined list of services that credentials may be stored under
      */
-    private allServices: string[] = ["Zowe-Plugin", "@brightside/core", "@zowe/cli", "Broadcom-Plugin"];
+    private allServices: string[] = [
+        globals.SETTINGS_SCS_DEFAULT,
+        globals.SCS_BRIGHTSIDE,
+        globals.SCS_ZOWE_CLI,
+        globals.SCS_BROADCOM_PLUGIN,
+    ];
 
     /**
      * Preferred service name to store credentials with
@@ -219,4 +225,26 @@ export class KeytarCredentialManager extends AbstractCredentialManager {
             `  Recreate the credentials in the vault for the particular service in the vault.`
         );
     }
+}
+
+/**
+ * Imports the neccesary security modules
+ */
+export function getSecurityModules(moduleName: string, isTheia: boolean): NodeModule | undefined {
+    const r = typeof __webpack_require__ === "function" ? __non_webpack_require__ : require;
+    // Workaround for Theia issue (https://github.com/eclipse-theia/theia/issues/4935)
+    const appRoot = isTheia ? process.cwd() : vscode.env.appRoot;
+    try {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+        return r(`${appRoot}/node_modules/${moduleName}`);
+    } catch (err) {
+        /* Do nothing */
+    }
+    try {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+        return r(`${appRoot}/node_modules.asar/${moduleName}`);
+    } catch (err) {
+        /* Do nothing */
+    }
+    return undefined;
 }

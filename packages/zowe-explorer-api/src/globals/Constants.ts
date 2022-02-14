@@ -9,11 +9,10 @@
  *                                                                                 *
  */
 
-/**
- * The types of persistence schemas wich are available in settings.json
- */
-export enum PersistenceSchemaEnum {
-    Dataset = "zowe.ds.history",
-    USS = "zowe.uss.history",
-    Job = "zowe.jobs.history",
-}
+// globals
+export const ZOWE_EXPLORER = "Zowe Explorer";
+export const SETTINGS_SECURITY_CREDENTIAL_PLUGIN = "zowe.security.credentialPlugin";
+export const SETTINGS_SCS_DEFAULT = "Zowe-Plugin";
+export const SCS_BRIGHTSIDE = "@brightside/core";
+export const SCS_ZOWE_CLI = "@zowe/cli";
+export const SCS_BROADCOM_PLUGIN = "Broadcom-Plugin";

@@ -14,7 +14,7 @@
 jest.mock("@zowe/imperative");
 import * as zowe from "@zowe/cli";
 import { Logger, IProfileLoaded, Session } from "@zowe/imperative";
-import { ZoweExplorerApi, ZosmfUssApi, ZosmfJesApi, ZosmfMvsApi } from "@zowe/zowe-explorer-api";
+import { ZoweExplorerApi, ZosmfUssApi, ZosmfJesApi, ZosmfMvsApi, ProfilesCache } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 
@@ -155,6 +155,14 @@ describe("ZoweExplorerApiRegister unit testing", () => {
 
     const registry = ZoweExplorerApiRegister.getInstance();
 
+    Object.defineProperty(ProfilesCache, "getConfigInstance", {
+        value: jest.fn(() => {
+            return {
+                usingTeamConfig: false,
+            };
+        }),
+    });
+
     it("registers an API only once per profile type", async () => {
         const defaultProfile = profiles.getDefaultProfile();
 
@@ -189,6 +197,13 @@ describe("ZoweExplorerApiRegister unit testing", () => {
                         return profilesForValidation;
                     }),
                     validateProfiles: jest.fn(),
+                };
+            }),
+        });
+        Object.defineProperty(ProfilesCache, "getConfigInstance", {
+            value: jest.fn(() => {
+                return {
+                    usingTeamConfig: false,
                 };
             }),
         });

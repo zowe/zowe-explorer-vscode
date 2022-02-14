@@ -11,7 +11,7 @@
 
 // tslint:disable:no-magic-numbers
 import * as zowe from "@zowe/cli";
-import { IProfileLoaded } from "@zowe/imperative";
+import { IProfileLoaded, ICommandArguments, Session, ConnectionPropsForSessCfg } from "@zowe/imperative";
 import * as expect from "expect";
 import * as vscode from "vscode";
 import { DatasetTree } from "../../src/dataset/DatasetTree";
@@ -20,7 +20,7 @@ import * as testConst from "../../resources/testProfileData";
 import * as sinon from "sinon";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
-import { DS_SESSION_CONTEXT, FAV_PROFILE_CONTEXT } from "../../src/globals";
+import * as globals from "../../src/globals";
 
 declare var it: any;
 
@@ -36,7 +36,19 @@ describe("DatasetTree Integration Tests", async () => {
     const TIMEOUT = 120000;
     chai.use(chaiAsPromised);
     // Uses loaded profile to create a zosmf session with Zowe
-    const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
+    const cmdArgs: ICommandArguments = {
+        $0: "zowe",
+        _: [""],
+        host: testProfile.profile.host,
+        port: testProfile.profile.port,
+        basePath: testProfile.profile.basePath,
+        rejectUnauthorized: testProfile.profile.rejectUnauthorized,
+        user: testProfile.profile.user,
+        password: testProfile.profile.password,
+    };
+    const sessCfg = zowe.ZosmfSession.createSessCfgFromArgs(cmdArgs);
+    ConnectionPropsForSessCfg.resolveSessCfgProps(sessCfg, cmdArgs);
+    const session = new Session(sessCfg);
     const sessNode = new ZoweDatasetNode(
         testConst.profile.name,
         vscode.TreeItemCollapsibleState.Expanded,
@@ -46,17 +58,17 @@ describe("DatasetTree Integration Tests", async () => {
         undefined,
         testProfile
     );
-    sessNode.contextValue = DS_SESSION_CONTEXT;
+    sessNode.contextValue = globals.DS_SESSION_CONTEXT;
     const pattern = testConst.normalPattern.toUpperCase();
     sessNode.pattern = pattern + ".PUBLIC";
     const testTree = new DatasetTree();
     testTree.mSessionNodes.splice(-1, 0, sessNode);
-    const oldSettings = vscode.workspace.getConfiguration("Zowe-DS-Persistent");
+    const oldSettings = vscode.workspace.getConfiguration(globals.SETTINGS_DS_HISTORY);
 
     after(async () => {
         await vscode.workspace
             .getConfiguration()
-            .update("Zowe-DS-Persistent", oldSettings, vscode.ConfigurationTarget.Global);
+            .update(globals.SETTINGS_DS_HISTORY, oldSettings, vscode.ConfigurationTarget.Global);
     });
     let sandbox;
 
@@ -200,7 +212,7 @@ describe("DatasetTree Integration Tests", async () => {
     it("Tests the addSession() function by adding the default history, deleting, then adding a passed session then deleting", async () => {
         let len: number;
         for (const sess of testTree.mSessionNodes) {
-            if (sess.contextValue === DS_SESSION_CONTEXT) {
+            if (sess.contextValue === globals.DS_SESSION_CONTEXT) {
                 testTree.deleteSession(sess);
             }
         }
@@ -209,7 +221,7 @@ describe("DatasetTree Integration Tests", async () => {
         expect(testTree.mSessionNodes.length).toBeGreaterThan(len);
         len = testTree.mSessionNodes.length;
         for (const sess of testTree.mSessionNodes) {
-            if (sess.contextValue === DS_SESSION_CONTEXT) {
+            if (sess.contextValue === globals.DS_SESSION_CONTEXT) {
                 testTree.deleteSession(sess);
             }
         }
@@ -224,7 +236,7 @@ describe("DatasetTree Integration Tests", async () => {
                 vscode.TreeItemCollapsibleState.Expanded,
                 null,
                 session,
-                FAV_PROFILE_CONTEXT,
+                globals.FAV_PROFILE_CONTEXT,
                 undefined,
                 testProfile
             );
@@ -407,7 +419,7 @@ describe("DatasetTree Integration Tests", async () => {
                         vscode.TreeItemCollapsibleState.Expanded,
                         null,
                         session,
-                        FAV_PROFILE_CONTEXT,
+                        globals.FAV_PROFILE_CONTEXT,
                         undefined,
                         testProfile
                     );

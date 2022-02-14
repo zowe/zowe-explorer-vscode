@@ -9,11 +9,4 @@
  *                                                                                 *
  */
 
-/**
- * The types of persistence schemas wich are available in settings.json
- */
-export enum PersistenceSchemaEnum {
-    Dataset = "zowe.ds.history",
-    USS = "zowe.uss.history",
-    Job = "zowe.jobs.history",
-}
+export * from "./Constants";

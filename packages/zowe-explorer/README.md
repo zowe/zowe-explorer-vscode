@@ -23,7 +23,7 @@ More information:
 
 ## Contents
 
-- [What's new in Zowe Explorer 1.21.0](#whats-new-in-zowe-explorer-1210)
+- [Early Access Features](#early-access-features)
 - [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
 - [Sample Use Cases](#sample-use-cases)
@@ -31,28 +31,14 @@ More information:
 - [Usage Tips](#usage-tips)
 - [Extending Zowe Explorer](#extending-zowe-explorer)
 
-## What's new in Zowe Explorer 1.21.0
+## Early Access Features
 
-> Zowe Explorer is compatible only with Theia 1.18.0 or higher.
+This version may receive breaking changes and is intended to gather early feedback on what may become a future LTS release.
 
-**Added**:
+For documentation about these features, see these files:
 
-- Added a progress bar for the simultaneous deletion of multiple jobs
-- Added the note about the deprecation of the associate profile feature to the Associate Profile section of Zowe Docs and to the Zowe Explorer Readme
-
-**Changed**:
-
-- Changed the `DataSet uploaded successfully` message type. Now messages are shown in the status bar instead of the notification pop-up
-- Updated dependencies for improved security
-- Updated Theia tests to use the latest Theia version
-
-**Fixed**:
-
-- Fixed the issue that caused JCL errors in the JOBS tree to be displayed as `undefined:undefined(undefined)`
-- Fixed the Theia input box issue that caused entered values to be incorrectly validated
-- Fixed the issue that caused the removal of unsaved credentials of a profile in the Jobs tree after deleting a job. Now when you delete a job from the Jobs tree with a profile that does not have the stored credentials, the profile keeps the cached credentials
-
-For more information, see [Changelog](https://marketplace.visualstudio.com/items/Zowe.vscode-extension-for-zowe/changelog).
+- [Changes Affecting Zowe Explorer Extenders](https://github.com/zowe/vscode-extension-for-zowe/blob/next/docs/Early%20Access%20-%20Changes%20Affecting%20Extenders.md)
+- [Using Global Profile Configuration](https://github.com/zowe/vscode-extension-for-zowe/blob/next/docs/Early%20Access%20-%20Using%20Global%20Profile%20Configuration.md)
 
 ## Prerequisites
 
@@ -357,10 +343,6 @@ For more information about SCS, see [Secure Credential Store Plug-in for Zowe Ex
 - **Delete a profile**: Right-click a chosen profile and select **Delete Profile** to permanently delete the profile. The functionality deletes the profile from your `.zowe` folder.
 
 - **Hide a profile**: You can hide a profile from the profile tree by right-clicking the profile and selecting the **Hide Profile** option. To add the profile back, click the **+** button and select the profile from the quick pick list.
-
-- **Associate profiles**: You can create a secondary association by right-clicking the profile and selecting the **Associate profiles** option. For more information, see [the Associate profiles section](https://docs.zowe.org/stable/user-guide/ze-profiles.html#associate-profile) in Zowe Docs.
-
-  > **Note**: The Associate Profile functionality is deprecated and will be removed in Zowe Explorer V2 that is slated for February 2022. For more information, see the Release Timeline section on the [Download Zowe](https://www.zowe.org/download.html#timeline) page on the Zowe site. Use the base profile feature instead of **associate profile**.
 
 - **Open recent members**: Zowe Explorer lets you open a list of members you worked on earlier. You can access the list by pressing Ctrl+Alt+R (Windows) or Command+Option+R (Mac).
 

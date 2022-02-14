@@ -18,7 +18,7 @@ import * as globals from "../../../src/globals";
 import { Logger } from "@zowe/imperative";
 import { createIJobFile, createIJobObject, createJobSessionNode } from "../../../__mocks__/mockCreators/jobs";
 import { Job } from "../../../src/job/ZoweJobNode";
-import { ValidProfileEnum, IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
+import { ValidProfileEnum, IZoweJobTreeNode, ProfilesCache } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
@@ -38,7 +38,7 @@ async function createGlobalMocks() {
         mockRefresh: jest.fn(),
         mockAffectsConfig: jest.fn(),
         createTreeView: jest.fn(),
-        mockCreateBasicZosmfSession: jest.fn(),
+        mockCreateSessCfgFromArgs: jest.fn(),
         mockGetSpoolFiles: jest.fn(),
         testSessionNode: null,
         mockDeleteJobs: jest.fn(),
@@ -83,6 +83,13 @@ async function createGlobalMocks() {
         }),
     };
 
+    Object.defineProperty(ProfilesCache, "getConfigInstance", {
+        value: jest.fn(() => {
+            return {
+                usingTeamConfig: false,
+            };
+        }),
+    });
     Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true });
     Object.defineProperty(vscode.window, "withProgress", { value: globalMocks.withProgress, configurable: true });
     Object.defineProperty(zowe, "GetJobs", { value: globalMocks.mockGetJobs, configurable: true });
@@ -95,8 +102,8 @@ async function createGlobalMocks() {
         value: globalMocks.mockGetJobsByOwnerAndPrefix,
         configurable: true,
     });
-    Object.defineProperty(zowe.ZosmfSession, "createBasicZosmfSession", {
-        value: globalMocks.mockCreateBasicZosmfSession,
+    Object.defineProperty(zowe.ZosmfSession, "createSessCfgFromArgs", {
+        value: globalMocks.mockCreateSessCfgFromArgs,
         configurable: true,
     });
     Object.defineProperty(globalMocks.mockGetJobs, "getSpoolFiles", {
@@ -147,7 +154,7 @@ async function createGlobalMocks() {
     globalMocks.mockGetJesApi.mockReturnValue(globalMocks.jesApi);
     ZoweExplorerApiRegister.getJesApi = globalMocks.mockGetJesApi.bind(ZoweExplorerApiRegister);
 
-    globalMocks.mockCreateBasicZosmfSession.mockReturnValue(globalMocks.testSession);
+    globalMocks.mockCreateSessCfgFromArgs.mockReturnValue(globalMocks.testSession);
     globalMocks.testSessionNode = createJobSessionNode(globalMocks.testSession, globalMocks.testProfile);
     globalMocks.createTreeView.mockReturnValue("testTreeView");
     globalMocks.mockGetJob.mockReturnValue(globalMocks.testIJob);
@@ -200,8 +207,6 @@ describe("ZoweJobNode unit tests - Function addSession", () => {
     it("Tests that addSession adds the session to the tree", async () => {
         const globalMocks = await createGlobalMocks();
 
-        globalMocks.testJobsProvider.mSessionNodes.pop();
-
         await globalMocks.testJobsProvider.addSession("sestest");
 
         expect(globalMocks.testJobsProvider.mSessionNodes[1]).toBeDefined();
@@ -212,7 +217,6 @@ describe("ZoweJobNode unit tests - Function addSession", () => {
     it("Tests that addSession adds the session to the tree with disabled global setting", async () => {
         const globalMocks = await createGlobalMocks();
 
-        globalMocks.testJobsProvider.mSessionNodes.pop();
         globalMocks.mockProfileInstance.checkProfileValidationSetting = globalMocks.mockValidationSetting.mockReturnValueOnce(
             false
         );
@@ -356,7 +360,7 @@ describe("ZoweJobNode unit tests - Function flipState", () => {
         const globalMocks = await createGlobalMocks();
         globalMocks.testJobsProvider.addSession("fake");
         globalMocks.testJobsProvider.mSessionNodes[1].contextValue = globals.JOBS_SESSION_CONTEXT;
-        globalMocks.mockCreateBasicZosmfSession.mockReturnValue(globalMocks.testSession);
+        globalMocks.mockCreateSessCfgFromArgs.mockReturnValue(globalMocks.testSession);
 
         await globalMocks.testJobsProvider.flipState(globalMocks.testJobsProvider.mSessionNodes[1], true);
         expect(JSON.stringify(globalMocks.testJobsProvider.mSessionNodes[1].iconPath)).toContain(
@@ -556,7 +560,7 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
 
         newMocks.testJobNodeNoCred.contextValue = globals.JOBS_SESSION_CONTEXT;
         globalMocks.testJobsProvider.initializeJobsTree(Logger.getAppLogger());
-        globalMocks.mockCreateBasicZosmfSession.mockReturnValue(globalMocks.testSessionNoCred);
+        globalMocks.mockCreateSessCfgFromArgs.mockReturnValue(globalMocks.testSessionNoCred);
         globalMocks.mockCreateQuickPick.mockReturnValue(newMocks.qpContent);
         Object.defineProperty(globals, "ISTHEIA", { get: () => newMocks.theia });
         jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(() => Promise.resolve(newMocks.qpItem));
