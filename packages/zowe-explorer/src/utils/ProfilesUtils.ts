@@ -14,15 +14,9 @@
 import * as vscode from "vscode";
 import * as os from "os";
 import * as path from "path";
+import * as globals from "../globals";
 import { Session, IProfile, ImperativeConfig, IProfileLoaded, ProfileInfo } from "@zowe/imperative";
-import {
-    getSecurityModules,
-    IZoweNodeType,
-    IZoweTree,
-    IZoweTreeNode,
-    ProfilesCache,
-    ZoweTreeNode,
-} from "@zowe/zowe-explorer-api";
+import { getSecurityModules, IZoweTreeNode, ProfilesCache, ZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import * as nls from "vscode-nls";
 
@@ -250,4 +244,18 @@ export function getProfile(node: vscode.TreeItem) {
         return (node as ZoweTreeNode).getProfile();
     }
     throw new Error(localize("getProfile.notTreeItem", "Tree Item is not a Zowe Explorer item."));
+}
+
+export async function readConfigFromDisk() {
+    const mProfileInfo = await getProfileInfo(globals.ISTHEIA);
+    let rootPath;
+    if (vscode.workspace.workspaceFolders) {
+        rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
+        await mProfileInfo.readProfilesFromDisk({ projectDir: path.normalize(rootPath) });
+    } else {
+        await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir() });
+    }
+    if (mProfileInfo.usingTeamConfig) {
+        globals.setConfigPath(rootPath);
+    }
 }

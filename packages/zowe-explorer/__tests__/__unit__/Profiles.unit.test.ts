@@ -2972,6 +2972,40 @@ describe("Profiles Unit Tests - Function ssoLogin", () => {
         );
     });
 
+    it("Test that sso login will login config file", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        const resultNode: IZoweNodeType = blockMocks.datasetSessionNodeToken;
+        const theProfiles = await Profiles.createInstance(blockMocks.log);
+        Object.defineProperty(theProfiles, "optionalCredChecks", {
+            value: jest.fn(() => {
+                return true;
+            }),
+        });
+        Object.defineProperty(ProfilesCache, "getConfigInstance", {
+            value: jest.fn(() => {
+                return {
+                    usingTeamConfig: true,
+                };
+            }),
+        });
+
+        const mockCommonApi = await ZoweExplorerApiRegister.getInstance().getCommonApi(blockMocks.testCombinedProfile);
+        const getCommonApiMock = jest.fn();
+        getCommonApiMock.mockReturnValue(mockCommonApi);
+        ZoweExplorerApiRegister.getInstance().getCommonApi = getCommonApiMock.bind(ZoweExplorerApiRegister);
+        jest.spyOn(mockCommonApi, "getTokenTypeName").mockReturnValue(SessConstants.TOKEN_TYPE_APIML);
+
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        await theProfiles.ssoLogin(resultNode);
+
+        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe(
+            "Login to authentication service was successful."
+        );
+    });
+
     it("Tests that sso login is skipped if service profile has its own host and port", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
@@ -3165,6 +3199,35 @@ describe("Profiles Unit Tests - Function ssoLogout", () => {
         getCommonApiMock.mockReturnValue(mockCommonApi);
         ZoweExplorerApiRegister.getInstance().getCommonApi = getCommonApiMock.bind(ZoweExplorerApiRegister);
         jest.spyOn(mockCommonApi, "getTokenTypeName").mockReturnValue("altTokenType");
+
+        jest.spyOn(mockCommonApi, "logout").mockReturnValue("logout success");
+
+        await theProfiles.ssoLogout(resultNode);
+
+        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe(
+            "Logout from authentication service was successful."
+        );
+    });
+
+    it("Test that sso logout for config file", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        const resultNode: IZoweNodeType = blockMocks.datasetSessionNodeAltToken;
+        const theProfiles = await Profiles.createInstance(blockMocks.log);
+        Object.defineProperty(ProfilesCache, "getConfigInstance", {
+            value: jest.fn(() => {
+                return {
+                    usingTeamConfig: true,
+                };
+            }),
+        });
+
+        const mockCommonApi = await ZoweExplorerApiRegister.getInstance().getCommonApi(blockMocks.testCombinedProfile);
+        const getCommonApiMock = jest.fn();
+        getCommonApiMock.mockReturnValue(mockCommonApi);
+        ZoweExplorerApiRegister.getInstance().getCommonApi = getCommonApiMock.bind(ZoweExplorerApiRegister);
+        jest.spyOn(mockCommonApi, "getTokenTypeName").mockReturnValue(SessConstants.TOKEN_TYPE_APIML);
 
         jest.spyOn(mockCommonApi, "logout").mockReturnValue("logout success");
 
