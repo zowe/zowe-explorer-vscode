@@ -23,6 +23,7 @@
   "createZoweSchema.showQuickPick.global": "Global: in the Zowe home directory ",
   "createZoweSchema.showQuickPick.project": "Project: in the current working directory",
   "createZoweSchema.undefined.location": "Operation Cancelled",
+  "createZoweSchema.success.infoMessage": "Team Configuration file created. Location: {0}. \n Please update the file and refresh the views.",
   "createNewConnection.profileName": "Profile name was not supplied. Operation Cancelled",
   "createNewConnection.profileType": "No profile type was chosen. Operation Cancelled",
   "createNewConnection.zosmfURL": "No valid value for z/OS URL. Operation Cancelled",
