@@ -1,5 +1,7 @@
 # eslint-plugin-zowe-explorer
 
+test to kick off CI test
+
 Custom ESLint Rules for ZOWE Explorer
 
 ## Installation
