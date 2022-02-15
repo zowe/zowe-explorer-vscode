@@ -78,9 +78,22 @@
         "command": "zowe.ds.deleteDataset",
         "key": "delete",
         "when": "focusedView == zowe.ds.explorer && listSupportsMultiselect"
+      },
+      {
+        "command": "zowe.extRefresh",
+        "key": "alt+z"
       }
     ],
     "commands": [
+      {
+        "command": "zowe.extRefresh",
+        "title": "%zowe.extRefresh%",
+        "category": "Zowe Explorer",
+        "icon": {
+          "light": "./resources/light/refresh.svg",
+          "dark": "./resources/dark/refresh.svg"
+        }
+      },
       {
         "command": "zowe.ds.disableValidation",
         "title": "%disableValidation%",

@@ -666,13 +666,17 @@ export class Profiles extends ProfilesCache {
                 configName = ProfilesCache.getConfigInstance().getTeamConfig().configName;
             }
             await this.openConfigFile(path.join(rootPath, configName));
-            vscode.window.showInformationMessage(
-                localize(
-                    "createZoweSchema.success.infoMessage",
-                    "Team Configuration file created. Location: {0}. \n Please update the file and refresh the views.",
-                    rootPath
-                )
+            const reloadButton = localize("createZoweSchema.reload.button", "Refresh Zowe Explorer");
+            const infoMsg = localize(
+                "createZoweSchema.reload.infoMessage",
+                "Team Configuration file created. Location: {0}. \n Please update file and refresh Zowe Explorer via button or command palette.",
+                rootPath
             );
+            await vscode.window.showInformationMessage(infoMsg, ...[reloadButton]).then(async (selection) => {
+                if (selection === reloadButton) {
+                    await vscode.commands.executeCommand("zowe.extRefresh");
+                }
+            });
             return path.join(rootPath, configName);
         } catch (err) {
             vscode.window.showErrorMessage("Error in creating team configuration file: " + err.message);

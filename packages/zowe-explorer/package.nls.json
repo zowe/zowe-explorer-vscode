@@ -2,6 +2,7 @@
   "displayName": "Zowe Explorer",
   "description": "VS Code extension, powered by Zowe CLI, that streamlines interaction with mainframe data sets, USS files, and jobs",
   "viewsContainers.activitybar": "Zowe",
+  "zowe.extRefresh": "Refresh Zowe Explorer",
   "zowe.ds.explorer": "Data Sets",
   "zowe.uss.explorer": "Unix System Services (USS)",
   "zowe.jobs.explorer": "Jobs",
