@@ -10,7 +10,7 @@ Throughout this document you will find the following terminology being used:
 
 - _Extender_: The organization or developer producing an extension for Zowe Explorer.
 - _Zowe Explorer Extension_: An installable piece of software that provides new functionality to Zowe Explorer or uses/calls services provided by Zowe Explorer. Also simply referred to here as an "extension", this can be a VS Code extension as well as a Zowe CLI Plugin or an independent piece of software. The conformance criteria below call out conformance requirements for three common types of Zowe Explorer extensions, but it is possible that more kinds of extensions can be created. If such new extension kinds surface, then Zowe Explorer APIs and this document can be expanded to support them in the future.
-- _Zowe Explorer VS Code extension_: Refers to a Zowe Explorer extension that is a VS Code extension that is installed in addition to Zowe Explorer ad that has a VS Code extension dependency to Zowe Explorer.
+- _Zowe Explorer VS Code extension_: Refers to a Zowe Explorer extension that is a VS Code extension that is installed in addition to Zowe Explorer and that has a VS Code extension dependency to Zowe Explorer.
 - _Zowe SDKs_ are [SDKs published by the Zowe project](https://docs.zowe.org/stable/user-guide/sdks-using) that provides various APIs for writing Zowe-based capabilities in general.
 
 These Zowe Conformance criteria are applicable to the latest Zowe v2 LTS Release.
@@ -187,7 +187,7 @@ Criteria for VS Code extensions that want to access the same Zowe CLI profiles t
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
    <th></th>
-   <td><b>Zowe Extender access:</b> Extension accesses the shared Zowe Explorer profiles cache via `ZoweExplorerApi.IApiRegisterClient.getExplorerExtenderApi()` API as documented in the Zowe Explorer extensibility documentation.</td>
+   <td><b>Zowe Extender access:</b> Extension accesses the shared Zowe Explorer profiles cache via `ZoweExplorerApi.IApiRegisterClient.getExplorerExtenderApi()` API as documented in the <a href=https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/README-Extending.md#using-the-zowe-explorer-profilescache-for-an-extenders-own-unrelated-profiles>Zowe Explorer extensibility documentation.</td>
  </tr>
 
   <tr>
@@ -303,10 +303,19 @@ Criteria for VS Code extensions adding menu and commands to VS Code that utilize
   <tr>
    <th style="background-color:#555555">23</th>
    <th style="background-color:#555555">v2</th>
+   <th style="background-color:#AAAAAA"></th>
+   <th style="background-color:#AAAAAA">x</th>
+   <th></th>
+   <td><b>Command categories 1: </b>  If the extension adds to <code>contributes.commands</code> in <code>package.json</code>, the value assigned to the <code>category</code> property contains the extension name.</td>
+ </tr>
+
+ <tr>
+   <th style="background-color:#555555">23</th>
+   <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
    <th></th>
-   <td><b>Command categories: </b>  If the extension adds to <code>contributes.commands</code> in <code>package.json</code>, the value assigned to the <code>category</code> property contains the extension name and it cannot be "Zowe Explorer".</td>
+   <td><b>Command categories 2: </b>  If the extension assigns values to the <code>category</code> property in <code>contributes.commands</code> in <code>package.json</code>, the value cannot be "Zowe Explorer".</td>
  </tr>
 
   <tr>
