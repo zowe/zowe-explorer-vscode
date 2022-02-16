@@ -23,7 +23,7 @@ More information:
 
 ## Contents
 
-- [What's new in Zowe Explorer 1.21.0](#whats-new-in-zowe-explorer-1210)
+- [What's new in Zowe Explorer 1.22.0](#whats-new-in-zowe-explorer-1210)
 - [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
 - [Sample Use Cases](#sample-use-cases)
@@ -31,28 +31,26 @@ More information:
 - [Usage Tips](#usage-tips)
 - [Extending Zowe Explorer](#extending-zowe-explorer)
 
-## What's new in Zowe Explorer 1.21.0
+## What's new in Zowe Explorer 1.22.0
 
 > Zowe Explorer is compatible only with Theia 1.18.0 or higher.
+> Zowe Explorer could experience possible unexpected behaviors with the latest Theia releases.
 
 **Added**:
 
-- Added a progress bar for the simultaneous deletion of multiple jobs
-- Added the note about the deprecation of the associate profile feature to the Associate Profile section of Zowe Docs and to the Zowe Explorer Readme
+- Added extensible Login and Logout capabilities for Zowe extenders to utilize for token based authentication.
+- Added an Eclipse Public License file. Users can view the license file in the root directory of the Zowe Explorer repository.
 
 **Changed**:
 
-- Changed the `DataSet uploaded successfully` message type. Now messages are shown in the status bar instead of the notification pop-up
-- Updated dependencies for improved security
-- Updated Theia tests to use the latest Theia version
+- Changed the Supported Node.js version to v12 or higher. We no longer support running the product on earlier versions (10.x and earlier) of Node.js.
+- Changed the dependencies of `copy-props`, `nanoid`, and `markdown-it` to improve security alerting.
+- A work around was developed to help developers debug Zowe Explorer VS Code extension on Theia. For more information, see [Work around for debugging in Theia](https://github.com/zowe/vscode-extension-for-zowe/pull/1576).
 
 **Fixed**:
 
-- Fixed the issue that caused JCL errors in the JOBS tree to be displayed as `undefined:undefined(undefined)`
-- Fixed the Theia input box issue that caused entered values to be incorrectly validated
-- Fixed the issue that caused the removal of unsaved credentials of a profile in the Jobs tree after deleting a job. Now when you delete a job from the Jobs tree with a profile that does not have the stored credentials, the profile keeps the cached credentials
-
-For more information, see [Changelog](https://marketplace.visualstudio.com/items/Zowe.vscode-extension-for-zowe/changelog).
+- Fixed the Zowe Explorer deployment script by updating it to use vsce (Visual Studio Code Extension Manager) version 1.103.1 to help ensure that it is compatible with Node v12 [#1608](https://github.com/zowe/vscode-extension-for-zowe/pull/1608).
+- Fixed the Theia input box issue that caused entered values to be validated incorrectly.
 
 ## Prerequisites
 
