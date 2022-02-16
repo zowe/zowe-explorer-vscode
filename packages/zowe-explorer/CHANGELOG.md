@@ -4,7 +4,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ## `v2.0.0-next.202202`
 
-- Added extender's type info to config schema during config file creation. [#1629](https://github.com/zowe/vscode-extension-for-zowe/pull/1629)
+- Added extender's type info to config schema during config file creation and removed Zowe CLI installation dependency. [#1629](https://github.com/zowe/vscode-extension-for-zowe/pull/1629)
 - Added support for Login and Logout using the config file. [#1637](https://github.com/zowe/vscode-extension-for-zowe/pull/1637)
 - Added capability to refresh Zowe Explorer updating the Views to reflect different profile handling to include the config file. [#1650](https://github.com/zowe/vscode-extension-for-zowe/pull/1650)
 - Updated Zowe SDK dependency. [#1624](https://github.com/zowe/vscode-extension-for-zowe/pull/1624)
