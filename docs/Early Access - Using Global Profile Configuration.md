@@ -14,17 +14,20 @@ Meet the following software requirements before you use the team configuration f
 
    Ensure that Zowe Explorer and the CLI versions are compatible.
 
-   | Zowe Explorer version    | Zowe CLI version        |
-   | ------------------------ | ----------------------- |
-   | v2.0.0-next.202107151328 | 7.0.0-next.202106012053 |
-   | v2.0.0-next.202110141604 | 7.0.0-next.202109281609 |
-   | v2.0.0-next.202112161700 | 7.0.0-next.202109281609 |
+   | Zowe Explorer version    | Zowe CLI version        | Zowe CLI as a Prereq |
+   | ------------------------ | ----------------------- | -------------------- |
+   | v2.0.0-next.202107151328 | 7.0.0-next.202106012053 | required             |
+   | v2.0.0-next.202110141604 | 7.0.0-next.202109281609 | required             |
+   | v2.0.0-next.202112161700 | 7.0.0-next.202109281609 | optional             |
+   | v2.0.0-next.202202       | 7.0.0-next.202201261615 | optional             |
 
 2. Initialize the Global Configuration file by using either [the Zowe CLI](https://github.com/zowe/zowe-cli/blob/next/docs/Early%20Access%20-%20Using%20Global%20Profile%20Configuration.md#initializing-global-configuration) or [Zowe Explorer](#create-a-team-configuration-file).
 
    Your Zowe home directory should contain the `zowe.config.json` and `zowe.schema.json` files.
 
 3. Customize the Global Configuration file by using either [the Zowe CLI](https://github.com/zowe/zowe-cli/blob/next/docs/Early%20Access%20-%20Using%20Global%20Profile%20Configuration.md#editing-configuration) or [Zowe Explorer](#manage-a-profile).
+
+**Note**: There is backwards compatibility for V1 profile configuration. The V2 profile configuration will take precedence over V1 profile configuration, if a Global or Team configuration file is in place the V1 profiles will not be accessible.
 
 ## Install the vNext Release version
 
@@ -64,9 +67,10 @@ Create a team configuration file.
 3. Click the **+** icon.
 4. Select **Create a New Team Configuration File**.
 5. Chose either a global configuration file or a project-level configuration file.
-6. Reload your VS Code window when prompted.
+6. Edit the config file to include the host information.
+7. Refresh Zowe Explorer by either clicking the button in the notification message shown after creation, `alt+z`, or the `Zowe Explorer: Refresh Zowe Explorer` command palette option.
 
-Your team configuration file appears either in your `.zowe` folder if you choose the global configuration file option, or in your workspace directory if you choose the project-level configuration file option.
+Your team configuration file appears either in your `.zowe` folder if you choose the global configuration file option, or in your workspace directory if you choose the project-level configuration file option. The notification message that shows in VS Code after config file creation will include the path of the file created.
 
 ### Manage a Profile
 
@@ -75,13 +79,13 @@ You can edit your project-level or global configuration files.
 **Follow these steps**:
 
 1. Right-click on your profile.
-2. Select the **Add**, **Update**, or **Delete Profile** options to edit the global `zowe.config.json` file.
+2. Select the **Add**, **Update**, or **Delete Profile** options to edit the zowe config file in place.
 
    **Tip**: Use the Intellisense prompts if you need assistance with filling parameters in the .json file.
 
-3. Reload your VS Code window by clicking **View** > **Command Palette** > **Developer: Reload Window** so that the changes take effect.
+3. Refresh the view by clicking the refresh icon in the Data Sets, USS, or Jobs view.
 
-   Alternatively, press F1 to open the command palette, type and execute the **Developer: Reload Window** option.
+   Alternatively, press F1 to open the command palette, type and execute the **Zowe Explorer: Refresh Zowe Explorer** option.
 
 You successfully edited your configuration file.
 
