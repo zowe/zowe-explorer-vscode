@@ -34,6 +34,7 @@ More information:
 ## Early Access Features
 
 > Zowe Explorer is compatible only with Theia 1.18.0 or higher.
+> Zowe Explorer could experience possible unexpected behaviors with the latest Theia releases.
 
 This version may receive breaking changes and is intended to gather early feedback on what may become a future LTS release.
 
