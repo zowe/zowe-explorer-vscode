@@ -1428,7 +1428,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
 
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
 
-        expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith("No selection made.");
+        expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith("No selection made. Operation cancelled.");
     });
     it("Checking function on favorites", async () => {
         const globalMocks = await createGlobalMocks();
@@ -1571,7 +1571,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
 
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
 
-        expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith("No selection made.");
+        expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith("No selection made. Operation cancelled.");
     });
 });
 describe("Dataset Tree Unit Tests - Function editSession", () => {

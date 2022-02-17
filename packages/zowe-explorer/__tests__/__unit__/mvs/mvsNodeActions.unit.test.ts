@@ -122,7 +122,7 @@ describe("mvsNodeActions", () => {
         await dsActions.uploadDialog(node, testTree);
 
         expect(showOpenDialog).toBeCalled();
-        expect(showInformationMessage.mock.calls.map((call) => call[0])).toEqual(["No selection made."]);
+        expect(showInformationMessage.mock.calls.map((call) => call[0])).toEqual(["No selection made. Operation cancelled."]);
         expect(openTextDocument).not.toBeCalled();
         expect(testTree.refreshElement).not.toBeCalled();
     });
