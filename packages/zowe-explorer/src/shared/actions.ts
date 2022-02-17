@@ -182,7 +182,7 @@ export async function openRecentMemberPrompt(
 
             const choice = await vscode.window.showQuickPick([createPick, ...items], options1);
             if (!choice) {
-                vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
+                vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made. Operation cancelled."));
                 return;
             }
             pattern = choice === createPick ? "" : choice.label;
@@ -195,7 +195,7 @@ export async function openRecentMemberPrompt(
             const choice = await resolveQuickPickHelper(quickpick);
             quickpick.hide();
             if (!choice || choice === createPick) {
-                vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
+                vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made. Operation cancelled."));
                 return;
             } else if (choice instanceof FilterDescriptor) {
                 if (quickpick.value) {
