@@ -178,7 +178,9 @@ export async function uploadDialog(node: ZoweDatasetNode, datasetProvider: api.I
             }
         }
     } else {
-        vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made. Operation cancelled."));
+        vscode.window.showInformationMessage(
+            localize("enterPattern.pattern", "No selection made. Operation cancelled.")
+        );
     }
 }
 
