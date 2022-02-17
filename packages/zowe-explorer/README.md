@@ -33,12 +33,31 @@ More information:
 
 ## Early Access Features
 
+> Zowe Explorer is compatible only with Theia 1.18.0 or higher.
+> Zowe Explorer could experience possible unexpected behaviors with the latest Theia releases.
+
 This version may receive breaking changes and is intended to gather early feedback on what may become a future LTS release.
+
+**Added**:
+
+- Added extensible Login and Logout capabilities for Zowe extenders to utilize for token based authentication.
+- Added an Eclipse Public License file. Users can view the license file in the root directory of the Zowe Explorer repository.
 
 For documentation about these features, see these files:
 
 - [Changes Affecting Zowe Explorer Extenders](https://github.com/zowe/vscode-extension-for-zowe/blob/next/docs/Early%20Access%20-%20Changes%20Affecting%20Extenders.md)
 - [Using Global Profile Configuration](https://github.com/zowe/vscode-extension-for-zowe/blob/next/docs/Early%20Access%20-%20Using%20Global%20Profile%20Configuration.md)
+
+**Changed**:
+
+- Changed the Supported Node.js version to v12 or higher. We no longer support running the product on earlier versions (10.x and earlier) of Node.js.
+- Changed the dependencies of `copy-props`, `nanoid`, and `markdown-it` to improve security alerting.
+- A work around was developed to help developers debug Zowe Explorer VS Code extension on Theia. For more information, see [Work around for debugging in Theia](https://github.com/zowe/vscode-extension-for-zowe/pull/1576).
+
+**Fixed**:
+
+- Fixed the Zowe Explorer deployment script by updating it to use vsce (Visual Studio Code Extension Manager) version 1.103.1 to help ensure that it is compatible with Node v12 [#1608](https://github.com/zowe/vscode-extension-for-zowe/pull/1608).
+- Fixed the Theia input box issue that caused entered values to be validated incorrectly.
 
 ## Prerequisites
 
@@ -82,8 +101,8 @@ Before using the base profile functionality, ensure that you have [Zowe CLI](htt
 **Follow these steps:**
 
 1. Open Zowe CLI and run the following command: `zowe auth login apiml`
-2. Follow the instructions to complete the login.  
-   A local base profile is created that contains your token.  
+2. Follow the instructions to complete the login.
+   A local base profile is created that contains your token.
    **Note:** For more information about the process, see [Token Management](https://docs.zowe.org/stable/user-guide/cli-usingcli.html#how-token-management-works).
 
 3. Run Zowe Explorer and click the **+** icon.
