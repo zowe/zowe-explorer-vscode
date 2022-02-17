@@ -311,7 +311,9 @@ export class Profiles extends ProfilesCache {
             // get user selection
             const choice = await vscode.window.showQuickPick([createPick, ...items], options);
             if (!choice) {
-                vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made. Operation cancelled."));
+                vscode.window.showInformationMessage(
+                    localize("enterPattern.pattern", "No selection made. Operation cancelled.")
+                );
                 return;
             }
             chosenProfile = choice === createPick ? "" : choice.label;
@@ -323,7 +325,9 @@ export class Profiles extends ProfilesCache {
             const choice = await resolveQuickPickHelper(quickpick);
             quickpick.hide();
             if (!choice) {
-                vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made. Operation cancelled."));
+                vscode.window.showInformationMessage(
+                    localize("enterPattern.pattern", "No selection made. Operation cancelled.")
+                );
                 return;
             }
             if (choice instanceof FilterDescriptor) {
