@@ -675,7 +675,7 @@ describe("USSTree Unit Tests - Function USSTree.filterPrompt()", () => {
 
         await globalMocks.testTree.filterPrompt(globalMocks.testTree.mSessionNodes[1]);
         expect(globalMocks.showInformationMessage.mock.calls.length).toBe(1);
-        expect(globalMocks.showInformationMessage.mock.calls[0][0]).toBe("No selection made.");
+        expect(globalMocks.showInformationMessage.mock.calls[0][0]).toBe("No selection made. Operation cancelled.");
     });
 
     it("Tests that filter() works when new path is specified (Theia)", async () => {
@@ -726,7 +726,7 @@ describe("USSTree Unit Tests - Function USSTree.filterPrompt()", () => {
 
         await globalMocks.testTree.filterPrompt(globalMocks.testTree.mSessionNodes[1]);
         expect(globalMocks.showInformationMessage.mock.calls.length).toBe(1);
-        expect(globalMocks.showInformationMessage.mock.calls[0][0]).toBe("No selection made.");
+        expect(globalMocks.showInformationMessage.mock.calls[0][0]).toBe("No selection made. Operation cancelled.");
     });
 
     it("Tests that filter() works correctly for favorited search nodes with credentials", async () => {
