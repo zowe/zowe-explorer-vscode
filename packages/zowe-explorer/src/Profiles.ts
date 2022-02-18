@@ -862,6 +862,7 @@ export class Profiles extends ProfilesCache {
         let repromptUser: string;
         let repromptPass: string;
         let loadProfile: IProfileLoaded;
+        let origProfile: IProfileLoaded;
         let loadSession: ISession;
         let newUser: string;
         let newPass: string;
@@ -913,6 +914,7 @@ export class Profiles extends ProfilesCache {
         } else {
             try {
                 const updSession = await ZoweExplorerApiRegister.getMvsApi(loadProfile).getSession();
+                origProfile = this.getLoadedProfConfig(sessName.trim());
                 if (ProfilesCache.getConfigInstance().usingTeamConfig) {
                     const profArray = [];
                     for (const theprofile of this.allProfiles) {
@@ -923,16 +925,36 @@ export class Profiles extends ProfilesCache {
                     profArray.push(loadProfile);
                     this.allProfiles = profArray;
                     const config = ProfilesCache.getConfigInstance().getTeamConfig();
-                    const secureFields = await config.api.secure.secureFields();
+                    const baseProfile = this.defaultProfileByType.get("base");
+                    // origProfile = this.getLoadedProfConfig(sessName.trim());
+                    const secureFields = config.api.secure.secureFields();
+                    console.log(secureFields);
                     const propName = loadProfile.name.trim();
                     const userProp = `profiles.` + propName + `.properties.user`;
                     const passProp = `profiles.` + propName + `.properties.password`;
+                    const userBase = `profiles.base.properties.user`;
+                    const passBase = `profiles.base.properties.password`;
+                    // write back secure credentials if already inplace
+                    console.log(origProfile);
+                    console.log(baseProfile);
                     secureFields.forEach((prop) => {
-                        if (prop === userProp) {
-                            config.set(prop, updSession.ISession.user, { secure: true });
-                        }
-                        if (prop === passProp) {
-                            config.set(prop, updSession.ISession.password, { secure: true });
+                        switch (prop) {
+                            case userProp:
+                                config.set(prop, updSession.ISession.user, { secure: true });
+                                break;
+                            case passProp:
+                                config.set(prop, updSession.ISession.password, { secure: true });
+                                break;
+                            case userBase:
+                                if (origProfile.profile.user == baseProfile.profile.user) {
+                                    config.set(prop, updSession.ISession.user, { secure: true });
+                                }
+                                break;
+                            case passBase:
+                                if (origProfile.profile.password == baseProfile.profile.password) {
+                                    config.set(prop, updSession.ISession.password, { secure: true });
+                                }
+                                break;
                         }
                     });
                     await config.save(false);
