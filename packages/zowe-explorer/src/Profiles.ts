@@ -926,37 +926,110 @@ export class Profiles extends ProfilesCache {
                     this.allProfiles = profArray;
                     const config = ProfilesCache.getConfigInstance().getTeamConfig();
                     const baseProfile = this.defaultProfileByType.get("base");
-                    // origProfile = this.getLoadedProfConfig(sessName.trim());
                     const secureFields = config.api.secure.secureFields();
-                    console.log(secureFields);
                     const propName = loadProfile.name.trim();
                     const userProp = `profiles.` + propName + `.properties.user`;
                     const passProp = `profiles.` + propName + `.properties.password`;
                     const userBase = `profiles.base.properties.user`;
                     const passBase = `profiles.base.properties.password`;
+                    let existing = false;
                     // write back secure credentials if already inplace
-                    console.log(origProfile);
-                    console.log(baseProfile);
                     secureFields.forEach((prop) => {
                         switch (prop) {
                             case userProp:
-                                config.set(prop, updSession.ISession.user, { secure: true });
+                                existing = true;
+                                config.set(prop, updSession.ISession.user, { parseString: true, secure: true });
                                 break;
                             case passProp:
-                                config.set(prop, updSession.ISession.password, { secure: true });
+                                existing = true;
+                                config.set(prop, updSession.ISession.password, { parseString: true, secure: true });
                                 break;
                             case userBase:
-                                if (origProfile.profile.user == baseProfile.profile.user) {
-                                    config.set(prop, updSession.ISession.user, { secure: true });
+                                if (origProfile.profile.user && origProfile.profile.user === baseProfile.profile.user) {
+                                    existing = true;
+                                    config.set(prop, updSession.ISession.user, { parseString: true, secure: true });
                                 }
                                 break;
                             case passBase:
-                                if (origProfile.profile.password == baseProfile.profile.password) {
-                                    config.set(prop, updSession.ISession.password, { secure: true });
+                                if (
+                                    origProfile.profile.password &&
+                                    origProfile.profile.password === baseProfile.profile.password
+                                ) {
+                                    existing = true;
+                                    config.set(prop, updSession.ISession.password, { parseString: true, secure: true });
                                 }
                                 break;
                         }
                     });
+                    if (!existing) {
+                        const saveSecureButton = localize(
+                            "promptCredentials.saveSecureCredentials.button",
+                            "Save Credentials Securely"
+                        );
+                        const saveUnsecureButton = localize(
+                            "promptCredentials.saveUsecureCredentials.button",
+                            "Save Credentials Unsecure"
+                        );
+                        const doNotSaveButton = localize("promptCredentials.doNotSave.button", "Do Not Save");
+                        const infoMsg = localize(
+                            "promptCredentials.saveCredentialsConfig.infoMessage",
+                            `Save entered credentials for future use with profile: {0}?\nSaving credentials will update the team config file.\n"Save Unsecure" will save values in plain text.`,
+                            loadProfile.name
+                        );
+                        await vscode.window
+                            .showInformationMessage(
+                                infoMsg,
+                                { modal: true },
+                                ...[saveSecureButton, saveUnsecureButton, doNotSaveButton]
+                            )
+                            .then((selection) => {
+                                if (selection === saveSecureButton) {
+                                    let secured = false;
+                                    if (secureFields.length > 0) {
+                                        secureFields.forEach((field) => {
+                                            if (
+                                                field.includes(baseProfile.name) &&
+                                                field.includes("user") &&
+                                                !baseProfile.profile.user
+                                            ) {
+                                                secured = true;
+                                                config.set(field, updSession.ISession.user, {
+                                                    parseString: true,
+                                                    secure: true,
+                                                });
+                                            }
+                                            if (
+                                                field.includes(baseProfile.name) &&
+                                                field.includes("password") &&
+                                                !baseProfile.profile.password
+                                            ) {
+                                                secured = true;
+                                                config.set(field, updSession.ISession.password, {
+                                                    parseString: true,
+                                                    secure: true,
+                                                });
+                                            }
+                                        });
+                                    }
+                                    if (!secured) {
+                                        config.set(userProp, updSession.ISession.user, {
+                                            parseString: true,
+                                            secure: true,
+                                        });
+                                        config.set(passProp, updSession.ISession.password, {
+                                            parseString: true,
+                                            secure: true,
+                                        });
+                                    }
+                                    rePrompt = false;
+                                }
+                                if (selection === saveUnsecureButton) {
+                                    rePrompt = false;
+                                    config.set(userProp, updSession.ISession.user);
+                                    config.set(passProp, updSession.ISession.password);
+                                }
+                            });
+                    }
                     await config.save(false);
                 } else {
                     const saveButton = localize("promptCredentials.saveCredentials.button", "Save Credentials");
