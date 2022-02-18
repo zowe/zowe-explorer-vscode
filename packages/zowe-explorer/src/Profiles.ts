@@ -929,10 +929,10 @@ export class Profiles extends ProfilesCache {
                     const passProp = `profiles.` + propName + `.properties.password`;
                     secureFields.forEach((prop) => {
                         if (prop === userProp) {
-                            config.set(prop, updSession.ISession.user);
+                            config.set(prop, updSession.ISession.user, { secure: true });
                         }
                         if (prop === passProp) {
-                            config.set(prop, updSession.ISession.password);
+                            config.set(prop, updSession.ISession.password, { secure: true });
                         }
                     });
                     await config.save(false);
