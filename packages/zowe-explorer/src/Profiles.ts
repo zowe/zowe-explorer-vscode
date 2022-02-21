@@ -925,7 +925,17 @@ export class Profiles extends ProfilesCache {
                     profArray.push(loadProfile);
                     this.allProfiles = profArray;
                     const config = ProfilesCache.getConfigInstance().getTeamConfig();
+                    const confPaths = config.paths;
+                    let global = true;
+                    let user = false;
+                    confPaths.forEach((confPath) => {
+                        if (confPath.includes(vscode.workspace.workspaceFolders?.[0].uri.fsPath)) {
+                            user = true;
+                            global = false;
+                        }
+                    });
                     const baseProfile = this.defaultProfileByType.get("base");
+                    config.api.layers.activate(user, global);
                     const secureFields = config.api.secure.secureFields();
                     const propName = loadProfile.name.trim();
                     const userProp = `profiles.` + propName + `.properties.user`;
