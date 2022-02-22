@@ -321,7 +321,7 @@ describe("mvsCommandActions unit testing", () => {
             placeHolder: "Select the Profile to use to submit the command",
         });
         expect(showInformationMessage.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls[0][0]).toEqual("No selection made.");
+        expect(showInformationMessage.mock.calls[0][0]).toEqual("No selection made. Operation cancelled.");
     });
 
     it("tests the issueMvsCommand function user escapes the command box", async () => {
