@@ -200,6 +200,7 @@ describe("dsNodeActions", () => {
     Object.defineProperty(vscode.window, "showInformationMessage", { value: showInformationMessage });
     Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
     Object.defineProperty(zowe.ZosmfSession, "createSessCfgFromArgs", { value: createSessCfgFromArgs });
+    Object.defineProperty(refreshActions, "refreshAll", { value: jest.fn() });
 
     beforeEach(() => {
         showErrorMessage.mockReset();
