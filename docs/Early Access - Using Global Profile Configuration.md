@@ -12,7 +12,7 @@ Meet the following software requirements before you use the team configuration f
 
 1. Install [Zowe CLI vNext version](https://github.com/zowe/zowe-cli/blob/next/docs/Early%20Access%20-%20Using%20Global%20Profile%20Configuration.md#installing-next-version).
 
-   Ensure that Zowe Explorer and the CLI versions are compatible.
+   **Note:** With Zowe Explorer `v2.0.0-next.202202221200` or higher, users can install Zowe CLI via the command `npm install -g @zowe/cli@next` since it is no longer a pre-requisite.
 
    | Zowe Explorer version    | Zowe CLI version        | Zowe CLI prerequisite |
    | ------------------------ | ----------------------- | --------------------- |

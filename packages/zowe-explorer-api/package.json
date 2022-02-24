@@ -27,6 +27,7 @@
     "lintErrors": "echo \"zowe-explorer-api: coming soon.\"",
     "pretty": "prettier --write .",
     "clean": "rimraf lib",
+    "fresh-clone": "yarn clean && rimraf node_modules",
     "license": "node ../../scripts/license.js",
     "package": "yarn license && yarn lint && yarn build && npm pack && node ../../scripts/mv-pack.js zowe-zowe-explorer-api tgz"
   }
