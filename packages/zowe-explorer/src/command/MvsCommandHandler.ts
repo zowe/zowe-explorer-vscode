@@ -181,7 +181,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
                 const choice = await vscode.window.showQuickPick([createPick, ...items], options1);
                 if (!choice) {
                     vscode.window.showInformationMessage(
-                        localize("issueMvsCommand.options.noselection", "No selection made.")
+                        localize("issueMvsCommand.options.noselection", "No selection made. Operation cancelled.")
                     );
                     return;
                 }
@@ -204,7 +204,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
                 quickpick.hide();
                 if (!choice) {
                     vscode.window.showInformationMessage(
-                        localize("issueMvsCommand.options.noselection", "No selection made.")
+                        localize("issueMvsCommand.options.noselection", "No selection made. Operation cancelled.")
                     );
                     return;
                 }
