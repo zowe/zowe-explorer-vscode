@@ -274,6 +274,14 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                     owner,
                     prefix
                 );
+                jobsInternal = jobsInternal.reduce((acc, current) => {
+                    const duplicateJobExists = acc.find((job) => job.jobid === current.jobid);
+                    if (!duplicateJobExists) {
+                        return acc.concat([current]);
+                    } else {
+                        return acc;
+                    }
+                }, []);
             } catch (error) {
                 await errorHandling(
                     error,
