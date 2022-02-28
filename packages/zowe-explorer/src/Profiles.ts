@@ -859,209 +859,18 @@ export class Profiles extends ProfilesCache {
     }
 
     public async promptCredentials(sessName, rePrompt?: boolean) {
-        let repromptUser: string;
-        let repromptPass: string;
-        let loadProfile: IProfileLoaded;
-        let origProfile: IProfileLoaded;
-        let loadSession: ISession;
-        let newUser: string;
-        let newPass: string;
-
-        try {
-            if (ProfilesCache.getConfigInstance().usingTeamConfig) {
-                loadProfile = this.getLoadedProfConfig(sessName.trim());
-            } else {
-                loadProfile = this.loadNamedProfile(sessName.trim());
-            }
-            loadSession = loadProfile.profile as ISession;
-        } catch (error) {
-            await errorHandling(error.message);
-        }
-
-        if (rePrompt) {
-            repromptUser = loadSession.user;
-            repromptPass = loadSession.password;
-        }
-
-        if (!loadSession.user || rePrompt) {
-            newUser = await this.userInfo(repromptUser);
-            loadSession.user = loadProfile.profile.user = newUser;
+        let updSessionInfo: string[];
+        if (ProfilesCache.getConfigInstance().usingTeamConfig) {
+            updSessionInfo = await this.promptConfig(sessName, rePrompt);
         } else {
-            newUser = loadSession.user = loadProfile.profile.user;
+            updSessionInfo = await this.promptOldStyle(sessName, rePrompt);
         }
-
-        if (newUser === undefined || (rePrompt && newUser === "")) {
-            vscode.window.showInformationMessage(
-                localize("promptCredentials.undefined.username", "Operation Cancelled")
-            );
+        if (updSessionInfo && updSessionInfo.length > 0) {
+            return updSessionInfo;
+        } else {
+            vscode.window.showInformationMessage(localize("promptCredentials.undefined.value", "Operation Cancelled"));
             await this.refresh(ZoweExplorerApiRegister.getInstance());
             return undefined;
-        } else {
-            if (!loadSession.password || rePrompt) {
-                newPass = await this.passwordInfo(repromptPass);
-                loadSession.password = loadProfile.profile.password = newPass;
-            } else {
-                newPass = loadSession.password = loadProfile.profile.password;
-            }
-        }
-
-        if (newPass === undefined || (rePrompt && newUser === "")) {
-            vscode.window.showInformationMessage(
-                localize("promptCredentials.undefined.password", "Operation Cancelled")
-            );
-            await this.refresh(ZoweExplorerApiRegister.getInstance());
-            return undefined;
-        } else {
-            try {
-                const updSession = await ZoweExplorerApiRegister.getMvsApi(loadProfile).getSession();
-                origProfile = this.getLoadedProfConfig(sessName.trim());
-                if (ProfilesCache.getConfigInstance().usingTeamConfig) {
-                    const profArray = [];
-                    for (const theprofile of this.allProfiles) {
-                        if (theprofile.name !== loadProfile.name) {
-                            profArray.push(theprofile);
-                        }
-                    }
-                    profArray.push(loadProfile);
-                    this.allProfiles = profArray;
-                    const config = ProfilesCache.getConfigInstance().getTeamConfig();
-                    const confPaths = config.paths;
-                    let global = true;
-                    let user = false;
-                    confPaths.forEach((confPath) => {
-                        if (confPath.includes(vscode.workspace.workspaceFolders?.[0].uri.fsPath)) {
-                            user = true;
-                            global = false;
-                        }
-                    });
-                    const baseProfile = this.defaultProfileByType.get("base");
-                    config.api.layers.activate(user, global);
-                    const secureFields = config.api.secure.secureFields();
-                    const propName = loadProfile.name.trim();
-                    const userProp = `profiles.` + propName + `.properties.user`;
-                    const passProp = `profiles.` + propName + `.properties.password`;
-                    const userBase = `profiles.base.properties.user`;
-                    const passBase = `profiles.base.properties.password`;
-                    let existing = false;
-                    // write back secure credentials if already inplace
-                    secureFields.forEach((prop) => {
-                        switch (prop) {
-                            case userProp:
-                                existing = true;
-                                config.set(prop, updSession.ISession.user, { parseString: true, secure: true });
-                                break;
-                            case passProp:
-                                existing = true;
-                                config.set(prop, updSession.ISession.password, { parseString: true, secure: true });
-                                break;
-                            case userBase:
-                                if (origProfile.profile.user && origProfile.profile.user === baseProfile.profile.user) {
-                                    existing = true;
-                                    config.set(prop, updSession.ISession.user, { parseString: true, secure: true });
-                                }
-                                break;
-                            case passBase:
-                                if (
-                                    origProfile.profile.password &&
-                                    origProfile.profile.password === baseProfile.profile.password
-                                ) {
-                                    existing = true;
-                                    config.set(prop, updSession.ISession.password, { parseString: true, secure: true });
-                                }
-                                break;
-                        }
-                    });
-                    if (!existing) {
-                        const saveSecureButton = localize(
-                            "promptCredentials.saveSecureCredentials.button",
-                            "Save Credentials Securely"
-                        );
-                        const saveUnsecureButton = localize(
-                            "promptCredentials.saveUsecureCredentials.button",
-                            "Save Credentials Unsecure"
-                        );
-                        const doNotSaveButton = localize("promptCredentials.doNotSave.button", "Do Not Save");
-                        const infoMsg = localize(
-                            "promptCredentials.saveCredentialsConfig.infoMessage",
-                            `Save entered credentials for future use with profile: {0}?\nSaving credentials will update the team config file.\n"Save Unsecure" will save values in plain text.`,
-                            loadProfile.name
-                        );
-                        await vscode.window
-                            .showInformationMessage(
-                                infoMsg,
-                                { modal: true },
-                                ...[saveSecureButton, saveUnsecureButton, doNotSaveButton]
-                            )
-                            .then((selection) => {
-                                if (selection === saveSecureButton) {
-                                    let secured = false;
-                                    if (secureFields.length > 0) {
-                                        secureFields.forEach((field) => {
-                                            if (
-                                                field.includes(baseProfile.name) &&
-                                                field.includes("user") &&
-                                                !baseProfile.profile.user
-                                            ) {
-                                                secured = true;
-                                                config.set(field, updSession.ISession.user, {
-                                                    parseString: true,
-                                                    secure: true,
-                                                });
-                                            }
-                                            if (
-                                                field.includes(baseProfile.name) &&
-                                                field.includes("password") &&
-                                                !baseProfile.profile.password
-                                            ) {
-                                                secured = true;
-                                                config.set(field, updSession.ISession.password, {
-                                                    parseString: true,
-                                                    secure: true,
-                                                });
-                                            }
-                                        });
-                                    }
-                                    if (!secured) {
-                                        config.set(userProp, updSession.ISession.user, {
-                                            parseString: true,
-                                            secure: true,
-                                        });
-                                        config.set(passProp, updSession.ISession.password, {
-                                            parseString: true,
-                                            secure: true,
-                                        });
-                                    }
-                                    rePrompt = false;
-                                }
-                                if (selection === saveUnsecureButton) {
-                                    rePrompt = false;
-                                    config.set(userProp, updSession.ISession.user);
-                                    config.set(passProp, updSession.ISession.password);
-                                }
-                            });
-                    }
-                    await config.save(false);
-                } else {
-                    const saveButton = localize("promptCredentials.saveCredentials.button", "Save Credentials");
-                    const doNotSaveButton = localize("promptCredentials.doNotSave.button", "Do Not Save");
-                    const infoMsg = localize(
-                        "promptCredentials.saveCredentials.infoMessage",
-                        "Save entered credentials for future use with profile: {0}?\nSaving credentials will update the local yaml file.",
-                        loadProfile.name
-                    );
-                    await vscode.window
-                        .showInformationMessage(infoMsg, ...[saveButton, doNotSaveButton])
-                        .then((selection) => {
-                            if (selection === saveButton) {
-                                rePrompt = false;
-                            }
-                        });
-                    await this.updateProfile(loadProfile, rePrompt);
-                }
-                return [updSession.ISession.user, updSession.ISession.password, updSession.ISession.base64EncodedAuth];
-            } catch (error) {
-                await errorHandling(error.message);
-            }
         }
     }
 
@@ -1564,6 +1373,211 @@ export class Profiles extends ProfilesCache {
     public async openConfigFile(filePath: string) {
         const document = await vscode.workspace.openTextDocument(filePath);
         await vscode.window.showTextDocument(document);
+    }
+
+    private async promptConfig(sessName, rePrompt?: boolean) {
+        const loadProfile = this.getLoadedProfConfig(sessName.trim());
+        const loadSession = loadProfile.profile as ISession;
+        const creds = await this.promptUserPass(loadSession, rePrompt);
+        if (creds && creds.length > 0) {
+            loadProfile.profile.user = loadSession.user = creds[0];
+            loadProfile.profile.password = loadSession.password = creds[1];
+            const config = ProfilesCache.getConfigInstance().getTeamConfig();
+            const confPaths = config.paths;
+            let global = true;
+            let user = false;
+            confPaths.forEach((confPath) => {
+                if (confPath.includes(vscode.workspace.workspaceFolders?.[0].uri.fsPath)) {
+                    user = true;
+                    global = false;
+                }
+            });
+            const baseProfile = this.defaultProfileByType.get("base");
+            const origProfile = this.getLoadedProfConfig(sessName.trim());
+            config.api.layers.activate(user, global);
+            const secureFields = config.api.secure.secureFields();
+            const propName = loadProfile.name.trim();
+            const userProp = `profiles.` + propName + `.properties.user`;
+            const passProp = `profiles.` + propName + `.properties.password`;
+            const userBase = `profiles.base.properties.user`;
+            const passBase = `profiles.base.properties.password`;
+            let existing = false;
+            // write back secure credentials if already inplace
+            secureFields.forEach((prop) => {
+                switch (prop) {
+                    case userProp:
+                        existing = true;
+                        config.set(prop, loadSession.user, { parseString: true, secure: true });
+                        break;
+                    case passProp:
+                        existing = true;
+                        config.set(prop, loadSession.password, { parseString: true, secure: true });
+                        break;
+                    case userBase:
+                        if (origProfile.profile.user && origProfile.profile.user === baseProfile.profile.user) {
+                            existing = true;
+                            config.set(prop, loadSession.user, { parseString: true, secure: true });
+                        }
+                        break;
+                    case passBase:
+                        if (
+                            origProfile.profile.password &&
+                            origProfile.profile.password === baseProfile.profile.password
+                        ) {
+                            existing = true;
+                            config.set(prop, loadSession.password, { parseString: true, secure: true });
+                        }
+                        break;
+                }
+            });
+            if (!existing) {
+                const saveSecureButton = localize(
+                    "promptCredentials.saveSecureCredentials.button",
+                    "Save Credentials Securely"
+                );
+                const saveUnsecureButton = localize(
+                    "promptCredentials.saveUsecureCredentials.button",
+                    "Save Credentials Unsecure"
+                );
+                const doNotSaveButton = localize("promptCredentials.doNotSave.button", "Do Not Save");
+                const saveButtons = [saveSecureButton, saveUnsecureButton, doNotSaveButton];
+                const selection = await this.promptSaveConfig(loadProfile.name, saveButtons);
+                if (selection === undefined) {
+                    return undefined;
+                }
+                switch (selection) {
+                    case saveSecureButton:
+                        let secured = false;
+                        if (secureFields.length > 0) {
+                            secureFields.forEach((field) => {
+                                if (
+                                    field.includes(baseProfile.name) &&
+                                    field.includes("user") &&
+                                    !baseProfile.profile.user
+                                ) {
+                                    secured = true;
+                                    config.set(field, loadSession.user, {
+                                        parseString: true,
+                                        secure: true,
+                                    });
+                                }
+                                if (
+                                    field.includes(baseProfile.name) &&
+                                    field.includes("password") &&
+                                    !baseProfile.profile.password
+                                ) {
+                                    secured = true;
+                                    config.set(field, loadSession.password, {
+                                        parseString: true,
+                                        secure: true,
+                                    });
+                                }
+                            });
+                        }
+                        if (!secured) {
+                            config.set(userProp, loadSession.user, {
+                                parseString: true,
+                                secure: true,
+                            });
+                            config.set(passProp, loadSession.password, {
+                                parseString: true,
+                                secure: true,
+                            });
+                        }
+                        break;
+                    case saveUnsecureButton:
+                        config.set(userProp, loadSession.user);
+                        config.set(passProp, loadSession.password);
+                        break;
+                    case doNotSaveButton:
+                        break;
+                }
+            }
+            await config.save(false);
+            const updSession = ZoweExplorerApiRegister.getMvsApi(loadProfile).getSession();
+            const profArray = [];
+            for (const theprofile of this.allProfiles) {
+                if (theprofile.name !== loadProfile.name) {
+                    profArray.push(theprofile);
+                }
+            }
+            profArray.push(loadProfile);
+            this.allProfiles = profArray;
+            return [updSession.ISession.user, updSession.ISession.password, updSession.ISession.base64EncodedAuth];
+        } else {
+            return undefined;
+        }
+    }
+
+    private async promptSaveConfig(profileName: string, saveButtons: string[]) {
+        const infoMsg = localize(
+            "promptCredentials.saveCredentialsConfig.infoMessage",
+            `Save entered credentials for future use with profile: {0}?\nSaving credentials will update the team config file.\n"Save Unsecure" will save values in plain text.`,
+            profileName
+        );
+        return vscode.window.showInformationMessage(infoMsg, { modal: true }, ...saveButtons).then((selection) => {
+            return selection;
+        });
+    }
+
+    private async promptOldStyle(sessName, rePrompt?: boolean) {
+        const loadProfile = this.loadNamedProfile(sessName.trim());
+        const loadSession = loadProfile.profile as ISession;
+        const creds = await this.promptUserPass(loadSession, rePrompt);
+        if (creds && creds.length > 0) {
+            const saveButton = localize("promptCredentials.saveCredentials.button", "Save Credentials");
+            const doNotSaveButton = localize("promptCredentials.doNotSave.button", "Do Not Save");
+            const infoMsg = localize(
+                "promptCredentials.saveCredentials.infoMessage",
+                "Save entered credentials for future use with profile: {0}?\nSaving credentials will update the local yaml file.",
+                loadProfile.name
+            );
+            await vscode.window.showInformationMessage(infoMsg, ...[saveButton, doNotSaveButton]).then((selection) => {
+                if (selection === saveButton) {
+                    rePrompt = false;
+                }
+            });
+            await this.updateProfile(loadProfile, rePrompt);
+            const updSession = ZoweExplorerApiRegister.getMvsApi(loadProfile).getSession();
+            return [updSession.ISession.user, updSession.ISession.password, updSession.ISession.base64EncodedAuth];
+        } else {
+            return undefined;
+        }
+    }
+
+    private async promptUserPass(loadSession: ISession, rePrompt?: boolean): Promise<string[] | undefined> {
+        let repromptUser: string;
+        let repromptPass: string;
+        let newUser: string;
+        let newPass: string;
+
+        if (rePrompt) {
+            repromptUser = loadSession.user;
+            repromptPass = loadSession.password;
+        }
+
+        if (!loadSession.user || rePrompt) {
+            newUser = await this.userInfo(repromptUser);
+            loadSession.user = newUser;
+        } else {
+            newUser = loadSession.user;
+        }
+
+        if (!newUser || (rePrompt && newUser === "")) {
+            return undefined;
+        } else {
+            if (!loadSession.password || rePrompt) {
+                newPass = await this.passwordInfo(repromptPass);
+                loadSession.password = newPass;
+            } else {
+                newPass = loadSession.password;
+            }
+        }
+
+        if (!newPass || (rePrompt && newUser === "")) {
+            return undefined;
+        }
+        return [newUser, newPass];
     }
 
     private async updateBaseProfileFileLogin(baseProfile: IProfileLoaded, updBaseProfile: IProfile) {
