@@ -38,6 +38,7 @@
     "pretty": "prettier --write .",
     "watch": "webpack --mode development --watch --info-verbosity verbose",
     "clean": "rimraf out",
+    "fresh-clone": "yarn clean && rimraf node_modules",
     "vscode:prepublish": "yarn license && yarn lint && webpack --mode production",
     "license": "node ../../scripts/license.js",
     "package": "vsce package --yarn && node ../../scripts/mv-pack.js zowe-explorer-ftp-extension vsix"

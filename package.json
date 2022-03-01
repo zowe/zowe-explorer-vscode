@@ -59,6 +59,8 @@
     "**/simple-get": "^4.0.1"
   },
   "scripts": {
+    "clean": "yarn workspaces run clean",
+    "fresh-clone": "yarn workspaces run fresh-clone && rimraf node_modules",
     "prepare": "yarn build",
     "lint": "yarn workspaces run lint",
     "lintErrors": "yarn workspaces run lintErrors",

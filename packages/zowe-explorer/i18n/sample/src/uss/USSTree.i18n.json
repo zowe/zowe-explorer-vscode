@@ -9,7 +9,7 @@
   "enterPattern.log.debug.prompt": "Prompting the user to choose a member from the filtered list",
   "filterPrompt.log.debug.promptUSSPath": "Prompting the user for a USS path",
   "searchHistory.options.prompt": "Select a filter",
-  "enterPattern.pattern": "No selection made.",
+  "enterPattern.pattern": "No selection made. Operation cancelled.",
   "filterPrompt.option.prompt.search": "Create a new filter",
   "filterPrompt.enterPath": "You must enter a path.",
   "initializeFavorites.log.debug": "Initializing profiles with USS favorites.",

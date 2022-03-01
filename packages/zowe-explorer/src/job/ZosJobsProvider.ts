@@ -583,7 +583,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                         );
                         if (!choice) {
                             vscode.window.showInformationMessage(
-                                localize("enterPattern.pattern", "No selection made.")
+                                localize("enterPattern.pattern", "No selection made. Operation cancelled.")
                             );
                             return;
                         }
@@ -599,7 +599,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                         quickpick.hide();
                         if (!choice) {
                             vscode.window.showInformationMessage(
-                                localize("enterPattern.pattern", "No selection made.")
+                                localize("enterPattern.pattern", "No selection made. Operation cancelled.")
                             );
                             return;
                         }
