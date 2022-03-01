@@ -4,7 +4,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ## `v2.0.0-next.202202281000`
 
-- Update Zowe CLI SDK to version 7.0.0-next.202202242016
+- Update Zowe CLI SDK to version 7.0.0-next.202202242016.
+- Fixed the bug that overwrites like-named profiles in a nested config.
 
 ## `v2.0.0-next.202202221200`
 
