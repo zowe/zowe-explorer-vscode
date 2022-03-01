@@ -18,7 +18,7 @@
   "findParentNode.unsuccessful": "Node does not exist. It may have been deleted.",
   "enterPattern.log.debug.prompt": "Prompting the user for a data set pattern",
   "searchHistory.options.prompt": "Select a filter",
-  "enterPattern.pattern": "No selection made.",
+  "enterPattern.pattern": "No selection made. Operation cancelled.",
   "enterPattern.options.prompt": "Search Data Sets: use a comma to separate multiple patterns",
   "datasetFilterPrompt.enterPattern": "You must enter a pattern.",
   "renameDataSet.cancelled": "Rename operation cancelled.",

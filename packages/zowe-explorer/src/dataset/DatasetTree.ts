@@ -896,7 +896,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                         const choice = await vscode.window.showQuickPick([createPick, ...items], options1);
                         if (!choice) {
                             vscode.window.showInformationMessage(
-                                localize("enterPattern.pattern", "No selection made.")
+                                localize("enterPattern.pattern", "No selection made. Operation cancelled.")
                             );
                             return;
                         }
@@ -911,7 +911,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                         quickpick.hide();
                         if (!choice) {
                             vscode.window.showInformationMessage(
-                                localize("enterPattern.pattern", "No selection made.")
+                                localize("enterPattern.pattern", "No selection made. Operation cancelled.")
                             );
                             return;
                         }
