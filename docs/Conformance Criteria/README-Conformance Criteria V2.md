@@ -116,20 +116,11 @@ General conformance criteria for all extensions that add new capabilities to Zow
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
    <th></th>
-   <td><b>Sharing of profiles with Zowe CLI:</b> Extensions that utilize Zowe CLI profiles must share the created profile instances between Zowe CLI and the Zowe Explorer extension that utilize them.</td>
+   <td><b>Sharing of profiles with Zowe CLI:</b> Extensions that utilize Zowe CLI profiles must keep the shared profile instances compatible between Zowe CLI and the Zowe Explorer extension that utilize them.</td>
  </tr>
 
  <tr>
-   <th style="background-color:#555555">10</th>
-   <th style="background-color:#555555">v2</th>
-   <th style="background-color:#AAAAAA"></th>
-   <th style="background-color:#AAAAAA">x</th>
-   <th></th>
-   <td><b>v1 Profile Support:</b>Extension has a backwards compatibility and it is able to support v1 type of profiles.</td>
- </tr>
-
- <tr>
-   <th style="background-color:#555555" rowspan=5>11</th>
+   <th style="background-color:#555555" rowspan=5>10</th>
    <th style="background-color:#555555"></th>
    <th style="background-color:#AAAAAA" colspan=2>Mark (a) or (b) or (c)</th>
    <th style="background-color:#AAAAAA"></th>
@@ -173,7 +164,7 @@ Criteria for VS Code extensions that want to access the same Zowe CLI profiles t
  </thead>
 
  <tr>
-   <th style="background-color:#555555">12</th>
+   <th style="background-color:#555555">11</th>
    <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
@@ -182,7 +173,7 @@ Criteria for VS Code extensions that want to access the same Zowe CLI profiles t
  </tr>
 
   <tr>
-   <th style="background-color:#555555">13</th>
+   <th style="background-color:#555555">12</th>
    <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
@@ -191,7 +182,7 @@ Criteria for VS Code extensions that want to access the same Zowe CLI profiles t
  </tr>
 
   <tr>
-   <th style="background-color:#555555">14</th>
+   <th style="background-color:#555555">13</th>
    <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
@@ -199,7 +190,7 @@ Criteria for VS Code extensions that want to access the same Zowe CLI profiles t
    <td><b>Added Profile Type initialization:</b> If the extension has a dependency on a new Zowe CLI profile type other than the Zowe Explorer default `zosmf`, it is calling the `ZoweExplorerApi.IApiRegisterClient.getExplorerExtenderApi().initialize(profileTypeName)` to ensure that the profile type is supported and managed by the extension without a Zowe CLI plugin installed.</td>
  </tr>
  <tr>
-   <th style="background-color:#555555">15</th>
+   <th style="background-color:#555555">14</th>
    <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA"></th>
    <th style="background-color:#AAAAAA">x</th>
@@ -208,12 +199,21 @@ Criteria for VS Code extensions that want to access the same Zowe CLI profiles t
  </tr>
 
  <tr>
-   <th style="background-color:#555555">16</th>
+   <th style="background-color:#555555">15</th>
    <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
    <th></th>
    <td><b>Team Configuration File:</b> Extension supports the Zowe CLI 7 team configuration file format.</td>
+ </tr>
+
+ <tr>
+   <th style="background-color:#555555">16</th>
+   <th style="background-color:#555555">v2</th>
+   <th style="background-color:#AAAAAA"></th>
+   <th style="background-color:#AAAAAA">x</th>
+   <th></th>
+   <td><b>v1 Profile Support:</b> Extension has a backwards compatibility and it is able to support v1 type of profiles.</td>
  </tr>
 
  <tr>
