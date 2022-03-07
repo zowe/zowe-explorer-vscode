@@ -30,7 +30,6 @@ import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import * as path from "path";
 import * as os from "os";
-import * as fs from "fs";
 import {
     IZoweTree,
     IZoweNodeType,
@@ -638,7 +637,7 @@ export class Profiles extends ProfilesCache {
                     global = false;
                 }
             }
-            const config = await Config.load("zowe", { projectDir: fs.realpathSync(rootPath) });
+            const config = await Config.load("zowe", { projectDir: path.normalize(rootPath) });
             if (vscode.workspace.workspaceFolders) {
                 config.api.layers.activate(user, global, rootPath);
             }
