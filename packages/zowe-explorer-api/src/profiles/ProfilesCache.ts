@@ -340,7 +340,8 @@ export class ProfilesCache {
             if (profilesForType && profilesForType.length > 0) {
                 for (const prof of profilesForType) {
                     // Step 2: Merge args for each profile
-                    const profAttr = await this.getMergedAttrs(mProfileInfo, prof);
+                    const currentProfile = this.getProfileFromConfig(prof.profName);
+                    const profAttr = await this.getMergedAttrs(mProfileInfo, currentProfile);
                     // Work-around. TODO: Discuss with imperative team
                     const profileFix = this.getProfileLoaded(prof.profName, prof.profType, profAttr);
                     // set default for type
