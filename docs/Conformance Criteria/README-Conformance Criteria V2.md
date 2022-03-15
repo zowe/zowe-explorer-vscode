@@ -122,9 +122,9 @@ General conformance criteria for all extensions that add new capabilities to Zow
  <tr>
    <th style="background-color:#555555" rowspan=5>10</th>
    <th style="background-color:#555555"></th>
-   <th style="background-color:#AAAAAA" colspan=2>Mark (a) or (b) or (c)</th>
+   <th style="background-color:#AAAAAA" colspan=2>Mark all that apply,(a) (b) (c)</th>
    <th style="background-color:#AAAAAA"></th>
-   <td style="text-align:center">Extension uses the extensibility APIs provided by Zowe Explorer. Supported methods include:<p style="color:red">(Please select all that apply _a_, _b_, or _c_)</td>
+   <td style="text-align:center">Extension uses the extensibility APIs provided by Zowe Explorer. Supported methods include:<p style="color:red">(Please select all that apply)</td>
  </tr>
  <tr>
    <th style="background-color:#555555"></th>
