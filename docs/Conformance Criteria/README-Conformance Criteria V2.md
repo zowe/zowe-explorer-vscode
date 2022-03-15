@@ -310,7 +310,7 @@ Criteria for VS Code extensions adding menu and commands to VS Code that utilize
  </tr>
 
  <tr>
-   <th style="background-color:#555555">23</th>
+   <th style="background-color:#555555">24</th>
    <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
@@ -319,7 +319,7 @@ Criteria for VS Code extensions adding menu and commands to VS Code that utilize
  </tr>
 
   <tr>
-   <th style="background-color:#555555">24</th>
+   <th style="background-color:#555555">25</th>
    <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
@@ -328,7 +328,7 @@ Criteria for VS Code extensions adding menu and commands to VS Code that utilize
  </tr>
 
   <tr>
-   <th style="background-color:#555555">25</th>
+   <th style="background-color:#555555">26</th>
    <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA"></th>
    <th style="background-color:#AAAAAA">x</th>
@@ -338,7 +338,7 @@ Criteria for VS Code extensions adding menu and commands to VS Code that utilize
  </tr>
 
    <tr>
-   <th style="background-color:#555555">26</th>
+   <th style="background-color:#555555">27</th>
    <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
@@ -348,7 +348,7 @@ Criteria for VS Code extensions adding menu and commands to VS Code that utilize
  </tr>
 
  <tr>
-   <th style="background-color:#555555">27</th>
+   <th style="background-color:#555555">28</th>
    <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
