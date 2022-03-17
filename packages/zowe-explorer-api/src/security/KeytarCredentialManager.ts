@@ -42,6 +42,7 @@ export class KeytarCredentialManager extends AbstractCredentialManager {
      * Combined list of services that credentials may be stored under
      */
     private allServices: string[] = [
+        globals.SCS_ZOWE_CLI_V2,
         globals.SETTINGS_SCS_DEFAULT,
         globals.SCS_BRIGHTSIDE,
         globals.SCS_ZOWE_CLI,
