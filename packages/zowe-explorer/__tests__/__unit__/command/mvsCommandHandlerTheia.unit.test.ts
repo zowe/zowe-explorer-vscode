@@ -35,6 +35,7 @@ describe("mvsCommandActions unit testing", () => {
         show: jest.fn(),
         hide: jest.fn(),
         dispose: jest.fn(),
+        replace: jest.fn(),
     };
     createOutputChannel.mockReturnValue(outputChannel);
     const qpItem: vscode.QuickPickItem = new utils.FilterDescriptor("\uFF0B " + "Create a new filter");

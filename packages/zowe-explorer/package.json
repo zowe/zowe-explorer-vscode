@@ -1679,7 +1679,7 @@
     "createDemoNodes": "ts-node ./scripts/createDemoNodes.ts"
   },
   "engines": {
-    "vscode": "^1.43.0"
+    "vscode": "^1.53.2"
   },
   "devDependencies": {
     "@types/chai": "^4.2.6",
