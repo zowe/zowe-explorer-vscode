@@ -419,10 +419,13 @@ export class ProfilesCache {
      * not initialized it we mock a default value.
      */
     private getZoweDir(): string {
-        imperative.ImperativeConfig.instance.loadedConfig = {
-            defaultHome: path.join(os.homedir(), ".zowe"),
-            envVariablePrefix: "ZOWE",
-        };
+        if (imperative.ImperativeConfig.instance.loadedConfig == null) {
+            imperative.ImperativeConfig.instance.loadedConfig = {
+                name: "zowe",
+                defaultHome: path.join(os.homedir(), ".zowe"),
+                envVariablePrefix: "ZOWE",
+            };
+        }
         return imperative.ImperativeConfig.instance.cliHome;
     }
 }
