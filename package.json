@@ -37,7 +37,7 @@
     "vsce": "^1.99.0",
     "vscode-nls-dev": "^4.0.0",
     "vscode-test": "^1.4.0",
-    "yarn": "1.22.10"
+    "yarn": "1.22.17"
   },
   "resolutions": {
     "**/lodash": "^4.17.21",
