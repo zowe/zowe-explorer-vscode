@@ -86,6 +86,11 @@
     ],
     "commands": [
       {
+        "command": "zowe.promptCredentials",
+        "title": "%zowe.promptCredentials%",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.extRefresh",
         "title": "%zowe.extRefresh%",
         "category": "Zowe Explorer",
@@ -834,6 +839,11 @@
         },
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)ussSession.*/",
+          "command": "zowe.promptCredentials",
+          "group": "098_zowe_ussProfileAuthentication@3"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)ussSession.*/",
           "command": "zowe.uss.ssoLogin",
           "group": "098_zowe_ussProfileAuthentication@3"
         },
@@ -1039,6 +1049,11 @@
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
+          "command": "zowe.promptCredentials",
+          "group": "098_zowe_dsProfileAuthentication@8"
+        },
+        {
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
           "command": "zowe.ds.ssoLogin",
           "group": "098_zowe_dsProfileAuthentication@8"
         },
@@ -1161,6 +1176,11 @@
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?=.*_validate=false.*)server.*/",
           "command": "zowe.jobs.enableValidation",
           "group": "098_zowe_jobsProfileAuthentication@4"
+        },
+        {
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/",
+          "command": "zowe.promptCredentials",
+          "group": "098_zowe_jobsProfileAuthentication@5"
         },
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/",
