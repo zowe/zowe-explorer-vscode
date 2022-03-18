@@ -11,6 +11,7 @@
 
 import * as imperative from "@zowe/imperative";
 import { ZoweExplorerApi } from "./ZoweExplorerApi";
+import { getZoweDir } from "@zowe/core-for-zowe-sdk";
 import * as path from "path";
 import * as os from "os";
 import * as fs from "fs";
@@ -191,7 +192,7 @@ export class ProfilesCache {
         if (!profileManager) {
             try {
                 profileManager = new imperative.CliProfileManager({
-                    profileRootDirectory: path.join(this.getZoweDir(), "profiles"),
+                    profileRootDirectory: path.join(getZoweDir(), "profiles"),
                     type,
                 });
             } catch (error) {
@@ -221,7 +222,7 @@ export class ProfilesCache {
     public isSecureCredentialPluginActive(): boolean {
         let imperativeIsSecure = false;
         try {
-            const fileName = path.join(this.getZoweDir(), "settings", "imperative.json");
+            const fileName = path.join(getZoweDir(), "settings", "imperative.json");
             let settings: Record<string, unknown>;
             if (fs.existsSync(fileName)) {
                 settings = JSON.parse(fs.readFileSync(fileName, "utf-8")) as Record<string, unknown>;
@@ -412,20 +413,5 @@ export class ProfilesCache {
             externalTypeArray.filter((exType) => registeredTypes.every((type) => type !== exType))
         );
         return allTypes;
-    }
-
-    /**
-     * Function to retrieve the home directory. In the situation Imperative has
-     * not initialized it we mock a default value.
-     */
-    private getZoweDir(): string {
-        if (imperative.ImperativeConfig.instance.loadedConfig == null) {
-            imperative.ImperativeConfig.instance.loadedConfig = {
-                name: "zowe",
-                defaultHome: path.join(os.homedir(), ".zowe"),
-                envVariablePrefix: "ZOWE",
-            };
-        }
-        return imperative.ImperativeConfig.instance.cliHome;
     }
 }
