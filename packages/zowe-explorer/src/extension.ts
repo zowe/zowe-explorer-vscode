@@ -167,6 +167,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             }
 
             await Profiles.getInstance().promptCredentials(profileName, true);
+            await refreshActions.refreshAll(datasetProvider);
+            await refreshActions.refreshAll(ussFileProvider);
+            await refreshActions.refreshAll(jobsProvider);
         })
     );
 
