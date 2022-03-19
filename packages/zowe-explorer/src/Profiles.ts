@@ -44,6 +44,7 @@ import {
     ValidProfileEnum,
     ProfilesCache,
     IUrlValidator,
+    ZoweVsCodeExtension
 } from "@zowe/zowe-explorer-api";
 import {
     errorHandling,
@@ -110,7 +111,7 @@ export class Profiles extends ProfilesCache {
                     error,
                     theProfile.name,
                     localize("checkCurrentProfile.error", "Error encountered in ") +
-                        `checkCurrentProfile.optionalProfiles!`
+                    `checkCurrentProfile.optionalProfiles!`
                 );
                 return profileStatus;
             }
@@ -858,35 +859,47 @@ export class Profiles extends ProfilesCache {
         }
     }
 
-    public async promptCredentials(sessName, rePrompt?: boolean) {
-        const loadProfile = this.getLoadedProfConfig(sessName.trim());
-        const loadSession = loadProfile.profile as ISession;
-        const creds = await this.promptUserPass(loadSession, rePrompt);
-        if (creds && creds.length > 0) {
-            loadProfile.profile.user = loadSession.user = creds[0];
-            loadProfile.profile.password = loadSession.password = creds[1];
+    public async promptCredentials(sessionName, rePrompt?: boolean) {
+        const userInputBoxOptions: vscode.InputBoxOptions = {
+            placeHolder: localize("createNewConnection.option.prompt.username.placeholder", "User Name"),
+            prompt: localize(
+                "createNewConnection.option.prompt.username",
+                "Enter the user name for the connection. Leave blank to not store."
+            )
+        };
+        const passwordInputBoxOptions: vscode.InputBoxOptions = {
+            placeHolder: localize("createNewConnection.option.prompt.password.placeholder", "Password"),
+            prompt: localize(
+                "createNewConnection.option.prompt.password",
+                "Enter the password for the connection. Leave blank to not store."
+            )
+        };
+        const promptInfo = await ZoweVsCodeExtension.promptCredentials({
+            sessionName,
+            rePrompt,
+            userInputBoxOptions,
+            passwordInputBoxOptions
+        });
 
-            const upd = { profileName: loadProfile.name, profileType: loadProfile.type };
-            await ProfilesCache.getConfigInstance().updateProperty({ ...upd, property: "user", value: creds[0] });
-            await ProfilesCache.getConfigInstance().updateProperty({ ...upd, property: "password", value: creds[1] });
-
-            const updSession = ZoweExplorerApiRegister.getMvsApi(loadProfile).getSession();
+        let returnValue;
+        if (promptInfo.creds) {
             if (ProfilesCache.getConfigInstance().usingTeamConfig) {
                 const profArray = [];
                 for (const theprofile of this.allProfiles) {
-                    if (theprofile.name !== loadProfile.name) {
+                    if (theprofile.name !== promptInfo.profile.name) {
                         profArray.push(theprofile);
                     }
                 }
-                profArray.push(loadProfile);
+                profArray.push(promptInfo.profile);
                 this.allProfiles = profArray;
+                await readConfigFromDisk();
             }
-            return [updSession.ISession.user, updSession.ISession.password, updSession.ISession.base64EncodedAuth];
+            returnValue = [promptInfo.user, promptInfo.password, promptInfo.base64EncodedAuth];
+        } else {
+            vscode.window.showInformationMessage(localize("promptCredentials.undefined.value", "Operation Cancelled"));
         }
-
-        vscode.window.showInformationMessage(localize("promptCredentials.undefined.value", "Operation Cancelled"));
         await this.refresh(ZoweExplorerApiRegister.getInstance());
-        return undefined;
+        return returnValue;
     }
 
     public async getDeleteProfile() {
@@ -1390,52 +1403,6 @@ export class Profiles extends ProfilesCache {
         await vscode.window.showTextDocument(document);
     }
 
-    private async promptSaveConfig(profileName: string, saveButtons: string[]) {
-        const infoMsg = localize(
-            "promptCredentials.saveCredentialsConfig.infoMessage",
-            `Save entered credentials for future use with profile: {0}?\nSaving credentials will update the team config file.\n"Save Unsecure" will save values in plain text.`,
-            profileName
-        );
-        return vscode.window.showInformationMessage(infoMsg, { modal: true }, ...saveButtons).then((selection) => {
-            return selection;
-        });
-    }
-
-    private async promptUserPass(loadSession: ISession, rePrompt?: boolean): Promise<string[] | undefined> {
-        let repromptUser: string;
-        let repromptPass: string;
-        let newUser: string;
-        let newPass: string;
-
-        if (rePrompt) {
-            repromptUser = loadSession.user;
-            repromptPass = loadSession.password;
-        }
-
-        if (!loadSession.user || rePrompt) {
-            newUser = await this.userInfo(repromptUser);
-            loadSession.user = newUser;
-        } else {
-            newUser = loadSession.user;
-        }
-
-        if (!newUser || (rePrompt && newUser === "")) {
-            return undefined;
-        } else {
-            if (!loadSession.password || rePrompt) {
-                newPass = await this.passwordInfo(repromptPass);
-                loadSession.password = newPass;
-            } else {
-                newPass = loadSession.password;
-            }
-        }
-
-        if (!newPass || (rePrompt && newUser === "")) {
-            return undefined;
-        }
-        return [newUser, newPass];
-    }
-
     private async updateBaseProfileFileLogin(baseProfile: IProfileLoaded, updBaseProfile: IProfile) {
         const mProfileInfo = ProfilesCache.getConfigInstance();
         if (mProfileInfo.usingTeamConfig) {
@@ -1563,7 +1530,7 @@ export class Profiles extends ProfilesCache {
         } catch (error) {
             this.log.error(
                 localize("deleteProfile.delete.log.error", "Error encountered when deleting profile! ") +
-                    JSON.stringify(error)
+                JSON.stringify(error)
             );
             await errorHandling(error, profileName, error.message);
             throw error;

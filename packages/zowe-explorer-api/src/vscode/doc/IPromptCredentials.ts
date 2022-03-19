@@ -9,5 +9,27 @@
  *                                                                                 *
  */
 
-export * from "./doc";
-export * from "./ZoweVsCodeExtension";
+import { IProfileLoaded, ISession } from "@zowe/imperative";
+import { InputBoxOptions } from "vscode";
+
+export interface IPromptCredentialsCommonOptions {
+  rePrompt?: boolean;
+  userInputBoxOptions?: InputBoxOptions;
+  passwordInputBoxOptions?: InputBoxOptions;
+}
+
+export interface IPromptCredentialsOptions extends IPromptCredentialsCommonOptions {
+  sessionName: string;
+}
+
+export interface IPromptUserPassOptions extends IPromptCredentialsCommonOptions {
+  session: ISession;
+}
+
+export interface IPromptCredentialsReturnValue {
+  user?: string,
+  password?: string,
+  base64EncodedAuth?: string;
+  creds: boolean;
+  profile: IProfileLoaded;
+}
