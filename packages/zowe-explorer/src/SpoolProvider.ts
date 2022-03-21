@@ -65,14 +65,12 @@ export function encodeJobFile(session: string, spool: zowe.IJobFile): vscode.Uri
  * @param spool The IJobFile to get the spool content for.
  * @param uniqueFragment The unique fragment of the encoded uri (can be timestamp, for example)
  */
-export const toUniqueJobFileUri =
-    (session: string, spool: zowe.IJobFile) =>
-    (uniqueFragment: string): vscode.Uri => {
-        const encodedUri = encodeJobFile(session, spool);
-        return encodedUri.with({
-            fragment: uniqueFragment,
-        });
-    };
+export const toUniqueJobFileUri = (session: string, spool: zowe.IJobFile) => (uniqueFragment: string): vscode.Uri => {
+    const encodedUri = encodeJobFile(session, spool);
+    return encodedUri.with({
+        fragment: uniqueFragment,
+    });
+};
 
 /**
  * Decode the information needed to get the Spool content.

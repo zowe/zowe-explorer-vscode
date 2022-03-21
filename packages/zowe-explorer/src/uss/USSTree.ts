@@ -635,8 +635,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 if (!sessionNode.getSession().ISession.user || !sessionNode.getSession().ISession.password) {
                     sessionNode.getSession().ISession.user = faveNode.getSession().ISession.user;
                     sessionNode.getSession().ISession.password = faveNode.getSession().ISession.password;
-                    sessionNode.getSession().ISession.base64EncodedAuth =
-                        faveNode.getSession().ISession.base64EncodedAuth;
+                    sessionNode.getSession().ISession.base64EncodedAuth = faveNode.getSession().ISession.base64EncodedAuth;
                 }
             }
             // Get session for sessionNode
