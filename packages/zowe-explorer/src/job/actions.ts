@@ -73,10 +73,16 @@ export async function getSpoolContent(session: string, spool: zowe.IJobFile, ref
     }
     await profiles.checkCurrentProfile(zosmfProfile);
     if (profiles.validProfile === ValidProfileEnum.VALID || profiles.validProfile === ValidProfileEnum.UNVERIFIED) {
-        const uri = toUniqueJobFileUri(session, spool)(refreshTimestamp.toString());
+        const uri: vscode.Uri = toUniqueJobFileUri(session, spool)(refreshTimestamp.toString());
         try {
             await vscode.window.showTextDocument(uri);
         } catch (error) {
+            const isTextDocActive =
+                vscode.window.activeTextEditor.document.uri?.path === `${spool.jobname}.${spool.jobid}.${spool.ddname}`;
+
+            if (String(error.message).includes("Failed to show text document") && isTextDocActive) {
+                return;
+            }
             await errorHandling(error, session, error.message);
             return;
         }
