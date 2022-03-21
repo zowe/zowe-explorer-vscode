@@ -14,7 +14,11 @@ import * as vscode from "vscode";
 import { ProfilesCache, ZoweExplorerApi } from "../profiles";
 import { IZoweLogger, MessageSeverityEnum } from "../logger/IZoweLogger";
 import { ISession } from "@zowe/imperative";
-import { IPromptCredentialsOptions, IPromptCredentialsReturnValue, IPromptUserPassOptions } from "./doc/IPromptCredentials";
+import {
+    IPromptCredentialsOptions,
+    IPromptCredentialsReturnValue,
+    IPromptUserPassOptions,
+} from "./doc/IPromptCredentials";
 
 /**
  * Collection of utility functions for writing Zowe Explorer VS Code extensions.
@@ -84,7 +88,7 @@ export class ZoweVsCodeExtension {
                 password: updSession.ISession.password,
                 base64EncodedAuth: updSession.ISession.base64EncodedAuth,
                 creds: true,
-                profile: loadProfile
+                profile: loadProfile,
             };
         }
         return { creds: false, profile: loadProfile };
@@ -106,7 +110,7 @@ export class ZoweVsCodeExtension {
                 prompt: "Enter the user name for the connection. Leave blank to not store.",
                 ignoreFocusOut: true,
                 value: newUser,
-                ...(options.userInputBoxOptions ?? {})
+                ...(options.userInputBoxOptions ?? {}),
             });
             options.session.user = newUser;
         }
@@ -122,7 +126,7 @@ export class ZoweVsCodeExtension {
                 password: true,
                 ignoreFocusOut: true,
                 value: newPass,
-                ...(options.passwordInputBoxOptions ?? {})
+                ...(options.passwordInputBoxOptions ?? {}),
             });
             options.session.password = newPass;
         }

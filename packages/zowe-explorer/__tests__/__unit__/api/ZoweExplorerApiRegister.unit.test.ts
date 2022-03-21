@@ -17,6 +17,7 @@ import { Logger, IProfileLoaded, Session } from "@zowe/imperative";
 import { ZoweExplorerApi, ZosmfUssApi, ZosmfJesApi, ZosmfMvsApi, ProfilesCache } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
+import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 
 class MockUssApi1 implements ZoweExplorerApi.IUss {
     public profile?: IProfileLoaded;
@@ -45,14 +46,14 @@ class MockUssApi1 implements ZoweExplorerApi.IUss {
     public putContent(
         inputFilePath: string,
         ussFilePath: string,
-        options: zowe.IUploadOptions
+        options: IUploadOptions
     ): Promise<zowe.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
     public uploadDirectory(
         inputDirectoryPath: string,
         ussDirectoryPath: string,
-        options: zowe.IUploadOptions
+        options: IUploadOptions
     ): Promise<zowe.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
@@ -109,14 +110,14 @@ class MockUssApi2 implements ZoweExplorerApi.IUss {
     public putContent(
         inputFilePath: string,
         ussFilePath: string,
-        options: zowe.IUploadOptions
+        options: IUploadOptions
     ): Promise<zowe.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
     public uploadDirectory(
         inputDirectoryPath: string,
         ussDirectoryPath: string,
-        options: zowe.IUploadOptions
+        options: IUploadOptions
     ): Promise<zowe.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }

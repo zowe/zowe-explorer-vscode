@@ -44,7 +44,7 @@ import {
     ValidProfileEnum,
     ProfilesCache,
     IUrlValidator,
-    ZoweVsCodeExtension
+    ZoweVsCodeExtension,
 } from "@zowe/zowe-explorer-api";
 import {
     errorHandling,
@@ -111,7 +111,7 @@ export class Profiles extends ProfilesCache {
                     error,
                     theProfile.name,
                     localize("checkCurrentProfile.error", "Error encountered in ") +
-                    `checkCurrentProfile.optionalProfiles!`
+                        `checkCurrentProfile.optionalProfiles!`
                 );
                 return profileStatus;
             }
@@ -865,20 +865,20 @@ export class Profiles extends ProfilesCache {
             prompt: localize(
                 "createNewConnection.option.prompt.username",
                 "Enter the user name for the connection. Leave blank to not store."
-            )
+            ),
         };
         const passwordInputBoxOptions: vscode.InputBoxOptions = {
             placeHolder: localize("createNewConnection.option.prompt.password.placeholder", "Password"),
             prompt: localize(
                 "createNewConnection.option.prompt.password",
                 "Enter the password for the connection. Leave blank to not store."
-            )
+            ),
         };
         const promptInfo = await ZoweVsCodeExtension.promptCredentials({
             sessionName,
             rePrompt,
             userInputBoxOptions,
-            passwordInputBoxOptions
+            passwordInputBoxOptions,
         });
 
         let returnValue;
@@ -1530,7 +1530,7 @@ export class Profiles extends ProfilesCache {
         } catch (error) {
             this.log.error(
                 localize("deleteProfile.delete.log.error", "Error encountered when deleting profile! ") +
-                JSON.stringify(error)
+                    JSON.stringify(error)
             );
             await errorHandling(error, profileName, error.message);
             throw error;

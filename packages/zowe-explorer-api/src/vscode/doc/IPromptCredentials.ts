@@ -13,23 +13,23 @@ import { IProfileLoaded, ISession } from "@zowe/imperative";
 import { InputBoxOptions } from "vscode";
 
 export interface IPromptCredentialsCommonOptions {
-  rePrompt?: boolean;
-  userInputBoxOptions?: InputBoxOptions;
-  passwordInputBoxOptions?: InputBoxOptions;
+    rePrompt?: boolean;
+    userInputBoxOptions?: InputBoxOptions;
+    passwordInputBoxOptions?: InputBoxOptions;
 }
 
 export interface IPromptCredentialsOptions extends IPromptCredentialsCommonOptions {
-  sessionName: string;
+    sessionName: string;
 }
 
 export interface IPromptUserPassOptions extends IPromptCredentialsCommonOptions {
-  session: ISession;
+    session: ISession;
 }
 
 export interface IPromptCredentialsReturnValue {
-  user?: string,
-  password?: string,
-  base64EncodedAuth?: string;
-  creds: boolean;
-  profile: IProfileLoaded;
+    user?: string;
+    password?: string;
+    base64EncodedAuth?: string;
+    creds: boolean;
+    profile: IProfileLoaded;
 }

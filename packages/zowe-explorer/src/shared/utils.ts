@@ -25,7 +25,8 @@ import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { ISession, IProfileLoaded, ITaskWithStatus } from "@zowe/imperative";
 import * as nls from "vscode-nls";
-import { IUploadOptions, IZosFilesResponse } from "@zowe/cli";
+import { IZosFilesResponse } from "@zowe/cli";
+import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 
 // Set up localization
 nls.config({

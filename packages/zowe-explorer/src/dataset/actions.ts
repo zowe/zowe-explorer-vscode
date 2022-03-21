@@ -27,6 +27,7 @@ import { DatasetTree } from "./DatasetTree";
 import * as contextually from "../shared/context";
 import { setFileSaved } from "../utils/workspace";
 import { UIViews } from "../shared/ui-views";
+import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 
 // Set up localization
 import * as nls from "vscode-nls";
@@ -1397,7 +1398,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
     });
 
     // define upload options
-    let uploadOptions: zowe.IUploadOptions;
+    let uploadOptions: IUploadOptions;
     if (node) {
         uploadOptions = {
             etag: node.getEtag(),
