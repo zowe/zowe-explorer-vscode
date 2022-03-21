@@ -78,8 +78,8 @@ export async function getSpoolContent(session: string, spool: zowe.IJobFile, ref
             await vscode.window.showTextDocument(uri);
         } catch (error) {
             const isTextDocActive =
-                vscode.window.activeTextEditor.document.uri.path === `${spool.jobname}.${spool.jobid}.${spool.ddname}`;
-            if (error.message.toString().contains("Failed to show text document") && isTextDocActive) {
+                vscode.window.activeTextEditor.document.uri?.path === `${spool.jobname}.${spool.jobid}.${spool.ddname}`;
+            if (String(error.message).includes("Failed to show text document") && isTextDocActive) {
                 return;
             }
             await errorHandling(error, session, error.message);
