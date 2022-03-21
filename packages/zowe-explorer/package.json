@@ -1662,7 +1662,7 @@
     "test:theia": "mocha ./out/__tests__/__theia__/*.theia.test.js --timeout 50000",
     "test": "yarn test:unit",
     "updateStrings": "node ../../scripts/stringUpdateScript.js && prettier --write  --loglevel warn ./i18n package.nls*",
-    "package": "vsce package --yarn && node ../../scripts/mv-pack.js vscode-extension-for-zowe vsix",
+    "package": "vsce package --allow-star-activation --yarn && node ../../scripts/mv-pack.js vscode-extension-for-zowe vsix",
     "license": "node ../../scripts/license.js",
     "watch": "yarn createTestProfileData && gulp build && webpack --mode development --watch --info-verbosity verbose",
     "compile": "tsc -b",
