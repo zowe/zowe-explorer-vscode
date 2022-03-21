@@ -29,7 +29,7 @@
     "resources"
   ],
   "activationEvents": [
-    "onStartupFinished"
+    "*"
   ],
   "main": "./out/src/extension",
   "contributes": {
