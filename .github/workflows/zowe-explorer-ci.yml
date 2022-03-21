@@ -22,7 +22,7 @@ jobs:
       # Continue to run tests on the other systems if one fails
       fail-fast: false
       matrix:
-        node-version: [14, 16]
+        node-version: [14, 16, 17]
         # order operating systems from best to worst
         os: [windows-latest, ubuntu-latest, macos-latest]
 
