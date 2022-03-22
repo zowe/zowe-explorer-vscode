@@ -4,9 +4,11 @@ on:
   push:
     paths:
       - packages/zowe-explorer-ftp-extension/**
+      - packages/zowe-explorer-api/**
   pull_request:
     paths:
       - packages/zowe-explorer-ftp-extension/**
+      - packages/zowe-explorer-api/**
 
 jobs:
   zftp-build:
