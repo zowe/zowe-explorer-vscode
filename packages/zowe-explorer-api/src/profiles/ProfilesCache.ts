@@ -11,8 +11,13 @@
 
 import * as imperative from "@zowe/imperative";
 import { ZoweExplorerApi } from "./ZoweExplorerApi";
+
+import { getZoweDir } from "@zowe/core-for-zowe-sdk";
 // import { getZoweDir } from "@zowe/cli";
-import * as zowe from "@zowe/cli";
+const zowe = { getZoweDir };
+
+// import * as zowe from "@zowe/cli";
+
 import * as path from "path";
 import * as os from "os";
 import * as fs from "fs";
