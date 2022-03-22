@@ -12,8 +12,8 @@
 import * as imperative from "@zowe/imperative";
 import { ZoweExplorerApi } from "./ZoweExplorerApi";
 
-import { getZoweDir } from "@zowe/core-for-zowe-sdk";
-// import { getZoweDir } from "@zowe/cli";
+// import { getZoweDir } from "@zowe/core-for-zowe-sdk";
+import { getZoweDir } from "@zowe/cli";
 const zowe = { getZoweDir };
 
 // import * as zowe from "@zowe/cli";
