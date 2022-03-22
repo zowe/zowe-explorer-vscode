@@ -11,7 +11,8 @@
 
 import * as imperative from "@zowe/imperative";
 import { ZoweExplorerApi } from "./ZoweExplorerApi";
-import { getZoweDir } from "@zowe/core-for-zowe-sdk";
+// import { getZoweDir } from "@zowe/cli";
+import * as zowe from "@zowe/cli";
 import * as path from "path";
 import * as os from "os";
 import * as fs from "fs";
@@ -192,7 +193,7 @@ export class ProfilesCache {
         if (!profileManager) {
             try {
                 profileManager = new imperative.CliProfileManager({
-                    profileRootDirectory: path.join(getZoweDir(), "profiles"),
+                    profileRootDirectory: path.join(zowe.getZoweDir(), "profiles"),
                     type,
                 });
             } catch (error) {
@@ -222,7 +223,7 @@ export class ProfilesCache {
     public isSecureCredentialPluginActive(): boolean {
         let imperativeIsSecure = false;
         try {
-            const fileName = path.join(getZoweDir(), "settings", "imperative.json");
+            const fileName = path.join(zowe.getZoweDir(), "settings", "imperative.json");
             let settings: Record<string, unknown>;
             if (fs.existsSync(fileName)) {
                 settings = JSON.parse(fs.readFileSync(fileName, "utf-8")) as Record<string, unknown>;
