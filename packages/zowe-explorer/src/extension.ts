@@ -32,7 +32,7 @@ import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import { Profiles } from "./Profiles";
 import { errorHandling, readConfigFromDisk } from "./utils/ProfilesUtils";
-import { ImperativeError, CliProfileManager } from "@zowe/imperative";
+import { ImperativeError, CliProfileManager, ImperativeConfig } from "@zowe/imperative";
 import { getImperativeConfig } from "@zowe/cli";
 import { createDatasetTree } from "./dataset/DatasetTree";
 import { createJobsTree } from "./job/ZosJobsProvider";
@@ -98,10 +98,12 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         }
 
         // Ensure that ~/.zowe folder exists
-        await CliProfileManager.initialize({
-            configuration: getImperativeConfig().profiles,
-            profileRootDirectory: path.join(getZoweDir(), "profiles"),
-        });
+        if (!ImperativeConfig.instance.config?.exists) {
+            await CliProfileManager.initialize({
+                configuration: getImperativeConfig().profiles,
+                profileRootDirectory: path.join(getZoweDir(), "profiles"),
+            });
+        }
 
         await readConfigFromDisk();
 
