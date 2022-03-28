@@ -9,13 +9,14 @@
  *                                                                                 *
  */
 
-import * as imperative from "@zowe/imperative";
-import { ZoweExplorerApi } from "./ZoweExplorerApi";
-import { getZoweDir } from "@zowe/core-for-zowe-sdk";
 import * as path from "path";
 import * as os from "os";
 import * as fs from "fs";
 import { URL } from "url";
+
+import * as imperative from "@zowe/imperative";
+import * as zowe from "@zowe/cli";
+import { ZoweExplorerApi } from "./ZoweExplorerApi";
 
 // TODO: find a home for constants
 export const CONTEXT_PREFIX = "_";
@@ -42,6 +43,10 @@ export enum ValidProfileEnum {
     UNVERIFIED = 1,
     VALID = 0,
     INVALID = -1,
+}
+
+export function getZoweDir(): string {
+    return zowe.getZoweDir();
 }
 
 export class ProfilesCache {

@@ -14,7 +14,6 @@ import * as imperative from "@zowe/imperative";
 import * as path from "path";
 import * as os from "os";
 import * as fs from "fs";
-import * as zowe from "@zowe/cli";
 import * as globals from "./globals";
 import {
     ZoweExplorerApi,
@@ -28,12 +27,12 @@ import {
 } from "@zowe/zowe-explorer-api";
 import { Profiles } from "./Profiles";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
-import * as nls from "vscode-nls";
-import { getProfileInfo, getZoweDir, getProfile } from "./utils/ProfilesUtils";
+import { getProfileInfo, getProfile } from "./utils/ProfilesUtils";
 
 // Set up localization
-nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
+// import * as nls from "vscode-nls";
+// nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+// const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 /**
  * The Zowe Explorer API Register singleton that gets exposed to other VS Code
