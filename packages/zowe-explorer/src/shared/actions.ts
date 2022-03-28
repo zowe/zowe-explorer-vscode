@@ -71,9 +71,9 @@ export async function searchInAllLoadedItems(
         if (contextually.isDs(item) || contextually.isPdsNotFav(item) || contextually.isVsam(item)) {
             if (contextually.isDsMember(item)) {
                 qpItem = new FilterItem(
-                    `[${item
-                        .getSessionNode()
-                        .label.toString()}]: ${item.getParent().label.toString()}(${item.label.toString()})`,
+                    `[${item.getSessionNode().label.toString()}]: ${item
+                        .getParent()
+                        .label.toString()}(${item.label.toString()})`,
                     "Data Set Member"
                 );
             } else {
