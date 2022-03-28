@@ -26,7 +26,7 @@ import {
     IZoweTreeNode,
     IZoweTree,
     KeytarApi,
-    getZoweDir
+    getZoweDir,
 } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
@@ -168,7 +168,16 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
                 profileName = node.getProfile().name;
             }
 
-            await Profiles.getInstance().promptCredentials(profileName, true);
+            const creds = await Profiles.getInstance().promptCredentials(profileName, true);
+            if (creds != null) {
+                vscode.window.showInformationMessage(
+                    localize(
+                        "promptCredentials.updatedCredentials",
+                        "Credentials for {0} were successfully updated",
+                        profileName
+                    )
+                );
+            }
             await refreshActions.refreshAll(datasetProvider);
             await refreshActions.refreshAll(ussFileProvider);
             await refreshActions.refreshAll(jobsProvider);

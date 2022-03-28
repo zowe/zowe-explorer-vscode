@@ -157,7 +157,7 @@ export class ImperativeConfig {
         loadedConfig: {
             name: "zowe",
             defaultHome: "./__tests__/.zowe",
-            envVariablePrefix: "ZOWE"
+            envVariablePrefix: "ZOWE",
         },
     };
     public loadedConfig = {

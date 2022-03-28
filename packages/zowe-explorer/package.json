@@ -845,12 +845,12 @@
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)ussSession.*/",
           "command": "zowe.uss.ssoLogin",
-          "group": "098_zowe_ussProfileAuthentication@3"
+          "group": "098_zowe_ussProfileAuthentication@4"
         },
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)ussSession.*/",
           "command": "zowe.uss.ssoLogout",
-          "group": "098_zowe_ussProfileAuthentication@4"
+          "group": "098_zowe_ussProfileAuthentication@5"
         },
         {
           "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/",
@@ -1055,12 +1055,12 @@
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
           "command": "zowe.ds.ssoLogin",
-          "group": "098_zowe_dsProfileAuthentication@8"
+          "group": "098_zowe_dsProfileAuthentication@9"
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
           "command": "zowe.ds.ssoLogout",
-          "group": "098_zowe_dsProfileAuthentication@9"
+          "group": "098_zowe_dsProfileAuthentication@10"
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
@@ -1185,12 +1185,12 @@
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/",
           "command": "zowe.jobs.ssoLogin",
-          "group": "098_zowe_jobsProfileAuthentication@5"
+          "group": "098_zowe_jobsProfileAuthentication@6"
         },
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/",
           "command": "zowe.jobs.ssoLogout",
-          "group": "098_zowe_jobsProfileAuthentication@6"
+          "group": "098_zowe_jobsProfileAuthentication@7"
         },
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/",
