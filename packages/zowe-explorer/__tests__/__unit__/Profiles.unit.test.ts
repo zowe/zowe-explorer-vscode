@@ -851,6 +851,26 @@ describe("Profiles Unit Tests - Function promptCredentials", () => {
         ZoweExplorerApiRegister.getMvsApi = getMvsApiMock.bind(ZoweExplorerApiRegister);
         jest.spyOn(mockMvsApi, "getSession").mockReturnValue(globalMocks.testSession);
 
+        Object.defineProperty(ProfilesCache, "getConfigInstance", {
+            value: jest.fn(() => {
+                return {
+                    usingTeamConfig: true,
+                    getAllProfiles: () => [
+                        {
+                            profName: newMocks.imperativeProfile.name,
+                            profType: newMocks.imperativeProfile.type,
+                            profile: newMocks.imperativeProfile.name,
+                            profLoc: { osLoc: [] },
+                        },
+                    ],
+                    mergeArgsForProfile: () => {
+                        return { knownArgs: [], missingArgs: [] };
+                    },
+                    updateProperty: jest.fn(),
+                };
+            }),
+        });
+
         return newMocks;
     }
 
@@ -2175,7 +2195,11 @@ describe("Profiles Unit Tests - Function checkCurrentProfile", () => {
                 };
             }),
         });
-        const response = await theProfiles.checkCurrentProfile(blockMocks.invalidProfile);
+
+        const response = await theProfiles.checkCurrentProfile({
+            ...blockMocks.invalidProfile,
+            ...{ profile: { tokenType: true } },
+        });
         expect(response).toEqual({ name: blockMocks.invalidProfile.name, status: "unverified" });
     });
 
