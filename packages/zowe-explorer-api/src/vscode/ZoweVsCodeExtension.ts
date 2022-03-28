@@ -86,9 +86,10 @@ export class ZoweVsCodeExtension {
     public static async inputBox(inputBoxOptions: vscode.InputBoxOptions): Promise<string> {
         if (!inputBoxOptions.validateInput) {
             // adding this for the theia breaking changes with input boxes
+            // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
             inputBoxOptions.validateInput = (value) => null;
         }
-        return vscode.window.showInputBox(inputBoxOptions);
+        return await vscode.window.showInputBox(inputBoxOptions);
     }
 
     private static async promptUserPass(options: IPromptUserPassOptions): Promise<string[] | undefined> {
