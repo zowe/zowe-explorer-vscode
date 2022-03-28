@@ -14,7 +14,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 
 import { AbstractCredentialManager, ImperativeError, SecureCredential, Logger } from "@zowe/imperative";
-import { getZoweDir } from "@zowe/cli";
+import { getZoweDir } from "../profiles/ProfilesCache";
 import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";

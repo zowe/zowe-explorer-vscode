@@ -9,9 +9,23 @@
  *                                                                                 *
  */
 
+import * as path from "path";
+import * as os from "os";
 import { Session } from "../Session";
 import { IListOptions } from "@zowe/cli";
 import * as imperative from "./imperative";
+
+export function getZoweDir(): string {
+    const defaultHome = path.join(os.homedir(), ".zowe");
+    if (imperative.ImperativeConfig.instance.loadedConfig?.defaultHome !== defaultHome) {
+        imperative.ImperativeConfig.instance.loadedConfig = {
+            name: "zowe",
+            defaultHome,
+            envVariablePrefix: "ZOWE"
+        };
+    }
+    return imperative.ImperativeConfig.instance.cliHome;
+}
 
 // tslint:disable-next-line:no-namespace
 export namespace ZosmfSession {

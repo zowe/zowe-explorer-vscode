@@ -9,7 +9,7 @@
  *                                                                                 *
  */
 
-import * as zowe from "@zowe/cli";
+// import * as zowe from "@zowe/cli";
 import * as fs from "fs";
 import * as path from "path";
 import * as globals from "./globals";
@@ -26,12 +26,14 @@ import {
     IZoweTreeNode,
     IZoweTree,
     KeytarApi,
+    getZoweDir
 } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import { Profiles } from "./Profiles";
-import { errorHandling, getZoweDir, readConfigFromDisk } from "./utils/ProfilesUtils";
+import { errorHandling, readConfigFromDisk } from "./utils/ProfilesUtils";
 import { ImperativeError, CliProfileManager } from "@zowe/imperative";
+import { getImperativeConfig } from "@zowe/cli";
 import { createDatasetTree } from "./dataset/DatasetTree";
 import { createJobsTree } from "./job/ZosJobsProvider";
 import { createUSSTree } from "./uss/USSTree";
@@ -97,7 +99,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
 
         // Ensure that ~/.zowe folder exists
         await CliProfileManager.initialize({
-            configuration: zowe.getImperativeConfig().profiles,
+            configuration: getImperativeConfig().profiles,
             profileRootDirectory: path.join(getZoweDir(), "profiles"),
         });
 

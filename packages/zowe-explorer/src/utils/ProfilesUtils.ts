@@ -12,11 +12,10 @@
 // Generic utility functions (not node type related). See ./src/shared/utils.ts
 
 import * as vscode from "vscode";
-import * as os from "os";
 import * as path from "path";
 import * as globals from "../globals";
-import { Session, IProfile, ImperativeConfig, IProfileLoaded, ProfileInfo } from "@zowe/imperative";
-import { getSecurityModules, IZoweTreeNode, ProfilesCache, ZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { Session, IProfile, IProfileLoaded, ProfileInfo } from "@zowe/imperative";
+import { getSecurityModules, IZoweTreeNode, ProfilesCache, ZoweTreeNode, getZoweDir } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import * as nls from "vscode-nls";
 
@@ -196,18 +195,6 @@ export class FilterDescriptor implements vscode.QuickPickItem {
     get alwaysShow(): boolean {
         return true;
     }
-}
-
-/**
- * Function to retrieve the home directory. In the situation Imperative has
- * not initialized it we mock a default value.
- */
-export function getZoweDir(): string {
-    ImperativeConfig.instance.loadedConfig = {
-        defaultHome: path.join(os.homedir(), ".zowe"),
-        envVariablePrefix: "ZOWE",
-    };
-    return ImperativeConfig.instance.cliHome;
 }
 
 /**

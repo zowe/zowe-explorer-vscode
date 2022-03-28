@@ -154,7 +154,11 @@ export class ProfileInfo {
 export class ImperativeConfig {
     public static instance = {
         cliHome: "./__tests__/.zowe",
-        loadedConfig: {},
+        loadedConfig: {
+            name: "zowe",
+            defaultHome: "./__tests__/.zowe",
+            envVariablePrefix: "ZOWE"
+        },
     };
     public loadedConfig = {
         defaultHome: "./__tests__/.zowe",
