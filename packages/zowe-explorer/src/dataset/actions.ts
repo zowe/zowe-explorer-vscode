@@ -681,8 +681,6 @@ export async function createFile(
 
             // Show newly-created data set in expanded tree view
             if (dsName) {
-                // node.label = `${node.label} `;
-                // node.label = node.label.trim();
                 node.tooltip = node.pattern = theFilter.toUpperCase();
                 node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
                 const icon = getIconByNode(node);
@@ -1160,7 +1158,6 @@ export async function enterPattern(node: api.IZoweDatasetTreeNode, datasetProvid
     // TODO figure out why a label change is needed to refresh the treeview,
     // instead of changing the collapsible state
     // change label so the treeview updates
-    // node.label = node.label.trim() + " ";
     node.tooltip = node.pattern = pattern.toUpperCase();
     node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
     node.dirty = true;

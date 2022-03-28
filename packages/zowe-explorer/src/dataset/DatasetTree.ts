@@ -818,8 +818,6 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         // Update tree filter to include selected node, and expand session node in tree
         sessionNode.tooltip = sessionNode.pattern = await this.createFilterString(parentName, sessionNode);
         sessionNode.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
-        // sessionNode.label = sessionNode.label.trim() + " ";
-        // sessionNode.label = sessionNode.label.trim();
         sessionNode.dirty = true;
         await this.refresh();
         let children = await sessionNode.getChildren();
@@ -995,8 +993,6 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 dsSets.push(dataSet);
             }
 
-            // nonFaveNode.label = nonFaveNode.label.trim() + " ";
-            // nonFaveNode.label.trim();
             let datasets: string;
             for (const item of dsSets) {
                 const newItem = item;
