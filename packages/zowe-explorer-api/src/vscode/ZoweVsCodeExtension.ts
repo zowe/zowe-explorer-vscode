@@ -13,12 +13,8 @@ import * as semver from "semver";
 import * as vscode from "vscode";
 import { ProfilesCache, ZoweExplorerApi } from "../profiles";
 import { IZoweLogger, MessageSeverityEnum } from "../logger/IZoweLogger";
-import { ISession } from "@zowe/imperative";
-import {
-    IPromptCredentialsOptions,
-    IPromptCredentialsReturnValue,
-    IPromptUserPassOptions,
-} from "./doc/IPromptCredentials";
+import { ISession, IProfileLoaded } from "@zowe/imperative";
+import { IPromptCredentialsOptions, IPromptUserPassOptions } from "./doc/IPromptCredentials";
 
 /**
  * Collection of utility functions for writing Zowe Explorer VS Code extensions.
@@ -68,11 +64,11 @@ export class ZoweVsCodeExtension {
         }
     }
 
-    public static async promptCredentials(options: IPromptCredentialsOptions): Promise<IPromptCredentialsReturnValue> {
+    public static async promptCredentials(options: IPromptCredentialsOptions): Promise<IProfileLoaded> {
         const loadProfile = ProfilesCache.getLoadedProfConfig(options.sessionName.trim());
         const loadSession = loadProfile.profile as ISession;
 
-        const creds = await ZoweVsCodeExtension.promptUserPass({ session: loadSession, rePrompt: options.rePrompt });
+        const creds = await ZoweVsCodeExtension.promptUserPass({ session: loadSession, ...options });
 
         if (creds && creds.length > 0) {
             loadProfile.profile.user = loadSession.user = creds[0];
@@ -82,22 +78,9 @@ export class ZoweVsCodeExtension {
             await ProfilesCache.getConfigInstance().updateProperty({ ...upd, property: "user", value: creds[0] });
             await ProfilesCache.getConfigInstance().updateProperty({ ...upd, property: "password", value: creds[1] });
 
-            let updSession = { ISession: loadSession };
-            try {
-                updSession = ZoweVsCodeExtension.getZoweExplorerApi().getMvsApi(loadProfile).getSession();
-            } catch (_MvsApisNotRegistered) {
-                // Do Nothing
-            }
-
-            return {
-                user: updSession.ISession.user,
-                password: updSession.ISession.password,
-                base64EncodedAuth: updSession.ISession.base64EncodedAuth,
-                creds: true,
-                profile: loadProfile,
-            };
+            return loadProfile;
         }
-        return { creds: false, profile: loadProfile };
+        return undefined;
     }
 
     public static async inputBox(inputBoxOptions: vscode.InputBoxOptions): Promise<string> {

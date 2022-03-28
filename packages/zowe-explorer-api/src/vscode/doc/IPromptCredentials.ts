@@ -25,11 +25,3 @@ export interface IPromptCredentialsOptions extends IPromptCredentialsCommonOptio
 export interface IPromptUserPassOptions extends IPromptCredentialsCommonOptions {
     session: ISession;
 }
-
-export interface IPromptCredentialsReturnValue {
-    user?: string;
-    password?: string;
-    base64EncodedAuth?: string;
-    creds: boolean;
-    profile: IProfileLoaded;
-}
