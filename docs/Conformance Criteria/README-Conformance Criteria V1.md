@@ -1,4 +1,4 @@
-# Zowe Explorer Conformance Evaluation Criteria (DRAFT)
+# Zowe Explorer Conformance Evaluation Criteria (Version 1)
 
 The Zowe Conformance Evaluation Criteria is a set of self-certifying and self-service tests to help the development community integrate and extend specific technology into the Zowe framework.
 
