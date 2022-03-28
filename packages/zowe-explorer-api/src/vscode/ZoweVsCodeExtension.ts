@@ -82,7 +82,13 @@ export class ZoweVsCodeExtension {
             await ProfilesCache.getConfigInstance().updateProperty({ ...upd, property: "user", value: creds[0] });
             await ProfilesCache.getConfigInstance().updateProperty({ ...upd, property: "password", value: creds[1] });
 
-            const updSession = ZoweVsCodeExtension.getZoweExplorerApi().getMvsApi(loadProfile).getSession();
+            let updSession = { ISession: loadSession };
+            try {
+                updSession = ZoweVsCodeExtension.getZoweExplorerApi().getMvsApi(loadProfile).getSession();
+            } catch (_MvsApisNotRegistered) {
+                // Do Nothing
+            }
+
             return {
                 user: updSession.ISession.user,
                 password: updSession.ISession.password,
