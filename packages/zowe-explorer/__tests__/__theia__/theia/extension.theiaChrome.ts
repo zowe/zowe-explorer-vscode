@@ -69,7 +69,7 @@ export async function clickOnJobsTab() {
 
 export async function getFavoritePrfileNameFromDatasets() {
     const favoriteProfile = await driverChrome
-        .wait(until.elementLocated(By.id(DatasetsLocators.favoriteProfileInDatasetId)), WAITTIME)
+        .wait(until.elementLocated(By.xpath(DatasetsLocators.favoriteProfileInDatasetXpath)), WAITTIME)
         .getText();
     return favoriteProfile;
 }
