@@ -178,12 +178,12 @@ describe("Add and Remove Profile to USS Favorites", () => {
         await driverChrome.sleepTime(SHORTSLEEPTIME);
         await driverChrome.OpenTheiaInChrome();
         await driverChrome.sleepTime(SLEEPTIME);
-        await driverChrome.clickOnZoweExplorer();
+        // await driverChrome.clickOnZoweExplorer();
     });
 
     it("Should Add Profile to Favorites under USS", async () => {
-        // await driverChrome.clickOnDatasetsTab();
-        // await driverChrome.sleepTime(SHORTSLEEPTIME);
+        await driverChrome.clickOnDatasetsTab();
+        await driverChrome.sleepTime(SHORTSLEEPTIME);
         await driverChrome.clickOnUssTabs();
         await driverChrome.sleepTime(SHORTSLEEPTIME);
         await driverChrome.addProfileToFavoritesInUss();
@@ -214,12 +214,12 @@ describe("Add and Remove Profile to JOBS Favorites", () => {
         await driverChrome.sleepTime(SHORTSLEEPTIME);
         await driverChrome.OpenTheiaInChrome();
         await driverChrome.sleepTime(SLEEPTIME);
-        await driverChrome.clickOnZoweExplorer();
+        // await driverChrome.clickOnZoweExplorer();
     });
 
     it("Should Add Profile to Favorites under JOBS", async () => {
-        // await driverChrome.clickOnUssTabs();
-        // await driverChrome.sleepTime(SHORTSLEEPTIME);
+        await driverChrome.clickOnUssTabs();
+        await driverChrome.sleepTime(SHORTSLEEPTIME);
         await driverChrome.clickOnJobsTab();
         await driverChrome.sleepTime(SHORTSLEEPTIME);
         await driverChrome.addProfileToFavoritesInJobs();
