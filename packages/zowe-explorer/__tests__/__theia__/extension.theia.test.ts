@@ -142,7 +142,7 @@ describe("Add Existing Profiles in USS and JOBS", () => {
     after(async () => driverFirefox.closeBrowser());
 });
 
-describe("Add and Remove Profile to Data Set Favorites", () => {
+describe("Add Profile to Favorites", () => {
     before(async () => {
         await driverChrome.openBrowser();
         await driverChrome.sleepTime(SHORTSLEEPTIME);
@@ -160,27 +160,6 @@ describe("Add and Remove Profile to Data Set Favorites", () => {
         expect(favoriteProfile).to.equal("TestSeleniumProfile");
     });
 
-    it("Should Remove Profile from Favorites under DATA SETS", async () => {
-        // await driverChrome.clickOnFavoriteTabInDatasets();
-        // await driverChrome.sleepTime(SHORTSLEEPTIME);
-        await driverChrome.removeFavoriteProfileFromDatasets();
-        await driverChrome.sleepTime(SHORTSLEEPTIME);
-        const favoriteProfile = await driverChrome.verifyRemovedFavoriteProfileInDatasets();
-        expect(favoriteProfile).to.equal(true);
-    });
-
-    after(async () => driverChrome.closeBrowser());
-});
-
-describe("Add and Remove Profile to USS Favorites", () => {
-    before(async () => {
-        await driverChrome.openBrowser();
-        await driverChrome.sleepTime(SHORTSLEEPTIME);
-        await driverChrome.OpenTheiaInChrome();
-        await driverChrome.sleepTime(SLEEPTIME);
-        await driverChrome.clickOnZoweExplorer();
-    });
-
     it("Should Add Profile to Favorites under USS", async () => {
         await driverChrome.clickOnDatasetsTab();
         await driverChrome.sleepTime(SHORTSLEEPTIME);
@@ -190,31 +169,8 @@ describe("Add and Remove Profile to USS Favorites", () => {
         await driverChrome.sleepTime(SHORTSLEEPTIME);
         await driverChrome.clickOnFavoriteTabInUss();
         await driverChrome.sleepTime(SHORTSLEEPTIME);
-        const favoriteProfile = await driverChrome.getFavoritePrfileNameFromUss();
+        const favoriteProfile = await driverChrome.getFavoriteProfileNameFromUss();
         expect(favoriteProfile).to.equal("TestSeleniumProfile");
-    });
-
-    it("Should Remove Profile from Favorites under USS", async () => {
-        // await driverChrome.clickOnUssTabs();
-        // await driverChrome.sleepTime(SHORTSLEEPTIME);
-        // await driverChrome.clickOnFavoriteTabInUss();
-        // await driverChrome.sleepTime(SHORTSLEEPTIME);
-        await driverChrome.removeFavoriteProfileFromUss();
-        await driverChrome.sleepTime(SHORTSLEEPTIME);
-        const favoriteProfile = await driverChrome.verifyRemovedFavoriteProfileInUss();
-        expect(favoriteProfile).to.equal(true);
-    });
-
-    after(async () => driverChrome.closeBrowser());
-});
-
-describe("Add and Remove Profile to JOBS Favorites", () => {
-    before(async () => {
-        await driverChrome.openBrowser();
-        await driverChrome.sleepTime(SHORTSLEEPTIME);
-        await driverChrome.OpenTheiaInChrome();
-        await driverChrome.sleepTime(SLEEPTIME);
-        await driverChrome.clickOnZoweExplorer();
     });
 
     it("Should Add Profile to Favorites under JOBS", async () => {
@@ -230,11 +186,43 @@ describe("Add and Remove Profile to JOBS Favorites", () => {
         expect(favoriteProfile).to.equal("TestSeleniumProfile");
     });
 
+    after(async () => driverChrome.closeBrowser());
+});
+
+describe("Remove Profile from Favorites", () => {
+    before(async () => {
+        await driverChrome.openBrowser();
+        await driverChrome.sleepTime(SHORTSLEEPTIME);
+        await driverChrome.OpenTheiaInChrome();
+        await driverChrome.sleepTime(SLEEPTIME);
+        await driverChrome.clickOnZoweExplorer();
+    });
+
+    it("Should Remove Profile from Favorites under DATA SETS", async () => {
+        await driverChrome.clickOnFavoriteTabInDatasets();
+        await driverChrome.sleepTime(SHORTSLEEPTIME);
+        await driverChrome.removeFavoriteProfileFromDatasets();
+        await driverChrome.sleepTime(SHORTSLEEPTIME);
+        const favoriteProfile = await driverChrome.verifyRemovedFavoriteProfileInDatasets();
+        expect(favoriteProfile).to.equal(true);
+    });
+
+    it("Should Remove Profile from Favorites under USS", async () => {
+        await driverChrome.clickOnUssTabs();
+        await driverChrome.sleepTime(SHORTSLEEPTIME);
+        await driverChrome.clickOnFavoriteTabInUss();
+        await driverChrome.sleepTime(SHORTSLEEPTIME);
+        await driverChrome.removeFavoriteProfileFromUss();
+        await driverChrome.sleepTime(SHORTSLEEPTIME);
+        const favoriteProfile = await driverChrome.verifyRemovedFavoriteProfileInUss();
+        expect(favoriteProfile).to.equal(true);
+    });
+
     it("Should Remove Profile from Favorites under JOBS", async () => {
-        // await driverChrome.clickOnJobsTab();
-        // await driverChrome.sleepTime(SHORTSLEEPTIME);
-        // await driverChrome.clickOnFavoriteTabInJobs();
-        // await driverChrome.sleepTime(SHORTSLEEPTIME);
+        await driverChrome.clickOnJobsTab();
+        await driverChrome.sleepTime(SHORTSLEEPTIME);
+        await driverChrome.clickOnFavoriteTabInJobs();
+        await driverChrome.sleepTime(SHORTSLEEPTIME);
         await driverChrome.removeFavoriteProfileFromJobs();
         await driverChrome.sleepTime(SHORTSLEEPTIME);
         const favoriteProfile = await driverChrome.verifyRemovedFavoriteProfileInDatasets();
@@ -243,51 +231,6 @@ describe("Add and Remove Profile to JOBS Favorites", () => {
 
     after(async () => driverChrome.closeBrowser());
 });
-
-// describe("Remove Profile from Favorites", () => {
-//     before(async () => {
-//         await driverChrome.openBrowser();
-//         await driverChrome.sleepTime(SHORTSLEEPTIME);
-//         await driverChrome.OpenTheiaInChrome();
-//         await driverChrome.sleepTime(SLEEPTIME);
-//         await driverChrome.clickOnZoweExplorer();
-//     });
-
-//     it("Should Remove Profile from Favorites under DATA SETS", async () => {
-//         // await driverChrome.clickOnDatasetsTab();
-//         // await driverChrome.sleepTime(SHORTSLEEPTIME);
-//         await driverChrome.clickOnFavoriteTabInDatasets();
-//         await driverChrome.sleepTime(SHORTSLEEPTIME);
-//         await driverChrome.removeFavoriteProfileFromDatasets();
-//         await driverChrome.sleepTime(SHORTSLEEPTIME);
-//         const favoriteProfile = await driverChrome.verifyRemovedFavoriteProfileInDatasets();
-//         expect(favoriteProfile).to.equal(true);
-//     });
-
-//     it("Should Remove Profile from Favorites under USS", async () => {
-//         await driverChrome.clickOnUssTabs();
-//         await driverChrome.sleepTime(SHORTSLEEPTIME);
-//         await driverChrome.clickOnFavoriteTabInUss();
-//         await driverChrome.sleepTime(SHORTSLEEPTIME);
-//         await driverChrome.removeFavoriteProfileFromUss();
-//         await driverChrome.sleepTime(SHORTSLEEPTIME);
-//         const favoriteProfile = await driverChrome.verifyRemovedFavoriteProfileInUss();
-//         expect(favoriteProfile).to.equal(true);
-//     });
-
-//     it("Should Remove Profile from Favorites under JOBS", async () => {
-//         await driverChrome.clickOnJobsTab();
-//         await driverChrome.sleepTime(SHORTSLEEPTIME);
-//         await driverChrome.clickOnFavoriteTabInJobs();
-//         await driverChrome.sleepTime(SHORTSLEEPTIME);
-//         await driverChrome.removeFavoriteProfileFromJobs();
-//         await driverChrome.sleepTime(SHORTSLEEPTIME);
-//         const favoriteProfile = await driverChrome.verifyRemovedFavoriteProfileInDatasets();
-//         expect(favoriteProfile).to.equal(true);
-//     });
-
-//     after(async () => driverChrome.closeBrowser());
-// });
 
 describe("Hide Profiles", () => {
     before(async () => {
