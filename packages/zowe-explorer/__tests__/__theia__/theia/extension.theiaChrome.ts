@@ -76,7 +76,7 @@ export async function getFavoritePrfileNameFromDatasets() {
 
 export async function getFavoriteProfileNameFromUss() {
     const favoriteProfile = await driverChrome
-        .wait(until.elementLocated(By.id(UssLocators.favoriteProfileInUssId)), WAITTIME)
+        .wait(until.elementLocated(By.xpath(UssLocators.favoriteProfileInUssXpath)), WAITTIME)
         .getText();
     return favoriteProfile;
 }
