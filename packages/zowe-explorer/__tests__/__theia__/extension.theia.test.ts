@@ -169,7 +169,7 @@ describe("Add Profile to Favorites", () => {
         await driverChrome.sleepTime(SHORTSLEEPTIME);
         await driverChrome.clickOnFavoriteTabInUss();
         await driverChrome.sleepTime(SHORTSLEEPTIME);
-        const favoriteProfile = await driverChrome.getFavoriteProfileNameFromUss();
+        const favoriteProfile = await driverChrome.getFavoritePrfileNameFromUss();
         expect(favoriteProfile).to.equal("TestSeleniumProfile");
     });
 
