@@ -142,7 +142,7 @@ describe("Add Existing Profiles in USS and JOBS", () => {
     after(async () => driverFirefox.closeBrowser());
 });
 
-describe("Add and Remove Profile to Favorites", () => {
+describe("Add and Remove Profile to Data Set Favorites", () => {
     before(async () => {
         await driverChrome.openBrowser();
         await driverChrome.sleepTime(SHORTSLEEPTIME);
@@ -169,9 +169,21 @@ describe("Add and Remove Profile to Favorites", () => {
         expect(favoriteProfile).to.equal(true);
     });
 
-    it("Should Add Profile to Favorites under USS", async () => {
-        await driverChrome.clickOnDatasetsTab();
+    after(async () => driverChrome.closeBrowser());
+});
+
+describe("Add and Remove Profile to USS Favorites", () => {
+    before(async () => {
+        await driverChrome.openBrowser();
         await driverChrome.sleepTime(SHORTSLEEPTIME);
+        await driverChrome.OpenTheiaInChrome();
+        await driverChrome.sleepTime(SLEEPTIME);
+        await driverChrome.clickOnZoweExplorer();
+    });
+
+    it("Should Add Profile to Favorites under USS", async () => {
+        // await driverChrome.clickOnDatasetsTab();
+        // await driverChrome.sleepTime(SHORTSLEEPTIME);
         await driverChrome.clickOnUssTabs();
         await driverChrome.sleepTime(SHORTSLEEPTIME);
         await driverChrome.addProfileToFavoritesInUss();
@@ -193,9 +205,21 @@ describe("Add and Remove Profile to Favorites", () => {
         expect(favoriteProfile).to.equal(true);
     });
 
-    it("Should Add Profile to Favorites under JOBS", async () => {
-        await driverChrome.clickOnUssTabs();
+    after(async () => driverChrome.closeBrowser());
+});
+
+describe("Add and Remove Profile to JOBS Favorites", () => {
+    before(async () => {
+        await driverChrome.openBrowser();
         await driverChrome.sleepTime(SHORTSLEEPTIME);
+        await driverChrome.OpenTheiaInChrome();
+        await driverChrome.sleepTime(SLEEPTIME);
+        await driverChrome.clickOnZoweExplorer();
+    });
+
+    it("Should Add Profile to Favorites under JOBS", async () => {
+        // await driverChrome.clickOnUssTabs();
+        // await driverChrome.sleepTime(SHORTSLEEPTIME);
         await driverChrome.clickOnJobsTab();
         await driverChrome.sleepTime(SHORTSLEEPTIME);
         await driverChrome.addProfileToFavoritesInJobs();
