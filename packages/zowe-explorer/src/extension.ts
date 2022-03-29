@@ -9,8 +9,6 @@
  *                                                                                 *
  */
 
-// kick off test
-
 import * as zowe from "@zowe/cli";
 import * as fs from "fs";
 import * as path from "path";

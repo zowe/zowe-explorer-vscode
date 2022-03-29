@@ -199,8 +199,8 @@ describe("Remove Profile from Favorites", () => {
     });
 
     it("Should Remove Profile from Favorites under DATA SETS", async () => {
-        await driverChrome.clickOnDatasetsTab();
-        await driverChrome.sleepTime(SHORTSLEEPTIME);
+        // await driverChrome.clickOnDatasetsTab();
+        // await driverChrome.sleepTime(SHORTSLEEPTIME);
         await driverChrome.clickOnFavoriteTabInDatasets();
         await driverChrome.sleepTime(SHORTSLEEPTIME);
         await driverChrome.removeFavoriteProfileFromDatasets();
