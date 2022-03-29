@@ -127,7 +127,7 @@ export async function removeFavoriteProfileFromUss() {
 
 export async function removeFavoriteProfileFromJobs() {
     const removeFromFavorite = await driverChrome.wait(
-        until.elementLocated(By.id(JobsLocators.favoriteProfileInJobsId)),
+        until.elementLocated(By.xpath(JobsLocators.favoriteProfileInJobsXpath)),
         WAITTIME
     );
     await driverChrome.actions().click(removeFromFavorite, Button.RIGHT).perform();
