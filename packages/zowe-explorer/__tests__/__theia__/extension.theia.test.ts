@@ -178,7 +178,7 @@ describe("Add and Remove Profile to USS Favorites", () => {
         await driverChrome.sleepTime(SHORTSLEEPTIME);
         await driverChrome.OpenTheiaInChrome();
         await driverChrome.sleepTime(SLEEPTIME);
-        // await driverChrome.clickOnZoweExplorer();
+        await driverChrome.clickOnZoweExplorer();
     });
 
     it("Should Add Profile to Favorites under USS", async () => {
@@ -214,7 +214,7 @@ describe("Add and Remove Profile to JOBS Favorites", () => {
         await driverChrome.sleepTime(SHORTSLEEPTIME);
         await driverChrome.OpenTheiaInChrome();
         await driverChrome.sleepTime(SLEEPTIME);
-        // await driverChrome.clickOnZoweExplorer();
+        await driverChrome.clickOnZoweExplorer();
     });
 
     it("Should Add Profile to Favorites under JOBS", async () => {
