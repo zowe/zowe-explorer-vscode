@@ -74,7 +74,7 @@ export async function getFavoritePrfileNameFromDatasets() {
     return favoriteProfile;
 }
 
-export async function getFavoriteProfileNameFromUss() {
+export async function getFavoritePrfileNameFromUss() {
     const favoriteProfile = await driverChrome
         .wait(until.elementLocated(By.xpath(UssLocators.favoriteProfileInUssXpath)), WAITTIME)
         .getText();
@@ -82,7 +82,9 @@ export async function getFavoriteProfileNameFromUss() {
 }
 
 export async function getFavoritePrfileNameFromJobs() {
-    return driverChrome.wait(until.elementLocated(By.id(JobsLocators.favoriteProfileInJobsId)), WAITTIME).getText();
+    return driverChrome
+        .wait(until.elementLocated(By.xpath(JobsLocators.favoriteProfileInJobsXpath)), WAITTIME)
+        .getText();
 }
 
 export async function removeFavoriteProfileFromDatasets() {
@@ -125,7 +127,7 @@ export async function removeFavoriteProfileFromUss() {
 
 export async function removeFavoriteProfileFromJobs() {
     const removeFromFavorite = await driverChrome.wait(
-        until.elementLocated(By.id(JobsLocators.favoriteProfileInJobsId)),
+        until.elementLocated(By.xpath(JobsLocators.favoriteprofile)),
         WAITTIME
     );
     await driverChrome.actions().click(removeFromFavorite, Button.RIGHT).perform();
