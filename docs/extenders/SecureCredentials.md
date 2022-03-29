@@ -1,4 +1,4 @@
-# Secure Credentials API Adoption
+# Managing Zowe Explorer credential security
 
 Zowe Explorer extenders can adopt the Zowe Explorer Secure Credentials API to enable extensions to use Zowe profiles that are managed by the Secure Credential Store. The Secure Credentials API enables extenders to utilize the [Zowe security practices](https://docs.zowe.org/stable/user-guide/cli-scsplugin/) when performing z/OS actions outside of the core Zowe Explorer functions. The API is available in `@zowe/zowe-explorer-api` version 1.15.1 and higher.
 
