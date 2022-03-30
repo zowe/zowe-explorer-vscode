@@ -169,7 +169,7 @@ Criteria for VS Code extensions that want to access the same Zowe CLI profiles t
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
    <th></th>
-   <td><b>VS Code extension dependency:</b> Extension declares Zowe Explorer as a VS Code extension dependency by including an `extensionDependencies` entry for Zowe Explorer in its package.json file.</td>
+   <td><b>VS Code extension dependency:</b> Extension declares Zowe Explorer as a VS Code extension dependency by including an `extensionDependencies` entry for Zowe Explorer in its package.json file if the extension uses VS Code dependent Zowe Explorer APIs.</td>
  </tr>
 
   <tr>
