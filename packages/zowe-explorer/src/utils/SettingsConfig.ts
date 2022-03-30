@@ -62,13 +62,12 @@ async function promptReload() {
 }
 
 export async function standardizeGlobalSettings() {
-    let globalIsMigrated =
-        (await configurations.inspect(globals.SETTINGS_VERSION).globalValue) !== currentVersionNumber;
+    let globalIsMigrated = configurations.inspect(globals.SETTINGS_VERSION).globalValue !== currentVersionNumber;
 
     // Standardize global settings when old Zowe settings were found
     if (zoweOldConfigurations.length > 0) {
         zoweOldConfigurations.forEach(async (configuration) => {
-            let globalValue: any = await configurations.inspect(configuration).globalValue;
+            let globalValue: any = configurations.inspect(configuration).globalValue;
 
             // Adjust fetching of value due to schema change
             if (configuration === "Zowe-Temp-Folder-Location") {
@@ -91,30 +90,31 @@ export async function standardizeGlobalSettings() {
 }
 
 export async function standardizeWorkspaceSettings() {
-    let workspaceIsNotMigrated =
-        (await configurations.inspect(globals.SETTINGS_VERSION).workspaceValue) !== currentVersionNumber;
-
+    let workspaceIsMigrated = false;
     // Standardize workspace settings when old Zowe settings were found
     if (zoweOldConfigurations.length > 0) {
-        zoweOldConfigurations
-            .filter((c) => !c.match(new RegExp("Zowe-[A-Za-z]+-Persistent|Zowe Commands: History", "g")))
-            .forEach(async (configuration) => {
-                let workspaceValue: any = await configurations.inspect(configuration).workspaceValue;
+        //filter to only supported workspace configurations in scope
+        const filteredConfigurations = zoweOldConfigurations.filter(
+            (c) => !c.match(new RegExp("Zowe-[A-Za-z]+-Persistent|Zowe Commands: History", "g"))
+        );
 
-                if (configuration === "Zowe-Temp-Folder-Location") {
-                    workspaceValue = workspaceValue ? workspaceValue.folderPath : workspaceValue;
-                }
+        for (const configuration of filteredConfigurations) {
+            let workspaceValue: any = configurations.inspect(configuration).workspaceValue;
 
-                const newSetting = configurationDictionary[configuration];
+            if (configuration === "Zowe-Temp-Folder-Location") {
+                workspaceValue = workspaceValue ? workspaceValue.folderPath : workspaceValue;
+            }
 
-                if (workspaceValue !== undefined) {
-                    await configurations.update(newSetting, workspaceValue, vscode.ConfigurationTarget.Workspace);
-                    workspaceIsNotMigrated = true;
-                }
-            });
+            const newSetting = configurationDictionary[configuration];
+
+            if (workspaceValue !== undefined) {
+                await configurations.update(newSetting, workspaceValue, vscode.ConfigurationTarget.Workspace);
+                workspaceIsMigrated = true;
+            }
+        }
     }
 
-    if (workspaceIsNotMigrated) {
+    if (workspaceIsMigrated) {
         await configurations.update(
             globals.SETTINGS_VERSION,
             currentVersionNumber,
@@ -124,11 +124,15 @@ export async function standardizeWorkspaceSettings() {
 }
 
 export async function standardizeSettings() {
-    const globalIsNotMigrated =
-        (await configurations.inspect(globals.SETTINGS_VERSION).globalValue) !== currentVersionNumber;
+    const globalIsNotMigrated = configurations.inspect(globals.SETTINGS_VERSION).globalValue !== currentVersionNumber;
     const workspaceIsNotMigrated =
-        (await configurations.inspect(globals.SETTINGS_VERSION).workspaceValue) !== currentVersionNumber;
+        configurations.inspect(globals.SETTINGS_VERSION).workspaceValue !== currentVersionNumber;
     const workspaceIsOpen = vscode.workspace.workspaceFolders !== undefined;
+    const zoweSettingsExist = zoweOldConfigurations.length > 0;
+
+    if (!zoweSettingsExist) {
+        return;
+    }
 
     if (workspaceIsNotMigrated && workspaceIsOpen) {
         await standardizeWorkspaceSettings();
