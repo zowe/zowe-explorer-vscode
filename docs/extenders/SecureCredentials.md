@@ -4,7 +4,9 @@ Zowe Explorer extenders can adopt the Zowe Explorer Secure Credentials API to en
 
 You can access the Zowe Explorer Secure Credentials API, using the `KeytarApi()` class. The class lets you handle profiles that are managed by Secure Credential Store. Initialize the API before any extension is [registered with Zowe Explorer](../README-Extending.md#accessing-the-zowe-explorer-extender-api), so that extenders can access the Data Sets, USS, and Jobs views.
 
-Use the following steps to configure Zowe Explorer to use Zowe profiles that are managed by the Secure Credentials API:
+The following steps describe how to configure Zowe Explorer to use Zowe profiles that are managed by the Secure Credentials API.
+
+**Follow these steps:**
 
 1. Activate and initialize the Zowe Explorer API. Follow the steps in [Zowe Explorer extension dependencies and activation](../README-Extending.md#zowe-explorer-extension-dependencies-and-activation).
 
