@@ -1433,7 +1433,10 @@ export class Profiles extends ProfilesCache {
         }
         try {
             // this will handle extenders
-            if (serviceProfile.type !== "zosmf" && serviceProfile.profile.tokenValue !== undefined) {
+            if (
+                serviceProfile.type !== "zosmf" &&
+                serviceProfile.profile?.tokenType !== SessConstants.TOKEN_TYPE_APIML
+            ) {
                 await ZoweExplorerApiRegister.getInstance()
                     .getCommonApi(serviceProfile)
                     .logout(await node.getSession());
