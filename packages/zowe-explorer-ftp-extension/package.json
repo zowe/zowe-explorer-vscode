@@ -41,10 +41,10 @@
     "fresh-clone": "yarn clean && rimraf node_modules",
     "vscode:prepublish": "yarn license && yarn lint && webpack --mode production",
     "license": "node ../../scripts/license.js",
-    "package": "vsce package --yarn && node ../../scripts/mv-pack.js zowe-explorer-ftp-extension vsix"
+    "package": "vsce package --allow-star-activation --yarn && node ../../scripts/mv-pack.js zowe-explorer-ftp-extension vsix"
   },
   "engines": {
-    "vscode": "^1.43.0"
+    "vscode": "^1.53.2"
   },
   "dependencies": {
     "@zowe/zowe-explorer-api": "2.0.0-next.202202281000",

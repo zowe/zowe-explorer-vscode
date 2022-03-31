@@ -69,7 +69,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         } else {
             this.contextValue = globals.DS_DS_CONTEXT;
         }
-        this.tooltip = this.label;
+        this.tooltip = this.label as string;
         const icon = getIconByNode(this);
         if (icon) {
             this.iconPath = icon.path;
@@ -143,9 +143,9 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
             // Loops through all the returned dataset members and creates nodes for them
             for (const item of response.apiResponse.items) {
-                const existing = this.children.find((element) => element.label.trim() === item.dsname);
+                const existing = this.children.find((element) => element.label.toString() === item.dsname);
                 if (existing) {
-                    elementChildren[existing.label] = existing;
+                    elementChildren[existing.label.toString()] = existing;
                     // Creates a ZoweDatasetNode for a PDS
                 } else if (item.dsorg === "PO" || item.dsorg === "PO-E") {
                     const temp = new ZoweDatasetNode(
@@ -157,7 +157,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         undefined,
                         this.getProfile()
                     );
-                    elementChildren[temp.label] = temp;
+                    elementChildren[temp.label.toString()] = temp;
                 } else if (item.migr && item.migr.toUpperCase() === "YES") {
                     const temp = new ZoweDatasetNode(
                         item.dsname,
@@ -168,7 +168,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         undefined,
                         this.getProfile()
                     );
-                    elementChildren[temp.label] = temp;
+                    elementChildren[temp.label.toString()] = temp;
                     // Creates a ZoweDatasetNode for a VSAM file
                 } else if (item.dsorg === "VS") {
                     let altLabel = item.dsname;
@@ -202,7 +202,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         this.getProfile()
                     );
                     temp.command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [temp] };
-                    elementChildren[temp.label] = temp;
+                    elementChildren[temp.label.toString()] = temp;
                 } else {
                     // Creates a ZoweDatasetNode for a PDS member
                     const temp = new ZoweDatasetNode(
@@ -215,7 +215,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         this.getProfile()
                     );
                     temp.command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [temp] };
-                    elementChildren[temp.label] = temp;
+                    elementChildren[temp.label.toString()] = temp;
                 }
             }
         });
@@ -280,19 +280,19 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 this.memberPattern = this.memberPattern.toUpperCase();
                 for (const memPattern of this.memberPattern.split(",")) {
                     options.pattern = memPattern;
-                    label = this.label.trim();
+                    label = this.label as string;
                     responses.push(
                         await ZoweExplorerApiRegister.getMvsApi(this.getProfile()).allMembers(label, options)
                     );
                 }
             } else {
-                label = this.label.trim();
+                label = this.label as string;
                 responses.push(await ZoweExplorerApiRegister.getMvsApi(this.getProfile()).allMembers(label, options));
             }
         } catch (err) {
             await errorHandling(
                 err,
-                this.label,
+                this.label.toString(),
                 localize("getChildren.error.response", "Retrieving response from ") + `zowe.List`
             );
             await syncSessionNode(Profiles.getInstance())((profileValue) =>

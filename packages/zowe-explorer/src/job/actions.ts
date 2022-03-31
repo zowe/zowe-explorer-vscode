@@ -132,7 +132,7 @@ export async function downloadJcl(job: Job) {
  */
 export const focusOnJob = async (jobsProvider: IZoweTree<IZoweJobTreeNode>, sessionName: string, jobId: string) => {
     let sessionNode: IZoweJobTreeNode | undefined = jobsProvider.mSessionNodes.find(
-        (jobNode) => jobNode.label.trim() === sessionName.trim()
+        (jobNode) => jobNode.label.toString() === sessionName.trim()
     );
     if (!sessionNode) {
         try {

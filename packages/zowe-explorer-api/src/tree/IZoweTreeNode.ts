@@ -34,11 +34,11 @@ export interface IZoweTreeNode {
     /**
      *  A human-readable string describing this item.
      */
-    label?: string;
+    label?: string | vscode.TreeItemLabel;
     /**
      * The tooltip text when you hover over this item.
      */
-    tooltip?: string;
+    tooltip?: string | vscode.MarkdownString | undefined;
     /**
      * Describes the full path of a file
      */
@@ -60,7 +60,7 @@ export interface IZoweTreeNode {
     /**
      * Retrieves the node label
      */
-    getLabel(): string;
+    getLabel(): string | vscode.TreeItemLabel;
     /**
      * Retrieves the nodes parent node
      */
