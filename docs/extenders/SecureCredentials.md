@@ -10,12 +10,12 @@ The following steps describe how to configure Zowe Explorer to use Zowe profiles
 
 1. Activate and initialize the Zowe Explorer API. Follow the steps in [Zowe Explorer extension dependencies and activation](../README-Extending.md#zowe-explorer-extension-dependencies-and-activation).
 
-2. Define an NPM dependency to the Zowe Explorer API in your VS Code extension `package.json` file to get access to Typescript type definitions provided for the API.
-3. Define an NPM dependency to Zowe CLI to get access to Typescript type definitions provided for Zowe Imperative.
+2. Use the following code snippet to gain access to `KeytarApi()`:
 
-   ```json
-   "dependencies": {
-       "@zowe/cli": "6.30.0",
-       "@zowe/zowe-explorer-api": "1.16.0"
-   }
-   ```
+```typescript
+export function activate(context: vscode.ExtensionContext) {
+  const log = imperative.Logger.getAppLogger();
+  const keytarApi = new KeytarApi(log);
+  await keytarApi.activateKeytar(imperative.CredentialManagerFactory.initialized, EnvironmentManager.isTheia());
+}
+```
