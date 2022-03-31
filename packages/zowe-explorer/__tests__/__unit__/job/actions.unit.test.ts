@@ -794,7 +794,7 @@ describe("focusing on a job in the tree view", () => {
         const profile = createIProfile();
         const session = createISessionWithoutCredentials();
         const existingJobSession = createJobSessionNode(session, profile);
-        const datasetSessionName = existingJobSession.label;
+        const datasetSessionName = existingJobSession.label as string;
         const jobTree = createTreeView();
         const jobTreeProvider = createJobsTree(session, submittedJob, profile, jobTree);
         jobTreeProvider.mSessionNodes.push(existingJobSession);
@@ -825,7 +825,7 @@ describe("focusing on a job in the tree view", () => {
         const profile = createIProfile();
         const session = createISessionWithoutCredentials();
         const newJobSession = createJobSessionNode(session, profile);
-        const datasetSessionName = newJobSession.label;
+        const datasetSessionName = newJobSession.label as string;
         const jobTree = createTreeView();
         const jobTreeProvider = createJobsTree(session, submittedJob, profile, jobTree);
         mocked(jobTreeProvider.addSession).mockImplementationOnce(() => {

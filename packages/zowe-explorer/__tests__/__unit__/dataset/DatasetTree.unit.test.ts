@@ -1227,7 +1227,7 @@ describe("Dataset Tree Unit Tests - Function  - Function removeFavProfile", () =
         expect(blockMocks.testTree.mFavorites.length).toEqual(1);
         globalMocks.mockShowWarningMessage.mockResolvedValueOnce("Continue");
 
-        await blockMocks.testTree.removeFavProfile(blockMocks.profileNodeInFavs.label, true);
+        await blockMocks.testTree.removeFavProfile(blockMocks.profileNodeInFavs.label.toString(), true);
 
         // Check that favorite is removed from UI
         expect(blockMocks.testTree.mFavorites.length).toEqual(0);
@@ -1244,7 +1244,7 @@ describe("Dataset Tree Unit Tests - Function  - Function removeFavProfile", () =
         const expectedFavProfileNode = blockMocks.testTree.mFavorites[0];
         globalMocks.mockShowWarningMessage.mockResolvedValueOnce("Cancel");
 
-        await blockMocks.testTree.removeFavProfile(blockMocks.profileNodeInFavs.label, true);
+        await blockMocks.testTree.removeFavProfile(blockMocks.profileNodeInFavs.label.toString(), true);
 
         expect(blockMocks.testTree.mFavorites.length).toEqual(1);
         expect(blockMocks.testTree.mFavorites[0]).toEqual(expectedFavProfileNode);
@@ -1256,7 +1256,7 @@ describe("Dataset Tree Unit Tests - Function  - Function removeFavProfile", () =
         // Make sure favorite is added before the actual unit test
         expect(blockMocks.testTree.mFavorites.length).toEqual(1);
 
-        await blockMocks.testTree.removeFavProfile(blockMocks.profileNodeInFavs.label, false);
+        await blockMocks.testTree.removeFavProfile(blockMocks.profileNodeInFavs.label.toString(), false);
 
         expect(blockMocks.testTree.mFavorites.length).toEqual(0);
     });
@@ -2062,7 +2062,11 @@ describe("Dataset Tree Unit Tests - Function renameNode", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
-        await blockMocks.testTree.renameNode(blockMocks.imperativeProfile.name, blockMocks.node.label, "newLabel");
+        await blockMocks.testTree.renameNode(
+            blockMocks.imperativeProfile.name,
+            blockMocks.node.label.toString(),
+            "newLabel"
+        );
 
         expect(blockMocks.node.label).toEqual("newLabel");
     });
