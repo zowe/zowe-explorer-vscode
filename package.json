@@ -40,7 +40,9 @@
     "yarn": "1.22.17"
   },
   "resolutions": {
-    "**/ansi-regex": "^5.0.1"
+    "**/ansi-regex": "^5.0.1",
+    "**/log4js": "6.3.0",
+    "**/minimist": "^1.2.6"
   },
   "scripts": {
     "clean": "yarn workspaces run clean",
