@@ -78,21 +78,23 @@ export function concatChildNodes(nodes: IZoweNodeType[]) {
  * @param {TreeItem} node - the node element
  */
 export function labelRefresh(node: vscode.TreeItem): void {
-    node.label = node.label.endsWith(" ") ? node.label.substring(0, node.label.length - 1) : node.label + " ";
+    node.label = node.label.toString().endsWith(" ")
+        ? node.label.toString().substring(0, node.label.toString().length - 1)
+        : node.label + " ";
 }
 
 export function sortTreeItems(favorites: vscode.TreeItem[], specificContext) {
     favorites.sort((a, b) => {
         if (a.contextValue === specificContext) {
             if (b.contextValue === specificContext) {
-                return a.label.toUpperCase() > b.label.toUpperCase() ? 1 : -1;
+                return a.label.toString().toUpperCase() > b.label.toString().toUpperCase() ? 1 : -1;
             } else {
                 return -1;
             }
         } else if (b.contextValue === specificContext) {
             return 1;
         }
-        return a.label.toUpperCase() > b.label.toUpperCase() ? 1 : -1;
+        return a.label.toString().toUpperCase() > b.label.toString().toUpperCase() ? 1 : -1;
     });
 }
 

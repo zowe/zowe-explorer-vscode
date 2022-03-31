@@ -304,8 +304,8 @@ describe("Shared Actions Unit Tests - Function openRecentMemberPrompt", () => {
             blockMocks.session
         );
         child.contextValue = globals.DS_MEMBER_CONTEXT;
-        child.pattern = child.label;
-        const qpItem = new utils.FilterDescriptor(child.label);
+        child.pattern = child.label as string;
+        const qpItem = new utils.FilterDescriptor(child.label.toString());
         const quickPickContent = createQuickPickContent("[sestest]: node(child)", [qpItem], globalMocks.qpPlaceholder);
 
         mocked(blockMocks.testDatasetTree.getFileHistory).mockReturnValueOnce([`[sestest]: node(child)`]);
@@ -354,7 +354,7 @@ describe("Shared Actions Unit Tests - Function openRecentMemberPrompt", () => {
             blockMocks.imperativeProfile.name
         );
         node.contextValue = globals.DS_DS_CONTEXT;
-        const qpItem = new utils.FilterDescriptor(node.label);
+        const qpItem = new utils.FilterDescriptor(node.label.toString());
         const quickPickContent = createQuickPickContent(
             "[sestest]: /node1/node2/node3.txt",
             [qpItem],

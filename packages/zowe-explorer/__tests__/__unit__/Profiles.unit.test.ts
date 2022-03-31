@@ -2785,10 +2785,9 @@ describe("Profiles Unit Tests - Function getCombinedProfile", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        const response = await (await blockMocks.mockProfileInstance).getCombinedProfile(
-            globalMocks.testProfile,
-            blockMocks.testBaseProfile
-        );
+        const response = await (
+            await blockMocks.mockProfileInstance
+        ).getCombinedProfile(globalMocks.testProfile, blockMocks.testBaseProfile);
 
         expect(response).toEqual(globalMocks.testProfile);
     });
@@ -2803,10 +2802,9 @@ describe("Profiles Unit Tests - Function getCombinedProfile", () => {
         globalMocks.testProfile.profile.user = null;
         globalMocks.testProfile.profile.password = null;
 
-        const response = await (await blockMocks.mockProfileInstance).getCombinedProfile(
-            globalMocks.testProfile,
-            blockMocks.testBaseProfile
-        );
+        const response = await (
+            await blockMocks.mockProfileInstance
+        ).getCombinedProfile(globalMocks.testProfile, blockMocks.testBaseProfile);
 
         expect(response).toEqual(globalMocks.testProfile);
     });
@@ -2826,10 +2824,9 @@ describe("Profiles Unit Tests - Function getCombinedProfile", () => {
         globalMocks.testProfile.profile.tokenType = "testTokenType";
         globalMocks.testProfile.profile.tokenValue = "testTokenValue";
 
-        const response = await (await blockMocks.mockProfileInstance).getCombinedProfile(
-            globalMocks.testProfile,
-            blockMocks.testBaseProfile
-        );
+        const response = await (
+            await blockMocks.mockProfileInstance
+        ).getCombinedProfile(globalMocks.testProfile, blockMocks.testBaseProfile);
 
         expect(response).toEqual(blockMocks.testCombinedProfile);
     });
@@ -2845,10 +2842,9 @@ describe("Profiles Unit Tests - Function getCombinedProfile", () => {
         blockMocks.testBaseProfile.profile.tokenValue = undefined;
         blockMocks.testBaseProfile.profile.tokenType = undefined;
 
-        const response = await (await blockMocks.mockProfileInstance).getCombinedProfile(
-            globalMocks.testProfile,
-            blockMocks.testBaseProfile
-        );
+        const response = await (
+            await blockMocks.mockProfileInstance
+        ).getCombinedProfile(globalMocks.testProfile, blockMocks.testBaseProfile);
 
         expect(response.profile.tokenValue).toEqual(undefined);
     });

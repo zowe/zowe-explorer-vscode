@@ -161,6 +161,7 @@ export async function addProfileToFavoritesInUss() {
         until.elementLocated(By.xpath(UssLocators.secondUssProfileXpath)),
         WAITTIME
     );
+
     await driverChrome.actions().click(addTofavorite, Button.RIGHT).perform();
     await driverChrome.sleep(SHORTSLEEPTIME);
     await driverChrome.wait(until.elementLocated(By.xpath(UssLocators.addToFavoriteOptionXpath)), WAITTIME).click();
