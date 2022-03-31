@@ -10,21 +10,44 @@
  */
 
 import * as vscode from "vscode";
+import { ProfilesCache } from "@zowe/zowe-explorer-api";
 import * as utils from "../../src/utils/ProfilesUtils";
 import * as globals from "../../src/globals";
-import { createInstanceOfProfile, createIProfile } from "../../__mocks__/mockCreators/shared";
+import { createInstanceOfProfile, createIProfile, createValidIProfile } from "../../__mocks__/mockCreators/shared";
 import { Profiles } from "../../src/Profiles";
 
 function createGlobalMocks() {
+    const globalMocks = {
+        isTheia: jest.fn(),
+        testProfileLoaded: createValidIProfile(),
+        mockProfileInstance: null,
+    };
+
+    globalMocks.mockProfileInstance = createInstanceOfProfile(globalMocks.testProfileLoaded);
     const isTheia = jest.fn();
 
     Object.defineProperty(vscode.window, "showQuickPick", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "createQuickPick", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showInputBox", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showErrorMessage", { value: jest.fn(), configurable: true });
-    Object.defineProperty(Profiles, "getInstance", { value: jest.fn(), configurable: true });
+    Object.defineProperty(Profiles, "getInstance", {
+        value: jest
+            .fn(() => {
+                return { promptCredentials: ["test", "test", "test"] };
+            })
+            .mockReturnValue(globalMocks.mockProfileInstance),
+        configurable: true,
+    });
     Object.defineProperty(globals, "ISTHEIA", { get: isTheia, configurable: true });
     Object.defineProperty(utils, "isTheia", { value: jest.fn(), configurable: true });
+
+    Object.defineProperty(ProfilesCache, "getConfigInstance", {
+        value: jest.fn(() => {
+            return {
+                usingTeamConfig: false,
+            };
+        }),
+    });
 
     return {
         isTheia,

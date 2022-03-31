@@ -137,7 +137,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         responses.forEach(async (response) => {
             // Throws reject if the Zowe command does not throw an error but does not succeed
             if (!response.success) {
-                throw Error(localize("getChildren.responses.error", "The response from Zowe CLI was not successful"));
+                errorHandling(localize("getChildren.responses.error", "The response from Zowe CLI was not successful"));
+                return;
             }
 
             // Loops through all the returned dataset members and creates nodes for them

@@ -4,7 +4,7 @@
   "initializeFavorites.log.debug": "Initializing profiles with data set favorites.",
   "initializeFavorites.no.favorites": "No data set favorites found.",
   "initializeFavorites.invalidDsFavorite1": "Invalid Data Sets favorite: {0}.",
-  "initializeFavorites.invalidDsFavorite2": " Please check formatting of the Zowe-DS-Persistent 'favorites' settings in the {0} user settings.",
+  "initializeFavorites.invalidDsFavorite2": " Please check formatting of the zowe.ds.history 'favorites' settings in the {0} user settings.",
   "initializeFavChildNodeForProfile.error": "Error creating data set favorite node: {0} for profile {1}.",
   "loadProfilesForFavorites.log.debug": "Loading profile: {0} for data set favorites",
   "loadProfilesForFavorites.authFailed": "You must authenticate to view favorites.",

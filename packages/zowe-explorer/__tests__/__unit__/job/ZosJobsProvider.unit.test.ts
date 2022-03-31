@@ -16,7 +16,7 @@ import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import * as globals from "../../../src/globals";
 import { Logger } from "@zowe/imperative";
-import { IZoweJobTreeNode, ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { IZoweJobTreeNode, ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import {
     createIJobFile,
     createIJobObject,
@@ -85,6 +85,18 @@ async function createGlobalMocks() {
         }),
     };
 
+    Object.defineProperty(ProfilesCache, "getConfigInstance", {
+        value: jest.fn(() => {
+            return {
+                usingTeamConfig: false,
+            };
+        }),
+        configurable: true,
+    });
+    Object.defineProperty(ProfilesCache, "allProfiles", {
+        value: [globalMocks.testProfile],
+        configurable: true,
+    });
     Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true });
     Object.defineProperty(vscode.window, "withProgress", { value: globalMocks.withProgress, configurable: true });
     Object.defineProperty(zowe, "GetJobs", { value: globalMocks.mockGetJobs, configurable: true });
@@ -113,10 +125,6 @@ async function createGlobalMocks() {
         value: globalMocks.mockGetConfiguration,
         configurable: true,
     });
-    Object.defineProperty(Profiles, "getInstance", {
-        value: jest.fn(() => globalMocks.mockProfileInstance),
-        configurable: true,
-    });
     Object.defineProperty(zowe, "DeleteJobs", { value: globalMocks.mockDeleteJobs, configurable: true });
     Object.defineProperty(vscode.window, "createQuickPick", {
         value: globalMocks.mockCreateQuickPick,
@@ -132,8 +140,13 @@ async function createGlobalMocks() {
     globalMocks.mockGetSpoolFiles.mockReturnValue([globalMocks.mockIJobFile]);
     globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.testProfile);
     globalMocks.mockProfileInstance.loadNamedProfile = globalMocks.mockLoadNamedProfile;
+    globalMocks.mockProfileInstance.allProfiles = [globalMocks.testProfile];
     globalMocks.mockLoadDefaultProfile.mockReturnValue(globalMocks.testProfile);
     globalMocks.mockProfileInstance.getDefaultProfile = globalMocks.mockLoadDefaultProfile;
+    Object.defineProperty(Profiles, "getInstance", {
+        value: jest.fn(() => globalMocks.mockProfileInstance),
+        configurable: true,
+    });
 
     // Jes API mocks
     globalMocks.jesApi = ZoweExplorerApiRegister.getJesApi(globalMocks.testProfile);
@@ -169,15 +182,16 @@ const mocked = <T extends (...args: any[]) => any>(fn: T): jest.Mock<ReturnType<
 describe("ZosJobsProvider unit tests - Function getChildren", () => {
     function createBlockMocks() {
         const imperativeProfile = createIProfile();
-        const profile = createInstanceOfProfile(imperativeProfile);
+        const profileInstance = createInstanceOfProfile(imperativeProfile);
         const session = createISession();
         const jobSessionNode = createJobSessionNode(session, imperativeProfile);
         const jobFavoritesNode = createJobFavoritesNode();
         const treeView = createTreeView();
         const testIJob = createIJobObject();
+        mocked(Profiles.getInstance).mockReturnValue(profileInstance);
 
         return {
-            profile,
+            profileInstance,
             session,
             jobSessionNode,
             jobFavoritesNode,
@@ -251,7 +265,6 @@ describe("ZosJobsProvider unit tests - Function getChildren", () => {
     it("Tests that getChildren gets children of a session element", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
 
         const testTree = new ZosJobsProvider();
@@ -401,6 +414,10 @@ describe("ZosJobsProvider unit tests - Function loadProfilesForFavorites", () =>
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
+                    getDefaultProfile: jest.fn(() => {
+                        return blockMocks.imperativeProfile;
+                    }),
+                    allProfiles: [blockMocks.imperativeProfile],
                     loadNamedProfile: jest.fn(() => {
                         return blockMocks.imperativeProfile;
                     }),
@@ -409,6 +426,12 @@ describe("ZosJobsProvider unit tests - Function loadProfilesForFavorites", () =>
                             name: blockMocks.imperativeProfile.name,
                             status: "unverified",
                         };
+                    }),
+                    getBaseProfile: jest.fn(() => {
+                        return blockMocks.imperativeProfile;
+                    }),
+                    getCombinedProfile: jest.fn(() => {
+                        return blockMocks.imperativeProfile;
                     }),
                     validProfile: ValidProfileEnum.VALID,
                 };
@@ -444,8 +467,18 @@ describe("ZosJobsProvider unit tests - Function loadProfilesForFavorites", () =>
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
+                    allProfiles: [blockMocks.imperativeProfile],
                     loadNamedProfile: jest.fn(() => {
                         throw new Error();
+                    }),
+                    getDefaultProfile: jest.fn(() => {
+                        return blockMocks.imperativeProfile;
+                    }),
+                    getBaseProfile: jest.fn(() => {
+                        return blockMocks.imperativeProfile;
+                    }),
+                    getCombinedProfile: jest.fn(() => {
+                        return blockMocks.imperativeProfile;
                     }),
                 };
             }),

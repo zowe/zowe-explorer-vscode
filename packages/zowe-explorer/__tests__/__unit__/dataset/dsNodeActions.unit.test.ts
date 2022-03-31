@@ -35,7 +35,7 @@ const showInformationMessage = jest.fn();
 const showQuickPick = jest.fn();
 const getConfiguration = jest.fn();
 const existsSync = jest.fn();
-const createBasicZosmfSession = jest.fn();
+const createSessCfgFromArgs = jest.fn();
 const refreshAll = jest.fn();
 const mockcreateZoweSession = jest.fn();
 const mockaddSearchHistory = jest.fn();
@@ -62,6 +62,15 @@ const profileOne: brtimperative.IProfileLoaded = {
     message: "",
     failNotFound: false,
 };
+getConfiguration.mockReturnValue({
+    persistence: true,
+    get: (setting: string) => ["[test]: /u{session}"],
+    // tslint:disable-next-line: no-empty
+    update: jest.fn(() => {
+        {
+        }
+    }),
+});
 
 function getDSNode() {
     const mParent = new ZoweDatasetNode(
@@ -164,9 +173,16 @@ describe("dsNodeActions", () => {
                 allProfiles: [{ name: "firstName" }, { name: "secondName" }],
                 defaultProfile: { name: "firstName" },
                 type: "zosmf",
+                enableValidationContext: jest.fn(),
                 loadNamedProfile: mockLoadNamedProfile,
                 checkCurrentProfile: jest.fn(() => {
                     return profilesForValidation;
+                }),
+                getBaseProfile: jest.fn(() => {
+                    return profileOne;
+                }),
+                getCombinedProfile: jest.fn(() => {
+                    return profileOne;
                 }),
                 profilesForValidation: [],
                 validateProfiles: jest.fn(),
@@ -183,7 +199,8 @@ describe("dsNodeActions", () => {
     Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
     Object.defineProperty(vscode.window, "showInformationMessage", { value: showInformationMessage });
     Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
-    Object.defineProperty(zowe.ZosmfSession, "createBasicZosmfSession", { value: createBasicZosmfSession });
+    Object.defineProperty(zowe.ZosmfSession, "createSessCfgFromArgs", { value: createSessCfgFromArgs });
+    Object.defineProperty(refreshActions, "refreshAll", { value: jest.fn() });
 
     beforeEach(() => {
         showErrorMessage.mockReset();
@@ -205,11 +222,18 @@ describe("dsNodeActions", () => {
                         getDefaultProfile: mockLoadNamedProfile,
                         loadNamedProfile: mockLoadNamedProfile,
                         usesSecurity: true,
+                        enableValidationContext: jest.fn(),
                         getProfiles: jest.fn(() => {
                             return [
                                 { name: profileOne.name, profile: profileOne },
                                 { name: profileOne.name, profile: profileOne },
                             ];
+                        }),
+                        getBaseProfile: jest.fn(() => {
+                            return profileOne;
+                        }),
+                        getCombinedProfile: jest.fn(() => {
+                            return profileOne;
                         }),
                         refresh: jest.fn(),
                         checkCurrentProfile: jest.fn(() => {
