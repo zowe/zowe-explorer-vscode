@@ -12,10 +12,10 @@ The following steps describe how to configure Zowe Explorer to use Zowe profiles
 
 2. Use the following code snippet to gain access to `KeytarApi()`:
 
-    ```typescript
-    export function activate(context: vscode.ExtensionContext) {
-      const log = imperative.Logger.getAppLogger();
-      const keytarApi = new KeytarApi(log);
-      await keytarApi.activateKeytar(imperative.CredentialManagerFactory.initialized, EnvironmentManager.isTheia());
-    }
-    ```
+   ```typescript
+   export function activate(context: vscode.ExtensionContext) {
+     const log = imperative.Logger.getAppLogger();
+     const keytarApi = new KeytarApi(log);
+     await keytarApi.activateKeytar(imperative.CredentialManagerFactory.initialized, EnvironmentManager.isTheia());
+   }
+   ```
