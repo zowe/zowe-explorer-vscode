@@ -333,7 +333,9 @@ export class Profiles extends ProfilesCache {
             // get user selection
             const choice = await vscode.window.showQuickPick([createPick, configPick, ...items], options);
             if (!choice) {
-                vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
+                vscode.window.showInformationMessage(
+                    localize("enterPattern.pattern", "No selection made. Operation cancelled.")
+                );
                 return;
             }
             chosenProfile = choice === createPick ? "" : choice.label;
@@ -345,7 +347,9 @@ export class Profiles extends ProfilesCache {
             const choice = await resolveQuickPickHelper(quickpick);
             quickpick.hide();
             if (!choice) {
-                vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
+                vscode.window.showInformationMessage(
+                    localize("enterPattern.pattern", "No selection made. Operation cancelled.")
+                );
                 return;
             }
             if (choice === configPick) {
@@ -365,42 +369,57 @@ export class Profiles extends ProfilesCache {
         }
 
         if (chosenProfile === "") {
-            let newprofile: any;
-            let profileName: string;
-            if (quickpick.value) {
-                profileName = quickpick.value;
-            }
-
-            const options = {
-                placeHolder: localize("createNewConnection.option.prompt.profileName.placeholder", "Connection Name"),
-                prompt: localize("createNewConnection.option.prompt.profileName", "Enter a name for the connection"),
-                value: profileName,
-            };
-            profileName = await UIViews.inputBox(options);
-            if (!profileName) {
-                vscode.window.showInformationMessage(
-                    localize(
-                        "createNewConnection.enterprofileName",
-                        "Profile Name was not supplied. Operation Cancelled"
-                    )
-                );
+            const config = ProfilesCache.getConfigInstance();
+            if (config.usingTeamConfig) {
+                const profiles = config.getAllProfiles();
+                const currentProfile = this.getProfileFromConfig(profiles[0].profName);
+                const filePath = currentProfile.profLoc.osLoc[0];
+                await this.openConfigFile(filePath);
                 return;
-            }
-            chosenProfile = profileName.trim();
-            this.log.debug(localize("addSession.log.debug.createNewProfile", "User created a new profile"));
-            try {
-                newprofile = await Profiles.getInstance().createNewConnection(chosenProfile);
-            } catch (error) {
-                await errorHandling(error, chosenProfile, error.message);
-            }
-            if (newprofile) {
-                try {
-                    await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
-                } catch (error) {
-                    await errorHandling(error, newprofile, error.message);
+            } else {
+                let newprofile: any;
+                let profileName: string;
+                if (quickpick.value) {
+                    profileName = quickpick.value;
                 }
-                await zoweFileProvider.addSession(newprofile);
-                await zoweFileProvider.refresh();
+
+                const options = {
+                    placeHolder: localize(
+                        "createNewConnection.option.prompt.profileName.placeholder",
+                        "Connection Name"
+                    ),
+                    prompt: localize(
+                        "createNewConnection.option.prompt.profileName",
+                        "Enter a name for the connection"
+                    ),
+                    value: profileName,
+                };
+                profileName = await UIViews.inputBox(options);
+                if (!profileName) {
+                    vscode.window.showInformationMessage(
+                        localize(
+                            "createNewConnection.enterprofileName",
+                            "Profile Name was not supplied. Operation Cancelled"
+                        )
+                    );
+                    return;
+                }
+                chosenProfile = profileName.trim();
+                this.log.debug(localize("addSession.log.debug.createNewProfile", "User created a new profile"));
+                try {
+                    newprofile = await Profiles.getInstance().createNewConnection(chosenProfile);
+                } catch (error) {
+                    await errorHandling(error, chosenProfile, error.message);
+                }
+                if (newprofile) {
+                    try {
+                        await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
+                    } catch (error) {
+                        await errorHandling(error, newprofile, error.message);
+                    }
+                    await zoweFileProvider.addSession(newprofile);
+                    await zoweFileProvider.refresh();
+                }
             }
         } else if (chosenProfile) {
             this.log.debug(
@@ -1361,7 +1380,10 @@ export class Profiles extends ProfilesCache {
         }
         try {
             // this will handle extenders
-            if (serviceProfile.type !== "zosmf" && serviceProfile.profile.tokenValue !== undefined) {
+            if (
+                serviceProfile.type !== "zosmf" &&
+                serviceProfile.profile?.tokenType !== SessConstants.TOKEN_TYPE_APIML
+            ) {
                 await ZoweExplorerApiRegister.getInstance()
                     .getCommonApi(serviceProfile)
                     .logout(await node.getSession());

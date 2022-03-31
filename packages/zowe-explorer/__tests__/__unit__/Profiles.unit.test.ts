@@ -860,7 +860,7 @@ describe("Profiles Unit Tests - Function promptCredentials", () => {
                             profName: newMocks.imperativeProfile.name,
                             profType: newMocks.imperativeProfile.type,
                             profile: newMocks.imperativeProfile.name,
-                            profLoc: { osLoc: [] },
+                            profLoc: { osLoc: ["dummy"] },
                         },
                     ],
                     mergeArgsForProfile: () => {

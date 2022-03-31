@@ -182,7 +182,9 @@ export class ProfilesCache {
     }
 
     public static getProfileFromConfig(profileName: string): imperative.IProfAttrs {
-        const configAllProfiles = ProfilesCache.getConfigInstance().getAllProfiles();
+        const configAllProfiles = ProfilesCache.getConfigInstance()
+            .getAllProfiles()
+            .filter((temp) => temp.profLoc.osLoc.length !== 0);
         const currentProfile = configAllProfiles.filter((temprofile) => temprofile.profName === profileName)[0];
         return currentProfile;
     }
