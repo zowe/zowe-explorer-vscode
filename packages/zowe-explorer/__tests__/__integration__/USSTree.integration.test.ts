@@ -246,7 +246,7 @@ describe("USSTree Integration Tests", async () => {
         testTree.deleteSession(testNode);
         len--;
         expect(testTree.mSessionNodes.length).toEqual(len);
-        await testTree.addSession(testNode.label);
+        await testTree.addSession(testNode.label as string);
         expect(testTree.mSessionNodes.length).toEqual(len + 1);
     }).timeout(TIMEOUT);
 
