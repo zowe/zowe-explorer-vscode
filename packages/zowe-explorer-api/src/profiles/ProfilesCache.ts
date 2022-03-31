@@ -281,6 +281,7 @@ export class ProfilesCache {
     }
 
     protected async refreshOldStyleProfs(apiRegister: ZoweExplorerApi.IApiRegisterClient): Promise<void> {
+        let mergedProfilesOfType: imperative.IProfileLoaded[] = [];
         this.allProfiles = [];
         this.allTypes = [];
         // TODO: Add Base ProfileType in registeredApiTypes
@@ -308,9 +309,17 @@ export class ProfilesCache {
                 return profile.type === type;
             });
             if (profilesForType && profilesForType.length > 0) {
-                this.allProfiles.push(...profilesForType);
-                this.profilesByType.set(type, profilesForType);
+                if (type !== "base") {
+                    let mergedProfile: imperative.IProfileLoaded;
+                    for (const profile of profilesForType) {
+                        mergedProfile = await this.mergeOldStyleProfile(profile);
+                        mergedProfilesOfType.push(mergedProfile);
+                    }
+                }
+                this.allProfiles.push(...mergedProfilesOfType);
+                this.profilesByType.set(type, mergedProfilesOfType);
                 let defaultProfile: imperative.IProfileLoaded;
+                mergedProfilesOfType = [];
                 try {
                     defaultProfile = await profileManager.load({ loadDefault: true });
                 } catch (error) {
@@ -325,6 +334,54 @@ export class ProfilesCache {
                 }
             }
         }
+    }
+
+    // combine v1 profiles
+    // eslint-disable-next-line complexity
+    protected async mergeOldStyleProfile(
+        serviceProfile: imperative.IProfileLoaded
+    ): Promise<imperative.IProfileLoaded> {
+        // TODO: This needs to be improved
+        // The idea is to handle all type of ZE Profiles
+
+        // This check will handle service profiles that have username and password
+        if (serviceProfile.profile.user && serviceProfile.profile.password) {
+            return serviceProfile;
+        }
+
+        let baseProfile: imperative.IProfileLoaded | undefined;
+        const cliProfileManager = this.getCliProfileManager("base");
+        try {
+            baseProfile = await cliProfileManager.load({ loadDefault: true });
+        } catch (error) {
+            baseProfile = undefined;
+        }
+
+        // This check is for optional credentials
+        if (
+            baseProfile &&
+            serviceProfile.profile.host &&
+            serviceProfile.profile.port &&
+            ((baseProfile.profile.host !== serviceProfile.profile.host &&
+                baseProfile.profile.port !== serviceProfile.profile.port) ||
+                (baseProfile.profile.host === serviceProfile.profile.host &&
+                    baseProfile.profile.port !== serviceProfile.profile.port))
+        ) {
+            return serviceProfile;
+        }
+        // This process combines the information from baseprofile to serviceprofile and create a new profile
+        const profSchema = this.getSchema(serviceProfile.type);
+        const mergedProfile = serviceProfile;
+        if (baseProfile?.profile && mergedProfile?.profile) {
+            for (const prop of Object.keys(profSchema)) {
+                mergedProfile.profile[prop] = (serviceProfile.profile[prop] ?? baseProfile.profile[prop]) as unknown;
+            }
+            mergedProfile.profile.tokenType = (serviceProfile.profile.tokenType ??
+                baseProfile.profile.tokenType) as string;
+            mergedProfile.profile.tokenValue = (serviceProfile.profile.tokenValue ??
+                baseProfile.profile.tokenValue) as string;
+        }
+        return mergedProfile;
     }
 
     protected async refreshConfig(apiRegister: ZoweExplorerApi.IApiRegisterClient): Promise<void> {

@@ -20,6 +20,7 @@ import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import * as nls from "vscode-nls";
 import { ZoweCommandProvider } from "../abstract/ZoweCommandProvider";
 import { UIViews } from "../shared/ui-views";
+import { ProfilesCache } from "@zowe/zowe-explorer-api";
 
 // Set up localization
 nls.config({
@@ -70,6 +71,8 @@ export class MvsCommandHandler extends ZoweCommandProvider {
     public async issueMvsCommand(session?: Session, command?: string, node?: IZoweTreeNode) {
         let profile: IProfileLoaded;
         if (node) {
+            // tslint:disable-next-line:no-console
+            console.log(node.getProfile());
             await this.checkCurrentProfile(node);
             if (!session) {
                 session = ZoweExplorerApiRegister.getMvsApi(node.getProfile()).getSession();
@@ -103,18 +106,18 @@ export class MvsCommandHandler extends ZoweCommandProvider {
                 profile = allProfiles.filter((temprofile) => temprofile.name === sesName)[0];
                 if (!node) {
                     // If baseProfile exists, combine that information first
-                    const baseProfile = Profiles.getInstance().getBaseProfile();
-                    if (baseProfile) {
-                        try {
-                            const combinedProfile = await Profiles.getInstance().getCombinedProfile(
-                                profile,
-                                baseProfile
-                            );
-                            profile = combinedProfile;
-                        } catch (error) {
-                            throw error;
-                        }
-                    }
+                    // const baseProfile = Profiles.getInstance().getBaseProfile();
+                    // if (baseProfile) {
+                    //     try {
+                    //         const combinedProfile = await Profiles.getInstance().getCombinedProfile(
+                    //             profile,
+                    //             baseProfile
+                    //         );
+                    //         profile = combinedProfile;
+                    //     } catch (error) {
+                    //         throw error;
+                    //     }
+                    // }
                     await Profiles.getInstance().checkCurrentProfile(profile);
                 }
                 if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
