@@ -7,7 +7,7 @@
   "issueMvsCommand.apiNonExisting": "Not implemented yet for profile of type: ",
   "issueMvsCommand.command.hostname": "Select an MVS command to run immediately against ",
   "issueMvsCommand.command.edit": " (An option to edit will follow)",
-  "issueMvsCommand.options.noselection": "No selection made.",
+  "issueMvsCommand.options.noselection": "No selection made. Operation cancelled.",
   "issueMvsCommand.command.hostnameAlt": "Select an MVS command to run against ",
   "issueMvsCommand.command": "Enter or update the MVS command",
   "issueMvsCommand.enter.command": "No command entered.",

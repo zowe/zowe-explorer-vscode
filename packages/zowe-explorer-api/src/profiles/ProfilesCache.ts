@@ -175,13 +175,17 @@ export class ProfilesCache {
     }
 
     public getProfileFromConfig(profileName: string): imperative.IProfAttrs {
-        const configAllProfiles = ProfilesCache.getConfigInstance().getAllProfiles();
+        const configAllProfiles = ProfilesCache.getConfigInstance()
+            .getAllProfiles()
+            .filter((temp) => temp.profLoc.osLoc.length !== 0);
         const currentProfile = configAllProfiles.filter((temprofile) => temprofile.profName === profileName)[0];
         return currentProfile;
     }
 
     public getLoadedProfConfig(profileName: string): imperative.IProfileLoaded {
-        const configAllProfiles = ProfilesCache.getConfigInstance().getAllProfiles();
+        const configAllProfiles = ProfilesCache.getConfigInstance()
+            .getAllProfiles()
+            .filter((temp) => temp.profLoc.osLoc.length !== 0);
         const currentProfile = configAllProfiles.filter((temprofile) => temprofile.profName === profileName.trim())[0];
         const mergedArgs = ProfilesCache.getConfigInstance().mergeArgsForProfile(currentProfile);
         const profile: imperative.IProfile = {};
