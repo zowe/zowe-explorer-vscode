@@ -174,7 +174,14 @@ export class ProfilesCache {
         return directProfile;
     }
 
+    /**
+     * @deprecated Please use ProfilesCache.getProfileFromConfig(...)
+     */
     public getProfileFromConfig(profileName: string): imperative.IProfAttrs {
+        return ProfilesCache.getProfileFromConfig(profileName);
+    }
+
+    public static getProfileFromConfig(profileName: string): imperative.IProfAttrs {
         const configAllProfiles = ProfilesCache.getConfigInstance().getAllProfiles();
         const currentProfile = configAllProfiles.filter((temprofile) => temprofile.profName === profileName)[0];
         return currentProfile;
@@ -188,8 +195,7 @@ export class ProfilesCache {
     }
 
     public static getLoadedProfConfig(profileName: string): imperative.IProfileLoaded {
-        const configAllProfiles = ProfilesCache.getConfigInstance().getAllProfiles();
-        const currentProfile = configAllProfiles.filter((temprofile) => temprofile.profName === profileName.trim())[0];
+        const currentProfile = ProfilesCache.getProfileFromConfig(profileName);
         const mergedArgs = ProfilesCache.getConfigInstance().mergeArgsForProfile(currentProfile);
         const profile: imperative.IProfile = {};
         for (const arg of mergedArgs.knownArgs) {
