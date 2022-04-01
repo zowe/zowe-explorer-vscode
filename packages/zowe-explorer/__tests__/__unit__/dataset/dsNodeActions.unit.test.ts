@@ -181,9 +181,9 @@ describe("dsNodeActions", () => {
                 getBaseProfile: jest.fn(() => {
                     return profileOne;
                 }),
-                getCombinedProfile: jest.fn(() => {
-                    return profileOne;
-                }),
+                // getCombinedProfile: jest.fn(() => {
+                //     return profileOne;
+                // }),
                 profilesForValidation: [],
                 validateProfiles: jest.fn(),
             };
@@ -232,9 +232,9 @@ describe("dsNodeActions", () => {
                         getBaseProfile: jest.fn(() => {
                             return profileOne;
                         }),
-                        getCombinedProfile: jest.fn(() => {
-                            return profileOne;
-                        }),
+                        // getCombinedProfile: jest.fn(() => {
+                        //     return profileOne;
+                        // }),
                         refresh: jest.fn(),
                         checkCurrentProfile: jest.fn(() => {
                             return profilesForValidation;

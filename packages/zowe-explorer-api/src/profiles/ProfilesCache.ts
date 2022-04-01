@@ -420,8 +420,8 @@ export class ProfilesCache {
             }
             this.allTypes.push(type);
         }
-        // check for proper merging of apiml tokens
-        this.checkMergingConfig();
+        // // check for proper merging of apiml tokens
+        // this.checkMergingConfig();
     }
 
     protected checkMergingConfig(): void {

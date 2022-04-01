@@ -200,7 +200,6 @@ export function createInstanceOfProfile(profile: imperative.IProfileLoaded) {
         getBaseProfile: jest.fn(),
         enableValidationContext: jest.fn(),
         disableValidationContext: jest.fn(),
-        getCombinedProfile: jest.fn(),
         getProfileSetting: jest.fn(),
         resetValidationSettings: jest.fn(),
         getValidSession: jest.fn(),

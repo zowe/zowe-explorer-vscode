@@ -84,9 +84,9 @@ async function createGlobalMocks() {
                 getBaseProfile: jest.fn(() => {
                     return globalMocks.testProfile;
                 }),
-                getCombinedProfile: jest.fn(() => {
-                    return globalMocks.testProfile;
-                }),
+                // getCombinedProfile: jest.fn(() => {
+                //     return globalMocks.testProfile;
+                // }),
                 editSession: globalMocks.mockEditSession,
                 disableValidationContext: globalMocks.mockDisableValidationContext,
                 enableValidationContext: globalMocks.mockEnableValidationContext,

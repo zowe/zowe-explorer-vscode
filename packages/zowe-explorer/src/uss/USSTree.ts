@@ -635,8 +635,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 if (!sessionNode.getSession().ISession.user || !sessionNode.getSession().ISession.password) {
                     sessionNode.getSession().ISession.user = faveNode.getSession().ISession.user;
                     sessionNode.getSession().ISession.password = faveNode.getSession().ISession.password;
-                    sessionNode.getSession().ISession.base64EncodedAuth =
-                        faveNode.getSession().ISession.base64EncodedAuth;
+                    sessionNode.getSession().ISession.base64EncodedAuth = faveNode.getSession().ISession.base64EncodedAuth;
                 }
             }
             // Get session for sessionNode
@@ -924,19 +923,19 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      */
     private async addSingleSession(profile: IProfileLoaded) {
         if (profile) {
-            if (!ProfilesCache.getConfigInstance().usingTeamConfig) {
-                // If baseProfile exists, combine that information first before adding the session to the tree
-                // TODO: Move addSession to abstract/ZoweTreeProvider (similar to editSession)
-                const baseProfile = Profiles.getInstance().getBaseProfile();
-                if (baseProfile) {
-                    try {
-                        const combinedProfile = await Profiles.getInstance().getCombinedProfile(profile, baseProfile);
-                        profile = combinedProfile;
-                    } catch (error) {
-                        throw error;
-                    }
-                }
-            }
+            // if (!ProfilesCache.getConfigInstance().usingTeamConfig) {
+            //     // If baseProfile exists, combine that information first before adding the session to the tree
+            //     // TODO: Move addSession to abstract/ZoweTreeProvider (similar to editSession)
+            //     const baseProfile = Profiles.getInstance().getBaseProfile();
+            //     if (baseProfile) {
+            //         try {
+            //             const combinedProfile = await Profiles.getInstance().getCombinedProfile(profile, baseProfile);
+            //             profile = combinedProfile;
+            //         } catch (error) {
+            //             throw error;
+            //         }
+            //     }
+            // }
             // If session is already added, do nothing
             if (this.mSessionNodes.find((tempNode) => tempNode.label.toString() === profile.name)) {
                 return;

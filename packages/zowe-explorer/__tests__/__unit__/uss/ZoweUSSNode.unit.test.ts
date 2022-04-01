@@ -918,10 +918,10 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
             blockMocks.childNode.fullPath = "Throw Error";
             blockMocks.childNode.dirty = true;
             blockMocks.childNode.profile = globalMocks.profileOne;
-            globalMocks.profileOps.getCombinedProfile.mockResolvedValue({
-                name: blockMocks.testCombinedProfile.name,
-                profile: blockMocks.testCombinedProfile.profile,
-            });
+            // globalMocks.profileOps.getCombinedProfile.mockResolvedValue({
+            //     name: blockMocks.testCombinedProfile.name,
+            //     profile: blockMocks.testCombinedProfile.profile,
+            // });
 
             await blockMocks.childNode.getChildren();
             expect(globalMocks.showErrorMessage.mock.calls.length).toEqual(1);
@@ -941,10 +941,10 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
             blockMocks.childNode.contextValue = globals.USS_SESSION_CONTEXT;
             blockMocks.childNode.dirty = true;
             blockMocks.childNode.profile = globalMocks.profileOne;
-            globalMocks.profileOps.getCombinedProfile.mockResolvedValue({
-                name: blockMocks.testCombinedProfile.name,
-                profile: blockMocks.testCombinedProfile.profile,
-            });
+            // globalMocks.profileOps.getCombinedProfile.mockResolvedValue({
+            //     name: blockMocks.testCombinedProfile.name,
+            //     profile: blockMocks.testCombinedProfile.profile,
+            // });
             const subNode = new ZoweUSSNode(
                 "Response Fail",
                 vscode.TreeItemCollapsibleState.Collapsed,
@@ -1043,9 +1043,9 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
                         ];
                     }),
                     refresh: jest.fn(),
-                    getCombinedProfile: jest.fn(() => {
-                        return [{ name: globalMocks.profileOne.name, profile: globalMocks.profileOne }];
-                    }),
+                    // getCombinedProfile: jest.fn(() => {
+                    //     return [{ name: globalMocks.profileOne.name, profile: globalMocks.profileOne }];
+                    // }),
                 };
             }),
         });
@@ -1488,7 +1488,7 @@ describe("ZoweUSSNode Unit Tests - Function node.initializeFileOpening()", () =>
     it("Tests that node.initializeFileOpening() successfully handles binary files that should be re-downloaded", async () => {
         const globalMocks = await createGlobalMocks();
 
-        const errorSelection = "Re-download" as unknown as vscode.MessageItem;
+        const errorSelection = ("Re-download" as unknown) as vscode.MessageItem;
         jest.spyOn(vscode.workspace, "openTextDocument").mockRejectedValue("Test error!");
         jest.spyOn(vscode.window, "showErrorMessage").mockResolvedValue(errorSelection);
 

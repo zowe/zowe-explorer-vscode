@@ -851,22 +851,22 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      */
     private async addSingleSession(zosmfProfile: IProfileLoaded) {
         if (zosmfProfile) {
-            if (!ProfilesCache.getConfigInstance().usingTeamConfig) {
-                // If baseProfile exists, combine that information first before adding the session to the tree
-                // TODO: Move addSession to abstract/ZoweTreeProvider (similar to editSession)
-                const baseProfile = Profiles.getInstance().getBaseProfile();
-                if (baseProfile) {
-                    try {
-                        const combinedProfile = await Profiles.getInstance().getCombinedProfile(
-                            zosmfProfile,
-                            baseProfile
-                        );
-                        zosmfProfile = combinedProfile;
-                    } catch (error) {
-                        throw error;
-                    }
-                }
-            }
+            // if (!ProfilesCache.getConfigInstance().usingTeamConfig) {
+            //     // If baseProfile exists, combine that information first before adding the session to the tree
+            //     // TODO: Move addSession to abstract/ZoweTreeProvider (similar to editSession)
+            //     const baseProfile = Profiles.getInstance().getBaseProfile();
+            //     if (baseProfile) {
+            //         try {
+            //             const combinedProfile = await Profiles.getInstance().getCombinedProfile(
+            //                 zosmfProfile,
+            //                 baseProfile
+            //             );
+            //             zosmfProfile = combinedProfile;
+            //         } catch (error) {
+            //             throw error;
+            //         }
+            //     }
+            // }
             // If session is already added, do nothing
             if (this.mSessionNodes.find((tempNode) => tempNode.label.toString() === zosmfProfile.name)) {
                 return;

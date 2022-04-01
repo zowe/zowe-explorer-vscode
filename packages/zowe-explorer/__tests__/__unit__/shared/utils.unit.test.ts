@@ -139,13 +139,13 @@ describe("syncSessionNode shared util function", () => {
         const combinedProfile = serviceProfileValue;
         const profiles = createInstanceOfProfile(serviceProfile);
         profiles.loadNamedProfile = jest.fn(() => serviceProfileValue);
-        profiles.getBaseProfile = jest.fn(() => {
-            return {
-                name: baseProfileName,
-                profile: baseProfile,
-            };
-        });
-        profiles.getCombinedProfile = jest.fn(() => combinedProfile);
+        // profiles.getBaseProfile = jest.fn(() => {
+        //     return {
+        //         name: baseProfileName,
+        //         profile: baseProfile,
+        //     };
+        // });
+        // profiles.getCombinedProfile = jest.fn(() => combinedProfile);
         const expectedSession = new Session({});
         const sessionFromProfile = () => expectedSession;
         // when
@@ -160,8 +160,8 @@ describe("syncSessionNode shared util function", () => {
         const combinedProfile = serviceProfileValue;
         const profiles = createInstanceOfProfile(serviceProfile);
         profiles.loadNamedProfile = jest.fn(() => serviceProfileValue);
-        profiles.getBaseProfile = jest.fn(() => undefined);
-        profiles.getCombinedProfile = jest.fn(() => combinedProfile);
+        // profiles.getBaseProfile = jest.fn(() => undefined);
+        // profiles.getCombinedProfile = jest.fn(() => combinedProfile);
         const expectedSession = new Session({});
         const sessionFromProfile = () => expectedSession;
         // when
@@ -190,21 +190,21 @@ describe("syncSessionNode shared util function", () => {
         expect(sessionNode.getProfile()).toEqual(initialProfile);
         expect(sessionNode.collapsibleState).toEqual(vscode.TreeItemCollapsibleState.Collapsed);
     });
-    it("should not try to combine service and base profiles when no base profile exists", async () => {
-        const getCombinedProfileSpy = jest.spyOn(Profiles.getInstance(), "getCombinedProfile");
-        const profiles = createInstanceOfProfile(serviceProfile);
-        profiles.loadNamedProfile = jest.fn(() => serviceProfileValue);
-        profiles.getBaseProfile = jest.fn(() => undefined);
-        const expectedSession = new Session({});
-        const sessionFromProfile = () => expectedSession;
-        // when
-        await utils.syncSessionNode(profiles)(sessionFromProfile)(sessionNode);
-        // then
-        expect(getCombinedProfileSpy).toBeCalledTimes(0);
-        expect(sessionNode.getSession()).toEqual(expectedSession);
-        expect(sessionNode.getProfile()).toEqual(serviceProfileValue);
-        expect(sessionNode.collapsibleState).toEqual(vscode.TreeItemCollapsibleState.Collapsed);
-    });
+    // it("should not try to combine service and base profiles when no base profile exists", async () => {
+    //     // const getCombinedProfileSpy = jest.spyOn(Profiles.getInstance(), "getCombinedProfile");
+    //     const profiles = createInstanceOfProfile(serviceProfile);
+    //     profiles.loadNamedProfile = jest.fn(() => serviceProfileValue);
+    //     profiles.getBaseProfile = jest.fn(() => undefined);
+    //     const expectedSession = new Session({});
+    //     const sessionFromProfile = () => expectedSession;
+    //     // when
+    //     await utils.syncSessionNode(profiles)(sessionFromProfile)(sessionNode);
+    //     // then
+    //     expect(getCombinedProfileSpy).toBeCalledTimes(0);
+    //     expect(sessionNode.getSession()).toEqual(expectedSession);
+    //     expect(sessionNode.getProfile()).toEqual(serviceProfileValue);
+    //     expect(sessionNode.collapsibleState).toEqual(vscode.TreeItemCollapsibleState.Collapsed);
+    // });
 });
 
 describe("Positive testing", () => {
