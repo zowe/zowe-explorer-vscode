@@ -123,6 +123,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
                 await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
             }
         );
+        imperative.ConfigSchema.updateSchema();
     }
 
     /**
