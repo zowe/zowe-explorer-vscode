@@ -20,7 +20,6 @@ import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import * as nls from "vscode-nls";
 import { ZoweCommandProvider } from "../abstract/ZoweCommandProvider";
 import { UIViews } from "../shared/ui-views";
-import { ProfilesCache } from "@zowe/zowe-explorer-api";
 
 // Set up localization
 nls.config({
