@@ -155,7 +155,7 @@ describe("ussNodeActions integration test", async () => {
                     vscode.TreeItemCollapsibleState.None,
                     testFolder,
                     session,
-                    testFolder.label,
+                    testFolder.label as string,
                     false,
                     testProfile.name
                 );

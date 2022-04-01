@@ -57,7 +57,7 @@ export async function createUSSNode(
         const filePathOptions: vscode.InputBoxOptions = {
             placeHolder: localize("createUSSNode.inputBox.placeholder", "{0} location", nodeType),
             prompt: localize("createUSSNode.inputBox.prompt", "Choose a location to create the {0}", nodeType),
-            value: node.tooltip,
+            value: node.tooltip as string,
         };
         filePath = await UIViews.inputBox(filePathOptions);
     } else {

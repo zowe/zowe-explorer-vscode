@@ -130,7 +130,9 @@ describe("Extension Integration Tests", async () => {
             const profileNamesList = profileManager.getAllProfileNames().filter(
                 (profileName) =>
                     // Find all cases where a profile is not already displayed
-                    !testTree.mSessionNodes.find((node) => node.label.toUpperCase() === profileName.toUpperCase())
+                    !testTree.mSessionNodes.find(
+                        (node) => node.label.toString().toUpperCase() === profileName.toUpperCase()
+                    )
             );
 
             // Mock user selecting first profile from list
@@ -399,13 +401,19 @@ describe("Extension Integration Tests", async () => {
             const changedData = "PS Upload Test";
 
             fs.writeFileSync(
-                path.join(globals.ZOWETEMPFOLDER, children[1].label + "[" + profiles[1].label + "]"),
+                path.join(
+                    globals.ZOWETEMPFOLDER,
+                    children[1].label.toString() + "[" + profiles[1].label.toString() + "]"
+                ),
                 changedData
             );
 
             // Upload file
             const doc = await vscode.workspace.openTextDocument(
-                path.join(globals.ZOWETEMPFOLDER, children[1].label + "[" + profiles[1].label + "]")
+                path.join(
+                    globals.ZOWETEMPFOLDER,
+                    children[1].label.toString() + "[" + profiles[1].label.toString() + "]"
+                )
             );
             await dsActions.saveFile(doc, testTree);
 
@@ -416,7 +424,7 @@ describe("Extension Integration Tests", async () => {
 
             // Change contents back
             const originalData = "";
-            fs.writeFileSync(path.join(path.join(globals.ZOWETEMPFOLDER, children[1].label)), originalData);
+            fs.writeFileSync(path.join(path.join(globals.ZOWETEMPFOLDER, children[1].label.toString())), originalData);
         }).timeout(TIMEOUT);
 
         it("should download, change, and re-upload a PDS member", async () => {
@@ -433,13 +441,19 @@ describe("Extension Integration Tests", async () => {
             const changedData2 = "PO Member Upload Test";
 
             fs.writeFileSync(
-                path.join(globals.ZOWETEMPFOLDER, children[0].label + "(" + childrenMembers[0].label + ")"),
+                path.join(
+                    globals.ZOWETEMPFOLDER,
+                    children[0].label.toString() + "(" + childrenMembers[0].label.toString() + ")"
+                ),
                 changedData2
             );
 
             // Upload file
             const doc2 = await vscode.workspace.openTextDocument(
-                path.join(globals.ZOWETEMPFOLDER, children[0].label + "(" + childrenMembers[0].label + ")")
+                path.join(
+                    globals.ZOWETEMPFOLDER,
+                    children[0].label.toString() + "(" + childrenMembers[0].label.toString() + ")"
+                )
             );
             dsActions.saveFile(doc2, testTree);
 
@@ -451,7 +465,10 @@ describe("Extension Integration Tests", async () => {
             // Change contents back
             const originalData2 = "";
             fs.writeFileSync(
-                path.join(globals.ZOWETEMPFOLDER, children[0].label + "(" + childrenMembers[0].label + ")"),
+                path.join(
+                    globals.ZOWETEMPFOLDER,
+                    children[0].label.toString() + "(" + childrenMembers[0].label.toString() + ")"
+                ),
                 originalData2
             );
         }).timeout(TIMEOUT);
@@ -1117,7 +1134,7 @@ async function getAllNodes(nodes: IZoweTreeNode[]) {
 
     for (const node of nodes) {
         let nodeChildren = await node.getChildren();
-        nodeChildren = nodeChildren.filter((item) => !item.label.includes("No datasets found"));
+        nodeChildren = nodeChildren.filter((item) => !item.label.toString().includes("No datasets found"));
         allNodes = allNodes.concat(await getAllNodes(nodeChildren));
         allNodes.push(node);
     }
@@ -1198,7 +1215,9 @@ describe("Extension Integration Tests - USS", () => {
             const profileNamesList = profileManager.getAllProfileNames().filter(
                 (profileName) =>
                     // Find all cases where a profile is not already displayed
-                    !ussTestTree.mSessionNodes.find((node) => node.label.toUpperCase() === profileName.toUpperCase())
+                    !ussTestTree.mSessionNodes.find(
+                        (node) => node.label.toString().toUpperCase() === profileName.toUpperCase()
+                    )
             );
 
             // Mock user selecting first profile from list
