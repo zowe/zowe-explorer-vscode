@@ -428,6 +428,17 @@ export namespace ZoweExplorerApi {
          * @memberof IJes
          */
         deleteJob(jobname: string, jobid: string): Promise<void>;
+
+        /**
+         * Cancels and purges a job identified by name and id.
+         * This version returns information about the status of the job
+         *
+         * @param {string} jobname
+         * @param {string} jobid
+         * @returns {Promise<undefined | zowe.IJobFeedback>}
+         * @memberof IJes
+         */
+        deleteJobWithInfo?(jobname: string, jobid: string): Promise<undefined | zowe.IJobFeedback>;
     }
     /**
      * API for providing a Command API handler to the extension.

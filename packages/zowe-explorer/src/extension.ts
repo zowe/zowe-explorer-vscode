@@ -9,7 +9,7 @@
  *                                                                                 *
  */
 
-import * as zowe from "@zowe/cli";
+// import * as zowe from "@zowe/cli";
 import * as fs from "fs";
 import * as path from "path";
 import * as globals from "./globals";
@@ -26,12 +26,14 @@ import {
     IZoweTreeNode,
     IZoweTree,
     KeytarApi,
+    getZoweDir,
 } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import { Profiles } from "./Profiles";
-import { errorHandling, getZoweDir, readConfigFromDisk } from "./utils/ProfilesUtils";
-import { ImperativeError, CliProfileManager } from "@zowe/imperative";
+import { errorHandling, readConfigFromDisk } from "./utils/ProfilesUtils";
+import { ImperativeError, CliProfileManager, ImperativeConfig } from "@zowe/imperative";
+import { getImperativeConfig } from "@zowe/cli";
 import { createDatasetTree } from "./dataset/DatasetTree";
 import { createJobsTree } from "./job/ZosJobsProvider";
 import { createUSSTree } from "./uss/USSTree";
@@ -41,6 +43,7 @@ import * as nls from "vscode-nls";
 import { TsoCommandHandler } from "./command/TsoCommandHandler";
 import { cleanTempDir, moveTempFolder, hideTempFolder } from "./utils/TempFolder";
 import { standardizeSettings } from "./utils/SettingsConfig";
+import { UIViews } from "./shared/ui-views";
 
 // Set up localization
 nls.config({
@@ -95,10 +98,12 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         }
 
         // Ensure that ~/.zowe folder exists
-        await CliProfileManager.initialize({
-            configuration: zowe.getImperativeConfig().profiles,
-            profileRootDirectory: path.join(getZoweDir(), "profiles"),
-        });
+        if (!ImperativeConfig.instance.config?.exists) {
+            await CliProfileManager.initialize({
+                configuration: getImperativeConfig().profiles,
+                profileRootDirectory: path.join(getZoweDir(), "profiles"),
+            });
+        }
 
         await readConfigFromDisk();
 
@@ -134,6 +139,50 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
                 }
             }
             await activate(context);
+        })
+    );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand("zowe.promptCredentials", async (node: IZoweTreeNode) => {
+            let profileName: string;
+            if (node == null) {
+                // prompt for profile
+                profileName = await UIViews.inputBox({
+                    placeHolder: localize(
+                        "createNewConnection.option.prompt.profileName.placeholder",
+                        "Connection Name"
+                    ),
+                    prompt: localize(
+                        "createNewConnection.option.prompt.profileName",
+                        "Enter a name for the connection."
+                    ),
+                    ignoreFocusOut: true,
+                });
+
+                if (profileName === undefined) {
+                    vscode.window.showInformationMessage(
+                        localize("createNewConnection.undefined.passWord", "Operation Cancelled")
+                    );
+                    return;
+                }
+                profileName = profileName.trim();
+            } else {
+                profileName = node.getProfile().name;
+            }
+
+            const creds = await Profiles.getInstance().promptCredentials(profileName, true);
+            if (creds != null) {
+                vscode.window.showInformationMessage(
+                    localize(
+                        "promptCredentials.updatedCredentials",
+                        "Credentials for {0} were successfully updated",
+                        profileName
+                    )
+                );
+            }
+            await refreshActions.refreshAll(datasetProvider);
+            await refreshActions.refreshAll(ussFileProvider);
+            await refreshActions.refreshAll(jobsProvider);
         })
     );
 

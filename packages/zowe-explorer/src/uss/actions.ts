@@ -30,6 +30,7 @@ import { returnIconState, resetValidationSettings } from "../shared/actions";
 import { PersistentFilters } from "../PersistentFilters";
 import { refreshAll } from "../shared/refresh";
 import { UIViews } from "../shared/ui-views";
+import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 
 // Set up localization
 nls.config({
@@ -183,7 +184,7 @@ export async function uploadFile(node: IZoweUSSTreeNode, doc: vscode.TextDocumen
                 statusMessage: localize("uploadFile.putContents", "Uploading USS file"),
                 stageName: 0, // TaskStage.IN_PROGRESS - https://github.com/kulshekhar/ts-jest/issues/281
             };
-            const options: zowe.IUploadOptions = {
+            const options: IUploadOptions = {
                 task,
             };
             if (prof.profile.encoding) {
