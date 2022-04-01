@@ -872,6 +872,9 @@ export class Profiles extends ProfilesCache {
             }
             await this.saveProfile(schemaValues, schemaValues.name, profileType);
             vscode.window.showInformationMessage("Profile " + newProfileName + " was created.");
+            // Trigger a ProfilesCache.createConfigInstance with a fresh Config.load
+            // This shall capture any profiles created (v1 or v2)
+            await readConfigFromDisk();
             return newProfileName;
         } catch (error) {
             await errorHandling(error.message);
@@ -893,6 +896,7 @@ export class Profiles extends ProfilesCache {
                 "Enter the password for the connection. Leave blank to not store."
             ),
         };
+
         const promptInfo = await ZoweVsCodeExtension.promptCredentials({
             sessionName,
             rePrompt,
@@ -917,11 +921,12 @@ export class Profiles extends ProfilesCache {
                 }
                 profArray.push(promptInfo.profile);
                 this.allProfiles = profArray;
-                await readConfigFromDisk();
             }
         } else {
             vscode.window.showInformationMessage(localize("promptCredentials.undefined.value", "Operation Cancelled"));
         }
+
+        await readConfigFromDisk();
         await this.refresh(ZoweExplorerApiRegister.getInstance());
         return returnValue;
     }
