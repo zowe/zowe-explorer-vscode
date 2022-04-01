@@ -343,6 +343,10 @@ export class ZosmfJesApi extends ZosmfApiCommon implements ZoweExplorerApi.IJes 
     }
 
     public async deleteJob(jobname: string, jobid: string): Promise<void> {
+        await zowe.DeleteJobs.deleteJob(this.getSession(), jobname, jobid);
+    }
+
+    public async deleteJobWithInfo(jobname: string, jobid: string): Promise<undefined | zowe.IJobFeedback> {
         return await zowe.DeleteJobs.deleteJob(this.getSession(), jobname, jobid);
     }
 }

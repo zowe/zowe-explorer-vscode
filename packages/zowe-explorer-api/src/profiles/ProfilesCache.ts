@@ -9,12 +9,14 @@
  *                                                                                 *
  */
 
-import * as imperative from "@zowe/imperative";
-import { ZoweExplorerApi } from "./ZoweExplorerApi";
 import * as path from "path";
 import * as os from "os";
 import * as fs from "fs";
 import { URL } from "url";
+
+import * as imperative from "@zowe/imperative";
+import * as zowe from "@zowe/cli";
+import { ZoweExplorerApi } from "./ZoweExplorerApi";
 
 // TODO: find a home for constants
 export const CONTEXT_PREFIX = "_";
@@ -41,6 +43,10 @@ export enum ValidProfileEnum {
     UNVERIFIED = 1,
     VALID = 0,
     INVALID = -1,
+}
+
+export function getZoweDir(): string {
+    return zowe.getZoweDir();
 }
 
 export class ProfilesCache {
@@ -168,7 +174,14 @@ export class ProfilesCache {
         return directProfile;
     }
 
+    /**
+     * @deprecated Please use ProfilesCache.getProfileFromConfig(...)
+     */
     public getProfileFromConfig(profileName: string): imperative.IProfAttrs {
+        return ProfilesCache.getProfileFromConfig(profileName);
+    }
+
+    public static getProfileFromConfig(profileName: string): imperative.IProfAttrs {
         const configAllProfiles = ProfilesCache.getConfigInstance()
             .getAllProfiles()
             .filter((temp) => temp.profLoc.osLoc.length !== 0);
@@ -176,18 +189,22 @@ export class ProfilesCache {
         return currentProfile;
     }
 
+    /**
+     * @deprecated Please use ProfilesCache.getLoadedProfConfig(...)
+     */
     public getLoadedProfConfig(profileName: string): imperative.IProfileLoaded {
-        const configAllProfiles = ProfilesCache.getConfigInstance()
-            .getAllProfiles()
-            .filter((temp) => temp.profLoc.osLoc.length !== 0);
-        const currentProfile = configAllProfiles.filter((temprofile) => temprofile.profName === profileName.trim())[0];
+        return ProfilesCache.getLoadedProfConfig(profileName);
+    }
+
+    public static getLoadedProfConfig(profileName: string): imperative.IProfileLoaded {
+        const currentProfile = ProfilesCache.getProfileFromConfig(profileName);
         const mergedArgs = ProfilesCache.getConfigInstance().mergeArgsForProfile(currentProfile);
         const profile: imperative.IProfile = {};
         for (const arg of mergedArgs.knownArgs) {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             profile[arg.argName] = arg.secure ? ProfilesCache.getConfigInstance().loadSecureArg(arg) : arg.argValue;
         }
-        return this.getProfileLoaded(currentProfile.profName, currentProfile.profType, profile);
+        return ProfilesCache.getProfileLoaded(currentProfile.profName, currentProfile.profType, profile);
     }
 
     public getCliProfileManager(type: string): imperative.CliProfileManager {
@@ -195,7 +212,7 @@ export class ProfilesCache {
         if (!profileManager) {
             try {
                 profileManager = new imperative.CliProfileManager({
-                    profileRootDirectory: path.join(this.getZoweDir(), "profiles"),
+                    profileRootDirectory: path.join(getZoweDir(), "profiles"),
                     type,
                 });
             } catch (error) {
@@ -225,7 +242,7 @@ export class ProfilesCache {
     public isSecureCredentialPluginActive(): boolean {
         let imperativeIsSecure = false;
         try {
-            const fileName = path.join(this.getZoweDir(), "settings", "imperative.json");
+            const fileName = path.join(getZoweDir(), "settings", "imperative.json");
             let settings: Record<string, unknown>;
             if (fs.existsSync(fileName)) {
                 settings = JSON.parse(fs.readFileSync(fileName, "utf-8")) as Record<string, unknown>;
@@ -244,7 +261,18 @@ export class ProfilesCache {
         return imperativeIsSecure;
     }
 
+    /**
+     * @deprecated Please use ProfilesCache.getProfileLoaded(...)
+     */
     public getProfileLoaded(
+        profileName: string,
+        profileType: string,
+        profile: imperative.IProfile
+    ): imperative.IProfileLoaded {
+        return ProfilesCache.getProfileLoaded(profileName, profileType, profile);
+    }
+
+    public static getProfileLoaded(
         profileName: string,
         profileType: string,
         profile: imperative.IProfile
@@ -253,11 +281,10 @@ export class ProfilesCache {
             message: "",
             name: profileName,
             type: profileType,
-            profile: profile,
+            profile,
             failNotFound: false,
         };
     }
-
     protected async deleteProfileOnDisk(ProfileInfo: imperative.IProfileLoaded): Promise<void> {
         await this.getCliProfileManager(ProfileInfo.type).delete({
             profile: ProfileInfo,
@@ -342,7 +369,7 @@ export class ProfilesCache {
                     // Step 2: Merge args for each profile
                     const profAttr = await this.getMergedAttrs(mProfileInfo, prof);
                     // Work-around. TODO: Discuss with imperative team
-                    const profileFix = this.getProfileLoaded(prof.profName, prof.profType, profAttr);
+                    const profileFix = ProfilesCache.getProfileLoaded(prof.profName, prof.profType, profAttr);
                     // set default for type
                     if (prof.isDefaultProfile) {
                         this.defaultProfileByType.set(type, profileFix);
@@ -416,17 +443,5 @@ export class ProfilesCache {
             externalTypeArray.filter((exType) => registeredTypes.every((type) => type !== exType))
         );
         return allTypes;
-    }
-
-    /**
-     * Function to retrieve the home directory. In the situation Imperative has
-     * not initialized it we mock a default value.
-     */
-    private getZoweDir(): string {
-        imperative.ImperativeConfig.instance.loadedConfig = {
-            defaultHome: path.join(os.homedir(), ".zowe"),
-            envVariablePrefix: "ZOWE",
-        };
-        return imperative.ImperativeConfig.instance.cliHome;
     }
 }

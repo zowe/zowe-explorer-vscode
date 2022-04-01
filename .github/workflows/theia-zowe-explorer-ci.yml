@@ -5,9 +5,11 @@ on:
   push:
     paths:
       - packages/zowe-explorer/**
+      - packages/zowe-explorer-api/**
   pull_request:
     paths:
       - packages/zowe-explorer/**
+      - packages/zowe-explorer-api/**
 
 jobs:
   ze-theia-build:
@@ -58,7 +60,8 @@ jobs:
       #     # --health-cmd "curl --fail http://localhost:3000 || exit 1" --health-interval=5s --health-timeout=5s --health-retries 60
       #     options: --init
 
-      - run: yarn lint
+      - name: Allow some time for the theia server to load
+        run: sleep 30s
 
       - name: Verify plugin loaded
         run: docker exec -i theia ls -la /home/theia/plugins

@@ -16,7 +16,7 @@ import * as loggerConfig from "../log4jsconfig.json";
 
 // Set up localization
 import * as nls from "vscode-nls";
-import { getZoweDir } from "@zowe/cli";
+import { getZoweDir } from "@zowe/zowe-explorer-api";
 
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
@@ -32,7 +32,7 @@ export let DS_DIR;
 export let CONFIG_PATH; // set during activate
 export let ISTHEIA: boolean = false; // set during activate
 export let LOG: Logger;
-export const COMMAND_COUNT = 97;
+export const COMMAND_COUNT = 98;
 export const MAX_SEARCH_HISTORY = 5;
 export const MAX_FILE_HISTORY = 10;
 export const STATUS_BAR_TIMEOUT_MS = 5000;
