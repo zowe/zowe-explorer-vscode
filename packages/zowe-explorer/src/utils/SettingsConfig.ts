@@ -21,6 +21,28 @@ nls.config({
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export class SettingsConfig {
+    public static async standardizeSettings(): Promise<void> {
+        const globalIsNotMigrated =
+            SettingsConfig.configurations.inspect(globals.SETTINGS_VERSION).globalValue !==
+            SettingsConfig.currentVersionNumber;
+        const workspaceIsNotMigrated =
+            SettingsConfig.configurations.inspect(globals.SETTINGS_VERSION).workspaceValue !==
+            SettingsConfig.currentVersionNumber;
+        const workspaceIsOpen = vscode.workspace.workspaceFolders !== undefined;
+        const zoweSettingsExist = SettingsConfig.zoweOldConfigurations.length > 0;
+
+        if (!zoweSettingsExist) {
+            return;
+        }
+
+        if (workspaceIsNotMigrated && workspaceIsOpen) {
+            await SettingsConfig.standardizeWorkspaceSettings();
+        }
+
+        if (globalIsNotMigrated) {
+            await SettingsConfig.standardizeGlobalSettings();
+        }
+    }
     // Dictionary describing translation from old configuration names to new standardized names
     private static configurationDictionary = {
         "Zowe-Default-Datasets-Binary": globals.SETTINGS_DS_DEFAULT_BINARY,
@@ -44,28 +66,6 @@ export class SettingsConfig {
     private static currentVersionNumber = semver.major(
         vscode.extensions.getExtension("zowe.vscode-extension-for-zowe").packageJSON.version
     );
-    public static async standardizeSettings(): Promise<void> {
-        const globalIsNotMigrated =
-            SettingsConfig.configurations.inspect(globals.SETTINGS_VERSION).globalValue !==
-            SettingsConfig.currentVersionNumber;
-        const workspaceIsNotMigrated =
-            SettingsConfig.configurations.inspect(globals.SETTINGS_VERSION).workspaceValue !==
-            SettingsConfig.currentVersionNumber;
-        const workspaceIsOpen = vscode.workspace.workspaceFolders !== undefined;
-        const zoweSettingsExist = SettingsConfig.zoweOldConfigurations.length > 0;
-
-        if (!zoweSettingsExist) {
-            return;
-        }
-
-        if (workspaceIsNotMigrated && workspaceIsOpen) {
-            await SettingsConfig.standardizeWorkspaceSettings();
-        }
-
-        if (globalIsNotMigrated) {
-            await SettingsConfig.standardizeGlobalSettings();
-        }
-    }
     private static async promptReload(): Promise<void> {
         // Prompt user to reload VS Code window
         const reloadButton = localize("standardization.reload.button", "Reload Window");
