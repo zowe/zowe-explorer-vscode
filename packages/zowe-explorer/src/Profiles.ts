@@ -44,6 +44,7 @@ import {
     ValidProfileEnum,
     ProfilesCache,
     IUrlValidator,
+    ZoweVsCodeExtension,
 } from "@zowe/zowe-explorer-api";
 import {
     errorHandling,
@@ -871,41 +872,63 @@ export class Profiles extends ProfilesCache {
             }
             await this.saveProfile(schemaValues, schemaValues.name, profileType);
             vscode.window.showInformationMessage("Profile " + newProfileName + " was created.");
+            // Trigger a ProfilesCache.createConfigInstance with a fresh Config.load
+            // This shall capture any profiles created (v1 or v2)
+            await readConfigFromDisk();
             return newProfileName;
         } catch (error) {
             await errorHandling(error.message);
         }
     }
 
-    public async promptCredentials(sessName, rePrompt?: boolean) {
-        const loadProfile = this.getLoadedProfConfig(sessName.trim());
-        const loadSession = loadProfile.profile as ISession;
-        const creds = await this.promptUserPass(loadSession, rePrompt);
-        if (creds && creds.length > 0) {
-            loadProfile.profile.user = loadSession.user = creds[0];
-            loadProfile.profile.password = loadSession.password = creds[1];
+    public async promptCredentials(sessionName: string, rePrompt?: boolean) {
+        const userInputBoxOptions: vscode.InputBoxOptions = {
+            placeHolder: localize("createNewConnection.option.prompt.username.placeholder", "User Name"),
+            prompt: localize(
+                "createNewConnection.option.prompt.username",
+                "Enter the user name for the connection. Leave blank to not store."
+            ),
+        };
+        const passwordInputBoxOptions: vscode.InputBoxOptions = {
+            placeHolder: localize("createNewConnection.option.prompt.password.placeholder", "Password"),
+            prompt: localize(
+                "createNewConnection.option.prompt.password",
+                "Enter the password for the connection. Leave blank to not store."
+            ),
+        };
 
-            const upd = { profileName: loadProfile.name, profileType: loadProfile.type };
-            await ProfilesCache.getConfigInstance().updateProperty({ ...upd, property: "user", value: creds[0] });
-            await ProfilesCache.getConfigInstance().updateProperty({ ...upd, property: "password", value: creds[1] });
+        const promptInfo = await ZoweVsCodeExtension.promptCredentials({
+            sessionName,
+            rePrompt,
+            userInputBoxOptions,
+            passwordInputBoxOptions,
+        });
 
-            const updSession = ZoweExplorerApiRegister.getMvsApi(loadProfile).getSession();
+        let returnValue;
+        if (promptInfo) {
+            const updSession = ZoweExplorerApiRegister.getMvsApi(promptInfo).getSession();
+            returnValue = [
+                updSession.ISession.user,
+                updSession.ISession.password,
+                updSession.ISession.base64EncodedAuth,
+            ];
             if (ProfilesCache.getConfigInstance().usingTeamConfig) {
                 const profArray = [];
                 for (const theprofile of this.allProfiles) {
-                    if (theprofile.name !== loadProfile.name) {
+                    if (theprofile.name !== promptInfo.profile.name) {
                         profArray.push(theprofile);
                     }
                 }
-                profArray.push(loadProfile);
+                profArray.push(promptInfo.profile);
                 this.allProfiles = profArray;
             }
-            return [updSession.ISession.user, updSession.ISession.password, updSession.ISession.base64EncodedAuth];
+        } else {
+            vscode.window.showInformationMessage(localize("promptCredentials.undefined.value", "Operation Cancelled"));
         }
 
-        vscode.window.showInformationMessage(localize("promptCredentials.undefined.value", "Operation Cancelled"));
+        await readConfigFromDisk();
         await this.refresh(ZoweExplorerApiRegister.getInstance());
-        return undefined;
+        return returnValue;
     }
 
     public async getDeleteProfile() {

@@ -9,17 +9,19 @@
  *                                                                                 *
  */
 
-import { ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
-import * as vscode from "vscode";
+import { IProfileLoaded, ISession } from "@zowe/imperative";
+import { InputBoxOptions } from "vscode";
 
-// This class will hold all UI/GUI actions like input boxes, dialog boxes, pop up messages, and so on.
-// This will keep vs code user interaction code separate from logic code.
-// NOTE: This refactor is still under construction
-export class UIViews {
-    /**
-     * @deprecated Please use ZoweVsCodeExtension.inputBox(...)
-     */
-    public static async inputBox(inputBoxOptions: vscode.InputBoxOptions): Promise<string> {
-        return ZoweVsCodeExtension.inputBox(inputBoxOptions);
-    }
+export interface IPromptCredentialsCommonOptions {
+    rePrompt?: boolean;
+    userInputBoxOptions?: InputBoxOptions;
+    passwordInputBoxOptions?: InputBoxOptions;
+}
+
+export interface IPromptCredentialsOptions extends IPromptCredentialsCommonOptions {
+    sessionName: string;
+}
+
+export interface IPromptUserPassOptions extends IPromptCredentialsCommonOptions {
+    session: ISession;
 }
