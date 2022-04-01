@@ -42,7 +42,7 @@ import SpoolProvider from "./SpoolProvider";
 import * as nls from "vscode-nls";
 import { TsoCommandHandler } from "./command/TsoCommandHandler";
 import { cleanTempDir, moveTempFolder, hideTempFolder } from "./utils/TempFolder";
-import { standardizeSettings } from "./utils/SettingsConfig";
+import { SettingsConfig } from "./utils/SettingsConfig";
 import { UIViews } from "./shared/ui-views";
 
 // Set up localization
@@ -306,7 +306,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
 
     ZoweExplorerExtender.createInstance(datasetProvider, ussFileProvider, jobsProvider);
 
-    await standardizeSettings();
+    await SettingsConfig.standardizeSettings();
     return ZoweExplorerApiRegister.getInstance();
 }
 
