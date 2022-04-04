@@ -210,7 +210,6 @@ describe("ZoweJobNode unit tests - Function addSession", () => {
 
         expect(globalMocks.testJobsProvider.mSessionNodes[1]).toBeDefined();
         expect(globalMocks.testJobsProvider.mSessionNodes[1].label).toEqual("sestest");
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].tooltip).toEqual("sestest - owner: fake prefix: *");
     });
 
     it("Tests that addSession adds the session to the tree with disabled global setting", async () => {
@@ -219,10 +218,12 @@ describe("ZoweJobNode unit tests - Function addSession", () => {
         globalMocks.mockProfileInstance.checkProfileValidationSetting =
             globalMocks.mockValidationSetting.mockReturnValueOnce(false);
         await globalMocks.testJobsProvider.addSession("sestest");
+        const iconPathString = JSON.stringify(globalMocks.testJobsProvider.mSessionNodes[1].iconPath);
+        const includesUnverified = iconPathString.includes("unverified");
 
         expect(globalMocks.testJobsProvider.mSessionNodes[1]).toBeDefined();
         expect(globalMocks.testJobsProvider.mSessionNodes[1].label).toEqual("sestest");
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].tooltip).toEqual("sestest - owner: fake prefix: *");
+        expect(includesUnverified).toEqual(true);
     });
 });
 
@@ -314,10 +315,10 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
     it("Tests that getChildren returns the spool files if user/owner is not defined", async () => {
         const globalMocks = await createGlobalMocks();
 
-        globalMocks.testJobsProvider.mSessionNodes[1]._owner = undefined;
-        globalMocks.testJobsProvider.mSessionNodes[1]._prefix = "";
+        globalMocks.testJobsProvider.mSessionNodes[1]._owner = null;
+        globalMocks.testJobsProvider.mSessionNodes[1]._prefix = "*";
         globalMocks.testJobsProvider.mSessionNodes[1]._searchId = "";
-        globalMocks.testJobsProvider.mSessionNodes[1].session.ISession.user = undefined;
+        globalMocks.testJobNode.session.ISession = globalMocks.testSessionNoCred;
         const spoolFiles = await globalMocks.testJobNode.getChildren();
         expect(spoolFiles.length).toBe(1);
         expect(spoolFiles[0].label).toEqual("STEP:STDOUT(101)");
@@ -724,11 +725,14 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        blockMocks.qpItem = new utils.FilterItem("Owner:fake Prefix:*");
+        blockMocks.qpContent.items = ["Owner:fake Prefix:*"];
+        globalMocks.mockShowQuickPick.mockReturnValueOnce(blockMocks.qpContent.items[0]);
+        globalMocks.mockShowInputBox.mockReturnValueOnce("fake");
+        globalMocks.mockShowInputBox.mockReturnValueOnce("*");
 
         await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
 
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("fake");
+        expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("FAKE");
         expect(globalMocks.testJobsProvider.mSessionNodes[1].prefix).toEqual("*");
     });
 

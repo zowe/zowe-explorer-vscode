@@ -70,8 +70,6 @@ export class MvsCommandHandler extends ZoweCommandProvider {
     public async issueMvsCommand(session?: Session, command?: string, node?: IZoweTreeNode) {
         let profile: IProfileLoaded;
         if (node) {
-            // tslint:disable-next-line:no-console
-            console.log(node.getProfile());
             await this.checkCurrentProfile(node);
             if (!session) {
                 session = ZoweExplorerApiRegister.getMvsApi(node.getProfile()).getSession();
