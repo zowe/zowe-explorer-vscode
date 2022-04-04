@@ -2,6 +2,14 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## 2.0.0-next.202204041200
+
+- Added Secure Credential support, allowing users to update credentials using GUI. [#1699](https://github.com/zowe/vscode-extension-for-zowe/pull/1693)
+- Update Zowe Explorer 2.0 settings migration. [1714](https://github.com/zowe/vscode-extension-for-zowe/pull/1714)
+- Update Zowe Explorer SSO logout check for extenders. [#1711](https://github.com/zowe/vscode-extension-for-zowe/pull/1711)
+- Update Zowe SDK dependency. [#1699](https://github.com/zowe/vscode-extension-for-zowe/pull/1693)
+- Updated dependencies for improved security. [#1702](https://github.com/zowe/vscode-extension-for-zowe/pull/1702)
+
 ## `v2.0.0-next.202202281000`
 
 - Update Zowe CLI SDK to version 7.0.0-next.202202242016.
