@@ -117,12 +117,11 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
             globals.EXTENDER_CONFIG.push(item);
         });
         // sequentially reload the internal profiles cache to satisfy all the newly added profile types
-        await ZoweExplorerExtender.refreshProfilesQueue.add(
-            async (): Promise<void> => {
-                await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
-            }
-        );
-        imperative.ConfigSchema.updateSchema();
+        await ZoweExplorerExtender.refreshProfilesQueue.add(async (): Promise<void> => {
+            await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
+        });
+
+        const updatedSchema = imperative.ConfigSchema.updateSchema();
     }
 
     /**
@@ -157,12 +156,10 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
      */
     public async reloadProfiles(profileType?: string): Promise<void> {
         // sequentially reload the internal profiles cache to satisfy all the newly added profile types
-        await ZoweExplorerExtender.refreshProfilesQueue.add(
-            async (): Promise<void> => {
-                // eslint-disable-next-line no-return-await
-                await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
-            }
-        );
+        await ZoweExplorerExtender.refreshProfilesQueue.add(async (): Promise<void> => {
+            // eslint-disable-next-line no-return-await
+            await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
+        });
         // profileType is used to load a default extender profile if no other profiles are populating the trees
         this.datasetProvider?.addSession(undefined, profileType);
         this.ussFileProvider?.addSession(undefined, profileType);
