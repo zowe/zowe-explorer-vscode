@@ -123,6 +123,7 @@ async function createGlobalMocks() {
         appName: vscode.env.appName,
         expectedCommands: [
             "zowe.extRefresh",
+            "zowe.promptCredentials",
             "zowe.all.config.init",
             "zowe.ds.addSession",
             "zowe.ds.addFavorite",
