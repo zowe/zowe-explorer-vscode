@@ -13,7 +13,12 @@ import * as vscode from "vscode";
 import { ProfilesCache } from "@zowe/zowe-explorer-api";
 import * as utils from "../../src/utils/ProfilesUtils";
 import * as globals from "../../src/globals";
-import { createInstanceOfProfile, createIProfile, createValidIProfile } from "../../__mocks__/mockCreators/shared";
+import {
+    createInstanceOfProfile,
+    createInstanceOfProfileInfo,
+    createIProfile,
+    createValidIProfile,
+} from "../../__mocks__/mockCreators/shared";
 import { Profiles } from "../../src/Profiles";
 
 function createGlobalMocks() {
@@ -21,6 +26,7 @@ function createGlobalMocks() {
         isTheia: jest.fn(),
         testProfileLoaded: createValidIProfile(),
         mockProfileInstance: null,
+        mockProfileInfo: createInstanceOfProfileInfo(),
     };
 
     globalMocks.mockProfileInstance = createInstanceOfProfile(globalMocks.testProfileLoaded);
@@ -43,9 +49,7 @@ function createGlobalMocks() {
 
     Object.defineProperty(ProfilesCache, "getConfigInstance", {
         value: jest.fn(() => {
-            return {
-                usingTeamConfig: false,
-            };
+            return { value: globalMocks.mockProfileInfo, configurable: true };
         }),
     });
 

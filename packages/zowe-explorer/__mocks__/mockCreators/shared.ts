@@ -217,6 +217,28 @@ export function createInstanceOfProfile(profile: imperative.IProfileLoaded) {
     } as any;
 }
 
+export function createInstanceOfProfileInfo() {
+    return {
+        getAllProfiles: [
+            { profName: "sestest", profType: "zosmf", isDefaultProfile: true, profLoc: "location" },
+            { profName: "profile1", profType: "zosmf", isDefaultProfile: false, profLoc: "location" },
+            { profName: "profile2", profType: "zosmf", isDefaultProfile: false, profLoc: "location" },
+        ],
+        getDefaultProfile: { profName: "sestest", profType: "zosmf", isDefaultProfile: true, profLoc: "location" },
+        usingTeamConfig: false,
+        updateProperty: jest.fn(),
+        updateKnownProperty: jest.fn(),
+        getTeamConfig: jest.fn(),
+        createSession: jest.fn(),
+        mergeArgsForProfile: jest.fn(),
+        mergeArgsForProfileType: jest.fn(),
+        profAttrsToProfLoaded: jest.fn(),
+        readProfilesFromDisk: jest.fn(),
+        loadSecureArg: jest.fn(),
+        initSessCfg: jest.fn(),
+    };
+}
+
 export function createFileResponse(theResponse) {
     return {
         success: true,

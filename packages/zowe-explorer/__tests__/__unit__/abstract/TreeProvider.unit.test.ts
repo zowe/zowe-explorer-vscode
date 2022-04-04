@@ -11,7 +11,12 @@
 
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
 import * as vscode from "vscode";
-import { createIProfile, createISession, createFileResponse } from "../../../__mocks__/mockCreators/shared";
+import {
+    createIProfile,
+    createISession,
+    createFileResponse,
+    createInstanceOfProfileInfo,
+} from "../../../__mocks__/mockCreators/shared";
 import { createUSSSessionNode } from "../../../__mocks__/mockCreators/uss";
 import { ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../src/Profiles";
@@ -56,13 +61,12 @@ async function createGlobalMocks() {
                 WorkspaceFolder: 3,
             };
         }),
+        mockProfileInfo: createInstanceOfProfileInfo(),
     };
 
     Object.defineProperty(ProfilesCache, "getConfigInstance", {
         value: jest.fn(() => {
-            return {
-                usingTeamConfig: false,
-            };
+            return { value: globalMocks.mockProfileInfo, configurable: true };
         }),
     });
     Object.defineProperty(vscode, "ConfigurationTarget", { value: globalMocks.enums, configurable: true });

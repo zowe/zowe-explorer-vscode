@@ -28,6 +28,7 @@ import {
     createInstanceOfProfile,
     createISessionWithoutCredentials,
     createQuickPickContent,
+    createInstanceOfProfileInfo,
 } from "../../../__mocks__/mockCreators/shared";
 
 async function createGlobalMocks() {
@@ -81,13 +82,12 @@ async function createGlobalMocks() {
                 WorkspaceFolder: 3,
             };
         }),
+        mockProfileInfo: createInstanceOfProfileInfo(),
     };
 
     Object.defineProperty(ProfilesCache, "getConfigInstance", {
         value: jest.fn(() => {
-            return {
-                usingTeamConfig: false,
-            };
+            return { value: globalMocks.mockProfileInfo, configurable: true };
         }),
     });
     Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true });

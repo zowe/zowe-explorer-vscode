@@ -28,6 +28,7 @@ import {
     createTextDocument,
     createFileResponse,
     createValidIProfile,
+    createInstanceOfProfileInfo,
 } from "../../../__mocks__/mockCreators/shared";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
@@ -78,6 +79,7 @@ function createGlobalMocks() {
                 Notification: 15,
             };
         }),
+        mockProfileInfo: createInstanceOfProfileInfo(),
     };
 
     globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.testProfile);
@@ -167,9 +169,7 @@ function createGlobalMocks() {
     });
     Object.defineProperty(ProfilesCache, "getConfigInstance", {
         value: jest.fn(() => {
-            return {
-                usingTeamConfig: false,
-            };
+            return { value: globalMocks.mockProfileInfo, configurable: true };
         }),
     });
 

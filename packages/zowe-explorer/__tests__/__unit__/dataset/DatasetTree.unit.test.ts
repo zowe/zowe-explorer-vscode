@@ -31,6 +31,7 @@ import {
     createWorkspaceConfiguration,
     createPersistentConfig,
     createValidIProfile,
+    createInstanceOfProfileInfo,
 } from "../../../__mocks__/mockCreators/shared";
 import {
     createDatasetSessionNode,
@@ -52,6 +53,7 @@ function createGlobalMocks() {
         testProfileLoaded: createValidIProfile(),
         mockProfileInstance: null,
         mockShowWarningMessage: jest.fn(),
+        mockProfileInfo: createInstanceOfProfileInfo(),
     };
 
     globalMocks.mockProfileInstance = createInstanceOfProfile(globalMocks.testProfileLoaded);
@@ -113,9 +115,7 @@ function createGlobalMocks() {
     });
     Object.defineProperty(ProfilesCache, "getConfigInstance", {
         value: jest.fn(() => {
-            return {
-                usingTeamConfig: false,
-            };
+            return { value: globalMocks.mockProfileInfo, configurable: true };
         }),
     });
     Object.defineProperty(zowe.Download, "dataSet", {

@@ -23,6 +23,7 @@ import {
     createValidIProfile,
     createISession,
     createAltTypeIProfile,
+    createInstanceOfProfileInfo,
 } from "../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../__mocks__/mockCreators/datasets";
 import { createProfileManager, createTestSchemas } from "../../__mocks__/mockCreators/profiles";
@@ -78,6 +79,7 @@ async function createGlobalMocks() {
             host: "fake.com",
             port: 143,
         },
+        mockProfileInfo: createInstanceOfProfileInfo(),
     };
 
     newMocks.mockProfileInstance = createInstanceOfProfile(newMocks.testProfile);
@@ -124,9 +126,7 @@ async function createGlobalMocks() {
 
     Object.defineProperty(ProfilesCache, "getConfigInstance", {
         value: jest.fn(() => {
-            return {
-                usingTeamConfig: false,
-            };
+            return { value: newMocks.mockProfileInfo, configurable: true };
         }),
     });
 
@@ -3234,14 +3234,8 @@ describe("Profiles Unit Tests - Function ssoLogout", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
         const resultNode: IZoweNodeType = blockMocks.datasetSessionNodeAltToken;
+        globalMocks.mockProfileInfo.usingTeamConfig = true;
         const theProfiles = await Profiles.createInstance(blockMocks.log);
-        Object.defineProperty(ProfilesCache, "getConfigInstance", {
-            value: jest.fn(() => {
-                return {
-                    usingTeamConfig: true,
-                };
-            }),
-        });
 
         const mockCommonApi = await ZoweExplorerApiRegister.getInstance().getCommonApi(blockMocks.testCombinedProfile);
         const getCommonApiMock = jest.fn();
