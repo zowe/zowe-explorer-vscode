@@ -158,7 +158,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
             if (error.toString().includes("non-existing")) {
                 vscode.window.showErrorMessage(
                     localize("issueTsoCommand.apiNonExisting", "Not implemented yet for profile of type: ") +
-                    profile.type
+                        profile.type
                 );
             } else {
                 await errorHandling(error.toString(), profile.name, error.message.toString());
@@ -196,10 +196,10 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                 const quickpick = vscode.window.createQuickPick();
                 quickpick.placeholder = alwaysEdit
                     ? localize("issueTsoCommand.command.hostnameAlt", "Select a TSO command to run against ") +
-                    hostname +
-                    localize("issueTsoCommand.command.edit", " (An option to edit will follow)")
+                      hostname +
+                      localize("issueTsoCommand.command.edit", " (An option to edit will follow)")
                     : localize("issueTsoCommand.command.hostname", "Select a TSO command to run immediately against ") +
-                    hostname;
+                      hostname;
 
                 quickpick.items = [createPick, ...items];
                 quickpick.ignoreFocusOut = true;
