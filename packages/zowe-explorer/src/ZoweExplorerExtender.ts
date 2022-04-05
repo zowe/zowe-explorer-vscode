@@ -15,6 +15,7 @@ import * as path from "path";
 import * as os from "os";
 import * as fs from "fs";
 import * as globals from "./globals";
+import * as zowe from "@zowe/cli";
 import {
     ZoweExplorerApi,
     ZoweExplorerTreeApi,
@@ -116,6 +117,22 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
         profileTypeConfigurations.forEach((item) => {
             globals.EXTENDER_CONFIG.push(item);
         });
+        // update global schema to include the extension
+        const rootPath = imperative.ImperativeConfig.instance.cliHome;
+        if (profileTypeConfigurations && imperative.ImperativeConfig.instance.config?.layerExists(rootPath)) {
+            const impConfig: imperative.IImperativeConfig = zowe.getImperativeConfig();
+            const knownCliConfig: imperative.ICommandProfileTypeConfiguration[] = impConfig.profiles;
+            // add extenders config info from global variable
+            globals.EXTENDER_CONFIG.forEach((item) => {
+                knownCliConfig.push(item);
+            });
+            knownCliConfig.push(impConfig.baseProfile);
+            imperative.ConfigSchema.updateSchema({
+                layer: "global",
+                schema: imperative.ConfigSchema.buildSchema(knownCliConfig),
+            });
+        }
+
         // sequentially reload the internal profiles cache to satisfy all the newly added profile types
         await ZoweExplorerExtender.refreshProfilesQueue.add(async (): Promise<void> => {
             await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
