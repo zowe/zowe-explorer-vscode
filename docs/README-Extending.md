@@ -1,4 +1,4 @@
-# VS Code extensions for Zowe Explorer (Draft)
+# VS Code extensions for Zowe Explorer
 
 Zowe Explorer provides extension APIs that assist third party extenders to create extensions that access Zowe Explorer resource entities to enrich the user experience. There are many ways Zowe Explorer can be extended to support many different use cases. We, the Zowe Explorer core contributors, have defined APIs, guidelines, as well as formal compliance criteria for three popular ways of extending it, but we encourage you to engage with us to discuss other ways for extensions that you envision that we did not yet consider.
 
@@ -10,6 +10,7 @@ Table of contents:
 - [About Zowe CLI profiles](#about-zowe-cli-profiles)
 - [Accessing the Zowe Explorer Extender API](#accessing-the-zowe-explorer-extender-api)
 - [Creating an extension that accesses Zowe Explorer profiles](#creating-an-extension-that-accesses-zowe-explorer-profiles)
+  - [Asking the User for Credentials](#asking-the-user-for-credentials)
 - [Creating an extension that adds a data provider](#creating-an-extension-that-adds-a-data-provider)
 - [Using the Zowe Explorer ProfilesCache for an extender's own unrelated profiles](#using-the-zowe-explorer-profilescache-for-an-extenders-own-unrelated-profiles)
 - [Creating an extension that adds menu commands](#creating-an-extension-that-adds-menu-commands)
@@ -149,6 +150,14 @@ if (zoweExplorerApi) {
   void vscode.window.showInformationMessage(message);
 }
 ```
+
+### Asking the User for Credentials
+
+A Zowe Explorer extension that uses the Zowe Explorer profiles may need to ask the user for credentials in order to perform certain actions against the service. It is possible for the Zowe CLI profiles and the Zowe Explorer profiles to not contain sensitive information like user and password, thus the need to prompt for them. In order to standardize on how extenders may ask for credentials, the Zowe Explorer exposes a `ZoweVsCodeExtension.promptCredentials()` API via the Zowe Explorer API NPM package. Said function allows for customization (e.g. internationalization) by accepting a `vscode.InputBoxOptions` object for the user and the password input boxes that will be presented to end-users.
+
+For an example on how to use the `promptCredentials()` API, see the [`Profiles.ts#promptCredentials(...)`](https://github.com/zowe/vscode-extension-for-zowe/blob/bb75051b14f12fde7cb627c24546d0effab887cf/packages/zowe-explorer/src/Profiles.ts#L885-L906) function.
+
+**Note:** The `promptCredentials()` API will default to the English language if no customization is provided.
 
 ## Creating an extension that adds a data provider
 
