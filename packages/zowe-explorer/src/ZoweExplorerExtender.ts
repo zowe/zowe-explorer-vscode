@@ -137,8 +137,6 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
         await ZoweExplorerExtender.refreshProfilesQueue.add(async (): Promise<void> => {
             await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
         });
-
-        const updatedSchema = imperative.ConfigSchema.updateSchema();
     }
 
     /**
