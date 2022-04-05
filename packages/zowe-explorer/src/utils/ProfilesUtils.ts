@@ -148,11 +148,6 @@ export const syncSessionNode =
             return;
         }
         sessionNode.setProfileToChoice(profile);
-
-        // const baseProfile = profiles.getBaseProfile();
-        // if (baseProfile) {
-        //     profile = await profiles.getCombinedProfile(profile, baseProfile);
-        // }
         const session = getSessionForProfile(profile);
         sessionNode.setSessionToChoice(session);
     };

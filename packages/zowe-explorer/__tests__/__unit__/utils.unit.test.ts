@@ -100,13 +100,11 @@ describe("Utils Unit Tests - Function errorHandling", () => {
         );
     });
     it("Checking common error handling - Theia", async () => {
-        // const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
         mocked(vscode.window.showErrorMessage).mockResolvedValueOnce({ title: "Check Credentials" });
         mocked(utils.isTheia).mockReturnValue(true);
-        // globalMocks.isTheia.mockReturnValue(true);
         const label = "invalidCred";
 
         await utils.errorHandling({ mDetails: { errorCode: 401 } }, label);

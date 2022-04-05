@@ -15,13 +15,7 @@ import * as nls from "vscode-nls";
 import * as globals from "../globals";
 import * as dsActions from "./actions";
 import { IProfileLoaded, Logger, Session } from "@zowe/imperative";
-import {
-    ValidProfileEnum,
-    IZoweTree,
-    IZoweDatasetTreeNode,
-    PersistenceSchemaEnum,
-    ProfilesCache,
-} from "@zowe/zowe-explorer-api";
+import { ValidProfileEnum, IZoweTree, IZoweDatasetTreeNode, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import {
@@ -847,8 +841,6 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 this.removeFileHistory(itemPath);
                 return;
             } else {
-                // memberNode.getParent().label = memberNode.getParent().label.trim() + " ";
-                // memberNode.getParent().label = memberNode.getParent().label.trim();
                 memberNode.getParent().collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
                 this.addSearchHistory(`${parentName}(${memberName})`);
                 dsActions.openPS(memberNode, true, this);
@@ -1285,20 +1277,6 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      */
     private async addSingleSession(profile: IProfileLoaded) {
         if (profile) {
-            // if (!ProfilesCache.getConfigInstance().usingTeamConfig) {
-            //     // If baseProfile exists, combine that information first before adding the session to the tree
-            //     // TODO: Move addSession to abstract/ZoweTreeProvider (similar to editSession)
-            //     const baseProfile = Profiles.getInstance().getBaseProfile();
-
-            //     if (baseProfile) {
-            //         try {
-            //             const combinedProfile = await Profiles.getInstance().getCombinedProfile(profile, baseProfile);
-            //             profile = combinedProfile;
-            //         } catch (error) {
-            //             throw error;
-            //         }
-            //     }
-            // }
             // If session is already added, do nothing
             if (this.mSessionNodes.find((tempNode) => tempNode.label.toString() === profile.name)) {
                 return;

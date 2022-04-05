@@ -15,12 +15,7 @@ import * as zowe from "@zowe/cli";
 import { IProfileLoaded } from "@zowe/imperative";
 import { ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import * as ussNodeActions from "../../../src/uss/actions";
-import {
-    createUSSTree,
-    createUSSNode,
-    createFavoriteUSSNode,
-    createUSSSessionNode,
-} from "../../../__mocks__/mockCreators/uss";
+import { createUSSTree, createUSSNode, createFavoriteUSSNode } from "../../../__mocks__/mockCreators/uss";
 import {
     createIProfile,
     createISession,
@@ -41,7 +36,6 @@ import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
 import * as isbinaryfile from "isbinaryfile";
 import * as fs from "fs";
 import { createUssApi, bindUssApi } from "../../../__mocks__/mockCreators/api";
-import * as workspaceUtils from "../../../src/utils/workspace";
 import * as refreshActions from "../../../src/shared/refresh";
 
 function createGlobalMocks() {

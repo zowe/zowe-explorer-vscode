@@ -58,9 +58,6 @@ function createGlobalMocks() {
                 getBaseProfile: jest.fn(() => {
                     return globalMocks.testProfile;
                 }),
-                // getCombinedProfile: jest.fn(() => {
-                //     return globalMocks.testProfile;
-                // }),
                 loadNamedProfile: globalMocks.mockLoadNamedProfile,
                 getDefaultProfile: jest.fn(),
             };

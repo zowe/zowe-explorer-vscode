@@ -145,7 +145,6 @@ async function createGlobalMocks() {
     globalMocks.mockProfileInstance.checkProfileValidationSetting =
         globalMocks.mockValidationSetting.mockReturnValue(true);
     globalMocks.mockProfileInstance.enableValidationContext = globalMocks.mockEnableValidationContext;
-    // globalMocks.mockProfileInstance.getCombinedProfile.mockResolvedValue(globalMocks.testProfile);
     globalMocks.mockProfileInstance.disableValidationContext = globalMocks.mockDisableValidationContext;
 
     // Jes API mocks

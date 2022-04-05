@@ -895,7 +895,6 @@ describe("USSTree Unit Tests - Function USSTree.addSingleSession()", () => {
         newMocks.mockProfilesInstance = createInstanceOfProfile(newMocks.testProfile);
         newMocks.mockProfilesInstance.getBaseProfile.mockResolvedValue(newMocks.testBaseProfile);
         newMocks.mockProfilesInstance.loadNamedProfile.mockReturnValue(newMocks.testProfile);
-        // newMocks.mockProfilesInstance.getCombinedProfile.mockReturnValue(newMocks.testCombinedProfile);
         newMocks.mockProfilesInstance.allProfiles = [
             newMocks.testProfile,
             { name: "firstName" },
@@ -908,41 +907,6 @@ describe("USSTree Unit Tests - Function USSTree.addSingleSession()", () => {
 
         return newMocks;
     }
-    // it("Tests if addSingleSession uses the baseProfile to get the combined profile information", async () => {
-    //     await createGlobalMocks();
-    //     const blockMocks = await createBlockMocks();
-
-    //     blockMocks.testTree.mSessionNodes.pop();
-    //     blockMocks.testSession.ISession.tokenType = blockMocks.testBaseProfile.profile.tokenType;
-    //     blockMocks.testSession.ISession.tokenValue = blockMocks.testBaseProfile.profile.tokenValue;
-
-    //     // Mock the USS API so that getSession returns the correct value
-    //     const mockMvsApi = await ZoweExplorerApiRegister.getMvsApi(blockMocks.testProfile);
-    //     const getMvsApiMock = jest.fn();
-    //     getMvsApiMock.mockReturnValue(mockMvsApi);
-    //     ZoweExplorerApiRegister.getMvsApi = getMvsApiMock.bind(ZoweExplorerApiRegister);
-    //     jest.spyOn(mockMvsApi, "getSession").mockReturnValue(blockMocks.testSession);
-
-    //     await blockMocks.testTree.addSingleSession(blockMocks.testProfile);
-
-    //     expect(blockMocks.testTree.mSessionNodes[1].session.ISession.tokenValue).toEqual("testTokenValue");
-    // });
-
-    // it("Tests if addSingleSession throws an error if  getCombinedProfile fails", async () => {
-    //     await createGlobalMocks();
-    //     const blockMocks = await createBlockMocks();
-
-    //     jest.spyOn(blockMocks.mockProfilesInstance, "getCombinedProfile").mockRejectedValue("Test error!");
-
-    //     let error;
-    //     try {
-    //         await blockMocks.testTree.addSingleSession(blockMocks.testProfile);
-    //     } catch (err) {
-    //         error = err;
-    //     }
-
-    //     expect(error).toEqual("Test error!");
-    // });
 
     it("Tests that addSingleSession doesn't add the session again, if it was already added", async () => {
         await createGlobalMocks();
@@ -1538,7 +1502,6 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
                 return {
                     loadNamedProfile: jest.fn(),
                     getBaseProfile: jest.fn(),
-                    // getCombinedProfile: jest.fn(),
                     checkCurrentProfile: blockMocks.mockCheckCurrentProfile.mockReturnValueOnce({
                         name: blockMocks.imperativeProfile.name,
                         status: "unverified",
