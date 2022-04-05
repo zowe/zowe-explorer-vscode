@@ -236,7 +236,7 @@ export function createInstanceOfProfileInfo() {
         readProfilesFromDisk: jest.fn(),
         loadSecureArg: jest.fn(),
         initSessCfg: jest.fn(),
-    };
+    } as any;
 }
 
 export function createFileResponse(theResponse) {

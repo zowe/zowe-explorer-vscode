@@ -38,8 +38,9 @@ async function createGlobalMocks() {
         session: createISession(),
         profileOne: createIProfile(),
         mockGetInstance: jest.fn(),
+        profiles: null,
     };
-    await Profiles.createInstance(Logger.getAppLogger());
+    newVariables.profiles = createInstanceOfProfile(newVariables.profileOne);
 
     return newVariables;
 }

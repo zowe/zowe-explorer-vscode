@@ -102,11 +102,44 @@ export class ProfilesCache {
     }
 
     public async refresh(apiRegister?: ZoweExplorerApi.IApiRegisterClient): Promise<void> {
-        if (ProfilesCache.getConfigInstance().usingTeamConfig) {
-            await this.refreshConfig(apiRegister);
-        } else {
-            await this.refreshOldStyleProfs(apiRegister);
+        this.allProfiles = [];
+        let tmpAllProfiles: imperative.IProfileLoaded[] = [];
+        this.allTypes = [];
+        const mProfileInfo = ProfilesCache.getConfigInstance();
+        // eslint-disable-next-line no-console
+        console.log(mProfileInfo);
+        const allTypes = this.getAllProfileTypes(apiRegister.registeredApiTypes());
+        allTypes.push("base");
+        for (const type of allTypes) {
+            // Step 1: Get all profiles for each registered type
+            const profilesForType = mProfileInfo.getAllProfiles(type).filter((temp) => temp.profLoc.osLoc.length !== 0);
+            if (profilesForType && profilesForType.length > 0) {
+                for (const prof of profilesForType) {
+                    // Step 2: Merge args for each profile
+                    const profAttr = await this.getMergedAttrs(mProfileInfo, prof);
+                    // Work-around. TODO: Discuss with imperative team
+                    const profileFix = ProfilesCache.getProfileLoaded(prof.profName, prof.profType, profAttr);
+                    // set default for type
+                    if (prof.isDefaultProfile) {
+                        this.defaultProfileByType.set(type, profileFix);
+                    }
+
+                    // Step 3: Update allProfiles list
+                    tmpAllProfiles.push(profileFix);
+                }
+                this.allProfiles.push(...tmpAllProfiles);
+                this.profilesByType.set(type, tmpAllProfiles);
+                tmpAllProfiles = [];
+            }
+            this.allTypes.push(type);
         }
+        // check for proper merging of apiml tokens
+        this.checkMergingConfig();
+        // if (ProfilesCache.getConfigInstance().usingTeamConfig) {
+        //     await this.refreshConfig(apiRegister);
+        // } else {
+        //     await this.refreshOldStyleProfs(apiRegister);
+        // }
         while (this.profilesForValidation.length > 0) {
             this.profilesForValidation.pop();
         }
@@ -441,8 +474,8 @@ export class ProfilesCache {
             }
             this.allTypes.push(type);
         }
-        // // check for proper merging of apiml tokens
-        // this.checkMergingConfig();
+        // check for proper merging of apiml tokens
+        this.checkMergingConfig();
     }
 
     protected checkMergingConfig(): void {

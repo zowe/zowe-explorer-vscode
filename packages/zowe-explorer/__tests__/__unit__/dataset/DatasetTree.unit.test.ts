@@ -1635,7 +1635,7 @@ describe("Dataset Tree Unit Tests - Function editSession", () => {
         };
 
         newMocks.datasetSessionNode = await createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
-        newMocks.profile = await Profiles.createInstance(newMocks.log);
+        newMocks.profile = createInstanceOfProfile(newMocks.imperativeProfile);
 
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
