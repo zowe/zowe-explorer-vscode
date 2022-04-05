@@ -160,20 +160,27 @@ async function createGlobalMocks() {
         profiles: null,
     };
     newMocks.profiles = createInstanceOfProfile(newMocks.testProfile);
+    newMocks.profiles.getDefaultProfile.mockReturnValue({
+        name: "sestest",
+        profile: {
+            host: "host.com",
+            user: "fake",
+            password: "fake",
+            rejectUnauthorized: true,
+            protocol: "https",
+        },
+        type: "zosmf",
+        message: "",
+        failNotFound: false,
+    });
 
     return newMocks;
 }
+afterEach(() => {
+    jest.resetAllMocks();
+});
 
 describe("ZoweExplorerApiRegister unit testing", () => {
-    // const log = Logger.getAppLogger();
-    // let profiles: Profiles;
-    // const testProfile = createValidIProfile();
-    // beforeEach(async () => {
-    //     profiles = createInstanceOfProfile(testProfile);
-    // });
-
-    // const registry = ZoweExplorerApiRegister.getInstance();
-
     it("registers an API only once per profile type", async () => {
         const globalMocks = await createGlobalMocks();
         const defaultProfile = globalMocks.profiles.getDefaultProfile();
@@ -284,6 +291,8 @@ describe("ZoweExplorerApiRegister unit testing", () => {
 
         expect(ZoweExplorerApiRegister.getCommonApi(defaultProfile)).toEqual(ussApi);
         expect(ZoweExplorerApiRegister.getCommonApi(defaultProfile).getProfileTypeName()).toEqual(defaultProfile.type);
-        expect(ZoweExplorerApiRegister.getCommonApi(profileUnused)).toThrow();
+        expect(() => {
+            ZoweExplorerApiRegister.getCommonApi(profileUnused);
+        }).toThrow();
     });
 });
