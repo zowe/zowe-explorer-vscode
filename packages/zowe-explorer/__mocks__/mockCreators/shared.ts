@@ -204,6 +204,7 @@ export function createInstanceOfProfile(profile: imperative.IProfileLoaded) {
         resetValidationSettings: jest.fn(),
         getValidSession: jest.fn(),
         editSession: jest.fn(),
+        createZoweSession: jest.fn(),
         createNewConnection: jest.fn(() => {
             return { newprofile: "fake" };
         }),
@@ -214,28 +215,70 @@ export function createInstanceOfProfile(profile: imperative.IProfileLoaded) {
             ];
         }),
         refresh: jest.fn(),
+        directLoad: jest.fn(),
+        getAllTypes: jest.fn(),
     } as any;
 }
 
 export function createInstanceOfProfileInfo() {
     return {
-        getAllProfiles: [
-            { profName: "sestest", profType: "zosmf", isDefaultProfile: true, profLoc: "location" },
-            { profName: "profile1", profType: "zosmf", isDefaultProfile: false, profLoc: "location" },
-            { profName: "profile2", profType: "zosmf", isDefaultProfile: false, profLoc: "location" },
+        getAllProfiles: () => [
+            {
+                profName: "sestest",
+                profType: "zosmf",
+                isDefaultProfile: true,
+                profLoc: { locType: 0, osLoc: ["location"], jsonLoc: "jsonLoc" },
+            },
+            {
+                profName: "profile1",
+                profType: "zosmf",
+                isDefaultProfile: false,
+                profLoc: { locType: 0, osLoc: ["location"], jsonLoc: "jsonLoc" },
+            },
+            {
+                profName: "profile2",
+                profType: "zosmf",
+                isDefaultProfile: false,
+                profLoc: { locType: 0, osLoc: ["location"], jsonLoc: "jsonLoc" },
+            },
         ],
-        getDefaultProfile: { profName: "sestest", profType: "zosmf", isDefaultProfile: true, profLoc: "location" },
+        getDefaultProfile: () => [
+            {
+                profName: "sestest",
+                profType: "zosmf",
+                isDefaultProfile: true,
+                profLoc: { locType: 0, osLoc: ["location"], jsonLoc: "jsonLoc" },
+            },
+        ],
         usingTeamConfig: false,
-        updateProperty: jest.fn(),
-        updateKnownProperty: jest.fn(),
-        getTeamConfig: jest.fn(),
-        createSession: jest.fn(),
-        mergeArgsForProfile: jest.fn(),
-        mergeArgsForProfileType: jest.fn(),
-        profAttrsToProfLoaded: jest.fn(),
-        readProfilesFromDisk: jest.fn(),
-        loadSecureArg: jest.fn(),
-        initSessCfg: jest.fn(),
+        // updateProperty: jest.fn(),
+        // updateKnownProperty: jest.fn(),
+        // getTeamConfig: jest.fn(),
+        // createSession: jest.fn(),
+        mergeArgsForProfile: jest.fn().mockReturnValue({
+            knownArgs: [
+                {
+                    argName: "user",
+                    dataType: "string",
+                    argValue: "fake",
+                    argLoc: { locType: 0, osLoc: ["location"], jsonLoc: "jsonLoc" },
+                    secure: false,
+                },
+                {
+                    argName: "password",
+                    dataType: "string",
+                    argValue: "fake",
+                    argLoc: { locType: 0, osLoc: ["location"], jsonLoc: "jsonLoc" },
+                    secure: false,
+                },
+            ],
+            missingArgs: [],
+        }),
+        // mergeArgsForProfileType: jest.fn(),
+        // profAttrsToProfLoaded: jest.fn(),
+        // readProfilesFromDisk: jest.fn(),
+        // loadSecureArg: jest.fn(),
+        // initSessCfg: jest.fn(),
     } as any;
 }
 

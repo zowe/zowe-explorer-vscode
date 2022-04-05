@@ -106,8 +106,6 @@ export class ProfilesCache {
         let tmpAllProfiles: imperative.IProfileLoaded[] = [];
         this.allTypes = [];
         const mProfileInfo = ProfilesCache.getConfigInstance();
-        // eslint-disable-next-line no-console
-        console.log(mProfileInfo);
         const allTypes = this.getAllProfileTypes(apiRegister.registeredApiTypes());
         allTypes.push("base");
         for (const type of allTypes) {
@@ -135,11 +133,6 @@ export class ProfilesCache {
         }
         // check for proper merging of apiml tokens
         this.checkMergingConfig();
-        // if (ProfilesCache.getConfigInstance().usingTeamConfig) {
-        //     await this.refreshConfig(apiRegister);
-        // } else {
-        //     await this.refreshOldStyleProfs(apiRegister);
-        // }
         while (this.profilesForValidation.length > 0) {
             this.profilesForValidation.pop();
         }
