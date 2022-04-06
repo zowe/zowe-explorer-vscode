@@ -14,13 +14,7 @@ import * as jobUtils from "../job/utils";
 import * as globals from "../globals";
 import { IJob } from "@zowe/cli";
 import { IProfileLoaded, Logger, Session } from "@zowe/imperative";
-import {
-    ValidProfileEnum,
-    IZoweTree,
-    IZoweJobTreeNode,
-    PersistenceSchemaEnum,
-    ProfilesCache,
-} from "@zowe/zowe-explorer-api";
+import { ValidProfileEnum, IZoweTree, IZoweJobTreeNode, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import { FilterItem, FilterDescriptor, resolveQuickPickHelper, errorHandling } from "../utils/ProfilesUtils";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
@@ -147,7 +141,6 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 const favsForProfile = this.loadProfilesForFavorites(this.log, element);
                 return favsForProfile;
             }
-            // await Profiles.getInstance().checkCurrentProfile(element.getProfile());
             return element.getChildren();
         }
         return this.mSessionNodes;
@@ -851,22 +844,6 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      */
     private async addSingleSession(zosmfProfile: IProfileLoaded) {
         if (zosmfProfile) {
-            if (!ProfilesCache.getConfigInstance().usingTeamConfig) {
-                // If baseProfile exists, combine that information first before adding the session to the tree
-                // TODO: Move addSession to abstract/ZoweTreeProvider (similar to editSession)
-                const baseProfile = Profiles.getInstance().getBaseProfile();
-                if (baseProfile) {
-                    try {
-                        const combinedProfile = await Profiles.getInstance().getCombinedProfile(
-                            zosmfProfile,
-                            baseProfile
-                        );
-                        zosmfProfile = combinedProfile;
-                    } catch (error) {
-                        throw error;
-                    }
-                }
-            }
             // If session is already added, do nothing
             if (this.mSessionNodes.find((tempNode) => tempNode.label.toString() === zosmfProfile.name)) {
                 return;

@@ -17,13 +17,13 @@ import {
     createAltTypeIProfile,
     createTreeView,
     createIProfile,
+    createInstanceOfProfile,
 } from "../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../__mocks__/mockCreators/datasets";
 import { createUSSSessionNode, createUSSTree } from "../../__mocks__/mockCreators/uss";
 import { createJobsTree, createIJobObject } from "../../__mocks__/mockCreators/jobs";
 import { ZoweExplorerExtender } from "../../src/ZoweExplorerExtender";
 import { Profiles } from "../../src/Profiles";
-import { ProfilesCache } from "@zowe/zowe-explorer-api";
 
 describe("ZoweExplorerExtender unit tests", () => {
     async function createBlockMocks() {
@@ -38,15 +38,16 @@ describe("ZoweExplorerExtender unit tests", () => {
             mockGetConfiguration: jest.fn(),
         };
 
-        Object.defineProperty(ProfilesCache, "getConfigInstance", {
-            value: jest.fn(() => {
-                return {
-                    usingTeamConfig: false,
-                };
-            }),
-            configurable: true,
+        newMocks.profiles = createInstanceOfProfile(newMocks.imperativeProfile);
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest
+                .fn(() => {
+                    return {
+                        refresh: jest.fn(),
+                    };
+                })
+                .mockReturnValue(newMocks.profiles),
         });
-        newMocks.profiles = await Profiles.createInstance(newMocks.log);
         Object.defineProperty(vscode.window, "createTreeView", { value: jest.fn(), configurable: true });
         Object.defineProperty(vscode.workspace, "getConfiguration", {
             value: newMocks.mockGetConfiguration,
