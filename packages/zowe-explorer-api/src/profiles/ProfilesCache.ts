@@ -102,11 +102,37 @@ export class ProfilesCache {
     }
 
     public async refresh(apiRegister?: ZoweExplorerApi.IApiRegisterClient): Promise<void> {
-        if (ProfilesCache.getConfigInstance().usingTeamConfig) {
-            await this.refreshConfig(apiRegister);
-        } else {
-            await this.refreshOldStyleProfs(apiRegister);
+        this.allProfiles = [];
+        let tmpAllProfiles: imperative.IProfileLoaded[] = [];
+        this.allTypes = [];
+        const mProfileInfo = ProfilesCache.getConfigInstance();
+        const allTypes = this.getAllProfileTypes(apiRegister.registeredApiTypes());
+        allTypes.push("base");
+        for (const type of allTypes) {
+            // Step 1: Get all profiles for each registered type
+            const profilesForType = mProfileInfo.getAllProfiles(type).filter((temp) => temp.profLoc.osLoc.length !== 0);
+            if (profilesForType && profilesForType.length > 0) {
+                for (const prof of profilesForType) {
+                    // Step 2: Merge args for each profile
+                    const profAttr = await this.getMergedAttrs(mProfileInfo, prof);
+                    // Work-around. TODO: Discuss with imperative team
+                    const profileFix = ProfilesCache.getProfileLoaded(prof.profName, prof.profType, profAttr);
+                    // set default for type
+                    if (prof.isDefaultProfile) {
+                        this.defaultProfileByType.set(type, profileFix);
+                    }
+
+                    // Step 3: Update allProfiles list
+                    tmpAllProfiles.push(profileFix);
+                }
+                this.allProfiles.push(...tmpAllProfiles);
+                this.profilesByType.set(type, tmpAllProfiles);
+                tmpAllProfiles = [];
+            }
+            this.allTypes.push(type);
         }
+        // check for proper merging of apiml tokens
+        this.checkMergingConfig();
         while (this.profilesForValidation.length > 0) {
             this.profilesForValidation.pop();
         }
@@ -305,87 +331,6 @@ export class ProfilesCache {
             overwrite: true,
         });
         return newProfile.profile;
-    }
-
-    protected async refreshOldStyleProfs(apiRegister: ZoweExplorerApi.IApiRegisterClient): Promise<void> {
-        this.allProfiles = [];
-        this.allTypes = [];
-        // TODO: Add Base ProfileType in registeredApiTypes
-        // This process retrieves the base profile if there's any and stores it in an array
-        // If base is added in registeredApiType maybe this process can be removed
-        try {
-            const profileManagerA = this.getCliProfileManager("base");
-            if (profileManagerA) {
-                try {
-                    const baseProfile = await profileManagerA.load({ loadDefault: true });
-                    this.allProfiles.push(baseProfile);
-                } catch (error) {
-                    if (!error?.message?.includes(`No default profile set for type "base"`)) {
-                        this.log.error(error);
-                    }
-                }
-            }
-        } catch (error) {
-            this.log.error(error);
-        }
-        const allTypes = this.getAllProfileTypes(apiRegister.registeredApiTypes());
-        for (const type of allTypes) {
-            const profileManager = this.getCliProfileManager(type);
-            const profilesForType = (await profileManager.loadAll()).filter((profile) => {
-                return profile.type === type;
-            });
-            if (profilesForType && profilesForType.length > 0) {
-                this.allProfiles.push(...profilesForType);
-                this.profilesByType.set(type, profilesForType);
-                let defaultProfile: imperative.IProfileLoaded;
-                try {
-                    defaultProfile = await profileManager.load({ loadDefault: true });
-                } catch (error) {
-                    this.log.error(error);
-                }
-                this.defaultProfileByType.set(type, defaultProfile);
-            }
-            // This is in the loop because I need an instantiated profile manager config
-            if (profileManager.configurations && this.allTypes.length === 0) {
-                for (const element of profileManager.configurations) {
-                    this.allTypes.push(element.type);
-                }
-            }
-        }
-    }
-
-    protected async refreshConfig(apiRegister: ZoweExplorerApi.IApiRegisterClient): Promise<void> {
-        this.allProfiles = [];
-        let tmpAllProfiles: imperative.IProfileLoaded[] = [];
-        this.allTypes = [];
-        const mProfileInfo = ProfilesCache.getConfigInstance();
-        const allTypes = this.getAllProfileTypes(apiRegister.registeredApiTypes());
-        allTypes.push("base");
-        for (const type of allTypes) {
-            // Step 1: Get all profiles for each registered type
-            const profilesForType = mProfileInfo.getAllProfiles(type).filter((temp) => temp.profLoc.osLoc.length !== 0);
-            if (profilesForType && profilesForType.length > 0) {
-                for (const prof of profilesForType) {
-                    // Step 2: Merge args for each profile
-                    const profAttr = await this.getMergedAttrs(mProfileInfo, prof);
-                    // Work-around. TODO: Discuss with imperative team
-                    const profileFix = ProfilesCache.getProfileLoaded(prof.profName, prof.profType, profAttr);
-                    // set default for type
-                    if (prof.isDefaultProfile) {
-                        this.defaultProfileByType.set(type, profileFix);
-                    }
-
-                    // Step 3: Update allProfiles list
-                    tmpAllProfiles.push(profileFix);
-                }
-                this.allProfiles.push(...tmpAllProfiles);
-                this.profilesByType.set(type, tmpAllProfiles);
-                tmpAllProfiles = [];
-            }
-            this.allTypes.push(type);
-        }
-        // check for proper merging of apiml tokens
-        this.checkMergingConfig();
     }
 
     protected checkMergingConfig(): void {

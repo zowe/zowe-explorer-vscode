@@ -430,9 +430,6 @@ describe("ZosJobsProvider unit tests - Function loadProfilesForFavorites", () =>
                     getBaseProfile: jest.fn(() => {
                         return blockMocks.imperativeProfile;
                     }),
-                    getCombinedProfile: jest.fn(() => {
-                        return blockMocks.imperativeProfile;
-                    }),
                     validProfile: ValidProfileEnum.VALID,
                 };
             }),
@@ -475,9 +472,6 @@ describe("ZosJobsProvider unit tests - Function loadProfilesForFavorites", () =>
                         return blockMocks.imperativeProfile;
                     }),
                     getBaseProfile: jest.fn(() => {
-                        return blockMocks.imperativeProfile;
-                    }),
-                    getCombinedProfile: jest.fn(() => {
                         return blockMocks.imperativeProfile;
                     }),
                 };
