@@ -215,15 +215,6 @@ Criteria for VS Code extensions that want to access the same Zowe CLI profiles t
    <th></th>
    <td><b>v1 Profile Support:</b> Extension has a backwards compatibility and it is able to support v1 type of profiles.</td>
  </tr>
-
- <tr>
-   <th style="background-color:#555555">17</th>
-   <th style="background-color:#555555">v2</th>
-   <th style="background-color:#AAAAAA">x</th>
-   <th style="background-color:#AAAAAA"></th>
-   <th></th>
-   <td><b>Secure Credential Store:</b> Extension calls the <a href=https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/extenders/SecureCredentials.md>Zowe Explorer-provided method</a> for initialization of secure credentials at startup.</td>
- </tr>
 </table>
 
 ### Data Provider Extension
@@ -241,7 +232,7 @@ Criteria for VS Code extensions that extend the Zowe Explorer MVS, USS, or JES t
  </thead>
 
  <tr>
-   <th style="background-color:#555555">18</th>
+   <th style="background-color:#555555">17</th>
    <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
@@ -250,7 +241,7 @@ Criteria for VS Code extensions that extend the Zowe Explorer MVS, USS, or JES t
  </tr>
 
  <tr>
-   <th style="background-color:#555555">19</th>
+   <th style="background-color:#555555">18</th>
    <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA"></th>
    <th style="background-color:#AAAAAA">x</th>
@@ -259,7 +250,7 @@ Criteria for VS Code extensions that extend the Zowe Explorer MVS, USS, or JES t
  </tr>
 
  <tr>
-   <th style="background-color:#555555">20</th>
+   <th style="background-color:#555555">19</th>
    <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
@@ -268,7 +259,7 @@ Criteria for VS Code extensions that extend the Zowe Explorer MVS, USS, or JES t
  </tr>
 
  <tr>
-   <th style="background-color:#555555">21</th>
+   <th style="background-color:#555555">20</th>
    <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA"></th>
    <th style="background-color:#AAAAAA">x</th>
@@ -292,7 +283,7 @@ Criteria for VS Code extensions adding menu and commands to VS Code that utilize
  </thead>
 
  <tr>
-   <th style="background-color:#555555">22</th>
+   <th style="background-color:#555555">21</th>
    <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
@@ -301,7 +292,7 @@ Criteria for VS Code extensions adding menu and commands to VS Code that utilize
  </tr>
 
   <tr>
-   <th style="background-color:#555555">23</th>
+   <th style="background-color:#555555">22</th>
    <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA"></th>
    <th style="background-color:#AAAAAA">x</th>
@@ -310,7 +301,7 @@ Criteria for VS Code extensions adding menu and commands to VS Code that utilize
  </tr>
 
  <tr>
-   <th style="background-color:#555555">24</th>
+   <th style="background-color:#555555">23</th>
    <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
@@ -319,7 +310,7 @@ Criteria for VS Code extensions adding menu and commands to VS Code that utilize
  </tr>
 
   <tr>
-   <th style="background-color:#555555">25</th>
+   <th style="background-color:#555555">24</th>
    <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
@@ -328,7 +319,7 @@ Criteria for VS Code extensions adding menu and commands to VS Code that utilize
  </tr>
 
   <tr>
-   <th style="background-color:#555555">26</th>
+   <th style="background-color:#555555">25</th>
    <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA"></th>
    <th style="background-color:#AAAAAA">x</th>
@@ -338,7 +329,7 @@ Criteria for VS Code extensions adding menu and commands to VS Code that utilize
  </tr>
 
    <tr>
-   <th style="background-color:#555555">27</th>
+   <th style="background-color:#555555">26</th>
    <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
@@ -348,7 +339,7 @@ Criteria for VS Code extensions adding menu and commands to VS Code that utilize
  </tr>
 
  <tr>
-   <th style="background-color:#555555">28</th>
+   <th style="background-color:#555555">27</th>
    <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
