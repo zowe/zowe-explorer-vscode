@@ -21,13 +21,7 @@ import {
     syncSessionNode,
 } from "../utils/ProfilesUtils";
 import { sortTreeItems, getAppName, checkIfChildPath } from "../shared/utils";
-import {
-    IZoweTree,
-    IZoweUSSTreeNode,
-    ValidProfileEnum,
-    PersistenceSchemaEnum,
-    ProfilesCache,
-} from "@zowe/zowe-explorer-api";
+import { IZoweTree, IZoweUSSTreeNode, ValidProfileEnum, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { ZoweUSSNode } from "./ZoweUSSNode";
@@ -924,19 +918,6 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      */
     private async addSingleSession(profile: IProfileLoaded) {
         if (profile) {
-            if (!ProfilesCache.getConfigInstance().usingTeamConfig) {
-                // If baseProfile exists, combine that information first before adding the session to the tree
-                // TODO: Move addSession to abstract/ZoweTreeProvider (similar to editSession)
-                const baseProfile = Profiles.getInstance().getBaseProfile();
-                if (baseProfile) {
-                    try {
-                        const combinedProfile = await Profiles.getInstance().getCombinedProfile(profile, baseProfile);
-                        profile = combinedProfile;
-                    } catch (error) {
-                        throw error;
-                    }
-                }
-            }
             // If session is already added, do nothing
             if (this.mSessionNodes.find((tempNode) => tempNode.label.toString() === profile.name)) {
                 return;

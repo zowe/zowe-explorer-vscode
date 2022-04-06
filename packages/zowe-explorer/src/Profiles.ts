@@ -13,7 +13,6 @@ import {
     IProfileLoaded,
     Logger,
     ISession,
-    ICommandArguments,
     Session,
     SessConstants,
     IUpdateProfile,
@@ -440,7 +439,8 @@ export class Profiles extends ProfilesCache {
             await this.openConfigFile(filePath);
             return;
         }
-        const editSession = profileLoaded.profile;
+        // use direct load since merging was done previously during initialization
+        const editSession = (await this.directLoad(profileLoaded.type, profileLoaded.name)).profile;
         const editURL = editSession.host + ":" + editSession.port;
         const editUser = editSession.user;
         const editPass = editSession.password;
@@ -1196,84 +1196,6 @@ export class Profiles extends ProfilesCache {
         return filteredProfile;
     }
 
-    public async getCombinedProfile(serviceProfile: IProfileLoaded, baseProfile: IProfileLoaded) {
-        // TODO: This needs to be improved
-        // The idea is to handle all type of ZE Profiles
-        const commonApi = ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile);
-
-        // This check will handle service profiles that have username and password
-        if (serviceProfile.profile.user && serviceProfile.profile.password) {
-            return serviceProfile;
-        }
-
-        // This check is for optional credentials
-        if (
-            baseProfile &&
-            serviceProfile.profile.host &&
-            serviceProfile.profile.port &&
-            ((baseProfile.profile.host !== serviceProfile.profile.host &&
-                baseProfile.profile.port !== serviceProfile.profile.port) ||
-                (baseProfile.profile.host === serviceProfile.profile.host &&
-                    baseProfile.profile.port !== serviceProfile.profile.port))
-        ) {
-            return serviceProfile;
-        }
-        let session;
-        if (!commonApi.getSessionFromCommandArgument) {
-            // This is here for extenders
-            session = ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).getSession(serviceProfile);
-        } else {
-            // This process combines the information from baseprofile to serviceprofile and create a new session
-            const profSchema = this.getSchema(serviceProfile.type);
-            const cmdArgs: ICommandArguments = {
-                $0: "zowe",
-                _: [""],
-            };
-            for (const prop of Object.keys(profSchema)) {
-                cmdArgs[prop] = serviceProfile.profile[prop] ? serviceProfile.profile[prop] : baseProfile.profile[prop];
-            }
-            if (baseProfile) {
-                cmdArgs.tokenType = serviceProfile.profile.tokenType
-                    ? serviceProfile.profile.tokenType
-                    : baseProfile.profile.tokenType;
-                cmdArgs.tokenValue = serviceProfile.profile.tokenValue
-                    ? serviceProfile.profile.tokenValue
-                    : baseProfile.profile.tokenValue;
-            }
-            if (commonApi.getSessionFromCommandArgument) {
-                if (cmdArgs.tokenType === undefined || cmdArgs.tokenValue === undefined) {
-                    this.log.debug(
-                        localize(
-                            "getCombinedProfile.noToken",
-                            "Profile {0} {1} is not authorized. Please check the connection and try again.",
-                            baseProfile.name,
-                            serviceProfile.name
-                        )
-                    );
-                    session = baseProfile.profile;
-                } else {
-                    const res = await commonApi.getSessionFromCommandArgument(cmdArgs);
-                    session = res.ISession;
-                }
-            } else {
-                vscode.window.showErrorMessage(
-                    localize("getCombinedProfile.log.debug", "This extension does not support base profiles.")
-                );
-            }
-        }
-
-        // For easier debugging, move serviceProfile to updatedServiceProfile and then update it with combinedProfile
-        const updatedServiceProfile: IProfileLoaded = serviceProfile;
-        for (const prop of Object.keys(session)) {
-            if (prop === "hostname") {
-                updatedServiceProfile.profile.host = session[prop];
-            } else {
-                updatedServiceProfile.profile[prop] = session[prop];
-            }
-        }
-        return updatedServiceProfile;
-    }
-
     public async ssoLogin(node?: IZoweNodeType, label?: string): Promise<void> {
         let loginToken: string;
         let loginTokenType: string;
@@ -1338,16 +1260,12 @@ export class Profiles extends ProfilesCache {
                     return;
                 }
                 try {
-                    const combinedProfile = await Profiles.getInstance().getCombinedProfile(
-                        serviceProfile,
-                        baseProfile
-                    );
                     const updSession = new Session({
-                        hostname: combinedProfile.profile.host,
-                        port: combinedProfile.profile.port,
+                        hostname: serviceProfile.profile.host,
+                        port: serviceProfile.profile.port,
                         user: creds[0],
                         password: creds[1],
-                        rejectUnauthorized: combinedProfile.profile.rejectUnauthorized,
+                        rejectUnauthorized: serviceProfile.profile.rejectUnauthorized,
                         tokenType: loginTokenType,
                         type: SessConstants.AUTH_TYPE_TOKEN,
                     });
@@ -1402,17 +1320,15 @@ export class Profiles extends ProfilesCache {
                     );
                     return;
                 }
-
-                const combinedProfile = await this.getCombinedProfile(serviceProfile, baseProfile);
                 const loginTokenType = ZoweExplorerApiRegister.getInstance()
                     .getCommonApi(serviceProfile)
                     .getTokenTypeName();
                 const updSession = new Session({
-                    hostname: combinedProfile.profile.host,
-                    port: combinedProfile.profile.port,
-                    rejectUnauthorized: combinedProfile.profile.rejectUnauthorized,
+                    hostname: serviceProfile.profile.host,
+                    port: serviceProfile.profile.port,
+                    rejectUnauthorized: serviceProfile.profile.rejectUnauthorized,
                     tokenType: loginTokenType,
-                    tokenValue: combinedProfile.profile.tokenValue,
+                    tokenValue: serviceProfile.profile.tokenValue,
                     type: SessConstants.AUTH_TYPE_TOKEN,
                 });
                 await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).logout(updSession);
@@ -1895,7 +1811,8 @@ export class Profiles extends ProfilesCache {
             }
         }
 
-        const OrigProfileInfo = this.loadedProfile.profile;
+        // use direct load since merging was done previously during initialization
+        const OrigProfileInfo = (await this.directLoad(this.loadedProfile.type, this.loadedProfile.name)).profile;
         const NewProfileInfo = updProfileInfo.profile;
 
         // Update the currently-loaded profile with the new info

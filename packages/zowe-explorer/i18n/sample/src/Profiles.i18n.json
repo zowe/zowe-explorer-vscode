@@ -45,8 +45,6 @@
   "deleteProfile.noSelected": "Operation Cancelled",
   "Profiles.validateProfiles.validationProgress": "Validating {0} Profile.",
   "Profiles.validateProfiles.validationCancelled": "Validating {0} was cancelled.",
-  "getCombinedProfile.noToken": "Profile {0} {1} is not authorized. Please check the connection and try again.",
-  "getCombinedProfile.log.debug": "This extension does not support base profiles.",
   "ssoAuth.noBase": "This profile does not support token authentication.",
   "ssoLogin.unableToLogin": "Unable to log in. ",
   "ssoLogin.successful": "Login to authentication service was successful.",
