@@ -21,13 +21,7 @@ import {
     syncSessionNode,
 } from "../utils/ProfilesUtils";
 import { sortTreeItems, getAppName, checkIfChildPath } from "../shared/utils";
-import {
-    IZoweTree,
-    IZoweUSSTreeNode,
-    ValidProfileEnum,
-    PersistenceSchemaEnum,
-    ProfilesCache,
-} from "@zowe/zowe-explorer-api";
+import { IZoweTree, IZoweUSSTreeNode, ValidProfileEnum, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { ZoweUSSNode } from "./ZoweUSSNode";
@@ -139,7 +133,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         const loadedNodes = await this.getAllLoadedItems();
         const options: vscode.InputBoxOptions = {
             prompt: localize("renameUSS.enterName", "Enter a new name for the {0}", nodeType),
-            value: originalNode.label.replace(/^\[.+\]:\s/, ""),
+            value: originalNode.label.toString().replace(/^\[.+\]:\s/, ""),
             ignoreFocusOut: true,
             validateInput: (value) => this.checkDuplicateLabel(parentPath + value, loadedNodes),
         };
@@ -326,7 +320,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             const profiles = Profiles.getInstance().allProfiles;
             for (const theProfile of profiles) {
                 // If session is already added, do nothing
-                if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === theProfile.name)) {
+                if (this.mSessionNodes.find((tempNode) => tempNode.label.toString() === theProfile.name)) {
                     continue;
                 }
                 for (const session of this.mHistory.getSessions()) {
@@ -354,8 +348,10 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      * @param {IZoweUSSTreeNode} [node]
      */
     public deleteSession(node: IZoweUSSTreeNode) {
-        this.mSessionNodes = this.mSessionNodes.filter((tempNode) => tempNode.label.trim() !== node.label.trim());
-        this.mHistory.removeSession(node.label);
+        this.mSessionNodes = this.mSessionNodes.filter(
+            (tempNode) => tempNode.label.toString() !== node.label.toString()
+        );
+        this.mHistory.removeSession(node.label as string);
         this.refresh();
     }
 
@@ -457,7 +453,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             profileNode.children.forEach((fav) => {
                 const favoriteEntry =
                     "[" +
-                    profileNode.label.trim() +
+                    profileNode.label.toString() +
                     "]: " +
                     fav.fullPath +
                     "{" +
@@ -498,9 +494,9 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
 
         // Remove favorited profile from UI
         this.mFavorites.forEach((favProfileNode) => {
-            const favProfileLabel = favProfileNode.label.trim();
+            const favProfileLabel = favProfileNode.label as string;
             if (favProfileLabel === profileName) {
-                this.mFavorites = this.mFavorites.filter((tempNode) => tempNode.label.trim() !== favProfileLabel);
+                this.mFavorites = this.mFavorites.filter((tempNode) => tempNode.label.toString() !== favProfileLabel);
                 favProfileNode.dirty = true;
                 this.refresh();
             }
@@ -625,7 +621,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 }
             } else {
                 // executing search from saved search in favorites
-                remotepath = node.label.trim();
+                remotepath = node.label as string;
                 const profileName = node.getProfileName();
                 await this.addSession(profileName);
                 const faveNode = node;
@@ -633,7 +629,8 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 if (!sessionNode.getSession().ISession.user || !sessionNode.getSession().ISession.password) {
                     sessionNode.getSession().ISession.user = faveNode.getSession().ISession.user;
                     sessionNode.getSession().ISession.password = faveNode.getSession().ISession.password;
-                    sessionNode.getSession().ISession.base64EncodedAuth = faveNode.getSession().ISession.base64EncodedAuth;
+                    sessionNode.getSession().ISession.base64EncodedAuth =
+                        faveNode.getSession().ISession.base64EncodedAuth;
                 }
             }
             // Get session for sessionNode
@@ -767,7 +764,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      * @param parentNode
      */
     public async loadProfilesForFavorites(log: Logger, parentNode: IZoweUSSTreeNode) {
-        const profileName = parentNode.label;
+        const profileName = parentNode.label as string;
         const updatedFavsForProfile: IZoweUSSTreeNode[] = [];
         let profile: IProfileLoaded;
         let session: Session;
@@ -921,21 +918,8 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      */
     private async addSingleSession(profile: IProfileLoaded) {
         if (profile) {
-            if (!ProfilesCache.getConfigInstance().usingTeamConfig) {
-                // If baseProfile exists, combine that information first before adding the session to the tree
-                // TODO: Move addSession to abstract/ZoweTreeProvider (similar to editSession)
-                const baseProfile = Profiles.getInstance().getBaseProfile();
-                if (baseProfile) {
-                    try {
-                        const combinedProfile = await Profiles.getInstance().getCombinedProfile(profile, baseProfile);
-                        profile = combinedProfile;
-                    } catch (error) {
-                        throw error;
-                    }
-                }
-            }
             // If session is already added, do nothing
-            if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === profile.name)) {
+            if (this.mSessionNodes.find((tempNode) => tempNode.label.toString() === profile.name)) {
                 return;
             }
             // Uses loaded profile to create a session with the USS API

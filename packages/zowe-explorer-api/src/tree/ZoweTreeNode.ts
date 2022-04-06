@@ -40,7 +40,7 @@ export class ZoweTreeNode extends vscode.TreeItem {
      * @param {string} etag
      */
     public constructor(
-        label: string,
+        label: string | vscode.TreeItemLabel,
         collapsibleState: vscode.TreeItemCollapsibleState,
         private mParent: IZoweTreeNode,
         protected session: Session,
@@ -93,8 +93,8 @@ export class ZoweTreeNode extends vscode.TreeItem {
      * This is the default was that the label should be accessed as it
      * automatically trims the value
      */
-    public getLabel(): string {
-        return this.label.trim();
+    public getLabel(): string | vscode.TreeItemLabel {
+        return this.label;
     }
 
     /**

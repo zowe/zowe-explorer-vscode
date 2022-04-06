@@ -12,11 +12,10 @@
 // Generic utility functions (not node type related). See ./src/shared/utils.ts
 
 import * as vscode from "vscode";
-import * as os from "os";
 import * as path from "path";
 import * as globals from "../globals";
-import { Session, IProfile, ImperativeConfig, IProfileLoaded, ProfileInfo } from "@zowe/imperative";
-import { getSecurityModules, IZoweTreeNode, ProfilesCache, ZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { Session, IProfile, IProfileLoaded, ProfileInfo } from "@zowe/imperative";
+import { getSecurityModules, IZoweTreeNode, ProfilesCache, ZoweTreeNode, getZoweDir } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import * as nls from "vscode-nls";
 
@@ -133,29 +132,25 @@ export function isTheia(): boolean {
  * @param sessionNode is a tree node, containing session information
  */
 type SessionForProfile = (profile: IProfileLoaded) => Session;
-export const syncSessionNode = (profiles: Profiles) => (getSessionForProfile: SessionForProfile) => async (
-    sessionNode: IZoweTreeNode
-): Promise<void> => {
-    sessionNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+export const syncSessionNode =
+    (profiles: Profiles) =>
+    (getSessionForProfile: SessionForProfile) =>
+    async (sessionNode: IZoweTreeNode): Promise<void> => {
+        sessionNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
 
-    const profileType = sessionNode.getProfile().type;
-    const profileName = sessionNode.getProfileName();
+        const profileType = sessionNode.getProfile().type;
+        const profileName = sessionNode.getProfileName();
 
-    let profile: IProfileLoaded;
-    try {
-        profile = profiles.loadNamedProfile(profileName, profileType);
-    } catch (e) {
-        return;
-    }
-    sessionNode.setProfileToChoice(profile);
-
-    const baseProfile = profiles.getBaseProfile();
-    if (baseProfile) {
-        profile = await profiles.getCombinedProfile(profile, baseProfile);
-    }
-    const session = getSessionForProfile(profile);
-    sessionNode.setSessionToChoice(session);
-};
+        let profile: IProfileLoaded;
+        try {
+            profile = profiles.loadNamedProfile(profileName, profileType);
+        } catch (e) {
+            return;
+        }
+        sessionNode.setProfileToChoice(profile);
+        const session = getSessionForProfile(profile);
+        sessionNode.setSessionToChoice(session);
+    };
 
 export async function resolveQuickPickHelper(
     quickpick: vscode.QuickPick<vscode.QuickPickItem>
@@ -196,18 +191,6 @@ export class FilterDescriptor implements vscode.QuickPickItem {
     get alwaysShow(): boolean {
         return true;
     }
-}
-
-/**
- * Function to retrieve the home directory. In the situation Imperative has
- * not initialized it we mock a default value.
- */
-export function getZoweDir(): string {
-    ImperativeConfig.instance.loadedConfig = {
-        defaultHome: path.join(os.homedir(), ".zowe"),
-        envVariablePrefix: "ZOWE",
-    };
-    return ImperativeConfig.instance.cliHome;
 }
 
 /**

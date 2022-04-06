@@ -21,7 +21,7 @@ import * as globals from "../../src/globals";
 import { ValidProfileEnum, ProfilesCache } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../src/Profiles";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
-import { createIProfile, createTreeView } from "../../__mocks__/mockCreators/shared";
+import { createInstanceOfProfileInfo, createIProfile, createTreeView } from "../../__mocks__/mockCreators/shared";
 import { PersistentFilters } from "../../src/PersistentFilters";
 
 jest.mock("vscode");
@@ -73,7 +73,7 @@ async function createGlobalMocks() {
         mockCliProfileManager: jest.fn().mockImplementation(() => {
             return { GetAllProfileNames: globalMocks.mockGetAllProfileNames, Load: globalMocks.mockLoad };
         }),
-        mockProfileInfo: jest.fn().mockImplementation(() => {
+        mockImperativeProfileInfo: jest.fn().mockImplementation(() => {
             return {
                 mAppName: "",
                 mCredentials: {},
@@ -81,6 +81,7 @@ async function createGlobalMocks() {
                 readProfilesFromDisk: jest.fn(),
             };
         }),
+        mockProfCacheProfileInfo: createInstanceOfProfileInfo(),
         testTreeView: null,
         enums: jest.fn().mockImplementation(() => {
             return {
@@ -123,6 +124,7 @@ async function createGlobalMocks() {
         appName: vscode.env.appName,
         expectedCommands: [
             "zowe.extRefresh",
+            "zowe.promptCredentials",
             "zowe.all.config.init",
             "zowe.ds.addSession",
             "zowe.ds.addFavorite",
@@ -329,9 +331,7 @@ async function createGlobalMocks() {
     });
     Object.defineProperty(ProfilesCache, "getConfigInstance", {
         value: jest.fn(() => {
-            return {
-                usingTeamConfig: false,
-            };
+            return { value: globalMocks.mockProfCacheProfileInfo, configurable: true };
         }),
     });
 
@@ -371,7 +371,7 @@ describe("Extension Unit Tests", () => {
     it("Testing that activate correctly executes", async () => {
         const globalMocks = await createGlobalMocks();
         Object.defineProperty(imperative, "ProfileInfo", {
-            value: globalMocks.mockProfileInfo,
+            value: globalMocks.mockImperativeProfileInfo,
             configurable: true,
         });
         // tslint:disable-next-line: no-object-literal-type-assertion

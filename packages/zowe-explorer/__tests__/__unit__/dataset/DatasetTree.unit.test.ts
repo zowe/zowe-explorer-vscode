@@ -31,6 +31,7 @@ import {
     createWorkspaceConfiguration,
     createPersistentConfig,
     createValidIProfile,
+    createInstanceOfProfileInfo,
 } from "../../../__mocks__/mockCreators/shared";
 import {
     createDatasetSessionNode,
@@ -52,6 +53,7 @@ function createGlobalMocks() {
         testProfileLoaded: createValidIProfile(),
         mockProfileInstance: null,
         mockShowWarningMessage: jest.fn(),
+        mockProfileInfo: createInstanceOfProfileInfo(),
     };
 
     globalMocks.mockProfileInstance = createInstanceOfProfile(globalMocks.testProfileLoaded);
@@ -113,9 +115,7 @@ function createGlobalMocks() {
     });
     Object.defineProperty(ProfilesCache, "getConfigInstance", {
         value: jest.fn(() => {
-            return {
-                usingTeamConfig: false,
-            };
+            return { value: globalMocks.mockProfileInfo, configurable: true };
         }),
     });
     Object.defineProperty(zowe.Download, "dataSet", {
@@ -895,7 +895,6 @@ describe("USSTree Unit Tests - Function USSTree.addSingleSession()", () => {
         newMocks.mockProfilesInstance = createInstanceOfProfile(newMocks.testProfile);
         newMocks.mockProfilesInstance.getBaseProfile.mockResolvedValue(newMocks.testBaseProfile);
         newMocks.mockProfilesInstance.loadNamedProfile.mockReturnValue(newMocks.testProfile);
-        newMocks.mockProfilesInstance.getCombinedProfile.mockReturnValue(newMocks.testCombinedProfile);
         newMocks.mockProfilesInstance.allProfiles = [
             newMocks.testProfile,
             { name: "firstName" },
@@ -908,41 +907,6 @@ describe("USSTree Unit Tests - Function USSTree.addSingleSession()", () => {
 
         return newMocks;
     }
-    it("Tests if addSingleSession uses the baseProfile to get the combined profile information", async () => {
-        await createGlobalMocks();
-        const blockMocks = await createBlockMocks();
-
-        blockMocks.testTree.mSessionNodes.pop();
-        blockMocks.testSession.ISession.tokenType = blockMocks.testBaseProfile.profile.tokenType;
-        blockMocks.testSession.ISession.tokenValue = blockMocks.testBaseProfile.profile.tokenValue;
-
-        // Mock the USS API so that getSession returns the correct value
-        const mockMvsApi = await ZoweExplorerApiRegister.getMvsApi(blockMocks.testProfile);
-        const getMvsApiMock = jest.fn();
-        getMvsApiMock.mockReturnValue(mockMvsApi);
-        ZoweExplorerApiRegister.getMvsApi = getMvsApiMock.bind(ZoweExplorerApiRegister);
-        jest.spyOn(mockMvsApi, "getSession").mockReturnValue(blockMocks.testSession);
-
-        await blockMocks.testTree.addSingleSession(blockMocks.testProfile);
-
-        expect(blockMocks.testTree.mSessionNodes[1].session.ISession.tokenValue).toEqual("testTokenValue");
-    });
-
-    it("Tests if addSingleSession throws an error if  getCombinedProfile fails", async () => {
-        await createGlobalMocks();
-        const blockMocks = await createBlockMocks();
-
-        jest.spyOn(blockMocks.mockProfilesInstance, "getCombinedProfile").mockRejectedValue("Test error!");
-
-        let error;
-        try {
-            await blockMocks.testTree.addSingleSession(blockMocks.testProfile);
-        } catch (err) {
-            error = err;
-        }
-
-        expect(error).toEqual("Test error!");
-    });
 
     it("Tests that addSingleSession doesn't add the session again, if it was already added", async () => {
         await createGlobalMocks();
@@ -1227,7 +1191,7 @@ describe("Dataset Tree Unit Tests - Function  - Function removeFavProfile", () =
         expect(blockMocks.testTree.mFavorites.length).toEqual(1);
         globalMocks.mockShowWarningMessage.mockResolvedValueOnce("Continue");
 
-        await blockMocks.testTree.removeFavProfile(blockMocks.profileNodeInFavs.label, true);
+        await blockMocks.testTree.removeFavProfile(blockMocks.profileNodeInFavs.label.toString(), true);
 
         // Check that favorite is removed from UI
         expect(blockMocks.testTree.mFavorites.length).toEqual(0);
@@ -1244,7 +1208,7 @@ describe("Dataset Tree Unit Tests - Function  - Function removeFavProfile", () =
         const expectedFavProfileNode = blockMocks.testTree.mFavorites[0];
         globalMocks.mockShowWarningMessage.mockResolvedValueOnce("Cancel");
 
-        await blockMocks.testTree.removeFavProfile(blockMocks.profileNodeInFavs.label, true);
+        await blockMocks.testTree.removeFavProfile(blockMocks.profileNodeInFavs.label.toString(), true);
 
         expect(blockMocks.testTree.mFavorites.length).toEqual(1);
         expect(blockMocks.testTree.mFavorites[0]).toEqual(expectedFavProfileNode);
@@ -1256,7 +1220,7 @@ describe("Dataset Tree Unit Tests - Function  - Function removeFavProfile", () =
         // Make sure favorite is added before the actual unit test
         expect(blockMocks.testTree.mFavorites.length).toEqual(1);
 
-        await blockMocks.testTree.removeFavProfile(blockMocks.profileNodeInFavs.label, false);
+        await blockMocks.testTree.removeFavProfile(blockMocks.profileNodeInFavs.label.toString(), false);
 
         expect(blockMocks.testTree.mFavorites.length).toEqual(0);
     });
@@ -1538,7 +1502,6 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
                 return {
                     loadNamedProfile: jest.fn(),
                     getBaseProfile: jest.fn(),
-                    getCombinedProfile: jest.fn(),
                     checkCurrentProfile: blockMocks.mockCheckCurrentProfile.mockReturnValueOnce({
                         name: blockMocks.imperativeProfile.name,
                         status: "unverified",
@@ -1635,7 +1598,7 @@ describe("Dataset Tree Unit Tests - Function editSession", () => {
         };
 
         newMocks.datasetSessionNode = await createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
-        newMocks.profile = await Profiles.createInstance(newMocks.log);
+        newMocks.profile = createInstanceOfProfile(newMocks.imperativeProfile);
 
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
@@ -2062,7 +2025,11 @@ describe("Dataset Tree Unit Tests - Function renameNode", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
-        await blockMocks.testTree.renameNode(blockMocks.imperativeProfile.name, blockMocks.node.label, "newLabel");
+        await blockMocks.testTree.renameNode(
+            blockMocks.imperativeProfile.name,
+            blockMocks.node.label.toString(),
+            "newLabel"
+        );
 
         expect(blockMocks.node.label).toEqual("newLabel");
     });

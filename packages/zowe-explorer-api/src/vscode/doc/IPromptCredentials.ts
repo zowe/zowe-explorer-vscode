@@ -9,12 +9,19 @@
  *                                                                                 *
  */
 
-// globals
-export const ZOWE_EXPLORER = "Zowe Explorer";
-export const SETTINGS_SECURITY_CREDENTIAL_PLUGIN = "zowe.security.credentialPlugin";
-export const SCS_ZOWE_PLUGIN = "Zowe-Plugin";
-export const SCS_ZOWE_CLI_V2 = "Zowe";
-export const SCS_BRIGHTSIDE = "@brightside/core";
-export const SCS_ZOWE_CLI = "@zowe/cli";
-export const SCS_BROADCOM_PLUGIN = "Broadcom-Plugin";
-export const SETTINGS_SCS_DEFAULT = SCS_ZOWE_PLUGIN;
+import { IProfileLoaded, ISession } from "@zowe/imperative";
+import { InputBoxOptions } from "vscode";
+
+export interface IPromptCredentialsCommonOptions {
+    rePrompt?: boolean;
+    userInputBoxOptions?: InputBoxOptions;
+    passwordInputBoxOptions?: InputBoxOptions;
+}
+
+export interface IPromptCredentialsOptions extends IPromptCredentialsCommonOptions {
+    sessionName: string;
+}
+
+export interface IPromptUserPassOptions extends IPromptCredentialsCommonOptions {
+    session: ISession;
+}

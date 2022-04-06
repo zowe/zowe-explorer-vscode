@@ -299,11 +299,11 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
         await dsActions.refreshPS(node);
 
         expect(mocked(zowe.Download.dataSet)).toBeCalledWith(blockMocks.zosmfSession, node.label, {
-            file: path.join(globals.DS_DIR, node.getSessionNode().label, node.label),
+            file: path.join(globals.DS_DIR, node.getSessionNode().label.toString(), node.label.toString()),
             returnEtag: true,
         });
         expect(mocked(vscode.workspace.openTextDocument)).toBeCalledWith(
-            path.join(globals.DS_DIR, node.getSessionNode().label, node.label)
+            path.join(globals.DS_DIR, node.getSessionNode().label.toString(), node.label.toString())
         );
         expect(mocked(vscode.window.showTextDocument)).toBeCalledTimes(2);
         expect(mocked(vscode.commands.executeCommand)).toBeCalledWith("workbench.action.closeActiveEditor");
@@ -376,7 +376,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
             {
                 file: path.join(
                     globals.DS_DIR,
-                    child.getSessionNode().label,
+                    child.getSessionNode().label.toString(),
                     `${child.getParent().label}(${child.label})`
                 ),
                 returnEtag: true,
@@ -759,10 +759,10 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
 
         expect(deleteSpy).toBeCalledWith(node.label);
         expect(mocked(fs.existsSync)).toBeCalledWith(
-            path.join(globals.DS_DIR, node.getSessionNode().label, node.label)
+            path.join(globals.DS_DIR, node.getSessionNode().label.toString(), node.label.toString())
         );
         expect(mocked(fs.unlinkSync)).toBeCalledWith(
-            path.join(globals.DS_DIR, node.getSessionNode().label, node.label)
+            path.join(globals.DS_DIR, node.getSessionNode().label.toString(), node.label.toString())
         );
     });
     it("Checking common PS dataset deletion with Unverified profile", async () => {
@@ -799,10 +799,10 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
 
         expect(deleteSpy).toBeCalledWith(node.label);
         expect(mocked(fs.existsSync)).toBeCalledWith(
-            path.join(globals.DS_DIR, node.getSessionNode().label, node.label)
+            path.join(globals.DS_DIR, node.getSessionNode().label.toString(), node.label.toString())
         );
         expect(mocked(fs.unlinkSync)).toBeCalledWith(
-            path.join(globals.DS_DIR, node.getSessionNode().label, node.label)
+            path.join(globals.DS_DIR, node.getSessionNode().label.toString(), node.label.toString())
         );
     });
     it("Checking common PS dataset deletion with not existing local file", async () => {
@@ -910,10 +910,10 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         expect(deleteSpy).toBeCalledWith(node.label);
         expect(blockMocks.testDatasetTree.removeFavorite).toBeCalledWith(node);
         expect(mocked(fs.existsSync)).toBeCalledWith(
-            path.join(globals.DS_DIR, parent.getSessionNode().label, "HLQ.TEST.NODE")
+            path.join(globals.DS_DIR, parent.getSessionNode().label.toString(), "HLQ.TEST.NODE")
         );
         expect(mocked(fs.unlinkSync)).toBeCalledWith(
-            path.join(globals.DS_DIR, parent.getSessionNode().label, "HLQ.TEST.NODE")
+            path.join(globals.DS_DIR, parent.getSessionNode().label.toString(), "HLQ.TEST.NODE")
         );
     });
     it("Checking Favorite PDS Member deletion", async () => {
@@ -936,13 +936,21 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
 
         await dsActions.deleteDataset(child, blockMocks.testDatasetTree);
 
-        expect(deleteSpy).toBeCalledWith(`${child.getParent().label}(${child.label})`);
+        expect(deleteSpy).toBeCalledWith(`${child.getParent().label.toString()}(${child.label.toString()})`);
         expect(blockMocks.testDatasetTree.removeFavorite).toBeCalledWith(child);
         expect(mocked(fs.existsSync)).toBeCalledWith(
-            path.join(globals.DS_DIR, parent.getSessionNode().label, `${child.getParent().label}(${child.label})`)
+            path.join(
+                globals.DS_DIR,
+                parent.getSessionNode().label.toString(),
+                `${child.getParent().label.toString()}(${child.label.toString()})`
+            )
         );
         expect(mocked(fs.unlinkSync)).toBeCalledWith(
-            path.join(globals.DS_DIR, parent.getSessionNode().label, `${child.getParent().label}(${child.label})`)
+            path.join(
+                globals.DS_DIR,
+                parent.getSessionNode().label.toString(),
+                `${child.getParent().label.toString()}(${child.label.toString()})`
+            )
         );
     });
     it("Checking Favorite PS dataset deletion", async () => {
@@ -979,10 +987,10 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         expect(deleteSpy).toBeCalledWith("HLQ.TEST.DELETE.NODE");
         expect(blockMocks.testDatasetTree.removeFavorite).toBeCalledWith(child);
         expect(mocked(fs.existsSync)).toBeCalledWith(
-            path.join(globals.DS_DIR, parent.getSessionNode().label, "HLQ.TEST.DELETE.NODE")
+            path.join(globals.DS_DIR, parent.getSessionNode().label.toString(), "HLQ.TEST.DELETE.NODE")
         );
         expect(mocked(fs.unlinkSync)).toBeCalledWith(
-            path.join(globals.DS_DIR, parent.getSessionNode().label, "HLQ.TEST.DELETE.NODE")
+            path.join(globals.DS_DIR, parent.getSessionNode().label.toString(), "HLQ.TEST.DELETE.NODE")
         );
     });
     it("Checking incorrect dataset failed deletion attempt", async () => {
@@ -1643,13 +1651,13 @@ describe("Dataset Actions Unit Tests - Function showDSAttributes", () => {
             success: true,
             commandResponse: "",
             apiResponse: {
-                items: [createDatasetAttributes(node.label, node.contextValue)],
+                items: [createDatasetAttributes(node.label.toString(), node.contextValue)],
             },
         });
 
         await dsActions.showDSAttributes(node, blockMocks.testDatasetTree);
 
-        expect(datasetListSpy).toBeCalledWith(node.label, { attributes: true });
+        expect(datasetListSpy).toBeCalledWith(node.label.toString(), { attributes: true });
         expect(mocked(vscode.window.createWebviewPanel)).toBeCalled();
     });
     it("Checking PS dataset attributes showing with Unverified Profile", async () => {
@@ -1682,13 +1690,13 @@ describe("Dataset Actions Unit Tests - Function showDSAttributes", () => {
             success: true,
             commandResponse: "",
             apiResponse: {
-                items: [createDatasetAttributes(node.label, node.contextValue)],
+                items: [createDatasetAttributes(node.label.toString(), node.contextValue)],
             },
         });
 
         await dsActions.showDSAttributes(node, blockMocks.testDatasetTree);
 
-        expect(datasetListSpy).toBeCalledWith(node.label, { attributes: true });
+        expect(datasetListSpy).toBeCalledWith(node.label.toString(), { attributes: true });
         expect(mocked(vscode.window.createWebviewPanel)).toBeCalled();
     });
     it("Checking PDS dataset attributes showing", async () => {
@@ -1714,13 +1722,13 @@ describe("Dataset Actions Unit Tests - Function showDSAttributes", () => {
             success: true,
             commandResponse: "",
             apiResponse: {
-                items: [createDatasetAttributes(node.label, node.contextValue)],
+                items: [createDatasetAttributes(node.label.toString(), node.contextValue)],
             },
         });
 
         await dsActions.showDSAttributes(node, blockMocks.testDatasetTree);
 
-        expect(datasetListSpy).toBeCalledWith(node.label, { attributes: true });
+        expect(datasetListSpy).toBeCalledWith(node.label.toString(), { attributes: true });
         expect(mocked(vscode.window.createWebviewPanel)).toBeCalled();
     });
     it("Checking Favorite PS dataset attributes showing", async () => {
@@ -1735,7 +1743,7 @@ describe("Dataset Actions Unit Tests - Function showDSAttributes", () => {
             null
         );
         node.contextValue = globals.DS_DS_CONTEXT + globals.FAV_SUFFIX;
-        const normalisedLabel = node.label.trim();
+        const normalisedLabel = node.label as string;
 
         mocked(vscode.window.createWebviewPanel).mockReturnValueOnce({
             webview: {
@@ -1768,7 +1776,7 @@ describe("Dataset Actions Unit Tests - Function showDSAttributes", () => {
             null
         );
         node.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
-        const normalisedLabel = node.label.trim();
+        const normalisedLabel = node.label as string;
 
         mocked(vscode.window.createWebviewPanel).mockReturnValueOnce({
             webview: {
@@ -2921,10 +2929,10 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
         await dsActions.openPS(node, true, blockMocks.testDatasetTree);
 
         expect(mocked(fs.existsSync)).toBeCalledWith(
-            path.join(globals.DS_DIR, node.getSessionNode().label.trim(), node.label)
+            path.join(globals.DS_DIR, node.getSessionNode().label.toString(), node.label.toString())
         );
         expect(mocked(vscode.workspace.openTextDocument)).toBeCalledWith(
-            sharedUtils.getDocumentFilePath(node.label, node)
+            sharedUtils.getDocumentFilePath(node.label.toString(), node)
         );
     });
 
@@ -2958,10 +2966,10 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
         await dsActions.openPS(node, true, blockMocks.testDatasetTree);
 
         expect(mocked(fs.existsSync)).toBeCalledWith(
-            path.join(globals.DS_DIR, node.getSessionNode().label.trim(), node.label)
+            path.join(globals.DS_DIR, node.getSessionNode().label.toString(), node.label.toString())
         );
         expect(mocked(vscode.workspace.openTextDocument)).toBeCalledWith(
-            sharedUtils.getDocumentFilePath(node.label, node)
+            sharedUtils.getDocumentFilePath(node.label.toString(), node)
         );
     });
 
@@ -3013,10 +3021,14 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
         await dsActions.openPS(child, true, blockMocks.testDatasetTree);
 
         expect(mocked(fs.existsSync)).toBeCalledWith(
-            path.join(globals.DS_DIR, child.getSessionNode().label.trim(), `${parent.label}(${child.label})`)
+            path.join(
+                globals.DS_DIR,
+                child.getSessionNode().label.toString(),
+                `${parent.label.toString()}(${child.label.toString()})`
+            )
         );
         expect(mocked(vscode.workspace.openTextDocument)).toBeCalledWith(
-            sharedUtils.getDocumentFilePath(`${parent.label}(${child.label})`, child)
+            sharedUtils.getDocumentFilePath(`${parent.label.toString()}(${child.label.toString()})`, child)
         );
     });
     it("Checking of opening for PDS Member of favorite dataset", async () => {
@@ -3045,10 +3057,14 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
         await dsActions.openPS(child, true, blockMocks.testDatasetTree);
 
         expect(mocked(fs.existsSync)).toBeCalledWith(
-            path.join(globals.DS_DIR, child.getSessionNode().label.trim(), `${parent.label}(${child.label})`)
+            path.join(
+                globals.DS_DIR,
+                child.getSessionNode().label.toString(),
+                `${parent.label.toString()}(${child.label.toString()})`
+            )
         );
         expect(mocked(vscode.workspace.openTextDocument)).toBeCalledWith(
-            sharedUtils.getDocumentFilePath(`${parent.label}(${child.label})`, child)
+            sharedUtils.getDocumentFilePath(`${parent.label.toString()}(${child.label.toString()})`, child)
         );
     });
     it("Checking of opening for sequential DS of favorite session", async () => {
@@ -3080,10 +3096,10 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
         await dsActions.openPS(child, true, blockMocks.testDatasetTree);
 
         expect(mocked(fs.existsSync)).toBeCalledWith(
-            path.join(globals.DS_DIR, blockMocks.imperativeProfile.name, child.label)
+            path.join(globals.DS_DIR, blockMocks.imperativeProfile.name, child.label.toString())
         );
         expect(mocked(vscode.workspace.openTextDocument)).toBeCalledWith(
-            sharedUtils.getDocumentFilePath(child.label, child)
+            sharedUtils.getDocumentFilePath(child.label.toString(), child)
         );
     });
     it("Checks that openPS fails if called from an invalid node", async () => {
@@ -3162,7 +3178,7 @@ describe("Dataset Actions Unit Tests - Function allocateLike", () => {
         );
         const profileInstance = createInstanceOfProfile(imperativeProfile);
         const mvsApi = createMvsApi(imperativeProfile);
-        const quickPickItem = new utils.FilterDescriptor(datasetSessionNode.label);
+        const quickPickItem = new utils.FilterDescriptor(datasetSessionNode.label.toString());
         const quickPickContent = createQuickPickContent("", [quickPickItem], "");
 
         bindMvsApi(mvsApi);
