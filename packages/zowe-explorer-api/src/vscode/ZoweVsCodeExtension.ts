@@ -64,6 +64,11 @@ export class ZoweVsCodeExtension {
         }
     }
 
+    /**
+     * Helper function to standardize the way we ask the user for credentials
+     * @param options Set of options to use when prompting for credentials
+     * @returns Instance of IProfileLoaded containing information about the updated profile
+     */
     public static async promptCredentials(options: IPromptCredentialsOptions): Promise<IProfileLoaded> {
         const loadProfile = ProfilesCache.getLoadedProfConfig(options.sessionName.trim());
         const loadSession = loadProfile.profile as ISession;
