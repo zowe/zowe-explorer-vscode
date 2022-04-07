@@ -58,7 +58,7 @@ export class ProfilesCache {
     protected profilesByType = new Map<string, imperative.IProfileLoaded[]>();
     protected defaultProfileByType = new Map<string, imperative.IProfileLoaded>();
     protected profileManagerByType = new Map<string, imperative.CliProfileManager>();
-    public constructor(protected log: imperative.Logger) { }
+    public constructor(protected log: imperative.Logger) {}
 
     public static createConfigInstance(mProfileInfo: imperative.ProfileInfo): imperative.ProfileInfo {
         return (ProfilesCache.info = mProfileInfo);
@@ -376,9 +376,7 @@ export class ProfilesCache {
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                 profile[arg.argName] = arg.secure ? await mProfileInfo.loadSecureArg(arg) : arg.argValue;
             }
-            console.log(mProfileInfo.mergeArgsForProfile(profAttrs, { getSecureVals: true }));
         }
-        console.log("++++", profile);
         return profile;
     }
 

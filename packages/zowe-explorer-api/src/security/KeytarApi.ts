@@ -27,11 +27,8 @@ export class KeytarApi {
             if (!initialized && keytar) {
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                 KeytarCredentialManager.keytar = keytar;
-                const service: string = vscode.workspace
-                    .getConfiguration()
-                    .get(globals.SETTINGS_SECURITY_CREDENTIAL_PLUGIN);
                 await imperative.CredentialManagerFactory.initialize({
-                    service: service || globals.SETTINGS_SCS_DEFAULT,
+                    service: globals.SETTINGS_SCS_DEFAULT,
                     Manager: KeytarCredentialManager,
                     displayName: globals.ZOWE_EXPLORER,
                 });

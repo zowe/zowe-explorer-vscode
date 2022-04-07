@@ -1620,12 +1620,6 @@
           "description": "%zowe.files.temporaryDownloadsFolder.path%",
           "scope": "window"
         },
-        "zowe.security.credentialPlugin": {
-          "type": "string",
-          "default": "",
-          "description": "%zowe.security.credentialPlugin%",
-          "scope": "resource"
-        },
         "zowe.uss.history": {
           "default": {
             "persistence": true,
