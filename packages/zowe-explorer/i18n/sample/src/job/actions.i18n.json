@@ -1,11 +1,16 @@
 {
   "downloadSpool.select": "Select",
-  "modifyCommand.command.prompt": "Modify Command",
-  "modifyCommand.response": "Command response: ",
-  "stopCommand.response": "Command response: ",
-  "setOwner.newOwner.prompt.owner": "Owner",
-  "setOwner.newOwner.prompt.prefix": "Prefix",
-  "deleteMulti.job": "The following jobs were deleted:",
-  "deleteCommand.job": "Job ",
-  "deleteCommand.delete": " deleted"
+  "modifyCommand.inputBox.prompt": "Modify Command",
+  "jobActions.modifyCommand.response": "Command response: ",
+  "jobActions.modifyCommand.apiNonExisting": "Not implemented yet for profile of type: ",
+  "jobActions.stopCommand.response": "Command response: ",
+  "jobActions.stopCommand.apiNonExisting": "Not implemented yet for profile of type: ",
+  "setOwner.inputBox.prompt": "Owner",
+  "setPrefix.inputBox.prompt": "Prefix",
+  "deleteJobPrompt.confirmation.message": "Are you sure you want to delete the following {0} items?\nThis will permanently remove the following jobs from your system.\n\n{1}",
+  "deleteJobPrompt.confirmation.delete": "Delete",
+  "deleteJobPrompt.confirmation.cancel.log.debug": "Delete action was canceled.",
+  "deleteJobPrompt.deleteCancelled": "Delete action was cancelled.",
+  "deleteCommand.job": "Job {0} deleted.",
+  "deleteCommand.multipleJobs": "The following jobs were deleted: {0}"
 }

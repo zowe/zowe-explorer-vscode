@@ -35,6 +35,8 @@ import * as globals from "../../../src/globals";
 import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
 import { Profiles } from "../../../src/Profiles";
 import * as SpoolProvider from "../../../src/SpoolProvider";
+import * as refreshActions from "../../../src/shared/refresh";
+import { UIViews } from "../../../src/shared/ui-views";
 
 const activeTextEditorDocument = jest.fn();
 
@@ -93,14 +95,15 @@ describe("Jobs Actions Unit Tests - Function setPrefix", () => {
         const blockMocks = createBlockMocks();
         const node = new Job("job", vscode.TreeItemCollapsibleState.None, null, blockMocks.session, null, null);
 
-        mocked(vscode.window.showInputBox).mockResolvedValueOnce("*");
+        const mySpy = jest.spyOn(UIViews, "inputBox").mockImplementationOnce(() => Promise.resolve("*"));
         await jobActions.setPrefix(node, blockMocks.testJobsTree);
 
-        expect(mocked(vscode.window.showInputBox).mock.calls.length).toBe(1);
-        expect(mocked(vscode.window.showInputBox).mock.calls[0][0]).toEqual({
+        expect(mySpy.mock.calls.length).toBe(1);
+        expect(mySpy).toHaveBeenCalledWith({
             prompt: "Prefix",
         });
-        expect(mocked(vscode.window.showInformationMessage).mock.calls.length).toBe(0);
+
+        mySpy.mockRestore();
     });
 });
 
@@ -132,14 +135,15 @@ describe("Jobs Actions Unit Tests - Function setOwner", () => {
             blockMocks.imperativeProfile
         );
 
-        mocked(vscode.window.showInputBox).mockResolvedValueOnce("OWNER");
+        const mySpy = jest.spyOn(UIViews, "inputBox").mockImplementationOnce(() => Promise.resolve("OWNER"));
         await jobActions.setOwner(node, blockMocks.testJobsTree);
 
-        expect(mocked(vscode.window.showInputBox).mock.calls.length).toBe(1);
-        expect(mocked(vscode.window.showInputBox).mock.calls[0][0]).toEqual({
+        expect(mySpy.mock.calls.length).toBe(1);
+        expect(mySpy).toHaveBeenCalledWith({
             prompt: "Owner",
         });
-        expect(mocked(vscode.window.showInformationMessage).mock.calls.length).toBe(0);
+
+        mySpy.mockRestore();
     });
 });
 
@@ -182,12 +186,20 @@ describe("Jobs Actions Unit Tests - Function stopCommand", () => {
     it("Checking failed attempt to issue stop command for Job Node.", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
+        const node = new Job(
+            "job",
+            vscode.TreeItemCollapsibleState.None,
+            null,
+            blockMocks.session,
+            undefined,
+            blockMocks.imperativeProfile
+        );
         mocked(zowe.IssueCommand.issueSimple).mockResolvedValueOnce({
             success: false,
             zosmfResponse: [],
             commandResponse: "fake response",
         });
-        await jobActions.stopCommand(undefined);
+        await jobActions.stopCommand(node);
         expect(mocked(vscode.window.showErrorMessage).mock.calls.length).toBe(1);
     });
 });
@@ -232,13 +244,21 @@ describe("Jobs Actions Unit Tests - Function modifyCommand", () => {
     it("Checking failed attempt to modify Job Node", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
+        const node = new Job(
+            "job",
+            vscode.TreeItemCollapsibleState.None,
+            null,
+            blockMocks.session,
+            undefined,
+            blockMocks.imperativeProfile
+        );
         mocked(vscode.window.showInputBox).mockResolvedValue("modify");
         mocked(zowe.IssueCommand.issueSimple).mockResolvedValueOnce({
             success: false,
             zosmfResponse: [],
             commandResponse: "fake response",
         });
-        await jobActions.modifyCommand(undefined);
+        await jobActions.modifyCommand(node);
         expect(mocked(vscode.window.showErrorMessage).mock.calls.length).toBe(1);
     });
 });
@@ -984,37 +1004,63 @@ describe("Jobs Actions Unit Tests - Function refreshJobsServer", () => {
     });
 });
 
-describe("Jobs Actions Unit Tests - Function deleteCommand", () => {
-    function createBlockMocks() {
-        const session = createISession();
-        const treeView = createTreeView();
-        const iJob = createIJobObject();
-        const imperativeProfile = createIProfile();
+describe("job deletion command", () => {
+    // general mocks
+    createGlobalMocks();
+    const session = createISession();
+    const profile = createIProfile();
+    const job = createIJobObject();
 
-        return {
-            session,
-            treeView,
-            iJob,
-            imperativeProfile,
-            testJobsTree: createJobsTree(session, iJob, imperativeProfile, treeView),
-        };
-    }
-    it("Tests that delete informs the user that a job was deleted", async () => {
-        createGlobalMocks();
-        const blockMocks = createBlockMocks();
-        const node = new Job(
-            "jobtest",
-            vscode.TreeItemCollapsibleState.Expanded,
-            null,
-            blockMocks.session,
-            blockMocks.iJob,
-            blockMocks.imperativeProfile
-        );
+    it("should delete a job from the jobs provider and refresh the current job session", async () => {
+        // arrange
+        const warningDialogStub = jest.fn();
+        Object.defineProperty(vscode.window, "showWarningMessage", {
+            value: warningDialogStub,
+            configurable: true,
+        });
+        warningDialogStub.mockResolvedValueOnce("Delete");
+        jest.spyOn(refreshActions, "refreshAll");
+        const jobsProvider = createJobsTree(session, job, profile, createTreeView());
+        jobsProvider.delete.mockResolvedValueOnce(Promise.resolve());
+        const jobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, null, session, job, profile);
+        // act
+        await jobActions.deleteCommand(jobsProvider, jobNode);
+        // assert
+        expect(mocked(jobsProvider.delete)).toBeCalledWith(jobNode);
+        expect(refreshActions.refreshAll).toHaveBeenCalledWith(jobsProvider);
+    });
 
-        await jobActions.deleteCommand(node, blockMocks.testJobsTree);
-        expect(mocked(vscode.window.showInformationMessage).mock.calls.length).toBe(1);
-        expect(mocked(vscode.window.showInformationMessage).mock.calls[0][0]).toEqual(
-            `Job ${node.job.jobname}(${node.job.jobid}) deleted`
-        );
+    it("should not delete a job in case user cancelled deletion", async () => {
+        // arrange
+        const warningDialogStub = jest.fn();
+        Object.defineProperty(vscode.window, "showWarningMessage", {
+            value: warningDialogStub,
+            configurable: true,
+        });
+        warningDialogStub.mockResolvedValueOnce("Cancel");
+        const jobsProvider = createJobsTree(session, job, profile, createTreeView());
+        jobsProvider.delete.mockResolvedValueOnce(Promise.resolve());
+        const jobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, null, session, job, profile);
+        // act
+        await jobActions.deleteCommand(jobsProvider, jobNode);
+        // assert
+        expect(mocked(jobsProvider.delete)).not.toBeCalled();
+    });
+
+    it("should not refresh the current job session after an error during job deletion", async () => {
+        // arrange
+        const warningDialogStub = jest.fn();
+        Object.defineProperty(vscode.window, "showWarningMessage", {
+            value: warningDialogStub,
+            configurable: true,
+        });
+        warningDialogStub.mockResolvedValueOnce("Delete");
+        const jobsProvider = createJobsTree(session, job, profile, createTreeView());
+        jobsProvider.delete.mockResolvedValueOnce(Promise.reject(new Error("something went wrong!")));
+        const jobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, null, session, job, profile);
+        // act
+        await jobActions.deleteCommand(jobsProvider, jobNode);
+        // assert
+        expect(mocked(jobsProvider.delete)).toBeCalledWith(jobNode);
     });
 });

@@ -27,6 +27,7 @@ import * as contextually from "../shared/context";
 import * as nls from "vscode-nls";
 import { resetValidationSettings } from "../shared/actions";
 import { PersistentFilters } from "../PersistentFilters";
+import { UIViews } from "../shared/ui-views";
 // Set up localization
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
@@ -365,11 +366,10 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                         " from the Favorites section of Zowe Explorer's Jobs view. Would you like to do this now? ",
                         getAppName(globals.ISTHEIA)
                     );
-                const btnLabelCancel = localize("initializeJobsFavorites.error.buttonCancel", "Cancel");
                 const btnLabelRemove = localize("initializeJobsFavorites.error.buttonRemove", "Remove");
-                vscode.window.showErrorMessage(errMessage, btnLabelCancel, btnLabelRemove).then(async (selection) => {
+                vscode.window.showErrorMessage(errMessage, { modal: true }, btnLabelRemove).then(async (selection) => {
                     if (selection === btnLabelRemove) {
-                        await this.removeFavProfile(profileName, true);
+                        await this.removeFavProfile(profileName, false);
                     }
                 });
                 return;
@@ -504,6 +504,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      */
     public async removeFavProfile(profileName: string, userSelected: boolean) {
         // If user selected the "Remove profile from Favorites option", confirm they are okay with deleting all favorited items for that profile.
+        let cancelled = false;
         if (userSelected) {
             const checkConfirmation = localize(
                 "removeFavProfile.confirm",
@@ -511,18 +512,16 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 profileName
             );
             const continueRemove = localize("removeFavProfile.continue", "Continue");
-            const cancelRemove = localize("removeFavProfile.cancel", "Cancel");
-            const quickPickOptions: vscode.QuickPickOptions = {
-                placeHolder: checkConfirmation,
-                ignoreFocusOut: true,
-                canPickMany: false,
-            };
-            // If user did not select "Continue", do nothing.
-            if (
-                (await vscode.window.showQuickPick([continueRemove, cancelRemove], quickPickOptions)) !== continueRemove
-            ) {
-                return;
-            }
+            await vscode.window
+                .showWarningMessage(checkConfirmation, { modal: true }, ...[continueRemove])
+                .then((selection) => {
+                    if (!selection || selection === "Cancel") {
+                        cancelled = true;
+                    }
+                });
+        }
+        if (cancelled) {
+            return;
         }
 
         // Remove favorited profile from UI
@@ -574,7 +573,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                         );
                         if (!choice) {
                             vscode.window.showInformationMessage(
-                                localize("enterPattern.pattern", "No selection made.")
+                                localize("enterPattern.pattern", "No selection made. Operation cancelled.")
                             );
                             return;
                         }
@@ -590,7 +589,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                         quickpick.hide();
                         if (!choice) {
                             vscode.window.showInformationMessage(
-                                localize("enterPattern.pattern", "No selection made.")
+                                localize("enterPattern.pattern", "No selection made. Operation cancelled.")
                             );
                             return;
                         }
@@ -616,7 +615,10 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 if (!hasHistory || choice === this.createOwner || searchCriteria.match(/Owner:/)) {
                     // User has selected owner/prefix option
                     options = {
-                        prompt: localize("jobsFilterPrompt.option.prompt.owner", "Enter the Job Owner. Default is *."),
+                        prompt: localize(
+                            "jobsFilterPrompt.inputBox.prompt.owner",
+                            "Enter the Job Owner. Default is *."
+                        ),
                         validateInput: (value: string) =>
                             value.match(/ /g)
                                 ? localize(
@@ -627,7 +629,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                         value: owner,
                     };
                     // get user input
-                    owner = await vscode.window.showInputBox(options);
+                    owner = await UIViews.inputBox(options);
                     if (owner === undefined) {
                         vscode.window.showInformationMessage(
                             localize("jobsFilterPrompt.enterPrefix", "Search Cancelled")
@@ -639,11 +641,14 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                     }
                     owner = owner.toUpperCase();
                     options = {
-                        prompt: localize("jobsFilterPrompt.option.prompt.prefix", "Enter a Job prefix. Default is *."),
+                        prompt: localize(
+                            "jobsFilterPrompt.inputBox.prompt.prefix",
+                            "Enter a Job prefix. Default is *."
+                        ),
                         value: prefix,
                     };
                     // get user input
-                    prefix = await vscode.window.showInputBox(options);
+                    prefix = await UIViews.inputBox(options);
                     if (prefix === undefined) {
                         vscode.window.showInformationMessage(
                             localize("jobsFilterPrompt.enterPrefix", "Search Cancelled")
@@ -656,11 +661,11 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                     prefix = prefix.toUpperCase();
                     if (!hasHistory || choice === this.createId) {
                         options = {
-                            prompt: localize("jobsFilterPrompt.option.prompt.jobid", "Enter a Job id"),
+                            prompt: localize("jobsFilterPrompt.inputBox.prompt.jobid", "Enter a Job id"),
                             value: jobid,
                         };
                         // get user input
-                        jobid = await vscode.window.showInputBox(options);
+                        jobid = await UIViews.inputBox(options);
                         if (jobid === undefined) {
                             vscode.window.showInformationMessage(
                                 localize("jobsFilterPrompt.enterPrefix", "Search Cancelled")
@@ -671,11 +676,11 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 } else {
                     // User has selected JobId option
                     options = {
-                        prompt: localize("jobsFilterPrompt.option.prompt.jobid", "Enter a Job id"),
+                        prompt: localize("jobsFilterPrompt.inputBox.prompt.jobid", "Enter a Job id"),
                         value: jobid,
                     };
                     // get user input
-                    jobid = await vscode.window.showInputBox(options);
+                    jobid = await UIViews.inputBox(options);
                     if (!jobid) {
                         vscode.window.showInformationMessage(
                             localize("jobsFilterPrompt.enterPrefix", "Search Cancelled")

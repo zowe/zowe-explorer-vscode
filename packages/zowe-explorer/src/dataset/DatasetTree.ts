@@ -35,6 +35,7 @@ import { resetValidationSettings } from "../shared/actions";
 import { closeOpenedTextFile } from "../utils/workspace";
 import { PersistentFilters } from "../PersistentFilters";
 import { IDataSet, IListOptions } from "@zowe/cli";
+import { UIViews } from "../shared/ui-views";
 
 // Set up localization
 nls.config({
@@ -398,12 +399,10 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                         " from the Favorites section of Zowe Explorer's Data Sets view. Would you like to do this now? ",
                         getAppName(globals.ISTHEIA)
                     );
-
-                const btnLabelCancel = localize("loadProfilesForFavorites.error.buttonCancel", "Cancel");
                 const btnLabelRemove = localize("loadProfilesForFavorites.error.buttonRemove", "Remove");
-                vscode.window.showErrorMessage(errMessage, btnLabelCancel, btnLabelRemove).then(async (selection) => {
+                vscode.window.showErrorMessage(errMessage, { modal: true }, btnLabelRemove).then(async (selection) => {
                     if (selection === btnLabelRemove) {
-                        await this.removeFavProfile(profileName, true);
+                        await this.removeFavProfile(profileName, false);
                     }
                 });
                 return;
@@ -683,6 +682,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      */
     public async removeFavProfile(profileName: string, userSelected: boolean) {
         // If user selected the "Remove profile from Favorites option", confirm they are okay with deleting all favorited items for that profile.
+        let cancelled = false;
         if (userSelected) {
             const checkConfirmation = localize(
                 "removeFavProfile.confirm",
@@ -690,18 +690,16 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 profileName
             );
             const continueRemove = localize("removeFavProfile.continue", "Continue");
-            const cancelRemove = localize("removeFavProfile.cancel", "Cancel");
-            const quickPickOptions: vscode.QuickPickOptions = {
-                placeHolder: checkConfirmation,
-                ignoreFocusOut: true,
-                canPickMany: false,
-            };
-            // If user did not select "Continue", do nothing.
-            if (
-                (await vscode.window.showQuickPick([continueRemove, cancelRemove], quickPickOptions)) !== continueRemove
-            ) {
-                return;
-            }
+            await vscode.window
+                .showWarningMessage(checkConfirmation, { modal: true }, ...[continueRemove])
+                .then((selection) => {
+                    if (!selection || selection === "Cancel") {
+                        cancelled = true;
+                    }
+                });
+        }
+        if (cancelled) {
+            return;
         }
 
         // Remove favorited profile from UI
@@ -898,7 +896,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                         const choice = await vscode.window.showQuickPick([createPick, ...items], options1);
                         if (!choice) {
                             vscode.window.showInformationMessage(
-                                localize("enterPattern.pattern", "No selection made.")
+                                localize("enterPattern.pattern", "No selection made. Operation cancelled.")
                             );
                             return;
                         }
@@ -913,7 +911,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                         quickpick.hide();
                         if (!choice) {
                             vscode.window.showInformationMessage(
-                                localize("enterPattern.pattern", "No selection made.")
+                                localize("enterPattern.pattern", "No selection made. Operation cancelled.")
                             );
                             return;
                         }
@@ -934,7 +932,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     value: pattern,
                 };
                 // get user input
-                pattern = await vscode.window.showInputBox(options2);
+                pattern = await UIViews.inputBox(options2);
                 if (!pattern) {
                     vscode.window.showInformationMessage(
                         localize("datasetFilterPrompt.enterPattern", "You must enter a pattern.")
@@ -1152,8 +1150,8 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     private async renameDataSetMember(node: IZoweDatasetTreeNode) {
         const beforeMemberName = node.label.trim();
         const dataSetName = node.getParent().getLabel();
-
-        let afterMemberName = await vscode.window.showInputBox({ value: beforeMemberName });
+        const options: vscode.InputBoxOptions = { value: beforeMemberName };
+        let afterMemberName = await UIViews.inputBox(options);
         if (!afterMemberName) {
             vscode.window.showInformationMessage(localize("renameDataSet.cancelled", "Rename operation cancelled."));
             return;
@@ -1215,8 +1213,8 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      */
     private async renameDataSet(node: IZoweDatasetTreeNode) {
         const beforeDataSetName = node.label.trim();
-
-        let afterDataSetName = await vscode.window.showInputBox({ value: beforeDataSetName });
+        const options: vscode.InputBoxOptions = { value: beforeDataSetName };
+        let afterDataSetName = await UIViews.inputBox(options);
         if (!afterDataSetName) {
             vscode.window.showInformationMessage(localize("renameDataSet.cancelled", "Rename operation cancelled."));
             return;

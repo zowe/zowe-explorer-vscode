@@ -37,7 +37,7 @@ jobs:
       - run: ls -la temp/plugins
 
       - name: Start Theia
-        run: docker run --name theia --init -d -p 3000:3000 -v "${PWD}/temp:/home/theia/.theia" theiaide/theia:1.15.0
+        run: docker run --name theia --init -d -p 3000:3000 --user theia -v "${PWD}/temp/plugins/:/home/theia/plugins" quay.io/zowe-explorer/theia:1.21.0
       # NOTE(Kelosky): alternatively, we could run docker via something like this; however, we cannot hot reload
       #                hosted VS Code extensions after theia is started (at least at the time this was written).
       # services:
@@ -53,7 +53,7 @@ jobs:
       - run: yarn lint
 
       - name: Verify plugin loaded
-        run: docker exec -i theia ls -la /home/theia/.theia/plugins
+        run: docker exec -i theia ls -la /home/theia/plugins
 
       - name: Verify Theia accessible
         run: curl --fail http://localhost:3000

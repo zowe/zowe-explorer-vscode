@@ -39,6 +39,8 @@ import { errorHandling, FilterDescriptor, FilterItem, resolveQuickPickHelper, is
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 
 import * as nls from "vscode-nls";
+import { UIViews } from "./shared/ui-views";
+import { constants } from "os";
 
 // TODO: find a home for constants
 export const CONTEXT_PREFIX = "_";
@@ -249,6 +251,7 @@ export class Profiles extends ProfilesCache {
     public async createZoweSession(zoweFileProvider: IZoweTree<IZoweTreeNode>) {
         const allProfiles = (await Profiles.getInstance()).allProfiles;
         const createNewProfile = "Create a New Connection to z/OS";
+        let addProfilePlaceholder: string = "";
         let chosenProfile: string = "";
 
         // Get all profiles
@@ -281,31 +284,50 @@ export class Profiles extends ProfilesCache {
         const createPick = new FilterDescriptor("\uFF0B " + createNewProfile);
         const items: vscode.QuickPickItem[] = profileNamesList.map((element) => new FilterItem(element));
         const quickpick = vscode.window.createQuickPick();
-        const placeholder = localize(
-            "addSession.quickPickOption",
-            'Choose "Create new..." to define a new profile or select an existing profile to Add to the USS Explorer'
-        );
-
+        switch (zoweFileProvider.getTreeType()) {
+            case PersistenceSchemaEnum.Dataset:
+                addProfilePlaceholder = localize(
+                    "ds.addSession.quickPickOption",
+                    'Choose "Create new..." to define or select a profile to add to the DATA SETS Explorer'
+                );
+                break;
+            case PersistenceSchemaEnum.Job:
+                addProfilePlaceholder = localize(
+                    "jobs.addSession.quickPickOption",
+                    'Choose "Create new..." to define or select a profile to add to the JOBS Explorer'
+                );
+                break;
+            default:
+                // Use USS View as default for placeholder text
+                addProfilePlaceholder = localize(
+                    "uss.addSession.quickPickOption",
+                    'Choose "Create new..." to define or select a profile to add to the USS Explorer'
+                );
+        }
         if (isTheia()) {
             const options: vscode.QuickPickOptions = {
-                placeHolder: placeholder,
+                placeHolder: addProfilePlaceholder,
             };
             // get user selection
             const choice = await vscode.window.showQuickPick([createPick, ...items], options);
             if (!choice) {
-                vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
+                vscode.window.showInformationMessage(
+                    localize("enterPattern.pattern", "No selection made. Operation cancelled.")
+                );
                 return;
             }
             chosenProfile = choice === createPick ? "" : choice.label;
         } else {
             quickpick.items = [createPick, ...items];
-            quickpick.placeholder = placeholder;
+            quickpick.placeholder = addProfilePlaceholder;
             quickpick.ignoreFocusOut = true;
             quickpick.show();
             const choice = await resolveQuickPickHelper(quickpick);
             quickpick.hide();
             if (!choice) {
-                vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
+                vscode.window.showInformationMessage(
+                    localize("enterPattern.pattern", "No selection made. Operation cancelled.")
+                );
                 return;
             }
             if (choice instanceof FilterDescriptor) {
@@ -327,7 +349,7 @@ export class Profiles extends ProfilesCache {
                 prompt: localize("createNewConnection.option.prompt.profileName", "Enter a name for the connection"),
                 value: profileName,
             };
-            profileName = await vscode.window.showInputBox(options);
+            profileName = await UIViews.inputBox(options);
             if (!profileName) {
                 vscode.window.showInformationMessage(
                     localize(
@@ -445,13 +467,19 @@ export class Profiles extends ProfilesCache {
                     }
                     updSchemaValues[value] = updRU;
                     break;
+                // for extenders that have their own token authentication methods with values in schema
+                // tokenType & tokenValue does not need to be presented to user as this is collected via login
+                case "tokenType":
+                    break;
+                case "tokenValue":
+                    break;
                 default:
                     let options: vscode.InputBoxOptions;
                     const response = await this.checkType(schema[value].type);
                     switch (response) {
                         case "number":
                             options = await this.optionsValue(value, schema, editSession[value]);
-                            const updValue = await vscode.window.showInputBox(options);
+                            const updValue = await UIViews.inputBox(options);
                             if (!Number.isNaN(Number(updValue))) {
                                 updSchemaValues[value] = Number(updValue);
                             } else {
@@ -483,7 +511,7 @@ export class Profiles extends ProfilesCache {
                             break;
                         default:
                             options = await this.optionsValue(value, schema, editSession[value]);
-                            const updDefValue = await vscode.window.showInputBox(options);
+                            const updDefValue = await UIViews.inputBox(options);
                             if (updDefValue === undefined) {
                                 vscode.window.showInformationMessage(
                                     localize("editConnection.default", "Operation Cancelled")
@@ -632,13 +660,19 @@ export class Profiles extends ProfilesCache {
                     }
                     schemaValues[value] = newRU;
                     break;
+                // for extenders that have their own token authentication methods with values in schema
+                // tokenType & tokenValue does not need to be presented to user as this is collected via login
+                case "tokenType":
+                    break;
+                case "tokenValue":
+                    break;
                 default:
                     let options: vscode.InputBoxOptions;
                     const response = await this.checkType(schema[value].type);
                     switch (response) {
                         case "number":
                             options = await this.optionsValue(value, schema);
-                            const enteredValue = Number(await vscode.window.showInputBox(options));
+                            const enteredValue = Number(await UIViews.inputBox(options));
                             if (!Number.isNaN(Number(enteredValue))) {
                                 if ((value === "encoding" || value === "responseTimeout") && enteredValue === 0) {
                                     delete schemaValues[value];
@@ -666,7 +700,7 @@ export class Profiles extends ProfilesCache {
                             break;
                         default:
                             options = await this.optionsValue(value, schema);
-                            const defValue = await vscode.window.showInputBox(options);
+                            const defValue = await UIViews.inputBox(options);
                             if (defValue === undefined) {
                                 vscode.window.showInformationMessage(
                                     localize("createNewConnection.default", "Operation Cancelled")
@@ -1127,161 +1161,150 @@ export class Profiles extends ProfilesCache {
     }
 
     public async ssoLogin(node?: IZoweNodeType, label?: string): Promise<void> {
-        const baseProfile = this.getBaseProfile();
+        let loginToken: string;
+        let loginTokenType: string;
+        let creds: string[];
         let serviceProfile: IProfileLoaded;
+        let session: Session;
         if (node) {
             serviceProfile = node.getProfile();
         } else {
             serviceProfile = this.loadNamedProfile(label.trim());
         }
-
-        // Skip if there is no base profile
-        if (!baseProfile) {
-            vscode.window.showInformationMessage(localize("ssoLogin.noBase", "This profile does not support login."));
-            return;
-        }
-
         // This check will handle service profiles that have username and password
         if (serviceProfile.profile.user && serviceProfile.profile.password) {
-            vscode.window.showInformationMessage(localize("ssoLogin.noBase", "This profile does not support login."));
+            vscode.window.showInformationMessage(
+                localize("ssoAuth.noBase", "This profile does not support token authentication.")
+            );
             return;
         }
 
-        // This check is for optional credentials
-        if (
-            baseProfile &&
-            serviceProfile.profile.host &&
-            serviceProfile.profile.port &&
-            ((baseProfile.profile.host !== serviceProfile.profile.host &&
-                baseProfile.profile.port !== serviceProfile.profile.port) ||
-                (baseProfile.profile.host === serviceProfile.profile.host &&
-                    baseProfile.profile.port !== serviceProfile.profile.port))
-        ) {
-            vscode.window.showInformationMessage(localize("ssoLogin.noBase", "This profile does not support login."));
+        try {
+            loginTokenType = ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).getTokenTypeName();
+        } catch (error) {
+            vscode.window.showInformationMessage(
+                localize("ssoAuth.noBase", "This profile does not support token authentication.")
+            );
             return;
         }
-
-        let newUser: string;
-        let newPass: string;
-
-        if (baseProfile) {
-            newUser = await this.userInfo();
-            if (newUser === undefined) {
-                vscode.window.showInformationMessage(localize("ssoLogin.undefined.username", "Operation Cancelled"));
-                return;
+        if (loginTokenType && loginTokenType !== SessConstants.TOKEN_TYPE_APIML) {
+            // this will handle extenders
+            if (node) {
+                session = node.getSession();
             } else {
-                newPass = await this.passwordInfo();
-                if (newPass === undefined) {
-                    vscode.window.showInformationMessage(
-                        localize("ssoLogin.undefined.username", "Operation Cancelled")
-                    );
-                    return;
-                }
+                session = ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).getSession();
             }
-
+            creds = await this.loginCredentialPrompt();
+            if (!creds) {
+                return;
+            }
+            session.ISession.user = creds[0];
+            session.ISession.password = creds[1];
             try {
-                const combinedProfile = await Profiles.getInstance().getCombinedProfile(serviceProfile, baseProfile);
-                const loginTokenType = ZoweExplorerApiRegister.getInstance()
-                    .getCommonApi(serviceProfile)
-                    .getTokenTypeName();
-                const updSession = new Session({
-                    hostname: combinedProfile.profile.host,
-                    port: combinedProfile.profile.port,
-                    user: newUser,
-                    password: newPass,
-                    rejectUnauthorized: combinedProfile.profile.rejectUnauthorized,
-                    tokenType: loginTokenType,
-                    type: SessConstants.AUTH_TYPE_TOKEN,
-                });
-                const loginToken = await ZoweExplorerApiRegister.getInstance()
-                    .getCommonApi(serviceProfile)
-                    .login(updSession);
-                const profileManager = Profiles.getInstance().getCliProfileManager(baseProfile.type);
-                const updBaseProfile: IProfile = {
-                    tokenType: loginTokenType,
-                    tokenValue: loginToken,
-                };
-
-                const updateParms: IUpdateProfile = {
-                    name: baseProfile.name,
-                    merge: true,
-                    profile: updBaseProfile,
-                };
-
-                try {
-                    await profileManager.update(updateParms);
-                } catch (error) {
-                    vscode.window.showErrorMessage(
-                        localize("ssoLogin.unableToLogin", "Unable to log in. ") + error.message
-                    );
-                    return;
-                }
-                vscode.window.showInformationMessage(
-                    localize("ssoLogin.successful", "Login to authentication service was successful.")
-                );
-                this.allProfiles = this.allProfiles.map((item) => {
-                    item.profile.tokenValue = loginToken;
-                    return item;
-                });
+                loginToken = await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).login(session);
             } catch (error) {
                 vscode.window.showErrorMessage(
                     localize("ssoLogin.unableToLogin", "Unable to log in. ") + error.message
                 );
                 return;
             }
+        } else {
+            const baseProfile = this.getBaseProfile();
+            // this will handle base profiles apiml tokens
+            const checksPassed = this.optionalCredChecks(serviceProfile, baseProfile);
+            if (!checksPassed) {
+                vscode.window.showInformationMessage(
+                    localize("ssoAuth.noBase", "This profile does not support token authentication.")
+                );
+                return;
+            }
+            if (baseProfile) {
+                creds = await this.loginCredentialPrompt();
+                if (!creds) {
+                    return;
+                }
+                try {
+                    const combinedProfile = await Profiles.getInstance().getCombinedProfile(
+                        serviceProfile,
+                        baseProfile
+                    );
+                    const updSession = new Session({
+                        hostname: combinedProfile.profile.host,
+                        port: combinedProfile.profile.port,
+                        user: creds[0],
+                        password: creds[1],
+                        rejectUnauthorized: combinedProfile.profile.rejectUnauthorized,
+                        tokenType: loginTokenType,
+                        type: SessConstants.AUTH_TYPE_TOKEN,
+                    });
+                    loginToken = await ZoweExplorerApiRegister.getInstance()
+                        .getCommonApi(serviceProfile)
+                        .login(updSession);
+                    const updBaseProfile: IProfile = {
+                        tokenType: loginTokenType,
+                        tokenValue: loginToken,
+                    };
+                    await this.updateBaseProfileFile(baseProfile, updBaseProfile);
+                    // update all profiles affiliated with the base profile
+                    this.allProfiles.forEach((item) => {
+                        const passed = this.optionalCredChecks(item, baseProfile);
+                        if (passed) {
+                            item.profile.tokenValue = loginToken;
+                        }
+                    });
+                } catch (error) {
+                    vscode.window.showErrorMessage(
+                        localize("ssoLogin.unableToLogin", "Unable to log in. ") + error.message
+                    );
+                    return;
+                }
+            }
         }
+        vscode.window.showInformationMessage(
+            localize("ssoLogin.successful", "Login to authentication service was successful.")
+        );
     }
 
     public async ssoLogout(node: IZoweNodeType): Promise<void> {
-        const baseProfile = this.getBaseProfile();
         const serviceProfile = node.getProfile();
-
-        // Skip if there is no base profile
-        if (!baseProfile) {
-            vscode.window.showInformationMessage(localize("ssoLogout.noBase", "This profile does not support logout."));
-            return;
-        }
-
         // This check will handle service profiles that have username and password
         if (serviceProfile.profile.user && serviceProfile.profile.password) {
-            vscode.window.showInformationMessage(localize("ssoLogout.noBase", "This profile does not support logout."));
-            return;
-        }
-
-        // This check is for optional credentials
-        if (
-            baseProfile &&
-            serviceProfile.profile.host &&
-            serviceProfile.profile.port &&
-            ((baseProfile.profile.host !== serviceProfile.profile.host &&
-                baseProfile.profile.port !== serviceProfile.profile.port) ||
-                (baseProfile.profile.host === serviceProfile.profile.host &&
-                    baseProfile.profile.port !== serviceProfile.profile.port))
-        ) {
-            vscode.window.showInformationMessage(localize("ssoLogout.noBase", "This profile does not support logout."));
-            return;
-        }
-
-        try {
-            const profiles = Profiles.getInstance();
-            const combinedProfile = await profiles.getCombinedProfile(serviceProfile, baseProfile);
-            const loginTokenType = ZoweExplorerApiRegister.getInstance()
-                .getCommonApi(serviceProfile)
-                .getTokenTypeName();
-            const updSession = new Session({
-                hostname: combinedProfile.profile.host,
-                port: combinedProfile.profile.port,
-                rejectUnauthorized: combinedProfile.profile.rejectUnauthorized,
-                tokenType: loginTokenType,
-                type: SessConstants.AUTH_TYPE_TOKEN,
-                tokenValue: combinedProfile.profile.tokenValue,
-            });
-            await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).logout(updSession);
             vscode.window.showInformationMessage(
-                localize("ssoLogout.successful", "Logout from authentication service was successful.")
+                localize("ssoAuth.noBase", "This profile does not support token authentication.")
             );
+            return;
+        }
+        try {
+            // this will handle extenders
+            if (serviceProfile.type !== "zosmf" && serviceProfile.profile.tokenValue !== undefined) {
+                await ZoweExplorerApiRegister.getInstance()
+                    .getCommonApi(serviceProfile)
+                    .logout(await node.getSession());
+            } else {
+                // this will handle base profile apiml tokens
+                const baseProfile = this.getBaseProfile();
+                const checksPassed = this.optionalCredChecks(serviceProfile, baseProfile);
+                if (!checksPassed) {
+                    vscode.window.showInformationMessage(
+                        localize("ssoAuth.noBase", "This profile does not support token authentication.")
+                    );
+                    return;
+                }
 
-            try {
+                const combinedProfile = await this.getCombinedProfile(serviceProfile, baseProfile);
+                const loginTokenType = ZoweExplorerApiRegister.getInstance()
+                    .getCommonApi(serviceProfile)
+                    .getTokenTypeName();
+                const updSession = new Session({
+                    hostname: combinedProfile.profile.host,
+                    port: combinedProfile.profile.port,
+                    rejectUnauthorized: combinedProfile.profile.rejectUnauthorized,
+                    tokenType: loginTokenType,
+                    tokenValue: combinedProfile.profile.tokenValue,
+                    type: SessConstants.AUTH_TYPE_TOKEN,
+                });
+                await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).logout(updSession);
+
                 this.getCliProfileManager(baseProfile.type).save({
                     name: baseProfile.name,
                     type: baseProfile.type,
@@ -1292,13 +1315,63 @@ export class Profiles extends ProfilesCache {
                         tokenValue: undefined,
                     },
                 });
-            } catch (error) {
-                vscode.window.showErrorMessage(error.message);
             }
+            vscode.window.showInformationMessage(
+                localize("ssoLogout.successful", "Logout from authentication service was successful.")
+            );
         } catch (error) {
             vscode.window.showErrorMessage(localize("ssoLogout.unableToLogout", "Unable to log out. ") + error.message);
             return;
         }
+    }
+
+    private async updateBaseProfileFile(baseProfile: IProfileLoaded, updBaseProfile: IProfile) {
+        const profileManager = Profiles.getInstance().getCliProfileManager(baseProfile.type);
+        const updateParms: IUpdateProfile = {
+            name: baseProfile.name,
+            merge: true,
+            profile: updBaseProfile,
+        };
+        await profileManager.update(updateParms);
+    }
+
+    private async loginCredentialPrompt(): Promise<string[]> {
+        let newPass: string;
+        const newUser = await this.userInfo();
+        if (!newUser) {
+            vscode.window.showInformationMessage(localize("ssoLogin.undefined.username", "Operation Cancelled"));
+            return;
+        } else {
+            newPass = await this.passwordInfo();
+            if (!newPass) {
+                vscode.window.showInformationMessage(localize("ssoLogin.undefined.username", "Operation Cancelled"));
+                return;
+            }
+        }
+        return [newUser, newPass];
+    }
+
+    private optionalCredChecks(serviceProfile?: IProfileLoaded, baseProfile?: IProfileLoaded): boolean {
+        if (serviceProfile.profile.user && serviceProfile.profile.password) {
+            return false;
+        }
+        // Skip if there is no base profile
+        if (!baseProfile) {
+            return false;
+        }
+        // This check is for optional credentials
+        if (
+            baseProfile &&
+            serviceProfile.profile.host &&
+            serviceProfile.profile.port &&
+            ((baseProfile.profile.host !== serviceProfile.profile.host &&
+                baseProfile.profile.port !== serviceProfile.profile.port) ||
+                (baseProfile.profile.host === serviceProfile.profile.host &&
+                    baseProfile.profile.port !== serviceProfile.profile.port))
+        ) {
+            return false;
+        }
+        return true;
     }
 
     private async deletePrompt(deletedProfile: IProfileLoaded) {
@@ -1353,7 +1426,7 @@ export class Profiles extends ProfilesCache {
         if (input) {
             zosURL = input;
         }
-        zosURL = await vscode.window.showInputBox({
+        const options: vscode.InputBoxOptions = {
             prompt: localize(
                 "createNewConnection.option.prompt.url",
                 "Enter a z/OS URL in the format 'https://url:port'."
@@ -1372,7 +1445,8 @@ export class Profiles extends ProfilesCache {
                     );
                 }
             },
-        });
+        };
+        zosURL = await UIViews.inputBox(options);
 
         let hostName: string;
         if (!zosURL) {
@@ -1412,7 +1486,7 @@ export class Profiles extends ProfilesCache {
                 prompt: schema[input].optionDefinition.description.toString(),
             };
         }
-        port = Number(await vscode.window.showInputBox(options));
+        port = Number(await UIViews.inputBox(options));
 
         if (port === 0 && schema[input].optionDefinition.hasOwnProperty("defaultValue")) {
             port = Number(schema[input].optionDefinition.defaultValue.toString());
@@ -1437,7 +1511,7 @@ export class Profiles extends ProfilesCache {
             ignoreFocusOut: true,
             value: userName,
         };
-        userName = await vscode.window.showInputBox(InputBoxOptions);
+        userName = await UIViews.inputBox(InputBoxOptions);
 
         if (userName === undefined) {
             vscode.window.showInformationMessage(
@@ -1466,7 +1540,7 @@ export class Profiles extends ProfilesCache {
             ignoreFocusOut: true,
             value: passWord,
         };
-        passWord = await vscode.window.showInputBox(InputBoxOptions);
+        passWord = await UIViews.inputBox(InputBoxOptions);
 
         if (passWord === undefined) {
             vscode.window.showInformationMessage(

@@ -2,6 +2,37 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## `1.22.0`
+
+- Added: Extensible Login and Logout capabilities for Zowe extenders to utilize for token based authentication. [#1606](https://github.com/zowe/vscode-extension-for-zowe/pull/1606) and [#1255](https://github.com/zowe/vscode-extension-for-zowe/issues/1255).
+- Added: Eclipse Public License file. Users can view the license file in the root directory of the Zowe Explorer repository [#1626](https://github.com/zowe/vscode-extension-for-zowe/pull/1626).
+- Updated: Supported Node.js version was changed to v12 or higher. We no longer support running the product on earlier versions (10.x and earlier) of Node.js [#1640](https://github.com/zowe/vscode-extension-for-zowe/pull/1640).
+- Updated: Security updates for `copy-props`, `nanoid`, and `markdown-it` dependencies were changed to improve security alerting [#1638](https://github.com/zowe/vscode-extension-for-zowe/pull/1638), [#1636](https://github.com/zowe/vscode-extension-for-zowe/pull/1636), and [#1649](https://github.com/zowe/vscode-extension-for-zowe/pull/1649).
+- Updated: A work around was developed to help developers debug Zowe Explorer VS Code extension on Theia. For more information, see **Work around for debugging in Theia** [#1576](https://github.com/zowe/vscode-extension-for-zowe/pull/1576).
+- Fixed: The Zowe Explorer deployment script was updated to use vsce (Visual Studio Code Extension Manager) version 1.103.1 to help ensure that it is compatible with Node v12 [#1608](https://github.com/zowe/vscode-extension-for-zowe/pull/1608).
+- Fixed: Fixed the Theia input box issue that caused entered values to be validated incorrectly [#1580](https://github.com/zowe/vscode-extension-for-zowe/pull/1580).
+
+## `1.21.0`
+
+- Add a progress bar for the simultaneous deletion of multiple jobs [#1583](https://github.com/zowe/vscode-extension-for-zowe/pull/1583). Thanks @uzuko01
+- Added the note about the deprecation of the associate profile feature to the Associate Profile section of Zowe Docs and to the Zowe Explorer Readme [#1575](https://github.com/zowe/vscode-extension-for-zowe/pull/1575). Thanks @IgorCATech
+- Changed the `DataSet uploaded successfully` message type. Now messages are shown in the status bar instead of the notification pop-up [#1542](https://github.com/zowe/vscode-extension-for-zowe/pull/1542). Thanks @anokhikastiaIBM
+- Updated dependencies for improved security [#1591](https://github.com/zowe/vscode-extension-for-zowe/pull/1591) and [#1601](https://github.com/zowe/vscode-extension-for-zowe/pull/1601). Thanks @lauren-li
+- Updated Theia tests to use the latest Theia version [#1566](https://github.com/zowe/vscode-extension-for-zowe/pull/1566). Thanks @JillieBeanSim
+- Fixed the issue that caused JCL errors in the JOBS tree to be displayed as `undefined:undefined(undefined)` [#1584](https://github.com/zowe/vscode-extension-for-zowe/pull/1584). Thanks @roman-kupriyanov
+- Fixed the Theia input box issue that caused entered values to be incorrectly validated [#1580](https://github.com/zowe/vscode-extension-for-zowe/pull/1580). Thanks @JillieBeanSim
+- Fixed the issue that caused the removal of unsaved credentials of a profile in the Jobs tree after deleting a job. Now when you delete a job from the Jobs tree with a profile that does not have the stored credentials, the profile keeps the cached credentials [#1524](https://github.com/zowe/vscode-extension-for-zowe/pull/1524). Thanks @nickImbirev
+
+## `1.20.0`
+
+- Added a Github action bot that automates the issue triage [#1530](https://github.com/zowe/vscode-extension-for-zowe/pull/1530). Thanks @crawr
+- Updated the @zowe/cli version to 6.33.3 to fix the SSH2 audit failure [#1522](https://github.com/zowe/vscode-extension-for-zowe/pull/1522). Thanks @JillieBeanSim
+- Updated the Jobs Issue Stop and Issue Modify commands so that they can be consumed by Extenders with the `issueMvsCommand` API [#1508](https://github.com/zowe/vscode-extension-for-zowe/pull/1508). Thanks @JillieBeanSim
+- Use Visual Studio Code's standard confirmation prompt for the Data Sets, USS, and Job trees when clicking on a Favorited profile that does not exist [#1506](https://github.com/zowe/vscode-extension-for-zowe/pull/1506). Thanks @JillieBeanSim
+- Updated the deletion prompt for the USS and Jobs trees [#1505](https://github.com/zowe/vscode-extension-for-zowe/pull/1505). Thanks @JillieBeanSim
+- Updated the placeholder text in the `Add Profile` entry field [#1490](https://github.com/zowe/vscode-extension-for-zowe/pull/1490). Thanks @anokhikastiaIBM
+- Fixed the Not Found issue that resulted from attempts to delete a member whose parent data set was already deleted using multi-delete [#1525](https://github.com/zowe/vscode-extension-for-zowe/pull/1525). Thanks @JillieBeanSim
+
 ## `1.19.0`
 
 - Added a check to ensure that a base profile exists before running the function that combines base and service profiles [#1500](https://github.com/zowe/vscode-extension-for-zowe/pull/1500). Thanks @lauren-li

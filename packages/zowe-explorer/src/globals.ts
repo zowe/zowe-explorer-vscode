@@ -32,6 +32,7 @@ export let LOG: Logger;
 export const COMMAND_COUNT = 96;
 export const MAX_SEARCH_HISTORY = 5;
 export const MAX_FILE_HISTORY = 10;
+export const STATUS_BAR_TIMEOUT_MS = 5000;
 export const CONTEXT_PREFIX = "_";
 export const FAV_SUFFIX = CONTEXT_PREFIX + "fav";
 export const FAV_PROFILE_CONTEXT = "profile_fav";
@@ -195,9 +196,7 @@ export function defineGlobals(tempPath: string | undefined) {
     }
 
     // Set temp path & folder paths
-    tempPath !== "" && tempPath !== undefined
-        ? (ZOWETEMPFOLDER = path.join(tempPath, "temp"))
-        : (ZOWETEMPFOLDER = path.join(__dirname, "..", "..", "resources", "temp"));
+    ZOWETEMPFOLDER = tempPath ? path.join(tempPath, "temp") : path.join(__dirname, "..", "..", "resources", "temp");
 
     ZOWE_TMP_FOLDER = path.join(ZOWETEMPFOLDER, "tmp");
     USS_DIR = path.join(ZOWETEMPFOLDER, "_U_");

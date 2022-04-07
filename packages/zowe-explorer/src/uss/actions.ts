@@ -29,6 +29,7 @@ import { getIconByNode } from "../generators/icons";
 import { returnIconState, resetValidationSettings } from "../shared/actions";
 import { PersistentFilters } from "../PersistentFilters";
 import { refreshAll } from "../shared/refresh";
+import { UIViews } from "../shared/ui-views";
 
 // Set up localization
 nls.config({
@@ -53,22 +54,25 @@ export async function createUSSNode(
     await ussFileProvider.checkCurrentProfile(node);
     let filePath;
     if (contextually.isSession(node)) {
-        filePath = await vscode.window.showInputBox({
-            placeHolder: localize("createUSSNode.fileLocation.placeholder", "{0} location", nodeType),
-            prompt: localize("createUSSNode.fileLocation.prompt", "Choose a location to create the {0}", nodeType),
+        const filePathOptions: vscode.InputBoxOptions = {
+            placeHolder: localize("createUSSNode.inputBox.placeholder", "{0} location", nodeType),
+            prompt: localize("createUSSNode.inputBox.prompt", "Choose a location to create the {0}", nodeType),
             value: node.tooltip,
-        });
+        };
+        filePath = await UIViews.inputBox(filePathOptions);
     } else {
         filePath = node.fullPath;
     }
-    const name = await vscode.window.showInputBox({
+    const nameOptions: vscode.InputBoxOptions = {
         placeHolder: localize("createUSSNode.name", "Name of file or directory"),
-    });
+    };
+    const name = await UIViews.inputBox(nameOptions);
     if (name && filePath) {
         try {
             filePath = `${filePath}/${name}`;
             await ZoweExplorerApiRegister.getUssApi(node.getProfile()).create(filePath, nodeType);
             if (isTopLevel) {
+                await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
                 refreshAll(ussFileProvider);
             } else {
                 ussFileProvider.refreshElement(node);
@@ -287,7 +291,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
         }
         const uploadResponse: zowe.IZosFilesResponse = await vscode.window.withProgress(
             {
-                location: vscode.ProgressLocation.Notification,
+                location: vscode.ProgressLocation.Window,
                 title: localize("saveUSSFile.response.title", "Saving file..."),
             },
             () => {
@@ -295,7 +299,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
             }
         );
         if (uploadResponse.success) {
-            vscode.window.showInformationMessage(uploadResponse.commandResponse);
+            vscode.window.setStatusBarMessage(uploadResponse.commandResponse, globals.STATUS_BAR_TIMEOUT_MS);
             // set local etag with the new etag from the updated file on mainframe
             if (node) {
                 node.setEtag(uploadResponse.apiResponse.etag);

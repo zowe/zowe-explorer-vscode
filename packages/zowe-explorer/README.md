@@ -23,7 +23,7 @@ More information:
 
 ## Contents
 
-- [What's new in Zowe Explorer 1.19.0](#whats-new-in-zowe-explorer-1190)
+- [What's new in Zowe Explorer 1.22.0](#whats-new-in-zowe-explorer-1210)
 - [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
 - [Sample Use Cases](#sample-use-cases)
@@ -31,32 +31,29 @@ More information:
 - [Usage Tips](#usage-tips)
 - [Extending Zowe Explorer](#extending-zowe-explorer)
 
-## What's new in Zowe Explorer 1.19.0
+## What's new in Zowe Explorer 1.22.0
 
-> Zowe Explorer is compatible only with Theia 1.15.0 or earlier versions.
+> Zowe Explorer is compatible only with Theia 1.18.0 or higher.
+> Zowe Explorer could experience possible unexpected behaviors with the latest Theia releases.
 
 **Added**:
 
-- Added Imperative logger access for extenders.
-- Added documentation for Imperative logger for extenders.
-- Added a check to ensure that a base profile exists before running the function that combines base and service profiles
+- Added extensible Login and Logout capabilities for Zowe extenders to utilize for token based authentication.
+- Added an Eclipse Public License file. Users can view the license file in the root directory of the Zowe Explorer repository.
 
 **Changed**:
 
-- Implemented separate console windows for TSO and MVS commands.
+- Changed the Supported Node.js version to v12 or higher. We no longer support running the product on earlier versions (10.x and earlier) of Node.js.
+- Changed the dependencies of `copy-props`, `nanoid`, and `markdown-it` to improve security alerting.
+- A work around was developed to help developers debug Zowe Explorer VS Code extension on Theia. For more information, see [Work around for debugging in Theia](https://github.com/zowe/vscode-extension-for-zowe/pull/1576).
 
 **Fixed**:
 
-- Fixed the bug that caused the check credentials pop-up to disappear too quickly.
-- Fixed the bug that kept the command text box while escaping the process of entering a TSO command. Now the command text box does not pop up if you cancel entering a TSO command.
-- Fixed the bug that caused issues with deleting data set members in Ecplipse Theia or Che.
-- Fixed the bug that caused a pop-up confirming the deletion of multiple data sets to display while removing a single data set member.
-
-For more information, see [Changelog](https://marketplace.visualstudio.com/items/Zowe.vscode-extension-for-zowe/changelog).
+- Fixed the Zowe Explorer deployment script by updating it to use vsce (Visual Studio Code Extension Manager) version 1.103.1 to help ensure that it is compatible with Node v12 [#1608](https://github.com/zowe/vscode-extension-for-zowe/pull/1608).
+- Fixed the Theia input box issue that caused entered values to be validated incorrectly.
 
 ## Prerequisites
 
-- Install [Node.js](https://nodejs.org/en/download/) v8.0 or later.
 - Configure TSO/E address space services, z/OS data set, file REST interface and z/OS jobs REST interface. For more information, see [z/OS Requirements](https://docs.zowe.org/stable/user-guide/systemrequirements-zosmf.html#z-os-requirements).
 - Create a Zowe Explorer profile.
 
@@ -359,7 +356,9 @@ For more information about SCS, see [Secure Credential Store Plug-in for Zowe Ex
 
 - **Hide a profile**: You can hide a profile from the profile tree by right-clicking the profile and selecting the **Hide Profile** option. To add the profile back, click the **+** button and select the profile from the quick pick list.
 
-- **Associate profiles**: You can create a secondary association by right-clicking the profile and selecting the **Associate profiles** icon. For more information, see [the Associate profiles section](https://docs.zowe.org/stable/user-guide/ze-profiles.html#associate-profile) in Zowe Docs.
+- **Associate profiles**: You can create a secondary association by right-clicking the profile and selecting the **Associate profiles** option. For more information, see [the Associate profiles section](https://docs.zowe.org/stable/user-guide/ze-profiles.html#associate-profile) in Zowe Docs.
+
+  > **Note**: The Associate Profile functionality is deprecated and will be removed in Zowe Explorer V2 that is slated for February 2022. For more information, see the Release Timeline section on the [Download Zowe](https://www.zowe.org/download.html#timeline) page on the Zowe site. Use the base profile feature instead of **associate profile**.
 
 - **Open recent members**: Zowe Explorer lets you open a list of members you worked on earlier. You can access the list by pressing Ctrl+Alt+R (Windows) or Command+Option+R (Mac).
 
