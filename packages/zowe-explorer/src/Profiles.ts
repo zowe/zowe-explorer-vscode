@@ -368,10 +368,10 @@ export class Profiles extends ProfilesCache {
         }
 
         if (chosenProfile === "") {
-            const config = ProfilesCache.getConfigInstance();
+            const config = await this.getProfileInfo();
             if (config.usingTeamConfig) {
                 const profiles = config.getAllProfiles();
-                const currentProfile = this.getProfileFromConfig(profiles[0].profName);
+                const currentProfile = await this.getProfileFromConfig(profiles[0].profName);
                 const filePath = currentProfile.profLoc.osLoc[0];
                 await this.openConfigFile(filePath);
                 return;
@@ -433,8 +433,8 @@ export class Profiles extends ProfilesCache {
     }
 
     public async editSession(profileLoaded: IProfileLoaded, profileName: string): Promise<any | undefined> {
-        if (ProfilesCache.getConfigInstance().usingTeamConfig) {
-            const currentProfile = this.getProfileFromConfig(profileLoaded.name);
+        if ((await this.getProfileInfo()).usingTeamConfig) {
+            const currentProfile = await this.getProfileFromConfig(profileLoaded.name);
             const filePath = currentProfile.profLoc.osLoc[0];
             await this.openConfigFile(filePath);
             return;
@@ -681,9 +681,9 @@ export class Profiles extends ProfilesCache {
             await config.save(false);
             let configName;
             if (user) {
-                configName = ProfilesCache.getConfigInstance().getTeamConfig().userConfigName;
+                configName = (await this.getProfileInfo()).getTeamConfig().userConfigName;
             } else {
-                configName = ProfilesCache.getConfigInstance().getTeamConfig().configName;
+                configName = (await this.getProfileInfo()).getTeamConfig().configName;
             }
             await this.openConfigFile(path.join(rootPath, configName));
             const reloadButton = localize("createZoweSchema.reload.button", "Refresh Zowe Explorer");
@@ -912,7 +912,7 @@ export class Profiles extends ProfilesCache {
                 updSession.ISession.password,
                 updSession.ISession.base64EncodedAuth,
             ];
-            if (ProfilesCache.getConfigInstance().usingTeamConfig) {
+            if ((await this.getProfileInfo()).usingTeamConfig) {
                 const profArray = [];
                 for (const theprofile of this.allProfiles) {
                     if (theprofile.name !== promptInfo.profile.name) {
@@ -977,8 +977,8 @@ export class Profiles extends ProfilesCache {
         }
         deleteLabel = deletedProfile.name;
 
-        if (ProfilesCache.getConfigInstance().usingTeamConfig) {
-            const currentProfile = this.getProfileFromConfig(deleteLabel);
+        if ((await this.getProfileInfo()).usingTeamConfig) {
+            const currentProfile = await this.getProfileFromConfig(deleteLabel);
             const filePath = currentProfile.profLoc.osLoc[0];
             await this.openConfigFile(filePath);
             return;
@@ -1398,7 +1398,7 @@ export class Profiles extends ProfilesCache {
     }
 
     private async updateBaseProfileFileLogin(baseProfile: IProfileLoaded, updBaseProfile: IProfile) {
-        const mProfileInfo = ProfilesCache.getConfigInstance();
+        const mProfileInfo = await this.getProfileInfo();
         if (mProfileInfo.usingTeamConfig) {
             // write to config file to add tokenType & tokenValue fields
             const profileProps = Object.keys(mProfileInfo.getTeamConfig().api.profiles.get(baseProfile.name));
@@ -1425,7 +1425,7 @@ export class Profiles extends ProfilesCache {
     }
 
     private async updateBaseProfileFileLogout(baseProfile: IProfileLoaded) {
-        const mProfileInfo = ProfilesCache.getConfigInstance();
+        const mProfileInfo = await this.getProfileInfo();
         if (mProfileInfo.usingTeamConfig) {
             // remove tokenType and TokenValue from config file
             const profileProps = Object.keys(mProfileInfo.getTeamConfig().api.profiles.get(baseProfile.name));

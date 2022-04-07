@@ -14,7 +14,7 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import * as globals from "../globals";
-import { Session, IProfile, IProfileLoaded, ProfileInfo } from "@zowe/imperative";
+import { Session, IProfile, IProfileLoaded, ProfileInfo, Logger } from "@zowe/imperative";
 import { getSecurityModules, IZoweTreeNode, ProfilesCache, ZoweTreeNode, getZoweDir } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import * as nls from "vscode-nls";
@@ -33,6 +33,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  * @param {moreInfo} - additional/customized error messages
  *************************************************************************************************************/
 export async function errorHandling(errorDetails: any, label?: string, moreInfo?: string) {
+    const profilesCache = new ProfilesCache(Logger.getAppLogger());
     let httpErrCode = null;
     const errMsg = localize(
         "errorHandling.invalid.credentials",
@@ -49,9 +50,9 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
         // open config file for missing hostname error
         const msg = errorDetails.toString();
         if (msg.includes("hostname")) {
-            if (ProfilesCache.getConfigInstance().usingTeamConfig) {
+            if ((await profilesCache.getProfileInfo()).usingTeamConfig) {
                 vscode.window.showErrorMessage("Required parameter 'host' must not be blank");
-                const currentProfile = Profiles.getInstance().getProfileFromConfig(label.trim());
+                const currentProfile = await profilesCache.getProfileFromConfig(label.trim());
                 const filePath = currentProfile.profLoc.osLoc[0];
                 await Profiles.getInstance().openConfigFile(filePath);
                 return;
@@ -136,6 +137,7 @@ export const syncSessionNode =
     (profiles: Profiles) =>
     (getSessionForProfile: SessionForProfile) =>
     async (sessionNode: IZoweTreeNode): Promise<void> => {
+        const profilesCache = new ProfilesCache(Logger.getAppLogger());
         sessionNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
 
         const profileType = sessionNode.getProfile().type;
@@ -143,7 +145,7 @@ export const syncSessionNode =
 
         let profile: IProfileLoaded;
         try {
-            profile = profiles.loadNamedProfile(profileName, profileType);
+            profile = profilesCache.loadNamedProfile(profileName, profileType);
         } catch (e) {
             return;
         }
@@ -218,7 +220,6 @@ export async function getProfileInfo(envTheia: boolean): Promise<ProfileInfo> {
     const mProfileInfo = new ProfileInfo("zowe", {
         requireKeytar: () => getSecurityModules("keytar", envTheia),
     });
-    ProfilesCache.createConfigInstance(mProfileInfo);
     return mProfileInfo;
 }
 

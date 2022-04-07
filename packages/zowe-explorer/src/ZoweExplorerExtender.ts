@@ -70,6 +70,8 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
      * of retrieving files and data from z/OS.
      */
     private static instance = new ZoweExplorerExtender();
+    // create instance of ProfilesCache
+    private profilesCache = new ProfilesCache(imperative.Logger.getAppLogger());
 
     // Instances will be created via createInstance()
     private constructor(
@@ -98,7 +100,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
             envVariablePrefix: "ZOWE",
         };
         // const mProfileInfo = await getProfileInfo(globals.ISTHEIA);
-        let mProfileInfo = await ProfilesCache.getConfigInstance();
+        let mProfileInfo = await this.profilesCache.getProfileInfo();
         if (!mProfileInfo) {
             mProfileInfo = await getProfileInfo(globals.ISTHEIA);
         }
