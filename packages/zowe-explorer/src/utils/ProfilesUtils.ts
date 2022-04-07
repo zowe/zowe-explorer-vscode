@@ -33,7 +33,6 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  * @param {moreInfo} - additional/customized error messages
  *************************************************************************************************************/
 export async function errorHandling(errorDetails: any, label?: string, moreInfo?: string) {
-    const profilesCache = new ProfilesCache(Logger.getAppLogger());
     let httpErrCode = null;
     const errMsg = localize(
         "errorHandling.invalid.credentials",
@@ -50,9 +49,9 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
         // open config file for missing hostname error
         const msg = errorDetails.toString();
         if (msg.includes("hostname")) {
-            if ((await profilesCache.getProfileInfo()).usingTeamConfig) {
+            if ((await globals.PROFILESCACHE.getProfileInfo()).usingTeamConfig) {
                 vscode.window.showErrorMessage("Required parameter 'host' must not be blank");
-                const currentProfile = await profilesCache.getProfileFromConfig(label.trim());
+                const currentProfile = await globals.PROFILESCACHE.getProfileFromConfig(label.trim());
                 const filePath = currentProfile.profLoc.osLoc[0];
                 await Profiles.getInstance().openConfigFile(filePath);
                 return;
@@ -137,7 +136,6 @@ export const syncSessionNode =
     (profiles: Profiles) =>
     (getSessionForProfile: SessionForProfile) =>
     async (sessionNode: IZoweTreeNode): Promise<void> => {
-        const profilesCache = new ProfilesCache(Logger.getAppLogger());
         sessionNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
 
         const profileType = sessionNode.getProfile().type;
@@ -145,7 +143,7 @@ export const syncSessionNode =
 
         let profile: IProfileLoaded;
         try {
-            profile = profilesCache.loadNamedProfile(profileName, profileType);
+            profile = globals.PROFILESCACHE.loadNamedProfile(profileName, profileType);
         } catch (e) {
             return;
         }

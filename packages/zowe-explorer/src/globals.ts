@@ -16,7 +16,7 @@ import * as loggerConfig from "../log4jsconfig.json";
 
 // Set up localization
 import * as nls from "vscode-nls";
-import { getZoweDir } from "@zowe/zowe-explorer-api";
+import { getZoweDir, ProfilesCache } from "@zowe/zowe-explorer-api";
 
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
@@ -86,6 +86,7 @@ export const SETTINGS_DS_HISTORY = "zowe.ds.history";
 export const SETTINGS_USS_HISTORY = "zowe.uss.history";
 export const SETTINGS_JOBS_HISTORY = "zowe.jobs.history";
 export const EXTENDER_CONFIG: ICommandProfileTypeConfiguration[] = [];
+export let PROFILESCACHE; // set during activate new ProfilesCache(Logger.getAppLogger());
 
 export enum CreateDataSetTypeWithKeysEnum {
     DATA_SET_BINARY = 0,
@@ -222,6 +223,7 @@ export function defineGlobals(tempPath: string | undefined) {
     ZOWE_TMP_FOLDER = path.join(ZOWETEMPFOLDER, "tmp");
     USS_DIR = path.join(ZOWETEMPFOLDER, "_U_");
     DS_DIR = path.join(ZOWETEMPFOLDER, "_D_");
+    PROFILESCACHE = new ProfilesCache(Logger.getAppLogger());
 }
 
 export function setConfigPath(configPath: string | undefined): void {
