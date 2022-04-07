@@ -1477,17 +1477,17 @@ export class Profiles extends ProfilesCache {
             return false;
         }
         // This check is for optional credentials
-        if (
-            baseProfile &&
-            serviceProfile.profile.host &&
-            serviceProfile.profile.port &&
-            ((baseProfile.profile.host !== serviceProfile.profile.host &&
-                baseProfile.profile.port !== serviceProfile.profile.port) ||
-                (baseProfile.profile.host === serviceProfile.profile.host &&
-                    baseProfile.profile.port !== serviceProfile.profile.port))
-        ) {
-            return false;
-        }
+        // if (
+        //     baseProfile &&
+        //     serviceProfile.profile.host &&
+        //     serviceProfile.profile.port &&
+        //     ((baseProfile.profile.host !== serviceProfile.profile.host &&
+        //         baseProfile.profile.port !== serviceProfile.profile.port) ||
+        //         (baseProfile.profile.host === serviceProfile.profile.host &&
+        //             baseProfile.profile.port !== serviceProfile.profile.port))
+        // ) {
+        //     return false;
+        // }
         return true;
     }
 
