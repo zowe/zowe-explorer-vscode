@@ -58,7 +58,7 @@ export class ProfilesCache {
     protected profilesByType = new Map<string, imperative.IProfileLoaded[]>();
     protected defaultProfileByType = new Map<string, imperative.IProfileLoaded>();
     protected profileManagerByType = new Map<string, imperative.CliProfileManager>();
-    public constructor(protected log: imperative.Logger) {}
+    public constructor(protected log: imperative.Logger) { }
 
     public static createConfigInstance(mProfileInfo: imperative.ProfileInfo): imperative.ProfileInfo {
         return (ProfilesCache.info = mProfileInfo);
@@ -342,8 +342,8 @@ export class ProfilesCache {
                 const profByType = this.profilesByType.get(type);
                 profByType.forEach((profile) => {
                     if (
-                        (baseProfile?.profile.host !== profile?.profile.host ||
-                            baseProfile?.profile.port !== profile?.profile.port) &&
+                        ((baseProfile?.profile.host && baseProfile?.profile.host !== profile?.profile.host) ||
+                            (baseProfile?.profile.port && baseProfile?.profile.port !== profile?.profile.port)) &&
                         profile?.profile.tokenType == "apimlAuthenticationToken"
                     ) {
                         profile.profile.tokenType = undefined;
@@ -376,7 +376,9 @@ export class ProfilesCache {
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                 profile[arg.argName] = arg.secure ? await mProfileInfo.loadSecureArg(arg) : arg.argValue;
             }
+            console.log(mProfileInfo.mergeArgsForProfile(profAttrs, { getSecureVals: true }));
         }
+        console.log("++++", profile);
         return profile;
     }
 

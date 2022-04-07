@@ -1246,14 +1246,6 @@ export class Profiles extends ProfilesCache {
             }
         } else {
             const baseProfile = this.getBaseProfile();
-            // this will handle base profiles apiml tokens
-            const checksPassed = this.optionalCredChecks(serviceProfile, baseProfile);
-            if (!checksPassed) {
-                vscode.window.showInformationMessage(
-                    localize("ssoAuth.noBase", "This profile does not support token authentication.")
-                );
-                return;
-            }
             if (baseProfile) {
                 creds = await this.loginCredentialPrompt();
                 if (!creds) {
@@ -1313,13 +1305,6 @@ export class Profiles extends ProfilesCache {
             } else {
                 // this will handle base profile apiml tokens
                 const baseProfile = this.getBaseProfile();
-                const checksPassed = this.optionalCredChecks(serviceProfile, baseProfile);
-                if (!checksPassed) {
-                    vscode.window.showInformationMessage(
-                        localize("ssoAuth.noBase", "This profile does not support token authentication.")
-                    );
-                    return;
-                }
                 const loginTokenType = ZoweExplorerApiRegister.getInstance()
                     .getCommonApi(serviceProfile)
                     .getTokenTypeName();
@@ -1466,29 +1451,6 @@ export class Profiles extends ProfilesCache {
             }
         }
         return [newUser, newPass];
-    }
-
-    private optionalCredChecks(serviceProfile?: IProfileLoaded, baseProfile?: IProfileLoaded): boolean {
-        if (serviceProfile.profile.user && serviceProfile.profile.password) {
-            return false;
-        }
-        // Skip if there is no base profile
-        if (!baseProfile) {
-            return false;
-        }
-        // This check is for optional credentials
-        if (
-            baseProfile &&
-            serviceProfile.profile.host &&
-            serviceProfile.profile.port &&
-            ((baseProfile.profile.host !== serviceProfile.profile.host &&
-                baseProfile.profile.port !== serviceProfile.profile.port) ||
-                (baseProfile.profile.host === serviceProfile.profile.host &&
-                    baseProfile.profile.port !== serviceProfile.profile.port))
-        ) {
-            return false;
-        }
-        return true;
     }
 
     private async deletePrompt(deletedProfile: IProfileLoaded) {
