@@ -346,7 +346,9 @@ export class TsoCommandHandler extends ZoweCommandProvider {
         }
         if (tsoProfile) {
             iStartTso.forEach((p) => (tsoParms[p] = tsoProfile.profile[p]));
-        } else {
+        }
+
+        if (tsoParms.account == null || tsoParms.account === "") {
             // If there is no tso profile an account number is still required, so ask for one.
             // All other properties of tsoParams will be undefined, so defaults will be utilized.
             const InputBoxOptions = {

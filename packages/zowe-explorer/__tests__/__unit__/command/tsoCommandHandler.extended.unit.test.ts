@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { ProfilesCache } from "@zowe/zowe-explorer-api";
+import { ProfilesCache, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../src/Profiles";
 import { TsoCommandHandler } from "../../../src/command/TsoCommandHandler";
 import { ProfileInfo } from "@zowe/imperative";
@@ -37,6 +37,26 @@ describe("TsoCommandHandler extended testing", () => {
 
             const result = await (TsoCommandHandler.getInstance() as any).getTsoParams();
             expect(result.account).toEqual("TEST");
+        });
+
+        it("should work with teamConfig and prompt if account is empty", async () => {
+            Object.defineProperty(Profiles, "getInstance", {
+                value: jest.fn(() => ({ getCliProfileManager: () => null })),
+            });
+
+            jest.spyOn(ProfilesCache, "getConfigInstance").mockReturnValue({
+                usingTeamConfig: true,
+                getAllProfiles: jest.fn().mockReturnValue(["dummy"]),
+                mergeArgsForProfile: jest.fn().mockReturnValue({
+                    knownArgs: [{ argName: "account", argValue: "" }],
+                }),
+            } as any);
+
+            const spyBox = jest.spyOn(ZoweVsCodeExtension, "inputBox").mockResolvedValue("TEST1");
+
+            const result = await (TsoCommandHandler.getInstance() as any).getTsoParams();
+            expect(spyBox).toHaveBeenCalled();
+            expect(result.account).toEqual("TEST1");
         });
     });
 });
