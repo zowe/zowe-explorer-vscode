@@ -123,14 +123,14 @@ async function createGlobalMocks() {
     });
     Object.defineProperty(vscode, "ProgressLocation", { value: newMocks.ProgressLocation, configurable: true });
     Object.defineProperty(vscode.window, "withProgress", { value: newMocks.withProgress, configurable: true });
-    newMocks.mockProfileInfo = createInstanceOfProfileInfo();
-    Object.defineProperty(ProfilesCache, "getConfigInstance", {
-        value: jest
-            .fn(() => {
-                return newMocks.mockProfileInfo;
-            })
-            .mockReturnValue(newMocks.mockProfileInfo),
-    });
+    // newMocks.mockProfileInfo = createInstanceOfProfileInfo();
+    // Object.defineProperty(ProfilesCache, "getConfigInstance", {
+    //     value: jest
+    //         .fn(() => {
+    //             return newMocks.mockProfileInfo;
+    //         })
+    //         .mockReturnValue(newMocks.mockProfileInfo),
+    // });
 
     return newMocks;
 }
@@ -853,25 +853,35 @@ describe("Profiles Unit Tests - Function promptCredentials", () => {
         ZoweExplorerApiRegister.getMvsApi = getMvsApiMock.bind(ZoweExplorerApiRegister);
         jest.spyOn(mockMvsApi, "getSession").mockReturnValue(globalMocks.testSession);
 
-        Object.defineProperty(ProfilesCache, "getConfigInstance", {
-            value: jest.fn(() => {
-                return {
-                    usingTeamConfig: true,
-                    getAllProfiles: () => [
-                        {
-                            profName: newMocks.imperativeProfile.name,
-                            profType: newMocks.imperativeProfile.type,
-                            profile: newMocks.imperativeProfile.name,
-                            profLoc: { osLoc: ["dummy"] },
-                        },
-                    ],
-                    mergeArgsForProfile: () => {
-                        return { knownArgs: [], missingArgs: [] };
-                    },
-                    updateProperty: jest.fn(),
-                };
-            }),
-        });
+        globalMocks.mockProfileInstance.getProfileInfo().usingTeamConfig = true;
+        globalMocks.mockProfileInstance.getProfileInfo().getAllProfiles = [
+            {
+                profName: newMocks.imperativeProfile.name,
+                profType: newMocks.imperativeProfile.type,
+                profile: newMocks.imperativeProfile.name,
+                profLoc: { osLoc: ["dummy"] },
+            },
+        ];
+        globalMocks.mockProfileInstance.getProfileInfo().mergeArgsForProfile = { knownArgs: [], missingArgs: [] };
+        // Object.defineProperty(ProfilesCache, "getConfigInstance", {
+        //     value: jest.fn(() => {
+        //         return {
+        //             usingTeamConfig: true,
+        //             getAllProfiles: () => [
+        //                 {
+        //                     profName: newMocks.imperativeProfile.name,
+        //                     profType: newMocks.imperativeProfile.type,
+        //                     profile: newMocks.imperativeProfile.name,
+        //                     profLoc: { osLoc: ["dummy"] },
+        //                 },
+        //             ],
+        //             mergeArgsForProfile: () => {
+        //                 return { knownArgs: [], missingArgs: [] };
+        //             },
+        //             updateProperty: jest.fn(),
+        //         };
+        //     }),
+        // });
 
         return newMocks;
     }
@@ -2859,13 +2869,14 @@ describe("Profiles Unit Tests - Function ssoLogin", () => {
                 return true;
             }),
         });
-        Object.defineProperty(ProfilesCache, "getConfigInstance", {
-            value: jest.fn(() => {
-                return {
-                    usingTeamConfig: true,
-                };
-            }),
-        });
+        globalMocks.mockProfileInstance.getProfileInfo().usingTeamConfig = true;
+        // Object.defineProperty(ProfilesCache, "getConfigInstance", {
+        //     value: jest.fn(() => {
+        //         return {
+        //             usingTeamConfig: true,
+        //         };
+        //     }),
+        // });
 
         const mockCommonApi = await ZoweExplorerApiRegister.getInstance().getCommonApi(blockMocks.testCombinedProfile);
         const getCommonApiMock = jest.fn();

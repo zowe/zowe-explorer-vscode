@@ -75,6 +75,7 @@ async function createGlobalMocks() {
         testUSSNode: null,
         testTree: null,
         profilesForValidation: { status: "active", name: "fake" },
+        mockProfilesCache: new ProfilesCache(Logger.getAppLogger()),
     };
 
     globalMocks.mockTextDocuments.push(globalMocks.mockTextDocumentDirty);
@@ -156,12 +157,8 @@ async function createGlobalMocks() {
     globalMocks.testTree.mSessionNodes.push(ussSessionTestNode);
     globalMocks.testTree.addSearchHistory("/u/myuser");
 
-    Object.defineProperty(ProfilesCache, "getConfigInstance", {
-        value: jest.fn(() => {
-            return {
-                usingTeamConfig: false,
-            };
-        }),
+    Object.defineProperty(globalMocks.mockProfilesCache, "getProfileInfo", {
+        value: jest.fn().mockReturnValue({ usingTeamConfig: false }),
     });
 
     return globalMocks;

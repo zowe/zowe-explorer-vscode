@@ -217,7 +217,17 @@ export function createInstanceOfProfile(profile: imperative.IProfileLoaded) {
         refresh: jest.fn(),
         directLoad: jest.fn(),
         getAllTypes: jest.fn(),
+        getProfileInfo: () => createInstanceOfProfileInfo(),
+        getDefaultConfigProfile: jest.fn(),
+        getProfileFromConfig: jest.fn(),
+        getProfileLoaded: jest.fn(),
     } as any;
+}
+
+export function createInstanceOfProfilesCache() {
+    return {
+        getProfileInfo: jest.fn(),
+    };
 }
 
 export function createInstanceOfProfileInfo() {
@@ -250,11 +260,11 @@ export function createInstanceOfProfileInfo() {
                 profLoc: { locType: 0, osLoc: ["location"], jsonLoc: "jsonLoc" },
             },
         ],
+        updateProperty: jest.fn(),
+        updateKnownProperty: jest.fn(),
+        getTeamConfig: jest.fn(),
+        createSession: jest.fn(),
         usingTeamConfig: false,
-        // updateProperty: jest.fn(),
-        // updateKnownProperty: jest.fn(),
-        // getTeamConfig: jest.fn(),
-        // createSession: jest.fn(),
         mergeArgsForProfile: jest.fn().mockReturnValue({
             knownArgs: [
                 {
@@ -274,11 +284,11 @@ export function createInstanceOfProfileInfo() {
             ],
             missingArgs: [],
         }),
-        // mergeArgsForProfileType: jest.fn(),
-        // profAttrsToProfLoaded: jest.fn(),
-        // readProfilesFromDisk: jest.fn(),
-        // loadSecureArg: jest.fn(),
-        // initSessCfg: jest.fn(),
+        mergeArgsForProfileType: jest.fn(),
+        profAttrsToProfLoaded: jest.fn(),
+        readProfilesFromDisk: jest.fn(),
+        loadSecureArg: jest.fn(),
+        initSessCfg: jest.fn(),
     } as any;
 }
 

@@ -11,6 +11,7 @@
 
 import * as vscode from "vscode";
 import { ProfilesCache } from "@zowe/zowe-explorer-api";
+import { Logger } from "@zowe/imperative";
 import * as utils from "../../src/utils/ProfilesUtils";
 import * as globals from "../../src/globals";
 import {
@@ -27,6 +28,7 @@ function createGlobalMocks() {
         testProfileLoaded: createValidIProfile(),
         mockProfileInstance: null,
         mockProfileInfo: createInstanceOfProfileInfo(),
+        mockProfilesCache: new ProfilesCache(Logger.getAppLogger()),
     };
 
     globalMocks.mockProfileInstance = createInstanceOfProfile(globalMocks.testProfileLoaded);
@@ -47,7 +49,7 @@ function createGlobalMocks() {
     Object.defineProperty(globals, "ISTHEIA", { get: isTheia, configurable: true });
     Object.defineProperty(utils, "isTheia", { value: jest.fn(), configurable: true });
 
-    Object.defineProperty(ProfilesCache, "getConfigInstance", {
+    Object.defineProperty(globalMocks.mockProfilesCache, "getProfileInfo", {
         value: jest.fn(() => {
             return { value: globalMocks.mockProfileInfo, configurable: true };
         }),

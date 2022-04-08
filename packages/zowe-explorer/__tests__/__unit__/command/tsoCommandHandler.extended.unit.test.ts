@@ -10,32 +10,37 @@
  */
 
 import * as vscode from "vscode";
-import { ProfilesCache, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../src/Profiles";
 import { TsoCommandHandler } from "../../../src/command/TsoCommandHandler";
 import { ProfileInfo } from "@zowe/imperative";
 import * as globals from "../../../src/globals";
+import { createInstanceOfProfilesCache } from "../../../__mocks__/mockCreators/shared";
 
 describe("TsoCommandHandler extended testing", () => {
     Object.defineProperty(vscode.workspace, "getConfiguration", { value: jest.fn() });
     Object.defineProperty(vscode.window, "createOutputChannel", { value: jest.fn() });
     Object.defineProperty(ProfileInfo, "profAttrsToProfLoaded", { value: () => ({ profile: {} }) });
     Object.defineProperty(Profiles, "selectTsoProfile", { value: () => "dummy" });
+    Object.defineProperty(globals, "PROFILESCACHE", {
+        value: jest.fn().mockReturnValue(createInstanceOfProfilesCache()),
+    });
+    Object.defineProperty(globals.PROFILESCACHE, "getProfileInfo", {
+        value: jest.fn().mockReturnValue({
+            usingTeamConfig: true,
+            getAllProfiles: jest.fn().mockReturnValue(["dummy"]),
+            mergeArgsForProfile: jest.fn().mockReturnValue({
+                knownArgs: [{ argName: "account", argValue: "TEST" }],
+            }),
+        }),
+        configurable: true,
+    });
 
     describe("getTsoParms", () => {
         it("should work with teamConfig", async () => {
             Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => ({ getCliProfileManager: () => null })),
             });
-
-            jest.spyOn(globals.PROFILESCACHE, "getProfileInfo").mockReturnValue({
-                usingTeamConfig: true,
-                getAllProfiles: jest.fn().mockReturnValue(["dummy"]),
-                mergeArgsForProfile: jest.fn().mockReturnValue({
-                    knownArgs: [{ argName: "account", argValue: "TEST" }],
-                }),
-            } as any);
-
             const result = await (TsoCommandHandler.getInstance() as any).getTsoParams();
             expect(result.account).toEqual("TEST");
         });
