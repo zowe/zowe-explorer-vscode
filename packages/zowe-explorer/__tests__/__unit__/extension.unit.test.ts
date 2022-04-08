@@ -420,44 +420,6 @@ describe("Extension Unit Tests", () => {
         expect(actualCommands).toEqual(globalMocks.expectedCommands);
     });
 
-    it("Tests that activate correctly executes if no configuration is set", async () => {
-        const globalMocks = await createGlobalMocks();
-
-        globalMocks.mockExistsSync.mockReturnValueOnce(false);
-        globalMocks.mockGetConfiguration.mockReturnValueOnce({
-            get: (setting: string) => "",
-            // tslint:disable-next-line: no-empty
-            update: jest.fn(() => {
-                {
-                }
-            }),
-            inspect: (configuration: string) => {
-                return {
-                    workspaceValue: undefined,
-                    globalValue: undefined,
-                };
-            },
-        });
-        globalMocks.mockGetConfiguration.mockReturnValueOnce({
-            get: (setting: string) => "files",
-            // tslint:disable-next-line: no-empty
-            update: jest.fn(() => {
-                {
-                }
-            }),
-            inspect: (configuration: string) => {
-                return {
-                    workspaceValue: undefined,
-                    globalValue: undefined,
-                };
-            },
-        });
-
-        await extension.activate(globalMocks.mockExtension);
-
-        expect(globalMocks.mockExistsSync.mock.calls.length).toBe(2);
-    });
-
     it("Tests that activate() works correctly for Theia", async () => {
         const globalMocks = await createGlobalMocks();
 

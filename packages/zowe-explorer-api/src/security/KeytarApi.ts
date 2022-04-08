@@ -18,6 +18,7 @@ import * as globals from "../globals";
 export class KeytarApi {
     public constructor(protected log: imperative.Logger) {}
 
+    // v1 specific
     public async activateKeytar(initialized: boolean, isTheia: boolean): Promise<void> {
         const log = imperative.Logger.getAppLogger();
         const profiles = new ProfilesCache(log);
