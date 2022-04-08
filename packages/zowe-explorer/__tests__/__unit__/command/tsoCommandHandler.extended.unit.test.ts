@@ -14,6 +14,7 @@ import { ProfilesCache, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../src/Profiles";
 import { TsoCommandHandler } from "../../../src/command/TsoCommandHandler";
 import { ProfileInfo } from "@zowe/imperative";
+import * as globals from "../../../src/globals";
 
 describe("TsoCommandHandler extended testing", () => {
     Object.defineProperty(vscode.workspace, "getConfiguration", { value: jest.fn() });
@@ -27,7 +28,7 @@ describe("TsoCommandHandler extended testing", () => {
                 value: jest.fn(() => ({ getCliProfileManager: () => null })),
             });
 
-            jest.spyOn(ProfilesCache, "getConfigInstance").mockReturnValue({
+            jest.spyOn(globals.PROFILESCACHE, "getProfileInfo").mockReturnValue({
                 usingTeamConfig: true,
                 getAllProfiles: jest.fn().mockReturnValue(["dummy"]),
                 mergeArgsForProfile: jest.fn().mockReturnValue({
@@ -44,7 +45,7 @@ describe("TsoCommandHandler extended testing", () => {
                 value: jest.fn(() => ({ getCliProfileManager: () => null })),
             });
 
-            jest.spyOn(ProfilesCache, "getConfigInstance").mockReturnValue({
+            jest.spyOn(globals.PROFILESCACHE, "getProfileInfo").mockReturnValue({
                 usingTeamConfig: true,
                 getAllProfiles: jest.fn().mockReturnValue(["dummy"]),
                 mergeArgsForProfile: jest.fn().mockReturnValue({
