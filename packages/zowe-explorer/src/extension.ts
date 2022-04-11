@@ -25,14 +25,13 @@ import {
     IZoweUSSTreeNode,
     IZoweTreeNode,
     IZoweTree,
-    KeytarApi,
     getZoweDir,
 } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import { Profiles } from "./Profiles";
 import { errorHandling, readConfigFromDisk } from "./utils/ProfilesUtils";
-import { ImperativeError, CliProfileManager, ImperativeConfig } from "@zowe/imperative";
+import { CliProfileManager, ImperativeConfig } from "@zowe/imperative";
 import { getImperativeConfig } from "@zowe/cli";
 import { createDatasetTree } from "./dataset/DatasetTree";
 import { createJobsTree } from "./job/ZosJobsProvider";
@@ -89,13 +88,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     try {
         globals.initLogger(context);
         globals.LOG.debug(localize("initialize.log.debug", "Initialized logger from VSCode extension"));
-
-        try {
-            const keytarApi = new KeytarApi(globals.LOG);
-            await keytarApi.activateKeytar(false, globals.ISTHEIA);
-        } catch (err) {
-            throw new ImperativeError({ msg: err.toString() });
-        }
 
         // Ensure that ~/.zowe folder exists
         if (!ImperativeConfig.instance.config?.exists) {
