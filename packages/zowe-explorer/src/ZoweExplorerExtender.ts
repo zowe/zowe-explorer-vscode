@@ -98,7 +98,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
             envVariablePrefix: "ZOWE",
         };
         // const mProfileInfo = await getProfileInfo(globals.ISTHEIA);
-        let mProfileInfo = await globals.PROFILESCACHE.getProfileInfo();
+        let mProfileInfo = await Profiles.getInstance().getProfileInfo();
         if (!mProfileInfo) {
             mProfileInfo = await getProfileInfo(globals.ISTHEIA);
         }

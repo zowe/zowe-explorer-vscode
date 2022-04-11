@@ -217,54 +217,52 @@ export function createInstanceOfProfile(profile: imperative.IProfileLoaded) {
         refresh: jest.fn(),
         directLoad: jest.fn(),
         getAllTypes: jest.fn(),
-        getProfileInfo: () => createInstanceOfProfileInfo(),
+        mProfileInfo: createInstanceOfProfileInfo(),
+        getProfileInfo: jest.fn(() => {
+            return createInstanceOfProfileInfo();
+        }),
         getDefaultConfigProfile: jest.fn(),
         getProfileFromConfig: jest.fn(),
         getProfileLoaded: jest.fn(),
     } as any;
 }
 
-export function createInstanceOfProfilesCache() {
-    return {
-        getProfileInfo: jest.fn(),
-    };
-}
-
 export function createInstanceOfProfileInfo() {
     return {
-        getAllProfiles: () => [
+        getAllProfiles: () =>
+            jest.fn().mockResolvedValue([
+                {
+                    profName: "sestest",
+                    profType: "zosmf",
+                    isDefaultProfile: true,
+                    profLoc: { locType: 0, osLoc: ["location"], jsonLoc: "jsonLoc" },
+                },
+                {
+                    profName: "profile1",
+                    profType: "zosmf",
+                    isDefaultProfile: false,
+                    profLoc: { locType: 0, osLoc: ["location"], jsonLoc: "jsonLoc" },
+                },
+                {
+                    profName: "profile2",
+                    profType: "zosmf",
+                    isDefaultProfile: false,
+                    profLoc: { locType: 0, osLoc: ["location"], jsonLoc: "jsonLoc" },
+                },
+            ]),
+        getDefaultProfile: jest.fn().mockReturnValue([
             {
                 profName: "sestest",
                 profType: "zosmf",
                 isDefaultProfile: true,
                 profLoc: { locType: 0, osLoc: ["location"], jsonLoc: "jsonLoc" },
             },
-            {
-                profName: "profile1",
-                profType: "zosmf",
-                isDefaultProfile: false,
-                profLoc: { locType: 0, osLoc: ["location"], jsonLoc: "jsonLoc" },
-            },
-            {
-                profName: "profile2",
-                profType: "zosmf",
-                isDefaultProfile: false,
-                profLoc: { locType: 0, osLoc: ["location"], jsonLoc: "jsonLoc" },
-            },
-        ],
-        getDefaultProfile: () => [
-            {
-                profName: "sestest",
-                profType: "zosmf",
-                isDefaultProfile: true,
-                profLoc: { locType: 0, osLoc: ["location"], jsonLoc: "jsonLoc" },
-            },
-        ],
+        ]),
+        usingTeamConfig: false,
         updateProperty: jest.fn(),
         updateKnownProperty: jest.fn(),
         getTeamConfig: jest.fn(),
         createSession: jest.fn(),
-        usingTeamConfig: false,
         mergeArgsForProfile: jest.fn().mockReturnValue({
             knownArgs: [
                 {

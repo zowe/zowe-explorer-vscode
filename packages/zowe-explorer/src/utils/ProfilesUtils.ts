@@ -49,9 +49,9 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
         // open config file for missing hostname error
         const msg = errorDetails.toString();
         if (msg.includes("hostname")) {
-            if ((await globals.PROFILESCACHE.getProfileInfo()).usingTeamConfig) {
+            if ((await this.getProfileInfo()).usingTeamConfig) {
                 vscode.window.showErrorMessage("Required parameter 'host' must not be blank");
-                const currentProfile = await globals.PROFILESCACHE.getProfileFromConfig(label.trim());
+                const currentProfile = await this.getProfileFromConfig(label.trim());
                 const filePath = currentProfile.profLoc.osLoc[0];
                 await Profiles.getInstance().openConfigFile(filePath);
                 return;
@@ -143,7 +143,7 @@ export const syncSessionNode =
 
         let profile: IProfileLoaded;
         try {
-            profile = globals.PROFILESCACHE.loadNamedProfile(profileName, profileType);
+            profile = await Profiles.getInstance().loadNamedProfile(profileName, profileType);
         } catch (e) {
             return;
         }

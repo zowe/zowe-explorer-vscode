@@ -11,7 +11,7 @@
 
 import * as sharedUtils from "../../../src/shared/utils";
 import * as globals from "../../../src/globals";
-import { IProfileLoaded, Logger, IProfile, Session } from "@zowe/imperative";
+import { IProfileLoaded, Session } from "@zowe/imperative";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import * as vscode from "vscode";
 import * as path from "path";
@@ -22,9 +22,8 @@ import {
     createFileResponse,
     createInstanceOfProfile,
     createTextDocument,
-    createInstanceOfProfilesCache,
+    createInstanceOfProfileInfo,
 } from "../../../__mocks__/mockCreators/shared";
-import { ProfilesCache } from "@zowe/zowe-explorer-api";
 import { createDatasetSessionNode } from "../../../__mocks__/mockCreators/datasets";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
 import { Job } from "../../../src/job/ZoweJobNode";
@@ -46,15 +45,8 @@ async function createGlobalMocks() {
     return newVariables;
 }
 
-Object.defineProperty(globals, "PROFILESCACHE", {
-    value: jest.fn().mockReturnValue(createInstanceOfProfilesCache()),
-});
-Object.defineProperty(globals.PROFILESCACHE, "getConfigInstance", {
-    value: jest.fn(() => {
-        return {
-            usingTeamConfig: false,
-        };
-    }),
+Object.defineProperty(Profiles.getInstance, "getProfileInfo", {
+    value: jest.fn().mockReturnValue(createInstanceOfProfileInfo()),
 });
 
 describe("Shared Utils Unit Tests - Function node.concatChildNodes()", () => {
