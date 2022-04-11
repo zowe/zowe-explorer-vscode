@@ -71,6 +71,7 @@ export class ZoweVsCodeExtension {
      */
     public static async promptCredentials(options: IPromptCredentialsOptions): Promise<IProfileLoaded> {
         const loadProfile = ProfilesCache.getLoadedProfConfig(options.sessionName.trim());
+        if (loadProfile == null) return undefined;
         const loadSession = loadProfile.profile as ISession;
 
         const creds = await ZoweVsCodeExtension.promptUserPass({ session: loadSession, ...options });

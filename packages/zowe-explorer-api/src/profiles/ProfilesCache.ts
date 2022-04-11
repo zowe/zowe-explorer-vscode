@@ -224,6 +224,7 @@ export class ProfilesCache {
 
     public static getLoadedProfConfig(profileName: string): imperative.IProfileLoaded {
         const currentProfile = ProfilesCache.getProfileFromConfig(profileName);
+        if (currentProfile == null) return undefined;
         const mergedArgs = ProfilesCache.getConfigInstance().mergeArgsForProfile(currentProfile);
         const profile: imperative.IProfile = {};
         for (const arg of mergedArgs.knownArgs) {
