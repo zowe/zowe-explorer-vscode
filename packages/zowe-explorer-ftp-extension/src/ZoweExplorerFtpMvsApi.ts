@@ -15,6 +15,7 @@ import * as tmp from "tmp";
 import * as zowe from "@zowe/cli";
 import * as imperative from "@zowe/imperative";
 import * as path from "path";
+import * as vscode from "vscode";
 
 import { MessageSeverityEnum, ZoweExplorerApi, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { DataSetUtils, TRANSFER_TYPE_ASCII, TRANSFER_TYPE_BINARY } from "@zowe/zos-ftp-for-zowe-cli";
@@ -40,6 +41,7 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
                         volume: element.volume,
                         recfm: element.recfm,
                         blksz: element.blksz,
+                        lrecl: element.lrecl,
                         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
                         migr: element.volume && element.volume.toUpperCase() === "MIGRATED" ? "YES" : "NO",
                     }));
@@ -112,8 +114,15 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
         };
         const file = path.basename(inputFilePath).replace(/[^a-z0-9]+/gi, "");
         const member = file.substr(0, 8);
-        let targetDataset;
-        const dsAtrribute = await this.dataSet(dataSetName);
+        let targetDataset: string;
+        const end = dataSetName.indexOf("(");
+        let newDataSetName: string;
+        if (end > 0) {
+            newDataSetName = dataSetName.substr(0, end);
+        } else {
+            newDataSetName = dataSetName;
+        }
+        const dsAtrribute = await this.dataSet(newDataSetName);
         const dsorg = dsAtrribute.apiResponse.items[0].dsorg;
         if (dsorg === "PS" || dataSetName.substr(dataSetName.length - 1) == ")") {
             targetDataset = dataSetName;
@@ -141,7 +150,27 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
                     throw new Error();
                 }
             }
-            await DataSetUtils.uploadDataSet(connection, targetDataset, transferOptions);
+            const lrecl: number = dsAtrribute.apiResponse.items[0].lrecl;
+            const data = fs.readFileSync(inputFilePath, "UTF-8");
+            const lines = data.split(/\r?\n/);
+            const foundIndex = lines.findIndex((line) => line.length > lrecl);
+
+            if (foundIndex !== -1) {
+                const select = await vscode.window.showWarningMessage(
+                    "zftp Warning: The " +
+                        (foundIndex + 1).toString() +
+                        " line exceeds the LRECL of the dataset.\n The dataset LRECL is " +
+                        lrecl.toString() +
+                        ". \n Do you want to continue?",
+                    "Yes",
+                    "No"
+                );
+                if (select === "No") {
+                    result.commandResponse = "";
+                    return result;
+                }
+            }
+            if (inputFilePath) await DataSetUtils.uploadDataSet(connection, targetDataset, transferOptions);
             result.success = true;
             if (options.returnEtag) {
                 const contentsTag = await this.getContentsTag(dataSetName);
