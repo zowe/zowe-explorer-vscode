@@ -154,14 +154,6 @@ describe("test that I am getting Profiles.getInstance from mock", () => {
             { name: "profile2" },
         ]);
     });
-    it("should return createInstanceOfProfile", async () => {
-        const globalMocks = await createGlobalMocks();
-        // tslint:disable-next-line:no-console
-        console.log(globalMocks.mockProfileInstance.getProfileInfo().getAllProfiles());
-        // tslint:disable-next-line:no-console
-        console.log(globalMocks.mockProfileInstance.allProfiles);
-        expect((await ProfilesCache.getProfileInfo()).usingTeamConfig).toEqual(false);
-    });
 });
 
 describe("Profiles Unit Tests - Function ssoLogin", () => {
