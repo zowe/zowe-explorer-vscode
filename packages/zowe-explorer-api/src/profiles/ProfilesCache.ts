@@ -60,14 +60,6 @@ export class ProfilesCache {
     protected profileManagerByType = new Map<string, imperative.CliProfileManager>();
     public constructor(protected log: imperative.Logger) {}
 
-    // public static createConfigInstance(mProfileInfo: imperative.ProfileInfo): imperative.ProfileInfo {
-    //     return (ProfilesCache.info = mProfileInfo);
-    // }
-
-    // public static getConfigInstance(): imperative.ProfileInfo {
-    //     return ProfilesCache.info;
-    // }
-
     public async getProfileInfo(): Promise<imperative.ProfileInfo> {
         const mProfileInfo = new imperative.ProfileInfo("zowe");
         await mProfileInfo.readProfilesFromDisk();

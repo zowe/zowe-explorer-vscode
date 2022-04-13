@@ -24,6 +24,7 @@ import {
     createISession,
     createAltTypeIProfile,
     createInstanceOfProfileInfo,
+    createInstanceOfProfilesCache,
 } from "../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../__mocks__/mockCreators/datasets";
 import { createProfileManager, createTestSchemas } from "../../__mocks__/mockCreators/profiles";
@@ -79,7 +80,7 @@ async function createGlobalMocks() {
             host: "fake.com",
             port: 143,
         },
-        mockProfileInfo: null,
+        mockGlobalProfileInfo: null,
     };
 
     newMocks.mockProfileInstance = createInstanceOfProfile(newMocks.testProfile);
@@ -123,14 +124,15 @@ async function createGlobalMocks() {
     });
     Object.defineProperty(vscode, "ProgressLocation", { value: newMocks.ProgressLocation, configurable: true });
     Object.defineProperty(vscode.window, "withProgress", { value: newMocks.withProgress, configurable: true });
-    // newMocks.mockProfileInfo = createInstanceOfProfileInfo();
-    // Object.defineProperty(ProfilesCache, "getConfigInstance", {
-    //     value: jest
-    //         .fn(() => {
-    //             return newMocks.mockProfileInfo;
-    //         })
-    //         .mockReturnValue(newMocks.mockProfileInfo),
-    // });
+    Object.defineProperty(globals, "PROFILESCACHE", { value: createInstanceOfProfilesCache(), configurable: true });
+    Object.defineProperty(globals.PROFILESCACHE, "getProfileInfo", {
+        value: jest.fn().mockReturnValue(createInstanceOfProfileInfo()),
+        configurable: true,
+    });
+    Object.defineProperty(Profiles.getInstance, "getProfileInfo", {
+        value: jest.fn().mockResolvedValue(createInstanceOfProfileInfo),
+        configurable: true,
+    });
 
     return newMocks;
 }
