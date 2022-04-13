@@ -154,7 +154,6 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
             const data = fs.readFileSync(inputFilePath, "UTF-8");
             const lines = data.split(/\r?\n/);
             const foundIndex = lines.findIndex((line) => line.length > lrecl);
-
             if (foundIndex !== -1) {
                 const message1 = `zftp Warning: At least one line, like line ${foundIndex + 1}, 
                 is longer than dataset LRECL, ${lrecl}. `;
