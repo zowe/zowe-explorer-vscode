@@ -156,21 +156,16 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
             const foundIndex = lines.findIndex((line) => line.length > lrecl);
 
             if (foundIndex !== -1) {
-                const select = await vscode.window.showWarningMessage(
-                    "zftp Warning: At least one line, like line " +
-                        (foundIndex + 1).toString() +
-                        " is longer than dataset LRECL, " +
-                        lrecl.toString() +
-                        ". The exceeding part will be truncated. \n Do you want to continue?",
-                    "Yes",
-                    "No"
-                );
+                const message1 = "zftp Warning: At least one line, like line " + (foundIndex + 1).toString();
+                const message2 = " is longer than dataset LRECL, " + lrecl.toString() + ".";
+                const message3 = " The exceeding part will be truncated. \n Do you want to continue?";
+                const select = await vscode.window.showWarningMessage(message1 + message2 + message3, "Yes", "No");
                 if (select === "No") {
                     result.commandResponse = "";
                     return result;
                 }
             }
-            if (inputFilePath) await DataSetUtils.uploadDataSet(connection, targetDataset, transferOptions);
+            await DataSetUtils.uploadDataSet(connection, targetDataset, transferOptions);
             result.success = true;
             if (options.returnEtag) {
                 const contentsTag = await this.getContentsTag(dataSetName);
