@@ -27,27 +27,25 @@ import { ZoweLogger } from "./extension";
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
 export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
+    private listConnection: any;
     public async fileList(ussFilePath: string): Promise<zowe.IZosFilesResponse> {
         const result = this.getDefaultResponse();
-        let connection: any;
-        try {
-            connection = await this.ftpClient(this.checkedProfile());
-            if (connection) {
-                const response: any[] = await UssUtils.listFiles(connection, ussFilePath);
-                if (response) {
-                    result.success = true;
-                    result.apiResponse.items = response.map((element) => ({
-                        name: element.name,
-                        size: element.size,
-                        mtime: element.lastModified,
-                        mode: element.permissions,
-                    }));
-                }
-            }
-            return result;
-        } finally {
-            this.releaseConnection(connection);
+        if (this.listConnection === undefined) {
+            this.listConnection = await this.ftpClient(this.checkedProfile());
         }
+        if (this.listConnection) {
+            const response: any[] = await UssUtils.listFiles(this.listConnection, ussFilePath);
+            if (response) {
+                result.success = true;
+                result.apiResponse.items = response.map((element) => ({
+                    name: element.name,
+                    size: element.size,
+                    mtime: element.lastModified,
+                    mode: element.permissions,
+                }));
+            }
+        }
+        return result;
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/require-await, require-await
