@@ -116,13 +116,13 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
         const member = file.substr(0, 8);
         let targetDataset: string;
         const end = dataSetName.indexOf("(");
-        let newDataSetName: string;
+        let dataSetNameWithoutMember: string;
         if (end > 0) {
-            newDataSetName = dataSetName.substr(0, end);
+            dataSetNameWithoutMember = dataSetName.substr(0, end);
         } else {
-            newDataSetName = dataSetName;
+            dataSetNameWithoutMember = dataSetName;
         }
-        const dsAtrribute = await this.dataSet(newDataSetName);
+        const dsAtrribute = await this.dataSet(dataSetNameWithoutMember);
         const dsorg = dsAtrribute.apiResponse.items[0].dsorg;
         if (dsorg === "PS" || dataSetName.substr(dataSetName.length - 1) == ")") {
             targetDataset = dataSetName;
@@ -157,11 +157,11 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
 
             if (foundIndex !== -1) {
                 const select = await vscode.window.showWarningMessage(
-                    "zftp Warning: The " +
+                    "zftp Warning: At least one line, like line " +
                         (foundIndex + 1).toString() +
-                        " line exceeds the LRECL of the dataset.\n The dataset LRECL is " +
+                        " is longer than dataset LRECL, " +
                         lrecl.toString() +
-                        ". \n Do you want to continue?",
+                        ". The exceeding part will be truncated. \n Do you want to continue?",
                     "Yes",
                     "No"
                 );
