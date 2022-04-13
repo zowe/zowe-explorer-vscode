@@ -21,6 +21,8 @@ import TestUtils from "../utils/TestUtils";
 jest.mock("../../../__mocks__/@zowe/zowe-explorer-api.ts");
 jest.mock("../../../src/extension.ts");
 
+//jest.mock("../../../src/ZoweExplorerFtpMvsApi.ts");
+jest.mock("vscode");
 const stream = require("stream");
 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-call
 const readableStream = stream.Readable.from([]);
