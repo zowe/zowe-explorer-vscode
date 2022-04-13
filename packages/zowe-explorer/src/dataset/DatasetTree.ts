@@ -894,7 +894,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     const createPick = new FilterDescriptor(DatasetTree.defaultDialogText);
                     const items: vscode.QuickPickItem[] = this.mHistory
                         .getSearchHistory()
-                        .map((element) => new FilterItem(element));
+                        .map((element) => new FilterItem({ text: element }));
                     if (globals.ISTHEIA) {
                         const options1: vscode.QuickPickOptions = {
                             placeHolder: localize("searchHistory.options.prompt", "Select a filter"),

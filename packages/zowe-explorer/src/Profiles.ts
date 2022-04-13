@@ -256,6 +256,21 @@ export class Profiles extends ProfilesCache {
         return profileSetting;
     }
 
+    private static _isProfileGlobal;
+
+    private static _getProfileIcon(name: string): string[] {
+        const prof = ProfilesCache.getConfigInstance()
+            .getAllProfiles()
+            .find((p) => p.profName === name);
+        const osLocInfo = ProfilesCache.getConfigInstance().getOsLocInfo(prof);
+        const ret: string[] = [];
+        for (const loc of osLocInfo ?? []) {
+            if (loc.global) ret.push("$(globe)");
+            else ret.push("$(folder)");
+        }
+        return ret;
+    }
+
     /**
      * Adds a new Profile to the provided treeview by clicking the 'Plus' button and
      * selecting which profile you would like to add from the drop-down that appears.
@@ -292,16 +307,19 @@ export class Profiles extends ProfilesCache {
                 return jesProfileTypes.includes(profile.type);
             }
         });
-        if (profileNamesList) {
-            profileNamesList = profileNamesList.filter(
-                (profileName) =>
-                    // Find all cases where a profile is not already displayed
-                    !zoweFileProvider.mSessionNodes.find((sessionNode) => sessionNode.getProfileName() === profileName)
-            );
-        }
+        profileNamesList = profileNamesList.filter(
+            (profileName) =>
+                // Find all cases where a profile is not already displayed
+                !zoweFileProvider.mSessionNodes.find((sessionNode) => sessionNode.getProfileName() === profileName)
+        );
+
+        // TODO(zFernand0): Include conflicting profiles
+
         const createPick = new FilterDescriptor("\uFF0B " + createNewProfile);
         const configPick = new FilterDescriptor("\uFF0B " + createNewConfig);
-        const items: vscode.QuickPickItem[] = profileNamesList.map((element) => new FilterItem(element));
+        const items: vscode.QuickPickItem[] = profileNamesList.map(
+            (element) => new FilterItem({ text: element, icon: Profiles._getProfileIcon(element)[0] })
+        );
         const quickpick = vscode.window.createQuickPick();
         switch (zoweFileProvider.getTreeType()) {
             case PersistenceSchemaEnum.Dataset:
@@ -358,7 +376,8 @@ export class Profiles extends ProfilesCache {
             if (choice instanceof FilterDescriptor) {
                 chosenProfile = "";
             } else {
-                chosenProfile = choice.label;
+                // remove any icons from the label
+                chosenProfile = choice.label.replace(/\$\(.*\)\s/g, "");
             }
         }
 
@@ -371,7 +390,7 @@ export class Profiles extends ProfilesCache {
             const config = ProfilesCache.getConfigInstance();
             if (config.usingTeamConfig) {
                 const profiles = config.getAllProfiles();
-                const currentProfile = this.getProfileFromConfig(profiles[0].profName);
+                const currentProfile = ProfilesCache.getProfileFromConfig(profiles[0].profName);
                 const filePath = currentProfile.profLoc.osLoc[0];
                 await this.openConfigFile(filePath);
                 return;
@@ -434,7 +453,8 @@ export class Profiles extends ProfilesCache {
 
     public async editSession(profileLoaded: IProfileLoaded, profileName: string): Promise<any | undefined> {
         if (ProfilesCache.getConfigInstance().usingTeamConfig) {
-            const currentProfile = this.getProfileFromConfig(profileLoaded.name);
+            const currentProfile = ProfilesCache.getProfileFromConfig(profileLoaded.name);
+            // TODO(zFernand0): Allow for conflicting profiles to be edited
             const filePath = currentProfile.profLoc.osLoc[0];
             await this.openConfigFile(filePath);
             return;
@@ -978,7 +998,7 @@ export class Profiles extends ProfilesCache {
         deleteLabel = deletedProfile.name;
 
         if (ProfilesCache.getConfigInstance().usingTeamConfig) {
-            const currentProfile = this.getProfileFromConfig(deleteLabel);
+            const currentProfile = ProfilesCache.getProfileFromConfig(deleteLabel);
             const filePath = currentProfile.profLoc.osLoc[0];
             await this.openConfigFile(filePath);
             return;

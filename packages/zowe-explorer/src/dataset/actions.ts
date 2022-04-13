@@ -62,7 +62,7 @@ export async function allocateLike(
 
         for (const thisSession of datasetProvider.mSessionNodes) {
             if (!thisSession.label.toString().includes("Favorites")) {
-                qpItems.push(new FilterItem(thisSession.label as string));
+                qpItems.push(new FilterItem({ text: thisSession.label as string }));
             }
         }
         quickpick.items = [...qpItems];
@@ -715,9 +715,9 @@ export async function createFile(
 async function handleUserSelection(newDSProperties, dsType): Promise<string> {
     // Create the array of items in the quickpick list
     const qpItems = [];
-    qpItems.push(new FilterItem(` + Allocate Data Set`, null, true));
+    qpItems.push(new FilterItem({ text: ` + Allocate Data Set`, show: true }));
     newDSProperties.forEach((prop) => {
-        qpItems.push(new FilterItem(prop.label, prop.value, true));
+        qpItems.push(new FilterItem({ text: prop.label, description: prop.value, show: true }));
     });
 
     // Provide the settings for the quickpick's appearance & behavior

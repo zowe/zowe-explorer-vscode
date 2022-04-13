@@ -416,9 +416,9 @@ describe("Test force upload", () => {
 describe("Shared Utils Unit Tests - Function filterTreeByString", () => {
     it("Testing that filterTreeByString returns the correct array", async () => {
         const qpItems = [
-            new utils.FilterItem("[sestest]: HLQ.PROD2.STUFF1"),
-            new utils.FilterItem("[sestest]: HLQ.PROD3.STUFF2(TESTMEMB)"),
-            new utils.FilterItem("[sestest]: /test/tree/abc"),
+            new utils.FilterItem({ text: "[sestest]: HLQ.PROD2.STUFF1" }),
+            new utils.FilterItem({ text: "[sestest]: HLQ.PROD3.STUFF2(TESTMEMB)" }),
+            new utils.FilterItem({ text: "[sestest]: /test/tree/abc" }),
         ];
 
         let filteredValues = await sharedUtils.filterTreeByString("testmemb", qpItems);

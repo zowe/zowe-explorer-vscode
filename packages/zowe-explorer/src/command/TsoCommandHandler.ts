@@ -160,7 +160,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
             const createPick = new FilterDescriptor(TsoCommandHandler.defaultDialogText);
             const items: vscode.QuickPickItem[] = this.history
                 .getSearchHistory()
-                .map((element) => new FilterItem(element));
+                .map((element) => new FilterItem({ text: element }));
             if (globals.ISTHEIA) {
                 const options1: vscode.QuickPickOptions = {
                     placeHolder:

@@ -51,7 +51,7 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
         if (msg.includes("hostname")) {
             if (ProfilesCache.getConfigInstance().usingTeamConfig) {
                 vscode.window.showErrorMessage("Required parameter 'host' must not be blank");
-                const currentProfile = Profiles.getInstance().getProfileFromConfig(label.trim());
+                const currentProfile = ProfilesCache.getProfileFromConfig(label.trim());
                 const filePath = currentProfile.profLoc.osLoc[0];
                 await Profiles.getInstance().openConfigFile(filePath);
                 return;
@@ -161,21 +161,29 @@ export async function resolveQuickPickHelper(
     });
 }
 
+export interface IFilterItem {
+    text: string;
+    description?: string;
+    show?: boolean;
+    icon?: string;
+}
+
 // tslint:disable-next-line: max-classes-per-file
 export class FilterItem implements vscode.QuickPickItem {
-    constructor(private text: string, private desc?: string, private show?: boolean) {}
+    constructor(private filterItem: IFilterItem) {}
     get label(): string {
-        return this.text;
+        const icon = this.filterItem.icon ? this.filterItem.icon + " " : null;
+        return (icon ?? "") + this.filterItem.text;
     }
     get description(): string {
-        if (this.desc) {
-            return this.desc;
+        if (this.filterItem.description) {
+            return this.filterItem.description;
         } else {
             return "";
         }
     }
     get alwaysShow(): boolean {
-        return this.show;
+        return this.filterItem.show;
     }
 }
 

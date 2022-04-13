@@ -563,7 +563,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                     // Check if user has created some history
                     const items: vscode.QuickPickItem[] = this.mHistory
                         .getSearchHistory()
-                        .map((element) => new FilterItem(element));
+                        .map((element) => new FilterItem({ text: element }));
                     if (globals.ISTHEIA) {
                         // Theia doesn't work properly when directly creating a QuickPick
                         const options1: vscode.QuickPickOptions = {
