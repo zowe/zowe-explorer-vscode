@@ -103,7 +103,7 @@ async function createGlobalMocks() {
         value: newMocks.mockCreateQuickPick,
         configurable: true,
     });
-    Object.defineProperty(Profiles, "getInstance", { value: newMocks.mockGetInstance, configurable: true });
+    Object.defineProperty(Profiles, "getInstance", { value: () => newMocks.mockGetInstance, configurable: true });
     Object.defineProperty(globals, "LOG", { value: newMocks.mockLog, configurable: true });
     Object.defineProperty(vscode.window, "createInputBox", { value: newMocks.mockCreateInputBox, configurable: true });
     Object.defineProperty(globals.LOG, "debug", { value: newMocks.mockDebug, configurable: true });
@@ -129,8 +129,8 @@ async function createGlobalMocks() {
         value: jest.fn().mockReturnValue(createInstanceOfProfileInfo()),
         configurable: true,
     });
-    Object.defineProperty(Profiles.getInstance, "getProfileInfo", {
-        value: jest.fn().mockResolvedValue(createInstanceOfProfileInfo),
+    Object.defineProperty(ProfilesCache, "getProfileInfo", {
+        value: jest.fn(() => Promise.resolve(createInstanceOfProfileInfo())),
         configurable: true,
     });
 

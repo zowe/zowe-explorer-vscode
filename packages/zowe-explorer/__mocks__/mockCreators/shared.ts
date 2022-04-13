@@ -217,16 +217,20 @@ export function createInstanceOfProfile(profile: imperative.IProfileLoaded) {
         refresh: jest.fn(),
         directLoad: jest.fn(),
         getAllTypes: jest.fn(),
-        getProfileInfo: () => createInstanceOfProfileInfo(),
+        getProfileInfo: jest.fn(() => {
+            return createInstanceOfProfileInfo();
+        }),
         getDefaultConfigProfile: jest.fn(),
         getProfileFromConfig: jest.fn(),
         getProfileLoaded: jest.fn(),
+        ssoLogin: jest.fn(),
     } as any;
 }
 
 export function createInstanceOfProfilesCache() {
     return {
-        getProfileInfo: jest.fn(),
+        getProfileInfo: jest.fn().mockResolvedValue(createInstanceOfProfileInfo()),
+        loadNamedProfile: jest.fn(),
     };
 }
 

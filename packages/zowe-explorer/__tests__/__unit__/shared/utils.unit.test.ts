@@ -56,6 +56,10 @@ Object.defineProperty(globals.PROFILESCACHE, "getConfigInstance", {
         };
     }),
 });
+Object.defineProperty(Profiles, "getInstance", {
+    value: () => createInstanceOfProfile(createIProfile()),
+    configurable: true,
+});
 
 describe("Shared Utils Unit Tests - Function node.concatChildNodes()", () => {
     it("Checks that concatChildNodes returns the proper array of children", async () => {
@@ -138,25 +142,16 @@ describe("syncSessionNode shared util function", () => {
     const sessionNode = createDatasetSessionNode(anySession, serviceProfile);
 
     it("should update a session and a profile in the provided node", async () => {
+        const globalMocks = await createGlobalMocks();
         // given
-        const profiles = createInstanceOfProfile(serviceProfile);
-        profiles.loadNamedProfile = jest.fn().mockResolvedValueOnce(serviceProfileValue);
+        Object.defineProperty(globals.PROFILESCACHE, "loadNamedProfile", {
+            value: jest.fn().mockReturnValue(serviceProfile),
+        });
         const expectedSession = new Session({});
         const sessionFromProfile = jest.fn().mockResolvedValueOnce(expectedSession);
         // when
-        await utils.syncSessionNode(profiles)(sessionFromProfile)(sessionNode);
-        expect(sessionNode.getSession()).toEqual(expectedSession);
-        expect(sessionNode.getProfile()).toEqual(serviceProfile);
-        expect(sessionNode.collapsibleState).toEqual(vscode.TreeItemCollapsibleState.Collapsed);
-    });
-    it("should update a session and a profile without default base profile in the provided node", async () => {
-        const profiles = createInstanceOfProfile(serviceProfile);
-        profiles.loadNamedProfile = jest.fn().mockResolvedValueOnce(serviceProfileValue);
-        const expectedSession = new Session({});
-        const sessionFromProfile = jest.fn().mockResolvedValueOnce(expectedSession);
-        // when
-        await utils.syncSessionNode(profiles)(sessionFromProfile)(sessionNode);
-        expect(sessionNode.getSession()).toEqual(expectedSession);
+        await utils.syncSessionNode(Profiles.getInstance())(sessionFromProfile)(sessionNode);
+        expect(await sessionNode.getSession()).toEqual(expectedSession);
         expect(sessionNode.getProfile()).toEqual(serviceProfile);
         expect(sessionNode.collapsibleState).toEqual(vscode.TreeItemCollapsibleState.Collapsed);
     });

@@ -267,6 +267,8 @@ export class Profiles extends ProfilesCache {
      */
     public async createZoweSession(zoweFileProvider: IZoweTree<IZoweTreeNode>) {
         const allProfiles = Profiles.getInstance().allProfiles;
+        // tslint:disable-next-line:no-console
+        console.log(allProfiles);
         const createNewProfile = "Create a New Connection to z/OS";
         const createNewConfig = "Create a New Team Configuration File";
         let addProfilePlaceholder = "";
