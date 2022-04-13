@@ -307,7 +307,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
     }
 
     private async getTsoParams(): Promise<IStartTsoParms> {
-        const profileInfo = await Profiles.getInstance().getProfileInfo();
+        const profileInfo = globals.PROFILESCACHE.getProfileInfo();
         const tsoProfiles: imperative.IProfileLoaded[] = [];
         let tsoProfile: imperative.IProfileLoaded;
         const tsoParms: IStartTsoParms = {};
