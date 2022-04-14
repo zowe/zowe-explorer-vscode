@@ -2,6 +2,11 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## 2.0.0-next.202204081040
+
+- Fixed TSO commands in when using teamConfig. [#1731](https://github.com/zowe/vscode-extension-for-zowe/pull/1731)
+- Fixed `Zowe Explorer: Refresh Zowe Explorer` command palette option. [1735](https://github.com/zowe/vscode-extension-for-zowe/pull/1735)
+
 ## 2.0.0-next.202204041200
 
 - Added Secure Credential support, allowing users to update credentials using GUI. [#1699](https://github.com/zowe/vscode-extension-for-zowe/pull/1693)
