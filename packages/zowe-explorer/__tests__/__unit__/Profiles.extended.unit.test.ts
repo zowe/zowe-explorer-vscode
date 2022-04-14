@@ -104,10 +104,6 @@ async function createGlobalMocks() {
         value: newMocks.mockCreateQuickPick,
         configurable: true,
     });
-    Object.defineProperty(Profiles, "getInstance", {
-        value: () => newMocks.mockProfileInstance,
-        configurable: true,
-    });
     Object.defineProperty(globals, "LOG", { value: newMocks.mockLog, configurable: true });
     Object.defineProperty(vscode.window, "createInputBox", { value: newMocks.mockCreateInputBox, configurable: true });
     Object.defineProperty(globals.LOG, "debug", { value: newMocks.mockDebug, configurable: true });
@@ -128,129 +124,47 @@ async function createGlobalMocks() {
     });
     Object.defineProperty(vscode, "ProgressLocation", { value: newMocks.ProgressLocation, configurable: true });
     Object.defineProperty(vscode.window, "withProgress", { value: newMocks.withProgress, configurable: true });
+
+    Object.defineProperty(Profiles, "getInstance", {
+        value: () => newMocks.mockProfileInstance,
+        configurable: true,
+    });
+
     Object.defineProperty(globals, "PROFILESCACHE", { value: createInstanceOfProfilesCache(), configurable: true });
     Object.defineProperty(globals.PROFILESCACHE, "getProfileInfo", {
         value: jest.fn().mockReturnValue(createInstanceOfProfileInfo()),
         configurable: true,
     });
     Object.defineProperty(ProfilesCache, "getProfileInfo", {
-        value: jest.fn(() => Promise.resolve(createInstanceOfProfileInfo())),
+        value: jest.fn().mockResolvedValue(createInstanceOfProfileInfo()),
         configurable: true,
     });
 
     return newMocks;
 }
 
-describe("test that I am getting Profiles.getInstance from mock", () => {
-    it("should return createInstanceOfProfile", async () => {
-        const globalMocks = await createGlobalMocks();
-        // tslint:disable-next-line:no-console
-        console.log(globalMocks.mockProfileInstance.getProfileInfo().getAllProfiles());
-        // tslint:disable-next-line:no-console
-        console.log(globalMocks.mockProfileInstance.allProfiles);
-        expect(Profiles.getInstance().allProfiles).toEqual([
-            { name: "sestest" },
-            { name: "profile1" },
-            { name: "profile2" },
-        ]);
-    });
-});
-
-describe("Profiles Unit Tests - Function ssoLogin", () => {
+describe("Profiles Unit Tests - Function refresh", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
             log: Logger.getAppLogger(),
-            testDatasetTree: null,
-            testUSSTree: null,
-            testJobTree: null,
-            treeView: createTreeView(),
-            datasetSessionNode: null,
-            optionalCredNode: null,
-            datasetSessionNodeToken: null,
-            ussSessionNode: null,
-            iJob: createIJobObject(),
             profiles: null,
-            imperativeProfile: createValidIProfile(),
-            session: null,
-            mockNode: null,
-            mockEnableValidationContext: jest.fn(),
-            mockLoadNamedProfile: jest.fn(),
-            testBaseProfile: createValidIProfile(),
-            testCombinedSession: createISession(),
-            testCombinedProfile: createValidIProfile(),
-            testOptionalProfile: createValidIProfile(),
-            datasetSessionNodeAltToken: null,
-            testAltTypeProfile: createAltTypeIProfile(),
-            testAltSession: createISession(),
+            invalidProfile: createInvalidIProfile(),
+            validProfile: createValidIProfile(),
+            profileInstance: null,
         };
-        newMocks.testBaseProfile.profile.tokenType = "testTokenType";
-        newMocks.testBaseProfile.profile.tokenValue = "testTokenValue";
-        newMocks.testCombinedSession.ISession.tokenType = "testTokenType";
-        newMocks.testCombinedSession.ISession.tokenValue = "testTokenValue";
-        newMocks.testCombinedProfile.profile.tokenType = "testTokenType";
-        newMocks.testCombinedProfile.profile.tokenValue = "testTokenValue";
-        newMocks.testCombinedProfile.profile.user = undefined;
-        newMocks.testCombinedProfile.profile.password = undefined;
-        newMocks.testCombinedProfile.profile.protocol = "https";
-        newMocks.testCombinedProfile.profile.host = "test";
-        newMocks.testCombinedProfile.profile.type = "basic";
-        newMocks.testOptionalProfile.profile.host = "host";
-        newMocks.testOptionalProfile.profile.port = "1443";
-        newMocks.testOptionalProfile.profile.user = undefined;
-        newMocks.testOptionalProfile.profile.password = undefined;
-        newMocks.testOptionalProfile.type = "zosmf";
-        newMocks.testAltSession.ISession.tokenType = "altTokenType";
-        newMocks.testAltSession.ISession.tokenValue = "altTokenValue";
-        newMocks.testAltTypeProfile.profile.user = undefined;
-        newMocks.testAltTypeProfile.profile.password = undefined;
-        newMocks.testAltTypeProfile.profile.tokenType = "altTokenType";
-        newMocks.testAltTypeProfile.profile.tokenValue = "altTokenValue";
-        globalMocks.mockCreateSessCfgFromArgs.mockResolvedValue(newMocks.testCombinedSession);
-        newMocks.datasetSessionNodeToken = createDatasetSessionNode(
-            newMocks.testCombinedSession,
-            newMocks.testCombinedProfile
-        );
-        newMocks.datasetSessionNodeAltToken = createDatasetSessionNode(
-            newMocks.testAltSession,
-            newMocks.testAltTypeProfile
-        );
-        newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
-        newMocks.optionalCredNode = createDatasetSessionNode(newMocks.session, newMocks.testOptionalProfile);
-        newMocks.mockNode = newMocks.datasetSessionNode;
-        newMocks.testDatasetTree = createDatasetTree(newMocks.datasetSessionNode, newMocks.treeView);
-        newMocks.testJobTree = createJobsTree(
-            newMocks.session,
-            newMocks.iJob,
-            newMocks.imperativeProfile,
-            newMocks.treeView
-        );
-
-        Object.defineProperty(globalMocks.mockCliProfileManager, "load", {
-            value: jest.fn(() => {
-                return new Promise((resolve) => {
-                    resolve(newMocks.imperativeProfile);
-                });
-            }),
-            configurable: true,
-        });
-        Object.defineProperty(globalMocks.mockCliProfileManager, "update", { value: jest.fn(), configurable: true });
+        newMocks.profiles = await Profiles.createInstance(newMocks.log);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        globalMocks.mockGetInstance.mockReturnValue(newMocks.profiles);
 
         return newMocks;
     }
 
-    it("Tests that sso login is skipped if service profile contains user/password", async () => {
+    it("Tests that Profile refresh empties profilesForValidation[]", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        const ussSessionNode = createUSSSessionNode(blockMocks.session, blockMocks.imperativeProfile);
-        const ussTree = createUSSTree([], [ussSessionNode], blockMocks.treeView);
-        const resultNode: IZoweNodeType = blockMocks.datasetSessionNode;
-
-        await Profiles.getInstance().ssoLogin(resultNode);
-
-        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
-        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe(
-            "This profile does not support token authentication."
-        );
+        blockMocks.profiles.profilesForValidation.push({ status: "active", name: blockMocks.validProfile.name });
+        await blockMocks.profiles.refresh(ZoweExplorerApiRegister.getInstance());
+        expect(blockMocks.profiles.profilesForValidation.length).toBe(0);
     });
 });

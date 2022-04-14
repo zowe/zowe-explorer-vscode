@@ -17,6 +17,7 @@ import * as vscode from "vscode";
 import { IZoweNodeType, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { FilterDescriptor } from "../../src/utils/ProfilesUtils";
 import * as zowe from "@zowe/cli";
+import { Profiles } from "../../src/Profiles";
 
 export function createPersistentConfig() {
     return {
@@ -223,7 +224,6 @@ export function createInstanceOfProfile(profile: imperative.IProfileLoaded) {
         getDefaultConfigProfile: jest.fn(),
         getProfileFromConfig: jest.fn(),
         getProfileLoaded: jest.fn(),
-        ssoLogin: jest.fn(),
     } as any;
 }
 

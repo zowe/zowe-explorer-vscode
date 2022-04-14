@@ -1199,6 +1199,8 @@ export class Profiles extends ProfilesCache {
     }
 
     public async ssoLogin(node?: IZoweNodeType, label?: string): Promise<void> {
+        // tslint:disable-next-line:no-console
+        console.log(`node: ${node}`);
         let loginToken: string;
         let loginTokenType: string;
         let creds: string[];
