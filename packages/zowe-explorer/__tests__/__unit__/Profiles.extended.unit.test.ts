@@ -50,16 +50,15 @@ jest.mock("fs-extra");
 
 async function createGlobalMocks() {
     const newMocks = {
+        log: Logger.getAppLogger(),
         mockShowInputBox: jest.fn(),
         mockGetConfiguration: jest.fn(),
         mockCreateQuickPick: jest.fn(),
         mockShowQuickPick: jest.fn(),
         mockShowInformationMessage: jest.fn(),
-        mockGetInstance: jest.fn(),
         mockShowErrorMessage: jest.fn(),
         mockCreateInputBox: jest.fn(),
         mockLog: jest.fn(),
-        mockProfileInstance: null,
         mockDebug: jest.fn(),
         mockError: jest.fn(),
         mockConfigurationTarget: jest.fn(),
@@ -80,12 +79,11 @@ async function createGlobalMocks() {
             host: "fake.com",
             port: 143,
         },
+        mockProfileInstance: null,
         mockProfilesCache: null,
     };
 
     newMocks.mockProfilesCache = new ProfilesCache(Logger.getAppLogger());
-    newMocks.mockProfileInstance = createInstanceOfProfile(newMocks.testProfile);
-    newMocks.mockGetInstance.mockReturnValue(newMocks.mockProfileInstance);
     newMocks.withProgress = jest.fn().mockImplementation((progLocation, callback) => {
         return newMocks.mockCallback;
     });
@@ -125,6 +123,11 @@ async function createGlobalMocks() {
     Object.defineProperty(vscode, "ProgressLocation", { value: newMocks.ProgressLocation, configurable: true });
     Object.defineProperty(vscode.window, "withProgress", { value: newMocks.withProgress, configurable: true });
 
+    newMocks.mockProfileInstance = new Profiles(newMocks.log);
+    Object.defineProperty(Profiles, "CreateInstance", {
+        value: () => newMocks.mockProfileInstance,
+        configurable: true,
+    });
     Object.defineProperty(Profiles, "getInstance", {
         value: () => newMocks.mockProfileInstance,
         configurable: true,
@@ -135,36 +138,24 @@ async function createGlobalMocks() {
         value: jest.fn().mockReturnValue(createInstanceOfProfileInfo()),
         configurable: true,
     });
-    Object.defineProperty(ProfilesCache, "getProfileInfo", {
-        value: jest.fn().mockResolvedValue(createInstanceOfProfileInfo()),
+    Object.defineProperty(newMocks.mockProfilesCache, "getProfileInfo", {
+        value: jest.fn(() => {
+            return createInstanceOfProfileInfo();
+        }),
         configurable: true,
     });
 
     return newMocks;
 }
 
-describe("Profiles Unit Tests - Function refresh", () => {
-    async function createBlockMocks(globalMocks) {
-        const newMocks = {
-            log: Logger.getAppLogger(),
-            profiles: null,
-            invalidProfile: createInvalidIProfile(),
-            validProfile: createValidIProfile(),
-            profileInstance: null,
-        };
-        newMocks.profiles = await Profiles.createInstance(newMocks.log);
-        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
-        globalMocks.mockGetInstance.mockReturnValue(newMocks.profiles);
-
-        return newMocks;
-    }
-
-    it("Tests that Profile refresh empties profilesForValidation[]", async () => {
+describe("Profiles Unit Tests - Function createNewConnection", () => {
+    it("Tests that createNewConnection fails if profileName is missing", async () => {
         const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
 
-        blockMocks.profiles.profilesForValidation.push({ status: "active", name: blockMocks.validProfile.name });
-        await blockMocks.profiles.refresh(ZoweExplorerApiRegister.getInstance());
-        expect(blockMocks.profiles.profilesForValidation.length).toBe(0);
+        await Profiles.getInstance().createNewConnection("");
+        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe(
+            "Profile name was not supplied. Operation Cancelled"
+        );
     });
 });

@@ -82,7 +82,7 @@ export class Profiles extends ProfilesCache {
         return Profiles.loader;
     }
 
-    private static loader: Profiles;
+    protected static loader: Profiles;
 
     public loadedProfile: IProfileLoaded;
     public validProfile: ValidProfileEnum = ValidProfileEnum.INVALID;
