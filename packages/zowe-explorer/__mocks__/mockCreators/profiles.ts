@@ -125,7 +125,6 @@ export function newTestSchemas() {
         user: { type: "string", secure: true, optionDefinition: { description: "description" } },
         password: { type: "string", secure: true, optionDefinition: { description: "description" } },
         rejectUnauthorized: { type: "boolean", optionDefinition: { description: "description" } },
-        basePath: { type: "string", optionDefinition: { description: "description" } },
     };
 }
 
