@@ -398,141 +398,149 @@
 //         return newMocks;
 //     }
 
-//     it("Tests that createNewConnection fails if profileName is missing", async () => {
-//         const globalMocks = await createGlobalMocks();
-//         const blockMocks = await createBlockMocks(globalMocks);
+// MOVED TO NEW
+// it("Tests that createNewConnection fails if profileName is missing", async () => {
+//     const globalMocks = await createGlobalMocks();
+//     const blockMocks = await createBlockMocks(globalMocks);
 
-//         await blockMocks.profiles.createNewConnection("");
-//         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
-//         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe(
-//             "Profile name was not supplied. Operation Cancelled"
-//         );
-//     });
+//     await blockMocks.profiles.createNewConnection("");
+//     expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
+//     expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe(
+//         "Profile name was not supplied. Operation Cancelled"
+//     );
+// });
 
-//     it("Tests that createNewConnection fails if profileType is missing", async () => {
-//         const globalMocks = await createGlobalMocks();
-//         const blockMocks = await createBlockMocks(globalMocks);
+// MOVED TO NEW
+// it("Tests that createNewConnection fails if profileType is missing", async () => {
+//     const globalMocks = await createGlobalMocks();
+//     const blockMocks = await createBlockMocks(globalMocks);
 
-//         blockMocks.profiles.getProfileType = () =>
-//             new Promise((resolve) => {
-//                 resolve(undefined);
-//             });
+//     blockMocks.profiles.getProfileType = () =>
+//         new Promise((resolve) => {
+//             resolve(undefined);
+//         });
 
-//         await blockMocks.profiles.createNewConnection(blockMocks.imperativeProfile.name);
-//         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
-//         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe(
-//             "No profile type was chosen. Operation Cancelled"
-//         );
-//     });
+//     await blockMocks.profiles.createNewConnection(blockMocks.imperativeProfile.name);
+//     expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
+//     expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe(
+//         "No profile type was chosen. Operation Cancelled"
+//     );
+// });
 
-//     it("Tests that createNewConnection fails if zOSMF URL is missing", async () => {
-//         const globalMocks = await createGlobalMocks();
-//         const blockMocks = await createBlockMocks(globalMocks);
+// MOVED TO NEW
+// it("Tests that createNewConnection fails if zOSMF URL is missing", async () => {
+//     const globalMocks = await createGlobalMocks();
+//     const blockMocks = await createBlockMocks(globalMocks);
 
-//         blockMocks.profiles.getProfileType = () =>
-//             new Promise((resolve) => {
-//                 resolve("zosmf");
-//             });
-//         blockMocks.profiles.getSchema = () => blockMocks.testSchemas[0];
-//         blockMocks.profiles.getUrl = () =>
-//             new Promise((resolve) => {
-//                 resolve(undefined);
-//             });
+//     blockMocks.profiles.getProfileType = () =>
+//         new Promise((resolve) => {
+//             resolve("zosmf");
+//         });
+//     blockMocks.profiles.getSchema = () => blockMocks.testSchemas[0];
+//     blockMocks.profiles.getUrl = () =>
+//         new Promise((resolve) => {
+//             resolve(undefined);
+//         });
 
-//         await blockMocks.profiles.createNewConnection(blockMocks.imperativeProfile.name);
-//         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
-//         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe(
-//             "No valid value for z/OS URL. Operation Cancelled"
-//         );
-//     });
+//     await blockMocks.profiles.createNewConnection(blockMocks.imperativeProfile.name);
+//     expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
+//     expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe(
+//         "No valid value for z/OS URL. Operation Cancelled"
+//     );
+// });
 
-//     it("Tests that createNewConnection fails if username is missing", async () => {
-//         const globalMocks = await createGlobalMocks();
-//         const blockMocks = await createBlockMocks(globalMocks);
+// MOVED TO NEW
+// it("Tests that createNewConnection fails if username is missing", async () => {
+//     const globalMocks = await createGlobalMocks();
+//     const blockMocks = await createBlockMocks(globalMocks);
 
-//         blockMocks.profiles.getProfileType = () =>
-//             new Promise((resolve) => {
-//                 resolve("zosmf");
-//             });
-//         blockMocks.profiles.getSchema = () => blockMocks.testSchemas[0];
-//         blockMocks.profiles.urlInfo = () => Promise.resolve(globalMocks.mockUrlInfo);
-//         globalMocks.mockShowInputBox.mockResolvedValueOnce(undefined);
+//     blockMocks.profiles.getProfileType = () =>
+//         new Promise((resolve) => {
+//             resolve("zosmf");
+//         });
+//     blockMocks.profiles.getSchema = () => blockMocks.testSchemas[0];
+//     blockMocks.profiles.urlInfo = () => Promise.resolve(globalMocks.mockUrlInfo);
+//     globalMocks.mockShowInputBox.mockResolvedValueOnce(undefined);
 
-//         await blockMocks.profiles.createNewConnection(blockMocks.imperativeProfile.name);
-//         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
-//     });
+//     await blockMocks.profiles.createNewConnection(blockMocks.imperativeProfile.name);
+//     expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+// });
 
-//     it("Tests that createNewConnection fails if password is missing", async () => {
-//         const globalMocks = await createGlobalMocks();
-//         const blockMocks = await createBlockMocks(globalMocks);
+// MOVED TO NEW
+// it("Tests that createNewConnection fails if password is missing", async () => {
+//     const globalMocks = await createGlobalMocks();
+//     const blockMocks = await createBlockMocks(globalMocks);
 
-//         blockMocks.profiles.getProfileType = () =>
-//             new Promise((resolve) => {
-//                 resolve("zosmf");
-//             });
-//         blockMocks.profiles.getSchema = () => blockMocks.testSchemas[0];
-//         blockMocks.profiles.urlInfo = () => Promise.resolve(globalMocks.mockUrlInfo);
-//         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
-//         globalMocks.mockShowInputBox.mockResolvedValueOnce(undefined);
+//     blockMocks.profiles.getProfileType = () =>
+//         new Promise((resolve) => {
+//             resolve("zosmf");
+//         });
+//     blockMocks.profiles.getSchema = () => blockMocks.testSchemas[0];
+//     blockMocks.profiles.urlInfo = () => Promise.resolve(globalMocks.mockUrlInfo);
+//     globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+//     globalMocks.mockShowInputBox.mockResolvedValueOnce(undefined);
 
-//         await blockMocks.profiles.createNewConnection(blockMocks.imperativeProfile.name);
-//         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
-//     });
+//     await blockMocks.profiles.createNewConnection(blockMocks.imperativeProfile.name);
+//     expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+// });
 
-//     it("Tests that createNewConnection fails if rejectUnauthorized is missing", async () => {
-//         const globalMocks = await createGlobalMocks();
-//         const blockMocks = await createBlockMocks(globalMocks);
+// MOVED TO NEW
+// it("Tests that createNewConnection fails if rejectUnauthorized is missing", async () => {
+//     const globalMocks = await createGlobalMocks();
+//     const blockMocks = await createBlockMocks(globalMocks);
 
-//         blockMocks.profiles.getProfileType = () =>
-//             new Promise((resolve) => {
-//                 resolve("zosmf");
-//             });
-//         blockMocks.profiles.getSchema = () => blockMocks.testSchemas[0];
-//         blockMocks.profiles.urlInfo = () => Promise.resolve(globalMocks.mockUrlInfo);
-//         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
-//         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
-//         globalMocks.mockShowInputBox.mockResolvedValueOnce(undefined);
+//     blockMocks.profiles.getProfileType = () =>
+//         new Promise((resolve) => {
+//             resolve("zosmf");
+//         });
+//     blockMocks.profiles.getSchema = () => blockMocks.testSchemas[0];
+//     blockMocks.profiles.urlInfo = () => Promise.resolve(globalMocks.mockUrlInfo);
+//     globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+//     globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+//     globalMocks.mockShowInputBox.mockResolvedValueOnce(undefined);
 
-//         await blockMocks.profiles.createNewConnection(blockMocks.imperativeProfile.name);
-//         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
-//     });
+//     await blockMocks.profiles.createNewConnection(blockMocks.imperativeProfile.name);
+//     expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+// });
 
-//     it("Tests that createNewConnection fails if profileName is a duplicate", async () => {
-//         const globalMocks = await createGlobalMocks();
-//         const blockMocks = await createBlockMocks(globalMocks);
+// MOVED TO NEW
+// it("Tests that createNewConnection fails if profileName is a duplicate", async () => {
+//     const globalMocks = await createGlobalMocks();
+//     const blockMocks = await createBlockMocks(globalMocks);
 
-//         blockMocks.profiles.getProfileType = () =>
-//             new Promise((resolve) => {
-//                 resolve("zosmf");
-//             });
-//         blockMocks.profiles.getSchema = () => blockMocks.testSchemas[0];
-//         blockMocks.profiles.urlInfo = () => Promise.resolve(globalMocks.mockUrlInfo);
-//         globalMocks.mockShowInputBox.mockResolvedValue("fake");
-//         globalMocks.mockShowQuickPick.mockResolvedValueOnce("False - Accept connections with self-signed certificates");
+//     blockMocks.profiles.getProfileType = () =>
+//         new Promise((resolve) => {
+//             resolve("zosmf");
+//         });
+//     blockMocks.profiles.getSchema = () => blockMocks.testSchemas[0];
+//     blockMocks.profiles.urlInfo = () => Promise.resolve(globalMocks.mockUrlInfo);
+//     globalMocks.mockShowInputBox.mockResolvedValue("fake");
+//     globalMocks.mockShowQuickPick.mockResolvedValueOnce("False - Accept connections with self-signed certificates");
 
-//         await blockMocks.profiles.createNewConnection(blockMocks.imperativeProfile.name);
-//         expect(globalMocks.mockShowErrorMessage.mock.calls.length).toBe(1);
-//         expect(globalMocks.mockShowErrorMessage.mock.calls[0][0]).toBe(
-//             "Profile name already exists. Please create a profile using a different name"
-//         );
-//     });
+//     await blockMocks.profiles.createNewConnection(blockMocks.imperativeProfile.name);
+//     expect(globalMocks.mockShowErrorMessage.mock.calls.length).toBe(1);
+//     expect(globalMocks.mockShowErrorMessage.mock.calls[0][0]).toBe(
+//         "Profile name already exists. Please create a profile using a different name"
+//     );
+// });
 
-//     it("Tests that createNewConnection creates a new profile", async () => {
-//         const globalMocks = await createGlobalMocks();
-//         const blockMocks = await createBlockMocks(globalMocks);
+// MOVED TO NEW
+// it("Tests that createNewConnection creates a new profile", async () => {
+//     const globalMocks = await createGlobalMocks();
+//     const blockMocks = await createBlockMocks(globalMocks);
 
-//         blockMocks.profiles.getProfileType = () =>
-//             new Promise((resolve) => {
-//                 resolve("zosmf");
-//             });
-//         blockMocks.profiles.getSchema = () => blockMocks.testSchemas[0];
-//         blockMocks.profiles.urlInfo = () => Promise.resolve(globalMocks.mockUrlInfo);
-//         globalMocks.mockShowInputBox.mockResolvedValue("fake");
-//         globalMocks.mockShowQuickPick.mockResolvedValueOnce("False - Accept connections with self-signed certificates");
+//     blockMocks.profiles.getProfileType = () =>
+//         new Promise((resolve) => {
+//             resolve("zosmf");
+//         });
+//     blockMocks.profiles.getSchema = () => blockMocks.testSchemas[0];
+//     blockMocks.profiles.urlInfo = () => Promise.resolve(globalMocks.mockUrlInfo);
+//     globalMocks.mockShowInputBox.mockResolvedValue("fake");
+//     globalMocks.mockShowQuickPick.mockResolvedValueOnce("False - Accept connections with self-signed certificates");
 
-//         await blockMocks.profiles.createNewConnection("fake");
-//         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile fake was created.");
-//     });
+//     await blockMocks.profiles.createNewConnection("fake");
+//     expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile fake was created.");
+// });
 
 //     it("Tests that createNewConnection creates a new profile with optional credentials", async () => {
 //         const globalMocks = await createGlobalMocks();
