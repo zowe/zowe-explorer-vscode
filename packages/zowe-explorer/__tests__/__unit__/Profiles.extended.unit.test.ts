@@ -27,7 +27,7 @@ import {
     createInstanceOfProfilesCache,
 } from "../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../__mocks__/mockCreators/datasets";
-import { createProfileManager, createTestSchemas } from "../../__mocks__/mockCreators/profiles";
+import { createProfileManager, createTestSchemas, newTestSchemas } from "../../__mocks__/mockCreators/profiles";
 import * as vscode from "vscode";
 import * as utils from "../../src/utils/ProfilesUtils";
 import * as child_process from "child_process";
@@ -42,6 +42,7 @@ import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import { Job } from "../../src/job/ZoweJobNode";
 import { createUSSSessionNode, createUSSTree } from "../../__mocks__/mockCreators/uss";
 import { createJobsTree, createIJobObject, createJobSessionNode } from "../../__mocks__/mockCreators/jobs";
+import { glob } from "glob";
 
 jest.mock("vscode");
 jest.mock("child_process");
@@ -149,6 +150,16 @@ async function createGlobalMocks() {
 }
 
 describe("Profiles Unit Tests - Function createNewConnection", () => {
+    async function createBlockMocks(globalMocks) {
+        const newMocks = {
+            testSchemas: newTestSchemas(),
+            inputBox: createInputBox("input"),
+        };
+        globalMocks.mockCreateInputBox.mockReturnValue(newMocks.inputBox);
+
+        return newMocks;
+    }
+
     it("Tests that createNewConnection fails if profileName is missing", async () => {
         const globalMocks = await createGlobalMocks();
 
@@ -157,5 +168,32 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe(
             "Profile name was not supplied. Operation Cancelled"
         );
+    });
+
+    it("Tests that createNewConnection fails if profileType is missing", async () => {
+        const globalMocks = await createGlobalMocks();
+        const spy = jest.spyOn(globalMocks.mockProfileInstance, "getProfileType").mockImplementation(undefined);
+
+        await Profiles.getInstance().createNewConnection(globalMocks.testProfile.name, undefined);
+        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe(
+            "No profile type was chosen. Operation Cancelled"
+        );
+        spy.mockClear();
+    });
+
+    it("Tests that createNewConnection fails if zOSMF URL is missing", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const spy1 = jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValue(blockMocks.testSchemas);
+        globalMocks.mockCreateInputBox.mockResolvedValue(undefined);
+
+        await Profiles.getInstance().createNewConnection(globalMocks.testProfile.name, "zosmf");
+        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe(
+            "No valid value for z/OS URL. Operation Cancelled"
+        );
+        spy1.mockClear();
     });
 });
