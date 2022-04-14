@@ -169,7 +169,7 @@ Criteria for VS Code extensions that want to access the same Zowe CLI profiles t
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
    <th></th>
-   <td><b>VS Code extension dependency:</b> Extension declares Zowe Explorer as a VS Code extension dependency by including an `extensionDependencies` entry for Zowe Explorer in its package.json file if the extension uses VS Code dependent Zowe Explorer APIs.</td>
+   <td><b>VS Code extension dependency:</b> If the extension calls the Zowe Explorer API it must declare Zowe Explorer as a VS Code extension dependency by including an <b>extensionDependencies</b> entry for Zowe Explorer in its package.json file. <em>This ensures  Zowe Explorer and Zowe Explorer API are activated and initialized for proper use by its extenders</em></td>
  </tr>
 
   <tr>
@@ -237,11 +237,20 @@ Criteria for VS Code extensions that extend the Zowe Explorer MVS, USS, or JES t
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
    <th></th>
+   <td><b>VS Code extension dependency:</b> If the extension calls the Zowe Explorer API it must declare Zowe Explorer as a VS Code extension dependency by including an <b>extensionDependencies</b> entry for Zowe Explorer in its package.json file. <em>This ensures  Zowe Explorer and Zowe Explorer API are activated and initialized for proper use by its extenders</td>
+</tr>
+
+<tr>
+   <th style="background-color:#555555">18</th>
+   <th style="background-color:#555555">v2</th>
+   <th style="background-color:#AAAAAA">x</th>
+   <th style="background-color:#AAAAAA"></th>
+   <th></th>
    <td><b>New Zowe CLI profile type:</b> Extension registers its new API instances with a new profile type name for the different Zowe Explorer views via the `ZoweExplorerApi.IApiRegisterClient.register{Mvs|Uss|Jes}Api(profileTypeName)` call as indicated from the <a href=https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/README-Extending.md#using-the-zowe-explorer-profilescache-for-an-extenders-own-unrelated-profiles>Zowe Explorer extensibility documentation</a></td>
  </tr>
 
  <tr>
-   <th style="background-color:#555555">18</th>
+   <th style="background-color:#555555">19</th>
    <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA"></th>
    <th style="background-color:#AAAAAA">x</th>
@@ -250,7 +259,7 @@ Criteria for VS Code extensions that extend the Zowe Explorer MVS, USS, or JES t
  </tr>
 
  <tr>
-   <th style="background-color:#555555">19</th>
+   <th style="background-color:#555555">20</th>
    <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
@@ -259,7 +268,7 @@ Criteria for VS Code extensions that extend the Zowe Explorer MVS, USS, or JES t
  </tr>
 
  <tr>
-   <th style="background-color:#555555">20</th>
+   <th style="background-color:#555555">21</th>
    <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA"></th>
    <th style="background-color:#AAAAAA">x</th>
@@ -283,21 +292,12 @@ Criteria for VS Code extensions adding menu and commands to VS Code that utilize
  </thead>
 
  <tr>
-   <th style="background-color:#555555">21</th>
-   <th style="background-color:#555555">v2</th>
-   <th style="background-color:#AAAAAA">x</th>
-   <th style="background-color:#AAAAAA"></th>
-   <th></th>
-   <td><b>Command operations: </b> If the extension is adding new commands to Zowe Explorer's tree views, the commands must not replace any existing Zowe Explorer commands.</td>
- </tr>
-
-  <tr>
    <th style="background-color:#555555">22</th>
    <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA"></th>
    <th style="background-color:#AAAAAA">x</th>
    <th></th>
-   <td><b>Command categories 1: </b>  If the extension adds to <code>contributes.commands</code> in <code>package.json</code>, the value assigned to the <code>category</code> property contains the extension name.</td>
+   <td><b>VS Code extension dependency:</b> If the extension calls the Zowe Explorer API it should declare Zowe Explorer as a VS Code extension dependency by including an <b>extensionDependencies</b> entry for Zowe Explorer in its package.json file. <em>This ensures  Zowe Explorer and Zowe Explorer API are activated and initialized for proper use by its extenders</em></td>
  </tr>
 
  <tr>
@@ -306,11 +306,29 @@ Criteria for VS Code extensions adding menu and commands to VS Code that utilize
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
    <th></th>
-   <td><b>Command categories 2: </b>  If the extension assigns values to the <code>category</code> property in <code>contributes.commands</code> in <code>package.json</code>, the value cannot be "Zowe Explorer".</td>
+   <td><b>Command operations: </b> If the extension is adding new commands to Zowe Explorer's tree views, the commands must not replace any existing Zowe Explorer commands.</td>
  </tr>
 
   <tr>
    <th style="background-color:#555555">24</th>
+   <th style="background-color:#555555">v2</th>
+   <th style="background-color:#AAAAAA"></th>
+   <th style="background-color:#AAAAAA">x</th>
+   <th></th>
+   <td><b>Command categories 1: </b>  If the extension adds to <code>contributes.commands</code> in <code>package.json</code>, the value assigned to the <code>category</code> property contains the extension name.</td>
+ </tr>
+
+ <tr>
+   <th style="background-color:#555555">25</th>
+   <th style="background-color:#555555">v2</th>
+   <th style="background-color:#AAAAAA">x</th>
+   <th style="background-color:#AAAAAA"></th>
+   <th></th>
+   <td><b>Command categories 2: </b>  If the extension assigns values to the <code>category</code> property in <code>contributes.commands</code> in <code>package.json</code>, the value cannot be "Zowe Explorer".</td>
+ </tr>
+
+  <tr>
+   <th style="background-color:#555555">26</th>
    <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
@@ -319,7 +337,7 @@ Criteria for VS Code extensions adding menu and commands to VS Code that utilize
  </tr>
 
   <tr>
-   <th style="background-color:#555555">25</th>
+   <th style="background-color:#555555">27</th>
    <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA"></th>
    <th style="background-color:#AAAAAA">x</th>
@@ -329,7 +347,7 @@ Criteria for VS Code extensions adding menu and commands to VS Code that utilize
  </tr>
 
    <tr>
-   <th style="background-color:#555555">26</th>
+   <th style="background-color:#555555">28</th>
    <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
@@ -339,7 +357,7 @@ Criteria for VS Code extensions adding menu and commands to VS Code that utilize
  </tr>
 
  <tr>
-   <th style="background-color:#555555">27</th>
+   <th style="background-color:#555555">29</th>
    <th style="background-color:#555555">v2</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
