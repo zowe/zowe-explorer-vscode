@@ -1382,59 +1382,25 @@ export class Profiles extends ProfilesCache {
         return [newUser, newPass];
     }
 
-    private async updateBaseProfileFileLogin(baseProfile: IProfileLoaded, updBaseProfile: IProfile) {
-        const mProfileInfo = ProfilesCache.getConfigInstance();
-        if (mProfileInfo.usingTeamConfig) {
-            // write to config file to add tokenType & tokenValue fields
-            const profileProps = Object.keys(mProfileInfo.getTeamConfig().api.profiles.get(baseProfile.name));
-            const profileExists =
-                mProfileInfo.getTeamConfig().api.profiles.exists(baseProfile.name) && profileProps.length > 0;
-            if (profileExists) {
-                const profilePath = mProfileInfo.getTeamConfig().api.profiles.expandPath(baseProfile.name);
-                mProfileInfo.getTeamConfig().set(`${profilePath}.properties.tokenType`, updBaseProfile.tokenType);
-                mProfileInfo
-                    .getTeamConfig()
-                    .set(`${profilePath}.properties.tokenValue`, updBaseProfile.tokenValue, { secure: true });
-                await mProfileInfo.getTeamConfig().save(false);
-            }
-        } else {
-            // write to yaml file to add tokenType & tokenValue fields
-            const profileManager = Profiles.getInstance().getCliProfileManager(baseProfile.type);
-            const updateParms: IUpdateProfile = {
-                name: baseProfile.name,
-                merge: true,
-                profile: updBaseProfile,
-            };
-            await profileManager.update(updateParms);
-        }
+    private async updateBaseProfileFileLogin(profile: IProfileLoaded, updProfile: IProfile) {
+        const upd = { profileName: profile.name, profileType: profile.type };
+        await ProfilesCache.getConfigInstance().updateProperty({
+            ...upd,
+            property: "tokenType",
+            value: updProfile.tokenType,
+        });
+        await ProfilesCache.getConfigInstance().updateProperty({
+            ...upd,
+            property: "tokenValue",
+            value: updProfile.tokenValue,
+            setSecure: true,
+        });
     }
 
-    private async updateBaseProfileFileLogout(baseProfile: IProfileLoaded) {
-        const mProfileInfo = ProfilesCache.getConfigInstance();
-        if (mProfileInfo.usingTeamConfig) {
-            // remove tokenType and TokenValue from config file
-            const profileProps = Object.keys(mProfileInfo.getTeamConfig().api.profiles.get(baseProfile.name));
-            const profileExists =
-                mProfileInfo.getTeamConfig().api.profiles.exists(baseProfile.name) && profileProps.length > 0;
-            if (profileExists) {
-                const profilePath = mProfileInfo.getTeamConfig().api.profiles.expandPath(baseProfile.name);
-                mProfileInfo.getTeamConfig().delete(`${profilePath}.properties.tokenType`);
-                mProfileInfo.getTeamConfig().delete(`${profilePath}.properties.tokenValue`);
-                await mProfileInfo.getTeamConfig().save(false);
-            }
-        } else {
-            // remove tokenType and TokenValue from old-style yaml profiles
-            this.getCliProfileManager(baseProfile.type).save({
-                name: baseProfile.name,
-                type: baseProfile.type,
-                overwrite: true,
-                profile: {
-                    ...baseProfile.profile,
-                    tokenType: undefined,
-                    tokenValue: undefined,
-                },
-            });
-        }
+    private async updateBaseProfileFileLogout(profile: IProfileLoaded) {
+        const upd = { profileName: profile.name, profileType: profile.type };
+        await ProfilesCache.getConfigInstance().updateProperty({ ...upd, property: "tokenType", value: undefined });
+        await ProfilesCache.getConfigInstance().updateProperty({ ...upd, property: "tokenValue", value: undefined });
     }
 
     private async loginCredentialPrompt(): Promise<string[]> {
