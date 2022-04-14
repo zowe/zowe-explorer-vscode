@@ -76,6 +76,20 @@ export class ZoweTreeProvider {
     }
 
     /**
+     * Call whenever the context of a node needs to be refreshed to add the global suffix
+     * @param node Node to refresh
+     */
+    public static refreshGlobalContext(node) {
+        if (Profiles.getConfigInstance().usingTeamConfig && !contextually.isGlobal(node)) {
+            const prof = Profiles.getConfigInstance()
+                .getAllProfiles()
+                .find((p) => p.profName === node.getProfileName());
+            const osLocInfo = Profiles.getConfigInstance().getOsLocInfo(prof);
+            if (osLocInfo?.[0]?.global) node.contextValue += globals.GLOBAL_SUFFIX;
+        }
+    }
+
+    /**
      * Called whenever the tree needs to be refreshed, and fires the data change event
      *
      */

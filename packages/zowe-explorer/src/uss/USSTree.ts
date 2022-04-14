@@ -919,7 +919,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
     private async addSingleSession(profile: IProfileLoaded) {
         if (profile) {
             // If session is already added, do nothing
-            if (this.mSessionNodes.find((tempNode) => tempNode.label.toString() === profile.name)) {
+            if (this.mSessionNodes.find((tNode) => tNode.label.toString() === profile.name)) {
                 return;
             }
             // Uses loaded profile to create a session with the USS API
@@ -937,6 +937,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 profile
             );
             node.contextValue = globals.USS_SESSION_CONTEXT;
+            ZoweTreeProvider.refreshGlobalContext(node);
             const icon = getIconByNode(node);
             if (icon) {
                 node.iconPath = icon.path;

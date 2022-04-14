@@ -842,32 +842,26 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      * Adds a single session to the jobs tree
      *
      */
-    private async addSingleSession(zosmfProfile: IProfileLoaded) {
-        if (zosmfProfile) {
+    private async addSingleSession(profile: IProfileLoaded) {
+        if (profile) {
             // If session is already added, do nothing
-            if (this.mSessionNodes.find((tempNode) => tempNode.label.toString() === zosmfProfile.name)) {
+            if (this.mSessionNodes.find((tNode) => tNode.label.toString() === profile.name)) {
                 return;
             }
             // Uses loaded profile to create a zosmf session with Zowe
             // const session = ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
-            const session = ZoweExplorerApiRegister.getJesApi(zosmfProfile).getSession();
+            const session = ZoweExplorerApiRegister.getJesApi(profile).getSession();
             // Creates ZoweNode to track new session and pushes it to mSessionNodes
-            const node = new Job(
-                zosmfProfile.name,
-                vscode.TreeItemCollapsibleState.Collapsed,
-                null,
-                session,
-                null,
-                zosmfProfile
-            );
+            const node = new Job(profile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, null, profile);
             node.contextValue = globals.JOBS_SESSION_CONTEXT;
+            ZoweTreeProvider.refreshGlobalContext(node);
             const icon = getIconByNode(node);
             if (icon) {
                 node.iconPath = icon.path;
             }
             node.dirty = true;
             this.mSessionNodes.push(node);
-            this.mHistory.addSession(zosmfProfile.name);
+            this.mHistory.addSession(profile.name);
         }
     }
 }

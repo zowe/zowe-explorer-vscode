@@ -189,6 +189,26 @@ export function isFavoriteContext(node: TreeItem): boolean {
 }
 
 /**
+ * Helper function to determine if node is located in the global layer.
+ * Only applicable for TEAM profiles
+ * @param node
+ * @returns true if node is located in the global layer, false otherwise
+ */
+export function isGlobal(node: TreeItem): boolean {
+    return new RegExp(
+        "^(" +
+            globals.JOBS_SESSION_CONTEXT +
+            "|" +
+            globals.USS_SESSION_CONTEXT +
+            "|" +
+            globals.DS_SESSION_CONTEXT +
+            ")(.*" +
+            globals.GLOBAL_SUFFIX +
+            ")"
+    ).test(node.contextValue);
+}
+
+/**
  * Helper function which identifies if the node is a dataset member
  * @param node
  * @return true if a dataset member, false otherwise

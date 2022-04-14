@@ -256,8 +256,6 @@ export class Profiles extends ProfilesCache {
         return profileSetting;
     }
 
-    private static _isProfileGlobal;
-
     private static _getProfileIcon(name: string): string[] {
         const prof = ProfilesCache.getConfigInstance()
             .getAllProfiles()
@@ -454,7 +452,6 @@ export class Profiles extends ProfilesCache {
     public async editSession(profileLoaded: IProfileLoaded, profileName: string): Promise<any | undefined> {
         if (ProfilesCache.getConfigInstance().usingTeamConfig) {
             const currentProfile = ProfilesCache.getProfileFromConfig(profileLoaded.name);
-            // TODO(zFernand0): Allow for conflicting profiles to be edited
             const filePath = currentProfile.profLoc.osLoc[0];
             await this.openConfigFile(filePath);
             return;

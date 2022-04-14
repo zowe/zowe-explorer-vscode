@@ -38,6 +38,7 @@ export const MAX_FILE_HISTORY = 10;
 export const STATUS_BAR_TIMEOUT_MS = 5000;
 export const CONTEXT_PREFIX = "_";
 export const FAV_SUFFIX = CONTEXT_PREFIX + "fav";
+export const GLOBAL_SUFFIX = CONTEXT_PREFIX + "global";
 export const FAV_PROFILE_CONTEXT = "profile_fav";
 export const RC_SUFFIX = CONTEXT_PREFIX + "rc=";
 export const VALIDATE_SUFFIX = CONTEXT_PREFIX + "validate=";

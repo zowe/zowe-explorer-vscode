@@ -1278,7 +1278,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     private async addSingleSession(profile: IProfileLoaded) {
         if (profile) {
             // If session is already added, do nothing
-            if (this.mSessionNodes.find((tempNode) => tempNode.label.toString() === profile.name)) {
+            if (this.mSessionNodes.find((tNode) => tNode.label.toString() === profile.name)) {
                 return;
             }
             // Uses loaded profile to create a session with the MVS API
@@ -1294,6 +1294,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 profile
             );
             node.contextValue = globals.DS_SESSION_CONTEXT;
+            ZoweTreeProvider.refreshGlobalContext(node);
             const icon = getIconByNode(node);
             if (icon) {
                 node.iconPath = icon.path;

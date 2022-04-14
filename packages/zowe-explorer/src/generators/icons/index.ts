@@ -12,6 +12,7 @@
 import { TreeItem } from "vscode";
 import { ZoweUSSNode } from "../../uss/ZoweUSSNode";
 import { ZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { ZoweTreeProvider } from "../../abstract/ZoweTreeProvider";
 
 export enum IconId {
     "document" = "document",
@@ -32,6 +33,7 @@ export enum IconId {
     "folderOpen" = "folderOpen",
     "migrated" = "migrated",
     "vsam" = "vsam",
+    "globe" = "globe",
 }
 export enum IconHierarchyType {
     "base" = "base",
@@ -63,6 +65,7 @@ const items = [
     require("./items/folderOpen"),
     require("./items/migrated"),
     require("./items/vsam"),
+    require("./items/globe"),
     require("./items/filterFolder"),
     require("./items/filterFolderOpen"),
 ].map((item) => item.default) as IIconItem[];
