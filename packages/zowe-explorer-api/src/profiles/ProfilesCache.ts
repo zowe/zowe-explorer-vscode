@@ -58,11 +58,11 @@ export class ProfilesCache {
     protected profilesByType = new Map<string, imperative.IProfileLoaded[]>();
     protected defaultProfileByType = new Map<string, imperative.IProfileLoaded>();
     protected profileManagerByType = new Map<string, imperative.CliProfileManager>();
-    public constructor(protected log: imperative.Logger) {}
+    public constructor(protected log: imperative.Logger, protected cwd?: string) {}
 
     public async getProfileInfo(): Promise<imperative.ProfileInfo> {
         const mProfileInfo = new imperative.ProfileInfo("zowe");
-        await mProfileInfo.readProfilesFromDisk();
+        await mProfileInfo.readProfilesFromDisk({ projectDir: this.cwd });
         return mProfileInfo;
     }
 
@@ -165,8 +165,6 @@ export class ProfilesCache {
             }
             this.allTypes.push(type);
         }
-        // eslint-disable-next-line no-console
-        console.log(this.allProfiles);
         // check for proper merging of apiml tokens
         this.checkMergingConfigAllProfiles();
         while (this.profilesForValidation.length > 0) {
@@ -333,17 +331,6 @@ export class ProfilesCache {
         }
         return imperativeIsSecure;
     }
-
-    /**
-     * @deprecated Please use ProfilesCache.getProfileLoaded(...)
-     */
-    // public getProfileLoaded(
-    //     profileName: string,
-    //     profileType: string,
-    //     profile: imperative.IProfile
-    // ): imperative.IProfileLoaded {
-    //     return ProfilesCache.getProfileLoaded(profileName, profileType, profile);
-    // }
 
     public getProfileLoaded(
         profileName: string,

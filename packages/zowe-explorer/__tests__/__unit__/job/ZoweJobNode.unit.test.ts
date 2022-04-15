@@ -878,7 +878,7 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         blockMocks.theia = true;
-        blockMocks.qpItem = new utils.FilterItem("Owner:fake Prefix:*");
+        blockMocks.qpItem = new utils.FilterItem({ text: "Owner:fake Prefix:*" });
         globalMocks.mockShowQuickPick.mockReturnValueOnce(blockMocks.qpItem);
 
         await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);

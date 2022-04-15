@@ -109,6 +109,7 @@ async function createGlobalMocks() {
                     name: globalMocks.testProfile.name,
                     setting: true,
                 }),
+                getProfileInfo: () => globalMocks.mockProfileInfo,
             };
         }),
         configurable: true,

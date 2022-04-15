@@ -139,7 +139,7 @@ describe("Extension Integration Tests", async () => {
             const inputBoxStub1 = sandbox.stub(vscode.window, "showQuickPick");
             inputBoxStub1.returns(new utils.FilterDescriptor("\uFF0B " + "Create a New Connection to z/OS"));
             const stubresolve = sandbox.stub(utils, "resolveQuickPickHelper");
-            stubresolve.returns(new utils.FilterItem(profileNamesList[0]));
+            stubresolve.returns(new utils.FilterItem({ text: profileNamesList[0] }));
 
             await testTree.createZoweSession(testTree);
             expect(testTree.mSessionNodes[testTree.mSessionNodes.length - 1].label).to.equal(profileNamesList[0]);
@@ -1224,7 +1224,7 @@ describe("Extension Integration Tests - USS", () => {
             const inputBoxStub1 = sandbox.stub(vscode.window, "showQuickPick");
             inputBoxStub1.returns(new utils.FilterDescriptor("\uFF0B " + "Create a New Connection to z/OS"));
             const stubresolve = sandbox.stub(utils, "resolveQuickPickHelper");
-            stubresolve.returns(new utils.FilterItem(profileNamesList[0]));
+            stubresolve.returns(new utils.FilterItem({ text: profileNamesList[0] }));
 
             await ussTestTree.createZoweSession(ussTestTree);
             expect(ussTestTree.mSessionNodes[ussTestTree.mSessionNodes.length - 1].label).to.equal(profileNamesList[0]);
@@ -1256,7 +1256,7 @@ describe("Extension Integration Tests - USS", () => {
             const inputBoxStub2 = sandbox.stub(vscode.window, "showInputBox");
             inputBoxStub2.returns(fullUSSPath);
             const stubresolve = sandbox.stub(utils, "resolveQuickPickHelper");
-            stubresolve.returns(new utils.FilterItem(fullUSSPath));
+            stubresolve.returns(new utils.FilterItem({ text: fullUSSPath }));
 
             await ussTestTree1.filterPrompt(ussSessionNode);
 

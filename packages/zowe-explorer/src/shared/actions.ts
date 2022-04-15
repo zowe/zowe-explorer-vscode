@@ -70,24 +70,24 @@ export async function searchInAllLoadedItems(
     for (const item of items) {
         if (contextually.isDs(item) || contextually.isPdsNotFav(item) || contextually.isVsam(item)) {
             if (contextually.isDsMember(item)) {
-                qpItem = new FilterItem(
-                    `[${item.getSessionNode().label.toString()}]: ${item
+                qpItem = new FilterItem({
+                    text: `[${item.getSessionNode().label.toString()}]: ${item
                         .getParent()
                         .label.toString()}(${item.label.toString()})`,
-                    "Data Set Member"
-                );
+                    description: "Data Set Member",
+                });
             } else {
-                qpItem = new FilterItem(
-                    `[${item.getSessionNode().label.toString()}]: ${item.label.toString()}`,
-                    "Data Set"
-                );
+                qpItem = new FilterItem({
+                    text: `[${item.getSessionNode().label.toString()}]: ${item.label.toString()}`,
+                    description: "Data Set",
+                });
             }
             qpItems.push(qpItem);
         } else if (contextually.isUssDirectory(item) || contextually.isText(item) || contextually.isBinary(item)) {
             const filterItem = `[${item.getProfileName().trim()}]: ${
                 item.getParent().fullPath
             }/${item.label.toString()}`;
-            qpItem = new FilterItem(filterItem, "USS");
+            qpItem = new FilterItem({ text: filterItem, description: "USS" });
             qpItems.push(qpItem);
         }
     }
@@ -181,7 +181,7 @@ export async function openRecentMemberPrompt(
         const createPick = new FilterDescriptor(
             localize("memberHistory.option.prompt.open", "Select a recent member to open")
         );
-        const items: vscode.QuickPickItem[] = fileHistory.map((element) => new FilterItem(element));
+        const items: vscode.QuickPickItem[] = fileHistory.map((element) => new FilterItem({ text: element }));
         if (globals.ISTHEIA) {
             const options1: vscode.QuickPickOptions = {
                 placeHolder: localize("memberHistory.options.prompt", "Select a recent member to open"),
