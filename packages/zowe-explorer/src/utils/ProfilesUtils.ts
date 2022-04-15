@@ -14,7 +14,7 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import * as globals from "../globals";
-import { Session, IProfile, IProfileLoaded, ProfileInfo } from "@zowe/imperative";
+import { Session, IProfile, IProfileLoaded, ProfileInfo, Logger } from "@zowe/imperative";
 import { getSecurityModules, IZoweTreeNode, ProfilesCache, ZoweTreeNode, getZoweDir } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import * as nls from "vscode-nls";
@@ -49,9 +49,9 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
         // open config file for missing hostname error
         const msg = errorDetails.toString();
         if (msg.includes("hostname")) {
-            if (ProfilesCache.getConfigInstance().usingTeamConfig) {
+            if ((await globals.PROFILESCACHE.getProfileInfo()).usingTeamConfig) {
                 vscode.window.showErrorMessage("Required parameter 'host' must not be blank");
-                const currentProfile = ProfilesCache.getProfileFromConfig(label.trim());
+                const currentProfile = await globals.PROFILESCACHE.getProfileFromConfig(label.trim());
                 const filePath = currentProfile.profLoc.osLoc[0];
                 await Profiles.getInstance().openConfigFile(filePath);
                 return;
@@ -143,7 +143,7 @@ export const syncSessionNode =
 
         let profile: IProfileLoaded;
         try {
-            profile = profiles.loadNamedProfile(profileName, profileType);
+            profile = globals.PROFILESCACHE.loadNamedProfile(profileName, profileType);
         } catch (e) {
             return;
         }
@@ -226,7 +226,6 @@ export async function getProfileInfo(envTheia: boolean): Promise<ProfileInfo> {
     const mProfileInfo = new ProfileInfo("zowe", {
         requireKeytar: () => getSecurityModules("keytar", envTheia),
     });
-    ProfilesCache.createConfigInstance(mProfileInfo);
     return mProfileInfo;
 }
 

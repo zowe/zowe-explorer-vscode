@@ -82,7 +82,7 @@ export class Profiles extends ProfilesCache {
         return Profiles.loader;
     }
 
-    private static loader: Profiles;
+    protected static loader: Profiles;
 
     public loadedProfile: IProfileLoaded;
     public validProfile: ValidProfileEnum = ValidProfileEnum.INVALID;
@@ -267,6 +267,8 @@ export class Profiles extends ProfilesCache {
      */
     public async createZoweSession(zoweFileProvider: IZoweTree<IZoweTreeNode>) {
         const allProfiles = Profiles.getInstance().allProfiles;
+        // tslint:disable-next-line:no-console
+        console.log(allProfiles);
         const createNewProfile = "Create a New Connection to z/OS";
         const createNewConfig = "Create a New Team Configuration File";
         let addProfilePlaceholder = "";
@@ -372,10 +374,10 @@ export class Profiles extends ProfilesCache {
         }
 
         if (chosenProfile === "") {
-            const config = ProfilesCache.getConfigInstance();
+            const config = await this.getProfileInfo();
             if (config.usingTeamConfig) {
                 const profiles = config.getAllProfiles();
-                const currentProfile = ProfilesCache.getProfileFromConfig(profiles[0].profName);
+                const currentProfile = await this.getProfileFromConfig(profiles[0].profName);
                 const filePath = currentProfile.profLoc.osLoc[0];
                 await this.openConfigFile(filePath);
                 return;
@@ -437,8 +439,8 @@ export class Profiles extends ProfilesCache {
     }
 
     public async editSession(profileLoaded: IProfileLoaded, profileName: string): Promise<any | undefined> {
-        if (ProfilesCache.getConfigInstance().usingTeamConfig) {
-            const currentProfile = ProfilesCache.getProfileFromConfig(profileLoaded.name);
+        if ((await this.getProfileInfo()).usingTeamConfig) {
+            const currentProfile = await this.getProfileFromConfig(profileLoaded.name);
             const filePath = currentProfile.profLoc.osLoc[0];
             await this.openConfigFile(filePath);
             return;
@@ -685,9 +687,9 @@ export class Profiles extends ProfilesCache {
             await config.save(false);
             let configName;
             if (user) {
-                configName = ProfilesCache.getConfigInstance().getTeamConfig().userConfigName;
+                configName = (await this.getProfileInfo()).getTeamConfig().userConfigName;
             } else {
-                configName = ProfilesCache.getConfigInstance().getTeamConfig().configName;
+                configName = (await this.getProfileInfo()).getTeamConfig().configName;
             }
             await this.openConfigFile(path.join(rootPath, configName));
             const reloadButton = localize("createZoweSchema.reload.button", "Refresh Zowe Explorer");
@@ -916,7 +918,7 @@ export class Profiles extends ProfilesCache {
                 updSession.ISession.password,
                 updSession.ISession.base64EncodedAuth,
             ];
-            if (ProfilesCache.getConfigInstance().usingTeamConfig) {
+            if ((await this.getProfileInfo()).usingTeamConfig) {
                 const profArray = [];
                 for (const theprofile of this.allProfiles) {
                     if (theprofile.name !== promptInfo.profile.name) {
@@ -981,8 +983,8 @@ export class Profiles extends ProfilesCache {
         }
         deleteLabel = deletedProfile.name;
 
-        if (ProfilesCache.getConfigInstance().usingTeamConfig) {
-            const currentProfile = ProfilesCache.getProfileFromConfig(deleteLabel);
+        if ((await this.getProfileInfo()).usingTeamConfig) {
+            const currentProfile = await this.getProfileFromConfig(deleteLabel);
             const filePath = currentProfile.profLoc.osLoc[0];
             await this.openConfigFile(filePath);
             return;
@@ -1201,6 +1203,8 @@ export class Profiles extends ProfilesCache {
     }
 
     public async ssoLogin(node?: IZoweNodeType, label?: string): Promise<void> {
+        // tslint:disable-next-line:no-console
+        console.log(`node: ${node}`);
         let loginToken: string;
         let loginTokenType: string;
         let creds: string[];
@@ -1369,7 +1373,7 @@ export class Profiles extends ProfilesCache {
     }
 
     private async updateBaseProfileFileLogin(baseProfile: IProfileLoaded, updBaseProfile: IProfile) {
-        const mProfileInfo = ProfilesCache.getConfigInstance();
+        const mProfileInfo = await this.getProfileInfo();
         if (mProfileInfo.usingTeamConfig) {
             // write to config file to add tokenType & tokenValue fields
             const profileProps = Object.keys(mProfileInfo.getTeamConfig().api.profiles.get(baseProfile.name));
@@ -1396,7 +1400,7 @@ export class Profiles extends ProfilesCache {
     }
 
     private async updateBaseProfileFileLogout(baseProfile: IProfileLoaded) {
-        const mProfileInfo = ProfilesCache.getConfigInstance();
+        const mProfileInfo = await this.getProfileInfo();
         if (mProfileInfo.usingTeamConfig) {
             // remove tokenType and TokenValue from config file
             const profileProps = Object.keys(mProfileInfo.getTeamConfig().api.profiles.get(baseProfile.name));
@@ -1448,17 +1452,17 @@ export class Profiles extends ProfilesCache {
             return false;
         }
         // This check is for optional credentials
-        if (
-            baseProfile &&
-            serviceProfile.profile.host &&
-            serviceProfile.profile.port &&
-            ((baseProfile.profile.host !== serviceProfile.profile.host &&
-                baseProfile.profile.port !== serviceProfile.profile.port) ||
-                (baseProfile.profile.host === serviceProfile.profile.host &&
-                    baseProfile.profile.port !== serviceProfile.profile.port))
-        ) {
-            return false;
-        }
+        // if (
+        //     baseProfile &&
+        //     serviceProfile.profile.host &&
+        //     serviceProfile.profile.port &&
+        //     ((baseProfile.profile.host !== serviceProfile.profile.host &&
+        //         baseProfile.profile.port !== serviceProfile.profile.port) ||
+        //         (baseProfile.profile.host === serviceProfile.profile.host &&
+        //             baseProfile.profile.port !== serviceProfile.profile.port))
+        // ) {
+        //     return false;
+        // }
         return true;
     }
 
