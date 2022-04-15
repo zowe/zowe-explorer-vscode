@@ -165,7 +165,7 @@ export class ZoweTreeProvider {
                 await setSession(node, EditSession as ISession);
             } else {
                 zoweFileProvider.deleteSession(node.getSessionNode());
-                this.mHistory.addSession(node.label);
+                this.mHistory.addSession(node.label as string);
                 zoweFileProvider.addSession(node.getProfileName());
             }
             this.refresh();
@@ -246,6 +246,10 @@ export class ZoweTreeProvider {
         await vscode.commands.executeCommand("zowe.ds.refreshAll");
         await vscode.commands.executeCommand("zowe.uss.refreshAll");
         await vscode.commands.executeCommand("zowe.jobs.refreshAllJobs");
+    }
+
+    public async createZoweSchema(zoweFileProvider: IZoweTree<IZoweNodeType>) {
+        await Profiles.getInstance().createZoweSchema(zoweFileProvider);
     }
 
     public async createZoweSession(zoweFileProvider: IZoweTree<IZoweNodeType>) {

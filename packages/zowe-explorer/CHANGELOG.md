@@ -2,6 +2,31 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## 2.0.0-next.202204081040
+
+- Fixed TSO commands in when using teamConfig. [#1731](https://github.com/zowe/vscode-extension-for-zowe/pull/1731)
+- Fixed `Zowe Explorer: Refresh Zowe Explorer` command palette option. [1735](https://github.com/zowe/vscode-extension-for-zowe/pull/1735)
+
+## 2.0.0-next.202204041200
+
+- Added Secure Credential support, allowing users to update credentials using GUI. [#1699](https://github.com/zowe/vscode-extension-for-zowe/pull/1693)
+- Update Zowe Explorer 2.0 settings migration. [1714](https://github.com/zowe/vscode-extension-for-zowe/pull/1714)
+- Update Zowe Explorer SSO logout check for extenders. [#1711](https://github.com/zowe/vscode-extension-for-zowe/pull/1711)
+- Update Zowe SDK dependency. [#1699](https://github.com/zowe/vscode-extension-for-zowe/pull/1693)
+- Updated dependencies for improved security. [#1702](https://github.com/zowe/vscode-extension-for-zowe/pull/1702)
+
+## `v2.0.0-next.202202281000`
+
+- Update Zowe CLI SDK to version 7.0.0-next.202202242016.
+- Fixed the bug that overwrites like-named profiles in a nested config.
+
+## `v2.0.0-next.202202221200`
+
+- Added extender's type info to config schema during config file creation and removed Zowe CLI installation dependency. [#1629](https://github.com/zowe/vscode-extension-for-zowe/pull/1629)
+- Added support for Login and Logout using the config file. [#1637](https://github.com/zowe/vscode-extension-for-zowe/pull/1637)
+- Added capability to refresh Zowe Explorer updating the Views to reflect different profile handling to include the config file. [#1650](https://github.com/zowe/vscode-extension-for-zowe/pull/1650)
+- Updated Zowe SDK dependency. [#1624](https://github.com/zowe/vscode-extension-for-zowe/pull/1624)
+
 ## `1.22.0`
 
 - Added: Extensible Login and Logout capabilities for Zowe extenders to utilize for token based authentication. [#1606](https://github.com/zowe/vscode-extension-for-zowe/pull/1606) and [#1255](https://github.com/zowe/vscode-extension-for-zowe/issues/1255).

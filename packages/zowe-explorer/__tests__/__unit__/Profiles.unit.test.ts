@@ -17,12 +17,13 @@ import {
     createQuickPickItem,
     createQuickPickContent,
     createInputBox,
-    createBasicZosmfSession,
+    createSessCfgFromArgs,
     createPersistentConfig,
     createInvalidIProfile,
     createValidIProfile,
     createISession,
     createAltTypeIProfile,
+    createInstanceOfProfileInfo,
 } from "../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../__mocks__/mockCreators/datasets";
 import { createProfileManager, createTestSchemas } from "../../__mocks__/mockCreators/profiles";
@@ -31,7 +32,7 @@ import * as utils from "../../src/utils/ProfilesUtils";
 import * as child_process from "child_process";
 import { Logger, SessConstants } from "@zowe/imperative";
 import * as globals from "../../src/globals";
-import { ValidProfileEnum, IZoweNodeType } from "@zowe/zowe-explorer-api";
+import { ValidProfileEnum, IZoweNodeType, ProfilesCache } from "@zowe/zowe-explorer-api";
 import { ZosmfSession } from "@zowe/cli";
 import { ZoweExplorerApiRegister } from "../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../src/Profiles";
@@ -61,9 +62,9 @@ async function createGlobalMocks() {
         mockDebug: jest.fn(),
         mockError: jest.fn(),
         mockConfigurationTarget: jest.fn(),
-        mockCreateBasicZosmfSession: jest.fn(),
-        mockCreateBasicZosmfSessionFromArguments: jest.fn(),
+        mockCreateSessCfgFromArgs: jest.fn(),
         testProfile: createValidIProfile(),
+        testSession: createISession(),
         mockCliProfileManager: createProfileManager(),
         ProgressLocation: jest.fn().mockImplementation(() => {
             return {
@@ -78,6 +79,7 @@ async function createGlobalMocks() {
             host: "fake.com",
             port: 143,
         },
+        mockProfileInfo: null,
     };
 
     newMocks.mockProfileInstance = createInstanceOfProfile(newMocks.testProfile);
@@ -104,9 +106,8 @@ async function createGlobalMocks() {
     Object.defineProperty(globals, "LOG", { value: newMocks.mockLog, configurable: true });
     Object.defineProperty(vscode.window, "createInputBox", { value: newMocks.mockCreateInputBox, configurable: true });
     Object.defineProperty(globals.LOG, "debug", { value: newMocks.mockDebug, configurable: true });
-    Object.defineProperty(ZosmfSession, "createBasicZosmfSession", { value: newMocks.mockCreateBasicZosmfSession });
-    Object.defineProperty(ZosmfSession, "createBasicZosmfSessionFromArguments", {
-        value: newMocks.mockCreateBasicZosmfSessionFromArguments,
+    Object.defineProperty(ZosmfSession, "createSessCfgFromArgs", {
+        value: newMocks.mockCreateSessCfgFromArgs,
         configurable: true,
     });
     Object.defineProperty(globals.LOG, "error", { value: newMocks.mockError, configurable: true });
@@ -122,6 +123,14 @@ async function createGlobalMocks() {
     });
     Object.defineProperty(vscode, "ProgressLocation", { value: newMocks.ProgressLocation, configurable: true });
     Object.defineProperty(vscode.window, "withProgress", { value: newMocks.withProgress, configurable: true });
+    newMocks.mockProfileInfo = createInstanceOfProfileInfo();
+    Object.defineProperty(ProfilesCache, "getConfigInstance", {
+        value: jest
+            .fn(() => {
+                return newMocks.mockProfileInfo;
+            })
+            .mockReturnValue(newMocks.mockProfileInfo),
+    });
 
     return newMocks;
 }
@@ -810,7 +819,7 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         globalMocks.mockCreateInputBox.mockReturnValue(blockMocks.inputBox);
         globalMocks.mockShowInputBox.mockResolvedValueOnce(Number("143"));
         globalMocks.mockShowInputBox.mockResolvedValueOnce("");
-        globalMocks.mockCreateBasicZosmfSession.mockReturnValue({
+        globalMocks.mockCreateSessCfgFromArgs.mockReturnValue({
             ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" },
         });
 
@@ -837,6 +846,33 @@ describe("Profiles Unit Tests - Function promptCredentials", () => {
         newMocks.profiles.allProfiles[1].profile = { user: "test", password: "test" };
         newMocks.profiles.loadNamedProfile = newMocks.mockLoadNamedProfile;
 
+        const mockMvsApi = await ZoweExplorerApiRegister.getMvsApi(globalMocks.testProfile);
+        const getMvsApiMock = jest.fn();
+        getMvsApiMock.mockReturnValue(mockMvsApi);
+        globalMocks.testSession.ISession.base64EncodedAuth = "fake";
+        ZoweExplorerApiRegister.getMvsApi = getMvsApiMock.bind(ZoweExplorerApiRegister);
+        jest.spyOn(mockMvsApi, "getSession").mockReturnValue(globalMocks.testSession);
+
+        Object.defineProperty(ProfilesCache, "getConfigInstance", {
+            value: jest.fn(() => {
+                return {
+                    usingTeamConfig: true,
+                    getAllProfiles: () => [
+                        {
+                            profName: newMocks.imperativeProfile.name,
+                            profType: newMocks.imperativeProfile.type,
+                            profile: newMocks.imperativeProfile.name,
+                            profLoc: { osLoc: ["dummy"] },
+                        },
+                    ],
+                    mergeArgsForProfile: () => {
+                        return { knownArgs: [], missingArgs: [] };
+                    },
+                    updateProperty: jest.fn(),
+                };
+            }),
+        });
+
         return newMocks;
     }
 
@@ -846,11 +882,12 @@ describe("Profiles Unit Tests - Function promptCredentials", () => {
 
         blockMocks.imperativeProfile.profile = { user: undefined, password: undefined };
         blockMocks.mockLoadNamedProfile.mockReturnValue(blockMocks.imperativeProfile);
-        globalMocks.mockCreateBasicZosmfSession.mockReturnValue({
+        globalMocks.mockCreateSessCfgFromArgs.mockReturnValue({
             ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" },
         });
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowInformationMessage.mockResolvedValueOnce([1]);
 
         const res = await blockMocks.profiles.promptCredentials(blockMocks.imperativeProfile.name);
         expect(res).toEqual(["fake", "fake", "fake"]);
@@ -863,11 +900,12 @@ describe("Profiles Unit Tests - Function promptCredentials", () => {
         blockMocks.imperativeProfile.profile = { user: "fake", password: "fake" };
         blockMocks.mockLoadNamedProfile.mockReturnValue(blockMocks.imperativeProfile);
         globalMocks.mockShowInformationMessage.mockResolvedValueOnce("Save Credentials");
-        globalMocks.mockCreateBasicZosmfSession.mockReturnValue({
+        globalMocks.mockCreateSessCfgFromArgs.mockReturnValue({
             ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" },
         });
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowInformationMessage.mockResolvedValueOnce([1]);
 
         const res = await blockMocks.profiles.promptCredentials(blockMocks.imperativeProfile.name, true);
         expect(res).toEqual(["fake", "fake", "fake"]);
@@ -879,11 +917,13 @@ describe("Profiles Unit Tests - Function promptCredentials", () => {
 
         blockMocks.imperativeProfile.profile = { user: undefined, password: "oldfake" };
         blockMocks.mockLoadNamedProfile.mockReturnValue(blockMocks.imperativeProfile);
-        globalMocks.mockCreateBasicZosmfSession.mockReturnValue({
+        globalMocks.mockCreateSessCfgFromArgs.mockReturnValue({
             ISession: { user: "fake", password: "oldfake", base64EncodedAuth: "fake" },
         });
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("oldfake");
+        globalMocks.mockShowInformationMessage.mockResolvedValueOnce([1]);
+        globalMocks.testSession.ISession.password = "oldfake";
 
         const res = await blockMocks.profiles.promptCredentials(blockMocks.imperativeProfile.name);
         expect(res).toEqual(["fake", "oldfake", "fake"]);
@@ -895,11 +935,13 @@ describe("Profiles Unit Tests - Function promptCredentials", () => {
 
         blockMocks.imperativeProfile.profile = { user: "oldfake", password: undefined };
         blockMocks.mockLoadNamedProfile.mockReturnValue(blockMocks.imperativeProfile);
-        globalMocks.mockCreateBasicZosmfSession.mockReturnValue({
+        globalMocks.mockCreateSessCfgFromArgs.mockReturnValue({
             ISession: { user: "oldfake", password: "fake", base64EncodedAuth: "fake" },
         });
         globalMocks.mockShowInputBox.mockResolvedValueOnce("oldfake");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowInformationMessage.mockResolvedValueOnce([1]);
+        globalMocks.testSession.ISession.user = "oldfake";
 
         const res = await blockMocks.profiles.promptCredentials(blockMocks.imperativeProfile.name);
         expect(res).toEqual(["oldfake", "fake", "fake"]);
@@ -911,7 +953,7 @@ describe("Profiles Unit Tests - Function promptCredentials", () => {
 
         blockMocks.imperativeProfile.profile = { user: "oldfake", password: "oldfake" };
         blockMocks.mockLoadNamedProfile.mockReturnValue(blockMocks.imperativeProfile);
-        globalMocks.mockCreateBasicZosmfSession.mockReturnValue({
+        globalMocks.mockCreateSessCfgFromArgs.mockReturnValue({
             ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" },
         });
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
@@ -1140,7 +1182,7 @@ describe("Profiles Unit Tests - Function editSession", () => {
         globalMocks.mockCreateInputBox.mockReturnValue(blockMocks.inputBox);
         globalMocks.mockShowInputBox.mockResolvedValue("fake");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("False - Accept connections with self-signed certificates");
-        globalMocks.mockCreateBasicZosmfSession.mockReturnValue({
+        globalMocks.mockCreateSessCfgFromArgs.mockReturnValue({
             ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" },
         });
 
@@ -1161,7 +1203,7 @@ describe("Profiles Unit Tests - Function editSession", () => {
         globalMocks.mockCreateInputBox.mockReturnValue(blockMocks.inputBox);
         globalMocks.mockShowInputBox.mockResolvedValue("fake");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("False - Accept connections with self-signed certificates");
-        globalMocks.mockCreateBasicZosmfSession.mockReturnValue({
+        globalMocks.mockCreateSessCfgFromArgs.mockReturnValue({
             ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" },
         });
 
@@ -1185,7 +1227,7 @@ describe("Profiles Unit Tests - Function editSession", () => {
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("False");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("123");
-        globalMocks.mockCreateBasicZosmfSession.mockReturnValue({
+        globalMocks.mockCreateSessCfgFromArgs.mockReturnValue({
             ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" },
         });
 
@@ -1210,7 +1252,7 @@ describe("Profiles Unit Tests - Function editSession", () => {
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("False");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("123");
-        globalMocks.mockCreateBasicZosmfSession.mockReturnValue({
+        globalMocks.mockCreateSessCfgFromArgs.mockReturnValue({
             ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" },
         });
 
@@ -1234,7 +1276,7 @@ describe("Profiles Unit Tests - Function editSession", () => {
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("False");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("");
-        globalMocks.mockCreateBasicZosmfSession.mockReturnValue({
+        globalMocks.mockCreateSessCfgFromArgs.mockReturnValue({
             ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" },
         });
 
@@ -1255,7 +1297,7 @@ describe("Profiles Unit Tests - Function editSession", () => {
         globalMocks.mockCreateInputBox.mockReturnValue(blockMocks.inputBox);
         globalMocks.mockShowInputBox.mockResolvedValueOnce("");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("");
-        globalMocks.mockCreateBasicZosmfSession.mockReturnValue({
+        globalMocks.mockCreateSessCfgFromArgs.mockReturnValue({
             ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" },
         });
 
@@ -1276,7 +1318,7 @@ describe("Profiles Unit Tests - Function editSession", () => {
         globalMocks.mockCreateInputBox.mockReturnValue(blockMocks.inputBox);
         globalMocks.mockShowInputBox.mockResolvedValueOnce("False");
         globalMocks.mockShowInputBox.mockResolvedValueOnce(undefined);
-        globalMocks.mockCreateBasicZosmfSession.mockReturnValue({
+        globalMocks.mockCreateSessCfgFromArgs.mockReturnValue({
             ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" },
         });
 
@@ -1299,7 +1341,7 @@ describe("Profiles Unit Tests - Function editSession", () => {
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("False");
-        globalMocks.mockCreateBasicZosmfSession.mockReturnValue({
+        globalMocks.mockCreateSessCfgFromArgs.mockReturnValue({
             ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" },
         });
 
@@ -1320,7 +1362,7 @@ describe("Profiles Unit Tests - Function editSession", () => {
         globalMocks.mockCreateInputBox.mockReturnValue(blockMocks.inputBox);
         globalMocks.mockShowInputBox.mockResolvedValueOnce("123");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("");
-        globalMocks.mockCreateBasicZosmfSession.mockReturnValue({
+        globalMocks.mockCreateSessCfgFromArgs.mockReturnValue({
             ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" },
         });
 
@@ -1341,7 +1383,7 @@ describe("Profiles Unit Tests - Function editSession", () => {
         globalMocks.mockCreateInputBox.mockReturnValue(blockMocks.inputBox);
         globalMocks.mockShowInputBox.mockResolvedValueOnce("123");
         globalMocks.mockShowInputBox.mockResolvedValueOnce(undefined);
-        globalMocks.mockCreateBasicZosmfSession.mockReturnValue({
+        globalMocks.mockCreateSessCfgFromArgs.mockReturnValue({
             ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" },
         });
 
@@ -1481,7 +1523,7 @@ describe("Profiles Unit Tests - Function editSession", () => {
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("False");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("123");
-        globalMocks.mockCreateBasicZosmfSession.mockReturnValue({
+        globalMocks.mockCreateSessCfgFromArgs.mockReturnValue({
             ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" },
         });
 
@@ -1511,11 +1553,11 @@ describe("Profiles Unit Tests - Function deleteProfile", () => {
             testSchemas: createTestSchemas(),
             profileInstance: null,
         };
-        globalMocks.mockCreateBasicZosmfSession.mockReturnValue({
+        globalMocks.mockCreateSessCfgFromArgs.mockReturnValue({
             ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" },
         });
         newMocks.profiles = await Profiles.createInstance(newMocks.log);
-        newMocks.session = createBasicZosmfSession(newMocks.imperativeProfile);
+        newMocks.session = createSessCfgFromArgs(newMocks.imperativeProfile);
         newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
         newMocks.mockLoadNamedProfile.mockReturnValue(newMocks.imperativeProfile);
         globalMocks.mockGetInstance.mockReturnValue(newMocks.profileInstance);
@@ -1808,6 +1850,7 @@ describe("Profiles Unit Tests - Function createInstance", () => {
                 { name: "profile2", profile: {}, type: "zosmf" },
             ],
         };
+        globalMocks.mockProfileInstance.allProfiles = newMocks.testProfiles;
         (child_process.spawnSync as any) = jest.fn((program: string, args: string[], options: any) => {
             const createFakeChildProcess = (status: number, stdout: string, stderr: string) => {
                 return {
@@ -1823,8 +1866,6 @@ describe("Profiles Unit Tests - Function createInstance", () => {
                 return createFakeChildProcess(0, JSON.stringify(newMocks.testProfiles[1]), "");
             }
         });
-        newMocks.profiles = await Profiles.createInstance(newMocks.log);
-        globalMocks.mockGetInstance.mockReturnValue(newMocks.profiles);
 
         return newMocks;
     }
@@ -1833,8 +1874,7 @@ describe("Profiles Unit Tests - Function createInstance", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        const profiles = await Profiles.createInstance(blockMocks.log);
-        expect(Profiles.getInstance()).toStrictEqual(profiles);
+        expect(Profiles.getInstance()).toStrictEqual(globalMocks.mockProfileInstance);
     });
 
     it("Tests that createInstance successfully routes through to spawn", async () => {
@@ -1847,7 +1887,6 @@ describe("Profiles Unit Tests - Function createInstance", () => {
         blockMocks.mockJSONParse.mockReturnValueOnce(blockMocks.testProfiles);
         blockMocks.mockJSONParse.mockReturnValueOnce(blockMocks.testProfiles[1]);
 
-        await Profiles.createInstance(blockMocks.log);
         expect(Profiles.getInstance().allProfiles).toEqual(blockMocks.testProfiles);
     });
 
@@ -1867,31 +1906,32 @@ describe("Profiles Unit Tests - Function createInstance", () => {
 });
 
 describe("Profiles Unit Tests - Property allProfiles", () => {
+    async function createBlockMocks(globalMocks) {
+        const newMocks = {
+            testProfiles: [
+                { name: "profile1", profile: {}, type: "zosmf" },
+                { name: "sestest", profile: {}, type: "zosmf" },
+                { name: "profile1", profile: {}, type: "zosmf" },
+                { name: "profile2", profile: {}, type: "zosmf" },
+            ],
+        };
+        globalMocks.mockProfileInstance.allProfiles = newMocks.testProfiles;
+        return newMocks;
+    }
     it("Tests that allProfiles contains all profiles", async () => {
-        await createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
 
-        const profiles = await Profiles.createInstance(Logger.getAppLogger());
-        const loadedProfiles = profiles.allProfiles;
-        expect(loadedProfiles).toEqual([
-            { name: "profile1", profile: {}, type: "zosmf" },
-            { name: "sestest", profile: {}, type: "zosmf" },
-            { name: "profile1", profile: {}, type: "zosmf" },
-            { name: "profile2", profile: {}, type: "zosmf" },
-        ]);
+        expect(Profiles.getInstance().allProfiles).toEqual(blockMocks.testProfiles);
     });
 });
 
 describe("Profiles Unit Tests - Function getDefaultProfile", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
-            log: Logger.getAppLogger(),
-            profiles: null,
-            profileInstance: null,
+            defaultProfile: { name: "profile1", profile: {}, type: "zosmf" },
         };
-        newMocks.profiles = await Profiles.createInstance(newMocks.log);
-        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
-        globalMocks.mockGetInstance.mockReturnValue(newMocks.profiles);
-
+        globalMocks.mockProfileInstance.getDefaultProfile.mockReturnValue(newMocks.defaultProfile);
         return newMocks;
     }
 
@@ -1899,61 +1939,47 @@ describe("Profiles Unit Tests - Function getDefaultProfile", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        const profiles = await Profiles.createInstance(blockMocks.log);
-        const loadedProfiles = profiles.getDefaultProfile();
-        expect(loadedProfiles).toEqual({ name: "profile1", profile: {}, type: "zosmf" });
+        // const profiles = await Profiles.createInstance(blockMocks.log);
+        // const loadedProfiles = profiles.getDefaultProfile();
+        expect(Profiles.getInstance().getDefaultProfile()).toEqual(blockMocks.defaultProfile);
     });
 });
 
 describe("Profiles Unit Tests - Function getProfiles", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
-            log: Logger.getAppLogger(),
-            profiles: null,
-            profileInstance: null,
+            testProfiles: [
+                { name: "sestest", profile: {}, type: "zosmf" },
+                { name: "profile1", profile: {}, type: "zosmf" },
+                { name: "profile2", profile: {}, type: "zosmf" },
+            ],
         };
-        newMocks.profiles = await Profiles.createInstance(newMocks.log);
-        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
-        globalMocks.mockGetInstance.mockReturnValue(newMocks.profiles);
-
+        globalMocks.mockProfileInstance.getProfiles.mockReturnValue(newMocks.testProfiles);
         return newMocks;
     }
-
     it("Tests that getProfiles returns all profiles of the specified type", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        const profiles = await Profiles.createInstance(blockMocks.log);
-        const loadedProfiles = profiles.getProfiles("zosmf");
-        expect(loadedProfiles).toEqual([
-            { name: "sestest", profile: {}, type: "zosmf" },
-            { name: "profile1", profile: {}, type: "zosmf" },
-            { name: "profile2", profile: {}, type: "zosmf" },
-        ]);
+        expect(Profiles.getInstance().getProfiles()).toEqual(blockMocks.testProfiles);
     });
 });
 
 describe("Profiles Unit Tests - Function directLoad", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
-            log: Logger.getAppLogger(),
-            profiles: null,
-            profileInstance: null,
+            testProfile: { name: "profile1", profile: {}, type: "zosmf" },
         };
-        newMocks.profiles = await Profiles.createInstance(newMocks.log);
-        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
-        globalMocks.mockGetInstance.mockReturnValue(newMocks.profiles);
+        globalMocks.mockProfileInstance.directLoad.mockResolvedValue(newMocks.testProfile);
 
         return newMocks;
     }
-
     it("Tests that directLoad returns the specified profile", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        const theProfiles = await Profiles.createInstance(blockMocks.log);
-        const profile = await theProfiles.directLoad("zosmf", "profile1");
-        expect(profile.name).toEqual("profile1");
+        // const profile = await Profiles.getInstance().directLoad("zosmf", "profile1");
+        expect(await Profiles.getInstance().directLoad("zosmf", "profile1")).toEqual(blockMocks.testProfile);
     });
 });
 
@@ -1983,25 +2009,16 @@ describe("Profiles Unit Tests - Function getNamesForType", () => {
 describe("Profiles Unit Tests - Function getAllTypes", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
-            log: Logger.getAppLogger(),
-            profiles: null,
-            profileInstance: null,
+            testTypes: ["zosmf", "banana"],
         };
-        newMocks.profiles = await Profiles.createInstance(newMocks.log);
-        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
-        globalMocks.mockGetInstance.mockReturnValue(newMocks.profiles);
-
+        globalMocks.mockProfileInstance.getAllTypes.mockReturnValue(newMocks.testTypes);
         return newMocks;
     }
-
     it("Tests that getAllTypes returns the names of all profile types", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        const theProfiles = await Profiles.createInstance(blockMocks.log);
-
-        const types = theProfiles.getAllTypes();
-        expect(types).toEqual(["zosmf", "banana"]);
+        expect(Profiles.getInstance().getAllTypes()).toEqual(blockMocks.testTypes);
     });
 });
 
@@ -2009,23 +2026,15 @@ describe("Profiles Unit Tests - Function loadNamedProfile", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
             log: Logger.getAppLogger(),
-            profiles: null,
-            profileInstance: null,
+            testProfile: { name: "profile2", profile: {}, type: "zosmf" },
         };
-        newMocks.profiles = await Profiles.createInstance(newMocks.log);
-        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
-        globalMocks.mockGetInstance.mockReturnValue(newMocks.profiles);
-
+        globalMocks.mockProfileInstance.loadNamedProfile.mockReturnValue(newMocks.testProfile);
         return newMocks;
     }
-
     it("Tests that loadNamedProfile returns the profile with the specified name", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
-
-        const profiles = await Profiles.createInstance(blockMocks.log);
-        const loadedProfile = profiles.loadNamedProfile("profile2");
-        expect(loadedProfile).toEqual({ name: "profile2", profile: {}, type: "zosmf" });
+        expect(Profiles.getInstance().loadNamedProfile("profile2")).toEqual(blockMocks.testProfile);
     });
 
     it("Tests that loadNamedProfile fails to load a non-existent profile", async () => {
@@ -2155,7 +2164,11 @@ describe("Profiles Unit Tests - Function checkCurrentProfile", () => {
                 };
             }),
         });
-        const response = await theProfiles.checkCurrentProfile(blockMocks.invalidProfile);
+
+        const response = await theProfiles.checkCurrentProfile({
+            ...blockMocks.invalidProfile,
+            ...{ profile: { tokenType: true } },
+        });
         expect(response).toEqual({ name: blockMocks.invalidProfile.name, status: "unverified" });
     });
 
@@ -2703,107 +2716,6 @@ describe("Profiles Unit Tests - Function refresh", () => {
     });
 });
 
-describe("Profiles Unit Tests - Function getCombinedProfile", () => {
-    async function createBlockMocks(globalMocks) {
-        const newMocks = {
-            testBaseProfile: createValidIProfile(),
-            mockCommonApi: await ZoweExplorerApiRegister.getCommonApi(globalMocks.testProfile),
-            testSchemas: createTestSchemas(),
-            mockProfileInstance: await Profiles.createInstance(Logger.getAppLogger()),
-            testCombinedSession: createISession(),
-            testCombinedProfile: createValidIProfile(),
-        };
-
-        newMocks.testBaseProfile.profile.tokenType = "testTokenType";
-        newMocks.testBaseProfile.profile.tokenValue = "testTokenValue";
-        newMocks.testCombinedSession.ISession.tokenType = "testTokenType";
-        newMocks.testCombinedSession.ISession.tokenValue = "testTokenValue";
-        newMocks.testCombinedProfile.profile.tokenType = "testTokenType";
-        newMocks.testCombinedProfile.profile.tokenValue = "testTokenValue";
-        newMocks.testCombinedProfile.profile.user = "fake";
-        newMocks.testCombinedProfile.profile.password = "fake";
-        newMocks.testCombinedProfile.profile.protocol = "https";
-        newMocks.testCombinedProfile.profile.host = "fake";
-        newMocks.testCombinedProfile.profile.type = "basic";
-        globalMocks.mockCreateBasicZosmfSessionFromArguments.mockResolvedValue(newMocks.testCombinedSession);
-        jest.spyOn(newMocks.mockProfileInstance, "getSchema").mockReturnValue(newMocks.testSchemas[0]);
-
-        // Mock the Common API so that getSession returns the correct value
-        const getCommonApiMock = jest.fn();
-        getCommonApiMock.mockReturnValue(newMocks.mockCommonApi);
-        ZoweExplorerApiRegister.getCommonApi = getCommonApiMock.bind(ZoweExplorerApiRegister);
-        jest.spyOn(newMocks.mockCommonApi, "getSession").mockReturnValue(globalMocks.testSession);
-
-        return newMocks;
-    }
-
-    it("Tests that getCombinedProfile returns the service profile if it contains user/password", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        const response = await (await blockMocks.mockProfileInstance).getCombinedProfile(
-            globalMocks.testProfile,
-            blockMocks.testBaseProfile
-        );
-
-        expect(response).toEqual(globalMocks.testProfile);
-    });
-
-    it("Tests that getCombinedProfile returns the service profile if it contains user/password", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        blockMocks.testBaseProfile.profile.host = "testBasePort.com";
-        // tslint:disable-next-line: no-magic-numbers
-        blockMocks.testBaseProfile.profile.port = 999;
-        globalMocks.testProfile.profile.user = null;
-        globalMocks.testProfile.profile.password = null;
-
-        const response = await (await blockMocks.mockProfileInstance).getCombinedProfile(
-            globalMocks.testProfile,
-            blockMocks.testBaseProfile
-        );
-
-        expect(response).toEqual(globalMocks.testProfile);
-    });
-
-    it("Tests that getCombinedProfile returns a combined profile with baseProfile details", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        globalMocks.testProfile.profile.user = null;
-        globalMocks.testProfile.profile.password = null;
-        blockMocks.testBaseProfile.profile.host = globalMocks.testProfile.profile.host;
-        blockMocks.testBaseProfile.profile.port = globalMocks.testProfile.profile.port;
-
-        const response = await (await blockMocks.mockProfileInstance).getCombinedProfile(
-            globalMocks.testProfile,
-            blockMocks.testBaseProfile
-        );
-
-        expect(response).toEqual(blockMocks.testCombinedProfile);
-    });
-
-    it("Tests that getCombinedProfile returns a combined profile with undefined tokenValue", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        globalMocks.testProfile.profile.user = null;
-        globalMocks.testProfile.profile.password = null;
-        blockMocks.testBaseProfile.profile.host = globalMocks.testProfile.profile.host;
-        blockMocks.testBaseProfile.profile.port = globalMocks.testProfile.profile.port;
-        blockMocks.testBaseProfile.profile.tokenValue = undefined;
-        blockMocks.testBaseProfile.profile.tokenType = undefined;
-
-        const response = await (await blockMocks.mockProfileInstance).getCombinedProfile(
-            globalMocks.testProfile,
-            blockMocks.testBaseProfile
-        );
-
-        expect(response.profile.tokenValue).toEqual(undefined);
-    });
-});
-
 describe("Profiles Unit Tests - Function ssoLogin", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
@@ -2854,7 +2766,7 @@ describe("Profiles Unit Tests - Function ssoLogin", () => {
         newMocks.testAltTypeProfile.profile.password = undefined;
         newMocks.testAltTypeProfile.profile.tokenType = "altTokenType";
         newMocks.testAltTypeProfile.profile.tokenValue = "altTokenValue";
-        globalMocks.mockCreateBasicZosmfSessionFromArguments.mockResolvedValue(newMocks.testCombinedSession);
+        globalMocks.mockCreateSessCfgFromArgs.mockResolvedValue(newMocks.testCombinedSession);
         newMocks.datasetSessionNodeToken = createDatasetSessionNode(
             newMocks.testCombinedSession,
             newMocks.testCombinedProfile
@@ -2868,9 +2780,6 @@ describe("Profiles Unit Tests - Function ssoLogin", () => {
         newMocks.mockNode = newMocks.datasetSessionNode;
         newMocks.profiles = await Profiles.createInstance(newMocks.log);
         newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
-        newMocks.profileInstance.getBaseProfile.mockReturnValue(newMocks.testBaseProfile);
-        newMocks.profileInstance.getCombinedProfile.mockResolvedValue(newMocks.testCombinedProfile);
-        newMocks.profileInstance.getCombinedProfile.mockResolvedValue(newMocks.testCombinedProfile);
         newMocks.testDatasetTree = createDatasetTree(newMocks.datasetSessionNode, newMocks.treeView);
         newMocks.testJobTree = createJobsTree(
             newMocks.session,
@@ -2924,9 +2833,37 @@ describe("Profiles Unit Tests - Function ssoLogin", () => {
             }),
         });
 
-        Object.defineProperty(theProfiles, "getCombinedProfile", {
-            value: jest.fn(async () => {
-                Promise.resolve(blockMocks.testCombinedProfile);
+        const mockCommonApi = await ZoweExplorerApiRegister.getInstance().getCommonApi(blockMocks.testCombinedProfile);
+        const getCommonApiMock = jest.fn();
+        getCommonApiMock.mockReturnValue(mockCommonApi);
+        ZoweExplorerApiRegister.getInstance().getCommonApi = getCommonApiMock.bind(ZoweExplorerApiRegister);
+        jest.spyOn(mockCommonApi, "getTokenTypeName").mockReturnValue("token");
+
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        await theProfiles.ssoLogin(resultNode);
+
+        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe(
+            "Login to authentication service was successful."
+        );
+    });
+
+    it("Test that sso login will login config file", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        const resultNode: IZoweNodeType = blockMocks.datasetSessionNodeToken;
+        const theProfiles = await Profiles.createInstance(blockMocks.log);
+        Object.defineProperty(theProfiles, "optionalCredChecks", {
+            value: jest.fn(() => {
+                return true;
+            }),
+        });
+        Object.defineProperty(ProfilesCache, "getConfigInstance", {
+            value: jest.fn(() => {
+                return {
+                    usingTeamConfig: true,
+                };
             }),
         });
 
@@ -2934,7 +2871,7 @@ describe("Profiles Unit Tests - Function ssoLogin", () => {
         const getCommonApiMock = jest.fn();
         getCommonApiMock.mockReturnValue(mockCommonApi);
         ZoweExplorerApiRegister.getInstance().getCommonApi = getCommonApiMock.bind(ZoweExplorerApiRegister);
-        jest.spyOn(mockCommonApi, "getTokenTypeName").mockReturnValue("token");
+        jest.spyOn(mockCommonApi, "getTokenTypeName").mockReturnValue(SessConstants.TOKEN_TYPE_APIML);
 
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
@@ -3022,11 +2959,12 @@ describe("Profiles Unit Tests - Function ssoLogout", () => {
         };
         newMocks.testBaseProfile.profile.tokenType = "apimlAuthenticationToken";
         newMocks.testBaseProfile.profile.tokenValue = "testTokenValue";
+        newMocks.testCombinedSession.ISession.tokenType = "testTokenType";
+        newMocks.testCombinedSession.ISession.tokenValue = "testTokenValue";
         newMocks.testBaseProfile.profile.host = "fake";
         newMocks.testCombinedSession.ISession.tokenType = "apimlAuthenticationToken";
-        newMocks.testCombinedSession.ISession.tokenValue = "testTokenValue";
-        newMocks.testCombinedProfile.profile.tokenType = "apimlAuthenticationToken";
         newMocks.testCombinedProfile.profile.tokenValue = "testTokenValue";
+        newMocks.testCombinedProfile.profile.tokenType = "apimlAuthenticationToken";
         newMocks.testCombinedProfile.profile.user = undefined;
         newMocks.testCombinedProfile.profile.password = undefined;
         newMocks.testCombinedProfile.profile.protocol = "https";
@@ -3037,7 +2975,7 @@ describe("Profiles Unit Tests - Function ssoLogout", () => {
         newMocks.testAltTypeProfile.profile.password = undefined;
         newMocks.testAltTypeProfile.profile.tokenType = "altTokenType";
         newMocks.testAltTypeProfile.profile.tokenValue = "altTokenValue";
-        globalMocks.mockCreateBasicZosmfSessionFromArguments.mockResolvedValue(newMocks.testCombinedSession);
+        globalMocks.mockCreateSessCfgFromArgs.mockResolvedValue(newMocks.testCombinedSession);
         newMocks.datasetSessionNodeToken = createDatasetSessionNode(
             newMocks.testCombinedSession,
             newMocks.testCombinedProfile
@@ -3051,8 +2989,6 @@ describe("Profiles Unit Tests - Function ssoLogout", () => {
         newMocks.profiles = await Profiles.createInstance(newMocks.log);
         newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
         newMocks.profileInstance.getBaseProfile.mockReturnValue(newMocks.testBaseProfile);
-        newMocks.profileInstance.getCombinedProfile.mockResolvedValue(newMocks.testCombinedProfile);
-        newMocks.profileInstance.getCombinedProfile.mockResolvedValue(newMocks.testCombinedProfile);
         newMocks.testDatasetTree = createDatasetTree(newMocks.datasetSessionNode, newMocks.treeView);
         newMocks.testJobTree = createJobsTree(
             newMocks.session,
@@ -3106,18 +3042,11 @@ describe("Profiles Unit Tests - Function ssoLogout", () => {
             }),
         });
 
-        Object.defineProperty(theProfiles, "getCombinedProfile", {
-            value: jest.fn(async () => {
-                return blockMocks.testCombinedProfile;
-            }),
-        });
-
         const mockCommonApi = await ZoweExplorerApiRegister.getInstance().getCommonApi(blockMocks.testCombinedProfile);
         const getCommonApiMock = jest.fn();
         getCommonApiMock.mockReturnValue(mockCommonApi);
         ZoweExplorerApiRegister.getInstance().getCommonApi = getCommonApiMock.bind(ZoweExplorerApiRegister);
         jest.spyOn(mockCommonApi, "getTokenTypeName").mockReturnValue("apimlAuthenticationToken");
-
         jest.spyOn(mockCommonApi, "logout").mockReturnValue("logout success");
 
         await theProfiles.ssoLogout(resultNode);
@@ -3139,6 +3068,29 @@ describe("Profiles Unit Tests - Function ssoLogout", () => {
         getCommonApiMock.mockReturnValue(mockCommonApi);
         ZoweExplorerApiRegister.getInstance().getCommonApi = getCommonApiMock.bind(ZoweExplorerApiRegister);
         jest.spyOn(mockCommonApi, "getTokenTypeName").mockReturnValue("altTokenType");
+
+        jest.spyOn(mockCommonApi, "logout").mockReturnValue("logout success");
+
+        await theProfiles.ssoLogout(resultNode);
+
+        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe(
+            "Logout from authentication service was successful."
+        );
+    });
+
+    it("Test that sso logout for config file", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        const resultNode: IZoweNodeType = blockMocks.datasetSessionNodeAltToken;
+        globalMocks.mockProfileInfo.usingTeamConfig = true;
+        const theProfiles = await Profiles.createInstance(blockMocks.log);
+
+        const mockCommonApi = await ZoweExplorerApiRegister.getInstance().getCommonApi(blockMocks.testCombinedProfile);
+        const getCommonApiMock = jest.fn();
+        getCommonApiMock.mockReturnValue(mockCommonApi);
+        ZoweExplorerApiRegister.getInstance().getCommonApi = getCommonApiMock.bind(ZoweExplorerApiRegister);
+        jest.spyOn(mockCommonApi, "getTokenTypeName").mockReturnValue(SessConstants.TOKEN_TYPE_APIML);
 
         jest.spyOn(mockCommonApi, "logout").mockReturnValue("logout success");
 

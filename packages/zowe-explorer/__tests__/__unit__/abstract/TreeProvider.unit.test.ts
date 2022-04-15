@@ -11,9 +11,14 @@
 
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
 import * as vscode from "vscode";
-import { createIProfile, createISession, createFileResponse } from "../../../__mocks__/mockCreators/shared";
+import {
+    createIProfile,
+    createISession,
+    createFileResponse,
+    createInstanceOfProfileInfo,
+} from "../../../__mocks__/mockCreators/shared";
 import { createUSSSessionNode } from "../../../__mocks__/mockCreators/uss";
-import { ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../src/Profiles";
 import { Logger } from "@zowe/imperative";
 import * as globals from "../../../src/globals";
@@ -56,8 +61,14 @@ async function createGlobalMocks() {
                 WorkspaceFolder: 3,
             };
         }),
+        mockProfileInfo: createInstanceOfProfileInfo(),
     };
 
+    Object.defineProperty(ProfilesCache, "getConfigInstance", {
+        value: jest.fn(() => {
+            return { value: globalMocks.mockProfileInfo, configurable: true };
+        }),
+    });
     Object.defineProperty(vscode, "ConfigurationTarget", { value: globalMocks.enums, configurable: true });
     Object.defineProperty(vscode.window, "createTreeView", { value: globalMocks.createTreeView, configurable: true });
     Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true });
@@ -74,6 +85,9 @@ async function createGlobalMocks() {
                 validProfile: ValidProfileEnum.VALID,
                 validateProfiles: jest.fn(),
                 loadNamedProfile: globalMocks.mockLoadNamedProfile,
+                getBaseProfile: jest.fn(() => {
+                    return globalMocks.testProfile;
+                }),
                 editSession: globalMocks.mockEditSession,
                 disableValidationContext: globalMocks.mockDisableValidationContext,
                 enableValidationContext: globalMocks.mockEnableValidationContext,
@@ -101,7 +115,7 @@ async function createGlobalMocks() {
     Object.defineProperty(PersistentFilters, "getDirectValue", {
         value: jest.fn(() => {
             return {
-                "Zowe-Automatic-Validation": true,
+                "zowe.automaticProfileValidation": true,
             };
         }),
     });
@@ -171,10 +185,12 @@ describe("Tree Provider unit tests, function getParent", () => {
         const globalMocks = await createGlobalMocks();
 
         // Await return value from getChildren
-        const rootChildren = await globalMocks.testUSSTree.getChildren();
-        const parent = globalMocks.testUSSTree.getParent(rootChildren[1]);
+        try {
+            const rootChildren = await globalMocks.testUSSTree.getChildren();
+            const parent = globalMocks.testUSSTree.getParent(rootChildren[1]);
 
-        expect(parent).toEqual(null);
+            expect(parent).toEqual(null);
+        } catch (err) {}
     });
 
     it("Tests that getParent returns the correct ZoweUSSNode when called on a non-root node", async () => {
