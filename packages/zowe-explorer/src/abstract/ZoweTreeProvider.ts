@@ -76,16 +76,16 @@ export class ZoweTreeProvider {
     }
 
     /**
-     * Call whenever the context of a node needs to be refreshed to add the global suffix
+     * Call whenever the context of a node needs to be refreshed to add the home suffix
      * @param node Node to refresh
      */
-    public static refreshGlobalContext(node) {
-        if (Profiles.getConfigInstance().usingTeamConfig && !contextually.isGlobal(node)) {
+    public refreshHomeProfileContext(node) {
+        if (Profiles.getConfigInstance().usingTeamConfig && !contextually.isHomeProfile(node)) {
             const prof = Profiles.getConfigInstance()
                 .getAllProfiles()
                 .find((p) => p.profName === node.getProfileName());
             const osLocInfo = Profiles.getConfigInstance().getOsLocInfo(prof);
-            if (osLocInfo?.[0]?.global) node.contextValue += globals.GLOBAL_SUFFIX;
+            if (osLocInfo?.[0]?.global) node.contextValue += globals.HOME_SUFFIX;
         }
     }
 

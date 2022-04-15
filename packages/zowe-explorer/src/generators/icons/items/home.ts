@@ -11,13 +11,13 @@
 
 import { IconHierarchyType, IconId, IIconItem } from "../index";
 import { getIconPathInResources } from "../../../shared/utils";
-import { isGlobal } from "../../../shared/context";
+import { isHomeProfile } from "../../../shared/context";
 
 const icon: IIconItem = {
-    id: IconId.globe,
+    id: IconId.home,
     type: IconHierarchyType.base,
-    path: getIconPathInResources("globe.svg"),
-    check: (node) => isGlobal(node),
+    path: getIconPathInResources("home.svg"),
+    check: (node) => isHomeProfile(node),
 };
 
 export default icon;

@@ -194,7 +194,7 @@ export function isFavoriteContext(node: TreeItem): boolean {
  * @param node
  * @returns true if node is located in the global layer, false otherwise
  */
-export function isGlobal(node: TreeItem): boolean {
+export function isHomeProfile(node: TreeItem): boolean {
     return new RegExp(
         "^(" +
             globals.JOBS_SESSION_CONTEXT +
@@ -203,7 +203,7 @@ export function isGlobal(node: TreeItem): boolean {
             "|" +
             globals.DS_SESSION_CONTEXT +
             ")(.*" +
-            globals.GLOBAL_SUFFIX +
+            globals.HOME_SUFFIX +
             ")"
     ).test(node.contextValue);
 }

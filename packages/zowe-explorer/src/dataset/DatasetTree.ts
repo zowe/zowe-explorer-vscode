@@ -1294,7 +1294,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 profile
             );
             node.contextValue = globals.DS_SESSION_CONTEXT;
-            ZoweTreeProvider.refreshGlobalContext(node);
+            this.refreshHomeProfileContext(node);
             const icon = getIconByNode(node);
             if (icon) {
                 node.iconPath = icon.path;

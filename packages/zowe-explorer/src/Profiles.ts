@@ -256,19 +256,6 @@ export class Profiles extends ProfilesCache {
         return profileSetting;
     }
 
-    private static _getProfileIcon(name: string): string[] {
-        const prof = ProfilesCache.getConfigInstance()
-            .getAllProfiles()
-            .find((p) => p.profName === name);
-        const osLocInfo = ProfilesCache.getConfigInstance().getOsLocInfo(prof);
-        const ret: string[] = [];
-        for (const loc of osLocInfo ?? []) {
-            if (loc.global) ret.push("$(globe)");
-            else ret.push("$(folder)");
-        }
-        return ret;
-    }
-
     /**
      * Adds a new Profile to the provided treeview by clicking the 'Plus' button and
      * selecting which profile you would like to add from the drop-down that appears.
@@ -316,7 +303,7 @@ export class Profiles extends ProfilesCache {
         const createPick = new FilterDescriptor("\uFF0B " + createNewProfile);
         const configPick = new FilterDescriptor("\uFF0B " + createNewConfig);
         const items: vscode.QuickPickItem[] = profileNamesList.map(
-            (element) => new FilterItem({ text: element, icon: Profiles._getProfileIcon(element)[0] })
+            (element) => new FilterItem({ text: element, icon: this.getProfileIcon(element)[0] })
         );
         const quickpick = vscode.window.createQuickPick();
         switch (zoweFileProvider.getTreeType()) {
@@ -1368,50 +1355,17 @@ export class Profiles extends ProfilesCache {
         await vscode.window.showTextDocument(document);
     }
 
-    private async promptSaveConfig(profileName: string, saveButtons: string[]) {
-        const infoMsg = localize(
-            "promptCredentials.saveCredentialsConfig.infoMessage",
-            `Save entered credentials for future use with profile: {0}?\nSaving credentials will update the team config file.\n"Save Unsecure" will save values in plain text.`,
-            profileName
-        );
-        return vscode.window.showInformationMessage(infoMsg, { modal: true }, ...saveButtons).then((selection) => {
-            return selection;
-        });
-    }
-
-    private async promptUserPass(loadSession: ISession, rePrompt?: boolean): Promise<string[] | undefined> {
-        let repromptUser: string;
-        let repromptPass: string;
-        let newUser: string;
-        let newPass: string;
-
-        if (rePrompt) {
-            repromptUser = loadSession.user;
-            repromptPass = loadSession.password;
+    private getProfileIcon(name: string): string[] {
+        const prof = ProfilesCache.getConfigInstance()
+            .getAllProfiles()
+            .find((p) => p.profName === name);
+        const osLocInfo = ProfilesCache.getConfigInstance().getOsLocInfo(prof);
+        const ret: string[] = [];
+        for (const loc of osLocInfo ?? []) {
+            if (loc.global) ret.push("$(home)");
+            else ret.push("$(folder)");
         }
-
-        if (!loadSession.user || rePrompt) {
-            newUser = await this.userInfo(repromptUser);
-            loadSession.user = newUser;
-        } else {
-            newUser = loadSession.user;
-        }
-
-        if (!newUser || (rePrompt && newUser === "")) {
-            return undefined;
-        } else {
-            if (!loadSession.password || rePrompt) {
-                newPass = await this.passwordInfo(repromptPass);
-                loadSession.password = newPass;
-            } else {
-                newPass = loadSession.password;
-            }
-        }
-
-        if (!newPass || (rePrompt && newUser === "")) {
-            return undefined;
-        }
-        return [newUser, newPass];
+        return ret;
     }
 
     private async updateBaseProfileFileLogin(baseProfile: IProfileLoaded, updBaseProfile: IProfile) {
