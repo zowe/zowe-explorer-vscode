@@ -1358,17 +1358,19 @@ export class Profiles extends ProfilesCache {
     }
 
     private async updateBaseProfileFileLogin(profile: IProfileLoaded, updProfile: IProfile) {
-        const pi = await this.getProfileInfo();
         const upd = { profileName: profile.name, profileType: profile.type };
-        await pi.updateProperty({ ...upd, property: "tokenType", value: updProfile.tokenType });
-        await pi.updateProperty({ ...upd, property: "tokenValue", value: updProfile.tokenValue, setSecure: true });
+        await (
+            await this.getProfileInfo()
+        ).updateProperty({ ...upd, property: "tokenType", value: updProfile.tokenType });
+        await (
+            await this.getProfileInfo()
+        ).updateProperty({ ...upd, property: "tokenValue", value: updProfile.tokenValue, setSecure: true });
     }
 
     private async updateBaseProfileFileLogout(profile: IProfileLoaded) {
-        const pi = await this.getProfileInfo();
         const upd = { profileName: profile.name, profileType: profile.type };
-        await pi.updateProperty({ ...upd, property: "tokenType", value: undefined });
-        await pi.updateProperty({ ...upd, property: "tokenValue", value: undefined });
+        await (await this.getProfileInfo()).updateProperty({ ...upd, property: "tokenType", value: undefined });
+        await (await this.getProfileInfo()).updateProperty({ ...upd, property: "tokenValue", value: undefined });
     }
 
     private async loginCredentialPrompt(): Promise<string[]> {
