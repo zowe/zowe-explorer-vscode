@@ -2,7 +2,7 @@
 
 exports[`Zosmf API tests should test putContent method passes all options to Zowe api method 1`] = `
 Object {
-  "encoding": 285,
+  "encoding": "285",
 }
 `;
 

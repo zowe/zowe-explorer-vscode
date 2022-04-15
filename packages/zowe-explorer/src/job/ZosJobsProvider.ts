@@ -195,7 +195,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 }
             }
             if (this.mSessionNodes.length === 1) {
-                this.addSingleSession(Profiles.getInstance().getDefaultProfile(profileType));
+                await this.addSingleSession(Profiles.getInstance().getDefaultProfile(profileType));
             }
         }
         this.refresh();
@@ -854,7 +854,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             // Creates ZoweNode to track new session and pushes it to mSessionNodes
             const node = new Job(profile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, null, profile);
             node.contextValue = globals.JOBS_SESSION_CONTEXT;
-            this.refreshHomeProfileContext(node);
+            await this.refreshHomeProfileContext(node);
             const icon = getIconByNode(node);
             if (icon) {
                 node.iconPath = icon.path;

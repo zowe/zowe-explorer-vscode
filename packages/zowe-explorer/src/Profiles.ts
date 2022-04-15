@@ -267,8 +267,6 @@ export class Profiles extends ProfilesCache {
      */
     public async createZoweSession(zoweFileProvider: IZoweTree<IZoweTreeNode>) {
         const allProfiles = Profiles.getInstance().allProfiles;
-        // tslint:disable-next-line:no-console
-        console.log(allProfiles);
         const createNewProfile = "Create a New Connection to z/OS";
         const createNewConfig = "Create a New Team Configuration File";
         let addProfilePlaceholder = "";
@@ -304,9 +302,12 @@ export class Profiles extends ProfilesCache {
 
         const createPick = new FilterDescriptor("\uFF0B " + createNewProfile);
         const configPick = new FilterDescriptor("\uFF0B " + createNewConfig);
-        const items: vscode.QuickPickItem[] = profileNamesList.map(
-            (element) => new FilterItem({ text: element, icon: this.getProfileIcon(element)[0] })
-        );
+        const items: vscode.QuickPickItem[] = [];
+        const mProfileInfo = await this.getProfileInfo();
+
+        for (const pName of profileNamesList) {
+            items.push(new FilterItem({ text: pName, icon: this.getProfileIcon(mProfileInfo, pName)[0] }));
+        }
         const quickpick = vscode.window.createQuickPick();
         switch (zoweFileProvider.getTreeType()) {
             case PersistenceSchemaEnum.Dataset:
@@ -1203,8 +1204,6 @@ export class Profiles extends ProfilesCache {
     }
 
     public async ssoLogin(node?: IZoweNodeType, label?: string): Promise<void> {
-        // tslint:disable-next-line:no-console
-        console.log(`node: ${node}`);
         let loginToken: string;
         let loginTokenType: string;
         let creds: string[];
@@ -1359,15 +1358,16 @@ export class Profiles extends ProfilesCache {
         await vscode.window.showTextDocument(document);
     }
 
-    private getProfileIcon(name: string): string[] {
-        const prof = ProfilesCache.getConfigInstance()
-            .getAllProfiles()
-            .find((p) => p.profName === name);
-        const osLocInfo = ProfilesCache.getConfigInstance().getOsLocInfo(prof);
+    private getProfileIcon(profInfo: zowe.imperative.ProfileInfo, name: string): string[] {
+        const prof = profInfo.getAllProfiles().find((p) => p.profName === name);
+        const osLocInfo = profInfo.getOsLocInfo(prof);
         const ret: string[] = [];
         for (const loc of osLocInfo ?? []) {
-            if (loc.global) ret.push("$(home)");
-            else ret.push("$(folder)");
+            if (loc.global) {
+                ret.push("$(home)");
+            } else {
+                ret.push("$(folder)");
+            }
         }
         return ret;
     }

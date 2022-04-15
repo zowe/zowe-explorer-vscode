@@ -165,8 +165,6 @@ export class ProfilesCache {
             }
             this.allTypes.push(type);
         }
-        // eslint-disable-next-line no-console
-        console.log(this.allProfiles);
         // check for proper merging of apiml tokens
         this.checkMergingConfigAllProfiles();
         while (this.profilesForValidation.length > 0) {

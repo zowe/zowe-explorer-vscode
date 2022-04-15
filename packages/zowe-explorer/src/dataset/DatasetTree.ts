@@ -485,7 +485,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 }
             }
             if (this.mSessionNodes.length === 1) {
-                this.addSingleSession(Profiles.getInstance().getDefaultProfile(profileType));
+                await this.addSingleSession(Profiles.getInstance().getDefaultProfile(profileType));
             }
         }
         this.refresh();
@@ -1294,7 +1294,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 profile
             );
             node.contextValue = globals.DS_SESSION_CONTEXT;
-            this.refreshHomeProfileContext(node);
+            await this.refreshHomeProfileContext(node);
             const icon = getIconByNode(node);
             if (icon) {
                 node.iconPath = icon.path;
