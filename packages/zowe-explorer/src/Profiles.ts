@@ -1276,7 +1276,6 @@ export class Profiles extends ProfilesCache {
                         tokenValue: loginToken,
                     };
                     await this.updateBaseProfileFileLogin(baseProfile, updBaseProfile);
-                    await readConfigFromDisk();
                     await this.refresh(ZoweExplorerApiRegister.getInstance());
                 } catch (error) {
                     vscode.window.showErrorMessage(
@@ -1326,7 +1325,6 @@ export class Profiles extends ProfilesCache {
                 await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).logout(updSession);
 
                 await this.updateBaseProfileFileLogout(baseProfile);
-                await readConfigFromDisk();
                 await this.refresh(ZoweExplorerApiRegister.getInstance());
             }
             vscode.window.showInformationMessage(
