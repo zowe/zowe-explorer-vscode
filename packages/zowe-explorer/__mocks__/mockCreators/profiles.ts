@@ -36,7 +36,6 @@ export function createTestSchemas() {
         aOther: { type: ["string", "null"], optionDefinition: { description: "description" } },
     };
     const schema4 = {
-        // tslint:disable-next-line:max-line-length
         host: {
             type: "string",
             optionDefinition: {
@@ -117,6 +116,16 @@ export function createTestSchemas() {
     };
     const schemaArray = [schema1, schema2, schema3, schema4, schema5];
     return schemaArray;
+}
+
+export function newTestSchemas() {
+    return {
+        host: { type: "string", optionDefinition: { description: "description" } },
+        port: { type: "number", optionDefinition: { description: "description", defaultValue: 443 } },
+        user: { type: "string", secure: true, optionDefinition: { description: "description" } },
+        password: { type: "string", secure: true, optionDefinition: { description: "description" } },
+        rejectUnauthorized: { type: "boolean", optionDefinition: { description: "description" } },
+    };
 }
 
 export function createProfileManager() {
