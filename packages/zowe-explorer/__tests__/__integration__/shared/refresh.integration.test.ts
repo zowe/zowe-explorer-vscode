@@ -11,7 +11,7 @@
 
 // tslint:disable:no-magic-numbers
 import * as zowe from "@zowe/cli";
-import { IProfileLoaded } from "@zowe/imperative";
+import { IProfileLoaded, ICommandArguments, ConnectionPropsForSessCfg, Session } from "@zowe/imperative";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import * as sinon from "sinon";
@@ -20,7 +20,7 @@ import * as vscode from "vscode";
 import { ZosJobsProvider } from "../../../src/job/ZosJobsProvider";
 import * as refreshActions from "../../../src/shared/refresh";
 import { Job } from "../../../src/job/ZoweJobNode";
-import { DS_SESSION_CONTEXT, JOBS_SESSION_CONTEXT } from "../../../src/globals";
+import * as globals from "../../../src/globals";
 import { DatasetTree } from "../../../src/dataset/DatasetTree";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import { createInstanceOfProfile } from "../../../__mocks__/mockCreators/shared";
@@ -32,7 +32,19 @@ describe("jobNodeActions integration test", async () => {
     const expect = chai.expect;
     chai.use(chaiAsPromised);
 
-    const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
+    const cmdArgs: ICommandArguments = {
+        $0: "zowe",
+        _: [""],
+        host: testConst.profile.host,
+        port: testConst.profile.port,
+        basePath: testConst.profile.basePath,
+        rejectUnauthorized: testConst.profile.rejectUnauthorized,
+        user: testConst.profile.user,
+        password: testConst.profile.password,
+    };
+    const sessCfg = zowe.ZosmfSession.createSessCfgFromArgs(cmdArgs);
+    ConnectionPropsForSessCfg.resolveSessCfgProps(sessCfg, cmdArgs);
+    const session = new Session(sessCfg);
     const testProfileLoaded: IProfileLoaded = {
         name: testConst.profile.name,
         profile: testConst.profile,
@@ -50,7 +62,7 @@ describe("jobNodeActions integration test", async () => {
         null,
         null
     );
-    jobSessionNode.contextValue = JOBS_SESSION_CONTEXT;
+    jobSessionNode.contextValue = globals.JOBS_SESSION_CONTEXT;
     const testJobsTree = new ZosJobsProvider();
     testJobsTree.mSessionNodes.push(jobSessionNode);
 
@@ -64,7 +76,7 @@ describe("jobNodeActions integration test", async () => {
         undefined,
         testProfileLoaded
     );
-    datasetSessionNode.contextValue = DS_SESSION_CONTEXT;
+    datasetSessionNode.contextValue = globals.DS_SESSION_CONTEXT;
     const pattern = testConst.normalPattern.toUpperCase();
     datasetSessionNode.pattern = pattern;
     const testDatasetTree = new DatasetTree();
@@ -82,12 +94,12 @@ describe("jobNodeActions integration test", async () => {
         sandbox.restore();
     });
 
-    const oldSettings = vscode.workspace.getConfiguration("Zowe-DS-Persistent");
+    const oldSettings = vscode.workspace.getConfiguration(globals.SETTINGS_DS_HISTORY);
 
     after(async () => {
         await vscode.workspace
             .getConfiguration()
-            .update("Zowe-DS-Persistent", oldSettings, vscode.ConfigurationTarget.Global);
+            .update(globals.SETTINGS_DS_HISTORY, oldSettings, vscode.ConfigurationTarget.Global);
     });
 
     describe("refreshAll", async () => {

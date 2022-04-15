@@ -13,7 +13,7 @@ import * as vscode from "vscode";
 import * as nls from "vscode-nls";
 import * as globals from "../globals";
 import * as imperative from "@zowe/imperative";
-import { ValidProfileEnum, IZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { ValidProfileEnum, IZoweTreeNode, ProfilesCache, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { PersistentFilters } from "../PersistentFilters";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
@@ -101,19 +101,6 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                 }
                 profile = allProfiles.filter((temprofile) => temprofile.name === sesName)[0];
                 if (!node) {
-                    // If baseProfile exists, combine that information first
-                    const baseProfile = Profiles.getInstance().getBaseProfile();
-                    if (baseProfile) {
-                        try {
-                            const combinedProfile = await Profiles.getInstance().getCombinedProfile(
-                                profile,
-                                baseProfile
-                            );
-                            profile = combinedProfile;
-                        } catch (error) {
-                            throw error;
-                        }
-                    }
                     await Profiles.getInstance().checkCurrentProfile(profile);
                 }
                 if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
@@ -168,7 +155,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
 
     private async getQuickPick(hostname: string) {
         let response = "";
-        const alwaysEdit = PersistentFilters.getDirectValue("Zowe Commands: Always edit") as boolean;
+        const alwaysEdit = PersistentFilters.getDirectValue(globals.SETTINGS_COMMANDS_ALWAYS_EDIT) as boolean;
         if (this.history.getSearchHistory().length > 0) {
             const createPick = new FilterDescriptor(TsoCommandHandler.defaultDialogText);
             const items: vscode.QuickPickItem[] = this.history
@@ -291,10 +278,42 @@ export class TsoCommandHandler extends ZoweCommandProvider {
         }
     }
 
+    private async selectTsoProfile(tsoProfiles: imperative.IProfileLoaded[] = []): Promise<imperative.IProfileLoaded> {
+        let tsoProfile: imperative.IProfileLoaded;
+        if (tsoProfiles.length > 1) {
+            const tsoProfileNamesList = tsoProfiles.map((temprofile) => {
+                return temprofile.name;
+            });
+            if (tsoProfileNamesList.length) {
+                const quickPickOptions: vscode.QuickPickOptions = {
+                    placeHolder: localize(
+                        "issueTsoCommand.tsoProfile.quickPickOption",
+                        "Select the TSO Profile to use for account number."
+                    ),
+                    ignoreFocusOut: true,
+                    canPickMany: false,
+                };
+                const sesName = await vscode.window.showQuickPick(tsoProfileNamesList, quickPickOptions);
+                if (sesName === undefined) {
+                    vscode.window.showInformationMessage(localize("issueTsoCommand.cancelled", "Operation Cancelled"));
+                    return;
+                }
+                tsoProfile = tsoProfiles.filter((temprofile) => temprofile.name === sesName)[0];
+            }
+        } else if (tsoProfiles.length > 0) {
+            tsoProfile = tsoProfiles[0];
+        }
+        return tsoProfile;
+    }
+
     private async getTsoParams(): Promise<IStartTsoParms> {
+        const profileInfo = globals.PROFILESCACHE.getProfileInfo();
         const tsoProfiles: imperative.IProfileLoaded[] = [];
         let tsoProfile: imperative.IProfileLoaded;
         const tsoParms: IStartTsoParms = {};
+        // Keys in the IStartTsoParms interface
+        // TODO(zFernand0): Request the CLI squad that all interfaces are also exported as values that we can iterate
+        const iStartTso = ["account", "characterSet", "codePage", "columns", "logonProcedure", "regionSize", "rows"];
         const profileManager = Profiles.getInstance().getCliProfileManager("tso");
         if (profileManager) {
             try {
@@ -304,48 +323,31 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                         tsoProfiles.push(item);
                     }
                 }
-                if (tsoProfiles.length && tsoProfiles.length > 1) {
-                    const tsoProfileNamesList = tsoProfiles.map((temprofile) => {
-                        return temprofile.name;
-                    });
-                    if (tsoProfileNamesList.length) {
-                        const quickPickOptions: vscode.QuickPickOptions = {
-                            placeHolder: localize(
-                                "issueTsoCommand.tsoProfile.quickPickOption",
-                                "Select the TSO Profile to use for account number."
-                            ),
-                            ignoreFocusOut: true,
-                            canPickMany: false,
-                        };
-                        const sesName = await vscode.window.showQuickPick(tsoProfileNamesList, quickPickOptions);
-                        if (sesName === undefined) {
-                            vscode.window.showInformationMessage(
-                                localize("issueTsoCommand.cancelled", "Operation Cancelled")
-                            );
-                            return;
-                        }
-                        tsoProfile = tsoProfiles.filter((temprofile) => temprofile.name === sesName)[0];
-                    }
-                } else {
-                    if (tsoProfiles.length) {
-                        tsoProfile = tsoProfiles[0];
-                    }
-                }
+                tsoProfile = await this.selectTsoProfile(tsoProfiles);
             } catch (error) {
                 if (!error?.message?.includes(`No default profile set for type "tso"`)) {
                     vscode.window.showInformationMessage(error);
                 }
             }
+        } else if (profileInfo.usingTeamConfig) {
+            const tempProfiles = profileInfo.getAllProfiles("tso");
+            if (tempProfiles.length > 0) {
+                tsoProfile = await this.selectTsoProfile(
+                    tempProfiles.map((p) => imperative.ProfileInfo.profAttrsToProfLoaded(p))
+                );
+                if (tsoProfile != null) {
+                    const prof = profileInfo.mergeArgsForProfile(tsoProfile.profile as imperative.IProfAttrs);
+                    iStartTso.forEach(
+                        (p) => (tsoProfile.profile[p] = prof.knownArgs.find((a) => a.argName === p)?.argValue)
+                    );
+                }
+            }
         }
         if (tsoProfile) {
-            tsoParms.account = tsoProfile.profile.account;
-            tsoParms.characterSet = tsoProfile.profile.characterSet;
-            tsoParms.codePage = tsoProfile.profile.codePage;
-            tsoParms.columns = tsoProfile.profile.columns;
-            tsoParms.logonProcedure = tsoProfile.profile.logonProcedure;
-            tsoParms.regionSize = tsoProfile.profile.regionSize;
-            tsoParms.rows = tsoProfile.profile.rows;
-        } else {
+            iStartTso.forEach((p) => (tsoParms[p] = tsoProfile.profile[p]));
+        }
+
+        if (tsoParms.account == null || tsoParms.account === "") {
             // If there is no tso profile an account number is still required, so ask for one.
             // All other properties of tsoParams will be undefined, so defaults will be utilized.
             const InputBoxOptions = {
@@ -357,7 +359,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                 ignoreFocusOut: true,
                 value: tsoParms.account,
             };
-            tsoParms.account = await UIViews.inputBox(InputBoxOptions);
+            tsoParms.account = await ZoweVsCodeExtension.inputBox(InputBoxOptions);
             if (!tsoParms.account) {
                 vscode.window.showInformationMessage(localize("issueTsoCommand.cancelled", "Operation Cancelled."));
                 return;

@@ -10,21 +10,50 @@
  */
 
 import * as vscode from "vscode";
+import { ProfilesCache } from "@zowe/zowe-explorer-api";
+import { Logger } from "@zowe/imperative";
 import * as utils from "../../src/utils/ProfilesUtils";
 import * as globals from "../../src/globals";
-import { createInstanceOfProfile, createIProfile } from "../../__mocks__/mockCreators/shared";
+import {
+    createInstanceOfProfile,
+    createInstanceOfProfileInfo,
+    createIProfile,
+    createValidIProfile,
+} from "../../__mocks__/mockCreators/shared";
 import { Profiles } from "../../src/Profiles";
 
 function createGlobalMocks() {
+    const globalMocks = {
+        isTheia: jest.fn(),
+        testProfileLoaded: createValidIProfile(),
+        mockProfileInstance: null,
+        mockProfileInfo: createInstanceOfProfileInfo(),
+        mockProfilesCache: new ProfilesCache(Logger.getAppLogger()),
+    };
+
+    globalMocks.mockProfileInstance = createInstanceOfProfile(globalMocks.testProfileLoaded);
     const isTheia = jest.fn();
 
     Object.defineProperty(vscode.window, "showQuickPick", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "createQuickPick", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showInputBox", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showErrorMessage", { value: jest.fn(), configurable: true });
-    Object.defineProperty(Profiles, "getInstance", { value: jest.fn(), configurable: true });
+    Object.defineProperty(Profiles, "getInstance", {
+        value: jest
+            .fn(() => {
+                return { promptCredentials: ["test", "test", "test"] };
+            })
+            .mockReturnValue(globalMocks.mockProfileInstance),
+        configurable: true,
+    });
     Object.defineProperty(globals, "ISTHEIA", { get: isTheia, configurable: true });
     Object.defineProperty(utils, "isTheia", { value: jest.fn(), configurable: true });
+
+    Object.defineProperty(globalMocks.mockProfilesCache, "getProfileInfo", {
+        value: jest.fn(() => {
+            return { value: globalMocks.mockProfileInfo, configurable: true };
+        }),
+    });
 
     return {
         isTheia,
@@ -73,13 +102,11 @@ describe("Utils Unit Tests - Function errorHandling", () => {
         );
     });
     it("Checking common error handling - Theia", async () => {
-        // const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
         mocked(vscode.window.showErrorMessage).mockResolvedValueOnce({ title: "Check Credentials" });
         mocked(utils.isTheia).mockReturnValue(true);
-        // globalMocks.isTheia.mockReturnValue(true);
         const label = "invalidCred";
 
         await utils.errorHandling({ mDetails: { errorCode: 401 } }, label);

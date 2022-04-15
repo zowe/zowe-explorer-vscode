@@ -23,7 +23,7 @@ More information:
 
 ## Contents
 
-- [What's new in Zowe Explorer 1.22.0](#whats-new-in-zowe-explorer-1210)
+- [Early Access Features](#early-access-features)
 - [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
 - [Sample Use Cases](#sample-use-cases)
@@ -31,15 +31,22 @@ More information:
 - [Usage Tips](#usage-tips)
 - [Extending Zowe Explorer](#extending-zowe-explorer)
 
-## What's new in Zowe Explorer 1.22.0
+## Early Access Features
 
 > Zowe Explorer is compatible only with Theia 1.18.0 or higher.
 > Zowe Explorer could experience possible unexpected behaviors with the latest Theia releases.
+
+This version may receive breaking changes and is intended to gather early feedback on what may become a future LTS release.
 
 **Added**:
 
 - Added extensible Login and Logout capabilities for Zowe extenders to utilize for token based authentication.
 - Added an Eclipse Public License file. Users can view the license file in the root directory of the Zowe Explorer repository.
+
+For documentation about these features, see these files:
+
+- [Changes Affecting Zowe Explorer Extenders](https://github.com/zowe/vscode-extension-for-zowe/blob/next/docs/Early%20Access%20-%20Changes%20Affecting%20Extenders.md)
+- [Using Global Profile Configuration](https://github.com/zowe/vscode-extension-for-zowe/blob/next/docs/Early%20Access%20-%20Using%20Global%20Profile%20Configuration.md)
 
 **Changed**:
 
@@ -94,8 +101,8 @@ Before using the base profile functionality, ensure that you have [Zowe CLI](htt
 **Follow these steps:**
 
 1. Open Zowe CLI and run the following command: `zowe auth login apiml`
-2. Follow the instructions to complete the login.  
-   A local base profile is created that contains your token.  
+2. Follow the instructions to complete the login.
+   A local base profile is created that contains your token.
    **Note:** For more information about the process, see [Token Management](https://docs.zowe.org/stable/user-guide/cli-usingcli.html#how-token-management-works).
 
 3. Run Zowe Explorer and click the **+** icon.
@@ -355,10 +362,6 @@ For more information about SCS, see [Secure Credential Store Plug-in for Zowe Ex
 - **Delete a profile**: Right-click a chosen profile and select **Delete Profile** to permanently delete the profile. The functionality deletes the profile from your `.zowe` folder.
 
 - **Hide a profile**: You can hide a profile from the profile tree by right-clicking the profile and selecting the **Hide Profile** option. To add the profile back, click the **+** button and select the profile from the quick pick list.
-
-- **Associate profiles**: You can create a secondary association by right-clicking the profile and selecting the **Associate profiles** option. For more information, see [the Associate profiles section](https://docs.zowe.org/stable/user-guide/ze-profiles.html#associate-profile) in Zowe Docs.
-
-  > **Note**: The Associate Profile functionality is deprecated and will be removed in Zowe Explorer V2 that is slated for February 2022. For more information, see the Release Timeline section on the [Download Zowe](https://www.zowe.org/download.html#timeline) page on the Zowe site. Use the base profile feature instead of **associate profile**.
 
 - **Open recent members**: Zowe Explorer lets you open a list of members you worked on earlier. You can access the list by pressing Ctrl+Alt+R (Windows) or Command+Option+R (Mac).
 

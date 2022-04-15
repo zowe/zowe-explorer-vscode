@@ -9,7 +9,7 @@
  *                                                                                 *
  */
 
-import { IZoweUSSTreeNode, ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { IZoweUSSTreeNode, ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
@@ -23,6 +23,7 @@ import {
     createFileResponse,
     createInstanceOfProfile,
     createValidIProfile,
+    createTreeView,
 } from "../../../__mocks__/mockCreators/shared";
 import * as globals from "../../../src/globals";
 import * as vscode from "vscode";
@@ -50,7 +51,7 @@ async function createGlobalMocks() {
         createQuickPick: jest.fn(),
         getConfiguration: jest.fn(),
         ZosmfSession: jest.fn(),
-        createBasicZosmfSession: jest.fn(),
+        createSessCfgFromArgs: jest.fn(),
         mockValidationSetting: jest.fn(),
         mockDisableValidationContext: jest.fn(),
         mockEnableValidationContext: jest.fn(),
@@ -74,6 +75,7 @@ async function createGlobalMocks() {
         testUSSNode: null,
         testTree: null,
         profilesForValidation: { status: "active", name: "fake" },
+        mockProfilesCache: new ProfilesCache(Logger.getAppLogger()),
     };
 
     globalMocks.mockTextDocuments.push(globalMocks.mockTextDocumentDirty);
@@ -85,7 +87,6 @@ async function createGlobalMocks() {
     globalMocks.mockProfilesInstance = createInstanceOfProfile(globalMocks.testProfile);
     globalMocks.mockProfilesInstance.getBaseProfile.mockResolvedValue(globalMocks.testBaseProfile);
     globalMocks.mockProfilesInstance.loadNamedProfile.mockReturnValue(globalMocks.testProfile);
-    globalMocks.mockProfilesInstance.getCombinedProfile.mockReturnValue(globalMocks.testCombinedProfile);
     globalMocks.mockProfilesInstance.allProfiles = [
         globalMocks.testProfile,
         { name: "firstName" },
@@ -110,14 +111,15 @@ async function createGlobalMocks() {
         value: globalMocks.showInformationMessage,
         configurable: true,
     });
-    Object.defineProperty(globalMocks.ZosmfSession, "createBasicZosmfSession", {
-        value: globalMocks.createBasicZosmfSession,
+    Object.defineProperty(globalMocks.ZosmfSession, "createSessCfgFromArgs", {
+        value: globalMocks.createSessCfgFromArgs,
         configurable: true,
     });
     Object.defineProperty(zowe, "ZosmfSession", { value: globalMocks.ZosmfSession, configurable: true });
     Object.defineProperty(globalMocks.filters, "getFilters", { value: globalMocks.getFilters, configurable: true });
     Object.defineProperty(vscode.window, "createQuickPick", { value: globalMocks.createQuickPick, configurable: true });
     Object.defineProperty(zowe, "Utilities", { value: globalMocks.Utilities, configurable: true });
+    Object.defineProperty(zowe.Utilities, "isFileTagBinOrAscii", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showErrorMessage", {
         value: globalMocks.showErrorMessage,
         configurable: true,
@@ -149,10 +151,15 @@ async function createGlobalMocks() {
         }),
     });
     globalMocks.testTree = new USSTree();
+    globalMocks.testTree.treeView = createTreeView();
     const ussSessionTestNode = createUSSSessionNode(globalMocks.testSession, globalMocks.testProfile);
     globalMocks.testUSSNode = createUSSNode(globalMocks.testSession, globalMocks.testProfile);
     globalMocks.testTree.mSessionNodes.push(ussSessionTestNode);
     globalMocks.testTree.addSearchHistory("/u/myuser");
+
+    Object.defineProperty(globalMocks.mockProfilesCache, "getProfileInfo", {
+        value: jest.fn().mockReturnValue({ usingTeamConfig: false }),
+    });
 
     return globalMocks;
 }
@@ -734,7 +741,7 @@ describe("USSTree Unit Tests - Function USSTree.filterPrompt()", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         const sessionWithCred = createISession();
-        globalMocks.createBasicZosmfSession.mockReturnValue(sessionWithCred);
+        globalMocks.createSessCfgFromArgs.mockReturnValue(sessionWithCred);
         const dsNode = new ZoweUSSNode(
             "/u/myFile.txt",
             vscode.TreeItemCollapsibleState.Expanded,
@@ -761,7 +768,7 @@ describe("USSTree Unit Tests - Function USSTree.filterPrompt()", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         const sessionNoCred = createISessionWithoutCredentials();
-        globalMocks.createBasicZosmfSession.mockReturnValue(sessionNoCred);
+        globalMocks.createSessCfgFromArgs.mockReturnValue(sessionNoCred);
         const dsNode = new ZoweUSSNode(
             "/u/myFile.txt",
             vscode.TreeItemCollapsibleState.Expanded,
@@ -1090,7 +1097,7 @@ describe("USSTree Unit Tests - Function USSTree.rename()", () => {
         globalMocks.showInputBox.mockReturnValueOnce("new name");
         Object.defineProperty(globalMocks.testTree, "findFavoritedNode", {
             value: jest.fn(() => {
-                return { ussFavNode };
+                return ussFavNode;
             }),
         });
 
@@ -1350,21 +1357,6 @@ describe("USSTree Unit Tests - Function USSTree.addSingleSession()", () => {
         await globalMocks.testTree.addSingleSession(globalMocks.testProfile);
 
         expect(globalMocks.testTree.mSessionNodes[1].session.ISession.tokenValue).toEqual("testTokenValue");
-    });
-
-    it("Tests if addSingleSession throws an error if  getCombinedProfile fails", async () => {
-        const globalMocks = await createGlobalMocks();
-
-        jest.spyOn(globalMocks.mockProfilesInstance, "getCombinedProfile").mockRejectedValue("Test error!");
-
-        let error;
-        try {
-            await globalMocks.testTree.addSingleSession(globalMocks.testProfile);
-        } catch (err) {
-            error = err;
-        }
-
-        expect(error).toEqual("Test error!");
     });
 
     it("Tests that addSingleSession doesn't add the session again, if it was already added", async () => {
@@ -1753,7 +1745,9 @@ describe("USSTree Unit Tests - Function USSTree.editSession()", () => {
             vscode.TreeItemCollapsibleState.Collapsed,
             null,
             globalMocks.testSession,
-            null
+            null,
+            false,
+            globalMocks.testProfile.name
         );
         const checkSession = jest.spyOn(globalMocks.testTree, "editSession");
         Object.defineProperty(Profiles, "getInstance", {
@@ -1785,6 +1779,8 @@ describe("USSTree Unit Tests - Function USSTree.editSession()", () => {
             vscode.TreeItemCollapsibleState.Collapsed,
             null,
             globalMocks.testSession,
+            null,
+            false,
             globalMocks.testProfile.name
         );
         const checkSession = jest.spyOn(globalMocks.testTree, "editSession");

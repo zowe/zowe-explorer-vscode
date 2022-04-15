@@ -22,7 +22,7 @@ export class PersistentFilters {
     /**
      * Retrieves a generic setting either in user or workspace.
      * <pre>{@code
-     *  PersistentFilters.getDirectValue("Zowe Commands: Always edit") as boolean;
+     *  PersistentFilters.getDirectValue("zowe.commands.alwaysEdit") as boolean;
      * }</pre>
      * @param key - string. The attribute value that needs retrieving
      */

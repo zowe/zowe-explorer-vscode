@@ -17,6 +17,7 @@ import {
     createAltTypeIProfile,
     createTreeView,
     createIProfile,
+    createInstanceOfProfile,
 } from "../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../__mocks__/mockCreators/datasets";
 import { createUSSSessionNode, createUSSTree } from "../../__mocks__/mockCreators/uss";
@@ -34,14 +35,28 @@ describe("ZoweExplorerExtender unit tests", () => {
             treeView: createTreeView(),
             instTest: ZoweExplorerExtender.getInstance(),
             profiles: null,
+            mockGetConfiguration: jest.fn(),
         };
-        newMocks.profiles = await Profiles.createInstance(newMocks.log);
+
+        newMocks.profiles = createInstanceOfProfile(newMocks.imperativeProfile);
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest
+                .fn(() => {
+                    return {
+                        refresh: jest.fn(),
+                    };
+                })
+                .mockReturnValue(newMocks.profiles),
+        });
         Object.defineProperty(vscode.window, "createTreeView", { value: jest.fn(), configurable: true });
+        Object.defineProperty(vscode.workspace, "getConfiguration", {
+            value: newMocks.mockGetConfiguration,
+            configurable: true,
+        });
+
         return newMocks;
     }
-    afterEach(async () => {
-        jest.resetAllMocks();
-    });
+
     it("calls DatasetTree addSession when extender profiles are reloaded", async () => {
         const blockMocks = await createBlockMocks();
         const datasetSessionNode = createDatasetSessionNode(blockMocks.session, blockMocks.altTypeProfile);

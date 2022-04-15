@@ -13,10 +13,12 @@ import * as imperative from "@zowe/imperative";
 import * as vscode from "vscode";
 import { ProfilesCache } from "../profiles";
 import { KeytarCredentialManager } from "./KeytarCredentialManager";
+import * as globals from "../globals";
 
 export class KeytarApi {
     public constructor(protected log: imperative.Logger) {}
 
+    // v1 specific
     public async activateKeytar(initialized: boolean, isTheia: boolean): Promise<void> {
         const log = imperative.Logger.getAppLogger();
         const profiles = new ProfilesCache(log);
@@ -26,11 +28,13 @@ export class KeytarApi {
             if (!initialized && keytar) {
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                 KeytarCredentialManager.keytar = keytar;
-                const service: string = vscode.workspace.getConfiguration().get("Zowe Security: Credential Key");
+                const service: string = vscode.workspace
+                    .getConfiguration()
+                    .get(globals.SETTINGS_SECURITY_CREDENTIAL_PLUGIN);
                 await imperative.CredentialManagerFactory.initialize({
-                    service: service || "Zowe-Plugin",
+                    service: service || globals.SETTINGS_SCS_DEFAULT,
                     Manager: KeytarCredentialManager,
-                    displayName: "Zowe Explorer",
+                    displayName: globals.ZOWE_EXPLORER,
                 });
             }
         }
