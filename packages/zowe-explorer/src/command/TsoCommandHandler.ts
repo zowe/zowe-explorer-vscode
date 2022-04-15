@@ -160,7 +160,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
             const createPick = new FilterDescriptor(TsoCommandHandler.defaultDialogText);
             const items: vscode.QuickPickItem[] = this.history
                 .getSearchHistory()
-                .map((element) => new FilterItem(element));
+                .map((element) => new FilterItem({ text: element }));
             if (globals.ISTHEIA) {
                 const options1: vscode.QuickPickOptions = {
                     placeHolder:
@@ -307,6 +307,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
     }
 
     private async getTsoParams(): Promise<IStartTsoParms> {
+        const profileInfo = globals.PROFILESCACHE.getProfileInfo();
         const tsoProfiles: imperative.IProfileLoaded[] = [];
         let tsoProfile: imperative.IProfileLoaded;
         const tsoParms: IStartTsoParms = {};
@@ -328,16 +329,14 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                     vscode.window.showInformationMessage(error);
                 }
             }
-        } else if (ProfilesCache.getConfigInstance().usingTeamConfig) {
-            const tempProfiles = ProfilesCache.getConfigInstance().getAllProfiles("tso");
+        } else if (profileInfo.usingTeamConfig) {
+            const tempProfiles = profileInfo.getAllProfiles("tso");
             if (tempProfiles.length > 0) {
                 tsoProfile = await this.selectTsoProfile(
                     tempProfiles.map((p) => imperative.ProfileInfo.profAttrsToProfLoaded(p))
                 );
                 if (tsoProfile != null) {
-                    const prof = ProfilesCache.getConfigInstance().mergeArgsForProfile(
-                        tsoProfile.profile as imperative.IProfAttrs
-                    );
+                    const prof = profileInfo.mergeArgsForProfile(tsoProfile.profile as imperative.IProfAttrs);
                     iStartTso.forEach(
                         (p) => (tsoProfile.profile[p] = prof.knownArgs.find((a) => a.argName === p)?.argValue)
                     );

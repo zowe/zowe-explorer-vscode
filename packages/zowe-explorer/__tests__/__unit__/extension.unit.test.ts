@@ -82,6 +82,7 @@ async function createGlobalMocks() {
             };
         }),
         mockProfCacheProfileInfo: createInstanceOfProfileInfo(),
+        mockProfilesCache: new ProfilesCache(imperative.Logger.getAppLogger()),
         testTreeView: null,
         enums: jest.fn().mockImplementation(() => {
             return {
@@ -119,6 +120,7 @@ async function createGlobalMocks() {
             disableValidationContext: jest.fn(),
             enableValidationContext: jest.fn(),
             validationArraySetup: jest.fn(),
+            getProfileInfo: () => createInstanceOfProfileInfo(),
         },
         mockExtension: null,
         appName: vscode.env.appName,
@@ -329,7 +331,7 @@ async function createGlobalMocks() {
             };
         }),
     });
-    Object.defineProperty(ProfilesCache, "getConfigInstance", {
+    Object.defineProperty(globalMocks.mockProfilesCache, "getProfileInfo", {
         value: jest.fn(() => {
             return { value: globalMocks.mockProfCacheProfileInfo, configurable: true };
         }),

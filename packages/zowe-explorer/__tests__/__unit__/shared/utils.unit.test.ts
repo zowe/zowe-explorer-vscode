@@ -22,6 +22,7 @@ import {
     createFileResponse,
     createInstanceOfProfile,
     createTextDocument,
+    createInstanceOfProfilesCache,
 } from "../../../__mocks__/mockCreators/shared";
 import { ProfilesCache } from "@zowe/zowe-explorer-api";
 import { createDatasetSessionNode } from "../../../__mocks__/mockCreators/datasets";
@@ -45,12 +46,19 @@ async function createGlobalMocks() {
     return newVariables;
 }
 
-Object.defineProperty(ProfilesCache, "getConfigInstance", {
+Object.defineProperty(globals, "PROFILESCACHE", {
+    value: jest.fn().mockReturnValue(createInstanceOfProfilesCache()),
+});
+Object.defineProperty(globals.PROFILESCACHE, "getConfigInstance", {
     value: jest.fn(() => {
         return {
             usingTeamConfig: false,
         };
     }),
+});
+Object.defineProperty(Profiles, "getInstance", {
+    value: () => createInstanceOfProfile(createIProfile()),
+    configurable: true,
 });
 
 describe("Shared Utils Unit Tests - Function node.concatChildNodes()", () => {
@@ -134,34 +142,17 @@ describe("syncSessionNode shared util function", () => {
     const sessionNode = createDatasetSessionNode(anySession, serviceProfile);
 
     it("should update a session and a profile in the provided node", async () => {
+        const globalMocks = await createGlobalMocks();
         // given
-        const baseProfileName = "base_test";
-        const baseProfile: IProfile = {};
-        const combinedProfile = serviceProfileValue;
-        const profiles = createInstanceOfProfile(serviceProfile);
-        profiles.loadNamedProfile = jest.fn(() => serviceProfileValue);
+        Object.defineProperty(globals.PROFILESCACHE, "loadNamedProfile", {
+            value: jest.fn().mockReturnValue(serviceProfile),
+        });
         const expectedSession = new Session({});
-        const sessionFromProfile = () => expectedSession;
+        const sessionFromProfile = jest.fn().mockResolvedValueOnce(expectedSession);
         // when
-        await utils.syncSessionNode(profiles)(sessionFromProfile)(sessionNode);
-        // then
-        const expectedProfile = combinedProfile;
-        expect(sessionNode.getSession()).toEqual(expectedSession);
-        expect(sessionNode.getProfile()).toEqual(expectedProfile);
-        expect(sessionNode.collapsibleState).toEqual(vscode.TreeItemCollapsibleState.Collapsed);
-    });
-    it("should update a session and a profile without default base profile in the provided node", async () => {
-        const combinedProfile = serviceProfileValue;
-        const profiles = createInstanceOfProfile(serviceProfile);
-        profiles.loadNamedProfile = jest.fn(() => serviceProfileValue);
-        const expectedSession = new Session({});
-        const sessionFromProfile = () => expectedSession;
-        // when
-        await utils.syncSessionNode(profiles)(sessionFromProfile)(sessionNode);
-        // then
-        const expectedProfile = combinedProfile;
-        expect(sessionNode.getSession()).toEqual(expectedSession);
-        expect(sessionNode.getProfile()).toEqual(expectedProfile);
+        await utils.syncSessionNode(Profiles.getInstance())(sessionFromProfile)(sessionNode);
+        expect(await sessionNode.getSession()).toEqual(expectedSession);
+        expect(sessionNode.getProfile()).toEqual(serviceProfile);
         expect(sessionNode.collapsibleState).toEqual(vscode.TreeItemCollapsibleState.Collapsed);
     });
     it("should do nothing, if there is no profile from provided node in the file system", async () => {
@@ -416,9 +407,9 @@ describe("Test force upload", () => {
 describe("Shared Utils Unit Tests - Function filterTreeByString", () => {
     it("Testing that filterTreeByString returns the correct array", async () => {
         const qpItems = [
-            new utils.FilterItem("[sestest]: HLQ.PROD2.STUFF1"),
-            new utils.FilterItem("[sestest]: HLQ.PROD3.STUFF2(TESTMEMB)"),
-            new utils.FilterItem("[sestest]: /test/tree/abc"),
+            new utils.FilterItem({ text: "[sestest]: HLQ.PROD2.STUFF1" }),
+            new utils.FilterItem({ text: "[sestest]: HLQ.PROD3.STUFF2(TESTMEMB)" }),
+            new utils.FilterItem({ text: "[sestest]: /test/tree/abc" }),
         ];
 
         let filteredValues = await sharedUtils.filterTreeByString("testmemb", qpItems);

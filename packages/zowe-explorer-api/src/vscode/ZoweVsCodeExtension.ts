@@ -13,7 +13,7 @@ import * as semver from "semver";
 import * as vscode from "vscode";
 import { ProfilesCache, ZoweExplorerApi } from "../profiles";
 import { IZoweLogger, MessageSeverityEnum } from "../logger/IZoweLogger";
-import { ISession, IProfileLoaded } from "@zowe/imperative";
+import { ISession, IProfileLoaded, Logger } from "@zowe/imperative";
 import { IPromptCredentialsOptions, IPromptUserPassOptions } from "./doc/IPromptCredentials";
 
 /**
@@ -27,6 +27,7 @@ export class ZoweVsCodeExtension {
      *          to access the Zowe Explorer APIs or `undefined`. Also `undefined` if requiredVersion
      *          is larger than the version of Zowe Explorer found.
      */
+    private static profilesCache = new ProfilesCache(Logger.getAppLogger());
     public static getZoweExplorerApi(requiredVersion?: string): ZoweExplorerApi.IApiRegisterClient {
         const zoweExplorerApi = vscode.extensions.getExtension("Zowe.vscode-extension-for-zowe");
         if (zoweExplorerApi?.exports) {
@@ -70,7 +71,7 @@ export class ZoweVsCodeExtension {
      * @returns Instance of IProfileLoaded containing information about the updated profile
      */
     public static async promptCredentials(options: IPromptCredentialsOptions): Promise<IProfileLoaded> {
-        const loadProfile = ProfilesCache.getLoadedProfConfig(options.sessionName.trim());
+        const loadProfile = await this.profilesCache.getLoadedProfConfig(options.sessionName.trim());
         if (loadProfile == null) return undefined;
         const loadSession = loadProfile.profile as ISession;
 
@@ -81,8 +82,12 @@ export class ZoweVsCodeExtension {
             loadProfile.profile.password = loadSession.password = creds[1];
 
             const upd = { profileName: loadProfile.name, profileType: loadProfile.type };
-            await ProfilesCache.getConfigInstance().updateProperty({ ...upd, property: "user", value: creds[0] });
-            await ProfilesCache.getConfigInstance().updateProperty({ ...upd, property: "password", value: creds[1] });
+            await (
+                await this.profilesCache.getProfileInfo()
+            ).updateProperty({ ...upd, property: "user", value: creds[0] });
+            await (
+                await this.profilesCache.getProfileInfo()
+            ).updateProperty({ ...upd, property: "password", value: creds[1] });
 
             return loadProfile;
         }

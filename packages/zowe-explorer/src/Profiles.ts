@@ -73,7 +73,7 @@ let InputBoxOptions: vscode.InputBoxOptions;
 export class Profiles extends ProfilesCache {
     // Processing stops if there are no profiles detected
     public static async createInstance(log: Logger): Promise<Profiles> {
-        Profiles.loader = new Profiles(log);
+        Profiles.loader = new Profiles(log, vscode.workspace.workspaceFolders?.[0].uri.fsPath);
         await Profiles.loader.refresh(ZoweExplorerApiRegister.getInstance());
         return Profiles.loader;
     }
@@ -82,15 +82,15 @@ export class Profiles extends ProfilesCache {
         return Profiles.loader;
     }
 
-    private static loader: Profiles;
+    protected static loader: Profiles;
 
     public loadedProfile: IProfileLoaded;
     public validProfile: ValidProfileEnum = ValidProfileEnum.INVALID;
     private dsSchema: string = globals.SETTINGS_DS_HISTORY;
     private ussSchema: string = globals.SETTINGS_USS_HISTORY;
     private jobsSchema: string = globals.SETTINGS_JOBS_HISTORY;
-    public constructor(log: Logger) {
-        super(log);
+    public constructor(log: Logger, cwd?: string) {
+        super(log, cwd);
     }
 
     public async checkCurrentProfile(theProfile: IProfileLoaded) {
@@ -292,16 +292,22 @@ export class Profiles extends ProfilesCache {
                 return jesProfileTypes.includes(profile.type);
             }
         });
-        if (profileNamesList) {
-            profileNamesList = profileNamesList.filter(
-                (profileName) =>
-                    // Find all cases where a profile is not already displayed
-                    !zoweFileProvider.mSessionNodes.find((sessionNode) => sessionNode.getProfileName() === profileName)
-            );
-        }
+        profileNamesList = profileNamesList.filter(
+            (profileName) =>
+                // Find all cases where a profile is not already displayed
+                !zoweFileProvider.mSessionNodes.find((sessionNode) => sessionNode.getProfileName() === profileName)
+        );
+
+        // TODO(zFernand0): Include conflicting profiles
+
         const createPick = new FilterDescriptor("\uFF0B " + createNewProfile);
         const configPick = new FilterDescriptor("\uFF0B " + createNewConfig);
-        const items: vscode.QuickPickItem[] = profileNamesList.map((element) => new FilterItem(element));
+        const items: vscode.QuickPickItem[] = [];
+        const mProfileInfo = await this.getProfileInfo();
+
+        for (const pName of profileNamesList) {
+            items.push(new FilterItem({ text: pName, icon: this.getProfileIcon(mProfileInfo, pName)[0] }));
+        }
         const quickpick = vscode.window.createQuickPick();
         switch (zoweFileProvider.getTreeType()) {
             case PersistenceSchemaEnum.Dataset:
@@ -358,7 +364,8 @@ export class Profiles extends ProfilesCache {
             if (choice instanceof FilterDescriptor) {
                 chosenProfile = "";
             } else {
-                chosenProfile = choice.label;
+                // remove any icons from the label
+                chosenProfile = choice.label.replace(/\$\(.*\)\s/g, "");
             }
         }
 
@@ -368,10 +375,10 @@ export class Profiles extends ProfilesCache {
         }
 
         if (chosenProfile === "") {
-            const config = ProfilesCache.getConfigInstance();
+            const config = await this.getProfileInfo();
             if (config.usingTeamConfig) {
                 const profiles = config.getAllProfiles();
-                const currentProfile = this.getProfileFromConfig(profiles[0].profName);
+                const currentProfile = await this.getProfileFromConfig(profiles[0].profName);
                 const filePath = currentProfile.profLoc.osLoc[0];
                 await this.openConfigFile(filePath);
                 return;
@@ -433,8 +440,8 @@ export class Profiles extends ProfilesCache {
     }
 
     public async editSession(profileLoaded: IProfileLoaded, profileName: string): Promise<any | undefined> {
-        if (ProfilesCache.getConfigInstance().usingTeamConfig) {
-            const currentProfile = this.getProfileFromConfig(profileLoaded.name);
+        if ((await this.getProfileInfo()).usingTeamConfig) {
+            const currentProfile = await this.getProfileFromConfig(profileLoaded.name);
             const filePath = currentProfile.profLoc.osLoc[0];
             await this.openConfigFile(filePath);
             return;
@@ -681,9 +688,9 @@ export class Profiles extends ProfilesCache {
             await config.save(false);
             let configName;
             if (user) {
-                configName = ProfilesCache.getConfigInstance().getTeamConfig().userConfigName;
+                configName = (await this.getProfileInfo()).getTeamConfig().userConfigName;
             } else {
-                configName = ProfilesCache.getConfigInstance().getTeamConfig().configName;
+                configName = (await this.getProfileInfo()).getTeamConfig().configName;
             }
             await this.openConfigFile(path.join(rootPath, configName));
             const reloadButton = localize("createZoweSchema.reload.button", "Refresh Zowe Explorer");
@@ -912,7 +919,7 @@ export class Profiles extends ProfilesCache {
                 updSession.ISession.password,
                 updSession.ISession.base64EncodedAuth,
             ];
-            if (ProfilesCache.getConfigInstance().usingTeamConfig) {
+            if ((await this.getProfileInfo()).usingTeamConfig) {
                 const profArray = [];
                 for (const theprofile of this.allProfiles) {
                     if (theprofile.name !== promptInfo.profile.name) {
@@ -977,8 +984,8 @@ export class Profiles extends ProfilesCache {
         }
         deleteLabel = deletedProfile.name;
 
-        if (ProfilesCache.getConfigInstance().usingTeamConfig) {
-            const currentProfile = this.getProfileFromConfig(deleteLabel);
+        if ((await this.getProfileInfo()).usingTeamConfig) {
+            const currentProfile = await this.getProfileFromConfig(deleteLabel);
             const filePath = currentProfile.profLoc.osLoc[0];
             await this.openConfigFile(filePath);
             return;
@@ -1336,50 +1343,18 @@ export class Profiles extends ProfilesCache {
         await vscode.window.showTextDocument(document);
     }
 
-    private async promptSaveConfig(profileName: string, saveButtons: string[]) {
-        const infoMsg = localize(
-            "promptCredentials.saveCredentialsConfig.infoMessage",
-            `Save entered credentials for future use with profile: {0}?\nSaving credentials will update the team config file.\n"Save Unsecure" will save values in plain text.`,
-            profileName
-        );
-        return vscode.window.showInformationMessage(infoMsg, { modal: true }, ...saveButtons).then((selection) => {
-            return selection;
-        });
-    }
-
-    private async promptUserPass(loadSession: ISession, rePrompt?: boolean): Promise<string[] | undefined> {
-        let repromptUser: string;
-        let repromptPass: string;
-        let newUser: string;
-        let newPass: string;
-
-        if (rePrompt) {
-            repromptUser = loadSession.user;
-            repromptPass = loadSession.password;
-        }
-
-        if (!loadSession.user || rePrompt) {
-            newUser = await this.userInfo(repromptUser);
-            loadSession.user = newUser;
-        } else {
-            newUser = loadSession.user;
-        }
-
-        if (!newUser || (rePrompt && newUser === "")) {
-            return undefined;
-        } else {
-            if (!loadSession.password || rePrompt) {
-                newPass = await this.passwordInfo(repromptPass);
-                loadSession.password = newPass;
+    private getProfileIcon(profInfo: zowe.imperative.ProfileInfo, name: string): string[] {
+        const prof = profInfo.getAllProfiles().find((p) => p.profName === name);
+        const osLocInfo = profInfo.getOsLocInfo(prof);
+        const ret: string[] = [];
+        for (const loc of osLocInfo ?? []) {
+            if (loc.global) {
+                ret.push("$(home)");
             } else {
-                newPass = loadSession.password;
+                ret.push("$(folder)");
             }
         }
-
-        if (!newPass || (rePrompt && newUser === "")) {
-            return undefined;
-        }
-        return [newUser, newPass];
+        return ret;
     }
 
     private async updateBaseProfileFileLogin(profile: IProfileLoaded, updProfile: IProfile) {
