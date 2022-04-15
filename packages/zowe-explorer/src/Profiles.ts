@@ -73,7 +73,7 @@ let InputBoxOptions: vscode.InputBoxOptions;
 export class Profiles extends ProfilesCache {
     // Processing stops if there are no profiles detected
     public static async createInstance(log: Logger): Promise<Profiles> {
-        Profiles.loader = new Profiles(log);
+        Profiles.loader = new Profiles(log, vscode.workspace.workspaceFolders?.[0].uri.fsPath);
         await Profiles.loader.refresh(ZoweExplorerApiRegister.getInstance());
         return Profiles.loader;
     }
@@ -89,8 +89,8 @@ export class Profiles extends ProfilesCache {
     private dsSchema: string = globals.SETTINGS_DS_HISTORY;
     private ussSchema: string = globals.SETTINGS_USS_HISTORY;
     private jobsSchema: string = globals.SETTINGS_JOBS_HISTORY;
-    public constructor(log: Logger) {
-        super(log);
+    public constructor(log: Logger, cwd?: string) {
+        super(log, cwd);
     }
 
     public async checkCurrentProfile(theProfile: IProfileLoaded) {
