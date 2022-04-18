@@ -2,6 +2,15 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## 2.0.0-next.202204180940
+
+- Refactored the PRofilesCache to reduce maintenance efforts going forward. [#1715](https://github.com/zowe/vscode-extension-for-zowe/issues/1715)
+- Updated CLI to consume security related fixes and more. [#1740](https://github.com/zowe/vscode-extension-for-zowe/pull/1740)
+- Added differentiation between project and global level profiles. [#1727](https://github.com/zowe/vscode-extension-for-zowe/issues/1727)
+- Removed the Secure Credential setting. [#1739](https://github.com/zowe/vscode-extension-for-zowe/issues/1739), [#722](https://github.com/zowe/vscode-extension-for-zowe/issues/722), [#820](https://github.com/zowe/vscode-extension-for-zowe/issues/820), and [#1223](https://github.com/zowe/vscode-extension-for-zowe/issues/1223)
+- Synchronized the ZE preferred Security service with the CLI. [#1736](https://github.com/zowe/vscode-extension-for-zowe/issues/1736)
+- Fixed APIML token not working between clients (ZE and CLI). [#1713](https://github.com/zowe/vscode-extension-for-zowe/issues/1713)
+
 ## 2.0.0-next.202204081040
 
 - Fixed TSO commands in when using teamConfig. [#1731](https://github.com/zowe/vscode-extension-for-zowe/pull/1731)
