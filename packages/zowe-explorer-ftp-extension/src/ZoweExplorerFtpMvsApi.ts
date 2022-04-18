@@ -25,53 +25,48 @@ import { ZoweLogger } from "./extension";
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
 export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
+    private listConnection: any;
     public async dataSet(filter: string, options?: zowe.IListOptions): Promise<zowe.IZosFilesResponse> {
         const result = this.getDefaultResponse();
-        let connection: any;
-        try {
-            connection = await this.ftpClient(this.checkedProfile());
-            if (connection) {
-                const response: any[] = await DataSetUtils.listDataSets(connection, filter);
-                if (response) {
-                    result.success = true;
-                    result.apiResponse.items = response.map((element) => ({
-                        dsname: element.dsname,
-                        dsorg: element.dsorg,
-                        volume: element.volume,
-                        recfm: element.recfm,
-                        blksz: element.blksz,
-                        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-                        migr: element.volume && element.volume.toUpperCase() === "MIGRATED" ? "YES" : "NO",
-                    }));
-                }
-            }
-            return result;
-        } finally {
-            this.releaseConnection(connection);
+        if (this.listConnection === undefined) {
+            this.listConnection = await this.ftpClient(this.checkedProfile());
         }
+        if (this.listConnection) {
+            const response: any[] = await DataSetUtils.listDataSets(this.listConnection, filter);
+            if (response) {
+                result.success = true;
+                result.apiResponse.items = response.map((element) => ({
+                    dsname: element.dsname,
+                    dsorg: element.dsorg,
+                    volume: element.volume,
+                    recfm: element.recfm,
+                    blksz: element.blksz,
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+                    migr: element.volume && element.volume.toUpperCase() === "MIGRATED" ? "YES" : "NO",
+                }));
+            }
+        }
+        return result;
     }
 
     public async allMembers(dataSetName: string, options?: zowe.IListOptions): Promise<zowe.IZosFilesResponse> {
         const result = this.getDefaultResponse();
-        let connection: any;
-        try {
-            connection = await this.ftpClient(this.checkedProfile());
-            if (connection) {
-                const response: any[] = await DataSetUtils.listMembers(connection, dataSetName);
-                if (response) {
-                    result.success = true;
-                    result.apiResponse.items = response.map((element) => ({
-                        member: element.name,
-                        changed: element.changed,
-                        created: element.created,
-                        id: element.id,
-                    }));
-                }
-            }
-            return result;
-        } finally {
-            this.releaseConnection(connection);
+        if (this.listConnection === undefined) {
+            this.listConnection = await this.ftpClient(this.checkedProfile());
         }
+        if (this.listConnection) {
+            const response: any[] = await DataSetUtils.listMembers(this.listConnection, dataSetName);
+            if (response) {
+                result.success = true;
+                result.apiResponse.items = response.map((element) => ({
+                    member: element.name,
+                    changed: element.changed,
+                    created: element.created,
+                    id: element.id,
+                }));
+            }
+        }
+        return result;
     }
 
     public async getContents(dataSetName: string, options: zowe.IDownloadOptions): Promise<zowe.IZosFilesResponse> {
