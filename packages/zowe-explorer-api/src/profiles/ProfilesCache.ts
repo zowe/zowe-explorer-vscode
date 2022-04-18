@@ -261,6 +261,7 @@ export class ProfilesCache {
     public async getLoadedProfConfig(profileName: string): Promise<imperative.IProfileLoaded> {
         const mProfileInfo = await this.getProfileInfo();
         const currentProfile = await this.getProfileFromConfig(profileName);
+        if (currentProfile == null) return undefined;
         const mergedArgs = mProfileInfo.mergeArgsForProfile(currentProfile);
         const profile: imperative.IProfile = {};
         for (const arg of mergedArgs.knownArgs) {

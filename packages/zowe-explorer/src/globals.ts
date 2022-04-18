@@ -79,7 +79,6 @@ export const SETTINGS_DS_DEFAULT_C = "zowe.ds.default.c";
 export const SETTINGS_DS_DEFAULT_CLASSIC = "zowe.ds.default.classic";
 export const SETTINGS_DS_DEFAULT_PDS = "zowe.ds.default.pds";
 export const SETTINGS_DS_DEFAULT_PS = "zowe.ds.default.ps";
-export const SETTINGS_SECURITY_CREDENTIAL_PLUGIN = "zowe.security.credentialPlugin";
 export const SETTINGS_COMMANDS_HISTORY = "zowe.commands.history";
 export const SETTINGS_COMMANDS_ALWAYS_EDIT = "zowe.commands.alwaysEdit";
 export const SETTINGS_AUTOMATIC_PROFILE_VALIDATION = "zowe.automaticProfileValidation";
