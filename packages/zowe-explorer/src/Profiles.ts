@@ -1252,7 +1252,7 @@ export class Profiles extends ProfilesCache {
                 return;
             }
         } else {
-            const baseProfile = this.getBaseProfile();
+            const baseProfile = await this.fetchBaseProfile();
             if (baseProfile) {
                 creds = await this.loginCredentialPrompt();
                 if (!creds) {
@@ -1310,7 +1310,7 @@ export class Profiles extends ProfilesCache {
                     .logout(await node.getSession());
             } else {
                 // this will handle base profile apiml tokens
-                const baseProfile = this.getBaseProfile();
+                const baseProfile = await this.fetchBaseProfile();
                 const loginTokenType = ZoweExplorerApiRegister.getInstance()
                     .getCommonApi(serviceProfile)
                     .getTokenTypeName();
