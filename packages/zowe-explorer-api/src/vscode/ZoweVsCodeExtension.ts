@@ -30,7 +30,7 @@ export class ZoweVsCodeExtension {
      */
     private static profilesCache = new ProfilesCache(
         Logger.getAppLogger(),
-        path.normalize(vscode.workspace.workspaceFolders?.[0].uri.fsPath)
+        vscode.workspace.workspaceFolders?.[0].uri.fsPath
     );
     public static getZoweExplorerApi(requiredVersion?: string): ZoweExplorerApi.IApiRegisterClient {
         const zoweExplorerApi = vscode.extensions.getExtension("Zowe.vscode-extension-for-zowe");
