@@ -13,7 +13,6 @@ The Zowe Explorer extension modernizes the way developers and system administrat
 - Enabling you to create, modify, rename, and upload USS files directly to a z/OS mainframe.
 - Providing a more streamlined way to access data sets, uss files, and jobs.
 - Letting you create, edit, and delete Zowe CLI `zosmf` compatible profiles.
-- Letting you use the Secure Credential Store plug-in to store your credentials securely in the settings.
 - Letting you leverage the API Mediation Layer token-based authentication to access z/OSMF.
 
 More information:
@@ -23,7 +22,6 @@ More information:
 
 ## Contents
 
-- [Early Access Features](#early-access-features)
 - [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
 - [Sample Use Cases](#sample-use-cases)
@@ -31,33 +29,8 @@ More information:
 - [Usage Tips](#usage-tips)
 - [Extending Zowe Explorer](#extending-zowe-explorer)
 
-## Early Access Features
-
 > Zowe Explorer is compatible only with Theia 1.18.0 or higher.
 > Zowe Explorer could experience possible unexpected behaviors with the latest Theia releases.
-
-This version may receive breaking changes and is intended to gather early feedback on what may become a future LTS release.
-
-**Added**:
-
-- Added extensible Login and Logout capabilities for Zowe extenders to utilize for token based authentication.
-- Added an Eclipse Public License file. Users can view the license file in the root directory of the Zowe Explorer repository.
-
-For documentation about these features, see these files:
-
-- [Changes Affecting Zowe Explorer Extenders](https://github.com/zowe/vscode-extension-for-zowe/blob/next/docs/Early%20Access%20-%20Changes%20Affecting%20Extenders.md)
-- [Using Global Profile Configuration](https://github.com/zowe/vscode-extension-for-zowe/blob/next/docs/Early%20Access%20-%20Using%20Global%20Profile%20Configuration.md)
-
-**Changed**:
-
-- Changed the Supported Node.js version to v12 or higher. We no longer support running the product on earlier versions (10.x and earlier) of Node.js.
-- Changed the dependencies of `copy-props`, `nanoid`, and `markdown-it` to improve security alerting.
-- A work around was developed to help developers debug Zowe Explorer VS Code extension on Theia. For more information, see [Work around for debugging in Theia](https://github.com/zowe/vscode-extension-for-zowe/pull/1576).
-
-**Fixed**:
-
-- Fixed the Zowe Explorer deployment script by updating it to use vsce (Visual Studio Code Extension Manager) version 1.103.1 to help ensure that it is compatible with Node v12 [#1608](https://github.com/zowe/vscode-extension-for-zowe/pull/1608).
-- Fixed the Theia input box issue that caused entered values to be validated incorrectly.
 
 ## Prerequisites
 
@@ -66,7 +39,7 @@ For documentation about these features, see these files:
 
 ## Getting Started
 
-Create a profile, review the sample use cases to familiarize yourself with the capabilities of Zowe Explorer, and you are ready to use Zowe Explorer.
+Create a v1 profile or a Team Configuration file for profile manangement, review the sample use cases to familiarize yourself with the capabilities of Zowe Explorer, and you are ready to use Zowe Explorer.
 
 ### Create Profile
 
@@ -78,6 +51,18 @@ Create a profile, review the sample use cases to familiarize yourself with the c
 
 ![New Connection](/docs/images/ZE-newProfiles.gif?raw=true "New Connection")
 <br /><br />
+
+### Create a Team Configuration File
+
+1. Navigate to the explorer tree.
+2. Hover over **DATA SETS**, **USS**, or **JOBS**.
+3. Click the **+** icon.
+4. Select **Create a New Team Configuration File**.
+5. Chose either a global configuration file or a project-level configuration file.
+6. Edit the config file to include the host information.
+7. Refresh Zowe Explorer by either clicking the button in the notification message shown after creation, `alt+z`, or the `Zowe Explorer: Refresh Zowe Explorer` command palette option.
+
+Your team configuration file appears either in your `.zowe` folder if you choose the global configuration file option, or in your workspace directory if you choose the project-level configuration file option. The notification message that shows in VS Code after config file creation will include the path of the file created.
 
 You can now use all the functionalities of the extension.
 
