@@ -59,7 +59,7 @@ export class ProfilesCache {
     protected defaultProfileByType = new Map<string, imperative.IProfileLoaded>();
     protected profileManagerByType = new Map<string, imperative.CliProfileManager>();
     public constructor(protected log: imperative.Logger, protected cwd?: string) {
-        this.cwd = fs.realpathSync.native(cwd);
+        this.cwd = cwd != null ? fs.realpathSync.native(cwd) : undefined;
     }
 
     public async getProfileInfo(): Promise<imperative.ProfileInfo> {
