@@ -14,7 +14,6 @@ import * as globals from "../globals";
 import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
-import * as moment from "moment";
 import { Session, IProfileLoaded } from "@zowe/imperative";
 import { IZoweUSSTreeNode, ZoweTreeNode, IZoweTree, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
@@ -439,7 +438,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         this.downloadedInternal = value;
 
         if (value) {
-            this.downloadedTime = moment().toISOString();
+            this.downloadedTime = new Date().toISOString();
             this.tooltip = injectAdditionalDataToTooltip(this, this.fullPath);
         }
 
