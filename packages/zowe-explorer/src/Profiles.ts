@@ -688,9 +688,9 @@ export class Profiles extends ProfilesCache {
             await config.save(false);
             let configName;
             if (user) {
-                configName = (await this.getProfileInfo()).getTeamConfig().userConfigName;
+                configName = config.userConfigName;
             } else {
-                configName = (await this.getProfileInfo()).getTeamConfig().configName;
+                configName = config.configName;
             }
             await this.openConfigFile(path.join(rootPath, configName));
             const reloadButton = localize("createZoweSchema.reload.button", "Refresh Zowe Explorer");
