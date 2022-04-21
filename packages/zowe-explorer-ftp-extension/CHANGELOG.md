@@ -1,6 +1,6 @@
 # Change Log
 
-## `1.23.1`
+## `1.22.1`
 
 - BugFix: Added a warning prompt so the user is aware some content may be truncated. [#1746](https://github.com/zowe/vscode-extension-for-zowe/pull/1746)
 
