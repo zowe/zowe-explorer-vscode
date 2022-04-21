@@ -11,6 +11,7 @@
 
 import * as semver from "semver";
 import * as vscode from "vscode";
+import * as path from "path";
 import { ProfilesCache, ZoweExplorerApi } from "../profiles";
 import { IZoweLogger, MessageSeverityEnum } from "../logger/IZoweLogger";
 import { ISession, IProfileLoaded, Logger } from "@zowe/imperative";
@@ -27,7 +28,10 @@ export class ZoweVsCodeExtension {
      *          to access the Zowe Explorer APIs or `undefined`. Also `undefined` if requiredVersion
      *          is larger than the version of Zowe Explorer found.
      */
-    private static profilesCache = new ProfilesCache(Logger.getAppLogger());
+    private static profilesCache = new ProfilesCache(
+        Logger.getAppLogger(),
+        vscode.workspace.workspaceFolders?.[0].uri.fsPath
+    );
     public static getZoweExplorerApi(requiredVersion?: string): ZoweExplorerApi.IApiRegisterClient {
         const zoweExplorerApi = vscode.extensions.getExtension("Zowe.vscode-extension-for-zowe");
         if (zoweExplorerApi?.exports) {
