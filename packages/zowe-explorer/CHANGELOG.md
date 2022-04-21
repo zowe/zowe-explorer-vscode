@@ -2,6 +2,16 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## 2.0.0-next.202204202000
+
+- Updated Imperative to gather information from the corresponding base profile. [#1757](https://github.com/zowe/vscode-extension-for-zowe/pull/1757)
+- Fixed issue when first Team Config profile management file is created. [#1754](https://github.com/zowe/vscode-extension-for-zowe/pull/1754)
+- Fixed `Failed to find property user` on load or refresh. [#1757](https://github.com/zowe/vscode-extension-for-zowe/pull/1757)
+- Fixed getting credentials from the wrong base profile. [#1757](https://github.com/zowe/vscode-extension-for-zowe/pull/1757)
+- Fixed writing tokens to the wrong base profile. [#1757](https://github.com/zowe/vscode-extension-for-zowe/pull/1757)
+- Fixed Windows not being able to share Tokens between CLI and ZE. [#1757](https://github.com/zowe/vscode-extension-for-zowe/pull/1757)
+- Fixed Login info written to global file if proifle name is the same as project level profile. [#1761](https://github.com/zowe/vscode-extension-for-zowe/pull/1761)
+
 ## 2.0.0-next.202204180940
 
 - Refactored the PRofilesCache to reduce maintenance efforts going forward. [#1715](https://github.com/zowe/vscode-extension-for-zowe/issues/1715)
