@@ -23,7 +23,7 @@
       "isBackground": true,
       "type": "shell",
       "options": {
-        "cwd": "packages/zowe-explorer"
+        "cwd": "${workspaceFolder}/packages/zowe-explorer"
       },
       "command": "yarn",
       "args": ["watch"],
@@ -64,7 +64,7 @@
       "isBackground": true,
       "type": "shell",
       "options": {
-        "cwd": "packages/zowe-explorer-ftp-extension"
+        "cwd": "${workspaceFolder}/packages/zowe-explorer-ftp-extension"
       },
       "command": "yarn",
       "args": ["watch"],
@@ -105,7 +105,7 @@
       "isBackground": false,
       "type": "shell",
       "options": {
-        "cwd": "scripts"
+        "cwd": "${workspaceFolder}/scripts"
       },
       "command": "ts-node create-env.ts"
     },
@@ -115,7 +115,7 @@
       "isBackground": false,
       "type": "shell",
       "options": {
-        "cwd": "packages/zowe-explorer"
+        "cwd": "${workspaceFolder}/packages/zowe-explorer"
       },
       "command": "yarn",
       "args": ["build:integration"],
@@ -127,7 +127,7 @@
       "isBackground": false,
       "type": "shell",
       "options": {
-        "cwd": "scripts"
+        "cwd": "${workspaceFolder}/scripts"
       },
       "command": "ts-node clean-env.ts"
     }
