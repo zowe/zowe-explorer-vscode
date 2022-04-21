@@ -10,6 +10,7 @@ Currently, the API is organized into two modules, which both are rolled up into 
 
 - `/profiles`: Provides access to common Zowe CLI profile management APIs, as well as abstractions for providing alternative z/OS interactions that use protocols other than z/OSMF, based on alternative Zowe CLI profile types.
 - `/tree`: Provides abstractions for accessing and extending the Zowe Explorer VS Code tree views.
+- `/logger`: Logs messages in a standard format, which is used by Zowe Explorer and will be consistent across Zowe components.
 
 ## Profiles API
 
@@ -40,6 +41,10 @@ import * as vscode from "vscode";
 imports.
 
 See this [special extension document](../../docs/README-Extending.md) to learn more about the Tree APIs available.
+
+## Logger API
+
+See this [special extension document](https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/extenders/Error%20Handling.md#logging-of-error-message) for more information about using the Logger API.
 
 ## Providing feedback or help contributing
 

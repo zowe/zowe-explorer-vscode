@@ -41,7 +41,21 @@ More information:
 
 Create a v1 profile or a Team Configuration file for profile manangement, review the sample use cases to familiarize yourself with the capabilities of Zowe Explorer, and you are ready to use Zowe Explorer.
 
-### Create Profile
+### Create a Team Configuration File
+
+1. Navigate to the explorer tree.
+2. Hover over **DATA SETS**, **USS**, or **JOBS**.
+3. Click the **+** icon.
+4. Select **Create a New Team Configuration File**.
+5. If no workspace is opened a global configuration file will be created. If a workspace is opened, chose either a global configuration file or a project-level configuration file.
+6. Edit the config file to include the host and other connection information.
+7. Refresh Zowe Explorer by either clicking the button in the notification message shown after creation, `alt+z`, or the `Zowe Explorer: Refresh Zowe Explorer` command palette option.
+
+Your team configuration file appears either in your `.zowe` folder if you choose the global configuration file option, or in your workspace directory if you choose the project-level configuration file option. The notification message that shows in VS Code after config file creation will include the path of the file created.
+
+### Create a v1 Profile
+
+**Note** If a Team Configuration file is in place v1 profile creation and use will not be available.
 
 1. Navigate to the explorer tree.
 2. Hover over **DATA SETS**, **USS**, or **JOBS**.
@@ -52,19 +66,11 @@ Create a v1 profile or a Team Configuration file for profile manangement, review
 ![New Connection](/docs/images/ZE-newProfiles.gif?raw=true "New Connection")
 <br /><br />
 
-### Create a Team Configuration File
-
-1. Navigate to the explorer tree.
-2. Hover over **DATA SETS**, **USS**, or **JOBS**.
-3. Click the **+** icon.
-4. Select **Create a New Team Configuration File**.
-5. Chose either a global configuration file or a project-level configuration file.
-6. Edit the config file to include the host information.
-7. Refresh Zowe Explorer by either clicking the button in the notification message shown after creation, `alt+z`, or the `Zowe Explorer: Refresh Zowe Explorer` command palette option.
-
-Your team configuration file appears either in your `.zowe` folder if you choose the global configuration file option, or in your workspace directory if you choose the project-level configuration file option. The notification message that shows in VS Code after config file creation will include the path of the file created.
-
 You can now use all the functionalities of the extension.
+
+### Updating Securley stored credentials
+
+Securing credentials for v1 profiles and secure fields in the Team configuration file are now handled by the Zowe Imperative dependency. To update securely stored user and password in Zowe Explorer the user can right click the profile and select `Update Credentials`. You will be prompted for the new credentials and the secure credentials vault will be updated.
 
 #### Profile Validation
 
@@ -81,11 +87,11 @@ Follow these steps:
 
 Leverage existing base profiles with a token to access z/OSMF via the API Mediation Layer.
 
-Before using the base profile functionality, ensure that you have [Zowe CLI](https://docs.zowe.org/stable/user-guide/cli-installcli.html) v1.13.0 or higher installed.
+Before using the base profile functionality with v1 profiles, ensure that you have [Zowe CLI](https://docs.zowe.org/stable/user-guide/cli-installcli.html) v1.13.0 or higher installed.
 
 **Follow these steps:**
 
-1. Open Zowe CLI and run the following command: `zowe auth login apiml`
+1. Zowe Explorer has a right click action for profiles to login and logout of the authentication service for existing Base profiles. If a v1 Base profile hasn't been created yet open Zowe CLI and run the following command: `zowe auth login apiml`
 2. Follow the instructions to complete the login.
    A local base profile is created that contains your token.
    **Note:** For more information about the process, see [Token Management](https://docs.zowe.org/stable/user-guide/cli-usingcli.html#how-token-management-works).
@@ -110,7 +116,7 @@ Use the Log in to the **Authentication Service** feature to regenerate a new tok
 
    You are prompted to enter your username and password.
 
-The token is stored in the default base profile .yaml file.
+The token is stored in the default base profile file, YAML file for v1 Profiles or the Team configuration file.
 
 If you do not want to store your token, you can request the server to end your session token. Use the **Log out from Authentication Service** feature to invalidate the token.
 
@@ -324,17 +330,6 @@ Your data set member is uploaded.
 4. Enter a new data set name.
 
 ![Allocate Like](/docs/images/ZE-allocate.gif?raw=true "Allocate Like")
-
-## Credentials Security
-
-Store your credentials securely with the Secure Credentials Store (SCS) plug-in.
-
-1. Navigate to the VS Code settings.
-2. Open Zowe Explorer Settings.
-3. Add the `Zowe-Plugin` value to the **Zowe Security** entry field.
-4. Restart VS Code.
-
-For more information about SCS, see [Secure Credential Store Plug-in for Zowe Explorer](https://docs.zowe.org/stable/user-guide/ze-profiles.html#enabling-secure-credential-store-with-zowe-explorer).
 
 ## Usage tips
 

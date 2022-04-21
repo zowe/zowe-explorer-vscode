@@ -36,37 +36,34 @@ Ensure that you obtain remote access to z/OS FTP service before you can use the 
 To use the FTP extension with Zowe Explorer:
 
 1. Open the Zowe Explorer activity bar in VS Code to see its three explorer views (Data Sets, USS, and Jobs).
-2. In the USS view, click the `+` icon and you will see your existing Zowe CLI FTP profiles listed in the drop-down to select.
-3. Select your Zowe FTP profile and it will appear in the USS view.
-4. In the USS view, click the Search icon next to your newly-added profile, and specify a USS path to list it.
-5. Try opening and saving files.
+2. Hover over **DATA SETS**, **USS**, or **JOBS**
+3. click the `+` icon and you will see your existing Zowe CLI FTP profiles listed in the drop-down to select.
+4. Select your Zowe FTP profile and it will appear in the USS view.
+5. Next to the profile in the view, click the Search icon next to your newly-added profile, and specify a USS path to list it.
+6. Try opening and saving files.
 
 If you do not have an existing Zowe FTP profile, you can create one graphically with Zowe Explorer:
 
-1. In the USS Explorer view, click the `+` icon and select `Create a New Connection to z/OS`.
-2. Provide a name for your profile.
-3. You will be prompted for the type of connection you want to create. The drop-down dialog will show you the types of all the extensions available, such as `zosmf` and `zftp`.
-4. Select `zftp` and continue providing values for the prompts shown. As you will see, the questions prompted are now specific for FTP-type connections and match the parameters available in the FTP plugin for Zowe CLI.
+### Create a Team Configuration File
 
-## Using the Zowe CLI FTP plugin
+1. Navigate to the explorer tree.
+2. Hover over **DATA SETS**, **USS**, or **JOBS**.
+3. Click the **+** icon.
+4. Select **Create a New Team Configuration File**.
+5. If no workspace is opened a global configuration file will be created. If a workspace is opened, chose either a global configuration file or a project-level configuration file.
+6. Edit the config file to include the host and other connection information.
+7. Refresh Zowe Explorer by either clicking the button in the notification message shown after creation, `alt+z`, or the `Zowe Explorer: Refresh Zowe Explorer` command palette option.
 
-When using this extension, we also recommend that you are already familiar with the [z/OS FTP Plug-in for Zowe CLI](https://github.com/zowe/zowe-cli-ftp-plugin) that this extension is based on. Not all capabilities that this plugin provides have yet been implemented for Zowe Explorer so it would greatly augment your user experience.
+Your team configuration file appears either in your `.zowe` folder if you choose the global configuration file option, or in your workspace directory if you choose the project-level configuration file option. The notification message that shows in VS Code after config file creation will include the path of the file created.
 
-The following steps are not required, as the Zowe Explorer FTP extension also includes the capability of creating such a profile in the Zowe Explorer UI as described above. However, to enable FTP for Zowe CLI and reuse the profile created for Zowe CLI also in Zowe Explorer, install the plugin and create the profile via command line:
+### Create a v1 Profile
 
-1. Go to the [z/OS FTP Plug-in for Zowe CLI](https://github.com/zowe/zowe-cli-ftp-plugin) GitHub repository and review the installation instructions for installing it into Zowe CLI. In short, after [meeting the prerequisites](https://github.com/zowe/zowe-cli-ftp-plugin#software-requirements), the command is:
-
-   ```bash
-   zowe plugins install @zowe/zos-ftp-for-zowe-cli@latest
-   ```
-
-2. Create Zowe FTP profile:
-
-   ```bash
-   zowe profiles create zftp <profile name> -H <host> -u <user> -p <password> -P <port>
-   ```
-
-Now you can run `zowe zos-ftp` commands as documented in the docs for the plugin. This profile can then also be selected in Zowe Explorer's Add Profile dialogs once this Zowe Explorer FTP VS Code extension is installed.
+1. Navigate to the explorer tree.
+2. Hover over **DATA SETS**, **USS**, or **JOBS**.
+3. Click the **+** icon.
+4. Provide a name for your profile.
+5. You will be prompted for the type of connection you want to create. The drop-down dialog will show you the types of all the extensions available, such as `zosmf` and `zftp`.
+6. Select `zftp` and continue providing values for the prompts shown. As you will see, the questions prompted are now specific for FTP-type connections and match the parameters available in the FTP plugin for Zowe CLI.
 
 ## List of Supported Data Set Functionalities
 
@@ -100,6 +97,30 @@ Partitioned Dataset Member:
 - Edit Member
 - Rename Member
 - Delete Member
+
+## List of Supported USS Functionalities
+
+- List uss files and directories
+- view file in text/binary mode
+- Edit file
+- Save file
+- Create a new directory/new file
+- Upload file
+- Rename file/directory
+- Delete file/directory
+- Pull from mainframe
+- Add to Favorites
+
+## List of Supported Jobs Functionalities
+
+- List Jobs with prefix and owner
+- List job by jobid
+- List spool files
+- View spool files content
+- Download spool files
+- Submit job from dataset/member
+- Delete job
+- Add to favorites
 
 ## Providing feedback or help contributing
 
