@@ -12,7 +12,7 @@
 // Generic utility functions (not node type related). See ./src/shared/utils.ts
 
 import * as vscode from "vscode";
-import * as path from "path";
+import * as fs from "fs";
 import * as globals from "../globals";
 import { Session, IProfile, IProfileLoaded, ProfileInfo, Logger } from "@zowe/imperative";
 import { getSecurityModules, IZoweTreeNode, ProfilesCache, ZoweTreeNode, getZoweDir } from "@zowe/zowe-explorer-api";
@@ -241,7 +241,7 @@ export async function readConfigFromDisk() {
     let rootPath;
     if (vscode.workspace.workspaceFolders) {
         rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
-        await mProfileInfo.readProfilesFromDisk({ projectDir: path.normalize(rootPath) });
+        await mProfileInfo.readProfilesFromDisk({ projectDir: fs.realpathSync.native(rootPath) });
     } else {
         await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir() });
     }

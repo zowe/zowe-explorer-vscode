@@ -661,7 +661,7 @@ export class Profiles extends ProfilesCache {
                     global = false;
                 }
             }
-            const config = await Config.load("zowe", { projectDir: fs.realpathSync(rootPath) });
+            const config = await Config.load("zowe", { projectDir: fs.realpathSync.native(rootPath) });
             if (vscode.workspace.workspaceFolders) {
                 config.api.layers.activate(user, global, rootPath);
             }
@@ -688,9 +688,9 @@ export class Profiles extends ProfilesCache {
             await config.save(false);
             let configName;
             if (user) {
-                configName = (await this.getProfileInfo()).getTeamConfig().userConfigName;
+                configName = config.userConfigName;
             } else {
-                configName = (await this.getProfileInfo()).getTeamConfig().configName;
+                configName = config.configName;
             }
             await this.openConfigFile(path.join(rootPath, configName));
             const reloadButton = localize("createZoweSchema.reload.button", "Refresh Zowe Explorer");
@@ -1252,7 +1252,7 @@ export class Profiles extends ProfilesCache {
                 return;
             }
         } else {
-            const baseProfile = this.getBaseProfile();
+            const baseProfile = await this.fetchBaseProfile();
             if (baseProfile) {
                 creds = await this.loginCredentialPrompt();
                 if (!creds) {
@@ -1310,7 +1310,7 @@ export class Profiles extends ProfilesCache {
                     .logout(await node.getSession());
             } else {
                 // this will handle base profile apiml tokens
-                const baseProfile = this.getBaseProfile();
+                const baseProfile = await this.fetchBaseProfile();
                 const loginTokenType = ZoweExplorerApiRegister.getInstance()
                     .getCommonApi(serviceProfile)
                     .getTokenTypeName();
@@ -1357,18 +1357,24 @@ export class Profiles extends ProfilesCache {
 
     private async updateBaseProfileFileLogin(profile: IProfileLoaded, updProfile: IProfile) {
         const upd = { profileName: profile.name, profileType: profile.type };
-        await (
-            await this.getProfileInfo()
-        ).updateProperty({ ...upd, property: "tokenType", value: updProfile.tokenType });
-        await (
-            await this.getProfileInfo()
-        ).updateProperty({ ...upd, property: "tokenValue", value: updProfile.tokenValue, setSecure: true });
+        const config = ImperativeConfig.instance.config;
+        const { user, global } = config.api.layers.find(upd.profileName);
+        const profilePath = config.api.profiles.expandPath(upd.profileName);
+        config.api.layers.activate(user, global);
+        config.set(`${profilePath}.properties.tokenType`, updProfile.tokenType);
+        config.set(`${profilePath}.properties.tokenValue`, updProfile.tokenValue);
+        await config.save();
     }
 
     private async updateBaseProfileFileLogout(profile: IProfileLoaded) {
         const upd = { profileName: profile.name, profileType: profile.type };
-        await (await this.getProfileInfo()).updateProperty({ ...upd, property: "tokenType", value: undefined });
-        await (await this.getProfileInfo()).updateProperty({ ...upd, property: "tokenValue", value: undefined });
+        const config = ImperativeConfig.instance.config;
+        const { user, global } = config.api.layers.find(upd.profileName);
+        const profilePath = config.api.profiles.expandPath(upd.profileName);
+        config.api.layers.activate(user, global);
+        config.set(`${profilePath}.properties.tokenType`, undefined);
+        config.set(`${profilePath}.properties.tokenValue`, undefined);
+        await config.save();
     }
 
     private async loginCredentialPrompt(): Promise<string[]> {
