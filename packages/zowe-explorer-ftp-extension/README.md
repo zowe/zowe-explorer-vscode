@@ -58,6 +58,8 @@ Your team configuration file appears either in your `.zowe` folder if you choose
 
 ### Create a v1 Profile
 
+**Note** If a Team Configuration file is in place v1 profile creation and use will not be available.
+
 1. Navigate to the explorer tree.
 2. Hover over **DATA SETS**, **USS**, or **JOBS**.
 3. Click the **+** icon.
