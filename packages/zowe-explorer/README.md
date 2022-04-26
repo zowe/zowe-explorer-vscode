@@ -115,7 +115,7 @@ Use the Log in to the **Authentication Service** feature to regenerate a new tok
 
    You are prompted to enter your username and password.
 
-The token is stored in the default base profile file, YAML file for v1 Profiles or the Team configuration file.
+The token is stored in the corresponding base profile file, YAML file for v1 Profiles or the Team configuration file.
 
 If you do not want to store your token, you can request the server to end your session token. Use the **Log out from Authentication Service** feature to invalidate the token.
 

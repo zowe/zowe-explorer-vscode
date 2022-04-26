@@ -37,10 +37,10 @@ To use the FTP extension with Zowe Explorer:
 
 1. Open the Zowe Explorer activity bar in VS Code to see its three explorer views (Data Sets, USS, and Jobs).
 2. Hover over **DATA SETS**, **USS**, or **JOBS**
-3. click the `+` icon and you will see your existing Zowe CLI FTP profiles listed in the drop-down to select.
-4. Select your Zowe FTP profile and it will appear in the USS view.
-5. Next to the profile in the view, click the Search icon next to your newly-added profile, and specify a USS path to list it.
-6. Try opening and saving files.
+3. Click the `+` icon and you will see your existing Zowe CLI FTP profiles listed in the drop-down to select.
+4. Select your Zowe FTP profile and it will appear in the view.
+5. Next to the profile in the view, click the Search icon next to your newly-added profile, and specify a filter search to list items in the view.
+6. Try opening, editing, and saving files.
 
 If you do not have an existing Zowe FTP profile, you can create one graphically with Zowe Explorer:
 
@@ -53,8 +53,6 @@ If you do not have an existing Zowe FTP profile, you can create one graphically 
 5. If no workspace is opened a global configuration file will be created. If a workspace is opened, chose either a global configuration file or a project-level configuration file.
 6. Edit the config file to include the host and other connection information.
 7. Refresh Zowe Explorer by either clicking the button in the notification message shown after creation, `alt+z`, or the `Zowe Explorer: Refresh Zowe Explorer` command palette option.
-
-Your team configuration file appears either in your `.zowe` folder if you choose the global configuration file option, or in your workspace directory if you choose the project-level configuration file option. The notification message that shows in VS Code after config file creation will include the path of the file created.
 
 ### Create a v1 Profile
 
