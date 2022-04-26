@@ -62,9 +62,10 @@ async function createGlobalMocks() {
             };
         }),
         mockProfileInfo: createInstanceOfProfileInfo(),
+        mockProfilesCache: new ProfilesCache(Logger.getAppLogger()),
     };
 
-    Object.defineProperty(ProfilesCache, "getConfigInstance", {
+    Object.defineProperty(globalMocks.mockProfilesCache, "getProfileInfo", {
         value: jest.fn(() => {
             return { value: globalMocks.mockProfileInfo, configurable: true };
         }),
@@ -108,6 +109,7 @@ async function createGlobalMocks() {
                     name: globalMocks.testProfile.name,
                     setting: true,
                 }),
+                getProfileInfo: () => globalMocks.mockProfileInfo,
             };
         }),
         configurable: true,

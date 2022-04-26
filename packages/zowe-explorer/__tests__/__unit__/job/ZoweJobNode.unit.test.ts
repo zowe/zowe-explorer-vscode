@@ -83,9 +83,10 @@ async function createGlobalMocks() {
             };
         }),
         mockProfileInfo: createInstanceOfProfileInfo(),
+        mockProfilesCache: new ProfilesCache(Logger.getAppLogger()),
     };
 
-    Object.defineProperty(ProfilesCache, "getConfigInstance", {
+    Object.defineProperty(globalMocks.mockProfilesCache, "getProfileInfo", {
         value: jest.fn(() => {
             return { value: globalMocks.mockProfileInfo, configurable: true };
         }),
@@ -877,7 +878,7 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         blockMocks.theia = true;
-        blockMocks.qpItem = new utils.FilterItem("Owner:fake Prefix:*");
+        blockMocks.qpItem = new utils.FilterItem({ text: "Owner:fake Prefix:*" });
         globalMocks.mockShowQuickPick.mockReturnValueOnce(blockMocks.qpItem);
 
         await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);

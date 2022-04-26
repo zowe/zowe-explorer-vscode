@@ -51,7 +51,6 @@ export class SettingsConfig {
         "Zowe-Default-Datasets-PDS": globals.SETTINGS_DS_DEFAULT_PDS,
         "Zowe-Default-Datasets-PS": globals.SETTINGS_DS_DEFAULT_PS,
         "Zowe-Temp-Folder-Location": globals.SETTINGS_TEMP_FOLDER_PATH,
-        "Zowe Security: Credential Key": globals.SETTINGS_SECURITY_CREDENTIAL_PLUGIN,
         "Zowe Commands: History": globals.SETTINGS_COMMANDS_HISTORY,
         "Zowe Commands: Always edit": globals.SETTINGS_COMMANDS_ALWAYS_EDIT,
         "Zowe-Automatic-Validation": globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION,
