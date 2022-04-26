@@ -120,6 +120,7 @@ async function createGlobalMocks() {
             disableValidationContext: jest.fn(),
             enableValidationContext: jest.fn(),
             validationArraySetup: jest.fn(),
+            getProfileInfo: () => createInstanceOfProfileInfo(),
         },
         mockExtension: null,
         appName: vscode.env.appName,

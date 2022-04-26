@@ -43,7 +43,7 @@ describe("mvsCommandActions unit testing", () => {
     };
     createOutputChannel.mockReturnValue(outputChannel);
     const qpItem: vscode.QuickPickItem = new utils.FilterDescriptor("\uFF0B " + "Create a new filter");
-    const qpItem2 = new utils.FilterItem("/d iplinfo0");
+    const qpItem2 = new utils.FilterItem({ text: "/d iplinfo0" });
 
     const mockLoadNamedProfile = jest.fn();
     Object.defineProperty(profileLoader.Profiles, "createInstance", {

@@ -120,7 +120,7 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
             }
         });
 
-        const qpItem = new utils.FilterItem("[sestest]: HLQ.PROD2.STUFF");
+        const qpItem = new utils.FilterItem({ text: "[sestest]: HLQ.PROD2.STUFF" });
         const quickPickContent = createQuickPickContent(qpItem, [qpItem], globalMocks.qpPlaceholder);
         quickPickContent.placeholder = "Select a filter";
         mocked(vscode.window.createQuickPick).mockReturnValue(quickPickContent);
@@ -164,7 +164,7 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
                 return Promise.resolve([blockMocks.datasetSessionNode]);
             }
         });
-        const qpItem = new utils.FilterItem("[sestest]: HLQ.PROD2.STUFF(TESTMEMB)");
+        const qpItem = new utils.FilterItem({ text: "[sestest]: HLQ.PROD2.STUFF(TESTMEMB)" });
         const quickPickContent = createQuickPickContent(qpItem, [qpItem], globalMocks.qpPlaceholder);
         quickPickContent.placeholder = "Select a filter";
         mocked(vscode.window.createQuickPick).mockReturnValue(quickPickContent);
@@ -193,7 +193,7 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
         jest.spyOn(folder, "getProfileName").mockImplementationOnce(() => "firstName");
         jest.spyOn(blockMocks.ussSessionNode, "getChildren").mockResolvedValueOnce([folder]);
 
-        const qpItem = new utils.FilterItem("[sestest]: /folder");
+        const qpItem = new utils.FilterItem({ text: "[sestest]: /folder" });
         const quickPickContent = createQuickPickContent(qpItem, [qpItem], globalMocks.qpPlaceholder);
         quickPickContent.placeholder = "Select a filter";
         mocked(vscode.window.createQuickPick).mockReturnValue(quickPickContent);
@@ -229,7 +229,7 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
         jest.spyOn(blockMocks.ussSessionNode, "getChildren").mockResolvedValueOnce([folder]);
         jest.spyOn(folder, "getChildren").mockResolvedValueOnce([file]);
 
-        const qpItem = new utils.FilterItem("[sestest]: /folder/file");
+        const qpItem = new utils.FilterItem({ text: "[sestest]: /folder/file" });
         const quickPickContent = createQuickPickContent(qpItem, [qpItem], globalMocks.qpPlaceholder);
         quickPickContent.placeholder = "Select a filter";
         mocked(vscode.window.createQuickPick).mockReturnValue(quickPickContent);

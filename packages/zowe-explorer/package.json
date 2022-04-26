@@ -1620,12 +1620,6 @@
           "description": "%zowe.files.temporaryDownloadsFolder.path%",
           "scope": "window"
         },
-        "zowe.security.credentialPlugin": {
-          "type": "string",
-          "default": "",
-          "description": "%zowe.security.credentialPlugin%",
-          "scope": "resource"
-        },
         "zowe.uss.history": {
           "default": {
             "persistence": true,
@@ -1754,7 +1748,7 @@
     "fs-extra": "8.0.1",
     "isbinaryfile": "4.0.4",
     "js-yaml": "3.13.1",
-    "moment": "2.24.0",
+    "moment": "2.29.2",
     "promise-queue": "2.2.5",
     "yamljs": "0.3.0"
   },
