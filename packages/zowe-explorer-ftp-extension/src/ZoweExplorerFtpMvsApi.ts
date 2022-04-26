@@ -15,6 +15,7 @@ import * as tmp from "tmp";
 import * as zowe from "@zowe/cli";
 import * as imperative from "@zowe/imperative";
 import * as path from "path";
+import * as vscode from "vscode";
 
 import { CreateDataSetTypeEnum, IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 
@@ -42,6 +43,7 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
                         volume: element.volume,
                         recfm: element.recfm,
                         blksz: element.blksz,
+                        lrecl: element.lrecl,
                         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
                         migr: element.volume && element.volume.toUpperCase() === "MIGRATED" ? "YES" : "NO",
                     }));
@@ -114,8 +116,15 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
         };
         const file = path.basename(inputFilePath).replace(/[^a-z0-9]+/gi, "");
         const member = file.substr(0, 8);
-        let targetDataset;
-        const dsAtrribute = await this.dataSet(dataSetName);
+        let targetDataset: string;
+        const end = dataSetName.indexOf("(");
+        let dataSetNameWithoutMember: string;
+        if (end > 0) {
+            dataSetNameWithoutMember = dataSetName.substr(0, end);
+        } else {
+            dataSetNameWithoutMember = dataSetName;
+        }
+        const dsAtrribute = await this.dataSet(dataSetNameWithoutMember);
         const dsorg = dsAtrribute.apiResponse.items[0].dsorg;
         if (dsorg === "PS" || dataSetName.substr(dataSetName.length - 1) == ")") {
             targetDataset = dataSetName;
@@ -141,6 +150,22 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
                         ZoweLogger
                     );
                     throw new Error();
+                }
+            }
+            const lrecl: number = dsAtrribute.apiResponse.items[0].lrecl;
+            const data = fs.readFileSync(inputFilePath, { encoding: "utf8" });
+            const lines = data.split(/\r?\n/);
+            const foundIndex = lines.findIndex((line) => line.length > lrecl);
+            if (foundIndex !== -1) {
+                const message1 = `zftp Warning: At least one line, like line ${foundIndex + 1},
+                is longer than dataset LRECL, ${lrecl}.`;
+                const message2 = "The exceeding part will be truncated.";
+                const message3 = "Do you want to continue?";
+                const warningMessage = `${message1} ${message2}\n${message3}`;
+                const select = await vscode.window.showWarningMessage(warningMessage, "Yes", "No");
+                if (select === "No") {
+                    result.commandResponse = "";
+                    return result;
                 }
             }
             await DataSetUtils.uploadDataSet(connection, targetDataset, transferOptions);

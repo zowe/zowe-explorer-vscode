@@ -58,11 +58,13 @@ export class ProfilesCache {
     protected profilesByType = new Map<string, imperative.IProfileLoaded[]>();
     protected defaultProfileByType = new Map<string, imperative.IProfileLoaded>();
     protected profileManagerByType = new Map<string, imperative.CliProfileManager>();
-    public constructor(protected log: imperative.Logger) {}
+    public constructor(protected log: imperative.Logger, protected cwd?: string) {
+        this.cwd = cwd != null ? fs.realpathSync.native(cwd) : undefined;
+    }
 
     public async getProfileInfo(): Promise<imperative.ProfileInfo> {
         const mProfileInfo = new imperative.ProfileInfo("zowe");
-        await mProfileInfo.readProfilesFromDisk();
+        await mProfileInfo.readProfilesFromDisk({ projectDir: this.cwd });
         return mProfileInfo;
     }
 
@@ -148,7 +150,7 @@ export class ProfilesCache {
             if (profilesForType && profilesForType.length > 0) {
                 for (const prof of profilesForType) {
                     // Step 2: Merge args for each profile
-                    const profAttr = await this.getMergedAttrs(mProfileInfo, prof);
+                    const profAttr = this.getMergedAttrs(mProfileInfo, prof);
                     // Work-around. TODO: Discuss with imperative team
                     const profileFix = this.getProfileLoaded(prof.profName, prof.profType, profAttr);
                     // set default for type
@@ -165,8 +167,6 @@ export class ProfilesCache {
             }
             this.allTypes.push(type);
         }
-        // eslint-disable-next-line no-console
-        console.log(this.allProfiles);
         // check for proper merging of apiml tokens
         this.checkMergingConfigAllProfiles();
         while (this.profilesForValidation.length > 0) {
@@ -235,7 +235,7 @@ export class ProfilesCache {
         const profilesForType = mProfileInfo.getAllProfiles(type).filter((temp) => temp.profLoc.osLoc.length !== 0);
         if (profilesForType && profilesForType.length > 0) {
             for (const prof of profilesForType) {
-                const profAttr = await this.getMergedAttrs(mProfileInfo, prof);
+                const profAttr = this.getMergedAttrs(mProfileInfo, prof);
                 let profile = this.getProfileLoaded(prof.profName, prof.profType, profAttr);
                 profile = await this.checkMergingConfigSingleProfile(profile);
                 profByType.push(profile);
@@ -263,11 +263,12 @@ export class ProfilesCache {
     public async getLoadedProfConfig(profileName: string): Promise<imperative.IProfileLoaded> {
         const mProfileInfo = await this.getProfileInfo();
         const currentProfile = await this.getProfileFromConfig(profileName);
-        const mergedArgs = mProfileInfo.mergeArgsForProfile(currentProfile);
+        if (currentProfile == null) return undefined;
+        const mergedArgs = mProfileInfo.mergeArgsForProfile(currentProfile, { getSecureVals: true });
         const profile: imperative.IProfile = {};
         for (const arg of mergedArgs.knownArgs) {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-            profile[arg.argName] = arg.secure ? mProfileInfo.loadSecureArg(arg) : arg.argValue;
+            profile[arg.argName] = arg.argValue;
         }
         return this.getProfileLoaded(currentProfile.profName, currentProfile.profType, profile);
     }
@@ -308,7 +309,7 @@ export class ProfilesCache {
     public async fetchBaseProfile(): Promise<imperative.IProfileLoaded> {
         const mProfileInfo = await this.getProfileInfo();
         const baseProfileAttrs = mProfileInfo.getDefaultProfile("base");
-        const profAttr = await this.getMergedAttrs(mProfileInfo, baseProfileAttrs);
+        const profAttr = this.getMergedAttrs(mProfileInfo, baseProfileAttrs);
         return this.getProfileLoaded(baseProfileAttrs.profName, baseProfileAttrs.profType, profAttr);
     }
 
@@ -333,17 +334,6 @@ export class ProfilesCache {
         }
         return imperativeIsSecure;
     }
-
-    /**
-     * @deprecated Please use ProfilesCache.getProfileLoaded(...)
-     */
-    // public getProfileLoaded(
-    //     profileName: string,
-    //     profileType: string,
-    //     profile: imperative.IProfile
-    // ): imperative.IProfileLoaded {
-    //     return ProfilesCache.getProfileLoaded(profileName, profileType, profile);
-    // }
 
     public getProfileLoaded(
         profileName: string,
@@ -436,16 +426,16 @@ export class ProfilesCache {
         return profile;
     }
 
-    protected async getMergedAttrs(
+    protected getMergedAttrs(
         mProfileInfo: imperative.ProfileInfo,
         profAttrs: imperative.IProfAttrs
-    ): Promise<imperative.IProfile> {
+    ): imperative.IProfile {
         const profile: imperative.IProfile = {};
         if (profAttrs != null) {
-            const mergedArgs = mProfileInfo.mergeArgsForProfile(profAttrs);
+            const mergedArgs = mProfileInfo.mergeArgsForProfile(profAttrs, { getSecureVals: true });
             for (const arg of mergedArgs.knownArgs) {
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-                profile[arg.argName] = arg.secure ? await mProfileInfo.loadSecureArg(arg) : arg.argValue;
+                profile[arg.argName] = arg.argValue;
             }
         }
         return profile;

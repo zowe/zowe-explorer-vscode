@@ -11,7 +11,7 @@ on:
     inputs:
       version:
         description: Version to be published
-        default: v2.0.0-next.202204081040
+        default: v2.0.0-next.202204202000
         required: false
       # create_release:
       #   description: Create the release even if publishing already happened

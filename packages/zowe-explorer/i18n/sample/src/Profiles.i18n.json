@@ -50,7 +50,6 @@
   "ssoLogin.successful": "Login to authentication service was successful.",
   "ssoLogout.successful": "Logout from authentication service was successful.",
   "ssoLogout.unableToLogout": "Unable to log out. ",
-  "promptCredentials.saveCredentialsConfig.infoMessage": "Save entered credentials for future use with profile: {0}?\nSaving credentials will update the team config file.\n\"Save Unsecure\" will save values in plain text.",
   "ssoLogin.undefined.username": "Operation Cancelled",
   "deleteProfile.log.debug": "Deleting profile ",
   "deleteProfile.showQuickPick.delete": "Delete",

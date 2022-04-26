@@ -485,7 +485,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 }
             }
             if (this.mSessionNodes.length === 1) {
-                this.addSingleSession(Profiles.getInstance().getDefaultProfile(profileType));
+                await this.addSingleSession(Profiles.getInstance().getDefaultProfile(profileType));
             }
         }
         this.refresh();
@@ -894,7 +894,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     const createPick = new FilterDescriptor(DatasetTree.defaultDialogText);
                     const items: vscode.QuickPickItem[] = this.mHistory
                         .getSearchHistory()
-                        .map((element) => new FilterItem(element));
+                        .map((element) => new FilterItem({ text: element }));
                     if (globals.ISTHEIA) {
                         const options1: vscode.QuickPickOptions = {
                             placeHolder: localize("searchHistory.options.prompt", "Select a filter"),
@@ -1278,7 +1278,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     private async addSingleSession(profile: IProfileLoaded) {
         if (profile) {
             // If session is already added, do nothing
-            if (this.mSessionNodes.find((tempNode) => tempNode.label.toString() === profile.name)) {
+            if (this.mSessionNodes.find((tNode) => tNode.label.toString() === profile.name)) {
                 return;
             }
             // Uses loaded profile to create a session with the MVS API
@@ -1294,6 +1294,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 profile
             );
             node.contextValue = globals.DS_SESSION_CONTEXT;
+            await this.refreshHomeProfileContext(node);
             const icon = getIconByNode(node);
             if (icon) {
                 node.iconPath = icon.path;

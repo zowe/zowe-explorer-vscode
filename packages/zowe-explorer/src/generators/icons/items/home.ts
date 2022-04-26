@@ -9,11 +9,15 @@
  *                                                                                 *
  */
 
-// globals
-export const ZOWE_EXPLORER = "Zowe Explorer";
-export const SCS_ZOWE_PLUGIN = "Zowe-Plugin";
-export const SCS_ZOWE_CLI_V2 = "Zowe";
-export const SCS_BRIGHTSIDE = "@brightside/core";
-export const SCS_ZOWE_CLI = "@zowe/cli";
-export const SCS_BROADCOM_PLUGIN = "Broadcom-Plugin";
-export const SETTINGS_SCS_DEFAULT = SCS_ZOWE_CLI_V2;
+import { IconHierarchyType, IconId, IIconItem } from "../index";
+import { getIconPathInResources } from "../../../shared/utils";
+import { isHomeProfile } from "../../../shared/context";
+
+const icon: IIconItem = {
+    id: IconId.home,
+    type: IconHierarchyType.base,
+    path: getIconPathInResources("home.svg"),
+    check: (node) => isHomeProfile(node),
+};
+
+export default icon;
