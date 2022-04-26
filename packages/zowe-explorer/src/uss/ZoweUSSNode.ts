@@ -91,7 +91,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             }
         }
         if (mParent && mParent.contextValue === globals.FAV_PROFILE_CONTEXT) {
-            this.profileName = this.mProfileName = mParent.label.trim();
+            this.profileName = this.mProfileName = mParent.label.toString();
             this.fullPath = label.trim();
             // File or directory name only (no parent path)
             this.shortLabel = this.fullPath.split("/", this.fullPath.length).pop();
@@ -167,7 +167,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         } catch (err) {
             await errorHandling(
                 err,
-                this.label,
+                this.label.toString(),
                 localize("getChildren.error.response", "Retrieving response from ") + `uss-file-list`
             );
             await syncSessionNode(Profiles.getInstance())((profileValue) =>
@@ -189,10 +189,11 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 const existing = this.children.find(
                     // Ensure both parent path and short label match.
                     // (Can't use mParent fullPath since that is already updated with new value by this point in getChildren.)
-                    (element: ZoweUSSNode) => element.parentPath === this.fullPath && element.label.trim() === item.name
+                    (element: ZoweUSSNode) =>
+                        element.parentPath === this.fullPath && element.label.toString() === item.name
                 );
                 if (existing) {
-                    elementChildren[existing.label] = existing;
+                    elementChildren[existing.label.toString()] = existing;
                 } else if (item.name !== "." && item.name !== "..") {
                     // Creates a ZoweUSSNode for a directory
                     if (item.mode.startsWith("d")) {
@@ -205,7 +206,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                             false,
                             item.mProfileName
                         );
-                        elementChildren[temp.label] = temp;
+                        elementChildren[temp.label.toString()] = temp;
                     } else {
                         // Creates a ZoweUSSNode for a file
                         let temp;
@@ -357,7 +358,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         const message = localize(
             "deleteUssPrompt.confirmation.message",
             "Are you sure you want to delete the following item?\nThis will permanently remove the following file or folder from your system.\n\n{0}",
-            this.label
+            this.label.toString()
         );
         let cancelled = false;
         await vscode.window.showWarningMessage(message, { modal: true }, ...[deleteButton]).then((selection) => {
@@ -394,7 +395,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         }
 
         vscode.window.showInformationMessage(
-            localize("deleteUssNode.itemDeleted", "The item {0} has been deleted.", this.label)
+            localize("deleteUssNode.itemDeleted", "The item {0} has been deleted.", this.label.toString())
         );
 
         // Remove node from the USS Favorites tree
@@ -472,7 +473,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     // For opening favorited and non-favorited files
                     case this.getParent().contextValue === globals.FAV_PROFILE_CONTEXT:
                     case contextually.isUssSession(this.getParent()):
-                        label = this.label;
+                        label = this.label as string;
                         break;
                     // Handle file path for files in directories and favorited directories
                     case contextually.isUssDirectory(this.getParent()):

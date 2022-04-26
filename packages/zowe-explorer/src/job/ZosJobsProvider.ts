@@ -12,8 +12,8 @@
 import * as vscode from "vscode";
 import * as jobUtils from "../job/utils";
 import * as globals from "../globals";
-import { ZosmfSession, IJob } from "@zowe/cli";
-import { IProfileLoaded, Logger, IProfile, Session } from "@zowe/imperative";
+import { IJob } from "@zowe/cli";
+import { IProfileLoaded, Logger, Session } from "@zowe/imperative";
 import { ValidProfileEnum, IZoweTree, IZoweJobTreeNode, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import { FilterItem, FilterDescriptor, resolveQuickPickHelper, errorHandling } from "../utils/ProfilesUtils";
 import { Profiles } from "../Profiles";
@@ -81,7 +81,10 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             this.mFavoriteSession.iconPath = icon.path;
         }
         this.mSessionNodes = [this.mFavoriteSession];
-        this.treeView = vscode.window.createTreeView("zowe.jobs", { treeDataProvider: this, canSelectMany: true });
+        this.treeView = vscode.window.createTreeView("zowe.jobs.explorer", {
+            treeDataProvider: this,
+            canSelectMany: true,
+        });
     }
 
     public rename(node: IZoweJobTreeNode) {
@@ -138,7 +141,6 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 const favsForProfile = this.loadProfilesForFavorites(this.log, element);
                 return favsForProfile;
             }
-            // await Profiles.getInstance().checkCurrentProfile(element.getProfile());
             return element.getChildren();
         }
         return this.mSessionNodes;
@@ -157,9 +159,10 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      * Adds a session to the data set tree
      *
      * @param {string} [sessionName] - optional; loads default profile if not passed
+     * @param {string} [profileType] - optional; loads profiles of a certain type if passed
      */
     public async addSession(sessionName?: string, profileType?: string) {
-        const setting = PersistentFilters.getDirectValue("Zowe-Automatic-Validation") as boolean;
+        const setting = PersistentFilters.getDirectValue(globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION) as boolean;
         // Loads profile associated with passed sessionName, default if none passed
         if (sessionName) {
             const theProfile: IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
@@ -173,10 +176,10 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 }
             }
         } else {
-            const allProfiles: IProfileLoaded[] = Profiles.getInstance().allProfiles;
+            const allProfiles = Profiles.getInstance().allProfiles;
             for (const sessionProfile of allProfiles) {
                 // If session is already added, do nothing
-                if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === sessionProfile.name)) {
+                if (this.mSessionNodes.find((tempNode) => tempNode.label.toString() === sessionProfile.name)) {
                     continue;
                 }
                 for (const session of this.mHistory.getSessions()) {
@@ -192,7 +195,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 }
             }
             if (this.mSessionNodes.length === 1) {
-                this.addSingleSession(Profiles.getInstance().getDefaultProfile(profileType));
+                await this.addSingleSession(Profiles.getInstance().getDefaultProfile(profileType));
             }
         }
         this.refresh();
@@ -316,7 +319,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      * @param parentNode
      */
     public async loadProfilesForFavorites(log: Logger, parentNode: IZoweJobTreeNode) {
-        const profileName = parentNode.label;
+        const profileName = parentNode.label as string;
         const updatedFavsForProfile: IZoweJobTreeNode[] = [];
         let profile: IProfileLoaded;
         let session: Session;
@@ -429,7 +432,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         } else {
             // Favorite a job
             favJob = new Job(
-                node.label.trim(),
+                node.label as string,
                 vscode.TreeItemCollapsibleState.Collapsed,
                 profileNodeInFavorites,
                 node.getSession(),
@@ -485,7 +488,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             profileNode.children.forEach((fav) => {
                 const favoriteEntry =
                     "[" +
-                    profileNode.label.trim() +
+                    profileNode.label.toString() +
                     "]: " +
                     fav.label +
                     "{" +
@@ -526,9 +529,9 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
 
         // Remove favorited profile from UI
         this.mFavorites.forEach((favProfileNode) => {
-            const favProfileLabel = favProfileNode.label.trim();
+            const favProfileLabel = favProfileNode.label as string;
             if (favProfileLabel === profileName) {
-                this.mFavorites = this.mFavorites.filter((tempNode) => tempNode.label.trim() !== favProfileLabel);
+                this.mFavorites = this.mFavorites.filter((tempNode) => tempNode.label.toString() !== favProfileLabel);
                 favProfileNode.dirty = true;
                 this.refresh();
             }
@@ -560,7 +563,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                     // Check if user has created some history
                     const items: vscode.QuickPickItem[] = this.mHistory
                         .getSearchHistory()
-                        .map((element) => new FilterItem(element));
+                        .map((element) => new FilterItem({ text: element }));
                     if (globals.ISTHEIA) {
                         // Theia doesn't work properly when directly creating a QuickPick
                         const options1: vscode.QuickPickOptions = {
@@ -692,11 +695,11 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 this.applySearchLabelToNode(node, searchCriteria);
             } else {
                 // executing search from saved search in favorites
-                searchCriteria = node.label.trim();
+                searchCriteria = node.label as string;
                 const session = node.getProfileName();
                 const faveNode = node;
                 await this.addSession(session);
-                node = this.mSessionNodes.find((tempNode) => tempNode.label.trim() === session);
+                node = this.mSessionNodes.find((tempNode) => tempNode.label.toString() === session);
                 if (!node.getSession().ISession.user || !node.getSession().ISession.password) {
                     node.getSession().ISession.user = faveNode.getSession().ISession.user;
                     node.getSession().ISession.password = faveNode.getSession().ISession.password;
@@ -730,8 +733,8 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
     }
 
     public deleteSession(node: IZoweJobTreeNode) {
-        this.mSessionNodes = this.mSessionNodes.filter((tempNode) => tempNode.label.trim() !== node.label.trim());
-        this.deleteSessionByLabel(node.getLabel());
+        this.mSessionNodes = this.mSessionNodes.filter((tempNode) => tempNode.label !== node.label);
+        this.deleteSessionByLabel(node.getLabel() as string);
     }
 
     /**
@@ -830,7 +833,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
     }
 
     private createJobsFavorite(node: IZoweJobTreeNode) {
-        node.label = node.label.substring(0, node.label.lastIndexOf(")") + 1);
+        node.label = node.label.toString().substring(0, node.label.toString().lastIndexOf(")") + 1);
         node.contextValue = contextually.asFavorite(node);
         return node;
     }
@@ -839,43 +842,26 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      * Adds a single session to the jobs tree
      *
      */
-    private async addSingleSession(zosmfProfile: IProfileLoaded) {
-        if (zosmfProfile) {
-            // If baseProfile exists, combine that information first before adding the session to the tree
-            // TODO: Move addSession to abstract/ZoweTreeProvider (similar to editSession)
-            const baseProfile = Profiles.getInstance().getBaseProfile();
-            if (baseProfile) {
-                try {
-                    const combinedProfile = await Profiles.getInstance().getCombinedProfile(zosmfProfile, baseProfile);
-                    zosmfProfile = combinedProfile;
-                } catch (error) {
-                    throw error;
-                }
-            }
+    private async addSingleSession(profile: IProfileLoaded) {
+        if (profile) {
             // If session is already added, do nothing
-            if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === zosmfProfile.name)) {
+            if (this.mSessionNodes.find((tNode) => tNode.label.toString() === profile.name)) {
                 return;
             }
             // Uses loaded profile to create a zosmf session with Zowe
             // const session = ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
-            const session = ZoweExplorerApiRegister.getMvsApi(zosmfProfile).getSession();
+            const session = ZoweExplorerApiRegister.getJesApi(profile).getSession();
             // Creates ZoweNode to track new session and pushes it to mSessionNodes
-            const node = new Job(
-                zosmfProfile.name,
-                vscode.TreeItemCollapsibleState.Collapsed,
-                null,
-                session,
-                null,
-                zosmfProfile
-            );
+            const node = new Job(profile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, null, profile);
             node.contextValue = globals.JOBS_SESSION_CONTEXT;
+            await this.refreshHomeProfileContext(node);
             const icon = getIconByNode(node);
             if (icon) {
                 node.iconPath = icon.path;
             }
             node.dirty = true;
             this.mSessionNodes.push(node);
-            this.mHistory.addSession(zosmfProfile.name);
+            this.mHistory.addSession(profile.name);
         }
     }
 }

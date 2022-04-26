@@ -161,6 +161,7 @@ export async function addProfileToFavoritesInUss() {
         until.elementLocated(By.xpath(UssLocators.secondUssProfileXpath)),
         WAITTIME
     );
+
     await driverChrome.actions().click(addTofavorite, Button.RIGHT).perform();
     await driverChrome.sleep(SHORTSLEEPTIME);
     await driverChrome.wait(until.elementLocated(By.xpath(UssLocators.addToFavoriteOptionXpath)), WAITTIME).click();
@@ -375,6 +376,12 @@ export async function addProfileDetails(profileName: string) {
     const authorization = await driverChrome.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
     authorization.sendKeys("False - Accept connections with self-signed certificates");
     authorization.sendKeys(Key.ENTER);
+    await driverChrome.sleep(SHORTSLEEPTIME);
+    const certFile = await driverChrome.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
+    certFile.sendKeys(Key.ENTER);
+    await driverChrome.sleep(SHORTSLEEPTIME);
+    const certKeyFile = await driverChrome.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
+    certKeyFile.sendKeys(Key.ENTER);
     await driverChrome.sleep(SHORTSLEEPTIME);
     const basepath = await driverChrome.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
     basepath.sendKeys(Key.ENTER);

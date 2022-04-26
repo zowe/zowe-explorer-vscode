@@ -30,20 +30,38 @@ import { createUSSSessionNode, createUSSTree } from "../../../__mocks__/mockCrea
 import * as dsActions from "../../../src/dataset/actions";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
 import { getIconById, IconId, getIconByNode } from "../../../src/generators/icons";
+import * as zowe from "@zowe/cli";
 
 async function createGlobalMocks() {
     const globalMocks = {
+        withProgress: null,
+        mockCallback: null,
+        ProgressLocation: jest.fn().mockImplementation(() => {
+            return {
+                Notification: 15,
+            };
+        }),
         qpPlaceholder:
             'Choose "Create new..." to define a new profile or select an existing profile to add to the Data Set Explorer',
     };
 
+    globalMocks.withProgress = jest.fn().mockImplementation((progLocation, callback) => {
+        return globalMocks.mockCallback;
+    });
+
     Object.defineProperty(vscode.window, "createTreeView", { value: jest.fn(), configurable: true });
+    Object.defineProperty(vscode.workspace, "getConfiguration", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showInformationMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showInputBox", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showErrorMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showQuickPick", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "createQuickPick", { value: jest.fn(), configurable: true });
+    Object.defineProperty(vscode.window, "withProgress", { value: globalMocks.withProgress, configurable: true });
+    Object.defineProperty(vscode.commands, "executeCommand", { value: globalMocks.withProgress, configurable: true });
+    Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true });
     Object.defineProperty(Profiles, "getInstance", { value: jest.fn(), configurable: true });
+    Object.defineProperty(zowe, "Utilities", { value: jest.fn(), configurable: true });
+    Object.defineProperty(zowe.Utilities, "isFileTagBinOrAscii", { value: jest.fn(), configurable: true });
     Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
     Object.defineProperty(globals.LOG, "debug", { value: jest.fn(), configurable: true });
     Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
@@ -102,7 +120,7 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
             }
         });
 
-        const qpItem = new utils.FilterItem("[sestest]: HLQ.PROD2.STUFF");
+        const qpItem = new utils.FilterItem({ text: "[sestest]: HLQ.PROD2.STUFF" });
         const quickPickContent = createQuickPickContent(qpItem, [qpItem], globalMocks.qpPlaceholder);
         quickPickContent.placeholder = "Select a filter";
         mocked(vscode.window.createQuickPick).mockReturnValue(quickPickContent);
@@ -146,7 +164,7 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
                 return Promise.resolve([blockMocks.datasetSessionNode]);
             }
         });
-        const qpItem = new utils.FilterItem("[sestest]: HLQ.PROD2.STUFF(TESTMEMB)");
+        const qpItem = new utils.FilterItem({ text: "[sestest]: HLQ.PROD2.STUFF(TESTMEMB)" });
         const quickPickContent = createQuickPickContent(qpItem, [qpItem], globalMocks.qpPlaceholder);
         quickPickContent.placeholder = "Select a filter";
         mocked(vscode.window.createQuickPick).mockReturnValue(quickPickContent);
@@ -164,7 +182,9 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
             vscode.TreeItemCollapsibleState.Collapsed,
             blockMocks.ussSessionNode,
             null,
-            "/"
+            "/",
+            false,
+            blockMocks.imperativeProfile.name
         );
         blockMocks.testDatasetTree.getChildren.mockReturnValue([blockMocks.ussSessionNode]);
 
@@ -173,11 +193,14 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
         jest.spyOn(folder, "getProfileName").mockImplementationOnce(() => "firstName");
         jest.spyOn(blockMocks.ussSessionNode, "getChildren").mockResolvedValueOnce([folder]);
 
-        const qpItem = new utils.FilterItem("[sestest]: /folder");
+        const qpItem = new utils.FilterItem({ text: "[sestest]: /folder" });
         const quickPickContent = createQuickPickContent(qpItem, [qpItem], globalMocks.qpPlaceholder);
         quickPickContent.placeholder = "Select a filter";
         mocked(vscode.window.createQuickPick).mockReturnValue(quickPickContent);
         jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(qpItem);
+        globalMocks.withProgress.mockImplementationOnce(() => {
+            return { apiResponse: [{ etag: null }] };
+        });
 
         const openNode = jest.spyOn(folder, "openUSS");
         await sharedActions.searchInAllLoadedItems(blockMocks.testDatasetTree, blockMocks.testUssTree);
@@ -192,9 +215,13 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
             vscode.TreeItemCollapsibleState.Collapsed,
             blockMocks.ussSessionNode,
             null,
-            "/"
+            "/",
+            false,
+            blockMocks.imperativeProfile.name
         );
         const file = new ZoweUSSNode("file", vscode.TreeItemCollapsibleState.None, folder, null, "/folder");
+        file.profile = blockMocks.imperativeProfile;
+        file.profileName = blockMocks.imperativeProfile.name;
         blockMocks.testDatasetTree.getChildren.mockReturnValue([blockMocks.ussSessionNode]);
 
         blockMocks.testDatasetTree.getAllLoadedItems.mockResolvedValueOnce([]);
@@ -202,11 +229,14 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
         jest.spyOn(blockMocks.ussSessionNode, "getChildren").mockResolvedValueOnce([folder]);
         jest.spyOn(folder, "getChildren").mockResolvedValueOnce([file]);
 
-        const qpItem = new utils.FilterItem("[sestest]: /folder/file");
+        const qpItem = new utils.FilterItem({ text: "[sestest]: /folder/file" });
         const quickPickContent = createQuickPickContent(qpItem, [qpItem], globalMocks.qpPlaceholder);
         quickPickContent.placeholder = "Select a filter";
         mocked(vscode.window.createQuickPick).mockReturnValue(quickPickContent);
         jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(qpItem);
+        globalMocks.withProgress.mockImplementationOnce(() => {
+            return { apiResponse: [{ etag: null }] };
+        });
 
         const openNode = jest.spyOn(file, "openUSS");
         await sharedActions.searchInAllLoadedItems(blockMocks.testDatasetTree, blockMocks.testUssTree);
@@ -274,8 +304,8 @@ describe("Shared Actions Unit Tests - Function openRecentMemberPrompt", () => {
             blockMocks.session
         );
         child.contextValue = globals.DS_MEMBER_CONTEXT;
-        child.pattern = child.label;
-        const qpItem = new utils.FilterDescriptor(child.label);
+        child.pattern = child.label as string;
+        const qpItem = new utils.FilterDescriptor(child.label.toString());
         const quickPickContent = createQuickPickContent("[sestest]: node(child)", [qpItem], globalMocks.qpPlaceholder);
 
         mocked(blockMocks.testDatasetTree.getFileHistory).mockReturnValueOnce([`[sestest]: node(child)`]);
@@ -319,10 +349,12 @@ describe("Shared Actions Unit Tests - Function openRecentMemberPrompt", () => {
             vscode.TreeItemCollapsibleState.None,
             blockMocks.ussSessionNode,
             null,
-            "/node1/node2"
+            "/node1/node2",
+            false,
+            blockMocks.imperativeProfile.name
         );
         node.contextValue = globals.DS_DS_CONTEXT;
-        const qpItem = new utils.FilterDescriptor(node.label);
+        const qpItem = new utils.FilterDescriptor(node.label.toString());
         const quickPickContent = createQuickPickContent(
             "[sestest]: /node1/node2/node3.txt",
             [qpItem],

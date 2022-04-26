@@ -17,6 +17,8 @@ import * as imperative from "@zowe/imperative";
 import * as path from "path";
 import * as vscode from "vscode";
 
+import { CreateDataSetTypeEnum, IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
+
 import { MessageSeverityEnum, ZoweExplorerApi, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { DataSetUtils, TRANSFER_TYPE_ASCII, TRANSFER_TYPE_BINARY } from "@zowe/zos-ftp-for-zowe-cli";
 import { AbstractFtpApi } from "./ZoweExplorerAbstractFtpApi";
@@ -106,7 +108,7 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
     public async putContents(
         inputFilePath: string,
         dataSetName: string,
-        options: zowe.IUploadOptions
+        options: IUploadOptions
     ): Promise<zowe.IZosFilesResponse> {
         const transferOptions = {
             transferType: options.binary ? TRANSFER_TYPE_BINARY : TRANSFER_TYPE_ASCII,
@@ -151,11 +153,11 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
                 }
             }
             const lrecl: number = dsAtrribute.apiResponse.items[0].lrecl;
-            const data = fs.readFileSync(inputFilePath, "UTF-8");
+            const data = fs.readFileSync(inputFilePath, { encoding: "utf8" });
             const lines = data.split(/\r?\n/);
             const foundIndex = lines.findIndex((line) => line.length > lrecl);
             if (foundIndex !== -1) {
-                const message1 = `zftp Warning: At least one line, like line ${foundIndex + 1}, 
+                const message1 = `zftp Warning: At least one line, like line ${foundIndex + 1},
                 is longer than dataset LRECL, ${lrecl}.`;
                 const message2 = "The exceeding part will be truncated.";
                 const message3 = "Do you want to continue?";
@@ -184,7 +186,7 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
     }
 
     public async createDataSet(
-        dataSetType: zowe.CreateDataSetTypeEnum,
+        dataSetType: CreateDataSetTypeEnum,
         dataSetName: string,
         options?: Partial<zowe.ICreateDataSetOptions>
     ): Promise<zowe.IZosFilesResponse> {
@@ -240,10 +242,7 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
         }
     }
 
-    public async createDataSetMember(
-        dataSetName: string,
-        options?: zowe.IUploadOptions
-    ): Promise<zowe.IZosFilesResponse> {
+    public async createDataSetMember(dataSetName: string, options?: IUploadOptions): Promise<zowe.IZosFilesResponse> {
         const transferOptions = {
             transferType: options ? TRANSFER_TYPE_BINARY : TRANSFER_TYPE_ASCII,
             content: "",
@@ -276,8 +275,8 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
     }
 
     public copyDataSetMember(
-        { dataSetName: fromDataSetName, memberName: fromMemberName }: zowe.IDataSet,
-        { dataSetName: toDataSetName, memberName: toMemberName }: zowe.IDataSet,
+        { dsn: fromDataSetName, member: fromMemberName }: zowe.IDataSet,
+        { dsn: toDataSetName, member: toMemberName }: zowe.IDataSet,
         options?: { replace?: boolean }
     ): Promise<zowe.IZosFilesResponse> {
         ZoweVsCodeExtension.showVsCodeMessage(

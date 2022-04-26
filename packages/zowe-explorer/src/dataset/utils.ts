@@ -18,7 +18,7 @@ export function getProfileAndDataSetName(node: IZoweNodeType) {
     let profileName;
     let dataSetName;
     profileName = node.getParent().getLabel();
-    dataSetName = node.label.trim();
+    dataSetName = node.label as string;
     return { profileName, dataSetName };
 }
 
