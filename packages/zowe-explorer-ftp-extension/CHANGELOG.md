@@ -1,4 +1,8 @@
-# Change Log
+All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
+
+## `2.0.0`
+
+- Major: Introduced Team Profiles and more. See the prerelease items (if any) below for more details.
 
 ## `1.22.1`
 

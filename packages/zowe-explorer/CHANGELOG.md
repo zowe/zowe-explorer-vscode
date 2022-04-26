@@ -2,6 +2,10 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## `2.0.0`
+
+- Major: Introduced Team Profiles and more. See the prerelease items (if any) below for more details.
+
 ## 2.0.0-next.202204202000
 
 - Updated Imperative to gather information from the corresponding base profile. [#1757](https://github.com/zowe/vscode-extension-for-zowe/pull/1757)
