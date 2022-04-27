@@ -25,7 +25,7 @@ interface IExtTextEditor extends vscode.TextEditor {
  * Opens the next tab in editor with given delay
  */
 function openNextTab(delay: number) {
-    return new Promise((resolve) => {
+    return new Promise<void>((resolve) => {
         vscode.commands.executeCommand("workbench.action.nextEditor");
         setTimeout(() => resolve(), delay);
     });
@@ -39,7 +39,7 @@ export function setFileSaved(status: boolean) {
 
 export async function awaitForDocumentBeingSaved() {
     fileWasSaved = false;
-    return new Promise((resolve) => {
+    return new Promise<void>((resolve) => {
         let count = 0;
         const saveWaitIntervalId = setInterval(() => {
             if (workspaceUtilFileSaveMaxIterationCount > count) {

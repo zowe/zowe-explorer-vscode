@@ -12,10 +12,10 @@
 // Generic utility functions (not node type related). See ./src/shared/utils.ts
 
 import * as vscode from "vscode";
-import * as os from "os";
-import * as path from "path";
-import { Session, IProfile, ImperativeConfig, IProfileLoaded } from "@zowe/imperative";
-import { IZoweTreeNode } from "@zowe/zowe-explorer-api";
+import * as fs from "fs";
+import * as globals from "../globals";
+import { Session, IProfile, IProfileLoaded, ProfileInfo, Logger } from "@zowe/imperative";
+import { getSecurityModules, IZoweTreeNode, ProfilesCache, ZoweTreeNode, getZoweDir } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import * as nls from "vscode-nls";
 
@@ -46,6 +46,17 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
 
     if (errorDetails.mDetails !== undefined) {
         httpErrCode = errorDetails.mDetails.errorCode;
+        // open config file for missing hostname error
+        const msg = errorDetails.toString();
+        if (msg.includes("hostname")) {
+            if ((await globals.PROFILESCACHE.getProfileInfo()).usingTeamConfig) {
+                vscode.window.showErrorMessage("Required parameter 'host' must not be blank");
+                const currentProfile = await globals.PROFILESCACHE.getProfileFromConfig(label.trim());
+                const filePath = currentProfile.profLoc.osLoc[0];
+                await Profiles.getInstance().openConfigFile(filePath);
+                return;
+            }
+        }
     }
 
     switch (httpErrCode) {
@@ -121,29 +132,25 @@ export function isTheia(): boolean {
  * @param sessionNode is a tree node, containing session information
  */
 type SessionForProfile = (profile: IProfileLoaded) => Session;
-export const syncSessionNode = (profiles: Profiles) => (getSessionForProfile: SessionForProfile) => async (
-    sessionNode: IZoweTreeNode
-): Promise<void> => {
-    sessionNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+export const syncSessionNode =
+    (profiles: Profiles) =>
+    (getSessionForProfile: SessionForProfile) =>
+    async (sessionNode: IZoweTreeNode): Promise<void> => {
+        sessionNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
 
-    const profileType = sessionNode.getProfile().type;
-    const profileName = sessionNode.getProfileName();
+        const profileType = sessionNode.getProfile().type;
+        const profileName = sessionNode.getProfileName();
 
-    let profile: IProfileLoaded;
-    try {
-        profile = profiles.loadNamedProfile(profileName, profileType);
-    } catch (e) {
-        return;
-    }
-    sessionNode.setProfileToChoice(profile);
-
-    const baseProfile = profiles.getBaseProfile();
-    if (baseProfile) {
-        profile = await profiles.getCombinedProfile(profile, baseProfile);
-    }
-    const session = getSessionForProfile(profile);
-    sessionNode.setSessionToChoice(session);
-};
+        let profile: IProfileLoaded;
+        try {
+            profile = globals.PROFILESCACHE.loadNamedProfile(profileName, profileType);
+        } catch (e) {
+            return;
+        }
+        sessionNode.setProfileToChoice(profile);
+        const session = getSessionForProfile(profile);
+        sessionNode.setSessionToChoice(session);
+    };
 
 export async function resolveQuickPickHelper(
     quickpick: vscode.QuickPick<vscode.QuickPickItem>
@@ -154,21 +161,29 @@ export async function resolveQuickPickHelper(
     });
 }
 
+export interface IFilterItem {
+    text: string;
+    description?: string;
+    show?: boolean;
+    icon?: string;
+}
+
 // tslint:disable-next-line: max-classes-per-file
 export class FilterItem implements vscode.QuickPickItem {
-    constructor(private text: string, private desc?: string, private show?: boolean) {}
+    constructor(private filterItem: IFilterItem) {}
     get label(): string {
-        return this.text;
+        const icon = this.filterItem.icon ? this.filterItem.icon + " " : null;
+        return (icon ?? "") + this.filterItem.text;
     }
     get description(): string {
-        if (this.desc) {
-            return this.desc;
+        if (this.filterItem.description) {
+            return this.filterItem.description;
         } else {
             return "";
         }
     }
     get alwaysShow(): boolean {
-        return this.show;
+        return this.filterItem.show;
     }
 }
 
@@ -184,18 +199,6 @@ export class FilterDescriptor implements vscode.QuickPickItem {
     get alwaysShow(): boolean {
         return true;
     }
-}
-
-/**
- * Function to retrieve the home directory. In the situation Imperative has
- * not initialized it we mock a default value.
- */
-export function getZoweDir(): string {
-    ImperativeConfig.instance.loadedConfig = {
-        defaultHome: path.join(os.homedir(), ".zowe"),
-        envVariablePrefix: "ZOWE",
-    };
-    return ImperativeConfig.instance.cliHome;
 }
 
 /**
@@ -216,5 +219,33 @@ export async function setSession(node: IZoweTreeNode, combinedSessionProfile: IP
         } else {
             sessionNode.ISession[prop] = combinedSessionProfile[prop];
         }
+    }
+}
+
+export async function getProfileInfo(envTheia: boolean): Promise<ProfileInfo> {
+    const mProfileInfo = new ProfileInfo("zowe", {
+        requireKeytar: () => getSecurityModules("keytar", envTheia),
+    });
+    return mProfileInfo;
+}
+
+export function getProfile(node: vscode.TreeItem) {
+    if (node instanceof ZoweTreeNode) {
+        return (node as ZoweTreeNode).getProfile();
+    }
+    throw new Error(localize("getProfile.notTreeItem", "Tree Item is not a Zowe Explorer item."));
+}
+
+export async function readConfigFromDisk() {
+    const mProfileInfo = await getProfileInfo(globals.ISTHEIA);
+    let rootPath;
+    if (vscode.workspace.workspaceFolders) {
+        rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
+        await mProfileInfo.readProfilesFromDisk({ projectDir: fs.realpathSync.native(rootPath) });
+    } else {
+        await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir() });
+    }
+    if (mProfileInfo.usingTeamConfig) {
+        globals.setConfigPath(rootPath);
     }
 }

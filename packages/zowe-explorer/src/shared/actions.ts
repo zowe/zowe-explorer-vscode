@@ -70,17 +70,24 @@ export async function searchInAllLoadedItems(
     for (const item of items) {
         if (contextually.isDs(item) || contextually.isPdsNotFav(item) || contextually.isVsam(item)) {
             if (contextually.isDsMember(item)) {
-                qpItem = new FilterItem(
-                    `[${item.getSessionNode().label.trim()}]: ${item.getParent().label.trim()}(${item.label.trim()})`,
-                    "Data Set Member"
-                );
+                qpItem = new FilterItem({
+                    text: `[${item.getSessionNode().label.toString()}]: ${item
+                        .getParent()
+                        .label.toString()}(${item.label.toString()})`,
+                    description: "Data Set Member",
+                });
             } else {
-                qpItem = new FilterItem(`[${item.getSessionNode().label.trim()}]: ${item.label.trim()}`, "Data Set");
+                qpItem = new FilterItem({
+                    text: `[${item.getSessionNode().label.toString()}]: ${item.label.toString()}`,
+                    description: "Data Set",
+                });
             }
             qpItems.push(qpItem);
         } else if (contextually.isUssDirectory(item) || contextually.isText(item) || contextually.isBinary(item)) {
-            const filterItem = `[${item.getProfileName().trim()}]: ${item.getParent().fullPath}/${item.label.trim()}`;
-            qpItem = new FilterItem(filterItem, "USS");
+            const filterItem = `[${item.getProfileName().trim()}]: ${
+                item.getParent().fullPath
+            }/${item.label.toString()}`;
+            qpItem = new FilterItem({ text: filterItem, description: "USS" });
             qpItems.push(qpItem);
         }
     }
@@ -128,14 +135,14 @@ export async function searchInAllLoadedItems(
         } else {
             // Data set nodes
             const sessions = await datasetProvider.getChildren();
-            const sessionNode = sessions.filter((session) => session.label.trim() === sessionName)[0];
+            const sessionNode = sessions.filter((session) => session.label.toString() === sessionName)[0];
             let children = await datasetProvider.getChildren(sessionNode);
-            const node = children.filter((child) => child.label.trim() === nodeName)[0];
+            const node = children.filter((child) => child.label.toString() === nodeName)[0];
 
             if (memberName) {
                 // Members
                 children = await datasetProvider.getChildren(node);
-                const member = children.filter((child) => child.label.trim() === memberName)[0];
+                const member = children.filter((child) => child.label.toString() === memberName)[0];
                 node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
                 await datasetProvider.getTreeView().reveal(member, { select: true, focus: true, expand: false });
 
@@ -174,7 +181,7 @@ export async function openRecentMemberPrompt(
         const createPick = new FilterDescriptor(
             localize("memberHistory.option.prompt.open", "Select a recent member to open")
         );
-        const items: vscode.QuickPickItem[] = fileHistory.map((element) => new FilterItem(element));
+        const items: vscode.QuickPickItem[] = fileHistory.map((element) => new FilterItem({ text: element }));
         if (globals.ISTHEIA) {
             const options1: vscode.QuickPickOptions = {
                 placeHolder: localize("memberHistory.options.prompt", "Select a recent member to open"),
@@ -222,7 +229,7 @@ export async function openRecentMemberPrompt(
         } else {
             // Data set was selected
             const sessionNode: IZoweDatasetTreeNode = datasetTree.mSessionNodes.find(
-                (sessNode) => sessNode.label.trim().toLowerCase() === sessionName.toLowerCase()
+                (sessNode) => sessNode.label.toString().toLowerCase() === sessionName.toLowerCase()
             );
             await datasetTree.openItemFromPath(pattern, sessionNode);
         }

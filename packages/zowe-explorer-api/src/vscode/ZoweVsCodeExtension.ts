@@ -11,8 +11,11 @@
 
 import * as semver from "semver";
 import * as vscode from "vscode";
-import { ZoweExplorerApi } from "../profiles";
+import * as path from "path";
+import { ProfilesCache, ZoweExplorerApi } from "../profiles";
 import { IZoweLogger, MessageSeverityEnum } from "../logger/IZoweLogger";
+import { ISession, IProfileLoaded, Logger } from "@zowe/imperative";
+import { IPromptCredentialsOptions, IPromptUserPassOptions } from "./doc/IPromptCredentials";
 
 /**
  * Collection of utility functions for writing Zowe Explorer VS Code extensions.
@@ -25,6 +28,10 @@ export class ZoweVsCodeExtension {
      *          to access the Zowe Explorer APIs or `undefined`. Also `undefined` if requiredVersion
      *          is larger than the version of Zowe Explorer found.
      */
+    private static profilesCache = new ProfilesCache(
+        Logger.getAppLogger(),
+        vscode.workspace.workspaceFolders?.[0].uri.fsPath
+    );
     public static getZoweExplorerApi(requiredVersion?: string): ZoweExplorerApi.IApiRegisterClient {
         const zoweExplorerApi = vscode.extensions.getExtension("Zowe.vscode-extension-for-zowe");
         if (zoweExplorerApi?.exports) {
@@ -60,5 +67,78 @@ export class ZoweVsCodeExtension {
                 void vscode.window.showErrorMessage(errorMessage);
                 break;
         }
+    }
+
+    /**
+     * Helper function to standardize the way we ask the user for credentials
+     * @param options Set of options to use when prompting for credentials
+     * @returns Instance of IProfileLoaded containing information about the updated profile
+     */
+    public static async promptCredentials(options: IPromptCredentialsOptions): Promise<IProfileLoaded> {
+        const loadProfile = await this.profilesCache.getLoadedProfConfig(options.sessionName.trim());
+        if (loadProfile == null) return undefined;
+        const loadSession = loadProfile.profile as ISession;
+
+        const creds = await ZoweVsCodeExtension.promptUserPass({ session: loadSession, ...options });
+
+        if (creds && creds.length > 0) {
+            loadProfile.profile.user = loadSession.user = creds[0];
+            loadProfile.profile.password = loadSession.password = creds[1];
+
+            const upd = { profileName: loadProfile.name, profileType: loadProfile.type };
+            await (
+                await this.profilesCache.getProfileInfo()
+            ).updateProperty({ ...upd, property: "user", value: creds[0] });
+            await (
+                await this.profilesCache.getProfileInfo()
+            ).updateProperty({ ...upd, property: "password", value: creds[1] });
+
+            return loadProfile;
+        }
+        return undefined;
+    }
+
+    public static async inputBox(inputBoxOptions: vscode.InputBoxOptions): Promise<string> {
+        if (!inputBoxOptions.validateInput) {
+            // adding this for the theia breaking changes with input boxes
+            // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+            inputBoxOptions.validateInput = (value) => null;
+        }
+        return await vscode.window.showInputBox(inputBoxOptions);
+    }
+
+    private static async promptUserPass(options: IPromptUserPassOptions): Promise<string[] | undefined> {
+        let newUser = options.session.user;
+        if (!newUser || options.rePrompt) {
+            newUser = await ZoweVsCodeExtension.inputBox({
+                placeHolder: "User Name",
+                prompt: "Enter the user name for the connection. Leave blank to not store.",
+                ignoreFocusOut: true,
+                value: newUser,
+                ...(options.userInputBoxOptions ?? {}),
+            });
+            options.session.user = newUser;
+        }
+        if (!newUser || (options.rePrompt && newUser === "")) {
+            return undefined;
+        }
+
+        let newPass = options.session.password;
+        if (!newPass || options.rePrompt) {
+            newPass = await ZoweVsCodeExtension.inputBox({
+                placeHolder: "Password",
+                prompt: "Enter the password for the connection. Leave blank to not store.",
+                password: true,
+                ignoreFocusOut: true,
+                value: newPass,
+                ...(options.passwordInputBoxOptions ?? {}),
+            });
+            options.session.password = newPass;
+        }
+        if (!newPass || (options.rePrompt && newPass === "")) {
+            return undefined;
+        }
+
+        return [newUser.trim(), newPass.trim()];
     }
 }

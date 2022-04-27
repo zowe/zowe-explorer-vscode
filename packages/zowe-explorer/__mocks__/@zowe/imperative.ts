@@ -36,6 +36,36 @@ export interface ISessionOptions {
     type: string;
 }
 
+export interface ICommandArguments {
+    user?: string;
+    password?: string;
+    hostname: string;
+    port: number;
+    tokenType?: string;
+    tokenValue?: string;
+}
+
+interface NodeModule {
+    exports: any;
+    require: NodeRequireFunction;
+    id: string;
+    filename: string;
+    loaded: boolean;
+    parent: NodeModule | null;
+    children: NodeModule[];
+    paths: string[];
+}
+export interface IProfOpts {
+    overrideWithEnv?: boolean;
+    requireKeytar?: () => NodeModule;
+}
+
+export interface IConfigOpts {
+    homeDir?: string;
+    projectDir?: string;
+    vault?: string;
+}
+
 export class BrightProfile {
     constructor(public profile: Profile) {}
 }
@@ -112,11 +142,23 @@ export class CliProfileManager {
     }
 }
 
+export class ProfileInfo {
+    constructor(appName: string, profInfoOpts?: IProfOpts) {}
+
+    public readProfilesFromDisk(teamCfgOpts?: IConfigOpts) {
+        return;
+    }
+}
+
 // tslint:disable-next-line:max-classes-per-file
 export class ImperativeConfig {
     public static instance = {
         cliHome: "./__tests__/.zowe",
-        loadedConfig: {},
+        loadedConfig: {
+            name: "zowe",
+            defaultHome: "./__tests__/.zowe",
+            envVariablePrefix: "ZOWE",
+        },
     };
     public loadedConfig = {
         defaultHome: "./__tests__/.zowe",
@@ -142,6 +184,11 @@ export class Logger {
     public static getAppLogger(): Logger {
         return log4js.getLogger("app");
     }
+}
+
+// tslint:disable-next-line:max-classes-per-file
+export class ConnectionPropsForSessCfg {
+    public static resolveSessCfgProps(): void {}
 }
 
 // tslint:disable-next-line:max-classes-per-file
