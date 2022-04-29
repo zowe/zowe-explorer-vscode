@@ -105,7 +105,7 @@
       "isBackground": false,
       "type": "shell",
       "options": {
-        "cwd": "scripts"
+        "cwd": "${workspaceFolder}/scripts"
       },
       "command": "ts-node create-env.ts"
     },
@@ -127,7 +127,7 @@
       "isBackground": false,
       "type": "shell",
       "options": {
-        "cwd": "scripts"
+        "cwd": "${workspaceFolder}/scripts"
       },
       "command": "ts-node clean-env.ts"
     }

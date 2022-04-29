@@ -10,7 +10,6 @@
  */
 
 // tslint:disable-next-line: no-duplicate-imports
-import * as moment from "moment";
 import { ZoweUSSNode } from "../uss/ZoweUSSNode";
 
 /**
@@ -22,7 +21,9 @@ import { ZoweUSSNode } from "../uss/ZoweUSSNode";
 export function injectAdditionalDataToTooltip(node: ZoweUSSNode, tooltip: string) {
     if (node.downloaded && node.downloadedTime) {
         // TODO: Add time formatter to localization so we will use not just US variant
-        return `${tooltip} (Downloaded: ${moment(node.downloadedTime).format("HH:mm MM/DD/YY")})`;
+        return `${tooltip} (Downloaded: ${new Date(node.downloadedTime)
+            .toISOString()
+            .replace(/(\d{4})-(\d{2})-(\d{2})T((\d{2}):(\d{2}):([^Z]+))Z/, "$5:$6 $2/$3/$1")})`;
     }
 
     return tooltip;
