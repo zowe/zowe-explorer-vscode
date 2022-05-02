@@ -331,42 +331,27 @@ export class Profiles extends ProfilesCache {
         }
 
         let configDir: string;
-        if (isTheia()) {
-            const options: vscode.QuickPickOptions = {
-                placeHolder: addProfilePlaceholder,
-            };
-            // get user selection
-            const choice = await vscode.window.showQuickPick([createPick, configPick, ...items], options);
-            if (!choice) {
-                vscode.window.showInformationMessage(
-                    localize("enterPattern.pattern", "No selection made. Operation cancelled.")
-                );
-                return;
-            }
-            chosenProfile = choice === createPick ? "" : choice.label;
+        quickpick.items = [createPick, configPick, ...items];
+        quickpick.placeholder = addProfilePlaceholder;
+        quickpick.ignoreFocusOut = true;
+        quickpick.show();
+        const choice = await resolveQuickPickHelper(quickpick);
+        quickpick.hide();
+        if (!choice) {
+            vscode.window.showInformationMessage(
+                localize("enterPattern.pattern", "No selection made. Operation cancelled.")
+            );
+            return;
+        }
+        if (choice === configPick) {
+            configDir = await this.createZoweSchema(zoweFileProvider);
+            return;
+        }
+        if (choice instanceof FilterDescriptor) {
+            chosenProfile = "";
         } else {
-            quickpick.items = [createPick, configPick, ...items];
-            quickpick.placeholder = addProfilePlaceholder;
-            quickpick.ignoreFocusOut = true;
-            quickpick.show();
-            const choice = await resolveQuickPickHelper(quickpick);
-            quickpick.hide();
-            if (!choice) {
-                vscode.window.showInformationMessage(
-                    localize("enterPattern.pattern", "No selection made. Operation cancelled.")
-                );
-                return;
-            }
-            if (choice === configPick) {
-                configDir = await this.createZoweSchema(zoweFileProvider);
-                return;
-            }
-            if (choice instanceof FilterDescriptor) {
-                chosenProfile = "";
-            } else {
-                // remove any icons from the label
-                chosenProfile = choice.label.replace(/\$\(.*\)\s/g, "");
-            }
+            // remove any icons from the label
+            chosenProfile = choice.label.replace(/\$\(.*\)\s/g, "");
         }
 
         if (configDir) {
