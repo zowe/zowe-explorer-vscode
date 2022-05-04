@@ -274,13 +274,6 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                     owner,
                     prefix
                 );
-                /*
-                    Note: Temporary fix
-                    This current fix is necessary since in certain instances the Zowe
-                    Explorer JES API returns duplicate jobs. The following reduce function
-                    filters only the unique jobs present by comparing the ids of these returned
-                    jobs. 
-                */
                 jobsInternal = jobsInternal.reduce((acc, current) => {
                     const duplicateJobExists = acc.find((job) => job.jobid === current.jobid);
                     if (!duplicateJobExists) {
