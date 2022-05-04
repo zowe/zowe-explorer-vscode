@@ -14,8 +14,8 @@
 import * as vscode from "vscode";
 import * as fs from "fs";
 import * as globals from "../globals";
-import { Session, IProfile, IProfileLoaded, ProfileInfo, Logger } from "@zowe/imperative";
-import { getSecurityModules, IZoweTreeNode, ProfilesCache, ZoweTreeNode, getZoweDir } from "@zowe/zowe-explorer-api";
+import { Session, IProfile, IProfileLoaded, ProfileInfo } from "@zowe/imperative";
+import { getSecurityModules, IZoweTreeNode, ZoweTreeNode, getZoweDir, getFullPath } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import * as nls from "vscode-nls";
 
@@ -241,7 +241,7 @@ export async function readConfigFromDisk() {
     let rootPath;
     if (vscode.workspace.workspaceFolders) {
         rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
-        await mProfileInfo.readProfilesFromDisk({ projectDir: fs.realpathSync(rootPath) });
+        await mProfileInfo.readProfilesFromDisk({ projectDir: getFullPath(rootPath) });
     } else {
         await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir() });
     }
