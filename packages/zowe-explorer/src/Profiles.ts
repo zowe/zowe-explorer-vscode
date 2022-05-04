@@ -646,7 +646,7 @@ export class Profiles extends ProfilesCache {
                     global = false;
                 }
             }
-            const config = await Config.load("zowe", { projectDir: fs.realpathSync.native(rootPath) });
+            const config = await Config.load("zowe", { projectDir: fs.realpathSync(rootPath) });
             if (vscode.workspace.workspaceFolders) {
                 config.api.layers.activate(user, global, rootPath);
             }
