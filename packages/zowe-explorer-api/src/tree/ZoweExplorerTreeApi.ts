@@ -43,14 +43,4 @@ export interface ZoweExplorerTreeApi {
      *
      */
     getProfile(primaryNode: TreeItem): IProfileLoaded;
-
-    /**
-     * Used by other VS Code Extensions to access an alternative
-     * profile types that can be employed in conjunction with the primary
-     * profile to provide alternative support.
-     *
-     * @param primaryNode represents the Tree item that is being used
-     * @return The requested profile
-     */
-    getLinkedProfile(primaryNode: TreeItem, type: string): Promise<IProfileLoaded>;
 }

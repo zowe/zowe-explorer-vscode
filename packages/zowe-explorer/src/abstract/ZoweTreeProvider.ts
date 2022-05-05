@@ -76,6 +76,21 @@ export class ZoweTreeProvider {
     }
 
     /**
+     * Call whenever the context of a node needs to be refreshed to add the home suffix
+     * @param node Node to refresh
+     */
+    public async refreshHomeProfileContext(node) {
+        const mProfileInfo = await Profiles.getInstance().getProfileInfo();
+        if (mProfileInfo.usingTeamConfig && !contextually.isHomeProfile(node)) {
+            const prof = mProfileInfo.getAllProfiles().find((p) => p.profName === node.getProfileName());
+            const osLocInfo = mProfileInfo.getOsLocInfo(prof);
+            if (osLocInfo?.[0]?.global) {
+                node.contextValue += globals.HOME_SUFFIX;
+            }
+        }
+    }
+
+    /**
      * Called whenever the tree needs to be refreshed, and fires the data change event
      *
      */
@@ -165,7 +180,7 @@ export class ZoweTreeProvider {
                 await setSession(node, EditSession as ISession);
             } else {
                 zoweFileProvider.deleteSession(node.getSessionNode());
-                this.mHistory.addSession(node.label);
+                this.mHistory.addSession(node.label as string);
                 zoweFileProvider.addSession(node.getProfileName());
             }
             this.refresh();
@@ -246,6 +261,10 @@ export class ZoweTreeProvider {
         await vscode.commands.executeCommand("zowe.ds.refreshAll");
         await vscode.commands.executeCommand("zowe.uss.refreshAll");
         await vscode.commands.executeCommand("zowe.jobs.refreshAllJobs");
+    }
+
+    public async createZoweSchema(zoweFileProvider: IZoweTree<IZoweNodeType>) {
+        await Profiles.getInstance().createZoweSchema(zoweFileProvider);
     }
 
     public async createZoweSession(zoweFileProvider: IZoweTree<IZoweNodeType>) {

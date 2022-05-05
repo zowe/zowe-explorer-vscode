@@ -11,7 +11,7 @@
 
 // tslint:disable:no-magic-numbers
 import * as zowe from "@zowe/cli";
-import { Logger, IProfileLoaded } from "@zowe/imperative";
+import { Logger, IProfileLoaded, ICommandArguments, ConnectionPropsForSessCfg, Session } from "@zowe/imperative";
 import * as chai from "chai";
 import * as sinon from "sinon";
 import * as chaiAsPromised from "chai-as-promised";
@@ -21,7 +21,7 @@ import * as vscode from "vscode";
 import * as testConst from "../../resources/testProfileData";
 import { USSTree } from "../../src/uss/USSTree";
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
-import { USS_SESSION_CONTEXT, FAV_PROFILE_CONTEXT } from "../../src/globals";
+import * as globals from "../../src/globals";
 
 declare var it: any;
 
@@ -38,7 +38,19 @@ describe("USSTree Integration Tests", async () => {
     chai.use(chaiAsPromised);
 
     // Uses loaded profile to create a zosmf session with Zowe
-    const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
+    const cmdArgs: ICommandArguments = {
+        $0: "zowe",
+        _: [""],
+        host: testProfile.profile.host,
+        port: testProfile.profile.port,
+        basePath: testProfile.profile.basePath,
+        rejectUnauthorized: testProfile.profile.rejectUnauthorized,
+        user: testProfile.profile.user,
+        password: testProfile.profile.password,
+    };
+    const sessCfg = zowe.ZosmfSession.createSessCfgFromArgs(cmdArgs);
+    ConnectionPropsForSessCfg.resolveSessCfgProps(sessCfg, cmdArgs);
+    const session = new Session(sessCfg);
     const sessNode = new ZoweUSSNode(
         testConst.profile.name,
         vscode.TreeItemCollapsibleState.Expanded,
@@ -48,7 +60,7 @@ describe("USSTree Integration Tests", async () => {
         false,
         testProfile.name
     );
-    sessNode.contextValue = USS_SESSION_CONTEXT;
+    sessNode.contextValue = globals.USS_SESSION_CONTEXT;
     const path = testConst.ussPattern;
     sessNode.fullPath = path;
     const testTree = new USSTree();
@@ -65,12 +77,12 @@ describe("USSTree Integration Tests", async () => {
         sandbox.restore();
     });
 
-    const oldSettings = vscode.workspace.getConfiguration("Zowe-USS-Persistent");
+    const oldSettings = vscode.workspace.getConfiguration(globals.SETTINGS_USS_HISTORY);
 
     after(async () => {
         await vscode.workspace
             .getConfiguration()
-            .update("Zowe-USS-Persistent", oldSettings, vscode.ConfigurationTarget.Global);
+            .update(globals.SETTINGS_USS_HISTORY, oldSettings, vscode.ConfigurationTarget.Global);
     });
 
     /*************************************************************************************************************
@@ -234,7 +246,7 @@ describe("USSTree Integration Tests", async () => {
         testTree.deleteSession(testNode);
         len--;
         expect(testTree.mSessionNodes.length).toEqual(len);
-        await testTree.addSession(testNode.label);
+        await testTree.addSession(testNode.label as string);
         expect(testTree.mSessionNodes.length).toEqual(len + 1);
     }).timeout(TIMEOUT);
 
@@ -248,7 +260,7 @@ describe("USSTree Integration Tests", async () => {
                 null,
                 null
             );
-            favProfileNode.contextValue = FAV_PROFILE_CONTEXT;
+            favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
             testTree.mFavorites.push(favProfileNode);
         });
         afterEach(() => {

@@ -57,7 +57,7 @@ async function createGlobalMocks() {
         Delete: jest.fn(),
         Utilities: jest.fn(),
         withProgress: jest.fn(),
-        createBasicZosmfSession: jest.fn(),
+        createSessCfgFromArgs: jest.fn(),
         ZosmfSession: jest.fn(),
         getUssApiMock: jest.fn(),
         ProgressLocation: jest.fn().mockImplementation(() => {
@@ -81,7 +81,6 @@ async function createGlobalMocks() {
     globalMocks.getUssApiMock.mockReturnValue(globalMocks.ussApi);
     ZoweExplorerApiRegister.getUssApi = globalMocks.getUssApiMock.bind(ZoweExplorerApiRegister);
 
-    // Object.defineProperty(globalMocks.mockTextDocuments[0], "fileName", { value: `${globals.USS_DIR}/sestest/test/node`, configurable: true });
     Object.defineProperty(vscode.workspace, "onDidSaveTextDocument", {
         value: globalMocks.onDidSaveTextDocument,
         configurable: true,
@@ -126,8 +125,8 @@ async function createGlobalMocks() {
     Object.defineProperty(vscode.window, "showInputBox", { value: globalMocks.showInputBox, configurable: true });
     Object.defineProperty(vscode.window, "createTreeView", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe, "ZosmfSession", { value: globalMocks.ZosmfSession, configurable: true });
-    Object.defineProperty(globalMocks.ZosmfSession, "createBasicZosmfSession", {
-        value: globalMocks.createBasicZosmfSession,
+    Object.defineProperty(globalMocks.ZosmfSession, "createSessCfgFromArgs", {
+        value: globalMocks.createSessCfgFromArgs,
         configurable: true,
     });
     Object.defineProperty(zowe, "Download", { value: globalMocks.Download, configurable: true });
@@ -918,10 +917,6 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
             blockMocks.childNode.fullPath = "Throw Error";
             blockMocks.childNode.dirty = true;
             blockMocks.childNode.profile = globalMocks.profileOne;
-            globalMocks.profileOps.getCombinedProfile.mockResolvedValue({
-                name: blockMocks.testCombinedProfile.name,
-                profile: blockMocks.testCombinedProfile.profile,
-            });
 
             await blockMocks.childNode.getChildren();
             expect(globalMocks.showErrorMessage.mock.calls.length).toEqual(1);
@@ -941,10 +936,6 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
             blockMocks.childNode.contextValue = globals.USS_SESSION_CONTEXT;
             blockMocks.childNode.dirty = true;
             blockMocks.childNode.profile = globalMocks.profileOne;
-            globalMocks.profileOps.getCombinedProfile.mockResolvedValue({
-                name: blockMocks.testCombinedProfile.name,
-                profile: blockMocks.testCombinedProfile.profile,
-            });
             const subNode = new ZoweUSSNode(
                 "Response Fail",
                 vscode.TreeItemCollapsibleState.Collapsed,
@@ -1013,7 +1004,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
         );
 
         newMocks.testUSSTree.getTreeView.mockReturnValue(createTreeView());
-        globalMocks.createBasicZosmfSession.mockReturnValue(globalMocks.session);
+        globalMocks.createSessCfgFromArgs.mockReturnValue(globalMocks.session);
         globalMocks.ussFile.mockReturnValue(globalMocks.response);
         globalMocks.withProgress.mockReturnValue(globalMocks.response);
         globalMocks.openTextDocument.mockResolvedValue("test.doc");
@@ -1043,12 +1034,15 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
                         ];
                     }),
                     refresh: jest.fn(),
-                    getCombinedProfile: jest.fn(() => {
-                        return [{ name: globalMocks.profileOne.name, profile: globalMocks.profileOne }];
-                    }),
                 };
             }),
         });
+
+        const mockUssApi = await ZoweExplorerApiRegister.getUssApi(globalMocks.testProfile);
+        const getUssApiMock = jest.fn();
+        getUssApiMock.mockReturnValue(mockUssApi);
+        ZoweExplorerApiRegister.getUssApi = getUssApiMock.bind(ZoweExplorerApiRegister);
+        jest.spyOn(mockUssApi, "isFileTagBinOrAscii").mockResolvedValueOnce(true);
 
         return newMocks;
     }
@@ -1076,9 +1070,6 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
         expect(globalMocks.existsSync.mock.calls[0][0]).toBe(
             path.join(globals.USS_DIR, "/" + node.mProfileName + "/", node.fullPath)
         );
-        expect(globalMocks.isFileTagBinOrAscii.mock.calls.length).toBe(1);
-        expect(globalMocks.isFileTagBinOrAscii.mock.calls[0][0]).toBe(globalMocks.session);
-        expect(globalMocks.isFileTagBinOrAscii.mock.calls[0][1]).toBe(node.fullPath);
         expect(globalMocks.withProgress).toBeCalledWith(
             {
                 location: vscode.ProgressLocation.Notification,
@@ -1132,9 +1123,6 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
         expect(globalMocks.existsSync.mock.calls[0][0]).toBe(
             path.join(globals.USS_DIR, "/" + node.mProfileName + "/", node.fullPath)
         );
-        expect(globalMocks.isFileTagBinOrAscii.mock.calls.length).toBe(1);
-        expect(globalMocks.isFileTagBinOrAscii.mock.calls[0][0]).toEqual(globalMocks.session);
-        expect(globalMocks.isFileTagBinOrAscii.mock.calls[0][1]).toBe(node.fullPath);
         expect(globalMocks.withProgress).toBeCalledWith(
             {
                 location: vscode.ProgressLocation.Notification,
@@ -1482,7 +1470,7 @@ describe("ZoweUSSNode Unit Tests - Function node.initializeFileOpening()", () =>
     it("Tests that node.initializeFileOpening() successfully handles binary files that should be re-downloaded", async () => {
         const globalMocks = await createGlobalMocks();
 
-        const errorSelection = ("Re-download" as unknown) as vscode.MessageItem;
+        const errorSelection = "Re-download" as unknown as vscode.MessageItem;
         jest.spyOn(vscode.workspace, "openTextDocument").mockRejectedValue("Test error!");
         jest.spyOn(vscode.window, "showErrorMessage").mockResolvedValue(errorSelection);
 

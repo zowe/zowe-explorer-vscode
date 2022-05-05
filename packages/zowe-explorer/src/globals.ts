@@ -10,12 +10,14 @@
  */
 
 import * as path from "path";
-import { Logger } from "@zowe/imperative";
+import { Logger, ICommandProfileTypeConfiguration } from "@zowe/imperative";
 import * as vscode from "vscode";
 import * as loggerConfig from "../log4jsconfig.json";
 
 // Set up localization
 import * as nls from "vscode-nls";
+import { getZoweDir, ProfilesCache } from "@zowe/zowe-explorer-api";
+
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
     bundleFormat: nls.BundleFormat.standalone,
@@ -27,14 +29,16 @@ export let ZOWETEMPFOLDER;
 export let ZOWE_TMP_FOLDER;
 export let USS_DIR;
 export let DS_DIR;
+export let CONFIG_PATH; // set during activate
 export let ISTHEIA: boolean = false; // set during activate
 export let LOG: Logger;
-export const COMMAND_COUNT = 96;
+export const COMMAND_COUNT = 98;
 export const MAX_SEARCH_HISTORY = 5;
 export const MAX_FILE_HISTORY = 10;
 export const STATUS_BAR_TIMEOUT_MS = 5000;
 export const CONTEXT_PREFIX = "_";
 export const FAV_SUFFIX = CONTEXT_PREFIX + "fav";
+export const HOME_SUFFIX = CONTEXT_PREFIX + "home";
 export const FAV_PROFILE_CONTEXT = "profile_fav";
 export const RC_SUFFIX = CONTEXT_PREFIX + "rc=";
 export const VALIDATE_SUFFIX = CONTEXT_PREFIX + "validate=";
@@ -66,6 +70,24 @@ export const ICON_STATE_CLOSED = "closed";
 export const FILTER_SEARCH = "isFilterSearch";
 export const VSCODE_APPNAME: string[] = ["Visual Studio Code", "VSCodium"];
 export const ROOTPATH = path.join(__dirname, "..", "..");
+export const SETTINGS_VERSION = "zowe.settings.version";
+export const SETTINGS_TEMP_FOLDER_PATH = "zowe.files.temporaryDownloadsFolder.path";
+export const SETTINGS_TEMP_FOLDER_CLEANUP = "zowe.files.temporaryDownloadsFolder.cleanup";
+export const SETTINGS_TEMP_FOLDER_HIDE = "zowe.files.temporaryDownloadsFolder.hide";
+export const SETTINGS_DS_DEFAULT_BINARY = "zowe.ds.default.binary";
+export const SETTINGS_DS_DEFAULT_C = "zowe.ds.default.c";
+export const SETTINGS_DS_DEFAULT_CLASSIC = "zowe.ds.default.classic";
+export const SETTINGS_DS_DEFAULT_PDS = "zowe.ds.default.pds";
+export const SETTINGS_DS_DEFAULT_PS = "zowe.ds.default.ps";
+export const SETTINGS_COMMANDS_HISTORY = "zowe.commands.history";
+export const SETTINGS_COMMANDS_ALWAYS_EDIT = "zowe.commands.alwaysEdit";
+export const SETTINGS_AUTOMATIC_PROFILE_VALIDATION = "zowe.automaticProfileValidation";
+export const SETTINGS_DS_HISTORY = "zowe.ds.history";
+export const SETTINGS_USS_HISTORY = "zowe.uss.history";
+export const SETTINGS_JOBS_HISTORY = "zowe.jobs.history";
+export const EXTENDER_CONFIG: ICommandProfileTypeConfiguration[] = [];
+export let PROFILESCACHE; // set during activate new ProfilesCache(Logger.getAppLogger());
+
 export enum CreateDataSetTypeWithKeysEnum {
     DATA_SET_BINARY = 0,
     DATA_SET_C = 1,
@@ -201,6 +223,15 @@ export function defineGlobals(tempPath: string | undefined) {
     ZOWE_TMP_FOLDER = path.join(ZOWETEMPFOLDER, "tmp");
     USS_DIR = path.join(ZOWETEMPFOLDER, "_U_");
     DS_DIR = path.join(ZOWETEMPFOLDER, "_D_");
+    PROFILESCACHE = new ProfilesCache(Logger.getAppLogger(), vscode.workspace.workspaceFolders?.[0].uri.fsPath);
+}
+
+export function setConfigPath(configPath: string | undefined): void {
+    if (configPath) {
+        CONFIG_PATH = configPath;
+    } else {
+        CONFIG_PATH = getZoweDir();
+    }
 }
 
 /**

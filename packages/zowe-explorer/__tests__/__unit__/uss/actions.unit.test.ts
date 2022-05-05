@@ -12,15 +12,10 @@
 jest.mock("fs");
 
 import * as zowe from "@zowe/cli";
-import { IProfileLoaded } from "@zowe/imperative";
-import { ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { IProfileLoaded, Logger } from "@zowe/imperative";
+import { ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import * as ussNodeActions from "../../../src/uss/actions";
-import {
-    createUSSTree,
-    createUSSNode,
-    createFavoriteUSSNode,
-    createUSSSessionNode,
-} from "../../../__mocks__/mockCreators/uss";
+import { createUSSTree, createUSSNode, createFavoriteUSSNode } from "../../../__mocks__/mockCreators/uss";
 import {
     createIProfile,
     createISession,
@@ -28,6 +23,7 @@ import {
     createTextDocument,
     createFileResponse,
     createValidIProfile,
+    createInstanceOfProfileInfo,
 } from "../../../__mocks__/mockCreators/shared";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
@@ -40,7 +36,6 @@ import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
 import * as isbinaryfile from "isbinaryfile";
 import * as fs from "fs";
 import { createUssApi, bindUssApi } from "../../../__mocks__/mockCreators/api";
-import * as workspaceUtils from "../../../src/utils/workspace";
 import * as refreshActions from "../../../src/shared/refresh";
 
 function createGlobalMocks() {
@@ -78,6 +73,8 @@ function createGlobalMocks() {
                 Notification: 15,
             };
         }),
+        mockProfileInfo: createInstanceOfProfileInfo(),
+        mockProfilesCache: new ProfilesCache(Logger.getAppLogger()),
     };
 
     globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.testProfile);
@@ -107,6 +104,7 @@ function createGlobalMocks() {
     Object.defineProperty(sharedUtils, "concatChildNodes", { value: globalMocks.concatChildNodes, configurable: true });
     Object.defineProperty(globalMocks.Create, "uss", { value: globalMocks.uss, configurable: true });
     Object.defineProperty(vscode.window, "showOpenDialog", { value: globalMocks.showOpenDialog, configurable: true });
+    Object.defineProperty(vscode.workspace, "getConfiguration", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.workspace, "openTextDocument", {
         value: globalMocks.openTextDocument,
         configurable: true,
@@ -162,6 +160,11 @@ function createGlobalMocks() {
                 validateProfiles: jest.fn(),
                 loadNamedProfile: globalMocks.mockLoadNamedProfile,
             };
+        }),
+    });
+    Object.defineProperty(globalMocks.mockProfilesCache, "getProfileInfo", {
+        value: jest.fn(() => {
+            return { value: globalMocks.mockProfileInfo, configurable: true };
         }),
     });
 

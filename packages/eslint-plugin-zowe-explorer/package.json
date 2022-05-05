@@ -1,6 +1,6 @@
 {
   "name": "eslint-plugin-zowe-explorer",
-  "version": "1.23.0-SNAPSHOT",
+  "version": "2.0.1-SNAPSHOT",
   "description": "Custom ESLint Rules for ZOWE Explorer",
   "keywords": [
     "eslint",
@@ -10,6 +10,8 @@
   "author": "",
   "main": "lib/index.js",
   "scripts": {
+    "clean": "echo \"eslint-plugin: nothing to clean.\"",
+    "fresh-clone": "yarn clean && rimraf node_modules",
     "test": "jest",
     "build": "echo \"eslint-plugin: nothing to build.\"",
     "lint": "echo \"eslint-plugin: nothing to lint.\"",

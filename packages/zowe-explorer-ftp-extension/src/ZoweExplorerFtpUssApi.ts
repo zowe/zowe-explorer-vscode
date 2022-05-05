@@ -13,8 +13,9 @@ import * as fs from "fs";
 import * as path from "path";
 import * as crypto from "crypto";
 import * as tmp from "tmp";
-import * as zowe from "@zowe/cli";
 import * as imperative from "@zowe/imperative";
+import * as zowe from "@zowe/cli";
+import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 
 import { MessageSeverityEnum, ZoweExplorerApi, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { CoreUtils, UssUtils, TRANSFER_TYPE_ASCII, TRANSFER_TYPE_BINARY } from "@zowe/zos-ftp-for-zowe-cli";
@@ -136,7 +137,7 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
         inputDirectoryPath: string,
         ussDirectoryPath: string,
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        options: zowe.IUploadOptions
+        options: IUploadOptions
     ): Promise<zowe.IZosFilesResponse> {
         let result = this.getDefaultResponse();
 

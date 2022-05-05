@@ -16,11 +16,12 @@
 import { FtpMvsApi } from "../../../src/ZoweExplorerFtpMvsApi";
 import { DataSetUtils } from "@zowe/zos-ftp-for-zowe-cli";
 import TestUtils from "../utils/TestUtils";
+import * as tmp from "tmp";
 
 // two methods to mock modules: create a __mocks__ file for zowe-explorer-api.ts and direct mock for extension.ts
 jest.mock("../../../__mocks__/@zowe/zowe-explorer-api.ts");
 jest.mock("../../../src/extension.ts");
-
+jest.mock("vscode");
 const stream = require("stream");
 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-call
 const readableStream = stream.Readable.from([]);
@@ -66,7 +67,7 @@ describe("FtpMvsApi", () => {
     });
 
     it("should view dataset content.", async () => {
-        const localFile = "/tmp/testds1.txt";
+        const localFile = tmp.tmpNameSync({ tmpdir: "/tmp" });
         const response = TestUtils.getSingleLineStream();
         DataSetUtils.downloadDataSet = jest.fn().mockReturnValue(response);
 
@@ -86,7 +87,9 @@ describe("FtpMvsApi", () => {
     });
 
     it("should upload content to dataset.", async () => {
-        const localFile = "/tmp/testds1.txt";
+        const localFile = tmp.tmpNameSync({ tmpdir: "/tmp" });
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-call
+        fs.writeFileSync(localFile, "hello");
         const response = TestUtils.getSingleLineStream();
         const response2 = [{ dsname: "IBMUSER.DS2", dsorg: "PS" }];
         DataSetUtils.listDataSets = jest.fn().mockReturnValue(response2);

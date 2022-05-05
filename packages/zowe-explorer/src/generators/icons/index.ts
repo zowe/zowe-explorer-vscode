@@ -32,6 +32,7 @@ export enum IconId {
     "folderOpen" = "folderOpen",
     "migrated" = "migrated",
     "vsam" = "vsam",
+    "home" = "home",
 }
 export enum IconHierarchyType {
     "base" = "base",
@@ -63,6 +64,7 @@ const items = [
     require("./items/folderOpen"),
     require("./items/migrated"),
     require("./items/vsam"),
+    require("./items/home"),
     require("./items/filterFolder"),
     require("./items/filterFolderOpen"),
 ].map((item) => item.default) as IIconItem[];

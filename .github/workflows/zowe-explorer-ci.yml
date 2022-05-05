@@ -4,21 +4,31 @@ on:
   push:
     paths:
       - packages/zowe-explorer/**
+      - packages/zowe-explorer-api/**
   pull_request:
     paths:
       - packages/zowe-explorer/**
+      - packages/zowe-explorer-api/**
 
 jobs:
   ze-build:
     runs-on: ${{ matrix.os }}
 
+    timeout-minutes: 60
+
+    concurrency:
+      group: ${{ matrix.os }}-node-${{ matrix.node-version }}-ze-ci-${{ github.ref }}
+      cancel-in-progress: true
+
     strategy:
       # Continue to run tests on the other systems if one fails
       fail-fast: false
       matrix:
-        node-version: [12.x, 14.x]
+        node-version: [14, 16]
         # order operating systems from best to worst
         os: [windows-latest, ubuntu-latest, macos-latest]
+
+    if: (github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository) && !contains(github.event.head_commit.message, '[ci skip]')
 
     steps:
       - name: Check out code

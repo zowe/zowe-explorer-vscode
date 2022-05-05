@@ -27,6 +27,7 @@ import { DatasetTree } from "./DatasetTree";
 import * as contextually from "../shared/context";
 import { setFileSaved } from "../utils/workspace";
 import { UIViews } from "../shared/ui-views";
+import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 
 // Set up localization
 import * as nls from "vscode-nls";
@@ -60,8 +61,8 @@ export async function allocateLike(
         quickpick.ignoreFocusOut = true;
 
         for (const thisSession of datasetProvider.mSessionNodes) {
-            if (!thisSession.label.trim().includes("Favorites")) {
-                qpItems.push(new FilterItem(thisSession.label.trim()));
+            if (!thisSession.label.toString().includes("Favorites")) {
+                qpItems.push(new FilterItem({ text: thisSession.label as string }));
             }
         }
         quickpick.items = [...qpItems];
@@ -72,9 +73,7 @@ export async function allocateLike(
             vscode.window.showInformationMessage(localize("allocateLike.noSelection", "You must select a profile."));
             return;
         } else {
-            currSession = datasetProvider.mSessionNodes.find(
-                (thisSession) => thisSession.label.trim() === selection.label.trim()
-            );
+            currSession = datasetProvider.mSessionNodes.find((thisSession) => thisSession.label === selection.label);
             profile = currSession.getProfile();
         }
         quickpick.dispose();
@@ -82,7 +81,7 @@ export async function allocateLike(
         // The user must enter the name of a data set to copy
         const currSelection =
             datasetProvider.getTreeView().selection.length > 0
-                ? datasetProvider.getTreeView().selection[0].label.trim()
+                ? datasetProvider.getTreeView().selection[0].label
                 : null;
         const inputBoxOptions: vscode.InputBoxOptions = {
             ignoreFocusOut: true,
@@ -90,7 +89,7 @@ export async function allocateLike(
                 "allocateLike.inputBox.placeHolder",
                 "Enter the name of the data set to copy attributes from"
             ),
-            value: currSelection,
+            value: currSelection as string,
         };
         likeDSName = await UIViews.inputBox(inputBoxOptions);
         if (!likeDSName) {
@@ -102,7 +101,7 @@ export async function allocateLike(
     } else {
         // User called allocateLike by right-clicking a node
         profile = node.getProfile();
-        likeDSName = node.label.replace(/\[.*\]: /g, "");
+        likeDSName = node.label.toString().replace(/\[.*\]: /g, "");
     }
 
     // Get new data set name
@@ -133,7 +132,9 @@ export async function allocateLike(
 
     // Refresh tree and open new node, if applicable
     if (!currSession) {
-        currSession = datasetProvider.mSessionNodes.find((thisSession) => thisSession.label.trim() === profile.name);
+        currSession = datasetProvider.mSessionNodes.find(
+            (thisSession) => thisSession.label.toString() === profile.name
+        );
     }
     const theFilter = await datasetProvider.createFilterString(newDSName, currSession);
     currSession.tooltip = currSession.pattern = theFilter.toUpperCase();
@@ -141,7 +142,9 @@ export async function allocateLike(
     datasetProvider.refresh();
     currSession.dirty = true;
     datasetProvider.refreshElement(currSession);
-    const newNode = (await currSession.getChildren()).find((child) => child.label.trim() === newDSName.toUpperCase());
+    const newNode = (await currSession.getChildren()).find(
+        (child) => child.label.toString() === newDSName.toUpperCase()
+    );
     await datasetProvider.getTreeView().reveal(currSession, { select: true, focus: true });
     datasetProvider.getTreeView().reveal(newNode, { select: true, focus: true });
 }
@@ -186,7 +189,7 @@ export async function uploadDialog(node: ZoweDatasetNode, datasetProvider: api.I
 
 export async function uploadFile(node: ZoweDatasetNode, doc: vscode.TextDocument) {
     try {
-        const datasetName = node.label;
+        const datasetName = node.label as string;
         const prof = node.getProfile();
         await ZoweExplorerApiRegister.getMvsApi(prof).putContents(doc.fileName, datasetName, {
             encoding: prof.profile.encoding,
@@ -209,11 +212,11 @@ export async function deleteDatasetPrompt(
 ) {
     let nodes: api.IZoweDatasetTreeNode[];
     const treeView = datasetProvider.getTreeView();
-    let selectedNodes: api.IZoweDatasetTreeNode[] = treeView.selection;
+    let selectedNodes = treeView.selection;
     let includedSelection = false;
     if (node) {
         for (const item of selectedNodes) {
-            if (node.getLabel() === item.getLabel()) {
+            if (node.getLabel().toString() === item.getLabel().toString()) {
                 includedSelection = true;
             }
         }
@@ -270,8 +273,8 @@ export async function deleteDatasetPrompt(
     // The names of the nodes that should be deleted
     const nodesToDelete: string[] = nodes.map((deletedNode) => {
         return contextually.isDsMember(deletedNode)
-            ? ` ${deletedNode.getParent().getLabel()}(${deletedNode.getLabel()})`
-            : ` ${deletedNode.getLabel()}`;
+            ? ` ${deletedNode.getParent().getLabel().toString()}(${deletedNode.getLabel().toString()})`
+            : ` ${deletedNode.getLabel().toString()}`;
     });
     nodesToDelete.sort();
 
@@ -283,8 +286,9 @@ export async function deleteDatasetPrompt(
         if (contextually.isDsMember(deletedNode)) {
             const parent = deletedNode.getParent();
             if (
-                memberParents.filter((alreadyAddedParent) => alreadyAddedParent.label.trim() === parent.label.trim())
-                    .length === 0
+                memberParents.filter(
+                    (alreadyAddedParent) => alreadyAddedParent.label.toString() === parent.label.toString()
+                ).length === 0
             ) {
                 memberParents.push(parent);
             }
@@ -292,7 +296,7 @@ export async function deleteDatasetPrompt(
     }
 
     nodes.map((deletedNode) => {
-        return contextually.isDsMember(deletedNode) ? deletedNode.getParent() : ` ${deletedNode.getLabel()}`;
+        return contextually.isDsMember(deletedNode) ? deletedNode.getParent() : ` ${deletedNode.getLabel().toString()}`;
     });
 
     // Confirm that the user really wants to delete
@@ -319,8 +323,8 @@ export async function deleteDatasetPrompt(
         // no multi-select available in Theia
         await deleteDataset(nodes[0], datasetProvider);
         const deleteItemName = contextually.isDsMember(nodes[0])
-            ? ` ${nodes[0].getParent().getLabel()}(${nodes[0].getLabel()})`
-            : ` ${nodes[0].getLabel()}`;
+            ? ` ${nodes[0].getParent().getLabel().toString()}(${nodes[0].getLabel().toString()})`
+            : ` ${nodes[0].getLabel().toString()}`;
         nodesDeleted.push(deleteItemName);
     }
     if (nodes.length > 1) {
@@ -347,8 +351,8 @@ export async function deleteDatasetPrompt(
                     try {
                         await deleteDataset(currNode, datasetProvider);
                         const deleteItemName = contextually.isDsMember(currNode)
-                            ? ` ${currNode.getParent().getLabel()}(${currNode.getLabel()})`
-                            : ` ${currNode.getLabel()}`;
+                            ? ` ${currNode.getParent().getLabel().toString()}(${currNode.getLabel().toString()})`
+                            : ` ${currNode.getLabel().toString()}`;
                         nodesDeleted.push(deleteItemName);
                     } catch (err) {
                         globals.LOG.error(err);
@@ -395,7 +399,7 @@ export async function createMember(
         localize("createMember.log.debug.createNewDataSet", "creating new data set member of name ") + name
     );
     if (name) {
-        const label = parent.label.trim();
+        const label = parent.label as string;
         try {
             await ZoweExplorerApiRegister.getMvsApi(parent.getProfile()).createDataSetMember(label + "(" + name + ")");
         } catch (err) {
@@ -444,12 +448,12 @@ export async function openPS(
                 // For favorited or non-favorited sequential DS:
                 case contextually.isFavorite(node):
                 case contextually.isSessionNotFav(node.getParent()):
-                    label = node.label.trim();
+                    label = node.label as string;
                     break;
                 // For favorited or non-favorited data set members:
                 case contextually.isFavoritePds(node.getParent()):
                 case contextually.isPdsNotFav(node.getParent()):
-                    label = node.getParent().getLabel().trim() + "(" + node.getLabel() + ")";
+                    label = node.getParent().getLabel().toString() + "(" + node.getLabel().toString() + ")";
                     break;
                 default:
                     vscode.window.showErrorMessage(
@@ -505,23 +509,23 @@ export function getDataSetTypeAndOptions(type: string) {
     switch (type) {
         case localize("createFile.dataSetBinary", "Data Set Binary"):
             typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_BINARY;
-            createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-Binary");
+            createOptions = vscode.workspace.getConfiguration(globals.SETTINGS_DS_DEFAULT_BINARY);
             break;
         case localize("createFile.dataSetC", "Data Set C"):
             typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_C;
-            createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-C");
+            createOptions = vscode.workspace.getConfiguration(globals.SETTINGS_DS_DEFAULT_C);
             break;
         case localize("createFile.dataSetClassic", "Data Set Classic"):
             typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_CLASSIC;
-            createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-Classic");
+            createOptions = vscode.workspace.getConfiguration(globals.SETTINGS_DS_DEFAULT_CLASSIC);
             break;
         case localize("createFile.dataSetPartitioned", "Data Set Partitioned"):
             typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED;
-            createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-PDS");
+            createOptions = vscode.workspace.getConfiguration(globals.SETTINGS_DS_DEFAULT_PDS);
             break;
         case localize("createFile.dataSetSequential", "Data Set Sequential"):
             typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL;
-            createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-PS");
+            createOptions = vscode.workspace.getConfiguration(globals.SETTINGS_DS_DEFAULT_PS);
             break;
     }
     return {
@@ -678,8 +682,6 @@ export async function createFile(
 
             // Show newly-created data set in expanded tree view
             if (dsName) {
-                node.label = `${node.label} `;
-                node.label = node.label.trim();
                 node.tooltip = node.pattern = theFilter.toUpperCase();
                 node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
                 const icon = getIconByNode(node);
@@ -713,9 +715,9 @@ export async function createFile(
 async function handleUserSelection(newDSProperties, dsType): Promise<string> {
     // Create the array of items in the quickpick list
     const qpItems = [];
-    qpItems.push(new FilterItem(` + Allocate Data Set`, null, true));
+    qpItems.push(new FilterItem({ text: ` + Allocate Data Set`, show: true }));
     newDSProperties.forEach((prop) => {
-        qpItems.push(new FilterItem(prop.label, prop.value, true));
+        qpItems.push(new FilterItem({ text: prop.label, description: prop.value, show: true }));
     });
 
     // Provide the settings for the quickpick's appearance & behavior
@@ -769,7 +771,7 @@ export async function showDSAttributes(
 ) {
     await datasetProvider.checkCurrentProfile(parent);
     if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
-        const label = parent.label.trim();
+        const label = parent.label as string;
         globals.LOG.debug(localize("showDSAttributes.debug", "showing attributes of data set ") + label);
         let attributes: any;
         try {
@@ -882,7 +884,7 @@ export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetT
 
     // get profile from session name
     let sessProfile: IProfileLoaded;
-    const sesNode = (await datasetProvider.getChildren()).find((child) => child.label.trim() === sessProfileName);
+    const sesNode = (await datasetProvider.getChildren()).find((child) => child.label.toString() === sessProfileName);
     if (sesNode) {
         sessProfile = sesNode.getProfile();
     } else {
@@ -934,15 +936,15 @@ export async function submitMember(node: api.IZoweTreeNode) {
             // For favorited or non-favorited sequential DS:
             case contextually.isFavorite(node):
             case contextually.isSessionNotFav(node.getParent()):
-                sesName = node.getParent().getLabel();
-                label = node.label;
+                sesName = node.getParent().getLabel() as string;
+                label = node.label as string;
                 sessProfile = node.getProfile();
                 break;
             // For favorited or non-favorited data set members:
             case contextually.isFavoritePds(node.getParent()):
             case contextually.isPdsNotFav(node.getParent()):
-                sesName = node.getParent().getParent().getLabel();
-                label = node.getParent().getLabel() + "(" + node.label.trim() + ")";
+                sesName = node.getParent().getParent().getLabel() as string;
+                label = node.getParent().getLabel().toString() + "(" + node.label.toString() + ")";
                 sessProfile = node.getProfile();
                 break;
             default:
@@ -981,15 +983,15 @@ export async function deleteDataset(node: api.IZoweTreeNode, datasetProvider: ap
     try {
         const parentContext = node.getParent().contextValue;
         if (parentContext.includes(globals.FAV_SUFFIX)) {
-            label = node.getLabel();
+            label = node.getLabel() as string;
             fav = true;
             if (parentContext.includes(globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX)) {
-                label = node.getParent().getLabel() + "(" + node.getLabel() + ")";
+                label = node.getParent().getLabel().toString() + "(" + node.getLabel().toString() + ")";
             }
         } else if (parentContext.includes(globals.DS_SESSION_CONTEXT)) {
-            label = node.getLabel();
+            label = node.getLabel() as string;
         } else if (parentContext.includes(globals.DS_PDS_CONTEXT)) {
-            label = node.getParent().getLabel() + "(" + node.getLabel() + ")";
+            label = node.getParent().getLabel().toString() + "(" + node.getLabel().toString() + ")";
         } else {
             throw Error(localize("deleteDataSet.invalidNode.error", "deleteDataSet() called from invalid node."));
         }
@@ -1019,7 +1021,7 @@ export async function deleteDataset(node: api.IZoweTreeNode, datasetProvider: ap
     // remove node from tree
     if (fav) {
         datasetProvider.mSessionNodes.forEach((ses) => {
-            if (node.getProfileName() === ses.label.trim()) {
+            if (node.getProfileName() === ses.label.toString()) {
                 ses.dirty = true;
             }
         });
@@ -1054,12 +1056,12 @@ export async function refreshPS(node: api.IZoweDatasetTreeNode) {
             // For favorited or non-favorited sequential DS:
             case contextually.isFavorite(node):
             case contextually.isSessionNotFav(node.getParent()):
-                label = node.label.trim();
+                label = node.label as string;
                 break;
             // For favorited or non-favorited data set members:
             case contextually.isFavoritePds(node.getParent()):
             case contextually.isPdsNotFav(node.getParent()):
-                label = node.getParent().getLabel() + "(" + node.getLabel() + ")";
+                label = node.getParent().getLabel().toString() + "(" + node.getLabel().toString() + ")";
                 break;
             default:
                 throw Error(localize("refreshPS.error.invalidNode", "refreshPS() called from invalid node."));
@@ -1145,17 +1147,18 @@ export async function enterPattern(node: api.IZoweDatasetTreeNode, datasetProvid
         }
     } else {
         // executing search from saved search in favorites
-        pattern = node.label.trim().substring(node.label.trim().indexOf(":") + 2);
-        const session = node.label.trim().substring(node.label.trim().indexOf("[") + 1, node.label.trim().indexOf("]"));
+        pattern = node.label.toString().substring(node.label.toString().indexOf(":") + 2);
+        const session = node.label
+            .toString()
+            .substring(node.label.toString().indexOf("[") + 1, node.label.toString().indexOf("]"));
         await datasetProvider.addSession(session);
-        node = datasetProvider.mSessionNodes.find((tempNode) => tempNode.label.trim() === session);
+        node = datasetProvider.mSessionNodes.find((tempNode) => tempNode.label.toString() === session);
     }
 
     // update the treeview with the new pattern
     // TODO figure out why a label change is needed to refresh the treeview,
     // instead of changing the collapsible state
     // change label so the treeview updates
-    node.label = node.label.trim() + " ";
     node.tooltip = node.pattern = pattern.toUpperCase();
     node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
     node.dirty = true;
@@ -1282,8 +1285,8 @@ export async function pasteMember(
             }
             try {
                 await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).copyDataSetMember(
-                    { dataSetName: beforeDataSetName, memberName: beforeMemberName },
-                    { dataSetName, memberName }
+                    { dsn: beforeDataSetName, member: beforeMemberName },
+                    { dsn: dataSetName, member: memberName }
                 );
             } catch (err) {
                 vscode.window.showErrorMessage(err.message);
@@ -1340,7 +1343,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
     // get session from session name
     let documentSession: Session;
     let node: api.IZoweDatasetTreeNode;
-    const sesNode = (await datasetProvider.getChildren()).find((child) => child.label.trim() === sesName);
+    const sesNode = (await datasetProvider.getChildren()).find((child) => child.label.toString() === sesName);
     if (sesNode) {
         globals.LOG.debug(localize("saveFile.log.debug.load", "Loading session from session node in saveFile()"));
         documentSession = sesNode.getSession();
@@ -1392,14 +1395,14 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
             const zNodeDetails = dsUtils.getProfileAndDataSetName(zNode);
             return `${zNodeDetails.profileName}(${zNodeDetails.dataSetName})` === `${label}`;
         } else if (contextually.isDs(zNode)) {
-            return zNode.label.trim() === label;
+            return zNode.label.toString() === label;
         } else {
             return false;
         }
     });
 
     // define upload options
-    let uploadOptions: zowe.IUploadOptions;
+    let uploadOptions: IUploadOptions;
     if (node) {
         uploadOptions = {
             etag: node.getEtag(),

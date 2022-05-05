@@ -21,7 +21,10 @@ import {
     createISession,
     createFileResponse,
     createInstanceOfProfile,
+    createTextDocument,
+    createInstanceOfProfilesCache,
 } from "../../../__mocks__/mockCreators/shared";
+import { ProfilesCache } from "@zowe/zowe-explorer-api";
 import { createDatasetSessionNode } from "../../../__mocks__/mockCreators/datasets";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
 import { Job } from "../../../src/job/ZoweJobNode";
@@ -36,11 +39,27 @@ async function createGlobalMocks() {
         session: createISession(),
         profileOne: createIProfile(),
         mockGetInstance: jest.fn(),
+        profiles: null,
     };
-    await Profiles.createInstance(Logger.getAppLogger());
+    newVariables.profiles = createInstanceOfProfile(newVariables.profileOne);
 
     return newVariables;
 }
+
+Object.defineProperty(globals, "PROFILESCACHE", {
+    value: jest.fn().mockReturnValue(createInstanceOfProfilesCache()),
+});
+Object.defineProperty(globals.PROFILESCACHE, "getConfigInstance", {
+    value: jest.fn(() => {
+        return {
+            usingTeamConfig: false,
+        };
+    }),
+});
+Object.defineProperty(Profiles, "getInstance", {
+    value: () => createInstanceOfProfile(createIProfile()),
+    configurable: true,
+});
 
 describe("Shared Utils Unit Tests - Function node.concatChildNodes()", () => {
     it("Checks that concatChildNodes returns the proper array of children", async () => {
@@ -123,43 +142,17 @@ describe("syncSessionNode shared util function", () => {
     const sessionNode = createDatasetSessionNode(anySession, serviceProfile);
 
     it("should update a session and a profile in the provided node", async () => {
+        const globalMocks = await createGlobalMocks();
         // given
-        const baseProfileName = "base_test";
-        const baseProfile: IProfile = {};
-        const combinedProfile = serviceProfileValue;
-        const profiles = createInstanceOfProfile(serviceProfile);
-        profiles.loadNamedProfile = jest.fn(() => serviceProfileValue);
-        profiles.getBaseProfile = jest.fn(() => {
-            return {
-                name: baseProfileName,
-                profile: baseProfile,
-            };
+        Object.defineProperty(globals.PROFILESCACHE, "loadNamedProfile", {
+            value: jest.fn().mockReturnValue(serviceProfile),
         });
-        profiles.getCombinedProfile = jest.fn(() => combinedProfile);
         const expectedSession = new Session({});
-        const sessionFromProfile = () => expectedSession;
+        const sessionFromProfile = jest.fn().mockResolvedValueOnce(expectedSession);
         // when
-        await utils.syncSessionNode(profiles)(sessionFromProfile)(sessionNode);
-        // then
-        const expectedProfile = combinedProfile;
-        expect(sessionNode.getSession()).toEqual(expectedSession);
-        expect(sessionNode.getProfile()).toEqual(expectedProfile);
-        expect(sessionNode.collapsibleState).toEqual(vscode.TreeItemCollapsibleState.Collapsed);
-    });
-    it("should update a session and a profile without default base profile in the provided node", async () => {
-        const combinedProfile = serviceProfileValue;
-        const profiles = createInstanceOfProfile(serviceProfile);
-        profiles.loadNamedProfile = jest.fn(() => serviceProfileValue);
-        profiles.getBaseProfile = jest.fn(() => undefined);
-        profiles.getCombinedProfile = jest.fn(() => combinedProfile);
-        const expectedSession = new Session({});
-        const sessionFromProfile = () => expectedSession;
-        // when
-        await utils.syncSessionNode(profiles)(sessionFromProfile)(sessionNode);
-        // then
-        const expectedProfile = combinedProfile;
-        expect(sessionNode.getSession()).toEqual(expectedSession);
-        expect(sessionNode.getProfile()).toEqual(expectedProfile);
+        await utils.syncSessionNode(Profiles.getInstance())(sessionFromProfile)(sessionNode);
+        expect(await sessionNode.getSession()).toEqual(expectedSession);
+        expect(sessionNode.getProfile()).toEqual(serviceProfile);
         expect(sessionNode.collapsibleState).toEqual(vscode.TreeItemCollapsibleState.Collapsed);
     });
     it("should do nothing, if there is no profile from provided node in the file system", async () => {
@@ -178,21 +171,6 @@ describe("syncSessionNode shared util function", () => {
         const initialProfile = sessionNode.getProfile();
         expect(sessionNode.getSession()).toEqual(initialSession);
         expect(sessionNode.getProfile()).toEqual(initialProfile);
-        expect(sessionNode.collapsibleState).toEqual(vscode.TreeItemCollapsibleState.Collapsed);
-    });
-    it("should not try to combine service and base profiles when no base profile exists", async () => {
-        const getCombinedProfileSpy = jest.spyOn(Profiles.getInstance(), "getCombinedProfile");
-        const profiles = createInstanceOfProfile(serviceProfile);
-        profiles.loadNamedProfile = jest.fn(() => serviceProfileValue);
-        profiles.getBaseProfile = jest.fn(() => undefined);
-        const expectedSession = new Session({});
-        const sessionFromProfile = () => expectedSession;
-        // when
-        await utils.syncSessionNode(profiles)(sessionFromProfile)(sessionNode);
-        // then
-        expect(getCombinedProfileSpy).toBeCalledTimes(0);
-        expect(sessionNode.getSession()).toEqual(expectedSession);
-        expect(sessionNode.getProfile()).toEqual(serviceProfileValue);
         expect(sessionNode.collapsibleState).toEqual(vscode.TreeItemCollapsibleState.Collapsed);
     });
 });
@@ -336,12 +314,13 @@ describe("Test force upload", () => {
             getMvsApi: jest.fn(),
             getUssApi: jest.fn(),
             withProgress: jest.fn(),
-            fileResponse: createFileResponse({ etag: null }),
+            fileResponse: createFileResponse([{ etag: null }]),
             ProgressLocation: jest.fn().mockImplementation(() => {
                 return {
                     Notification: 15,
                 };
             }),
+            mockDoc: createTextDocument("mocDoc"),
         };
 
         Object.defineProperty(vscode.window, "showInformationMessage", {
@@ -361,6 +340,19 @@ describe("Test force upload", () => {
             configurable: true,
         });
         Object.defineProperty(vscode.window, "withProgress", { value: newVariables.withProgress, configurable: true });
+        Object.defineProperty(vscode.window, "activeTextEditor", { value: { edit: jest.fn() }, configurable: true });
+        Object.defineProperty(vscode, "Position", {
+            value: jest.fn(() => {
+                return {};
+            }),
+            configurable: true,
+        });
+        Object.defineProperty(vscode, "Range", {
+            value: jest.fn(() => {
+                return {};
+            }),
+            configurable: true,
+        });
         Object.defineProperty(vscode, "ProgressLocation", { value: newVariables.ProgressLocation, configurable: true });
 
         return newVariables;
@@ -370,7 +362,7 @@ describe("Test force upload", () => {
         const blockMocks = await createBlockMocks();
         blockMocks.showInformationMessage.mockResolvedValueOnce("Yes");
         blockMocks.withProgress.mockResolvedValueOnce(blockMocks.fileResponse);
-        await sharedUtils.willForceUpload(blockMocks.ussNode, null, null);
+        await sharedUtils.willForceUpload(blockMocks.ussNode, blockMocks.mockDoc, null);
         expect(blockMocks.withProgress).toBeCalledWith(
             {
                 location: vscode.ProgressLocation.Notification,
@@ -384,7 +376,7 @@ describe("Test force upload", () => {
         const blockMocks = await createBlockMocks();
         blockMocks.showInformationMessage.mockResolvedValueOnce("Yes");
         blockMocks.withProgress.mockResolvedValueOnce(blockMocks.fileResponse);
-        await sharedUtils.willForceUpload(blockMocks.dsNode, null, null);
+        await sharedUtils.willForceUpload(blockMocks.dsNode, blockMocks.mockDoc, null);
         expect(blockMocks.withProgress).toBeCalledWith(
             {
                 location: vscode.ProgressLocation.Notification,
@@ -397,7 +389,7 @@ describe("Test force upload", () => {
     it("should cancel upload if user clicks 'No'", async () => {
         const blockMocks = await createBlockMocks();
         blockMocks.showInformationMessage.mockResolvedValueOnce("No");
-        await sharedUtils.willForceUpload(blockMocks.dsNode, null, null);
+        await sharedUtils.willForceUpload(blockMocks.dsNode, blockMocks.mockDoc, null);
         expect(blockMocks.showInformationMessage.mock.calls[1][0]).toBe("Upload cancelled.");
     });
 
@@ -405,7 +397,7 @@ describe("Test force upload", () => {
         const blockMocks = await createBlockMocks();
         Object.defineProperty(globals, "ISTHEIA", { value: true });
         blockMocks.showInformationMessage.mockResolvedValueOnce("No");
-        await sharedUtils.willForceUpload(blockMocks.dsNode, null, null);
+        await sharedUtils.willForceUpload(blockMocks.dsNode, blockMocks.mockDoc, null);
         expect(blockMocks.showWarningMessage.mock.calls[0][0]).toBe(
             "A merge conflict has been detected. Since you are running inside Theia editor, a merge conflict resolution is not available yet."
         );
@@ -415,9 +407,9 @@ describe("Test force upload", () => {
 describe("Shared Utils Unit Tests - Function filterTreeByString", () => {
     it("Testing that filterTreeByString returns the correct array", async () => {
         const qpItems = [
-            new utils.FilterItem("[sestest]: HLQ.PROD2.STUFF1"),
-            new utils.FilterItem("[sestest]: HLQ.PROD3.STUFF2(TESTMEMB)"),
-            new utils.FilterItem("[sestest]: /test/tree/abc"),
+            new utils.FilterItem({ text: "[sestest]: HLQ.PROD2.STUFF1" }),
+            new utils.FilterItem({ text: "[sestest]: HLQ.PROD3.STUFF2(TESTMEMB)" }),
+            new utils.FilterItem({ text: "[sestest]: /test/tree/abc" }),
         ];
 
         let filteredValues = await sharedUtils.filterTreeByString("testmemb", qpItems);
@@ -459,7 +451,7 @@ describe("Shared Utils Unit Tests - Function getDocumentFilePath", () => {
             blockMocks.datasetSessionNode,
             null
         );
-        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(
+        expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
             path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.JCL(member).jcl")
         );
         node = new ZoweDatasetNode(
@@ -468,7 +460,7 @@ describe("Shared Utils Unit Tests - Function getDocumentFilePath", () => {
             blockMocks.datasetSessionNode,
             null
         );
-        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(
+        expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
             path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.ASM(member).asm")
         );
         node = new ZoweDatasetNode(
@@ -477,7 +469,7 @@ describe("Shared Utils Unit Tests - Function getDocumentFilePath", () => {
             blockMocks.datasetSessionNode,
             null
         );
-        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(
+        expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
             path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.COBOL.TEST(member).cbl")
         );
         node = new ZoweDatasetNode(
@@ -486,7 +478,7 @@ describe("Shared Utils Unit Tests - Function getDocumentFilePath", () => {
             blockMocks.datasetSessionNode,
             null
         );
-        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(
+        expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
             path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.PROD.PLI(member).pli")
         );
         node = new ZoweDatasetNode(
@@ -495,7 +487,7 @@ describe("Shared Utils Unit Tests - Function getDocumentFilePath", () => {
             blockMocks.datasetSessionNode,
             null
         );
-        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(
+        expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
             path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.PROD.PLX(member).pli")
         );
         node = new ZoweDatasetNode(
@@ -504,7 +496,7 @@ describe("Shared Utils Unit Tests - Function getDocumentFilePath", () => {
             blockMocks.datasetSessionNode,
             null
         );
-        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(
+        expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
             path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.PROD.SH(member).sh")
         );
         node = new ZoweDatasetNode(
@@ -513,7 +505,7 @@ describe("Shared Utils Unit Tests - Function getDocumentFilePath", () => {
             blockMocks.datasetSessionNode,
             null
         );
-        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(
+        expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
             path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.REXX.EXEC(member).rexx")
         );
         node = new ZoweDatasetNode(
@@ -522,7 +514,7 @@ describe("Shared Utils Unit Tests - Function getDocumentFilePath", () => {
             blockMocks.datasetSessionNode,
             null
         );
-        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(
+        expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
             path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.XML(member).xml")
         );
 
@@ -532,7 +524,7 @@ describe("Shared Utils Unit Tests - Function getDocumentFilePath", () => {
             blockMocks.datasetSessionNode,
             null
         );
-        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(
+        expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
             path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.XML.xml")
         );
         node = new ZoweDatasetNode(
@@ -541,7 +533,7 @@ describe("Shared Utils Unit Tests - Function getDocumentFilePath", () => {
             blockMocks.datasetSessionNode,
             null
         );
-        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(
+        expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
             path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.TXML")
         );
         node = new ZoweDatasetNode(
@@ -550,7 +542,7 @@ describe("Shared Utils Unit Tests - Function getDocumentFilePath", () => {
             blockMocks.datasetSessionNode,
             null
         );
-        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(
+        expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
             path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.XML.TGML.xml")
         );
         node = new ZoweDatasetNode(
@@ -559,11 +551,11 @@ describe("Shared Utils Unit Tests - Function getDocumentFilePath", () => {
             blockMocks.datasetSessionNode,
             null
         );
-        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(
+        expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
             path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.XML.ASM.asm")
         );
         node = new ZoweDatasetNode("AUSER", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
-        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(
+        expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
             path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER")
         );
         node = new ZoweDatasetNode(
@@ -572,7 +564,7 @@ describe("Shared Utils Unit Tests - Function getDocumentFilePath", () => {
             blockMocks.datasetSessionNode,
             null
         );
-        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(
+        expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
             path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.XML.TEST(member).xml")
         );
         node = new ZoweDatasetNode(
@@ -581,7 +573,7 @@ describe("Shared Utils Unit Tests - Function getDocumentFilePath", () => {
             blockMocks.datasetSessionNode,
             null
         );
-        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(
+        expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
             path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "XML.AUSER.TEST(member)")
         );
         node = new ZoweDatasetNode(
@@ -590,7 +582,7 @@ describe("Shared Utils Unit Tests - Function getDocumentFilePath", () => {
             blockMocks.datasetSessionNode,
             null
         );
-        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(
+        expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
             path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.COBOL.PL1.XML.TEST(member).xml")
         );
         node = new ZoweDatasetNode(
@@ -599,7 +591,7 @@ describe("Shared Utils Unit Tests - Function getDocumentFilePath", () => {
             blockMocks.datasetSessionNode,
             null
         );
-        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(
+        expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
             path.join(
                 path.sep,
                 "test",
@@ -616,7 +608,7 @@ describe("Shared Utils Unit Tests - Function getDocumentFilePath", () => {
             blockMocks.datasetSessionNode,
             null
         );
-        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(
+        expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
             path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.COPYBOOK.cpy")
         );
         node = new ZoweDatasetNode(
@@ -625,7 +617,7 @@ describe("Shared Utils Unit Tests - Function getDocumentFilePath", () => {
             blockMocks.datasetSessionNode,
             null
         );
-        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(
+        expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
             path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.PLINC.inc")
         );
         node = new ZoweDatasetNode(
@@ -634,7 +626,7 @@ describe("Shared Utils Unit Tests - Function getDocumentFilePath", () => {
             blockMocks.datasetSessionNode,
             null
         );
-        expect(sharedUtils.getDocumentFilePath(node.label, node)).toEqual(
+        expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toEqual(
             path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.SPFLOG1.log")
         );
     });
