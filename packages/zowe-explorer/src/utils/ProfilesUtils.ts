@@ -247,5 +247,23 @@ export async function readConfigFromDisk() {
     }
     if (mProfileInfo.usingTeamConfig) {
         globals.setConfigPath(rootPath);
+        globals.LOG.debug(
+            'Zowe Explorer is using the team configuration file "%s"',
+            mProfileInfo.getTeamConfig().configName
+        );
+        const layers = mProfileInfo.getTeamConfig().layers || [];
+        const layerSummary = layers.map(
+            (config: IConfigLayer) =>
+                `Path: ${config.path}: ${
+                    config.exists
+                        ? "Found, with the following defaults:" +
+                          JSON.stringify(config.properties?.defaults || "Undefined default")
+                        : "Not available"
+                } `
+        );
+        globals.LOG.debug(
+            "Summary of team configuration files considered for Zowe Explorer: %s",
+            JSON.stringify(layerSummary)
+        );
     }
 }
