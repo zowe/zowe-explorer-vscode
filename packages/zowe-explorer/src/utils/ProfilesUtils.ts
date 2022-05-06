@@ -14,8 +14,8 @@
 import * as vscode from "vscode";
 import * as fs from "fs";
 import * as globals from "../globals";
-import { Session, IProfile, IProfileLoaded, ProfileInfo, Logger } from "@zowe/imperative";
-import { getSecurityModules, IZoweTreeNode, ProfilesCache, ZoweTreeNode, getZoweDir } from "@zowe/zowe-explorer-api";
+import { Session, IProfile, IProfileLoaded, ProfileInfo, IConfigLayer } from "@zowe/imperative";
+import { getSecurityModules, IZoweTreeNode, ZoweTreeNode, getZoweDir } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import * as nls from "vscode-nls";
 
@@ -247,5 +247,23 @@ export async function readConfigFromDisk() {
     }
     if (mProfileInfo.usingTeamConfig) {
         globals.setConfigPath(rootPath);
+        globals.LOG.debug(
+            'Zowe Explorer is using the team configuration file "%s"',
+            mProfileInfo.getTeamConfig().configName
+        );
+        const layers = mProfileInfo.getTeamConfig().layers || [];
+        const layerSummary = layers.map(
+            (config: IConfigLayer) =>
+                `Path: ${config.path}: ${
+                    config.exists
+                        ? "Found, with the following defaults:" +
+                          JSON.stringify(config.properties?.defaults || "Undefined default")
+                        : "Not available"
+                } `
+        );
+        globals.LOG.debug(
+            "Summary of team configuration files considered for Zowe Explorer: %s",
+            JSON.stringify(layerSummary)
+        );
     }
 }
