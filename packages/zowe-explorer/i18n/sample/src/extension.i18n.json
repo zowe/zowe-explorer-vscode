@@ -1,6 +1,7 @@
 {
   "initialize.log.debug": "Initialized logger from VSCode extension",
   "initialize.log.error": "Error encountered while activating and initializing logger! ",
+  "initialize.profiles.error": "Error reading or initializing Zowe CLI profiles.",
   "createNewConnection.option.prompt.profileName.placeholder": "Connection Name",
   "createNewConnection.option.prompt.profileName": "Enter a name for the connection.",
   "createNewConnection.undefined.passWord": "Operation Cancelled",
