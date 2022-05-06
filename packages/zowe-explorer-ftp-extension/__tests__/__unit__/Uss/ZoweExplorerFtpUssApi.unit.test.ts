@@ -88,7 +88,7 @@ describe("FtpUssApi", () => {
             },
         };
         const result = await UssApi.putContents(mockParams.inputFilePath, mockParams.ussFilePath);
-        expect(result.commandResponse).toContain("File updated.");
+        expect(result.commandResponse).toContain("File uploaded successfully.");
         expect(UssUtils.downloadFile).toBeCalledTimes(1);
         expect(UssUtils.uploadFile).toBeCalledTimes(1);
         expect(UssApi.releaseConnection).toBeCalled();

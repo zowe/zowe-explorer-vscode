@@ -105,22 +105,10 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
             }
             // Save-Save with FTP requires loading the file first
             if (returnEtag && etag) {
-                const tmpFileName = tmp.tmpNameSync();
-                const options: zowe.IDownloadOptions = {
-                    binary,
-                    file: tmpFileName,
-                };
-                const loadResult = await this.getContents(ussFilePath, options);
-                if (
-                    loadResult &&
-                    loadResult.success &&
-                    loadResult.apiResponse &&
-                    loadResult.apiResponse.etag &&
-                    loadResult.apiResponse.etag !== etag
-                ) {
-                    // TODO: extension.ts should not check for zosmf errors.
+                const contentsTag = await this.getContentsTag(ussFilePath);
+                if (contentsTag && contentsTag !== etag) {
                     ZoweVsCodeExtension.showVsCodeMessage(
-                        "Rest API failure with HTTP(S) status 412",
+                        "Save conflict. Please pull the latest content from mainframe first.",
                         MessageSeverityEnum.ERROR,
                         ZoweLogger
                     );
@@ -130,9 +118,14 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
             await UssUtils.uploadFile(connection, ussFilePath, transferOptions);
             result.success = true;
             if (returnEtag) {
-                result.apiResponse.etag = await this.hashFile(inputFilePath);
+                const contentsTag = await this.getContentsTag(ussFilePath);
+                result.apiResponse = [
+                    {
+                        etag: contentsTag,
+                    },
+                ];
             }
-            result.commandResponse = "File updated.";
+            result.commandResponse = "File uploaded successfully.";
 
             return result;
         } finally {
@@ -255,6 +248,17 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
         } finally {
             this.releaseConnection(connection);
         }
+    }
+
+    private async getContentsTag(ussFilePath: string): Promise<string> {
+        const tmpFileName = tmp.tmpNameSync();
+        const options: zowe.IDownloadOptions = {
+            binary: false,
+            file: tmpFileName,
+        };
+        const loadResult = await this.getContents(ussFilePath, options);
+        const etag: string = loadResult.apiResponse.etag;
+        return etag;
     }
 
     private getDefaultResponse(): zowe.IZosFilesResponse {
