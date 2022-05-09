@@ -1402,13 +1402,10 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
     });
 
     // define upload options
-    let uploadOptions: IUploadOptions;
-    if (node) {
-        uploadOptions = {
-            etag: node.getEtag(),
-            returnEtag: true,
-        };
-    }
+    const uploadOptions: IUploadOptions = {
+        etag: node?.getEtag(),
+        returnEtag: true,
+    };
 
     try {
         const uploadResponse = await vscode.window.withProgress(
@@ -1417,7 +1414,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
                 title: localize("saveFile.response.save.title", "Saving data set..."),
             },
             () => {
-                const prof = node ? node.getProfile() : profile;
+                const prof = node?.getProfile() ?? profile;
                 if (prof.profile.encoding) {
                     uploadOptions.encoding = prof.profile.encoding;
                 }
