@@ -2,6 +2,13 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## `2.0.1`
+
+- BugFix: Fixed adding profiles to the tree view on Theia. [#1774](https://github.com/zowe/vscode-extension-for-zowe/issues/1774)
+- BugFix: Updated Log4js version to resolve initialization problem on Eclipse Che. [#1692](https://github.com/zowe/vscode-extension-for-zowe/issues/1692)
+- BugFix: Fixed dataset upload issue by trimming labels. [#1789](https://github.com/zowe/vscode-extension-for-zowe/issues/1789)
+- BugFix: Improved logging information to help diagnose Team Profile issues. [#1776](https://github.com/zowe/vscode-extension-for-zowe/pull/1776)
+
 ## `2.0.0`
 
 - Major: Introduced Team Profiles and more. See the prerelease items (if any) below for more details.
