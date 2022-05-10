@@ -9,7 +9,7 @@
  *                                                                                 *
  */
 
-import { IProfileLoaded, ISession } from "@zowe/imperative";
+import { ISession } from "@zowe/imperative";
 import { InputBoxOptions } from "vscode";
 
 export interface IPromptCredentialsCommonOptions {

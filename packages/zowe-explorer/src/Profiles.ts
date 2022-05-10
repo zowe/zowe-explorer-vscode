@@ -12,7 +12,6 @@
 import {
     IProfileLoaded,
     Logger,
-    ISession,
     Session,
     SessConstants,
     IUpdateProfile,
@@ -44,6 +43,7 @@ import {
     ProfilesCache,
     IUrlValidator,
     ZoweVsCodeExtension,
+    getFullPath,
 } from "@zowe/zowe-explorer-api";
 import {
     errorHandling,
@@ -646,7 +646,7 @@ export class Profiles extends ProfilesCache {
                     global = false;
                 }
             }
-            const config = await Config.load("zowe", { projectDir: fs.realpathSync.native(rootPath) });
+            const config = await Config.load("zowe", { projectDir: getFullPath(rootPath) });
             if (vscode.workspace.workspaceFolders) {
                 config.api.layers.activate(user, global, rootPath);
             }
