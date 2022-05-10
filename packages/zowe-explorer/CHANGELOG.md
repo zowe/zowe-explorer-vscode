@@ -4,10 +4,12 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ## `2.0.1`
 
+- BugFix: Improved logging information to help diagnose Team Profile issues. [#1776](https://github.com/zowe/vscode-extension-for-zowe/pull/1776)
 - BugFix: Fixed adding profiles to the tree view on Theia. [#1774](https://github.com/zowe/vscode-extension-for-zowe/issues/1774)
 - BugFix: Updated Log4js version to resolve initialization problem on Eclipse Che. [#1692](https://github.com/zowe/vscode-extension-for-zowe/issues/1692)
 - BugFix: Fixed dataset upload issue by trimming labels. [#1789](https://github.com/zowe/vscode-extension-for-zowe/issues/1789)
-- BugFix: Improved logging information to help diagnose Team Profile issues. [#1776](https://github.com/zowe/vscode-extension-for-zowe/pull/1776)
+- BugFix: Fixed duplicate jobs appearing in the jobs view upon making an owner/prefix filter search for extenders. [#1780](https://github.com/zowe/vscode-extension-for-zowe/pull/1780)
+- BugFix: Fixed error displayed when opening a job file for extenders. [#1701](https://github.com/zowe/vscode-extension-for-zowe/pull/1701)
 
 ## `2.0.0`
 
