@@ -11,7 +11,6 @@
 
 import * as semver from "semver";
 import * as vscode from "vscode";
-import * as path from "path";
 import { ProfilesCache, ZoweExplorerApi } from "../profiles";
 import { IZoweLogger, MessageSeverityEnum } from "../logger/IZoweLogger";
 import { ISession, IProfileLoaded, Logger } from "@zowe/imperative";
