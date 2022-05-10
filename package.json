@@ -41,7 +41,7 @@
   },
   "resolutions": {
     "**/ansi-regex": "^5.0.1",
-    "**/log4js": "6.3.0",
+    "**/log4js": "6.4.6",
     "**/minimist": "^1.2.6",
     "**/moment": "^2.29.2"
   },

@@ -49,6 +49,13 @@ export function getZoweDir(): string {
     return zowe.getZoweDir();
 }
 
+export function getFullPath(anyPath: string): string {
+    if (os.platform() === "win32") {
+        return fs.realpathSync.native(anyPath);
+    }
+    return fs.realpathSync(anyPath);
+}
+
 export class ProfilesCache {
     public profilesForValidation: IProfileValidation[] = [];
     public profilesValidationSetting: IValidationSetting[] = [];
@@ -59,7 +66,7 @@ export class ProfilesCache {
     protected defaultProfileByType = new Map<string, imperative.IProfileLoaded>();
     protected profileManagerByType = new Map<string, imperative.CliProfileManager>();
     public constructor(protected log: imperative.Logger, protected cwd?: string) {
-        this.cwd = cwd != null ? fs.realpathSync.native(cwd) : undefined;
+        this.cwd = cwd != null ? getFullPath(cwd) : undefined;
     }
 
     public async getProfileInfo(): Promise<imperative.ProfileInfo> {
