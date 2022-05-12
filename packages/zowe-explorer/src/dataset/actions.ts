@@ -1341,21 +1341,10 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
     }
 
     // get session from session name
-    let documentSession: Session;
-    let node: api.IZoweDatasetTreeNode;
-    const sesNode = (await datasetProvider.getChildren()).find((child) => child.label.toString() === sesName);
-    if (sesNode) {
-        globals.LOG.debug(localize("saveFile.log.debug.load", "Loading session from session node in saveFile()"));
-        documentSession = sesNode.getSession();
-    } else {
+    const sesNode = (await datasetProvider.getChildren()).find((child) => child.label.toString().trim() === sesName);
+    if (!sesNode) {
         // if saving from favorites, a session might not exist for this node
-        globals.LOG.debug(
-            localize(
-                "saveFile.log.debug.sessionNode",
-                "couldn't find session node, loading profile with CLI profile manager"
-            )
-        );
-        documentSession = ZoweExplorerApiRegister.getMvsApi(profile).getSession();
+        globals.LOG.debug(localize("saveFile.log.debug.missingSessionNode", "couldn't find session node"));
     }
 
     // If not a member
@@ -1363,7 +1352,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
         doc.fileName.lastIndexOf(path.sep) + 1,
         checkForAddedSuffix(doc.fileName) ? doc.fileName.lastIndexOf(".") : doc.fileName.length
     );
-    label = label.toUpperCase();
+    label = label.toUpperCase().trim();
     globals.LOG.debug(localize("saveFile.log.debug.saving", "Saving file ") + label);
     if (!label.includes("(")) {
         try {
@@ -1382,33 +1371,23 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
         }
     }
     // Get specific node based on label and parent tree (session / favorites)
-    let nodes: api.IZoweNodeType[];
-    if (!sesNode || sesNode.children.length === 0) {
-        // saving from favorites
-        nodes = concatChildNodes(datasetProvider.mFavorites);
-    } else {
-        // saving from session
-        nodes = concatChildNodes([sesNode]);
-    }
-    node = nodes.find((zNode) => {
+    const nodes: api.IZoweNodeType[] = concatChildNodes(sesNode ? [sesNode] : datasetProvider.mSessionNodes);
+    const node: api.IZoweDatasetTreeNode = nodes.find((zNode) => {
         if (contextually.isDsMember(zNode)) {
             const zNodeDetails = dsUtils.getProfileAndDataSetName(zNode);
             return `${zNodeDetails.profileName}(${zNodeDetails.dataSetName})` === `${label}`;
-        } else if (contextually.isDs(zNode)) {
-            return zNode.label.toString() === label;
+        } else if (contextually.isDs(zNode) || contextually.isDsSession(zNode)) {
+            return zNode.label.toString().trim() === label;
         } else {
             return false;
         }
     });
 
     // define upload options
-    let uploadOptions: IUploadOptions;
-    if (node) {
-        uploadOptions = {
-            etag: node.getEtag(),
-            returnEtag: true,
-        };
-    }
+    const uploadOptions: IUploadOptions = {
+        etag: node?.getEtag(),
+        returnEtag: true,
+    };
 
     try {
         const uploadResponse = await vscode.window.withProgress(
@@ -1417,7 +1396,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
                 title: localize("saveFile.response.save.title", "Saving data set..."),
             },
             () => {
-                const prof = node ? node.getProfile() : profile;
+                const prof = node?.getProfile() ?? profile;
                 if (prof.profile.encoding) {
                     uploadOptions.encoding = prof.profile.encoding;
                 }
