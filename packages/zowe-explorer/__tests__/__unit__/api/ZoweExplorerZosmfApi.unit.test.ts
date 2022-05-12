@@ -107,7 +107,7 @@ describe("Zosmf API tests", () => {
         api.getSession = jest.fn();
 
         await api.putContent("someLocalFile.txt", "/some/remote", {
-            encoding: 285,
+            encoding: "285",
         });
     });
 });

@@ -12,10 +12,10 @@
 // Generic utility functions (not node type related). See ./src/shared/utils.ts
 
 import * as vscode from "vscode";
-import * as path from "path";
+import * as fs from "fs";
 import * as globals from "../globals";
-import { Session, IProfile, IProfileLoaded, ProfileInfo, Logger } from "@zowe/imperative";
-import { getSecurityModules, IZoweTreeNode, ProfilesCache, ZoweTreeNode, getZoweDir } from "@zowe/zowe-explorer-api";
+import { Session, IProfile, IProfileLoaded, ProfileInfo, IConfigLayer } from "@zowe/imperative";
+import { getSecurityModules, IZoweTreeNode, ZoweTreeNode, getZoweDir, getFullPath } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import * as nls from "vscode-nls";
 
@@ -161,21 +161,29 @@ export async function resolveQuickPickHelper(
     });
 }
 
+export interface IFilterItem {
+    text: string;
+    description?: string;
+    show?: boolean;
+    icon?: string;
+}
+
 // tslint:disable-next-line: max-classes-per-file
 export class FilterItem implements vscode.QuickPickItem {
-    constructor(private text: string, private desc?: string, private show?: boolean) {}
+    constructor(private filterItem: IFilterItem) {}
     get label(): string {
-        return this.text;
+        const icon = this.filterItem.icon ? this.filterItem.icon + " " : null;
+        return (icon ?? "") + this.filterItem.text;
     }
     get description(): string {
-        if (this.desc) {
-            return this.desc;
+        if (this.filterItem.description) {
+            return this.filterItem.description;
         } else {
             return "";
         }
     }
     get alwaysShow(): boolean {
-        return this.show;
+        return this.filterItem.show;
     }
 }
 
@@ -233,11 +241,29 @@ export async function readConfigFromDisk() {
     let rootPath;
     if (vscode.workspace.workspaceFolders) {
         rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
-        await mProfileInfo.readProfilesFromDisk({ projectDir: path.normalize(rootPath) });
+        await mProfileInfo.readProfilesFromDisk({ projectDir: getFullPath(rootPath) });
     } else {
         await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir() });
     }
     if (mProfileInfo.usingTeamConfig) {
         globals.setConfigPath(rootPath);
+        globals.LOG.debug(
+            'Zowe Explorer is using the team configuration file "%s"',
+            mProfileInfo.getTeamConfig().configName
+        );
+        const layers = mProfileInfo.getTeamConfig().layers || [];
+        const layerSummary = layers.map(
+            (config: IConfigLayer) =>
+                `Path: ${config.path}: ${
+                    config.exists
+                        ? "Found, with the following defaults:" +
+                          JSON.stringify(config.properties?.defaults || "Undefined default")
+                        : "Not available"
+                } `
+        );
+        globals.LOG.debug(
+            "Summary of team configuration files considered for Zowe Explorer: %s",
+            JSON.stringify(layerSummary)
+        );
     }
 }

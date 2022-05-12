@@ -1,4 +1,16 @@
-# Change Log
+All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
+
+## `2.0.1`
+
+- BugFix: Fixed eTag related issue when saving USS files. [#1732](https://github.com/zowe/vscode-extension-for-zowe/issues/1732)
+
+## `2.0.0`
+
+- Major: Introduced Team Profiles and more. See the prerelease items (if any) below for more details.
+
+## `1.22.1`
+
+- BugFix: Added a warning prompt so the user is aware some content may be truncated. [#1746](https://github.com/zowe/vscode-extension-for-zowe/pull/1746)
 
 ## `1.22.0`
 

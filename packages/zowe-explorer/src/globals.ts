@@ -38,6 +38,7 @@ export const MAX_FILE_HISTORY = 10;
 export const STATUS_BAR_TIMEOUT_MS = 5000;
 export const CONTEXT_PREFIX = "_";
 export const FAV_SUFFIX = CONTEXT_PREFIX + "fav";
+export const HOME_SUFFIX = CONTEXT_PREFIX + "home";
 export const FAV_PROFILE_CONTEXT = "profile_fav";
 export const RC_SUFFIX = CONTEXT_PREFIX + "rc=";
 export const VALIDATE_SUFFIX = CONTEXT_PREFIX + "validate=";
@@ -78,7 +79,6 @@ export const SETTINGS_DS_DEFAULT_C = "zowe.ds.default.c";
 export const SETTINGS_DS_DEFAULT_CLASSIC = "zowe.ds.default.classic";
 export const SETTINGS_DS_DEFAULT_PDS = "zowe.ds.default.pds";
 export const SETTINGS_DS_DEFAULT_PS = "zowe.ds.default.ps";
-export const SETTINGS_SECURITY_CREDENTIAL_PLUGIN = "zowe.security.credentialPlugin";
 export const SETTINGS_COMMANDS_HISTORY = "zowe.commands.history";
 export const SETTINGS_COMMANDS_ALWAYS_EDIT = "zowe.commands.alwaysEdit";
 export const SETTINGS_AUTOMATIC_PROFILE_VALIDATION = "zowe.automaticProfileValidation";
@@ -223,7 +223,7 @@ export function defineGlobals(tempPath: string | undefined) {
     ZOWE_TMP_FOLDER = path.join(ZOWETEMPFOLDER, "tmp");
     USS_DIR = path.join(ZOWETEMPFOLDER, "_U_");
     DS_DIR = path.join(ZOWETEMPFOLDER, "_D_");
-    PROFILESCACHE = new ProfilesCache(Logger.getAppLogger());
+    PROFILESCACHE = new ProfilesCache(Logger.getAppLogger(), vscode.workspace.workspaceFolders?.[0].uri.fsPath);
 }
 
 export function setConfigPath(configPath: string | undefined): void {

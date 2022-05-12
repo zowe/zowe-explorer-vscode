@@ -27,7 +27,10 @@ export class ZoweVsCodeExtension {
      *          to access the Zowe Explorer APIs or `undefined`. Also `undefined` if requiredVersion
      *          is larger than the version of Zowe Explorer found.
      */
-    private static profilesCache = new ProfilesCache(Logger.getAppLogger());
+    private static profilesCache = new ProfilesCache(
+        Logger.getAppLogger(),
+        vscode.workspace.workspaceFolders?.[0].uri.fsPath
+    );
     public static getZoweExplorerApi(requiredVersion?: string): ZoweExplorerApi.IApiRegisterClient {
         const zoweExplorerApi = vscode.extensions.getExtension("Zowe.vscode-extension-for-zowe");
         if (zoweExplorerApi?.exports) {
@@ -72,6 +75,7 @@ export class ZoweVsCodeExtension {
      */
     public static async promptCredentials(options: IPromptCredentialsOptions): Promise<IProfileLoaded> {
         const loadProfile = await this.profilesCache.getLoadedProfConfig(options.sessionName.trim());
+        if (loadProfile == null) return undefined;
         const loadSession = loadProfile.profile as ISession;
 
         const creds = await ZoweVsCodeExtension.promptUserPass({ session: loadSession, ...options });

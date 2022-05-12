@@ -188,7 +188,7 @@ describe("mvsCommandActions unit testing", () => {
 
         // Third run selects an alternative value
         showQuickPick.mockReturnValueOnce("firstName");
-        showQuickPick.mockReturnValueOnce(new utils.FilterItem("/d m=cpu"));
+        showQuickPick.mockReturnValueOnce(new utils.FilterItem({ text: "/d m=cpu" }));
         jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(() => Promise.resolve(qpItem));
 
         await mvsActions.issueMvsCommand();

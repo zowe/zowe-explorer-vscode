@@ -9,19 +9,15 @@
  *                                                                                 *
  */
 
-import { ISession } from "@zowe/imperative";
-import { InputBoxOptions } from "vscode";
+import { IconHierarchyType, IconId, IIconItem } from "../index";
+import { getIconPathInResources } from "../../../shared/utils";
+import { isHomeProfile } from "../../../shared/context";
 
-export interface IPromptCredentialsCommonOptions {
-    rePrompt?: boolean;
-    userInputBoxOptions?: InputBoxOptions;
-    passwordInputBoxOptions?: InputBoxOptions;
-}
+const icon: IIconItem = {
+    id: IconId.home,
+    type: IconHierarchyType.base,
+    path: getIconPathInResources("home.svg"),
+    check: (node) => isHomeProfile(node),
+};
 
-export interface IPromptCredentialsOptions extends IPromptCredentialsCommonOptions {
-    sessionName: string;
-}
-
-export interface IPromptUserPassOptions extends IPromptCredentialsCommonOptions {
-    session: ISession;
-}
+export default icon;

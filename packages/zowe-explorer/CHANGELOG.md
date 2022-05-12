@@ -2,6 +2,38 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## `2.0.1`
+
+- BugFix: Improved logging information to help diagnose Team Profile issues. [#1776](https://github.com/zowe/vscode-extension-for-zowe/pull/1776)
+- BugFix: Fixed adding profiles to the tree view on Theia. [#1774](https://github.com/zowe/vscode-extension-for-zowe/issues/1774)
+- BugFix: Updated Log4js version to resolve initialization problem on Eclipse Che. [#1692](https://github.com/zowe/vscode-extension-for-zowe/issues/1692)
+- BugFix: Fixed dataset upload issue by trimming labels. [#1789](https://github.com/zowe/vscode-extension-for-zowe/issues/1789)
+- BugFix: Fixed duplicate jobs appearing in the jobs view upon making an owner/prefix filter search for extenders. [#1780](https://github.com/zowe/vscode-extension-for-zowe/pull/1780)
+- BugFix: Fixed error displayed when opening a job file for extenders. [#1701](https://github.com/zowe/vscode-extension-for-zowe/pull/1701)
+
+## `2.0.0`
+
+- Major: Introduced Team Profiles and more. See the prerelease items (if any) below for more details.
+
+## 2.0.0-next.202204202000
+
+- Updated Imperative to gather information from the corresponding base profile. [#1757](https://github.com/zowe/vscode-extension-for-zowe/pull/1757)
+- Fixed issue when first Team Config profile management file is created. [#1754](https://github.com/zowe/vscode-extension-for-zowe/pull/1754)
+- Fixed `Failed to find property user` on load or refresh. [#1757](https://github.com/zowe/vscode-extension-for-zowe/pull/1757)
+- Fixed getting credentials from the wrong base profile. [#1757](https://github.com/zowe/vscode-extension-for-zowe/pull/1757)
+- Fixed writing tokens to the wrong base profile. [#1757](https://github.com/zowe/vscode-extension-for-zowe/pull/1757)
+- Fixed Windows not being able to share Tokens between CLI and ZE. [#1757](https://github.com/zowe/vscode-extension-for-zowe/pull/1757)
+- Fixed Login info written to global file if proifle name is the same as project level profile. [#1761](https://github.com/zowe/vscode-extension-for-zowe/pull/1761)
+
+## 2.0.0-next.202204180940
+
+- Refactored the PRofilesCache to reduce maintenance efforts going forward. [#1715](https://github.com/zowe/vscode-extension-for-zowe/issues/1715)
+- Updated CLI to consume security related fixes and more. [#1740](https://github.com/zowe/vscode-extension-for-zowe/pull/1740)
+- Added differentiation between project and global level profiles. [#1727](https://github.com/zowe/vscode-extension-for-zowe/issues/1727)
+- Removed the Secure Credential setting. [#1739](https://github.com/zowe/vscode-extension-for-zowe/issues/1739), [#722](https://github.com/zowe/vscode-extension-for-zowe/issues/722), [#820](https://github.com/zowe/vscode-extension-for-zowe/issues/820), and [#1223](https://github.com/zowe/vscode-extension-for-zowe/issues/1223)
+- Synchronized the ZE preferred Security service with the CLI. [#1736](https://github.com/zowe/vscode-extension-for-zowe/issues/1736)
+- Fixed APIML token not working between clients (ZE and CLI). [#1713](https://github.com/zowe/vscode-extension-for-zowe/issues/1713)
+
 ## 2.0.0-next.202204081040
 
 - Fixed TSO commands in when using teamConfig. [#1731](https://github.com/zowe/vscode-extension-for-zowe/pull/1731)

@@ -20,6 +20,20 @@ We encourage extenders to use this guidance in order to:
 - Give developers more information in error logs.
 - Standardize the error message format across all of Zowe Explorer's extenders.
 
+## Error Message Format
+
+We highly recommend the usage of this error message format:
+
+```
+Extension Name Error - Error Message
+```
+
+Example: For the Zowe Explorer FTP extension, an error message might look like:
+
+```
+Zowe Explorer FTP Extension Error - Unable to delete node…
+```
+
 ## Logging of Error Message
 
 We highly recommend the usage of our API function when logging an extender's error messages.
