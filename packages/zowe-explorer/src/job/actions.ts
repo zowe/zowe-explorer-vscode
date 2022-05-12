@@ -22,6 +22,7 @@ import { IProfileLoaded } from "@zowe/imperative";
 import * as globals from "../globals";
 import { refreshAll as refreshAllJobs } from "../shared/refresh";
 import { UIViews } from "../shared/ui-views";
+import { getDocumentFilePath } from "../shared/utils";
 
 // Set up localization
 nls.config({
@@ -102,6 +103,45 @@ export async function refreshJobsServer(node: IZoweJobTreeNode, jobsProvider: IZ
         Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED
     ) {
         await jobsProvider.refreshElement(node);
+    }
+}
+
+/**
+ * Refreshes the passed node with current mainframe data
+ *
+ * @param {IZoweJobTreeNode} node - The node which represents the @@@@@@
+ */
+// This is not a UI refresh.
+export async function refreshSpool(node: IZoweJobTreeNode) {
+    let label: string;
+    try {
+        label = node.getParent().getLabel().toString() + "(" + node.getLabel().toString() + ")";
+        const documentFilePath = getDocumentFilePath(label, node); // Q. Is this the actual file path??
+        const prof = node.getProfile();
+        // const response1 = await ZoweExplorerApiRegister.getJesApi(prof).getSpoolContentById(node.job.jobname, node.job.jobid);
+        const response2 = await ZoweExplorerApiRegister.getJesApi(prof).getSpoolFiles(node.job.jobname, node.job.jobid);
+        //node.setEtag(response.apiResponse.etag);  //Q. what is Etag and is it needed for Jobs?
+        const document = await vscode.workspace.openTextDocument(documentFilePath);
+        vscode.window.showTextDocument(document);
+        // // if there are unsaved changes, vscode won't automatically display the updates, so close and reopen
+        if (document.isDirty) {
+            await vscode.commands.executeCommand("workbench.action.closeActiveEditor");
+            vscode.window.showTextDocument(document);
+        }
+    } catch (err) {
+        globals.LOG.error(
+            localize("refreshSpool.log.error.refresh", "Error encountered when refreshing JES spool files: ") +
+                JSON.stringify(err)
+        );
+        if (err.message.includes(localize("refreshSpool.error.notFound", "not found"))) {
+            vscode.window.showInformationMessage(
+                localize("refreshSpool.file1", "Unable to find file: ") +
+                    label +
+                    localize("refreshSpool.file2", " was probably deleted.")
+            );
+        } else {
+            await errorHandling(err, node.getProfileName(), err.message);
+        }
     }
 }
 
