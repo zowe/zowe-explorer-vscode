@@ -307,29 +307,14 @@ export class TsoCommandHandler extends ZoweCommandProvider {
     }
 
     private async getTsoParams(): Promise<IStartTsoParms> {
-        const profileInfo = globals.PROFILESCACHE.getProfileInfo();
+        const profileInfo = await Profiles.getInstance().getProfileInfo();
         const tsoProfiles: imperative.IProfileLoaded[] = [];
         let tsoProfile: imperative.IProfileLoaded;
         const tsoParms: IStartTsoParms = {};
         // Keys in the IStartTsoParms interface
         // TODO(zFernand0): Request the CLI squad that all interfaces are also exported as values that we can iterate
         const iStartTso = ["account", "characterSet", "codePage", "columns", "logonProcedure", "regionSize", "rows"];
-        const profileManager = Profiles.getInstance().getCliProfileManager("tso");
-        if (profileManager) {
-            try {
-                const profiles = await profileManager.loadAll();
-                for (const item of profiles) {
-                    if (item.type === "tso") {
-                        tsoProfiles.push(item);
-                    }
-                }
-                tsoProfile = await this.selectTsoProfile(tsoProfiles);
-            } catch (error) {
-                if (!error?.message?.includes(`No default profile set for type "tso"`)) {
-                    vscode.window.showInformationMessage(error);
-                }
-            }
-        } else if (profileInfo.usingTeamConfig) {
+        if (profileInfo.usingTeamConfig) {
             const tempProfiles = profileInfo.getAllProfiles("tso");
             if (tempProfiles.length > 0) {
                 tsoProfile = await this.selectTsoProfile(
@@ -340,6 +325,23 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                     iStartTso.forEach(
                         (p) => (tsoProfile.profile[p] = prof.knownArgs.find((a) => a.argName === p)?.argValue)
                     );
+                }
+            }
+        } else {
+            const profileManager = await Profiles.getInstance().getCliProfileManager("tso");
+            if (profileManager) {
+                try {
+                    const profiles = await profileManager.loadAll();
+                    for (const item of profiles) {
+                        if (item.type === "tso") {
+                            tsoProfiles.push(item);
+                        }
+                    }
+                    tsoProfile = await this.selectTsoProfile(tsoProfiles);
+                } catch (error) {
+                    if (!error?.message?.includes(`No default profile set for type "tso"`)) {
+                        vscode.window.showInformationMessage(error);
+                    }
                 }
             }
         }
