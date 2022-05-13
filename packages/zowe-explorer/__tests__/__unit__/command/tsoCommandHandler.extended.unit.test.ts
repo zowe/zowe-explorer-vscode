@@ -25,36 +25,16 @@ describe("TsoCommandHandler extended testing", () => {
     Object.defineProperty(globals, "PROFILESCACHE", {
         value: jest.fn().mockReturnValue(createInstanceOfProfilesCache()),
     });
-    const testProfileOps = {
-        getProfileInfo: jest.fn().mockReturnValue({
+    Object.defineProperty(globals.PROFILESCACHE, "getProfileInfo", {
+        value: jest.fn().mockReturnValue({
             usingTeamConfig: true,
             getAllProfiles: jest.fn().mockReturnValue(["dummy"]),
             mergeArgsForProfile: jest.fn().mockReturnValue({
                 knownArgs: [{ argName: "account", argValue: "TEST" }],
             }),
         }),
-    };
-    Object.defineProperty(Profiles, "createInstance", {
-        value: jest.fn(() => {
-            return testProfileOps;
-        }),
-    });
-    Object.defineProperty(Profiles, "getInstance", {
-        value: jest.fn(() => {
-            return testProfileOps;
-        }),
         configurable: true,
     });
-    // Object.defineProperty(Profiles.getInstance, "getProfileInfo", {
-    //     value: jest.fn().mockResolvedValue({
-    //         usingTeamConfig: true,
-    //         getAllProfiles: jest.fn().mockReturnValue(["dummy"]),
-    //         mergeArgsForProfile: jest.fn().mockReturnValue({
-    //             knownArgs: [{ argName: "account", argValue: "TEST" }],
-    //         }),
-    //     }),
-    //     configurable: true,
-    // });
 
     describe("getTsoParms", () => {
         it("should work with teamConfig", async () => {
@@ -67,12 +47,10 @@ describe("TsoCommandHandler extended testing", () => {
 
         it("should work with teamConfig and prompt if account is empty", async () => {
             Object.defineProperty(Profiles, "getInstance", {
-                value: jest.fn(() => ({
-                    getCliProfileManager: () => null,
-                })),
+                value: jest.fn(() => ({ getCliProfileManager: () => null })),
             });
 
-            jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockReturnValue({
+            jest.spyOn(globals.PROFILESCACHE, "getProfileInfo").mockReturnValue({
                 usingTeamConfig: true,
                 getAllProfiles: jest.fn().mockReturnValue(["dummy"]),
                 mergeArgsForProfile: jest.fn().mockReturnValue({
