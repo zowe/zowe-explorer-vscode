@@ -1168,7 +1168,7 @@
           "group": "002_zowe_jobsWorkspace"
         },
         {
-          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)*.*/",
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^spool.*/",
           "command": "zowe.jobs.refreshSpool",
           "group": "003_zowe_jobsMainframeInteraction@0"
         },
