@@ -44,6 +44,7 @@ import {
     IUrlValidator,
     ZoweVsCodeExtension,
     getFullPath,
+    getZoweDir,
 } from "@zowe/zowe-explorer-api";
 import {
     errorHandling,
@@ -610,12 +611,7 @@ export class Profiles extends ProfilesCache {
         try {
             let user = false;
             let global = true;
-            ImperativeConfig.instance.loadedConfig = {
-                defaultHome: path.join(os.homedir(), ".zowe"),
-                envVariablePrefix: "ZOWE",
-            };
-
-            let rootPath = ImperativeConfig.instance.cliHome;
+            let rootPath = getZoweDir();
             if (vscode.workspace.workspaceFolders) {
                 const quickPickOptions: vscode.QuickPickOptions = {
                     placeHolder: localize(
