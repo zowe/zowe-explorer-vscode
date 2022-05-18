@@ -1,5 +1,9 @@
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## `2.0.2`
+
+- Bugfix: Fixed eTag related issue when saving USS files. [#1813](https://github.com/zowe/vscode-extension-for-zowe/pull/1813)
+
 ## `2.0.1`
 
 - BugFix: Fixed eTag related issue when saving USS files. [#1732](https://github.com/zowe/vscode-extension-for-zowe/issues/1732)
