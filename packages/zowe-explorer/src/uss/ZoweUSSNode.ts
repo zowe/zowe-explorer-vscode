@@ -124,7 +124,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     }
 
     public getSessionNode(): IZoweUSSTreeNode {
-        return this.session ? this : this.getParent().getSessionNode();
+        return this.session ? this : this.getParent()?.getSessionNode() ?? this;
     }
 
     /**
