@@ -305,7 +305,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
 }
 
 // tslint:disable-next-line: max-classes-per-file
-class Spool extends Job {
+export class Spool extends Job {
     constructor(
         label: string,
         mCollapsibleState: vscode.TreeItemCollapsibleState,
