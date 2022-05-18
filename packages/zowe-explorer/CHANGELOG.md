@@ -2,6 +2,12 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## `2.0.2`
+
+- Bugfix: Fixed USS search filter fails on credential-less profiles. [#1811](https://github.com/zowe/vscode-extension-for-zowe/pull/1811)
+- Bugfix: Fixed Zowe Explorer recognizing environment variable ZOWE_CLI_HOME. [#1803](https://github.com/zowe/vscode-extension-for-zowe/pull/1803)
+- Bugfix: Fixed Zowe Explorer prompting for TSO Account number when saved in config file's TSO profile. [#1801](https://github.com/zowe/vscode-extension-for-zowe/pull/1801)
+
 ## `2.0.1`
 
 - BugFix: Improved logging information to help diagnose Team Profile issues. [#1776](https://github.com/zowe/vscode-extension-for-zowe/pull/1776)
