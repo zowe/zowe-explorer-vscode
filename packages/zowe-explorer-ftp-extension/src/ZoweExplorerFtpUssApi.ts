@@ -119,11 +119,7 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
             result.success = true;
             if (returnEtag) {
                 const contentsTag = await this.getContentsTag(ussFilePath);
-                result.apiResponse = [
-                    {
-                        etag: contentsTag,
-                    },
-                ];
+                result.apiResponse.etag = contentsTag;
             }
             result.commandResponse = "File uploaded successfully.";
 
