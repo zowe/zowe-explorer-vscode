@@ -80,6 +80,11 @@
         "when": "focusedView == zowe.ds.explorer && listSupportsMultiselect"
       },
       {
+        "command": "zowe.uss.deleteNode",
+        "key": "delete",
+        "when": "focusedView == zowe.uss.explorer"
+      },
+      {
         "command": "zowe.extRefresh",
         "key": "alt+z"
       }
