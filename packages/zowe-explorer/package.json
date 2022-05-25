@@ -72,7 +72,7 @@
       {
         "command": "zowe.jobs.deleteJob",
         "key": "delete",
-        "when": "focusedView == zowe.jobs.explorer && listSupportsMultiselect"
+        "when": "focusedView == zowe.jobs.explorer"
       },
       {
         "command": "zowe.ds.deleteDataset",
@@ -1520,6 +1520,10 @@
         },
         {
           "command": "zowe.jobs.refreshJob",
+          "when": "never"
+        },
+        {
+          "command": "zowe.jobs.deleteJob",
           "when": "never"
         }
       ]

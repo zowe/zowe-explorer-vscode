@@ -272,10 +272,15 @@ export async function deleteCommand(
             jobsProvider
         );
         return;
-    }
-    if (job) {
+    } else if (job) {
         await deleteSingleJob(job, jobsProvider);
         return;
+    } else {
+        const treeView = jobsProvider.getTreeView();
+        let selectedNodes = treeView.selection;
+        if (selectedNodes) {
+            await deleteMultipleJobs(selectedNodes, jobsProvider);
+        }
     }
 }
 
