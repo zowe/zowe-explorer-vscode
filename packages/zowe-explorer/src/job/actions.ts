@@ -277,7 +277,7 @@ export async function deleteCommand(
         return;
     } else {
         const treeView = jobsProvider.getTreeView();
-        let selectedNodes = treeView.selection;
+        const selectedNodes = treeView.selection;
         if (selectedNodes) {
             await deleteMultipleJobs(selectedNodes, jobsProvider);
         }
