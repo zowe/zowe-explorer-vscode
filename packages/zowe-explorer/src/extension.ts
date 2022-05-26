@@ -95,7 +95,16 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             });
         }
 
-        await readConfigFromDisk();
+        try {
+            await readConfigFromDisk();
+        } catch (err) {
+            const errorMessage = localize(
+                "readFilesFromDisk.error",
+                "Error encountered when reading config file from disk. The platform in use does not support secure values. Please verify there are no secure properties and autoStore:false in the config file."
+            );
+            vscode.window.showErrorMessage(errorMessage);
+            return;
+        }
 
         // Initialize profile manager
         await Profiles.createInstance(globals.LOG);
