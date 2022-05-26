@@ -95,16 +95,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             });
         }
 
-        try {
-            await readConfigFromDisk();
-        } catch (err) {
-            const errorMessage = localize(
-                "readFilesFromDisk.error",
-                "Error encountered when reading config file from disk. The platform in use does not support secure values. Please verify there are no secure properties and autoStore:false in the config file."
-            );
-            vscode.window.showErrorMessage(errorMessage);
-            return;
-        }
+        await readConfigFromDisk();
 
         // Initialize profile manager
         await Profiles.createInstance(globals.LOG);
@@ -124,8 +115,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         jobsProvider = await createJobsTree(globals.LOG);
     } catch (err) {
         const errorMessage = localize("initialize.profiles.error", "Error reading or initializing Zowe CLI profiles.");
-        await errorHandling(err, null, errorMessage);
-        globals.LOG.error(errorMessage + JSON.stringify(err));
+        vscode.window.showErrorMessage(errorMessage);
+        vscode.window.showErrorMessage(err.message);
     }
 
     // set a command to silently reload extension

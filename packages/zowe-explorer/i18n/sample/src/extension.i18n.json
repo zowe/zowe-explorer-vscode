@@ -1,7 +1,6 @@
 {
   "initialize.log.debug": "Initialized logger from VSCode extension",
   "initialize.log.error": "Error encountered while activating and initializing logger! ",
-  "readFilesFromDisk.error": "Error encountered when reading config file from disk. The platform in use does not support secure values. Please verify there are no secure properties and autoStore:false in the config file.",
   "initialize.profiles.error": "Error reading or initializing Zowe CLI profiles.",
   "createNewConnection.option.prompt.profileName.placeholder": "Connection Name",
   "createNewConnection.option.prompt.profileName": "Enter a name for the connection.",
