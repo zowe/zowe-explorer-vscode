@@ -82,8 +82,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             "initialize.log.error",
             "Error encountered while activating and initializing logger! "
         );
-        await errorHandling(err, null, errorMessage);
-        globals.LOG.error(errorMessage + JSON.stringify(err));
+        vscode.window.showErrorMessage(errorMessage);
+        vscode.window.showErrorMessage(err.message);
     }
 
     try {
