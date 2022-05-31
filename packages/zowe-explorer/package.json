@@ -72,12 +72,17 @@
       {
         "command": "zowe.jobs.deleteJob",
         "key": "delete",
-        "when": "focusedView == zowe.jobs.explorer && listSupportsMultiselect"
+        "when": "focusedView == zowe.jobs.explorer"
       },
       {
         "command": "zowe.ds.deleteDataset",
         "key": "delete",
         "when": "focusedView == zowe.ds.explorer && listSupportsMultiselect"
+      },
+      {
+        "command": "zowe.uss.deleteNode",
+        "key": "delete",
+        "when": "focusedView == zowe.uss.explorer"
       },
       {
         "command": "zowe.extRefresh",
@@ -1515,6 +1520,10 @@
         },
         {
           "command": "zowe.jobs.refreshJob",
+          "when": "never"
+        },
+        {
+          "command": "zowe.jobs.deleteJob",
           "when": "never"
         }
       ]
