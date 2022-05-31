@@ -1338,7 +1338,7 @@ export class Profiles extends ProfilesCache {
 
     private async updateBaseProfileFileLogin(profile: IProfileLoaded, updProfile: IProfile) {
         const upd = { profileName: profile.name, profileType: profile.type };
-        const config = ImperativeConfig.instance.config;
+        const config = (await this.getProfileInfo()).getTeamConfig();
         const { user, global } = config.api.layers.find(upd.profileName);
         const profilePath = config.api.profiles.expandPath(upd.profileName);
         config.api.layers.activate(user, global);
@@ -1349,7 +1349,7 @@ export class Profiles extends ProfilesCache {
 
     private async updateBaseProfileFileLogout(profile: IProfileLoaded) {
         const upd = { profileName: profile.name, profileType: profile.type };
-        const config = ImperativeConfig.instance.config;
+        const config = (await this.getProfileInfo()).getTeamConfig();
         const { user, global } = config.api.layers.find(upd.profileName);
         const profilePath = config.api.profiles.expandPath(upd.profileName);
         config.api.layers.activate(user, global);
