@@ -82,8 +82,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             "initialize.log.error",
             "Error encountered while activating and initializing logger! "
         );
-        await errorHandling(err, null, errorMessage);
-        globals.LOG.error(errorMessage + JSON.stringify(err));
+        vscode.window.showErrorMessage(errorMessage);
+        vscode.window.showErrorMessage(err.message);
     }
 
     try {
@@ -115,8 +115,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         jobsProvider = await createJobsTree(globals.LOG);
     } catch (err) {
         const errorMessage = localize("initialize.profiles.error", "Error reading or initializing Zowe CLI profiles.");
-        await errorHandling(err, null, errorMessage);
-        globals.LOG.error(errorMessage + JSON.stringify(err));
+        vscode.window.showErrorMessage(errorMessage);
+        vscode.window.showErrorMessage(err.message);
     }
 
     // set a command to silently reload extension
