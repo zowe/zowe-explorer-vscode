@@ -892,30 +892,19 @@ export class Profiles extends ProfilesCache {
             passwordInputBoxOptions,
         });
 
-        let returnValue;
-        if (promptInfo) {
-            const updSession = ZoweExplorerApiRegister.getMvsApi(promptInfo).getSession();
-            returnValue = [
-                updSession.ISession.user,
-                updSession.ISession.password,
-                updSession.ISession.base64EncodedAuth,
-            ];
-            if ((await this.getProfileInfo()).usingTeamConfig) {
-                const profArray = [];
-                for (const theprofile of this.allProfiles) {
-                    if (theprofile.name !== promptInfo.profile.name) {
-                        profArray.push(theprofile);
-                    }
-                }
-                profArray.push(promptInfo.profile);
-                this.allProfiles = profArray;
-            }
-        } else {
+        if (!promptInfo) {
             vscode.window.showInformationMessage(localize("promptCredentials.undefined.value", "Operation Cancelled"));
         }
-
-        await readConfigFromDisk();
-        await this.refresh(ZoweExplorerApiRegister.getInstance());
+        const updSession = ZoweExplorerApiRegister.getMvsApi(promptInfo).getSession();
+        const returnValue = [
+            updSession.ISession.user,
+            updSession.ISession.password,
+            updSession.ISession.base64EncodedAuth,
+        ];
+        if ((await this.getProfileInfo()).usingTeamConfig) {
+            const promptedTypeIndex = this.allProfiles.findIndex((profile) => profile.type === promptInfo.type);
+            this.allProfiles[promptedTypeIndex] = promptInfo;
+        }
         return returnValue;
     }
 
