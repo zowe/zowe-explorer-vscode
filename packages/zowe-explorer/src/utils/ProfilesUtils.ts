@@ -67,7 +67,7 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
         // tslint:disable-next-line: no-magic-numbers
         case 401:
             if (label.includes("[")) {
-                label = label.substring(0, label.indexOf(" ["));
+                label = label.substring(0, label.indexOf(" [")).trim();
             }
 
             if (errorDetails.mDetails.additionalDetails) {
