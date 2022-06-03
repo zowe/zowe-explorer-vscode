@@ -1740,7 +1740,7 @@
     "jsdom": "^16.0.0",
     "keytar": "^7.2.0",
     "log4js": "^6.4.6",
-    "markdownlint-cli": "^0.16.0",
+    "markdownlint-cli": "^0.31.1",
     "mem": "^6.0.1",
     "run-sequence": "^2.2.1",
     "selenium-webdriver": "^3.6.0",

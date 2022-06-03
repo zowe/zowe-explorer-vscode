@@ -89,6 +89,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     try {
         // Ensure that ~/.zowe folder exists
         if (!ImperativeConfig.instance.config?.exists) {
+            // Should we replace the instance.config above with (await getProfileInfo(globals.ISTHEIA)).exists
             await CliProfileManager.initialize({
                 configuration: getImperativeConfig().profiles,
                 profileRootDirectory: path.join(getZoweDir(), "profiles"),

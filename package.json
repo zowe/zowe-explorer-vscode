@@ -30,7 +30,7 @@
     "eslint": "^8.11.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.0.0",
-    "mocha": "^4.0.0",
+    "mocha": "^6.0.0",
     "prettier": "2.6.0",
     "rimraf": "^3.0.2",
     "typescript": "^4.5.3",
@@ -42,8 +42,10 @@
   "resolutions": {
     "**/ansi-regex": "^5.0.1",
     "**/log4js": "6.4.6",
+    "**/glob-parent": "^5.1.2",
     "**/minimist": "^1.2.6",
-    "**/moment": "^2.29.2"
+    "**/moment": "^2.29.2",
+    "**/tar": "^6.1.9"
   },
   "scripts": {
     "clean": "yarn workspaces run clean",
