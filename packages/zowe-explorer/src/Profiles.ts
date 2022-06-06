@@ -115,14 +115,16 @@ export class Profiles extends ProfilesCache {
                 );
                 return profileStatus;
             }
-            if (values !== undefined) {
+            if (values) {
                 theProfile.profile.user = values[0];
                 theProfile.profile.password = values[1];
                 theProfile.profile.base64EncodedAuth = values[2];
-            }
 
-            // Validate profile
-            profileStatus = await this.getProfileSetting(theProfile);
+                // Validate profile
+                profileStatus = await this.getProfileSetting(theProfile);
+            } else {
+                profileStatus = { name: theProfile.name, status: "unverified" };
+            }
         } else {
             // Profile should have enough information to allow validation
             profileStatus = await this.getProfileSetting(theProfile);
@@ -894,6 +896,7 @@ export class Profiles extends ProfilesCache {
 
         if (!promptInfo) {
             vscode.window.showInformationMessage(localize("promptCredentials.undefined.value", "Operation Cancelled"));
+            return; // See https://github.com/zowe/vscode-extension-for-zowe/issues/1827
         }
         const updSession = ZoweExplorerApiRegister.getMvsApi(promptInfo).getSession();
         const returnValue = [
