@@ -297,8 +297,6 @@ export class Profiles extends ProfilesCache {
                 !zoweFileProvider.mSessionNodes.find((sessionNode) => sessionNode.getProfileName() === profileName)
         );
 
-        // TODO(zFernand0): Include conflicting profiles
-
         const createPick = new FilterDescriptor("\uFF0B " + createNewProfile);
         const configPick = new FilterDescriptor("\uFF0B " + createNewConfig);
         const items: vscode.QuickPickItem[] = [];
@@ -886,6 +884,7 @@ export class Profiles extends ProfilesCache {
         const promptInfo = await ZoweVsCodeExtension.promptCredentials({
             sessionName,
             rePrompt,
+            secure: (await this.getProfileInfo()).isSecured(),
             userInputBoxOptions,
             passwordInputBoxOptions,
         });
