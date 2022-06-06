@@ -334,7 +334,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 await Profiles.getInstance().checkCurrentProfile(profile);
                 if (
                     Profiles.getInstance().validProfile === ValidProfileEnum.VALID ||
-                    Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED
+                    !contextually.isValidationEnabled(parentNode)
                 ) {
                     session = ZoweExplorerApiRegister.getJesApi(profile).getSession();
                     parentNode.setProfileToChoice(profile);
@@ -553,10 +553,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         let searchCriteria: string = "";
         const hasHistory = this.mHistory.getSearchHistory().length > 0;
         await this.checkCurrentProfile(node);
-        if (
-            Profiles.getInstance().validProfile === ValidProfileEnum.VALID ||
-            Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED
-        ) {
+        if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID || !contextually.isValidationEnabled(node)) {
             if (contextually.isSessionNotFav(node)) {
                 // This is the profile object context
                 if (hasHistory) {

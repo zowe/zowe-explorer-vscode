@@ -59,10 +59,6 @@ import * as globals from "./globals";
 import * as nls from "vscode-nls";
 import { UIViews } from "./shared/ui-views";
 
-// TODO: find a home for constants
-export const CONTEXT_PREFIX = "_";
-const VALIDATE_SUFFIX = CONTEXT_PREFIX + "validate=";
-
 // Set up localization
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
@@ -183,16 +179,16 @@ export class Profiles extends ProfilesCache {
     public async disableValidationContext(node: IZoweNodeType) {
         const theProfile: IProfileLoaded = node.getProfile();
         this.validationArraySetup(theProfile, false);
-        if (node.contextValue.includes(`${VALIDATE_SUFFIX}true`)) {
+        if (node.contextValue.includes(`${globals.VALIDATE_SUFFIX}true`)) {
             node.contextValue = node.contextValue
                 .replace(/(_validate=true)/g, "")
                 .replace(/(_Active)/g, "")
                 .replace(/(_Inactive)/g, "");
-            node.contextValue = node.contextValue + `${VALIDATE_SUFFIX}false`;
-        } else if (node.contextValue.includes(`${VALIDATE_SUFFIX}false`)) {
+            node.contextValue = node.contextValue + `${globals.VALIDATE_SUFFIX}false`;
+        } else if (node.contextValue.includes(`${globals.VALIDATE_SUFFIX}false`)) {
             return node;
         } else {
-            node.contextValue = node.contextValue + `${VALIDATE_SUFFIX}false`;
+            node.contextValue = node.contextValue + `${globals.VALIDATE_SUFFIX}false`;
         }
         return node;
     }
@@ -205,13 +201,13 @@ export class Profiles extends ProfilesCache {
     public async enableValidationContext(node: IZoweNodeType) {
         const theProfile: IProfileLoaded = node.getProfile();
         this.validationArraySetup(theProfile, true);
-        if (node.contextValue.includes(`${VALIDATE_SUFFIX}false`)) {
+        if (node.contextValue.includes(`${globals.VALIDATE_SUFFIX}false`)) {
             node.contextValue = node.contextValue.replace(/(_validate=false)/g, "").replace(/(_Unverified)/g, "");
-            node.contextValue = node.contextValue + `${VALIDATE_SUFFIX}true`;
-        } else if (node.contextValue.includes(`${VALIDATE_SUFFIX}true`)) {
+            node.contextValue = node.contextValue + `${globals.VALIDATE_SUFFIX}true`;
+        } else if (node.contextValue.includes(`${globals.VALIDATE_SUFFIX}true`)) {
             return node;
         } else {
-            node.contextValue = node.contextValue + `${VALIDATE_SUFFIX}true`;
+            node.contextValue = node.contextValue + `${globals.VALIDATE_SUFFIX}true`;
         }
 
         return node;
