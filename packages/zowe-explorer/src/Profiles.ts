@@ -1245,6 +1245,12 @@ export class Profiles extends ProfilesCache {
                     };
                     await this.updateBaseProfileFileLogin(baseProfile, updBaseProfile);
                     await this.refresh(ZoweExplorerApiRegister.getInstance());
+                    const baseIndex = this.allProfiles.findIndex((profile) => profile.name === baseProfile.name);
+                    this.allProfiles[baseIndex] = { ...baseProfile, profile: { ...baseProfile, ...updBaseProfile } };
+                    node.setProfileToChoice({
+                        ...node.getProfile(),
+                        profile: { ...node.getProfile().profile, ...updBaseProfile },
+                    });
                 } catch (error) {
                     vscode.window.showErrorMessage(
                         localize("ssoLogin.unableToLogin", "Unable to log in. ") + error.message
@@ -1325,25 +1331,30 @@ export class Profiles extends ProfilesCache {
 
     private async updateBaseProfileFileLogin(profile: IProfileLoaded, updProfile: IProfile) {
         const upd = { profileName: profile.name, profileType: profile.type };
-        // const config = (await this.getProfileInfo()).getTeamConfig();
-        const config = ImperativeConfig.instance.config;
+        const mProfileInfo = await this.getProfileInfo();
+        const config = mProfileInfo.getTeamConfig();
         const { user, global } = config.api.layers.find(upd.profileName);
         const profilePath = config.api.profiles.expandPath(upd.profileName);
         config.api.layers.activate(user, global);
         config.set(`${profilePath}.properties.tokenType`, updProfile.tokenType);
-        config.set(`${profilePath}.properties.tokenValue`, updProfile.tokenValue);
+        config.set(`${profilePath}.properties.tokenValue`, updProfile.tokenValue, { secure: mProfileInfo.isSecured() });
         await config.save();
     }
 
     private async updateBaseProfileFileLogout(profile: IProfileLoaded) {
         const upd = { profileName: profile.name, profileType: profile.type };
-        // const config = (await this.getProfileInfo()).getTeamConfig();
-        const config = ImperativeConfig.instance.config;
+        const mProfileInfo = await this.getProfileInfo();
+        const config = mProfileInfo.getTeamConfig();
         const { user, global } = config.api.layers.find(upd.profileName);
         const profilePath = config.api.profiles.expandPath(upd.profileName);
         config.api.layers.activate(user, global);
         config.set(`${profilePath}.properties.tokenType`, undefined);
-        config.set(`${profilePath}.properties.tokenValue`, undefined);
+        const secure = mProfileInfo.isSecured();
+        config.set(`${profilePath}.properties.tokenValue`, undefined, { secure });
+        if (secure) {
+            // TODO: Do we need to remove the secure array value ?
+            // const secureArray = config.api.profiles.mConfig.properties.profiles.base.secure;
+        }
         await config.save();
     }
 
