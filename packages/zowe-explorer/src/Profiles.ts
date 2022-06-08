@@ -1332,26 +1332,19 @@ export class Profiles extends ProfilesCache {
     private async updateBaseProfileFileLogin(profile: IProfileLoaded, updProfile: IProfile) {
         const upd = { profileName: profile.name, profileType: profile.type };
         const mProfileInfo = await this.getProfileInfo();
-        const config = mProfileInfo.getTeamConfig();
-        const { user, global } = config.api.layers.find(upd.profileName);
-        const profilePath = config.api.profiles.expandPath(upd.profileName);
-        config.api.layers.activate(user, global);
-        config.set(`${profilePath}.properties.tokenType`, updProfile.tokenType);
-        config.set(`${profilePath}.properties.tokenValue`, updProfile.tokenValue, { secure: mProfileInfo.isSecured() });
-        await config.save();
+        const setSecure = mProfileInfo.isSecured();
+        await mProfileInfo.updateProperty({ ...upd, property: "tokenType", value: updProfile.tokenType });
+        await mProfileInfo.updateProperty({ ...upd, property: "tokenValue", value: updProfile.tokenValue, setSecure });
     }
 
     private async updateBaseProfileFileLogout(profile: IProfileLoaded) {
         const upd = { profileName: profile.name, profileType: profile.type };
         const mProfileInfo = await this.getProfileInfo();
-        const config = mProfileInfo.getTeamConfig();
-        const { user, global } = config.api.layers.find(upd.profileName);
-        const profilePath = config.api.profiles.expandPath(upd.profileName);
-        config.api.layers.activate(user, global);
-        config.set(`${profilePath}.properties.tokenType`, undefined);
-        const secure = mProfileInfo.isSecured();
-        config.set(`${profilePath}.properties.tokenValue`, undefined, { secure });
-        await config.save();
+        const setSecure = mProfileInfo.isSecured();
+        const prof = mProfileInfo.getAllProfiles(profile.type).find((prof) => prof.profName === profile.name);
+        const mergedArgs = mProfileInfo.mergeArgsForProfile(prof);
+        await mProfileInfo.updateKnownProperty({ mergedArgs, property: "tokenValue", value: undefined, setSecure });
+        await mProfileInfo.updateKnownProperty({ mergedArgs, property: "tokenType", value: undefined });
     }
 
     private async loginCredentialPrompt(): Promise<string[]> {
