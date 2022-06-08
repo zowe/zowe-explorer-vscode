@@ -1148,11 +1148,13 @@ export async function enterPattern(node: api.IZoweDatasetTreeNode, datasetProvid
     } else {
         // executing search from saved search in favorites
         pattern = node.label.toString().substring(node.label.toString().indexOf(":") + 2);
-        const session = node.label
+        const sessionName = node.label
             .toString()
             .substring(node.label.toString().indexOf("[") + 1, node.label.toString().indexOf("]"));
-        await datasetProvider.addSession(session);
-        node = datasetProvider.mSessionNodes.find((tempNode) => tempNode.label.toString() === session);
+        await datasetProvider.addSession(sessionName.trim());
+        node = datasetProvider.mSessionNodes.find(
+            (tempNode) => tempNode.label.toString().trim() === sessionName.trim()
+        );
     }
 
     // update the treeview with the new pattern
