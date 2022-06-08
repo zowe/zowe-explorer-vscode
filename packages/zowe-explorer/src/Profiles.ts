@@ -1351,10 +1351,6 @@ export class Profiles extends ProfilesCache {
         config.set(`${profilePath}.properties.tokenType`, undefined);
         const secure = mProfileInfo.isSecured();
         config.set(`${profilePath}.properties.tokenValue`, undefined, { secure });
-        if (secure) {
-            // TODO: Do we need to remove the secure array value ?
-            // const secureArray = config.api.profiles.mConfig.properties.profiles.base.secure;
-        }
         await config.save();
     }
 
