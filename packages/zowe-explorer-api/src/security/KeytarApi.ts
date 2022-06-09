@@ -9,9 +9,8 @@
  *                                                                                 *
  */
 
-import * as imperative from "@zowe/imperative";
 import * as vscode from "vscode";
-import * as path from "path";
+import { imperative } from "@zowe/cli";
 import { ProfilesCache } from "../profiles";
 import { KeytarCredentialManager } from "./KeytarCredentialManager";
 import * as globals from "../globals";
