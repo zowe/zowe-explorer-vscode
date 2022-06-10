@@ -86,7 +86,8 @@
       },
       {
         "command": "zowe.extRefresh",
-        "key": "alt+z"
+        "key": "ctrl+alt+z",
+        "mac": "cmd+alt+z"
       }
     ],
     "commands": [
