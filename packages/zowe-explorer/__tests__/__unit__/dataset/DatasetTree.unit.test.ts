@@ -32,6 +32,7 @@ import {
     createPersistentConfig,
     createValidIProfile,
     createInstanceOfProfileInfo,
+    createInstanceOfProfilesCache,
 } from "../../../__mocks__/mockCreators/shared";
 import {
     createDatasetSessionNode,
@@ -66,6 +67,10 @@ function createGlobalMocks() {
     Object.defineProperty(vscode.workspace, "openTextDocument", { value: jest.fn(), configurable: true });
     Object.defineProperty(Profiles, "getInstance", {
         value: jest.fn().mockReturnValue(globalMocks.mockProfileInstance),
+        configurable: true,
+    });
+    Object.defineProperty(Profiles.getInstance, "loadNamedProfile", {
+        value: jest.fn().mockReturnValue(globalMocks.testProfileLoaded),
         configurable: true,
     });
     Object.defineProperty(vscode.window, "showQuickPick", { value: jest.fn(), configurable: true });
@@ -146,6 +151,10 @@ function createGlobalMocks() {
     Object.defineProperty(vscode.window, "showWarningMessage", {
         value: globalMocks.mockShowWarningMessage,
         configurable: true,
+    });
+    Object.defineProperty(globals, "PROFILESCACHE", { value: createInstanceOfProfilesCache(), configurable: true });
+    Object.defineProperty(globals.PROFILESCACHE, "loadNamedProfile", {
+        value: jest.fn().mockReturnValue(globalMocks.testProfileLoaded),
     });
 
     return globalMocks;
