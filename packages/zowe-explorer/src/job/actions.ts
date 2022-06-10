@@ -143,12 +143,14 @@ export const focusOnJob = async (jobsProvider: IZoweTree<IZoweJobTreeNode>, sess
     );
     if (!sessionNode) {
         try {
-            await jobsProvider.addSession(sessionName);
+            await jobsProvider.addSession(sessionName.trim());
         } catch (error) {
             await errorHandling(error, null, error.message);
             return;
         }
-        sessionNode = jobsProvider.mSessionNodes.find((jobNode) => jobNode.label === sessionName);
+        sessionNode = jobsProvider.mSessionNodes.find(
+            (jobNode) => jobNode.label.toString().trim() === sessionName.trim()
+        );
     }
     try {
         jobsProvider.refreshElement(sessionNode);
