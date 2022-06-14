@@ -15,6 +15,8 @@ import { Session } from "../Session";
 import { IListOptions } from "@zowe/cli";
 import * as imperative from "./imperative";
 
+export * as imperative from "./imperative";
+
 export function getZoweDir(): string {
     const defaultHome = path.join(os.homedir(), ".zowe");
     if (imperative.ImperativeConfig.instance.loadedConfig?.defaultHome !== defaultHome) {
