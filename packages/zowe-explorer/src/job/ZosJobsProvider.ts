@@ -847,7 +847,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             }
             // Uses loaded profile to create a zosmf session with Zowe
             // const session = ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
-            const session = ZoweExplorerApiRegister.getJesApi(profile).getSession();
+            const session = await ZoweExplorerApiRegister.getJesApi(profile).getSession();
             // Creates ZoweNode to track new session and pushes it to mSessionNodes
             const node = new Job(profile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, null, profile);
             node.contextValue = globals.JOBS_SESSION_CONTEXT;

@@ -22,6 +22,7 @@ More information:
 
 ## Contents
 
+- [Keyboard Shortcuts](#keyboard-shortcuts)
 - [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
 - [Sample Use Cases](#sample-use-cases)
@@ -30,6 +31,22 @@ More information:
 
 > Zowe Explorer is compatible only with Theia 1.18.0 or higher.
 > Zowe Explorer could experience possible unexpected behaviors with the latest Theia releases.
+
+## Keyboard Shortcuts
+
+- Restart Zowe Explorer
+
+  - Windows: `ctrl`+`alt`+`z`
+  - Mac: `⌘`+`⌥`+`z`
+
+- Open Recent Member
+
+  - Windows: `ctrl`+`alt`+`r`
+  - Mac: `⌘`+`⌥`+`r`
+
+- Search in all Loaded Items
+  - Windows: `ctrl`+`alt`+`p`
+  - Mac: `⌘`+`⌥`+`p`
 
 ## Prerequisites
 
@@ -48,7 +65,7 @@ Create a v1 profile or a Team Configuration file for profile manangement, review
 4. Select **Create a New Team Configuration File**.
 5. If no workspace is opened a global configuration file will be created. If a workspace is opened, chose either a global configuration file or a project-level configuration file.
 6. Edit the config file to include the host and other connection information.
-7. Refresh Zowe Explorer by either clicking the button in the notification message shown after creation, `alt+z`, or the `Zowe Explorer: Refresh Zowe Explorer` command palette option.
+7. Refresh Zowe Explorer by either clicking the button in the notification message shown after creation, `ctrl`+`alt`+`z`/`⌘`+`⌥`+`z`, or the `Zowe Explorer: Refresh Zowe Explorer` command palette option.
 
 Your team configuration file appears either in your `.zowe` folder if you choose the global configuration file option, or in your workspace directory if you choose the project-level configuration file option. The notification message that shows in VS Code after config file creation will include the path of the file created.
 

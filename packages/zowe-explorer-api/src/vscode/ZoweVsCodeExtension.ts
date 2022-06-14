@@ -13,7 +13,7 @@ import * as semver from "semver";
 import * as vscode from "vscode";
 import { ProfilesCache, ZoweExplorerApi } from "../profiles";
 import { IZoweLogger, MessageSeverityEnum } from "../logger/IZoweLogger";
-import { ISession, IProfileLoaded, Logger } from "@zowe/imperative";
+import { imperative } from "@zowe/cli";
 import { IPromptCredentialsOptions, IPromptUserPassOptions } from "./doc/IPromptCredentials";
 
 /**
@@ -28,7 +28,7 @@ export class ZoweVsCodeExtension {
      *          is larger than the version of Zowe Explorer found.
      */
     private static profilesCache = new ProfilesCache(
-        Logger.getAppLogger(),
+        imperative.Logger.getAppLogger(),
         vscode.workspace.workspaceFolders?.[0].uri.fsPath
     );
     public static getZoweExplorerApi(requiredVersion?: string): ZoweExplorerApi.IApiRegisterClient {
@@ -71,12 +71,12 @@ export class ZoweVsCodeExtension {
     /**
      * Helper function to standardize the way we ask the user for credentials
      * @param options Set of options to use when prompting for credentials
-     * @returns Instance of IProfileLoaded containing information about the updated profile
+     * @returns Instance of imperative.IProfileLoaded containing information about the updated profile
      */
-    public static async promptCredentials(options: IPromptCredentialsOptions): Promise<IProfileLoaded> {
+    public static async promptCredentials(options: IPromptCredentialsOptions): Promise<imperative.IProfileLoaded> {
         const loadProfile = await this.profilesCache.getLoadedProfConfig(options.sessionName.trim());
         if (loadProfile == null) return undefined;
-        const loadSession = loadProfile.profile as ISession;
+        const loadSession = loadProfile.profile as imperative.ISession;
 
         const creds = await ZoweVsCodeExtension.promptUserPass({ session: loadSession, ...options });
 
