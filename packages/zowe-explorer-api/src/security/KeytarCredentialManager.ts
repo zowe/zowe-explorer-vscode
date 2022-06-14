@@ -13,8 +13,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 
-import { AbstractCredentialManager, ImperativeError, SecureCredential, Logger } from "@zowe/imperative";
 import { getZoweDir } from "../profiles/ProfilesCache";
+import { imperative } from "@zowe/cli";
 import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
@@ -29,7 +29,7 @@ declare const __non_webpack_require__: typeof require;
  * @export
  * @class KeytarCredentialManager
  */
-export class KeytarCredentialManager extends AbstractCredentialManager {
+export class KeytarCredentialManager extends imperative.AbstractCredentialManager {
     /**
      * Reference to the lazily loaded keytar module.
      *
@@ -119,12 +119,12 @@ export class KeytarCredentialManager extends AbstractCredentialManager {
      *
      * @returns {Promise<void>} A promise that the function has completed.
      *
-     * @throws {@link ImperativeError} if keytar is not defined.
-     * @throws {@link ImperativeError} when keytar.deletePassword returns false.
+     * @throws {@link imperative.ImperativeError} if keytar is not defined.
+     * @throws {@link imperative.ImperativeError} when keytar.deletePassword returns false.
      */
     protected async deleteCredentials(account: string): Promise<void> {
         if (!(await this.deleteCredentialsHelper(account))) {
-            Logger.getAppLogger().debug("errorHandling.deleteCredentials", "Unable to delete credentials.");
+            imperative.Logger.getAppLogger().debug("errorHandling.deleteCredentials", "Unable to delete credentials.");
         }
     }
 
@@ -134,12 +134,12 @@ export class KeytarCredentialManager extends AbstractCredentialManager {
      *
      * @param {string} account The account for which to get credentials
      * @param {boolean} optional Set to true if failure to find credentials should be ignored
-     * @returns {Promise<SecureCredential>} A promise containing the credentials stored in keytar.
+     * @returns {Promise<imperative.SecureCredential>} A promise containing the credentials stored in keytar.
      *
-     * @throws {@link ImperativeError} if keytar is not defined.
-     * @throws {@link ImperativeError} when keytar.getPassword returns null or undefined.
+     * @throws {@link imperative.ImperativeError} if keytar is not defined.
+     * @throws {@link imperative.ImperativeError} when keytar.getPassword returns null or undefined.
      */
-    protected async loadCredentials(account: string, optional?: boolean): Promise<SecureCredential> {
+    protected async loadCredentials(account: string, optional?: boolean): Promise<imperative.SecureCredential> {
         // Helper function to handle all breaking changes
         // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
         const loadHelper = async (service: string) => {
@@ -175,7 +175,7 @@ export class KeytarCredentialManager extends AbstractCredentialManager {
 
         // Throw an error if credentials could not be found
         if (password == null && !optional) {
-            throw new ImperativeError({
+            throw new imperative.ImperativeError({
                 msg: "Unable to load credentials.",
                 additionalDetails: this.getMissingEntryMessage(account),
             });
@@ -190,13 +190,13 @@ export class KeytarCredentialManager extends AbstractCredentialManager {
      * account and credentials passed to the function by Imperative.
      *
      * @param {string} account The account to set credentials
-     * @param {SecureCredential} credentials The credentials to store
+     * @param {imperative.SecureCredential} credentials The credentials to store
      *
      * @returns {Promise<void>} A promise that the function has completed.
      *
-     * @throws {@link ImperativeError} if keytar is not defined.
+     * @throws {@link imperative.ImperativeError} if keytar is not defined.
      */
-    protected async saveCredentials(account: string, credentials: SecureCredential): Promise<void> {
+    protected async saveCredentials(account: string, credentials: imperative.SecureCredential): Promise<void> {
         await this.deleteCredentialsHelper(account, true);
         await KeytarCredentialManager.keytar.setPassword(this.preferredService, account, credentials);
     }

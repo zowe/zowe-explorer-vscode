@@ -10,7 +10,7 @@
  */
 
 import { TreeItem } from "vscode";
-import { IProfileLoaded } from "@zowe/imperative";
+import { imperative } from "@zowe/cli";
 
 /**
  * APIs that allow accessing the Zowe Explorer tree.
@@ -30,7 +30,7 @@ import { IProfileLoaded } from "@zowe/imperative";
  *     'Zowe Explorer was augmented for MyApp support. Please, refresh your explorer views.');\
  *   } else {\
  *   window.showInformationMessage(\
- *     'Zowe VS Extension was not found: either not installe or older version.');\
+ *     'Zowe VS Extension was not found: either not install or older version.');\
  * }
  *
  */
@@ -42,5 +42,5 @@ export interface ZoweExplorerTreeApi {
      * @return The requested profile
      *
      */
-    getProfile(primaryNode: TreeItem): IProfileLoaded;
+    getProfile(primaryNode: TreeItem): imperative.IProfileLoaded;
 }
