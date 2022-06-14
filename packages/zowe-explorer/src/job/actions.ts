@@ -15,7 +15,7 @@ import { errorHandling } from "../utils/ProfilesUtils";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { ValidProfileEnum, IZoweTree, IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
-import { Job } from "./ZoweJobNode";
+import { Job, Spool } from "./ZoweJobNode";
 import * as nls from "vscode-nls";
 import { toUniqueJobFileUri } from "../SpoolProvider";
 import { IProfileLoaded, Session } from "@zowe/imperative";
@@ -23,7 +23,6 @@ import * as globals from "../globals";
 import { refreshAll as refreshAllJobs } from "../shared/refresh";
 import { UIViews } from "../shared/ui-views";
 import { getDocumentFilePath } from "../shared/utils";
-import { Spool } from "./ZoweJobNode";
 
 // Set up localization
 nls.config({
