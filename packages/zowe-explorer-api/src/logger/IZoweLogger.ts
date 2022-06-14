@@ -11,7 +11,7 @@
 
 import * as loggerConfig from "../log4jsconfig.json";
 import * as path from "path";
-import { Logger } from "@zowe/imperative";
+import { imperative } from "@zowe/cli";
 
 export enum MessageSeverityEnum {
     TRACE = 0,
@@ -23,13 +23,13 @@ export enum MessageSeverityEnum {
 }
 
 /**
- * Creates an instance of the Imperative logger for exxtenders to use
+ * Creates an instance of the Imperative logger for extenders to use
  *
  * @export
  * @class IZoweLogger
  */
 export class IZoweLogger {
-    private log: Logger;
+    private log: imperative.Logger;
     private extensionName: string;
     /**
      * Creates an instance of the Imperative logger
@@ -42,16 +42,16 @@ export class IZoweLogger {
                 loggerConfig.log4jsConfig.appenders[appenderName].filename
             );
         }
-        Logger.initLogger(loggerConfig);
+        imperative.Logger.initLogger(loggerConfig);
         this.extensionName = extensionName;
-        this.log = Logger.getAppLogger();
+        this.log = imperative.Logger.getAppLogger();
     }
 
     public getExtensionName(): string {
         return this.extensionName;
     }
 
-    public getImperativeLogger(): Logger {
+    public getImperativeLogger(): imperative.Logger {
         return this.log;
     }
 

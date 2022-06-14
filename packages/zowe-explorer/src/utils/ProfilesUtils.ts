@@ -49,9 +49,13 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
         // open config file for missing hostname error
         const msg = errorDetails.toString();
         if (msg.includes("hostname")) {
-            if ((await globals.PROFILESCACHE.getProfileInfo()).usingTeamConfig) {
+            let mProfileInfo = await globals.PROFILESCACHE.getProfileInfo();
+            if (!mProfileInfo) {
+                mProfileInfo = await Profiles.getInstance().getProfileInfo();
+            }
+            if (mProfileInfo.usingTeamConfig) {
                 vscode.window.showErrorMessage("Required parameter 'host' must not be blank");
-                const currentProfile = await globals.PROFILESCACHE.getProfileFromConfig(label.trim());
+                const currentProfile = await mProfileInfo.getProfileFromConfig(label.trim());
                 const filePath = currentProfile.profLoc.osLoc[0];
                 await Profiles.getInstance().openConfigFile(filePath);
                 return;
@@ -63,7 +67,7 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
         // tslint:disable-next-line: no-magic-numbers
         case 401:
             if (label.includes("[")) {
-                label = label.substring(0, label.indexOf(" ["));
+                label = label.substring(0, label.indexOf(" [")).trim();
             }
 
             if (errorDetails.mDetails.additionalDetails) {

@@ -44,6 +44,7 @@ import {
     IUrlValidator,
     ZoweVsCodeExtension,
     getFullPath,
+    getZoweDir,
 } from "@zowe/zowe-explorer-api";
 import {
     errorHandling,
@@ -610,12 +611,7 @@ export class Profiles extends ProfilesCache {
         try {
             let user = false;
             let global = true;
-            ImperativeConfig.instance.loadedConfig = {
-                defaultHome: path.join(os.homedir(), ".zowe"),
-                envVariablePrefix: "ZOWE",
-            };
-
-            let rootPath = ImperativeConfig.instance.cliHome;
+            let rootPath = getZoweDir();
             if (vscode.workspace.workspaceFolders) {
                 const quickPickOptions: vscode.QuickPickOptions = {
                     placeHolder: localize(
@@ -896,30 +892,19 @@ export class Profiles extends ProfilesCache {
             passwordInputBoxOptions,
         });
 
-        let returnValue;
-        if (promptInfo) {
-            const updSession = ZoweExplorerApiRegister.getMvsApi(promptInfo).getSession();
-            returnValue = [
-                updSession.ISession.user,
-                updSession.ISession.password,
-                updSession.ISession.base64EncodedAuth,
-            ];
-            if ((await this.getProfileInfo()).usingTeamConfig) {
-                const profArray = [];
-                for (const theprofile of this.allProfiles) {
-                    if (theprofile.name !== promptInfo.profile.name) {
-                        profArray.push(theprofile);
-                    }
-                }
-                profArray.push(promptInfo.profile);
-                this.allProfiles = profArray;
-            }
-        } else {
+        if (!promptInfo) {
             vscode.window.showInformationMessage(localize("promptCredentials.undefined.value", "Operation Cancelled"));
         }
-
-        await readConfigFromDisk();
-        await this.refresh(ZoweExplorerApiRegister.getInstance());
+        const updSession = ZoweExplorerApiRegister.getMvsApi(promptInfo).getSession();
+        const returnValue = [
+            updSession.ISession.user,
+            updSession.ISession.password,
+            updSession.ISession.base64EncodedAuth,
+        ];
+        if ((await this.getProfileInfo()).usingTeamConfig) {
+            const promptedTypeIndex = this.allProfiles.findIndex((profile) => profile.type === promptInfo.type);
+            this.allProfiles[promptedTypeIndex] = promptInfo;
+        }
         return returnValue;
     }
 
@@ -1342,6 +1327,7 @@ export class Profiles extends ProfilesCache {
 
     private async updateBaseProfileFileLogin(profile: IProfileLoaded, updProfile: IProfile) {
         const upd = { profileName: profile.name, profileType: profile.type };
+        // const config = (await this.getProfileInfo()).getTeamConfig();
         const config = ImperativeConfig.instance.config;
         const { user, global } = config.api.layers.find(upd.profileName);
         const profilePath = config.api.profiles.expandPath(upd.profileName);
@@ -1353,6 +1339,7 @@ export class Profiles extends ProfilesCache {
 
     private async updateBaseProfileFileLogout(profile: IProfileLoaded) {
         const upd = { profileName: profile.name, profileType: profile.type };
+        // const config = (await this.getProfileInfo()).getTeamConfig();
         const config = ImperativeConfig.instance.config;
         const { user, global } = config.api.layers.find(upd.profileName);
         const profilePath = config.api.profiles.expandPath(upd.profileName);

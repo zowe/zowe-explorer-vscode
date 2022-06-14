@@ -9,7 +9,7 @@
  *                                                                                 *
  */
 
-import { ISession } from "@zowe/imperative";
+import { imperative } from "@zowe/cli";
 import { InputBoxOptions } from "vscode";
 
 export interface IPromptCredentialsCommonOptions {
@@ -23,5 +23,5 @@ export interface IPromptCredentialsOptions extends IPromptCredentialsCommonOptio
 }
 
 export interface IPromptUserPassOptions extends IPromptCredentialsCommonOptions {
-    session: ISession;
+    session: imperative.ISession;
 }

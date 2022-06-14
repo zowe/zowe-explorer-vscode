@@ -82,13 +82,14 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             "initialize.log.error",
             "Error encountered while activating and initializing logger! "
         );
-        await errorHandling(err, null, errorMessage);
-        globals.LOG.error(errorMessage + JSON.stringify(err));
+        vscode.window.showErrorMessage(errorMessage);
+        vscode.window.showErrorMessage(err.message);
     }
 
     try {
         // Ensure that ~/.zowe folder exists
         if (!ImperativeConfig.instance.config?.exists) {
+            // Should we replace the instance.config above with (await getProfileInfo(globals.ISTHEIA)).exists
             await CliProfileManager.initialize({
                 configuration: getImperativeConfig().profiles,
                 profileRootDirectory: path.join(getZoweDir(), "profiles"),
@@ -115,8 +116,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         jobsProvider = await createJobsTree(globals.LOG);
     } catch (err) {
         const errorMessage = localize("initialize.profiles.error", "Error reading or initializing Zowe CLI profiles.");
-        await errorHandling(err, null, errorMessage);
-        globals.LOG.error(errorMessage + JSON.stringify(err));
+        vscode.window.showErrorMessage(errorMessage);
+        vscode.window.showErrorMessage(err.message);
     }
 
     // set a command to silently reload extension
@@ -517,9 +518,10 @@ function initUSSProvider(context: vscode.ExtensionContext, ussFileProvider: IZow
         )
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.deleteNode", async (node: IZoweUSSTreeNode) =>
-            node.deleteUSSNode(ussFileProvider, node.getUSSDocumentFilePath())
-        )
+        vscode.commands.registerCommand("zowe.uss.deleteNode", (node: IZoweUSSTreeNode) => {
+            const tempNode = ussFileProvider.getTreeView().selection[0] as IZoweUSSTreeNode;
+            tempNode.deleteUSSNode(ussFileProvider, tempNode.getUSSDocumentFilePath());
+        })
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.uss.binary", async (node: IZoweUSSTreeNode) =>
