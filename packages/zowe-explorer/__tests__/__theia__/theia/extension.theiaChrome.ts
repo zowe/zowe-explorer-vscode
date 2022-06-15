@@ -16,7 +16,6 @@ import { TheiaLocator, DatasetsLocators, UssLocators, JobsLocators, TheiaNotific
 
 const WAITTIME = 40000;
 const SHORTSLEEPTIME = 2000;
-const SLEEPTIME = 15000;
 let driverChrome: any;
 
 export async function openBrowser() {
@@ -353,8 +352,6 @@ export function closeBrowser() {
 }
 
 export async function addProfileDetails(profileName: string) {
-    // await driverChrome.findElement(By.id(DatasetsLocators.datasetsAddSessionId)).click();
-    // await driverChrome.sleep(SHORTSLEEPTIME);
     await driverChrome.findElement(By.xpath(DatasetsLocators.createNewConnectionListXpath)).click();
     await driverChrome.sleep(SHORTSLEEPTIME);
     const datasetProfileName = await driverChrome.wait(
@@ -395,9 +392,6 @@ export async function addProfileDetails(profileName: string) {
     await driverChrome.sleep(SHORTSLEEPTIME);
     const responseTimeout = await driverChrome.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
     responseTimeout.sendKeys(Key.ENTER);
-    // await driverChrome.sleep(SHORTSLEEPTIME);
-    // await driverChrome.actions().sendKeys(Key.ENTER).perform();
-    // await driverChrome.sleep(SHORTSLEEPTIME);
 }
 export async function clickOnDatasetsPanel() {
     await driverChrome.findElement(By.id(DatasetsLocators.datasetsPanelId)).click();
