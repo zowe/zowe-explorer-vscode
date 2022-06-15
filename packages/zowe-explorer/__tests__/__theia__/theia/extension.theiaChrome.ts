@@ -16,11 +16,12 @@ import { TheiaLocator, DatasetsLocators, UssLocators, JobsLocators, TheiaNotific
 
 const WAITTIME = 40000;
 const SHORTSLEEPTIME = 2000;
+const SLEEPTIME = 15000;
 let driverChrome: any;
 
 export async function openBrowser() {
     const chromeOptions = new chrome.Options();
-    chromeOptions.addArguments("headless");
+    // chromeOptions.addArguments("headless");
     chromeOptions.addArguments("window-size=1200,1100");
     driverChrome = new Builder().forBrowser("chrome").setChromeOptions(chromeOptions).build();
 }
@@ -352,11 +353,10 @@ export function closeBrowser() {
 }
 
 export async function addProfileDetails(profileName: string) {
-    await driverChrome.findElement(By.id(DatasetsLocators.datasetsAddSessionId)).click();
-    await driverChrome.sleep(SHORTSLEEPTIME);
+    // await driverChrome.findElement(By.id(DatasetsLocators.datasetsAddSessionId)).click();
+    // await driverChrome.sleep(SHORTSLEEPTIME);
     await driverChrome.findElement(By.xpath(DatasetsLocators.createNewConnectionListXpath)).click();
     await driverChrome.sleep(SHORTSLEEPTIME);
-    // profile name
     const datasetProfileName = await driverChrome.wait(
         until.elementLocated(By.xpath(DatasetsLocators.emptyInputBoxXpath)),
         WAITTIME
@@ -388,16 +388,16 @@ export async function addProfileDetails(profileName: string) {
     basepath.sendKeys(Key.ENTER);
     await driverChrome.sleep(SHORTSLEEPTIME);
     const protocol = await driverChrome.findElement(By.xpath(DatasetsLocators.inputBoxXpath));
-    protocol.sendKeys("HTTPS");
+    protocol.sendKeys(Key.ENTER);
     await driverChrome.sleep(SHORTSLEEPTIME);
     const encoding = await driverChrome.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
     encoding.sendKeys(Key.ENTER);
     await driverChrome.sleep(SHORTSLEEPTIME);
     const responseTimeout = await driverChrome.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
     responseTimeout.sendKeys(Key.ENTER);
-    await driverChrome.sleep(SHORTSLEEPTIME);
-    await driverChrome.actions().sendKeys(Key.ENTER).perform();
-    await driverChrome.sleep(SHORTSLEEPTIME);
+    // await driverChrome.sleep(SHORTSLEEPTIME);
+    // await driverChrome.actions().sendKeys(Key.ENTER).perform();
+    // await driverChrome.sleep(SHORTSLEEPTIME);
 }
 export async function clickOnDatasetsPanel() {
     await driverChrome.findElement(By.id(DatasetsLocators.datasetsPanelId)).click();

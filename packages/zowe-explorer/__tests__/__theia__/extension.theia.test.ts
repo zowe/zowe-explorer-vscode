@@ -65,15 +65,20 @@ describe("Add Default Profile and Profile in DATASETS", () => {
 
     it("Should Add Default Profile in DATASETS", async () => {
         await driverChrome.clickOnDatasetsPanel();
+        await driverChrome.sleepTime(SHORTSLEEPTIME);
         await driverChrome.clickOnAddSessionInDatasets();
+        await driverChrome.sleepTime(SHORTSLEEPTIME);
         await driverChrome.addProfileDetails("DefaultProfile");
+        await driverChrome.sleepTime(SHORTSLEEPTIME);
         const datasetProfile = await driverChrome.getDatasetsDefaultProfilename();
         expect(datasetProfile).to.equal("DefaultProfile");
     });
 
     it("Should Add Profile in DATASETS", async () => {
         await driverChrome.clickOnDatasetsPanel();
+        await driverChrome.sleepTime(SHORTSLEEPTIME);
         await driverChrome.clickOnAddSessionInDatasets();
+        await driverChrome.sleepTime(SHORTSLEEPTIME);
         await driverChrome.addProfileDetails("TestSeleniumProfile");
         await driverChrome.sleepTime(SHORTSLEEPTIME);
         const datasetProfile = await driverChrome.getDatasetsProfilename();
