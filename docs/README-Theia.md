@@ -15,6 +15,7 @@ For development and debugging it is recommended to clone the full Theia reposito
 ### Building it locally
 
 1. Follow the [instructions here](https://theia-ide.org/docs/composing_applications/) to build Theia using node and yarn with the two modifications described below.
+   **Note** Selenium looks for chromedriver in the `/usr/local/bin` directory for [MacOS](https://www.tutorialspoint.com/how-to-setup-chrome-driver-with-selenium-on-macos) instead of on the PATH.
 
 1. After pasting the contents for the `package.json` file add the following additional entries into the `dependencies` object:
 

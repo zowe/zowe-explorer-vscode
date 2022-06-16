@@ -352,8 +352,6 @@ export function closeBrowser() {
 }
 
 export async function addProfileDetails(profileName: string) {
-    await driverChrome.findElement(By.id(DatasetsLocators.datasetsAddSessionId)).click();
-    await driverChrome.sleep(SHORTSLEEPTIME);
     await driverChrome.findElement(By.xpath(DatasetsLocators.createNewConnectionListXpath)).click();
     await driverChrome.sleep(SHORTSLEEPTIME);
     const datasetProfileName = await driverChrome.wait(
@@ -368,9 +366,11 @@ export async function addProfileDetails(profileName: string) {
     zosUrl.sendKeys(Key.ENTER);
     await driverChrome.sleep(SHORTSLEEPTIME);
     const username = await driverChrome.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
+    username.sendKeys("fake");
     username.sendKeys(Key.ENTER);
     await driverChrome.sleep(SHORTSLEEPTIME);
     const password = await driverChrome.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
+    password.sendKeys("fake");
     password.sendKeys(Key.ENTER);
     await driverChrome.sleep(SHORTSLEEPTIME);
     const authorization = await driverChrome.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
@@ -394,9 +394,6 @@ export async function addProfileDetails(profileName: string) {
     await driverChrome.sleep(SHORTSLEEPTIME);
     const responseTimeout = await driverChrome.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
     responseTimeout.sendKeys(Key.ENTER);
-    await driverChrome.sleep(SHORTSLEEPTIME);
-    await driverChrome.actions().sendKeys(Key.ENTER).perform();
-    await driverChrome.sleep(SHORTSLEEPTIME);
 }
 export async function clickOnDatasetsPanel() {
     await driverChrome.findElement(By.id(DatasetsLocators.datasetsPanelId)).click();
