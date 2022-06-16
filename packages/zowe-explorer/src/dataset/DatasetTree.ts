@@ -369,7 +369,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     Profiles.getInstance().validProfile === ValidProfileEnum.VALID ||
                     !contextually.isValidationEnabled(parentNode)
                 ) {
-                    session = ZoweExplorerApiRegister.getMvsApi(profile).getSession();
+                    session = await ZoweExplorerApiRegister.getMvsApi(profile).getSession();
                     parentNode.setProfileToChoice(profile);
                     parentNode.setSessionToChoice(session);
                 } else {
@@ -1276,7 +1276,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 return;
             }
             // Uses loaded profile to create a session with the MVS API
-            const session = ZoweExplorerApiRegister.getMvsApi(profile).getSession();
+            const session = await ZoweExplorerApiRegister.getMvsApi(profile).getSession();
             // Creates ZoweDatasetNode to track new session and pushes it to mSessionNodes
             const node = new ZoweDatasetNode(
                 profile.name,
