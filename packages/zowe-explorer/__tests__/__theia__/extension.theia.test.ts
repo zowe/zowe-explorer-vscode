@@ -147,7 +147,7 @@ describe("Add Existing Profiles in USS and JOBS", () => {
     after(async () => driverFirefox.closeBrowser());
 });
 
-describe("Add Profile to Favorites", () => {
+describe("Test Adding and Removing Favorites", () => {
     before(async () => {
         await driverChrome.openBrowser();
         await driverChrome.sleepTime(SHORTSLEEPTIME);
@@ -165,6 +165,13 @@ describe("Add Profile to Favorites", () => {
         expect(favoriteProfile).to.equal("TestSeleniumProfile");
     });
 
+    it("Should Remove Profile from Favorites under DATA SETS", async () => {
+        await driverChrome.removeFavoriteProfileFromDatasets();
+        await driverChrome.sleepTime(SHORTSLEEPTIME);
+        const favoriteProfile = await driverChrome.verifyRemovedFavoriteProfileInDatasets();
+        expect(favoriteProfile).to.equal(true);
+    });
+
     it("Should Add Profile to Favorites under USS", async () => {
         await driverChrome.clickOnDatasetsTab();
         await driverChrome.sleepTime(SHORTSLEEPTIME);
@@ -176,6 +183,13 @@ describe("Add Profile to Favorites", () => {
         await driverChrome.sleepTime(SHORTSLEEPTIME);
         const favoriteProfile = await driverChrome.getFavoritePrfileNameFromUss();
         expect(favoriteProfile).to.equal("TestSeleniumProfile");
+    });
+
+    it("Should Remove Profile from Favorites under USS", async () => {
+        await driverChrome.removeFavoriteProfileFromUss();
+        await driverChrome.sleepTime(SHORTSLEEPTIME);
+        const favoriteProfile = await driverChrome.verifyRemovedFavoriteProfileInUss();
+        expect(favoriteProfile).to.equal(true);
     });
 
     it("Should Add Profile to Favorites under JOBS", async () => {
@@ -191,44 +205,7 @@ describe("Add Profile to Favorites", () => {
         expect(favoriteProfile).to.equal("TestSeleniumProfile");
     });
 
-    after(async () => driverChrome.closeBrowser());
-});
-
-describe("Remove Profile from Favorites", () => {
-    before(async () => {
-        await driverChrome.openBrowser();
-        await driverChrome.sleepTime(SHORTSLEEPTIME);
-        await driverChrome.OpenTheiaInChrome();
-        await driverChrome.sleepTime(SLEEPTIME);
-        await driverChrome.clickOnZoweExplorer();
-        await driverFirefox.sleepTime(wait5sec);
-    });
-
-    it("Should Remove Profile from Favorites under DATA SETS", async () => {
-        await driverChrome.clickOnFavoriteTabInDatasets();
-        await driverChrome.sleepTime(SHORTSLEEPTIME);
-        await driverChrome.removeFavoriteProfileFromDatasets();
-        await driverChrome.sleepTime(SHORTSLEEPTIME);
-        const favoriteProfile = await driverChrome.verifyRemovedFavoriteProfileInDatasets();
-        expect(favoriteProfile).to.equal(true);
-    });
-
-    it("Should Remove Profile from Favorites under USS", async () => {
-        await driverChrome.clickOnUssTabs();
-        await driverChrome.sleepTime(SHORTSLEEPTIME);
-        await driverChrome.clickOnFavoriteTabInUss();
-        await driverChrome.sleepTime(SHORTSLEEPTIME);
-        await driverChrome.removeFavoriteProfileFromUss();
-        await driverChrome.sleepTime(SHORTSLEEPTIME);
-        const favoriteProfile = await driverChrome.verifyRemovedFavoriteProfileInUss();
-        expect(favoriteProfile).to.equal(true);
-    });
-
     it("Should Remove Profile from Favorites under JOBS", async () => {
-        await driverChrome.clickOnJobsTab();
-        await driverChrome.sleepTime(SHORTSLEEPTIME);
-        await driverChrome.clickOnFavoriteTabInJobs();
-        await driverChrome.sleepTime(SHORTSLEEPTIME);
         await driverChrome.removeFavoriteProfileFromJobs();
         await driverChrome.sleepTime(SHORTSLEEPTIME);
         const favoriteProfile = await driverChrome.verifyRemovedFavoriteProfileInDatasets();
