@@ -2,6 +2,29 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## `2.0.3`
+
+- Bugfix: Fixed Quick-key Delete in USS and Jobs trees. [#1821](https://github.com/zowe/vscode-extension-for-zowe/pull/1821)
+- Bugfix: Fixed issue with Zowe Explorer crashing during initialization due to Zowe config file errors. [#1822](https://github.com/zowe/vscode-extension-for-zowe/pull/1822)
+- Bugfix: Fixed issue where Spool files failed to open when credentials were not stored in a profile. [#1823](https://github.com/zowe/vscode-extension-for-zowe/pull/1823)
+- Bugfix: Fixed extra space in the Invalid Credentials dialog, at profile validation profilename. [#1824](https://github.com/zowe/vscode-extension-for-zowe/pull/1824)
+- Bugfix: Updated dependencies for improved security. [#1819](https://github.com/zowe/vscode-extension-for-zowe/pull/1819)
+
+## `2.0.2`
+
+- Bugfix: Fixed USS search filter fails on credential-less profiles. [#1811](https://github.com/zowe/vscode-extension-for-zowe/pull/1811)
+- Bugfix: Fixed Zowe Explorer recognizing environment variable ZOWE_CLI_HOME. [#1803](https://github.com/zowe/vscode-extension-for-zowe/pull/1803)
+- Bugfix: Fixed Zowe Explorer prompting for TSO Account number when saved in config file's TSO profile. [#1801](https://github.com/zowe/vscode-extension-for-zowe/pull/1801)
+
+## `2.0.1`
+
+- BugFix: Improved logging information to help diagnose Team Profile issues. [#1776](https://github.com/zowe/vscode-extension-for-zowe/pull/1776)
+- BugFix: Fixed adding profiles to the tree view on Theia. [#1774](https://github.com/zowe/vscode-extension-for-zowe/issues/1774)
+- BugFix: Updated Log4js version to resolve initialization problem on Eclipse Che. [#1692](https://github.com/zowe/vscode-extension-for-zowe/issues/1692)
+- BugFix: Fixed dataset upload issue by trimming labels. [#1789](https://github.com/zowe/vscode-extension-for-zowe/issues/1789)
+- BugFix: Fixed duplicate jobs appearing in the jobs view upon making an owner/prefix filter search for extenders. [#1780](https://github.com/zowe/vscode-extension-for-zowe/pull/1780)
+- BugFix: Fixed error displayed when opening a job file for extenders. [#1701](https://github.com/zowe/vscode-extension-for-zowe/pull/1701)
+
 ## `2.0.0`
 
 - Major: Introduced Team Profiles and more. See the prerelease items (if any) below for more details.

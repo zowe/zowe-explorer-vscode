@@ -10,8 +10,6 @@
  */
 
 import * as zowe from "@zowe/cli";
-import { IProfileLoaded, Session, ICommandArguments, ICommandProfileTypeConfiguration } from "@zowe/imperative";
-
 import { ProfilesCache } from "./ProfilesCache";
 
 /**
@@ -25,7 +23,7 @@ export namespace ZoweExplorerApi {
      */
     export interface ICommon {
         /** The profile associated with a specific instance of an API.  */
-        profile?: IProfileLoaded;
+        profile?: zowe.imperative.IProfileLoaded;
 
         /**
          * Return the type name of the CLI profile supported by this api.
@@ -37,46 +35,46 @@ export namespace ZoweExplorerApi {
         /**
          * Create a session for the specific profile type.
          *
-         * @param {IProfileLoaded} profile
+         * @param {zowe.imperative.IProfileLoaded} profile
          *      optional profile reference,
          *      will use the profile the API was retrieved with by default
-         * @returns {Session} a Zowe CLI Session
+         * @returns {zowe.imperative.Session} a Zowe CLI Session
          */
-        getSession(profile?: IProfileLoaded): Session;
+        getSession(profile?: zowe.imperative.IProfileLoaded): zowe.imperative.Session;
 
         /**
          * Create a session for the specific profile type.
          *
-         * @param {IProfileLoaded} profile
+         * @param {zowe.imperative.IProfileLoaded} profile
          *      will use the profile the API was retrieved with by default
          * @returns {IZosmfInfoResponse} z/OSMF Check Status response
          */
-        getStatus?(profile: IProfileLoaded, profileType?): Promise<string>;
+        getStatus?(profile: zowe.imperative.IProfileLoaded, profileType?): Promise<string>;
 
         /**
          * Create a session for a set command arguments. The session will be created independent
          * of a specific profile using a specific API implementation that was created with a
          * referece profile.
          *
-         * @param {ICommandArguments} cmdArgs a Zowe CLI ICommandArguments instance
-         * @returns {Session} a Zowe CLI Session
+         * @param {zowe.imperative.ICommandArguments} cmdArgs a Zowe CLI ICommandArguments instance
+         * @returns {zowe.imperative.Session} a Zowe CLI Session
          */
-        getSessionFromCommandArgument?(cmdArgs: ICommandArguments): Session;
+        getSessionFromCommandArgument?(cmdArgs: zowe.imperative.ICommandArguments): zowe.imperative.Session;
 
         /**
          * Perform login to obtain a token from the authentication service
          *
-         * @param {Session} session a Zowe CLI Session
+         * @param {zowe.imperative.Session} session a Zowe CLI Session
          * @returns {string} the token value
          */
-        login?(session: Session): Promise<string>;
+        login?(session: zowe.imperative.Session): Promise<string>;
 
         /**
          * Perform logout from the authentication service
          *
-         * @param {Session} session a Zowe CLI Session
+         * @param {zowe.imperative.Session} session a Zowe CLI Session
          */
-        logout?(session: Session);
+        logout?(session: zowe.imperative.Session);
 
         /**
          * Return the type name of the token supported by this api.
@@ -508,7 +506,10 @@ export namespace ZoweExplorerApi {
          * might want to check for an existing profile folder with meta-file
          * or to create them automatically if it is non-existant.
          */
-        initForZowe(type: string, profileTypeConfigurations?: ICommandProfileTypeConfiguration[]): Promise<void>;
+        initForZowe(
+            type: string,
+            profileTypeConfigurations?: zowe.imperative.ICommandProfileTypeConfiguration[]
+        ): Promise<void>;
     }
 
     /**
@@ -545,10 +546,10 @@ export namespace ZoweExplorerApi {
 
         /**
          * Lookup of an API for USS for a given profile.
-         * @param {IProfileLoaded} profile
+         * @param {zowe.imperative.IProfileLoaded} profile
          * @returns the registered API instance for the given profile
          */
-        getUssApi(profile: IProfileLoaded): IUss;
+        getUssApi(profile: zowe.imperative.IProfileLoaded): IUss;
 
         /**
          * Register a new implementation of the MVS Api.
@@ -563,7 +564,7 @@ export namespace ZoweExplorerApi {
          * @param {string} profile
          * @returns the registered API instance
          */
-        getMvsApi(profile: IProfileLoaded): IMvs;
+        getMvsApi(profile: zowe.imperative.IProfileLoaded): IMvs;
 
         /**
          * Register a new implementation of the JES Api.
@@ -578,7 +579,7 @@ export namespace ZoweExplorerApi {
          * @param {string} profile
          * @returns the registered API instance
          */
-        getJesApi(profile: IProfileLoaded): IJes;
+        getJesApi(profile: zowe.imperative.IProfileLoaded): IJes;
 
         /**
          * Register a new implementation of the Command Api.
@@ -593,7 +594,7 @@ export namespace ZoweExplorerApi {
          * @param {string} profile
          * @returns the registered API instance
          */
-        getCommandApi(profile: IProfileLoaded): ICommand;
+        getCommandApi(profile: zowe.imperative.IProfileLoaded): ICommand;
 
         /**
          * Lookup of an API for the generic extender API.

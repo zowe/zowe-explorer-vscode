@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { Session, IProfileLoaded } from "@zowe/imperative";
+import { imperative } from "@zowe/cli";
 import { IZoweTreeNode } from "./IZoweTreeNode";
 
 /**
@@ -36,15 +36,15 @@ export class ZoweTreeNode extends vscode.TreeItem {
      * @param {string} label - Displayed in the [TreeView]
      * @param {vscode.TreeItemCollapsibleState} mCollapsibleState - file/folder
      * @param {IZoweTreeNode} mParent
-     * @param {Session} session
+     * @param {imperative..Session} session
      * @param {string} etag
      */
     public constructor(
         label: string | vscode.TreeItemLabel,
         collapsibleState: vscode.TreeItemCollapsibleState,
         private mParent: IZoweTreeNode,
-        protected session: Session,
-        protected profile: IProfileLoaded
+        protected session: imperative.Session,
+        protected profile: imperative.IProfileLoaded
     ) {
         super(label, collapsibleState);
         // TODO Check this
@@ -63,20 +63,20 @@ export class ZoweTreeNode extends vscode.TreeItem {
     }
 
     /**
-     * Returns the [Session] for this node
+     * Returns the [imperative.Session] for this node
      *
-     * @returns {Session}
+     * @returns {imperative.Session}
      */
-    public getSession(): Session {
+    public getSession(): imperative.Session {
         return this.session || (this.getParent() ? this.getParent().getSession() : undefined);
     }
 
     /**
-     * Returns the IProfileLoaded profile for this node
+     * Returns the imperative.IProfileLoaded profile for this node
      *
-     * @returns {IProfileLoaded}
+     * @returns {imperative.IProfileLoaded}
      */
-    public getProfile(): IProfileLoaded {
+    public getProfile(): imperative.IProfileLoaded {
         return this.profile ? this.profile : this.getParent() ? this.getParent().getProfile() : undefined;
     }
 
@@ -98,11 +98,11 @@ export class ZoweTreeNode extends vscode.TreeItem {
     }
 
     /**
-     * Sets the IProfileLoaded profile for this node to the one chosen in parameters.
+     * Sets the imperative.IProfileLoaded profile for this node to the one chosen in parameters.
      *
-     * @param {IProfileLoaded} The profile you will set the node to use
+     * @param {imperative.IProfileLoaded} The profile you will set the node to use
      */
-    public setProfileToChoice(aProfile: IProfileLoaded): void {
+    public setProfileToChoice(aProfile: imperative.IProfileLoaded): void {
         this.profile = aProfile;
     }
     /**
@@ -110,7 +110,7 @@ export class ZoweTreeNode extends vscode.TreeItem {
      *
      * @param aSession The session you will set the node to use
      */
-    public setSessionToChoice(aSession: Session): void {
+    public setSessionToChoice(aSession: imperative.Session): void {
         this.session = aSession;
     }
 }

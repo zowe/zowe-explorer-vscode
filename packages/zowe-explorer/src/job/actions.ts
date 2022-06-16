@@ -77,6 +77,13 @@ export async function getSpoolContent(session: string, spool: zowe.IJobFile, ref
         try {
             await vscode.window.showTextDocument(uri);
         } catch (error) {
+            const isTextDocActive =
+                vscode.window.activeTextEditor &&
+                vscode.window.activeTextEditor.document.uri?.path === `${spool.jobname}.${spool.jobid}.${spool.ddname}`;
+
+            if (isTextDocActive && String(error.message).includes("Failed to show text document")) {
+                return;
+            }
             await errorHandling(error, session, error.message);
             return;
         }
@@ -136,12 +143,14 @@ export const focusOnJob = async (jobsProvider: IZoweTree<IZoweJobTreeNode>, sess
     );
     if (!sessionNode) {
         try {
-            await jobsProvider.addSession(sessionName);
+            await jobsProvider.addSession(sessionName.trim());
         } catch (error) {
             await errorHandling(error, null, error.message);
             return;
         }
-        sessionNode = jobsProvider.mSessionNodes.find((jobNode) => jobNode.label === sessionName);
+        sessionNode = jobsProvider.mSessionNodes.find(
+            (jobNode) => jobNode.label.toString().trim() === sessionName.trim()
+        );
     }
     try {
         jobsProvider.refreshElement(sessionNode);
@@ -266,10 +275,15 @@ export async function deleteCommand(
             jobsProvider
         );
         return;
-    }
-    if (job) {
+    } else if (job) {
         await deleteSingleJob(job, jobsProvider);
         return;
+    } else {
+        const treeView = jobsProvider.getTreeView();
+        const selectedNodes = treeView.selection;
+        if (selectedNodes) {
+            await deleteMultipleJobs(selectedNodes, jobsProvider);
+        }
     }
 }
 

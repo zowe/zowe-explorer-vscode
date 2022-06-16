@@ -25,6 +25,7 @@ import {
     IZoweUSSTreeNode,
     IZoweJobTreeNode,
     ProfilesCache,
+    getZoweDir,
 } from "@zowe/zowe-explorer-api";
 import { Profiles } from "./Profiles";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
@@ -94,10 +95,8 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
         // and/or created a profile that the profile directory in ~/.zowe/profiles
         // will be created with the appropriate meta data. If not called the user will
         // see errors when creating a profile of any type.
-        imperative.ImperativeConfig.instance.loadedConfig = {
-            defaultHome: path.join(os.homedir(), ".zowe"),
-            envVariablePrefix: "ZOWE",
-        };
+        getZoweDir(); // This should create initialize the loadedConfig if it is not already
+
         // const mProfileInfo = await getProfileInfo(globals.ISTHEIA);
         let mProfileInfo = await globals.PROFILESCACHE.getProfileInfo();
         if (!mProfileInfo) {

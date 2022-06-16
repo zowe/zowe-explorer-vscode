@@ -10,7 +10,6 @@
  */
 
 import * as zowe from "@zowe/cli";
-import { Session, SessConstants, IProfileLoaded, ICommandArguments, ConnectionPropsForSessCfg } from "@zowe/imperative";
 import { ZoweExplorerApi } from "./ZoweExplorerApi";
 
 /**
@@ -22,26 +21,26 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
         return "zosmf";
     }
 
-    private session: Session;
-    public constructor(public profile?: IProfileLoaded) {}
+    private session: zowe.imperative.Session;
+    public constructor(public profile?: zowe.imperative.IProfileLoaded) {}
 
     public getProfileTypeName(): string {
         return ZosmfUssApi.getProfileTypeName();
     }
 
-    public getSessionFromCommandArgument(cmdArgs: ICommandArguments): Session {
+    public getSessionFromCommandArgument(cmdArgs: zowe.imperative.ICommandArguments): zowe.imperative.Session {
         const sessCfg = zowe.ZosmfSession.createSessCfgFromArgs(cmdArgs);
-        ConnectionPropsForSessCfg.resolveSessCfgProps(sessCfg, cmdArgs);
-        const sessionToUse = new Session(sessCfg);
+        zowe.imperative.ConnectionPropsForSessCfg.resolveSessCfgProps(sessCfg, cmdArgs);
+        const sessionToUse = new zowe.imperative.Session(sessCfg);
         return sessionToUse;
     }
 
-    public getSession(profile?: IProfileLoaded): Session {
+    public getSession(profile?: zowe.imperative.IProfileLoaded): zowe.imperative.Session {
         if (!this.session) {
             try {
                 if (!this.profile.profile.tokenValue) {
                     const serviceProfile = profile || this.profile;
-                    const cmdArgs: ICommandArguments = {
+                    const cmdArgs: zowe.imperative.ICommandArguments = {
                         $0: "zowe",
                         _: [""],
                         host: serviceProfile.profile.host,
@@ -55,7 +54,7 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
                     this.session = this.getSessionFromCommandArgument(cmdArgs);
                 } else {
                     const serviceProfile = this.profile;
-                    const cmdArgs: ICommandArguments = {
+                    const cmdArgs: zowe.imperative.ICommandArguments = {
                         $0: "zowe",
                         _: [""],
                         host: serviceProfile.profile.host,
@@ -75,13 +74,13 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
         return this.session;
     }
 
-    public async getStatus(validateProfile?: IProfileLoaded, profileType?: string): Promise<string> {
+    public async getStatus(validateProfile?: zowe.imperative.IProfileLoaded, profileType?: string): Promise<string> {
         // This API call is specific for z/OSMF profiles
-        let validateSession: Session;
+        let validateSession: zowe.imperative.Session;
         if (profileType === "zosmf") {
             if (validateProfile.profile.tokenValue) {
                 const serviceProfile = validateProfile;
-                const cmdArgs: ICommandArguments = {
+                const cmdArgs: zowe.imperative.ICommandArguments = {
                     $0: "zowe",
                     _: [""],
                     host: serviceProfile.profile.host,
@@ -95,7 +94,7 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
                 validateSession = this.getSessionFromCommandArgument(cmdArgs);
             } else {
                 const serviceProfile = validateProfile;
-                const cmdArgs: ICommandArguments = {
+                const cmdArgs: zowe.imperative.ICommandArguments = {
                     $0: "zowe",
                     _: [""],
                     host: serviceProfile.profile.host,
@@ -122,14 +121,14 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
     }
 
     public getTokenTypeName(): string {
-        return SessConstants.TOKEN_TYPE_APIML;
+        return zowe.imperative.SessConstants.TOKEN_TYPE_APIML;
     }
 
-    public login(session: Session): Promise<string> {
+    public login(session: zowe.imperative.Session): Promise<string> {
         return zowe.Login.apimlLogin(session);
     }
 
-    public logout(session: Session): Promise<void> {
+    public logout(session: zowe.imperative.Session): Promise<void> {
         return zowe.Logout.apimlLogout(session);
     }
 }

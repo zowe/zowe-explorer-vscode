@@ -14,8 +14,8 @@
 import * as vscode from "vscode";
 import * as fs from "fs";
 import * as globals from "../globals";
-import { Session, IProfile, IProfileLoaded, ProfileInfo, Logger } from "@zowe/imperative";
-import { getSecurityModules, IZoweTreeNode, ProfilesCache, ZoweTreeNode, getZoweDir } from "@zowe/zowe-explorer-api";
+import { Session, IProfile, IProfileLoaded, ProfileInfo, IConfigLayer } from "@zowe/imperative";
+import { getSecurityModules, IZoweTreeNode, ZoweTreeNode, getZoweDir, getFullPath } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import * as nls from "vscode-nls";
 
@@ -49,9 +49,13 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
         // open config file for missing hostname error
         const msg = errorDetails.toString();
         if (msg.includes("hostname")) {
-            if ((await globals.PROFILESCACHE.getProfileInfo()).usingTeamConfig) {
+            let mProfileInfo = await globals.PROFILESCACHE.getProfileInfo();
+            if (!mProfileInfo) {
+                mProfileInfo = await Profiles.getInstance().getProfileInfo();
+            }
+            if (mProfileInfo.usingTeamConfig) {
                 vscode.window.showErrorMessage("Required parameter 'host' must not be blank");
-                const currentProfile = await globals.PROFILESCACHE.getProfileFromConfig(label.trim());
+                const currentProfile = await mProfileInfo.getProfileFromConfig(label.trim());
                 const filePath = currentProfile.profLoc.osLoc[0];
                 await Profiles.getInstance().openConfigFile(filePath);
                 return;
@@ -63,7 +67,7 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
         // tslint:disable-next-line: no-magic-numbers
         case 401:
             if (label.includes("[")) {
-                label = label.substring(0, label.indexOf(" ["));
+                label = label.substring(0, label.indexOf(" [")).trim();
             }
 
             if (errorDetails.mDetails.additionalDetails) {
@@ -241,11 +245,29 @@ export async function readConfigFromDisk() {
     let rootPath;
     if (vscode.workspace.workspaceFolders) {
         rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
-        await mProfileInfo.readProfilesFromDisk({ projectDir: fs.realpathSync.native(rootPath) });
+        await mProfileInfo.readProfilesFromDisk({ projectDir: getFullPath(rootPath) });
     } else {
         await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir() });
     }
     if (mProfileInfo.usingTeamConfig) {
         globals.setConfigPath(rootPath);
+        globals.LOG.debug(
+            'Zowe Explorer is using the team configuration file "%s"',
+            mProfileInfo.getTeamConfig().configName
+        );
+        const layers = mProfileInfo.getTeamConfig().layers || [];
+        const layerSummary = layers.map(
+            (config: IConfigLayer) =>
+                `Path: ${config.path}: ${
+                    config.exists
+                        ? "Found, with the following defaults:" +
+                          JSON.stringify(config.properties?.defaults || "Undefined default")
+                        : "Not available"
+                } `
+        );
+        globals.LOG.debug(
+            "Summary of team configuration files considered for Zowe Explorer: %s",
+            JSON.stringify(layerSummary)
+        );
     }
 }

@@ -70,17 +70,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
 
     hideTempFolder(getZoweDir());
 
-    try {
-        if (!fs.existsSync(globals.ZOWETEMPFOLDER)) {
-            fs.mkdirSync(globals.ZOWETEMPFOLDER);
-            fs.mkdirSync(globals.ZOWE_TMP_FOLDER);
-            fs.mkdirSync(globals.USS_DIR);
-            fs.mkdirSync(globals.DS_DIR);
-        }
-    } catch (err) {
-        await errorHandling(err, null, err.message);
-    }
-
     let datasetProvider: IZoweTree<IZoweDatasetTreeNode>;
     let ussFileProvider: IZoweTree<IZoweUSSTreeNode>;
     let jobsProvider: IZoweTree<IZoweJobTreeNode>;
@@ -88,9 +77,19 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     try {
         globals.initLogger(context);
         globals.LOG.debug(localize("initialize.log.debug", "Initialized logger from VSCode extension"));
+    } catch (err) {
+        const errorMessage = localize(
+            "initialize.log.error",
+            "Error encountered while activating and initializing logger! "
+        );
+        vscode.window.showErrorMessage(errorMessage);
+        vscode.window.showErrorMessage(err.message);
+    }
 
+    try {
         // Ensure that ~/.zowe folder exists
         if (!ImperativeConfig.instance.config?.exists) {
+            // Should we replace the instance.config above with (await getProfileInfo(globals.ISTHEIA)).exists
             await CliProfileManager.initialize({
                 configuration: getImperativeConfig().profiles,
                 profileRootDirectory: path.join(getZoweDir(), "profiles"),
@@ -102,6 +101,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         // Initialize profile manager
         await Profiles.createInstance(globals.LOG);
 
+        if (!fs.existsSync(globals.ZOWETEMPFOLDER)) {
+            fs.mkdirSync(globals.ZOWETEMPFOLDER);
+            fs.mkdirSync(globals.ZOWE_TMP_FOLDER);
+            fs.mkdirSync(globals.USS_DIR);
+            fs.mkdirSync(globals.DS_DIR);
+        }
+
         // Initialize dataset provider
         datasetProvider = await createDatasetTree(globals.LOG);
         // Initialize uss provider
@@ -109,16 +115,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         // Initialize Jobs provider with the created session and the selected pattern
         jobsProvider = await createJobsTree(globals.LOG);
     } catch (err) {
-        await errorHandling(
-            err,
-            null,
-            localize("initialize.log.error", "Error encountered while activating and initializing logger! ")
-        );
-        globals.LOG.error(
-            localize("initialize.log.error", "Error encountered while activating and initializing logger! ") +
-                JSON.stringify(err)
-        );
+        const errorMessage = localize("initialize.profiles.error", "Error reading or initializing Zowe CLI profiles.");
+        vscode.window.showErrorMessage(errorMessage);
+        vscode.window.showErrorMessage(err.message);
     }
+
     // set a command to silently reload extension
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.extRefresh", async () => {
@@ -517,9 +518,10 @@ function initUSSProvider(context: vscode.ExtensionContext, ussFileProvider: IZow
         )
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.deleteNode", async (node: IZoweUSSTreeNode) =>
-            node.deleteUSSNode(ussFileProvider, node.getUSSDocumentFilePath())
-        )
+        vscode.commands.registerCommand("zowe.uss.deleteNode", (node: IZoweUSSTreeNode) => {
+            const tempNode = ussFileProvider.getTreeView().selection[0] as IZoweUSSTreeNode;
+            tempNode.deleteUSSNode(ussFileProvider, tempNode.getUSSDocumentFilePath());
+        })
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.uss.binary", async (node: IZoweUSSTreeNode) =>
