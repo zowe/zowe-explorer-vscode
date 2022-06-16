@@ -1338,10 +1338,9 @@ export class Profiles extends ProfilesCache {
     }
 
     private async updateBaseProfileFileLogout(profile: IProfileLoaded) {
-        const upd = { profileName: profile.name, profileType: profile.type };
         const mProfileInfo = await this.getProfileInfo();
         const setSecure = mProfileInfo.isSecured();
-        const prof = mProfileInfo.getAllProfiles(profile.type).find((prof) => prof.profName === profile.name);
+        const prof = mProfileInfo.getAllProfiles(profile.type).find((p) => p.profName === profile.name);
         const mergedArgs = mProfileInfo.mergeArgsForProfile(prof);
         await mProfileInfo.updateKnownProperty({ mergedArgs, property: "tokenValue", value: undefined, setSecure });
         await mProfileInfo.updateKnownProperty({ mergedArgs, property: "tokenType", value: undefined });
