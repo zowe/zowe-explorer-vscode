@@ -233,7 +233,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
     public findNonFavoritedNode(node: IZoweUSSTreeNode): IZoweUSSTreeNode {
         let matchingNode: IZoweUSSTreeNode;
         const profileName = node.getProfileName();
-        const sessionNode = this.mSessionNodes.find((session) => session.getProfileName() === profileName.trim());
+        const sessionNode = this.mSessionNodes.find((session) => session.getProfileName() === profileName);
         if (sessionNode) {
             matchingNode = this.findMatchInLoadedChildren(sessionNode, node.fullPath);
         }
@@ -305,7 +305,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         const setting = PersistentFilters.getDirectValue(globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION) as boolean;
         // Loads profile associated with passed sessionName, persisted profiles or default if none passed
         if (sessionName) {
-            const profile: IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
+            const profile: IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName.trim());
 
             if (profile) {
                 await this.addSingleSession(profile);
@@ -320,11 +320,13 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             const profiles = Profiles.getInstance().allProfiles;
             for (const theProfile of profiles) {
                 // If session is already added, do nothing
-                if (this.mSessionNodes.find((tempNode) => tempNode.label.toString() === theProfile.name)) {
+                if (
+                    this.mSessionNodes.find((tempNode) => tempNode.label.toString().trim() === theProfile.name.trim())
+                ) {
                     continue;
                 }
                 for (const session of this.mHistory.getSessions()) {
-                    if (session === theProfile.name) {
+                    if (session && session.trim() === theProfile.name) {
                         await this.addSingleSession(theProfile);
                         for (const node of this.mSessionNodes) {
                             const name = node.getProfileName();
@@ -404,7 +406,11 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         if (icon) {
             temp.iconPath = icon.path;
         }
-        if (!profileNodeInFavorites.children.find((tempNode) => tempNode.label === temp.label)) {
+        if (
+            !profileNodeInFavorites.children.find(
+                (tempNode) => tempNode.label.toString().trim() === temp.label.toString().trim()
+            )
+        ) {
             profileNodeInFavorites.children.push(temp);
             sortTreeItems(profileNodeInFavorites.children, globals.USS_SESSION_CONTEXT + globals.FAV_SUFFIX);
             sortTreeItems(this.mFavorites, globals.FAV_PROFILE_CONTEXT);
@@ -785,7 +791,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                     Profiles.getInstance().validProfile === ValidProfileEnum.VALID ||
                     Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED
                 ) {
-                    session = ZoweExplorerApiRegister.getUssApi(profile).getSession();
+                    session = await ZoweExplorerApiRegister.getUssApi(profile).getSession();
                     parentNode.setProfileToChoice(profile);
                     parentNode.setSessionToChoice(session);
                 } else {
@@ -923,7 +929,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 return;
             }
             // Uses loaded profile to create a session with the USS API
-            const session = ZoweExplorerApiRegister.getUssApi(profile).getSession();
+            const session = await ZoweExplorerApiRegister.getUssApi(profile).getSession();
             // Creates ZoweNode to track new session and pushes it to mSessionNodes
             const node = new ZoweUSSNode(
                 profile.name,
