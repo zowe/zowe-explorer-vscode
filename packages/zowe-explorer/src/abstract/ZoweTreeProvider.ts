@@ -122,7 +122,7 @@ export class ZoweTreeProvider {
             element.iconPath = icon.path;
         }
         element.dirty = true;
-        this.mOnDidChangeTreeData.fire(element);
+        if (isOpen) this.mOnDidChangeTreeData.fire(element);
     }
 
     public async onDidChangeConfiguration(e: vscode.ConfigurationChangeEvent) {
