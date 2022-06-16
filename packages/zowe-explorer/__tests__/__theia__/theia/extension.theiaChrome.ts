@@ -20,7 +20,7 @@ let driverChrome: any;
 
 export async function openBrowser() {
     const chromeOptions = new chrome.Options();
-    chromeOptions.addArguments("headless");
+    // chromeOptions.addArguments("headless");
     chromeOptions.addArguments("window-size=1200,1100");
     driverChrome = new Builder().forBrowser("chrome").setChromeOptions(chromeOptions).build();
 }
@@ -366,9 +366,11 @@ export async function addProfileDetails(profileName: string) {
     zosUrl.sendKeys(Key.ENTER);
     await driverChrome.sleep(SHORTSLEEPTIME);
     const username = await driverChrome.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
+    username.sendKeys("fake");
     username.sendKeys(Key.ENTER);
     await driverChrome.sleep(SHORTSLEEPTIME);
     const password = await driverChrome.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
+    password.sendKeys("fake");
     password.sendKeys(Key.ENTER);
     await driverChrome.sleep(SHORTSLEEPTIME);
     const authorization = await driverChrome.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));

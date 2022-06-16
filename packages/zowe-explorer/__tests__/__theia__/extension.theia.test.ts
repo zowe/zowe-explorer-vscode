@@ -201,6 +201,7 @@ describe("Remove Profile from Favorites", () => {
         await driverChrome.OpenTheiaInChrome();
         await driverChrome.sleepTime(SLEEPTIME);
         await driverChrome.clickOnZoweExplorer();
+        await driverFirefox.sleepTime(wait5sec);
     });
 
     it("Should Remove Profile from Favorites under DATA SETS", async () => {
