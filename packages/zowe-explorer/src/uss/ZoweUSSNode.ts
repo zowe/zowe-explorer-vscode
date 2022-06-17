@@ -153,6 +153,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         const responses: zowe.IZosFilesResponse[] = [];
         const sessNode = this.getSessionNode();
         try {
+            const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
             responses.push(
                 await vscode.window.withProgress(
                     {
@@ -160,7 +161,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                         title: localize("ZoweUssNode.getList.progress", "Get USS file list command submitted."),
                     },
                     () => {
-                        return ZoweExplorerApiRegister.getUssApi(this.getProfile()).fileList(this.fullPath);
+                        return ZoweExplorerApiRegister.getUssApi(cachedProfile).fileList(this.fullPath);
                     }
                 )
             );
@@ -355,6 +356,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
     public async deleteUSSNode(ussFileProvider: IZoweTree<IZoweUSSTreeNode>, filePath: string) {
         const deleteButton = localize("deleteUssPrompt.confirmation.delete", "Delete");
+        const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
         const message = localize(
             "deleteUssPrompt.confirmation.message",
             "Are you sure you want to delete the following item?\nThis will permanently remove the following file or folder from your system.\n\n{0}",
@@ -376,7 +378,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             return;
         }
         try {
-            await ZoweExplorerApiRegister.getUssApi(this.profile).delete(
+            await ZoweExplorerApiRegister.getUssApi(cachedProfile).delete(
                 this.fullPath,
                 contextually.isUssDirectory(this)
             );
@@ -488,22 +490,22 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 // if local copy exists, open that instead of pulling from mainframe
                 const documentFilePath = this.getUSSDocumentFilePath();
                 if (download || !fs.existsSync(documentFilePath)) {
-                    const profile = this.getProfile();
+                    const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
                     const fullPath = this.fullPath;
                     const chooseBinary =
                         this.binary ||
-                        (await ZoweExplorerApiRegister.getUssApi(profile).isFileTagBinOrAscii(this.fullPath));
+                        (await ZoweExplorerApiRegister.getUssApi(cachedProfile).isFileTagBinOrAscii(this.fullPath));
                     const response = await vscode.window.withProgress(
                         {
                             location: vscode.ProgressLocation.Notification,
                             title: "Opening USS file...",
                         },
                         function downloadUSSFile() {
-                            return ZoweExplorerApiRegister.getUssApi(profile).getContents(fullPath, {
+                            return ZoweExplorerApiRegister.getUssApi(cachedProfile).getContents(fullPath, {
                                 file: documentFilePath,
                                 binary: chooseBinary,
                                 returnEtag: true,
-                                encoding: profile.profile.encoding,
+                                encoding: cachedProfile.profile.encoding,
                             });
                         }
                     );
@@ -563,14 +565,14 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             }
 
             if ((isDirty && !this.isDirtyInEditor && !wasSaved) || !isDirty) {
-                const prof = this.getProfile();
-                const response = await ZoweExplorerApiRegister.getUssApi(prof).getContents(this.fullPath, {
+                const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
+                const response = await ZoweExplorerApiRegister.getUssApi(cachedProfile).getContents(this.fullPath, {
                     file: ussDocumentFilePath,
                     binary:
                         this.binary ||
-                        (await ZoweExplorerApiRegister.getUssApi(this.getProfile()).isFileTagBinOrAscii(this.fullPath)),
+                        (await ZoweExplorerApiRegister.getUssApi(cachedProfile).isFileTagBinOrAscii(this.fullPath)),
                     returnEtag: true,
-                    encoding: prof?.profile.encoding,
+                    encoding: cachedProfile?.profile.encoding,
                 });
                 this.setEtag(response.apiResponse.etag);
                 this.downloaded = true;

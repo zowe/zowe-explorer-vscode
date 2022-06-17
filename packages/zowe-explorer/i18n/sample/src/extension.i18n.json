@@ -5,6 +5,7 @@
   "createNewConnection.option.prompt.profileName.placeholder": "Connection Name",
   "createNewConnection.option.prompt.profileName": "Enter a name for the connection.",
   "createNewConnection.undefined.passWord": "Operation Cancelled",
+  "zowe.loadNamedProfile.error": "Error when updating credentials.",
   "promptCredentials.updatedCredentials": "Credentials for {0} were successfully updated",
   "onDidSaveTextDocument1": "File was saved -- determining whether the file is a USS file or Data set.\n Comparing (case insensitive) ",
   "onDidSaveTextDocument2": " against directory ",

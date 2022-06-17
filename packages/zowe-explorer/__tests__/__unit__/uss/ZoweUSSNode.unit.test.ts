@@ -76,6 +76,9 @@ async function createGlobalMocks() {
     globalMocks.openTextDocument.mockResolvedValue(globalMocks.mockTextDocument);
     globalMocks.mockTextDocuments.push(globalMocks.mockTextDocument);
     globalMocks.profileOps = createInstanceOfProfile(globalMocks.profileOne);
+    Object.defineProperty(globalMocks.profileOps, "loadNamedProfile", {
+        value: jest.fn(),
+    });
     globalMocks.ussApi = ZoweExplorerApiRegister.getUssApi(globalMocks.profileOne);
     globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.profileOne);
     globalMocks.getUssApiMock.mockReturnValue(globalMocks.ussApi);
