@@ -15,13 +15,14 @@ import { errorHandling } from "../utils/ProfilesUtils";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { ValidProfileEnum, IZoweTree, IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
-import { Job } from "./ZoweJobNode";
+import { Job, Spool } from "./ZoweJobNode";
 import * as nls from "vscode-nls";
 import { toUniqueJobFileUri } from "../SpoolProvider";
-import { IProfileLoaded } from "@zowe/imperative";
+import { IProfileLoaded, Session } from "@zowe/imperative";
 import * as globals from "../globals";
 import { refreshAll as refreshAllJobs } from "../shared/refresh";
 import { UIViews } from "../shared/ui-views";
+import { getDocumentFilePath } from "../shared/utils";
 
 // Set up localization
 nls.config({
@@ -88,6 +89,37 @@ export async function getSpoolContent(session: string, spool: zowe.IJobFile, ref
             return;
         }
     }
+}
+
+export async function getSpoolContentFromMainframe(node: IZoweJobTreeNode) {
+    let spools: zowe.IJobFile[] = [];
+    spools = await ZoweExplorerApiRegister.getJesApi(node.getProfile()).getSpoolFiles(
+        node.job?.jobname,
+        node.job?.jobid
+    );
+    spools = spools
+        // filter out all the objects which do not seem to be correct Job File Document types
+        // see an issue #845 for the details
+        .filter((item) => !(item.id === undefined && item.ddname === undefined && item.stepname === undefined));
+    spools.forEach(async (spool) => {
+        if (`${spool.stepname}:${spool.ddname}(${spool.id})` === node.label.toString()) {
+            let prefix = spool.stepname;
+            if (prefix === undefined) {
+                prefix = spool.procstep;
+            }
+            const spoolNode = new Spool(
+                `${spool.stepname}:${spool.ddname}(${spool.id})`,
+                vscode.TreeItemCollapsibleState.None,
+                node.getParent(),
+                node.getSession(),
+                spool,
+                node.job,
+                node.getParent()
+            );
+            node = spoolNode;
+            await getSpoolContent(node.getProfile().name, spool, Date.now());
+        }
+    });
 }
 
 /**
@@ -376,3 +408,22 @@ async function deleteMultipleJobs(
         await errorHandling(userMessage);
     }
 }
+
+// class Spool extends Job {
+//     constructor(
+//         label: string,
+//         mCollapsibleState: vscode.TreeItemCollapsibleState,
+//         mParent: IZoweJobTreeNode,
+//         session: Session,
+//         spool: zowe.IJobFile,
+//         job: zowe.IJob,
+//         parent: IZoweJobTreeNode
+//     ) {
+//         super(label, mCollapsibleState, mParent, session, job, parent.getProfile());
+//         this.contextValue = globals.JOBS_SPOOL_CONTEXT;
+//         const icon = getIconByNode(this);
+//         if (icon) {
+//             this.iconPath = icon.path;
+//         }
+//     }
+// }

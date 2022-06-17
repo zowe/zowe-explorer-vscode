@@ -27,8 +27,6 @@ import {
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import * as path from "path";
-import * as os from "os";
-import * as fs from "fs";
 import {
     IZoweTree,
     IZoweNodeType,
@@ -865,7 +863,7 @@ export class Profiles extends ProfilesCache {
         }
     }
 
-    public async promptCredentials(sessionName: string, rePrompt?: boolean) {
+    public async promptCredentials(sessionName: string, rePrompt?: boolean): Promise<string[]> {
         const userInputBoxOptions: vscode.InputBoxOptions = {
             placeHolder: localize("createNewConnection.option.prompt.username.placeholder", "User Name"),
             prompt: localize(
@@ -893,6 +891,9 @@ export class Profiles extends ProfilesCache {
             vscode.window.showInformationMessage(localize("promptCredentials.undefined.value", "Operation Cancelled"));
             return; // See https://github.com/zowe/vscode-extension-for-zowe/issues/1827
         }
+
+        await this.refresh(ZoweExplorerApiRegister.getInstance());
+
         const updSession = ZoweExplorerApiRegister.getMvsApi(promptInfo).getSession();
         const returnValue = [
             updSession.ISession.user,

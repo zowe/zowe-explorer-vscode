@@ -188,6 +188,16 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             }
 
             const creds = await Profiles.getInstance().promptCredentials(profileName, true);
+
+            try {
+                const updatedProfileInfo = Profiles.getInstance().loadNamedProfile(profileName);
+                node.setProfileToChoice(updatedProfileInfo);
+            } catch (err) {
+                const errorMessage = localize("zowe.loadNamedProfile.error", "Error when updating credentials.");
+                vscode.window.showErrorMessage(errorMessage);
+                vscode.window.showErrorMessage(err.message);
+            }
+
             if (creds != null) {
                 vscode.window.showInformationMessage(
                     localize(
@@ -651,6 +661,11 @@ function initJobsProvider(context: vscode.ExtensionContext, jobsProvider: IZoweT
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.jobs.refreshJob", async (job) => jobActions.refreshJob(job, jobsProvider))
+    );
+    context.subscriptions.push(
+        vscode.commands.registerCommand("zowe.jobs.refreshSpool", (node) =>
+            jobActions.getSpoolContentFromMainframe(node)
+        )
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.jobs.addJobsSession", () => jobsProvider.createZoweSession(jobsProvider))

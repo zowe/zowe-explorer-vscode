@@ -380,6 +380,10 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         const mockCheckCurrentProfile = jest.fn();
         bindJesApi(jesApi);
 
+        Object.defineProperty(profileInstance, "loadNamedProfile", {
+            value: jest.fn(),
+        });
+
         return {
             session,
             treeView,
