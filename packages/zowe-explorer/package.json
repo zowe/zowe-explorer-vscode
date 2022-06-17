@@ -682,6 +682,11 @@
         "command": "zowe.jobs.refreshJob",
         "title": "%jobs.refreshJob%",
         "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.jobs.refreshSpool",
+        "title": "%jobs.refreshSpool%",
+        "category": "Zowe Explorer"
       }
     ],
     "menus": {
@@ -1169,6 +1174,11 @@
           "group": "002_zowe_jobsWorkspace"
         },
         {
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^spool.*/",
+          "command": "zowe.jobs.refreshSpool",
+          "group": "003_zowe_jobsMainframeInteraction@0"
+        },
+        {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)job.*/",
           "command": "zowe.jobs.deleteJob",
           "group": "099_zowe_jobsModification"
@@ -1521,6 +1531,10 @@
         },
         {
           "command": "zowe.jobs.refreshJob",
+          "when": "never"
+        },
+        {
+          "command": "zowe.jobs.refreshSpool",
           "when": "never"
         },
         {
