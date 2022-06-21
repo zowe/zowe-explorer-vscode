@@ -96,6 +96,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
                 profileRootDirectory: path.join(zoweDir, "profiles"),
             });
 
+            // TODO(zFernand0): Will address the commented code below once this imperative issue is resolved.
+            // https://github.com/zowe/imperative/issues/840
+
             // const settingsPath = path.join(zoweDir, "settings");
             // if (!fs.existsSync(settingsPath)) {
             //     fs.mkdirSync(settingsPath);
