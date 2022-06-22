@@ -30,7 +30,7 @@ import {
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import { Profiles } from "./Profiles";
-import { errorHandling, readConfigFromDisk } from "./utils/ProfilesUtils";
+import { readConfigFromDisk } from "./utils/ProfilesUtils";
 import { CliProfileManager, ImperativeConfig } from "@zowe/imperative";
 import { getImperativeConfig } from "@zowe/cli";
 import { createDatasetTree } from "./dataset/DatasetTree";
@@ -89,11 +89,28 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     try {
         // Ensure that ~/.zowe folder exists
         if (!ImperativeConfig.instance.config?.exists) {
+            const zoweDir = getZoweDir();
             // Should we replace the instance.config above with (await getProfileInfo(globals.ISTHEIA)).exists
             await CliProfileManager.initialize({
                 configuration: getImperativeConfig().profiles,
-                profileRootDirectory: path.join(getZoweDir(), "profiles"),
+                profileRootDirectory: path.join(zoweDir, "profiles"),
             });
+
+            // TODO(zFernand0): Will address the commented code below once this imperative issue is resolved.
+            // https://github.com/zowe/imperative/issues/840
+
+            // const settingsPath = path.join(zoweDir, "settings");
+            // if (!fs.existsSync(settingsPath)) {
+            //     fs.mkdirSync(settingsPath);
+            // }
+            // const imperativeSettings = path.join(settingsPath, "imperative.json");
+            // if (!fs.existsSync(imperativeSettings)) {
+            //     fs.writeFileSync(imperativeSettings, JSON.stringify({
+            //         overrides: {
+            //             CredentialManager: "@zowe/cli"
+            //         }
+            //     }));
+            // }
         }
 
         await readConfigFromDisk();
@@ -137,6 +154,16 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
 
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.promptCredentials", async (node: IZoweTreeNode) => {
+            const mProfileInfo = await Profiles.getInstance().getProfileInfo();
+            if (!mProfileInfo.getTeamConfig().properties.autoStore) {
+                vscode.window.showInformationMessage(
+                    localize(
+                        "zowe.promptCredentials.notSupported",
+                        '"Update Credentials" operation not supported when "autoStore" is false'
+                    )
+                );
+                return;
+            }
             let profileName: string;
             if (node == null) {
                 // prompt for profile
