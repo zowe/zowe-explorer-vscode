@@ -22,26 +22,24 @@ const profile = {
     profile: { host: "1.1.1.1", user: "user", password: "password", port: "21", rejectUnauthorized: false },
 };
 describe("AbstractFtpApi", () => {
-    it("should add a record in sessionMap when call getSession function.", async () => {
-        let instance;
-        instance = new Dummy();
-        const result = await instance.getSession(profile);
+    it("should add a record in sessionMap when call getSession function.", () => {
+        const instance = new Dummy();
+        const result = instance.getSession(profile);
 
         expect(result).toBeInstanceOf(FtpSession);
-        expect(result.mISession.hostname).toBe("1.1.1.1");
+        expect(result.ISession.hostname).toBe("1.1.1.1");
         expect(sessionMap.size).toBe(1);
     });
 
     it("should remove the record in sessionMap when call logout function.", async () => {
-        let instance;
-        instance = new Dummy();
-        const result = await instance.getSession(profile);
-        const session = new FtpSession(result.mISession);
+        const instance = new Dummy();
+        const result = instance.getSession(profile);
+        const session = new FtpSession(result.ISession);
         sessionMap.get = jest.fn().mockReturnValue(session);
         session.releaseConnections = jest.fn();
 
         await instance.logout(session);
-
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         expect(session.releaseConnections).toBeCalledTimes(1);
         expect(sessionMap.size).toBe(0);
     });
