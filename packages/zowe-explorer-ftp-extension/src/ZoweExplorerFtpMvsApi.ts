@@ -30,29 +30,27 @@ import { ZoweLogger } from "./extension";
 export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
     public async dataSet(filter: string, options?: zowe.IListOptions): Promise<zowe.IZosFilesResponse> {
         const result = this.getDefaultResponse();
-        let connection: any;
-        try {
-            connection = await this.ftpClient(this.checkedProfile());
-            if (connection) {
-                const response: any[] = await DataSetUtils.listDataSets(connection, filter);
-                if (response) {
-                    result.success = true;
-                    result.apiResponse.items = response.map((element) => ({
-                        dsname: element.dsname,
-                        dsorg: element.dsorg,
-                        volume: element.volume,
-                        recfm: element.recfm,
-                        blksz: element.blksz,
-                        lrecl: element.lrecl,
-                        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-                        migr: element.volume && element.volume.toUpperCase() === "MIGRATED" ? "YES" : "NO",
-                    }));
-                }
-            }
-            return result;
-        } finally {
-            this.releaseConnection(connection);
+        const session = this.getSession(this.profile);
+        if (session.mvsListConnection === undefined || session.mvsListConnection.connected === false) {
+            session.mvsListConnection = await this.ftpClient(this.checkedProfile());
         }
+        if (session.mvsListConnection.connected === true) {
+            const response: any[] = await DataSetUtils.listDataSets(session.mvsListConnection, filter);
+            if (response) {
+                result.success = true;
+                result.apiResponse.items = response.map((element) => ({
+                    dsname: element.dsname,
+                    dsorg: element.dsorg,
+                    volume: element.volume,
+                    recfm: element.recfm,
+                    blksz: element.blksz,
+                    lrecl: element.lrecl,
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+                    migr: element.volume && element.volume.toUpperCase() === "MIGRATED" ? "YES" : "NO",
+                }));
+            }
+        }
+        return result;
     }
 
     public async allMembers(dataSetName: string, options?: zowe.IListOptions): Promise<zowe.IZosFilesResponse> {
