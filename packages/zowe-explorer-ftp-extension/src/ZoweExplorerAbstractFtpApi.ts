@@ -13,10 +13,11 @@
 import * as imperative from "@zowe/imperative";
 import { FTPConfig, IZosFTPProfile } from "@zowe/zos-ftp-for-zowe-cli";
 import { MessageSeverityEnum, ZoweExplorerApi, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
-import { ZoweLogger } from "./extension";
+import { sessionMap, ZoweLogger } from "./extension";
+import { FtpSession } from "./ftpSession";
 
 export abstract class AbstractFtpApi implements ZoweExplorerApi.ICommon {
-    private session?: imperative.Session;
+    private session?: FtpSession;
 
     public constructor(public profile?: imperative.IProfileLoaded) {}
 
@@ -24,7 +25,8 @@ export abstract class AbstractFtpApi implements ZoweExplorerApi.ICommon {
         return "zftp";
     }
 
-    public getSession(profile?: imperative.IProfileLoaded): imperative.Session {
+    public getSession(profile?: imperative.IProfileLoaded): FtpSession {
+        this.session = sessionMap.get(this.profile);
         if (!this.session) {
             const ftpProfile = (profile || this.profile)?.profile;
             if (!ftpProfile) {
@@ -35,13 +37,15 @@ export abstract class AbstractFtpApi implements ZoweExplorerApi.ICommon {
                 );
                 throw new Error();
             }
-            this.session = new imperative.Session({
+
+            this.session = new FtpSession({
                 hostname: ftpProfile.host,
                 port: ftpProfile.port,
                 user: ftpProfile.user,
                 password: ftpProfile.password,
                 rejectUnauthorized: ftpProfile.rejectUnauthorized,
             });
+            sessionMap.set(this.profile, this.session);
         }
         return this.session;
     }
@@ -80,6 +84,15 @@ export abstract class AbstractFtpApi implements ZoweExplorerApi.ICommon {
             connection.close();
             return;
         }
+    }
+
+    public logout(session: any): Promise<void> {
+        const ftpsession = sessionMap.get(this.profile);
+        if (ftpsession !== undefined) {
+            ftpsession.releaseConnections();
+            sessionMap.delete(this.profile);
+        }
+        return;
     }
 
     public async getStatus(validateProfile?: imperative.IProfileLoaded, profileType?: string): Promise<string> {
