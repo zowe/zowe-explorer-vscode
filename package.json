@@ -1,6 +1,6 @@
 {
   "name": "zowe-explorer",
-  "version": "2.1.0",
+  "version": "2.2.0-SNAPSHOT",
   "description": "Monorepo for the Zowe Explorer project.",
   "publisher": "Zowe",
   "author": "Zowe",
