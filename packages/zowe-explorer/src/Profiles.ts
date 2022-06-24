@@ -889,7 +889,6 @@ export class Profiles extends ProfilesCache {
             },
             ZoweExplorerApiRegister.getInstance()
         );
-        console.log(promptInfo);
         if (!promptInfo) {
             vscode.window.showInformationMessage(localize("promptCredentials.undefined.value", "Operation Cancelled"));
             return; // See https://github.com/zowe/vscode-extension-for-zowe/issues/1827
