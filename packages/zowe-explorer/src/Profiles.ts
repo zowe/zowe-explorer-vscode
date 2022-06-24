@@ -879,20 +879,23 @@ export class Profiles extends ProfilesCache {
             ),
         };
 
-        const promptInfo = await ZoweVsCodeExtension.promptCredentials({
-            sessionName,
-            rePrompt,
-            secure: (await this.getProfileInfo()).isSecured(),
-            userInputBoxOptions,
-            passwordInputBoxOptions,
-        });
-
+        const promptInfo = await ZoweVsCodeExtension.updateCredentials(
+            {
+                sessionName,
+                rePrompt,
+                secure: (await this.getProfileInfo()).isSecured(),
+                userInputBoxOptions,
+                passwordInputBoxOptions,
+            },
+            ZoweExplorerApiRegister.getInstance()
+        );
+        console.log(promptInfo);
         if (!promptInfo) {
             vscode.window.showInformationMessage(localize("promptCredentials.undefined.value", "Operation Cancelled"));
             return; // See https://github.com/zowe/vscode-extension-for-zowe/issues/1827
         }
 
-        await this.refresh(ZoweExplorerApiRegister.getInstance());
+        // await this.refresh(ZoweExplorerApiRegister.getInstance());
 
         const updSession = ZoweExplorerApiRegister.getMvsApi(promptInfo).getSession();
         const returnValue = [
@@ -900,10 +903,10 @@ export class Profiles extends ProfilesCache {
             updSession.ISession.password,
             updSession.ISession.base64EncodedAuth,
         ];
-        if ((await this.getProfileInfo()).usingTeamConfig) {
-            const promptedTypeIndex = this.allProfiles.findIndex((profile) => profile.type === promptInfo.type);
-            this.allProfiles[promptedTypeIndex] = promptInfo;
-        }
+        // if ((await this.getProfileInfo()).usingTeamConfig) {
+        const promptedTypeIndex = this.allProfiles.findIndex((profile) => profile.type === promptInfo.type);
+        this.allProfiles[promptedTypeIndex] = promptInfo;
+        // }
         return returnValue;
     }
 

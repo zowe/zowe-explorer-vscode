@@ -155,7 +155,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.promptCredentials", async (node: IZoweTreeNode) => {
             const mProfileInfo = await Profiles.getInstance().getProfileInfo();
-            if (!mProfileInfo.getTeamConfig().properties.autoStore) {
+            if (mProfileInfo.usingTeamConfig && !mProfileInfo.getTeamConfig().properties.autoStore) {
                 vscode.window.showInformationMessage(
                     localize(
                         "zowe.promptCredentials.notSupported",

@@ -72,6 +72,7 @@ export class ZoweVsCodeExtension {
      * Helper function to standardize the way we ask the user for credentials
      * @param options Set of options to use when prompting for credentials
      * @returns Instance of imperative.IProfileLoaded containing information about the updated profile
+     * @deprecated
      */
     public static async promptCredentials(options: IPromptCredentialsOptions): Promise<imperative.IProfileLoaded> {
         const loadProfile = await this.profilesCache.getLoadedProfConfig(options.sessionName.trim());
@@ -91,6 +92,40 @@ export class ZoweVsCodeExtension {
             await (
                 await this.profilesCache.getProfileInfo()
             ).updateProperty({ ...upd, property: "password", value: creds[1], setSecure: options.secure });
+
+            return loadProfile;
+        }
+        return undefined;
+    }
+
+    /**
+     * Helper function to standardize the way we ask the user for credentials that updates ProfilesCache
+     * @param options Set of options to use when prompting for credentials
+     * @returns Instance of imperative.IProfileLoaded containing information about the updated profile
+     */
+    public static async updateCredentials(
+        options: IPromptCredentialsOptions,
+        apiRegister?: ZoweExplorerApi.IApiRegisterClient
+    ): Promise<imperative.IProfileLoaded> {
+        const loadProfile = await this.profilesCache.getLoadedProfConfig(options.sessionName.trim());
+        if (loadProfile == null) return undefined;
+        const loadSession = loadProfile.profile as imperative.ISession;
+
+        const creds = await ZoweVsCodeExtension.promptUserPass({ session: loadSession, ...options });
+
+        if (creds && creds.length > 0) {
+            loadProfile.profile.user = loadSession.user = creds[0];
+            loadProfile.profile.password = loadSession.password = creds[1];
+
+            const upd = { profileName: loadProfile.name, profileType: loadProfile.type };
+            await (
+                await this.profilesCache.getProfileInfo()
+            ).updateProperty({ ...upd, property: "user", value: creds[0], setSecure: options.secure });
+            await (
+                await this.profilesCache.getProfileInfo()
+            ).updateProperty({ ...upd, property: "password", value: creds[1], setSecure: options.secure });
+
+            await this.profilesCache.refresh(apiRegister);
 
             return loadProfile;
         }
