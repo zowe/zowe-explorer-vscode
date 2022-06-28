@@ -387,3 +387,12 @@ export function getBaseContext(node: TreeItem): string {
         ? node.contextValue.substring(0, node.contextValue.indexOf(globals.CONTEXT_PREFIX))
         : node.contextValue;
 }
+
+/**
+ * Helper function check if a node has validation enabled
+ * @param node
+ * @return true if validation is enabled, false otherwise
+ */
+export function isValidationEnabled(node: TreeItem): boolean {
+    return new RegExp("(" + globals.VALIDATE_SUFFIX + "true)").test(node.contextValue);
+}
