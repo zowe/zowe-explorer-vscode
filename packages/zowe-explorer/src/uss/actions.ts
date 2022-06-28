@@ -291,17 +291,9 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
                 location: vscode.ProgressLocation.Window,
                 title: localize("saveUSSFile.response.title", "Saving file..."),
             },
-            async () => {
+            () => {
                 handleSaveStacking();
-                return await uploadContent(
-                    sesNode,
-                    doc,
-                    remote,
-                    sesNode.getProfile(),
-                    binary,
-                    etagToUpload,
-                    returnEtag
-                );
+                return uploadContent(sesNode, doc, remote, sesNode.getProfile(), binary, etagToUpload, returnEtag);
             }
         );
         if (uploadResponse.success) {
