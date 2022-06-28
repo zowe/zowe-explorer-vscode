@@ -25,7 +25,7 @@ import { getIconByNode } from "../generators/icons";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { DatasetTree } from "./DatasetTree";
 import * as contextually from "../shared/context";
-import { setFileSaved } from "../utils/workspace";
+import { handleSaveStacking, setFileSaved } from "../utils/workspace";
 import { UIViews } from "../shared/ui-views";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 
@@ -1398,6 +1398,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
                 title: localize("saveFile.response.save.title", "Saving data set..."),
             },
             () => {
+                handleSaveStacking();
                 const prof = node?.getProfile() ?? profile;
                 if (prof.profile.encoding) {
                     uploadOptions.encoding = prof.profile.encoding;

@@ -365,6 +365,10 @@ export namespace workspace {
         };
     }
 
+    export function onWillSaveTextDocument(event) {
+        return Disposable;
+    }
+
     /**
      * ~~The folder that is open in the editor. `undefined` when no folder
      * has been opened.~~
