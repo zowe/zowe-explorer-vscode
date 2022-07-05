@@ -25,33 +25,32 @@ import { ZoweLogger } from "./extension";
 export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
     public async getJobsByOwnerAndPrefix(owner: string, prefix: string): Promise<zowe.IJob[]> {
         const result = this.getIJobResponse();
-        let connection: any;
-        try {
-            connection = await this.ftpClient(this.checkedProfile());
-            if (connection) {
-                const options = {
-                    owner: owner,
-                };
-                const response = await JobUtils.listJobs(connection, prefix, options);
-                if (response) {
-                    const results = response.map((job: IJob) => {
-                        return {
-                            ...result,
-                            /* it’s prepared for the potential change in zftp api, renaming jobid to jobId, jobname to jobName. */
-                            jobid: (job as any).jobId || job.jobid,
-                            jobname: (job as any).jobName || job.jobname,
-                            owner: job.owner,
-                            class: job.class,
-                            status: job.status,
-                        };
-                    });
-                    return results;
-                }
-            }
-            return [result];
-        } finally {
-            this.releaseConnection(connection);
+        const session = this.getSession(this.profile);
+        if (session.jesListConnection === undefined || session.jesListConnection.connected === false) {
+            session.jesListConnection = await this.ftpClient(this.checkedProfile());
         }
+
+        if (session.jesListConnection.connected === true) {
+            const options = {
+                owner: owner,
+            };
+            const response = await JobUtils.listJobs(session.jesListConnection, prefix, options);
+            if (response) {
+                const results = response.map((job: IJob) => {
+                    return {
+                        ...result,
+                        /* it’s prepared for the potential change in zftp api, renaming jobid to jobId, jobname to jobName. */
+                        jobid: (job as any).jobId || job.jobid,
+                        jobname: (job as any).jobName || job.jobname,
+                        owner: job.owner,
+                        class: job.class,
+                        status: job.status,
+                    };
+                });
+                return results;
+            }
+        }
+        return [result];
     }
 
     public async getJob(jobid: string): Promise<zowe.IJob> {

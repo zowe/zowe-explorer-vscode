@@ -17,6 +17,7 @@ import { FtpMvsApi } from "../../../src/ZoweExplorerFtpMvsApi";
 import { DataSetUtils } from "@zowe/zos-ftp-for-zowe-cli";
 import TestUtils from "../utils/TestUtils";
 import * as tmp from "tmp";
+import { sessionMap } from "../../../src/extension";
 
 // two methods to mock modules: create a __mocks__ file for zowe-explorer-api.ts and direct mock for extension.ts
 jest.mock("../../../__mocks__/@zowe/zowe-explorer-api.ts");
@@ -35,6 +36,7 @@ describe("FtpMvsApi", () => {
         MvsApi.checkedProfile = jest.fn().mockReturnValue({ message: "success", type: "zftp", failNotFound: false });
         MvsApi.ftpClient = jest.fn().mockReturnValue({ host: "", user: "", password: "", port: "" });
         MvsApi.releaseConnection = jest.fn();
+        sessionMap.get = jest.fn().mockReturnValue({ mvsListConnection: { connected: true } });
     });
 
     it("should list datasets.", async () => {
@@ -50,7 +52,7 @@ describe("FtpMvsApi", () => {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         expect(result.apiResponse.items[0].dsname).toContain("IBMUSER.DS1");
         expect(DataSetUtils.listDataSets).toBeCalledTimes(1);
-        expect(MvsApi.releaseConnection).toBeCalled();
+        expect(MvsApi.releaseConnection).toHaveBeenCalledTimes(0);
     });
 
     it("should list dataset members.", async () => {
