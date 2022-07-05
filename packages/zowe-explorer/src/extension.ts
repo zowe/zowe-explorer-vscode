@@ -279,7 +279,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
                 );
 
                 if (!savedFile.document.isDirty) {
-                    return;
+                    globals.LOG.debug(
+                        localize("activate.didSaveText.file", "File ") +
+                            savedFile.document.fileName +
+                            localize("activate.didSaveText.notDirty", " is not a dirty file ")
+                    );
                 } else if (savedFile.document.fileName.toUpperCase().indexOf(globals.DS_DIR.toUpperCase()) >= 0) {
                     globals.LOG.debug(localize("activate.didSaveText.isDataSet", "File is a data set-- saving "));
                     await dsActions.saveFile(savedFile.document, datasetProvider); // TODO MISSED TESTING
