@@ -87,10 +87,10 @@ export class ZoweVsCodeExtension {
             const upd = { profileName: loadProfile.name, profileType: loadProfile.type };
             await (
                 await this.profilesCache.getProfileInfo()
-            ).updateProperty({ ...upd, property: "user", value: creds[0] });
+            ).updateProperty({ ...upd, property: "user", value: creds[0], setSecure: options.secure });
             await (
                 await this.profilesCache.getProfileInfo()
-            ).updateProperty({ ...upd, property: "password", value: creds[1] });
+            ).updateProperty({ ...upd, property: "password", value: creds[1], setSecure: options.secure });
 
             return loadProfile;
         }
