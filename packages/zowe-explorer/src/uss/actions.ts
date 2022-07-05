@@ -22,7 +22,7 @@ import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { isBinaryFileSync } from "isbinaryfile";
 import { Session, ITaskWithStatus } from "@zowe/imperative";
 import * as contextually from "../shared/context";
-import { handleSaveStacking, setFileSaved } from "../utils/workspace";
+import { setFileSaved } from "../utils/workspace";
 import * as nls from "vscode-nls";
 import { refreshAll } from "../shared/refresh";
 import { UIViews } from "../shared/ui-views";
@@ -292,7 +292,6 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
                 title: localize("saveUSSFile.response.title", "Saving file..."),
             },
             () => {
-                handleSaveStacking();
                 return uploadContent(sesNode, doc, remote, sesNode.getProfile(), binary, etagToUpload, returnEtag);
             }
         );

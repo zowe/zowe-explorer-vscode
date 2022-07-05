@@ -27,7 +27,6 @@ import { ISession, IProfileLoaded, ITaskWithStatus } from "@zowe/imperative";
 import * as nls from "vscode-nls";
 import { IZosFilesResponse } from "@zowe/cli";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
-import { handleSaveStacking } from "../utils/workspace";
 
 // Set up localization
 nls.config({
@@ -290,7 +289,6 @@ export async function willForceUpload(
                         title,
                     },
                     () => {
-                        handleSaveStacking();
                         return uploadContent(node, doc, remotePath, profile, binary, null, returnEtag);
                     }
                 );

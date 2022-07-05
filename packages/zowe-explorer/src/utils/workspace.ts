@@ -129,26 +129,3 @@ export async function closeOpenedTextFile(path: string) {
 
     return false;
 }
-
-/**
- * Handles saving stacking issue by queueing saves as TextEdit until the user has
- * completed their edits and proceeds to save each TextEdit in a FIFO structure.
- */
-export function handleSaveStacking(): void {
-    const saveListener = vscode.workspace.onWillSaveTextDocument(async (save) => {
-        const preSaveEditsQueue: Thenable<vscode.TextEdit[]> = new Promise((resolve) => {
-            const documentListener = vscode.workspace.onDidChangeTextDocument(async (document) => {
-                const changes: vscode.TextEdit[] = document.contentChanges.map((change) => {
-                    return new vscode.TextEdit(change.range, change.text);
-                });
-                const completedTypingEdits = async () => {
-                    await documentListener.dispose();
-                    await saveListener.dispose();
-                    return changes;
-                };
-                resolve(await completedTypingEdits());
-            });
-        });
-        save.waitUntil(preSaveEditsQueue);
-    });
-}

@@ -265,28 +265,31 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             )
         );
         context.subscriptions.push(
-            vscode.workspace.onDidSaveTextDocument(async (savedFile) => {
+            vscode.workspace.onWillSaveTextDocument(async (savedFile) => {
                 globals.LOG.debug(
                     localize(
                         "onDidSaveTextDocument1",
                         "File was saved -- determining whether the file is a USS file or Data set.\n Comparing (case insensitive) "
                     ) +
-                        savedFile.fileName +
+                        savedFile.document.fileName +
                         localize("onDidSaveTextDocument2", " against directory ") +
                         globals.DS_DIR +
                         localize("onDidSaveTextDocument3", "and") +
                         globals.USS_DIR
                 );
-                if (savedFile.fileName.toUpperCase().indexOf(globals.DS_DIR.toUpperCase()) >= 0) {
+
+                if (!savedFile.document.isDirty) {
+                    return;
+                } else if (savedFile.document.fileName.toUpperCase().indexOf(globals.DS_DIR.toUpperCase()) >= 0) {
                     globals.LOG.debug(localize("activate.didSaveText.isDataSet", "File is a data set-- saving "));
-                    await dsActions.saveFile(savedFile, datasetProvider); // TODO MISSED TESTING
-                } else if (savedFile.fileName.toUpperCase().indexOf(globals.USS_DIR.toUpperCase()) >= 0) {
+                    await dsActions.saveFile(savedFile.document, datasetProvider); // TODO MISSED TESTING
+                } else if (savedFile.document.fileName.toUpperCase().indexOf(globals.USS_DIR.toUpperCase()) >= 0) {
                     globals.LOG.debug(localize("activate.didSaveText.isUSSFile", "File is a USS file -- saving"));
-                    await ussActions.saveUSSFile(savedFile, ussFileProvider); // TODO MISSED TESTING
+                    await ussActions.saveUSSFile(savedFile.document, ussFileProvider); // TODO MISSED TESTING
                 } else {
                     globals.LOG.debug(
                         localize("activate.didSaveText.file", "File ") +
-                            savedFile.fileName +
+                            savedFile.document.fileName +
                             localize("activate.didSaveText.notDataSet", " is not a data set or USS file ")
                     );
                 }
