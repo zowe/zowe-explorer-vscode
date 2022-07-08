@@ -9,7 +9,6 @@
  *                                                                                 *
  */
 
-// import * as zowe from "@zowe/cli";
 import * as fs from "fs";
 import * as path from "path";
 import * as globals from "./globals";
@@ -305,110 +304,79 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     return ZoweExplorerApiRegister.getInstance();
 }
 
-// TODO: My stuff
 async function watchConfigProfile(context: vscode.ExtensionContext) {
-    // const reloadButton = localize("createZoweSchema.reload.button", "Refresh Zowe Explorer");
-    // zoweConfigProfilePath.config.opts.homeDir  zoweConfigProfilePath.config.opts.projectDir zoweConfigProfilePath.cliHome
-    // project path: vscode.workspace.workspaceFolders?.[0].uri.fsPath;
-    const zoweConfigProfilePath = ImperativeConfig.instance;
-    console.log(zoweConfigProfilePath);
-    // Need to handle global and personal profiles!!!
+    const zoweFilesInfo = ImperativeConfig.instance;
     // Test on Windows
-    // Make the profile file is valid!
+    // Make sure the profile file is valid!
     // https://code.visualstudio.com/api/references/vscode-api
 
     // TODO: zowe.config.json needs to be a constant. Watch for yaml?
     const globalProfileWatcher = vscode.workspace.createFileSystemWatcher(
-        new vscode.RelativePattern(zoweConfigProfilePath.cliHome, "zowe.config.json")
+        new vscode.RelativePattern(zoweFilesInfo.cliHome, "zowe.config.json")
     );
 
-    // TODO: Check if exists
     const workspaceProfileWatcher = vscode.workspace.createFileSystemWatcher(
-        new vscode.RelativePattern(vscode.workspace.workspaceFolders?.[0].uri.fsPath, "zowe.config.json")
+        new vscode.RelativePattern(vscode.workspace.workspaceFolders?.[0].uri.fsPath, "zowe.config.user.json")
     );
     context.subscriptions.push(globalProfileWatcher, workspaceProfileWatcher);
 
-    globalProfileWatcher.onDidCreate(async (uri: vscode.Uri) => {
+    const onCreateProfileAction = async function (uri: vscode.Uri) {
         console.log(uri, "Global config profile has been created!");
-        const infoMsg = localize(
-            "createZoweSchema.reload.infoMessage",
-            "Team Configuration file created at {0}.",
-            "rootPath"
-        );
+        const infoMsg = localize("createZoweSchema.reload.infoMessage", "Configuration file created at {0}.", uri.path);
         void vscode.window.showInformationMessage(infoMsg);
         await vscode.commands.executeCommand("zowe.extRefresh");
+    };
+
+    const onChangeProfileAction = async function (uri: vscode.Uri) {
+        const stats = fs.statSync(uri.fsPath);
+        const now = stats.mtime.getTime();
+        if (lastChanged < now) {
+            lastChanged = now;
+            console.log(uri, "Zowe profile Config changed!", lastChanged);
+            // TODO: Fix line break
+            const infoMsg = localize(
+                "createZoweSchema.reload.infoMessage",
+                "Team Configuration file at {0} has been updated. \n Zowe Explorer has been refreshed",
+                uri.path
+            );
+            void vscode.window.showInformationMessage(infoMsg);
+            await vscode.commands.executeCommand("zowe.extRefresh");
+        }
+    };
+
+    const onDeleteProfileAction = async function (uri: vscode.Uri) {
+        console.log(uri, "Global config profile has been deleted!");
+        const infoMsg = localize(
+            "createZoweSchema.reload.infoMessage",
+            "Team Configuration file at {0} has been deleted. \n Zowe Explorer has been refreshed",
+            uri.path
+        );
+        void vscode.window.showWarningMessage(infoMsg);
+        await vscode.commands.executeCommand("zowe.extRefresh");
+    };
+
+    globalProfileWatcher.onDidCreate(async (uri: vscode.Uri) => {
+        await onCreateProfileAction(uri);
     });
 
     globalProfileWatcher.onDidChange(async (uri: vscode.Uri) => {
-        const stats = fs.statSync(uri.fsPath);
-        const now = stats.mtime.getTime();
-        if (lastChanged < now) {
-            lastChanged = now;
-            console.log(uri, "Zowe profile Config changed!", lastChanged);
-            // await readConfigFromDisk();
-            // Initialize profile manager
-            // await Profiles.createInstance(globals.LOG);
-            const infoMsg = localize(
-                "createZoweSchema.reload.infoMessage",
-                "Team Configuration file at {0} has been updated. \n Zowe Explorer has been refreshed",
-                "rootPath"
-            );
-            void vscode.window.showInformationMessage(infoMsg);
-            await vscode.commands.executeCommand("zowe.extRefresh");
-            // await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
-            // await refreshActions.refreshAll(datasetProvider);
-            // await refreshActions.refreshAll(ussFileProvider);
-            // await refreshActions.refreshAll(jobsProvider);
-        }
+        await onChangeProfileAction(uri);
     });
 
     globalProfileWatcher.onDidDelete(async (uri: vscode.Uri) => {
-        console.log(uri, "Global config profile has been deleted!");
-        const infoMsg = localize(
-            "createZoweSchema.reload.infoMessage",
-            "Team Configuration file at {0} has been deleted. \n Zowe Explorer has been refreshed",
-            "rootPath"
-        );
-        void vscode.window.showWarningMessage(infoMsg);
-        await vscode.commands.executeCommand("zowe.extRefresh");
+        await onDeleteProfileAction(uri);
     });
 
     workspaceProfileWatcher.onDidCreate(async (uri: vscode.Uri) => {
-        console.log(uri, "Global config profile has been created!");
-        const infoMsg = localize(
-            "createZoweSchema.reload.infoMessage",
-            "Team Configuration file created at {0}.",
-            "rootPath"
-        );
-        void vscode.window.showInformationMessage(infoMsg);
-        await vscode.commands.executeCommand("zowe.extRefresh");
+        await onCreateProfileAction(uri);
     });
 
     workspaceProfileWatcher.onDidChange(async (uri: vscode.Uri) => {
-        const stats = fs.statSync(uri.fsPath);
-        const now = stats.mtime.getTime();
-        if (lastChanged < now) {
-            lastChanged = now;
-            console.log(uri, "Zowe profile Config changed!", lastChanged);
-            const infoMsg = localize(
-                "createZoweSchema.reload.infoMessage",
-                "Team Configuration file at {0} has been updated. \n Zowe Explorer has been refreshed",
-                "rootPath"
-            );
-            void vscode.window.showInformationMessage(infoMsg);
-            await vscode.commands.executeCommand("zowe.extRefresh");
-        }
+        await onChangeProfileAction(uri);
     });
 
     workspaceProfileWatcher.onDidDelete(async (uri: vscode.Uri) => {
-        console.log(uri, "Global config profile has been deleted!");
-        const infoMsg = localize(
-            "createZoweSchema.reload.infoMessage",
-            "Team Configuration file at {0} has been deleted. \n Zowe Explorer has been refreshed",
-            "rootPath"
-        );
-        void vscode.window.showWarningMessage(infoMsg);
-        await vscode.commands.executeCommand("zowe.extRefresh");
+        await onDeleteProfileAction(uri);
     });
 }
 
