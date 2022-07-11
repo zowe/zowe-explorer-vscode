@@ -278,7 +278,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
                         globals.USS_DIR
                 );
 
-                if (!savedFile.document.isDirty) {
+                const autoSaveEnabled = vscode.workspace.getConfiguration("files").autoSave === "off";
+                if (!savedFile.document.isDirty && autoSaveEnabled) {
                     globals.LOG.debug(
                         localize("activate.didSaveText.file", "File ") +
                             savedFile.document.fileName +
