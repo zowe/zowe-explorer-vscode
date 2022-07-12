@@ -50,6 +50,7 @@ nls.config({
 })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 let lastChanged = 0;
+let savedProfileContents = new Uint8Array();
 
 /**
  * The function that runs when the extension is loaded
@@ -332,6 +333,12 @@ async function watchConfigProfile(context: vscode.ExtensionContext) {
         const now = stats.mtime.getTime();
         if (lastChanged < now) {
             lastChanged = now;
+            const newProfileContents = await vscode.workspace.fs.readFile(uri);
+            if (newProfileContents.toString() === savedProfileContents.toString()) {
+                return;
+            }
+            savedProfileContents = newProfileContents;
+            console.log("Saved profile is....", savedProfileContents.toString());
             console.log(uri, "Zowe profile Config changed!", lastChanged);
             // TODO: Fix line break
             const infoMsg = localize(
