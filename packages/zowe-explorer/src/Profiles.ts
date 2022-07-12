@@ -894,18 +894,13 @@ export class Profiles extends ProfilesCache {
             return; // See https://github.com/zowe/vscode-extension-for-zowe/issues/1827
         }
 
-        // await this.refresh(ZoweExplorerApiRegister.getInstance());
-
         const updSession = ZoweExplorerApiRegister.getMvsApi(promptInfo).getSession();
         const returnValue = [
             updSession.ISession.user,
             updSession.ISession.password,
             updSession.ISession.base64EncodedAuth,
         ];
-        // if ((await this.getProfileInfo()).usingTeamConfig) {
-        const promptedTypeIndex = this.allProfiles.findIndex((profile) => profile.type === promptInfo.type);
-        this.allProfiles[promptedTypeIndex] = promptInfo;
-        // }
+        this.updateProfilesArrays(promptInfo);
         return returnValue;
     }
 

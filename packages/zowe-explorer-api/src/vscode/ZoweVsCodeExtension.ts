@@ -105,27 +105,36 @@ export class ZoweVsCodeExtension {
      */
     public static async updateCredentials(
         options: IPromptCredentialsOptions,
-        apiRegister?: ZoweExplorerApi.IApiRegisterClient
+        apiRegister: ZoweExplorerApi.IApiRegisterClient
     ): Promise<imperative.IProfileLoaded> {
-        const loadProfile = await this.profilesCache.getLoadedProfConfig(options.sessionName.trim());
-        if (loadProfile == null) return undefined;
+        const cache = this.profilesCache;
+        const profInfo = await cache.getProfileInfo();
+        options.secure = options.secure ? options.secure : profInfo.isSecured();
+        const loadProfile = await cache.getLoadedProfConfig(options.sessionName);
         const loadSession = loadProfile.profile as imperative.ISession;
-
         const creds = await ZoweVsCodeExtension.promptUserPass({ session: loadSession, ...options });
 
         if (creds && creds.length > 0) {
             loadProfile.profile.user = loadSession.user = creds[0];
             loadProfile.profile.password = loadSession.password = creds[1];
 
-            const upd = { profileName: loadProfile.name, profileType: loadProfile.type };
-            await (
-                await this.profilesCache.getProfileInfo()
-            ).updateProperty({ ...upd, property: "user", value: creds[0], setSecure: options.secure });
-            await (
-                await this.profilesCache.getProfileInfo()
-            ).updateProperty({ ...upd, property: "password", value: creds[1], setSecure: options.secure });
+            let saved = false;
+            if (!options.secure) {
+                saved = await this.saveCredentials(loadProfile);
+            }
 
-            await this.profilesCache.refresh(apiRegister);
+            if (options.secure || saved) {
+                // write changes to the file
+                const upd = { profileName: loadProfile.name, profileType: loadProfile.type };
+                await profInfo.updateProperty({ ...upd, property: "user", value: creds[0], setSecure: options.secure });
+                await profInfo.updateProperty({
+                    ...upd,
+                    property: "password",
+                    value: creds[1],
+                    setSecure: options.secure,
+                });
+            }
+            await cache.refresh(apiRegister);
 
             return loadProfile;
         }
@@ -139,6 +148,18 @@ export class ZoweVsCodeExtension {
             inputBoxOptions.validateInput = (value) => null;
         }
         return await vscode.window.showInputBox(inputBoxOptions);
+    }
+
+    private static async saveCredentials(profile: imperative.IProfileLoaded): Promise<boolean> {
+        let saved = false;
+        const saveButton = "Save Credentials";
+        const message = `Save entered credentials in plain text for future use with profile ${profile.name}?\nSaving credentials will update the local information file.`;
+        await vscode.window.showInformationMessage(message, { modal: true }, ...[saveButton]).then((selection) => {
+            if (selection) {
+                saved = true;
+            }
+        });
+        return saved;
     }
 
     private static async promptUserPass(options: IPromptUserPassOptions): Promise<string[] | undefined> {
