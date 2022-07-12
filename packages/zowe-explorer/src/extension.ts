@@ -43,6 +43,7 @@ import { TsoCommandHandler } from "./command/TsoCommandHandler";
 import { cleanTempDir, moveTempFolder, hideTempFolder } from "./utils/TempFolder";
 import { SettingsConfig } from "./utils/SettingsConfig";
 import { UIViews } from "./shared/ui-views";
+import { handleSaving } from "./utils/workspace";
 
 // Set up localization
 nls.config({
@@ -277,7 +278,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
                         localize("onDidSaveTextDocument3", "and") +
                         globals.USS_DIR
                 );
-
                 if (!savedFile.document.isDirty) {
                     globals.LOG.debug(
                         localize("activate.didSaveText.file", "File ") +
@@ -286,10 +286,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
                     );
                 } else if (savedFile.document.fileName.toUpperCase().indexOf(globals.DS_DIR.toUpperCase()) >= 0) {
                     globals.LOG.debug(localize("activate.didSaveText.isDataSet", "File is a data set-- saving "));
-                    await dsActions.saveFile(savedFile.document, datasetProvider); // TODO MISSED TESTING
+                    handleSaving(dsActions.saveFile, savedFile.document, datasetProvider);
                 } else if (savedFile.document.fileName.toUpperCase().indexOf(globals.USS_DIR.toUpperCase()) >= 0) {
                     globals.LOG.debug(localize("activate.didSaveText.isUSSFile", "File is a USS file -- saving"));
-                    await ussActions.saveUSSFile(savedFile.document, ussFileProvider); // TODO MISSED TESTING
+                    handleSaving(ussActions.saveUSSFile, savedFile.document, ussFileProvider);
                 } else {
                     globals.LOG.debug(
                         localize("activate.didSaveText.file", "File ") +
