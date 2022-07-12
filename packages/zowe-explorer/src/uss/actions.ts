@@ -302,7 +302,6 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
                 node.setEtag(uploadResponse.apiResponse.etag);
             }
             setFileSaved(true);
-            
             // this part never runs! zowe.Upload.fileToUSSFile doesn't return success: false, it just throws the error which is caught below!!!!!
         } else {
             vscode.window.showErrorMessage(uploadResponse.commandResponse);
