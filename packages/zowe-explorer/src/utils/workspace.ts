@@ -139,7 +139,7 @@ export async function closeOpenedTextFile(path: string) {
 let savedFilesStack = [];
 let ongoingSave = false;
 export function handleSaving(
-    uploadRequest: Function,
+    uploadRequest: (document, provider) => Promise<void | string>,
     savedFile: vscode.TextDocument,
     fileProvider: IZoweTree<IZoweUSSTreeNode | IZoweDatasetTreeNode>
 ): void {
