@@ -10,6 +10,8 @@
  */
 
 // tslint:disable-next-line: no-duplicate-imports
+import * as path from "path";
+import * as fs from "fs";
 import { ZoweUSSNode } from "../uss/ZoweUSSNode";
 
 /**
@@ -27,4 +29,21 @@ export function injectAdditionalDataToTooltip(node: ZoweUSSNode, tooltip: string
     }
 
     return tooltip;
+}
+
+/**
+ * Checks whether file already exists while case sensitivity taken into account
+ * @param filepath
+ * @returns {string}
+ */
+export function fileExistsWithCaseSync(filepath) {
+    const dir = path.dirname(filepath);
+    if (dir === path.dirname(dir)) {
+        return true;
+    }
+    const filenames = fs.readdirSync(dir);
+    if (filenames.indexOf(path.basename(filepath)) === -1) {
+        return false;
+    }
+    return fileExistsWithCaseSync(dir);
 }
