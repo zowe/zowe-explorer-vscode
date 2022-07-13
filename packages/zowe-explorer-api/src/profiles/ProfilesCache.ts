@@ -393,21 +393,6 @@ export class ProfilesCache {
         };
     }
 
-    protected getMergedAttrs(
-        mProfileInfo: zowe.imperative.ProfileInfo,
-        profAttrs: zowe.imperative.IProfAttrs
-    ): zowe.imperative.IProfile {
-        const profile: zowe.imperative.IProfile = {};
-        if (profAttrs != null) {
-            const mergedArgs = mProfileInfo.mergeArgsForProfile(profAttrs, { getSecureVals: true });
-            for (const arg of mergedArgs.knownArgs) {
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-                profile[arg.argName] = arg.argValue;
-            }
-        }
-        return profile;
-    }
-
     // used by Zowe Explorer for v1 profiles
     protected async deleteProfileOnDisk(ProfileInfo: zowe.imperative.IProfileLoaded): Promise<void> {
         await this.getCliProfileManager(ProfileInfo.type).delete({
@@ -481,6 +466,21 @@ export class ProfilesCache {
         ) {
             profile.profile.tokenType = undefined;
             profile.profile.tokenValue = undefined;
+        }
+        return profile;
+    }
+
+    protected getMergedAttrs(
+        mProfileInfo: zowe.imperative.ProfileInfo,
+        profAttrs: zowe.imperative.IProfAttrs
+    ): zowe.imperative.IProfile {
+        const profile: zowe.imperative.IProfile = {};
+        if (profAttrs != null) {
+            const mergedArgs = mProfileInfo.mergeArgsForProfile(profAttrs, { getSecureVals: true });
+            for (const arg of mergedArgs.knownArgs) {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                profile[arg.argName] = arg.argValue;
+            }
         }
         return profile;
     }
