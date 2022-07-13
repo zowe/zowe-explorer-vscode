@@ -132,23 +132,22 @@ export async function closeOpenedTextFile(path: string) {
 }
 
 /**
- * Handle auto/regular save by using a stack
- * where the next save being made will be the one at the top of the stack
- * upon the save at the bottom of the stack being resolved.
+ * Handle auto/regular save by prioritizing the last ongoing save of a series queued saves
  */
-let savedFilesStack = [];
+let latestSavedFile: vscode.TextDocument;
 let ongoingSave = false;
 export function handleSaving(
     uploadRequest: (document, provider) => Promise<void | string>,
     savedFile: vscode.TextDocument,
     fileProvider: IZoweTree<IZoweUSSTreeNode | IZoweDatasetTreeNode>
 ): void {
-    savedFilesStack.push(savedFile);
-    if (!ongoingSave) {
-        ongoingSave = true;
-        uploadRequest(savedFilesStack.pop(), fileProvider).then((response) => {
-            savedFilesStack = [savedFilesStack.pop()];
-            ongoingSave = false;
-        });
+    latestSavedFile = savedFile;
+    if (ongoingSave) {
+        return;
     }
+    ongoingSave = true;
+    uploadRequest(latestSavedFile, fileProvider).then(() => {
+        latestSavedFile = undefined;
+        ongoingSave = false;
+    });
 }
