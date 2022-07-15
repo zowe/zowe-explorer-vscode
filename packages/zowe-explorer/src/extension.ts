@@ -50,7 +50,6 @@ nls.config({
     bundleFormat: nls.BundleFormat.standalone,
 })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
-let lastChanged = 0;
 let savedProfileContents = new Uint8Array();
 
 /**
@@ -361,17 +360,12 @@ async function watchConfigProfile(context: vscode.ExtensionContext) {
     context.subscriptions.push(globalProfileWatcher, workspaceProfileWatcher);
 
     const onChangeProfileAction = async (uri: vscode.Uri) => {
-        const stats = fs.statSync(uri.fsPath);
-        const now = stats.mtime.getTime();
-        if (lastChanged < now) {
-            lastChanged = now;
-            const newProfileContents = await vscode.workspace.fs.readFile(uri);
-            if (newProfileContents.toString() === savedProfileContents.toString()) {
-                return;
-            }
-            savedProfileContents = newProfileContents;
-            await vscode.commands.executeCommand("zowe.extRefresh");
+        const newProfileContents = await vscode.workspace.fs.readFile(uri);
+        if (newProfileContents.toString() === savedProfileContents.toString()) {
+            return;
         }
+        savedProfileContents = newProfileContents;
+        await vscode.commands.executeCommand("zowe.extRefresh");
     };
 
     globalProfileWatcher.onDidCreate(async () => {
