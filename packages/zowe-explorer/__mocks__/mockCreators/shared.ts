@@ -190,7 +190,7 @@ export function createInstanceOfProfile(profile: imperative.IProfileLoaded) {
         defaultProfile: { name: "sestest" },
         getDefaultProfile: jest.fn(),
         promptCredentials: jest.fn(),
-        loadNamedProfile: jest.fn(),
+        loadNamedProfile: jest.fn().mockReturnValue(profile),
         usesSecurity: true,
         validProfile: ValidProfileEnum.VALID,
         checkCurrentProfile: jest.fn(() => {

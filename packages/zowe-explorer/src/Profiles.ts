@@ -27,8 +27,6 @@ import {
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import * as path from "path";
-import * as os from "os";
-import * as fs from "fs";
 import {
     IZoweTree,
     IZoweNodeType,
@@ -58,10 +56,6 @@ import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import * as globals from "./globals";
 import * as nls from "vscode-nls";
 import { UIViews } from "./shared/ui-views";
-
-// TODO: find a home for constants
-export const CONTEXT_PREFIX = "_";
-const VALIDATE_SUFFIX = CONTEXT_PREFIX + "validate=";
 
 // Set up localization
 nls.config({
@@ -115,14 +109,16 @@ export class Profiles extends ProfilesCache {
                 );
                 return profileStatus;
             }
-            if (values !== undefined) {
+            if (values) {
                 theProfile.profile.user = values[0];
                 theProfile.profile.password = values[1];
                 theProfile.profile.base64EncodedAuth = values[2];
-            }
 
-            // Validate profile
-            profileStatus = await this.getProfileSetting(theProfile);
+                // Validate profile
+                profileStatus = await this.getProfileSetting(theProfile);
+            } else {
+                profileStatus = { name: theProfile.name, status: "unverified" };
+            }
         } else {
             // Profile should have enough information to allow validation
             profileStatus = await this.getProfileSetting(theProfile);
@@ -181,16 +177,16 @@ export class Profiles extends ProfilesCache {
     public async disableValidationContext(node: IZoweNodeType) {
         const theProfile: IProfileLoaded = node.getProfile();
         this.validationArraySetup(theProfile, false);
-        if (node.contextValue.includes(`${VALIDATE_SUFFIX}true`)) {
+        if (node.contextValue.includes(`${globals.VALIDATE_SUFFIX}true`)) {
             node.contextValue = node.contextValue
                 .replace(/(_validate=true)/g, "")
                 .replace(/(_Active)/g, "")
                 .replace(/(_Inactive)/g, "");
-            node.contextValue = node.contextValue + `${VALIDATE_SUFFIX}false`;
-        } else if (node.contextValue.includes(`${VALIDATE_SUFFIX}false`)) {
+            node.contextValue = node.contextValue + `${globals.VALIDATE_SUFFIX}false`;
+        } else if (node.contextValue.includes(`${globals.VALIDATE_SUFFIX}false`)) {
             return node;
         } else {
-            node.contextValue = node.contextValue + `${VALIDATE_SUFFIX}false`;
+            node.contextValue = node.contextValue + `${globals.VALIDATE_SUFFIX}false`;
         }
         return node;
     }
@@ -203,13 +199,13 @@ export class Profiles extends ProfilesCache {
     public async enableValidationContext(node: IZoweNodeType) {
         const theProfile: IProfileLoaded = node.getProfile();
         this.validationArraySetup(theProfile, true);
-        if (node.contextValue.includes(`${VALIDATE_SUFFIX}false`)) {
+        if (node.contextValue.includes(`${globals.VALIDATE_SUFFIX}false`)) {
             node.contextValue = node.contextValue.replace(/(_validate=false)/g, "").replace(/(_Unverified)/g, "");
-            node.contextValue = node.contextValue + `${VALIDATE_SUFFIX}true`;
-        } else if (node.contextValue.includes(`${VALIDATE_SUFFIX}true`)) {
+            node.contextValue = node.contextValue + `${globals.VALIDATE_SUFFIX}true`;
+        } else if (node.contextValue.includes(`${globals.VALIDATE_SUFFIX}true`)) {
             return node;
         } else {
-            node.contextValue = node.contextValue + `${VALIDATE_SUFFIX}true`;
+            node.contextValue = node.contextValue + `${globals.VALIDATE_SUFFIX}true`;
         }
 
         return node;
@@ -298,8 +294,6 @@ export class Profiles extends ProfilesCache {
                 // Find all cases where a profile is not already displayed
                 !zoweFileProvider.mSessionNodes.find((sessionNode) => sessionNode.getProfileName() === profileName)
         );
-
-        // TODO(zFernand0): Include conflicting profiles
 
         const createPick = new FilterDescriptor("\uFF0B " + createNewProfile);
         const configPick = new FilterDescriptor("\uFF0B " + createNewConfig);
@@ -858,7 +852,7 @@ export class Profiles extends ProfilesCache {
         }
     }
 
-    public async promptCredentials(sessionName: string, rePrompt?: boolean) {
+    public async promptCredentials(sessionName: string, rePrompt?: boolean): Promise<string[]> {
         const userInputBoxOptions: vscode.InputBoxOptions = {
             placeHolder: localize("createNewConnection.option.prompt.username.placeholder", "User Name"),
             prompt: localize(
@@ -877,13 +871,18 @@ export class Profiles extends ProfilesCache {
         const promptInfo = await ZoweVsCodeExtension.promptCredentials({
             sessionName,
             rePrompt,
+            secure: (await this.getProfileInfo()).isSecured(),
             userInputBoxOptions,
             passwordInputBoxOptions,
         });
 
         if (!promptInfo) {
             vscode.window.showInformationMessage(localize("promptCredentials.undefined.value", "Operation Cancelled"));
+            return; // See https://github.com/zowe/vscode-extension-for-zowe/issues/1827
         }
+
+        await this.refresh(ZoweExplorerApiRegister.getInstance());
+
         const updSession = ZoweExplorerApiRegister.getMvsApi(promptInfo).getSession();
         const returnValue = [
             updSession.ISession.user,
@@ -1236,6 +1235,12 @@ export class Profiles extends ProfilesCache {
                     };
                     await this.updateBaseProfileFileLogin(baseProfile, updBaseProfile);
                     await this.refresh(ZoweExplorerApiRegister.getInstance());
+                    const baseIndex = this.allProfiles.findIndex((profile) => profile.name === baseProfile.name);
+                    this.allProfiles[baseIndex] = { ...baseProfile, profile: { ...baseProfile, ...updBaseProfile } };
+                    node.setProfileToChoice({
+                        ...node.getProfile(),
+                        profile: { ...node.getProfile().profile, ...updBaseProfile },
+                    });
                 } catch (error) {
                     vscode.window.showErrorMessage(
                         localize("ssoLogin.unableToLogin", "Unable to log in. ") + error.message
@@ -1316,26 +1321,19 @@ export class Profiles extends ProfilesCache {
 
     private async updateBaseProfileFileLogin(profile: IProfileLoaded, updProfile: IProfile) {
         const upd = { profileName: profile.name, profileType: profile.type };
-        // const config = (await this.getProfileInfo()).getTeamConfig();
-        const config = ImperativeConfig.instance.config;
-        const { user, global } = config.api.layers.find(upd.profileName);
-        const profilePath = config.api.profiles.expandPath(upd.profileName);
-        config.api.layers.activate(user, global);
-        config.set(`${profilePath}.properties.tokenType`, updProfile.tokenType);
-        config.set(`${profilePath}.properties.tokenValue`, updProfile.tokenValue);
-        await config.save();
+        const mProfileInfo = await this.getProfileInfo();
+        const setSecure = mProfileInfo.isSecured();
+        await mProfileInfo.updateProperty({ ...upd, property: "tokenType", value: updProfile.tokenType });
+        await mProfileInfo.updateProperty({ ...upd, property: "tokenValue", value: updProfile.tokenValue, setSecure });
     }
 
     private async updateBaseProfileFileLogout(profile: IProfileLoaded) {
-        const upd = { profileName: profile.name, profileType: profile.type };
-        // const config = (await this.getProfileInfo()).getTeamConfig();
-        const config = ImperativeConfig.instance.config;
-        const { user, global } = config.api.layers.find(upd.profileName);
-        const profilePath = config.api.profiles.expandPath(upd.profileName);
-        config.api.layers.activate(user, global);
-        config.set(`${profilePath}.properties.tokenType`, undefined);
-        config.set(`${profilePath}.properties.tokenValue`, undefined);
-        await config.save();
+        const mProfileInfo = await this.getProfileInfo();
+        const setSecure = mProfileInfo.isSecured();
+        const prof = mProfileInfo.getAllProfiles(profile.type).find((p) => p.profName === profile.name);
+        const mergedArgs = mProfileInfo.mergeArgsForProfile(prof);
+        await mProfileInfo.updateKnownProperty({ mergedArgs, property: "tokenValue", value: undefined, setSecure });
+        await mProfileInfo.updateKnownProperty({ mergedArgs, property: "tokenType", value: undefined });
     }
 
     private async loginCredentialPrompt(): Promise<string[]> {

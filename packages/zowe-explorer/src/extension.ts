@@ -29,7 +29,7 @@ import {
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import { Profiles } from "./Profiles";
-import { errorHandling, readConfigFromDisk } from "./utils/ProfilesUtils";
+import { readConfigFromDisk } from "./utils/ProfilesUtils";
 import { CliProfileManager, ImperativeConfig } from "@zowe/imperative";
 import { getImperativeConfig } from "@zowe/cli";
 import { createDatasetTree } from "./dataset/DatasetTree";
@@ -42,6 +42,7 @@ import { TsoCommandHandler } from "./command/TsoCommandHandler";
 import { cleanTempDir, moveTempFolder, hideTempFolder } from "./utils/TempFolder";
 import { SettingsConfig } from "./utils/SettingsConfig";
 import { UIViews } from "./shared/ui-views";
+import { handleSaving } from "./utils/workspace";
 
 // Set up localization
 nls.config({
@@ -90,11 +91,28 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     try {
         // Ensure that ~/.zowe folder exists
         if (!ImperativeConfig.instance.config?.exists) {
+            const zoweDir = getZoweDir();
             // Should we replace the instance.config above with (await getProfileInfo(globals.ISTHEIA)).exists
             await CliProfileManager.initialize({
                 configuration: getImperativeConfig().profiles,
-                profileRootDirectory: path.join(getZoweDir(), "profiles"),
+                profileRootDirectory: path.join(zoweDir, "profiles"),
             });
+
+            // TODO(zFernand0): Will address the commented code below once this imperative issue is resolved.
+            // https://github.com/zowe/imperative/issues/840
+
+            // const settingsPath = path.join(zoweDir, "settings");
+            // if (!fs.existsSync(settingsPath)) {
+            //     fs.mkdirSync(settingsPath);
+            // }
+            // const imperativeSettings = path.join(settingsPath, "imperative.json");
+            // if (!fs.existsSync(imperativeSettings)) {
+            //     fs.writeFileSync(imperativeSettings, JSON.stringify({
+            //         overrides: {
+            //             CredentialManager: "@zowe/cli"
+            //         }
+            //     }));
+            // }
         }
 
         await readConfigFromDisk();
@@ -138,6 +156,16 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
 
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.promptCredentials", async (node: IZoweTreeNode) => {
+            const mProfileInfo = await Profiles.getInstance().getProfileInfo();
+            if (!mProfileInfo.getTeamConfig().properties.autoStore) {
+                vscode.window.showInformationMessage(
+                    localize(
+                        "zowe.promptCredentials.notSupported",
+                        '"Update Credentials" operation not supported when "autoStore" is false'
+                    )
+                );
+                return;
+            }
             let profileName: string;
             if (node == null) {
                 // prompt for profile
@@ -165,6 +193,16 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             }
 
             const creds = await Profiles.getInstance().promptCredentials(profileName, true);
+
+            try {
+                const updatedProfileInfo = Profiles.getInstance().loadNamedProfile(profileName);
+                node.setProfileToChoice(updatedProfileInfo);
+            } catch (err) {
+                const errorMessage = localize("zowe.loadNamedProfile.error", "Error when updating credentials.");
+                vscode.window.showErrorMessage(errorMessage);
+                vscode.window.showErrorMessage(err.message);
+            }
+
             if (creds != null) {
                 vscode.window.showInformationMessage(
                     localize(
@@ -229,28 +267,34 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             )
         );
         context.subscriptions.push(
-            vscode.workspace.onDidSaveTextDocument(async (savedFile) => {
+            vscode.workspace.onWillSaveTextDocument(async (savedFile) => {
                 globals.LOG.debug(
                     localize(
                         "onDidSaveTextDocument1",
                         "File was saved -- determining whether the file is a USS file or Data set.\n Comparing (case insensitive) "
                     ) +
-                        savedFile.fileName +
+                        savedFile.document.fileName +
                         localize("onDidSaveTextDocument2", " against directory ") +
                         globals.DS_DIR +
                         localize("onDidSaveTextDocument3", "and") +
                         globals.USS_DIR
                 );
-                if (savedFile.fileName.toUpperCase().indexOf(globals.DS_DIR.toUpperCase()) >= 0) {
+                if (!savedFile.document.isDirty) {
+                    globals.LOG.debug(
+                        localize("activate.didSaveText.file", "File ") +
+                            savedFile.document.fileName +
+                            localize("activate.didSaveText.notDirty", " is not a dirty file ")
+                    );
+                } else if (savedFile.document.fileName.toUpperCase().indexOf(globals.DS_DIR.toUpperCase()) >= 0) {
                     globals.LOG.debug(localize("activate.didSaveText.isDataSet", "File is a data set-- saving "));
-                    await dsActions.saveFile(savedFile, datasetProvider); // TODO MISSED TESTING
-                } else if (savedFile.fileName.toUpperCase().indexOf(globals.USS_DIR.toUpperCase()) >= 0) {
+                    handleSaving(dsActions.saveFile, savedFile.document, datasetProvider);
+                } else if (savedFile.document.fileName.toUpperCase().indexOf(globals.USS_DIR.toUpperCase()) >= 0) {
                     globals.LOG.debug(localize("activate.didSaveText.isUSSFile", "File is a USS file -- saving"));
-                    await ussActions.saveUSSFile(savedFile, ussFileProvider); // TODO MISSED TESTING
+                    handleSaving(ussActions.saveUSSFile, savedFile.document, ussFileProvider);
                 } else {
                     globals.LOG.debug(
                         localize("activate.didSaveText.file", "File ") +
-                            savedFile.fileName +
+                            savedFile.document.fileName +
                             localize("activate.didSaveText.notDataSet", " is not a data set or USS file ")
                     );
                 }
@@ -679,6 +723,11 @@ function initJobsProvider(context: vscode.ExtensionContext, jobsProvider: IZoweT
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.jobs.refreshJob", async (job) => jobActions.refreshJob(job, jobsProvider))
+    );
+    context.subscriptions.push(
+        vscode.commands.registerCommand("zowe.jobs.refreshSpool", (node) =>
+            jobActions.getSpoolContentFromMainframe(node)
+        )
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.jobs.addJobsSession", () => jobsProvider.createZoweSession(jobsProvider))

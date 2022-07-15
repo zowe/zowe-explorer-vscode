@@ -565,10 +565,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             this.log.debug(localize("filterPrompt.log.debug.promptUSSPath", "Prompting the user for a USS path"));
         }
         await this.checkCurrentProfile(node);
-        if (
-            Profiles.getInstance().validProfile === ValidProfileEnum.VALID ||
-            Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED
-        ) {
+        if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID || !contextually.isValidationEnabled(node)) {
             let sessionNode;
             let remotepath: string;
             if (contextually.isSessionNotFav(node)) {
@@ -789,7 +786,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 await Profiles.getInstance().checkCurrentProfile(profile);
                 if (
                     Profiles.getInstance().validProfile === ValidProfileEnum.VALID ||
-                    Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED
+                    !contextually.isValidationEnabled(parentNode)
                 ) {
                     session = await ZoweExplorerApiRegister.getUssApi(profile).getSession();
                     parentNode.setProfileToChoice(profile);

@@ -96,7 +96,8 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                         title: localize("ZoweJobNode.getJobs.spoolfiles", "Get Job Spool files command submitted."),
                     },
                     () => {
-                        return ZoweExplorerApiRegister.getJesApi(this.getProfile()).getSpoolFiles(
+                        const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
+                        return ZoweExplorerApiRegister.getJesApi(cachedProfile).getSpoolFiles(
                             this.job.jobname,
                             this.job.jobid
                         );
@@ -266,11 +267,12 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
     private async getJobs(owner, prefix, searchId): Promise<zowe.IJob[]> {
         let jobsInternal: zowe.IJob[] = [];
         const sessNode = this.getSessionNode();
+        const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
         if (this.searchId.length > 0) {
-            jobsInternal.push(await ZoweExplorerApiRegister.getJesApi(this.getProfile()).getJob(searchId));
+            jobsInternal.push(await ZoweExplorerApiRegister.getJesApi(cachedProfile).getJob(searchId));
         } else {
             try {
-                jobsInternal = await ZoweExplorerApiRegister.getJesApi(this.getProfile()).getJobsByOwnerAndPrefix(
+                jobsInternal = await ZoweExplorerApiRegister.getJesApi(cachedProfile).getJobsByOwnerAndPrefix(
                     owner,
                     prefix
                 );
@@ -305,7 +307,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
 }
 
 // tslint:disable-next-line: max-classes-per-file
-class Spool extends Job {
+export class Spool extends Job {
     constructor(
         label: string,
         mCollapsibleState: vscode.TreeItemCollapsibleState,

@@ -263,6 +263,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         const sessNode = this.getSessionNode();
         const responses: zowe.IZosFilesResponse[] = [];
         try {
+            const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
             const options: zowe.IListOptions = {};
             options.attributes = true;
             let label: string;
@@ -271,7 +272,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 // loop through each pattern for datasets
                 for (const pattern of this.pattern.split(",")) {
                     responses.push(
-                        await ZoweExplorerApiRegister.getMvsApi(this.getProfile()).dataSet(pattern.trim(), {
+                        await ZoweExplorerApiRegister.getMvsApi(cachedProfile).dataSet(pattern.trim(), {
                             attributes: true,
                         })
                     );
@@ -281,13 +282,11 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 for (const memPattern of this.memberPattern.split(",")) {
                     options.pattern = memPattern;
                     label = this.label as string;
-                    responses.push(
-                        await ZoweExplorerApiRegister.getMvsApi(this.getProfile()).allMembers(label, options)
-                    );
+                    responses.push(await ZoweExplorerApiRegister.getMvsApi(cachedProfile).allMembers(label, options));
                 }
             } else {
                 label = this.label as string;
-                responses.push(await ZoweExplorerApiRegister.getMvsApi(this.getProfile()).allMembers(label, options));
+                responses.push(await ZoweExplorerApiRegister.getMvsApi(cachedProfile).allMembers(label, options));
             }
         } catch (err) {
             await errorHandling(

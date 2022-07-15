@@ -18,6 +18,7 @@ import { DataSetUtils, JobUtils } from "@zowe/zos-ftp-for-zowe-cli";
 import TestUtils from "../utils/TestUtils";
 import { DownloadJobs } from "@zowe/cli";
 import * as imperative from "@zowe/imperative";
+import { sessionMap } from "../../../src/extension";
 
 // two methods to mock modules: create a __mocks__ file for zowe-explorer-api.ts and direct mock for extension.ts
 jest.mock("../../../__mocks__/@zowe/zowe-explorer-api.ts");
@@ -30,6 +31,7 @@ describe("FtpJesApi", () => {
         JesApi.checkedProfile = jest.fn().mockReturnValue({ message: "success", type: "zftp", failNotFound: false });
         JesApi.ftpClient = jest.fn().mockReturnValue({ host: "", user: "", password: "", port: "" });
         JesApi.releaseConnection = jest.fn();
+        sessionMap.get = jest.fn().mockReturnValue({ jesListConnection: { connected: true } });
     });
 
     it("should list jobs by owner and prefix.", async () => {
@@ -46,7 +48,7 @@ describe("FtpJesApi", () => {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         expect(result[0].jobname).toContain("JOB1");
         expect(JobUtils.listJobs).toBeCalledTimes(1);
-        expect(JesApi.releaseConnection).toBeCalled();
+        expect(JesApi.releaseConnection).toHaveBeenCalledTimes(0);
     });
 
     it("should get job by jobid.", async () => {

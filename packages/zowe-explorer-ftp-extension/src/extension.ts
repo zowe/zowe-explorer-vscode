@@ -16,12 +16,19 @@ import { FtpUssApi } from "./ZoweExplorerFtpUssApi";
 import { FtpMvsApi } from "./ZoweExplorerFtpMvsApi";
 import { FtpJesApi } from "./ZoweExplorerFtpJesApi";
 import { CoreUtils } from "@zowe/zos-ftp-for-zowe-cli";
+import { imperative } from "@zowe/cli";
+import { FtpSession } from "./ftpSession";
 
 export const ZoweLogger = new IZoweLogger("Zowe Explorer FTP Extension", path.join(__dirname, "..", ".."));
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function activate(context: vscode.ExtensionContext): void {
     void registerFtpApis();
+}
+
+export function deactivate(context: vscode.ExtensionContext): void {
+    sessionMap.forEach((session) => session.releaseConnections());
+    sessionMap.clear();
 }
 
 /**
@@ -55,3 +62,5 @@ async function registerFtpApis(): Promise<boolean> {
     );
     return false;
 }
+
+export const sessionMap = new Map<imperative.IProfileLoaded, FtpSession>();

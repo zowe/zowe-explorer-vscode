@@ -18,6 +18,7 @@ import * as vscode from "vscode";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import { Session, IProfileLoaded } from "@zowe/imperative";
 import { List } from "@zowe/cli";
+import { Profiles } from "../../src/Profiles";
 import {
     DS_PDS_CONTEXT,
     DS_SESSION_CONTEXT,
@@ -88,6 +89,13 @@ describe("Unit Tests (Jest)", () => {
      * Creates sample ZoweDatasetNode list and checks that getChildren() returns the correct array
      *************************************************************************************************************/
     it("Testing that getChildren returns the correct Thenable<ZoweDatasetNode[]>", async () => {
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    loadNamedProfile: jest.fn().mockReturnValue(profileOne),
+                };
+            }),
+        });
         // Creating a rootNode
         const rootNode = new ZoweDatasetNode(
             "root",
@@ -194,6 +202,13 @@ describe("Unit Tests (Jest)", () => {
      * Creates sample ZoweDatasetNode list and checks that getChildren() returns the correct array for a PO
      *************************************************************************************************************/
     it("Testing that getChildren returns the correct Thenable<ZoweDatasetNode[]> for a PO", async () => {
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    loadNamedProfile: jest.fn().mockReturnValue(profileOne),
+                };
+            }),
+        });
         // Creating a rootNode
         const rootNode = new ZoweDatasetNode(
             "root",
@@ -253,6 +268,13 @@ describe("Unit Tests (Jest)", () => {
         "Checks that when bright.List.dataSet/allMembers() causes an error on the zowe call, " +
             "it throws an error and the catch block is reached",
         async () => {
+            Object.defineProperty(Profiles, "getInstance", {
+                value: jest.fn(() => {
+                    return {
+                        loadNamedProfile: jest.fn().mockReturnValue(profileOne),
+                    };
+                }),
+            });
             showErrorMessage.mockReset();
             // Creating a rootNode
             const rootNode = new ZoweDatasetNode(
@@ -282,6 +304,13 @@ describe("Unit Tests (Jest)", () => {
         "Checks that when bright.List.dataSet/allMembers() returns an unsuccessful response, " +
             "it returns a label of 'No datasets found'",
         async () => {
+            Object.defineProperty(Profiles, "getInstance", {
+                value: jest.fn(() => {
+                    return {
+                        loadNamedProfile: jest.fn().mockReturnValue(profileOne),
+                    };
+                }),
+            });
             // Creating a rootNode
             const rootNode = new ZoweDatasetNode(
                 "root",
@@ -457,6 +486,13 @@ describe("Unit Tests (Jest)", () => {
      * Run with a favorite
      *************************************************************************************************************/
     it("Testing Run with a favorite", async () => {
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    loadNamedProfile: jest.fn().mockReturnValue(profileOne),
+                };
+            }),
+        });
         // Creating a rootNode
         const pds = new ZoweDatasetNode(
             "[root]: something",
@@ -476,6 +512,13 @@ describe("Unit Tests (Jest)", () => {
      * No values returned
      *************************************************************************************************************/
     it("Testing what happens when response is zero", async () => {
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    loadNamedProfile: jest.fn().mockReturnValue(profileOne),
+                };
+            }),
+        });
         // Creating a rootNode
         const pds = new ZoweDatasetNode(
             "[root]: something",
