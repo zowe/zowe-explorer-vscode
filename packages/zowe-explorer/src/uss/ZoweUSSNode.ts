@@ -20,7 +20,7 @@ import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
 import { getIconByNode } from "../generators/icons/index";
-import { fileExistsWithCaseSync, injectAdditionalDataToTooltip } from "../uss/utils";
+import { fileExistsCaseInsensitveSync, injectAdditionalDataToTooltip } from "../uss/utils";
 import * as contextually from "../shared/context";
 import { closeOpenedTextFile } from "../utils/workspace";
 import * as nls from "vscode-nls";
@@ -490,7 +490,8 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
                 const documentFilePath = this.getUSSDocumentFilePath();
                 // check if some other file is already created with the same name avoid opening file warn user
-                if (fs.existsSync(documentFilePath) && !fileExistsWithCaseSync(documentFilePath)) {
+                const fileExists = fs.existsSync(documentFilePath);
+                if (fileExists && !fileExistsCaseInsensitveSync(documentFilePath)) {
                     vscode.window.showInformationMessage(
                         localize(
                             "openUSS.name.exists",
@@ -499,7 +500,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     );
                 } else {
                     // if local copy exists, open that instead of pulling from mainframe
-                    if (download || !fs.existsSync(documentFilePath)) {
+                    if (download || !fileExists) {
                         const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
                         const fullPath = this.fullPath;
                         const chooseBinary =

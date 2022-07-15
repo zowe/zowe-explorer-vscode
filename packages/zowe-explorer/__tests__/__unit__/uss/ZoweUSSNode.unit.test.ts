@@ -29,6 +29,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as workspaceUtils from "../../../src/utils/workspace";
 import * as globals from "../../../src/globals";
+import * as ussUtils from "../../../src/uss/utils";
 
 jest.mock("fs");
 jest.mock("path");
@@ -71,6 +72,7 @@ async function createGlobalMocks() {
         response: createFileResponse({ etag: "123" }),
         ussApi: null,
         mockShowWarningMessage: jest.fn(),
+        fileExistsCaseInsensitveSync: jest.fn(),
     };
 
     globalMocks.openTextDocument.mockResolvedValue(globalMocks.mockTextDocument);
@@ -151,6 +153,10 @@ async function createGlobalMocks() {
     Object.defineProperty(vscode.window, "withProgress", { value: globalMocks.withProgress, configurable: true });
     Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
     Object.defineProperty(globals.LOG, "debug", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ussUtils, "fileExistsCaseInsensitveSync", {
+        value: globalMocks.fileExistsCaseInsensitveSync,
+        configurable: true,
+    });
 
     return globalMocks;
 }
@@ -1168,6 +1174,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
 
         globalMocks.existsSync.mockReturnValue("exists");
         globalMocks.mockShowTextDocument.mockRejectedValueOnce(Error("testError"));
+        globalMocks.fileExistsCaseInsensitveSync.mockReturnValue(true);
 
         try {
             await child.openUSS(false, true, blockMocks.testUSSTree);

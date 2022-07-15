@@ -34,9 +34,9 @@ export function injectAdditionalDataToTooltip(node: ZoweUSSNode, tooltip: string
 /**
  * Checks whether file already exists while case sensitivity taken into account
  * @param filepath
- * @returns {string}
+ * @returns {boolean}
  */
-export function fileExistsWithCaseSync(filepath) {
+export function fileExistsCaseInsensitveSync(filepath) {
     const dir = path.dirname(filepath);
     if (dir === path.dirname(dir)) {
         return true;
@@ -45,5 +45,5 @@ export function fileExistsWithCaseSync(filepath) {
     if (filenames.indexOf(path.basename(filepath)) === -1) {
         return false;
     }
-    return fileExistsWithCaseSync(dir);
+    return fileExistsCaseInsensitveSync(dir);
 }

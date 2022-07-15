@@ -27,6 +27,7 @@ import * as nls from "vscode-nls";
 import { refreshAll } from "../shared/refresh";
 import { UIViews } from "../shared/ui-views";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
+import { fileExistsCaseInsensitveSync } from "./utils";
 
 // Set up localization
 nls.config({
@@ -67,28 +68,26 @@ export async function createUSSNode(
     if (name && filePath) {
         try {
             filePath = `${filePath}/${name}`;
+            await ZoweExplorerApiRegister.getUssApi(node.getProfile()).create(filePath, nodeType);
+            if (isTopLevel) {
+                await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
+                refreshAll(ussFileProvider);
+            } else {
+                ussFileProvider.refreshElement(node);
+            }
+            const newNode = await node.getChildren().then((children) => children.find((child) => child.label === name));
+            await ussFileProvider.getTreeView().reveal(node, { select: true, focus: true });
+            ussFileProvider.getTreeView().reveal(newNode, { select: true, focus: true });
             const localPath = `${node.getUSSDocumentFilePath()}/${name}`;
             const fileExists = fs.existsSync(localPath);
-            if (!fileExists) {
-                await ZoweExplorerApiRegister.getUssApi(node.getProfile()).create(filePath, nodeType);
-                if (isTopLevel) {
-                    await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
-                    refreshAll(ussFileProvider);
-                } else {
-                    ussFileProvider.refreshElement(node);
-                }
-                const newNode = await node
-                    .getChildren()
-                    .then((children) => children.find((child) => child.label === name));
-                await ussFileProvider.getTreeView().reveal(node, { select: true, focus: true });
-                ussFileProvider.getTreeView().reveal(newNode, { select: true, focus: true });
-            } else {
+            if (fileExists && !fileExistsCaseInsensitveSync(localPath)) {
                 vscode.window.showInformationMessage(
                     localize(
                         "createUSSNode.name.exists",
                         "There is already a file with same name. Please change your OS file system settings if you want to give case sensitive file names."
                     )
                 );
+                ussFileProvider.refreshElement(node);
             }
         } catch (err) {
             await errorHandling(
