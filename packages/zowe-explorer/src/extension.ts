@@ -316,7 +316,7 @@ async function watchConfigProfile(context: vscode.ExtensionContext) {
     );
     context.subscriptions.push(globalProfileWatcher, workspaceProfileWatcher);
 
-    const onChangeProfileAction = async function (uri: vscode.Uri) {
+    const onChangeProfileAction = async (uri: vscode.Uri) => {
         const stats = fs.statSync(uri.fsPath);
         const now = stats.mtime.getTime();
         if (lastChanged < now) {
