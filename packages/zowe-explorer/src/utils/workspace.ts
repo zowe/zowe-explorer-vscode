@@ -9,6 +9,7 @@
  *                                                                                 *
  */
 
+import { IZoweDatasetTreeNode, IZoweTree, IZoweUSSTreeNode } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
 import {
     workspaceUtilTabSwitchDelay,
@@ -128,4 +129,25 @@ export async function closeOpenedTextFile(path: string) {
     }
 
     return false;
+}
+
+/**
+ * Handle auto/regular save by prioritizing the last ongoing save of a series queued saves
+ */
+let latestSavedFile: vscode.TextDocument;
+let ongoingSave = false;
+export function handleSaving(
+    uploadRequest: (document, provider) => Promise<void | string>,
+    savedFile: vscode.TextDocument,
+    fileProvider: IZoweTree<IZoweUSSTreeNode | IZoweDatasetTreeNode>
+): void {
+    latestSavedFile = savedFile;
+    if (ongoingSave) {
+        return;
+    }
+    ongoingSave = true;
+    uploadRequest(latestSavedFile, fileProvider).then(() => {
+        latestSavedFile = undefined;
+        ongoingSave = false;
+    });
 }

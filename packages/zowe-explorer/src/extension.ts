@@ -43,6 +43,7 @@ import { TsoCommandHandler } from "./command/TsoCommandHandler";
 import { cleanTempDir, moveTempFolder, hideTempFolder } from "./utils/TempFolder";
 import { SettingsConfig } from "./utils/SettingsConfig";
 import { UIViews } from "./shared/ui-views";
+import { handleSaving } from "./utils/workspace";
 
 // Set up localization
 nls.config({
@@ -265,28 +266,34 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             )
         );
         context.subscriptions.push(
-            vscode.workspace.onDidSaveTextDocument(async (savedFile) => {
+            vscode.workspace.onWillSaveTextDocument(async (savedFile) => {
                 globals.LOG.debug(
                     localize(
                         "onDidSaveTextDocument1",
                         "File was saved -- determining whether the file is a USS file or Data set.\n Comparing (case insensitive) "
                     ) +
-                        savedFile.fileName +
+                        savedFile.document.fileName +
                         localize("onDidSaveTextDocument2", " against directory ") +
                         globals.DS_DIR +
                         localize("onDidSaveTextDocument3", "and") +
                         globals.USS_DIR
                 );
-                if (savedFile.fileName.toUpperCase().indexOf(globals.DS_DIR.toUpperCase()) >= 0) {
+                if (!savedFile.document.isDirty) {
+                    globals.LOG.debug(
+                        localize("activate.didSaveText.file", "File ") +
+                            savedFile.document.fileName +
+                            localize("activate.didSaveText.notDirty", " is not a dirty file ")
+                    );
+                } else if (savedFile.document.fileName.toUpperCase().indexOf(globals.DS_DIR.toUpperCase()) >= 0) {
                     globals.LOG.debug(localize("activate.didSaveText.isDataSet", "File is a data set-- saving "));
-                    await dsActions.saveFile(savedFile, datasetProvider); // TODO MISSED TESTING
-                } else if (savedFile.fileName.toUpperCase().indexOf(globals.USS_DIR.toUpperCase()) >= 0) {
+                    handleSaving(dsActions.saveFile, savedFile.document, datasetProvider);
+                } else if (savedFile.document.fileName.toUpperCase().indexOf(globals.USS_DIR.toUpperCase()) >= 0) {
                     globals.LOG.debug(localize("activate.didSaveText.isUSSFile", "File is a USS file -- saving"));
-                    await ussActions.saveUSSFile(savedFile, ussFileProvider); // TODO MISSED TESTING
+                    handleSaving(ussActions.saveUSSFile, savedFile.document, ussFileProvider);
                 } else {
                     globals.LOG.debug(
                         localize("activate.didSaveText.file", "File ") +
-                            savedFile.fileName +
+                            savedFile.document.fileName +
                             localize("activate.didSaveText.notDataSet", " is not a data set or USS file ")
                     );
                 }
