@@ -36,7 +36,7 @@ export function injectAdditionalDataToTooltip(node: ZoweUSSNode, tooltip: string
  * @param filepath
  * @returns {boolean}
  */
-export function fileExistsCaseInsensitveSync(filepath) {
+export function fileExistsCaseSensitveSync(filepath) {
     const dir = path.dirname(filepath);
     if (dir === path.dirname(dir)) {
         return true;
@@ -45,5 +45,5 @@ export function fileExistsCaseInsensitveSync(filepath) {
     if (filenames.indexOf(path.basename(filepath)) === -1) {
         return false;
     }
-    return fileExistsCaseInsensitveSync(dir);
+    return fileExistsCaseSensitveSync(dir);
 }

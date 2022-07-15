@@ -27,7 +27,7 @@ import * as nls from "vscode-nls";
 import { refreshAll } from "../shared/refresh";
 import { UIViews } from "../shared/ui-views";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
-import { fileExistsCaseInsensitveSync } from "./utils";
+import { fileExistsCaseSensitveSync } from "./utils";
 
 // Set up localization
 nls.config({
@@ -80,7 +80,7 @@ export async function createUSSNode(
             ussFileProvider.getTreeView().reveal(newNode, { select: true, focus: true });
             const localPath = `${node.getUSSDocumentFilePath()}/${name}`;
             const fileExists = fs.existsSync(localPath);
-            if (fileExists && !fileExistsCaseInsensitveSync(localPath)) {
+            if (fileExists && !fileExistsCaseSensitveSync(localPath)) {
                 vscode.window.showInformationMessage(
                     localize(
                         "createUSSNode.name.exists",

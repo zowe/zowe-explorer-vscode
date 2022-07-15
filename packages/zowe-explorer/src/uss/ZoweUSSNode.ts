@@ -20,7 +20,7 @@ import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
 import { getIconByNode } from "../generators/icons/index";
-import { fileExistsCaseInsensitveSync, injectAdditionalDataToTooltip } from "../uss/utils";
+import { fileExistsCaseSensitveSync, injectAdditionalDataToTooltip } from "../uss/utils";
 import * as contextually from "../shared/context";
 import { closeOpenedTextFile } from "../utils/workspace";
 import * as nls from "vscode-nls";
@@ -491,7 +491,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 const documentFilePath = this.getUSSDocumentFilePath();
                 // check if some other file is already created with the same name avoid opening file warn user
                 const fileExists = fs.existsSync(documentFilePath);
-                if (fileExists && !fileExistsCaseInsensitveSync(documentFilePath)) {
+                if (fileExists && !fileExistsCaseSensitveSync(documentFilePath)) {
                     vscode.window.showInformationMessage(
                         localize(
                             "openUSS.name.exists",
