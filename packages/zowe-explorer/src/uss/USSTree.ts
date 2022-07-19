@@ -86,7 +86,10 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             this.mFavoriteSession.iconPath = icon.path;
         }
         this.mSessionNodes = [this.mFavoriteSession as IZoweUSSTreeNode];
-        this.treeView = vscode.window.createTreeView("zowe.uss.explorer", { treeDataProvider: this });
+        this.treeView = vscode.window.createTreeView("zowe.uss.explorer", {
+            treeDataProvider: this,
+            canSelectMany: true,
+        });
     }
 
     /**
