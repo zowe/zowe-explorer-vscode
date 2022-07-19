@@ -354,9 +354,11 @@ async function watchConfigProfile(context: vscode.ExtensionContext) {
         new vscode.RelativePattern(zoweFilesInfo.cliHome, "zowe.config.json")
     );
 
-    const workspaceProfileWatcher = vscode.workspace.createFileSystemWatcher(
-        new vscode.RelativePattern(vscode.workspace.workspaceFolders?.[0].uri.fsPath, "zowe.config.user.json")
-    );
+    const workspaceProfileWatcher =
+        vscode.workspace.workspaceFolders &&
+        vscode.workspace.createFileSystemWatcher(
+            new vscode.RelativePattern(vscode.workspace.workspaceFolders[0].uri.fsPath, "zowe.config.user.json")
+        );
     context.subscriptions.push(globalProfileWatcher, workspaceProfileWatcher);
 
     const onChangeProfileAction = async (uri: vscode.Uri) => {
@@ -380,17 +382,20 @@ async function watchConfigProfile(context: vscode.ExtensionContext) {
         await vscode.commands.executeCommand("zowe.extRefresh");
     });
 
-    workspaceProfileWatcher.onDidCreate(async () => {
-        await vscode.commands.executeCommand("zowe.extRefresh");
-    });
+    workspaceProfileWatcher &&
+        workspaceProfileWatcher.onDidCreate(async () => {
+            await vscode.commands.executeCommand("zowe.extRefresh");
+        });
 
-    workspaceProfileWatcher.onDidChange(async (uri: vscode.Uri) => {
-        await onChangeProfileAction(uri);
-    });
+    workspaceProfileWatcher &&
+        workspaceProfileWatcher.onDidChange(async (uri: vscode.Uri) => {
+            await onChangeProfileAction(uri);
+        });
 
-    workspaceProfileWatcher.onDidDelete(async () => {
-        await vscode.commands.executeCommand("zowe.extRefresh");
-    });
+    workspaceProfileWatcher &&
+        workspaceProfileWatcher.onDidDelete(async () => {
+            await vscode.commands.executeCommand("zowe.extRefresh");
+        });
 }
 
 function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
