@@ -343,13 +343,11 @@ export class ProfilesCache {
      * @returns {boolean}
      */
     public async isCredentialsSecured(): Promise<boolean> {
-        let imperativeIsSecure = false;
         try {
-            imperativeIsSecure = (await this.getProfileInfo()).isSecured();
+            return (await this.getProfileInfo()).isSecured();
         } catch (error) {
             this.log.error(error);
         }
-        return imperativeIsSecure;
     }
 
     /**
