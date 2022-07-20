@@ -151,15 +151,14 @@ export class ZoweVsCodeExtension {
     }
 
     private static async saveCredentials(profile: imperative.IProfileLoaded): Promise<boolean> {
-        let saved = false;
         const saveButton = "Save Credentials";
         const message = `Save entered credentials in plain text for future use with profile ${profile.name}?\nSaving credentials will update the local information file.`;
         await vscode.window.showInformationMessage(message, { modal: true }, ...[saveButton]).then((selection) => {
             if (selection) {
-                saved = true;
+                return true;
             }
         });
-        return saved;
+        return false;
     }
 
     private static async promptUserPass(options: IPromptUserPassOptions): Promise<string[] | undefined> {
