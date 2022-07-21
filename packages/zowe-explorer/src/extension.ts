@@ -349,6 +349,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
 }
 
 async function watchConfigProfile(context: vscode.ExtensionContext) {
+    if (globals.ISTHEIA) {
+        return undefined;
+    }
     const zoweFilesInfo = ImperativeConfig.instance;
     const globalProfileWatcher = vscode.workspace.createFileSystemWatcher(
         new vscode.RelativePattern(zoweFilesInfo.cliHome, "zowe.config.json")
@@ -359,7 +362,9 @@ async function watchConfigProfile(context: vscode.ExtensionContext) {
         vscode.workspace.createFileSystemWatcher(
             new vscode.RelativePattern(vscode.workspace.workspaceFolders[0].uri.fsPath, "zowe.config.user.json")
         );
-    context.subscriptions.push(globalProfileWatcher, workspaceProfileWatcher);
+
+    context.subscriptions.push(globalProfileWatcher);
+    workspaceProfileWatcher && context.subscriptions.push(globalProfileWatcher);
 
     const onChangeProfileAction = async (uri: vscode.Uri) => {
         const newProfileContents = await vscode.workspace.fs.readFile(uri);
