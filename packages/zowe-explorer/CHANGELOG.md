@@ -5,7 +5,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ## `2.2.0`
 
 - Optimized saving of files on DS/USS when utilizing autosave or experiencing slow upload speeds.
-- Updates to use new Zowe Explorer APIs ``ZoweVsCodeExtension.updateCredentials` for credential prompting and `ProfilesCache.updateProfilesArrays` for profiles that don't store credentials locally in profile file.
+- Updates to use new Zowe Explorer APIs `ZoweVsCodeExtension.updateCredentials` for credential prompting and `ProfilesCache.updateProfilesArrays` for profiles that don't store credentials locally in profile file.
 
 ## `2.1.0`
 
