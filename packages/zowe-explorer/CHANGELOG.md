@@ -2,6 +2,11 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## `2.2.0`
+
+- Optimized saving of files on DS/USS when utilizing autosave or experiencing slow upload speeds.
+- Updates to use new Zowe Explorer APIs ``ZoweVsCodeExtension.updateCredentials` for credential prompting and `ProfilesCache.updateProfilesArrays` for profiles that don't store credentials locally in profile file.
+
 ## `2.1.0`
 
 - Added: `Pull from Mainframe` option added for JES spool files. [#1837](https://github.com/zowe/vscode-extension-for-zowe/pull/1837)
