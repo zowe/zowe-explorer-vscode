@@ -92,6 +92,26 @@ export class ProfilesCache {
     }
 
     /**
+     * Updates profile in allProfiles array and if default updates defaultProfileByType
+     *
+     * @param {string} profileLoaded
+     *
+     * @returns {void}
+     */
+    public updateProfilesArrays(profileLoaded: zowe.imperative.IProfileLoaded): void {
+        // update allProfiles array
+        const promptedTypeIndex = this.allProfiles.findIndex(
+            (profile) => profile.type === profileLoaded.type && profile.name === profileLoaded.name
+        );
+        this.allProfiles[promptedTypeIndex] = profileLoaded;
+        // checks if default, if true update defaultProfileByType
+        const defaultProf = this.defaultProfileByType.get(profileLoaded.type);
+        if (defaultProf.name === profileLoaded.name) {
+            this.defaultProfileByType.set(profileLoaded.type, profileLoaded);
+        }
+    }
+
+    /**
      * This returns default profile by type from defaultProfileByType
      *
      * @param {string} type Name of Profile, defaults to "zosmf" if nothing passed.
@@ -273,12 +293,7 @@ export class ProfilesCache {
         const mProfileInfo = await this.getProfileInfo();
         const currentProfile = await this.getProfileFromConfig(profileName);
         if (currentProfile == null) return undefined;
-        const mergedArgs = mProfileInfo.mergeArgsForProfile(currentProfile, { getSecureVals: true });
-        const profile: zowe.imperative.IProfile = {};
-        for (const arg of mergedArgs.knownArgs) {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-            profile[arg.argName] = arg.argValue;
-        }
+        const profile = this.getMergedAttrs(mProfileInfo, currentProfile);
         return this.getProfileLoaded(currentProfile.profName, currentProfile.profType, profile);
     }
 
@@ -322,6 +337,24 @@ export class ProfilesCache {
         return this.getProfileLoaded(baseProfileAttrs.profName, baseProfileAttrs.profType, profAttr);
     }
 
+    /**
+     * This returns true or false depending on if credentials are stored securely.
+     *
+     * @returns {boolean}
+     */
+    public async isCredentialsSecured(): Promise<boolean> {
+        try {
+            return (await this.getProfileInfo()).isSecured();
+        } catch (error) {
+            this.log.error(error);
+        }
+    }
+
+    /**
+     * This returns true or false depending on if SCS plugin is installed. Use isCredentialsSecured().
+     * @deprecated
+     * @returns {boolean}
+     */
     public isSecureCredentialPluginActive(): boolean {
         let imperativeIsSecure = false;
         try {
