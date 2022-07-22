@@ -584,14 +584,22 @@ function initUSSProvider(context: vscode.ExtensionContext, ussFileProvider: IZow
         })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.binary", async (node: IZoweUSSTreeNode) =>
-            ussActions.changeFileType(node, true, ussFileProvider)
-        )
+        vscode.commands.registerCommand("zowe.uss.binary", async () => {
+            let selectedNodes = ussFileProvider.getTreeView().selection as IZoweUSSTreeNode[];
+            selectedNodes = selectedNodes.filter((x) => x.contextValue === globals.DS_TEXT_FILE_CONTEXT);
+            selectedNodes.forEach((selectedNode) => {
+                ussActions.changeFileType(selectedNode, true, ussFileProvider);
+            });
+        })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.text", async (node: IZoweUSSTreeNode) =>
-            ussActions.changeFileType(node, false, ussFileProvider)
-        )
+        vscode.commands.registerCommand("zowe.uss.text", async () => {
+            let selectedNodes = ussFileProvider.getTreeView().selection as IZoweUSSTreeNode[];
+            selectedNodes = selectedNodes.filter((x) => x.contextValue === globals.DS_BINARY_FILE_CONTEXT);
+            selectedNodes.forEach((selectedNode) => {
+                ussActions.changeFileType(selectedNode, false, ussFileProvider);
+            });
+        })
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.uss.renameNode", async (node: IZoweUSSTreeNode) =>
