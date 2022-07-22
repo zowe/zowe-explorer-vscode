@@ -444,12 +444,14 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         // Get node's profile node in favorites
         const profileName = node.getProfileName();
         const profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profileName);
-        profileNodeInFavorites.children = profileNodeInFavorites.children.filter(
-            (temp) => !(temp.label === node.label && temp.contextValue.startsWith(node.contextValue))
-        );
-        // Remove profile node from Favorites if it contains no more favorites.
-        if (profileNodeInFavorites.children.length < 1) {
-            return this.removeFavProfile(profileName, false);
+        if (profileNodeInFavorites) {
+            profileNodeInFavorites.children = profileNodeInFavorites.children?.filter(
+                (temp) => !(temp.label === node.label && temp.contextValue.startsWith(node.contextValue))
+            );
+            // Remove profile node from Favorites if it contains no more favorites.
+            if (profileNodeInFavorites.children?.length < 1) {
+                return this.removeFavProfile(profileName, false);
+            }
         }
         await this.updateFavorites();
         this.refreshElement(this.mFavoriteSession);
