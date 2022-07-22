@@ -98,25 +98,25 @@ jobs:
         run: "echo ::set-output name=package_nls::$(cat packages/zowe-explorer/package.nls.json)"
         id: get_ze_name
 
-      - name: Publish the Zowe Explorer
-        id: deploy_zowe_explorer
-        uses: ./.github/actions/deploy-vscode-extension
-        with:
-          name: ${{ fromJson(steps.get_ze_name.outputs.package_nls).displayName }}
-          package: packages/zowe-explorer
-          token: ${{ secrets.VSCODE_PUBLISHER_TOKEN }} ${{ secrets.VSCODE_ZOWE_ROBOT_PUBLISH_TOKEN }}
+      # - name: Publish the Zowe Explorer
+      #   id: deploy_zowe_explorer
+      #   uses: ./.github/actions/deploy-vscode-extension
+      #   with:
+      #     name: ${{ fromJson(steps.get_ze_name.outputs.package_nls).displayName }}
+      #     package: packages/zowe-explorer
+      #     token: ${{ secrets.VSCODE_PUBLISHER_TOKEN }} ${{ secrets.VSCODE_ZOWE_ROBOT_PUBLISH_TOKEN }}
 
       - name: Get the FTP Extension package.json
         run: "echo ::set-output name=package::$(cat packages/zowe-explorer-ftp-extension/package.json)"
         id: get_ftp_name
 
-      - name: Publish the FTP Extension for Zowe Explorer
-        id: deploy_zowe_explorer_ftp_extension
-        uses: ./.github/actions/deploy-vscode-extension
-        with:
-          name: ${{ fromJson(steps.get_ftp_name.outputs.package).displayName }}
-          package: packages/zowe-explorer-ftp-extension
-          token: ${{ secrets.VSCODE_PUBLISHER_TOKEN }} ${{ secrets.VSCODE_ZOWE_ROBOT_PUBLISH_TOKEN }}
+      # - name: Publish the FTP Extension for Zowe Explorer
+      #   id: deploy_zowe_explorer_ftp_extension
+      #   uses: ./.github/actions/deploy-vscode-extension
+      #   with:
+      #     name: ${{ fromJson(steps.get_ftp_name.outputs.package).displayName }}
+      #     package: packages/zowe-explorer-ftp-extension
+      #     token: ${{ secrets.VSCODE_PUBLISHER_TOKEN }} ${{ secrets.VSCODE_ZOWE_ROBOT_PUBLISH_TOKEN }}
 
       - name: Get the NPM API package.json
         run: "echo ::set-output name=package::$(cat packages/zowe-explorer-api/package.json)"

@@ -32,13 +32,8 @@ const checkVersion = (packageJson, version) => {
 const publishSpecificProject = (versionName, token, packagePath, tag) => {
     if (tag !== "next") {
         console.log(`Publishing: ${versionName}`);
-        if (packagePath !== "packages/zowe-explorer")
-            console.log(execSync(`vsce publish --yarn -p ${token.split(" ")[0]}`, { cwd: packagePath }).toString());
-        try {
-            console.log(execSync(`ovsx publish ${versionName}.vsix -p ${token.split(" ")[1]}`, { cwd: "dist" }).toString());
-        } catch (err) {
-            console.log(err);
-        }
+        console.log(execSync(`vsce publish --yarn -p ${token.split(" ")[0]}`, { cwd: packagePath }).toString());
+        console.log(execSync(`ovsx publish ${versionName}.vsix -p ${token.split(" ")[1]}`, { cwd: "dist" }).toString());
     } else {
         console.log(`Not publishing ${versionName}.vsix with the "next" tag.`);
     }
