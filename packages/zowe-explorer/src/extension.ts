@@ -519,7 +519,13 @@ function initUSSProvider(context: vscode.ExtensionContext, ussFileProvider: IZow
         })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.refreshUSS", (node: IZoweUSSTreeNode) => node.refreshUSS())
+        vscode.commands.registerCommand("zowe.uss.refreshUSS", () => {
+            let selectedNodes = ussFileProvider.getTreeView().selection as IZoweUSSTreeNode[];
+            selectedNodes = selectedNodes.filter((x) => x.contextValue === globals.DS_TEXT_FILE_CONTEXT);
+            selectedNodes.forEach((selectedNode) => {
+                selectedNode.refreshUSS();
+            });
+        })
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.uss.refreshUSSInTree", (node: IZoweUSSTreeNode) =>
