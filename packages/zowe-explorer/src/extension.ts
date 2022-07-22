@@ -506,9 +506,12 @@ function initUSSProvider(context: vscode.ExtensionContext, ussFileProvider: IZow
         })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.removeFavorite", async (node: IZoweUSSTreeNode) =>
-            ussFileProvider.removeFavorite(node)
-        )
+        vscode.commands.registerCommand("zowe.uss.removeFavorite", async () => {
+            let selectedNodes = ussFileProvider.getTreeView().selection as IZoweUSSTreeNode[];
+            selectedNodes.forEach((selectedNode) => {
+                ussFileProvider.removeFavorite(selectedNode);
+            });
+        })
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.uss.addSession", async () =>

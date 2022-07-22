@@ -505,7 +505,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         this.mFavorites.forEach((favProfileNode) => {
             const favProfileLabel = favProfileNode.label as string;
             if (favProfileLabel === profileName) {
-                this.mFavorites = this.mFavorites.filter((tempNode) => tempNode.label.toString() !== favProfileLabel);
+                this.mFavorites = this.mFavorites.filter((tempNode) => tempNode?.label.toString() !== favProfileLabel);
                 favProfileNode.dirty = true;
                 this.refresh();
             }

@@ -734,7 +734,7 @@
           "group": "inline"
         },
         {
-          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(ussSession.*|profile.*)).*_fav.*/",
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(ussSession.*|profile.*|directory.*)).*_fav.*/",
           "command": "zowe.uss.removeFavorite",
           "group": "inline"
         },
