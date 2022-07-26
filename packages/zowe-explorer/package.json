@@ -939,17 +939,17 @@
           "group": "001_zowe_dsCreate@1"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav.*)session.*/ && !listMultiSelection",
           "command": "zowe.ds.createDataset",
           "group": "001_zowe_dsCreate@2"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^(ds|pds).*/",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(ds|pds).*/ && !listMultiSelection",
           "command": "zowe.ds.allocateLike",
           "group": "001_zowe_dsCreate@3"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^pds.*/",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^pds.*/ && !listMultiSelection",
           "command": "zowe.ds.createMember",
           "group": "001_zowe_dsCreate@4"
         },
@@ -1019,17 +1019,17 @@
           "group": "099_zowe_dsModification@1"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^member.*/",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^member.*/  && !listMultiSelection",
           "command": "zowe.ds.renameDataSetMember",
           "group": "099_zowe_dsModification@2"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^ds.*/",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^ds.*/ && !listMultiSelection",
           "command": "zowe.ds.renameDataSet",
           "group": "099_zowe_dsModification@2"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^pds.*/",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^pds.*/ && !listMultiSelection",
           "command": "zowe.ds.renameDataSet",
           "group": "099_zowe_dsModification@2"
         },
