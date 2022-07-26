@@ -404,10 +404,26 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
         )
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.editDataSet", (node) => dsActions.openPS(node, false, datasetProvider))
+        vscode.commands.registerCommand("zowe.ds.editDataSet", () => {
+            let selectedNodes = datasetProvider.getTreeView().selection as IZoweDatasetTreeNode[];
+            selectedNodes = selectedNodes.filter(
+                (node) => node.contextValue == globals.DS_DS_CONTEXT || node.contextValue == globals.DS_MEMBER_CONTEXT
+            );
+            selectedNodes.forEach((node) => {
+                dsActions.openPS(node, false, datasetProvider);
+            });
+        })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.editMember", (node) => dsActions.openPS(node, false, datasetProvider))
+        vscode.commands.registerCommand("zowe.ds.editMember", () => {
+            let selectedNodes = datasetProvider.getTreeView().selection as IZoweDatasetTreeNode[];
+            selectedNodes = selectedNodes.filter(
+                (node) => node.contextValue == globals.DS_DS_CONTEXT || node.contextValue == globals.DS_MEMBER_CONTEXT
+            );
+            selectedNodes.forEach((node) => {
+                dsActions.openPS(node, false, datasetProvider);
+            });
+        })
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.removeSession", async (node) => datasetProvider.deleteSession(node))
