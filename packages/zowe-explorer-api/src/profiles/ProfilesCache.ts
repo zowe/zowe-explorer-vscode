@@ -497,13 +497,16 @@ export class ProfilesCache {
     /**
      * Used for extenders to register with Zowe Explorer that do not need their
      * profile type in the existing MVS, USS, and JES
-     * @param {string} profileTypeName Type of Profile, defaults to "zosmf" if nothing passed.
+     * @param {string} profileTypeName Type of Profile
      *
      * @returns {void}
      */
     public async asyncRegisterCustomProfilesType(profileTypeName: string): Promise<void> {
         const existsV1Profile = fs.existsSync(path.posix.join(`${os.homedir()}/.zowe/profiles/${profileTypeName}`));
-        const existsV2Profile = (await this.getProfileInfo()).usingTeamConfig;
+        const profileInfo = await this.getProfileInfo();
+        const existsV2Profile =
+            profileInfo?.usingTeamConfig &&
+            profileInfo.getAllProfiles().find((profile) => profile.profType === profileTypeName);
         if (!existsV1Profile && !existsV2Profile) {
             throw new Error(
                 `Zowe Explorer Profiles Cache error: Tried to register a custom profile type named: ${profileTypeName} that does not yet exist. Extenders must call "zoweExplorerApi.getExplorerExtenderApi().initForZowe()" first.`
