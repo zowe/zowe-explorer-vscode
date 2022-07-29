@@ -97,9 +97,16 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
         getZoweDir(); // This should create initialize the loadedConfig if it is not already
 
         // const mProfileInfo = await getProfileInfo(globals.ISTHEIA);
-        let mProfileInfo = await globals.PROFILESCACHE.getProfileInfo();
-        if (!mProfileInfo) {
-            mProfileInfo = await getProfileInfo(globals.ISTHEIA);
+        let mProfileInfo: imperative.ProfileInfo;
+        try {
+            mProfileInfo = await globals.PROFILESCACHE.getProfileInfo();
+            if (!mProfileInfo) {
+                mProfileInfo = await getProfileInfo(globals.ISTHEIA);
+            }
+        } catch (error) {
+            if (!error.toString().includes("Error parsing JSON")) {
+                throw new Error(error);
+            }
         }
         if (profileTypeConfigurations && !mProfileInfo.usingTeamConfig) {
             const configOptions = Array.from(profileTypeConfigurations);

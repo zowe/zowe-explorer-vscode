@@ -12,12 +12,12 @@
 // Generic utility functions (not node type related). See ./src/shared/utils.ts
 
 import * as vscode from "vscode";
-import * as fs from "fs";
 import * as globals from "../globals";
-import { Session, IProfile, IProfileLoaded, ProfileInfo, IConfigLayer } from "@zowe/imperative";
 import { getSecurityModules, IZoweTreeNode, ZoweTreeNode, getZoweDir, getFullPath } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import * as nls from "vscode-nls";
+import { imperative } from "@zowe/cli";
+import { UIViews } from "../shared/ui-views";
 
 // Set up localization
 nls.config({
@@ -135,7 +135,7 @@ export function isTheia(): boolean {
  * @param getSessionForProfile is a function to build a valid specific session based on provided profile
  * @param sessionNode is a tree node, containing session information
  */
-type SessionForProfile = (profile: IProfileLoaded) => Session;
+type SessionForProfile = (profile: imperative.IProfileLoaded) => imperative.Session;
 export const syncSessionNode =
     (profiles: Profiles) =>
     (getSessionForProfile: SessionForProfile) =>
@@ -145,7 +145,7 @@ export const syncSessionNode =
         const profileType = sessionNode.getProfile().type;
         const profileName = sessionNode.getProfileName();
 
-        let profile: IProfileLoaded;
+        let profile: imperative.IProfileLoaded;
         try {
             profile = globals.PROFILESCACHE.loadNamedProfile(profileName, profileType);
         } catch (e) {
@@ -208,14 +208,14 @@ export class FilterDescriptor implements vscode.QuickPickItem {
 /**
  * Function to update the node profile information
  */
-export async function setProfile(node: IZoweTreeNode, profile: IProfile) {
+export async function setProfile(node: IZoweTreeNode, profile: imperative.IProfile) {
     node.getProfile().profile = profile;
 }
 
 /**
  * Function to update the node session information
  */
-export async function setSession(node: IZoweTreeNode, combinedSessionProfile: IProfile) {
+export async function setSession(node: IZoweTreeNode, combinedSessionProfile: imperative.IProfile) {
     const sessionNode = node.getSession();
     for (const prop of Object.keys(combinedSessionProfile)) {
         if (prop === "host") {
@@ -226,8 +226,8 @@ export async function setSession(node: IZoweTreeNode, combinedSessionProfile: IP
     }
 }
 
-export async function getProfileInfo(envTheia: boolean): Promise<ProfileInfo> {
-    const mProfileInfo = new ProfileInfo("zowe", {
+export async function getProfileInfo(envTheia: boolean): Promise<imperative.ProfileInfo> {
+    const mProfileInfo = new imperative.ProfileInfo("zowe", {
         requireKeytar: () => getSecurityModules("keytar", envTheia),
     });
     return mProfileInfo;
@@ -243,31 +243,93 @@ export function getProfile(node: vscode.TreeItem) {
 export async function readConfigFromDisk() {
     const mProfileInfo = await getProfileInfo(globals.ISTHEIA);
     let rootPath;
-    if (vscode.workspace.workspaceFolders) {
-        rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
-        await mProfileInfo.readProfilesFromDisk({ projectDir: getFullPath(rootPath) });
-    } else {
-        await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir() });
+    try {
+        if (vscode.workspace.workspaceFolders) {
+            rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
+            await mProfileInfo.readProfilesFromDisk({ projectDir: getFullPath(rootPath) });
+        } else {
+            await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir() });
+        }
+        if (mProfileInfo.usingTeamConfig) {
+            globals.setConfigPath(rootPath);
+            globals.LOG.debug(
+                'Zowe Explorer is using the team configuration file "%s"',
+                mProfileInfo.getTeamConfig().configName
+            );
+            const layers = mProfileInfo.getTeamConfig().layers || [];
+            const layerSummary = layers.map(
+                (config: imperative.IConfigLayer) =>
+                    `Path: ${config.path}: ${
+                        config.exists
+                            ? "Found, with the following defaults:" +
+                              JSON.stringify(config.properties?.defaults || "Undefined default")
+                            : "Not available"
+                    } `
+            );
+            globals.LOG.debug(
+                "Summary of team configuration files considered for Zowe Explorer: %s",
+                JSON.stringify(layerSummary)
+            );
+        }
+    } catch (error) {
+        if (error.message.toString().includes("Error parsing JSON")) {
+            const errorArray = error.message.toString().split("'");
+            const path = errorArray[1];
+            const document = await vscode.workspace.openTextDocument(path);
+            await vscode.window.showTextDocument(document);
+        }
+        throw new Error(error);
     }
-    if (mProfileInfo.usingTeamConfig) {
-        globals.setConfigPath(rootPath);
-        globals.LOG.debug(
-            'Zowe Explorer is using the team configuration file "%s"',
-            mProfileInfo.getTeamConfig().configName
+}
+
+export async function promptCredentials(node: IZoweTreeNode) {
+    const mProfileInfo = await Profiles.getInstance().getProfileInfo();
+    if (mProfileInfo.usingTeamConfig && !mProfileInfo.getTeamConfig().properties.autoStore) {
+        vscode.window.showInformationMessage(
+            localize(
+                "zowe.promptCredentials.notSupported",
+                '"Update Credentials" operation not supported when "autoStore" is false'
+            )
         );
-        const layers = mProfileInfo.getTeamConfig().layers || [];
-        const layerSummary = layers.map(
-            (config: IConfigLayer) =>
-                `Path: ${config.path}: ${
-                    config.exists
-                        ? "Found, with the following defaults:" +
-                          JSON.stringify(config.properties?.defaults || "Undefined default")
-                        : "Not available"
-                } `
-        );
-        globals.LOG.debug(
-            "Summary of team configuration files considered for Zowe Explorer: %s",
-            JSON.stringify(layerSummary)
+        return;
+    }
+    let profileName: string;
+    if (node == null) {
+        // prompt for profile
+        profileName = await UIViews.inputBox({
+            placeHolder: localize("createNewConnection.option.prompt.profileName.placeholder", "Connection Name"),
+            prompt: localize("createNewConnection.option.prompt.profileName", "Enter a name for the connection."),
+            ignoreFocusOut: true,
+        });
+
+        if (profileName === undefined) {
+            vscode.window.showInformationMessage(
+                localize("createNewConnection.undefined.passWord", "Operation Cancelled")
+            );
+            return;
+        }
+        profileName = profileName.trim();
+    } else {
+        profileName = node.getProfile().name;
+    }
+
+    const creds = await Profiles.getInstance().promptCredentials(profileName, true);
+
+    try {
+        const updatedProfileInfo = Profiles.getInstance().loadNamedProfile(profileName);
+        node.setProfileToChoice(updatedProfileInfo);
+    } catch (err) {
+        const errorMessage = localize("zowe.loadNamedProfile.error", "Error when updating credentials.");
+        vscode.window.showErrorMessage(`${errorMessage}: ${err.message}`);
+    }
+
+    if (creds != null) {
+        vscode.window.showInformationMessage(
+            localize(
+                "promptCredentials.updatedCredentials",
+                "Credentials for {0} were successfully updated",
+                profileName
+            )
         );
     }
 }
