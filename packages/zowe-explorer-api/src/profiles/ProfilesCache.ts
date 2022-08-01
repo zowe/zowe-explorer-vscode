@@ -149,7 +149,6 @@ export class ProfilesCache {
     }
 
     /**
-     * @deprecated Please use {@link asyncRegisterCustomProfilesType}.
      * Used for extenders to register with Zowe Explorer that do not need their
      * profile type in the existing MVS, USS, and JES
      *
@@ -158,12 +157,6 @@ export class ProfilesCache {
      * @returns {void}
      */
     public registerCustomProfilesType(profileTypeName: string): void {
-        const exists = fs.existsSync(path.posix.join(`${os.homedir()}/.zowe/profiles/${profileTypeName}`));
-        if (!exists) {
-            throw new Error(
-                `Zowe Explorer Profiles Cache error: Tried to register a custom profile type named: ${profileTypeName} that does not yet exist. Extenders must call "zoweExplorerApi.getExplorerExtenderApi().initForZowe()" first.`
-            );
-        }
         this.allExternalTypes.add(profileTypeName);
     }
 
@@ -492,26 +485,5 @@ export class ProfilesCache {
             externalTypeArray.filter((exType) => registeredTypes.every((type) => type !== exType))
         );
         return allTypes;
-    }
-
-    /**
-     * Used for extenders to register with Zowe Explorer that do not need their
-     * profile type in the existing MVS, USS, and JES
-     * @param {string} profileTypeName Type of Profile
-     *
-     * @returns {void}
-     */
-    public async asyncRegisterCustomProfilesType(profileTypeName: string): Promise<void> {
-        const existsV1Profile = fs.existsSync(path.posix.join(`${os.homedir()}/.zowe/profiles/${profileTypeName}`));
-        const profileInfo = await this.getProfileInfo();
-        const existsV2Profile =
-            profileInfo?.usingTeamConfig &&
-            profileInfo.getAllProfiles().find((profile) => profile.profType === profileTypeName);
-        if (!existsV1Profile && !existsV2Profile) {
-            throw new Error(
-                `Zowe Explorer Profiles Cache error: Tried to register a custom profile type named: ${profileTypeName} that does not yet exist. Extenders must call "zoweExplorerApi.getExplorerExtenderApi().initForZowe()" first.`
-            );
-        }
-        this.allExternalTypes.add(profileTypeName);
     }
 }
