@@ -51,6 +51,7 @@ import {
     resolveQuickPickHelper,
     isTheia,
     readConfigFromDisk,
+    getProfileInfo,
 } from "./utils/ProfilesUtils";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import * as globals from "./globals";
@@ -298,7 +299,8 @@ export class Profiles extends ProfilesCache {
         const createPick = new FilterDescriptor("\uFF0B " + createNewProfile);
         const configPick = new FilterDescriptor("\uFF0B " + createNewConfig);
         const items: vscode.QuickPickItem[] = [];
-        const mProfileInfo = await this.getProfileInfo();
+        let mProfileInfo: zowe.imperative.ProfileInfo;
+        mProfileInfo = await getProfileInfo(globals.ISTHEIA);
 
         for (const pName of profileNamesList) {
             items.push(new FilterItem({ text: pName, icon: this.getProfileIcon(mProfileInfo, pName)[0] }));
@@ -355,7 +357,7 @@ export class Profiles extends ProfilesCache {
         }
 
         if (chosenProfile === "") {
-            const config = await this.getProfileInfo();
+            const config = await getProfileInfo(globals.ISTHEIA);
             if (config.usingTeamConfig) {
                 const profiles = config.getAllProfiles();
                 const currentProfile = await this.getProfileFromConfig(profiles[0].profName);
