@@ -675,23 +675,6 @@ export class Profiles extends ProfilesCache {
         }
     }
 
-    async propmtToRefreshForProfiles(rootPath: string) {
-        if (globals.ISTHEIA) {
-            const reloadButton = localize("createZoweSchema.reload.button", "Refresh Zowe Explorer");
-            const infoMsg = localize(
-                "createZoweSchema.reload.infoMessage",
-                "Team Configuration file created. Location: {0}. \n Please update file and refresh Zowe Explorer via button or command palette.",
-                rootPath
-            );
-            await vscode.window.showInformationMessage(infoMsg, ...[reloadButton]).then(async (selection) => {
-                if (selection === reloadButton) {
-                    await vscode.commands.executeCommand("zowe.extRefresh");
-                }
-            });
-        }
-        return undefined;
-    }
-
     public async createNewConnection(profileName: string, requestedProfileType?: string): Promise<string | undefined> {
         let newUser: string;
         let newPass: string;
@@ -1318,6 +1301,23 @@ export class Profiles extends ProfilesCache {
     public async openConfigFile(filePath: string) {
         const document = await vscode.workspace.openTextDocument(filePath);
         await vscode.window.showTextDocument(document);
+    }
+
+    private async propmtToRefreshForProfiles(rootPath: string) {
+        if (globals.ISTHEIA) {
+            const reloadButton = localize("createZoweSchema.reload.button", "Refresh Zowe Explorer");
+            const infoMsg = localize(
+                "createZoweSchema.reload.infoMessage",
+                "Team Configuration file created. Location: {0}. \n Please update file and refresh Zowe Explorer via button or command palette.",
+                rootPath
+            );
+            await vscode.window.showInformationMessage(infoMsg, ...[reloadButton]).then(async (selection) => {
+                if (selection === reloadButton) {
+                    await vscode.commands.executeCommand("zowe.extRefresh");
+                }
+            });
+        }
+        return undefined;
     }
 
     private getProfileIcon(profInfo: zowe.imperative.ProfileInfo, name: string): string[] {
