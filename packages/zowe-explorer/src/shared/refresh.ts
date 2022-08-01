@@ -27,22 +27,20 @@ import * as globals from "../globals";
  */
 export async function refreshAll(treeProvider: IZoweTree<IZoweTreeNode>) {
     await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
-    if (treeProvider.mSessionNodes.length > 0) {
-        treeProvider.mSessionNodes.forEach(async (sessNode) => {
-            const setting = (await PersistentFilters.getDirectValue(
-                globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION
-            )) as boolean;
-            if (contextually.isSessionNotFav(sessNode)) {
-                labelRefresh(sessNode);
-                sessNode.children = [];
-                sessNode.dirty = true;
-                resetValidationSettings(sessNode, setting);
-                returnIconState(sessNode);
-                await syncSessionNode(Profiles.getInstance())((profileValue) =>
-                    ZoweExplorerApiRegister.getCommonApi(profileValue).getSession()
-                )(sessNode);
-            }
-        });
-        treeProvider.refresh();
-    }
+    treeProvider.mSessionNodes.forEach(async (sessNode) => {
+        const setting = (await PersistentFilters.getDirectValue(
+            globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION
+        )) as boolean;
+        if (contextually.isSessionNotFav(sessNode)) {
+            labelRefresh(sessNode);
+            sessNode.children = [];
+            sessNode.dirty = true;
+            resetValidationSettings(sessNode, setting);
+            returnIconState(sessNode);
+            await syncSessionNode(Profiles.getInstance())((profileValue) =>
+                ZoweExplorerApiRegister.getCommonApi(profileValue).getSession()
+            )(sessNode);
+        }
+    });
+    treeProvider.refresh();
 }
