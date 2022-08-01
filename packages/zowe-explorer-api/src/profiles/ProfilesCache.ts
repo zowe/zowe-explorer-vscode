@@ -230,8 +230,13 @@ export class ProfilesCache {
         return validationResult;
     }
 
-    // gets schema from /.zowe/profiles/profileType directory
-    // used by Zowe Explorer for creation & update of v1 profiles
+    /**
+     * LOOK FOR A WAY TO GETSCHEMA OF CONFIG TOO
+     * gets schema from /.zowe/profiles/profileType directory
+     * used by Zowe Explorer for creation & update of v1 profiles
+     * @param profileType
+     * @returns
+     */
     public getSchema(profileType: string): Record<string, unknown> {
         const profileManager = this.getCliProfileManager(profileType);
         const configOptions = Array.from(profileManager.configurations);
@@ -273,6 +278,13 @@ export class ProfilesCache {
         return profByType;
     }
 
+    /**
+     * TO BE CHANGED, REMOVE CLIPROFILEMANAGER USE
+     * v1 profile specific
+     * @param type
+     * @param name
+     * @returns
+     */
     public async directLoad(type: string, name: string): Promise<zowe.imperative.IProfileLoaded> {
         let directProfile: zowe.imperative.IProfileLoaded;
         const profileManager = this.getCliProfileManager(type);
@@ -297,7 +309,11 @@ export class ProfilesCache {
         return this.getProfileLoaded(currentProfile.profName, currentProfile.profType, profile);
     }
 
-    // V1 specific used by Zowe Explorer to handle v1 profiles
+    /**
+     * V1 specific used by Zowe Explorer to handle v1 profiles
+     * @param type string, profile type
+     * @returns zowe.imperative.CliProfileManager
+     */
     public getCliProfileManager(type: string): zowe.imperative.CliProfileManager {
         let profileManager = this.profileManagerByType.get(type);
         if (!profileManager) {
