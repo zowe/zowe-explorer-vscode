@@ -37,6 +37,7 @@ import {
     isTheia,
     readConfigFromDisk,
     getProfileInfo,
+    openConfigOnError,
 } from "./utils/ProfilesUtils";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import * as globals from "./globals";
@@ -674,6 +675,7 @@ export class Profiles extends ProfilesCache {
             });
             return path.join(rootPath, configName);
         } catch (err) {
+            await openConfigOnError(err);
             vscode.window.showErrorMessage("Error in creating team configuration file: " + err.message);
         }
     }
