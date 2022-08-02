@@ -9,21 +9,6 @@
  *                                                                                 *
  */
 
-import {
-    IProfileLoaded,
-    Logger,
-    Session,
-    SessConstants,
-    IUpdateProfile,
-    IProfile,
-    ConfigSchema,
-    ConfigBuilder,
-    ImperativeConfig,
-    IImperativeConfig,
-    Config,
-    IConfig,
-    ICommandProfileTypeConfiguration,
-} from "@zowe/imperative";
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import * as path from "path";
@@ -68,7 +53,7 @@ let InputBoxOptions: vscode.InputBoxOptions;
 
 export class Profiles extends ProfilesCache {
     // Processing stops if there are no profiles detected
-    public static async createInstance(log: Logger): Promise<Profiles> {
+    public static async createInstance(log: zowe.imperative.Logger): Promise<Profiles> {
         Profiles.loader = new Profiles(log, vscode.workspace.workspaceFolders?.[0].uri.fsPath);
         await Profiles.loader.refresh(ZoweExplorerApiRegister.getInstance());
         return Profiles.loader;
@@ -80,16 +65,16 @@ export class Profiles extends ProfilesCache {
 
     protected static loader: Profiles;
 
-    public loadedProfile: IProfileLoaded;
+    public loadedProfile: zowe.imperative.IProfileLoaded;
     public validProfile: ValidProfileEnum = ValidProfileEnum.INVALID;
     private dsSchema: string = globals.SETTINGS_DS_HISTORY;
     private ussSchema: string = globals.SETTINGS_USS_HISTORY;
     private jobsSchema: string = globals.SETTINGS_JOBS_HISTORY;
-    public constructor(log: Logger, cwd?: string) {
+    public constructor(log: zowe.imperative.Logger, cwd?: string) {
         super(log, cwd);
     }
 
-    public async checkCurrentProfile(theProfile: IProfileLoaded) {
+    public async checkCurrentProfile(theProfile: zowe.imperative.IProfileLoaded) {
         let profileStatus: IProfileValidation;
         if (!theProfile.profile.tokenType && (!theProfile.profile.user || !theProfile.profile.password)) {
             // The profile will need to be reactivated, so remove it from profilesForValidation
@@ -138,7 +123,7 @@ export class Profiles extends ProfilesCache {
         return profileStatus;
     }
 
-    public async getProfileSetting(theProfile: IProfileLoaded): Promise<IProfileValidation> {
+    public async getProfileSetting(theProfile: zowe.imperative.IProfileLoaded): Promise<IProfileValidation> {
         let profileStatus: IProfileValidation;
         let found: boolean = false;
         this.profilesValidationSetting.filter(async (instance) => {
@@ -176,7 +161,7 @@ export class Profiles extends ProfilesCache {
     }
 
     public async disableValidationContext(node: IZoweNodeType) {
-        const theProfile: IProfileLoaded = node.getProfile();
+        const theProfile: zowe.imperative.IProfileLoaded = node.getProfile();
         this.validationArraySetup(theProfile, false);
         if (node.contextValue.includes(`${globals.VALIDATE_SUFFIX}true`)) {
             node.contextValue = node.contextValue
@@ -198,7 +183,7 @@ export class Profiles extends ProfilesCache {
     }
 
     public async enableValidationContext(node: IZoweNodeType) {
-        const theProfile: IProfileLoaded = node.getProfile();
+        const theProfile: zowe.imperative.IProfileLoaded = node.getProfile();
         this.validationArraySetup(theProfile, true);
         if (node.contextValue.includes(`${globals.VALIDATE_SUFFIX}false`)) {
             node.contextValue = node.contextValue.replace(/(_validate=false)/g, "").replace(/(_Unverified)/g, "");
@@ -213,7 +198,7 @@ export class Profiles extends ProfilesCache {
     }
 
     public async validationArraySetup(
-        theProfile: IProfileLoaded,
+        theProfile: zowe.imperative.IProfileLoaded,
         validationSetting: boolean
     ): Promise<IValidationSetting> {
         let found: boolean = false;
@@ -299,8 +284,7 @@ export class Profiles extends ProfilesCache {
         const createPick = new FilterDescriptor("\uFF0B " + createNewProfile);
         const configPick = new FilterDescriptor("\uFF0B " + createNewConfig);
         const items: vscode.QuickPickItem[] = [];
-        let mProfileInfo: zowe.imperative.ProfileInfo;
-        mProfileInfo = await getProfileInfo(globals.ISTHEIA);
+        const mProfileInfo = await getProfileInfo(globals.ISTHEIA);
 
         for (const pName of profileNamesList) {
             items.push(new FilterItem({ text: pName, icon: this.getProfileIcon(mProfileInfo, pName)[0] }));
@@ -357,9 +341,8 @@ export class Profiles extends ProfilesCache {
         }
 
         if (chosenProfile === "") {
-            const config = await getProfileInfo(globals.ISTHEIA);
-            if (config.usingTeamConfig) {
-                const profiles = config.getAllProfiles();
+            if (mProfileInfo.usingTeamConfig) {
+                const profiles = mProfileInfo.getAllProfiles();
                 const currentProfile = await this.getProfileFromConfig(profiles[0].profName);
                 const filePath = currentProfile.profLoc.osLoc[0];
                 await this.openConfigFile(filePath);
@@ -421,7 +404,10 @@ export class Profiles extends ProfilesCache {
         }
     }
 
-    public async editSession(profileLoaded: IProfileLoaded, profileName: string): Promise<any | undefined> {
+    public async editSession(
+        profileLoaded: zowe.imperative.IProfileLoaded,
+        profileName: string
+    ): Promise<any | undefined> {
         if ((await this.getProfileInfo()).usingTeamConfig) {
             const currentProfile = await this.getProfileFromConfig(profileLoaded.name);
             const filePath = currentProfile.profLoc.osLoc[0];
@@ -638,19 +624,19 @@ export class Profiles extends ProfilesCache {
                     global = false;
                 }
             }
-            const config = await Config.load("zowe", { projectDir: getFullPath(rootPath) });
+            const config = await zowe.imperative.Config.load("zowe", { projectDir: getFullPath(rootPath) });
             if (vscode.workspace.workspaceFolders) {
                 config.api.layers.activate(user, global, rootPath);
             }
 
-            const impConfig: IImperativeConfig = zowe.getImperativeConfig();
-            const knownCliConfig: ICommandProfileTypeConfiguration[] = impConfig.profiles;
+            const impConfig: zowe.imperative.IImperativeConfig = zowe.getImperativeConfig();
+            const knownCliConfig: zowe.imperative.ICommandProfileTypeConfiguration[] = impConfig.profiles;
             // add extenders config info from global variable
             globals.EXTENDER_CONFIG.forEach((item) => {
                 knownCliConfig.push(item);
             });
             knownCliConfig.push(impConfig.baseProfile);
-            config.setSchema(ConfigSchema.buildSchema(knownCliConfig));
+            config.setSchema(zowe.imperative.ConfigSchema.buildSchema(knownCliConfig));
 
             // Note: IConfigBuilderOpts not exported
             // const opts: IConfigBuilderOpts = {
@@ -660,7 +646,7 @@ export class Profiles extends ProfilesCache {
             };
 
             // Build new config and merge with existing layer
-            const newConfig: IConfig = await ConfigBuilder.build(impConfig, opts);
+            const newConfig: zowe.imperative.IConfig = await zowe.imperative.ConfigBuilder.build(impConfig, opts);
             config.api.layers.merge(newConfig);
             await config.save(false);
             let configName;
@@ -907,7 +893,7 @@ export class Profiles extends ProfilesCache {
     }
 
     public async getDeleteProfile() {
-        const allProfiles: IProfileLoaded[] = this.allProfiles;
+        const allProfiles: zowe.imperative.IProfileLoaded[] = this.allProfiles;
         const profileNamesList = allProfiles.map((temprofile) => {
             return temprofile.name;
         });
@@ -941,7 +927,7 @@ export class Profiles extends ProfilesCache {
         node?: IZoweNodeType
     ) {
         let deleteLabel: string;
-        let deletedProfile: IProfileLoaded;
+        let deletedProfile: zowe.imperative.IProfileLoaded;
         if (!node) {
             deletedProfile = await this.getDeleteProfile();
         } else {
@@ -1080,7 +1066,7 @@ export class Profiles extends ProfilesCache {
         }
     }
 
-    public async validateProfiles(theProfile: IProfileLoaded) {
+    public async validateProfiles(theProfile: zowe.imperative.IProfileLoaded) {
         let filteredProfile: IProfileValidation;
         let profileStatus;
         const getSessStatus = await ZoweExplorerApiRegister.getInstance().getCommonApi(theProfile);
@@ -1175,8 +1161,8 @@ export class Profiles extends ProfilesCache {
         let loginToken: string;
         let loginTokenType: string;
         let creds: string[];
-        let serviceProfile: IProfileLoaded;
-        let session: Session;
+        let serviceProfile: zowe.imperative.IProfileLoaded;
+        let session: zowe.imperative.Session;
         if (node) {
             serviceProfile = node.getProfile();
         } else {
@@ -1198,7 +1184,7 @@ export class Profiles extends ProfilesCache {
             );
             return;
         }
-        if (loginTokenType && loginTokenType !== SessConstants.TOKEN_TYPE_APIML) {
+        if (loginTokenType && loginTokenType !== zowe.imperative.SessConstants.TOKEN_TYPE_APIML) {
             // this will handle extenders
             if (node) {
                 session = node.getSession();
@@ -1227,19 +1213,19 @@ export class Profiles extends ProfilesCache {
                     return;
                 }
                 try {
-                    const updSession = new Session({
+                    const updSession = new zowe.imperative.Session({
                         hostname: serviceProfile.profile.host,
                         port: serviceProfile.profile.port,
                         user: creds[0],
                         password: creds[1],
                         rejectUnauthorized: serviceProfile.profile.rejectUnauthorized,
                         tokenType: loginTokenType,
-                        type: SessConstants.AUTH_TYPE_TOKEN,
+                        type: zowe.imperative.SessConstants.AUTH_TYPE_TOKEN,
                     });
                     loginToken = await ZoweExplorerApiRegister.getInstance()
                         .getCommonApi(serviceProfile)
                         .login(updSession);
-                    const updBaseProfile: IProfile = {
+                    const updBaseProfile: zowe.imperative.IProfile = {
                         tokenType: loginTokenType,
                         tokenValue: loginToken,
                     };
@@ -1277,7 +1263,7 @@ export class Profiles extends ProfilesCache {
             // this will handle extenders
             if (
                 serviceProfile.type !== "zosmf" &&
-                serviceProfile.profile?.tokenType !== SessConstants.TOKEN_TYPE_APIML
+                serviceProfile.profile?.tokenType !== zowe.imperative.SessConstants.TOKEN_TYPE_APIML
             ) {
                 await ZoweExplorerApiRegister.getInstance()
                     .getCommonApi(serviceProfile)
@@ -1288,13 +1274,13 @@ export class Profiles extends ProfilesCache {
                 const loginTokenType = ZoweExplorerApiRegister.getInstance()
                     .getCommonApi(serviceProfile)
                     .getTokenTypeName();
-                const updSession = new Session({
+                const updSession = new zowe.imperative.Session({
                     hostname: serviceProfile.profile.host,
                     port: serviceProfile.profile.port,
                     rejectUnauthorized: serviceProfile.profile.rejectUnauthorized,
                     tokenType: loginTokenType,
                     tokenValue: serviceProfile.profile.tokenValue,
-                    type: SessConstants.AUTH_TYPE_TOKEN,
+                    type: zowe.imperative.SessConstants.AUTH_TYPE_TOKEN,
                 });
                 await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).logout(updSession);
 
@@ -1329,7 +1315,10 @@ export class Profiles extends ProfilesCache {
         return ret;
     }
 
-    private async updateBaseProfileFileLogin(profile: IProfileLoaded, updProfile: IProfile) {
+    private async updateBaseProfileFileLogin(
+        profile: zowe.imperative.IProfileLoaded,
+        updProfile: zowe.imperative.IProfile
+    ) {
         const upd = { profileName: profile.name, profileType: profile.type };
         const mProfileInfo = await this.getProfileInfo();
         const setSecure = mProfileInfo.isSecured();
@@ -1337,7 +1326,7 @@ export class Profiles extends ProfilesCache {
         await mProfileInfo.updateProperty({ ...upd, property: "tokenValue", value: updProfile.tokenValue, setSecure });
     }
 
-    private async updateBaseProfileFileLogout(profile: IProfileLoaded) {
+    private async updateBaseProfileFileLogout(profile: zowe.imperative.IProfileLoaded) {
         const mProfileInfo = await this.getProfileInfo();
         const setSecure = mProfileInfo.isSecured();
         const prof = mProfileInfo.getAllProfiles(profile.type).find((p) => p.profName === profile.name);
@@ -1362,7 +1351,7 @@ export class Profiles extends ProfilesCache {
         return [newUser, newPass];
     }
 
-    private async deletePrompt(deletedProfile: IProfileLoaded) {
+    private async deletePrompt(deletedProfile: zowe.imperative.IProfileLoaded) {
         const profileName = deletedProfile.name;
         this.log.debug(localize("deleteProfile.log.debug", "Deleting profile ") + profileName);
         const quickPickOptions: vscode.QuickPickOptions = {
@@ -1711,10 +1700,10 @@ export class Profiles extends ProfilesCache {
             }
         }
 
-        const updateParms: IUpdateProfile = {
+        const updateParms: zowe.imperative.IUpdateProfile = {
             name: this.loadedProfile.name,
             merge: false,
-            profile: OrigProfileInfo as IProfile,
+            profile: OrigProfileInfo as zowe.imperative.IProfile,
         };
         try {
             this.getCliProfileManager(this.loadedProfile.type).update(updateParms);
