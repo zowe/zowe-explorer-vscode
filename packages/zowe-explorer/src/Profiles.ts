@@ -347,8 +347,21 @@ export class Profiles extends ProfilesCache {
         }
 
         if (chosenProfile === "") {
-            if (mProfileInfo.usingTeamConfig) {
-                const profiles = mProfileInfo.getAllProfiles();
+            let config: zowe.imperative.ProfileInfo;
+            try {
+                config = await this.getProfileInfo();
+            } catch (error) {
+                await openConfigOnError(error);
+                vscode.window.showErrorMessage(
+                    localize(
+                        "Profiles.getProfileInfo.error",
+                        "Error in creating team configuration file: {0}",
+                        error.message
+                    )
+                );
+            }
+            if (config.usingTeamConfig) {
+                const profiles = config.getAllProfiles();
                 const currentProfile = await this.getProfileFromConfig(profiles[0].profName);
                 const filePath = currentProfile.profLoc.osLoc[0];
                 await this.openConfigFile(filePath);
@@ -676,7 +689,9 @@ export class Profiles extends ProfilesCache {
             return path.join(rootPath, configName);
         } catch (err) {
             await openConfigOnError(err);
-            vscode.window.showErrorMessage("Error in creating team configuration file: " + err.message);
+            vscode.window.showErrorMessage(
+                localize("Profiles.getProfileInfo.error", "Error in creating team configuration file: {0}", err.message)
+            );
         }
     }
 
