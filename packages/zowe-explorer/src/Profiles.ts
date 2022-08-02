@@ -253,6 +253,7 @@ export class Profiles extends ProfilesCache {
         const allProfiles = Profiles.getInstance().allProfiles;
         const createNewProfile = "Create a New Connection to z/OS";
         const createNewConfig = "Create a New Team Configuration File";
+        const editConfig = "Edit Team Configuration File";
         let addProfilePlaceholder = "";
         let chosenProfile: string = "";
 
@@ -284,6 +285,7 @@ export class Profiles extends ProfilesCache {
 
         const createPick = new FilterDescriptor("\uFF0B " + createNewProfile);
         const configPick = new FilterDescriptor("\uFF0B " + createNewConfig);
+        const configEdit = new FilterDescriptor("\u270F " + editConfig);
         const items: vscode.QuickPickItem[] = [];
         let mProfileInfo: zowe.imperative.ProfileInfo;
         try {
@@ -318,7 +320,7 @@ export class Profiles extends ProfilesCache {
         }
 
         let configDir: string;
-        quickpick.items = [createPick, configPick, ...items];
+        quickpick.items = [createPick, configPick, configEdit, ...items];
         quickpick.placeholder = addProfilePlaceholder;
         quickpick.ignoreFocusOut = true;
         quickpick.show();
