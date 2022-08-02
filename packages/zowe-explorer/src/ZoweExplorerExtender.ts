@@ -94,14 +94,21 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
         // and/or created a profile that the profile directory in ~/.zowe/profiles
         // will be created with the appropriate meta data. If not called the user will
         // see errors when creating a profile of any type.
-        getZoweDir(); // This should create initialize the loadedConfig if it is not already
+        getZoweDir();
 
+        /**
+         * This should create initialize the loadedConfig if it is not already
+         * Check Zowe Explorer's cached instance first
+         * If it doesn't exist create instance and read from disk to see if using v1 or v2
+         * profile management.
+         */
         let usingTeamConfig: boolean;
         let mProfileInfo: zowe.imperative.ProfileInfo;
         try {
             mProfileInfo = await globals.PROFILESCACHE.getProfileInfo();
             if (!mProfileInfo) {
                 mProfileInfo = await getProfileInfo(globals.ISTHEIA);
+                mProfileInfo.readProfilesFromDisk();
             }
             usingTeamConfig = mProfileInfo.usingTeamConfig;
         } catch (error) {
