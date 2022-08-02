@@ -284,7 +284,12 @@ export class Profiles extends ProfilesCache {
         const createPick = new FilterDescriptor("\uFF0B " + createNewProfile);
         const configPick = new FilterDescriptor("\uFF0B " + createNewConfig);
         const items: vscode.QuickPickItem[] = [];
-        const mProfileInfo = await getProfileInfo(globals.ISTHEIA);
+        let mProfileInfo: zowe.imperative.ProfileInfo;
+        try {
+            mProfileInfo = await this.getProfileInfo();
+        } catch (err) {
+            this.log.warn(err);
+        }
 
         for (const pName of profileNamesList) {
             items.push(new FilterItem({ text: pName, icon: this.getProfileIcon(mProfileInfo, pName)[0] }));
