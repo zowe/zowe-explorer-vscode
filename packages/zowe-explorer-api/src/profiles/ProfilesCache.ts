@@ -157,12 +157,6 @@ export class ProfilesCache {
      * @returns {void}
      */
     public registerCustomProfilesType(profileTypeName: string): void {
-        const exists = fs.existsSync(path.posix.join(`${os.homedir()}/.zowe/profiles/${profileTypeName}`));
-        if (!exists) {
-            throw new Error(
-                `Zowe Explorer Profiles Cache error: Tried to register a custom profile type named: ${profileTypeName} that does not yet exist. Extenders must call "zoweExplorerApi.getExplorerExtenderApi().initForZowe()" first.`
-            );
-        }
         this.allExternalTypes.add(profileTypeName);
     }
 
