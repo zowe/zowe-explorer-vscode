@@ -225,9 +225,10 @@ export class ProfilesCache {
     }
 
     /**
-     * LOOK FOR A WAY TO GETSCHEMA OF CONFIG TOO
+     * V1 Profile specific
      * gets schema from /.zowe/profiles/profileType directory
      * used by Zowe Explorer for creation & update of v1 profiles
+     * TO DO: put in request for public readonly api for this on Imperative.
      * @param profileType
      * @returns
      */
@@ -317,7 +318,8 @@ export class ProfilesCache {
     }
 
     /**
-     * V1 specific used by Zowe Explorer to handle v1 profiles
+     * V1 Profile specific
+     * Used by Zowe Explorer to handle v1 profiles
      * @param type string, profile type
      * @returns zowe.imperative.CliProfileManager
      */
