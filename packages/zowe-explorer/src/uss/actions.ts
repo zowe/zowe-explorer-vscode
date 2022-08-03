@@ -27,6 +27,7 @@ import * as nls from "vscode-nls";
 import { refreshAll } from "../shared/refresh";
 import { UIViews } from "../shared/ui-views";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
+import { fileExistsCaseSensitveSync } from "./utils";
 
 // Set up localization
 nls.config({
@@ -77,6 +78,17 @@ export async function createUSSNode(
             const newNode = await node.getChildren().then((children) => children.find((child) => child.label === name));
             await ussFileProvider.getTreeView().reveal(node, { select: true, focus: true });
             ussFileProvider.getTreeView().reveal(newNode, { select: true, focus: true });
+            const localPath = `${node.getUSSDocumentFilePath()}/${name}`;
+            const fileExists = fs.existsSync(localPath);
+            if (fileExists && !fileExistsCaseSensitveSync(localPath)) {
+                vscode.window.showInformationMessage(
+                    localize(
+                        "createUSSNode.name.exists",
+                        "There is already a file with same name. Please change your OS file system settings if you want to give case sensitive file names."
+                    )
+                );
+                ussFileProvider.refreshElement(node);
+            }
         } catch (err) {
             await errorHandling(
                 err,
