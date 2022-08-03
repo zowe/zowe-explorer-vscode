@@ -426,8 +426,7 @@ export class Profiles extends ProfilesCache {
             await this.openConfigFile(filePath);
             return;
         }
-        // use direct load since merging was done previously during initialization
-        const editSession = (await this.directLoad(profileLoaded.type, profileLoaded.name)).profile;
+        const editSession = this.loadNamedProfile(profileLoaded.name, profileLoaded.type).profile;
         const editURL = editSession.host + ":" + editSession.port;
         const editUser = editSession.user;
         const editPass = editSession.password;

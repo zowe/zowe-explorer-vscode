@@ -243,12 +243,19 @@ export class ProfilesCache {
         return schema;
     }
 
-    // Return string[] of all profile types set by refresh
+    /**
+     * get array of profile types
+     * @returns string[]
+     */
     public getAllTypes(): string[] {
         return this.allTypes;
     }
 
-    // get string[] of profile names by type
+    /**
+     * get array of Profile names by type
+     * @param type  profile type
+     * @returns string[]
+     */
     public async getNamesForType(type: string): Promise<string[]> {
         const profilesForType = await this.fetchAllProfilesByType(type);
         return profilesForType.map((profile) => {
@@ -256,16 +263,20 @@ export class ProfilesCache {
         });
     }
 
-    // get IProfileLoaded[] from imperative
+    /**
+     * get array of IProfileLoaded by type
+     * @param type profile type
+     * @returns IProfileLoaded[]
+     */
     public async fetchAllProfilesByType(type: string): Promise<zowe.imperative.IProfileLoaded[]> {
         const profByType: zowe.imperative.IProfileLoaded[] = [];
         const mProfileInfo = await this.getProfileInfo();
-        const profilesForType = mProfileInfo.getAllProfiles(type).filter((temp) => temp.profLoc.osLoc.length !== 0);
+        const profilesForType = mProfileInfo.getAllProfiles(type);
         if (profilesForType && profilesForType.length > 0) {
             for (const prof of profilesForType) {
                 const profAttr = this.getMergedAttrs(mProfileInfo, prof);
                 let profile = this.getProfileLoaded(prof.profName, prof.profType, profAttr);
-                profile = await this.checkMergingConfigSingleProfile(profile);
+                profile = this.checkMergingConfigSingleProfile(profile);
                 profByType.push(profile);
             }
         }
@@ -273,19 +284,21 @@ export class ProfilesCache {
     }
 
     /**
-     * TO BE CHANGED, REMOVE CLIPROFILEMANAGER USE
-     * v1 profile specific
-     * @param type
-     * @param name
-     * @returns
+     * Direct load and return of particular IProfileLoaded
+     * @param type profile type
+     * @param name profile name
+     * @returns IProfileLoaded
      */
     public async directLoad(type: string, name: string): Promise<zowe.imperative.IProfileLoaded> {
-        let directProfile: zowe.imperative.IProfileLoaded;
-        const profileManager = this.getCliProfileManager(type);
-        if (profileManager) {
-            directProfile = await profileManager.load({ name });
+        const profsOfType = await this.fetchAllProfilesByType(type);
+        if (profsOfType && profsOfType.length > 0) {
+            for (const profile of profsOfType) {
+                if (profile.name === name) {
+                    return profile;
+                }
+            }
         }
-        return directProfile;
+        return;
     }
 
     public async getProfileFromConfig(profileName: string): Promise<zowe.imperative.IProfAttrs> {
@@ -463,10 +476,8 @@ export class ProfilesCache {
     }
 
     // check correct merging of a single profile
-    protected async checkMergingConfigSingleProfile(
-        profile: zowe.imperative.IProfileLoaded
-    ): Promise<zowe.imperative.IProfileLoaded> {
-        const baseProfile = await this.fetchBaseProfile();
+    protected checkMergingConfigSingleProfile(profile: zowe.imperative.IProfileLoaded): zowe.imperative.IProfileLoaded {
+        const baseProfile = this.defaultProfileByType.get("base");
         if (
             (baseProfile?.profile.host !== profile?.profile.host ||
                 baseProfile?.profile?.port !== profile?.profile.port) &&

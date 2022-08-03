@@ -307,8 +307,9 @@ export class TsoCommandHandler extends ZoweCommandProvider {
     }
 
     /**
-     * USE IPROFILE TO GET ALL TSO PROFILES VS CLIPROFILEMANAGER
-     * @returns
+     * Looks for list of tso profiles for user to choose from,
+     * if non exist prompts user for account number.
+     * @returns Promise<IStartTsoParms>
      */
     private async getTsoParams(): Promise<IStartTsoParms> {
         let profileInfo = await globals.PROFILESCACHE.getProfileInfo();
