@@ -318,8 +318,7 @@ export class Profiles extends ProfilesCache {
                     'Choose "Create new..." to define or select a profile to add to the USS Explorer'
                 );
         }
-        const profileInfo = await this.getProfileInfo();
-        if (profileInfo.usingTeamConfig) {
+        if (mProfileInfo && mProfileInfo.usingTeamConfig) {
             quickpick.items = [configPick, configEdit, ...items];
         } else {
             quickpick.items = [createPick, configPick, ...items];
@@ -618,7 +617,7 @@ export class Profiles extends ProfilesCache {
             let global = true;
             let rootPath = getZoweDir();
             if (vscode.workspace.workspaceFolders) {
-                const choice = await this.getConfigLocationPrompt();
+                const choice = await this.getConfigLocationPrompt("create");
                 if (choice === undefined) {
                     vscode.window.showInformationMessage(
                         localize("createZoweSchema.undefined.location", "Operation Cancelled")
@@ -688,7 +687,7 @@ export class Profiles extends ProfilesCache {
             await this.openConfigFile(existingLayers[0].path);
         }
         if (existingLayers && existingLayers.length > 1) {
-            const choice = await this.getConfigLocationPrompt();
+            const choice = await this.getConfigLocationPrompt("edit");
             switch (choice) {
                 case "project":
                     for (const file of existingLayers) {
@@ -1342,12 +1341,21 @@ export class Profiles extends ProfilesCache {
         await vscode.window.showTextDocument(document);
     }
 
-    private async getConfigLocationPrompt(): Promise<string> {
-        const quickPickOptions: vscode.QuickPickOptions = {
-            placeHolder: localize(
-                "createZoweSchema.quickPickOption",
+    private async getConfigLocationPrompt(action: string): Promise<string> {
+        let placeHolderText: string;
+        if (action === "create") {
+            placeHolderText = localize(
+                "getConfigLocationPrompt.placeholder.create",
                 "Select the location where the config file will be initialized"
-            ),
+            );
+        } else {
+            placeHolderText = localize(
+                "getConfigLocationPrompt.placeholder.edit",
+                "Select the location of the config file to edit"
+            );
+        }
+        const quickPickOptions: vscode.QuickPickOptions = {
+            placeHolder: placeHolderText,
             ignoreFocusOut: true,
             canPickMany: false,
         };
