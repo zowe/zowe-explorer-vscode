@@ -48,6 +48,8 @@
   "ssoLogin.successful": "Login to authentication service was successful.",
   "ssoLogout.successful": "Logout from authentication service was successful.",
   "ssoLogout.unableToLogout": "Unable to log out. ",
+  "createZoweSchema.reload.button": "Refresh Zowe Explorer",
+  "createZoweSchema.reload.infoMessage": "Team Configuration file created. Location: {0}. \n Please update file and refresh Zowe Explorer via button or command palette.",
   "ssoLogin.undefined.username": "Operation Cancelled",
   "deleteProfile.log.debug": "Deleting profile ",
   "deleteProfile.showQuickPick.delete": "Delete",
