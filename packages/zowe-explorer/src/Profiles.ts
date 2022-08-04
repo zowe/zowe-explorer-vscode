@@ -665,17 +665,7 @@ export class Profiles extends ProfilesCache {
                 configName = config.configName;
             }
             await this.openConfigFile(path.join(rootPath, configName));
-            const reloadButton = localize("createZoweSchema.reload.button", "Refresh Zowe Explorer");
-            const infoMsg = localize(
-                "createZoweSchema.reload.infoMessage",
-                "Team Configuration file created. Location: {0}. \n Please update file and refresh Zowe Explorer via button or command palette.",
-                rootPath
-            );
-            await vscode.window.showInformationMessage(infoMsg, ...[reloadButton]).then(async (selection) => {
-                if (selection === reloadButton) {
-                    await vscode.commands.executeCommand("zowe.extRefresh");
-                }
-            });
+            await this.promptToRefreshForProfiles(rootPath);
             return path.join(rootPath, configName);
         } catch (err) {
             await openConfigOnError(err);
@@ -1376,6 +1366,23 @@ export class Profiles extends ProfilesCache {
                 return "project";
         }
         return;
+    }
+
+    private async promptToRefreshForProfiles(rootPath: string) {
+        if (globals.ISTHEIA) {
+            const reloadButton = localize("createZoweSchema.reload.button", "Refresh Zowe Explorer");
+            const infoMsg = localize(
+                "createZoweSchema.reload.infoMessage",
+                "Team Configuration file created. Location: {0}. \n Please update file and refresh Zowe Explorer via button or command palette.",
+                rootPath
+            );
+            await vscode.window.showInformationMessage(infoMsg, ...[reloadButton]).then(async (selection) => {
+                if (selection === reloadButton) {
+                    await vscode.commands.executeCommand("zowe.extRefresh");
+                }
+            });
+        }
+        return undefined;
     }
 
     private getProfileIcon(profInfo: zowe.imperative.ProfileInfo, name: string): string[] {
