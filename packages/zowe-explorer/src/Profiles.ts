@@ -318,7 +318,7 @@ export class Profiles extends ProfilesCache {
                     'Choose "Create new..." to define or select a profile to add to the USS Explorer'
                 );
         }
-        let profileInfo = await this.getProfileInfo();
+        const profileInfo = await this.getProfileInfo();
         if (profileInfo.usingTeamConfig) {
             quickpick.items = [configPick, configEdit, ...items];
         } else {
