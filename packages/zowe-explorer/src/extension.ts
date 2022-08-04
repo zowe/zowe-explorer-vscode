@@ -303,7 +303,7 @@ async function watchConfigProfile(context: vscode.ExtensionContext) {
             new vscode.RelativePattern(vscode.workspace.workspaceFolders[0].uri.fsPath, "zowe.config.user.json")
         );
 
-    context.subscriptions.push(globalProfileWatcher);
+    context.subscriptions.push(workspaceProfileWatcher);
     workspaceProfileWatcher && context.subscriptions.push(globalProfileWatcher);
 
     const onChangeProfileAction = async (uri: vscode.Uri) => {
