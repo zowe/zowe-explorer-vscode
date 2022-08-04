@@ -668,7 +668,7 @@ export class Profiles extends ProfilesCache {
                 configName = config.configName;
             }
             await this.openConfigFile(path.join(rootPath, configName));
-            await this.propmtToRefreshForProfiles(rootPath);
+            await this.promptToRefreshForProfiles(rootPath);
             return path.join(rootPath, configName);
         } catch (err) {
             vscode.window.showErrorMessage("Error in creating team configuration file: " + err.message);
@@ -1303,7 +1303,7 @@ export class Profiles extends ProfilesCache {
         await vscode.window.showTextDocument(document);
     }
 
-    private async propmtToRefreshForProfiles(rootPath: string) {
+    private async promptToRefreshForProfiles(rootPath: string) {
         if (globals.ISTHEIA) {
             const reloadButton = localize("createZoweSchema.reload.button", "Refresh Zowe Explorer");
             const infoMsg = localize(
