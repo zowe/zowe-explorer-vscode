@@ -251,12 +251,6 @@ export class Profiles extends ProfilesCache {
      */
     public async createZoweSession(zoweFileProvider: IZoweTree<IZoweTreeNode>) {
         const allProfiles = Profiles.getInstance().allProfiles;
-        const createNewProfile = "Create a New Connection to z/OS";
-        const createNewConfig = "Create a New Team Configuration File";
-        const editConfig = "Edit Team Configuration File";
-        let addProfilePlaceholder = "";
-        let chosenProfile: string = "";
-
         // Get all profiles
         let profileNamesList = allProfiles.map((profile) => {
             return profile.name;
@@ -282,6 +276,11 @@ export class Profiles extends ProfilesCache {
                 // Find all cases where a profile is not already displayed
                 !zoweFileProvider.mSessionNodes.find((sessionNode) => sessionNode.getProfileName() === profileName)
         );
+        // Set Options according to profile management in use
+
+        const createNewProfile = "Create a New Connection to z/OS";
+        const createNewConfig = "Create a New Team Configuration File";
+        const editConfig = "Edit Team Configuration File";
 
         const createPick = new FilterDescriptor("\uFF0B " + createNewProfile);
         const configPick = new FilterDescriptor("\uFF0B " + createNewConfig);
@@ -298,6 +297,7 @@ export class Profiles extends ProfilesCache {
             items.push(new FilterItem({ text: pName, icon: this.getProfileIcon(mProfileInfo, pName)[0] }));
         }
         const quickpick = vscode.window.createQuickPick();
+        let addProfilePlaceholder = "";
         switch (zoweFileProvider.getTreeType()) {
             case PersistenceSchemaEnum.Dataset:
                 addProfilePlaceholder = localize(
@@ -318,9 +318,12 @@ export class Profiles extends ProfilesCache {
                     'Choose "Create new..." to define or select a profile to add to the USS Explorer'
                 );
         }
-
-        let configDir: string;
-        quickpick.items = [createPick, configPick, configEdit, ...items];
+        let profileInfo = await this.getProfileInfo();
+        if (profileInfo.usingTeamConfig) {
+            quickpick.items = [configPick, configEdit, ...items];
+        } else {
+            quickpick.items = [createPick, configPick, ...items];
+        }
         quickpick.placeholder = addProfilePlaceholder;
         quickpick.ignoreFocusOut = true;
         quickpick.show();
@@ -333,25 +336,20 @@ export class Profiles extends ProfilesCache {
             return;
         }
         if (choice === configPick) {
-            configDir = await this.createZoweSchema(zoweFileProvider);
+            await this.createZoweSchema(zoweFileProvider);
             return;
         }
         if (choice === configEdit) {
             await this.editZoweConfigFile();
             return;
         }
+        let chosenProfile: string = "";
         if (choice instanceof FilterDescriptor) {
             chosenProfile = "";
         } else {
             // remove any icons from the label
             chosenProfile = choice.label.replace(/\$\(.*\)\s/g, "");
         }
-
-        if (configDir) {
-            await this.openConfigFile(configDir);
-            return;
-        }
-
         if (chosenProfile === "") {
             let config: zowe.imperative.ProfileInfo;
             try {
