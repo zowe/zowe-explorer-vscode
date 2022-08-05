@@ -894,12 +894,8 @@ export class Profiles extends ProfilesCache {
             return; // See https://github.com/zowe/vscode-extension-for-zowe/issues/1827
         }
 
-        const updSession = ZoweExplorerApiRegister.getMvsApi(promptInfo).getSession();
-        const returnValue = [
-            updSession.ISession.user,
-            updSession.ISession.password,
-            updSession.ISession.base64EncodedAuth,
-        ];
+        const updSession = promptInfo.profile as zowe.imperative.ISession;
+        const returnValue = [updSession.user, updSession.password, updSession.base64EncodedAuth];
         this.updateProfilesArrays(promptInfo);
         return returnValue;
     }

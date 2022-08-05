@@ -49,16 +49,20 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
         // open config file for missing hostname error
         const msg = errorDetails.toString();
         if (msg.includes("hostname")) {
-            let mProfileInfo = await globals.PROFILESCACHE.getProfileInfo();
+            let mProfileInfo: imperative.ProfileInfo = await globals.PROFILESCACHE.getProfileInfo();
             if (!mProfileInfo) {
                 mProfileInfo = await Profiles.getInstance().getProfileInfo();
             }
             if (mProfileInfo.usingTeamConfig) {
                 vscode.window.showErrorMessage("Required parameter 'host' must not be blank");
-                const currentProfile = await mProfileInfo.getProfileFromConfig(label.trim());
-                const filePath = currentProfile.profLoc.osLoc[0];
-                await Profiles.getInstance().openConfigFile(filePath);
-                return;
+                const profAllAttrs = mProfileInfo.getAllProfiles();
+                for (const prof of profAllAttrs) {
+                    if (prof.profName === label.trim()) {
+                        const filePath = prof.profLoc.osLoc[0];
+                        await Profiles.getInstance().openConfigFile(filePath);
+                        return;
+                    }
+                }
             }
         }
     }
@@ -318,14 +322,6 @@ export async function promptCredentials(node: IZoweTreeNode) {
     }
 
     const creds = await Profiles.getInstance().promptCredentials(profileName, true);
-
-    try {
-        const updatedProfileInfo = Profiles.getInstance().loadNamedProfile(profileName);
-        node.setProfileToChoice(updatedProfileInfo);
-    } catch (err) {
-        const errorMessage = localize("zowe.loadNamedProfile.error", "Error when updating credentials.");
-        vscode.window.showErrorMessage(`${errorMessage}: ${err.message}`);
-    }
 
     if (creds != null) {
         vscode.window.showInformationMessage(

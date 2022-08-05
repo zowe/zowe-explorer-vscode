@@ -152,9 +152,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.promptCredentials", async (node: IZoweTreeNode) => {
             await promptCredentials(node);
-            await refreshActions.refreshAll(datasetProvider);
-            await refreshActions.refreshAll(ussFileProvider);
-            await refreshActions.refreshAll(jobsProvider);
         })
     );
 
