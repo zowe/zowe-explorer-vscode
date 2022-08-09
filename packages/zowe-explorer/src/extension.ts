@@ -412,7 +412,7 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
         vscode.commands.registerCommand("zowe.ds.editDataSet", () => {
             let selectedNodes = datasetProvider.getTreeView().selection as IZoweDatasetTreeNode[];
             selectedNodes = selectedNodes.filter(
-                (node) => node.contextValue == globals.DS_DS_CONTEXT || node.contextValue == globals.DS_MEMBER_CONTEXT
+                (node) => node.contextValue === globals.DS_DS_CONTEXT || node.contextValue === globals.DS_MEMBER_CONTEXT
             );
             selectedNodes.forEach((node) => {
                 dsActions.openPS(node, false, datasetProvider);
@@ -423,7 +423,7 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
         vscode.commands.registerCommand("zowe.ds.editMember", () => {
             let selectedNodes = datasetProvider.getTreeView().selection as IZoweDatasetTreeNode[];
             selectedNodes = selectedNodes.filter(
-                (node) => node.contextValue == globals.DS_DS_CONTEXT || node.contextValue == globals.DS_MEMBER_CONTEXT
+                (node) => node.contextValue === globals.DS_DS_CONTEXT || node.contextValue === globals.DS_MEMBER_CONTEXT
             );
             selectedNodes.forEach((node) => {
                 dsActions.openPS(node, false, datasetProvider);
