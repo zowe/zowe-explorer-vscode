@@ -18,6 +18,7 @@ import { IZoweNodeType, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { FilterDescriptor } from "../../src/utils/ProfilesUtils";
 import * as zowe from "@zowe/cli";
 import { Profiles } from "../../src/Profiles";
+import { string } from "yargs";
 
 export function createPersistentConfig() {
     return {
@@ -360,4 +361,17 @@ export function createWorkspaceConfiguration(): vscode.WorkspaceConfiguration {
         has: jest.fn(),
         inspect: jest.fn(),
     };
+}
+
+export function createQuickPickInstance(): vscode.QuickPick<vscode.QuickPickItem> {
+    return {
+        value: null,
+        placeholder: createQuickPickItem(),
+        items: undefined,
+        show: jest.fn(),
+        hide: jest.fn(),
+        onDidAccept: jest.fn(),
+        ignoreFocusOut: false,
+        onDidHide: jest.fn(),
+    } as any;
 }
