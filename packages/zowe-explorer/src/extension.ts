@@ -352,7 +352,12 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
         )
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.addFavorite", async (node) => datasetProvider.addFavorite(node))
+        vscode.commands.registerCommand("zowe.ds.addFavorite", async () => {
+            const selectedNodes = datasetProvider.getTreeView().selection as IZoweDatasetTreeNode[];
+            selectedNodes.forEach((node) => {
+                datasetProvider.addFavorite(node);
+            });
+        })
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.refreshAll", async () => {
@@ -429,7 +434,12 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
         vscode.commands.registerCommand("zowe.ds.removeSession", async (node) => datasetProvider.deleteSession(node))
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.removeFavorite", async (node) => datasetProvider.removeFavorite(node))
+        vscode.commands.registerCommand("zowe.ds.removeFavorite", async () => {
+            const selectedNodes = datasetProvider.getTreeView().selection as IZoweDatasetTreeNode[];
+            selectedNodes.forEach((node) => {
+                datasetProvider.removeFavorite(node);
+            });
+        })
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.saveSearch", async (node) => datasetProvider.addFavorite(node))
