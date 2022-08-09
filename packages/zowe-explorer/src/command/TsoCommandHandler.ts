@@ -306,46 +306,32 @@ export class TsoCommandHandler extends ZoweCommandProvider {
         return tsoProfile;
     }
 
+    /**
+     * Looks for list of tso profiles for user to choose from,
+     * if non exist prompts user for account number.
+     * @returns Promise<IStartTsoParms>
+     */
     private async getTsoParams(): Promise<IStartTsoParms> {
         let profileInfo = await globals.PROFILESCACHE.getProfileInfo();
         if (!profileInfo) {
             profileInfo = await Profiles.getInstance().getProfileInfo();
         }
-        const tsoProfiles: imperative.IProfileLoaded[] = [];
-        let tsoProfile: imperative.IProfileLoaded;
         const tsoParms: IStartTsoParms = {};
+
         // Keys in the IStartTsoParms interface
         // TODO(zFernand0): Request the CLI squad that all interfaces are also exported as values that we can iterate
         const iStartTso = ["account", "characterSet", "codePage", "columns", "logonProcedure", "regionSize", "rows"];
-        if (profileInfo.usingTeamConfig) {
-            const tempProfiles = profileInfo.getAllProfiles("tso");
-            if (tempProfiles.length > 0) {
-                tsoProfile = await this.selectTsoProfile(
-                    tempProfiles.map((p) => imperative.ProfileInfo.profAttrsToProfLoaded(p))
+        const profiles = profileInfo.getAllProfiles("tso");
+        let tsoProfile: imperative.IProfileLoaded;
+        if (profiles.length > 0) {
+            tsoProfile = await this.selectTsoProfile(
+                profiles.map((p) => imperative.ProfileInfo.profAttrsToProfLoaded(p))
+            );
+            if (tsoProfile != null) {
+                const prof = profileInfo.mergeArgsForProfile(tsoProfile.profile as imperative.IProfAttrs);
+                iStartTso.forEach(
+                    (p) => (tsoProfile.profile[p] = prof.knownArgs.find((a) => a.argName === p)?.argValue)
                 );
-                if (tsoProfile != null) {
-                    const prof = profileInfo.mergeArgsForProfile(tsoProfile.profile as imperative.IProfAttrs);
-                    iStartTso.forEach(
-                        (p) => (tsoProfile.profile[p] = prof.knownArgs.find((a) => a.argName === p)?.argValue)
-                    );
-                }
-            }
-        } else {
-            const profileManager = await Profiles.getInstance().getCliProfileManager("tso");
-            if (profileManager) {
-                try {
-                    const profiles = await profileManager.loadAll();
-                    for (const item of profiles) {
-                        if (item.type === "tso") {
-                            tsoProfiles.push(item);
-                        }
-                    }
-                    tsoProfile = await this.selectTsoProfile(tsoProfiles);
-                } catch (error) {
-                    if (!error?.message?.includes(`No default profile set for type "tso"`)) {
-                        vscode.window.showInformationMessage(error);
-                    }
-                }
             }
         }
         if (tsoProfile) {

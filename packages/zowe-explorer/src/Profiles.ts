@@ -426,8 +426,7 @@ export class Profiles extends ProfilesCache {
             await this.openConfigFile(filePath);
             return;
         }
-        // use direct load since merging was done previously during initialization
-        const editSession = (await this.directLoad(profileLoaded.type, profileLoaded.name)).profile;
+        const editSession = this.loadNamedProfile(profileLoaded.name, profileLoaded.type).profile;
         const editURL = editSession.host + ":" + editSession.port;
         const editUser = editSession.user;
         const editPass = editSession.password;
@@ -1670,9 +1669,17 @@ export class Profiles extends ProfilesCache {
         return test;
     }
 
-    // ** Functions that Calls Get CLI Profile Manager  */
+    /**
+     * Functions that Calls Get CLI Profile Manager, v1 profile specific.
+     * @param updProfileInfo
+     * @param rePrompt
+     * @returns
+     */
 
     private async updateProfile(updProfileInfo, rePrompt?: boolean) {
+        if (ImperativeConfig.instance.config?.exists) {
+            return;
+        }
         if (updProfileInfo.type !== undefined) {
             const profileManager = this.getCliProfileManager(updProfileInfo.type);
             this.loadedProfile = await profileManager.load({
