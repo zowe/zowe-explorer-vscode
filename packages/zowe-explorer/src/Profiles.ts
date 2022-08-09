@@ -34,9 +34,7 @@ import {
     FilterDescriptor,
     FilterItem,
     resolveQuickPickHelper,
-    isTheia,
     readConfigFromDisk,
-    getProfileInfo,
     openConfigOnError,
 } from "./utils/ProfilesUtils";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
@@ -1686,7 +1684,7 @@ export class Profiles extends ProfilesCache {
      */
 
     private async updateProfile(updProfileInfo, rePrompt?: boolean) {
-        if (ImperativeConfig.instance.config?.exists) {
+        if (zowe.imperative.ImperativeConfig.instance.config?.exists) {
             return;
         }
         if (updProfileInfo.type !== undefined) {
