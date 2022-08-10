@@ -28,7 +28,6 @@ import * as utils from "../../src/utils/ProfilesUtils";
 import * as zowe from "@zowe/cli";
 import * as globals from "../../src/globals";
 import { ProfilesCache } from "@zowe/zowe-explorer-api";
-import { ZosmfSession } from "@zowe/cli";
 import { Profiles } from "../../src/Profiles";
 
 // jest.mock("vscode");
@@ -96,7 +95,7 @@ async function createGlobalMocks() {
     Object.defineProperty(globals, "LOG", { value: newMocks.mockLog, configurable: true });
     Object.defineProperty(vscode.window, "createInputBox", { value: newMocks.mockCreateInputBox, configurable: true });
     Object.defineProperty(globals.LOG, "debug", { value: newMocks.mockDebug, configurable: true });
-    Object.defineProperty(ZosmfSession, "createSessCfgFromArgs", {
+    Object.defineProperty(zowe.ZosmfSession, "createSessCfgFromArgs", {
         value: newMocks.mockCreateSessCfgFromArgs,
         configurable: true,
     });
