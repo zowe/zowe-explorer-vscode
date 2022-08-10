@@ -14,11 +14,9 @@ import { ZoweTreeProvider } from "../../src/abstract/ZoweTreeProvider";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
 import * as vscode from "vscode";
-import { IZoweNodeType, ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { FilterDescriptor } from "../../src/utils/ProfilesUtils";
 import * as zowe from "@zowe/cli";
-import { Profiles } from "../../src/Profiles";
-import { string } from "yargs";
 
 export function createPersistentConfig() {
     return {
@@ -373,5 +371,11 @@ export function createQuickPickInstance(): vscode.QuickPick<vscode.QuickPickItem
         onDidAccept: jest.fn(),
         ignoreFocusOut: false,
         onDidHide: jest.fn(),
+    } as any;
+}
+
+export function createConfigInstance() {
+    return {
+        load: jest.fn(),
     } as any;
 }

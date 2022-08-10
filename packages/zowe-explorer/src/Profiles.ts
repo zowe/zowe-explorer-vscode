@@ -1352,9 +1352,12 @@ export class Profiles extends ProfilesCache {
             ignoreFocusOut: true,
             canPickMany: false,
         };
-        const globalText = localize("createZoweSchema.showQuickPick.global", "Global: in the Zowe home directory ");
+        const globalText = localize(
+            "getConfigLocationPrompt.showQuickPick.global",
+            "Global: in the Zowe home directory"
+        );
         const projectText = localize(
-            "createZoweSchema.showQuickPick.project",
+            "getConfigLocationPrompt.showQuickPick.project",
             "Project: in the current working directory"
         );
         const location = await vscode.window.showQuickPick([globalText, projectText], quickPickOptions);

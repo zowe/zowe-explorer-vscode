@@ -19,12 +19,13 @@ import {
     createInstanceOfProfilesCache,
     createQuickPickItem,
     createQuickPickInstance,
+    createConfigInstance,
 } from "../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../__mocks__/mockCreators/datasets";
 import { createProfileManager, newTestSchemas } from "../../__mocks__/mockCreators/profiles";
 import * as vscode from "vscode";
 import * as utils from "../../src/utils/ProfilesUtils";
-import { Logger } from "@zowe/imperative";
+import * as zowe from "@zowe/cli";
 import * as globals from "../../src/globals";
 import { ProfilesCache } from "@zowe/zowe-explorer-api";
 import { ZosmfSession } from "@zowe/cli";
@@ -37,7 +38,7 @@ jest.mock("fs-extra");
 
 async function createGlobalMocks() {
     const newMocks = {
-        log: Logger.getAppLogger(),
+        log: zowe.imperative.Logger.getAppLogger(),
         mockShowInputBox: jest.fn(),
         mockGetConfiguration: jest.fn(),
         mockCreateQuickPick: createQuickPickInstance(),
@@ -70,7 +71,7 @@ async function createGlobalMocks() {
         mockProfilesCache: null,
     };
 
-    newMocks.mockProfilesCache = new ProfilesCache(Logger.getAppLogger());
+    newMocks.mockProfilesCache = new ProfilesCache(zowe.imperative.Logger.getAppLogger());
     newMocks.withProgress = jest.fn().mockImplementation((progLocation, callback) => {
         return newMocks.mockCallback;
     });
@@ -304,6 +305,55 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
         await Profiles.getInstance().createZoweSession(blockMocks.testDatasetTree);
         expect(spy).toBeCalled();
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("No selection made. Operation cancelled.");
+        spy.mockClear();
+    });
+});
+
+describe("Profiles Unit Tests - Function editZoweConfigFile", () => {
+    async function createBlockMocks(globalMocks) {
+        const newMocks = {
+            quickPickItem: createQuickPickItem(),
+            mockConfigInstance: createConfigInstance(),
+        };
+        Object.defineProperty(zowe.imperative, "Config", {
+            value: () => newMocks.mockConfigInstance,
+            configurable: true,
+        });
+        Object.defineProperty(zowe.imperative.Config, "load", {
+            value: jest.fn(() => {
+                return {
+                    layers: [
+                        {
+                            path: "globalPath",
+                            exists: true,
+                            properties: undefined,
+                            global: true,
+                            user: false,
+                        },
+                        {
+                            path: "projectPath",
+                            exists: true,
+                            properties: undefined,
+                            global: false,
+                            user: true,
+                        },
+                    ],
+                } as any;
+            }),
+            configurable: true,
+        });
+
+        return newMocks;
+    }
+    it("Tests that editZoweConfigFile presents correct message when escaping selection of quickpick", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const spy = jest.spyOn(vscode.window, "showQuickPick");
+        spy.mockResolvedValueOnce(undefined);
+        await Profiles.getInstance().editZoweConfigFile();
+        expect(spy).toBeCalled();
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
         spy.mockClear();
     });
 });
