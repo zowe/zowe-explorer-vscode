@@ -10,7 +10,7 @@
  */
 
 import * as PromiseQueue from "promise-queue";
-import * as imperative from "@zowe/imperative";
+import * as zowe from "@zowe/cli";
 import * as path from "path";
 import * as os from "os";
 import * as fs from "fs";
@@ -88,26 +88,42 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
      */
     public async initForZowe(
         profileType: string,
-        profileTypeConfigurations?: imperative.ICommandProfileTypeConfiguration[]
+        profileTypeConfigurations?: zowe.imperative.ICommandProfileTypeConfiguration[]
     ) {
         // Ensure that when a user has not installed the profile type's CLI plugin
         // and/or created a profile that the profile directory in ~/.zowe/profiles
         // will be created with the appropriate meta data. If not called the user will
         // see errors when creating a profile of any type.
-        getZoweDir(); // This should create initialize the loadedConfig if it is not already
+        getZoweDir();
 
-        // const mProfileInfo = await getProfileInfo(globals.ISTHEIA);
-        let mProfileInfo = await globals.PROFILESCACHE.getProfileInfo();
-        if (!mProfileInfo) {
-            mProfileInfo = await getProfileInfo(globals.ISTHEIA);
+        /**
+         * This should create initialize the loadedConfig if it is not already
+         * Check Zowe Explorer's cached instance first
+         * If it doesn't exist create instance and read from disk to see if using v1 or v2
+         * profile management.
+         */
+        let usingTeamConfig: boolean;
+        let mProfileInfo: zowe.imperative.ProfileInfo;
+        try {
+            mProfileInfo = await globals.PROFILESCACHE.getProfileInfo();
+            if (!mProfileInfo) {
+                mProfileInfo = await getProfileInfo(globals.ISTHEIA);
+                mProfileInfo.readProfilesFromDisk();
+            }
+            usingTeamConfig = mProfileInfo.usingTeamConfig;
+        } catch (error) {
+            if (error.toString().includes("Error parsing JSON")) {
+                usingTeamConfig = true;
+            }
         }
-        if (profileTypeConfigurations && !mProfileInfo.usingTeamConfig) {
+
+        if (profileTypeConfigurations && !usingTeamConfig) {
             const configOptions = Array.from(profileTypeConfigurations);
             const exists = fs.existsSync(path.posix.join(`${os.homedir()}/.zowe/profiles/${profileType}`));
             if (configOptions && !exists) {
-                await imperative.CliProfileManager.initialize({
+                await zowe.imperative.CliProfileManager.initialize({
                     configuration: configOptions,
-                    profileRootDirectory: path.join(imperative.ImperativeConfig.instance.cliHome, "profiles"),
+                    profileRootDirectory: path.join(zowe.imperative.ImperativeConfig.instance.cliHome, "profiles"),
                 });
             }
         }
@@ -128,7 +144,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
      * @return The requested profile
      *
      */
-    public getProfile(primaryNode: IZoweTreeNode): imperative.IProfileLoaded {
+    public getProfile(primaryNode: IZoweTreeNode): zowe.imperative.IProfileLoaded {
         return getProfile(primaryNode);
     }
 

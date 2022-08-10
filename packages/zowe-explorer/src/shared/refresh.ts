@@ -12,15 +12,12 @@
 import { IZoweTree, IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { PersistentFilters } from "../PersistentFilters";
 import { Profiles } from "../Profiles";
-import { readConfigFromDisk, syncSessionNode } from "../utils/ProfilesUtils";
+import { syncSessionNode } from "../utils/ProfilesUtils";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { resetValidationSettings, returnIconState } from "./actions";
 import { labelRefresh } from "./utils";
 import * as contextually from "../shared/context";
 import * as globals from "../globals";
-import { createDatasetTree } from "../dataset/DatasetTree";
-import { createUSSTree } from "../uss/USSTree";
-import { createJobsTree } from "../job/ZosJobsProvider";
 
 /**
  * View (DATA SETS, JOBS, USS) refresh button
@@ -29,7 +26,6 @@ import { createJobsTree } from "../job/ZosJobsProvider";
  * @param {IZoweTree} treeProvider
  */
 export async function refreshAll(treeProvider: IZoweTree<IZoweTreeNode>) {
-    await readConfigFromDisk();
     await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
     treeProvider.mSessionNodes.forEach(async (sessNode) => {
         const setting = (await PersistentFilters.getDirectValue(
