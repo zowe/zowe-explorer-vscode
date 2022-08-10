@@ -379,3 +379,24 @@ export function createConfigInstance() {
         load: jest.fn(),
     } as any;
 }
+
+export function createConfigLoad() {
+    return {
+        layers: [
+            {
+                path: "globalPath",
+                exists: true,
+                properties: undefined,
+                global: true,
+                user: false,
+            },
+            {
+                path: "projectPath",
+                exists: true,
+                properties: undefined,
+                global: false,
+                user: true,
+            },
+        ],
+    } as any;
+}
