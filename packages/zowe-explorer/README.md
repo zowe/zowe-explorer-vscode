@@ -94,14 +94,11 @@ Securing credentials for v1 profiles and secure fields in the Team configuration
 1. Hover over **DATA SETS**, **USS**, or **JOBS**.
 2. Click the **+** icon.
 3. If team configuration file is in place, the Edit option will show
-
-![Edit Team Configuration File](/docs/images/ZE-edit-config.png)
-<br /><br />
-
+   ![Edit Team Configuration File](/docs/images/ZE-edit-config.png)
+   <br /><br />
 4. If only a global or project level config is in place it will open to be edited. If both a global and project level config is in place, an option will be presented for user to choose which file to edit.
-
-![Edit Config Location Option](/docs/images/ZE-edit-options.png)
-<br /><br />
+   ![Edit Config Location Option](/docs/images/ZE-edit-options.png)
+   <br /><br />
 
 ### Profile Validation
 
