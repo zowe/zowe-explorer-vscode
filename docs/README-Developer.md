@@ -122,7 +122,7 @@ Set up your Theia workspace for development purposes.
 
 2. Build a VSIX file that contains your changes.
 
-3. Build and run the Theia browser example, using [Setting up your Theia workspace](https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/README-Theia.md#setting-up-your-theia-workspace).
+3. Build and run the Theia browser example, using [Setting up your Theia workspace](https://github.com/zowe/vscode-extension-for-zowe/blob/main/docs/README-Theia.md#setting-up-your-theia-workspace).
 
    - Ensure that your latest VSIX file is in the `plugins` folder.
    - Ensure that Theia is running while you execute the tests!
