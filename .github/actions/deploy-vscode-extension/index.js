@@ -14,15 +14,15 @@ const publishProject = require("../common").publishProject;
 
 // Check if the given versions is already published
 const checkVersion = (packageJson, version) => {
-    try {
-        const metadata = JSON.parse(
-            execSync(`vsce show ${packageJson.publisher}.${packageJson.name} --json`).toString()
-        );
-        return metadata != null && metadata.versions[0].version == version;
-    } catch (err) {
-        // Do nothing if the extension was not found and just continue to publish the extension
-        console.log(`Project: ${packageJson.publisher}.${packageJson.name} not found!`);
-    }
+    // try {
+    //     const metadata = JSON.parse(
+    //         execSync(`vsce show ${packageJson.publisher}.${packageJson.name} --json`).toString()
+    //     );
+    //     return metadata != null && metadata.versions[0].version == version;
+    // } catch (err) {
+    //     // Do nothing if the extension was not found and just continue to publish the extension
+    //     console.log(`Project: ${packageJson.publisher}.${packageJson.name} not found!`);
+    // }
     return false;
 };
 
@@ -32,7 +32,8 @@ const checkVersion = (packageJson, version) => {
 const publishSpecificProject = (versionName, token, packagePath, tag) => {
     if (tag !== "next") {
         console.log(`Publishing: ${versionName}`);
-        console.log(execSync(`vsce publish --yarn -p ${token.split(" ")[0]}`, { cwd: packagePath }).toString());
+        if (packagePath !== "packages/zowe-explorer")
+            console.log(execSync(`vsce publish --yarn -p ${token.split(" ")[0]}`, { cwd: packagePath }).toString());
         console.log(execSync(`ovsx publish ${versionName}.vsix -p ${token.split(" ")[1]}`, { cwd: "dist" }).toString());
     } else {
         console.log(`Not publishing ${versionName}.vsix with the "next" tag.`);
