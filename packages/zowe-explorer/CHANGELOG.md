@@ -2,6 +2,15 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## `2.2.1`
+
+- Bugfix: Fixed activation failure when error reading team configuration file. [#1876](https://github.com/zowe/vscode-extension-for-zowe/issues/1876)
+- Bugfix: Fixed Profile IO errors by refactoring use of Imperative's CliProfileManager. [#1851](https://github.com/zowe/vscode-extension-for-zowe/issues/1851)
+- Bugfix: Fixed runtime error found in initForZowe call used by extenders. [#1872](https://github.com/zowe/vscode-extension-for-zowe/issues/1872)
+- Bugfix: Added error notification for users when OS case sensitivitiy is not set up to avoid issues found with USS files in single directory of same name but different case. [#1484](https://github.com/zowe/vscode-extension-for-zowe/issues/1484)
+- Bugfix: Added file watcher for team configuration files to fix v2 profile update issues experienced during creation, updating, and deletion of global or project level configuration files in VS Code. [#1760](https://github.com/zowe/vscode-extension-for-zowe/issues/1760)
+- Bugfix: Updated dependencies for improved security. [#1878](https://github.com/zowe/vscode-extension-for-zowe/pull/1878)
+
 ## `2.2.0`
 
 - Optimized saving of files on DS/USS when utilizing autosave or experiencing slow upload speeds.
