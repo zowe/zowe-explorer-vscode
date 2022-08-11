@@ -36,7 +36,7 @@ Steps to reproduce the behavior:
 - Zowe Explorer Version:
 - (Optional) Zowe CLI Version:
 - (Optional) Are you using Secure Credential Store?
-<!-- If you have SCS installed, please read the documentation for Integrating SCS within Zowe Explorer: https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/README-Security.md -->
+<!-- If you have SCS installed, please read the documentation for Integrating SCS within Zowe Explorer: https://github.com/zowe/vscode-extension-for-zowe/blob/main/docs/README-Security.md -->
 
 **Additional context**
 

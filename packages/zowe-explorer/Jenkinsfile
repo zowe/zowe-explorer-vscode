@@ -15,8 +15,8 @@ node('ca-jenkins-agent') {
   // This is the product name used by the build machine to store information about the builds
   def PRODUCT_NAME = "Zowe Explorer"
 
-  // This is the what should be considered the master branch (for deployment purposes)
-  def MASTER_BRANCH = "master"
+  // This is the what should be considered the default branch (for deployment purposes)
+  def MAIN_BRANCH = "main"
 
   // Artifactory Details
   def ARTIFACTORY_CREDENTIALS_ID = "zowe.jfrog.io"
@@ -46,7 +46,7 @@ node('ca-jenkins-agent') {
 
   // Protected branch property definitions
   pipeline.protectedBranches.addMap([
-      [name: "master", tag: "latest", dependencies: ["@zowe/cli": "zowe-v1-lts"]]
+      [name: "main", tag: "latest", dependencies: ["@zowe/cli": "zowe-v1-lts"]]
   ])
 
   // Git configuration information
@@ -113,7 +113,7 @@ node('ca-jenkins-agent') {
   // Publish a new version of the extensions if needed
   pipeline.createStage(
     name: "Publish",
-    shouldExecute: { env.BRANCH_NAME == MASTER_BRANCH },
+    shouldExecute: { env.BRANCH_NAME == MAIN_BRANCH },
     timeout: [ time: 10, unit: 'MINUTES' ],
     stage: {
       // Gather details about the extension for comparison
@@ -158,7 +158,7 @@ node('ca-jenkins-agent') {
 
         // Gather details about the GitHub APIs used to publish a release
         def releaseAPI = "repos/zowe/vscode-extension-for-zowe/releases"
-        def releaseDetails = "{\"tag_name\":\"$version\",\"target_commitish\":\"master\",\"name\":\"$version\",\"body\":\"$releaseChanges\",\"draft\":false,\"prerelease\":false}"
+        def releaseDetails = "{\"tag_name\":\"$version\",\"target_commitish\":\"main\",\"name\":\"$version\",\"body\":\"$releaseChanges\",\"draft\":false,\"prerelease\":false}"
         def releaseUrl = "https://$TOKEN:x-oauth-basic@api.github.com/${releaseAPI}"
 
         // Create the release

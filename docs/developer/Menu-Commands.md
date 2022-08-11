@@ -20,7 +20,7 @@ In order to add a command to a core Zowe Explorer menu, the command must first b
   | `zowe.uss.<command>`  | USS             | `zowe.uss.addFavorite`  |
   | `zowe.jobs.<command>` | Jobs            | `zowe.jobs.addFavorite` |
 
-- **`title`** property: Be sure to localize the command's title. This can be done by following the steps for adding a new string to the `package.json` file in the [Developer's ReadMe](https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/Developer's%20ReadMe.md#adding-strings).
+- **`title`** property: Be sure to localize the command's title. This can be done by following the steps for adding a new string to the `package.json` file in the [Developer's ReadMe](https://github.com/zowe/vscode-extension-for-zowe/blob/main/docs/Developer's%20ReadMe.md#adding-strings).
 
   - **Tip:** When choosing the command's key name, consider prefixing it with `ds.`, `uss.`, or `jobs.` to indicate if the key is for the Data Sets, USS, or Jobs view, respectively. (For example, the key `%uss.addFavorite%` is used for the `addFavorite` command in the USS view.) If the command is more related to profiles than to a specific view, consider prefixing the key name with `profile.`.
 

@@ -3,7 +3,7 @@ name: Deployment of Zowe Explorer and related extensions
 on:
   push:
     branches:
-      - master
+      - main
       - v1-lts
     paths:
       - package.json
