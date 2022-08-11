@@ -69,6 +69,8 @@ async function createGlobalMocks() {
         },
         mockProfileInstance: null,
         mockProfilesCache: null,
+        mockConfigInstance: createConfigInstance(),
+        mockConfigLoad: null,
     };
 
     newMocks.mockProfilesCache = new ProfilesCache(zowe.imperative.Logger.getAppLogger());
@@ -137,6 +139,25 @@ async function createGlobalMocks() {
         value: jest.fn(() => {
             return createInstanceOfProfileInfo();
         }),
+        configurable: true,
+    });
+
+    Object.defineProperty(zowe.imperative, "Config", {
+        value: () => newMocks.mockConfigInstance,
+        configurable: true,
+    });
+    newMocks.mockConfigLoad = Object.defineProperty(zowe.imperative.Config, "load", {
+        value: jest.fn(() => {
+            return createConfigLoad();
+        }),
+        configurable: true,
+    });
+    Object.defineProperty(vscode.workspace, "openTextDocument", {
+        value: () => {},
+        configurable: true,
+    });
+    Object.defineProperty(vscode.window, "showTextDocument", {
+        value: () => {},
         configurable: true,
     });
 
@@ -310,36 +331,8 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
 });
 
 describe("Profiles Unit Tests - Function editZoweConfigFile", () => {
-    async function createBlockMocks(globalMocks) {
-        const newMocks = {
-            quickPickItem: createQuickPickItem(),
-            mockConfigInstance: createConfigInstance(),
-            mockConfigLoad: null,
-        };
-        Object.defineProperty(zowe.imperative, "Config", {
-            value: () => newMocks.mockConfigInstance,
-            configurable: true,
-        });
-        newMocks.mockConfigLoad = Object.defineProperty(zowe.imperative.Config, "load", {
-            value: jest.fn(() => {
-                return createConfigLoad();
-            }),
-            configurable: true,
-        });
-        Object.defineProperty(vscode.workspace, "openTextDocument", {
-            value: () => {},
-            configurable: true,
-        });
-        Object.defineProperty(vscode.window, "showTextDocument", {
-            value: () => {},
-            configurable: true,
-        });
-
-        return newMocks;
-    }
     it("Tests that editZoweConfigFile presents correct message when escaping selection of quickpick", async () => {
         const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
 
         const spy = jest.spyOn(vscode.window, "showQuickPick");
         spy.mockResolvedValueOnce(undefined);
@@ -350,7 +343,6 @@ describe("Profiles Unit Tests - Function editZoweConfigFile", () => {
     });
     it("Tests that editZoweConfigFile opens correct file when Global is selected", async () => {
         const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
 
         const spyQuickPick = jest.spyOn(vscode.window, "showQuickPick");
         spyQuickPick.mockResolvedValueOnce("Global: in the Zowe home directory" as any);
@@ -363,8 +355,7 @@ describe("Profiles Unit Tests - Function editZoweConfigFile", () => {
     });
     it("Tests that editZoweConfigFile opens correct file when only Global config available", async () => {
         const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-        blockMocks.mockConfigLoad.load.mockResolvedValueOnce({
+        globalMocks.mockConfigLoad.load.mockResolvedValueOnce({
             layers: [
                 {
                     path: "globalPath",
@@ -382,7 +373,6 @@ describe("Profiles Unit Tests - Function editZoweConfigFile", () => {
     });
     it("Tests that editZoweConfigFile opens correct file when Project is selected", async () => {
         const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
 
         const spyQuickPick = jest.spyOn(vscode.window, "showQuickPick");
         spyQuickPick.mockResolvedValueOnce("Project: in the current working directory" as any);
@@ -395,8 +385,7 @@ describe("Profiles Unit Tests - Function editZoweConfigFile", () => {
     });
     it("Tests that editZoweConfigFile opens correct file when only Project config available", async () => {
         const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-        blockMocks.mockConfigLoad.load.mockResolvedValueOnce({
+        globalMocks.mockConfigLoad.load.mockResolvedValueOnce({
             layers: [
                 {
                     path: "projectPath",
