@@ -9,8 +9,7 @@
  *                                                                                 *
  */
 
-import * as zowe from "@zowe/cli";
-import * as imperative from "@zowe/imperative";
+import { imperative, ZosmfSession } from "@zowe/cli";
 import * as sinon from "sinon";
 import * as vscode from "vscode";
 import * as chai from "chai";
@@ -46,7 +45,7 @@ describe("tsoCommands integration test", async () => {
         user: testProfile.profile.user,
         password: testProfile.profile.password,
     };
-    const sessCfg = zowe.ZosmfSession.createSessCfgFromArgs(cmdArgs);
+    const sessCfg = ZosmfSession.createSessCfgFromArgs(cmdArgs);
     imperative.ConnectionPropsForSessCfg.resolveSessCfgProps(sessCfg, cmdArgs);
     const session = new imperative.Session(sessCfg);
     const testNode = new ZoweDatasetNode(

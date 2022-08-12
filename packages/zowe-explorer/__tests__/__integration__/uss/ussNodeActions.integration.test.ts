@@ -10,8 +10,7 @@
  */
 
 // tslint:disable:no-magic-numbers
-import * as zowe from "@zowe/cli";
-import { Logger, IProfileLoaded, ICommandArguments, ConnectionPropsForSessCfg, Session } from "@zowe/imperative";
+import { Create, Delete, imperative, List, ZosmfSession } from "@zowe/cli";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import * as sinon from "sinon";
@@ -25,7 +24,7 @@ const TIMEOUT = 45000;
 declare var it: Mocha.ITestDefinition;
 // declare var describe: any;
 
-const testProfile: IProfileLoaded = {
+const testProfile: imperative.IProfileLoaded = {
     name: testConst.profile.name,
     profile: testConst.profile,
     type: testConst.profile.type,
@@ -37,7 +36,7 @@ describe("ussNodeActions integration test", async () => {
     const expect = chai.expect;
     chai.use(chaiAsPromised);
 
-    const cmdArgs: ICommandArguments = {
+    const cmdArgs: imperative.ICommandArguments = {
         $0: "zowe",
         _: [""],
         host: testProfile.profile.host,
@@ -47,9 +46,9 @@ describe("ussNodeActions integration test", async () => {
         user: testProfile.profile.user,
         password: testProfile.profile.password,
     };
-    const sessCfg = zowe.ZosmfSession.createSessCfgFromArgs(cmdArgs);
-    ConnectionPropsForSessCfg.resolveSessCfgProps(sessCfg, cmdArgs);
-    const session = new Session(sessCfg);
+    const sessCfg = ZosmfSession.createSessCfgFromArgs(cmdArgs);
+    imperative.ConnectionPropsForSessCfg.resolveSessCfgProps(sessCfg, cmdArgs);
+    const session = new imperative.Session(sessCfg);
     const sessionNode = new ZoweUSSNode(
         testConst.profile.name,
         vscode.TreeItemCollapsibleState.Expanded,
@@ -85,7 +84,7 @@ describe("ussNodeActions integration test", async () => {
 
     describe("Initialize USS Favorites", async () => {
         it("should still create favorite nodes when given a favorite with invalid profile name", async () => {
-            const log = Logger.getAppLogger();
+            const log = imperative.Logger.getAppLogger();
             const profileName = testConst.profile.name;
             // Reset testTree's favorites to be empty
             testTree.mFavorites = [];
@@ -104,7 +103,7 @@ describe("ussNodeActions integration test", async () => {
                     { persistence: true, favorites },
                     vscode.ConfigurationTarget.Global
                 );
-            await testTree.initializeFavorites(Logger.getAppLogger());
+            await testTree.initializeFavorites(imperative.Logger.getAppLogger());
             const initializedFavProfileLabels = [`${profileName}`, "badProfileName"];
             const goodProfileFavLabels = ["tester1", "testfile1", "tester2", "testfile2"];
             const badProfileFavLabels = ["tester1"];
@@ -125,13 +124,13 @@ describe("ussNodeActions integration test", async () => {
         afterEach(async () => {
             await Promise.all(
                 [
-                    zowe.Delete.ussFile(sessionNode.getSession(), beforeFileName),
-                    zowe.Delete.ussFile(sessionNode.getSession(), afterFileName),
+                    Delete.ussFile(sessionNode.getSession(), beforeFileName),
+                    Delete.ussFile(sessionNode.getSession(), afterFileName),
                 ].map((p) => p.catch((err) => err))
             );
         });
         beforeEach(async () => {
-            await zowe.Create.uss(sessionNode.getSession(), beforeFileName, "file").catch((err) => err);
+            await Create.uss(sessionNode.getSession(), beforeFileName, "file").catch((err) => err);
         });
 
         it("should rename a uss file", async () => {
@@ -163,7 +162,7 @@ describe("ussNodeActions integration test", async () => {
                 inputBoxStub.returns(afterNameBase);
 
                 await testTree.rename(testNode);
-                list = await zowe.List.fileList(sessionNode.getSession(), path);
+                list = await List.fileList(sessionNode.getSession(), path);
                 list = list.apiResponse.items ? list.apiResponse.items.map((entry) => entry.name) : [];
             } catch (err) {
                 error = err;

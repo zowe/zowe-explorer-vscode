@@ -10,7 +10,7 @@
  */
 
 import { ZoweExplorerApi } from "@zowe/zowe-explorer-api";
-import * as imperative from "@zowe/imperative";
+import { imperative } from "@zowe/cli";
 
 import { ZoweExplorerApiRegister } from "../../src/ZoweExplorerApiRegister";
 

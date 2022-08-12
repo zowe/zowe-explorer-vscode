@@ -11,7 +11,6 @@
 
 import { ZosmfUssApi, ZosmfMvsApi } from "@zowe/zowe-explorer-api";
 import * as zowe from "@zowe/cli";
-import { AbstractSession } from "@zowe/imperative";
 
 export declare enum TaskStage {
     IN_PROGRESS = 0,
@@ -95,7 +94,12 @@ describe("Zosmf API tests", () => {
 
     it("should test putContent method passes all options to Zowe api method", async () => {
         const fileToUssFile = jest.fn(
-            async (session: AbstractSession, inputFile: string, ussname: string, options?: zowe.IUploadOptions) => {
+            async (
+                session: zowe.imperative.AbstractSession,
+                inputFile: string,
+                ussname: string,
+                options?: zowe.IUploadOptions
+            ) => {
                 expect(options).toMatchSnapshot();
                 return { api: "", commandResponse: "", success: true };
             }

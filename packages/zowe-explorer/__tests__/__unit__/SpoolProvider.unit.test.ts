@@ -11,7 +11,6 @@
 
 import * as spoolprovider from "../../src/SpoolProvider";
 import * as zowe from "@zowe/cli";
-import { IProfileLoaded } from "@zowe/imperative";
 import * as vscode from "vscode";
 import { Profiles } from "../../src/Profiles";
 
@@ -121,7 +120,7 @@ describe("SpoolProvider Unit Tests", () => {
     it("Tests that the spool content is returned", async () => {
         const GetJobs = jest.fn();
         const getSpoolContentById = jest.fn();
-        const profileOne: IProfileLoaded = {
+        const profileOne: zowe.imperative.IProfileLoaded = {
             name: "sessionName",
             profile: {
                 user: undefined,
