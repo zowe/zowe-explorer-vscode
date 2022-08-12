@@ -20,7 +20,6 @@ import { FilterItem, errorHandling, resolveQuickPickHelper } from "../utils/Prof
 import { getDocumentFilePath, concatChildNodes, checkForAddedSuffix, willForceUpload } from "../shared/utils";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Profiles } from "../Profiles";
-import { TextUtils, IProfileLoaded, Session } from "@zowe/imperative";
 import { getIconByNode } from "../generators/icons";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { DatasetTree } from "./DatasetTree";
@@ -804,7 +803,7 @@ export async function showDSAttributes(
         // but just in case we'll display all of the results
         // if there's only one result (which there should be), we will just pass in attributes[0]
         // so that prettyJson doesn't display the attributes as an array with a hyphen character
-        const attributesText = TextUtils.prettyJson(
+        const attributesText = zowe.imperative.TextUtils.prettyJson(
             attributes.length > 1 ? attributes : attributes[0],
             undefined,
             false
@@ -860,7 +859,7 @@ export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetT
     const profiles = Profiles.getInstance();
     let sessProfileName;
     if (regExp === null) {
-        const allProfiles: IProfileLoaded[] = profiles.allProfiles;
+        const allProfiles: zowe.imperative.IProfileLoaded[] = profiles.allProfiles;
         const profileNamesList = allProfiles.map((profile) => {
             return profile.name;
         });
@@ -883,7 +882,7 @@ export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetT
     }
 
     // get profile from session name
-    let sessProfile: IProfileLoaded;
+    let sessProfile: zowe.imperative.IProfileLoaded;
     const sesNode = (await datasetProvider.getChildren()).find((child) => child.label.toString() === sessProfileName);
     if (sesNode) {
         sessProfile = sesNode.getProfile();
@@ -928,7 +927,7 @@ export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetT
 export async function submitMember(node: api.IZoweTreeNode) {
     let label: string;
     let sesName: string;
-    let sessProfile: IProfileLoaded;
+    let sessProfile: zowe.imperative.IProfileLoaded;
     const profiles = Profiles.getInstance();
     await profiles.checkCurrentProfile(node.getProfile());
     if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
