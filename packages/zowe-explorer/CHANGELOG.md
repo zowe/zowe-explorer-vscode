@@ -24,7 +24,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Bugfix: Fixed unwanted requests made by tree node when closing folder. [#754](https://github.com/zowe/vscode-extension-for-zowe/issues/754)
 - Bugfix: Fix for credentials not being updated after the invalid credentials error is displayed. [#1799](https://github.com/zowe/vscode-extension-for-zowe/issues/1799)
 - Bugfix: Fixed hyperlink for Job submitted when profile is not already in JOBS view. [#1751](https://github.com/zowe/vscode-extension-for-zowe/issues/1751)
-- Bugfix: Fixed keybindings for `Refresh Zowe Explorer` to not override default VSC keybinding. See [README.md](https://github.com/zowe/vscode-extension-for-zowe/blob/master/packages/zowe-explorer/README.md#keyboard-shortcuts) for new keybindings. [#1826](https://github.com/zowe/vscode-extension-for-zowe/issues/1826)
+- Bugfix: Fixed keybindings for `Refresh Zowe Explorer` to not override default VSC keybinding. See [README.md](https://github.com/zowe/vscode-extension-for-zowe/blob/main/packages/zowe-explorer/README.md#keyboard-shortcuts) for new keybindings. [#1826](https://github.com/zowe/vscode-extension-for-zowe/issues/1826)
 - Bugfix: Fixed `Update Profile` issue for missing non-secure credentials. [#1804](https://github.com/zowe/vscode-extension-for-zowe/issues/1804)
 - Bugfix: Fixed errors when operation cancelled during credential prompt. [#1827](https://github.com/zowe/vscode-extension-for-zowe/issues/1827)
 - Bugfix: Login and Logout operations no longer require a restart of Zowe Explorer or VSC. [#1750](https://github.com/zowe/vscode-extension-for-zowe/issues/1750)
