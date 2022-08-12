@@ -10,7 +10,7 @@
  */
 
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import * as imperative from "@zowe/imperative";
+import { imperative } from "@zowe/cli";
 import { FTPConfig, IZosFTPProfile } from "@zowe/zos-ftp-for-zowe-cli";
 import { MessageSeverityEnum, ZoweExplorerApi, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { sessionMap, ZoweLogger } from "./extension";

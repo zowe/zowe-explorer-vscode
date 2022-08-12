@@ -1,8 +1,7 @@
 import { profile, normalPattern, ussPattern } from "../packages/zowe-explorer/resources/testProfileData";
-import { Create, CreateDataSetTypeEnum, Upload, Delete } from "@zowe/cli";
-import { Session, Logger } from "@zowe/imperative";
+import { Create, CreateDataSetTypeEnum, Upload, Delete, imperative } from "@zowe/cli";
 
-const session: Session = new Session({
+const session: imperative.Session = new imperative.Session({
     hostname: profile.host,
     user: profile.user,
     password: profile.password,
@@ -92,60 +91,60 @@ export async function cleanupSystemTestEnvironment() {
 }
 
 async function createDataset(type: CreateDataSetTypeEnum, name: string) {
-    Logger.getConsoleLogger().info(`Creating Dataset: ${name}`);
+    imperative.Logger.getConsoleLogger().info(`Creating Dataset: ${name}`);
     try {
         return await Create.dataSet(session, type, name);
     } catch (err) {
-        Logger.getConsoleLogger().error(`Creating Dataset ${name} failed: ${err}`);
+        imperative.Logger.getConsoleLogger().error(`Creating Dataset ${name} failed: ${err}`);
         return null;
     }
 }
 
 async function createMember(name: string) {
-    Logger.getConsoleLogger().info(`Creating DS member: ${name}`);
+    imperative.Logger.getConsoleLogger().info(`Creating DS member: ${name}`);
     try {
         return await Upload.bufferToDataSet(session, Buffer.from(""), name);
     } catch (err) {
-        Logger.getConsoleLogger().error(`Creating DS member ${name} failed: ${err}`);
+        imperative.Logger.getConsoleLogger().error(`Creating DS member ${name} failed: ${err}`);
         return null;
     }
 }
 
 async function deleteDataset(name: string) {
-    Logger.getConsoleLogger().info(`Deleting Dataset: ${name}`);
+    imperative.Logger.getConsoleLogger().info(`Deleting Dataset: ${name}`);
     try {
         return await Delete.dataSet(session, name);
     } catch (err) {
-        Logger.getConsoleLogger().error(`Deleting Dataset ${name} failed: ${err}`);
+        imperative.Logger.getConsoleLogger().error(`Deleting Dataset ${name} failed: ${err}`);
         return null;
     }
 }
 async function deleteAllFiles(name: string) {
-    Logger.getConsoleLogger().info(`Deleting files: ${name}`);
+    imperative.Logger.getConsoleLogger().info(`Deleting files: ${name}`);
     try {
         return await Delete.ussFile(session, name, true);
     } catch (err) {
-        Logger.getConsoleLogger().error(`Deleting files ${name} failed: ${err}`);
+        imperative.Logger.getConsoleLogger().error(`Deleting files ${name} failed: ${err}`);
         return null;
     }
 }
 
 async function createUSSFile(name: string) {
-    Logger.getConsoleLogger().info(`Creating USS File: ${name}`);
+    imperative.Logger.getConsoleLogger().info(`Creating USS File: ${name}`);
     try {
         return await Create.uss(session, name, "file");
     } catch (err) {
-        Logger.getConsoleLogger().error(`Creating USS File ${name} failed: ${err}`);
+        imperative.Logger.getConsoleLogger().error(`Creating USS File ${name} failed: ${err}`);
         return null;
     }
 }
 
 async function createUSSDirectory(name: string) {
-    Logger.getConsoleLogger().info(`Creating USS Directory: ${name}`);
+    imperative.Logger.getConsoleLogger().info(`Creating USS Directory: ${name}`);
     try {
         return await Create.uss(session, name, "directory");
     } catch (err) {
-        Logger.getConsoleLogger().error(`Creating USS Directory ${name} failed: ${err}`);
+        imperative.Logger.getConsoleLogger().error(`Creating USS Directory ${name} failed: ${err}`);
         return null;
     }
 }
