@@ -44,7 +44,7 @@ export async function allocateLike(
     datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>,
     node?: api.IZoweDatasetTreeNode
 ) {
-    let profile: IProfileLoaded;
+    let profile: zowe.imperative.IProfileLoaded;
     let likeDSName: string;
     let currSession: api.IZoweDatasetTreeNode;
 

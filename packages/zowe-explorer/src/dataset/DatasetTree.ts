@@ -1268,7 +1268,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * Adds a single session to the data set tree
      *
      */
-    private async addSingleSession(profile: IProfileLoaded) {
+    private async addSingleSession(profile: imperative.IProfileLoaded) {
         if (profile) {
             // If session is already added, do nothing
             if (this.mSessionNodes.find((tNode) => tNode.label.toString() === profile.name)) {
