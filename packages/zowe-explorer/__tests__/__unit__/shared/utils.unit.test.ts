@@ -11,7 +11,7 @@
 
 import * as sharedUtils from "../../../src/shared/utils";
 import * as globals from "../../../src/globals";
-import { IProfileLoaded, Logger, IProfile, Session } from "@zowe/imperative";
+import { IProfileLoaded, Logger, Session } from "@zowe/imperative";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import * as vscode from "vscode";
 import * as path from "path";
@@ -22,8 +22,6 @@ import {
     createFileResponse,
     createInstanceOfProfile,
     createTextDocument,
-    createInstanceOfProfilesCache,
-    createInstanceOfProfileInfo,
 } from "../../../__mocks__/mockCreators/shared";
 import { ProfilesCache } from "@zowe/zowe-explorer-api";
 import { createDatasetSessionNode } from "../../../__mocks__/mockCreators/datasets";
@@ -129,19 +127,6 @@ describe("Shared Utils Unit Tests - Function node.labelRefresh()", () => {
 });
 
 describe("syncSessionNode shared util function", () => {
-    // const serviceProfileName = "test";
-    // const serviceProfileValue = {
-    //     name: serviceProfileName,
-    //     profile: {},
-    // };
-    // const serviceProfileType = "zosmf";
-    // const serviceProfile = {
-    //     profile: serviceProfileValue,
-    //     type: serviceProfileType,
-    //     message: "",
-    //     failNotFound: true,
-    // };
-
     const serviceProfile = {
         name: "test",
         profile: {},
@@ -170,7 +155,7 @@ describe("syncSessionNode shared util function", () => {
         const profiles = createInstanceOfProfile(serviceProfile);
         profiles.loadNamedProfile = jest.fn(() =>
             jest.fn(() => {
-                throw new Error(`There is no such profile with name: ${serviceProfileName}`);
+                throw new Error(`There is no such profile with name: ${serviceProfile.name}`);
             })
         );
         profiles.getBaseProfile = jest.fn(() => undefined);
