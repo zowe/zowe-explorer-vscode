@@ -23,6 +23,7 @@ import {
     createInstanceOfProfile,
     createTextDocument,
     createInstanceOfProfilesCache,
+    createInstanceOfProfileInfo,
 } from "../../../__mocks__/mockCreators/shared";
 import { ProfilesCache } from "@zowe/zowe-explorer-api";
 import { createDatasetSessionNode } from "../../../__mocks__/mockCreators/datasets";
@@ -35,31 +36,34 @@ import * as utils from "../../../src/utils/ProfilesUtils";
 jest.mock("path");
 
 async function createGlobalMocks() {
-    const newVariables = {
+    const newMocks = {
         session: createISession(),
         profileOne: createIProfile(),
         mockGetInstance: jest.fn(),
-        profiles: null,
+        mockProfileInstance: null,
+        mockProfilesCache: null,
     };
-    newVariables.profiles = createInstanceOfProfile(newVariables.profileOne);
+    newMocks.mockProfilesCache = new ProfilesCache(Logger.getAppLogger());
+    newMocks.mockProfileInstance = createInstanceOfProfile(createIProfile());
+    Object.defineProperty(Profiles, "CreateInstance", {
+        value: () => newMocks.mockProfileInstance,
+        configurable: true,
+    });
+    Object.defineProperty(Profiles, "getInstance", {
+        value: () => newMocks.mockProfileInstance,
+        configurable: true,
+    });
 
-    return newVariables;
+    Object.defineProperty(newMocks.mockProfilesCache, "getConfigInstance", {
+        value: jest.fn(() => {
+            return {
+                usingTeamConfig: false,
+            };
+        }),
+    });
+
+    return newMocks;
 }
-
-Object.defineProperty(globals, "PROFILESCACHE", {
-    value: jest.fn().mockReturnValue(createInstanceOfProfilesCache()),
-});
-Object.defineProperty(globals.PROFILESCACHE, "getConfigInstance", {
-    value: jest.fn(() => {
-        return {
-            usingTeamConfig: false,
-        };
-    }),
-});
-Object.defineProperty(Profiles, "getInstance", {
-    value: () => createInstanceOfProfile(createIProfile()),
-    configurable: true,
-});
 
 describe("Shared Utils Unit Tests - Function node.concatChildNodes()", () => {
     it("Checks that concatChildNodes returns the proper array of children", async () => {
@@ -125,34 +129,41 @@ describe("Shared Utils Unit Tests - Function node.labelRefresh()", () => {
 });
 
 describe("syncSessionNode shared util function", () => {
-    const serviceProfileName = "test";
-    const serviceProfileValue = {
-        name: serviceProfileName,
-        profile: {},
-    };
-    const serviceProfileType = "zosmf";
+    // const serviceProfileName = "test";
+    // const serviceProfileValue = {
+    //     name: serviceProfileName,
+    //     profile: {},
+    // };
+    // const serviceProfileType = "zosmf";
+    // const serviceProfile = {
+    //     profile: serviceProfileValue,
+    //     type: serviceProfileType,
+    //     message: "",
+    //     failNotFound: true,
+    // };
+
     const serviceProfile = {
-        profile: serviceProfileValue,
-        type: serviceProfileType,
+        name: "test",
+        profile: {},
+        type: "zosmf",
         message: "",
         failNotFound: true,
     };
 
-    const anySession = undefined;
-    const sessionNode = createDatasetSessionNode(anySession, serviceProfile);
+    const sessionNode = createDatasetSessionNode(undefined, serviceProfile);
 
     it("should update a session and a profile in the provided node", async () => {
         const globalMocks = await createGlobalMocks();
         // given
-        Object.defineProperty(globals.PROFILESCACHE, "loadNamedProfile", {
-            value: jest.fn().mockReturnValue(serviceProfile),
+        Object.defineProperty(globalMocks.mockProfilesCache, "loadNamedProfile", {
+            value: jest.fn().mockReturnValue(createIProfile()),
         });
         const expectedSession = new Session({});
-        const sessionFromProfile = jest.fn().mockResolvedValueOnce(expectedSession);
+        const sessionForProfile = () => new Session({});
         // when
-        await utils.syncSessionNode(Profiles.getInstance())(sessionFromProfile)(sessionNode);
+        await utils.syncSessionNode(Profiles.getInstance())(sessionForProfile)(sessionNode);
         expect(await sessionNode.getSession()).toEqual(expectedSession);
-        expect(sessionNode.getProfile()).toEqual(serviceProfile);
+        expect(await sessionNode.getProfile()).toEqual(createIProfile());
         expect(sessionNode.collapsibleState).toEqual(vscode.TreeItemCollapsibleState.Collapsed);
     });
     it("should do nothing, if there is no profile from provided node in the file system", async () => {

@@ -151,7 +151,7 @@ export const syncSessionNode =
 
         let profile: imperative.IProfileLoaded;
         try {
-            profile = globals.PROFILESCACHE.loadNamedProfile(profileName, profileType);
+            profile = Profiles.getInstance().loadNamedProfile(profileName, profileType);
         } catch (e) {
             return;
         }
@@ -332,7 +332,4 @@ export async function promptCredentials(node: IZoweTreeNode) {
             )
         );
     }
-    // repaint tree and nodes with new credentials, fix for
-    // nodes caching old profile credentials
-    await vscode.commands.executeCommand("zowe.extRefresh");
 }
