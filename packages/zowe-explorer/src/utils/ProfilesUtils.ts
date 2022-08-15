@@ -332,4 +332,7 @@ export async function promptCredentials(node: IZoweTreeNode) {
             )
         );
     }
+    // repaint tree and nodes with new credentials, fix for
+    // nodes caching old profile credentials
+    await vscode.commands.executeCommand("zowe.extRefresh");
 }
