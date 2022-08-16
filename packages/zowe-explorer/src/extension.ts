@@ -377,9 +377,13 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
         })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.refreshDataset", (node) =>
-            dsActions.refreshDataset(node, datasetProvider)
-        )
+        vscode.commands.registerCommand("zowe.ds.refreshDataset", async () => {
+            let selectedNodes = datasetProvider.getTreeView().selection as IZoweDatasetTreeNode[];
+            selectedNodes = selectedNodes.filter((node) => node.contextValue === globals.DS_PDS_CONTEXT);
+            for (const node of selectedNodes) {
+                await dsActions.refreshDataset(node, datasetProvider);
+            }
+        })
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.pattern", (node) => datasetProvider.filterPrompt(node))
