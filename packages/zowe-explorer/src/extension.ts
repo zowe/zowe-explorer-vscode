@@ -41,6 +41,7 @@ import { TsoCommandHandler } from "./command/TsoCommandHandler";
 import { cleanTempDir, moveTempFolder, hideTempFolder } from "./utils/TempFolder";
 import { SettingsConfig } from "./utils/SettingsConfig";
 import { handleSaving } from "./utils/workspace";
+import { ZoweDatasetNode } from "./dataset/ZoweDatasetNode";
 
 // Set up localization
 nls.config({
@@ -504,7 +505,13 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
         vscode.commands.registerCommand("zowe.ds.hMigrateDataSet", (node) => dsActions.hMigrateDataSet(node))
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.hRecallDataSet", (node) => dsActions.hRecallDataSet(node))
+        vscode.commands.registerCommand("zowe.ds.hRecallDataSet", async () => {
+            let selectedNodes = datasetProvider.getTreeView().selection as IZoweDatasetTreeNode[];
+            selectedNodes = selectedNodes.filter((node) => node.contextValue === globals.DS_MIGRATED_FILE_CONTEXT);
+            for (const node of selectedNodes) {
+                dsActions.hRecallDataSet(node as ZoweDatasetNode);
+            }
+        })
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.disableValidation", async (node) =>
