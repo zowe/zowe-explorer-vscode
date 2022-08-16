@@ -379,7 +379,9 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.refreshDataset", async () => {
             let selectedNodes = datasetProvider.getTreeView().selection as IZoweDatasetTreeNode[];
-            selectedNodes = selectedNodes.filter((node) => node.contextValue === globals.DS_PDS_CONTEXT);
+            selectedNodes = selectedNodes.filter(
+                (node) => node.contextValue === globals.DS_PDS_CONTEXT || node.contextValue === globals.DS_DS_CONTEXT
+            );
             for (const node of selectedNodes) {
                 await dsActions.refreshDataset(node, datasetProvider);
             }
@@ -473,9 +475,15 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
         vscode.commands.registerCommand("zowe.ds.submitMember", async (node) => dsActions.submitMember(node))
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.showDSAttributes", (node) =>
-            dsActions.showDSAttributes(node, datasetProvider)
-        )
+        vscode.commands.registerCommand("zowe.ds.showDSAttributes", async () => {
+            let selectedNodes = datasetProvider.getTreeView().selection as IZoweDatasetTreeNode[];
+            selectedNodes = selectedNodes.filter(
+                (node) => node.contextValue === globals.DS_DS_CONTEXT || node.contextValue === globals.DS_PDS_CONTEXT
+            );
+            for (const node of selectedNodes) {
+                await dsActions.showDSAttributes(node, datasetProvider);
+            }
+        })
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.renameDataSet", (node) => datasetProvider.rename(node))
