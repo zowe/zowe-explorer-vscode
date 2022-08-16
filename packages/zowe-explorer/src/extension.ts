@@ -502,7 +502,15 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
         vscode.commands.registerCommand("zowe.ds.renameDataSetMember", (node) => datasetProvider.rename(node))
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.hMigrateDataSet", (node) => dsActions.hMigrateDataSet(node))
+        vscode.commands.registerCommand("zowe.ds.hMigrateDataSet", async () => {
+            let selectedNodes = datasetProvider.getTreeView().selection as IZoweDatasetTreeNode[];
+            selectedNodes = selectedNodes.filter(
+                (node) => node.contextValue === globals.DS_DS_CONTEXT || node.contextValue === globals.DS_PDS_CONTEXT
+            );
+            for (const node of selectedNodes) {
+                dsActions.hMigrateDataSet(node as ZoweDatasetNode);
+            }
+        })
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.hRecallDataSet", async () => {
