@@ -366,7 +366,15 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
         })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.refreshNode", (node) => dsActions.refreshPS(node))
+        vscode.commands.registerCommand("zowe.ds.refreshNode", async () => {
+            let selectedNodes = datasetProvider.getTreeView().selection as IZoweDatasetTreeNode[];
+            selectedNodes = selectedNodes.filter(
+                (node) => node.contextValue === globals.DS_DS_CONTEXT || node.contextValue === globals.DS_MEMBER_CONTEXT
+            );
+            for (const node of selectedNodes) {
+                await dsActions.refreshPS(node);
+            }
+        })
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.refreshDataset", (node) =>
