@@ -4,6 +4,7 @@
   "getChildren.error.response": "Retrieving response from ",
   "getChildren.responses.error.response": "The response from Zowe CLI was not successful",
   "getChildren.responses.open": "Open",
+  "deleteUssPrompt.deleteCancelled": "Delete action was cancelled.",
   "deleteUSSNode.error.node": "Unable to delete node: ",
   "deleteUssNode.itemDeleted": "The item {0} has been deleted.",
   "openUSS.error.invalidNode": "open() called from invalid node.",

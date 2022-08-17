@@ -378,11 +378,5 @@ export async function deleteUSSFilesPrompt(nodes: IZoweUSSTreeNode[]): Promise<b
             cancelled = true;
         }
     });
-    if (cancelled) {
-        vscode.window.showInformationMessage(
-            localize("deleteUssPrompt.deleteCancelled", "Delete action was cancelled.")
-        );
-        return false;
-    }
-    return true;
+    return cancelled;
 }

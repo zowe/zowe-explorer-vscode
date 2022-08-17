@@ -712,7 +712,7 @@ describe("ZoweUSSNode Unit Tests - Function node.deleteUSSNode()", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
         globalMocks.mockShowWarningMessage.mockResolvedValueOnce("Delete");
-        await blockMocks.ussNode.deleteUSSNode(blockMocks.testUSSTree, "");
+        await blockMocks.ussNode.deleteUSSNode(blockMocks.testUSSTree, "", false);
         expect(blockMocks.testUSSTree.refresh).toHaveBeenCalled();
     });
 
@@ -720,7 +720,7 @@ describe("ZoweUSSNode Unit Tests - Function node.deleteUSSNode()", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
         globalMocks.mockShowWarningMessage.mockResolvedValueOnce("Cancel");
-        await blockMocks.ussNode.deleteUSSNode(blockMocks.testUSSTree, "");
+        await blockMocks.ussNode.deleteUSSNode(blockMocks.testUSSTree, "", true);
         expect(blockMocks.testUSSTree.refresh).not.toHaveBeenCalled();
     });
 
@@ -728,7 +728,7 @@ describe("ZoweUSSNode Unit Tests - Function node.deleteUSSNode()", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
         globalMocks.mockShowWarningMessage.mockResolvedValueOnce(undefined);
-        await blockMocks.ussNode.deleteUSSNode(blockMocks.testUSSTree, "");
+        await blockMocks.ussNode.deleteUSSNode(blockMocks.testUSSTree, "", true);
         expect(blockMocks.testUSSTree.refresh).not.toHaveBeenCalled();
     });
 
@@ -741,7 +741,7 @@ describe("ZoweUSSNode Unit Tests - Function node.deleteUSSNode()", () => {
         });
 
         try {
-            await blockMocks.ussNode.deleteUSSNode(blockMocks.testUSSTree, "");
+            await blockMocks.ussNode.deleteUSSNode(blockMocks.testUSSTree, "", false);
             // tslint:disable-next-line:no-empty
         } catch (err) {}
 

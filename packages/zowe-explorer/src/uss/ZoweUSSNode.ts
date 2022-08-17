@@ -354,8 +354,14 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         vscode.commands.executeCommand("zowe.uss.refreshUSSInTree", this);
     }
 
-    public async deleteUSSNode(ussFileProvider: IZoweTree<IZoweUSSTreeNode>, filePath: string) {
+    public async deleteUSSNode(ussFileProvider: IZoweTree<IZoweUSSTreeNode>, filePath: string, cancelled: boolean) {
         const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
+        if (cancelled) {
+            vscode.window.showInformationMessage(
+                localize("deleteUssPrompt.deleteCancelled", "Delete action was cancelled.")
+            );
+            return;
+        }
         try {
             await ZoweExplorerApiRegister.getUssApi(cachedProfile).delete(
                 this.fullPath,
