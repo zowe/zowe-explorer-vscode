@@ -87,6 +87,7 @@ export const SETTINGS_USS_HISTORY = "zowe.uss.history";
 export const SETTINGS_JOBS_HISTORY = "zowe.jobs.history";
 export const EXTENDER_CONFIG: imperative.ICommandProfileTypeConfiguration[] = [];
 export let PROFILESCACHE; // set during activate new ProfilesCache(Logger.getAppLogger());
+export let ACTIVATED = false;
 
 export enum CreateDataSetTypeWithKeysEnum {
     DATA_SET_BINARY = 0,
@@ -250,4 +251,8 @@ export function initLogger(context: vscode.ExtensionContext) {
     }
     imperative.Logger.initLogger(loggerConfig);
     this.LOG = imperative.Logger.getAppLogger();
+}
+
+export function setActivated(value: boolean) {
+    ACTIVATED = value;
 }
