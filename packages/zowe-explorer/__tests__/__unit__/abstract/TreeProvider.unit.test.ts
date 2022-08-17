@@ -20,7 +20,7 @@ import {
 import { createUSSSessionNode } from "../../../__mocks__/mockCreators/uss";
 import { ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../src/Profiles";
-import { Logger } from "@zowe/imperative";
+import { imperative } from "@zowe/cli";
 import * as globals from "../../../src/globals";
 import { createUSSTree } from "../../../src/uss/USSTree";
 import { createIJobObject } from "../../../__mocks__/mockCreators/jobs";
@@ -62,7 +62,7 @@ async function createGlobalMocks() {
             };
         }),
         mockProfileInfo: createInstanceOfProfileInfo(),
-        mockProfilesCache: new ProfilesCache(Logger.getAppLogger()),
+        mockProfilesCache: new ProfilesCache(imperative.Logger.getAppLogger()),
     };
 
     Object.defineProperty(globalMocks.mockProfilesCache, "getProfileInfo", {
@@ -126,7 +126,7 @@ async function createGlobalMocks() {
     globalMocks.withProgress.mockImplementation((progLocation, callback) => callback());
     globalMocks.withProgress.mockReturnValue(globalMocks.testResponse);
     globalMocks.testSessionNode = createUSSSessionNode(globalMocks.testSession, globalMocks.testProfile);
-    globalMocks.testUSSTree = await createUSSTree(Logger.getAppLogger());
+    globalMocks.testUSSTree = await createUSSTree(imperative.Logger.getAppLogger());
     Object.defineProperty(globalMocks.testUSSTree, "refresh", { value: globalMocks.refresh, configurable: true });
     globalMocks.testUSSTree.mSessionNodes.push(globalMocks.testSessionNode);
     globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.testProfile);
@@ -146,7 +146,7 @@ describe("ZoweJobNode unit tests - Function editSession", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
             testIJob: createIJobObject(),
-            testJobsProvider: await createJobsTree(Logger.getAppLogger()),
+            testJobsProvider: await createJobsTree(imperative.Logger.getAppLogger()),
             jobNode: null,
         };
 
@@ -255,7 +255,7 @@ describe("ZoweJobNode unit tests - Function checkCurrentProfile", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
             testIJob: createIJobObject(),
-            testJobsProvider: await createJobsTree(Logger.getAppLogger()),
+            testJobsProvider: await createJobsTree(imperative.Logger.getAppLogger()),
             jobNode: null,
         };
 

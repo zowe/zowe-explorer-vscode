@@ -10,7 +10,7 @@
  */
 
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
-import * as imperative from "@zowe/imperative";
+import { imperative } from "@zowe/cli";
 import * as vscode from "vscode";
 import * as globals from "../../src/globals";
 import { ZoweTreeProvider } from "../../src/abstract/ZoweTreeProvider";

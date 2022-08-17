@@ -14,7 +14,6 @@ import * as nls from "vscode-nls";
 
 import * as globals from "../globals";
 import * as dsActions from "./actions";
-import { IProfileLoaded, Logger, Session } from "@zowe/imperative";
 import { ValidProfileEnum, IZoweTree, IZoweDatasetTreeNode, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
@@ -34,7 +33,7 @@ import * as contextually from "../shared/context";
 import { resetValidationSettings } from "../shared/actions";
 import { closeOpenedTextFile } from "../utils/workspace";
 import { PersistentFilters } from "../PersistentFilters";
-import { IDataSet, IListOptions } from "@zowe/cli";
+import { IDataSet, IListOptions, imperative } from "@zowe/cli";
 import { UIViews } from "../shared/ui-views";
 
 // Set up localization
@@ -49,7 +48,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  *
  * @export
  */
-export async function createDatasetTree(log: Logger) {
+export async function createDatasetTree(log: imperative.Logger) {
     const tree = new DatasetTree();
     await tree.initializeFavorites(log);
     await tree.addSession();
@@ -232,7 +231,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * Profile loading only occurs in loadProfilesForFavorites when the profile node in Favorites is clicked on.
      * @param log
      */
-    public async initializeFavorites(log: Logger) {
+    public async initializeFavorites(log: imperative.Logger) {
         this.log = log;
         this.log.debug(localize("initializeFavorites.log.debug", "Initializing profiles with data set favorites."));
         const lines: string[] = this.mHistory.readFavorites();
@@ -350,11 +349,11 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * Loads profile for the profile node in Favorites that was clicked on, as well as for its children favorites.
      * @param log
      */
-    public async loadProfilesForFavorites(log: Logger, parentNode: IZoweDatasetTreeNode) {
+    public async loadProfilesForFavorites(log: imperative.Logger, parentNode: IZoweDatasetTreeNode) {
         const profileName = parentNode.label as string;
         const updatedFavsForProfile: IZoweDatasetTreeNode[] = [];
-        let profile: IProfileLoaded;
-        let session: Session;
+        let profile: imperative.IProfileLoaded;
+        let session: imperative.Session;
         this.log = log;
         this.log.debug(
             localize("loadProfilesForFavorites.log.debug", "Loading profile: {0} for data set favorites", profileName)
@@ -448,7 +447,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         const setting = PersistentFilters.getDirectValue(globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION) as boolean;
         // Loads profile associated with passed sessionName, default if none passed
         if (sessionName) {
-            const profile: IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
+            const profile: imperative.IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
             if (profile) {
                 await this.addSingleSession(profile);
                 for (const node of this.mSessionNodes) {
@@ -1269,7 +1268,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * Adds a single session to the data set tree
      *
      */
-    private async addSingleSession(profile: IProfileLoaded) {
+    private async addSingleSession(profile: imperative.IProfileLoaded) {
         if (profile) {
             // If session is already added, do nothing
             if (this.mSessionNodes.find((tNode) => tNode.label.toString() === profile.name)) {

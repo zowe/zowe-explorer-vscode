@@ -10,8 +10,6 @@
  */
 
 import * as zowe from "@zowe/cli";
-import * as imperative from "@zowe/imperative";
-
 import { MessageSeverityEnum, ZoweExplorerApi, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { JobUtils, DataSetUtils, TRANSFER_TYPE_ASCII } from "@zowe/zos-ftp-for-zowe-cli";
 import { DownloadJobs, IJobFile } from "@zowe/cli";
@@ -154,8 +152,8 @@ export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
                         parms.omitJobidDirectory,
                         parms.outDir
                     );
-                    imperative.IO.createDirsSyncFromFilePath(destinationFile);
-                    imperative.IO.writeFile(destinationFile, spoolFileToDownload.contents);
+                    zowe.imperative.IO.createDirsSyncFromFilePath(destinationFile);
+                    zowe.imperative.IO.writeFile(destinationFile, spoolFileToDownload.contents);
                 }
             }
         } finally {

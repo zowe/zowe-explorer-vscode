@@ -12,7 +12,6 @@
 import * as zowe from "@zowe/cli";
 import * as vscode from "vscode";
 import * as globals from "../globals";
-import { Session, IProfileLoaded } from "@zowe/imperative";
 import { errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
 import { IZoweDatasetTreeNode, ZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
@@ -53,10 +52,10 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         label: string,
         collapsibleState: vscode.TreeItemCollapsibleState,
         mParent: IZoweDatasetTreeNode,
-        session: Session,
+        session: zowe.imperative.Session,
         contextOverride?: string,
         private etag?: string,
-        profile?: IProfileLoaded
+        profile?: zowe.imperative.IProfileLoaded
     ) {
         super(label, collapsibleState, mParent, session, profile);
 
