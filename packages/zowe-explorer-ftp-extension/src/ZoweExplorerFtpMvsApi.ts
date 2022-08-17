@@ -13,7 +13,6 @@ import * as fs from "fs";
 import * as crypto from "crypto";
 import * as tmp from "tmp";
 import * as zowe from "@zowe/cli";
-import * as imperative from "@zowe/imperative";
 import * as path from "path";
 import * as vscode from "vscode";
 
@@ -87,7 +86,7 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
         try {
             connection = await this.ftpClient(this.checkedProfile());
             if (connection && targetFile) {
-                imperative.IO.createDirsSyncFromFilePath(targetFile);
+                zowe.imperative.IO.createDirsSyncFromFilePath(targetFile);
                 await DataSetUtils.downloadDataSet(connection, dataSetName, transferOptions);
                 result.success = true;
                 result.commandResponse = "";

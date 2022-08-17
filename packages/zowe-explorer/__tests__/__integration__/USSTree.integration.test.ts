@@ -10,8 +10,7 @@
  */
 
 // tslint:disable:no-magic-numbers
-import * as zowe from "@zowe/cli";
-import { Logger, IProfileLoaded, ICommandArguments, ConnectionPropsForSessCfg, Session } from "@zowe/imperative";
+import { imperative, ZosmfSession } from "@zowe/cli";
 import * as chai from "chai";
 import * as sinon from "sinon";
 import * as chaiAsPromised from "chai-as-promised";
@@ -25,7 +24,7 @@ import * as globals from "../../src/globals";
 
 declare var it: any;
 
-const testProfile: IProfileLoaded = {
+const testProfile: imperative.IProfileLoaded = {
     name: testConst.profile.name,
     profile: testConst.profile,
     type: testConst.profile.type,
@@ -38,7 +37,7 @@ describe("USSTree Integration Tests", async () => {
     chai.use(chaiAsPromised);
 
     // Uses loaded profile to create a zosmf session with Zowe
-    const cmdArgs: ICommandArguments = {
+    const cmdArgs: imperative.ICommandArguments = {
         $0: "zowe",
         _: [""],
         host: testProfile.profile.host,
@@ -48,9 +47,9 @@ describe("USSTree Integration Tests", async () => {
         user: testProfile.profile.user,
         password: testProfile.profile.password,
     };
-    const sessCfg = zowe.ZosmfSession.createSessCfgFromArgs(cmdArgs);
-    ConnectionPropsForSessCfg.resolveSessCfgProps(sessCfg, cmdArgs);
-    const session = new Session(sessCfg);
+    const sessCfg = ZosmfSession.createSessCfgFromArgs(cmdArgs);
+    imperative.ConnectionPropsForSessCfg.resolveSessCfgProps(sessCfg, cmdArgs);
+    const session = new imperative.Session(sessCfg);
     const sessNode = new ZoweUSSNode(
         testConst.profile.name,
         vscode.TreeItemCollapsibleState.Expanded,
@@ -238,7 +237,7 @@ describe("USSTree Integration Tests", async () => {
      *************************************************************************************************************/
     it("Tests the addSession() function by adding a default, deleting, then adding a passed session", async () => {
         let len = testTree.mSessionNodes.length;
-        const log = new Logger(undefined);
+        const log = new imperative.Logger(undefined);
         await testTree.addSession();
         expect(testTree.mSessionNodes.length).toBeGreaterThanOrEqual(len + 1);
         len = testTree.mSessionNodes.length;

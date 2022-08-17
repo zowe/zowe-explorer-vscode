@@ -9,14 +9,13 @@
  *                                                                                 *
  */
 
-import * as imperative from "@zowe/imperative";
 import { ZoweTreeProvider } from "../../src/abstract/ZoweTreeProvider";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
 import * as vscode from "vscode";
 import { IZoweNodeType, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { FilterDescriptor } from "../../src/utils/ProfilesUtils";
-import * as zowe from "@zowe/cli";
+import { imperative, ZosmfSession } from "@zowe/cli";
 import { Profiles } from "../../src/Profiles";
 
 export function createPersistentConfig() {
@@ -67,7 +66,7 @@ export function createSessCfgFromArgs(testProfile: imperative.IProfileLoaded) {
         user: testProfile.profile.user,
         password: testProfile.profile.password,
     };
-    const sessCfg = zowe.ZosmfSession.createSessCfgFromArgs(cmdArgs);
+    const sessCfg = ZosmfSession.createSessCfgFromArgs(cmdArgs);
     const session = new imperative.Session(sessCfg);
     return session;
 }

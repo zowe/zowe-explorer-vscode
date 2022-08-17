@@ -31,10 +31,9 @@ import { createProfileManager, createTestSchemas, newTestSchemas } from "../../_
 import * as vscode from "vscode";
 import * as utils from "../../src/utils/ProfilesUtils";
 import * as child_process from "child_process";
-import { Logger, SessConstants } from "@zowe/imperative";
 import * as globals from "../../src/globals";
 import { ValidProfileEnum, IZoweNodeType, ProfilesCache } from "@zowe/zowe-explorer-api";
-import { ZosmfSession } from "@zowe/cli";
+import { ZosmfSession, imperative } from "@zowe/cli";
 import { ZoweExplorerApiRegister } from "../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../src/Profiles";
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
@@ -51,7 +50,7 @@ jest.mock("fs-extra");
 
 async function createGlobalMocks() {
     const newMocks = {
-        log: Logger.getAppLogger(),
+        log: imperative.Logger.getAppLogger(),
         mockShowInputBox: jest.fn(),
         mockGetConfiguration: jest.fn(),
         mockCreateQuickPick: jest.fn(),
@@ -84,7 +83,7 @@ async function createGlobalMocks() {
         mockProfilesCache: null,
     };
 
-    newMocks.mockProfilesCache = new ProfilesCache(Logger.getAppLogger());
+    newMocks.mockProfilesCache = new ProfilesCache(imperative.Logger.getAppLogger());
     newMocks.withProgress = jest.fn().mockImplementation((progLocation, callback) => {
         return newMocks.mockCallback;
     });

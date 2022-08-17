@@ -11,7 +11,6 @@
 
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
-import * as imperative from "@zowe/imperative";
 import { ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import {
     createSessCfgFromArgs,

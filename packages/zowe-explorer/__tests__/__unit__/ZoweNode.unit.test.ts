@@ -11,13 +11,11 @@
 
 // tslint:disable:no-shadowed-variable
 jest.mock("vscode");
-jest.mock("@zowe/imperative");
 jest.mock("@zowe/cli");
 jest.mock("Session");
 import * as vscode from "vscode";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
-import { Session, IProfileLoaded } from "@zowe/imperative";
-import { List } from "@zowe/cli";
+import { List, imperative } from "@zowe/cli";
 import { Profiles } from "../../src/Profiles";
 import {
     DS_PDS_CONTEXT,
@@ -31,14 +29,14 @@ import {
 
 describe("Unit Tests (Jest)", () => {
     // Globals
-    const session = new Session({
+    const session = new imperative.Session({
         user: "fake",
         password: "fake",
         hostname: "fake",
         protocol: "https",
         type: "basic",
     });
-    const profileOne: IProfileLoaded = {
+    const profileOne: imperative.IProfileLoaded = {
         name: "profile1",
         profile: {},
         type: "zosmf",

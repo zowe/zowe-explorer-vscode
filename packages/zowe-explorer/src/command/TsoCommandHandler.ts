@@ -12,14 +12,13 @@
 import * as vscode from "vscode";
 import * as nls from "vscode-nls";
 import * as globals from "../globals";
-import * as imperative from "@zowe/imperative";
-import { ValidProfileEnum, IZoweTreeNode, ProfilesCache, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { ValidProfileEnum, IZoweTreeNode, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { PersistentFilters } from "../PersistentFilters";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, FilterDescriptor, FilterItem, resolveQuickPickHelper } from "../utils/ProfilesUtils";
 import { ZoweCommandProvider } from "../abstract/ZoweCommandProvider";
-import { IStartTsoParms } from "@zowe/cli";
+import { IStartTsoParms, imperative } from "@zowe/cli";
 import { UIViews } from "../shared/ui-views";
 
 // Set up localization

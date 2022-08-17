@@ -15,7 +15,6 @@ import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
 import { createUSSTree, USSTree } from "../../../src/uss/USSTree";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
-import { Logger, IProfileLoaded } from "@zowe/imperative";
 import {
     createIProfile,
     createISession,
@@ -75,7 +74,7 @@ async function createGlobalMocks() {
         testUSSNode: null,
         testTree: null,
         profilesForValidation: { status: "active", name: "fake" },
-        mockProfilesCache: new ProfilesCache(Logger.getAppLogger()),
+        mockProfilesCache: new ProfilesCache(zowe.imperative.Logger.getAppLogger()),
     };
 
     globalMocks.mockTextDocuments.push(globalMocks.mockTextDocumentDirty);
@@ -167,7 +166,7 @@ async function createGlobalMocks() {
 describe("USSTree Unit Tests - Function USSTree.initializeFavorites()", () => {
     it("Tests that initializeFavorites() is executed successfully", async () => {
         const globalMocks = await createGlobalMocks();
-        const testTree1 = await createUSSTree(Logger.getAppLogger());
+        const testTree1 = await createUSSTree(zowe.imperative.Logger.getAppLogger());
         const favProfileNode = testTree1.mFavorites[0];
         expect(testTree1.mSessionNodes).toBeDefined();
         expect(testTree1.mFavorites.length).toBe(1);
@@ -208,7 +207,7 @@ describe("USSTree Unit Tests - Function USSTree.initializeFavorites()", () => {
 describe("USSTree Unit Tests - Function initializeFavChildNodeForProfile()", () => {
     it("Tests initializeFavChildNodeForProfile() for favorited search", async () => {
         createGlobalMocks();
-        const testTree1 = await createUSSTree(Logger.getAppLogger());
+        const testTree1 = await createUSSTree(zowe.imperative.Logger.getAppLogger());
         const favProfileNode = testTree1.mFavorites[0];
         const label = "/u/fakeuser";
         const line = "[test]: /u/fakeuser{ussSession}";
@@ -1510,7 +1509,7 @@ describe("USSTree Unit Tests - Function USSTree.getChildren()", () => {
     });
     it("Testing that getChildren() gets profile-loaded favorites for profile node in Favorites section", async () => {
         const globalMocks = await createGlobalMocks();
-        const log = Logger.getAppLogger();
+        const log = zowe.imperative.Logger.getAppLogger();
         const favProfileNode = new ZoweUSSNode(
             "sestest",
             vscode.TreeItemCollapsibleState.Collapsed,
@@ -1534,7 +1533,7 @@ const mocked = <T extends (...args: any[]) => any>(fn: T): jest.Mock<ReturnType<
 
 describe("USSTree Unit Tests - Function USSTree.loadProfilesForFavorites", () => {
     function createBlockMocks(globalMocks) {
-        const log = Logger.getAppLogger();
+        const log = zowe.imperative.Logger.getAppLogger();
         const ussApi = createUssApi(globalMocks.testProfile);
         bindUssApi(ussApi);
 
@@ -1721,7 +1720,7 @@ describe("USSTree Unit Tests - Function USSTree.loadProfilesForFavorites", () =>
 });
 
 describe("USSTree Unit Tests - Function USSTree.editSession()", () => {
-    const profileLoad: IProfileLoaded = {
+    const profileLoad: zowe.imperative.IProfileLoaded = {
         name: "fake",
         profile: {
             host: "fake",

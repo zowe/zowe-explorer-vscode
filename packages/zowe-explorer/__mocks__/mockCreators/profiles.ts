@@ -9,7 +9,7 @@
  *                                                                                 *
  */
 
-import { CliProfileManager } from "@zowe/imperative";
+import { imperative } from "@zowe/cli";
 
 export function createTestSchemas() {
     const schema1: {} = {
@@ -235,6 +235,6 @@ export function createProfileManager() {
                 ],
             },
         ],
-    }) as CliProfileManager;
+    }) as imperative.CliProfileManager;
     return newManager;
 }

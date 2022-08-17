@@ -11,9 +11,7 @@
 
 // tslint:disable: max-classes-per-file
 
-jest.mock("@zowe/imperative");
 import * as zowe from "@zowe/cli";
-import { IProfileLoaded, Session } from "@zowe/imperative";
 import { ZoweExplorerApi, ZosmfUssApi, ZosmfJesApi, ZosmfMvsApi } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
@@ -21,7 +19,7 @@ import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 import { createInstanceOfProfile, createValidIProfile } from "../../../__mocks__/mockCreators/shared";
 
 class MockUssApi1 implements ZoweExplorerApi.IUss {
-    public profile?: IProfileLoaded;
+    public profile?: zowe.imperative.IProfileLoaded;
     public getProfileTypeName(): string {
         return "api1typename";
     }
@@ -67,25 +65,25 @@ class MockUssApi1 implements ZoweExplorerApi.IUss {
     public rename(currentUssPath: string, newUssPath: string): Promise<zowe.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
-    public getSession(profile?: IProfileLoaded): Session {
+    public getSession(profile?: zowe.imperative.IProfileLoaded): zowe.imperative.Session {
         throw new Error("Method not implemented.");
     }
-    public getStatus?(profile?: IProfileLoaded): Promise<string> {
+    public getStatus?(profile?: zowe.imperative.IProfileLoaded): Promise<string> {
         throw new Error("Method not implemented.");
     }
     public getTokenTypeName?(): string {
         throw new Error("Method not implemented.");
     }
-    public login?(session: Session): Promise<string> {
+    public login?(session: zowe.imperative.Session): Promise<string> {
         throw new Error("Method not implemented.");
     }
-    public logout?(session: Session): Promise<string> {
+    public logout?(session: zowe.imperative.Session): Promise<string> {
         throw new Error("Method not implemented.");
     }
 }
 
 class MockUssApi2 implements ZoweExplorerApi.IUss {
-    public profile?: IProfileLoaded;
+    public profile?: zowe.imperative.IProfileLoaded;
     public getProfileTypeName(): string {
         return "api2typename";
     }
@@ -131,19 +129,19 @@ class MockUssApi2 implements ZoweExplorerApi.IUss {
     public rename(currentUssPath: string, newUssPath: string): Promise<zowe.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
-    public getSession(profile?: IProfileLoaded): Session {
+    public getSession(profile?: zowe.imperative.IProfileLoaded): zowe.imperative.Session {
         throw new Error("Method not implemented.");
     }
-    public getStatus?(profile?: IProfileLoaded): Promise<string> {
+    public getStatus?(profile?: zowe.imperative.IProfileLoaded): Promise<string> {
         throw new Error("Method not implemented.");
     }
     public getTokenTypeName?(): string {
         throw new Error("Method not implemented.");
     }
-    public login?(session: Session): Promise<string> {
+    public login?(session: zowe.imperative.Session): Promise<string> {
         throw new Error("Method not implemented.");
     }
-    public logout?(session: Session): Promise<string> {
+    public logout?(session: zowe.imperative.Session): Promise<string> {
         throw new Error("Method not implemented.");
     }
 }
@@ -274,7 +272,7 @@ describe("ZoweExplorerApiRegister unit testing", () => {
         const globalMocks = await createGlobalMocks();
         const defaultProfile = globalMocks.profiles.getDefaultProfile();
         const ussApi = ZoweExplorerApiRegister.getUssApi(defaultProfile);
-        const profileUnused: IProfileLoaded = {
+        const profileUnused: zowe.imperative.IProfileLoaded = {
             name: "profileUnused",
             profile: {
                 user: undefined,

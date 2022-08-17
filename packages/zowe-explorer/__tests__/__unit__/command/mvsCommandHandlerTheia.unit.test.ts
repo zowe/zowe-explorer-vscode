@@ -15,7 +15,7 @@ import { ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { MvsCommandHandler } from "../../../src/command/MvsCommandHandler";
 import * as globals from "../../../src/globals";
 import * as utils from "../../../src/utils/ProfilesUtils";
-import { Session, IProfileLoaded } from "@zowe/imperative";
+import { imperative } from "@zowe/cli";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 
 describe("mvsCommandActions unit testing", () => {
@@ -64,7 +64,7 @@ describe("mvsCommandActions unit testing", () => {
         return submitResponse;
     });
 
-    const session = new Session({
+    const session = new imperative.Session({
         user: "fake",
         password: "fake",
         hostname: "fake",
@@ -73,7 +73,7 @@ describe("mvsCommandActions unit testing", () => {
         type: "basic",
     });
 
-    const profileOne: IProfileLoaded = {
+    const profileOne: imperative.IProfileLoaded = {
         name: "aProfile",
         profile: {},
         type: "zosmf",

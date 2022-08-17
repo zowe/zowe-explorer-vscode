@@ -13,7 +13,6 @@
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import * as globals from "../globals";
-import { Session, IProfileLoaded } from "@zowe/imperative";
 import { IZoweJobTreeNode, ZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
@@ -48,9 +47,9 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
         label: string,
         collapsibleState: vscode.TreeItemCollapsibleState,
         mParent: IZoweJobTreeNode,
-        session: Session,
+        session: zowe.imperative.Session,
         public job: zowe.IJob,
-        profile: IProfileLoaded
+        profile: zowe.imperative.IProfileLoaded
     ) {
         super(label, collapsibleState, mParent, session, profile);
         if (session) {
@@ -312,7 +311,7 @@ export class Spool extends Job {
         label: string,
         mCollapsibleState: vscode.TreeItemCollapsibleState,
         mParent: IZoweJobTreeNode,
-        session: Session,
+        session: zowe.imperative.Session,
         spool: zowe.IJobFile,
         job: zowe.IJob,
         parent: IZoweJobTreeNode
