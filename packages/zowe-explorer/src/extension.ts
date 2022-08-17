@@ -582,8 +582,10 @@ function initUSSProvider(context: vscode.ExtensionContext, ussFileProvider: IZow
         vscode.commands.registerCommand("zowe.uss.deleteNode", async () => {
             let selectedNodes = ussFileProvider.getTreeView().selection as IZoweUSSTreeNode[];
             selectedNodes = selectedNodes.filter((x) => contextually.isDocument(x) || contextually.isUssDirectory(x));
-            for (const node of selectedNodes) {
-                await node.deleteUSSNode(ussFileProvider, node.getUSSDocumentFilePath());
+            if (await ussActions.deleteUSSFilesPrompt(selectedNodes)) {
+                for (const node of selectedNodes) {
+                    await node.deleteUSSNode(ussFileProvider, node.getUSSDocumentFilePath());
+                }
             }
         })
     );
