@@ -18,11 +18,9 @@ import { ValidProfileEnum, IZoweTree, IZoweJobTreeNode } from "@zowe/zowe-explor
 import { Job, Spool } from "./ZoweJobNode";
 import * as nls from "vscode-nls";
 import { toUniqueJobFileUri } from "../SpoolProvider";
-import { IProfileLoaded, Session } from "@zowe/imperative";
 import * as globals from "../globals";
 import { refreshAll as refreshAllJobs } from "../shared/refresh";
 import { UIViews } from "../shared/ui-views";
-import { getDocumentFilePath } from "../shared/utils";
 
 // Set up localization
 nls.config({
@@ -65,7 +63,7 @@ export async function downloadSpool(job: IZoweJobTreeNode) {
  */
 export async function getSpoolContent(session: string, spool: zowe.IJobFile, refreshTimestamp: number) {
     const profiles = Profiles.getInstance();
-    let zosmfProfile: IProfileLoaded;
+    let zosmfProfile: zowe.imperative.IProfileLoaded;
     try {
         zosmfProfile = profiles.loadNamedProfile(session);
     } catch (error) {

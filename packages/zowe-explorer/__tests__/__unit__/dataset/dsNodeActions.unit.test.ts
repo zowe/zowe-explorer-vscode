@@ -9,12 +9,9 @@
  *                                                                                 *
  */
 
-jest.mock("@zowe/imperative");
-jest.mock("@zowe/cli");
 import * as vscode from "vscode";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
-import * as brtimperative from "@zowe/imperative";
-import * as zowe from "@zowe/cli";
+import { imperative, ZosmfSession } from "@zowe/cli";
 import * as dsNodeActions from "../../../src/dataset/actions";
 import * as refreshActions from "../../../src/shared/refresh";
 import { Profiles } from "../../../src/Profiles";
@@ -23,7 +20,6 @@ import { FAVORITE_CONTEXT, DS_SESSION_CONTEXT, FAV_SUFFIX } from "../../../src/g
 jest.mock("vscode");
 jest.mock("Session");
 jest.mock("@zowe/cli");
-jest.mock("@zowe/imperative");
 jest.mock("util");
 jest.mock("DatasetTree");
 jest.mock("USSTree");
@@ -55,7 +51,7 @@ const mockGetProfileName = jest.fn();
 const mockGetSession = jest.fn();
 const mockGetProfiles = jest.fn();
 
-const profileOne: brtimperative.IProfileLoaded = {
+const profileOne: imperative.IProfileLoaded = {
     name: "profile1",
     profile: {},
     type: "zosmf",
@@ -155,7 +151,7 @@ function getDSTree() {
     return testDSTree1;
 }
 
-const session = new brtimperative.Session({
+const session = new imperative.Session({
     user: "fake",
     password: "fake",
     hostname: "fake",
@@ -196,7 +192,7 @@ describe("dsNodeActions", () => {
     Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
     Object.defineProperty(vscode.window, "showInformationMessage", { value: showInformationMessage });
     Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
-    Object.defineProperty(zowe.ZosmfSession, "createSessCfgFromArgs", { value: createSessCfgFromArgs });
+    Object.defineProperty(ZosmfSession, "createSessCfgFromArgs", { value: createSessCfgFromArgs });
     Object.defineProperty(refreshActions, "refreshAll", { value: jest.fn() });
 
     beforeEach(() => {

@@ -31,7 +31,6 @@
 // import * as vscode from "vscode";
 // import * as utils from "../../src/utils/ProfilesUtils";
 // import * as child_process from "child_process";
-// import { Logger, SessConstants } from "@zowe/imperative";
 // import * as globals from "../../src/globals";
 // import { ValidProfileEnum, IZoweNodeType, ProfilesCache } from "@zowe/zowe-explorer-api";
 // import { ZosmfSession } from "@zowe/cli";

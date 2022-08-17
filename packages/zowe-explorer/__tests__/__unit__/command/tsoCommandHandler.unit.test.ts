@@ -10,14 +10,13 @@
  */
 
 jest.mock("Session");
-jest.mock("@zowe/imperative");
 
 import * as vscode from "vscode";
 import { ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import * as profileLoader from "../../../src/Profiles";
 import { TsoCommandHandler } from "../../../src/command/TsoCommandHandler";
 import * as utils from "../../../src/utils/ProfilesUtils";
-import { Session, IProfileLoaded } from "@zowe/imperative";
+import { imperative } from "@zowe/cli";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 
@@ -86,7 +85,7 @@ describe("TsoCommandHandler unit testing", () => {
         };
     });
 
-    const session = new Session({
+    const session = new imperative.Session({
         user: "fake",
         password: "fake",
         hostname: "fake",
@@ -95,7 +94,7 @@ describe("TsoCommandHandler unit testing", () => {
         type: "basic",
     });
 
-    const profileOne: IProfileLoaded = {
+    const profileOne: imperative.IProfileLoaded = {
         name: "aProfile",
         profile: {},
         type: "zosmf",

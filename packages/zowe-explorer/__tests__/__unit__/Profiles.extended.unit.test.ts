@@ -26,9 +26,10 @@ import { createDatasetSessionNode, createDatasetTree } from "../../__mocks__/moc
 import { createProfileManager, newTestSchemas } from "../../__mocks__/mockCreators/profiles";
 import * as vscode from "vscode";
 import * as utils from "../../src/utils/ProfilesUtils";
-import * as zowe from "@zowe/cli";
 import * as globals from "../../src/globals";
-import { ProfilesCache } from "@zowe/zowe-explorer-api";
+import { ValidProfileEnum, IZoweNodeType, ProfilesCache } from "@zowe/zowe-explorer-api";
+import { ZosmfSession, imperative } from "@zowe/cli";
+import { ZoweExplorerApiRegister } from "../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../src/Profiles";
 
 // jest.mock("vscode");
@@ -38,7 +39,7 @@ jest.mock("fs-extra");
 
 async function createGlobalMocks() {
     const newMocks = {
-        log: zowe.imperative.Logger.getAppLogger(),
+        log: imperative.Logger.getAppLogger(),
         mockShowInputBox: jest.fn(),
         mockGetConfiguration: jest.fn(),
         mockCreateQuickPick: createQuickPickInstance(),
@@ -73,7 +74,7 @@ async function createGlobalMocks() {
         mockConfigLoad: null,
     };
 
-    newMocks.mockProfilesCache = new ProfilesCache(zowe.imperative.Logger.getAppLogger());
+    newMocks.mockProfilesCache = new ProfilesCache(imperative.Logger.getAppLogger());
     newMocks.withProgress = jest.fn().mockImplementation((progLocation, callback) => {
         return newMocks.mockCallback;
     });
@@ -98,7 +99,7 @@ async function createGlobalMocks() {
     Object.defineProperty(globals, "LOG", { value: newMocks.mockLog, configurable: true });
     Object.defineProperty(vscode.window, "createInputBox", { value: newMocks.mockCreateInputBox, configurable: true });
     Object.defineProperty(globals.LOG, "debug", { value: newMocks.mockDebug, configurable: true });
-    Object.defineProperty(zowe.ZosmfSession, "createSessCfgFromArgs", {
+    Object.defineProperty(ZosmfSession, "createSessCfgFromArgs", {
         value: newMocks.mockCreateSessCfgFromArgs,
         configurable: true,
     });
@@ -142,11 +143,11 @@ async function createGlobalMocks() {
         configurable: true,
     });
 
-    Object.defineProperty(zowe.imperative, "Config", {
+    Object.defineProperty(imperative, "Config", {
         value: () => newMocks.mockConfigInstance,
         configurable: true,
     });
-    newMocks.mockConfigLoad = Object.defineProperty(zowe.imperative.Config, "load", {
+    newMocks.mockConfigLoad = Object.defineProperty(imperative.Config, "load", {
         value: jest.fn(() => {
             return createConfigLoad();
         }),

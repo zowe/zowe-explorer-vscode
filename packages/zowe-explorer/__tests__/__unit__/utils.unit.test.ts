@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import { ProfilesCache } from "@zowe/zowe-explorer-api";
-import { Logger } from "@zowe/imperative";
+import { imperative } from "@zowe/cli";
 import * as utils from "../../src/utils/ProfilesUtils";
 import * as globals from "../../src/globals";
 import {
@@ -28,7 +28,7 @@ function createGlobalMocks() {
         testProfileLoaded: createValidIProfile(),
         mockProfileInstance: null,
         mockProfileInfo: createInstanceOfProfileInfo(),
-        mockProfilesCache: new ProfilesCache(Logger.getAppLogger()),
+        mockProfilesCache: new ProfilesCache(imperative.Logger.getAppLogger()),
     };
 
     globalMocks.mockProfileInstance = createInstanceOfProfile(globalMocks.testProfileLoaded);
