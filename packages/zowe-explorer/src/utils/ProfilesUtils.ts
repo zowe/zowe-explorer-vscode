@@ -195,8 +195,41 @@ export class FilterItem implements vscode.QuickPickItem {
     }
 }
 
+export class FilterItem2 implements vscode.QuickPickItem {
+    constructor(private filterItem: IFilterItem) {}
+    get label(): string {
+        return this.filterItem.text;
+    }
+    get description(): string {
+        return this.filterItem.description;
+    }
+    get detail(): string {
+        return "detail";
+    }
+    get alwaysShow(): boolean {
+        return this.filterItem.show;
+    }
+    get buttons(): vscode.QuickInputButton[] {
+        const button = { tooltip: "Button tooltip", iconPath: { id: "breakpoints-activate" } };
+        return [button];
+    }
+}
+
 // tslint:disable-next-line: max-classes-per-file
 export class FilterDescriptor implements vscode.QuickPickItem {
+    constructor(private text: string) {}
+    get label(): string {
+        return this.text;
+    }
+    get description(): string {
+        return "";
+    }
+    get alwaysShow(): boolean {
+        return true;
+    }
+}
+
+export class FilterDescriptor2 implements vscode.QuickPickItem {
     constructor(private text: string) {}
     get label(): string {
         return this.text;
