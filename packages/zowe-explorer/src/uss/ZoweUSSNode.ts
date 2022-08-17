@@ -9,12 +9,11 @@
  *                                                                                 *
  */
 
-import * as zowe from "@zowe/cli";
+import { imperative, IZosFilesResponse } from "@zowe/cli";
 import * as globals from "../globals";
 import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
-import { Session, IProfileLoaded } from "@zowe/imperative";
 import { IZoweUSSTreeNode, ZoweTreeNode, IZoweTree, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
@@ -49,7 +48,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     public profileName = "";
     public shortLabel = "";
     public downloadedTime = null as string;
-    public profile: IProfileLoaded; // TODO: This reference should be stored instead of the name
+    public profile: imperative.IProfileLoaded; // TODO: This reference should be stored instead of the name
     private downloadedInternal = false;
 
     /**
@@ -67,12 +66,12 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         label: string,
         collapsibleState: vscode.TreeItemCollapsibleState,
         mParent: IZoweUSSTreeNode,
-        session: Session,
+        session: imperative.Session,
         private parentPath: string,
         binary = false,
         public mProfileName?: string,
         private etag: string = "",
-        profile?: IProfileLoaded
+        profile?: imperative.IProfileLoaded
     ) {
         super(label, collapsibleState, mParent, session, profile);
         this.binary = binary;
@@ -150,7 +149,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         }
 
         // Gets the directories from the fullPath and displays any thrown errors
-        const responses: zowe.IZosFilesResponse[] = [];
+        const responses: IZosFilesResponse[] = [];
         const sessNode = this.getSessionNode();
         try {
             const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());

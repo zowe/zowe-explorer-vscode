@@ -12,7 +12,6 @@
 jest.mock("fs");
 
 import * as zowe from "@zowe/cli";
-import { IProfileLoaded, Logger } from "@zowe/imperative";
 import { ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import * as ussNodeActions from "../../../src/uss/actions";
 import { createUSSTree, createUSSNode, createFavoriteUSSNode } from "../../../__mocks__/mockCreators/uss";
@@ -74,7 +73,7 @@ function createGlobalMocks() {
             };
         }),
         mockProfileInfo: createInstanceOfProfileInfo(),
-        mockProfilesCache: new ProfilesCache(Logger.getAppLogger()),
+        mockProfilesCache: new ProfilesCache(zowe.imperative.Logger.getAppLogger()),
     };
 
     globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.testProfile);
@@ -693,7 +692,7 @@ describe("USS Action Unit Tests - function uploadFile", () => {
         const blockMocks = await createBlockMocks(globalMocks);
         const putContents = jest.fn();
         ZoweExplorerApiRegister.getUssApi = jest.fn<any, Parameters<typeof ZoweExplorerApiRegister.getUssApi>>(
-            (profile: IProfileLoaded) => {
+            (profile: zowe.imperative.IProfileLoaded) => {
                 return {
                     putContents,
                 };
@@ -709,7 +708,7 @@ describe("USS Action Unit Tests - function uploadFile", () => {
         const blockMocks = await createBlockMocks(globalMocks);
         const putContent = jest.fn();
         ZoweExplorerApiRegister.getUssApi = jest.fn<any, Parameters<typeof ZoweExplorerApiRegister.getUssApi>>(
-            (profile: IProfileLoaded) => {
+            (profile: zowe.imperative.IProfileLoaded) => {
                 return {
                     putContent,
                 };

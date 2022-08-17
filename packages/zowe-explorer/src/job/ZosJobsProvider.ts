@@ -12,8 +12,7 @@
 import * as vscode from "vscode";
 import * as jobUtils from "../job/utils";
 import * as globals from "../globals";
-import { IJob } from "@zowe/cli";
-import { IProfileLoaded, Logger, Session } from "@zowe/imperative";
+import { IJob, imperative } from "@zowe/cli";
 import { ValidProfileEnum, IZoweTree, IZoweJobTreeNode, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import { FilterItem, FilterDescriptor, resolveQuickPickHelper, errorHandling } from "../utils/ProfilesUtils";
 import { Profiles } from "../Profiles";
@@ -42,7 +41,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  * @class ZosJobsProvider
  * @implements {vscode.TreeDataProvider}
  */
-export async function createJobsTree(log: Logger) {
+export async function createJobsTree(log: imperative.Logger) {
     const tree = new ZosJobsProvider();
     await tree.initializeJobsTree(log);
     await tree.addSession();
@@ -165,7 +164,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         const setting = PersistentFilters.getDirectValue(globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION) as boolean;
         // Loads profile associated with passed sessionName, default if none passed
         if (sessionName) {
-            const theProfile: IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
+            const theProfile: imperative.IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
             if (theProfile) {
                 await this.addSingleSession(theProfile);
             }
@@ -250,7 +249,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      * Initialize the favorites and history information
      * @param log - Logger
      */
-    public async initializeJobsTree(log: Logger) {
+    public async initializeJobsTree(log: imperative.Logger) {
         this.log = log;
         this.log.debug(localize("initializeJobsTree.log.debug", "Initializing profiles with jobs favorites."));
         const lines: string[] = this.mHistory.readFavorites();
@@ -318,11 +317,11 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      * @param log
      * @param parentNode
      */
-    public async loadProfilesForFavorites(log: Logger, parentNode: IZoweJobTreeNode) {
+    public async loadProfilesForFavorites(log: imperative.Logger, parentNode: IZoweJobTreeNode) {
         const profileName = parentNode.label as string;
         const updatedFavsForProfile: IZoweJobTreeNode[] = [];
-        let profile: IProfileLoaded;
-        let session: Session;
+        let profile: imperative.IProfileLoaded;
+        let session: imperative.Session;
         this.log = log;
         this.log.debug(
             localize("loadProfilesForFavorites.log.debug", "Loading profile: {0} for jobs favorites", profileName)
@@ -839,7 +838,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      * Adds a single session to the jobs tree
      *
      */
-    private async addSingleSession(profile: IProfileLoaded) {
+    private async addSingleSession(profile: imperative.IProfileLoaded) {
         if (profile) {
             // If session is already added, do nothing
             if (this.mSessionNodes.find((tNode) => tNode.label.toString() === profile.name)) {

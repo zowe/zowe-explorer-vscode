@@ -10,10 +10,9 @@
  */
 
 import * as vscode from "vscode";
-import * as dsUtils from "../../../src/dataset/utils";
 import * as dsActions from "../../../src/dataset/actions";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
-import { Session, IProfileLoaded } from "@zowe/imperative";
+import { imperative } from "@zowe/cli";
 import { PDS_FAV_CONTEXT, FAVORITE_CONTEXT } from "../../../src/globals";
 
 const mockRefresh = jest.fn();
@@ -38,7 +37,7 @@ const DatasetTree = jest.fn().mockImplementation(() => {
     };
 });
 
-const session = new Session({
+const session = new imperative.Session({
     user: "fake",
     password: "fake",
     hostname: "fake",
@@ -47,7 +46,13 @@ const session = new Session({
 });
 
 const testTree = DatasetTree();
-const profileOne: IProfileLoaded = { name: "profile1", profile: {}, type: "zosmf", message: "", failNotFound: false };
+const profileOne: imperative.IProfileLoaded = {
+    name: "profile1",
+    profile: {},
+    type: "zosmf",
+    message: "",
+    failNotFound: false,
+};
 const sessNode = new ZoweDatasetNode(
     "sestest",
     vscode.TreeItemCollapsibleState.Expanded,
