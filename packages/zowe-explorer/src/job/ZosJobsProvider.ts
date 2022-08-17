@@ -14,8 +14,20 @@ import * as jobUtils from "../job/utils";
 import * as globals from "../globals";
 import { IJob } from "@zowe/cli";
 import { IProfileLoaded, Logger, Session } from "@zowe/imperative";
-import { ValidProfileEnum, IZoweTree, IZoweJobTreeNode, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
-import { FilterItem, FilterDescriptor, resolveQuickPickHelper, errorHandling } from "../utils/ProfilesUtils";
+import {
+    ValidProfileEnum,
+    IZoweTree,
+    IZoweJobTreeNode,
+    PersistenceSchemaEnum,
+    ZoweVsCodeExtension,
+} from "@zowe/zowe-explorer-api";
+import {
+    FilterItem,
+    FilterItem2,
+    FilterDescriptor,
+    resolveQuickPickHelper,
+    errorHandling,
+} from "../utils/ProfilesUtils";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Job } from "./ZoweJobNode";
@@ -542,6 +554,133 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         return;
     }
 
+    async handleEditingMultiJobParameters() {
+        const JOB_PROPERTIES = [
+            {
+                key: `owner`,
+                label: `Job Owner`,
+                value: "*",
+                placeHolder: localize("createFile.attribute.alcunit", `Enter job owner id`),
+            },
+            {
+                key: `prefix`,
+                label: `Job Prefix`,
+                value: "*",
+                placeHolder: localize("createFile.attribute.avgblk", `Enter job prefix`),
+            },
+            {
+                key: `job-status`,
+                label: `Job Status`,
+                value: "*",
+                placeHolder: localize("createFile.attribute.avgblk", `Enter job status`),
+            },
+        ];
+        // Create the array of items in the quickpick list
+        const editableItems = [];
+        editableItems.push(new FilterItem({ text: ` + Submit this Job Search Query`, show: true }));
+        JOB_PROPERTIES.forEach((prop) => {
+            editableItems.push(new FilterItem({ text: prop.label, description: prop.value, show: true }));
+        });
+        const quickpick = vscode.window.createQuickPick();
+        quickpick.placeholder = localize("createFileNoWebview.options.prompt", "Click on parameters to change them");
+        quickpick.ignoreFocusOut = true;
+        quickpick.items = [...editableItems];
+        quickpick.matchOnDescription = false;
+        quickpick.onDidHide(() => {
+            if (quickpick.selectedItems.length === 0) {
+                globals.LOG.debug(localize("createFile.noOptionSelected", "No option selected. Operation cancelled."));
+                vscode.window.showInformationMessage(localize("createFile.operationCancelled", "Operation cancelled."));
+                return;
+            }
+        });
+
+        // Show quickpick and store the user's input
+        quickpick.show();
+        let pattern: string;
+        const choice2 = await resolveQuickPickHelper(quickpick);
+        pattern = choice2.label;
+        quickpick.dispose();
+        if (pattern) {
+            // Parse pattern for selected attribute
+            switch (pattern) {
+                case " + Allocate Data Set":
+                    return new Promise((resolve) => resolve(` + Allocate Data Set`));
+                default:
+                    const options: vscode.InputBoxOptions = {
+                        value: JOB_PROPERTIES.find((prop) => prop.label === pattern).value,
+                        placeHolder: JOB_PROPERTIES.find((prop) => prop.label === pattern).placeHolder,
+                    };
+                    JOB_PROPERTIES.find((prop) => prop.label === pattern).value = await ZoweVsCodeExtension.inputBox(
+                        options
+                    );
+                    break;
+            }
+            return Promise.resolve(this.handleEditingMultiJobParameters());
+        }
+    }
+
+    async handleJobQuery() {
+        let choice: vscode.QuickPickItem;
+        let searchCriteria: string = "";
+        let options: vscode.InputBoxOptions;
+        let owner = "*";
+        let prefix: string;
+        let jobid: string;
+        const filter_items = { text: "1", description: "2", show: true };
+        const items: vscode.QuickPickItem[] = [new FilterItem2(filter_items)];
+        // VSCode route to create a QuickPick
+        const quickpick = vscode.window.createQuickPick();
+        quickpick.items = [this.createOwner, this.createId, ...items];
+        quickpick.placeholder = localize("searchHistory.options.prompt", "Select a filter");
+        quickpick.ignoreFocusOut = true;
+        quickpick.show();
+        choice = await resolveQuickPickHelper(quickpick);
+        quickpick.hide();
+        if (!choice) {
+            vscode.window.showInformationMessage(
+                localize("enterPattern.pattern", "No selection made. Operation cancelled.")
+            );
+            return;
+        }
+        if (choice instanceof FilterDescriptor) {
+            if (quickpick.value.length > 0) {
+                searchCriteria = this.interpretFreeform(quickpick.value) || choice.label;
+            }
+        }
+        // change this variable name
+        if (choice === this.createOwner) {
+            // User has selected owner/prefix option
+            options = {
+                prompt: localize("jobsFilterPrompt.inputBox.prompt.owner", "+ Submit query"),
+                validateInput: (value: string) =>
+                    value.match(/ /g)
+                        ? localize("jobs.enter.valid.owner", "Please enter a valid owner name (no spaces allowed).")
+                        : "",
+                value: owner,
+                placeHolder: "This is a placeholder",
+            };
+            // get user input
+            owner = await ZoweVsCodeExtension.inputBox(options);
+            if (owner === undefined) {
+                vscode.window.showInformationMessage(localize("jobsFilterPrompt.enterPrefix", "Search Cancelled"));
+                return;
+            }
+
+            // get user input
+            prefix = await await ZoweVsCodeExtension.inputBox(options);
+            if (prefix === undefined) {
+                vscode.window.showInformationMessage(localize("jobsFilterPrompt.enterPrefix", "Search Cancelled"));
+                return;
+            }
+            if (!prefix) {
+                prefix = "*";
+            }
+            prefix = prefix.toUpperCase();
+        }
+
+        return;
+    }
+
     /**
      * Prompts the user for search details to populate the [TreeView]{@link vscode.TreeView}
      *
@@ -553,6 +692,12 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         let searchCriteria: string = "";
         const hasHistory = this.mHistory.getSearchHistory().length > 0;
         await this.checkCurrentProfile(node);
+        const kristina = true;
+        if (kristina) {
+            await this.handleJobQuery();
+            return;
+        }
+        // ====================================
         if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID || !contextually.isValidationEnabled(node)) {
             if (contextually.isSessionNotFav(node)) {
                 // This is the profile object context

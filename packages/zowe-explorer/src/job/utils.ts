@@ -9,7 +9,7 @@
  *                                                                                 *
  */
 
-import { FilterDescriptor } from "../utils/ProfilesUtils";
+import { FilterDescriptor, FilterDescriptor2 } from "../utils/ProfilesUtils";
 
 import * as nls from "vscode-nls";
 // Set up localization
@@ -29,6 +29,6 @@ export class JobIdFilterDescriptor extends FilterDescriptor {
 // tslint:disable-next-line: max-classes-per-file
 export class OwnerFilterDescriptor extends FilterDescriptor {
     constructor() {
-        super("\uFF0B " + localize("zosJobsProvider.option.prompt.createOwner", "Owner/Prefix Job Search"));
+        super("\uFF0B " + localize("zosJobsProvider.option.prompt.createOwner", "Create Job Search Filter"));
     }
 }
