@@ -305,9 +305,12 @@ export class Profiles extends ProfilesCache {
             this.log.warn(err);
         }
 
+        const profAllAttrs = mProfileInfo.getAllProfiles();
         for (const pName of profileNamesList) {
-            items.push(new FilterItem({ text: pName, icon: this.getProfileIcon(mProfileInfo, pName)[0] }));
+            const osLocInfo = mProfileInfo.getOsLocInfo(profAllAttrs.find((p) => p.profName === pName));
+            items.push(new FilterItem({ text: pName, icon: this.getProfileIcon(osLocInfo)[0] }));
         }
+
         const quickpick = vscode.window.createQuickPick();
         switch (zoweFileProvider.getTreeType()) {
             case PersistenceSchemaEnum.Dataset:
@@ -1338,9 +1341,7 @@ export class Profiles extends ProfilesCache {
         return undefined;
     }
 
-    private getProfileIcon(profInfo: zowe.imperative.ProfileInfo, name: string): string[] {
-        const prof = profInfo.getAllProfiles().find((p) => p.profName === name);
-        const osLocInfo = profInfo.getOsLocInfo(prof);
+    private getProfileIcon(osLocInfo: zowe.imperative.IProfLocOsLoc[]): string[] {
         const ret: string[] = [];
         for (const loc of osLocInfo ?? []) {
             if (loc.global) {
