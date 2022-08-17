@@ -361,7 +361,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
 }
 
 export async function deleteUSSFilesPrompt(nodes: IZoweUSSTreeNode[]): Promise<boolean> {
-    const fileNames = nodes.reduce(function (label, currentVal) {
+    const fileNames = nodes.reduce((label, currentVal) => {
         return label + currentVal.label + "\n";
     }, "");
 
