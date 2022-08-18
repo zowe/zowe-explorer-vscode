@@ -359,3 +359,43 @@ export function createWorkspaceConfiguration(): vscode.WorkspaceConfiguration {
         inspect: jest.fn(),
     };
 }
+
+export function createQuickPickInstance(): vscode.QuickPick<vscode.QuickPickItem> {
+    return {
+        value: null,
+        placeholder: createQuickPickItem(),
+        items: undefined,
+        show: jest.fn(),
+        hide: jest.fn(),
+        onDidAccept: jest.fn(),
+        ignoreFocusOut: false,
+        onDidHide: jest.fn(),
+    } as any;
+}
+
+export function createConfigInstance() {
+    return {
+        load: jest.fn(),
+    } as any;
+}
+
+export function createConfigLoad() {
+    return {
+        layers: [
+            {
+                path: "globalPath",
+                exists: true,
+                properties: undefined,
+                global: true,
+                user: false,
+            },
+            {
+                path: "projectPath",
+                exists: true,
+                properties: undefined,
+                global: false,
+                user: true,
+            },
+        ],
+    } as any;
+}
