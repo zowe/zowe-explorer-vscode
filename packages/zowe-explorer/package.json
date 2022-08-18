@@ -1144,7 +1144,7 @@
           "group": "000_zowe_jobsMainframeInteraction@2"
         },
         {
-          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)job.*/",
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)job.*/ && !listMultiSelection",
           "command": "zowe.jobs.runModifyCommand",
           "group": "001_zowe_jobsSystemSpecific@2"
         },
