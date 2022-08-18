@@ -151,7 +151,7 @@ export const syncSessionNode =
 
         let profile: imperative.IProfileLoaded;
         try {
-            profile = globals.PROFILESCACHE.loadNamedProfile(profileName, profileType);
+            profile = Profiles.getInstance().loadNamedProfile(profileName, profileType);
         } catch (e) {
             return;
         }
