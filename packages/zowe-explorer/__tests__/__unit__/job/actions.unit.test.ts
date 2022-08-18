@@ -284,6 +284,7 @@ describe("Jobs Actions Unit Tests - Function downloadSpool", () => {
     it("Checking download of Job Spool", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
+        let jobs: Job[] = [];
         const node = new Job(
             "job",
             vscode.TreeItemCollapsibleState.None,
@@ -300,10 +301,11 @@ describe("Jobs Actions Unit Tests - Function downloadSpool", () => {
             path: "",
             query: "",
         };
+        jobs.push(node);
         mocked(vscode.window.showOpenDialog).mockResolvedValue([fileUri as vscode.Uri]);
         const downloadFileSpy = jest.spyOn(blockMocks.jesApi, "downloadSpoolContent");
 
-        await jobActions.downloadSpool(node);
+        await jobActions.downloadSpool(jobs);
         expect(mocked(vscode.window.showOpenDialog)).toBeCalled();
         expect(downloadFileSpy).toBeCalled();
         expect(downloadFileSpy.mock.calls[0][0]).toEqual({

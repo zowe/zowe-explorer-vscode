@@ -34,7 +34,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  *
  * @param job The job to download the spool content from
  */
-export async function downloadSpool(job: IZoweJobTreeNode) {
+export async function downloadSpool(jobs: IZoweJobTreeNode[]) {
     try {
         const dirUri = await vscode.window.showOpenDialog({
             openLabel: localize("downloadSpool.select", "Select"),
@@ -43,11 +43,13 @@ export async function downloadSpool(job: IZoweJobTreeNode) {
             canSelectMany: false,
         });
         if (dirUri !== undefined) {
-            ZoweExplorerApiRegister.getJesApi(job.getProfile()).downloadSpoolContent({
-                jobid: job.job.jobid,
-                jobname: job.job.jobname,
-                outDir: dirUri[0].fsPath,
-            });
+            for (const job of jobs) {
+                await ZoweExplorerApiRegister.getJesApi(job.getProfile()).downloadSpoolContent({
+                    jobid: job.job.jobid,
+                    jobname: job.job.jobname,
+                    outDir: dirUri[0].fsPath,
+                });
+            }
         }
     } catch (error) {
         await errorHandling(error, null, error.message);
