@@ -42,6 +42,7 @@ import { cleanTempDir, moveTempFolder, hideTempFolder } from "./utils/TempFolder
 import { SettingsConfig } from "./utils/SettingsConfig";
 import { handleSaving } from "./utils/workspace";
 import { ZoweDatasetNode } from "./dataset/ZoweDatasetNode";
+import * as contextuals from "../src/shared/context";
 
 // Set up localization
 nls.config({
@@ -369,9 +370,7 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.refreshNode", async () => {
             let selectedNodes = datasetProvider.getTreeView().selection as IZoweDatasetTreeNode[];
-            selectedNodes = selectedNodes.filter(
-                (node) => node.contextValue === globals.DS_DS_CONTEXT || node.contextValue === globals.DS_MEMBER_CONTEXT
-            );
+            selectedNodes = selectedNodes.filter((node) => contextuals.isDs(node) || contextuals.isDsMember(node));
             for (const node of selectedNodes) {
                 await dsActions.refreshPS(node);
             }
@@ -380,9 +379,7 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.refreshDataset", async () => {
             let selectedNodes = datasetProvider.getTreeView().selection as IZoweDatasetTreeNode[];
-            selectedNodes = selectedNodes.filter(
-                (node) => node.contextValue === globals.DS_PDS_CONTEXT || node.contextValue === globals.DS_DS_CONTEXT
-            );
+            selectedNodes = selectedNodes.filter((node) => contextuals.isDs(node) || contextuals.isPdsNotFav(node));
             for (const node of selectedNodes) {
                 await dsActions.refreshDataset(node, datasetProvider);
             }
@@ -426,9 +423,7 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.editDataSet", async () => {
             let selectedNodes = datasetProvider.getTreeView().selection as IZoweDatasetTreeNode[];
-            selectedNodes = selectedNodes.filter(
-                (node) => node.contextValue === globals.DS_DS_CONTEXT || node.contextValue === globals.DS_MEMBER_CONTEXT
-            );
+            selectedNodes = selectedNodes.filter((node) => contextuals.isDs(node) || contextuals.isDsMember(node));
             for (const node of selectedNodes) {
                 await dsActions.openPS(node, false, datasetProvider);
             }
@@ -437,9 +432,7 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.editMember", async () => {
             let selectedNodes = datasetProvider.getTreeView().selection as IZoweDatasetTreeNode[];
-            selectedNodes = selectedNodes.filter(
-                (node) => node.contextValue === globals.DS_DS_CONTEXT || node.contextValue === globals.DS_MEMBER_CONTEXT
-            );
+            selectedNodes = selectedNodes.filter((node) => contextuals.isDs(node) || contextuals.isDsMember(node));
             for (const node of selectedNodes) {
                 await dsActions.openPS(node, false, datasetProvider);
             }
@@ -478,9 +471,7 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.showDSAttributes", async () => {
             let selectedNodes = datasetProvider.getTreeView().selection as IZoweDatasetTreeNode[];
-            selectedNodes = selectedNodes.filter(
-                (node) => node.contextValue === globals.DS_DS_CONTEXT || node.contextValue === globals.DS_PDS_CONTEXT
-            );
+            selectedNodes = selectedNodes.filter((node) => contextuals.isDs(node) || contextuals.isPdsNotFav(node));
             for (const node of selectedNodes) {
                 await dsActions.showDSAttributes(node, datasetProvider);
             }
@@ -504,9 +495,7 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.hMigrateDataSet", async () => {
             let selectedNodes = datasetProvider.getTreeView().selection as IZoweDatasetTreeNode[];
-            selectedNodes = selectedNodes.filter(
-                (node) => node.contextValue === globals.DS_DS_CONTEXT || node.contextValue === globals.DS_PDS_CONTEXT
-            );
+            selectedNodes = selectedNodes.filter((node) => contextuals.isDs(node) || contextuals.isPdsNotFav(node));
             for (const node of selectedNodes) {
                 dsActions.hMigrateDataSet(node as ZoweDatasetNode);
             }
@@ -515,7 +504,7 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.hRecallDataSet", async () => {
             let selectedNodes = datasetProvider.getTreeView().selection as IZoweDatasetTreeNode[];
-            selectedNodes = selectedNodes.filter((node) => node.contextValue === globals.DS_MIGRATED_FILE_CONTEXT);
+            selectedNodes = selectedNodes.filter((node) => contextuals.isMigrated(node));
             for (const node of selectedNodes) {
                 dsActions.hRecallDataSet(node as ZoweDatasetNode);
             }
