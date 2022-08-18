@@ -43,6 +43,7 @@ import { SettingsConfig } from "./utils/SettingsConfig";
 import { handleSaving } from "./utils/workspace";
 import { ZoweDatasetNode } from "./dataset/ZoweDatasetNode";
 import * as contextuals from "../src/shared/context";
+import { Job } from "./job/ZoweJobNode";
 
 // Set up localization
 nls.config({
@@ -699,7 +700,12 @@ function initJobsProvider(context: vscode.ExtensionContext, jobsProvider: IZoweT
         vscode.commands.registerCommand("zowe.jobs.runModifyCommand", (job) => jobActions.modifyCommand(job))
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.runStopCommand", (job) => jobActions.stopCommand(job))
+        vscode.commands.registerCommand("zowe.jobs.runStopCommand", async () => {
+            let selectedNodes = jobsProvider.getTreeView().selection as IZoweJobTreeNode[];
+            for (const node of selectedNodes) {
+                await jobActions.stopCommand(node as Job);
+            }
+        })
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.jobs.refreshJobsServer", async (job) =>
