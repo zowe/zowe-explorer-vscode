@@ -108,7 +108,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
             mProfileInfo = await globals.PROFILESCACHE.getProfileInfo();
             if (!mProfileInfo) {
                 mProfileInfo = await getProfileInfo(globals.ISTHEIA);
-                mProfileInfo.readProfilesFromDisk();
+                mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir() });
             }
             usingTeamConfig = mProfileInfo.usingTeamConfig;
         } catch (error) {
