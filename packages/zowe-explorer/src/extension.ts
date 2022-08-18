@@ -752,10 +752,20 @@ function initJobsProvider(context: vscode.ExtensionContext, jobsProvider: IZoweT
         )
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.addFavorite", async (node) => jobsProvider.addFavorite(node))
+        vscode.commands.registerCommand("zowe.jobs.addFavorite", async () => {
+            let selectedNodes = jobsProvider.getTreeView().selection as IZoweJobTreeNode[];
+            for (const node of selectedNodes) {
+                await jobsProvider.addFavorite(node);
+            }
+        })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.removeFavorite", async (node) => jobsProvider.removeFavorite(node))
+        vscode.commands.registerCommand("zowe.jobs.removeFavorite", async () => {
+            let selectedNodes = jobsProvider.getTreeView().selection as IZoweJobTreeNode[];
+            for (const node of selectedNodes) {
+                await jobsProvider.removeFavorite(node);
+            }
+        })
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.jobs.saveSearch", async (node) => jobsProvider.saveSearch(node))
