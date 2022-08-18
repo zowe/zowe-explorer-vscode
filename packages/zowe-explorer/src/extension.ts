@@ -289,15 +289,17 @@ async function watchConfigProfile(context: vscode.ExtensionContext) {
     if (globals.ISTHEIA) {
         return undefined;
     }
-    const zoweFilesInfo = imperative.ImperativeConfig.instance;
     const globalProfileWatcher = vscode.workspace.createFileSystemWatcher(
-        new vscode.RelativePattern(zoweFilesInfo.cliHome, "zowe.config.json")
+        new vscode.RelativePattern(getZoweDir(), "{zowe.config,zowe.config.user}.json")
     );
 
     const workspaceProfileWatcher =
         vscode.workspace.workspaceFolders &&
         vscode.workspace.createFileSystemWatcher(
-            new vscode.RelativePattern(vscode.workspace.workspaceFolders[0].uri.fsPath, "zowe.config.user.json")
+            new vscode.RelativePattern(
+                vscode.workspace.workspaceFolders[0].uri.fsPath,
+                "{zowe.config,zowe.config.user}.json"
+            )
         );
 
     context.subscriptions.push(workspaceProfileWatcher);
