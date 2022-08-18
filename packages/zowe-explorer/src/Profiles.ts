@@ -249,11 +249,6 @@ export class Profiles extends ProfilesCache {
      */
     public async createZoweSession(zoweFileProvider: IZoweTree<IZoweTreeNode>) {
         const allProfiles = Profiles.getInstance().allProfiles;
-        const createNewProfile = "Create a New Connection to z/OS";
-        const createNewConfig = "Create a New Team Configuration File";
-        let addProfilePlaceholder = "";
-        let chosenProfile: string = "";
-
         // Get all profiles
         let profileNamesList = allProfiles.map((profile) => {
             return profile.name;
@@ -279,9 +274,15 @@ export class Profiles extends ProfilesCache {
                 // Find all cases where a profile is not already displayed
                 !zoweFileProvider.mSessionNodes.find((sessionNode) => sessionNode.getProfileName() === profileName)
         );
+        // Set Options according to profile management in use
+
+        const createNewProfile = "Create a New Connection to z/OS";
+        const createNewConfig = "Create a New Team Configuration File";
+        const editConfig = "Edit Team Configuration File";
 
         const createPick = new FilterDescriptor("\uFF0B " + createNewProfile);
         const configPick = new FilterDescriptor("\uFF0B " + createNewConfig);
+        const configEdit = new FilterDescriptor("\u270F " + editConfig);
         const items: vscode.QuickPickItem[] = [];
         let mProfileInfo: zowe.imperative.ProfileInfo;
         try {
@@ -294,6 +295,7 @@ export class Profiles extends ProfilesCache {
             items.push(new FilterItem({ text: pName, icon: this.getProfileIcon(mProfileInfo, pName)[0] }));
         }
         const quickpick = vscode.window.createQuickPick();
+        let addProfilePlaceholder = "";
         switch (zoweFileProvider.getTreeType()) {
             case PersistenceSchemaEnum.Dataset:
                 addProfilePlaceholder = localize(
@@ -314,9 +316,11 @@ export class Profiles extends ProfilesCache {
                     'Choose "Create new..." to define or select a profile to add to the USS Explorer'
                 );
         }
-
-        let configDir: string;
-        quickpick.items = [createPick, configPick, ...items];
+        if (mProfileInfo && mProfileInfo.usingTeamConfig) {
+            quickpick.items = [configPick, configEdit, ...items];
+        } else {
+            quickpick.items = [createPick, configPick, ...items];
+        }
         quickpick.placeholder = addProfilePlaceholder;
         quickpick.ignoreFocusOut = true;
         quickpick.show();
@@ -329,21 +333,20 @@ export class Profiles extends ProfilesCache {
             return;
         }
         if (choice === configPick) {
-            configDir = await this.createZoweSchema(zoweFileProvider);
+            await this.createZoweSchema(zoweFileProvider);
             return;
         }
+        if (choice === configEdit) {
+            await this.editZoweConfigFile();
+            return;
+        }
+        let chosenProfile: string = "";
         if (choice instanceof FilterDescriptor) {
             chosenProfile = "";
         } else {
             // remove any icons from the label
             chosenProfile = choice.label.replace(/\$\(.*\)\s/g, "");
         }
-
-        if (configDir) {
-            await this.openConfigFile(configDir);
-            return;
-        }
-
         if (chosenProfile === "") {
             let config: zowe.imperative.ProfileInfo;
             try {
@@ -611,30 +614,14 @@ export class Profiles extends ProfilesCache {
             let global = true;
             let rootPath = getZoweDir();
             if (vscode.workspace.workspaceFolders) {
-                const quickPickOptions: vscode.QuickPickOptions = {
-                    placeHolder: localize(
-                        "createZoweSchema.quickPickOption",
-                        "Select the location where the config file will be initialized"
-                    ),
-                    ignoreFocusOut: true,
-                    canPickMany: false,
-                };
-                const globalText = localize(
-                    "createZoweSchema.showQuickPick.global",
-                    "Global: in the Zowe home directory "
-                );
-                const projectText = localize(
-                    "createZoweSchema.showQuickPick.project",
-                    "Project: in the current working directory"
-                );
-                const location = await vscode.window.showQuickPick([globalText, projectText], quickPickOptions);
-                if (location === undefined) {
+                const choice = await this.getConfigLocationPrompt("create");
+                if (choice === undefined) {
                     vscode.window.showInformationMessage(
                         localize("createZoweSchema.undefined.location", "Operation Cancelled")
                     );
                     return;
                 }
-                if (location === projectText) {
+                if (choice === "project") {
                     rootPath = vscode.workspace.workspaceFolders?.[0].uri.fsPath;
                     user = true;
                     global = false;
@@ -679,6 +666,47 @@ export class Profiles extends ProfilesCache {
             vscode.window.showErrorMessage(
                 localize("Profiles.getProfileInfo.error", "Error in creating team configuration file: {0}", err.message)
             );
+        }
+    }
+
+    public async editZoweConfigFile() {
+        const existingLayers: zowe.imperative.IConfigLayer[] = [];
+        const config = await zowe.imperative.Config.load("zowe", {
+            projectDir: vscode.workspace.workspaceFolders?.[0].uri.fsPath,
+        });
+        const layers = config.layers;
+        layers.forEach((layer) => {
+            if (layer.exists) {
+                existingLayers.push(layer);
+            }
+        });
+        if (existingLayers.length === 1) {
+            await this.openConfigFile(existingLayers[0].path);
+        }
+        if (existingLayers && existingLayers.length > 1) {
+            const choice = await this.getConfigLocationPrompt("edit");
+            switch (choice) {
+                case "project":
+                    for (const file of existingLayers) {
+                        if (file.user) {
+                            await this.openConfigFile(file.path);
+                        }
+                    }
+                    break;
+                case "global":
+                    for (const file of existingLayers) {
+                        if (file.global) {
+                            await this.openConfigFile(file.path);
+                        }
+                    }
+                    break;
+                default:
+                    vscode.window.showInformationMessage(
+                        localize("createZoweSchema.undefined.location", "Operation Cancelled")
+                    );
+                    return;
+            }
+            return;
         }
     }
 
@@ -1304,6 +1332,42 @@ export class Profiles extends ProfilesCache {
     public async openConfigFile(filePath: string) {
         const document = await vscode.workspace.openTextDocument(filePath);
         await vscode.window.showTextDocument(document);
+    }
+
+    private async getConfigLocationPrompt(action: string): Promise<string> {
+        let placeHolderText: string;
+        if (action === "create") {
+            placeHolderText = localize(
+                "getConfigLocationPrompt.placeholder.create",
+                "Select the location where the config file will be initialized"
+            );
+        } else {
+            placeHolderText = localize(
+                "getConfigLocationPrompt.placeholder.edit",
+                "Select the location of the config file to edit"
+            );
+        }
+        const quickPickOptions: vscode.QuickPickOptions = {
+            placeHolder: placeHolderText,
+            ignoreFocusOut: true,
+            canPickMany: false,
+        };
+        const globalText = localize(
+            "getConfigLocationPrompt.showQuickPick.global",
+            "Global: in the Zowe home directory"
+        );
+        const projectText = localize(
+            "getConfigLocationPrompt.showQuickPick.project",
+            "Project: in the current working directory"
+        );
+        const location = await vscode.window.showQuickPick([globalText, projectText], quickPickOptions);
+        switch (location) {
+            case globalText:
+                return "global";
+            case projectText:
+                return "project";
+        }
+        return;
     }
 
     private async promptToRefreshForProfiles(rootPath: string) {
