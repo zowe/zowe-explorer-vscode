@@ -701,7 +701,7 @@ function initJobsProvider(context: vscode.ExtensionContext, jobsProvider: IZoweT
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.jobs.runStopCommand", async () => {
-            let selectedNodes = jobsProvider.getTreeView().selection as IZoweJobTreeNode[];
+            const selectedNodes = jobsProvider.getTreeView().selection as IZoweJobTreeNode[];
             for (const node of selectedNodes) {
                 await jobActions.stopCommand(node as Job);
             }
@@ -740,12 +740,19 @@ function initJobsProvider(context: vscode.ExtensionContext, jobsProvider: IZoweT
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.jobs.downloadSpool", async () => {
-            let selectedNodes = jobsProvider.getTreeView().selection as IZoweJobTreeNode[];
+            const selectedNodes = jobsProvider.getTreeView().selection as IZoweJobTreeNode[];
             await jobActions.downloadSpool(selectedNodes);
         })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.getJobJcl", (job) => jobActions.downloadJcl(job))
+        vscode.commands.registerCommand("zowe.jobs.getJobJcl", async () => {
+            const selectedNodes = jobsProvider.getTreeView().selection as IZoweJobTreeNode[];
+            const jclContents: string[] = [];
+            for (const job of selectedNodes) {
+                jclContents.push(await jobActions.downloadJcl(job as Job));
+            }
+            jobActions.openMultipleJcl(jclContents);
+        })
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.jobs.setJobSpool", async (session, jobId) =>
@@ -762,7 +769,7 @@ function initJobsProvider(context: vscode.ExtensionContext, jobsProvider: IZoweT
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.jobs.addFavorite", async () => {
-            let selectedNodes = jobsProvider.getTreeView().selection as IZoweJobTreeNode[];
+            const selectedNodes = jobsProvider.getTreeView().selection as IZoweJobTreeNode[];
             for (const node of selectedNodes) {
                 await jobsProvider.addFavorite(node);
             }
@@ -770,7 +777,7 @@ function initJobsProvider(context: vscode.ExtensionContext, jobsProvider: IZoweT
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.jobs.removeFavorite", async () => {
-            let selectedNodes = jobsProvider.getTreeView().selection as IZoweJobTreeNode[];
+            const selectedNodes = jobsProvider.getTreeView().selection as IZoweJobTreeNode[];
             for (const node of selectedNodes) {
                 await jobsProvider.removeFavorite(node);
             }
