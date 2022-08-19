@@ -2,7 +2,7 @@
 
 [![version](https://vsmarketplacebadge.apphb.com/version-short/Zowe.vscode-extension-for-zowe.png)](https://vsmarketplacebadge.apphb.com/version-short/Zowe.vscode-extension-for-zowe.png)
 [![downloads](https://vsmarketplacebadge.apphb.com/downloads-short/Zowe.vscode-extension-for-zowe.png)](https://vsmarketplacebadge.apphb.com/downloads-short/Zowe.vscode-extension-for-zowe.png)
-[![codecov](https://codecov.io/gh/zowe/vscode-extension-for-zowe/branch/master/graph/badge.svg)](https://codecov.io/gh/zowe/vscode-extension-for-zowe)
+[![codecov](https://codecov.io/gh/zowe/vscode-extension-for-zowe/branch/main/graph/badge.svg)](https://codecov.io/gh/zowe/vscode-extension-for-zowe)
 [![slack](https://img.shields.io/badge/chat-on%20Slack-blue)](https://slack.openmainframeproject.org/)
 
 [Zowe Explorer](https://github.com/zowe/community#zowe-explorer) is a sub-project of Zowe, focusing on modernizing mainframe experience. [Zowe](https://www.zowe.org/) is a project hosted by the [Open Mainframe Project](https://www.openmainframeproject.org/), a [Linux Foundation](https://www.linuxfoundation.org/) project.
@@ -64,8 +64,7 @@ Create a v1 profile or a Team Configuration file for profile manangement, review
 3. Click the **+** icon.
 4. Select **Create a New Team Configuration File**.
 5. If no workspace is opened a global configuration file will be created. If a workspace is opened, chose either a global configuration file or a project-level configuration file.
-6. Edit the config file to include the host and other connection information.
-7. Refresh Zowe Explorer by either clicking the button in the notification message shown after creation, `ctrl`+`alt`+`z`/`⌘`+`⌥`+`z`, or the `Zowe Explorer: Refresh Zowe Explorer` command palette option.
+6. Edit the config file to include the host and other connection information and save.
 
 Your team configuration file appears either in your `.zowe` folder if you choose the global configuration file option, or in your workspace directory if you choose the project-level configuration file option. The notification message that shows in VS Code after config file creation will include the path of the file created.
 
@@ -88,7 +87,20 @@ You can now use all the functionalities of the extension.
 
 Securing credentials for v1 profiles and secure fields in the Team configuration file are now handled by the Zowe Imperative dependency. To update securely stored user and password in Zowe Explorer the user can right click the profile and select `Update Credentials`. You will be prompted for the new credentials and the secure credentials vault will be updated.
 
-#### Profile Validation
+### Editing Team Configuration File
+
+#### From **+** button in tree views
+
+1. Hover over **DATA SETS**, **USS**, or **JOBS**.
+2. Click the **+** icon.
+3. If team configuration file is in place, the Edit option will show
+   ![Edit Team Configuration File](/docs/images/ZE-edit-config.png)
+   <br /><br />
+4. If only a global or project level config is in place it will open to be edited. If both a global and project level config is in place, an option will be presented for user to choose which file to edit.
+   ![Edit Config Location Option](/docs/images/ZE-edit-options.png)
+   <br /><br />
+
+### Profile Validation
 
 Zowe Explorer includes the profile validation feature that helps to ensure that the specified connection to z/OS is successfully established and your profile is ready for use. If a profile is valid, the profile is active and can be used. By default, the feature is automatically enabled. You can disable the feature by right-clicking on your profile and selecting the **Disable Validation for Profile** option. Alternatively, you can enable or disable the feature for all profiles in the VS Code settings.
 
@@ -365,6 +377,6 @@ For the comprehensive Zowe Explorer documentation that also includes information
 
 ## Extending Zowe Explorer
 
-You can add new functionalities to Zowe Explorer by creating your own extension. For more information, see [Extensions for Zowe Explorer](https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/README-Extending.md).
+You can add new functionalities to Zowe Explorer by creating your own extension. For more information, see [Extensions for Zowe Explorer](https://github.com/zowe/vscode-extension-for-zowe/blob/main/docs/README-Extending.md).
 
 **Tip:** View an example of a Zowe Explorer extension — [Zowe Explorer FTP extension documentation](https://github.com/zowe/zowe-explorer-ftp-extension#zowe-explorer-ftp-extension).

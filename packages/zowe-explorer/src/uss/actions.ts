@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import * as zowe from "@zowe/cli";
+import { imperative, IZosFilesResponse } from "@zowe/cli";
 import * as fs from "fs";
 import * as globals from "../globals";
 import * as path from "path";
@@ -20,13 +20,13 @@ import { ValidProfileEnum, IZoweTree, IZoweUSSTreeNode } from "@zowe/zowe-explor
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { isBinaryFileSync } from "isbinaryfile";
-import { Session, ITaskWithStatus } from "@zowe/imperative";
 import * as contextually from "../shared/context";
 import { setFileSaved } from "../utils/workspace";
 import * as nls from "vscode-nls";
 import { refreshAll } from "../shared/refresh";
 import { UIViews } from "../shared/ui-views";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
+import { fileExistsCaseSensitveSync } from "./utils";
 
 // Set up localization
 nls.config({
@@ -77,6 +77,17 @@ export async function createUSSNode(
             const newNode = await node.getChildren().then((children) => children.find((child) => child.label === name));
             await ussFileProvider.getTreeView().reveal(node, { select: true, focus: true });
             ussFileProvider.getTreeView().reveal(newNode, { select: true, focus: true });
+            const localPath = `${node.getUSSDocumentFilePath()}/${name}`;
+            const fileExists = fs.existsSync(localPath);
+            if (fileExists && !fileExistsCaseSensitveSync(localPath)) {
+                vscode.window.showInformationMessage(
+                    localize(
+                        "createUSSNode.name.exists",
+                        "There is already a file with same name. Please change your OS file system settings if you want to give case sensitive file names."
+                    )
+                );
+                ussFileProvider.refreshElement(node);
+            }
         } catch (err) {
             await errorHandling(
                 err,
@@ -175,7 +186,7 @@ export async function uploadFile(node: IZoweUSSTreeNode, doc: vscode.TextDocumen
 
         // if new api method exists, use it
         if (ZoweExplorerApiRegister.getUssApi(prof).putContent) {
-            const task: ITaskWithStatus = {
+            const task: imperative.ITaskWithStatus = {
                 percentComplete: 0,
                 statusMessage: localize("uploadFile.putContents", "Uploading USS file"),
                 stageName: 0, // TaskStage.IN_PROGRESS - https://github.com/kulshekhar/ts-jest/issues/281
@@ -243,7 +254,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
     const remote = ending.substring(sesName.length).replace(/\\/g, "/");
 
     // get session from session name
-    let documentSession: Session;
+    let documentSession: imperative.Session;
     let binary;
     let node: IZoweUSSTreeNode;
 
@@ -286,7 +297,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
             binary =
                 binary || (await ZoweExplorerApiRegister.getUssApi(sesNode.getProfile()).isFileTagBinOrAscii(remote));
         }
-        const uploadResponse: zowe.IZosFilesResponse = await vscode.window.withProgress(
+        const uploadResponse: IZosFilesResponse = await vscode.window.withProgress(
             {
                 location: vscode.ProgressLocation.Window,
                 title: localize("saveUSSFile.response.title", "Saving file..."),

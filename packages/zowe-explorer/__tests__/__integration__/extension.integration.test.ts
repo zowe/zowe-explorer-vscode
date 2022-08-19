@@ -11,14 +11,6 @@
 
 // tslint:disable:no-magic-numbers
 import * as zowe from "@zowe/cli";
-import {
-    Logger,
-    CliProfileManager,
-    IProfileLoaded,
-    ICommandArguments,
-    ConnectionPropsForSessCfg,
-    Session,
-} from "@zowe/imperative";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import * as extension from "../../src/extension";
@@ -45,7 +37,7 @@ const TIMEOUT = 45000;
 declare var it: Mocha.ITestDefinition;
 // declare var describe: any;
 
-const testProfile: IProfileLoaded = {
+const testProfile: zowe.imperative.IProfileLoaded = {
     name: testConst.profile.name,
     profile: testConst.profile,
     type: testConst.profile.type,
@@ -57,7 +49,7 @@ describe("Extension Integration Tests", async () => {
     const expect = chai.expect;
     chai.use(chaiAsPromised);
 
-    const cmdArgs: ICommandArguments = {
+    const cmdArgs: zowe.imperative.ICommandArguments = {
         $0: "zowe",
         _: [""],
         host: testProfile.profile.host,
@@ -68,8 +60,8 @@ describe("Extension Integration Tests", async () => {
         password: testProfile.profile.password,
     };
     const sessCfg = zowe.ZosmfSession.createSessCfgFromArgs(cmdArgs);
-    ConnectionPropsForSessCfg.resolveSessCfgProps(sessCfg, cmdArgs);
-    const session = new Session(sessCfg);
+    zowe.imperative.ConnectionPropsForSessCfg.resolveSessCfgProps(sessCfg, cmdArgs);
+    const session = new zowe.imperative.Session(sessCfg);
     const sessionNode = new ZoweDatasetNode(
         testConst.profile.name,
         vscode.TreeItemCollapsibleState.Expanded,
@@ -123,7 +115,7 @@ describe("Extension Integration Tests", async () => {
     describe("Creating a Session", () => {
         it("should add a session", async () => {
             // Grab profiles
-            const profileManager = await new CliProfileManager({
+            const profileManager = await new zowe.imperative.CliProfileManager({
                 profileRootDirectory: path.join(os.homedir(), ".zowe", "profiles"),
                 type: "zosmf",
             });
@@ -1032,7 +1024,7 @@ describe("Extension Integration Tests", async () => {
 
     describe("Initializing Favorites", () => {
         it("should work when provided an empty Favorites list", async () => {
-            const log = Logger.getAppLogger();
+            const log = zowe.imperative.Logger.getAppLogger();
             await vscode.workspace
                 .getConfiguration()
                 .update(
@@ -1045,7 +1037,7 @@ describe("Extension Integration Tests", async () => {
         }).timeout(TIMEOUT);
 
         it("should work when provided a valid Favorites list", async () => {
-            const log = Logger.getAppLogger();
+            const log = zowe.imperative.Logger.getAppLogger();
             const profileName = testConst.profile.name;
             const favorites = [
                 `[${profileName}]: ${pattern}.EXT.PDS{pds}`,
@@ -1071,7 +1063,7 @@ describe("Extension Integration Tests", async () => {
         }).timeout(TIMEOUT);
 
         it("should log a warn message when provided an invalid Favorites list", async () => {
-            const log = Logger.getAppLogger();
+            const log = zowe.imperative.Logger.getAppLogger();
             const corruptedFavorite = pattern + ".EXT.ABCDEFGHI.PS[profileName]{ds}";
             const favorites = [pattern + ".EXT.PDS[profileName]{pds}", corruptedFavorite];
             await vscode.workspace
@@ -1087,7 +1079,7 @@ describe("Extension Integration Tests", async () => {
         }).timeout(TIMEOUT);
 
         it("should still create favorite nodes when given a favorite with invalid profile name", async () => {
-            const log = Logger.getAppLogger();
+            const log = zowe.imperative.Logger.getAppLogger();
             const profileName = testConst.profile.name;
             // Reset testTree's favorites to be empty
             testTree.mFavorites = [];
@@ -1146,7 +1138,7 @@ describe("Extension Integration Tests - USS", () => {
     chai.use(chaiAsPromised);
 
     // Profiles.createInstance(Logger.getAppLogger());
-    const cmdArgs: ICommandArguments = {
+    const cmdArgs: zowe.imperative.ICommandArguments = {
         $0: "zowe",
         _: [""],
         host: testProfile.profile.host,
@@ -1157,8 +1149,8 @@ describe("Extension Integration Tests - USS", () => {
         password: testProfile.profile.password,
     };
     const sessCfg = zowe.ZosmfSession.createSessCfgFromArgs(cmdArgs);
-    ConnectionPropsForSessCfg.resolveSessCfgProps(sessCfg, cmdArgs);
-    const session = new Session(sessCfg);
+    zowe.imperative.ConnectionPropsForSessCfg.resolveSessCfgProps(sessCfg, cmdArgs);
+    const session = new zowe.imperative.Session(sessCfg);
     const ussSessionNode = new ZoweUSSNode(
         testConst.profile.name,
         vscode.TreeItemCollapsibleState.Expanded,
@@ -1208,7 +1200,7 @@ describe("Extension Integration Tests - USS", () => {
     describe("Creating a Session -USS", () => {
         it("should add a session", async () => {
             // Grab profiles
-            const profileManager = await new CliProfileManager({
+            const profileManager = await new zowe.imperative.CliProfileManager({
                 profileRootDirectory: path.join(os.homedir(), ".zowe", "profiles"),
                 type: "zosmf",
             });

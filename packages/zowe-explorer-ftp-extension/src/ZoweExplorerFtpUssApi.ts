@@ -13,7 +13,6 @@ import * as fs from "fs";
 import * as path from "path";
 import * as crypto from "crypto";
 import * as tmp from "tmp";
-import * as imperative from "@zowe/imperative";
 import * as zowe from "@zowe/cli";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 
@@ -67,7 +66,7 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
         try {
             connection = await this.ftpClient(this.checkedProfile());
             if (connection && targetFile) {
-                imperative.IO.createDirsSyncFromFilePath(targetFile);
+                zowe.imperative.IO.createDirsSyncFromFilePath(targetFile);
                 await UssUtils.downloadFile(connection, ussFilePath, transferOptions);
                 result.success = true;
                 result.commandResponse = "";
@@ -137,7 +136,7 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
         let result = this.getDefaultResponse();
 
         // Check if inputDirectory is directory
-        if (!imperative.IO.isDir(inputDirectoryPath)) {
+        if (!zowe.imperative.IO.isDir(inputDirectoryPath)) {
             ZoweVsCodeExtension.showVsCodeMessage(
                 "The local directory path provided does not exist.",
                 MessageSeverityEnum.ERROR,

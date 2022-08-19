@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { Logger } from "@zowe/imperative";
+import { imperative } from "@zowe/cli";
 import * as globals from "../globals";
 import { getIconById, IconId } from "../generators/icons";
 import * as contextually from "../shared/context";
@@ -38,7 +38,7 @@ export class ZoweCommandProvider {
         IZoweTreeNode | undefined
     >();
     public readonly onDidChangeTreeData: vscode.Event<IZoweTreeNode | void> = this.mOnDidChangeTreeData.event;
-    private log: Logger = Logger.getAppLogger();
+    private log: imperative.Logger = imperative.Logger.getAppLogger();
 
     constructor() {
         this.history = new PersistentFilters(ZoweCommandProvider.persistenceSchema, ZoweCommandProvider.totalFilters);

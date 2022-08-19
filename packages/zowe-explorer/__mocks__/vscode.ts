@@ -174,6 +174,10 @@ export class Disposable {
     constructor() {}
 }
 
+export function RelativePattern(base: string, pattern: string) {
+    return {};
+}
+
 export interface QuickPickOptions {
     placeHolder: string;
     ignoreFocusOut: string;
@@ -362,6 +366,14 @@ export namespace workspace {
             inspect: () => {
                 return {};
             },
+        };
+    }
+
+    export function createFileSystemWatcher() {
+        return {
+            onDidCreate: () => {},
+            onDidChange: () => {},
+            onDidDelete: () => {},
         };
     }
 

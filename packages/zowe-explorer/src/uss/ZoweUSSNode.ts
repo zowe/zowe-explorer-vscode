@@ -9,18 +9,17 @@
  *                                                                                 *
  */
 
-import * as zowe from "@zowe/cli";
+import { imperative, IZosFilesResponse } from "@zowe/cli";
 import * as globals from "../globals";
 import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
-import { Session, IProfileLoaded } from "@zowe/imperative";
 import { IZoweUSSTreeNode, ZoweTreeNode, IZoweTree, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
 import { getIconByNode } from "../generators/icons/index";
-import { injectAdditionalDataToTooltip } from "../uss/utils";
+import { fileExistsCaseSensitveSync, injectAdditionalDataToTooltip } from "../uss/utils";
 import * as contextually from "../shared/context";
 import { closeOpenedTextFile } from "../utils/workspace";
 import * as nls from "vscode-nls";
@@ -49,7 +48,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     public profileName = "";
     public shortLabel = "";
     public downloadedTime = null as string;
-    public profile: IProfileLoaded; // TODO: This reference should be stored instead of the name
+    public profile: imperative.IProfileLoaded; // TODO: This reference should be stored instead of the name
     private downloadedInternal = false;
 
     /**
@@ -67,12 +66,12 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         label: string,
         collapsibleState: vscode.TreeItemCollapsibleState,
         mParent: IZoweUSSTreeNode,
-        session: Session,
+        session: imperative.Session,
         private parentPath: string,
         binary = false,
         public mProfileName?: string,
         private etag: string = "",
-        profile?: IProfileLoaded
+        profile?: imperative.IProfileLoaded
     ) {
         super(label, collapsibleState, mParent, session, profile);
         this.binary = binary;
@@ -150,7 +149,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         }
 
         // Gets the directories from the fullPath and displays any thrown errors
-        const responses: zowe.IZosFilesResponse[] = [];
+        const responses: IZosFilesResponse[] = [];
         const sessNode = this.getSessionNode();
         try {
             const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
@@ -476,38 +475,50 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                         );
                         throw Error(localize("openUSS.error.invalidNode", "open() called from invalid node."));
                 }
-                // if local copy exists, open that instead of pulling from mainframe
+
                 const documentFilePath = this.getUSSDocumentFilePath();
-                if (download || !fs.existsSync(documentFilePath)) {
-                    const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
-                    const fullPath = this.fullPath;
-                    const chooseBinary =
-                        this.binary ||
-                        (await ZoweExplorerApiRegister.getUssApi(cachedProfile).isFileTagBinOrAscii(this.fullPath));
-                    const response = await vscode.window.withProgress(
-                        {
-                            location: vscode.ProgressLocation.Notification,
-                            title: "Opening USS file...",
-                        },
-                        function downloadUSSFile() {
-                            return ZoweExplorerApiRegister.getUssApi(cachedProfile).getContents(fullPath, {
-                                file: documentFilePath,
-                                binary: chooseBinary,
-                                returnEtag: true,
-                                encoding: cachedProfile.profile.encoding,
-                            });
-                        }
+                // check if some other file is already created with the same name avoid opening file warn user
+                const fileExists = fs.existsSync(documentFilePath);
+                if (fileExists && !fileExistsCaseSensitveSync(documentFilePath)) {
+                    vscode.window.showInformationMessage(
+                        localize(
+                            "openUSS.name.exists",
+                            "There is already file with same name please change your OS file system settings and make case sensitive if you want edit this files"
+                        )
                     );
+                } else {
+                    // if local copy exists, open that instead of pulling from mainframe
+                    if (download || !fileExists) {
+                        const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
+                        const fullPath = this.fullPath;
+                        const chooseBinary =
+                            this.binary ||
+                            (await ZoweExplorerApiRegister.getUssApi(cachedProfile).isFileTagBinOrAscii(this.fullPath));
+                        const response = await vscode.window.withProgress(
+                            {
+                                location: vscode.ProgressLocation.Notification,
+                                title: "Opening USS file...",
+                            },
+                            function downloadUSSFile() {
+                                return ZoweExplorerApiRegister.getUssApi(cachedProfile).getContents(fullPath, {
+                                    file: documentFilePath,
+                                    binary: chooseBinary,
+                                    returnEtag: true,
+                                    encoding: cachedProfile.profile.encoding,
+                                });
+                            }
+                        );
 
-                    this.downloaded = true;
-                    this.setEtag(response.apiResponse.etag);
+                        this.downloaded = true;
+                        this.setEtag(response.apiResponse.etag);
+                    }
+
+                    // Add document name to recently-opened files
+                    ussFileProvider.addFileHistory(`[${this.getProfile().name}]: ${this.fullPath}`);
+                    ussFileProvider.getTreeView().reveal(this, { select: true, focus: true, expand: false });
+
+                    await this.initializeFileOpening(documentFilePath, previewFile);
                 }
-
-                // Add document name to recently-opened files
-                ussFileProvider.addFileHistory(`[${this.getProfile().name}]: ${this.fullPath}`);
-                ussFileProvider.getTreeView().reveal(this, { select: true, focus: true, expand: false });
-
-                await this.initializeFileOpening(documentFilePath, previewFile);
             } catch (err) {
                 await errorHandling(err, this.mProfileName, err.message);
                 throw err;

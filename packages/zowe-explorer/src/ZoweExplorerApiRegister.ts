@@ -9,7 +9,7 @@
  *                                                                                 *
  */
 
-import { IProfileLoaded } from "@zowe/imperative";
+import { imperative } from "@zowe/cli";
 import { ZoweExplorerApi, ZosmfUssApi, ZosmfMvsApi, ZosmfJesApi, ZosmfCommandApi } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 
@@ -41,7 +41,7 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
      * @param {IProfileLoaded} a profile to be used with this instance of the API returned
      * @returns an instance of the API that uses the profile provided
      */
-    public static getUssApi(profile: IProfileLoaded): ZoweExplorerApi.IUss {
+    public static getUssApi(profile: imperative.IProfileLoaded): ZoweExplorerApi.IUss {
         return ZoweExplorerApiRegister.getInstance().getUssApi(profile);
     }
 
@@ -50,7 +50,7 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
      * @param {IProfileLoaded} a profile to be used with this instance of the API returned
      * @returns an instance of the API that uses the profile provided
      */
-    public static getMvsApi(profile: IProfileLoaded): ZoweExplorerApi.IMvs {
+    public static getMvsApi(profile: imperative.IProfileLoaded): ZoweExplorerApi.IMvs {
         return ZoweExplorerApiRegister.getInstance().getMvsApi(profile);
     }
 
@@ -59,7 +59,7 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
      * @param {IProfileLoaded} a profile to be used with this instance of the API returned
      * @returns an instance of the API that uses the profile provided
      */
-    public static getJesApi(profile: IProfileLoaded): ZoweExplorerApi.IJes {
+    public static getJesApi(profile: imperative.IProfileLoaded): ZoweExplorerApi.IJes {
         return ZoweExplorerApiRegister.getInstance().getJesApi(profile);
     }
 
@@ -68,7 +68,7 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
      * @param {IProfileLoaded} a profile to be used with this instance of the API returned
      * @returns an instance of the API that uses the profile provided
      */
-    public static getCommandApi(profile: IProfileLoaded): ZoweExplorerApi.ICommand {
+    public static getCommandApi(profile: imperative.IProfileLoaded): ZoweExplorerApi.ICommand {
         return ZoweExplorerApiRegister.getInstance().getCommandApi(profile);
     }
 
@@ -77,7 +77,7 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
      * @param profile {IProfileLoaded} a profile to be used with this instance of the API returned
      * @returns an instance of the Commin API that uses the profile provided; could be an instance any of its subclasses
      */
-    public static getCommonApi(profile: IProfileLoaded): ZoweExplorerApi.ICommon {
+    public static getCommonApi(profile: imperative.IProfileLoaded): ZoweExplorerApi.ICommon {
         return ZoweExplorerApiRegister.getInstance().getCommonApi(profile);
     }
 
@@ -242,7 +242,7 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
      * @param {IProfileLoaded} profile
      * @returns an instance of the API for the profile provided
      */
-    public getUssApi(profile: IProfileLoaded): ZoweExplorerApi.IUss {
+    public getUssApi(profile: imperative.IProfileLoaded): ZoweExplorerApi.IUss {
         if (profile && profile.type && this.registeredUssApiTypes().includes(profile.type)) {
             // create a clone of the API object that remembers the profile with which it was created
             const api = Object.create(this.ussApiImplementations.get(profile.type));
@@ -261,7 +261,7 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
      * @param {IProfileLoaded} profile
      * @returns an instance of the API for the profile provided
      */
-    public getMvsApi(profile: IProfileLoaded): ZoweExplorerApi.IMvs {
+    public getMvsApi(profile: imperative.IProfileLoaded): ZoweExplorerApi.IMvs {
         if (profile && profile.type && this.registeredMvsApiTypes().includes(profile.type)) {
             // create a clone of the API object that remembers the profile with which it was created
             const api = Object.create(this.mvsApiImplementations.get(profile.type));
@@ -280,7 +280,7 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
      * @param {IProfileLoaded} profile
      * @returns an instance of the API for the profile provided
      */
-    public getJesApi(profile: IProfileLoaded): ZoweExplorerApi.IJes {
+    public getJesApi(profile: imperative.IProfileLoaded): ZoweExplorerApi.IJes {
         if (profile && profile.type && this.registeredJesApiTypes().includes(profile.type)) {
             // create a clone of the API object that remembers the profile with which it was created
             const api = Object.create(this.jesApiImplementations.get(profile.type));
@@ -299,7 +299,7 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
      * @param {IProfileLoaded} profile
      * @returns an instance of the API for the profile provided
      */
-    public getCommandApi(profile: IProfileLoaded): ZoweExplorerApi.ICommand {
+    public getCommandApi(profile: imperative.IProfileLoaded): ZoweExplorerApi.ICommand {
         if (profile && profile.type && this.registeredCommandApiTypes().includes(profile.type)) {
             // create a clone of the API object that remembers the profile with which it was created
             const api = Object.create(this.commandApiImplementations.get(profile.type));
@@ -315,7 +315,7 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
         }
     }
 
-    public getCommonApi(profile: IProfileLoaded): ZoweExplorerApi.ICommon {
+    public getCommonApi(profile: imperative.IProfileLoaded): ZoweExplorerApi.ICommon {
         let result: ZoweExplorerApi.ICommon;
         try {
             result = this.getUssApi(profile);

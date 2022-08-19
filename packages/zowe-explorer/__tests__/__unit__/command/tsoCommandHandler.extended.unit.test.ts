@@ -13,14 +13,14 @@ import * as vscode from "vscode";
 import { ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../src/Profiles";
 import { TsoCommandHandler } from "../../../src/command/TsoCommandHandler";
-import { ProfileInfo } from "@zowe/imperative";
+import { imperative } from "@zowe/cli";
 import * as globals from "../../../src/globals";
 import { createInstanceOfProfilesCache } from "../../../__mocks__/mockCreators/shared";
 
 describe("TsoCommandHandler extended testing", () => {
     Object.defineProperty(vscode.workspace, "getConfiguration", { value: jest.fn() });
     Object.defineProperty(vscode.window, "createOutputChannel", { value: jest.fn() });
-    Object.defineProperty(ProfileInfo, "profAttrsToProfLoaded", { value: () => ({ profile: {} }) });
+    Object.defineProperty(imperative.ProfileInfo, "profAttrsToProfLoaded", { value: () => ({ profile: {} }) });
     Object.defineProperty(Profiles, "selectTsoProfile", { value: () => "dummy" });
     Object.defineProperty(globals, "PROFILESCACHE", {
         value: jest.fn().mockReturnValue(createInstanceOfProfilesCache()),

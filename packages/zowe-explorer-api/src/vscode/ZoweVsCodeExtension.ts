@@ -72,6 +72,7 @@ export class ZoweVsCodeExtension {
      * Helper function to standardize the way we ask the user for credentials
      * @param options Set of options to use when prompting for credentials
      * @returns Instance of imperative.IProfileLoaded containing information about the updated profile
+     * @deprecated
      */
     public static async promptCredentials(options: IPromptCredentialsOptions): Promise<imperative.IProfileLoaded> {
         const loadProfile = await this.profilesCache.getLoadedProfConfig(options.sessionName.trim());
@@ -97,6 +98,49 @@ export class ZoweVsCodeExtension {
         return undefined;
     }
 
+    /**
+     * Helper function to standardize the way we ask the user for credentials that updates ProfilesCache
+     * @param options Set of options to use when prompting for credentials
+     * @returns Instance of imperative.IProfileLoaded containing information about the updated profile
+     */
+    public static async updateCredentials(
+        options: IPromptCredentialsOptions,
+        apiRegister: ZoweExplorerApi.IApiRegisterClient
+    ): Promise<imperative.IProfileLoaded> {
+        const cache = this.profilesCache;
+        const profInfo = await cache.getProfileInfo();
+        options.secure = options.secure ? options.secure : profInfo.isSecured();
+        const loadProfile = await cache.getLoadedProfConfig(options.sessionName);
+        const loadSession = loadProfile.profile as imperative.ISession;
+        const creds = await ZoweVsCodeExtension.promptUserPass({ session: loadSession, ...options });
+
+        if (creds && creds.length > 0) {
+            loadProfile.profile.user = loadSession.user = creds[0];
+            loadProfile.profile.password = loadSession.password = creds[1];
+
+            let saved = true;
+            if (!options.secure && !profInfo.usingTeamConfig) {
+                saved = await ZoweVsCodeExtension.saveCredentials(loadProfile);
+            }
+
+            if (saved || profInfo.usingTeamConfig) {
+                // v1 write changes to the file, v2 autoStore value determines if written to file
+                const upd = { profileName: loadProfile.name, profileType: loadProfile.type };
+                await profInfo.updateProperty({ ...upd, property: "user", value: creds[0], setSecure: options.secure });
+                await profInfo.updateProperty({
+                    ...upd,
+                    property: "password",
+                    value: creds[1],
+                    setSecure: options.secure,
+                });
+            }
+            await cache.refresh(apiRegister);
+
+            return loadProfile;
+        }
+        return undefined;
+    }
+
     public static async inputBox(inputBoxOptions: vscode.InputBoxOptions): Promise<string> {
         if (!inputBoxOptions.validateInput) {
             // adding this for the theia breaking changes with input boxes
@@ -104,6 +148,18 @@ export class ZoweVsCodeExtension {
             inputBoxOptions.validateInput = (value) => null;
         }
         return await vscode.window.showInputBox(inputBoxOptions);
+    }
+
+    private static async saveCredentials(profile: imperative.IProfileLoaded): Promise<boolean> {
+        let save = false;
+        const saveButton = "Save Credentials";
+        const message = `Save entered credentials in plain text for future use with profile ${profile.name}?\nSaving credentials will update the local information file.`;
+        await vscode.window.showInformationMessage(message, { modal: true }, ...[saveButton]).then((selection) => {
+            if (selection) {
+                save = true;
+            }
+        });
+        return save;
     }
 
     private static async promptUserPass(options: IPromptUserPassOptions): Promise<string[] | undefined> {

@@ -9,7 +9,6 @@
  *                                                                                 *
  */
 
-// import * as zowe from "@zowe/cli";
 import * as fs from "fs";
 import * as path from "path";
 import * as globals from "./globals";
@@ -30,9 +29,8 @@ import {
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import { Profiles } from "./Profiles";
-import { readConfigFromDisk } from "./utils/ProfilesUtils";
-import { CliProfileManager, ImperativeConfig } from "@zowe/imperative";
-import { getImperativeConfig } from "@zowe/cli";
+import { promptCredentials, readConfigFromDisk } from "./utils/ProfilesUtils";
+import { getImperativeConfig, imperative } from "@zowe/cli";
 import { createDatasetTree } from "./dataset/DatasetTree";
 import { createJobsTree } from "./job/ZosJobsProvider";
 import { createUSSTree } from "./uss/USSTree";
@@ -42,7 +40,6 @@ import * as nls from "vscode-nls";
 import { TsoCommandHandler } from "./command/TsoCommandHandler";
 import { cleanTempDir, moveTempFolder, hideTempFolder } from "./utils/TempFolder";
 import { SettingsConfig } from "./utils/SettingsConfig";
-import { UIViews } from "./shared/ui-views";
 import { handleSaving } from "./utils/workspace";
 import * as contextually from "../src/shared/context";
 
@@ -52,6 +49,7 @@ nls.config({
     bundleFormat: nls.BundleFormat.standalone,
 })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
+let savedProfileContents = new Uint8Array();
 
 /**
  * The function that runs when the extension is loaded
@@ -84,16 +82,15 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             "initialize.log.error",
             "Error encountered while activating and initializing logger! "
         );
-        vscode.window.showErrorMessage(errorMessage);
-        vscode.window.showErrorMessage(err.message);
+        vscode.window.showErrorMessage(`${errorMessage}: ${err.message}`);
     }
 
     try {
         // Ensure that ~/.zowe folder exists
-        if (!ImperativeConfig.instance.config?.exists) {
+        if (!imperative.ImperativeConfig.instance.config?.exists) {
             const zoweDir = getZoweDir();
             // Should we replace the instance.config above with (await getProfileInfo(globals.ISTHEIA)).exists
-            await CliProfileManager.initialize({
+            await imperative.CliProfileManager.initialize({
                 configuration: getImperativeConfig().profiles,
                 profileRootDirectory: path.join(zoweDir, "profiles"),
             });
@@ -116,28 +113,27 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         }
 
         await readConfigFromDisk();
-
-        // Initialize profile manager
-        await Profiles.createInstance(globals.LOG);
-
-        if (!fs.existsSync(globals.ZOWETEMPFOLDER)) {
-            fs.mkdirSync(globals.ZOWETEMPFOLDER);
-            fs.mkdirSync(globals.ZOWE_TMP_FOLDER);
-            fs.mkdirSync(globals.USS_DIR);
-            fs.mkdirSync(globals.DS_DIR);
-        }
-
-        // Initialize dataset provider
-        datasetProvider = await createDatasetTree(globals.LOG);
-        // Initialize uss provider
-        ussFileProvider = await createUSSTree(globals.LOG);
-        // Initialize Jobs provider with the created session and the selected pattern
-        jobsProvider = await createJobsTree(globals.LOG);
     } catch (err) {
         const errorMessage = localize("initialize.profiles.error", "Error reading or initializing Zowe CLI profiles.");
-        vscode.window.showErrorMessage(errorMessage);
-        vscode.window.showErrorMessage(err.message);
+        vscode.window.showErrorMessage(`${errorMessage}: ${err.message}`);
     }
+
+    // Initialize profile manager
+    await Profiles.createInstance(globals.LOG);
+
+    if (!fs.existsSync(globals.ZOWETEMPFOLDER)) {
+        fs.mkdirSync(globals.ZOWETEMPFOLDER);
+        fs.mkdirSync(globals.ZOWE_TMP_FOLDER);
+        fs.mkdirSync(globals.USS_DIR);
+        fs.mkdirSync(globals.DS_DIR);
+    }
+
+    // Initialize dataset provider
+    datasetProvider = await createDatasetTree(globals.LOG);
+    // Initialize uss provider
+    ussFileProvider = await createUSSTree(globals.LOG);
+    // Initialize Jobs provider with the created session and the selected pattern
+    jobsProvider = await createJobsTree(globals.LOG);
 
     // set a command to silently reload extension
     context.subscriptions.push(
@@ -156,65 +152,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
 
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.promptCredentials", async (node: IZoweTreeNode) => {
-            const mProfileInfo = await Profiles.getInstance().getProfileInfo();
-            if (!mProfileInfo.getTeamConfig().properties.autoStore) {
-                vscode.window.showInformationMessage(
-                    localize(
-                        "zowe.promptCredentials.notSupported",
-                        '"Update Credentials" operation not supported when "autoStore" is false'
-                    )
-                );
-                return;
-            }
-            let profileName: string;
-            if (node == null) {
-                // prompt for profile
-                profileName = await UIViews.inputBox({
-                    placeHolder: localize(
-                        "createNewConnection.option.prompt.profileName.placeholder",
-                        "Connection Name"
-                    ),
-                    prompt: localize(
-                        "createNewConnection.option.prompt.profileName",
-                        "Enter a name for the connection."
-                    ),
-                    ignoreFocusOut: true,
-                });
-
-                if (profileName === undefined) {
-                    vscode.window.showInformationMessage(
-                        localize("createNewConnection.undefined.passWord", "Operation Cancelled")
-                    );
-                    return;
-                }
-                profileName = profileName.trim();
-            } else {
-                profileName = node.getProfile().name;
-            }
-
-            const creds = await Profiles.getInstance().promptCredentials(profileName, true);
-
-            try {
-                const updatedProfileInfo = Profiles.getInstance().loadNamedProfile(profileName);
-                node.setProfileToChoice(updatedProfileInfo);
-            } catch (err) {
-                const errorMessage = localize("zowe.loadNamedProfile.error", "Error when updating credentials.");
-                vscode.window.showErrorMessage(errorMessage);
-                vscode.window.showErrorMessage(err.message);
-            }
-
-            if (creds != null) {
-                vscode.window.showInformationMessage(
-                    localize(
-                        "promptCredentials.updatedCredentials",
-                        "Credentials for {0} were successfully updated",
-                        profileName
-                    )
-                );
-            }
-            await refreshActions.refreshAll(datasetProvider);
-            await refreshActions.refreshAll(ussFileProvider);
-            await refreshActions.refreshAll(jobsProvider);
+            await promptCredentials(node);
         })
     );
 
@@ -343,9 +281,64 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     }
 
     ZoweExplorerExtender.createInstance(datasetProvider, ussFileProvider, jobsProvider);
-
     await SettingsConfig.standardizeSettings();
+    await watchConfigProfile(context);
     return ZoweExplorerApiRegister.getInstance();
+}
+
+async function watchConfigProfile(context: vscode.ExtensionContext) {
+    if (globals.ISTHEIA) {
+        return undefined;
+    }
+    const zoweFilesInfo = imperative.ImperativeConfig.instance;
+    const globalProfileWatcher = vscode.workspace.createFileSystemWatcher(
+        new vscode.RelativePattern(zoweFilesInfo.cliHome, "zowe.config.json")
+    );
+
+    const workspaceProfileWatcher =
+        vscode.workspace.workspaceFolders &&
+        vscode.workspace.createFileSystemWatcher(
+            new vscode.RelativePattern(vscode.workspace.workspaceFolders[0].uri.fsPath, "zowe.config.user.json")
+        );
+
+    context.subscriptions.push(workspaceProfileWatcher);
+    workspaceProfileWatcher && context.subscriptions.push(globalProfileWatcher);
+
+    const onChangeProfileAction = async (uri: vscode.Uri) => {
+        const newProfileContents = await vscode.workspace.fs.readFile(uri);
+        if (newProfileContents.toString() === savedProfileContents.toString()) {
+            return;
+        }
+        savedProfileContents = newProfileContents;
+        await vscode.commands.executeCommand("zowe.extRefresh");
+    };
+
+    globalProfileWatcher.onDidCreate(async () => {
+        await vscode.commands.executeCommand("zowe.extRefresh");
+    });
+
+    globalProfileWatcher.onDidChange(async (uri: vscode.Uri) => {
+        await onChangeProfileAction(uri);
+    });
+
+    globalProfileWatcher.onDidDelete(async () => {
+        await vscode.commands.executeCommand("zowe.extRefresh");
+    });
+
+    workspaceProfileWatcher &&
+        workspaceProfileWatcher.onDidCreate(async () => {
+            await vscode.commands.executeCommand("zowe.extRefresh");
+        });
+
+    workspaceProfileWatcher &&
+        workspaceProfileWatcher.onDidChange(async (uri: vscode.Uri) => {
+            await onChangeProfileAction(uri);
+        });
+
+    workspaceProfileWatcher &&
+        workspaceProfileWatcher.onDidDelete(async () => {
+            await vscode.commands.executeCommand("zowe.extRefresh");
+        });
 }
 
 function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {

@@ -10,12 +10,10 @@
  */
 
 jest.mock("@zowe/cli");
-jest.mock("@zowe/imperative");
 import { createJobsTree, ZosJobsProvider } from "../../../src/job/ZosJobsProvider";
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import * as globals from "../../../src/globals";
-import { Logger } from "@zowe/imperative";
 import { IZoweJobTreeNode, ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import {
     createIJobFile,
@@ -167,7 +165,7 @@ async function createGlobalMocks() {
             return {};
         }),
     });
-    globalMocks.testJobsProvider = await createJobsTree(Logger.getAppLogger());
+    globalMocks.testJobsProvider = await createJobsTree(zowe.imperative.Logger.getAppLogger());
     globalMocks.testJobsProvider.mSessionNodes.push(globalMocks.testSessionNode);
     Object.defineProperty(globalMocks.testJobsProvider, "refresh", {
         value: globalMocks.mockRefresh,
@@ -245,7 +243,7 @@ describe("ZosJobsProvider unit tests - Function getChildren", () => {
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
 
         const testTree = new ZosJobsProvider();
-        const log = Logger.getAppLogger();
+        const log = zowe.imperative.Logger.getAppLogger();
         const favProfileNode = new Job(
             "sestest",
             vscode.TreeItemCollapsibleState.Collapsed,
@@ -372,7 +370,7 @@ describe("ZosJobsProvider unit tests - Function initializeFavChildNodeForProfile
 
 describe("ZosJobsProvider unit tests - Function loadProfilesForFavorites", () => {
     function createBlockMocks() {
-        const log = Logger.getAppLogger();
+        const log = zowe.imperative.Logger.getAppLogger();
         const imperativeProfile = createIProfile();
         const session = createISession();
         const jobFavoritesNode = createJobFavoritesNode();

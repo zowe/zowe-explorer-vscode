@@ -44,7 +44,7 @@ See this [special extension document](../../docs/README-Extending.md) to learn m
 
 ## Logger API
 
-See this [special extension document](https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/extenders/Error%20Handling.md#logging-of-error-message) for more information about using the Logger API.
+See this [special extension document](https://github.com/zowe/vscode-extension-for-zowe/blob/main/docs/extenders/Error%20Handling.md#logging-of-error-message) for more information about using the Logger API.
 
 ## Providing feedback or help contributing
 

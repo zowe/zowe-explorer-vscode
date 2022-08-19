@@ -11,7 +11,7 @@ Join our [Slack channel](https://slack.openmainframeproject.org/) to connect wit
 
 Client-side prerequisites:
 
-- Install [Node.js](https://nodejs.org/en/download/) v12.0 or later.
+- Install [Node.js](https://nodejs.org/en/download/) v14.0 or later.
 - Install [Yarn](https://yarnpkg.com/getting-started/install).
 
 Host-side prerequisites:
@@ -37,7 +37,7 @@ Clone the repository, build a VSIX file, and start working with the extension.
 1. Clone the repository by issuing the following command in your local command-line interface:
 
    ```shell
-   git clone --origin=upstream --branch=master --single-branch https://github.com/zowe/vscode-extension-for-zowe.git
+   git clone --origin=upstream --branch=main --single-branch https://github.com/zowe/vscode-extension-for-zowe.git
    ```
 
 2. Change directories into the newly-cloned repository:
@@ -62,7 +62,7 @@ Now install the extension to VS Code.
 
 You can now use the extension.
 
-For more information on how to run tests for the extension, see [Developer's ReadMe](https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/Developer's%20ReadMe.md).
+For more information on how to run tests for the extension, see [Developer's ReadMe](https://github.com/zowe/vscode-extension-for-zowe/blob/main/docs/Developer's%20ReadMe.md).
 
 ## Available Documentation
 
@@ -70,19 +70,19 @@ The current repository of the VS Code extension Zowe Explorer includes several R
 
 Use the following list with the description and links to find the topics of your interest:
 
-[Core Zowe Explorer ReadMe](https://github.com/zowe/vscode-extension-for-zowe/blob/master/packages/zowe-explorer/README.md) — contains information about how to install, configure, and use Zowe Explorer. This ReadMe helps you to familiarize yourself with the basic features of the extension.
+[Core Zowe Explorer ReadMe](https://github.com/zowe/vscode-extension-for-zowe/blob/main/packages/zowe-explorer/README.md) — contains information about how to install, configure, and use Zowe Explorer. This ReadMe helps you to familiarize yourself with the basic features of the extension.
 
-[Zowe Explorer ESlint Plug-in ReadMe](https://github.com/zowe/vscode-extension-for-zowe/blob/master/packages/eslint-plugin-zowe-explorer/README.md) — contains information about how to install ESLint and configure ESLint rules. ESLint helps you to find and fix problems in your JavaScript code.
+[Zowe Explorer ESlint Plug-in ReadMe](https://github.com/zowe/vscode-extension-for-zowe/blob/main/packages/eslint-plugin-zowe-explorer/README.md) — contains information about how to install ESLint and configure ESLint rules. ESLint helps you to find and fix problems in your JavaScript code.
 
-[Zowe Explorer Extensibility API ReadMe](https://github.com/zowe/vscode-extension-for-zowe/blob/master/packages/zowe-explorer-api/README.md) — contains information about how to extend the capabilities of Zowe Explorer, using the extensibility API.
+[Zowe Explorer Extensibility API ReadMe](https://github.com/zowe/vscode-extension-for-zowe/blob/main/packages/zowe-explorer-api/README.md) — contains information about how to extend the capabilities of Zowe Explorer, using the extensibility API.
 
-[Zowe Explorer FTP Extension ReadMe](https://github.com/zowe/vscode-extension-for-zowe/blob/master/packages/zowe-explorer-ftp-extension/README.md) — contains information about how to install and use the Zowe Explorer extension for FTP. The extension adds the FTP protocol to Zowe Explorer, enabling you to use z/OS FTP Plug-in for Zowe CLI profiles to connect and interact with z/OS USS and MVS.
+[Zowe Explorer FTP Extension ReadMe](https://github.com/zowe/vscode-extension-for-zowe/blob/main/packages/zowe-explorer-ftp-extension/README.md) — contains information about how to install and use the Zowe Explorer extension for FTP. The extension adds the FTP protocol to Zowe Explorer, enabling you to use z/OS FTP Plug-in for Zowe CLI profiles to connect and interact with z/OS USS and MVS.
 
 **Note**: Zowe Explorer FTP extension is an example that shows how the extensibility API is used to add new capabilities to Zowe Explorer.
 
-[Zowe Explorer Developer's ReadMe](https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/README-Developer.md) — contains information on how to install, build, and test Zowe Explorer.
+[Zowe Explorer Developer's ReadMe](https://github.com/zowe/vscode-extension-for-zowe/blob/main/docs/README-Developer.md) — contains information on how to install, build, and test Zowe Explorer.
 
-[Zowe Explorer in Theia ReadMe](https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/README-Theia.md) — contains information on how to develop for the Web-based IDE Eclipse Theia.
+[Zowe Explorer in Theia ReadMe](https://github.com/zowe/vscode-extension-for-zowe/blob/main/docs/README-Theia.md) — contains information on how to develop for the Web-based IDE Eclipse Theia.
 
 ## How to Contribute
 

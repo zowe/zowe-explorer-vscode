@@ -4,5 +4,10 @@
   "ErrorHandling.authentication.login": "Log in to Authentication Service",
   "ErrorHandling.checkCredentials.button": "Check Credentials",
   "ErrorHandling.checkCredentials.cancelled": "Operation Cancelled",
-  "getProfile.notTreeItem": "Tree Item is not a Zowe Explorer item."
+  "getProfile.notTreeItem": "Tree Item is not a Zowe Explorer item.",
+  "zowe.promptCredentials.notSupported": "\"Update Credentials\" operation not supported when \"autoStore\" is false",
+  "createNewConnection.option.prompt.profileName.placeholder": "Connection Name",
+  "createNewConnection.option.prompt.profileName": "Enter a name for the connection.",
+  "createNewConnection.undefined.passWord": "Operation Cancelled",
+  "promptCredentials.updatedCredentials": "Credentials for {0} were successfully updated"
 }

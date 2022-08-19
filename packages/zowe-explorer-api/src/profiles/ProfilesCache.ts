@@ -70,7 +70,7 @@ export class ProfilesCache {
 
     public async getProfileInfo(): Promise<zowe.imperative.ProfileInfo> {
         const mProfileInfo = new zowe.imperative.ProfileInfo("zowe");
-        await mProfileInfo.readProfilesFromDisk({ projectDir: this.cwd });
+        await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir(), projectDir: this.cwd });
         return mProfileInfo;
     }
 
@@ -89,6 +89,26 @@ export class ProfilesCache {
             }
         }
         throw new Error(`Zowe Explorer Profiles Cache error: Could not find profile named: ${name}.`);
+    }
+
+    /**
+     * Updates profile in allProfiles array and if default updates defaultProfileByType
+     *
+     * @param {string} profileLoaded
+     *
+     * @returns {void}
+     */
+    public updateProfilesArrays(profileLoaded: zowe.imperative.IProfileLoaded): void {
+        // update allProfiles array
+        const promptedTypeIndex = this.allProfiles.findIndex(
+            (profile) => profile.type === profileLoaded.type && profile.name === profileLoaded.name
+        );
+        this.allProfiles[promptedTypeIndex] = profileLoaded;
+        // checks if default, if true update defaultProfileByType
+        const defaultProf = this.defaultProfileByType.get(profileLoaded.type);
+        if (defaultProf.name === profileLoaded.name) {
+            this.defaultProfileByType.set(profileLoaded.type, profileLoaded);
+        }
     }
 
     /**
@@ -137,12 +157,6 @@ export class ProfilesCache {
      * @returns {void}
      */
     public registerCustomProfilesType(profileTypeName: string): void {
-        const exists = fs.existsSync(path.posix.join(`${os.homedir()}/.zowe/profiles/${profileTypeName}`));
-        if (!exists) {
-            throw new Error(
-                `Zowe Explorer Profiles Cache error: Tried to register a custom profile type named: ${profileTypeName} that does not yet exist. Extenders must call "zoweExplorerApi.getExplorerExtenderApi().initForZowe()" first.`
-            );
-        }
         this.allExternalTypes.add(profileTypeName);
     }
 
@@ -150,7 +164,12 @@ export class ProfilesCache {
         this.allProfiles = [];
         let tmpAllProfiles: zowe.imperative.IProfileLoaded[] = [];
         this.allTypes = [];
-        const mProfileInfo = await this.getProfileInfo();
+        let mProfileInfo: zowe.imperative.ProfileInfo;
+        try {
+            mProfileInfo = await this.getProfileInfo();
+        } catch (error) {
+            return;
+        }
         const allTypes = this.getAllProfileTypes(apiRegister.registeredApiTypes());
         allTypes.push("base");
         for (const type of allTypes) {
@@ -210,8 +229,14 @@ export class ProfilesCache {
         return validationResult;
     }
 
-    // gets schema from /.zowe/profiles/profileType directory
-    // used by Zowe Explorer for creation & update of v1 profiles
+    /**
+     * V1 Profile specific
+     * gets schema from /.zowe/profiles/profileType directory
+     * used by Zowe Explorer for creation & update of v1 profiles
+     * TO DO: put in request for public readonly api for this on Imperative.
+     * @param profileType
+     * @returns
+     */
     public getSchema(profileType: string): Record<string, unknown> {
         const profileManager = this.getCliProfileManager(profileType);
         const configOptions = Array.from(profileManager.configurations);
@@ -224,12 +249,19 @@ export class ProfilesCache {
         return schema;
     }
 
-    // Return string[] of all profile types set by refresh
+    /**
+     * get array of profile types
+     * @returns string[]
+     */
     public getAllTypes(): string[] {
         return this.allTypes;
     }
 
-    // get string[] of profile names by type
+    /**
+     * get array of Profile names by type
+     * @param type  profile type
+     * @returns string[]
+     */
     public async getNamesForType(type: string): Promise<string[]> {
         const profilesForType = await this.fetchAllProfilesByType(type);
         return profilesForType.map((profile) => {
@@ -237,29 +269,42 @@ export class ProfilesCache {
         });
     }
 
-    // get IProfileLoaded[] from imperative
+    /**
+     * get array of IProfileLoaded by type
+     * @param type profile type
+     * @returns IProfileLoaded[]
+     */
     public async fetchAllProfilesByType(type: string): Promise<zowe.imperative.IProfileLoaded[]> {
         const profByType: zowe.imperative.IProfileLoaded[] = [];
         const mProfileInfo = await this.getProfileInfo();
-        const profilesForType = mProfileInfo.getAllProfiles(type).filter((temp) => temp.profLoc.osLoc.length !== 0);
+        const profilesForType = mProfileInfo.getAllProfiles(type);
         if (profilesForType && profilesForType.length > 0) {
             for (const prof of profilesForType) {
                 const profAttr = this.getMergedAttrs(mProfileInfo, prof);
                 let profile = this.getProfileLoaded(prof.profName, prof.profType, profAttr);
-                profile = await this.checkMergingConfigSingleProfile(profile);
+                profile = this.checkMergingConfigSingleProfile(profile);
                 profByType.push(profile);
             }
         }
         return profByType;
     }
 
+    /**
+     * Direct load and return of particular IProfileLoaded
+     * @param type profile type
+     * @param name profile name
+     * @returns IProfileLoaded
+     */
     public async directLoad(type: string, name: string): Promise<zowe.imperative.IProfileLoaded> {
-        let directProfile: zowe.imperative.IProfileLoaded;
-        const profileManager = this.getCliProfileManager(type);
-        if (profileManager) {
-            directProfile = await profileManager.load({ name });
+        const profsOfType = await this.fetchAllProfilesByType(type);
+        if (profsOfType && profsOfType.length > 0) {
+            for (const profile of profsOfType) {
+                if (profile.name === name) {
+                    return profile;
+                }
+            }
         }
-        return directProfile;
+        return;
     }
 
     public async getProfileFromConfig(profileName: string): Promise<zowe.imperative.IProfAttrs> {
@@ -273,16 +318,16 @@ export class ProfilesCache {
         const mProfileInfo = await this.getProfileInfo();
         const currentProfile = await this.getProfileFromConfig(profileName);
         if (currentProfile == null) return undefined;
-        const mergedArgs = mProfileInfo.mergeArgsForProfile(currentProfile, { getSecureVals: true });
-        const profile: zowe.imperative.IProfile = {};
-        for (const arg of mergedArgs.knownArgs) {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-            profile[arg.argName] = arg.argValue;
-        }
+        const profile = this.getMergedAttrs(mProfileInfo, currentProfile);
         return this.getProfileLoaded(currentProfile.profName, currentProfile.profType, profile);
     }
 
-    // V1 specific used by Zowe Explorer to handle v1 profiles
+    /**
+     * V1 Profile specific
+     * Used by Zowe Explorer to handle v1 profiles
+     * @param type string, profile type
+     * @returns zowe.imperative.CliProfileManager
+     */
     public getCliProfileManager(type: string): zowe.imperative.CliProfileManager {
         let profileManager = this.profileManagerByType.get(type);
         if (!profileManager) {
@@ -322,6 +367,24 @@ export class ProfilesCache {
         return this.getProfileLoaded(baseProfileAttrs.profName, baseProfileAttrs.profType, profAttr);
     }
 
+    /**
+     * This returns true or false depending on if credentials are stored securely.
+     *
+     * @returns {boolean}
+     */
+    public async isCredentialsSecured(): Promise<boolean> {
+        try {
+            return (await this.getProfileInfo()).isSecured();
+        } catch (error) {
+            this.log.error(error);
+        }
+    }
+
+    /**
+     * This returns true or false depending on if SCS plugin is installed. Use isCredentialsSecured().
+     * @deprecated
+     * @returns {boolean}
+     */
     public isSecureCredentialPluginActive(): boolean {
         let imperativeIsSecure = false;
         try {
@@ -420,10 +483,8 @@ export class ProfilesCache {
     }
 
     // check correct merging of a single profile
-    protected async checkMergingConfigSingleProfile(
-        profile: zowe.imperative.IProfileLoaded
-    ): Promise<zowe.imperative.IProfileLoaded> {
-        const baseProfile = await this.fetchBaseProfile();
+    protected checkMergingConfigSingleProfile(profile: zowe.imperative.IProfileLoaded): zowe.imperative.IProfileLoaded {
+        const baseProfile = this.defaultProfileByType.get("base");
         if (
             (baseProfile?.profile.host !== profile?.profile.host ||
                 baseProfile?.profile?.port !== profile?.profile.port) &&

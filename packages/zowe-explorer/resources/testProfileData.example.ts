@@ -1,6 +1,6 @@
-import { IProfile } from "@zowe/imperative";
+import { imperative } from "@zowe/cli";
 
-export const profile: IProfile = {
+export const profile: imperative.IProfile = {
     type: "zosmf",
     host: "",
     port: 0,

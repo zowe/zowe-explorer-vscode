@@ -10,8 +10,7 @@
  */
 
 // tslint:disable:no-magic-numbers
-import * as zowe from "@zowe/cli";
-import { IProfileLoaded, ICommandArguments, Session, ConnectionPropsForSessCfg } from "@zowe/imperative";
+import { Create, CreateDataSetTypeEnum, Delete, imperative, List, Upload, ZosmfSession } from "@zowe/cli";
 import * as expect from "expect";
 import * as vscode from "vscode";
 import { DatasetTree } from "../../src/dataset/DatasetTree";
@@ -24,7 +23,7 @@ import * as globals from "../../src/globals";
 
 declare var it: any;
 
-const testProfile: IProfileLoaded = {
+const testProfile: imperative.IProfileLoaded = {
     name: testConst.profile.name,
     profile: testConst.profile,
     type: testConst.profile.type,
@@ -36,7 +35,7 @@ describe("DatasetTree Integration Tests", async () => {
     const TIMEOUT = 120000;
     chai.use(chaiAsPromised);
     // Uses loaded profile to create a zosmf session with Zowe
-    const cmdArgs: ICommandArguments = {
+    const cmdArgs: imperative.ICommandArguments = {
         $0: "zowe",
         _: [""],
         host: testProfile.profile.host,
@@ -46,9 +45,9 @@ describe("DatasetTree Integration Tests", async () => {
         user: testProfile.profile.user,
         password: testProfile.profile.password,
     };
-    const sessCfg = zowe.ZosmfSession.createSessCfgFromArgs(cmdArgs);
-    ConnectionPropsForSessCfg.resolveSessCfgProps(sessCfg, cmdArgs);
-    const session = new Session(sessCfg);
+    const sessCfg = ZosmfSession.createSessCfgFromArgs(cmdArgs);
+    imperative.ConnectionPropsForSessCfg.resolveSessCfgProps(sessCfg, cmdArgs);
+    const session = new imperative.Session(sessCfg);
     const sessNode = new ZoweDatasetNode(
         testConst.profile.name,
         vscode.TreeItemCollapsibleState.Expanded,
@@ -334,16 +333,16 @@ describe("DatasetTree Integration Tests", async () => {
             afterEach(async () => {
                 await Promise.all(
                     [
-                        zowe.Delete.dataSet(sessNode.getSession(), beforeDataSetName),
-                        zowe.Delete.dataSet(sessNode.getSession(), afterDataSetName),
+                        Delete.dataSet(sessNode.getSession(), beforeDataSetName),
+                        Delete.dataSet(sessNode.getSession(), afterDataSetName),
                     ].map((p) => p.catch((err) => err))
                 );
             });
             describe("Rename Sequential Data Set", () => {
                 beforeEach(async () => {
-                    await zowe.Create.dataSet(
+                    await Create.dataSet(
                         sessNode.getSession(),
-                        zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL,
+                        CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL,
                         beforeDataSetName
                     ).catch((err) => err);
                 });
@@ -363,8 +362,8 @@ describe("DatasetTree Integration Tests", async () => {
                         inputBoxStub.returns(afterDataSetName);
 
                         await testTree.rename(testNode);
-                        beforeList = await zowe.List.dataSet(sessNode.getSession(), beforeDataSetName);
-                        afterList = await zowe.List.dataSet(sessNode.getSession(), afterDataSetName);
+                        beforeList = await List.dataSet(sessNode.getSession(), beforeDataSetName);
+                        afterList = await List.dataSet(sessNode.getSession(), afterDataSetName);
                     } catch (err) {
                         error = err;
                     }
@@ -392,8 +391,8 @@ describe("DatasetTree Integration Tests", async () => {
                         inputBoxStub.returns(lowercaseAfterDataSetName);
 
                         await testTree.rename(testNode);
-                        beforeList = await zowe.List.dataSet(sessNode.getSession(), beforeDataSetName);
-                        afterList = await zowe.List.dataSet(sessNode.getSession(), afterDataSetName);
+                        beforeList = await List.dataSet(sessNode.getSession(), beforeDataSetName);
+                        afterList = await List.dataSet(sessNode.getSession(), afterDataSetName);
                     } catch (err) {
                         error = err;
                     }
@@ -406,12 +405,12 @@ describe("DatasetTree Integration Tests", async () => {
             });
             describe("Rename Member", () => {
                 beforeEach(async () => {
-                    await zowe.Create.dataSet(
+                    await Create.dataSet(
                         sessNode.getSession(),
-                        zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED,
+                        CreateDataSetTypeEnum.DATA_SET_PARTITIONED,
                         beforeDataSetName
                     ).catch((err) => err);
-                    await zowe.Upload.bufferToDataSet(
+                    await Upload.bufferToDataSet(
                         sessNode.getSession(),
                         new Buffer("abc"),
                         `${beforeDataSetName}(mem1)`
@@ -451,7 +450,7 @@ describe("DatasetTree Integration Tests", async () => {
                         inputBoxStub.returns("MEM2");
 
                         await testTree.rename(childNode);
-                        list = await zowe.List.allMembers(sessNode.getSession(), beforeDataSetName);
+                        list = await List.allMembers(sessNode.getSession(), beforeDataSetName);
                     } catch (err) {
                         error = err;
                     }
@@ -482,7 +481,7 @@ describe("DatasetTree Integration Tests", async () => {
                         inputBoxStub.returns("mem2");
 
                         await testTree.rename(childNode);
-                        list = await zowe.List.allMembers(sessNode.getSession(), beforeDataSetName);
+                        list = await List.allMembers(sessNode.getSession(), beforeDataSetName);
                     } catch (err) {
                         error = err;
                     }
@@ -495,9 +494,9 @@ describe("DatasetTree Integration Tests", async () => {
             });
             describe("Rename Partitioned Data Set", () => {
                 beforeEach(async () => {
-                    await zowe.Create.dataSet(
+                    await Create.dataSet(
                         sessNode.getSession(),
-                        zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED,
+                        CreateDataSetTypeEnum.DATA_SET_PARTITIONED,
                         beforeDataSetName
                     ).catch((err) => err);
                 });
@@ -518,8 +517,8 @@ describe("DatasetTree Integration Tests", async () => {
                         inputBoxStub.returns(afterDataSetName);
 
                         await testTree.rename(testNode);
-                        beforeList = await zowe.List.dataSet(sessNode.getSession(), beforeDataSetName);
-                        afterList = await zowe.List.dataSet(sessNode.getSession(), afterDataSetName);
+                        beforeList = await List.dataSet(sessNode.getSession(), beforeDataSetName);
+                        afterList = await List.dataSet(sessNode.getSession(), afterDataSetName);
                     } catch (err) {
                         error = err;
                     }
@@ -547,8 +546,8 @@ describe("DatasetTree Integration Tests", async () => {
                         inputBoxStub.returns(lowercaseAfterDataSetName);
 
                         await testTree.rename(testNode);
-                        beforeList = await zowe.List.dataSet(sessNode.getSession(), beforeDataSetName);
-                        afterList = await zowe.List.dataSet(sessNode.getSession(), afterDataSetName);
+                        beforeList = await List.dataSet(sessNode.getSession(), beforeDataSetName);
+                        afterList = await List.dataSet(sessNode.getSession(), afterDataSetName);
                     } catch (err) {
                         error = err;
                     }

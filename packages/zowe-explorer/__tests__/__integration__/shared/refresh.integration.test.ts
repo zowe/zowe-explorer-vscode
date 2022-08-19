@@ -10,8 +10,7 @@
  */
 
 // tslint:disable:no-magic-numbers
-import * as zowe from "@zowe/cli";
-import { IProfileLoaded, ICommandArguments, ConnectionPropsForSessCfg, Session } from "@zowe/imperative";
+import { imperative, ZosmfSession } from "@zowe/cli";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import * as sinon from "sinon";
@@ -32,7 +31,7 @@ describe("jobNodeActions integration test", async () => {
     const expect = chai.expect;
     chai.use(chaiAsPromised);
 
-    const cmdArgs: ICommandArguments = {
+    const cmdArgs: imperative.ICommandArguments = {
         $0: "zowe",
         _: [""],
         host: testConst.profile.host,
@@ -42,10 +41,10 @@ describe("jobNodeActions integration test", async () => {
         user: testConst.profile.user,
         password: testConst.profile.password,
     };
-    const sessCfg = zowe.ZosmfSession.createSessCfgFromArgs(cmdArgs);
-    ConnectionPropsForSessCfg.resolveSessCfgProps(sessCfg, cmdArgs);
-    const session = new Session(sessCfg);
-    const testProfileLoaded: IProfileLoaded = {
+    const sessCfg = ZosmfSession.createSessCfgFromArgs(cmdArgs);
+    imperative.ConnectionPropsForSessCfg.resolveSessCfgProps(sessCfg, cmdArgs);
+    const session = new imperative.Session(sessCfg);
+    const testProfileLoaded: imperative.IProfileLoaded = {
         name: testConst.profile.name,
         profile: testConst.profile,
         type: testConst.profile.type,

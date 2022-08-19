@@ -1,6 +1,7 @@
 {
   "extends": "tslint:latest",
   "rules": {
+    "no-unused-expression": [true, "allow-fast-null-checks"],
     "object-literal-sort-keys": false,
     "ordered-imports": false,
     "one-line": false,
