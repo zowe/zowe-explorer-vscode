@@ -15,6 +15,7 @@ import * as path from "path";
 import * as os from "os";
 import * as fs from "fs";
 import * as globals from "./globals";
+import * as vscode from "vscode";
 import {
     ZoweExplorerApi,
     ZoweExplorerTreeApi,
@@ -105,11 +106,11 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
         let usingTeamConfig: boolean;
         let mProfileInfo: zowe.imperative.ProfileInfo;
         try {
-            mProfileInfo = await globals.PROFILESCACHE.getProfileInfo();
-            if (!mProfileInfo) {
-                mProfileInfo = await getProfileInfo(globals.ISTHEIA);
-                mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir() });
-            }
+            mProfileInfo = await getProfileInfo(globals.ISTHEIA);
+            mProfileInfo.readProfilesFromDisk({
+                homeDir: getZoweDir(),
+                projectDir: vscode.workspace.workspaceFolders?.[0].uri.fsPath,
+            });
             usingTeamConfig = mProfileInfo.usingTeamConfig;
         } catch (error) {
             if (error.toString().includes("Error parsing JSON")) {
