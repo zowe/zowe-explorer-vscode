@@ -69,15 +69,6 @@ describe("TsoCommandHandler extended testing", () => {
                     };
                 }),
             });
-
-            // jest.spyOn(Profiles.getInstance, "getProfileInfo").mockReturnValue({
-            //     usingTeamConfig: true,
-            //     getAllProfiles: jest.fn().mockReturnValue(["dummy"]),
-            //     mergeArgsForProfile: jest.fn().mockReturnValue({
-            //         knownArgs: [{ argName: "account", argValue: "" }],
-            //     }),
-            // } as any);
-
             const spyBox = jest.spyOn(ZoweVsCodeExtension, "inputBox").mockResolvedValue("TEST1");
 
             const result = await (TsoCommandHandler.getInstance() as any).getTsoParams();
