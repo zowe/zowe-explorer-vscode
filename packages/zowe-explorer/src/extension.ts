@@ -41,6 +41,7 @@ import { TsoCommandHandler } from "./command/TsoCommandHandler";
 import { cleanTempDir, moveTempFolder, hideTempFolder } from "./utils/TempFolder";
 import { SettingsConfig } from "./utils/SettingsConfig";
 import { handleSaving } from "./utils/workspace";
+import * as contextually from "../src/shared/context";
 
 // Set up localization
 nls.config({
@@ -491,14 +492,20 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
 
 function initUSSProvider(context: vscode.ExtensionContext, ussFileProvider: IZoweTree<IZoweUSSTreeNode>) {
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.addFavorite", async (node: IZoweUSSTreeNode) =>
-            ussFileProvider.addFavorite(node)
-        )
+        vscode.commands.registerCommand("zowe.uss.addFavorite", async () => {
+            const selectedNodes = ussFileProvider.getTreeView().selection as IZoweUSSTreeNode[];
+            for (const node of selectedNodes) {
+                await ussFileProvider.addFavorite(node);
+            }
+        })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.removeFavorite", async (node: IZoweUSSTreeNode) =>
-            ussFileProvider.removeFavorite(node)
-        )
+        vscode.commands.registerCommand("zowe.uss.removeFavorite", async () => {
+            const selectedNodes = ussFileProvider.getTreeView().selection as IZoweUSSTreeNode[];
+            for (const node of selectedNodes) {
+                await ussFileProvider.removeFavorite(node);
+            }
+        })
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.uss.addSession", async () =>
@@ -512,7 +519,13 @@ function initUSSProvider(context: vscode.ExtensionContext, ussFileProvider: IZow
         })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.refreshUSS", (node: IZoweUSSTreeNode) => node.refreshUSS())
+        vscode.commands.registerCommand("zowe.uss.refreshUSS", async () => {
+            let selectedNodes = ussFileProvider.getTreeView().selection as IZoweUSSTreeNode[];
+            selectedNodes = selectedNodes.filter((x) => contextually.isDocument(x));
+            for (const node of selectedNodes) {
+                await node.refreshUSS();
+            }
+        })
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.uss.refreshUSSInTree", (node: IZoweUSSTreeNode) =>
@@ -520,8 +533,12 @@ function initUSSProvider(context: vscode.ExtensionContext, ussFileProvider: IZow
         )
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.refreshDirectory", (node: IZoweUSSTreeNode) => {
-            ussActions.refreshDirectory(node, ussFileProvider);
+        vscode.commands.registerCommand("zowe.uss.refreshDirectory", () => {
+            let selectedNodes = ussFileProvider.getTreeView().selection as IZoweUSSTreeNode[];
+            selectedNodes = selectedNodes.filter((x) => contextually.isUssDirectory(x));
+            for (const node of selectedNodes) {
+                ussActions.refreshDirectory(node, ussFileProvider);
+            }
         })
     );
     context.subscriptions.push(
@@ -555,20 +572,32 @@ function initUSSProvider(context: vscode.ExtensionContext, ussFileProvider: IZow
         )
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.deleteNode", (node: IZoweUSSTreeNode) => {
-            const tempNode = ussFileProvider.getTreeView().selection[0] as IZoweUSSTreeNode;
-            tempNode.deleteUSSNode(ussFileProvider, tempNode.getUSSDocumentFilePath());
+        vscode.commands.registerCommand("zowe.uss.deleteNode", async () => {
+            let selectedNodes = ussFileProvider.getTreeView().selection as IZoweUSSTreeNode[];
+            selectedNodes = selectedNodes.filter((x) => contextually.isDocument(x) || contextually.isUssDirectory(x));
+            const cancelled = await ussActions.deleteUSSFilesPrompt(selectedNodes);
+            for (const node of selectedNodes) {
+                await node.deleteUSSNode(ussFileProvider, node.getUSSDocumentFilePath(), cancelled);
+            }
         })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.binary", async (node: IZoweUSSTreeNode) =>
-            ussActions.changeFileType(node, true, ussFileProvider)
-        )
+        vscode.commands.registerCommand("zowe.uss.binary", async () => {
+            let selectedNodes = ussFileProvider.getTreeView().selection as IZoweUSSTreeNode[];
+            selectedNodes = selectedNodes.filter((x) => contextually.isText(x));
+            for (const node of selectedNodes) {
+                await ussActions.changeFileType(node, true, ussFileProvider);
+            }
+        })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.text", async (node: IZoweUSSTreeNode) =>
-            ussActions.changeFileType(node, false, ussFileProvider)
-        )
+        vscode.commands.registerCommand("zowe.uss.text", async () => {
+            let selectedNodes = ussFileProvider.getTreeView().selection as IZoweUSSTreeNode[];
+            selectedNodes = selectedNodes.filter((x) => contextually.isBinary(x));
+            for (const node of selectedNodes) {
+                await ussActions.changeFileType(node, false, ussFileProvider);
+            }
+        })
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.uss.renameNode", async (node: IZoweUSSTreeNode) =>
