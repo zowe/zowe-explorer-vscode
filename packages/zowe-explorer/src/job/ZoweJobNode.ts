@@ -232,13 +232,13 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
     }
 
     set tooltip(newTooltip: string) {
-        if (newTooltip !== undefined) {
+        if (newTooltip) {
             this._tooltip = newTooltip;
         }
     }
 
     get tooltip(): string {
-        if (this._tooltip !== undefined) {
+        if (this._tooltip) {
             return this._tooltip;
         }
         if (this.job !== null) {
