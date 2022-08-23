@@ -672,6 +672,7 @@ export class Profiles extends ProfilesCache {
     public async editZoweConfigFile() {
         const existingLayers: zowe.imperative.IConfigLayer[] = [];
         const config = await zowe.imperative.Config.load("zowe", {
+            homeDir: getZoweDir(),
             projectDir: vscode.workspace.workspaceFolders?.[0].uri.fsPath,
         });
         const layers = config.layers;
