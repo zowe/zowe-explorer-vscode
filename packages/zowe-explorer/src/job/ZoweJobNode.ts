@@ -149,7 +149,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                     if (icon) {
                         spoolNode.iconPath = icon.path;
                     }
-                    let arr = [];
+                    const arr = [];
                     Object.keys(spool).map((key) => {
                         if (key !== "records-url") {
                             arr.push({ [key]: spool[key] });
