@@ -353,23 +353,12 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         vscode.commands.executeCommand("zowe.uss.refreshUSSInTree", this);
     }
 
-    public async deleteUSSNode(ussFileProvider: IZoweTree<IZoweUSSTreeNode>, filePath: string) {
-        const deleteButton = localize("deleteUssPrompt.confirmation.delete", "Delete");
+    public async deleteUSSNode(
+        ussFileProvider: IZoweTree<IZoweUSSTreeNode>,
+        filePath: string,
+        cancelled: boolean = false
+    ) {
         const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
-        const message = localize(
-            "deleteUssPrompt.confirmation.message",
-            "Are you sure you want to delete the following item?\nThis will permanently remove the following file or folder from your system.\n\n{0}",
-            this.label.toString()
-        );
-        let cancelled = false;
-        await vscode.window.showWarningMessage(message, { modal: true }, ...[deleteButton]).then((selection) => {
-            if (!selection || selection === "Cancel") {
-                globals.LOG.debug(
-                    localize("deleteUssPrompt.confirmation.cancel.log.debug", "Delete action was canceled.")
-                );
-                cancelled = true;
-            }
-        });
         if (cancelled) {
             vscode.window.showInformationMessage(
                 localize("deleteUssPrompt.deleteCancelled", "Delete action was cancelled.")

@@ -213,8 +213,9 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      *
      * @param ussFileProvider Deletes the USS tree node
      * @param filePath
+     * @param cancelled optional
      */
-    deleteUSSNode?(ussFileProvider: IZoweTree<IZoweUSSTreeNode>, filePath: string);
+    deleteUSSNode?(ussFileProvider: IZoweTree<IZoweUSSTreeNode>, filePath: string, cancelled?: boolean);
     /**
      * Process for renaming a USS Node. This could be a Favorite Node
      *
