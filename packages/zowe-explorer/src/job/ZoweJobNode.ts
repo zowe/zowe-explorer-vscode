@@ -43,7 +43,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
     // tslint:disable-next-line: variable-name
     private _searchId: string;
     // tslint:disable-next-line: variable-name
-    private _tooltip: any;
+    private _tooltip: string;
 
     constructor(
         label: string,
@@ -158,7 +158,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                     });
                     let newTooltip = "";
                     arr.forEach((item) => {
-                        newTooltip = newTooltip + `${JSON.stringify(item).replace(/({|})/g, "")}\n`;
+                        newTooltip += `${JSON.stringify(item).replace(/({|})/g, "")}\n`;
                     });
                     spoolNode.tooltip = newTooltip;
                     spoolNode.command = {
