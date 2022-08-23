@@ -86,7 +86,10 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             this.mFavoriteSession.iconPath = icon.path;
         }
         this.mSessionNodes = [this.mFavoriteSession as IZoweUSSTreeNode];
-        this.treeView = vscode.window.createTreeView("zowe.uss.explorer", { treeDataProvider: this });
+        this.treeView = vscode.window.createTreeView("zowe.uss.explorer", {
+            treeDataProvider: this,
+            canSelectMany: true,
+        });
     }
 
     /**
@@ -441,12 +444,14 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         // Get node's profile node in favorites
         const profileName = node.getProfileName();
         const profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profileName);
-        profileNodeInFavorites.children = profileNodeInFavorites.children.filter(
-            (temp) => !(temp.label === node.label && temp.contextValue.startsWith(node.contextValue))
-        );
-        // Remove profile node from Favorites if it contains no more favorites.
-        if (profileNodeInFavorites.children.length < 1) {
-            return this.removeFavProfile(profileName, false);
+        if (profileNodeInFavorites) {
+            profileNodeInFavorites.children = profileNodeInFavorites.children?.filter(
+                (temp) => !(temp.label === node.label && temp.contextValue.startsWith(node.contextValue))
+            );
+            // Remove profile node from Favorites if it contains no more favorites.
+            if (profileNodeInFavorites.children?.length < 1) {
+                return this.removeFavProfile(profileName, false);
+            }
         }
         await this.updateFavorites();
         this.refreshElement(this.mFavoriteSession);
@@ -502,7 +507,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         this.mFavorites.forEach((favProfileNode) => {
             const favProfileLabel = favProfileNode.label as string;
             if (favProfileLabel === profileName) {
-                this.mFavorites = this.mFavorites.filter((tempNode) => tempNode.label.toString() !== favProfileLabel);
+                this.mFavorites = this.mFavorites.filter((tempNode) => tempNode?.label.toString() !== favProfileLabel);
                 favProfileNode.dirty = true;
                 this.refresh();
             }
