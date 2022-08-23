@@ -42,6 +42,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
     private _prefix: string;
     // tslint:disable-next-line: variable-name
     private _searchId: string;
+    private _tooltip: any;
 
     constructor(
         label: string,
@@ -122,16 +123,21 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                     return [noSpoolNode];
                 }
                 const refreshTimestamp = Date.now();
-                console.log(spools);
                 spools.forEach((spool) => {
                     let prefix = spool.stepname;
                     if (prefix === undefined) {
                         prefix = spool.procstep;
                     }
                     const sessionName = this.getProfileName();
-                    const procstep = spool.procstep ? spool.procstep : "";
+                    const procstep = spool.procstep ? spool.procstep : undefined;
+                    let newLabel: string;
+                    if (procstep) {
+                        newLabel = `${spool.stepname}:${spool.ddname} - ${procstep}`;
+                    } else {
+                        newLabel = `${spool.stepname}:${spool.ddname} - ${spool["record-count"]}`;
+                    }
                     const spoolNode = new Spool(
-                        `${spool.stepname}:${spool.ddname} ${procstep}`,
+                        newLabel,
                         vscode.TreeItemCollapsibleState.None,
                         this,
                         this.session,
@@ -143,6 +149,17 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                     if (icon) {
                         spoolNode.iconPath = icon.path;
                     }
+                    let arr = [];
+                    Object.keys(spool).map((key) => {
+                        if (key !== "records-url") {
+                            arr.push({ [key]: spool[key] });
+                        }
+                    });
+                    let newTooltip = "";
+                    arr.forEach((item) => {
+                        newTooltip = newTooltip + `${JSON.stringify(item).replace(/({|})/g, "")}\n`;
+                    });
+                    spoolNode.tooltip = newTooltip;
                     spoolNode.command = {
                         command: "zowe.jobs.zosJobsOpenspool",
                         title: "",
@@ -213,7 +230,16 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
         return this.getParent() ? this.getParent().getSessionNode() : this;
     }
 
+    set tooltip(newTooltip: string) {
+        if (newTooltip !== undefined) {
+            this._tooltip = newTooltip;
+        }
+    }
+
     get tooltip(): string {
+        if (this._tooltip !== undefined) {
+            return this._tooltip;
+        }
         if (this.job !== null) {
             if (this.job.retcode) {
                 return `${this.job.jobname}(${this.job.jobid}) - ${this.job.retcode}`;
