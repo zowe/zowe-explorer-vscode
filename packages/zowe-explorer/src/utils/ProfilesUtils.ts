@@ -49,10 +49,7 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
         // open config file for missing hostname error
         const msg = errorDetails.toString();
         if (msg.includes("hostname")) {
-            let mProfileInfo: imperative.ProfileInfo = await globals.PROFILESCACHE.getProfileInfo();
-            if (!mProfileInfo) {
-                mProfileInfo = await Profiles.getInstance().getProfileInfo();
-            }
+            const mProfileInfo = await Profiles.getInstance().getProfileInfo();
             if (mProfileInfo.usingTeamConfig) {
                 vscode.window.showErrorMessage("Required parameter 'host' must not be blank");
                 const profAllAttrs = mProfileInfo.getAllProfiles();
