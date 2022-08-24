@@ -123,11 +123,6 @@
 //     });
 //     Object.defineProperty(vscode, "ProgressLocation", { value: newMocks.ProgressLocation, configurable: true });
 //     Object.defineProperty(vscode.window, "withProgress", { value: newMocks.withProgress, configurable: true });
-//     Object.defineProperty(globals, "PROFILESCACHE", { value: createInstanceOfProfilesCache(), configurable: true });
-//     Object.defineProperty(globals.PROFILESCACHE, "getProfileInfo", {
-//         value: jest.fn().mockReturnValue(createInstanceOfProfileInfo()),
-//         configurable: true,
-//     });
 //     Object.defineProperty(ProfilesCache, "getProfileInfo", {
 //         value: jest.fn(() => Promise.resolve(createInstanceOfProfileInfo())),
 //         configurable: true,
