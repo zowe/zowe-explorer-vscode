@@ -311,10 +311,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
      * @returns Promise<IStartTsoParms>
      */
     private async getTsoParams(): Promise<IStartTsoParms> {
-        let profileInfo = await globals.PROFILESCACHE.getProfileInfo();
-        if (!profileInfo) {
-            profileInfo = await Profiles.getInstance().getProfileInfo();
-        }
+        const profileInfo = await Profiles.getInstance().getProfileInfo();
         const tsoParms: IStartTsoParms = {};
 
         // Keys in the IStartTsoParms interface
