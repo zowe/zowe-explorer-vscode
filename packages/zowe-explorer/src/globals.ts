@@ -206,6 +206,27 @@ export const DATA_SET_PROPERTIES = [
     },
 ];
 
+export const JOB_PROPERTIES = [
+    {
+        key: `owner`,
+        label: `Job Owner`,
+        value: null,
+        placeHolder: localize("createFile.attribute.alcunit", `Enter job owner id`), // change thes localize ids
+    },
+    {
+        key: `prefix`,
+        label: `Job Prefix`,
+        value: null,
+        placeHolder: localize("createFile.attribute.avgblk", `Enter job prefix`),
+    },
+    {
+        key: `job-status`,
+        label: `Job Status`,
+        value: null,
+        placeHolder: localize("createFile.attribute.avgblk", `Enter job status`),
+    },
+];
+
 /**
  * Defines all global variables
  * @param tempPath File path for temporary folder defined in preferences
