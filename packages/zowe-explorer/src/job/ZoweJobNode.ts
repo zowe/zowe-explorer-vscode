@@ -34,6 +34,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
     public static readonly JobId = "JobId:";
     public static readonly Owner = "Owner:";
     public static readonly Prefix = "Prefix:";
+    public static readonly Status = "Status:"; // make generic?
 
     public children: IZoweJobTreeNode[] = [];
     public dirty = true;
@@ -43,6 +44,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
     private _prefix: string;
     // tslint:disable-next-line: variable-name
     private _searchId: string;
+    private _status: string;
 
     constructor(
         label: string,
@@ -53,15 +55,21 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
         profile: IProfileLoaded
     ) {
         super(label, collapsibleState, mParent, session, profile);
-        if (session) {
-            if (session.ISession.user) {
-                this._owner = session.ISession.user;
-            } else {
-                this._owner = "*";
-            }
-        }
         this._prefix = "*";
         this._searchId = "";
+
+        if (session) {
+            this._owner = "*";
+            this._status = "*";
+            if (session.ISession.user) {
+                this._owner = session.ISession.user;
+            }
+            // pickup from here. Profile stuff
+            if (session.ISession.status) {
+                this._status = session.ISession.status;
+            }
+        }
+
         const icon = getIconByNode(this);
         if (icon) {
             this.iconPath = icon.path;
@@ -97,6 +105,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                     },
                     () => {
                         const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
+                        // now we getting somewhere
                         return ZoweExplorerApiRegister.getJesApi(cachedProfile).getSpoolFiles(
                             this.job.jobname,
                             this.job.jobid
@@ -156,7 +165,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                         title: localize("ZoweJobNode.getJobs.jobs", "Get Jobs command submitted."),
                     },
                     () => {
-                        return this.getJobs(this._owner, this._prefix, this._searchId);
+                        return this.getJobs(this._owner, this._prefix, this._searchId, this._status); // change here
                     }
                 );
                 jobs.forEach((job) => {
@@ -240,6 +249,12 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
         return this._owner;
     }
 
+    set status(newStatus: string) {
+        if (newStatus) {
+            this._status = newStatus;
+        }
+    }
+
     set prefix(newPrefix: string) {
         if (newPrefix !== undefined) {
             if (newPrefix.length === 0) {
@@ -248,6 +263,10 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                 this._prefix = newPrefix;
             }
         }
+    }
+
+    get status() {
+        return this._status;
     }
 
     get prefix() {
@@ -264,7 +283,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
         return this._searchId;
     }
 
-    private async getJobs(owner, prefix, searchId): Promise<zowe.IJob[]> {
+    private async getJobs(owner: string, prefix: string, searchId: string, status: string): Promise<zowe.IJob[]> {
         let jobsInternal: zowe.IJob[] = [];
         const sessNode = this.getSessionNode();
         const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
@@ -272,10 +291,11 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
             jobsInternal.push(await ZoweExplorerApiRegister.getJesApi(cachedProfile).getJob(searchId));
         } else {
             try {
-                jobsInternal = await ZoweExplorerApiRegister.getJesApi(cachedProfile).getJobsByOwnerAndPrefix(
+                jobsInternal = await ZoweExplorerApiRegister.getJesApi(cachedProfile).getJobsByParameters({
                     owner,
-                    prefix
-                );
+                    prefix,
+                    status,
+                });
                 /**
                  *    Note: Temporary fix
                  *    This current fix is necessary since in certain instances the Zowe
