@@ -306,7 +306,7 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
 
         const spoolFiles = await globalMocks.testJobNode.getChildren();
         expect(spoolFiles.length).toBe(1);
-        expect(spoolFiles[0].label).toEqual("STEP:STDOUT(101)");
+        expect(spoolFiles[0].label).toEqual("STEP:STDOUT - 1");
         expect(spoolFiles[0].owner).toEqual("fake");
     });
 
@@ -319,7 +319,7 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
         globalMocks.testJobNode.session.ISession = globalMocks.testSessionNoCred;
         const spoolFiles = await globalMocks.testJobNode.getChildren();
         expect(spoolFiles.length).toBe(1);
-        expect(spoolFiles[0].label).toEqual("STEP:STDOUT(101)");
+        expect(spoolFiles[0].label).toEqual("STEP:STDOUT - 1");
         expect(spoolFiles[0].owner).toEqual("*");
     });
 });
