@@ -627,6 +627,8 @@ export class Profiles extends ProfilesCache {
                     global = false;
                 }
             }
+            // call check for existing and prompt here
+            const check = await this.checkExistingConfig(rootPath);
             const config = await zowe.imperative.Config.load("zowe", { projectDir: getFullPath(rootPath) });
             if (vscode.workspace.workspaceFolders) {
                 config.api.layers.activate(user, global, rootPath);
@@ -670,17 +672,7 @@ export class Profiles extends ProfilesCache {
     }
 
     public async editZoweConfigFile() {
-        const existingLayers: zowe.imperative.IConfigLayer[] = [];
-        const config = await zowe.imperative.Config.load("zowe", {
-            homeDir: getZoweDir(),
-            projectDir: vscode.workspace.workspaceFolders?.[0].uri.fsPath,
-        });
-        const layers = config.layers;
-        layers.forEach((layer) => {
-            if (layer.exists) {
-                existingLayers.push(layer);
-            }
-        });
+        const existingLayers = await this.getConfigLayers();
         if (existingLayers.length === 1) {
             await this.openConfigFile(existingLayers[0].path);
         }
@@ -1362,6 +1354,7 @@ export class Profiles extends ProfilesCache {
             "Project: in the current working directory"
         );
         const location = await vscode.window.showQuickPick([globalText, projectText], quickPickOptions);
+        // call check for existing and prompt here
         switch (location) {
             case globalText:
                 return "global";
@@ -1369,6 +1362,30 @@ export class Profiles extends ProfilesCache {
                 return "project";
         }
         return;
+    }
+
+    private async checkExistingConfig(path: string) {
+        const existingLayers = await this.getConfigLayers();
+        for (const file of existingLayers) {
+            if (file.path.includes(path)) {
+                // prompt to create new or leave as is
+            }
+        }
+    }
+
+    private async getConfigLayers(): Promise<zowe.imperative.IConfigLayer[]> {
+        const existingLayers: zowe.imperative.IConfigLayer[] = [];
+        const config = await zowe.imperative.Config.load("zowe", {
+            homeDir: getZoweDir(),
+            projectDir: vscode.workspace.workspaceFolders?.[0].uri.fsPath,
+        });
+        const layers = config.layers;
+        layers.forEach((layer) => {
+            if (layer.exists) {
+                existingLayers.push(layer);
+            }
+        });
+        return existingLayers;
     }
 
     private async promptToRefreshForProfiles(rootPath: string) {
