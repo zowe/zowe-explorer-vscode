@@ -734,7 +734,7 @@ describe("Jobs Actions Unit Tests - Function getSpoolContent", () => {
 
         await jobActions.getSpoolContent(session, spoolFile, anyTimestamp);
 
-        expect(mocked(vscode.window.showTextDocument)).toBeCalledWith(blockMocks.mockUri);
+        expect(mocked(vscode.window.showTextDocument)).toBeCalledWith(blockMocks.mockUri, { preview: false });
     });
     it("should call showTextDocument with encoded uri with unverified profile", async () => {
         createGlobalMocks();
@@ -758,7 +758,7 @@ describe("Jobs Actions Unit Tests - Function getSpoolContent", () => {
 
         await jobActions.getSpoolContent(session, spoolFile, anyTimestamp);
 
-        expect(mocked(vscode.window.showTextDocument)).toBeCalledWith(blockMocks.mockUri);
+        expect(mocked(vscode.window.showTextDocument)).toBeCalledWith(blockMocks.mockUri, { preview: false });
     });
     it("should show error message for non existing profile", async () => {
         createGlobalMocks();

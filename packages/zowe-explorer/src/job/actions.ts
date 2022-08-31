@@ -76,7 +76,7 @@ export async function getSpoolContent(session: string, spool: zowe.IJobFile, ref
     if (profiles.validProfile === ValidProfileEnum.VALID || profiles.validProfile === ValidProfileEnum.UNVERIFIED) {
         const uri = toUniqueJobFileUri(session, spool)(refreshTimestamp.toString());
         try {
-            await vscode.window.showTextDocument(uri);
+            await vscode.window.showTextDocument(uri, { preview: false });
         } catch (error) {
             const isTextDocActive =
                 vscode.window.activeTextEditor &&
