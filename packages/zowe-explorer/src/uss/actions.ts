@@ -370,3 +370,24 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
         }
     }
 }
+
+export async function deleteUSSFilesPrompt(nodes: IZoweUSSTreeNode[]): Promise<boolean> {
+    const fileNames = nodes.reduce((label, currentVal) => {
+        return label + currentVal.label + "\n";
+    }, "");
+
+    const deleteButton = localize("deleteUssPrompt.confirmation.delete", "Delete");
+    const message = localize(
+        "deleteUssPrompt.confirmation.message",
+        "Are you sure you want to delete the following item?\nThis will permanently remove the following file or folder from your system.\n\n{0}",
+        fileNames.toString()
+    );
+    let cancelled = false;
+    await vscode.window.showWarningMessage(message, { modal: true }, ...[deleteButton]).then((selection) => {
+        if (!selection || selection === "Cancel") {
+            globals.LOG.debug(localize("deleteUssPrompt.confirmation.cancel.log.debug", "Delete action was canceled."));
+            cancelled = true;
+        }
+    });
+    return cancelled;
+}

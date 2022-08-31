@@ -49,10 +49,7 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
         // open config file for missing hostname error
         const msg = errorDetails.toString();
         if (msg.includes("hostname")) {
-            let mProfileInfo: imperative.ProfileInfo = await globals.PROFILESCACHE.getProfileInfo();
-            if (!mProfileInfo) {
-                mProfileInfo = await Profiles.getInstance().getProfileInfo();
-            }
+            const mProfileInfo = await Profiles.getInstance().getProfileInfo();
             if (mProfileInfo.usingTeamConfig) {
                 vscode.window.showErrorMessage("Required parameter 'host' must not be blank");
                 const profAllAttrs = mProfileInfo.getAllProfiles();
@@ -151,7 +148,7 @@ export const syncSessionNode =
 
         let profile: imperative.IProfileLoaded;
         try {
-            profile = globals.PROFILESCACHE.loadNamedProfile(profileName, profileType);
+            profile = Profiles.getInstance().loadNamedProfile(profileName, profileType);
         } catch (e) {
             return;
         }
@@ -250,7 +247,7 @@ export async function readConfigFromDisk() {
     try {
         if (vscode.workspace.workspaceFolders) {
             rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
-            await mProfileInfo.readProfilesFromDisk({ projectDir: getFullPath(rootPath) });
+            await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir(), projectDir: getFullPath(rootPath) });
         } else {
             await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir() });
         }

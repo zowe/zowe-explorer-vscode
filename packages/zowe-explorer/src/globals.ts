@@ -224,10 +224,6 @@ export function defineGlobals(tempPath: string | undefined) {
     ZOWE_TMP_FOLDER = path.join(ZOWETEMPFOLDER, "tmp");
     USS_DIR = path.join(ZOWETEMPFOLDER, "_U_");
     DS_DIR = path.join(ZOWETEMPFOLDER, "_D_");
-    PROFILESCACHE = new ProfilesCache(
-        imperative.Logger.getAppLogger(),
-        vscode.workspace.workspaceFolders?.[0].uri.fsPath
-    );
 }
 
 export function setConfigPath(configPath: string | undefined): void {
