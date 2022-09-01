@@ -50,6 +50,8 @@
   "getConfigLocationPrompt.placeholder.edit": "Select the location of the config file to edit",
   "getConfigLocationPrompt.showQuickPick.global": "Global: in the Zowe home directory",
   "getConfigLocationPrompt.showQuickPick.project": "Project: in the current working directory",
+  "checkExistingConfig.createNew.button": "Create New",
+  "checkExistingConfig.createNew.message": "A Team Configuration File already exists in this location\n{0}\nWould you like to continue with creating a new file?",
   "createZoweSchema.reload.button": "Refresh Zowe Explorer",
   "createZoweSchema.reload.infoMessage": "Team Configuration file created. Location: {0}. \n Please update file and refresh Zowe Explorer via button or command palette.",
   "ssoLogin.undefined.username": "Operation Cancelled",

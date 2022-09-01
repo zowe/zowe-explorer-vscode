@@ -628,8 +628,23 @@ export class Profiles extends ProfilesCache {
                 }
             }
             // call check for existing and prompt here
-            const check = await this.checkExistingConfig(rootPath);
-            const config = await zowe.imperative.Config.load("zowe", { projectDir: getFullPath(rootPath) });
+            const returned = await this.checkExistingConfig(rootPath);
+            console.log(returned);
+            if (!returned) {
+                return;
+            } else {
+                if (returned.includes("user")) {
+                    user = true;
+                    global = false;
+                } else {
+                    user = false;
+                    global = true;
+                }
+            }
+            const config = await zowe.imperative.Config.load("zowe", {
+                homeDir: getZoweDir(),
+                projectDir: getFullPath(rootPath),
+            });
             if (vscode.workspace.workspaceFolders) {
                 config.api.layers.activate(user, global, rootPath);
             }
@@ -1364,13 +1379,29 @@ export class Profiles extends ProfilesCache {
         return;
     }
 
-    private async checkExistingConfig(path: string) {
+    private async checkExistingConfig(filePath: string) {
         const existingLayers = await this.getConfigLayers();
         for (const file of existingLayers) {
-            if (file.path.includes(path)) {
-                // prompt to create new or leave as is
+            if (file.path.includes(filePath)) {
+                const createButton = localize("checkExistingConfig.createNew.button", "Create New");
+                const message = localize(
+                    "checkExistingConfig.createNew.message",
+                    `A Team Configuration File already exists in this location\n{0}\nWould you like to continue with creating a new file?`,
+                    file.path
+                );
+                await vscode.window
+                    .showInformationMessage(message, { modal: true }, ...[createButton])
+                    .then((selection) => {
+                        if (selection) {
+                            return file.path.replace(filePath, "").replace(/\\|\|[/]/g, "");
+                        } else {
+                            this.openConfigFile(file.path);
+                            return undefined;
+                        }
+                    });
             }
         }
+        return undefined;
     }
 
     private async getConfigLayers(): Promise<zowe.imperative.IConfigLayer[]> {
