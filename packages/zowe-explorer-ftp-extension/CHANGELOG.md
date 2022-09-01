@@ -1,5 +1,9 @@
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## Recent Changes
+
+- BugFix: Fixed some profile properties like "rejectUnauthorized" being ignored.
+
 ## `2.0.2`
 
 - Bugfix: Fixed eTag related issue when saving USS files. [#1813](https://github.com/zowe/vscode-extension-for-zowe/pull/1813)
