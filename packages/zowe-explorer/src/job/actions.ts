@@ -408,21 +408,3 @@ async function deleteMultipleJobs(
         await errorHandling(userMessage);
     }
 }
-// class Spool extends Job {
-//     constructor(
-//         label: string,
-//         mCollapsibleState: vscode.TreeItemCollapsibleState,
-//         mParent: IZoweJobTreeNode,
-//         session: Session,
-//         spool: zowe.IJobFile,
-//         job: zowe.IJob,
-//         parent: IZoweJobTreeNode
-//     ) {
-//         super(label, mCollapsibleState, mParent, session, job, parent.getProfile());
-//         this.contextValue = globals.JOBS_SPOOL_CONTEXT;
-//         const icon = getIconByNode(this);
-//         if (icon) {
-//             this.iconPath = icon.path;
-//         }
-//     }
-// }
