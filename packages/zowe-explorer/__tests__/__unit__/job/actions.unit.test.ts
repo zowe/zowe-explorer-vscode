@@ -355,9 +355,7 @@ describe("Jobs Actions Unit Tests - Function downloadJcl", () => {
             blockMocks.iJob,
             blockMocks.imperativeProfile
         );
-        const content: string[] = ["mockContent1", "mockContent2"];
         await jobActions.downloadJcl(node);
-        await jobActions.openMultipleJcl(content);
         expect(mocked(zowe.GetJobs.getJclForJob)).toBeCalled();
         expect(mocked(vscode.workspace.openTextDocument)).toBeCalled();
         expect(mocked(vscode.window.showTextDocument)).toBeCalled();

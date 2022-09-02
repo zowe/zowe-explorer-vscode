@@ -153,9 +153,11 @@ export function refreshJob(job: Job, jobsProvider: IZoweTree<IZoweJobTreeNode>) 
  *
  * @param job The job to download the JCL content from
  */
-export async function downloadJcl(job: Job): Promise<string> {
+export async function downloadJcl(job: Job) {
     try {
-        return await ZoweExplorerApiRegister.getJesApi(job.getProfile()).getJclForJob(job.job);
+        const jobJcl = await ZoweExplorerApiRegister.getJesApi(job.getProfile()).getJclForJob(job.job);
+        const jclDoc = await vscode.workspace.openTextDocument({ language: "jcl", content: jobJcl });
+        await vscode.window.showTextDocument(jclDoc, { preview: false });
     } catch (error) {
         await errorHandling(error, null, error.message);
     }
@@ -406,16 +408,6 @@ async function deleteMultipleJobs(
         await errorHandling(userMessage);
     }
 }
-
-export async function openMultipleJcl(jobContentList: string[]) {
-    let docContent: string = "";
-    for await (const jobContent of jobContentList) {
-        docContent += jobContent + "\n";
-    }
-    const jclDoc = await vscode.workspace.openTextDocument({ language: "jcl", content: docContent });
-    await vscode.window.showTextDocument(jclDoc);
-}
-
 // class Spool extends Job {
 //     constructor(
 //         label: string,

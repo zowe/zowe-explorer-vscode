@@ -788,12 +788,11 @@ function initJobsProvider(context: vscode.ExtensionContext, jobsProvider: IZoweT
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.jobs.getJobJcl", async (node, nodeList) => {
-            const selectedNodes = getSelectedNodeList(node, nodeList) as IZoweJobTreeNode[];
-            const jclContents: string[] = [];
+            let selectedNodes = getSelectedNodeList(node, nodeList) as IZoweJobTreeNode[];
+            selectedNodes = selectedNodes.filter((x) => contextuals.isJob(x));
             for (const job of selectedNodes) {
-                jclContents.push(await jobActions.downloadJcl(job as Job));
+                await jobActions.downloadJcl(job as Job);
             }
-            jobActions.openMultipleJcl(jclContents);
         })
     );
     context.subscriptions.push(
