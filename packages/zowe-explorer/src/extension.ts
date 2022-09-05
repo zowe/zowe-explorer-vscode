@@ -697,9 +697,10 @@ function initJobsProvider(context: vscode.ExtensionContext, jobsProvider: IZoweT
         vscode.commands.registerCommand("zowe.jobs.refreshJob", async (job) => jobActions.refreshJob(job, jobsProvider))
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.refreshSpool", (node) =>
-            jobActions.getSpoolContentFromMainframe(node)
-        )
+        vscode.commands.registerCommand("zowe.jobs.refreshSpool", async (node) => {
+            await jobActions.getSpoolContentFromMainframe(node);
+            jobActions.refreshJob(node.mParent, jobsProvider);
+        })
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.jobs.addJobsSession", () => jobsProvider.createZoweSession(jobsProvider))
