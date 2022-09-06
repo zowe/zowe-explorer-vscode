@@ -2,6 +2,10 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## Recent Changes
+
+- Bugfix: Fixed extension being slow to load large team config files. [#1911](https://github.com/zowe/vscode-extension-for-zowe/issues/1911)
+
 ## `2.2.1`
 
 - Bugfix: Fixed activation failure when error reading team configuration file. [#1876](https://github.com/zowe/vscode-extension-for-zowe/issues/1876)
