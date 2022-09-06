@@ -130,8 +130,7 @@ async function createGlobalMocks() {
         value: [{ name: "sestest" }, { name: "profile1" }, { name: "profile2" }],
         configurable: true,
     });
-
-    Object.defineProperty(newMocks.mockProfilesCache, "getProfileInfo", {
+    Object.defineProperty(newMocks.mockProfileInstance, "getProfileInfo", {
         value: jest.fn(() => {
             return createInstanceOfProfileInfo();
         }),

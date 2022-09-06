@@ -69,8 +69,23 @@ export class Profiles extends ProfilesCache {
     private dsSchema: string = globals.SETTINGS_DS_HISTORY;
     private ussSchema: string = globals.SETTINGS_USS_HISTORY;
     private jobsSchema: string = globals.SETTINGS_JOBS_HISTORY;
+    private mProfileInfo: zowe.imperative.ProfileInfo;
     public constructor(log: zowe.imperative.Logger, cwd?: string) {
         super(log, cwd);
+    }
+
+    /**
+     * Initializes the Imperative ProfileInfo API and reads profiles from disk.
+     * During extension activation the ProfileInfo object is cached, so this
+     * method can be called multiple times without impacting performance. After
+     * the extension has activated, the cache expires so that the latest profile
+     * contents will be loaded.
+     */
+    public async getProfileInfo(): Promise<zowe.imperative.ProfileInfo> {
+        if (globals.ACTIVATED || this.mProfileInfo == null) {
+            this.mProfileInfo = await super.getProfileInfo();
+        }
+        return this.mProfileInfo;
     }
 
     public async checkCurrentProfile(theProfile: zowe.imperative.IProfileLoaded) {
@@ -291,9 +306,12 @@ export class Profiles extends ProfilesCache {
             this.log.warn(err);
         }
 
+        const profAllAttrs = mProfileInfo.getAllProfiles();
         for (const pName of profileNamesList) {
-            items.push(new FilterItem({ text: pName, icon: this.getProfileIcon(mProfileInfo, pName)[0] }));
+            const osLocInfo = mProfileInfo.getOsLocInfo(profAllAttrs.find((p) => p.profName === pName));
+            items.push(new FilterItem({ text: pName, icon: this.getProfileIcon(osLocInfo)[0] }));
         }
+
         const quickpick = vscode.window.createQuickPick();
         let addProfilePlaceholder = "";
         switch (zoweFileProvider.getTreeType()) {
@@ -1388,9 +1406,7 @@ export class Profiles extends ProfilesCache {
         return undefined;
     }
 
-    private getProfileIcon(profInfo: zowe.imperative.ProfileInfo, name: string): string[] {
-        const prof = profInfo.getAllProfiles().find((p) => p.profName === name);
-        const osLocInfo = profInfo.getOsLocInfo(prof);
+    private getProfileIcon(osLocInfo: zowe.imperative.IProfLocOsLoc[]): string[] {
         const ret: string[] = [];
         for (const loc of osLocInfo ?? []) {
             if (loc.global) {

@@ -73,7 +73,7 @@ export async function getSpoolContent(session: string, spool: zowe.IJobFile, ref
         return;
     }
     await profiles.checkCurrentProfile(zosmfProfile);
-    if (profiles.validProfile === ValidProfileEnum.VALID || profiles.validProfile === ValidProfileEnum.UNVERIFIED) {
+    if (profiles.validProfile !== ValidProfileEnum.INVALID) {
         const uri = toUniqueJobFileUri(session, spool)(refreshTimestamp.toString());
         try {
             await vscode.window.showTextDocument(uri, { preview: false });
@@ -102,13 +102,25 @@ export async function getSpoolContentFromMainframe(node: IZoweJobTreeNode) {
         // see an issue #845 for the details
         .filter((item) => !(item.id === undefined && item.ddname === undefined && item.stepname === undefined));
     spools.forEach(async (spool) => {
-        if (`${spool.stepname}:${spool.ddname}(${spool.id})` === node.label.toString()) {
+        if (
+            `${spool.stepname}:${spool.ddname} - ${spool["record-count"]}` === node.label.toString() ||
+            `${spool.stepname}:${spool.ddname} - ${spool.procstep}` === node.label.toString()
+        ) {
             let prefix = spool.stepname;
             if (prefix === undefined) {
                 prefix = spool.procstep;
             }
+
+            const procstep = spool.procstep ? spool.procstep : undefined;
+            let newLabel: string;
+            if (procstep) {
+                newLabel = `${spool.stepname}:${spool.ddname} - ${procstep}`;
+            } else {
+                newLabel = `${spool.stepname}:${spool.ddname} - ${spool["record-count"]}`;
+            }
+
             const spoolNode = new Spool(
-                `${spool.stepname}:${spool.ddname}(${spool.id})`,
+                newLabel,
                 vscode.TreeItemCollapsibleState.None,
                 node.getParent(),
                 node.getSession(),
