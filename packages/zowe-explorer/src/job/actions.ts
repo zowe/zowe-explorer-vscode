@@ -34,7 +34,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  *
  * @param job The job to download the spool content from
  */
-export async function downloadSpool(job: IZoweJobTreeNode) {
+export async function downloadSpool(jobs: IZoweJobTreeNode[]) {
     try {
         const dirUri = await vscode.window.showOpenDialog({
             openLabel: localize("downloadSpool.select", "Select"),
@@ -43,11 +43,13 @@ export async function downloadSpool(job: IZoweJobTreeNode) {
             canSelectMany: false,
         });
         if (dirUri !== undefined) {
-            ZoweExplorerApiRegister.getJesApi(job.getProfile()).downloadSpoolContent({
-                jobid: job.job.jobid,
-                jobname: job.job.jobname,
-                outDir: dirUri[0].fsPath,
-            });
+            for (const job of jobs) {
+                await ZoweExplorerApiRegister.getJesApi(job.getProfile()).downloadSpoolContent({
+                    jobid: job.job.jobid,
+                    jobname: job.job.jobname,
+                    outDir: dirUri[0].fsPath,
+                });
+            }
         }
     } catch (error) {
         await errorHandling(error, null, error.message);
@@ -74,7 +76,7 @@ export async function getSpoolContent(session: string, spool: zowe.IJobFile, ref
     if (profiles.validProfile !== ValidProfileEnum.INVALID) {
         const uri = toUniqueJobFileUri(session, spool)(refreshTimestamp.toString());
         try {
-            await vscode.window.showTextDocument(uri);
+            await vscode.window.showTextDocument(uri, { preview: false });
         } catch (error) {
             const isTextDocActive =
                 vscode.window.activeTextEditor &&
@@ -167,7 +169,7 @@ export async function downloadJcl(job: Job) {
     try {
         const jobJcl = await ZoweExplorerApiRegister.getJesApi(job.getProfile()).getJclForJob(job.job);
         const jclDoc = await vscode.workspace.openTextDocument({ language: "jcl", content: jobJcl });
-        await vscode.window.showTextDocument(jclDoc);
+        await vscode.window.showTextDocument(jclDoc, { preview: false });
     } catch (error) {
         await errorHandling(error, null, error.message);
     }
@@ -418,22 +420,3 @@ async function deleteMultipleJobs(
         await errorHandling(userMessage);
     }
 }
-
-// class Spool extends Job {
-//     constructor(
-//         label: string,
-//         mCollapsibleState: vscode.TreeItemCollapsibleState,
-//         mParent: IZoweJobTreeNode,
-//         session: Session,
-//         spool: zowe.IJobFile,
-//         job: zowe.IJob,
-//         parent: IZoweJobTreeNode
-//     ) {
-//         super(label, mCollapsibleState, mParent, session, job, parent.getProfile());
-//         this.contextValue = globals.JOBS_SPOOL_CONTEXT;
-//         const icon = getIconByNode(this);
-//         if (icon) {
-//             this.iconPath = icon.path;
-//         }
-//     }
-// }

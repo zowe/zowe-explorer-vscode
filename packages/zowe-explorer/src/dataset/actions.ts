@@ -1075,11 +1075,11 @@ export async function refreshPS(node: api.IZoweDatasetTreeNode) {
         node.setEtag(response.apiResponse.etag);
 
         const document = await vscode.workspace.openTextDocument(documentFilePath);
-        vscode.window.showTextDocument(document);
+        vscode.window.showTextDocument(document, { preview: false });
         // if there are unsaved changes, vscode won't automatically display the updates, so close and reopen
         if (document.isDirty) {
             await vscode.commands.executeCommand("workbench.action.closeActiveEditor");
-            vscode.window.showTextDocument(document);
+            vscode.window.showTextDocument(document, { preview: false });
         }
     } catch (err) {
         globals.LOG.error(

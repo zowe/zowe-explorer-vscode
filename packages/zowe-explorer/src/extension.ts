@@ -41,7 +41,9 @@ import { TsoCommandHandler } from "./command/TsoCommandHandler";
 import { cleanTempDir, moveTempFolder, hideTempFolder } from "./utils/TempFolder";
 import { SettingsConfig } from "./utils/SettingsConfig";
 import { handleSaving } from "./utils/workspace";
-import * as contextually from "../src/shared/context";
+import { ZoweDatasetNode } from "./dataset/ZoweDatasetNode";
+import * as contextuals from "../src/shared/context";
+import { Job } from "./job/ZoweJobNode";
 
 // Set up localization
 nls.config({
@@ -356,7 +358,12 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
         )
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.addFavorite", async (node) => datasetProvider.addFavorite(node))
+        vscode.commands.registerCommand("zowe.ds.addFavorite", async (node, nodeList) => {
+            const selectedNodes = getSelectedNodeList(node, nodeList);
+            for (const item of selectedNodes) {
+                datasetProvider.addFavorite(item);
+            }
+        })
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.refreshAll", async () => {
@@ -365,12 +372,26 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
         })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.refreshNode", (node) => dsActions.refreshPS(node))
+        vscode.commands.registerCommand("zowe.ds.refreshNode", async (node, nodeList) => {
+            let selectedNodes = getSelectedNodeList(node, nodeList);
+            selectedNodes = selectedNodes.filter(
+                (element) => contextuals.isDs(element) || contextuals.isDsMember(element)
+            );
+            for (const item of selectedNodes) {
+                await dsActions.refreshPS(item);
+            }
+        })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.refreshDataset", (node) =>
-            dsActions.refreshDataset(node, datasetProvider)
-        )
+        vscode.commands.registerCommand("zowe.ds.refreshDataset", async (node, nodeList) => {
+            let selectedNodes = getSelectedNodeList(node, nodeList);
+            selectedNodes = selectedNodes.filter(
+                (element) => contextuals.isDs(element) || contextuals.isPdsNotFav(element)
+            );
+            for (const item of selectedNodes) {
+                await dsActions.refreshDataset(item, datasetProvider);
+            }
+        })
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.pattern", (node) => datasetProvider.filterPrompt(node))
@@ -408,16 +429,37 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
         )
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.editDataSet", (node) => dsActions.openPS(node, false, datasetProvider))
+        vscode.commands.registerCommand("zowe.ds.editDataSet", async (node, nodeList) => {
+            let selectedNodes = getSelectedNodeList(node, nodeList);
+            selectedNodes = selectedNodes.filter(
+                (element) => contextuals.isDs(element) || contextuals.isDsMember(element)
+            );
+            for (const item of selectedNodes) {
+                await dsActions.openPS(item, false, datasetProvider);
+            }
+        })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.editMember", (node) => dsActions.openPS(node, false, datasetProvider))
+        vscode.commands.registerCommand("zowe.ds.editMember", async (node, nodeList) => {
+            let selectedNodes = getSelectedNodeList(node, nodeList);
+            selectedNodes = selectedNodes.filter(
+                (element) => contextuals.isDs(element) || contextuals.isDsMember(element)
+            );
+            for (const item of selectedNodes) {
+                await dsActions.openPS(item, false, datasetProvider);
+            }
+        })
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.removeSession", async (node) => datasetProvider.deleteSession(node))
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.removeFavorite", async (node) => datasetProvider.removeFavorite(node))
+        vscode.commands.registerCommand("zowe.ds.removeFavorite", async (node, nodeList) => {
+            const selectedNodes = getSelectedNodeList(node, nodeList);
+            for (const item of selectedNodes) {
+                await datasetProvider.removeFavorite(item);
+            }
+        })
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.saveSearch", async (node) => datasetProvider.addFavorite(node))
@@ -439,9 +481,15 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
         vscode.commands.registerCommand("zowe.ds.submitMember", async (node) => dsActions.submitMember(node))
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.showDSAttributes", (node) =>
-            dsActions.showDSAttributes(node, datasetProvider)
-        )
+        vscode.commands.registerCommand("zowe.ds.showDSAttributes", async (node, nodeList) => {
+            let selectedNodes = getSelectedNodeList(node, nodeList);
+            selectedNodes = selectedNodes.filter(
+                (element) => contextuals.isDs(element) || contextuals.isPdsNotFav(element)
+            );
+            for (const item of selectedNodes) {
+                await dsActions.showDSAttributes(item, datasetProvider);
+            }
+        })
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.renameDataSet", (node) => datasetProvider.rename(node))
@@ -459,10 +507,24 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
         vscode.commands.registerCommand("zowe.ds.renameDataSetMember", (node) => datasetProvider.rename(node))
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.hMigrateDataSet", (node) => dsActions.hMigrateDataSet(node))
+        vscode.commands.registerCommand("zowe.ds.hMigrateDataSet", async (node, nodeList) => {
+            let selectedNodes = getSelectedNodeList(node, nodeList);
+            selectedNodes = selectedNodes.filter(
+                (element) => contextuals.isDs(element) || contextuals.isPdsNotFav(element)
+            );
+            for (const item of selectedNodes) {
+                dsActions.hMigrateDataSet(item as ZoweDatasetNode);
+            }
+        })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.hRecallDataSet", (node) => dsActions.hRecallDataSet(node))
+        vscode.commands.registerCommand("zowe.ds.hRecallDataSet", async (node, nodeList) => {
+            let selectedNodes = getSelectedNodeList(node, nodeList);
+            selectedNodes = selectedNodes.filter((element) => contextuals.isMigrated(element));
+            for (const item of selectedNodes) {
+                dsActions.hRecallDataSet(item as ZoweDatasetNode);
+            }
+        })
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.disableValidation", async (node) =>
@@ -495,18 +557,18 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
 
 function initUSSProvider(context: vscode.ExtensionContext, ussFileProvider: IZoweTree<IZoweUSSTreeNode>) {
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.addFavorite", async () => {
-            const selectedNodes = ussFileProvider.getTreeView().selection as IZoweUSSTreeNode[];
-            for (const node of selectedNodes) {
-                await ussFileProvider.addFavorite(node);
+        vscode.commands.registerCommand("zowe.uss.addFavorite", async (node, nodeList) => {
+            const selectedNodes = getSelectedNodeList(node, nodeList);
+            for (const item of selectedNodes) {
+                await ussFileProvider.addFavorite(item);
             }
         })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.removeFavorite", async () => {
-            const selectedNodes = ussFileProvider.getTreeView().selection as IZoweUSSTreeNode[];
-            for (const node of selectedNodes) {
-                await ussFileProvider.removeFavorite(node);
+        vscode.commands.registerCommand("zowe.uss.removeFavorite", async (node, nodeList) => {
+            const selectedNodes = getSelectedNodeList(node, nodeList);
+            for (const item of selectedNodes) {
+                await ussFileProvider.removeFavorite(item);
             }
         })
     );
@@ -522,11 +584,11 @@ function initUSSProvider(context: vscode.ExtensionContext, ussFileProvider: IZow
         })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.refreshUSS", async () => {
-            let selectedNodes = ussFileProvider.getTreeView().selection as IZoweUSSTreeNode[];
-            selectedNodes = selectedNodes.filter((x) => contextually.isDocument(x));
-            for (const node of selectedNodes) {
-                await node.refreshUSS();
+        vscode.commands.registerCommand("zowe.uss.refreshUSS", async (node, nodeList) => {
+            let selectedNodes = getSelectedNodeList(node, nodeList) as IZoweUSSTreeNode[];
+            selectedNodes = selectedNodes.filter((x) => contextuals.isDocument(x));
+            for (const item of selectedNodes) {
+                await item.refreshUSS();
             }
         })
     );
@@ -536,11 +598,11 @@ function initUSSProvider(context: vscode.ExtensionContext, ussFileProvider: IZow
         )
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.refreshDirectory", () => {
-            let selectedNodes = ussFileProvider.getTreeView().selection as IZoweUSSTreeNode[];
-            selectedNodes = selectedNodes.filter((x) => contextually.isUssDirectory(x));
-            for (const node of selectedNodes) {
-                ussActions.refreshDirectory(node, ussFileProvider);
+        vscode.commands.registerCommand("zowe.uss.refreshDirectory", (node, nodeList) => {
+            let selectedNodes = getSelectedNodeList(node, nodeList) as IZoweUSSTreeNode[];
+            selectedNodes = selectedNodes.filter((x) => contextuals.isUssDirectory(x));
+            for (const item of selectedNodes) {
+                ussActions.refreshDirectory(item, ussFileProvider);
             }
         })
     );
@@ -575,30 +637,30 @@ function initUSSProvider(context: vscode.ExtensionContext, ussFileProvider: IZow
         )
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.deleteNode", async () => {
-            let selectedNodes = ussFileProvider.getTreeView().selection as IZoweUSSTreeNode[];
-            selectedNodes = selectedNodes.filter((x) => contextually.isDocument(x) || contextually.isUssDirectory(x));
+        vscode.commands.registerCommand("zowe.uss.deleteNode", async (node, nodeList) => {
+            let selectedNodes = getSelectedNodeList(node, nodeList) as IZoweUSSTreeNode[];
+            selectedNodes = selectedNodes.filter((x) => contextuals.isDocument(x) || contextuals.isUssDirectory(x));
             const cancelled = await ussActions.deleteUSSFilesPrompt(selectedNodes);
-            for (const node of selectedNodes) {
-                await node.deleteUSSNode(ussFileProvider, node.getUSSDocumentFilePath(), cancelled);
+            for (const item of selectedNodes) {
+                await item.deleteUSSNode(ussFileProvider, item.getUSSDocumentFilePath(), cancelled);
             }
         })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.binary", async () => {
-            let selectedNodes = ussFileProvider.getTreeView().selection as IZoweUSSTreeNode[];
-            selectedNodes = selectedNodes.filter((x) => contextually.isText(x));
-            for (const node of selectedNodes) {
-                await ussActions.changeFileType(node, true, ussFileProvider);
+        vscode.commands.registerCommand("zowe.uss.binary", async (node, nodeList) => {
+            let selectedNodes = getSelectedNodeList(node, nodeList) as IZoweUSSTreeNode[];
+            selectedNodes = selectedNodes.filter((x) => contextuals.isText(x));
+            for (const item of selectedNodes) {
+                await ussActions.changeFileType(item, true, ussFileProvider);
             }
         })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.text", async () => {
-            let selectedNodes = ussFileProvider.getTreeView().selection as IZoweUSSTreeNode[];
-            selectedNodes = selectedNodes.filter((x) => contextually.isBinary(x));
-            for (const node of selectedNodes) {
-                await ussActions.changeFileType(node, false, ussFileProvider);
+        vscode.commands.registerCommand("zowe.uss.text", async (node, nodeList) => {
+            let selectedNodes = getSelectedNodeList(node, nodeList) as IZoweUSSTreeNode[];
+            selectedNodes = selectedNodes.filter((x) => contextuals.isBinary(x));
+            for (const item of selectedNodes) {
+                await ussActions.changeFileType(item, false, ussFileProvider);
             }
         })
     );
@@ -681,7 +743,12 @@ function initJobsProvider(context: vscode.ExtensionContext, jobsProvider: IZoweT
         vscode.commands.registerCommand("zowe.jobs.runModifyCommand", (job) => jobActions.modifyCommand(job))
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.runStopCommand", (job) => jobActions.stopCommand(job))
+        vscode.commands.registerCommand("zowe.jobs.runStopCommand", async (node, nodeList) => {
+            const selectedNodes = getSelectedNodeList(node, nodeList) as IZoweJobTreeNode[];
+            for (const item of selectedNodes) {
+                await jobActions.stopCommand(item as Job);
+            }
+        })
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.jobs.refreshJobsServer", async (job) =>
@@ -715,10 +782,19 @@ function initJobsProvider(context: vscode.ExtensionContext, jobsProvider: IZoweT
         vscode.commands.registerCommand("zowe.jobs.removeJobsSession", (job) => jobsProvider.deleteSession(job))
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.downloadSpool", (job) => jobActions.downloadSpool(job))
+        vscode.commands.registerCommand("zowe.jobs.downloadSpool", async (node, nodeList) => {
+            const selectedNodes = getSelectedNodeList(node, nodeList) as IZoweJobTreeNode[];
+            await jobActions.downloadSpool(selectedNodes);
+        })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.getJobJcl", (job) => jobActions.downloadJcl(job))
+        vscode.commands.registerCommand("zowe.jobs.getJobJcl", async (node, nodeList) => {
+            let selectedNodes = getSelectedNodeList(node, nodeList) as IZoweJobTreeNode[];
+            selectedNodes = selectedNodes.filter((x) => contextuals.isJob(x));
+            for (const job of selectedNodes) {
+                await jobActions.downloadJcl(job as Job);
+            }
+        })
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.jobs.setJobSpool", async (session, jobId) =>
@@ -734,10 +810,20 @@ function initJobsProvider(context: vscode.ExtensionContext, jobsProvider: IZoweT
         )
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.addFavorite", async (node) => jobsProvider.addFavorite(node))
+        vscode.commands.registerCommand("zowe.jobs.addFavorite", async (node, nodeList) => {
+            const selectedNodes = getSelectedNodeList(node, nodeList) as IZoweJobTreeNode[];
+            for (const item of selectedNodes) {
+                await jobsProvider.addFavorite(item);
+            }
+        })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.removeFavorite", async (node) => jobsProvider.removeFavorite(node))
+        vscode.commands.registerCommand("zowe.jobs.removeFavorite", async (node, nodeList) => {
+            const selectedNodes = getSelectedNodeList(node, nodeList) as IZoweJobTreeNode[];
+            for (const item of selectedNodes) {
+                await jobsProvider.removeFavorite(item);
+            }
+        })
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.jobs.saveSearch", async (node) => jobsProvider.saveSearch(node))
@@ -792,6 +878,16 @@ function initSubscribers(context: vscode.ExtensionContext, theProvider: IZoweTre
             await theProvider.flipState(e.element, true);
         });
     }
+}
+
+function getSelectedNodeList(node: IZoweTreeNode, nodeList: IZoweTreeNode[]): IZoweTreeNode[] {
+    let resultNodeList: IZoweTreeNode[] = [];
+    if (!nodeList) {
+        resultNodeList.push(node);
+    } else {
+        resultNodeList = nodeList;
+    }
+    return resultNodeList;
 }
 
 /**
