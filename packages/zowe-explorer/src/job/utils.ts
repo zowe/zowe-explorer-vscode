@@ -9,7 +9,7 @@
  *                                                                                 *
  */
 
-import { FilterDescriptor, FilterDescriptor2 } from "../utils/ProfilesUtils";
+import { FilterDescriptor } from "../utils/ProfilesUtils";
 
 import * as nls from "vscode-nls";
 // Set up localization
