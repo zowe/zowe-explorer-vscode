@@ -206,6 +206,29 @@ export const DATA_SET_PROPERTIES = [
     },
 ];
 
+export const JOB_STATUS = [
+    {
+        key: `active`,
+        label: `Active`,
+        value: `Active`,
+    },
+    {
+        key: `input`,
+        label: `Input`,
+        value: null,
+    },
+    {
+        key: `output`,
+        label: `Output`,
+        value: null,
+    },
+    {
+        key: `held`,
+        label: `Held`,
+        value: null,
+    },
+];
+
 export const JOB_PROPERTIES = [
     {
         key: `owner`,
