@@ -554,7 +554,17 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         return;
     }
 
-    // pickup from here
+    async setJobStatus() {
+        const choice = await vscode.window.showQuickPick(globals.JOB_STATUS);
+        if (!choice) {
+            vscode.window.showInformationMessage(
+                localize("enterPattern.pattern", "No selection made. Operation cancelled.")
+            );
+            return undefined;
+        }
+        return choice;
+    }
+
     async handleEditingMultiJobParameters(jobProperties, node) {
         const editableItems = [];
         editableItems.push(new FilterItem({ text: ` + Submit this Job Search Query`, show: true }));
@@ -577,52 +587,29 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         const choice = await resolveQuickPickHelper(quickpick);
         const pattern = choice.label;
         quickpick.dispose();
+        // check key instead
+        if (pattern === "Job Status") {
+            const statusChoice = await this.setJobStatus();
+            jobProperties.find((prop) => prop.key === "job-status").value = statusChoice.label;
+        } else {
+            const options: vscode.InputBoxOptions = {
+                value: jobProperties.find((prop) => prop.label === pattern).value,
+                placeHolder: jobProperties.find((prop) => prop.label === pattern).placeHolder,
+            };
+            jobProperties.find((prop) => prop.label === pattern).value = await ZoweVsCodeExtension.inputBox(options);
+        }
         if (pattern == " + Submit this Job Search Query") {
             node.searchId = "";
             node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
             node.prefix = jobProperties.find((prop) => prop.key === "prefix").value;
             node.owner = jobProperties.find((prop) => prop.key === "owner").value;
             node.status = jobProperties.find((prop) => prop.key === "job-status").value;
-            // const icon = getIconByNode(node);
-            // if (icon) {
-            //     node.iconPath = icon.path;
-            // }
             labelRefresh(node); // WTF
             node.dirty = true;
             this.refreshElement(node);
-            return new Promise((resolve) => resolve(` + Submit this Job Search Query`)); // here
+            return new Promise((resolve) => resolve(` + Submit this Job Search Query`));
         }
-        const options: vscode.InputBoxOptions = {
-            value: jobProperties.find((prop) => prop.label === pattern).value,
-            placeHolder: jobProperties.find((prop) => prop.label === pattern).placeHolder,
-        };
-        jobProperties.find((prop) => prop.label === pattern).value = await ZoweVsCodeExtension.inputBox(options);
         return Promise.resolve(this.handleEditingMultiJobParameters(jobProperties, node));
-    }
-
-    async showJobFilteringOptions(node: IZoweJobTreeNode) {
-        const quickpick = vscode.window.createQuickPick();
-        quickpick.items = [this.createOwner, this.createId];
-        quickpick.placeholder = localize("searchHistory.options.prompt", "Select a filter");
-        quickpick.ignoreFocusOut = true;
-        quickpick.show();
-        const choice = await resolveQuickPickHelper(quickpick);
-        quickpick.hide();
-        if (!choice) {
-            vscode.window.showInformationMessage(
-                localize("enterPattern.pattern", "No selection made. Operation cancelled.")
-            );
-            return;
-        }
-        // change this variable name
-        if (choice === this.createOwner) {
-            await this.handleEditingMultiJobParameters(globals.JOB_PROPERTIES, node);
-            return;
-        }
-
-        if (choice === this.createId) {
-            console.log("Handle Searching job by Id");
-        }
     }
 
     public async applyRegularSessionSearchLabel(node) {
