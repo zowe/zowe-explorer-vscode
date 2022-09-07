@@ -44,7 +44,8 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
     private _prefix: string;
     // tslint:disable-next-line: variable-name
     private _searchId: string;
-    private _status: string;
+    // tslint:disable-next-line: variable-name
+    private _jobStatus: string;
 
     constructor(
         label: string,
@@ -60,13 +61,13 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
 
         if (session) {
             this._owner = "*";
-            this._status = "*";
+            this._jobStatus = "*";
             if (session.ISession.user) {
                 this._owner = session.ISession.user;
             }
-            // pickup from here. Profile stuff
+            // pickup from here. Is this neede?
             if (session.ISession.status) {
-                this._status = session.ISession.status;
+                this._jobStatus = session.ISession.status;
             }
         }
 
@@ -165,7 +166,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                         title: localize("ZoweJobNode.getJobs.jobs", "Get Jobs command submitted."),
                     },
                     () => {
-                        return this.getJobs(this._owner, this._prefix, this._searchId, this._status); // change here
+                        return this.getJobs(this._owner, this._prefix, this._searchId, this._jobStatus); // change here
                     }
                 );
                 jobs.forEach((job) => {
@@ -251,8 +252,12 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
 
     set status(newStatus: string) {
         if (newStatus) {
-            this._status = newStatus;
+            this._jobStatus = newStatus;
         }
+    }
+
+    get status() {
+        return this._jobStatus;
     }
 
     set prefix(newPrefix: string) {
@@ -263,10 +268,6 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                 this._prefix = newPrefix;
             }
         }
-    }
-
-    get status() {
-        return this._status;
     }
 
     get prefix() {
@@ -283,7 +284,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
         return this._searchId;
     }
 
-    private async getJobs(owner: string, prefix: string, searchId: string, status: string): Promise<zowe.IJob[]> {
+    private async getJobs(owner: string, prefix: string, searchId: string, jobStatus: string): Promise<zowe.IJob[]> {
         let jobsInternal: zowe.IJob[] = [];
         const sessNode = this.getSessionNode();
         const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
@@ -294,7 +295,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                 jobsInternal = await ZoweExplorerApiRegister.getJesApi(cachedProfile).getJobsByParameters({
                     owner,
                     prefix,
-                    status,
+                    jobStatus,
                 });
                 /**
                  *    Note: Temporary fix
