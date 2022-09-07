@@ -95,7 +95,6 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
         // and/or created a profile that the profile directory in ~/.zowe/profiles
         // will be created with the appropriate meta data. If not called the user will
         // see errors when creating a profile of any type.
-        getZoweDir();
 
         /**
          * This should create initialize the loadedConfig if it is not already

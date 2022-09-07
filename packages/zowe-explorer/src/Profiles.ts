@@ -646,12 +646,12 @@ export class Profiles extends ProfilesCache {
                 }
             }
             // call check for existing and prompt here
-            const returned = await this.checkExistingConfig(rootPath);
-            console.log(returned);
-            if (!returned) {
+            const existingFile = await this.checkExistingConfig(rootPath);
+            if (!existingFile) {
                 return;
-            } else {
-                if (returned.includes("user")) {
+            }
+            if (existingFile.includes("zowe")) {
+                if (existingFile.includes("user")) {
                     user = true;
                     global = false;
                 } else {
@@ -1398,9 +1398,12 @@ export class Profiles extends ProfilesCache {
     }
 
     private async checkExistingConfig(filePath: string) {
+        let found = false;
+        let location: string;
         const existingLayers = await this.getConfigLayers();
         for (const file of existingLayers) {
             if (file.path.includes(filePath)) {
+                found = true;
                 const createButton = localize("checkExistingConfig.createNew.button", "Create New");
                 const message = localize(
                     "checkExistingConfig.createNew.message",
@@ -1409,17 +1412,20 @@ export class Profiles extends ProfilesCache {
                 );
                 await vscode.window
                     .showInformationMessage(message, { modal: true }, ...[createButton])
-                    .then((selection) => {
+                    .then(async (selection) => {
                         if (selection) {
-                            return file.path.replace(filePath, "").replace(/\\|\|[/]/g, "");
+                            location = file.path.replace(filePath, "").replace(/\\|\|[/]/g, "");
                         } else {
-                            this.openConfigFile(file.path);
-                            return undefined;
+                            await this.openConfigFile(file.path);
+                            location = undefined;
                         }
                     });
             }
         }
-        return undefined;
+        if (found) {
+            return location;
+        }
+        return "none";
     }
 
     private async getConfigLayers(): Promise<zowe.imperative.IConfigLayer[]> {
