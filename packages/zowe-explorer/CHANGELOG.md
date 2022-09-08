@@ -2,9 +2,18 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
-## Recent Changes
+## `2.3.0`
 
+- Added option to edit team configuration file via the + button for easy access. [#1896](https://github.com/zowe/vscode-extension-for-zowe/issues/1896)
+- Added multiple selection to manage context menu of Datasets, USS, and Jobs views. [#1428](https://github.com/zowe/vscode-extension-for-zowe/issues/1428)
+- Added Spool file attribute information to a hover over the Spool file's name. [#1832](https://github.com/zowe/vscode-extension-for-zowe/issues/1832)
+- Added support for CLI home directory environment variable in Team Config file watcher, and support watching Team Config files named zowe.config.json and zowe.config.user.json at both locations. [#1913](https://github.com/zowe/vscode-extension-for-zowe/issues/1913)
+- Update to Job's View Spool file label to display PROCSTEP if available, if PROCSTEP isn't available the label will display the Spool file's record count. [#1889](https://github.com/zowe/vscode-extension-for-zowe/issues/1889) [#1832](https://github.com/zowe/vscode-extension-for-zowe/issues/1832)
 - Bugfix: Fixed extension being slow to load large team config files. [#1911](https://github.com/zowe/vscode-extension-for-zowe/issues/1911)
+- Bugfix: Fix issue with cached profile information after updates to profiles. [#1915](https://github.com/zowe/vscode-extension-for-zowe/issues/1915)
+- Bugfix: Fix for saving credentials to v1 profile's yaml file when un-secure and save is selected after credential prompting. [#1886](https://github.com/zowe/vscode-extension-for-zowe/issues/1886)
+- Bugfix: Fix for outdated cached information after Update Credentials. [#1858](https://github.com/zowe/vscode-extension-for-zowe/issues/1858)
+- Bugfix: Fix to support ZOWE_CLI_HOME environment variable. [#1747](https://github.com/zowe/vscode-extension-for-zowe/issues/1747)
 
 ## `2.2.1`
 
