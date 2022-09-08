@@ -605,8 +605,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             prefix = searchCriteria.match(/Prefix:/) ? searchCriteria.match(/(?<=Prefix\:).*$/)[0] : null;
             jobid = searchCriteria.match(/JobId:/) ? searchCriteria.match(/(?<=JobId\:).*$/)[0] : null;
         }
-        // TODO: search Why check for history? Rename this.createOwner
-        if (!hasHistory || choice === this.createOwner || searchCriteria.match(/Owner:/)) {
+        if (choice === this.createOwner) {
             await this.handleEditingMultiJobParameters(globals.JOB_PROPERTIES, node);
             return;
         }
