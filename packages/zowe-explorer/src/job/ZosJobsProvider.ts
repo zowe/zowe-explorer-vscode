@@ -769,45 +769,41 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         jobProperties.forEach((prop) => {
             editableItems.push(new FilterItem({ text: prop.label, description: prop.value, show: true }));
         });
-        // const quickpick = vscode.window.createQuickPick();
         // quickpick.placeholder = localize("createFileNoWebview.options.prompt", "Click on parameters to change them");
-        // quickpick.ignoreFocusOut = true;
-        // quickpick.items = [...editableItems];
-        // quickpick.matchOnDescription = false;
         // quickpick.onDidHide(() => {
         //     if (quickpick.selectedItems.length === 0) {
         //         globals.LOG.debug(localize("createFile.noOptionSelected", "No option selected. Operation cancelled."));
         //         vscode.window.showInformationMessage(localize("createFile.operationCancelled", "Operation cancelled."));
         //     }
         // });
-
-        // quickpick.show();
-        // const choice = await resolveQuickPickHelper(quickpick); //issue here
-        // const pattern = choice.text;
-        // quickpick.dispose();
-        const choice = await vscode.window.showQuickPick(editableItems);
+        const choice = await vscode.window.showQuickPick(editableItems, {
+            ignoreFocusOut: true,
+            matchOnDescription: false,
+        });
         const pattern = choice.label;
-        // check key instead
-        if (pattern === "Job Status") {
-            const statusChoice = await this.setJobStatus();
-            jobProperties.find((prop) => prop.key === "job-status").value = statusChoice.label;
-        } else {
-            const options: vscode.InputBoxOptions = {
-                value: jobProperties.find((prop) => prop.label === pattern).value,
-                placeHolder: jobProperties.find((prop) => prop.label === pattern).placeHolder,
-            };
-            jobProperties.find((prop) => prop.label === pattern).value = await ZoweVsCodeExtension.inputBox(options);
-        }
-        if (pattern === " + Submit this Job Search Query") {
-            node.searchId = "";
-            node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
-            node.prefix = jobProperties.find((prop) => prop.key === "prefix").value;
-            node.owner = jobProperties.find((prop) => prop.key === "owner").value;
-            node.status = jobProperties.find((prop) => prop.key === "job-status").value;
-            labelRefresh(node);
-            node.dirty = true;
-            this.refreshElement(node);
-            return new Promise((resolve) => resolve(` + Submit this Job Search Query`));
+        switch (pattern) {
+            case "Job Status":
+                const statusChoice = await this.setJobStatus();
+                jobProperties.find((prop) => prop.key === "job-status").value = statusChoice.label;
+                break;
+            case " + Submit this Job Search Query":
+                node.searchId = "";
+                node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+                node.prefix = jobProperties.find((prop) => prop.key === "prefix").value;
+                node.owner = jobProperties.find((prop) => prop.key === "owner").value;
+                node.status = jobProperties.find((prop) => prop.key === "job-status").value;
+                labelRefresh(node);
+                node.dirty = true;
+                this.refreshElement(node);
+                return new Promise((resolve) => resolve(` + Submit this Job Search Query`));
+            default:
+                const options: vscode.InputBoxOptions = {
+                    value: jobProperties.find((prop) => prop.label === pattern).value,
+                    placeHolder: jobProperties.find((prop) => prop.label === pattern).placeHolder,
+                };
+                jobProperties.find((prop) => prop.label === pattern).value = await ZoweVsCodeExtension.inputBox(
+                    options
+                );
         }
         return Promise.resolve(this.handleEditingMultiJobParameters(jobProperties, node));
     }
