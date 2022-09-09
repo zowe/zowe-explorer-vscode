@@ -44,6 +44,7 @@ import { handleSaving } from "./utils/workspace";
 import { ZoweDatasetNode } from "./dataset/ZoweDatasetNode";
 import * as contextuals from "../src/shared/context";
 import { Job } from "./job/ZoweJobNode";
+import { labelRefresh } from "./shared/utils";
 
 // Set up localization
 nls.config({
@@ -762,12 +763,15 @@ function initJobsProvider(context: vscode.ExtensionContext, jobsProvider: IZoweT
         })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.refreshJob", async (job) => jobActions.refreshJob(job, jobsProvider))
+        vscode.commands.registerCommand("zowe.jobs.refreshJob", async (job) => {
+            await jobActions.refreshJob(job, jobsProvider);
+            jobActions.refreshJob(job.mParent, jobsProvider);
+        })
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.jobs.refreshSpool", async (node) => {
             await jobActions.getSpoolContentFromMainframe(node);
-            jobActions.refreshJob(node.mParent, jobsProvider);
+            jobActions.refreshJob(node.mParent.mParent, jobsProvider);
         })
     );
     context.subscriptions.push(
