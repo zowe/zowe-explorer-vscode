@@ -44,7 +44,6 @@ import { handleSaving } from "./utils/workspace";
 import { ZoweDatasetNode } from "./dataset/ZoweDatasetNode";
 import * as contextuals from "../src/shared/context";
 import { Job } from "./job/ZoweJobNode";
-import { labelRefresh } from "./shared/utils";
 
 // Set up localization
 nls.config({
