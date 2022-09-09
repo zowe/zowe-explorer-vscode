@@ -455,13 +455,11 @@ export class ProfilesCache {
                 const profByType = this.profilesByType.get(type);
                 profByType.forEach((profile) => {
                     if (
-                        baseProfile?.profile?.host &&
-                        baseProfile?.profile?.port &&
-                        profile?.profile?.host &&
-                        profile?.profile?.port &&
+                        baseProfile?.profile?.host && baseProfile?.profile?.port &&
+                        profile?.profile?.host && profile?.profile?.port &&
                         (baseProfile?.profile.host !== profile?.profile.host ||
                             baseProfile?.profile.port !== profile?.profile.port) &&
-                        profile?.profile.tokenType == "apimlAuthenticationToken"
+                        profile?.profile.tokenType === "apimlAuthenticationToken"
                     ) {
                         profile.profile.tokenType = undefined;
                         profile.profile.tokenValue = undefined;
@@ -486,9 +484,11 @@ export class ProfilesCache {
     protected checkMergingConfigSingleProfile(profile: zowe.imperative.IProfileLoaded): zowe.imperative.IProfileLoaded {
         const baseProfile = this.defaultProfileByType.get("base");
         if (
+            baseProfile?.profile?.host && baseProfile?.profile?.port &&
+            profile?.profile?.host && profile?.profile?.port &&
             (baseProfile?.profile.host !== profile?.profile.host ||
-                baseProfile?.profile?.port !== profile?.profile.port) &&
-            profile?.profile.tokenType == "apimlAuthenticationToken"
+                baseProfile?.profile.port !== profile?.profile.port) &&
+            profile?.profile.tokenType === "apimlAuthenticationToken"
         ) {
             profile.profile.tokenType = undefined;
             profile.profile.tokenValue = undefined;

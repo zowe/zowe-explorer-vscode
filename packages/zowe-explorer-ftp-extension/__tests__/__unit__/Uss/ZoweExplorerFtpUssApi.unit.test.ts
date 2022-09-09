@@ -135,7 +135,7 @@ describe("FtpUssApi", () => {
         const result = await UssApi.create(mockParams.ussPath, mockParams.type);
         expect(result.commandResponse).toContain("Directory or file created.");
         expect(UssUtils.uploadFile).toBeCalledTimes(1);
-        expect(UssUtils.makeDirectory).not.toBeCalled;
+        expect(UssUtils.makeDirectory).not.toBeCalled();
         expect(UssApi.releaseConnection).toBeCalled();
     });
 
