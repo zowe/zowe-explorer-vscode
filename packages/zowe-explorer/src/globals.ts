@@ -208,23 +208,23 @@ export const DATA_SET_PROPERTIES = [
 
 export const JOB_STATUS = [
     {
-        key: `active`,
+        key: `Active`,
         label: `Active`,
         value: `Active`,
     },
     {
-        key: `input`,
+        key: `Input`,
         label: `Input`,
         value: null,
     },
     {
-        key: `output`,
+        key: `Output`,
         label: `Output`,
         value: null,
     },
     {
-        key: `held`,
-        label: `Held`,
+        key: `All`, // key is not used
+        label: `All`,
         value: null,
     },
 ];
@@ -234,18 +234,21 @@ export const JOB_PROPERTIES = [
         key: `owner`,
         label: `Job Owner`,
         value: null,
+        show: true,
         placeHolder: localize("createFile.attribute.alcunit", `Enter job owner id`), // change thes localize ids
     },
     {
         key: `prefix`,
         label: `Job Prefix`,
         value: null,
+        show: true,
         placeHolder: localize("createFile.attribute.avgblk", `Enter job prefix`),
     },
     {
         key: `job-status`,
         label: `Job Status`,
         value: null,
+        show: false,
         placeHolder: localize("createFile.attribute.avgblk", `Enter job status`),
     },
 ];
