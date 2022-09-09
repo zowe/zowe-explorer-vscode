@@ -292,11 +292,11 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
             jobsInternal.push(await ZoweExplorerApiRegister.getJesApi(cachedProfile).getJob(searchId));
         } else {
             try {
-                jobsInternal = await ZoweExplorerApiRegister.getJesApi(cachedProfile).getJobsByParameters({
+                jobsInternal = await ZoweExplorerApiRegister.getJesApi(cachedProfile).getJobsByParameters(
                     owner,
                     prefix,
-                    jobStatus,
-                });
+                    jobStatus
+                );
                 /**
                  *    Note: Temporary fix
                  *    This current fix is necessary since in certain instances the Zowe
