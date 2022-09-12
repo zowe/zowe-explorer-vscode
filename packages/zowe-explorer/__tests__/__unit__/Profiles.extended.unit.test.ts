@@ -29,7 +29,6 @@ import * as globals from "../../src/globals";
 import * as zowe from "@zowe/cli";
 import { ProfilesCache } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../src/Profiles";
-import { focusOnJob } from "../../src/job/actions";
 
 // jest.mock("vscode");
 jest.mock("child_process");
