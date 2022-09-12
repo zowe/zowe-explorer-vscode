@@ -16,7 +16,6 @@ import {
     createValidIProfile,
     createISession,
     createInstanceOfProfileInfo,
-    createInstanceOfProfilesCache,
     createQuickPickItem,
     createQuickPickInstance,
     createConfigInstance,
@@ -27,10 +26,10 @@ import { createProfileManager, newTestSchemas } from "../../__mocks__/mockCreato
 import * as vscode from "vscode";
 import * as utils from "../../src/utils/ProfilesUtils";
 import * as globals from "../../src/globals";
-import { ValidProfileEnum, IZoweNodeType, ProfilesCache } from "@zowe/zowe-explorer-api";
-import { ZosmfSession, imperative } from "@zowe/cli";
-import { ZoweExplorerApiRegister } from "../../src/ZoweExplorerApiRegister";
+import * as zowe from "@zowe/cli";
+import { ProfilesCache } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../src/Profiles";
+import { focusOnJob } from "../../src/job/actions";
 
 // jest.mock("vscode");
 jest.mock("child_process");
@@ -39,7 +38,7 @@ jest.mock("fs-extra");
 
 async function createGlobalMocks() {
     const newMocks = {
-        log: imperative.Logger.getAppLogger(),
+        log: zowe.imperative.Logger.getAppLogger(),
         mockShowInputBox: jest.fn(),
         mockGetConfiguration: jest.fn(),
         mockCreateQuickPick: createQuickPickInstance(),
@@ -74,7 +73,7 @@ async function createGlobalMocks() {
         mockConfigLoad: null,
     };
 
-    newMocks.mockProfilesCache = new ProfilesCache(imperative.Logger.getAppLogger());
+    newMocks.mockProfilesCache = new ProfilesCache(zowe.imperative.Logger.getAppLogger());
     newMocks.withProgress = jest.fn().mockImplementation((progLocation, callback) => {
         return newMocks.mockCallback;
     });
@@ -99,7 +98,7 @@ async function createGlobalMocks() {
     Object.defineProperty(globals, "LOG", { value: newMocks.mockLog, configurable: true });
     Object.defineProperty(vscode.window, "createInputBox", { value: newMocks.mockCreateInputBox, configurable: true });
     Object.defineProperty(globals.LOG, "debug", { value: newMocks.mockDebug, configurable: true });
-    Object.defineProperty(ZosmfSession, "createSessCfgFromArgs", {
+    Object.defineProperty(zowe.ZosmfSession, "createSessCfgFromArgs", {
         value: newMocks.mockCreateSessCfgFromArgs,
         configurable: true,
     });
@@ -137,11 +136,11 @@ async function createGlobalMocks() {
         configurable: true,
     });
 
-    Object.defineProperty(imperative, "Config", {
+    Object.defineProperty(zowe.imperative, "Config", {
         value: () => newMocks.mockConfigInstance,
         configurable: true,
     });
-    newMocks.mockConfigLoad = Object.defineProperty(imperative.Config, "load", {
+    newMocks.mockConfigLoad = Object.defineProperty(zowe.imperative.Config, "load", {
         value: jest.fn(() => {
             return createConfigLoad();
         }),
@@ -344,7 +343,7 @@ describe("Profiles Unit Tests - Function editZoweConfigFile", () => {
         const spyOpenFile = jest.spyOn(globalMocks.mockProfileInstance, "openConfigFile");
         await Profiles.getInstance().editZoweConfigFile();
         expect(spyQuickPick).toBeCalled();
-        expect(spyOpenFile).toBeCalledWith("globalPath");
+        expect(spyOpenFile).toBeCalledWith("file://globalPath/.zowe/zowe.config.json");
         spyQuickPick.mockClear();
         spyOpenFile.mockClear();
     });
@@ -374,7 +373,7 @@ describe("Profiles Unit Tests - Function editZoweConfigFile", () => {
         const spyOpenFile = jest.spyOn(globalMocks.mockProfileInstance, "openConfigFile");
         await Profiles.getInstance().editZoweConfigFile();
         expect(spyQuickPick).toBeCalled();
-        expect(spyOpenFile).toBeCalledWith("projectPath");
+        expect(spyOpenFile).toBeCalledWith("file://projectPath/zowe.user.config.json");
         spyQuickPick.mockClear();
         spyOpenFile.mockClear();
     });
@@ -394,6 +393,87 @@ describe("Profiles Unit Tests - Function editZoweConfigFile", () => {
         const spyOpenFile = jest.spyOn(globalMocks.mockProfileInstance, "openConfigFile");
         await Profiles.getInstance().editZoweConfigFile();
         expect(spyOpenFile).toBeCalledWith("projectPath");
+        spyOpenFile.mockClear();
+    });
+});
+
+describe("Profiles Unit Tests - Function createZoweSchema", () => {
+    async function createBlockMocks(globalMocks) {
+        const newMocks = {
+            session: createISessionWithoutCredentials(),
+            treeView: createTreeView(),
+            testDatasetSessionNode: null,
+            testDatasetTree: null,
+            quickPickItem: createQuickPickItem(),
+            mockWsFolder: null,
+            qpPlaceholder:
+                'Choose "Create new..." to define a new profile or select an existing profile to add to the Data Set Explorer',
+        };
+        newMocks.testDatasetSessionNode = createDatasetSessionNode(newMocks.session, globalMocks.mockProfileInstance);
+        newMocks.testDatasetTree = createDatasetTree(newMocks.testDatasetSessionNode, newMocks.treeView);
+        Object.defineProperty(zowe, "getZoweDir", {
+            value: jest.fn().mockReturnValue("file://globalPath/.zowe"),
+            configurable: true,
+        });
+        Object.defineProperty(zowe.imperative, "Config", {
+            value: jest.fn().mockResolvedValue(createConfigLoad()),
+            configurable: true,
+        });
+        newMocks.mockWsFolder = Object.defineProperty(vscode.workspace, "workspaceFolders", {
+            value: () => [{ uri: "file://projectPath/zowe.user.config.json", name: "zowe.user.config.json", index: 0 }],
+            configurable: true,
+        });
+        return newMocks;
+    }
+    it("Tests that createZoweSchema presents correct message when escaping selection of config location prompt", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const spy = jest.spyOn(vscode.window, "showQuickPick");
+        spy.mockResolvedValueOnce(undefined);
+        await Profiles.getInstance().createZoweSchema(blockMocks.testDatasetTree);
+        expect(spy).toBeCalled();
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+        spy.mockClear();
+    });
+    it("Tests that createZoweSchema will open correct config file when cancelling creation in location with existing config file", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const spyQuickPick = jest.spyOn(vscode.window, "showQuickPick");
+        globalMocks.mockShowQuickPick.mockResolvedValueOnce("Global: in the Zowe home directory");
+        const spyLayers = jest.spyOn(globalMocks.mockProfileInstance, "getConfigLayers");
+        spyLayers.mockResolvedValueOnce(createConfigLoad().layers);
+        const spyInfoMessage = jest.spyOn(vscode.window, "showInformationMessage");
+        globalMocks.mockShowInformationMessage.mockResolvedValueOnce(undefined);
+        const spyOpenFile = jest.spyOn(globalMocks.mockProfileInstance, "openConfigFile");
+        await Profiles.getInstance().createZoweSchema(blockMocks.testDatasetTree);
+
+        expect(spyQuickPick).toBeCalled();
+        expect(spyInfoMessage).toBeCalled();
+        expect(spyOpenFile).toBeCalled();
+
+        spyQuickPick.mockClear();
+        spyLayers.mockClear();
+        spyInfoMessage.mockClear();
+        spyOpenFile.mockClear();
+    });
+    it("Test that createZoweSchema will open config on error if error deals with parsing file", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const spyQuickPick = jest.spyOn(vscode.window, "showQuickPick");
+        globalMocks.mockShowQuickPick.mockResolvedValueOnce("Global: in the Zowe home directory");
+        const spyLayers = jest.spyOn(globalMocks.mockProfileInstance, "getConfigLayers");
+        spyLayers.mockRejectedValueOnce(new Error("Error parsing JSON"));
+        const spyOpenFile = jest.spyOn(globalMocks.mockProfileInstance, "openConfigFile");
+        await Profiles.getInstance().createZoweSchema(blockMocks.testDatasetTree);
+
+        expect(spyQuickPick).toBeCalled();
+        expect(spyOpenFile).toBeCalled();
+
+        spyQuickPick.mockClear();
+        spyLayers.mockClear();
         spyOpenFile.mockClear();
     });
 });
