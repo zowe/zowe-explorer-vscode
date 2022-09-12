@@ -763,7 +763,6 @@ function initJobsProvider(context: vscode.ExtensionContext, jobsProvider: IZoweT
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.jobs.refreshJob", async (job) => {
-            await jobActions.refreshJob(job, jobsProvider);
             jobActions.refreshJob(job.mParent, jobsProvider);
         })
     );
