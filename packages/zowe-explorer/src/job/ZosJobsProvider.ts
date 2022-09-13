@@ -60,6 +60,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
     public static readonly JobId = "JobId:";
     public static readonly Owner = "Owner:";
     public static readonly Prefix = "Prefix:";
+    public static readonly Status = "Status";
     public static readonly defaultDialogText: string = localize("SpecifyCriteria", "Create new..");
     private static readonly persistenceSchema: PersistenceSchemaEnum = PersistenceSchemaEnum.Job;
 
@@ -425,7 +426,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         if (contextually.isSession(node)) {
             // Favorite a search/session
             favJob = new Job(
-                this.createSearchLabel(node.owner, node.prefix, node.searchId),
+                this.createSearchLabel(node.owner, node.prefix, node.searchId, node.status),
                 vscode.TreeItemCollapsibleState.None,
                 profileNodeInFavorites,
                 node.getSession(),
@@ -599,14 +600,17 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         let options: vscode.InputBoxOptions;
         let owner: string;
         let prefix: string;
-        let jobid: string;
+        let jobid: string; // do we need to define these here?
+        let status: string;
         if (searchCriteria) {
             owner = searchCriteria.match(/Owner:/) ? searchCriteria.match(/(?<=Owner\:).*(?=\s)/)[0] : null;
             prefix = searchCriteria.match(/Prefix:/) ? searchCriteria.match(/(?<=Prefix\:).*$/)[0] : null;
             jobid = searchCriteria.match(/JobId:/) ? searchCriteria.match(/(?<=JobId\:).*$/)[0] : null;
+            status = searchCriteria.match(/Status:/) ? searchCriteria.match(/(?<=Status\:).*$/)[0] : null;
+            // TODO: Add status here
         }
         if (choice === this.createOwner) {
-            await this.handleEditingMultiJobParameters(globals.JOB_PROPERTIES, node);
+            await this.handleEditingMultiJobParameters(globals.JOB_PROPERTIES, node); // here create search label
             return;
         }
         if (choice === this.createId) {
@@ -621,7 +625,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 return;
             }
         }
-        searchCriteria = this.createSearchLabel(owner, prefix, jobid);
+        searchCriteria = this.createSearchLabel(owner, prefix, jobid, status);
         this.applySearchLabelToNode(node, searchCriteria);
         return searchCriteria;
     }
@@ -665,7 +669,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             labelRefresh(node);
             node.dirty = true;
             this.refreshElement(node);
-            this.addSearchHistory(searchCriteria);
+            this.addSearchHistory(searchCriteria); // history added here
         }
     }
 
@@ -693,19 +697,20 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      * @param prefix - The job prefix search item
      * @param jobid - A specific jobid search item
      */
-    public createSearchLabel(owner: string, prefix: string, jobid: string): string {
-        let revisedCriteria: string = "";
-
+    public createSearchLabel(owner: string, prefix: string, jobid: string, status: string): string {
         const alphaNumeric = new RegExp("^w+$");
         if (jobid && !alphaNumeric.exec(jobid.trim())) {
-            revisedCriteria = Job.JobId + jobid.toUpperCase().trim();
-        } else {
-            if (owner) {
-                revisedCriteria = Job.Owner + owner.trim() + " ";
-            }
-            if (prefix) {
-                revisedCriteria += Job.Prefix + prefix.trim();
-            }
+            return Job.JobId + jobid.toUpperCase().trim();
+        }
+        let revisedCriteria = "";
+        if (owner) {
+            revisedCriteria = Job.Owner + owner.trim() + " ";
+        }
+        if (prefix) {
+            revisedCriteria += Job.Prefix + prefix.trim();
+        }
+        if (status) {
+            revisedCriteria += Job.Status + status.trim();
         }
         return revisedCriteria.trim();
     }
@@ -714,6 +719,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         throw new Error("Method not implemented.");
     }
 
+    // Is this still called?
     public interpretFreeform(input: string): string {
         let jobId: string;
         let owner: string;
@@ -736,7 +742,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         const jobPattern = new RegExp("[a-zA-Z]{3}[0-9]{5}");
         const jobs = jobPattern.exec(input);
         if (jobs && jobs.length > 0) {
-            return this.createSearchLabel("*", "*", jobs[0]);
+            return this.createSearchLabel("*", "*", jobs[0], "*"); // fix here
         }
         if (!owner && !prefix && !jobId) {
             const validPattern = new RegExp("[a-zA-Z0-9*]{2,8}");
@@ -748,7 +754,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 }
             });
         }
-        return this.createSearchLabel(owner, prefix, jobId);
+        return this.createSearchLabel(owner, prefix, jobId, "*");
     }
 
     private async setJobStatus() {
@@ -766,7 +772,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         const editableItems = [];
         editableItems.push(new FilterItem({ text: ` + Submit this Job Search Query`, show: true }));
         jobProperties.forEach((prop) => {
-            editableItems.push(new FilterItem({ text: prop.label, description: prop.value, show: true }));
+            editableItems.push(new FilterItem({ text: prop.label, description: prop.value, show: prop.show }));
         });
         // quickpick.placeholder = localize("createFileNoWebview.options.prompt", "Click on parameters to change them");
         // quickpick.onDidHide(() => {
@@ -791,6 +797,8 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 node.prefix = jobProperties.find((prop) => prop.key === "prefix").value;
                 node.owner = jobProperties.find((prop) => prop.key === "owner").value;
                 node.status = jobProperties.find((prop) => prop.key === "job-status").value;
+                const searchCriteria = this.createSearchLabel(node.owner, node.prefix, node.jobid, node.status);
+                this.addSearchHistory(searchCriteria);
                 labelRefresh(node);
                 node.dirty = true;
                 this.refreshElement(node);
@@ -867,7 +875,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             }
             node.dirty = true;
             this.mSessionNodes.push(node);
-            this.mHistory.addSession(profile.name);
+            this.mHistory.addSession(profile.name); // here
         }
     }
 }
