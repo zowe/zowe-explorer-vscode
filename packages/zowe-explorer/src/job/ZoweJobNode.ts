@@ -34,7 +34,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
     public static readonly JobId = "JobId:";
     public static readonly Owner = "Owner:";
     public static readonly Prefix = "Prefix:";
-    public static readonly Status = "Status:"; // make generic?
+    public static readonly Status = "Status:";
 
     public children: IZoweJobTreeNode[] = [];
     public dirty = true;
