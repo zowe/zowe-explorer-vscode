@@ -1305,7 +1305,7 @@ export class Profiles extends ProfilesCache {
     public async ssoLogout(node: IZoweNodeType): Promise<void> {
         const serviceProfile = node.getProfile();
         // This check will handle service profiles that have username and password
-        if (serviceProfile.profile.user && serviceProfile.profile.password) {
+        if (serviceProfile.profile?.user && serviceProfile.profile?.password) {
             vscode.window.showInformationMessage(
                 localize("ssoAuth.noBase", "This profile does not support token authentication.")
             );
