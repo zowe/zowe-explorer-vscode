@@ -414,14 +414,11 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
             value: jest.fn().mockReturnValue("file://globalPath/.zowe"),
             configurable: true,
         });
-        Object.defineProperty(zowe.imperative, "Config", {
-            value: jest.fn().mockResolvedValue(createConfigLoad()),
-            configurable: true,
-        });
-        newMocks.mockWsFolder = Object.defineProperty(vscode.workspace, "workspaceFolders", {
+        Object.defineProperty(vscode.workspace, "workspaceFolders", {
             value: () => [{ uri: "file://projectPath/zowe.user.config.json", name: "zowe.user.config.json", index: 0 }],
             configurable: true,
         });
+
         return newMocks;
     }
     it("Tests that createZoweSchema presents correct message when escaping selection of config location prompt", async () => {
@@ -474,5 +471,32 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
         spyQuickPick.mockClear();
         spyLayers.mockClear();
         spyOpenFile.mockClear();
+    });
+    it("Test that createZoweSchema will auto create global if VSC not in project and config doesn't exist", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        Object.defineProperty(vscode.workspace, "workspaceFolders", {
+            value: undefined,
+            configurable: true,
+        });
+
+        const spyQuickPick = jest.spyOn(vscode.window, "showQuickPick");
+        const spyLayers = jest.spyOn(globalMocks.mockProfileInstance, "getConfigLayers");
+        spyLayers.mockResolvedValueOnce([
+            {
+                path: "file://projectPath/zowe.user.config.json",
+                exists: true,
+                properties: undefined,
+                global: false,
+                user: true,
+            },
+        ]);
+
+        await Profiles.getInstance().createZoweSchema(blockMocks.testDatasetTree);
+
+        expect(spyQuickPick).toBeCalledTimes(0);
+
+        spyQuickPick.mockClear();
+        spyLayers.mockClear();
     });
 });
