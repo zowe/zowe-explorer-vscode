@@ -494,7 +494,7 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
 
         await Profiles.getInstance().createZoweSchema(blockMocks.testDatasetTree);
 
-        expect(spyQuickPick).toBeCalledTimes(0);
+        expect(spyQuickPick).not.toBeCalled();
 
         spyQuickPick.mockClear();
         spyLayers.mockClear();
