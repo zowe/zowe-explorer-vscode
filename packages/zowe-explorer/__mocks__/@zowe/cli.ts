@@ -62,7 +62,7 @@ export namespace Login {
     }
 }
 
-export namespace Login {
+export namespace Logout {
     export function apimlLogout(session: Session) {
         return;
     }
