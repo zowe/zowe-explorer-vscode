@@ -284,7 +284,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
         return this._searchId;
     }
 
-    private async getJobs(owner: string, prefix: string, searchId: string, jobStatus: string): Promise<zowe.IJob[]> {
+    private async getJobs(owner: string, prefix: string, searchId: string, status: string): Promise<zowe.IJob[]> {
         let jobsInternal: zowe.IJob[] = [];
         const sessNode = this.getSessionNode();
         const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
@@ -292,11 +292,11 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
             jobsInternal.push(await ZoweExplorerApiRegister.getJesApi(cachedProfile).getJob(searchId));
         } else {
             try {
-                jobsInternal = await ZoweExplorerApiRegister.getJesApi(cachedProfile).getJobsByParameters(
+                jobsInternal = await ZoweExplorerApiRegister.getJesApi(cachedProfile).getJobsByParameters({
                     owner,
                     prefix,
-                    jobStatus
-                );
+                    status,
+                });
                 /**
                  *    Note: Temporary fix
                  *    This current fix is necessary since in certain instances the Zowe
