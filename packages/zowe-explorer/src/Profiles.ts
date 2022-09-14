@@ -1414,7 +1414,7 @@ export class Profiles extends ProfilesCache {
                     .showInformationMessage(message, { modal: true }, ...[createButton])
                     .then(async (selection) => {
                         if (selection) {
-                            location = file.path.replace(filePath, "").replace(/\\|\|[/]/g, "");
+                            location = file.path.replace(filePath, "").replace(/\/|\\/g, "");
                         } else {
                             await this.openConfigFile(file.path);
                             location = undefined;
