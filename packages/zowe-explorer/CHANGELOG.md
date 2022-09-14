@@ -2,6 +2,10 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## TBD Release
+
+- Added check for existing team configuration file in location during create, prompting user to continue with the create action.
+
 ## `2.3.0`
 
 - Added option to edit team configuration file via the + button for easy access. [#1896](https://github.com/zowe/vscode-extension-for-zowe/issues/1896)
