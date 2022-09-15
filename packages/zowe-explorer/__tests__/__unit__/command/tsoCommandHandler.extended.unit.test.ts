@@ -36,7 +36,7 @@ describe("TsoCommandHandler extended testing", () => {
         configurable: true,
     });
 
-    describe("getTsoParms", () => {
+    describe("getTsoParams", () => {
         it("should work with teamConfig", async () => {
             Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => ({
