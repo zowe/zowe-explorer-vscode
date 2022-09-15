@@ -4,7 +4,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ## TBD Release
 
-- Added check for existing team configuration file in location during create, prompting user to continue with the create action.
+- Added check for existing team configuration file in location during create, prompting user to continue with the create action. [#1923](https://github.com/zowe/vscode-extension-for-zowe/issues/1923)
+- Bugfix: Fix refresh job & spool file pull from mainframe doesn't update job status [#1936](https://github.com/zowe/vscode-extension-for-zowe/pull/1936)
 
 ## `2.3.0`
 
