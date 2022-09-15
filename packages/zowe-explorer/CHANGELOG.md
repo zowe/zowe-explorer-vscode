@@ -2,6 +2,10 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## TBD Release
+
+- Bugfix: Fix refresh job & spool file pull from mainframe doesn't update job status [#1936](https://github.com/zowe/vscode-extension-for-zowe/pull/1936)
+
 ## `2.3.0`
 
 - Added option to edit team configuration file via the + button for easy access. [#1896](https://github.com/zowe/vscode-extension-for-zowe/issues/1896)
