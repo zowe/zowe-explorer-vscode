@@ -1,7 +1,7 @@
 name: Zowe Explorer FTP CI
 
 on:
-  push:# TODO Restore path filter after testing
+  push: # TODO Restore path filter after testing
     # paths:
     #   - packages/zowe-explorer-ftp-extension/**
     #   - packages/zowe-explorer-api/**
