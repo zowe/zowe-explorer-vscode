@@ -70,7 +70,7 @@ export class ProfilesCache {
 
     public async getProfileInfo(): Promise<zowe.imperative.ProfileInfo> {
         const mProfileInfo = new zowe.imperative.ProfileInfo("zowe");
-        await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir(), projectDir: this.cwd ?? "" });
+        await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir(), projectDir: this.cwd ?? false });
         return mProfileInfo;
     }
 

@@ -109,7 +109,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
             mProfileInfo = await getProfileInfo(globals.ISTHEIA);
             mProfileInfo.readProfilesFromDisk({
                 homeDir: getZoweDir(),
-                projectDir: vscode.workspace.workspaceFolders?.[0].uri.fsPath ?? "",
+                projectDir: vscode.workspace.workspaceFolders?.[0].uri.fsPath ?? false,
             });
             usingTeamConfig = mProfileInfo.usingTeamConfig;
         } catch (error) {
