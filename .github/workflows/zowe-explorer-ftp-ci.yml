@@ -71,4 +71,4 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: zowe-explorer-ftp-extension-vsix
-          path: packages/zowe-explorer-ftp-extension/*.vsix
+          path: dist/*.vsix
