@@ -68,7 +68,7 @@ jobs:
 
       - name: Archive VSIX artifact
         if: matrix.os == 'ubuntu-latest' && matrix.node-version == '16.x'
-        run: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v2
         with:
           name: zowe-explorer-ftp-extension-vsix
           path: packages/zowe-explorer-ftp-extension/*.vsix
