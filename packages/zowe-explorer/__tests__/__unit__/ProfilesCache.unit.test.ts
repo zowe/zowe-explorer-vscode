@@ -13,7 +13,6 @@ jest.mock("fs");
 jest.unmock("@zowe/cli");
 jest.unmock("@zowe/imperative");
 
-import * as fs from "fs";
 import { getZoweDir, imperative } from "@zowe/cli";
 import { ProfilesCache } from "@zowe/zowe-explorer-api";
 
