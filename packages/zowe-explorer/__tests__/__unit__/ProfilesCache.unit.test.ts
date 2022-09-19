@@ -35,8 +35,9 @@ describe("ProfilesCache API", () => {
         expect(config.layers[0].path).toContain(__dirname);
         expect(config.layers[1].path).toContain(__dirname);
         expect(config.layers[2].path).toContain(zoweDir);
+        // tslint:disable-next-line:no-magic-numbers
         expect(config.layers[3].path).toContain(zoweDir);
-        expect(config.layers.map(layer => layer.exists)).toEqual([true, true, true, true]);
+        expect(config.layers.map((layer) => layer.exists)).toEqual([true, true, true, true]);
     });
 
     it("should not load project profiles from same directory as global profiles", async () => {
@@ -44,7 +45,7 @@ describe("ProfilesCache API", () => {
         const config = (await profilesCache.getProfileInfo()).getTeamConfig();
         expect(config.layers[0].path).not.toContain(zoweDir);
         expect(config.layers[1].path).not.toContain(zoweDir);
-        expect(config.layers.map(layer => layer.exists)).toEqual([true, true, true, true]);
+        expect(config.layers.map((layer) => layer.exists)).toEqual([true, true, true, true]);
     });
 
     it("should not load project profiles when current directory is undefined", async () => {
@@ -52,6 +53,6 @@ describe("ProfilesCache API", () => {
         const config = (await profilesCache.getProfileInfo()).getTeamConfig();
         expect(config.layers[0].path).toBe("");
         expect(config.layers[1].path).toBe("");
-        expect(config.layers.map(layer => layer.exists)).toEqual([false, false, true, true]);
+        expect(config.layers.map((layer) => layer.exists)).toEqual([false, false, true, true]);
     });
 });

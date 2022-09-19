@@ -2,6 +2,10 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## TBD Release
+
+- Bugfix: Fixed project profiles loaded when no workspace folder is open. [#1802](https://github.com/zowe/vscode-extension-for-zowe/issues/1802)
+
 ## `2.3.0`
 
 - Added option to edit team configuration file via the + button for easy access. [#1896](https://github.com/zowe/vscode-extension-for-zowe/issues/1896)
