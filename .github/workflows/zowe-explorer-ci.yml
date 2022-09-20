@@ -1,10 +1,10 @@
 name: Zowe Explorer CI
 
 on:
-  push: # TODO Restore path filter after testing
-    # paths:
-    #   - packages/zowe-explorer/**
-    #   - packages/zowe-explorer-api/**
+  push:
+    paths:
+      - packages/zowe-explorer/**
+      - packages/zowe-explorer-api/**
   pull_request:
     paths:
       - packages/zowe-explorer/**
