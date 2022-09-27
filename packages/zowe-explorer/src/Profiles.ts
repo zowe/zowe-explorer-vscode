@@ -1407,14 +1407,14 @@ export class Profiles extends ProfilesCache {
                 const createButton = localize("checkExistingConfig.createNew.button", "Create New");
                 const message = localize(
                     "checkExistingConfig.createNew.message",
-                    `A Team Configuration File already exists in this location\n{0}\nWould you like to continue with creating a new file?`,
+                    `A Team Configuration File already exists in this location\n{0}\nContinuing may alter the existing file, would you like to proceed?`,
                     file.path
                 );
                 await vscode.window
                     .showInformationMessage(message, { modal: true }, ...[createButton])
                     .then(async (selection) => {
                         if (selection) {
-                            location = file.path.replace(filePath, "").replace(/[\/|\\]/g, "");
+                            location = path.basename(file.path);
                         } else {
                             await this.openConfigFile(file.path);
                             location = undefined;
