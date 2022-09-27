@@ -70,7 +70,8 @@ export class ProfilesCache {
 
     public async getProfileInfo(): Promise<zowe.imperative.ProfileInfo> {
         const mProfileInfo = new zowe.imperative.ProfileInfo("zowe");
-        await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir(), projectDir: this.cwd });
+        // When no workspace is open and `cwd` is undefined, set `projectDir` to false to ignore project config
+        await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir(), projectDir: this.cwd ?? false });
         return mProfileInfo;
     }
 
