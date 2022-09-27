@@ -222,6 +222,7 @@ export function createInstanceOfProfile(profile: imperative.IProfileLoaded) {
         getDefaultConfigProfile: jest.fn(),
         getProfileFromConfig: jest.fn(),
         getProfileLoaded: jest.fn(),
+        openConfigFile: jest.fn(),
     } as any;
 }
 
@@ -383,14 +384,14 @@ export function createConfigLoad() {
     return {
         layers: [
             {
-                path: "globalPath",
+                path: "file://globalPath/.zowe/zowe.config.json",
                 exists: true,
                 properties: undefined,
                 global: true,
                 user: false,
             },
             {
-                path: "projectPath",
+                path: "file://projectPath/zowe.user.config.json",
                 exists: true,
                 properties: undefined,
                 global: false,
