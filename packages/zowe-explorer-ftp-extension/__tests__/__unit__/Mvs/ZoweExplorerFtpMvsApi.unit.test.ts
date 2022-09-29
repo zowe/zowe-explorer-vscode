@@ -77,7 +77,7 @@ describe("FtpMvsApi", () => {
             dataSetName: "IBMUSER.DS2",
             options: {
                 file: localFile,
-                encoding: ""
+                encoding: "",
             },
         };
         const result = await MvsApi.getContents(mockParams.dataSetName, mockParams.options);
@@ -101,7 +101,7 @@ describe("FtpMvsApi", () => {
         const mockParams = {
             inputFilePath: localFile,
             dataSetName: "IBMUSER.DS2",
-            options: {encoding: ""},
+            options: { encoding: "" },
         };
         const result = await MvsApi.putContents(mockParams.inputFilePath, mockParams.dataSetName, mockParams.options);
         expect(result.commandResponse).toContain("Data set uploaded successfully.");
@@ -128,7 +128,7 @@ describe("FtpMvsApi", () => {
         const mockParams = {
             dataSetName: "IBMUSER.DS2(M1)",
             type: "file",
-            options: {encoding: ""},
+            options: { encoding: "" },
         };
         const result = await MvsApi.createDataSetMember(mockParams.dataSetName, mockParams.options);
         expect(result.commandResponse).toContain("Member created successfully.");
