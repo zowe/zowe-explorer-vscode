@@ -81,6 +81,7 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
         const transferOptions = {
             transferType: options.binary ? TRANSFER_TYPE_BINARY : TRANSFER_TYPE_ASCII,
             localFile: targetFile,
+            encoding: options.encoding,
         };
         let connection: any;
         try {
@@ -110,6 +111,7 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
         const transferOptions = {
             transferType: options.binary ? TRANSFER_TYPE_BINARY : TRANSFER_TYPE_ASCII,
             localFile: inputFilePath,
+            encoding: options.encoding,
         };
         const file = path.basename(inputFilePath).replace(/[^a-z0-9]+/gi, "");
         const member = file.substr(0, 8);
@@ -243,6 +245,7 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
         const transferOptions = {
             transferType: options ? TRANSFER_TYPE_BINARY : TRANSFER_TYPE_ASCII,
             content: "",
+            encoding: options.encoding,
         };
         const result = this.getDefaultResponse();
         let connection: any;
