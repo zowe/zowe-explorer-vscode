@@ -1275,7 +1275,16 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 return;
             }
             // Uses loaded profile to create a session with the MVS API
-            const session = await ZoweExplorerApiRegister.getMvsApi(profile).getSession();
+            let session: imperative.Session;
+            try {
+                session = await ZoweExplorerApiRegister.getMvsApi(profile).getSession();
+            } catch (err) {
+                if (err.toString().includes("hostname")) {
+                    this.log.error(err);
+                } else {
+                    await errorHandling(err, profile.name);
+                }
+            }
             // Creates ZoweDatasetNode to track new session and pushes it to mSessionNodes
             const node = new ZoweDatasetNode(
                 profile.name,

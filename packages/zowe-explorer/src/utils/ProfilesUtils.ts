@@ -282,8 +282,7 @@ export async function openConfigOnError(error: Error) {
     if (error.message.toString().includes("Error parsing JSON")) {
         const errorArray = error.message.toString().split("'");
         const path = errorArray[1];
-        const document = await vscode.workspace.openTextDocument(path);
-        await vscode.window.showTextDocument(document);
+        await Profiles.getInstance().openConfigFile(path);
     }
 }
 
