@@ -31,6 +31,7 @@
   "activationEvents": [
     "*"
   ],
+  "browser": "./out/src/web/extension",
   "main": "./out/src/extension",
   "contributes": {
     "viewsContainers": {
@@ -1702,8 +1703,10 @@
     "updateStrings": "node ../../scripts/stringUpdateScript.js && prettier --write  --loglevel warn ./i18n package.nls*",
     "package": "vsce package --allow-star-activation --yarn && node ../../scripts/mv-pack.js vscode-extension-for-zowe vsix",
     "license": "node ../../scripts/license.js",
-    "watch": "yarn createTestProfileData && gulp build && webpack --mode development --watch --info-verbosity verbose",
+    "watch": "yarn createTestProfileData && gulp build && webpack --mode development --watch --info-verbosity verbose --config-name desktopConfig",
+    "web-watch": "yarn createTestProfileData && gulp build && webpack --mode development --watch --info-verbosity verbose --config-name webConfig",
     "compile": "tsc -b",
+    "compile-web": "webpack --config-name webConfig",
     "markdown": "markdownlint CHANGELOG.md README.md",
     "lint:pretty": "prettier --check .",
     "lint": "yarn lint:src && yarn lint:tests && yarn lint:pretty && yarn markdown",
@@ -1714,7 +1717,8 @@
     "lintErrors": "echo \"zowe-explorer: lintErrors coming soon with eslint.\"",
     "pretty": "prettier --write .",
     "createTestProfileData": "ts-node ./scripts/createTestProfileData.ts",
-    "createDemoNodes": "ts-node ./scripts/createDemoNodes.ts"
+    "createDemoNodes": "ts-node ./scripts/createDemoNodes.ts",
+    "open-in-browser": "npm run compile-web && vscode-test-web --extensionDevelopmentPath=./"
   },
   "engines": {
     "vscode": "^1.53.2"
@@ -1765,7 +1769,8 @@
     "ts-node": "^8.10.1",
     "tslint": "^5.17.0",
     "webpack": "^4.42.1",
-    "webpack-cli": "^3.3.11"
+    "webpack-cli": "^3.3.11",
+    "@vscode/test-web": "*"
   },
   "dependencies": {
     "@zowe/zowe-explorer-api": "2.4.0-SNAPSHOT",
