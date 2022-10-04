@@ -79,12 +79,12 @@ You can now use all the functionalities of the extension.
 
 ### Create a team configuration file
 
-1.	Navigate to the **Side Bar**.
-2.	Hover over **DATA SETS**, **USS**, or **JOBS**.
-3.	Click the **+** icon.
-4.	Select **Create a New Team Configuration File**.
-5.	If no workspace is open, a global configuration file is created. If a workspace is open, chose either a global configuration file or a project-level configuration file.
-6.	Edit the config file to include the host and other connection information, and save.
+1. Navigate to the **Side Bar**.
+2. Hover over **DATA SETS**, **USS**, or **JOBS**.
+3. Click the **+** icon.
+4. Select **Create a New Team Configuration File**.
+5. If no workspace is open, a global configuration file is created. If a workspace is open, chose either a global configuration file or a project-level configuration file.
+6. Edit the config file to include the host and other connection information, and save.
 
 Your team configuration file appears either in your .zowe folder if you chose the global configuration file option, or in your workspace directory if you chose the project-level configuration file option. The notification message that shows in VS Code after config file creation includes the path of the created file.
 
@@ -108,7 +108,7 @@ Securing credentials for v1 profiles and secure fields in the team configuration
 
 **Note:** The following information applies to Zowe CLI V1 profiles (one yaml file for each user profile) and Zowe CLI team profiles (Zowe CLI V2).
 
-Zowe Explorer includes the profile validation feature that helps to ensure that the specified connection to z/OS is successfully established and your profile is ready for use. If a profile is valid, the profile is active and can be used. 
+Zowe Explorer includes the profile validation feature that helps to ensure that the specified connection to z/OS is successfully established and your profile is ready for use. If a profile is valid, the profile is active and can be used.
 
 By default, this feature is automatically enabled. You can disable the feature by right-clicking on your profile and selecting the **Disable Validation for Profile** option. Alternatively, you can enable or disable the feature for all profiles in the VS Code settings
 
@@ -126,7 +126,7 @@ As a Zowe user, you can leverage the base profile functionality to access multip
 1. Zowe Explorer has a right click action for profiles to log in and log out of the authentication service for existing Base profiles. If a v1 Base profile hasn't been created, open a terminal and run the following Zowe CLI command: `zowe auth login apiml`.
 2. Follow the instructions to complete the login.
    A local base profile is created that contains your token.
-   
+
    **Note:** For more information about the process, see [Token Management](https://docs.zowe.org/stable/user-guide/cli-usingcli.html#how-token-management-works).
 
 3. Open VS Code and select the **Zowe Explorer** icon in the **Side Bar**.
@@ -146,6 +146,7 @@ For more information, see [Integrating with API Mediation Layer](https://docs.zo
 If the token for your base profile is no longer valid, you can log in again to get a new token with the **Log in to Authentication Service** feature.
 
 **Notes:**
+
 - The feature is only available for base profiles.
 - The feature supports only API Mediation Layer at the moment. Other extenders may use a different authentication service.
 
@@ -191,7 +192,7 @@ Review the following use cases and their procedures to understand how to work wi
 2. Open the **DATA SETS** bar.
 3. Hover over the profile that you want to apply the filter to.
 4. Click the **Search** icon.
-4. Enter a search pattern in the `HLQ.ZZZ.SSS(MEMBERNAME)` format to filter for and display the specified member in the tree.
+5. Enter a search pattern in the `HLQ.ZZZ.SSS(MEMBERNAME)` format to filter for and display the specified member in the tree.
 
 ![View Data Set With Member Pattern](/docs/images/ZE-member-filter-search.gif?raw=true "View Data Set With Member Pattern")
 
@@ -256,6 +257,7 @@ Review the following use cases and their procedures to understand how to work wi
 5. Press `Ctrl`+`S` or `Command`+`S` (OSx) to save the changes.
 
    If the original content in your local version no longer matches the same file in the mainframe, a warning message displays advising the user to compare both versions.
+
 6. If necessary, use the editor tool bar to resolve any merge conflicts.
 
 ![Save](/docs/images/ZE-safe-save.gif?raw=true "Save")
@@ -321,7 +323,7 @@ Review the following use cases and their procedures to understand how to work wi
 7. Select the attribute you want to edit, provide the value in the **Command Palette**, and press the `Enter` key.
 8. (Optional) Edit the parameters of your data set.
 9. Select the **+ Allocate Data Set** option to create the data set.
-   
+
    The data set has been created successfully.
 
    ![Parameters](/docs/images/ZE-set-params.gif?raw=true "Parameters")
