@@ -41,7 +41,7 @@ The Zowe Explorer extension modernizes the way developers and system administrat
 
 ## Contents
 
-- [Prerequisites](#prerequisites)
+- [Prerequisites tasks](#prerequisite-tasks)
 - [Getting started](#getting-started)
 - [Sample use cases](#sample-use-cases)
 - [Usage tips](#usage-tips)
