@@ -9,8 +9,6 @@
 
 [Zowe Explorer](https://github.com/zowe/community#zowe-explorer) is a sub-project of Zowe, focusing on modernizing mainframe experience. [Zowe](https://www.zowe.org/) is a project hosted by the [Open Mainframe Project](https://www.openmainframeproject.org/), a [Linux Foundation](https://www.linuxfoundation.org/) project.
 
-### Overview
-
 The Zowe Explorer extension modernizes the way developers and system administrators interact with z/OS mainframes by:
 
 - Enabling you to create, modify, rename, copy, and upload data sets directly to a z/OS mainframe.
@@ -19,7 +17,22 @@ The Zowe Explorer extension modernizes the way developers and system administrat
 - Letting you create, edit, and delete Zowe CLI `zosmf` compatible profiles.
 - Letting you leverage the API Mediation Layer token-based authentication to access z/OSMF.
 
-### Applications
+## Contents
+
+- [Sample use cases](#sample-use-cases) 
+- [Prerequisites tasks](#prerequisite-tasks)
+- [Getting started](#getting-started)
+- [Usage tips](#usage-tips)
+- [Keyboard shortcuts](#keyboard-shortcuts)
+- [Extending Zowe Explorer](#extending-zowe-explorer)
+- [More information](#more-information)
+
+> Zowe Explorer is compatible only with Theia 1.18.0 or higher.
+> Zowe Explorer could experience possible unexpected behaviors with the latest Theia releases.
+
+## Sample use cases
+
+Review the following use cases and their procedures to understand how to work with data sets in Zowe Explorer. For the complete list of features including USS and jobs, see [Zowe Explorer Sample Use Cases](https://docs.zowe.org/stable/user-guide/ze-usage/#sample-use-cases).
 
 - [View data sets and use multiple filters](#view-data-sets-and-use-multiple-filters): View multiple data sets simultaneously and apply filters to show specified data sets.
 - [Refresh the data set list](#refresh-the-list-of-data-sets): Refresh the list of pre-filtered data sets.
@@ -33,144 +46,6 @@ The Zowe Explorer extension modernizes the way developers and system administrat
 - [View and access multiple profiles simultaneously](#view-and-access-multiple-profiles-simultaneously): Work with data sets from multiple profiles.
 - [Submit a JCL](#submit-a-jcl): You can submit a jcl from a chose data set.
 - [Allocate Like](#allocate-like): Create a copy of a chosen data set with the same parameters.
-
-### More information
-
-- For the complete Zowe Explorer documentation, see [Zowe Docs](https://docs.zowe.org/stable/user-guide/ze-install.html).
-- Join the **#zowe-explorer** channel on [Slack](https://openmainframeproject.slack.com/) to stay in touch with the Zowe community.
-
-## Contents
-
-- [Prerequisites tasks](#prerequisite-tasks)
-- [Getting started](#getting-started)
-- [Sample use cases](#sample-use-cases)
-- [Usage tips](#usage-tips)
-- [Keyboard shortcuts](#keyboard-shortcuts)
-- [Extending Zowe Explorer](#extending-zowe-explorer)
-
-> Zowe Explorer is compatible only with Theia 1.18.0 or higher.
-> Zowe Explorer could experience possible unexpected behaviors with the latest Theia releases.
-
-## Prerequisite tasks
-
-- Configure TSO/E address space services, z/OS data set, file REST interface, and z/OS jobs REST interface. For more information, see [z/OS Requirements](https://docs.zowe.org/stable/user-guide/systemrequirements-zosmf.html#z-os-requirements).
-- Create a Zowe Explorer profile.
-
-## Getting started
-
-This section includes steps for the tasks you need to complete to get started using Zowe Explorer.
-
-Create a [v1 profile](#create-a-v1-profile) or a [team configuration file](#create-a-team-configuration-file) for profile manangement, review the [sample use cases](#sample-use-cases) to familiarize yourself with the capabilities of Zowe Explorer, and you are ready to use Zowe Explorer.
-
-### Create a v1 profile
-
-**Note:** If a team configuration file is in place, v1 profile creation and use will not be available.
-
-1. Navigate to the **Side Bar**.
-2. Hover over **DATA SETS**, **USS**, or **JOBS**.
-3. Click the **+** icon.
-4. Select **Create a New Connection to z/OS**. The user name and password fields are optional.
-5. Follow the instructions, and enter all required information to complete the profile creation.
-
-![New Connection](/docs/images/ZE-newProfiles.gif?raw=true "New Connection")
-<br /><br />
-
-You can now use all the functionalities of the extension.
-
-### Create a team configuration file
-
-1. Navigate to the **Side Bar**.
-2. Hover over **DATA SETS**, **USS**, or **JOBS**.
-3. Click the **+** icon.
-4. Select **Create a New Team Configuration File**.
-5. If no workspace is open, a global configuration file is created. If a workspace is open, chose either a global configuration file or a project-level configuration file.
-6. Edit the config file to include the host and other connection information, and save.
-
-Your team configuration file appears either in your .zowe folder if you chose the global configuration file option, or in your workspace directory if you chose the project-level configuration file option. The notification message that shows in VS Code after config file creation includes the path of the created file.
-
-### Updating securely stored credentials
-
-Securing credentials for v1 profiles and secure fields in the team configuration file are handled by the Zowe Imperative dependency. To update securely stored user names and passwords in Zowe Explorer, the user can right click the profile and select **Update Credentials**. This prompts the user for the new credentials and the secure credentials vault is updated.
-
-### Editing team configuration file
-
-1. Navigate to the **Side Bar**.
-2. Hover over **DATA SETS**, **USS**, or **JOBS**.
-3. Click the **+** icon.
-4. If team configuration file is in place, the **Edit Team Configuration File** option displays.
-   ![Edit Team Configuration File](/docs/images/ZE-edit-config.png)
-   <br /><br />
-5. If only a global or project level config is in place, it opens to be edited. If both a global and project level config are in place, the user must select which file to edit.
-   ![Edit Config Location Option](/docs/images/ZE-edit-options.png)
-   <br /><br />
-
-### Profile validation
-
-**Note:** The following information applies to Zowe CLI V1 profiles (one yaml file for each user profile) and Zowe CLI team profiles (Zowe CLI V2).
-
-Zowe Explorer includes the profile validation feature that helps to ensure that the specified connection to z/OS is successfully established and your profile is ready for use. If a profile is valid, the profile is active and can be used.
-
-By default, this feature is automatically enabled. You can disable the feature by right-clicking on your profile and selecting the **Disable Validation for Profile** option. Alternatively, you can enable or disable the feature for all profiles in the VS Code settings
-
-1. In VS Code, navigate to **Settings**.
-2. Navigate to Zowe Explorer settings.
-3. Check the **Automatic Profile Validation** checkbox to enable the automatic validation of profiles option. Uncheck to disable.
-4. Restart VS Code.
-
-### Use base profile and token with existing profiles
-
-As a Zowe user, you can leverage the base profile functionality to access multiple services through Single Sign-on. Base profiles enable you to authenticate using the Zowe API Mediation Layer (API ML). You can use base profiles with more than one service profile. For more information, see [Base Profiles](https://docs.zowe.org/stable/user-guide/cli-using-using-profiles/#base-profiles).
-
-**Note:** Before using the base profile functionality with v1 profiles, ensure that you have [Zowe CLI](https://docs.zowe.org/stable/user-guide/cli-installcli.html) v6.0.0 or higher installed.
-
-1. Zowe Explorer has a right click action for profiles to log in and log out of the authentication service for existing Base profiles. If a v1 Base profile hasn't been created, open a terminal and run the following Zowe CLI command: `zowe auth login apiml`.
-2. Follow the instructions to complete the login.
-   A local base profile is created that contains your token.
-
-   **Note:** For more information about the process, see [Token Management](https://docs.zowe.org/stable/user-guide/cli-usingcli.html#how-token-management-works).
-
-3. Open VS Code and select the **Zowe Explorer** icon in the **Side Bar**.
-
-4. Hover over **DATA SETS**, **USS**, or **JOBS**.
-
-5. Click the **+** icon.
-
-6. Select the profile you use with your base profile with the token.
-
-   The profile appears in the tree and you can now use this profile to access z/OSMF via the API Mediation Layer.
-
-For more information, see [Integrating with API Mediation Layer](https://docs.zowe.org/stable/user-guide/cli-usingcli.html#integrating-with-api-mediation-layer).
-
-#### Log in to the Authentication Service
-
-If the token for your base profile is no longer valid, you can log in again to get a new token with the **Log in to Authentication Service** feature.
-
-**Notes:**
-
-- The feature is only available for base profiles.
-- The feature supports only API Mediation Layer at the moment. Other extenders may use a different authentication service.
-
-1. Open VS Code and select the Zowe Explorer icon in the **Side Bar**.
-2. Right-click your profile.
-3. Select the **Log in to Authentication Service** option.
-
-   You are prompted to enter your username and password.
-
-The token is stored in the corresponding base profile file, YAML file for v1 Profiles, or the team configuration file.
-
-If you do not want to store your token, you can request the server to end your session token. Use the **Log out from Authentication Service** feature to invalidate the token:
-
-1. Open Zowe Explorer.
-2. Hover over **DATA SETS**, **USS**, or **JOBS**.
-3. Click the **+** icon.
-4. Right-click your profile.
-5. Select the **Log out from Authentication Service** option.
-
-Your token has been successfully invalidated.
-
-## Sample use cases
-
-Review the following use cases and their procedures to understand how to work with data sets in Zowe Explorer. For the complete list of features including USS and jobs, see [Zowe Explorer Sample Use Cases](https://docs.zowe.org/stable/user-guide/ze-usage/#sample-use-cases).
 
 ### View data sets and use multiple filters
 
@@ -375,6 +250,123 @@ Review the following use cases and their procedures to understand how to work wi
 
 ![Allocate Like](/docs/images/ZE-allocate.gif?raw=true "Allocate Like")
 
+## Prerequisite tasks
+
+- Configure TSO/E address space services, z/OS data set, file REST interface, and z/OS jobs REST interface. For more information, see [z/OS Requirements](https://docs.zowe.org/stable/user-guide/systemrequirements-zosmf.html#z-os-requirements).
+- Create a Zowe Explorer profile.
+
+## Getting started
+
+This section includes steps for the tasks you need to complete to get started using Zowe Explorer.
+
+Create a [v1 profile](#create-a-v1-profile) or a [team configuration file](#create-a-team-configuration-file) for profile manangement, review the [sample use cases](#sample-use-cases) to familiarize yourself with the capabilities of Zowe Explorer, and you are ready to use Zowe Explorer.
+
+### Create a v1 profile
+
+**Note:** If a team configuration file is in place, v1 profile creation and use will not be available.
+
+1. Navigate to the **Side Bar**.
+2. Hover over **DATA SETS**, **USS**, or **JOBS**.
+3. Click the **+** icon.
+4. Select **Create a New Connection to z/OS**. The user name and password fields are optional.
+5. Follow the instructions, and enter all required information to complete the profile creation.
+
+![New Connection](/docs/images/ZE-newProfiles.gif?raw=true "New Connection")
+<br /><br />
+
+You can now use all the functionalities of the extension.
+
+### Create a team configuration file
+
+1. Navigate to the **Side Bar**.
+2. Hover over **DATA SETS**, **USS**, or **JOBS**.
+3. Click the **+** icon.
+4. Select **Create a New Team Configuration File**.
+5. If no workspace is open, a global configuration file is created. If a workspace is open, chose either a global configuration file or a project-level configuration file.
+6. Edit the config file to include the host and other connection information, and save.
+
+Your team configuration file appears either in your .zowe folder if you chose the global configuration file option, or in your workspace directory if you chose the project-level configuration file option. The notification message that shows in VS Code after config file creation includes the path of the created file.
+
+### Updating securely stored credentials
+
+Securing credentials for v1 profiles and secure fields in the team configuration file are handled by the Zowe Imperative dependency. To update securely stored user names and passwords in Zowe Explorer, the user can right click the profile and select **Update Credentials**. This prompts the user for the new credentials and the secure credentials vault is updated.
+
+### Editing team configuration file
+
+1. Navigate to the **Side Bar**.
+2. Hover over **DATA SETS**, **USS**, or **JOBS**.
+3. Click the **+** icon.
+4. If team configuration file is in place, the **Edit Team Configuration File** option displays.
+   ![Edit Team Configuration File](/docs/images/ZE-edit-config.png)
+   <br /><br />
+5. If only a global or project level config is in place, it opens to be edited. If both a global and project level config are in place, the user must select which file to edit.
+   ![Edit Config Location Option](/docs/images/ZE-edit-options.png)
+   <br /><br />
+
+### Profile validation
+
+**Note:** The following information applies to Zowe CLI V1 profiles (one yaml file for each user profile) and Zowe CLI team profiles (Zowe CLI V2).
+
+Zowe Explorer includes the profile validation feature that helps to ensure that the specified connection to z/OS is successfully established and your profile is ready for use. If a profile is valid, the profile is active and can be used.
+
+By default, this feature is automatically enabled. You can disable the feature by right-clicking on your profile and selecting the **Disable Validation for Profile** option. Alternatively, you can enable or disable the feature for all profiles in the VS Code settings
+
+1. In VS Code, navigate to **Settings**.
+2. Navigate to Zowe Explorer settings.
+3. Check the **Automatic Profile Validation** checkbox to enable the automatic validation of profiles option. Uncheck to disable.
+4. Restart VS Code.
+
+### Use base profile and token with existing profiles
+
+As a Zowe user, you can leverage the base profile functionality to access multiple services through Single Sign-on. Base profiles enable you to authenticate using the Zowe API Mediation Layer (API ML). You can use base profiles with more than one service profile. For more information, see [Base Profiles](https://docs.zowe.org/stable/user-guide/cli-using-using-profiles/#base-profiles).
+
+**Note:** Before using the base profile functionality with v1 profiles, ensure that you have [Zowe CLI](https://docs.zowe.org/stable/user-guide/cli-installcli.html) v6.0.0 or higher installed.
+
+1. Zowe Explorer has a right click action for profiles to log in and log out of the authentication service for existing Base profiles. If a v1 Base profile hasn't been created, open a terminal and run the following Zowe CLI command: `zowe auth login apiml`.
+2. Follow the instructions to complete the login.
+   A local base profile is created that contains your token.
+
+   **Note:** For more information about the process, see [Token Management](https://docs.zowe.org/stable/user-guide/cli-usingcli.html#how-token-management-works).
+
+3. Open VS Code and select the **Zowe Explorer** icon in the **Side Bar**.
+
+4. Hover over **DATA SETS**, **USS**, or **JOBS**.
+
+5. Click the **+** icon.
+
+6. Select the profile you use with your base profile with the token.
+
+   The profile appears in the tree and you can now use this profile to access z/OSMF via the API Mediation Layer.
+
+For more information, see [Integrating with API Mediation Layer](https://docs.zowe.org/stable/user-guide/cli-usingcli.html#integrating-with-api-mediation-layer).
+
+#### Log in to the Authentication Service
+
+If the token for your base profile is no longer valid, you can log in again to get a new token with the **Log in to Authentication Service** feature.
+
+**Notes:**
+
+- The feature is only available for base profiles.
+- The feature supports only API Mediation Layer at the moment. Other extenders may use a different authentication service.
+
+1. Open VS Code and select the Zowe Explorer icon in the **Side Bar**.
+2. Right-click your profile.
+3. Select the **Log in to Authentication Service** option.
+
+   You are prompted to enter your username and password.
+
+The token is stored in the corresponding base profile file, YAML file for v1 Profiles, or the team configuration file.
+
+If you do not want to store your token, you can request the server to end your session token. Use the **Log out from Authentication Service** feature to invalidate the token:
+
+1. Open Zowe Explorer.
+2. Hover over **DATA SETS**, **USS**, or **JOBS**.
+3. Click the **+** icon.
+4. Right-click your profile.
+5. Select the **Log out from Authentication Service** option.
+
+Your token has been successfully invalidated.
+
 ## Usage tips
 
 - Use the **Add to Favorite** feature to permanently store chosen data sets, USS files, and jobs in the **Favorites** folder. Right-click on a data set, USS file or jobs and select **Add Favorite**.
@@ -412,3 +404,8 @@ For the comprehensive Zowe Explorer documentation that also includes information
 You can add new functionalities to Zowe Explorer by creating your own extension. For more information, see [Extensions for Zowe Explorer](https://github.com/zowe/vscode-extension-for-zowe/blob/main/docs/README-Extending.md).
 
 **Tip:** View an example of a Zowe Explorer extension: [Zowe Explorer FTP extension documentation](https://github.com/zowe/zowe-explorer-ftp-extension#zowe-explorer-ftp-extension).
+
+## More information
+
+- For the complete Zowe Explorer documentation, see [Zowe Docs](https://docs.zowe.org/stable/user-guide/ze-install.html).
+- Join the **#zowe-explorer** channel on [Slack](https://openmainframeproject.slack.com/) to stay in touch with the Zowe community.
