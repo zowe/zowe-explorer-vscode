@@ -326,7 +326,7 @@ As a Zowe user, you can leverage the base profile functionality to access multip
 2. Follow the instructions to complete the login.
    A local base profile is created that contains your token.
 
-   **Note:** For more information about the process, see [Token Management](https://docs.zowe.org/stable/user-guide/cli-usingcli.html#how-token-management-works).
+   **Note:** For more information about the process, see [Token Management](https://docs.zowe.org/stable/user-guide/cli-using-integrating-apiml/#how-token-management-works).
 
 3. Open VS Code and select the **Zowe Explorer** icon in the **Side Bar**.
 
@@ -338,7 +338,7 @@ As a Zowe user, you can leverage the base profile functionality to access multip
 
    The profile appears in the tree and you can now use this profile to access z/OSMF via the API Mediation Layer.
 
-For more information, see [Integrating with API Mediation Layer](https://docs.zowe.org/stable/user-guide/cli-usingcli.html#integrating-with-api-mediation-layer).
+For more information, see [Integrating with API Mediation Layer](https://docs.zowe.org/stable/user-guide/cli-using-integrating-apiml).
 
 #### Log in to the Authentication Service
 
