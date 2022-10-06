@@ -1,0 +1,25 @@
+name: Changelog
+
+on:
+  pull_request:
+    branches:
+      - main
+      - v?-lts
+      - next
+
+jobs:
+  changelog:
+    if: ${{ contains( github.event.pull_request.labels.*.name, 'no-changelog') != true }}
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Check Changelog Updated
+      uses: awharn/check_changelog_action@yarn-workspaces
+      with:
+        header: '## TBD Release'
+        yarnWorkspaces: true
