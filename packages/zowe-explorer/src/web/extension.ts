@@ -8,9 +8,5 @@
  * Copyright Contributors to the Zowe Project.                                     *
  *                                                                                 *
  */
-
-import * as vscode from "vscode";
-export function activate(): void {
-    vscode.window.showInformationMessage("Web ext");
-}
+export function activate(): void {}
 export async function deactivate() {}
