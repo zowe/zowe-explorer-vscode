@@ -5,8 +5,10 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ## TBD Release
 
 - Added check for existing team configuration file in location during create, prompting user to continue with the create action. [#1923](https://github.com/zowe/vscode-extension-for-zowe/issues/1923)
+- Added a solution to allow Zowe Explorer extensions with a dependency on Zowe Explorer to work as web extension without Zowe Explorer functionality in vscode.dev. [#1953](https://github.com/zowe/vscode-extension-for-zowe/issues/1953)
 - Bugfix: Fix refresh job & spool file pull from mainframe doesn't update job status [#1936](https://github.com/zowe/vscode-extension-for-zowe/pull/1936)
 - Bugfix: Fixed project profiles loaded when no workspace folder is open. [#1802](https://github.com/zowe/vscode-extension-for-zowe/issues/1802)
+- Bugfix: Fix for serial saving of data sets and files to avoid conflict error. [#1868](https://github.com/zowe/vscode-extension-for-zowe/issues/1868)
 
 ## `2.3.0`
 
