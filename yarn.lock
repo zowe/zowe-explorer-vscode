@@ -2262,12 +2262,12 @@
   dependencies:
     minimatch "3.0.4"
 
-"@zowe/zos-ftp-for-zowe-cli@1.5.0":
-  version "1.5.0"
-  resolved "https://registry.npmjs.org/@zowe/zos-ftp-for-zowe-cli/-/zos-ftp-for-zowe-cli-1.5.0.tgz#6a8e70af3bb452a357b871611f01f4722d9bc797"
-  integrity sha512-w7bM15QY0yK1xSzwJWXN1jjZEoTOXeXH/z4L3WnoANSCvjCfHymDT0aVKr3qpDKiznWR358nskPc5KBhdYsBYQ==
+"@zowe/zos-ftp-for-zowe-cli@2.1.0":
+  version "2.1.0"
+  resolved "https://registry.npmjs.org/@zowe/zos-ftp-for-zowe-cli/-/zos-ftp-for-zowe-cli-2.1.0.tgz#4f9249e93052f1a38be09ead0b1205f79c339e34"
+  integrity sha512-CW7tkTYIqVbkBxB9LGr6dwtN5WGg0WDELx/XYHCS/Ak9DaECKzEbwON5+4Aw4E9BryTYIVMORwhmXlj7v2KChQ==
   dependencies:
-    zos-node-accessor "^1.0.8"
+    zos-node-accessor "1.0.12"
 
 "@zowe/zos-jobs-for-zowe-sdk@7.6.1":
   version "7.6.1"
@@ -12989,10 +12989,10 @@ yn@3.1.1:
   resolved "https://registry.npmjs.org/yn/-/yn-3.1.1.tgz#1e87401a09d767c1d5eab26a6e4c185182d2eb50"
   integrity sha512-Ux4ygGWsu2c7isFWe8Yu1YluJmqVhxqK2cLXNQA5AcC3QfbGNpM7fu0Y8b/z16pXLnFxZYvWhd3fhBY9DLmC6Q==
 
-zos-node-accessor@^1.0.8:
-  version "1.0.10"
-  resolved "https://registry.npmjs.org/zos-node-accessor/-/zos-node-accessor-1.0.10.tgz#41f6725c247cc4581a356e7fbc437ecde6a32803"
-  integrity sha512-aCFrKllhCxZmd2dPCJ3bLFBQM9juvkquDR3DdhKqxLfZglEAa7YNfORZQXz2146ogOjYS5tkAjcr1Swf1HmBgw==
+zos-node-accessor@1.0.12:
+  version "1.0.12"
+  resolved "https://registry.npmjs.org/zos-node-accessor/-/zos-node-accessor-1.0.12.tgz#fce75ced095545850ee065263977af4ed640bef2"
+  integrity sha512-WA4DVgYLMDIYFh5eTvY9zQSgO6MJvClvFX2RMU5NCLbrTDVVoQ8e0tsUsHU2M0X7P7cY28Lrk1nDZSbdQf0imw==
   dependencies:
     debug "~2.6.8"
     ftp4 "~0.3.13"
