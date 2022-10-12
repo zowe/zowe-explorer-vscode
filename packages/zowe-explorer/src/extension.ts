@@ -227,10 +227,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
                     );
                 } else if (savedFile.document.fileName.toUpperCase().indexOf(globals.DS_DIR.toUpperCase()) >= 0) {
                     globals.LOG.debug(localize("activate.didSaveText.isDataSet", "File is a data set-- saving "));
-                    handleSaving(dsActions.saveFile, savedFile.document, datasetProvider);
+                    await handleSaving(dsActions.saveFile, savedFile.document, datasetProvider);
                 } else if (savedFile.document.fileName.toUpperCase().indexOf(globals.USS_DIR.toUpperCase()) >= 0) {
                     globals.LOG.debug(localize("activate.didSaveText.isUSSFile", "File is a USS file -- saving"));
-                    handleSaving(ussActions.saveUSSFile, savedFile.document, ussFileProvider);
+                    await handleSaving(ussActions.saveUSSFile, savedFile.document, ussFileProvider);
                 } else {
                     globals.LOG.debug(
                         localize("activate.didSaveText.file", "File ") +
