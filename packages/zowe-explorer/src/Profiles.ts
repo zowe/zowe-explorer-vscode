@@ -685,6 +685,18 @@ export class Profiles extends ProfilesCache {
 
             // Build new config and merge with existing layer
             const newConfig: zowe.imperative.IConfig = await zowe.imperative.ConfigBuilder.build(impConfig, opts);
+
+            // Temporary solution for handling unsecure profiles until CLI team's work is made
+            // Remove secure properties and set autoStore to false when vscode setting is true
+            const configuration: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
+            const isSecureCredsEnabled: boolean = configuration.get(globals.SETTINGS_DISABLE_CREDENTIAL_MANAGER);
+            if (!isSecureCredsEnabled) {
+                for (const profile of Object.entries(newConfig.profiles)) {
+                    delete newConfig.profiles[profile[0]].secure;
+                }
+                newConfig.autoStore = false;
+            }
+
             config.api.layers.merge(newConfig);
             await config.save(false);
             let configName;

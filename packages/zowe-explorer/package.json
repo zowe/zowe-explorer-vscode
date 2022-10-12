@@ -1688,6 +1688,12 @@
           "type": "integer",
           "description": "%zowe.settings.version%",
           "scope": "window"
+        },
+        "zowe.security.enableSecureCredentials": {
+          "default": true,
+          "type": "boolean",
+          "description": "%zowe.security.enableSecureCredentials%",
+          "scope": "window"
         }
       }
     }
