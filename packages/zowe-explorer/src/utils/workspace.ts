@@ -134,20 +134,25 @@ export async function closeOpenedTextFile(path: string) {
 /**
  * Handle auto/regular save by prioritizing the last ongoing save of a series queued saves
  */
+const savingQueue = [];
 let latestSavedFile: vscode.TextDocument;
 let ongoingSave = false;
-export function handleSaving(
+export async function handleSaving(
     uploadRequest: (document, provider) => Promise<void | string>,
     savedFile: vscode.TextDocument,
     fileProvider: IZoweTree<IZoweUSSTreeNode | IZoweDatasetTreeNode>
-): void {
-    latestSavedFile = savedFile;
+): Promise<void> {
+    const saving = {
+        savedFile,
+    };
+    savingQueue.push(saving);
     if (ongoingSave) {
         return;
     }
     ongoingSave = true;
-    uploadRequest(latestSavedFile, fileProvider).then(() => {
-        latestSavedFile = undefined;
-        ongoingSave = false;
-    });
+    while (savingQueue.length !== 0) {
+        latestSavedFile = savingQueue.shift().savedFile;
+        await uploadRequest(latestSavedFile, fileProvider);
+    }
+    ongoingSave = false;
 }
