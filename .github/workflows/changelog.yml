@@ -13,13 +13,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
-    - name: Check Changelog Updated
-      uses: awharn/check_changelog_action@v1.1.0
-      with:
-        header: '## TBD Release'
-        yarnWorkspaces: true
+      - name: Check Changelog Updated
+        uses: awharn/check_changelog_action@v1.1.0
+        with:
+          header: "## TBD Release"
+          yarnWorkspaces: true

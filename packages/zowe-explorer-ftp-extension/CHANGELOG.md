@@ -1,7 +1,9 @@
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
 ## `2.3.0`
+
 ### Bug fixes
+
 - Fixed for profile properties like "rejectUnauthorized" being ignored.
 
 ## `2.0.2`
