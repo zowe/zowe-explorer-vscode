@@ -246,10 +246,10 @@ export async function readConfigFromDisk() {
     let rootPath;
     try {
         if (vscode.workspace.workspaceFolders) {
-            rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
+            rootPath = vscode.workspace.workspaceFolders?.[0].uri.fsPath;
             await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir(), projectDir: getFullPath(rootPath) });
         } else {
-            await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir(), projectDir: false });
+            await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir(), projectDir: undefined });
         }
         if (mProfileInfo.usingTeamConfig) {
             globals.setConfigPath(rootPath);
