@@ -284,8 +284,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     ZoweExplorerExtender.createInstance(datasetProvider, ussFileProvider, jobsProvider);
     await SettingsConfig.standardizeSettings();
 
-    vscode.window.showInformationMessage(`check settings.`);
-
     try {
         await watchConfigProfile(context);
     } catch (e) {
