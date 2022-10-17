@@ -8,5 +8,6 @@
  * Copyright Contributors to the Zowe Project.                                     *
  *                                                                                 *
  */
+
 export function activate(): void {}
 export async function deactivate() {}
