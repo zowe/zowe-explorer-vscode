@@ -90,11 +90,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     try {
         // Ensure that ~/.zowe folder exists
         if (!imperative.ImperativeConfig.instance.config?.exists) {
-            const zoweDir = getZoweDir();
             // Should we replace the instance.config above with (await getProfileInfo(globals.ISTHEIA)).exists
             await imperative.CliProfileManager.initialize({
                 configuration: getImperativeConfig().profiles,
-                profileRootDirectory: path.join(zoweDir, "profiles"),
+                profileRootDirectory: path.join(getZoweDir(), "profiles"),
             });
 
             // TODO(zFernand0): Will address the commented code below once this imperative issue is resolved.
@@ -115,13 +114,12 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         }
 
         await readConfigFromDisk();
+        // Initialize profile manager
+        await Profiles.createInstance(globals.LOG);
     } catch (err) {
         const errorMessage = localize("initialize.profiles.error", "Error reading or initializing Zowe CLI profiles.");
-        vscode.window.showErrorMessage(`${errorMessage}: ${err.message}`);
+        vscode.window.showWarningMessage(`${errorMessage}: ${err.message}`);
     }
-
-    // Initialize profile manager
-    await Profiles.createInstance(globals.LOG);
 
     if (!fs.existsSync(globals.ZOWETEMPFOLDER)) {
         fs.mkdirSync(globals.ZOWETEMPFOLDER);
@@ -167,7 +165,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     // Register functions & event listeners
     vscode.workspace.onDidChangeConfiguration(async (e) => {
         // If the temp folder location has been changed, update current temp folder preference
-        if (e.affectsConfiguration(globals.SETTINGS_TEMP_FOLDER_PATH)) {
+        if (e?.affectsConfiguration(globals.SETTINGS_TEMP_FOLDER_PATH)) {
             const updatedPreferencesTempPath: string = vscode.workspace
                 .getConfiguration()
                 /* tslint:disable:no-string-literal */
@@ -175,13 +173,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             moveTempFolder(preferencesTempPath, updatedPreferencesTempPath);
             preferencesTempPath = updatedPreferencesTempPath;
         }
-        if (e.affectsConfiguration(globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION)) {
+        if (e?.affectsConfiguration(globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION)) {
             await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
             await refreshActions.refreshAll(datasetProvider);
             await refreshActions.refreshAll(ussFileProvider);
             await refreshActions.refreshAll(jobsProvider);
         }
-        if (e.affectsConfiguration(globals.SETTINGS_TEMP_FOLDER_HIDE)) {
+        if (e?.affectsConfiguration(globals.SETTINGS_TEMP_FOLDER_HIDE)) {
             hideTempFolder(getZoweDir());
         }
     });
@@ -195,6 +193,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     if (jobsProvider) {
         initJobsProvider(context, jobsProvider);
     }
+
     if (datasetProvider || ussFileProvider) {
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.openRecentMember", () =>
@@ -284,12 +283,18 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
 
     ZoweExplorerExtender.createInstance(datasetProvider, ussFileProvider, jobsProvider);
     await SettingsConfig.standardizeSettings();
+
+    vscode.window.showInformationMessage(`check settings.`);
+
     try {
         await watchConfigProfile(context);
     } catch (e) {
         globals.LOG.error(e);
     }
     globals.setActivated(true);
+
+    vscode.window.showInformationMessage(`Zowe Explorer Activated!!!`);
+
     return ZoweExplorerApiRegister.getInstance();
 }
 

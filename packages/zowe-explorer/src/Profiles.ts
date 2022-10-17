@@ -302,14 +302,13 @@ export class Profiles extends ProfilesCache {
         let mProfileInfo: zowe.imperative.ProfileInfo;
         try {
             mProfileInfo = await this.getProfileInfo();
+            const profAllAttrs = mProfileInfo.getAllProfiles();
+            for (const pName of profileNamesList) {
+                const osLocInfo = mProfileInfo.getOsLocInfo(profAllAttrs.find((p) => p.profName === pName));
+                items.push(new FilterItem({ text: pName, icon: this.getProfileIcon(osLocInfo)[0] }));
+            }
         } catch (err) {
             this.log.warn(err);
-        }
-
-        const profAllAttrs = mProfileInfo.getAllProfiles();
-        for (const pName of profileNamesList) {
-            const osLocInfo = mProfileInfo.getOsLocInfo(profAllAttrs.find((p) => p.profName === pName));
-            items.push(new FilterItem({ text: pName, icon: this.getProfileIcon(osLocInfo)[0] }));
         }
 
         const quickpick = vscode.window.createQuickPick();
