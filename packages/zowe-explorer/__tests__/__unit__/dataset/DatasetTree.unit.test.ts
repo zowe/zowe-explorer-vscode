@@ -40,6 +40,7 @@ import {
 import { bindMvsApi, createMvsApi } from "../../../__mocks__/mockCreators/api";
 import * as workspaceUtils from "../../../src/utils/workspace";
 import { PersistentFilters } from "../../../src/PersistentFilters";
+import * as dsUtils from "../../../src/dataset/utils";
 
 jest.mock("fs");
 jest.mock("util");
@@ -2455,5 +2456,8 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
 
         expect(renameDataSetMemberSpy).toHaveBeenLastCalledWith("HLQ.TEST.RENAME.NODE", "mem1", "MEM2");
         expect(error).toBe(defaultError);
+    });
+    it("Checking validate validateDataSetName util function", async () => {
+        expect(dsUtils.validateDataSetName("#DSNAME.DSNAME")).toBe(true);
     });
 });
