@@ -35,6 +35,7 @@ import { closeOpenedTextFile } from "../utils/workspace";
 import { PersistentFilters } from "../PersistentFilters";
 import { IDataSet, IListOptions, imperative } from "@zowe/cli";
 import { UIViews } from "../shared/ui-views";
+import { validateDataSetName } from "./utils";
 
 // Set up localization
 nls.config({
@@ -1149,7 +1150,14 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     private async renameDataSetMember(node: IZoweDatasetTreeNode) {
         const beforeMemberName = node.label as string;
         const dataSetName = node.getParent().getLabel() as string;
-        const options: vscode.InputBoxOptions = { value: beforeMemberName };
+        const options: vscode.InputBoxOptions = {
+            value: beforeMemberName,
+            validateInput: (text) => {
+                return validateDataSetName(text) === true
+                    ? null
+                    : localize("dataset.validation", "Enter valid dataset name");
+            },
+        };
         let afterMemberName = await UIViews.inputBox(options);
         if (!afterMemberName) {
             vscode.window.showInformationMessage(localize("renameDataSet.cancelled", "Rename operation cancelled."));
@@ -1212,7 +1220,14 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      */
     private async renameDataSet(node: IZoweDatasetTreeNode) {
         const beforeDataSetName = node.label as string;
-        const options: vscode.InputBoxOptions = { value: beforeDataSetName };
+        const options: vscode.InputBoxOptions = {
+            value: beforeDataSetName,
+            validateInput: (text) => {
+                return validateDataSetName(text) === true
+                    ? null
+                    : localize("dataset.validation", "Enter valid dataset name");
+            },
+        };
         let afterDataSetName = await UIViews.inputBox(options);
         if (!afterDataSetName) {
             vscode.window.showInformationMessage(localize("renameDataSet.cancelled", "Rename operation cancelled."));

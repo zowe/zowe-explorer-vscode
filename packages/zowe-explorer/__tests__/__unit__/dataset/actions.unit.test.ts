@@ -171,7 +171,10 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
 
         await dsActions.createMember(parent, blockMocks.testDatasetTree);
 
-        expect(mySpy).toBeCalledWith({ placeHolder: "Name of Member" });
+        expect(mySpy).toBeCalledWith({
+            placeHolder: "Name of Member",
+            validateInput: expect.any(Function),
+        });
         expect(mocked(zowe.Upload.bufferToDataSet)).toBeCalledWith(
             blockMocks.zosmfSession,
             Buffer.from(""),
@@ -241,7 +244,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
 
         await dsActions.createMember(parent, blockMocks.testDatasetTree);
 
-        expect(mySpy).toBeCalledWith({ placeHolder: "Name of Member" });
+        expect(mySpy).toBeCalledWith({ placeHolder: "Name of Member", validateInput: expect.any(Function) });
         expect(mocked(zowe.Upload.bufferToDataSet)).toBeCalledWith(
             blockMocks.zosmfSession,
             Buffer.from(""),

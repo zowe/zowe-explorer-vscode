@@ -89,6 +89,11 @@ export async function allocateLike(
                 "Enter the name of the data set to copy attributes from"
             ),
             value: currSelection as string,
+            validateInput: (text) => {
+                return dsUtils.validateDataSetName(text) === true
+                    ? null
+                    : localize("dataset.validation", "Enter valid dataset name");
+            },
         };
         likeDSName = await UIViews.inputBox(inputBoxOptions);
         if (!likeDSName) {
@@ -107,6 +112,11 @@ export async function allocateLike(
     const options: vscode.InputBoxOptions = {
         ignoreFocusOut: true,
         placeHolder: localize("allocateLike.inputBox.placeHolder", "Enter a name for the new data set"),
+        validateInput: (text) => {
+            return dsUtils.validateDataSetName(text) === true
+                ? null
+                : localize("dataset.validation", "Enter valid dataset name");
+        },
     };
     const newDSName = await UIViews.inputBox(options);
     if (!newDSName) {
@@ -392,6 +402,11 @@ export async function createMember(
 ) {
     const options: vscode.InputBoxOptions = {
         placeHolder: localize("createMember.inputBox.placeholder", "Name of Member"),
+        validateInput: (text) => {
+            return dsUtils.validateDataSetName(text) === true
+                ? null
+                : localize("dataset.validation", "Enter valid dataset name");
+        },
     };
     const name = await UIViews.inputBox(options);
     globals.LOG.debug(
@@ -579,6 +594,11 @@ export async function createFile(
         const options: vscode.InputBoxOptions = {
             placeHolder: localize("createFile.inputBox.placeHolder", "Name of Data Set"),
             ignoreFocusOut: true,
+            validateInput: (text) => {
+                return dsUtils.validateDataSetName(text) === true
+                    ? null
+                    : localize("dataset.validation", "Enter valid dataset name");
+            },
         };
         dsName = await UIViews.inputBox(options);
         if (dsName) {

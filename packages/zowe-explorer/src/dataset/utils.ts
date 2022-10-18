@@ -29,3 +29,7 @@ export function getNodeLabels(node: IZoweNodeType) {
         return { ...getProfileAndDataSetName(node), memberName: undefined };
     }
 }
+export function validateDataSetName(dsName: string): boolean {
+    const dsPattern = /^[a-zA-Z#@\$][a-zA-Z0-9#@\$\-]{0,7}(\.[a-zA-Z#@\$][a-zA-Z0-9#@\$\-]{0,7})*$/;
+    return dsPattern.test(dsName);
+}
