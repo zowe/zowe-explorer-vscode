@@ -32,6 +32,7 @@
     "*"
   ],
   "main": "./out/src/extension",
+  "browser": "./out/src/web/extension",
   "contributes": {
     "viewsContainers": {
       "activitybar": [
@@ -1693,7 +1694,7 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "yarn createTestProfileData && gulp build && yarn license && yarn lint && webpack --mode production && yarn updateStrings",
+    "vscode:prepublish": "yarn createTestProfileData && gulp build && yarn license && yarn lint && webpack --mode production && yarn updateStrings && yarn run compile-web",
     "build": "yarn createTestProfileData && gulp build && yarn license && webpack --mode development",
     "build:integration": "yarn createTestProfileData && gulp build && yarn license && tsc --build --pretty",
     "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
@@ -1704,6 +1705,7 @@
     "license": "node ../../scripts/license.js",
     "watch": "yarn createTestProfileData && gulp build && webpack --mode development --watch --info-verbosity verbose",
     "compile": "tsc -b",
+    "compile-web": "webpack --target webworker --entry ./src/web/extension.ts --output-path ./out/src/web",
     "markdown": "markdownlint CHANGELOG.md README.md",
     "lint:pretty": "prettier --check .",
     "lint": "yarn lint:src && yarn lint:tests && yarn lint:pretty && yarn markdown",
