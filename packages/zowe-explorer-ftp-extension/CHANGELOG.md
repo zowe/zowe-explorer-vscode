@@ -1,6 +1,6 @@
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
-## TBD Release
+## `2.4.0`
 
 - Added support for profile file encoding used for upload and download of MVS files. [#1942](https://github.com/zowe/vscode-extension-for-zowe/issues/1942)
 
