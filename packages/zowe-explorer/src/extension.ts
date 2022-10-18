@@ -90,10 +90,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     try {
         // Ensure that ~/.zowe folder exists
         if (!imperative.ImperativeConfig.instance.config?.exists) {
+            const zoweDir = getZoweDir();
             // Should we replace the instance.config above with (await getProfileInfo(globals.ISTHEIA)).exists
             await imperative.CliProfileManager.initialize({
                 configuration: getImperativeConfig().profiles,
-                profileRootDirectory: path.join(getZoweDir(), "profiles"),
+                profileRootDirectory: path.join(zoweDir, "profiles"),
             });
 
             // TODO(zFernand0): Will address the commented code below once this imperative issue is resolved.
@@ -194,7 +195,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     if (jobsProvider) {
         initJobsProvider(context, jobsProvider);
     }
-
     if (datasetProvider || ussFileProvider) {
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.openRecentMember", () =>
@@ -284,7 +284,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
 
     ZoweExplorerExtender.createInstance(datasetProvider, ussFileProvider, jobsProvider);
     await SettingsConfig.standardizeSettings();
-
     try {
         await watchConfigProfile(context);
     } catch (e) {

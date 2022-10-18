@@ -168,9 +168,6 @@ export class ProfilesCache {
         let mProfileInfo: zowe.imperative.ProfileInfo;
         try {
             mProfileInfo = await this.getProfileInfo();
-            // } catch (error) {
-            //     return;
-            // }
             const allTypes = this.getAllProfileTypes(apiRegister.registeredApiTypes());
             allTypes.push("base");
             for (const type of allTypes) {
