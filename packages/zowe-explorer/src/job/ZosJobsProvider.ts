@@ -175,10 +175,10 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 }
             }
         } else {
-            const allProfiles: imperative.IProfileLoaded[] = Profiles.getInstance()?.allProfiles;
+            const allProfiles: imperative.IProfileLoaded[] = Profiles.getInstance().allProfiles;
             if (allProfiles) {
-                allProfiles.forEach(async (sessionProfile) => {
-                    // for (const sessionProfile of allProfiles) {
+                // allProfiles.forEach(async (sessionProfile) => {
+                for (const sessionProfile of allProfiles) {
                     // If session is already added, do nothing
                     if (this.mSessionNodes.find((tempNode) => tempNode.label.toString() === sessionProfile.name)) {
                         return;
@@ -194,7 +194,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                             }
                         }
                     }
-                });
+                }
             }
             if (profileType && this.mSessionNodes.length === 1) {
                 await this.addSingleSession(Profiles.getInstance().getDefaultProfile(profileType));

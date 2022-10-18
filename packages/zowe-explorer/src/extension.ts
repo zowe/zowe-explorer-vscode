@@ -166,7 +166,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     // Register functions & event listeners
     vscode.workspace.onDidChangeConfiguration(async (e) => {
         // If the temp folder location has been changed, update current temp folder preference
-        if (e?.affectsConfiguration(globals.SETTINGS_TEMP_FOLDER_PATH)) {
+        if (e.affectsConfiguration(globals.SETTINGS_TEMP_FOLDER_PATH)) {
             const updatedPreferencesTempPath: string = vscode.workspace
                 .getConfiguration()
                 /* tslint:disable:no-string-literal */
@@ -174,13 +174,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             moveTempFolder(preferencesTempPath, updatedPreferencesTempPath);
             preferencesTempPath = updatedPreferencesTempPath;
         }
-        if (e?.affectsConfiguration(globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION)) {
+        if (e.affectsConfiguration(globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION)) {
             await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
             await refreshActions.refreshAll(datasetProvider);
             await refreshActions.refreshAll(ussFileProvider);
             await refreshActions.refreshAll(jobsProvider);
         }
-        if (e?.affectsConfiguration(globals.SETTINGS_TEMP_FOLDER_HIDE)) {
+        if (e.affectsConfiguration(globals.SETTINGS_TEMP_FOLDER_HIDE)) {
             hideTempFolder(getZoweDir());
         }
     });
@@ -291,9 +291,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         globals.LOG.error(e);
     }
     globals.setActivated(true);
-
-    vscode.window.showInformationMessage(`Zowe Explorer Activated!!!`);
-
     return ZoweExplorerApiRegister.getInstance();
 }
 
