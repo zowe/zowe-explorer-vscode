@@ -462,8 +462,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         } else {
             const profiles: imperative.IProfileLoaded[] = Profiles.getInstance()?.allProfiles;
             if (profiles) {
-                profiles.forEach(async (theProfile) => {
-                    // for (const theProfile of profiles) {
+                for (const theProfile of profiles) {
                     // If session is already added, do nothing
                     if (this.mSessionNodes.find((tempNode) => tempNode.label.toString() === theProfile.name)) {
                         return;
@@ -481,7 +480,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                             }
                         }
                     }
-                });
+                }
             }
             if (profileType && this.mSessionNodes.length === 1) {
                 await this.addSingleSession(Profiles.getInstance().getDefaultProfile(profileType));
