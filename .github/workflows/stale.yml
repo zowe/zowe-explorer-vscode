@@ -16,8 +16,8 @@ jobs:
           close-issue-message: >
             This issue has been automatically closed due to lack of activity. In an
             effort to reduce noise, please do not comment any further.
-          days-before-issue-stale: 7
-          days-before-issue-close: 7
+          days-before-issue-stale: 14
+          days-before-issue-close: 90
           exempt-all-issue-assignees: true
           stale-issue-label: "pending closure"
           stale-issue-message: >

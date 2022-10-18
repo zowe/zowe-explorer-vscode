@@ -1,7 +1,7 @@
 ---
 name: Feature request
 about: Suggest an idea for the Zowe Explorer
-labels: enhancement
+labels: enhancement, new
 ---
 
 **Is your feature request related to a problem? Please describe.**
