@@ -263,32 +263,43 @@ export class Profiles extends ProfilesCache {
      * @param {USSTree} zoweFileProvider - either the USS, MVS, JES tree
      */
     public async createZoweSession(zoweFileProvider: IZoweTree<IZoweTreeNode>) {
-        const allProfiles = Profiles.getInstance().allProfiles;
-        // Get all profiles
-        let profileNamesList = allProfiles.map((profile) => {
-            return profile.name;
-        });
-        // Filter to list of the APIs available for current tree explorer
-        profileNamesList = profileNamesList.filter((profileName) => {
-            const profile = Profiles.getInstance().loadNamedProfile(profileName);
-            if (zoweFileProvider.getTreeType() === PersistenceSchemaEnum.USS) {
-                const ussProfileTypes = ZoweExplorerApiRegister.getInstance().registeredUssApiTypes();
-                return ussProfileTypes.includes(profile.type);
+        let profileNamesList;
+        try {
+            const allProfiles = Profiles.getInstance().allProfiles;
+            if (allProfiles) {
+                // Get all profiles
+                profileNamesList = allProfiles.map((profile) => {
+                    return profile.name;
+                });
+                // Filter to list of the APIs available for current tree explorer
+                profileNamesList = profileNamesList?.filter((profileName) => {
+                    const profile = Profiles.getInstance().loadNamedProfile(profileName);
+                    if (profile) {
+                        if (zoweFileProvider.getTreeType() === PersistenceSchemaEnum.USS) {
+                            const ussProfileTypes = ZoweExplorerApiRegister.getInstance().registeredUssApiTypes();
+                            return ussProfileTypes.includes(profile.type);
+                        }
+                        if (zoweFileProvider.getTreeType() === PersistenceSchemaEnum.Dataset) {
+                            const mvsProfileTypes = ZoweExplorerApiRegister.getInstance().registeredMvsApiTypes();
+                            return mvsProfileTypes.includes(profile.type);
+                        }
+                        if (zoweFileProvider.getTreeType() === PersistenceSchemaEnum.Job) {
+                            const jesProfileTypes = ZoweExplorerApiRegister.getInstance().registeredJesApiTypes();
+                            return jesProfileTypes.includes(profile.type);
+                        }
+                    }
+                });
+                profileNamesList = profileNamesList?.filter(
+                    (profileName) =>
+                        // Find all cases where a profile is not already displayed
+                        !zoweFileProvider.mSessionNodes?.find(
+                            (sessionNode) => sessionNode.getProfileName() === profileName
+                        )
+                );
             }
-            if (zoweFileProvider.getTreeType() === PersistenceSchemaEnum.Dataset) {
-                const mvsProfileTypes = ZoweExplorerApiRegister.getInstance().registeredMvsApiTypes();
-                return mvsProfileTypes.includes(profile.type);
-            }
-            if (zoweFileProvider.getTreeType() === PersistenceSchemaEnum.Job) {
-                const jesProfileTypes = ZoweExplorerApiRegister.getInstance().registeredJesApiTypes();
-                return jesProfileTypes.includes(profile.type);
-            }
-        });
-        profileNamesList = profileNamesList.filter(
-            (profileName) =>
-                // Find all cases where a profile is not already displayed
-                !zoweFileProvider.mSessionNodes.find((sessionNode) => sessionNode.getProfileName() === profileName)
-        );
+        } catch (err) {
+            this.log.warn(err);
+        }
         // Set Options according to profile management in use
 
         const createNewProfile = "Create a New Connection to z/OS";

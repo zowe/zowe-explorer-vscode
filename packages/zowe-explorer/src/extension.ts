@@ -114,12 +114,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         }
 
         await readConfigFromDisk();
-        // Initialize profile manager
-        await Profiles.createInstance(globals.LOG);
     } catch (err) {
         const errorMessage = localize("initialize.profiles.error", "Error reading or initializing Zowe CLI profiles.");
         vscode.window.showWarningMessage(`${errorMessage}: ${err.message}`);
     }
+
+    // Initialize profile manager
+    await Profiles.createInstance(globals.LOG);
 
     if (!fs.existsSync(globals.ZOWETEMPFOLDER)) {
         fs.mkdirSync(globals.ZOWETEMPFOLDER);
