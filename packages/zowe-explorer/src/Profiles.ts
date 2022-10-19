@@ -727,7 +727,7 @@ export class Profiles extends ProfilesCache {
             }
             if (settings) {
                 const updatedSettings = settings.replace(
-                    /"CredentialManager": @zowe\/cli/g,
+                    /"CredentialManager": "@zowe\/cli"/g,
                     '"CredentialManager": false'
                 );
                 if (updatedSettings !== settings) {
