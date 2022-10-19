@@ -12,6 +12,7 @@
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import * as path from "path";
+import * as fs from "fs";
 import {
     IZoweTree,
     IZoweNodeType,
@@ -689,11 +690,12 @@ export class Profiles extends ProfilesCache {
             // Temporary solution for handling unsecure profiles until CLI team's work is made
             // Remove secure properties and set autoStore to false when vscode setting is true
             const configuration: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
-            const isSecureCredsEnabled: boolean = configuration.get(globals.SETTINGS_DISABLE_CREDENTIAL_MANAGER);
+            const isSecureCredsEnabled: boolean = configuration.get(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED);
             if (!isSecureCredsEnabled) {
                 for (const profile of Object.entries(newConfig.profiles)) {
                     delete newConfig.profiles[profile[0]].secure;
                 }
+                this.updateImperativeSettings();
                 newConfig.autoStore = false;
             }
 
@@ -713,6 +715,31 @@ export class Profiles extends ProfilesCache {
             vscode.window.showErrorMessage(
                 localize("Profiles.getProfileInfo.error", "Error in creating team configuration file: {0}", err.message)
             );
+        }
+    }
+
+    updateImperativeSettings() {
+        try {
+            const fileName = path.join(getZoweDir(), "settings", "imperative.json");
+            let settings: string;
+            if (fs.existsSync(fileName)) {
+                settings = fs.readFileSync(fileName, "utf-8");
+            }
+            if (settings) {
+                const updatedSettings = settings.replace(
+                    /"CredentialManager": @zowe\/cli/g,
+                    '"CredentialManager": false'
+                );
+                if (updatedSettings !== settings) {
+                    fs.writeFile(fileName, updatedSettings, "utf8", (err) => {
+                        if (err) {
+                            this.log.error("Could not update imerative.json", err);
+                        }
+                    });
+                }
+            }
+        } catch (error) {
+            this.log.error(error);
         }
     }
 

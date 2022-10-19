@@ -1690,10 +1690,10 @@
           "description": "%zowe.settings.version%",
           "scope": "window"
         },
-        "zowe.security.enableSecureCredentials": {
+        "zowe.security.secureCredentialsEnabled": {
           "default": true,
           "type": "boolean",
-          "description": "%zowe.security.enableSecureCredentials%",
+          "description": "%zowe.security.secureCredentialsEnabled%",
           "scope": "window"
         }
       }

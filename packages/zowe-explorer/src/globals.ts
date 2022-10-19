@@ -85,7 +85,7 @@ export const SETTINGS_AUTOMATIC_PROFILE_VALIDATION = "zowe.automaticProfileValid
 export const SETTINGS_DS_HISTORY = "zowe.ds.history";
 export const SETTINGS_USS_HISTORY = "zowe.uss.history";
 export const SETTINGS_JOBS_HISTORY = "zowe.jobs.history";
-export const SETTINGS_DISABLE_CREDENTIAL_MANAGER = "zowe.security.enableSecureCredentials";
+export const SETTINGS_SECURE_CREDENTIALS_ENABLED = "zowe.security.secureCredentialsEnabled";
 export const EXTENDER_CONFIG: imperative.ICommandProfileTypeConfiguration[] = [];
 export let ACTIVATED = false;
 
