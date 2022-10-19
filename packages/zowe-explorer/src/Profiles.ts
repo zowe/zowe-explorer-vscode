@@ -718,7 +718,7 @@ export class Profiles extends ProfilesCache {
         }
     }
 
-    updateImperativeSettings() {
+    public updateImperativeSettings() {
         try {
             const fileName = path.join(getZoweDir(), "settings", "imperative.json");
             let settings: string;
