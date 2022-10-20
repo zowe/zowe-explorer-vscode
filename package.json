@@ -45,7 +45,8 @@
     "**/glob-parent": "^6.0.2",
     "**/minimist": "^1.2.6",
     "**/moment": "^2.29.4",
-    "**/tar": "^6.1.9"
+    "**/tar": "^6.1.9",
+    "**/minimatch": "^3.0.5"
   },
   "scripts": {
     "clean": "yarn workspaces run clean",
