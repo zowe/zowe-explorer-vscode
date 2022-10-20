@@ -82,9 +82,7 @@ export class Profiles extends ProfilesCache {
      * contents will be loaded.
      */
     public async getProfileInfo(): Promise<zowe.imperative.ProfileInfo> {
-        if (globals.ACTIVATED || this.mProfileInfo == null) {
-            this.mProfileInfo = await super.getProfileInfo();
-        }
+        this.mProfileInfo = await super.getProfileInfo();
         return this.mProfileInfo;
     }
 
