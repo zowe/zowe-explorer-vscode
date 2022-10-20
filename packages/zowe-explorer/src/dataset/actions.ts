@@ -95,7 +95,7 @@ export async function allocateLike(
                     : localize("dataset.validation", "Enter valid dataset name");
             },
         };
-        likeDSName = await UIViews.inputBox(inputBoxOptions);
+        likeDSName = await vscode.window.showInputBox(inputBoxOptions);
         if (!likeDSName) {
             vscode.window.showInformationMessage(
                 localize("allocateLike.noNewName", "You must enter a new data set name.")
@@ -118,7 +118,7 @@ export async function allocateLike(
                 : localize("dataset.validation", "Enter valid dataset name");
         },
     };
-    const newDSName = await UIViews.inputBox(options);
+    const newDSName = await vscode.window.showInputBox(options);
     if (!newDSName) {
         vscode.window.showInformationMessage(localize("allocateLike.noNewName", "You must enter a new data set name."));
         return;
@@ -408,7 +408,7 @@ export async function createMember(
                 : localize("dataset.validation", "Enter valid dataset name");
         },
     };
-    const name = await UIViews.inputBox(options);
+    const name = await vscode.window.showInputBox(options);
     globals.LOG.debug(
         localize("createMember.log.debug.createNewDataSet", "creating new data set member of name ") + name
     );
@@ -600,7 +600,7 @@ export async function createFile(
                     : localize("dataset.validation", "Enter valid dataset name");
             },
         };
-        dsName = await UIViews.inputBox(options);
+        dsName = await vscode.window.showInputBox(options);
         if (dsName) {
             dsName = dsName.trim().toUpperCase();
             newDSProperties.forEach((property) => {
@@ -770,7 +770,7 @@ async function handleUserSelection(newDSProperties, dsType): Promise<string> {
                     value: newDSProperties.find((prop) => prop.label === pattern).value,
                     placeHolder: newDSProperties.find((prop) => prop.label === pattern).placeHolder,
                 };
-                newDSProperties.find((prop) => prop.label === pattern).value = await UIViews.inputBox(options);
+                newDSProperties.find((prop) => prop.label === pattern).value = await vscode.window.showInputBox(options);
                 break;
         }
         return Promise.resolve(handleUserSelection(newDSProperties, dsType));
@@ -1159,7 +1159,7 @@ export async function enterPattern(node: api.IZoweDatasetTreeNode, datasetProvid
             value: node.pattern,
         };
         // get user input
-        pattern = await UIViews.inputBox(options);
+        pattern = await vscode.window.showInputBox(options);
         if (!pattern) {
             vscode.window.showInformationMessage(localize("enterPattern.pattern", "You must enter a pattern."));
             return;
@@ -1287,7 +1287,7 @@ export async function pasteMember(
                 value: beforeMemberName,
                 placeHolder: localize("pasteMember.inputBox.placeHolder", "Name of Data Set Member"),
             };
-            memberName = await UIViews.inputBox(inputBoxOptions);
+            memberName = await vscode.window.showInputBox(inputBoxOptions);
             if (!memberName) {
                 return;
             }

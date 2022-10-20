@@ -933,7 +933,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     value: pattern,
                 };
                 // get user input
-                pattern = await UIViews.inputBox(options2);
+                pattern = await vscode.window.showInputBox(options2);
                 if (!pattern) {
                     vscode.window.showInformationMessage(
                         localize("datasetFilterPrompt.enterPattern", "You must enter a pattern.")
@@ -1158,7 +1158,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     : localize("dataset.validation", "Enter valid dataset name");
             },
         };
-        let afterMemberName = await UIViews.inputBox(options);
+        let afterMemberName = await vscode.window.showInputBox(options);
         if (!afterMemberName) {
             vscode.window.showInformationMessage(localize("renameDataSet.cancelled", "Rename operation cancelled."));
             return;
@@ -1228,7 +1228,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     : localize("dataset.validation", "Enter valid dataset name");
             },
         };
-        let afterDataSetName = await UIViews.inputBox(options);
+        let afterDataSetName = await vscode.window.showInputBox(options);
         if (!afterDataSetName) {
             vscode.window.showInformationMessage(localize("renameDataSet.cancelled", "Rename operation cancelled."));
             return;

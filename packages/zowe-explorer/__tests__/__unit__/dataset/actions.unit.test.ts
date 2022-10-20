@@ -156,8 +156,8 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
             blockMocks.datasetSessionNode,
             blockMocks.session
         );
-
-        const mySpy = jest.spyOn(UIViews, "inputBox").mockImplementationOnce(() => Promise.resolve("testMember"));
+    
+         const mySpy = mocked(vscode.window.showInputBox).mockResolvedValue("testMember");
         mocked(vscode.window.withProgress).mockImplementation((progLocation, callback) => {
             return callback();
         });
@@ -230,7 +230,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
         parent.label = `${parent.label}`;
         parent.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
 
-        const mySpy = jest.spyOn(UIViews, "inputBox").mockImplementationOnce(() => Promise.resolve("testMember"));
+        const mySpy = mocked(vscode.window.showInputBox).mockResolvedValue("testMember");
         mocked(vscode.window.withProgress).mockImplementation((progLocation, callback) => {
             return callback();
         });
@@ -1065,7 +1065,7 @@ describe("Dataset Actions Unit Tests - Function enterPattern", () => {
         node.pattern = "TEST";
         node.contextValue = globals.DS_SESSION_CONTEXT;
 
-        const mySpy = jest.spyOn(UIViews, "inputBox").mockImplementationOnce(() => Promise.resolve("test"));
+        const mySpy =  mocked(vscode.window.showInputBox).mockResolvedValue("test");
         await dsActions.enterPattern(node, blockMocks.testDatasetTree);
 
         expect(mySpy).toBeCalledWith({

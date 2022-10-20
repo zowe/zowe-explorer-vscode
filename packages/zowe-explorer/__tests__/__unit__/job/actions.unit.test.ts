@@ -97,7 +97,7 @@ describe("Jobs Actions Unit Tests - Function setPrefix", () => {
         const blockMocks = createBlockMocks();
         const node = new Job("job", vscode.TreeItemCollapsibleState.None, null, blockMocks.session, null, null);
 
-        const mySpy = jest.spyOn(UIViews, "inputBox").mockImplementationOnce(() => Promise.resolve("*"));
+        const mySpy =  mocked(vscode.window.showInputBox).mockResolvedValue("*");
         await jobActions.setPrefix(node, blockMocks.testJobsTree);
 
         expect(mySpy.mock.calls.length).toBe(1);
@@ -137,7 +137,7 @@ describe("Jobs Actions Unit Tests - Function setOwner", () => {
             blockMocks.imperativeProfile
         );
 
-        const mySpy = jest.spyOn(UIViews, "inputBox").mockImplementationOnce(() => Promise.resolve("OWNER"));
+        const mySpy =  mocked(vscode.window.showInputBox).mockResolvedValue("OWNER");
         await jobActions.setOwner(node, blockMocks.testJobsTree);
 
         expect(mySpy.mock.calls.length).toBe(1);

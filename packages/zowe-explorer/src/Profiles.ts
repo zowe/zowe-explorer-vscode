@@ -403,7 +403,7 @@ export class Profiles extends ProfilesCache {
                     ),
                     value: profileName,
                 };
-                profileName = await UIViews.inputBox(options);
+                profileName = await vscode.window.showInputBox(options);
                 if (!profileName) {
                     vscode.window.showInformationMessage(
                         localize(
@@ -543,7 +543,7 @@ export class Profiles extends ProfilesCache {
                     switch (response) {
                         case "number":
                             options = await this.optionsValue(value, schema, editSession[value]);
-                            const updValue = await UIViews.inputBox(options);
+                            const updValue = await vscode.window.showInputBox(options);
                             if (!Number.isNaN(Number(updValue))) {
                                 updSchemaValues[value] = Number(updValue);
                             } else {
@@ -575,7 +575,7 @@ export class Profiles extends ProfilesCache {
                             break;
                         default:
                             options = await this.optionsValue(value, schema, editSession[value]);
-                            const updDefValue = await UIViews.inputBox(options);
+                            const updDefValue = await vscode.window.showInputBox(options);
                             if (updDefValue === undefined) {
                                 vscode.window.showInformationMessage(
                                     localize("editConnection.default", "Operation Cancelled")
@@ -846,7 +846,7 @@ export class Profiles extends ProfilesCache {
                     switch (response) {
                         case "number":
                             options = await this.optionsValue(value, schema);
-                            const enteredValue = Number(await UIViews.inputBox(options));
+                            const enteredValue = Number(await vscode.window.showInputBox(options));
                             if (!Number.isNaN(Number(enteredValue))) {
                                 if ((value === "encoding" || value === "responseTimeout") && enteredValue === 0) {
                                     delete schemaValues[value];
@@ -874,7 +874,7 @@ export class Profiles extends ProfilesCache {
                             break;
                         default:
                             options = await this.optionsValue(value, schema);
-                            const defValue = await UIViews.inputBox(options);
+                            const defValue = await vscode.window.showInputBox(options);
                             if (defValue === undefined) {
                                 vscode.window.showInformationMessage(
                                     localize("createNewConnection.default", "Operation Cancelled")
@@ -1580,7 +1580,7 @@ export class Profiles extends ProfilesCache {
                 }
             },
         };
-        zosURL = await UIViews.inputBox(options);
+        zosURL = await vscode.window.showInputBox(options);
 
         let hostName: string;
         if (!zosURL) {
@@ -1620,7 +1620,7 @@ export class Profiles extends ProfilesCache {
                 prompt: schema[input].optionDefinition.description.toString(),
             };
         }
-        port = Number(await UIViews.inputBox(options));
+        port = Number(await vscode.window.showInputBox(options));
 
         if (port === 0 && schema[input].optionDefinition.hasOwnProperty("defaultValue")) {
             port = Number(schema[input].optionDefinition.defaultValue.toString());
@@ -1645,7 +1645,7 @@ export class Profiles extends ProfilesCache {
             ignoreFocusOut: true,
             value: userName,
         };
-        userName = await UIViews.inputBox(InputBoxOptions);
+        userName = await vscode.window.showInputBox(InputBoxOptions);
 
         if (userName === undefined) {
             vscode.window.showInformationMessage(
@@ -1674,7 +1674,7 @@ export class Profiles extends ProfilesCache {
             ignoreFocusOut: true,
             value: passWord,
         };
-        passWord = await UIViews.inputBox(InputBoxOptions);
+        passWord = await vscode.window.showInputBox(InputBoxOptions);
 
         if (passWord === undefined) {
             vscode.window.showInformationMessage(
