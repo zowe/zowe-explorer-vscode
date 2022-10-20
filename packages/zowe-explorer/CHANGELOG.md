@@ -7,6 +7,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ### New features and enhancements
 
 - Added check for existing team configuration file in location during create, prompting user to continue with the create action. [#1923](https://github.com/zowe/vscode-extension-for-zowe/issues/1923)
+- "Added a new setting `zowe.security.secureCredentialsEnabled`, whose default value is selected for security and will have to be unselected to allow creation of team configuration files without default secure arrays to support environments that don't have access to Zowe CLI's Secure Credential Management."
 
 ### Bug fixes
 
