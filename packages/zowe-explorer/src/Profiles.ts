@@ -726,10 +726,7 @@ export class Profiles extends ProfilesCache {
                 settings = fs.readFileSync(fileName, "utf-8");
             }
             if (settings) {
-                const updatedSettings = settings.replace(
-                    /"CredentialManager": "@zowe\/cli"/g,
-                    '"CredentialManager": false'
-                );
+                const updatedSettings = this.setCredentialManagerFalse(settings);
                 if (updatedSettings !== settings) {
                     fs.writeFile(fileName, updatedSettings, "utf8", (err) => {
                         if (err) {
@@ -741,6 +738,12 @@ export class Profiles extends ProfilesCache {
         } catch (error) {
             this.log.error(error);
         }
+    }
+
+    public setCredentialManagerFalse(settings: string): string {
+        return settings
+            .replace(/"CredentialManager": "@zowe\/cli"/g, '"CredentialManager": false')
+            .replace(/"credential-manager": "@zowe\/cli"/g, '"credential-manager": false');
     }
 
     public async editZoweConfigFile() {
