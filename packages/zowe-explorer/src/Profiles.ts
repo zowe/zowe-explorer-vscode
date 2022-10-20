@@ -733,7 +733,7 @@ export class Profiles extends ProfilesCache {
                 if (updatedSettings !== settings) {
                     fs.writeFile(fileName, updatedSettings, "utf8", (err) => {
                         if (err) {
-                            this.log.error("Could not update imerative.json", err);
+                            this.log.error("Could not update imperative.json settings file", err);
                         }
                     });
                 }
