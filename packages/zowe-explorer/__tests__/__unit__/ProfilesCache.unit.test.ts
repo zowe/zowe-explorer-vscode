@@ -46,12 +46,4 @@ describe("ProfilesCache API", () => {
         expect(config.layers[1].path).not.toContain(zoweDir);
         expect(config.layers.map((layer) => layer.exists)).toEqual([true, true, true, true]);
     });
-
-    it("should not load project profiles when current directory is undefined", async () => {
-        const profilesCache = new ProfilesCache(imperative.Logger.getAppLogger(), undefined);
-        const config = (await profilesCache.getProfileInfo()).getTeamConfig();
-        expect(config.layers[0].path).toBe("");
-        expect(config.layers[1].path).toBe("");
-        expect(config.layers.map((layer) => layer.exists)).toEqual([false, false, true, true]);
-    });
 });
