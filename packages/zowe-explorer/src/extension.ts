@@ -115,7 +115,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         }
 
         await readConfigFromDisk();
-        vscode.window.showInformationMessage("profiles read from disk.");
     } catch (err) {
         const errorMessage = localize("initialize.profiles.error", "Error reading or initializing Zowe CLI profiles.");
         vscode.window.showWarningMessage(`${errorMessage}: ${err.message}`);
@@ -123,7 +122,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
 
     // Initialize profile manager
     await Profiles.createInstance(globals.LOG);
-    vscode.window.showInformationMessage("profiles initialized.");
 
     if (!fs.existsSync(globals.ZOWETEMPFOLDER)) {
         fs.mkdirSync(globals.ZOWETEMPFOLDER);
@@ -138,7 +136,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     ussFileProvider = await createUSSTree(globals.LOG);
     // Initialize Jobs provider with the created session and the selected pattern
     jobsProvider = await createJobsTree(globals.LOG);
-    vscode.window.showInformationMessage("trees created.");
 
     // set a command to silently reload extension
     context.subscriptions.push(
@@ -297,7 +294,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         globals.LOG.error(e);
     }
     globals.setActivated(true);
-    vscode.window.showInformationMessage("zowe explorer activated.");
     return ZoweExplorerApiRegister.getInstance();
 }
 
