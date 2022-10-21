@@ -18,7 +18,7 @@
     "vscode": "^1.43.0"
   },
   "dependencies": {
-    "@zowe/cli": "6.40.1",
+    "@zowe/cli": "6.40.8",
     "vscode-nls": "4.1.2"
   },
   "devDependencies": {
@@ -51,8 +51,9 @@
     "**/underscore": "^1.12.1",
     "**/node-notifier": "^8.0.1",
     "**/yargs-parser": "^5.0.1",
+    "**/minimatch": "^3.1.2",
     "**/minimist": "^1.2.6",
-    "**/moment": "^2.29.2",
+    "**/moment": "^2.29.4",
     "**/log4js": "6.4.6",
     "**/diff": "^3.5.0",
     "**/markdown-it": "^12.3.2"
