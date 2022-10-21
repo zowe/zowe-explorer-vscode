@@ -115,6 +115,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         }
 
         await readConfigFromDisk();
+        vscode.window.showInformationMessage("profiles read from disk.");
     } catch (err) {
         const errorMessage = localize("initialize.profiles.error", "Error reading or initializing Zowe CLI profiles.");
         vscode.window.showWarningMessage(`${errorMessage}: ${err.message}`);
@@ -122,6 +123,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
 
     // Initialize profile manager
     await Profiles.createInstance(globals.LOG);
+    vscode.window.showInformationMessage("profiles initialized.");
 
     if (!fs.existsSync(globals.ZOWETEMPFOLDER)) {
         fs.mkdirSync(globals.ZOWETEMPFOLDER);
@@ -136,19 +138,24 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     ussFileProvider = await createUSSTree(globals.LOG);
     // Initialize Jobs provider with the created session and the selected pattern
     jobsProvider = await createJobsTree(globals.LOG);
+    vscode.window.showInformationMessage("trees created.");
 
     // set a command to silently reload extension
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.extRefresh", async () => {
-            await deactivate();
-            for (const sub of context.subscriptions) {
-                try {
-                    await sub.dispose();
-                } catch (e) {
-                    globals.LOG.error(e);
+            if (globals.ISTHEIA) {
+                await vscode.commands.executeCommand("workbench.action.reloadWindow");
+            } else {
+                await deactivate();
+                for (const sub of context.subscriptions) {
+                    try {
+                        await sub.dispose();
+                    } catch (e) {
+                        globals.LOG.error(e);
+                    }
                 }
+                await activate(context);
             }
-            await activate(context);
         })
     );
 
@@ -157,7 +164,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             await promptCredentials(node);
         })
     );
-
     const spoolProvider = new SpoolProvider();
     const providerRegistration = vscode.Disposable.from(
         vscode.workspace.registerTextDocumentContentProvider(SpoolProvider.scheme, spoolProvider)
@@ -284,12 +290,14 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
 
     ZoweExplorerExtender.createInstance(datasetProvider, ussFileProvider, jobsProvider);
     await SettingsConfig.standardizeSettings();
+
     try {
         await watchConfigProfile(context);
     } catch (e) {
         globals.LOG.error(e);
     }
     globals.setActivated(true);
+    vscode.window.showInformationMessage("zowe explorer activated.");
     return ZoweExplorerApiRegister.getInstance();
 }
 
