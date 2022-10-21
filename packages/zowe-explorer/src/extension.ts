@@ -121,7 +121,49 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     }
 
     // Initialize profile manager
-    await Profiles.createInstance(globals.LOG);
+    const profilesCache = await Profiles.createInstance(globals.LOG);
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand("zowe.toggleSecureCredentials", () => {
+            const settings = vscode.workspace.getConfiguration();
+            const currentValue = settings.get(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED);
+            settings.update(
+                globals.SETTINGS_SECURE_CREDENTIALS_ENABLED,
+                !currentValue,
+                vscode.ConfigurationTarget.Global
+            );
+        })
+    );
+
+    try {
+        const isImperativeSettingEnabled = await profilesCache.isCredentialsSecured();
+        const isSecureCredsEnabled = vscode.workspace
+            .getConfiguration()
+            .get(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED);
+
+        if (isImperativeSettingEnabled !== isSecureCredsEnabled) {
+            const yesButton = localize("zoweSecurity.disable.button", "Yes");
+            const keepCurrentSettingButton = localize("zoweSecurity.keepEnabled.button", "Keep current setting");
+            const infoMsg = localize(
+                "zoweSecurity.setting.infoMessage",
+                `Imperative.json setting appears to not match VS Code setting zowe.security.secureCredentialsEnabled, do you want to allow Zowe Explorer to correct this setting?`
+            );
+
+            await vscode.window
+                .showInformationMessage(infoMsg, ...[yesButton, keepCurrentSettingButton])
+                .then(async (selection) => {
+                    if (selection === yesButton) {
+                        await vscode.commands.executeCommand("zowe.toggleSecureCredentials");
+                    }
+                });
+        }
+    } catch (err) {
+        const errorMessage = localize(
+            "zowe.secureCredentials.toggle",
+            "Error encountered when toggling secure credential setting"
+        );
+        vscode.window.showErrorMessage(`${errorMessage}: ${err.message}`);
+    }
 
     if (!fs.existsSync(globals.ZOWETEMPFOLDER)) {
         fs.mkdirSync(globals.ZOWETEMPFOLDER);
