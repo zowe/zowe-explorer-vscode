@@ -124,6 +124,7 @@ async function createGlobalMocks() {
         mockExtension: null,
         appName: vscode.env.appName,
         expectedCommands: [
+            "zowe.toggleSecureCredentials",
             "zowe.extRefresh",
             "zowe.promptCredentials",
             "zowe.all.config.init",
