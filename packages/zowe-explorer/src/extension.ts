@@ -121,49 +121,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     }
 
     // Initialize profile manager
-    const profilesCache = await Profiles.createInstance(globals.LOG);
-
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.toggleSecureCredentials", () => {
-            const settings = vscode.workspace.getConfiguration();
-            const currentValue = settings.get(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED);
-            settings.update(
-                globals.SETTINGS_SECURE_CREDENTIALS_ENABLED,
-                !currentValue,
-                vscode.ConfigurationTarget.Global
-            );
-        })
-    );
-
-    try {
-        const isImperativeSettingEnabled = await profilesCache.isCredentialsSecured();
-        const isSecureCredsEnabled = vscode.workspace
-            .getConfiguration()
-            .get(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED);
-
-        if (isImperativeSettingEnabled !== isSecureCredsEnabled) {
-            const yesButton = localize("zoweSecurity.disable.button", "Yes");
-            const keepCurrentSettingButton = localize("zoweSecurity.keepEnabled.button", "Keep current setting");
-            const infoMsg = localize(
-                "zoweSecurity.setting.infoMessage",
-                `Imperative.json setting appears to not match VS Code setting zowe.security.secureCredentialsEnabled, do you want to allow Zowe Explorer to correct this setting?`
-            );
-
-            await vscode.window
-                .showInformationMessage(infoMsg, ...[yesButton, keepCurrentSettingButton])
-                .then(async (selection) => {
-                    if (selection === yesButton) {
-                        await vscode.commands.executeCommand("zowe.toggleSecureCredentials");
-                    }
-                });
-        }
-    } catch (err) {
-        const errorMessage = localize(
-            "zowe.secureCredentials.toggle",
-            "Error encountered when toggling secure credential setting"
-        );
-        vscode.window.showErrorMessage(`${errorMessage}: ${err.message}`);
-    }
+    await Profiles.createInstance(globals.LOG);
 
     if (!fs.existsSync(globals.ZOWETEMPFOLDER)) {
         fs.mkdirSync(globals.ZOWETEMPFOLDER);
@@ -194,6 +152,19 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         })
     );
 
+    // Update imperative.json to false only when VS Code setting is set to false
+    context.subscriptions.push(
+        vscode.commands.registerCommand("zowe.updateSecureCredentials", () => {
+            const isSettingEnabled: boolean = vscode.workspace
+                .getConfiguration()
+                .get(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED);
+
+            if (!isSettingEnabled) {
+                Profiles.getInstance().updateImperativeSettings();
+            }
+        })
+    );
+
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.promptCredentials", async (node: IZoweTreeNode) => {
             await promptCredentials(node);
@@ -207,26 +178,35 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     context.subscriptions.push(spoolProvider, providerRegistration);
 
     // Register functions & event listeners
-    vscode.workspace.onDidChangeConfiguration(async (e) => {
-        // If the temp folder location has been changed, update current temp folder preference
-        if (e.affectsConfiguration(globals.SETTINGS_TEMP_FOLDER_PATH)) {
-            const updatedPreferencesTempPath: string = vscode.workspace
-                .getConfiguration()
-                /* tslint:disable:no-string-literal */
-                .get(globals.SETTINGS_TEMP_FOLDER_PATH);
-            moveTempFolder(preferencesTempPath, updatedPreferencesTempPath);
-            preferencesTempPath = updatedPreferencesTempPath;
-        }
-        if (e.affectsConfiguration(globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION)) {
-            await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
-            await refreshActions.refreshAll(datasetProvider);
-            await refreshActions.refreshAll(ussFileProvider);
-            await refreshActions.refreshAll(jobsProvider);
-        }
-        if (e.affectsConfiguration(globals.SETTINGS_TEMP_FOLDER_HIDE)) {
-            hideTempFolder(getZoweDir());
-        }
-    });
+    context.subscriptions.push(
+        vscode.workspace.onDidChangeConfiguration(async (e) => {
+            // If the temp folder location has been changed, update current temp folder preference
+            if (e.affectsConfiguration(globals.SETTINGS_TEMP_FOLDER_PATH)) {
+                const updatedPreferencesTempPath: string = vscode.workspace
+                    .getConfiguration()
+                    /* tslint:disable:no-string-literal */
+                    .get(globals.SETTINGS_TEMP_FOLDER_PATH);
+                moveTempFolder(preferencesTempPath, updatedPreferencesTempPath);
+                preferencesTempPath = updatedPreferencesTempPath;
+            }
+            if (e.affectsConfiguration(globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION)) {
+                await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
+                await refreshActions.refreshAll(datasetProvider);
+                await refreshActions.refreshAll(ussFileProvider);
+                await refreshActions.refreshAll(jobsProvider);
+            }
+            if (e.affectsConfiguration(globals.SETTINGS_TEMP_FOLDER_HIDE)) {
+                hideTempFolder(getZoweDir());
+            }
+
+            if (e.affectsConfiguration(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED)) {
+                await vscode.commands.executeCommand("zowe.updateSecureCredentials");
+            }
+        })
+    );
+
+    // Update imperative.json to false if VS Code setting is set to false
+    await vscode.commands.executeCommand("zowe.updateSecureCredentials");
 
     if (datasetProvider) {
         initDatasetProvider(context, datasetProvider);
