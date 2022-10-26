@@ -46,8 +46,7 @@
     "**/minimatch": "^3.1.2",
     "**/minimist": "^1.2.6",
     "**/moment": "^2.29.4",
-    "**/tar": "^6.1.9",
-    "**/minimatch": "^3.0.5"
+    "**/tar": "^6.1.9"
   },
   "scripts": {
     "clean": "yarn workspaces run clean",
