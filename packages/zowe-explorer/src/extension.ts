@@ -117,7 +117,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         await readConfigFromDisk();
     } catch (err) {
         const errorMessage = localize("initialize.profiles.error", "Error reading or initializing Zowe CLI profiles.");
-        vscode.window.showErrorMessage(`${errorMessage}: ${err.message}`);
+        vscode.window.showWarningMessage(`${errorMessage}: ${err.message}`);
     }
 
     // Initialize profile manager
@@ -140,15 +140,19 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     // set a command to silently reload extension
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.extRefresh", async () => {
-            await deactivate();
-            for (const sub of context.subscriptions) {
-                try {
-                    await sub.dispose();
-                } catch (e) {
-                    globals.LOG.error(e);
+            if (globals.ISTHEIA) {
+                await vscode.commands.executeCommand("workbench.action.reloadWindow");
+            } else {
+                await deactivate();
+                for (const sub of context.subscriptions) {
+                    try {
+                        await sub.dispose();
+                    } catch (e) {
+                        globals.LOG.error(e);
+                    }
                 }
+                await activate(context);
             }
-            await activate(context);
         })
     );
 
@@ -170,7 +174,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             await promptCredentials(node);
         })
     );
-
     const spoolProvider = new SpoolProvider();
     const providerRegistration = vscode.Disposable.from(
         vscode.workspace.registerTextDocumentContentProvider(SpoolProvider.scheme, spoolProvider)
@@ -306,6 +309,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
 
     ZoweExplorerExtender.createInstance(datasetProvider, ussFileProvider, jobsProvider);
     await SettingsConfig.standardizeSettings();
+
     try {
         await watchConfigProfile(context);
     } catch (e) {
