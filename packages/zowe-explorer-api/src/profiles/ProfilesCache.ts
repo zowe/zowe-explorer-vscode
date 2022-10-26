@@ -70,8 +70,7 @@ export class ProfilesCache {
 
     public async getProfileInfo(): Promise<zowe.imperative.ProfileInfo> {
         const mProfileInfo = new zowe.imperative.ProfileInfo("zowe");
-        // When no workspace is open and `cwd` is undefined, set `projectDir` to false to ignore project config
-        await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir(), projectDir: this.cwd ?? false });
+        await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir(), projectDir: this.cwd ?? undefined });
         return mProfileInfo;
     }
 
@@ -168,38 +167,40 @@ export class ProfilesCache {
         let mProfileInfo: zowe.imperative.ProfileInfo;
         try {
             mProfileInfo = await this.getProfileInfo();
+            const allTypes = this.getAllProfileTypes(apiRegister.registeredApiTypes());
+            allTypes.push("base");
+            for (const type of allTypes) {
+                // Step 1: Get all profiles for each registered type
+                const profilesForType = mProfileInfo
+                    .getAllProfiles(type)
+                    .filter((temp) => temp.profLoc.osLoc.length !== 0);
+                if (profilesForType && profilesForType.length > 0) {
+                    for (const prof of profilesForType) {
+                        // Step 2: Merge args for each profile
+                        const profAttr = this.getMergedAttrs(mProfileInfo, prof);
+                        // Work-around. TODO: Discuss with imperative team
+                        const profileFix = this.getProfileLoaded(prof.profName, prof.profType, profAttr);
+                        // set default for type
+                        if (prof.isDefaultProfile) {
+                            this.defaultProfileByType.set(type, profileFix);
+                        }
+
+                        // Step 3: Update allProfiles list
+                        tmpAllProfiles.push(profileFix);
+                    }
+                    this.allProfiles.push(...tmpAllProfiles);
+                    this.profilesByType.set(type, tmpAllProfiles);
+                    tmpAllProfiles = [];
+                }
+                this.allTypes.push(type);
+            }
+            // check for proper merging of apiml tokens
+            this.checkMergingConfigAllProfiles();
+            while (this.profilesForValidation.length > 0) {
+                this.profilesForValidation.pop();
+            }
         } catch (error) {
             return;
-        }
-        const allTypes = this.getAllProfileTypes(apiRegister.registeredApiTypes());
-        allTypes.push("base");
-        for (const type of allTypes) {
-            // Step 1: Get all profiles for each registered type
-            const profilesForType = mProfileInfo.getAllProfiles(type).filter((temp) => temp.profLoc.osLoc.length !== 0);
-            if (profilesForType && profilesForType.length > 0) {
-                for (const prof of profilesForType) {
-                    // Step 2: Merge args for each profile
-                    const profAttr = this.getMergedAttrs(mProfileInfo, prof);
-                    // Work-around. TODO: Discuss with imperative team
-                    const profileFix = this.getProfileLoaded(prof.profName, prof.profType, profAttr);
-                    // set default for type
-                    if (prof.isDefaultProfile) {
-                        this.defaultProfileByType.set(type, profileFix);
-                    }
-
-                    // Step 3: Update allProfiles list
-                    tmpAllProfiles.push(profileFix);
-                }
-                this.allProfiles.push(...tmpAllProfiles);
-                this.profilesByType.set(type, tmpAllProfiles);
-                tmpAllProfiles = [];
-            }
-            this.allTypes.push(type);
-        }
-        // check for proper merging of apiml tokens
-        this.checkMergingConfigAllProfiles();
-        while (this.profilesForValidation.length > 0) {
-            this.profilesForValidation.pop();
         }
     }
 

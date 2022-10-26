@@ -320,27 +320,31 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 }
             }
         } else {
-            const profiles = Profiles.getInstance().allProfiles;
-            for (const theProfile of profiles) {
-                // If session is already added, do nothing
-                if (
-                    this.mSessionNodes.find((tempNode) => tempNode.label.toString().trim() === theProfile.name.trim())
-                ) {
-                    continue;
-                }
-                for (const session of this.mHistory.getSessions()) {
-                    if (session && session.trim() === theProfile.name) {
-                        await this.addSingleSession(theProfile);
-                        for (const node of this.mSessionNodes) {
-                            const name = node.getProfileName();
-                            if (name === theProfile.name) {
-                                await resetValidationSettings(node, setting);
+            const profiles: imperative.IProfileLoaded[] = Profiles.getInstance()?.allProfiles;
+            if (profiles) {
+                for (const theProfile of profiles) {
+                    // If session is already added, do nothing
+                    if (
+                        this.mSessionNodes.find(
+                            (tempNode) => tempNode.label.toString().trim() === theProfile.name.trim()
+                        )
+                    ) {
+                        return;
+                    }
+                    for (const session of this.mHistory.getSessions()) {
+                        if (session && session.trim() === theProfile.name) {
+                            await this.addSingleSession(theProfile);
+                            for (const node of this.mSessionNodes) {
+                                const name = node.getProfileName();
+                                if (name === theProfile.name) {
+                                    await resetValidationSettings(node, setting);
+                                }
                             }
                         }
                     }
                 }
             }
-            if (this.mSessionNodes.length === 1) {
+            if (profileType && this.mSessionNodes.length === 1) {
                 await this.addSingleSession(Profiles.getInstance().getDefaultProfile(profileType));
             }
         }
