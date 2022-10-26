@@ -500,29 +500,3 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
         spyLayers.mockClear();
     });
 });
-
-describe("setCredentialManagerFalse", () => {
-    it("should set CredentialManager with empty string to return empty string ", () => {
-        expect(Profiles.getInstance().setCredentialManagerFalse("")).toEqual("");
-    });
-    it("should set CredentialManager with false remain false ", () => {
-        const settings = '{\n  "overrides": {\n    "CredentialManager": false\n  }\n}\n\n\n\n\n\n\n\n\n\n\n\n';
-        const result = '{\n  "overrides": {\n    "CredentialManager": false\n  }\n}\n\n\n\n\n\n\n\n\n\n\n\n';
-        expect(Profiles.getInstance().setCredentialManagerFalse(settings)).toEqual(result);
-    });
-    it("should set CredentialManager with @zowe/cli sets to false ", () => {
-        const settings = '{\n  "overrides": {\n    "CredentialManager": "@zowe/cli"\n  }\n}\n\n\n\n\n\n\n\n\n\n\n\n';
-        const result = '{\n  "overrides": {\n    "CredentialManager": false\n  }\n}\n\n\n\n\n\n\n\n\n\n\n\n';
-        expect(Profiles.getInstance().setCredentialManagerFalse(settings)).toEqual(result);
-    });
-    it("should set CredentialManager with @zowe/cli set false ", () => {
-        const settings = '{\n  "overrides": {\n    "credential-manager": false\n  }\n}\n\n\n\n\n\n\n\n\n\n\n\n';
-        const result = '{\n  "overrides": {\n    "credential-manager": false\n  }\n}\n\n\n\n\n\n\n\n\n\n\n\n';
-        expect(Profiles.getInstance().setCredentialManagerFalse(settings)).toEqual(result);
-    });
-    it("should set credential-manager with @zowe/cli sets to false ", () => {
-        const settings = '{\n  "overrides": {\n    "credential-manager": "@zowe/cli"\n  }\n}\n\n\n\n\n\n\n\n\n\n\n\n';
-        const result = '{\n  "overrides": {\n    "credential-manager": false\n  }\n}\n\n\n\n\n\n\n\n\n\n\n\n';
-        expect(Profiles.getInstance().setCredentialManagerFalse(settings)).toEqual(result);
-    });
-});
