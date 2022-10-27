@@ -5,8 +5,7 @@ on:
     branches:
       - main
       - v1-lts
-    paths:
-      - package.json
+      - temp-deploy
   workflow_dispatch:
     inputs:
       version:
