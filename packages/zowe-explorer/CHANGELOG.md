@@ -13,10 +13,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ### Bug fixes
 
 - Fixed activation and Refresh Extension issues in web based editors, ie. Theia. [#1807](https://github.com/zowe/vscode-extension-for-zowe/issues/1807)
-- Fixed the job status not updating when refreshing a job or pulling a spool file from mainframe. [#1936](https://github.com/zowe/vscode-extension-for-zowe/pull/1936)
-- Prevented project profiles from being loaded when no workspace folder is open. [#1802](https://github.com/zowe/vscode-extension-for-zowe/issues/1802)
-- Bugfix: Fix refresh job & spool file pull from mainframe doesn't update job status [#1936](https://github.com/zowe/vscode-extension-for-zowe/pull/1936)
-- Bugfix: Fix for serial saving of data sets and files to avoid conflict error. [#1868](https://github.com/zowe/vscode-extension-for-zowe/issues/1868)
+- Fix refresh job & spool file pull from mainframe doesn't update job status [#1936](https://github.com/zowe/vscode-extension-for-zowe/pull/1936)
+- Fix for serial saving of data sets and files to avoid conflict error. [#1868](https://github.com/zowe/vscode-extension-for-zowe/issues/1868)
 
 ## `2.3.0`
 
