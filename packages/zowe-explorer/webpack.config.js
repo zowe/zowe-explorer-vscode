@@ -19,7 +19,7 @@
 // https://github.com/webpack/webpack/issues/14532
 const crypto = require("crypto");
 const crypto_orig_createHash = crypto.createHash;
-crypto.createHash = algorithm => crypto_orig_createHash(algorithm == "md4" ? "sha256" : algorithm);
+crypto.createHash = (algorithm) => crypto_orig_createHash(algorithm == "md4" ? "sha256" : algorithm);
 
 const path = require("path");
 var webpack = require("webpack");
