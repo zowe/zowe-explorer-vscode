@@ -14,6 +14,7 @@ const publishProject = require("../common").publishProject;
 
 // Check if the given versions is already published
 const checkVersion = (packageJson, version) => {
+    return true;
     try {
         const metadata = JSON.parse(
             execSync(`vsce show ${packageJson.publisher}.${packageJson.name} --json`).toString()
@@ -32,6 +33,7 @@ const checkVersion = (packageJson, version) => {
 const publishSpecificProject = (versionName, token, packagePath, tag) => {
     if (tag !== "next") {
         console.log(`Publishing: ${versionName}`);
+        if (packagePath !== "packages/zowe-explorer")
         console.log(execSync(`vsce publish --yarn -p ${token.split(" ")[0]}`, { cwd: packagePath }).toString());
         console.log(execSync(`ovsx publish ${versionName}.vsix -p ${token.split(" ")[1]}`, { cwd: "dist" }).toString());
     } else {
