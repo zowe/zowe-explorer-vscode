@@ -13,10 +13,12 @@
 
 import * as vscode from "vscode";
 import * as globals from "../globals";
+import * as path from "path";
+import * as fs from "fs";
 import { getSecurityModules, IZoweTreeNode, ZoweTreeNode, getZoweDir, getFullPath } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import * as nls from "vscode-nls";
-import { imperative } from "@zowe/cli";
+import { imperative, getImperativeConfig } from "@zowe/cli";
 import { UIViews } from "../shared/ui-views";
 
 // Set up localization
@@ -326,6 +328,42 @@ export async function promptCredentials(node: IZoweTreeNode) {
                 "Credentials for {0} were successfully updated",
                 profileName
             )
+        );
+    }
+}
+
+export async function initializeZoweFolder(): Promise<void> {
+    // Ensure that ~/.zowe folder exists
+    const zoweDir = getZoweDir();
+    // Ensure that the ~/.zowe/settings/imperative.json exists
+    // TODO: update code below once this imperative issue is resolved.
+    // https://github.com/zowe/imperative/issues/840
+    const settingsPath = path.join(zoweDir, "settings");
+    if (!fs.existsSync(settingsPath)) {
+        fs.mkdirSync(settingsPath);
+    }
+    writeOverridesFile();
+    // If not using team config, ensure that the ~/.zowe/profiles directory
+    // exists with appropriate types within
+    if (!imperative.ImperativeConfig.instance.config?.exists) {
+        await imperative.CliProfileManager.initialize({
+            configuration: getImperativeConfig().profiles,
+            profileRootDirectory: path.join(zoweDir, "profiles"),
+        });
+    }
+}
+
+function writeOverridesFile() {
+    globals.setGlobalSecurityValue();
+    const settingsFile = path.join(getZoweDir(), "settings", "imperative.json");
+    if (!fs.existsSync(settingsFile)) {
+        fs.writeFileSync(
+            settingsFile,
+            JSON.stringify({
+                overrides: {
+                    CredentialManager: globals.PROFILE_SECURITY,
+                },
+            })
         );
     }
 }
