@@ -111,7 +111,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
                 const rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
                 await mProfileInfo.readProfilesFromDisk({ homeDir: zoweDir, projectDir: getFullPath(rootPath) });
             } else {
-                await mProfileInfo.readProfilesFromDisk({ homeDir: zoweDir, projectDir: false });
+                await mProfileInfo.readProfilesFromDisk({ homeDir: zoweDir, projectDir: undefined });
             }
             usingTeamConfig = mProfileInfo.usingTeamConfig;
         } catch (error) {
