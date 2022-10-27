@@ -32,7 +32,7 @@ export let DS_DIR;
 export let CONFIG_PATH; // set during activate
 export let ISTHEIA: boolean = false; // set during activate
 export let LOG: imperative.Logger;
-export const COMMAND_COUNT = 99;
+export const COMMAND_COUNT = 100;
 export const MAX_SEARCH_HISTORY = 5;
 export const MAX_FILE_HISTORY = 10;
 export const STATUS_BAR_TIMEOUT_MS = 5000;
@@ -85,6 +85,7 @@ export const SETTINGS_AUTOMATIC_PROFILE_VALIDATION = "zowe.automaticProfileValid
 export const SETTINGS_DS_HISTORY = "zowe.ds.history";
 export const SETTINGS_USS_HISTORY = "zowe.uss.history";
 export const SETTINGS_JOBS_HISTORY = "zowe.jobs.history";
+export const SETTINGS_SECURE_CREDENTIALS_ENABLED = "zowe.security.secureCredentialsEnabled";
 export const EXTENDER_CONFIG: imperative.ICommandProfileTypeConfiguration[] = [];
 export let ACTIVATED = false;
 

@@ -164,6 +164,10 @@ export namespace commands {
     export function registerCommand(command: string, callback: (...args: any[]) => any, thisArg?: any): Disposable {
         return undefined;
     }
+
+    export function executeCommand(command: string): undefined {
+        return undefined;
+    }
 }
 export class Disposable {
     /**

@@ -12,6 +12,7 @@
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import * as path from "path";
+import * as fs from "fs";
 import {
     IZoweTree,
     IZoweNodeType,
@@ -693,6 +694,10 @@ export class Profiles extends ProfilesCache {
 
             // Build new config and merge with existing layer
             const newConfig: zowe.imperative.IConfig = await zowe.imperative.ConfigBuilder.build(impConfig, opts);
+
+            // Create non secure profile if VS Code setting is false
+            this.createNonSecureProfile(newConfig);
+
             config.api.layers.merge(newConfig);
             await config.save(false);
             let configName;
@@ -709,6 +714,24 @@ export class Profiles extends ProfilesCache {
             vscode.window.showErrorMessage(
                 localize("Profiles.getProfileInfo.error", "Error in creating team configuration file: {0}", err.message)
             );
+        }
+    }
+
+    public updateImperativeSettings() {
+        try {
+            const fileName = path.join(getZoweDir(), "settings", "imperative.json");
+            const updatedSettings = {
+                overrides: {
+                    CredentialManager: false,
+                },
+            };
+            fs.writeFile(fileName, JSON.stringify(updatedSettings), "utf8", (err) => {
+                if (err) {
+                    this.log.error("Could not update imperative.json settings file", err);
+                }
+            });
+        } catch (error) {
+            this.log.error(error);
         }
     }
 
@@ -1882,6 +1905,20 @@ export class Profiles extends ProfilesCache {
             this.getCliProfileManager(this.loadedProfile.type).update(updateParms);
         } catch (error) {
             vscode.window.showErrorMessage(error.message);
+        }
+    }
+
+    // Temporary solution for handling unsecure profiles until CLI team's work is made
+    // Remove secure properties and set autoStore to false when vscode setting is true
+    private createNonSecureProfile(newConfig: zowe.imperative.IConfig): void {
+        const configuration: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
+        const isSecureCredsEnabled: boolean = configuration.get(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED);
+        if (!isSecureCredsEnabled) {
+            for (const profile of Object.entries(newConfig.profiles)) {
+                delete newConfig.profiles[profile[0]].secure;
+            }
+            this.updateImperativeSettings();
+            newConfig.autoStore = false;
         }
     }
 }
