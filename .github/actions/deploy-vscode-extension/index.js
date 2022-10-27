@@ -14,7 +14,7 @@ const publishProject = require("../common").publishProject;
 
 // Check if the given versions is already published
 const checkVersion = (packageJson, version) => {
-    return true;
+    return false;
     try {
         const metadata = JSON.parse(
             execSync(`vsce show ${packageJson.publisher}.${packageJson.name} --json`).toString()
