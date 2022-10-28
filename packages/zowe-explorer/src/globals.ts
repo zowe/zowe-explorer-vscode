@@ -256,10 +256,8 @@ export function setActivated(value: boolean) {
 }
 
 export async function setGlobalSecurityValue() {
-    const isSettingEnabled: boolean = await vscode.workspace
-        .getConfiguration()
-        .get(SETTINGS_SECURE_CREDENTIALS_ENABLED);
-    if (!isSettingEnabled) {
+    const settingEnabled: boolean = await vscode.workspace.getConfiguration().get(SETTINGS_SECURE_CREDENTIALS_ENABLED);
+    if (!settingEnabled) {
         PROFILE_SECURITY = false;
     } else {
         PROFILE_SECURITY = ZOWE_CLI_SCM;

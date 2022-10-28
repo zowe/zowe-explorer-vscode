@@ -80,6 +80,8 @@ async function createGlobalMocks() {
                 readProfilesFromDisk: jest.fn(),
             };
         }),
+        mockSetGlobalSecurityValue: jest.fn(),
+        mockWriteOverridesFile: jest.fn(),
         mockProfCacheProfileInfo: createInstanceOfProfileInfo(),
         mockProfilesCache: new ProfilesCache(zowe.imperative.Logger.getAppLogger()),
         testTreeView: null,
@@ -259,6 +261,10 @@ async function createGlobalMocks() {
     });
     Object.defineProperty(vscode.workspace, "onDidChangeConfiguration", {
         value: globalMocks.mockOnDidChangeConfiguration,
+        configurable: true,
+    });
+    Object.defineProperty(globals, "setGlobalSecurityValue", {
+        value: globalMocks.mockSetGlobalSecurityValue,
         configurable: true,
     });
     Object.defineProperty(fs, "readdirSync", { value: globalMocks.mockReaddirSync, configurable: true });
