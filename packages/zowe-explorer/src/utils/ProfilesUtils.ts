@@ -374,7 +374,6 @@ export function writeOverridesFile() {
             return;
         }
         content.overrides.CredentialManager = globals.PROFILE_SECURITY;
-        console.log(content.overrides.CredentialManager);
         fileContent = JSON.stringify(content, null, 2);
         fs.writeFileSync(settingsFile, fileContent, "utf8");
     } else {
