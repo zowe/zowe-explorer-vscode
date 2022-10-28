@@ -19,6 +19,8 @@ async function createGlobalMocks() {
         mockReadFileSync: jest.fn(),
         mockWriteFileSync: jest.fn(),
         mockFileRead: { overrides: { CredentialManager: "@zowe/cli" } },
+        zoweDir: "__tests__/.zowe/settings/imperative.json",
+        encoding: "utf8",
     };
     Object.defineProperty(fs, "writeFileSync", { value: globalMocks.mockWriteFileSync, configurable: true });
     Object.defineProperty(fs, "existsSync", {
@@ -36,23 +38,21 @@ afterEach(() => {
 
 describe("ProfileUtils Unit Tests", () => {
     it("should have file exist", async () => {
+        const globalMocks = await createGlobalMocks();
         const fileJson = { overrides: { CredentialManager: "@zowe/cli", testValue: true } };
-        const path = "__tests__/.zowe/settings/imperative.json";
         const content = JSON.stringify(fileJson, null, 2);
-        const encoding = "utf8";
         jest.spyOn(fs, "readFileSync").mockReturnValueOnce(
             JSON.stringify({ overrides: { CredentialManager: false, testValue: true } }, null, 2)
         );
         const spy = jest.spyOn(fs, "writeFileSync");
         writeOverridesFile();
-        expect(spy).toBeCalledWith(path, content, encoding);
+        expect(spy).toBeCalledWith(globalMocks.zoweDir, content, globalMocks.encoding);
         spy.mockClear();
     });
     it("should have no change to global variable PROFILE_SECURITY and returns", async () => {
+        const globalMocks = await createGlobalMocks();
         const fileJson = { overrides: { CredentialManager: "@zowe/cli", testValue: true } };
-        const path = "__tests__/.zowe/settings/imperative.json";
         const content = JSON.stringify(fileJson, null, 2);
-        const encoding = "utf8";
         jest.spyOn(fs, "readFileSync").mockReturnValueOnce(JSON.stringify(fileJson, null, 2));
         const spy = jest.spyOn(fs, "writeFileSync");
         writeOverridesFile();
@@ -67,14 +67,11 @@ describe("ProfileUtils Unit Tests", () => {
             },
             configurable: true,
         });
-        const fileJson = { overrides: { CredentialManager: "@zowe/cli" } };
-        const path = "__tests__/.zowe/settings/imperative.json";
-        const content = JSON.stringify(fileJson, null, 2);
-        const encoding = "utf8";
+        const content = JSON.stringify(globalMocks.mockFileRead, null, 2);
         const spyRead = jest.spyOn(fs, "readFileSync");
         const spy = jest.spyOn(fs, "writeFileSync");
         writeOverridesFile();
-        expect(spy).toBeCalledWith(path, content, encoding);
+        expect(spy).toBeCalledWith(globalMocks.zoweDir, content, globalMocks.encoding);
         expect(spyRead).toBeCalledTimes(0);
         spy.mockClear();
         spyRead.mockClear();
