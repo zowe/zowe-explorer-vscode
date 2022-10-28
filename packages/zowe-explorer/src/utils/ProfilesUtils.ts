@@ -283,8 +283,8 @@ export async function readConfigFromDisk() {
 export async function openConfigOnError(error: Error) {
     if (error.message.toString().includes("Error parsing JSON")) {
         const errorArray = error.message.toString().split("'");
-        const path = errorArray[1];
-        await Profiles.getInstance().openConfigFile(path);
+        const errorPath = errorArray[1];
+        await Profiles.getInstance().openConfigFile(errorPath);
     }
 }
 
@@ -364,10 +364,10 @@ export async function initializeZoweFolder(): Promise<void> {
 
 export function writeOverridesFile() {
     const settingsFile = path.join(getZoweDir(), "settings", "imperative.json");
-    const file = JSON.stringify({
+    const fileContent = JSON.stringify({
         overrides: {
             CredentialManager: globals.PROFILE_SECURITY,
         },
     });
-    fs.writeFileSync(settingsFile, file);
+    fs.writeFileSync(settingsFile, fileContent);
 }
