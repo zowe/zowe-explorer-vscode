@@ -364,10 +364,14 @@ export async function initializeZoweFolder(): Promise<void> {
 
 export function writeOverridesFile() {
     const settingsFile = path.join(getZoweDir(), "settings", "imperative.json");
-    const fileContent = JSON.stringify({
-        overrides: {
-            CredentialManager: globals.PROFILE_SECURITY,
+    const fileContent = JSON.stringify(
+        {
+            overrides: {
+                CredentialManager: globals.PROFILE_SECURITY,
+            },
         },
-    });
+        null,
+        2
+    );
     fs.writeFileSync(settingsFile, fileContent);
 }
