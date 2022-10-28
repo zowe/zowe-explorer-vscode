@@ -87,8 +87,9 @@ export const SETTINGS_USS_HISTORY = "zowe.uss.history";
 export const SETTINGS_JOBS_HISTORY = "zowe.jobs.history";
 export const SETTINGS_SECURE_CREDENTIALS_ENABLED = "zowe.security.secureCredentialsEnabled";
 export const EXTENDER_CONFIG: imperative.ICommandProfileTypeConfiguration[] = [];
+export const ZOWE_CLI_SCM = "@zowe/cli";
 export let ACTIVATED = false;
-export let PROFILE_SECURITY: string | boolean = "@zowe/cli";
+export let PROFILE_SECURITY: string | boolean = ZOWE_CLI_SCM;
 
 export enum CreateDataSetTypeWithKeysEnum {
     DATA_SET_BINARY = 0,
@@ -254,10 +255,13 @@ export function setActivated(value: boolean) {
     ACTIVATED = value;
 }
 
-export function setGlobalSecurityValue() {
-    const configuration: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
-    const secureCredsEnabled: boolean = configuration.get(SETTINGS_SECURE_CREDENTIALS_ENABLED);
-    if (!secureCredsEnabled) {
+export async function setGlobalSecurityValue() {
+    const isSettingEnabled: boolean = await vscode.workspace
+        .getConfiguration()
+        .get(SETTINGS_SECURE_CREDENTIALS_ENABLED);
+    if (!isSettingEnabled) {
         PROFILE_SECURITY = false;
+    } else {
+        PROFILE_SECURITY = ZOWE_CLI_SCM;
     }
 }

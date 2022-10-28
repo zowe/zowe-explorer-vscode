@@ -28,7 +28,7 @@ import {
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import { Profiles } from "./Profiles";
-import { initializeZoweFolder, promptCredentials, readConfigFromDisk } from "./utils/ProfilesUtils";
+import { initializeZoweFolder, promptCredentials, readConfigFromDisk, writeOverridesFile } from "./utils/ProfilesUtils";
 import { createDatasetTree } from "./dataset/DatasetTree";
 import { createJobsTree } from "./job/ZosJobsProvider";
 import { createUSSTree } from "./uss/USSTree";
@@ -131,14 +131,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
 
     // Update imperative.json to false only when VS Code setting is set to false
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.updateSecureCredentials", () => {
-            const isSettingEnabled: boolean = vscode.workspace
-                .getConfiguration()
-                .get(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED);
-
-            if (!isSettingEnabled) {
-                Profiles.getInstance().updateImperativeSettings();
-            }
+        vscode.commands.registerCommand("zowe.updateSecureCredentials", async () => {
+            await globals.setGlobalSecurityValue();
+            writeOverridesFile();
         })
     );
 

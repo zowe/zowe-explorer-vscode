@@ -333,11 +333,17 @@ export async function promptCredentials(node: IZoweTreeNode) {
 }
 
 export async function initializeZoweFolder(): Promise<void> {
+    // ensure the Secure Credentials Enabled value is read
+    // set globals.PROFILE_SECURITY value accordingly
+    globals.setGlobalSecurityValue();
     // Ensure that ~/.zowe folder exists
-    const zoweDir = getZoweDir();
     // Ensure that the ~/.zowe/settings/imperative.json exists
     // TODO: update code below once this imperative issue is resolved.
     // https://github.com/zowe/imperative/issues/840
+    const zoweDir = getZoweDir();
+    if (!fs.existsSync(zoweDir)) {
+        fs.mkdirSync(zoweDir);
+    }
     const settingsPath = path.join(zoweDir, "settings");
     if (!fs.existsSync(settingsPath)) {
         fs.mkdirSync(settingsPath);
@@ -353,17 +359,12 @@ export async function initializeZoweFolder(): Promise<void> {
     }
 }
 
-function writeOverridesFile() {
-    globals.setGlobalSecurityValue();
+export function writeOverridesFile() {
     const settingsFile = path.join(getZoweDir(), "settings", "imperative.json");
-    if (!fs.existsSync(settingsFile)) {
-        fs.writeFileSync(
-            settingsFile,
-            JSON.stringify({
-                overrides: {
-                    CredentialManager: globals.PROFILE_SECURITY,
-                },
-            })
-        );
-    }
+    const file = JSON.stringify({
+        overrides: {
+            CredentialManager: globals.PROFILE_SECURITY,
+        },
+    });
+    fs.writeFileSync(settingsFile, file);
 }
