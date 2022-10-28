@@ -50,9 +50,7 @@ describe("ProfileUtils Unit Tests", () => {
         spy.mockClear();
     });
     it("should have no change to global variable PROFILE_SECURITY and returns", async () => {
-        const globalMocks = await createGlobalMocks();
         const fileJson = { overrides: { CredentialManager: "@zowe/cli", testValue: true } };
-        const content = JSON.stringify(fileJson, null, 2);
         jest.spyOn(fs, "readFileSync").mockReturnValueOnce(JSON.stringify(fileJson, null, 2));
         const spy = jest.spyOn(fs, "writeFileSync");
         writeOverridesFile();
