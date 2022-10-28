@@ -22,6 +22,7 @@ import { Profiles } from "../../src/Profiles";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import { createInstanceOfProfileInfo, createIProfile, createTreeView } from "../../__mocks__/mockCreators/shared";
 import { PersistentFilters } from "../../src/PersistentFilters";
+import { initializeZoweFolder, writeOverridesFile } from "../../src/utils/ProfilesUtils";
 
 jest.mock("vscode");
 jest.mock("fs");
@@ -470,7 +471,7 @@ describe("Extension Unit Tests", () => {
 
         expect(globals.ISTHEIA).toEqual(true);
         // tslint:disable-next-line: no-magic-numbers
-        expect(globalMocks.mockMkdirSync.mock.calls.length).toBe(4);
+        expect(globalMocks.mockMkdirSync.mock.calls.length).toBe(6);
         expect(globalMocks.mockRegisterCommand.mock.calls.length).toBe(globals.COMMAND_COUNT);
         globalMocks.mockRegisterCommand.mock.calls.forEach((call, i) => {
             expect(globalMocks.mockRegisterCommand.mock.calls[i][1]).toBeInstanceOf(Function);
