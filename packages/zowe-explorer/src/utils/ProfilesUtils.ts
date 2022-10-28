@@ -348,7 +348,10 @@ export async function initializeZoweFolder(): Promise<void> {
     if (!fs.existsSync(settingsPath)) {
         fs.mkdirSync(settingsPath);
     }
-    writeOverridesFile();
+    const settingsFile = path.join(settingsPath, "imperative.json");
+    if (!fs.existsSync(settingsFile)) {
+        writeOverridesFile();
+    }
     // If not using team config, ensure that the ~/.zowe/profiles directory
     // exists with appropriate types within
     if (!imperative.ImperativeConfig.instance.config?.exists) {
