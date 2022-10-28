@@ -6,7 +6,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
-- Added independence from Zowe CLI installation by creating the `~/.zowe/settings/imperative.json` file during activation if it doesn't already exist. This file is for Zowe Explorer to know the Security Credential Manager used for secure profile information.
+- Added independence from Zowe CLI installation by creating the `~/.zowe/settings/imperative.json` file during activation if it doesn't already exist. This file is for Zowe Explorer to know the Security Credential Manager used for secure profile information. [#1850](https://github.com/zowe/vscode-extension-for-zowe/issues/1850)
 
 ### Bug fixes
 
