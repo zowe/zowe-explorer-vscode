@@ -368,14 +368,14 @@ export function writeOverridesFile() {
     const settingsFile = path.join(getZoweDir(), "settings", "imperative.json");
     if (fs.existsSync(settingsFile)) {
         content = JSON.parse(fs.readFileSync(settingsFile).toString());
-    }
-    if (content && content?.overrides) {
-        if (content?.overrides?.CredentialManager === globals.PROFILE_SECURITY) {
-            return;
+        if (content && content?.overrides) {
+            if (content?.overrides?.CredentialManager === globals.PROFILE_SECURITY) {
+                return;
+            }
+            content.overrides.CredentialManager = globals.PROFILE_SECURITY;
+            fileContent = JSON.stringify(content, null, 2);
+            fs.writeFileSync(settingsFile, fileContent, "utf8");
         }
-        content.overrides.CredentialManager = globals.PROFILE_SECURITY;
-        fileContent = JSON.stringify(content, null, 2);
-        fs.writeFileSync(settingsFile, fileContent, "utf8");
     } else {
         fileContent = JSON.stringify({ overrides: { CredentialManager: globals.PROFILE_SECURITY } }, null, 2);
         fs.writeFileSync(settingsFile, fileContent, "utf8");
