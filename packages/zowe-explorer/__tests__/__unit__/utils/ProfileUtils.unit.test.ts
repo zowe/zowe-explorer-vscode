@@ -10,6 +10,7 @@
  */
 
 import * as fs from "fs";
+import * as path from "path";
 import { writeOverridesFile } from "../../../src/utils/ProfilesUtils";
 
 jest.mock("fs");
@@ -19,7 +20,7 @@ async function createGlobalMocks() {
         mockReadFileSync: jest.fn(),
         mockWriteFileSync: jest.fn(),
         mockFileRead: { overrides: { CredentialManager: "@zowe/cli" } },
-        zoweDir: "__tests__/.zowe/settings/imperative.json",
+        zoweDir: path.normalize("__tests__/.zowe/settings/imperative.json"),
         encoding: "utf8",
     };
     Object.defineProperty(fs, "writeFileSync", { value: globalMocks.mockWriteFileSync, configurable: true });
