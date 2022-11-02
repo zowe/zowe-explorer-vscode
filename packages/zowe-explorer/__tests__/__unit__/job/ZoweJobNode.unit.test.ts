@@ -135,9 +135,8 @@ async function createGlobalMocks() {
     globalMocks.mockGetBaseProfile.mockResolvedValue(globalMocks.testProfile);
     globalMocks.mockProfileInstance.getValidSession.mockResolvedValue(globalMocks.testSession);
     globalMocks.mockProfileInstance.getBaseProfile = globalMocks.mockGetBaseProfile;
-    globalMocks.mockProfileInstance.checkProfileValidationSetting = globalMocks.mockValidationSetting.mockReturnValue(
-        true
-    );
+    globalMocks.mockProfileInstance.checkProfileValidationSetting =
+        globalMocks.mockValidationSetting.mockReturnValue(true);
     globalMocks.mockProfileInstance.enableValidationContext = globalMocks.mockEnableValidationContext;
     globalMocks.mockProfileInstance.getCombinedProfile.mockResolvedValue(globalMocks.testProfile);
     globalMocks.mockProfileInstance.disableValidationContext = globalMocks.mockDisableValidationContext;
@@ -213,9 +212,8 @@ describe("ZoweJobNode unit tests - Function addSession", () => {
         const globalMocks = await createGlobalMocks();
 
         globalMocks.testJobsProvider.mSessionNodes.pop();
-        globalMocks.mockProfileInstance.checkProfileValidationSetting = globalMocks.mockValidationSetting.mockReturnValueOnce(
-            false
-        );
+        globalMocks.mockProfileInstance.checkProfileValidationSetting =
+            globalMocks.mockValidationSetting.mockReturnValueOnce(false);
         await globalMocks.testJobsProvider.addSession("sestest");
 
         expect(globalMocks.testJobsProvider.mSessionNodes[1]).toBeDefined();

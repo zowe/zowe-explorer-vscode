@@ -119,7 +119,7 @@ describe("FtpUssApi", () => {
         const result = await UssApi.create(mockParams.ussPath, mockParams.type);
         expect(result.commandResponse).toContain("Directory or file created.");
         expect(UssUtils.makeDirectory).toBeCalledTimes(1);
-        expect(UssUtils.uploadFile).not.toBeCalled;
+        expect(UssUtils.uploadFile).not.toBeCalled();
         expect(UssApi.releaseConnection).toBeCalled();
     });
 
@@ -133,7 +133,7 @@ describe("FtpUssApi", () => {
         const result = await UssApi.create(mockParams.ussPath, mockParams.type);
         expect(result.commandResponse).toContain("Directory or file created.");
         expect(UssUtils.uploadFile).toBeCalledTimes(1);
-        expect(UssUtils.makeDirectory).not.toBeCalled;
+        expect(UssUtils.makeDirectory).not.toBeCalled();
         expect(UssApi.releaseConnection).toBeCalled();
     });
 
@@ -161,7 +161,7 @@ describe("FtpUssApi", () => {
         const result = await UssApi.delete(mockParams.ussPath, mockParams.recursive);
         expect(result.commandResponse).toContain("Delete completed.");
         expect(UssUtils.deleteFile).toBeCalledTimes(1);
-        expect(UssUtils.deleteDirectory).not.toBeCalled;
+        expect(UssUtils.deleteDirectory).not.toBeCalled();
         expect(UssApi.releaseConnection).toBeCalled();
     });
 

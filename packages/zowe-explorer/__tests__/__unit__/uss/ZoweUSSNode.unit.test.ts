@@ -1482,7 +1482,7 @@ describe("ZoweUSSNode Unit Tests - Function node.initializeFileOpening()", () =>
     it("Tests that node.initializeFileOpening() successfully handles binary files that should be re-downloaded", async () => {
         const globalMocks = await createGlobalMocks();
 
-        const errorSelection = ("Re-download" as unknown) as vscode.MessageItem;
+        const errorSelection = "Re-download" as unknown as vscode.MessageItem;
         jest.spyOn(vscode.workspace, "openTextDocument").mockRejectedValue("Test error!");
         jest.spyOn(vscode.window, "showErrorMessage").mockResolvedValue(errorSelection);
 

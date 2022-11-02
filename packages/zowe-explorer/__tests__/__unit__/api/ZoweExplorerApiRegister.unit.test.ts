@@ -175,11 +175,9 @@ describe("ZoweExplorerApiRegister unit testing", () => {
     });
 
     it("registers multiple API instances in parallel", async () => {
-        const mockRefresh = jest.fn(
-            async (): Promise<void> => {
-                return;
-            }
-        );
+        const mockRefresh = jest.fn(async (): Promise<void> => {
+            return;
+        });
         const profilesForValidation = { status: "active", name: "fake" };
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
