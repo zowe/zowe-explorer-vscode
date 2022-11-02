@@ -147,7 +147,7 @@ describe("FtpUssApi", () => {
         const result = await UssApi.delete(mockParams.ussPath, mockParams.recursive);
         expect(result.commandResponse).toContain("Delete completed.");
         expect(UssUtils.deleteDirectory).toBeCalledTimes(1);
-        expect(UssUtils.deleteFile).not.toBeCalled;
+        expect(UssUtils.deleteFile).not.toBeCalled();
         expect(UssApi.releaseConnection).toBeCalled();
     });
 

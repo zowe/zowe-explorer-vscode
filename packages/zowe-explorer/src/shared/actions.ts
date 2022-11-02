@@ -202,9 +202,7 @@ export async function openRecentMemberPrompt(
                 );
                 return;
             } else if (choice instanceof FilterDescriptor) {
-                if (quickpick.value) {
-                    pattern = quickpick.value;
-                }
+                pattern = quickpick.value;
             } else {
                 pattern = choice.label;
             }
