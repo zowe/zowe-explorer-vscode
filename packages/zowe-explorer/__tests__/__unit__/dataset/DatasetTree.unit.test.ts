@@ -151,7 +151,7 @@ function createGlobalMocks() {
     return globalMocks;
 }
 
-// Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/master/src/util/testing.ts
+// Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/eadf408f90ca2007b85f5a61c6c0b74b4e431943/src/utils/testing.ts
 const mocked = <T extends (...args: any[]) => any>(fn: T): jest.Mock<ReturnType<T>> => fn as any;
 
 describe("Dataset Tree Unit Tests - Initialisation", () => {
@@ -2459,5 +2459,35 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
     });
     it("Checking validate validateDataSetName util function", async () => {
         expect(dsUtils.validateDataSetName("#DSNAME.DSNAME")).toBe(true);
+    });
+
+    it("Tests that rename() validates the dataset name", async () => {
+        globals.defineGlobals("");
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        mocked(workspaceUtils.closeOpenedTextFile).mockResolvedValueOnce(false);
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        const node = new ZoweDatasetNode(
+            "HLQ.TEST.RENAME.NODE",
+            vscode.TreeItemCollapsibleState.None,
+            testTree.mSessionNodes[1],
+            blockMocks.session
+        );
+        const renameDataSetSpy = jest.spyOn(blockMocks.mvsApi, "renameDataSet");
+        const testValidDsName = async (text: string) => {
+            mocked(vscode.window.showInputBox).mockImplementation((options) => {
+                options.validateInput(text);
+                return Promise.resolve(text);
+            });
+            const oldName = node.label;
+            await testTree.rename(node);
+            expect(renameDataSetSpy).toHaveBeenLastCalledWith(oldName, text);
+        };
+
+        await testValidDsName("HLQ.TEST.RENAME.NODE.NEW.TEST");
+        await testValidDsName("INVALID-DATASET-NAME");
     });
 });
