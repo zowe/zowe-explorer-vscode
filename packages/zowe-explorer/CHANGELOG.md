@@ -2,6 +2,12 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## TBD Release
+
+### Bug fixes
+
+- Fixed the loading of previously saved profiles in the tree views. [#1992](https://github.com/zowe/vscode-extension-for-zowe/issues/1992)
+
 ## `2.4.0`
 
 ### New features and enhancements
