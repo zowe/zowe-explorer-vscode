@@ -62,9 +62,7 @@ async function createGlobalMocks() {
     Object.defineProperty(Profiles, "getInstance", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe, "Utilities", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe.Utilities, "isFileTagBinOrAscii", { value: jest.fn(), configurable: true });
-    Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
-    Object.defineProperty(globals.LOG, "debug", { value: jest.fn(), configurable: true });
-    Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
+    Object.defineProperty(globals, "LOG", { value: console, configurable: true });
 
     return globalMocks;
 }

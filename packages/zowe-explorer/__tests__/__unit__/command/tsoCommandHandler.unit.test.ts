@@ -19,6 +19,7 @@ import * as utils from "../../../src/utils/ProfilesUtils";
 import { imperative } from "@zowe/cli";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
+import * as globals from "../../../src/globals";
 
 describe("TsoCommandHandler unit testing", () => {
     const showErrorMessage = jest.fn();
@@ -45,6 +46,7 @@ describe("TsoCommandHandler unit testing", () => {
     const qpItem2 = new utils.FilterItem({ text: "/d iplinfo0" });
 
     const mockLoadNamedProfile = jest.fn();
+    Object.defineProperty(globals, "LOG", { value: console, configurable: true });
     Object.defineProperty(profileLoader.Profiles, "createInstance", {
         value: jest.fn(() => {
             return {

@@ -13,7 +13,7 @@ import * as vscode from "vscode";
 import * as dsActions from "../../../src/dataset/actions";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import { imperative } from "@zowe/cli";
-import { PDS_FAV_CONTEXT, FAVORITE_CONTEXT } from "../../../src/globals";
+import * as globals from "../../../src/globals";
 
 const mockRefresh = jest.fn();
 const showOpenDialog = jest.fn();
@@ -23,6 +23,7 @@ const mockRefreshElement = jest.fn();
 const mockFindFavoritedNode = jest.fn();
 const mockFindNonFavoritedNode = jest.fn();
 
+Object.defineProperty(globals, "LOG", { value: console, configurable: true });
 Object.defineProperty(vscode.window, "showOpenDialog", { value: showOpenDialog });
 Object.defineProperty(vscode.window, "showInformationMessage", { value: showInformationMessage });
 Object.defineProperty(vscode.workspace, "openTextDocument", { value: openTextDocument });
@@ -84,7 +85,7 @@ describe("mvsNodeActions", () => {
             sessNode,
             null,
             null,
-            PDS_FAV_CONTEXT,
+            globals.PDS_FAV_CONTEXT,
             profileOne
         );
         testTree.mFavorites.push(nodeAsFavorite);
@@ -117,7 +118,7 @@ describe("mvsNodeActions", () => {
             sessNode,
             null,
             null,
-            PDS_FAV_CONTEXT,
+            globals.PDS_FAV_CONTEXT,
             profileOne
         );
         testTree.mFavorites.push(nodeAsFavorite);
@@ -140,7 +141,7 @@ describe("mvsNodeActions", () => {
             vscode.TreeItemCollapsibleState.Collapsed,
             sessNode,
             null,
-            PDS_FAV_CONTEXT
+            globals.PDS_FAV_CONTEXT
         );
         testTree.mFavorites.push(nodeAsFavorite);
         const fileUri = { fsPath: "/tmp/foo" };

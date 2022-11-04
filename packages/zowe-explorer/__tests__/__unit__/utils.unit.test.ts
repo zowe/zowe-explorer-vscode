@@ -47,6 +47,7 @@ function createGlobalMocks() {
         configurable: true,
     });
     Object.defineProperty(globals, "ISTHEIA", { get: isTheia, configurable: true });
+    Object.defineProperty(globals, "LOG", { value: console, configurable: true });
     Object.defineProperty(utils, "isTheia", { value: jest.fn(), configurable: true });
 
     Object.defineProperty(globalMocks.mockProfilesCache, "getProfileInfo", {
