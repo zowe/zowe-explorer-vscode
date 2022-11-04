@@ -176,9 +176,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         })
     );
 
-    // Update imperative.json to false if VS Code setting is set to false
-    await vscode.commands.executeCommand("zowe.updateSecureCredentials");
-
     if (datasetProvider) {
         initDatasetProvider(context, datasetProvider);
     }
