@@ -329,7 +329,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                             (tempNode) => tempNode.label.toString().trim() === theProfile.name.trim()
                         )
                     ) {
-                        return;
+                        continue;
                     }
                     for (const session of this.mHistory.getSessions()) {
                         if (session && session.trim() === theProfile.name) {

@@ -465,7 +465,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 for (const theProfile of profiles) {
                     // If session is already added, do nothing
                     if (this.mSessionNodes.find((tempNode) => tempNode.label.toString() === theProfile.name)) {
-                        return;
+                        continue;
                     }
                     for (const session of this.mHistory.getSessions()) {
                         if (session === theProfile.name) {
