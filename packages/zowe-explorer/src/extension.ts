@@ -340,7 +340,7 @@ async function watchConfigProfile(context: vscode.ExtensionContext) {
             return;
         }
         savedProfileContents = newProfileContents;
-        await vscode.commands.executeCommand("zowe.extRefresh");
+        await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
     };
 
     globalProfileWatcher.onDidCreate(async () => {

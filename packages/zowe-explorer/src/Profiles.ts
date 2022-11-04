@@ -1267,7 +1267,9 @@ export class Profiles extends ProfilesCache {
         }
 
         try {
-            loginTokenType = ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).getTokenTypeName();
+            loginTokenType = await ZoweExplorerApiRegister.getInstance()
+                .getCommonApi(serviceProfile)
+                .getTokenTypeName();
         } catch (error) {
             vscode.window.showInformationMessage(
                 localize("ssoAuth.noBase", "This profile does not support token authentication.")
@@ -1279,7 +1281,7 @@ export class Profiles extends ProfilesCache {
             if (node) {
                 session = node.getSession();
             } else {
-                session = ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).getSession();
+                session = await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).getSession();
             }
             creds = await this.loginCredentialPrompt();
             if (!creds) {
@@ -1289,6 +1291,12 @@ export class Profiles extends ProfilesCache {
             session.ISession.password = creds[1];
             try {
                 loginToken = await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).login(session);
+                const profIndex = this.allProfiles.findIndex((profile) => profile.name === serviceProfile.name);
+                this.allProfiles[profIndex] = { ...serviceProfile, profile: { ...serviceProfile, ...session } };
+                node.setProfileToChoice({
+                    ...node.getProfile(),
+                    profile: { ...node.getProfile().profile, ...session },
+                });
             } catch (error) {
                 vscode.window.showErrorMessage(
                     localize("ssoLogin.unableToLogin", "Unable to log in. ") + error.message
@@ -1320,7 +1328,7 @@ export class Profiles extends ProfilesCache {
                         tokenValue: loginToken,
                     };
                     await this.updateBaseProfileFileLogin(baseProfile, updBaseProfile);
-                    await this.refresh(ZoweExplorerApiRegister.getInstance());
+                    // await this.refresh(ZoweExplorerApiRegister.getInstance());
                     const baseIndex = this.allProfiles.findIndex((profile) => profile.name === baseProfile.name);
                     this.allProfiles[baseIndex] = { ...baseProfile, profile: { ...baseProfile, ...updBaseProfile } };
                     node.setProfileToChoice({
