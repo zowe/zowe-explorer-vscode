@@ -74,7 +74,7 @@ export class KeytarCredentialManager extends imperative.AbstractCredentialManage
         this.preferredService = service;
     }
 
-    public static getSecurityModules(moduleName: string, isTheia: boolean): NodeRequire | undefined {
+    public static getSecurityModules(moduleName: string, isTheia: boolean): NodeModule | undefined {
         let imperativeIsSecure = false;
         try {
             const fileName = path.join(getZoweDir(), "settings", "imperative.json");
@@ -213,9 +213,9 @@ export class KeytarCredentialManager extends imperative.AbstractCredentialManage
 }
 
 /**
- * Imports the neccesary security modules
+ * Imports the necessary security modules
  */
-export function getSecurityModules(moduleName: string, isTheia: boolean): NodeRequire | undefined {
+export function getSecurityModules(moduleName: string, isTheia: boolean): NodeModule | undefined {
     const r = typeof __webpack_require__ === "function" ? __non_webpack_require__ : require;
     // Workaround for Theia issue (https://github.com/eclipse-theia/theia/issues/4935)
     const appRoot = isTheia ? process.cwd() : vscode.env.appRoot;

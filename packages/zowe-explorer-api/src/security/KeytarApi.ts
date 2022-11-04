@@ -24,7 +24,7 @@ export class KeytarApi {
         const profiles = new ProfilesCache(log, vscode.workspace.workspaceFolders?.[0].uri.fsPath);
         const scsActive = profiles.isSecureCredentialPluginActive();
         if (scsActive) {
-            const keytar: NodeRequire | undefined = KeytarCredentialManager.getSecurityModules("keytar", isTheia);
+            const keytar = KeytarCredentialManager.getSecurityModules("keytar", isTheia);
             if (!initialized && keytar) {
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                 KeytarCredentialManager.keytar = keytar;
