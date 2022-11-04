@@ -2,7 +2,15 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## TBD Release
+
+-
+
 ## `2.4.0`
+
+### Bug fixes
+
+- Fixed login/logout errors from Team config file watcher. [#1924](https://github.com/zowe/vscode-extension-for-zowe/issues/1924)
 
 ### New features and enhancements
 
