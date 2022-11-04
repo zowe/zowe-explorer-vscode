@@ -383,6 +383,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     ];
                 }
             } catch (error) {
+                this.log.error(error);
                 const errMessage: string =
                     localize(
                         "loadProfilesForFavorites.error.profile1",

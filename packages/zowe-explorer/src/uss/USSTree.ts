@@ -813,6 +813,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                     return [infoNode];
                 }
             } catch (error) {
+                this.log.error(error);
                 const errMessage: string =
                     localize(
                         "initializeUSSFavorites.error.profile1",

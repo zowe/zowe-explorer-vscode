@@ -76,7 +76,6 @@ export class KeytarCredentialManager extends imperative.AbstractCredentialManage
 
     public static getSecurityModules(moduleName: string, isTheia: boolean): NodeRequire | undefined {
         let imperativeIsSecure = false;
-        const r = typeof __webpack_require__ === "function" ? __non_webpack_require__ : require;
         try {
             const fileName = path.join(getZoweDir(), "settings", "imperative.json");
             let settings;
@@ -90,25 +89,10 @@ export class KeytarCredentialManager extends imperative.AbstractCredentialManage
             imperativeIsSecure =
                 (typeof value1 === "string" && value1.length > 0) || (typeof value2 === "string" && value2.length > 0);
         } catch (error) {
+            imperative.Logger.getAppLogger().warn(error);
             return undefined;
         }
-        if (imperativeIsSecure) {
-            // Workaround for Theia issue (https://github.com/eclipse-theia/theia/issues/4935)
-            const appRoot = isTheia ? process.cwd() : vscode.env.appRoot;
-            try {
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-                return r(`${appRoot}/node_modules/${moduleName}`);
-            } catch (err) {
-                /* Do nothing */
-            }
-            try {
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-                return r(`${appRoot}/node_modules.asar/${moduleName}`);
-            } catch (err) {
-                /* Do nothing */
-            }
-        }
-        return undefined;
+        return imperativeIsSecure ? getSecurityModules(moduleName, isTheia) : undefined;
     }
 
     /**
@@ -231,7 +215,7 @@ export class KeytarCredentialManager extends imperative.AbstractCredentialManage
 /**
  * Imports the neccesary security modules
  */
-export function getSecurityModules(moduleName: string, isTheia: boolean): NodeModule | undefined {
+export function getSecurityModules(moduleName: string, isTheia: boolean): NodeRequire | undefined {
     const r = typeof __webpack_require__ === "function" ? __non_webpack_require__ : require;
     // Workaround for Theia issue (https://github.com/eclipse-theia/theia/issues/4935)
     const appRoot = isTheia ? process.cwd() : vscode.env.appRoot;
@@ -239,13 +223,13 @@ export function getSecurityModules(moduleName: string, isTheia: boolean): NodeMo
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return r(`${appRoot}/node_modules/${moduleName}`);
     } catch (err) {
-        /* Do nothing */
+        imperative.Logger.getAppLogger().warn(err);
     }
     try {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return r(`${appRoot}/node_modules.asar/${moduleName}`);
     } catch (err) {
-        /* Do nothing */
+        imperative.Logger.getAppLogger().warn(err);
     }
     return undefined;
 }

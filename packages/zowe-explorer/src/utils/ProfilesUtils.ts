@@ -43,6 +43,7 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
         "errorHandling.invalid.token",
         "Your connection is no longer active. Please log in to an authentication service to restore the connection."
     );
+    [errorDetails, errorDetails.mDetails, label, moreInfo].filter(Boolean).map(globals.LOG.error);
 
     if (errorDetails.mDetails !== undefined) {
         httpErrCode = errorDetails.mDetails.errorCode;
@@ -150,6 +151,7 @@ export const syncSessionNode =
         try {
             profile = Profiles.getInstance().loadNamedProfile(profileName, profileType);
         } catch (e) {
+            globals.LOG.warn(e);
             return;
         }
         sessionNode.setProfileToChoice(profile);

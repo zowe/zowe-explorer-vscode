@@ -142,6 +142,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
             }
         } catch (error) {
             if (error.toString().includes("non-existing")) {
+                globals.LOG.error(error);
                 vscode.window.showErrorMessage(
                     localize("issueTsoCommand.apiNonExisting", "Not implemented yet for profile of type: ") +
                         profile.type
@@ -268,6 +269,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
             this.history.addSearchHistory(command);
         } catch (error) {
             if (error.toString().includes("account number")) {
+                globals.LOG.error(error);
                 vscode.window.showErrorMessage(
                     localize("issueTsoCommand.accountNumberNotSupplied", "Error: No account number was supplied.")
                 );
