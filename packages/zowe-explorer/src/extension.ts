@@ -397,7 +397,6 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.refreshAll", async () => {
-            await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
             await refreshActions.refreshAll(datasetProvider);
         })
     );
@@ -609,7 +608,6 @@ function initUSSProvider(context: vscode.ExtensionContext, ussFileProvider: IZow
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.uss.refreshAll", async () => {
-            await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
             await refreshActions.refreshAll(ussFileProvider);
         })
     );
@@ -787,7 +785,6 @@ function initJobsProvider(context: vscode.ExtensionContext, jobsProvider: IZoweT
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.jobs.refreshAllJobs", async () => {
-            await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
             await refreshActions.refreshAll(jobsProvider);
         })
     );
