@@ -180,7 +180,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 for (const sessionProfile of allProfiles) {
                     // If session is already added, do nothing
                     if (this.mSessionNodes.find((tempNode) => tempNode.label.toString() === sessionProfile.name)) {
-                        return;
+                        continue;
                     }
                     for (const session of this.mHistory.getSessions()) {
                         if (session === sessionProfile.name) {
