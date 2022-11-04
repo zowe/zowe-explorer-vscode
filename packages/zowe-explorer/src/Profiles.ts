@@ -83,7 +83,9 @@ export class Profiles extends ProfilesCache {
      * contents will be loaded.
      */
     public async getProfileInfo(): Promise<zowe.imperative.ProfileInfo> {
-        this.mProfileInfo = await super.getProfileInfo();
+        if (globals.ACTIVATED || this.mProfileInfo == null) {
+            this.mProfileInfo = await super.getProfileInfo();
+        }
         return this.mProfileInfo;
     }
 
@@ -1454,7 +1456,7 @@ export class Profiles extends ProfilesCache {
         const existingLayers: zowe.imperative.IConfigLayer[] = [];
         const config = await zowe.imperative.Config.load("zowe", {
             homeDir: getZoweDir(),
-            projectDir: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath,
+            projectDir: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? false,
         });
         const layers = config.layers;
         layers.forEach((layer) => {
