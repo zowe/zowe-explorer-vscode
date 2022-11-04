@@ -1743,7 +1743,6 @@
     "eslint-plugin-zowe-explorer": "2.5.0-SNAPSHOT",
     "@typescript-eslint/eslint-plugin": "^2.31.0",
     "@typescript-eslint/parser": "^2.31.0",
-    "@vscode/test-web": "^0.0.32",
     "eslint": "^6.8.0",
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",
