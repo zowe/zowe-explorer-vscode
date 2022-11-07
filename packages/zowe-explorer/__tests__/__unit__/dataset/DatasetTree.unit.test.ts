@@ -2306,9 +2306,18 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
 
         const renameDataSetMemberSpy = jest.spyOn(blockMocks.mvsApi, "renameDataSetMember");
 
-        await testTree.rename(child);
+        const testValidDsName = async (text: string) => {
+            mocked(vscode.window.showInputBox).mockImplementation((options) => {
+                options.validateInput(text);
+                return Promise.resolve(text);
+            });
+            await testTree.rename(child);
+            expect(renameDataSetMemberSpy).toHaveBeenLastCalledWith("HLQ.TEST.RENAME.NODE", "mem1", "MEM2");
+        };
 
-        expect(renameDataSetMemberSpy).toHaveBeenLastCalledWith("HLQ.TEST.RENAME.NODE", "mem1", "MEM2");
+        await testValidDsName("HLQ.TEST.RENAME.NODE");
+
+        await testTree.rename(child);
     });
     it("Checking function with PDS Member given in lowercase", async () => {
         globals.defineGlobals("");

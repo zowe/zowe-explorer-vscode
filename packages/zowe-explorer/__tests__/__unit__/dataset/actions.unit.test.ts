@@ -156,8 +156,12 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
             blockMocks.datasetSessionNode,
             blockMocks.session
         );
-    
-         const mySpy = mocked(vscode.window.showInputBox).mockResolvedValue("testMember");
+
+        const mySpy = mocked(vscode.window.showInputBox).mockImplementation((options) => {
+            options.validateInput("testMember");
+            return Promise.resolve("testMember");
+        });
+
         mocked(vscode.window.withProgress).mockImplementation((progLocation, callback) => {
             return callback();
         });
@@ -1065,7 +1069,7 @@ describe("Dataset Actions Unit Tests - Function enterPattern", () => {
         node.pattern = "TEST";
         node.contextValue = globals.DS_SESSION_CONTEXT;
 
-        const mySpy =  mocked(vscode.window.showInputBox).mockResolvedValue("test");
+        const mySpy = mocked(vscode.window.showInputBox).mockResolvedValue("test");
         await dsActions.enterPattern(node, blockMocks.testDatasetTree);
 
         expect(mySpy).toBeCalledWith({
@@ -2626,7 +2630,10 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         blockMocks.testDatasetTree.createFilterString.mockResolvedValue("test");
         blockMocks.testDatasetTree.getSearchHistory.mockReturnValue([]);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        mocked(vscode.window.showInputBox).mockResolvedValue("test");
+        mocked(vscode.window.showInputBox).mockImplementation((options) => {
+            options.validateInput("test");
+            return Promise.resolve("test");
+        });
         mocked(vscode.window.showQuickPick).mockResolvedValue(" + Allocate Data Set" as any);
         const createDataSetSpy = jest.spyOn(blockMocks.mvsApi, "createDataSet");
         createDataSetSpy.mockReset();
@@ -3189,7 +3196,10 @@ describe("Dataset Actions Unit Tests - Function allocateLike", () => {
 
         mocked(vscode.window.createQuickPick).mockReturnValue(quickPickContent);
         mocked(Profiles.getInstance).mockReturnValue(profileInstance);
-        mocked(vscode.window.showInputBox).mockResolvedValue("test");
+        mocked(vscode.window.showInputBox).mockImplementation((options) => {
+            options.validateInput("test");
+            return Promise.resolve("test");
+        });
         jest.spyOn(datasetSessionNode, "getChildren").mockResolvedValue([testNode, testSDSNode]);
         testDatasetTree.createFilterString.mockResolvedValue("test");
         jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValue(quickPickItem);
