@@ -211,13 +211,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     await vscode.commands.executeCommand("zowe.updateSecureCredentials");
 
     if (datasetProvider) {
-        initDatasetProvider(context, datasetProvider);
+        initDatasetProvider(context);
     }
     if (ussFileProvider) {
-        initUSSProvider(context, ussFileProvider);
+        initUSSProvider(context);
     }
     if (jobsProvider) {
-        initJobsProvider(context, jobsProvider);
+        initJobsProvider(context);
     }
     if (datasetProvider || ussFileProvider) {
         context.subscriptions.push(
@@ -372,7 +372,7 @@ async function watchConfigProfile(context: vscode.ExtensionContext) {
         });
 }
 
-function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
+function initDatasetProvider(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.all.config.init", async () => {
             datasetProvider.createZoweSchema(datasetProvider);
@@ -580,7 +580,7 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
     initSubscribers(context, datasetProvider);
 }
 
-function initUSSProvider(context: vscode.ExtensionContext, ussFileProvider: IZoweTree<IZoweUSSTreeNode>) {
+function initUSSProvider(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.uss.addFavorite", async (node, nodeList) => {
             const selectedNodes = getSelectedNodeList(node, nodeList);
@@ -752,7 +752,7 @@ function initUSSProvider(context: vscode.ExtensionContext, ussFileProvider: IZow
     initSubscribers(context, ussFileProvider);
 }
 
-function initJobsProvider(context: vscode.ExtensionContext, jobsProvider: IZoweTree<IZoweJobTreeNode>) {
+function initJobsProvider(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.jobs.zosJobsOpenspool", (session, spool, refreshTimestamp) =>
             jobActions.getSpoolContent(session, spool, refreshTimestamp)
