@@ -1328,7 +1328,6 @@ export class Profiles extends ProfilesCache {
                         tokenValue: loginToken,
                     };
                     await this.updateBaseProfileFileLogin(baseProfile, updBaseProfile);
-                    // await this.refresh(ZoweExplorerApiRegister.getInstance());
                     const baseIndex = this.allProfiles.findIndex((profile) => profile.name === baseProfile.name);
                     this.allProfiles[baseIndex] = { ...baseProfile, profile: { ...baseProfile, ...updBaseProfile } };
                     node.setProfileToChoice({
@@ -1383,7 +1382,7 @@ export class Profiles extends ProfilesCache {
                 await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).logout(updSession);
 
                 await this.updateBaseProfileFileLogout(baseProfile);
-                await this.refresh(ZoweExplorerApiRegister.getInstance());
+                // await this.refresh(ZoweExplorerApiRegister.getInstance());
             }
             vscode.window.showInformationMessage(
                 localize("ssoLogout.successful", "Logout from authentication service was successful.")

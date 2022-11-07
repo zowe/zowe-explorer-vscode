@@ -52,6 +52,9 @@ nls.config({
 })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 let savedProfileContents = new Uint8Array();
+let datasetProvider: IZoweTree<IZoweDatasetTreeNode>;
+let ussFileProvider: IZoweTree<IZoweUSSTreeNode>;
+let jobsProvider: IZoweTree<IZoweJobTreeNode>;
 
 /**
  * The function that runs when the extension is loaded
@@ -72,9 +75,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
 
     hideTempFolder(getZoweDir());
 
-    let datasetProvider: IZoweTree<IZoweDatasetTreeNode>;
-    let ussFileProvider: IZoweTree<IZoweUSSTreeNode>;
-    let jobsProvider: IZoweTree<IZoweJobTreeNode>;
+    // let datasetProvider: IZoweTree<IZoweDatasetTreeNode>;
+    // let ussFileProvider: IZoweTree<IZoweUSSTreeNode>;
+    // let jobsProvider: IZoweTree<IZoweJobTreeNode>;
 
     try {
         globals.initLogger(context);
@@ -340,7 +343,9 @@ async function watchConfigProfile(context: vscode.ExtensionContext) {
             return;
         }
         savedProfileContents = newProfileContents;
-        await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
+        await refreshActions.refreshAll(datasetProvider);
+        await refreshActions.refreshAll(ussFileProvider);
+        await refreshActions.refreshAll(jobsProvider);
     };
 
     globalProfileWatcher.onDidCreate(async () => {
