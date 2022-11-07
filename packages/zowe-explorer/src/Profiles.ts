@@ -1382,7 +1382,6 @@ export class Profiles extends ProfilesCache {
                 await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).logout(updSession);
 
                 await this.updateBaseProfileFileLogout(baseProfile);
-                // await this.refresh(ZoweExplorerApiRegister.getInstance());
             }
             vscode.window.showInformationMessage(
                 localize("ssoLogout.successful", "Logout from authentication service was successful.")

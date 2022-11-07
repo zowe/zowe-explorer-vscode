@@ -75,10 +75,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
 
     hideTempFolder(getZoweDir());
 
-    // let datasetProvider: IZoweTree<IZoweDatasetTreeNode>;
-    // let ussFileProvider: IZoweTree<IZoweUSSTreeNode>;
-    // let jobsProvider: IZoweTree<IZoweJobTreeNode>;
-
     try {
         globals.initLogger(context);
         globals.LOG.debug(localize("initialize.log.debug", "Initialized logger from VSCode extension"));
