@@ -1,6 +1,6 @@
 {
   "name": "zowe-explorer",
-  "version": "2.4.0-SNAPSHOT",
+  "version": "2.5.0-SNAPSHOT",
   "description": "Monorepo for the Zowe Explorer project.",
   "publisher": "Zowe",
   "author": "Zowe",
@@ -18,7 +18,7 @@
     "vscode": "^1.53.2"
   },
   "dependencies": {
-    "@zowe/cli": "7.6.1",
+    "@zowe/cli": "7.6.2",
     "vscode-nls": "4.1.2"
   },
   "devDependencies": {
@@ -43,6 +43,8 @@
     "**/ansi-regex": "^5.0.1",
     "**/log4js": "6.4.6",
     "**/glob-parent": "^6.0.2",
+    "**/gulp-typescript/source-map": "^0.7.4",
+    "**/minimatch": "^3.1.2",
     "**/minimist": "^1.2.6",
     "**/moment": "^2.29.4",
     "**/tar": "^6.1.9"

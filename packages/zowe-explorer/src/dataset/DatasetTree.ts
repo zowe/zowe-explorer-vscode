@@ -461,27 +461,29 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 }
             }
         } else {
-            const profiles = Profiles.getInstance().allProfiles;
-            for (const theProfile of profiles) {
-                // If session is already added, do nothing
-                if (this.mSessionNodes.find((tempNode) => tempNode.label.toString() === theProfile.name)) {
-                    continue;
-                }
-                for (const session of this.mHistory.getSessions()) {
-                    if (session === theProfile.name) {
-                        await this.addSingleSession(theProfile);
-                        for (const node of this.mSessionNodes) {
-                            if (node.label !== "Favorites") {
-                                const name = node.getProfileName();
-                                if (name === theProfile.name) {
-                                    await resetValidationSettings(node, setting);
+            const profiles: imperative.IProfileLoaded[] = Profiles.getInstance()?.allProfiles;
+            if (profiles) {
+                for (const theProfile of profiles) {
+                    // If session is already added, do nothing
+                    if (this.mSessionNodes.find((tempNode) => tempNode.label.toString() === theProfile.name)) {
+                        return;
+                    }
+                    for (const session of this.mHistory.getSessions()) {
+                        if (session === theProfile.name) {
+                            await this.addSingleSession(theProfile);
+                            for (const node of this.mSessionNodes) {
+                                if (node.label !== "Favorites") {
+                                    const name = node.getProfileName();
+                                    if (name === theProfile.name) {
+                                        await resetValidationSettings(node, setting);
+                                    }
                                 }
                             }
                         }
                     }
                 }
             }
-            if (this.mSessionNodes.length === 1) {
+            if (profileType && this.mSessionNodes.length === 1) {
                 await this.addSingleSession(Profiles.getInstance().getDefaultProfile(profileType));
             }
         }

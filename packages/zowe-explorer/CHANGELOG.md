@@ -2,16 +2,19 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
-## TBD Release
+## `2.4.0`
 
 ### New features and enhancements
 
 - Added check for existing team configuration file in location during create, prompting user to continue with the create action. [#1923](https://github.com/zowe/vscode-extension-for-zowe/issues/1923)
+- Added a solution to allow Zowe Explorer extensions with a dependency on Zowe Explorer to work as web extension without Zowe Explorer functionality in vscode.dev. [#1953](https://github.com/zowe/vscode-extension-for-zowe/issues/1953)
+- Added a new setting `Secure Credentials Enabled`, default value is selected for security and will have to be unselected to allow creation of team configuration files without default secure arrays to support environments that don't have access to Zowe CLI's Secure Credential Management.
 
 ### Bug fixes
 
-- Fixed the job status not updating when refreshing a job or pulling a spool file from mainframe. [#1936](https://github.com/zowe/vscode-extension-for-zowe/pull/1936)
-- Prevented project profiles from being loaded when no workspace folder is open. [#1802](https://github.com/zowe/vscode-extension-for-zowe/issues/1802)
+- Fixed activation and Refresh Extension issues in web based editors, ie. Theia. [#1807](https://github.com/zowe/vscode-extension-for-zowe/issues/1807)
+- Fix refresh job & spool file pull from mainframe doesn't update job status [#1936](https://github.com/zowe/vscode-extension-for-zowe/pull/1936)
+- Fix for serial saving of data sets and files to avoid conflict error. [#1868](https://github.com/zowe/vscode-extension-for-zowe/issues/1868)
 - Bugfix: Added validation check while creating, renaming and using allocate alike feature for datasets [#1849](https://github.com/zowe/vscode-extension-for-zowe/issues/1849)
 
 ## `2.3.0`
