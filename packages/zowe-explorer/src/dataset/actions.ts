@@ -770,7 +770,9 @@ async function handleUserSelection(newDSProperties, dsType): Promise<string> {
                     value: newDSProperties.find((prop) => prop.label === pattern).value,
                     placeHolder: newDSProperties.find((prop) => prop.label === pattern).placeHolder,
                 };
-                newDSProperties.find((prop) => prop.label === pattern).value = await vscode.window.showInputBox(options);
+                newDSProperties.find((prop) => prop.label === pattern).value = await vscode.window.showInputBox(
+                    options
+                );
                 break;
         }
         return Promise.resolve(handleUserSelection(newDSProperties, dsType));
