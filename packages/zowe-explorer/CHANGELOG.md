@@ -7,7 +7,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ### Bug fixes
 
 - Fixed login/logout errors from Team config file watcher. [#1924](https://github.com/zowe/vscode-extension-for-zowe/issues/1924)
-- Fixed the loading of previously saved profiles in the tree views. [#1992](https://github.com/zowe/vscode-extension-for-zowe/issues/1992)
+- Fixed the loading of previously saved profiles in the tree views.
 
 ## `2.4.0`
 
