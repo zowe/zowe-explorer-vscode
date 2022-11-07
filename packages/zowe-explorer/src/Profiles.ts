@@ -12,6 +12,7 @@
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import * as path from "path";
+import * as fs from "fs";
 import {
     IZoweTree,
     IZoweNodeType,
@@ -82,9 +83,7 @@ export class Profiles extends ProfilesCache {
      * contents will be loaded.
      */
     public async getProfileInfo(): Promise<zowe.imperative.ProfileInfo> {
-        if (globals.ACTIVATED || this.mProfileInfo == null) {
-            this.mProfileInfo = await super.getProfileInfo();
-        }
+        this.mProfileInfo = await super.getProfileInfo();
         return this.mProfileInfo;
     }
 
@@ -263,32 +262,43 @@ export class Profiles extends ProfilesCache {
      * @param {USSTree} zoweFileProvider - either the USS, MVS, JES tree
      */
     public async createZoweSession(zoweFileProvider: IZoweTree<IZoweTreeNode>) {
-        const allProfiles = Profiles.getInstance().allProfiles;
-        // Get all profiles
-        let profileNamesList = allProfiles.map((profile) => {
-            return profile.name;
-        });
-        // Filter to list of the APIs available for current tree explorer
-        profileNamesList = profileNamesList.filter((profileName) => {
-            const profile = Profiles.getInstance().loadNamedProfile(profileName);
-            if (zoweFileProvider.getTreeType() === PersistenceSchemaEnum.USS) {
-                const ussProfileTypes = ZoweExplorerApiRegister.getInstance().registeredUssApiTypes();
-                return ussProfileTypes.includes(profile.type);
+        let profileNamesList;
+        try {
+            const allProfiles = Profiles.getInstance().allProfiles;
+            if (allProfiles) {
+                // Get all profiles
+                profileNamesList = allProfiles.map((profile) => {
+                    return profile.name;
+                });
+                // Filter to list of the APIs available for current tree explorer
+                profileNamesList = profileNamesList?.filter((profileName) => {
+                    const profile = Profiles.getInstance().loadNamedProfile(profileName);
+                    if (profile) {
+                        if (zoweFileProvider.getTreeType() === PersistenceSchemaEnum.USS) {
+                            const ussProfileTypes = ZoweExplorerApiRegister.getInstance().registeredUssApiTypes();
+                            return ussProfileTypes.includes(profile.type);
+                        }
+                        if (zoweFileProvider.getTreeType() === PersistenceSchemaEnum.Dataset) {
+                            const mvsProfileTypes = ZoweExplorerApiRegister.getInstance().registeredMvsApiTypes();
+                            return mvsProfileTypes.includes(profile.type);
+                        }
+                        if (zoweFileProvider.getTreeType() === PersistenceSchemaEnum.Job) {
+                            const jesProfileTypes = ZoweExplorerApiRegister.getInstance().registeredJesApiTypes();
+                            return jesProfileTypes.includes(profile.type);
+                        }
+                    }
+                });
+                profileNamesList = profileNamesList?.filter(
+                    (profileName) =>
+                        // Find all cases where a profile is not already displayed
+                        !zoweFileProvider.mSessionNodes?.find(
+                            (sessionNode) => sessionNode.getProfileName() === profileName
+                        )
+                );
             }
-            if (zoweFileProvider.getTreeType() === PersistenceSchemaEnum.Dataset) {
-                const mvsProfileTypes = ZoweExplorerApiRegister.getInstance().registeredMvsApiTypes();
-                return mvsProfileTypes.includes(profile.type);
-            }
-            if (zoweFileProvider.getTreeType() === PersistenceSchemaEnum.Job) {
-                const jesProfileTypes = ZoweExplorerApiRegister.getInstance().registeredJesApiTypes();
-                return jesProfileTypes.includes(profile.type);
-            }
-        });
-        profileNamesList = profileNamesList.filter(
-            (profileName) =>
-                // Find all cases where a profile is not already displayed
-                !zoweFileProvider.mSessionNodes.find((sessionNode) => sessionNode.getProfileName() === profileName)
-        );
+        } catch (err) {
+            this.log.warn(err);
+        }
         // Set Options according to profile management in use
 
         const createNewProfile = "Create a New Connection to z/OS";
@@ -302,14 +312,13 @@ export class Profiles extends ProfilesCache {
         let mProfileInfo: zowe.imperative.ProfileInfo;
         try {
             mProfileInfo = await this.getProfileInfo();
+            const profAllAttrs = mProfileInfo.getAllProfiles();
+            for (const pName of profileNamesList) {
+                const osLocInfo = mProfileInfo.getOsLocInfo(profAllAttrs.find((p) => p.profName === pName));
+                items.push(new FilterItem({ text: pName, icon: this.getProfileIcon(osLocInfo)[0] }));
+            }
         } catch (err) {
             this.log.warn(err);
-        }
-
-        const profAllAttrs = mProfileInfo.getAllProfiles();
-        for (const pName of profileNamesList) {
-            const osLocInfo = mProfileInfo.getOsLocInfo(profAllAttrs.find((p) => p.profName === pName));
-            items.push(new FilterItem({ text: pName, icon: this.getProfileIcon(osLocInfo)[0] }));
         }
 
         const quickpick = vscode.window.createQuickPick();
@@ -685,6 +694,10 @@ export class Profiles extends ProfilesCache {
 
             // Build new config and merge with existing layer
             const newConfig: zowe.imperative.IConfig = await zowe.imperative.ConfigBuilder.build(impConfig, opts);
+
+            // Create non secure profile if VS Code setting is false
+            this.createNonSecureProfile(newConfig);
+
             config.api.layers.merge(newConfig);
             await config.save(false);
             let configName;
@@ -701,6 +714,24 @@ export class Profiles extends ProfilesCache {
             vscode.window.showErrorMessage(
                 localize("Profiles.getProfileInfo.error", "Error in creating team configuration file: {0}", err.message)
             );
+        }
+    }
+
+    public updateImperativeSettings() {
+        try {
+            const fileName = path.join(getZoweDir(), "settings", "imperative.json");
+            const updatedSettings = {
+                overrides: {
+                    CredentialManager: false,
+                },
+            };
+            fs.writeFile(fileName, JSON.stringify(updatedSettings), "utf8", (err) => {
+                if (err) {
+                    this.log.error("Could not update imperative.json settings file", err);
+                }
+            });
+        } catch (error) {
+            this.log.error(error);
         }
     }
 
@@ -1874,6 +1905,20 @@ export class Profiles extends ProfilesCache {
             this.getCliProfileManager(this.loadedProfile.type).update(updateParms);
         } catch (error) {
             vscode.window.showErrorMessage(error.message);
+        }
+    }
+
+    // Temporary solution for handling unsecure profiles until CLI team's work is made
+    // Remove secure properties and set autoStore to false when vscode setting is true
+    private createNonSecureProfile(newConfig: zowe.imperative.IConfig): void {
+        const configuration: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
+        const isSecureCredsEnabled: boolean = configuration.get(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED);
+        if (!isSecureCredsEnabled) {
+            for (const profile of Object.entries(newConfig.profiles)) {
+                delete newConfig.profiles[profile[0]].secure;
+            }
+            this.updateImperativeSettings();
+            newConfig.autoStore = false;
         }
     }
 }
