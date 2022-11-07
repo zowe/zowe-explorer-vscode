@@ -195,8 +195,14 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                     }
                 }
             }
-            if (profileType && this.mSessionNodes.length === 1) {
-                await this.addSingleSession(Profiles.getInstance().getDefaultProfile(profileType));
+            if (this.mSessionNodes.length === 1) {
+                try {
+                    await this.addSingleSession(Profiles.getInstance().getDefaultProfile(profileType));
+                } catch (error) {
+                    // catch and log error of no default,
+                    // if not type passed getDefaultProfile assumes zosmf
+                    this.log.debug(error);
+                }
             }
         }
         this.refresh();
