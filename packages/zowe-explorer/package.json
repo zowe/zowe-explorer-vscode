@@ -89,6 +89,18 @@
         "command": "zowe.extRefresh",
         "key": "ctrl+alt+z",
         "mac": "cmd+alt+z"
+      },
+      {
+        "command": "zowe.uss.copyUssFile",
+        "key": "ctrl+c",
+        "mac": "cmd+c",
+        "when": "focusedView == zowe.uss.explorer || viewItem =~ /^(?!.*_fav.*)(textFile.*|binaryFile.*)/"
+      },
+      {
+        "command": "zowe.uss.pasteUssFile",
+        "key": "ctrl+v",
+        "mac": "cmd+v",
+        "when": "focusedView == zowe.uss.explorer || viewItem =~ /^(directory.*|ussSession.*)/ && !listSupportsMultiselect"
       }
     ],
     "commands": [
@@ -525,6 +537,16 @@
         "category": "Zowe Explorer"
       },
       {
+        "command": "zowe.uss.copyUssFile",
+        "title": "%copyFile%",
+        "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.uss.pasteUssFile",
+        "title": "%pasteFile%",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.jobs.deleteJob",
         "title": "%deleteJob%",
         "category": "Zowe Explorer",
@@ -783,6 +805,16 @@
           "when": "view == zowe.uss.explorer && viewItem =~ /^directory.*/ && !listMultiSelection",
           "command": "zowe.uss.uploadDialog",
           "group": "001_zowe_ussCreate@3"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)(textFile.*|binaryFile.*)/",
+          "command": "zowe.uss.copyUssFile",
+          "group": "001_zowe_ussCreate@4"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)(textFile.*|binaryFile.*|directory.*)/",
+          "command": "zowe.uss.pasteUssFile",
+          "group": "001_zowe_ussCreate@5"
         },
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^textFile.*/",
@@ -1411,6 +1443,14 @@
           "when": "never"
         },
         {
+          "command": "zowe.uss.copyUssFile",
+          "when": "never"
+        },
+        {
+          "command": "zowe.uss.pasteUssFile",
+          "when": "never"
+        },
+        {
           "command": "zowe.uss.editFile",
           "when": "never"
         },
@@ -1770,7 +1810,7 @@
     "webpack-cli": "^3.3.11"
   },
   "dependencies": {
-    "@zowe/zowe-explorer-api": "2.4.0-SNAPSHOT",
+    "@zowe/zowe-explorer-api": "file: ../../../zowe-explorer-api",
     "fs-extra": "8.0.1",
     "isbinaryfile": "4.0.4",
     "js-yaml": "3.13.1",

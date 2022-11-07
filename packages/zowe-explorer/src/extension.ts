@@ -724,6 +724,28 @@ function initUSSProvider(context: vscode.ExtensionContext, ussFileProvider: IZow
         )
     );
     context.subscriptions.push(
+        vscode.commands.registerCommand("zowe.uss.pasteUssFile", async (node: IZoweUSSTreeNode) => {
+            const selectedNode = (ussFileProvider.getTreeView().selection as IZoweUSSTreeNode[])[0];
+            await selectedNode.copyUssFile();
+            ussFileProvider.refreshElement(selectedNode);
+        })
+    );
+    context.subscriptions.push(
+        vscode.commands.registerCommand(
+            "zowe.uss.copyUssFile",
+            async (node: IZoweUSSTreeNode, nodeList: IZoweUSSTreeNode[]) => {
+                let selectedNodes;
+                if (node || nodeList) {
+                    selectedNodes = getSelectedNodeList(node, nodeList) as IZoweUSSTreeNode[];
+                } else {
+                    const a = ussFileProvider.getTreeView();
+                    selectedNodes = a.selection;
+                }
+                ussActions.copyUssFilesToClipboard(selectedNodes, ussFileProvider);
+            }
+        )
+    );
+    context.subscriptions.push(
         vscode.workspace.onDidChangeConfiguration((e) => {
             ussFileProvider.onDidChangeConfiguration(e);
         })

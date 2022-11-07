@@ -178,6 +178,8 @@ async function createGlobalMocks() {
             "zowe.uss.deleteNode",
             "zowe.uss.binary",
             "zowe.uss.text",
+            "zowe.uss.copyUssFile",
+            "zowe.uss.pasteUssFile",
             "zowe.uss.renameNode",
             "zowe.uss.uploadDialog",
             "zowe.uss.copyPath",

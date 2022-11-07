@@ -9,7 +9,7 @@
  *                                                                                 *
  */
 
-import { imperative, IZosFilesResponse } from "@zowe/cli";
+import { imperative, IUploadOptions, IZosFilesResponse } from "@zowe/cli";
 import * as globals from "../globals";
 import * as vscode from "vscode";
 import * as fs from "fs";
@@ -645,6 +645,44 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
     private returnmProfileName(): string {
         return this.mProfileName;
+    }
+
+    public async copyUssFile() {
+        const clipboardContents = await vscode.env.clipboard.readText();
+        const localFileNames = clipboardContents.split(",");
+        const prof = this.getProfile();
+        const remotePath = this.fullPath;
+        const task: imperative.ITaskWithStatus = {
+            percentComplete: 0,
+            statusMessage: localize("uploadFile.putContents", "Uploading USS file"),
+            stageName: 0,
+        };
+        let options: IUploadOptions = {
+            task,
+        };
+        if (prof.profile.encoding) {
+            options.encoding = prof.profile.encoding;
+        }
+        const api = ZoweExplorerApiRegister.getUssApi(this.profile);
+        const apiResponse = await api.fileList(remotePath);
+        const fileList = apiResponse.apiResponse?.items;
+        for (const localFile of localFileNames) {
+            if (localFile.endsWith("/")) {
+                let fname = localFile.split("/").pop();
+                let res = await api.uploadDirectory(localFile.slice(0, -1), remotePath, options);
+                console.log(res);
+            } else {
+                let fname = localFile.split("/").pop();
+                if (
+                    fileList.find((file) => {
+                        return file.name === fname;
+                    })
+                ) {
+                    fname += "(copy)";
+                }
+                api.putContent(localFile, remotePath.concat("/", fname), options);
+            }
+        }
     }
 }
 

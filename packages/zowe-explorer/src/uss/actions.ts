@@ -391,3 +391,17 @@ export async function deleteUSSFilesPrompt(nodes: IZoweUSSTreeNode[]): Promise<b
     });
     return cancelled;
 }
+export async function copyUssFilesToClipboard(
+    selectedNodes: IZoweUSSTreeNode[],
+    ussFileProvider: IZoweTree<IZoweUSSTreeNode>
+) {
+    let filePaths: any[] = [];
+    for (const node of selectedNodes) {
+        if (contextually.isUssDirectory(node)) {
+            filePaths.push(node.getUSSDocumentFilePath() + "/");
+        } else {
+            filePaths.push(node.getUSSDocumentFilePath());
+        }
+    }
+    vscode.env.clipboard.writeText(filePaths.join(","));
+}

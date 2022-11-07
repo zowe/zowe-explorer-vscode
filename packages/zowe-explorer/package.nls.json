@@ -108,5 +108,7 @@
   "jobs.refreshSpool": "Pull from Mainframe",
   "all.configInit": "Initialize Team Configuration File",
   "createZoweSchema.reload.button": "Reload Window",
-  "createZoweSchema.reload.infoMessage": "Team Configuration file created. Location: {0}. \n Please reload your window."
+  "createZoweSchema.reload.infoMessage": "Team Configuration file created. Location: {0}. \n Please reload your window.",
+  "copyFile": "Copy File(s)",
+  "pasteFile": "Paste"
 }
