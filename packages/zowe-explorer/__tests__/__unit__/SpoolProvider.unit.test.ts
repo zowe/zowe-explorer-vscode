@@ -107,7 +107,8 @@ describe("SpoolProvider Unit Tests", () => {
         expect(mockUri.with.mock.calls.length).toEqual(1);
         expect(mockUri.with.mock.calls[0][0]).toEqual({
             path: "TESTJOB.100.STDOUT",
-            query: '["sessionName",{"byte-count":128,"job-correlator":"","record-count":1,"records-url":"fake/records","class":"A","ddname":"STDOUT","id":100,"jobid":"100","jobname":"TESTJOB","lrecl":80,"procstep":"","recfm":"FB","stepname":"","subsystem":""}]',
+            query:
+                '["sessionName",{"byte-count":128,"job-correlator":"","record-count":1,"records-url":"fake/records","class":"A","ddname":"STDOUT","id":100,"jobid":"100","jobname":"TESTJOB","lrecl":80,"procstep":"","recfm":"FB","stepname":"","subsystem":""}]',
             scheme: "zosspool",
         });
     });
