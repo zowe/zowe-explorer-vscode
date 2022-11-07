@@ -2,6 +2,10 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## TBD Release
+
+- Bugfix: Added validation check while creating, renaming and using allocate alike feature for datasets [#1849](https://github.com/zowe/vscode-extension-for-zowe/issues/1849)
+
 ## `2.4.0`
 
 ### New features and enhancements
@@ -15,7 +19,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed activation and Refresh Extension issues in web based editors, ie. Theia. [#1807](https://github.com/zowe/vscode-extension-for-zowe/issues/1807)
 - Fix refresh job & spool file pull from mainframe doesn't update job status [#1936](https://github.com/zowe/vscode-extension-for-zowe/pull/1936)
 - Fix for serial saving of data sets and files to avoid conflict error. [#1868](https://github.com/zowe/vscode-extension-for-zowe/issues/1868)
-- Bugfix: Added validation check while creating, renaming and using allocate alike feature for datasets [#1849](https://github.com/zowe/vscode-extension-for-zowe/issues/1849)
 
 ## `2.3.0`
 
