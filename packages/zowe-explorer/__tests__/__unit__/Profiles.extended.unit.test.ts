@@ -161,6 +161,60 @@ afterEach(() => {
     jest.clearAllMocks();
 });
 
+describe("Profiles Unit Test - Function createInstance", () => {
+    const mockWorkspaceFolders = jest.fn();
+
+    beforeAll(() => {
+        // We need to create a persistent "vscode" mock that will apply for the
+        // deferred requires in this test suite.
+        const originalVscodeMock = jest.requireMock("vscode");
+        jest.doMock("vscode", () => {
+            Object.defineProperty(originalVscodeMock.workspace, "workspaceFolders", {
+                get: mockWorkspaceFolders,
+                configurable: true,
+            });
+            return originalVscodeMock;
+        });
+    });
+
+    beforeEach(() => {
+        // Reset module cache and re-require the Profiles API in each test
+        // below. This ensures that the tests cover static properties defined
+        // at import time in the zowe-explorer-api package.
+        jest.resetModules();
+    });
+
+    afterAll(() => {
+        jest.restoreAllMocks();
+    });
+
+    it("should create instance when there is no workspace", async () => {
+        mockWorkspaceFolders.mockReturnValue(undefined);
+        const { Profiles: testProfiles } = require("../../src/Profiles");
+        jest.spyOn(testProfiles.prototype, "refresh").mockResolvedValueOnce(undefined);
+        const profilesInstance = await testProfiles.createInstance(undefined);
+        expect((profilesInstance as any).cwd).toBeUndefined();
+    });
+
+    it("should create instance when there is empty workspace", async () => {
+        mockWorkspaceFolders.mockReturnValue([undefined]);
+        const { Profiles: testProfiles } = require("../../src/Profiles");
+        jest.spyOn(testProfiles.prototype, "refresh").mockResolvedValueOnce(undefined);
+        const profilesInstance = await testProfiles.createInstance(undefined);
+        expect((profilesInstance as any).cwd).toBeUndefined();
+    });
+
+    it("should create instance when there is non-empty workspace", async () => {
+        mockWorkspaceFolders.mockReturnValue([{
+            uri: { fsPath: "fakePath" }
+        }]);
+        const { Profiles: testProfiles } = require("../../src/Profiles");
+        jest.spyOn(testProfiles.prototype, "refresh").mockResolvedValueOnce(undefined);
+        const profilesInstance = await testProfiles.createInstance(undefined);
+        expect((profilesInstance as any).cwd).toBe("fakePath");
+    });
+});
+
 describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
@@ -295,6 +349,7 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
         spy.mockClear();
     });
 });
+
 describe("Profiles Unit Tests - Function createZoweSession", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
