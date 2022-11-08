@@ -328,7 +328,8 @@ async function watchConfigProfile(context: vscode.ExtensionContext) {
     );
 
     const workspaceProfileWatcher =
-        vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0] &&
+        vscode.workspace.workspaceFolders &&
+        vscode.workspace.workspaceFolders[0] &&
         vscode.workspace.createFileSystemWatcher(
             new vscode.RelativePattern(
                 vscode.workspace.workspaceFolders[0].uri.fsPath,

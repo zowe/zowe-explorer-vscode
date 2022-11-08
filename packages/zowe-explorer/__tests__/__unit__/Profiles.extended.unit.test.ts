@@ -415,7 +415,7 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
             configurable: true,
         });
         Object.defineProperty(vscode.workspace, "workspaceFolders", {
-            value: () => [{ uri: "file://projectPath/zowe.user.config.json", name: "zowe.user.config.json", index: 0 }],
+            get: () => [{ uri: "file://projectPath/zowe.user.config.json", name: "zowe.user.config.json", index: 0 }],
             configurable: true,
         });
 
