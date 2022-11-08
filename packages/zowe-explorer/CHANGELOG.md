@@ -4,8 +4,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ## TBD Release
 
-### New features and enhancements
-
 ### Bug fixes
 
 - Fixed the `Secure Credentials Enabled` setting to update the `~/.zowe/settings/imperative.json` file upon change of the setting without overwriting other data in the file.
