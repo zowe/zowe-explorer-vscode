@@ -189,28 +189,33 @@ describe("Profiles Unit Test - Function createInstance", () => {
     });
 
     it("should create instance when there is no workspace", async () => {
-        mockWorkspaceFolders.mockReturnValue(undefined);
+        mockWorkspaceFolders.mockClear().mockReturnValue(undefined);
         const { Profiles: testProfiles } = require("../../src/Profiles");
         jest.spyOn(testProfiles.prototype, "refresh").mockResolvedValueOnce(undefined);
         const profilesInstance = await testProfiles.createInstance(undefined);
+        expect(mockWorkspaceFolders).toHaveBeenCalledTimes(2);
         expect((profilesInstance as any).cwd).toBeUndefined();
     });
 
     it("should create instance when there is empty workspace", async () => {
-        mockWorkspaceFolders.mockReturnValue([undefined]);
+        mockWorkspaceFolders.mockClear().mockReturnValue([undefined]);
         const { Profiles: testProfiles } = require("../../src/Profiles");
         jest.spyOn(testProfiles.prototype, "refresh").mockResolvedValueOnce(undefined);
         const profilesInstance = await testProfiles.createInstance(undefined);
+        expect(mockWorkspaceFolders).toHaveBeenCalledTimes(2);
         expect((profilesInstance as any).cwd).toBeUndefined();
     });
 
     it("should create instance when there is non-empty workspace", async () => {
-        mockWorkspaceFolders.mockReturnValue([{
-            uri: { fsPath: "fakePath" }
-        }]);
+        mockWorkspaceFolders.mockClear().mockReturnValue([
+            {
+                uri: { fsPath: "fakePath" },
+            },
+        ]);
         const { Profiles: testProfiles } = require("../../src/Profiles");
         jest.spyOn(testProfiles.prototype, "refresh").mockResolvedValueOnce(undefined);
         const profilesInstance = await testProfiles.createInstance(undefined);
+        expect(mockWorkspaceFolders).toHaveBeenCalledTimes(2);
         expect((profilesInstance as any).cwd).toBe("fakePath");
     });
 });
