@@ -488,7 +488,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 } catch (error) {
                     // catch and log error of no default,
                     // if not type passed getDefaultProfile assumes zosmf
-                    this.log.debug(error);
+                    this.log.warn(error);
                 }
             }
         }
