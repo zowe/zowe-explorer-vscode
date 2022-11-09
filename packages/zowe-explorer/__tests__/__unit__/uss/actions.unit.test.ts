@@ -719,3 +719,50 @@ describe("USS Action Unit Tests - function uploadFile", () => {
         expect(ZoweExplorerApiRegister.getUssApi(null).putContent).toBeCalled();
     });
 });
+
+describe("USS Action Unit Tests - copy file / directory", () => {
+    async function createBlockMocks(globalMocks) {
+        const newMocks = {
+            node: null,
+            testUSSTree: null,
+            getMvsApiMock: jest.fn(),
+            testResponse: createFileResponse({ etag: "132" }),
+            testDoc: createTextDocument(path.normalize("/sestest/tmp/foo.txt")),
+            ussNode: createUSSNode(globalMocks.testSession, createIProfile()),
+            mvsApi: ZoweExplorerApiRegister.getMvsApi(globalMocks.testProfile),
+        };
+
+        newMocks.node = new ZoweUSSNode(
+            "u/myuser/testFile",
+            vscode.TreeItemCollapsibleState.None,
+            newMocks.ussNode,
+            null,
+            "/"
+        );
+        newMocks.ussNode.children.push(newMocks.node);
+        newMocks.testUSSTree = createUSSTree(
+            [createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile)],
+            [newMocks.ussNode],
+            createTreeView()
+        );
+        globalMocks.ussFile.mockResolvedValueOnce(newMocks.testResponse);
+        globalMocks.withProgress.mockImplementation((progLocation, callback) => callback());
+        newMocks.getMvsApiMock.mockReturnValue(newMocks.mvsApi);
+        ZoweExplorerApiRegister.getMvsApi = newMocks.getMvsApiMock.bind(ZoweExplorerApiRegister);
+
+        return newMocks;
+    }
+
+    it("Copy file(s), Directory(s) paths into clipboard", async () => {
+        let nodes = [
+            new ZoweUSSNode("u/myuser/testFile", vscode.TreeItemCollapsibleState.None, null, null, "/"),
+            new ZoweUSSNode("u/myuser/testDirectory", vscode.TreeItemCollapsibleState.None, null, null, "/"),
+        ];
+        nodes[1].contextValue = "directory";
+        const globalMocks = createGlobalMocks();
+        await ussNodeActions.copyUssFilesToClipboard(nodes);
+        expect(globalMocks.writeText).toBeCalledWith(
+            nodes[0].getUSSDocumentFilePath() + "," + nodes[1].getUSSDocumentFilePath() + "/"
+        );
+    });
+});

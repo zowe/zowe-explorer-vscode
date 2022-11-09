@@ -764,10 +764,9 @@ function initUSSProvider(context: vscode.ExtensionContext, ussFileProvider: IZow
                 if (node || nodeList) {
                     selectedNodes = getSelectedNodeList(node, nodeList) as IZoweUSSTreeNode[];
                 } else {
-                    const a = ussFileProvider.getTreeView();
-                    selectedNodes = a.selection;
+                    selectedNodes = ussFileProvider.getTreeView().selection;
                 }
-                ussActions.copyUssFilesToClipboard(selectedNodes, ussFileProvider);
+                ussActions.copyUssFilesToClipboard(selectedNodes);
             }
         )
     );

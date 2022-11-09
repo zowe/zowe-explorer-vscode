@@ -668,13 +668,11 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         const fileList = apiResponse.apiResponse?.items;
         for (const localFile of localFileNames) {
             if (localFile.endsWith("/")) {
-                let fname = localFile.split("/").pop();
-                let res = await api.uploadDirectory(localFile.slice(0, -1), remotePath, options);
-                console.log(res);
+                api.uploadDirectory(localFile.slice(0, -1), remotePath, options);
             } else {
                 let fname = localFile.split("/").pop();
                 if (
-                    fileList.find((file) => {
+                    fileList?.find((file) => {
                         return file.name === fname;
                     })
                 ) {

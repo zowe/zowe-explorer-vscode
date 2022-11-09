@@ -85,7 +85,7 @@ export function createIProfile(): imperative.IProfileLoaded {
             port: 999,
             user: undefined,
             password: undefined,
-            rejectUnauthorize: false,
+            rejectUnauthorize: false,            
         },
         type: "zosmf",
         message: "",
