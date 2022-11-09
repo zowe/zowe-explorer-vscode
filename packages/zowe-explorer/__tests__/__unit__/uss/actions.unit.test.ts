@@ -721,38 +721,6 @@ describe("USS Action Unit Tests - function uploadFile", () => {
 });
 
 describe("USS Action Unit Tests - copy file / directory", () => {
-    async function createBlockMocks(globalMocks) {
-        const newMocks = {
-            node: null,
-            testUSSTree: null,
-            getMvsApiMock: jest.fn(),
-            testResponse: createFileResponse({ etag: "132" }),
-            testDoc: createTextDocument(path.normalize("/sestest/tmp/foo.txt")),
-            ussNode: createUSSNode(globalMocks.testSession, createIProfile()),
-            mvsApi: ZoweExplorerApiRegister.getMvsApi(globalMocks.testProfile),
-        };
-
-        newMocks.node = new ZoweUSSNode(
-            "u/myuser/testFile",
-            vscode.TreeItemCollapsibleState.None,
-            newMocks.ussNode,
-            null,
-            "/"
-        );
-        newMocks.ussNode.children.push(newMocks.node);
-        newMocks.testUSSTree = createUSSTree(
-            [createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile)],
-            [newMocks.ussNode],
-            createTreeView()
-        );
-        globalMocks.ussFile.mockResolvedValueOnce(newMocks.testResponse);
-        globalMocks.withProgress.mockImplementation((progLocation, callback) => callback());
-        newMocks.getMvsApiMock.mockReturnValue(newMocks.mvsApi);
-        ZoweExplorerApiRegister.getMvsApi = newMocks.getMvsApiMock.bind(ZoweExplorerApiRegister);
-
-        return newMocks;
-    }
-
     it("Copy file(s), Directory(s) paths into clipboard", async () => {
         const nodes = [
             new ZoweUSSNode("u/myuser/testFile", vscode.TreeItemCollapsibleState.None, null, null, "/"),
