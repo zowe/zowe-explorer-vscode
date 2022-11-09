@@ -30,7 +30,6 @@ import * as path from "path";
 import * as workspaceUtils from "../../../src/utils/workspace";
 import * as globals from "../../../src/globals";
 import * as ussUtils from "../../../src/uss/utils";
-import { any } from "expect";
 jest.mock("fs");
 jest.mock("path");
 
