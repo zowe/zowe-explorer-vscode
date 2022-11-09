@@ -4,6 +4,10 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ## `2.4.0`
 
+## TBD Release
+
+-Add multiselect copy/paste feature on uss view [#1549](https://github.com/zowe/vscode-extension-for-zowe/issues/1549)
+
 ### New features and enhancements
 
 - Added check for existing team configuration file in location during create, prompting user to continue with the create action. [#1923](https://github.com/zowe/vscode-extension-for-zowe/issues/1923)
