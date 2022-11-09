@@ -392,7 +392,7 @@ export async function deleteUSSFilesPrompt(nodes: IZoweUSSTreeNode[]): Promise<b
     return cancelled;
 }
 export async function copyUssFilesToClipboard(selectedNodes: IZoweUSSTreeNode[]) {
-    let filePaths: any[] = [];
+    const filePaths: any[] = [];
     for (const node of selectedNodes) {
         if (contextually.isUssDirectory(node)) {
             filePaths.push(node.getUSSDocumentFilePath() + "/");

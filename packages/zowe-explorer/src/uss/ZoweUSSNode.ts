@@ -643,10 +643,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         return path.join(globals.USS_DIR || "", "/" + this.getSessionNode().getProfileName() + "/", this.fullPath);
     }
 
-    private returnmProfileName(): string {
-        return this.mProfileName;
-    }
-
     public async copyUssFile() {
         const clipboardContents = await vscode.env.clipboard.readText();
         const localFileNames = clipboardContents.split(",");
@@ -657,7 +653,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             statusMessage: localize("uploadFile.putContents", "Uploading USS file"),
             stageName: 0,
         };
-        let options: IUploadOptions = {
+        const options: IUploadOptions = {
             task,
         };
         if (prof.profile.encoding) {
@@ -681,6 +677,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 api.putContent(localFile, remotePath.concat("/", fname), options);
             }
         }
+    }
+    private returnmProfileName(): string {
+        return this.mProfileName;
     }
 }
 

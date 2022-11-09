@@ -754,7 +754,7 @@ describe("USS Action Unit Tests - copy file / directory", () => {
     }
 
     it("Copy file(s), Directory(s) paths into clipboard", async () => {
-        let nodes = [
+        const nodes = [
             new ZoweUSSNode("u/myuser/testFile", vscode.TreeItemCollapsibleState.None, null, null, "/"),
             new ZoweUSSNode("u/myuser/testDirectory", vscode.TreeItemCollapsibleState.None, null, null, "/"),
         ];
