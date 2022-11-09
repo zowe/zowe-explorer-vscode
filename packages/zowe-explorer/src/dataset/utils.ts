@@ -31,5 +31,8 @@ export function getNodeLabels(node: IZoweNodeType) {
 }
 export function validateDataSetName(dsName: string): boolean {
     const dsPattern = /^[a-zA-Z#@\$][a-zA-Z0-9#@\$\-]{0,7}(\.[a-zA-Z#@\$][a-zA-Z0-9#@\$\-]{0,7})*$/;
+    if (dsName.length > globals.MAX_DATASET_LENGTH) {
+        return false;
+    }
     return dsPattern.test(dsName);
 }

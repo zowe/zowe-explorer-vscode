@@ -88,6 +88,7 @@ export const SETTINGS_JOBS_HISTORY = "zowe.jobs.history";
 export const SETTINGS_SECURE_CREDENTIALS_ENABLED = "zowe.security.secureCredentialsEnabled";
 export const EXTENDER_CONFIG: imperative.ICommandProfileTypeConfiguration[] = [];
 export let ACTIVATED = false;
+export const MAX_DATASET_LENGTH = 44;
 
 export enum CreateDataSetTypeWithKeysEnum {
     DATA_SET_BINARY = 0,

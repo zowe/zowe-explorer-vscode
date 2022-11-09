@@ -2466,8 +2466,17 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         expect(renameDataSetMemberSpy).toHaveBeenLastCalledWith("HLQ.TEST.RENAME.NODE", "mem1", "MEM2");
         expect(error).toBe(defaultError);
     });
-    it("Checking validate validateDataSetName util function", async () => {
+    it("Checking validate validateDataSetName util function successfully execution", async () => {
         expect(dsUtils.validateDataSetName("#DSNAME.DSNAME")).toBe(true);
+    });
+
+    it("Checking validate validateDataSetName util function fail", async () => {
+        expect(dsUtils.validateDataSetName("#DSNAME.DSNAMEMORETHAN8CHARS.TEST")).toBe(false);
+    });
+    it("Checking validate validateDataSetName util function fail on max ds length", async () => {
+        const dsName = "#DSNAMET.DSNAME.DSNAME.DSNAME.DSNAME.DSNAMETE";
+        expect(dsName.length - 1 == globals.MAX_DATASET_LENGTH).toBe(true);
+        expect(dsUtils.validateDataSetName(dsName)).toBe(false);
     });
 
     it("Tests that rename() validates the dataset name", async () => {
