@@ -23,7 +23,8 @@ const mockRefreshElement = jest.fn();
 const mockFindFavoritedNode = jest.fn();
 const mockFindNonFavoritedNode = jest.fn();
 
-Object.defineProperty(globals, "LOG", { value: console, configurable: true });
+Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
+Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
 Object.defineProperty(vscode.window, "showOpenDialog", { value: showOpenDialog });
 Object.defineProperty(vscode.window, "showInformationMessage", { value: showInformationMessage });
 Object.defineProperty(vscode.workspace, "openTextDocument", { value: openTextDocument });

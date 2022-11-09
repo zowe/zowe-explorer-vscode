@@ -138,7 +138,9 @@ async function createGlobalMocks() {
         value: jest.fn().mockReturnValue(globalMocks.mockProfilesInstance),
         configurable: true,
     });
-    Object.defineProperty(globals, "LOG", { value: console, configurable: true });
+    Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
+    Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
+    Object.defineProperty(globals.LOG, "warn", { value: jest.fn(), configurable: true });
 
     globalMocks.withProgress.mockImplementation((progLocation, callback) => callback());
     globalMocks.withProgress.mockReturnValue(globalMocks.testResponse);

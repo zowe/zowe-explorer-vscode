@@ -45,7 +45,8 @@ describe("Unit Tests (Jest)", () => {
         return callback();
     });
 
-    Object.defineProperty(globals, "LOG", { value: console, configurable: true });
+    Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
+    Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode, "ProgressLocation", { value: ProgressLocation });
     Object.defineProperty(vscode.window, "withProgress", { value: withProgress });
 

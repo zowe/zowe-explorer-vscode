@@ -46,7 +46,8 @@ describe("mvsCommandActions unit testing", () => {
     const qpItem2 = new utils.FilterItem({ text: "/d iplinfo0" });
 
     const mockLoadNamedProfile = jest.fn();
-    Object.defineProperty(globals, "LOG", { value: console, configurable: true });
+    Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
+    Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
     Object.defineProperty(profileLoader.Profiles, "createInstance", {
         value: jest.fn(() => {
             return {
