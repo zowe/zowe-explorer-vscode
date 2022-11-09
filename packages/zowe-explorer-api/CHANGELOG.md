@@ -2,10 +2,6 @@
 
 All notable changes to the "zowe-explorer-api" extension will be documented in this file.
 
-## TBD Release
-
--Add multiselect copy/paste feature on uss view [#1549](https://github.com/zowe/vscode-extension-for-zowe/issues/1549)
-
 ## `2.4.0`
 
 - Fixed refresh for Zowe Explorer activation and Refresh Extension issues in web based editors. [#1807](https://github.com/zowe/vscode-extension-for-zowe/issues/1807)
