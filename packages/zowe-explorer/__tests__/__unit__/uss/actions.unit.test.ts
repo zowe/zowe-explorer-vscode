@@ -158,7 +158,7 @@ function createGlobalMocks() {
                 }),
                 profilesForValidation: [],
                 validateProfiles: jest.fn(),
-                loadNamedProfile: globalMocks.mockLoadNamedProfile
+                loadNamedProfile: globalMocks.mockLoadNamedProfile,
             };
         }),
     });
