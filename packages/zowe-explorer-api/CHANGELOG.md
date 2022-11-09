@@ -12,7 +12,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ## `2.2.0`
 
-- New API `ZoweVsCodeExtension.updateCredentials` for credential prompting that updates the add .ProfilesCache after obtaining credentials from user.
+- New API `ZoweVsCodeExtension.updateCredentials` for credential prompting that updates the ProfilesCache after obtaining credentials from user.
 - New API `ProfilesCache.updateProfilesArrays` to update `ProfilesCache.allProfiles` for profiles that don't store credentials locally in profile file.
 - New API `ProfilesCache.isCredentialsSecured` to check if credentials are stored securely.
 - Deprecated `ZoweVsCodeExtension.promptCredentials` in favor of `ZoweVsCodeExtension.updateCredentials`.
