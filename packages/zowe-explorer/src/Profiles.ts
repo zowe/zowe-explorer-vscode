@@ -717,24 +717,6 @@ export class Profiles extends ProfilesCache {
         }
     }
 
-    public updateImperativeSettings() {
-        try {
-            const fileName = path.join(getZoweDir(), "settings", "imperative.json");
-            const updatedSettings = {
-                overrides: {
-                    CredentialManager: false,
-                },
-            };
-            fs.writeFile(fileName, JSON.stringify(updatedSettings), "utf8", (err) => {
-                if (err) {
-                    this.log.error("Could not update imperative.json settings file", err);
-                }
-            });
-        } catch (error) {
-            this.log.error(error);
-        }
-    }
-
     public async editZoweConfigFile() {
         const existingLayers = await this.getConfigLayers();
         if (existingLayers.length === 1) {
@@ -1923,7 +1905,6 @@ export class Profiles extends ProfilesCache {
             for (const profile of Object.entries(newConfig.profiles)) {
                 delete newConfig.profiles[profile[0]].secure;
             }
-            this.updateImperativeSettings();
             newConfig.autoStore = false;
         }
     }
