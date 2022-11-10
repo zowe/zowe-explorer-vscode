@@ -111,9 +111,16 @@ describe("ProfileUtils.removeSession Unit Tests", () => {
 
         return newMocks;
     }
-    it("should remove session from data set treeView", async () => {
+    it("should remove session from treeView", async () => {
         const blockMocks = createBlockMocks();
+        const originalLength = blockMocks.testDatasetTree.mSessionNodes.length;
         await removeSession(blockMocks.testDatasetTree, blockMocks.imperativeProfile.name);
-        expect(blockMocks.testDatasetTree.mSessionNodes.length).toEqual(0);
+        expect(blockMocks.testDatasetTree.mSessionNodes.length).toEqual(originalLength - 1);
+    });
+    it("should not find session in treeView", async () => {
+        const blockMocks = createBlockMocks();
+        const originalLength = blockMocks.testDatasetTree.mSessionNodes.length;
+        await removeSession(blockMocks.testDatasetTree, "fake");
+        expect(blockMocks.testDatasetTree.mSessionNodes.length).toEqual(originalLength);
     });
 });
