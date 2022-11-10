@@ -24,6 +24,7 @@ import { createIJobObject, createJobsTree } from "../../../__mocks__/mockCreator
 import * as refreshActions from "../../../src/shared/refresh";
 import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
 import * as globals from "../../../src/globals";
+import * as utils from "../../../src/utils/ProfilesUtils";
 
 function createGlobalMocks() {
     const globalMocks = {
@@ -60,6 +61,9 @@ function createGlobalMocks() {
                 }),
                 loadNamedProfile: globalMocks.mockLoadNamedProfile,
                 getDefaultProfile: jest.fn(),
+                fetchAllProfiles: jest.fn(() => {
+                    return [{ name: "sestest" }, { name: "profile1" }, { name: "profile2" }];
+                }),
             };
         }),
     });
@@ -117,6 +121,10 @@ describe("Refresh Unit Tests - Function refreshAll", () => {
                     "zowe.automaticProfileValidation": true,
                 };
             }),
+        });
+        Object.defineProperty(utils, "removeSession", {
+            value: jest.fn().mockImplementationOnce(() => Promise.resolve()),
+            configurable: true,
         });
 
         return newMocks;

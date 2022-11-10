@@ -304,7 +304,6 @@ export class ProfilesCache {
             profile = this.checkMergingConfigSingleProfile(profile);
             profiles.push(profile);
         }
-        this.allProfiles = profiles;
         return profiles;
     }
 

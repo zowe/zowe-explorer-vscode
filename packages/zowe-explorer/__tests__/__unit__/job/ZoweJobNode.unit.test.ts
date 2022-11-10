@@ -89,6 +89,7 @@ async function createGlobalMocks() {
             return { value: globalMocks.mockProfileInfo, configurable: true };
         }),
     });
+    globalMocks.mockProfileInstance = createInstanceOfProfile(globalMocks.testProfile);
     Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true });
     Object.defineProperty(vscode.window, "withProgress", { value: globalMocks.withProgress, configurable: true });
     Object.defineProperty(zowe, "GetJobs", { value: globalMocks.mockGetJobs, configurable: true });
@@ -128,6 +129,10 @@ async function createGlobalMocks() {
     });
     Object.defineProperty(globalMocks.mockDeleteJobs, "deleteJob", {
         value: globalMocks.mockDeleteJob,
+        configurable: true,
+    });
+    Object.defineProperty(utils, "removeSession", {
+        value: jest.fn().mockImplementationOnce(() => Promise.resolve()),
         configurable: true,
     });
 
