@@ -4,7 +4,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ## TBD Release
 
-- Added new API for obtaining the lasted array of Profiles, `ProfilesCache.fetchAllProfiles()`.
+- Added new API for obtaining the lastest array of Profiles, `ProfilesCache.fetchAllProfiles()`.
 
 ## `2.4.0`
 
