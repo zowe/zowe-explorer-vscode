@@ -9,7 +9,7 @@
  *                                                                                 *
  */
 
-import { IZoweTree, IZoweTreeNode, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
+import { IZoweTree, IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { PersistentFilters } from "../PersistentFilters";
 import { Profiles } from "../Profiles";
 import { removeSession, syncSessionNode } from "../utils/ProfilesUtils";
@@ -18,7 +18,6 @@ import { resetValidationSettings, returnIconState } from "./actions";
 import { labelRefresh } from "./utils";
 import * as contextually from "../shared/context";
 import * as globals from "../globals";
-import * as vscode from "vscode";
 
 /**
  * View (DATA SETS, JOBS, USS) refresh button

@@ -20,8 +20,7 @@ import { Profiles } from "../Profiles";
 import * as nls from "vscode-nls";
 import { imperative, getImperativeConfig } from "@zowe/cli";
 import { UIViews } from "../shared/ui-views";
-import { PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
-import { IZoweTree } from "@zowe/zowe-explorer-api";
+import { PersistenceSchemaEnum, IZoweTree } from "@zowe/zowe-explorer-api";
 
 // Set up localization
 nls.config({
