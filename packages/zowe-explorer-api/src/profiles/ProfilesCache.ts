@@ -162,7 +162,6 @@ export class ProfilesCache {
 
     public async refresh(apiRegister?: ZoweExplorerApi.IApiRegisterClient): Promise<void> {
         this.allProfiles = [];
-        let tmpAllProfiles: zowe.imperative.IProfileLoaded[] = [];
         this.allTypes = [];
         let mProfileInfo: zowe.imperative.ProfileInfo;
         try {
@@ -170,6 +169,7 @@ export class ProfilesCache {
             const allTypes = this.getAllProfileTypes(apiRegister.registeredApiTypes());
             allTypes.push("base");
             for (const type of allTypes) {
+                const tmpAllProfiles: zowe.imperative.IProfileLoaded[] = [];
                 // Step 1: Get all profiles for each registered type
                 const profilesForType = mProfileInfo
                     .getAllProfiles(type)
@@ -190,7 +190,6 @@ export class ProfilesCache {
                     }
                     this.allProfiles.push(...tmpAllProfiles);
                     this.profilesByType.set(type, tmpAllProfiles);
-                    tmpAllProfiles = [];
                 }
                 this.allTypes.push(type);
             }
@@ -289,6 +288,24 @@ export class ProfilesCache {
             }
         }
         return profByType;
+    }
+
+    /**
+     * get array of IProfileLoaded for all profiles
+     * @returns IProfileLoaded[]
+     */
+    public async fetchAllProfiles(): Promise<zowe.imperative.IProfileLoaded[]> {
+        const profiles: zowe.imperative.IProfileLoaded[] = [];
+        const profInfo = await this.getProfileInfo();
+        const profileAttrs = profInfo.getAllProfiles();
+        for (const prof of profileAttrs) {
+            const profAttr = this.getMergedAttrs(profInfo, prof);
+            let profile = this.getProfileLoaded(prof.profName, prof.profType, profAttr);
+            profile = this.checkMergingConfigSingleProfile(profile);
+            profiles.push(profile);
+        }
+        this.allProfiles = profiles;
+        return profiles;
     }
 
     /**

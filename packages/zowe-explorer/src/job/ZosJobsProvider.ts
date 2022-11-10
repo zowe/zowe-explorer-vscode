@@ -175,7 +175,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 }
             }
         } else {
-            const allProfiles: imperative.IProfileLoaded[] = Profiles.getInstance().allProfiles;
+            const allProfiles: imperative.IProfileLoaded[] = await Profiles.getInstance().fetchAllProfiles();
             if (allProfiles) {
                 for (const sessionProfile of allProfiles) {
                     // If session is already added, do nothing
