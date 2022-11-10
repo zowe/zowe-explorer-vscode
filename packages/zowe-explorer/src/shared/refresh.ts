@@ -29,7 +29,6 @@ import * as vscode from "vscode";
 export async function refreshAll(treeProvider: IZoweTree<IZoweTreeNode>) {
     await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
     treeProvider.mSessionNodes.forEach(async (sessNode) => {
-        sessNode.label.toString() === "Favorites";
         const profiles = await Profiles.getInstance().fetchAllProfiles();
         const found = profiles.some((prof) => prof.name === sessNode.label.toString().trim());
         if (found || sessNode.label.toString() === "Favorites") {
