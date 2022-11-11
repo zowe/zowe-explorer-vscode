@@ -21,7 +21,7 @@ let driverFirefox: any;
 
 export async function openBrowser() {
     const firefoxOptions = new firefox.Options();
-    firefoxOptions.headless();
+    // firefoxOptions.headless();
     driverFirefox = new Builder().forBrowser("firefox").setFirefoxOptions(firefoxOptions).build();
 }
 

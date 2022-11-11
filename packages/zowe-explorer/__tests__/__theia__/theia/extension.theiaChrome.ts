@@ -20,7 +20,7 @@ let driverChrome: any;
 
 export async function openBrowser() {
     const chromeOptions = new chrome.Options();
-    chromeOptions.addArguments("headless");
+    chromeOptions.addArguments();
     chromeOptions.addArguments("window-size=1200,1100");
     driverChrome = new Builder().forBrowser("chrome").setChromeOptions(chromeOptions).build();
 }

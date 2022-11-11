@@ -71,6 +71,13 @@ jobs:
       - name: Verify Theia accessible
         run: curl --fail http://localhost:3000
 
+      - name: Update Settings file
+        run: |
+          echo 'JSON_SETTINGS<<EOF' >> $GITHUB_ENV
+          cat packages/zowe-explorer/__tests__/__theia__/mockFiles/settings.json >> $GITHUB_ENV
+          echo 'EOF' >> $GITHUB_ENV
+          docker exec -i theia echo '${{JSON_SETTINGS}}' > $HOME/.theia/settings.json
+
       - name: Prep integration test files
         run: yarn workspace vscode-extension-for-zowe build:integration
 
