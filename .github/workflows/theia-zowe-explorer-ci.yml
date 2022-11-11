@@ -74,7 +74,7 @@ jobs:
       - name: Update Settings file
         run: |
           echo 'action_read=cat packages/zowe-explorer/__tests__/__theia__/mockFiles/settings.json' >> $GITHUB_ENV
-          docker exec -i theia cat '${{env.action_read}}' > home/theia/.theia/settings.json
+          docker exec -i theia cat ${{env.action_read}} >| home/theia/.theia/settings.json
 
       - name: Prep integration test files
         run: yarn workspace vscode-extension-for-zowe build:integration
