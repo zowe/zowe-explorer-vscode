@@ -45,7 +45,7 @@ jobs:
 
       - name: Get and rename vsix
         run: |
-          action_get=ls temp/plugins >> $GITHUB_ENV
+          "action_get=ls temp/plugins" >> $GITHUB_ENV
           mv temp/plugins/${{env.action_get}} temp/plugins/zowe-explorer.vsix
 
       # Verify vsix
