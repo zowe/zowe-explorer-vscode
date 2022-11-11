@@ -10,28 +10,33 @@
  */
 
 interface Stats {
-    isDirectory(path: string): boolean;
-    isFile(path: string): boolean;
+    isDirectory(): boolean;
+    isFile(): boolean;
 }
 
 export class FakeStats implements Stats {
-    isFile(path: string): boolean {
+    isFile(): boolean {
         if (this.path.endsWith(".txt")) {
             return true;
         }
         return false;
     }
-    public path: string;
     isDirectory(): boolean {
         if (this.path.endsWith(".txt")) {
             return false;
         }
         return true;
     }
-    constructor(private mMyPath: string) {
-        this.path = mMyPath;
-    }
+    constructor(public path: string) {}
 }
+
+export function access(path: string, callback: any): void {}
+
+export function existsSync(path: string | Buffer): boolean {
+    return Boolean(path);
+}
+
+export function lstat(path: string, callback: any): void {}
 
 export function lstatSync(path: string): Stats {
     const value = new FakeStats(path);
@@ -42,12 +47,26 @@ export function readdirSync(path: string): string[] {
     const value = ["A[testSess]", "Parent[testSess]", "B"];
     return value;
 }
+
+export function readFileSync(path: string): string {
+    return "{}";
+}
+
+export function realpathSync(path: string): string {
+    return path;
+}
+
+realpathSync.native = realpathSync;
+
 export function rmdirSync(path: string): void {}
+
+export function stat(path: string, callback: any): void {}
+
+export function statSync(path: string): Stats {
+    const value = new FakeStats(path);
+    return value;
+}
 
 export function unlinkSync(path: string): void {}
 
 export function writeFileSync(path: string, data: any, encoding: string): void {}
-
-export function existsSync(path: string | Buffer): boolean {
-    return true;
-}

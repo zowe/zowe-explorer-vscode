@@ -284,6 +284,7 @@ describe("Jobs Actions Unit Tests - Function downloadSpool", () => {
     it("Checking download of Job Spool", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
+        const jobs: Job[] = [];
         const node = new Job(
             "job",
             vscode.TreeItemCollapsibleState.None,
@@ -300,10 +301,11 @@ describe("Jobs Actions Unit Tests - Function downloadSpool", () => {
             path: "",
             query: "",
         };
+        jobs.push(node);
         mocked(vscode.window.showOpenDialog).mockResolvedValue([fileUri as vscode.Uri]);
         const downloadFileSpy = jest.spyOn(blockMocks.jesApi, "downloadSpoolContent");
 
-        await jobActions.downloadSpool(node);
+        await jobActions.downloadSpool(jobs);
         expect(mocked(vscode.window.showOpenDialog)).toBeCalled();
         expect(downloadFileSpy).toBeCalled();
         expect(downloadFileSpy.mock.calls[0][0]).toEqual({
@@ -353,7 +355,6 @@ describe("Jobs Actions Unit Tests - Function downloadJcl", () => {
             blockMocks.iJob,
             blockMocks.imperativeProfile
         );
-
         await jobActions.downloadJcl(node);
         expect(mocked(zowe.GetJobs.getJclForJob)).toBeCalled();
         expect(mocked(vscode.workspace.openTextDocument)).toBeCalled();
@@ -731,7 +732,7 @@ describe("Jobs Actions Unit Tests - Function getSpoolContent", () => {
 
         await jobActions.getSpoolContent(session, spoolFile, anyTimestamp);
 
-        expect(mocked(vscode.window.showTextDocument)).toBeCalledWith(blockMocks.mockUri);
+        expect(mocked(vscode.window.showTextDocument)).toBeCalledWith(blockMocks.mockUri, { preview: false });
     });
     it("should call showTextDocument with encoded uri with unverified profile", async () => {
         createGlobalMocks();
@@ -755,7 +756,7 @@ describe("Jobs Actions Unit Tests - Function getSpoolContent", () => {
 
         await jobActions.getSpoolContent(session, spoolFile, anyTimestamp);
 
-        expect(mocked(vscode.window.showTextDocument)).toBeCalledWith(blockMocks.mockUri);
+        expect(mocked(vscode.window.showTextDocument)).toBeCalledWith(blockMocks.mockUri, { preview: false });
     });
     it("should show error message for non existing profile", async () => {
         createGlobalMocks();

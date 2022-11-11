@@ -13,7 +13,6 @@ import * as vscode from "vscode";
 import * as globals from "../../../src/globals";
 import * as fs from "fs";
 import * as zowe from "@zowe/cli";
-import { Logger } from "@zowe/imperative";
 import { DatasetTree } from "../../../src/dataset/DatasetTree";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import { IZoweDatasetTreeNode, ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
@@ -54,7 +53,7 @@ function createGlobalMocks() {
         mockProfileInstance: null,
         mockShowWarningMessage: jest.fn(),
         mockProfileInfo: createInstanceOfProfileInfo(),
-        mockProfilesCache: new ProfilesCache(Logger.getAppLogger()),
+        mockProfilesCache: new ProfilesCache(zowe.imperative.Logger.getAppLogger()),
     };
 
     globalMocks.mockProfileInstance = createInstanceOfProfile(globalMocks.testProfileLoaded);
@@ -426,7 +425,7 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
     it("Checking function for profile node in Favorites section", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-        const log = Logger.getAppLogger();
+        const log = zowe.imperative.Logger.getAppLogger();
         const favProfileNode = new ZoweDatasetNode(
             "testProfile",
             vscode.TreeItemCollapsibleState.None,
@@ -472,7 +471,7 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
 });
 describe("Dataset Tree Unit Tests - Function loadProfilesForFavorites", () => {
     function createBlockMocks() {
-        const log = Logger.getAppLogger();
+        const log = zowe.imperative.Logger.getAppLogger();
         const session = createISession();
         const imperativeProfile = createIProfile();
         const treeView = createTreeView();
@@ -782,7 +781,7 @@ describe("Dataset Tree Unit Tests - Function removeFileHistory", () => {
 describe("Dataset Tree Unit Tests - Function addSession", () => {
     async function createBlockMocks() {
         const newMocks = {
-            log: Logger.getAppLogger(),
+            log: zowe.imperative.Logger.getAppLogger(),
             session: createISession(),
             imperativeProfile: createIProfile(),
             treeView: createTreeView(),
@@ -1339,7 +1338,7 @@ describe("Dataset Tree Unit Tests - Function flipState", () => {
 describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
-            log: Logger.getAppLogger(),
+            log: zowe.imperative.Logger.getAppLogger(),
             session: createISession(),
             imperativeProfile: createIProfile(),
             mockDefaultProfile: jest.fn(),
@@ -1586,7 +1585,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
 describe("Dataset Tree Unit Tests - Function editSession", () => {
     async function createBlockMocks() {
         const newMocks = {
-            log: Logger.getAppLogger(),
+            log: zowe.imperative.Logger.getAppLogger(),
             session: createISession(),
             imperativeProfile: createIProfile(),
             mockDefaultProfile: jest.fn(),

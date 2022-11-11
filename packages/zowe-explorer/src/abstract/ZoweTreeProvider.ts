@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as globals from "../globals";
-import { Logger, IProfile, ISession } from "@zowe/imperative";
+import { imperative } from "@zowe/cli";
 import { PersistentFilters } from "../PersistentFilters";
 import { OwnerFilterDescriptor } from "../job/utils";
 import { getIconByNode, getIconById, IconId } from "../generators/icons";
@@ -45,7 +45,7 @@ export class ZoweTreeProvider {
     public createOwner = new OwnerFilterDescriptor();
 
     protected mHistory: PersistentFilters;
-    protected log: Logger = Logger.getAppLogger();
+    protected log: imperative.Logger = imperative.Logger.getAppLogger();
     protected validProfile: number = -1;
 
     constructor(protected persistenceSchema: PersistenceSchemaEnum, public mFavoriteSession: IZoweTreeNode) {
@@ -176,10 +176,10 @@ export class ZoweTreeProvider {
         const profileName = node.getProfileName();
         const EditSession = await Profiles.getInstance().editSession(profile, profileName);
         if (EditSession) {
-            node.getProfile().profile = EditSession as IProfile;
-            await setProfile(node, EditSession as IProfile);
+            node.getProfile().profile = EditSession as imperative.IProfile;
+            await setProfile(node, EditSession as imperative.IProfile);
             if (await node.getSession()) {
-                await setSession(node, EditSession as ISession);
+                await setSession(node, EditSession as imperative.ISession);
             } else {
                 zoweFileProvider.deleteSession(node.getSessionNode());
                 this.mHistory.addSession(node.label as string);

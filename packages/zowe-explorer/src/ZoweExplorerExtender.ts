@@ -12,9 +12,9 @@
 import * as PromiseQueue from "promise-queue";
 import * as zowe from "@zowe/cli";
 import * as path from "path";
-import * as os from "os";
 import * as fs from "fs";
 import * as globals from "./globals";
+import * as vscode from "vscode";
 import {
     ZoweExplorerApi,
     ZoweExplorerTreeApi,
@@ -25,6 +25,7 @@ import {
     IZoweJobTreeNode,
     ProfilesCache,
     getZoweDir,
+    getFullPath,
 } from "@zowe/zowe-explorer-api";
 import { Profiles } from "./Profiles";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
@@ -94,7 +95,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
         // and/or created a profile that the profile directory in ~/.zowe/profiles
         // will be created with the appropriate meta data. If not called the user will
         // see errors when creating a profile of any type.
-        getZoweDir();
+        const zoweDir = getZoweDir();
 
         /**
          * This should create initialize the loadedConfig if it is not already
@@ -105,10 +106,12 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
         let usingTeamConfig: boolean;
         let mProfileInfo: zowe.imperative.ProfileInfo;
         try {
-            mProfileInfo = await globals.PROFILESCACHE.getProfileInfo();
-            if (!mProfileInfo) {
-                mProfileInfo = await getProfileInfo(globals.ISTHEIA);
-                mProfileInfo.readProfilesFromDisk();
+            mProfileInfo = await getProfileInfo(globals.ISTHEIA);
+            if (vscode.workspace.workspaceFolders) {
+                const rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
+                await mProfileInfo.readProfilesFromDisk({ homeDir: zoweDir, projectDir: getFullPath(rootPath) });
+            } else {
+                await mProfileInfo.readProfilesFromDisk({ homeDir: zoweDir, projectDir: undefined });
             }
             usingTeamConfig = mProfileInfo.usingTeamConfig;
         } catch (error) {
@@ -119,11 +122,11 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
 
         if (profileTypeConfigurations && !usingTeamConfig) {
             const configOptions = Array.from(profileTypeConfigurations);
-            const exists = fs.existsSync(path.posix.join(`${os.homedir()}/.zowe/profiles/${profileType}`));
+            const exists = fs.existsSync(path.join(zoweDir, "profiles", profileType));
             if (configOptions && !exists) {
                 await zowe.imperative.CliProfileManager.initialize({
                     configuration: configOptions,
-                    profileRootDirectory: path.join(zowe.imperative.ImperativeConfig.instance.cliHome, "profiles"),
+                    profileRootDirectory: path.join(zoweDir, "profiles"),
                 });
             }
         }

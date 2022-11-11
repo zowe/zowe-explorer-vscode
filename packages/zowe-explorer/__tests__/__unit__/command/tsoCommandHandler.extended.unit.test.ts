@@ -10,36 +10,45 @@
  */
 
 import * as vscode from "vscode";
-import { ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { ZoweVsCodeExtension, ProfilesCache } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../src/Profiles";
 import { TsoCommandHandler } from "../../../src/command/TsoCommandHandler";
-import { ProfileInfo } from "@zowe/imperative";
-import * as globals from "../../../src/globals";
-import { createInstanceOfProfilesCache } from "../../../__mocks__/mockCreators/shared";
+import { imperative } from "@zowe/cli";
+import { createInstanceOfProfile, createIProfile } from "../../../__mocks__/mockCreators/shared";
 
 describe("TsoCommandHandler extended testing", () => {
+    // Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/master/src/util/testing.ts
+    const mocked = <T extends (...args: any[]) => any>(fn: T): jest.Mock<ReturnType<T>> => fn as any;
+    const newMocks = {
+        imperativeProfile: createIProfile(),
+        profileInstance: null,
+        mockProfilesCache: new ProfilesCache(imperative.Logger.getAppLogger()),
+    };
     Object.defineProperty(vscode.workspace, "getConfiguration", { value: jest.fn() });
     Object.defineProperty(vscode.window, "createOutputChannel", { value: jest.fn() });
-    Object.defineProperty(ProfileInfo, "profAttrsToProfLoaded", { value: () => ({ profile: {} }) });
+    Object.defineProperty(imperative.ProfileInfo, "profAttrsToProfLoaded", { value: () => ({ profile: {} }) });
+    newMocks.profileInstance = createInstanceOfProfile(newMocks.imperativeProfile);
     Object.defineProperty(Profiles, "selectTsoProfile", { value: () => "dummy" });
-    Object.defineProperty(globals, "PROFILESCACHE", {
-        value: jest.fn().mockReturnValue(createInstanceOfProfilesCache()),
-    });
-    Object.defineProperty(globals.PROFILESCACHE, "getProfileInfo", {
-        value: jest.fn().mockReturnValue({
-            usingTeamConfig: true,
-            getAllProfiles: jest.fn().mockReturnValue(["dummy"]),
-            mergeArgsForProfile: jest.fn().mockReturnValue({
-                knownArgs: [{ argName: "account", argValue: "TEST" }],
-            }),
-        }),
+    Object.defineProperty(Profiles, "getInstance", { value: jest.fn(), configurable: true });
+
+    Object.defineProperty(Profiles, "getInstance", {
+        value: jest.fn().mockReturnValue(newMocks.profileInstance),
         configurable: true,
     });
 
-    describe("getTsoParms", () => {
+    describe("getTsoParams", () => {
         it("should work with teamConfig", async () => {
             Object.defineProperty(Profiles, "getInstance", {
-                value: jest.fn(() => ({ getCliProfileManager: () => null })),
+                value: jest.fn(() => ({
+                    getCliProfileManager: () => null,
+                    getProfileInfo: jest.fn().mockReturnValue({
+                        usingTeamConfig: true,
+                        getAllProfiles: jest.fn().mockReturnValue(["dummy"]),
+                        mergeArgsForProfile: jest.fn().mockReturnValue({
+                            knownArgs: [{ argName: "account", argValue: "TEST" }],
+                        }),
+                    } as any),
+                })),
             });
             const result = await (TsoCommandHandler.getInstance() as any).getTsoParams();
             expect(result.account).toEqual("TEST");
@@ -47,17 +56,19 @@ describe("TsoCommandHandler extended testing", () => {
 
         it("should work with teamConfig and prompt if account is empty", async () => {
             Object.defineProperty(Profiles, "getInstance", {
-                value: jest.fn(() => ({ getCliProfileManager: () => null })),
-            });
-
-            jest.spyOn(globals.PROFILESCACHE, "getProfileInfo").mockReturnValue({
-                usingTeamConfig: true,
-                getAllProfiles: jest.fn().mockReturnValue(["dummy"]),
-                mergeArgsForProfile: jest.fn().mockReturnValue({
-                    knownArgs: [{ argName: "account", argValue: "" }],
+                value: jest.fn(() => {
+                    return {
+                        getCliProfileManager: () => null,
+                        getProfileInfo: jest.fn().mockReturnValue({
+                            usingTeamConfig: true,
+                            getAllProfiles: jest.fn().mockReturnValue(["dummy"]),
+                            mergeArgsForProfile: jest.fn().mockReturnValue({
+                                knownArgs: [{ argName: "account", argValue: "" }],
+                            }),
+                        } as any),
+                    };
                 }),
-            } as any);
-
+            });
             const spyBox = jest.spyOn(ZoweVsCodeExtension, "inputBox").mockResolvedValue("TEST1");
 
             const result = await (TsoCommandHandler.getInstance() as any).getTsoParams();

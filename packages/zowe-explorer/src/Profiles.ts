@@ -12,6 +12,7 @@
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import * as path from "path";
+import * as fs from "fs";
 import {
     IZoweTree,
     IZoweNodeType,
@@ -69,8 +70,21 @@ export class Profiles extends ProfilesCache {
     private dsSchema: string = globals.SETTINGS_DS_HISTORY;
     private ussSchema: string = globals.SETTINGS_USS_HISTORY;
     private jobsSchema: string = globals.SETTINGS_JOBS_HISTORY;
+    private mProfileInfo: zowe.imperative.ProfileInfo;
     public constructor(log: zowe.imperative.Logger, cwd?: string) {
         super(log, cwd);
+    }
+
+    /**
+     * Initializes the Imperative ProfileInfo API and reads profiles from disk.
+     * During extension activation the ProfileInfo object is cached, so this
+     * method can be called multiple times without impacting performance. After
+     * the extension has activated, the cache expires so that the latest profile
+     * contents will be loaded.
+     */
+    public async getProfileInfo(): Promise<zowe.imperative.ProfileInfo> {
+        this.mProfileInfo = await super.getProfileInfo();
+        return this.mProfileInfo;
     }
 
     public async checkCurrentProfile(theProfile: zowe.imperative.IProfileLoaded) {
@@ -248,52 +262,67 @@ export class Profiles extends ProfilesCache {
      * @param {USSTree} zoweFileProvider - either the USS, MVS, JES tree
      */
     public async createZoweSession(zoweFileProvider: IZoweTree<IZoweTreeNode>) {
-        const allProfiles = Profiles.getInstance().allProfiles;
+        let profileNamesList: string[] = [];
+        try {
+            const allProfiles = Profiles.getInstance().allProfiles;
+            if (allProfiles) {
+                // Get all profiles
+                profileNamesList = allProfiles.map((profile) => {
+                    return profile.name;
+                });
+                // Filter to list of the APIs available for current tree explorer
+                profileNamesList = profileNamesList.filter((profileName) => {
+                    const profile = Profiles.getInstance().loadNamedProfile(profileName);
+                    if (profile) {
+                        if (zoweFileProvider.getTreeType() === PersistenceSchemaEnum.USS) {
+                            const ussProfileTypes = ZoweExplorerApiRegister.getInstance().registeredUssApiTypes();
+                            return ussProfileTypes.includes(profile.type);
+                        }
+                        if (zoweFileProvider.getTreeType() === PersistenceSchemaEnum.Dataset) {
+                            const mvsProfileTypes = ZoweExplorerApiRegister.getInstance().registeredMvsApiTypes();
+                            return mvsProfileTypes.includes(profile.type);
+                        }
+                        if (zoweFileProvider.getTreeType() === PersistenceSchemaEnum.Job) {
+                            const jesProfileTypes = ZoweExplorerApiRegister.getInstance().registeredJesApiTypes();
+                            return jesProfileTypes.includes(profile.type);
+                        }
+                    }
+                });
+                profileNamesList = profileNamesList.filter(
+                    (profileName) =>
+                        // Find all cases where a profile is not already displayed
+                        !zoweFileProvider.mSessionNodes?.find(
+                            (sessionNode) => sessionNode.getProfileName() === profileName
+                        )
+                );
+            }
+        } catch (err) {
+            this.log.warn(err);
+        }
+        // Set Options according to profile management in use
+
         const createNewProfile = "Create a New Connection to z/OS";
         const createNewConfig = "Create a New Team Configuration File";
-        let addProfilePlaceholder = "";
-        let chosenProfile: string = "";
-
-        // Get all profiles
-        let profileNamesList = allProfiles.map((profile) => {
-            return profile.name;
-        });
-        // Filter to list of the APIs available for current tree explorer
-        profileNamesList = profileNamesList.filter((profileName) => {
-            const profile = Profiles.getInstance().loadNamedProfile(profileName);
-            if (zoweFileProvider.getTreeType() === PersistenceSchemaEnum.USS) {
-                const ussProfileTypes = ZoweExplorerApiRegister.getInstance().registeredUssApiTypes();
-                return ussProfileTypes.includes(profile.type);
-            }
-            if (zoweFileProvider.getTreeType() === PersistenceSchemaEnum.Dataset) {
-                const mvsProfileTypes = ZoweExplorerApiRegister.getInstance().registeredMvsApiTypes();
-                return mvsProfileTypes.includes(profile.type);
-            }
-            if (zoweFileProvider.getTreeType() === PersistenceSchemaEnum.Job) {
-                const jesProfileTypes = ZoweExplorerApiRegister.getInstance().registeredJesApiTypes();
-                return jesProfileTypes.includes(profile.type);
-            }
-        });
-        profileNamesList = profileNamesList.filter(
-            (profileName) =>
-                // Find all cases where a profile is not already displayed
-                !zoweFileProvider.mSessionNodes.find((sessionNode) => sessionNode.getProfileName() === profileName)
-        );
+        const editConfig = "Edit Team Configuration File";
 
         const createPick = new FilterDescriptor("\uFF0B " + createNewProfile);
         const configPick = new FilterDescriptor("\uFF0B " + createNewConfig);
+        const configEdit = new FilterDescriptor("\u270F " + editConfig);
         const items: vscode.QuickPickItem[] = [];
         let mProfileInfo: zowe.imperative.ProfileInfo;
         try {
             mProfileInfo = await this.getProfileInfo();
+            const profAllAttrs = mProfileInfo.getAllProfiles();
+            for (const pName of profileNamesList) {
+                const osLocInfo = mProfileInfo.getOsLocInfo(profAllAttrs.find((p) => p.profName === pName));
+                items.push(new FilterItem({ text: pName, icon: this.getProfileIcon(osLocInfo)[0] }));
+            }
         } catch (err) {
             this.log.warn(err);
         }
 
-        for (const pName of profileNamesList) {
-            items.push(new FilterItem({ text: pName, icon: this.getProfileIcon(mProfileInfo, pName)[0] }));
-        }
         const quickpick = vscode.window.createQuickPick();
+        let addProfilePlaceholder = "";
         switch (zoweFileProvider.getTreeType()) {
             case PersistenceSchemaEnum.Dataset:
                 addProfilePlaceholder = localize(
@@ -314,9 +343,11 @@ export class Profiles extends ProfilesCache {
                     'Choose "Create new..." to define or select a profile to add to the USS Explorer'
                 );
         }
-
-        let configDir: string;
-        quickpick.items = [createPick, configPick, ...items];
+        if (mProfileInfo && mProfileInfo.usingTeamConfig) {
+            quickpick.items = [configPick, configEdit, ...items];
+        } else {
+            quickpick.items = [createPick, configPick, ...items];
+        }
         quickpick.placeholder = addProfilePlaceholder;
         quickpick.ignoreFocusOut = true;
         quickpick.show();
@@ -329,21 +360,20 @@ export class Profiles extends ProfilesCache {
             return;
         }
         if (choice === configPick) {
-            configDir = await this.createZoweSchema(zoweFileProvider);
+            await this.createZoweSchema(zoweFileProvider);
             return;
         }
+        if (choice === configEdit) {
+            await this.editZoweConfigFile();
+            return;
+        }
+        let chosenProfile: string = "";
         if (choice instanceof FilterDescriptor) {
             chosenProfile = "";
         } else {
             // remove any icons from the label
             chosenProfile = choice.label.replace(/\$\(.*\)\s/g, "");
         }
-
-        if (configDir) {
-            await this.openConfigFile(configDir);
-            return;
-        }
-
         if (chosenProfile === "") {
             let config: zowe.imperative.ProfileInfo;
             try {
@@ -611,36 +641,37 @@ export class Profiles extends ProfilesCache {
             let global = true;
             let rootPath = getZoweDir();
             if (vscode.workspace.workspaceFolders) {
-                const quickPickOptions: vscode.QuickPickOptions = {
-                    placeHolder: localize(
-                        "createZoweSchema.quickPickOption",
-                        "Select the location where the config file will be initialized"
-                    ),
-                    ignoreFocusOut: true,
-                    canPickMany: false,
-                };
-                const globalText = localize(
-                    "createZoweSchema.showQuickPick.global",
-                    "Global: in the Zowe home directory "
-                );
-                const projectText = localize(
-                    "createZoweSchema.showQuickPick.project",
-                    "Project: in the current working directory"
-                );
-                const location = await vscode.window.showQuickPick([globalText, projectText], quickPickOptions);
-                if (location === undefined) {
+                const choice = await this.getConfigLocationPrompt("create");
+                if (choice === undefined) {
                     vscode.window.showInformationMessage(
                         localize("createZoweSchema.undefined.location", "Operation Cancelled")
                     );
                     return;
                 }
-                if (location === projectText) {
+                if (choice === "project") {
                     rootPath = vscode.workspace.workspaceFolders?.[0].uri.fsPath;
                     user = true;
                     global = false;
                 }
             }
-            const config = await zowe.imperative.Config.load("zowe", { projectDir: getFullPath(rootPath) });
+            // call check for existing and prompt here
+            const existingFile = await this.checkExistingConfig(rootPath);
+            if (!existingFile) {
+                return;
+            }
+            if (existingFile.includes("zowe")) {
+                if (existingFile.includes("user")) {
+                    user = true;
+                    global = false;
+                } else {
+                    user = false;
+                    global = true;
+                }
+            }
+            const config = await zowe.imperative.Config.load("zowe", {
+                homeDir: getZoweDir(),
+                projectDir: getFullPath(rootPath),
+            });
             if (vscode.workspace.workspaceFolders) {
                 config.api.layers.activate(user, global, rootPath);
             }
@@ -663,6 +694,10 @@ export class Profiles extends ProfilesCache {
 
             // Build new config and merge with existing layer
             const newConfig: zowe.imperative.IConfig = await zowe.imperative.ConfigBuilder.build(impConfig, opts);
+
+            // Create non secure profile if VS Code setting is false
+            this.createNonSecureProfile(newConfig);
+
             config.api.layers.merge(newConfig);
             await config.save(false);
             let configName;
@@ -679,6 +714,38 @@ export class Profiles extends ProfilesCache {
             vscode.window.showErrorMessage(
                 localize("Profiles.getProfileInfo.error", "Error in creating team configuration file: {0}", err.message)
             );
+        }
+    }
+
+    public async editZoweConfigFile() {
+        const existingLayers = await this.getConfigLayers();
+        if (existingLayers.length === 1) {
+            await this.openConfigFile(existingLayers[0].path);
+        }
+        if (existingLayers && existingLayers.length > 1) {
+            const choice = await this.getConfigLocationPrompt("edit");
+            switch (choice) {
+                case "project":
+                    for (const file of existingLayers) {
+                        if (file.user) {
+                            await this.openConfigFile(file.path);
+                        }
+                    }
+                    break;
+                case "global":
+                    for (const file of existingLayers) {
+                        if (file.global) {
+                            await this.openConfigFile(file.path);
+                        }
+                    }
+                    break;
+                default:
+                    vscode.window.showInformationMessage(
+                        localize("createZoweSchema.undefined.location", "Operation Cancelled")
+                    );
+                    return;
+            }
+            return;
         }
     }
 
@@ -1258,7 +1325,7 @@ export class Profiles extends ProfilesCache {
     public async ssoLogout(node: IZoweNodeType): Promise<void> {
         const serviceProfile = node.getProfile();
         // This check will handle service profiles that have username and password
-        if (serviceProfile.profile.user && serviceProfile.profile.password) {
+        if (serviceProfile.profile?.user && serviceProfile.profile?.password) {
             vscode.window.showInformationMessage(
                 localize("ssoAuth.noBase", "This profile does not support token authentication.")
             );
@@ -1306,6 +1373,89 @@ export class Profiles extends ProfilesCache {
         await vscode.window.showTextDocument(document);
     }
 
+    private async getConfigLocationPrompt(action: string): Promise<string> {
+        let placeHolderText: string;
+        if (action === "create") {
+            placeHolderText = localize(
+                "getConfigLocationPrompt.placeholder.create",
+                "Select the location where the config file will be initialized"
+            );
+        } else {
+            placeHolderText = localize(
+                "getConfigLocationPrompt.placeholder.edit",
+                "Select the location of the config file to edit"
+            );
+        }
+        const quickPickOptions: vscode.QuickPickOptions = {
+            placeHolder: placeHolderText,
+            ignoreFocusOut: true,
+            canPickMany: false,
+        };
+        const globalText = localize(
+            "getConfigLocationPrompt.showQuickPick.global",
+            "Global: in the Zowe home directory"
+        );
+        const projectText = localize(
+            "getConfigLocationPrompt.showQuickPick.project",
+            "Project: in the current working directory"
+        );
+        const location = await vscode.window.showQuickPick([globalText, projectText], quickPickOptions);
+        // call check for existing and prompt here
+        switch (location) {
+            case globalText:
+                return "global";
+            case projectText:
+                return "project";
+        }
+        return;
+    }
+
+    private async checkExistingConfig(filePath: string) {
+        let found = false;
+        let location: string;
+        const existingLayers = await this.getConfigLayers();
+        for (const file of existingLayers) {
+            if (file.path.includes(filePath)) {
+                found = true;
+                const createButton = localize("checkExistingConfig.createNew.button", "Create New");
+                const message = localize(
+                    "checkExistingConfig.createNew.message",
+                    `A Team Configuration File already exists in this location\n{0}\nContinuing may alter the existing file, would you like to proceed?`,
+                    file.path
+                );
+                await vscode.window
+                    .showInformationMessage(message, { modal: true }, ...[createButton])
+                    .then(async (selection) => {
+                        if (selection) {
+                            location = path.basename(file.path);
+                        } else {
+                            await this.openConfigFile(file.path);
+                            location = undefined;
+                        }
+                    });
+            }
+        }
+        if (found) {
+            return location;
+        }
+        return "none";
+    }
+
+    private async getConfigLayers(): Promise<zowe.imperative.IConfigLayer[]> {
+        const existingLayers: zowe.imperative.IConfigLayer[] = [];
+        const config = await zowe.imperative.Config.load("zowe", {
+            homeDir: getZoweDir(),
+            projectDir: vscode.workspace.workspaceFolders?.[0].uri.fsPath,
+        });
+        const layers = config.layers;
+        layers.forEach((layer) => {
+            if (layer.exists) {
+                existingLayers.push(layer);
+            }
+        });
+        return existingLayers;
+    }
+
     private async promptToRefreshForProfiles(rootPath: string) {
         if (globals.ISTHEIA) {
             const reloadButton = localize("createZoweSchema.reload.button", "Refresh Zowe Explorer");
@@ -1323,9 +1473,7 @@ export class Profiles extends ProfilesCache {
         return undefined;
     }
 
-    private getProfileIcon(profInfo: zowe.imperative.ProfileInfo, name: string): string[] {
-        const prof = profInfo.getAllProfiles().find((p) => p.profName === name);
-        const osLocInfo = profInfo.getOsLocInfo(prof);
+    private getProfileIcon(osLocInfo: zowe.imperative.IProfLocOsLoc[]): string[] {
         const ret: string[] = [];
         for (const loc of osLocInfo ?? []) {
             if (loc.global) {
@@ -1739,6 +1887,19 @@ export class Profiles extends ProfilesCache {
             this.getCliProfileManager(this.loadedProfile.type).update(updateParms);
         } catch (error) {
             vscode.window.showErrorMessage(error.message);
+        }
+    }
+
+    // Temporary solution for handling unsecure profiles until CLI team's work is made
+    // Remove secure properties and set autoStore to false when vscode setting is true
+    private createNonSecureProfile(newConfig: zowe.imperative.IConfig): void {
+        const configuration: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
+        const isSecureCredsEnabled: boolean = configuration.get(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED);
+        if (!isSecureCredsEnabled) {
+            for (const profile of Object.entries(newConfig.profiles)) {
+                delete newConfig.profiles[profile[0]].secure;
+            }
+            newConfig.autoStore = false;
         }
     }
 }

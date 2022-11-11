@@ -10,7 +10,7 @@
  */
 
 import * as path from "path";
-import { Logger, ICommandProfileTypeConfiguration } from "@zowe/imperative";
+import { imperative } from "@zowe/cli";
 import * as vscode from "vscode";
 import * as loggerConfig from "../log4jsconfig.json";
 
@@ -31,8 +31,8 @@ export let USS_DIR;
 export let DS_DIR;
 export let CONFIG_PATH; // set during activate
 export let ISTHEIA: boolean = false; // set during activate
-export let LOG: Logger;
-export const COMMAND_COUNT = 99;
+export let LOG: imperative.Logger;
+export const COMMAND_COUNT = 100;
 export const MAX_SEARCH_HISTORY = 5;
 export const MAX_FILE_HISTORY = 10;
 export const STATUS_BAR_TIMEOUT_MS = 5000;
@@ -85,8 +85,11 @@ export const SETTINGS_AUTOMATIC_PROFILE_VALIDATION = "zowe.automaticProfileValid
 export const SETTINGS_DS_HISTORY = "zowe.ds.history";
 export const SETTINGS_USS_HISTORY = "zowe.uss.history";
 export const SETTINGS_JOBS_HISTORY = "zowe.jobs.history";
-export const EXTENDER_CONFIG: ICommandProfileTypeConfiguration[] = [];
-export let PROFILESCACHE; // set during activate new ProfilesCache(Logger.getAppLogger());
+export const SETTINGS_SECURE_CREDENTIALS_ENABLED = "zowe.security.secureCredentialsEnabled";
+export const EXTENDER_CONFIG: imperative.ICommandProfileTypeConfiguration[] = [];
+export const ZOWE_CLI_SCM = "@zowe/cli";
+export let ACTIVATED = false;
+export let PROFILE_SECURITY: string | boolean = ZOWE_CLI_SCM;
 
 export enum CreateDataSetTypeWithKeysEnum {
     DATA_SET_BINARY = 0,
@@ -270,7 +273,6 @@ export function defineGlobals(tempPath: string | undefined) {
     ZOWE_TMP_FOLDER = path.join(ZOWETEMPFOLDER, "tmp");
     USS_DIR = path.join(ZOWETEMPFOLDER, "_U_");
     DS_DIR = path.join(ZOWETEMPFOLDER, "_D_");
-    PROFILESCACHE = new ProfilesCache(Logger.getAppLogger(), vscode.workspace.workspaceFolders?.[0].uri.fsPath);
 }
 
 export function setConfigPath(configPath: string | undefined): void {
@@ -292,6 +294,19 @@ export function initLogger(context: vscode.ExtensionContext) {
             loggerConfig.log4jsConfig.appenders[appenderName].filename
         );
     }
-    Logger.initLogger(loggerConfig);
-    this.LOG = Logger.getAppLogger();
+    imperative.Logger.initLogger(loggerConfig);
+    this.LOG = imperative.Logger.getAppLogger();
+}
+
+export function setActivated(value: boolean) {
+    ACTIVATED = value;
+}
+
+export async function setGlobalSecurityValue() {
+    const settingEnabled: boolean = await vscode.workspace.getConfiguration().get(SETTINGS_SECURE_CREDENTIALS_ENABLED);
+    if (!settingEnabled) {
+        PROFILE_SECURITY = false;
+    } else {
+        PROFILE_SECURITY = ZOWE_CLI_SCM;
+    }
 }

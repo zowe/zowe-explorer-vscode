@@ -11,7 +11,7 @@
 
 import * as sinon from "sinon";
 import * as vscode from "vscode";
-import { IProfileLoaded, IProfile } from "@zowe/imperative";
+import { imperative } from "@zowe/cli";
 import { Profiles } from "../../src/Profiles";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
@@ -20,7 +20,7 @@ import * as testConst from "../../resources/testProfileData";
 declare var it: Mocha.ITestDefinition;
 const TIMEOUT = 45000;
 
-const testProfile: IProfile = {
+const testProfile: imperative.IProfile = {
     type: "zosmf",
     host: "testHost",
     port: 1443,
@@ -30,7 +30,7 @@ const testProfile: IProfile = {
     name: "testProfileIntegration", // @NOTE: This profile name must match an existing zowe profile in the ~/.zowe/profiles/zosmf folder
 };
 
-const testProfileLoaded: IProfileLoaded = {
+const testProfileLoaded: imperative.IProfileLoaded = {
     name: testConst.profile.name,
     profile: testConst.profile,
     type: testConst.profile.type,

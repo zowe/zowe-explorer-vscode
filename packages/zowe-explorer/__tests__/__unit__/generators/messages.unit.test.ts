@@ -16,7 +16,7 @@ import {
     MessageContentType,
 } from "../../../src/generators/messages";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
-import { IProfileLoaded, Session } from "@zowe/imperative";
+import { imperative } from "@zowe/cli";
 import { DatasetTree } from "../../../src/dataset/DatasetTree";
 import * as vscode from "vscode";
 
@@ -31,7 +31,7 @@ describe("Checking message generator's basics", () => {
         Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
     };
     const generateTestSessionNode = () => {
-        const session = new Session({
+        const session = new imperative.Session({
             user: "fake",
             password: "fake",
             hostname: "fake",
@@ -40,7 +40,7 @@ describe("Checking message generator's basics", () => {
             type: "basic",
         });
         const testTree = new DatasetTree();
-        const profile: IProfileLoaded = {
+        const profile: imperative.IProfileLoaded = {
             name: "aProfile",
             profile: {},
             type: "zosmf",
