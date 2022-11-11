@@ -74,10 +74,7 @@ jobs:
       - name: Update Settings file
         run: |
           echo 'action_read=cat packages/zowe-explorer/__tests__/__theia__/mockFiles/settings.json' > $GITHUB_ENV
-          docker exec -i theia pwd
-          docker exec -i theia ls -al
-          docker exec -i theia cd ..
-          docker exec -i theia la -al
+          docker exec -i theia mkdir .theia
           docker exec -i theia echo ${{env.action_read}} >| .theia/settings.json
 
       - name: Prep integration test files
