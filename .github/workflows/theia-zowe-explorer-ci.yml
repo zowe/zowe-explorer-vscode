@@ -41,10 +41,8 @@ jobs:
         run: mkdir -p temp/plugins && chmod -R 777 temp
 
       - name: Copy vsix to theia folder
-        env:
-          VSCEXT: ls dist
-        run: mv dist/${VSCEXT} temp/plugins/zowe-explorer.vsix
-      # cp dist/*.vsix temp/plugins
+        run: cp dist/*.vsix temp/plugins
+
       # Verify vsix
       - run: ls -la temp/plugins
 
@@ -72,18 +70,15 @@ jobs:
         run: curl --fail http://localhost:3000
 
       - name: Update Settings file
-        env:
-          DOCKERPS: docker ps -aqf "name=theia"
         run: |
+          echo 'DOCKERPS=docker ps -aqf "name=theia"' >> $GITHUB_ENV
           docker exec -i theia mkdir .theia
-          docker cp packages/zowe-explorer/__tests__/__theia__/mockFiles/settings.json ${DOCKERPS}:/home/theia/.theia
+          docker cp packages/zowe-explorer/__tests__/__theia__/mockFiles/settings.json $env.DOCKERPS:/home/theia/.theia
 
       - name: Restart Theia with uploaded changes
-        env:
-          DOCKERID: docker ps -aqf "name=theia"
         run: |
-          docker stop ${DOCKERID}
-          docker start -i ${DOCKERID}
+          docker stop $env.DOCKERPS
+          docker start -i $env.DOCKERPS
           sleep 30s
           curl --fail http://localhost:3000
 
