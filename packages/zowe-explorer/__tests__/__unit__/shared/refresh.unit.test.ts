@@ -24,7 +24,6 @@ import { createIJobObject, createJobsTree } from "../../../__mocks__/mockCreator
 import * as refreshActions from "../../../src/shared/refresh";
 import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
 import * as globals from "../../../src/globals";
-import * as utils from "../../../src/utils/ProfilesUtils";
 import * as sessUtils from "../../../src/utils/SessionUtils";
 
 function createGlobalMocks() {
