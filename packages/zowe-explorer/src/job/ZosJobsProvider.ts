@@ -33,13 +33,19 @@ import * as contextually from "../shared/context";
 import * as nls from "vscode-nls";
 import { resetValidationSettings } from "../shared/actions";
 import { PersistentFilters } from "../PersistentFilters";
-import { UIViews } from "../shared/ui-views";
 // Set up localization
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
     bundleFormat: nls.BundleFormat.standalone,
 })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
+
+type JobSearchCriteria = {
+    Owner: string | undefined;
+    Prefix: string | undefined;
+    JobId: string | undefined;
+    Status: string | undefined;
+};
 
 /**
  * Creates the Job tree that contains nodes of sessions, jobs and spool items
@@ -590,44 +596,67 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 }
                 if (choice instanceof FilterDescriptor) {
                     if (quickpick.value.length > 0) {
-                        searchCriteria = this.interpretFreeform(quickpick.value);
+                        searchCriteria = this.interpretFreeform(quickpick.value); // is this called?
                     }
                 } else {
                     searchCriteria = choice.label;
                 }
             }
         }
-        let options: vscode.InputBoxOptions;
-        let owner: string;
-        let prefix: string;
-        let jobid: string; // do we need to define these here?
-        let status: string;
+        const searchCriteriaObj: JobSearchCriteria = {
+            Owner: undefined,
+            Prefix: undefined,
+            JobId: undefined,
+            Status: undefined,
+        };
         if (searchCriteria) {
-            owner = searchCriteria.match(/Owner:/) ? searchCriteria.match(/(?<=Owner\:).*(?=\s)/)[0] : null;
-            prefix = searchCriteria.match(/Prefix:/) ? searchCriteria.match(/(?<=Prefix\:).*$/)[0] : null;
-            jobid = searchCriteria.match(/JobId:/) ? searchCriteria.match(/(?<=JobId\:).*$/)[0] : null;
-            status = searchCriteria.match(/Status:/) ? searchCriteria.match(/(?<=Status\:).*$/)[0] : null;
-            // TODO: Add status here
+            const searchOptionArray = searchCriteria.split(" ");
+            searchOptionArray.forEach((searchOption) => {
+                const keyValue = searchOption.split(":");
+                searchCriteriaObj[keyValue[0].trim()] = keyValue[1].trim();
+            });
         }
         if (choice === this.createOwner) {
             await this.handleEditingMultiJobParameters(globals.JOB_PROPERTIES, node); // here create search label
             return;
         }
         if (choice === this.createId) {
-            options = {
+            const options = {
                 prompt: localize("jobsFilterPrompt.inputBox.prompt.jobid", "Enter a Job id"),
-                value: jobid,
+                value: searchCriteriaObj.JobId,
             };
             // get user input
-            jobid = await ZoweVsCodeExtension.inputBox(options);
-            if (!jobid) {
+            searchCriteriaObj.JobId = await ZoweVsCodeExtension.inputBox(options);
+            if (!searchCriteriaObj.JobId) {
                 vscode.window.showInformationMessage(localize("jobsFilterPrompt.enterPrefix", "Search Cancelled"));
                 return;
             }
         }
-        searchCriteria = this.createSearchLabel(owner, prefix, jobid, status);
-        this.applySearchLabelToNode(node, searchCriteria);
+        searchCriteria = this.createSearchLabel(
+            searchCriteriaObj.Owner,
+            searchCriteriaObj.Prefix,
+            searchCriteriaObj.JobId,
+            searchCriteriaObj.Status
+        );
+        this.applySearchLabelToNode(node, searchCriteriaObj);
         return searchCriteria;
+    }
+
+    private parseJobSearchQuery(searchCriteria: string) {
+        const searchCriteriaObj: JobSearchCriteria = {
+            Owner: undefined,
+            Prefix: undefined,
+            JobId: undefined,
+            Status: undefined,
+        };
+        if (searchCriteria) {
+            const searchOptionArray = searchCriteria.split(" ");
+            searchOptionArray.forEach((searchOption) => {
+                const keyValue = searchOption.split(":");
+                searchCriteriaObj[keyValue[0].trim()] = keyValue[1].trim();
+            });
+        }
+        return searchCriteriaObj;
     }
 
     public async applySavedFavoritesSearchLabel(node) {
@@ -642,7 +671,8 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             node.getSession().ISession.password = faveNode.getSession().ISession.password;
             node.getSession().ISession.base64EncodedAuth = faveNode.getSession().ISession.base64EncodedAuth;
         }
-        this.applySearchLabelToNode(node, searchCriteria); // look here
+        const jobQueryObj = this.parseJobSearchQuery(searchCriteria);
+        this.applySearchLabelToNode(node, jobQueryObj);
         return searchCriteria;
     }
 
@@ -707,7 +737,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             revisedCriteria = Job.Owner + owner.trim() + " ";
         }
         if (prefix) {
-            revisedCriteria += Job.Prefix + prefix.trim();
+            revisedCriteria += Job.Prefix + prefix.trim() + " ";
         }
         if (status) {
             revisedCriteria += Job.Status + status.trim();
@@ -820,29 +850,32 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      * @param node - a IZoweJobTreeNode node
      * @param storedSearch - The original search string
      */
-    private applySearchLabelToNode(node: IZoweJobTreeNode, storedSearch: string) {
-        if (storedSearch) {
+    private applySearchLabelToNode(node: IZoweJobTreeNode, storedSearchObj: JobSearchCriteria) {
+        if (storedSearchObj) {
             node.searchId = "";
             node.owner = "*";
             node.prefix = "*";
-            const criteria: string[] = storedSearch.split(" ");
-            for (const crit of criteria) {
-                let index = crit.indexOf(ZosJobsProvider.JobId);
-                if (index > -1) {
-                    index += ZosJobsProvider.JobId.length;
-                    node.searchId = crit.substring(index).trim();
-                }
-                index = crit.indexOf(ZosJobsProvider.Owner);
-                if (index > -1) {
-                    index += ZosJobsProvider.Owner.length;
-                    node.owner = crit.substring(index).trim();
-                }
-                index = crit.indexOf(ZosJobsProvider.Prefix);
-                if (index > -1) {
-                    index += ZosJobsProvider.Prefix.length;
-                    node.prefix = crit.substring(index).trim();
-                }
-            }
+            node.searchId = storedSearchObj.JobId || "";
+            node.owner = storedSearchObj.Owner || "*";
+            node.prefix = storedSearchObj.Prefix || "*";
+            node.status = storedSearchObj.Status || "*";
+            // const criteria: string[] = storedSearch.split(" ");
+            // for (const crit of criteria) {
+            //     let index = crit.indexOf(ZosJobsProvider.JobId);
+            //     if (index > -1) {
+            //         index += ZosJobsProvider.JobId.length;
+            //         node.searchId = crit.substring(index).trim();
+            //     }
+            //     index = crit.indexOf(ZosJobsProvider.Owner);
+            //     if (index > -1) {
+            //         index += ZosJobsProvider.Owner.length;
+            //         node.owner = crit.substring(index).trim();
+            //     }
+            //     index = crit.indexOf(ZosJobsProvider.Prefix);
+            //     if (index > -1) {
+            //         index += ZosJobsProvider.Prefix.length;
+            //         node.prefix = crit.substring(index).trim();
+            //     }
         }
     }
 
