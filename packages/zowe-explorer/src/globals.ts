@@ -236,23 +236,23 @@ export const JOB_PROPERTIES = [
     {
         key: `owner`,
         label: `Job Owner`,
-        value: null,
+        value: undefined,
         show: true,
-        placeHolder: localize("createFile.attribute.alcunit", `Enter job owner id`), // change thes localize ids
+        placeHolder: localize("searchJobs.owner.id", `Enter job owner id`),
     },
     {
         key: `prefix`,
         label: `Job Prefix`,
-        value: null,
+        value: "*",
         show: true,
-        placeHolder: localize("createFile.attribute.avgblk", `Enter job prefix`),
+        placeHolder: localize("searchJobs.prefix", `Enter job prefix`),
     },
     {
         key: `job-status`,
         label: `Job Status`,
-        value: null,
+        value: "*",
         show: false,
-        placeHolder: localize("createFile.attribute.avgblk", `Enter job status`),
+        placeHolder: localize("searchJobs.status", `Enter job status`),
     },
 ];
 

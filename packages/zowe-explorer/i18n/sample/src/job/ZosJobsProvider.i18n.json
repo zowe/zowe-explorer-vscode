@@ -12,10 +12,7 @@
   "removeFavProfile.continue": "Continue",
   "searchHistory.options.prompt": "Select a filter",
   "enterPattern.pattern": "No selection made. Operation cancelled.",
-  "jobsFilterPrompt.inputBox.prompt.owner": "Enter the Job Owner. Default is *.",
-  "jobs.enter.valid.owner": "Please enter a valid owner name (no spaces allowed).",
-  "jobsFilterPrompt.enterPrefix": "Search Cancelled",
-  "jobsFilterPrompt.inputBox.prompt.prefix": "Enter a Job prefix. Default is *.",
   "jobsFilterPrompt.inputBox.prompt.jobid": "Enter a Job id",
+  "jobsFilterPrompt.enterPrefix": "Search Cancelled",
   "SpecifyCriteria": "Create new.."
 }
