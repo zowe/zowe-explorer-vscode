@@ -39,12 +39,12 @@ nls.config({
 })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
-type JobSearchCriteria = {
+interface IJobSearchCriteria {
     Owner: string | undefined;
     Prefix: string | undefined;
     JobId: string | undefined;
     Status: string | undefined;
-};
+}
 
 /**
  * Creates the Job tree that contains nodes of sessions, jobs and spool items
@@ -604,7 +604,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 }
             }
         }
-        const searchCriteriaObj: JobSearchCriteria = {
+        const searchCriteriaObj: IJobSearchCriteria = {
             Owner: undefined,
             Prefix: undefined,
             JobId: undefined,
@@ -643,8 +643,8 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         return searchCriteria;
     }
 
-    private parseJobSearchQuery(searchCriteria: string) {
-        const searchCriteriaObj: JobSearchCriteria = {
+    public parseJobSearchQuery(searchCriteria: string) {
+        const searchCriteriaObj: IJobSearchCriteria = {
             Owner: undefined,
             Prefix: undefined,
             JobId: undefined,
@@ -803,15 +803,11 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         const editableItems = [];
         editableItems.push(new FilterItem({ text: ` + Submit this Job Search Query`, show: true }));
         jobProperties.forEach((prop) => {
+            if (prop.key === "owner" && !prop.value) {
+                prop.value = node.profile.profile.user;
+            }
             editableItems.push(new FilterItem({ text: prop.label, description: prop.value, show: prop.show }));
         });
-        // quickpick.placeholder = localize("createFileNoWebview.options.prompt", "Click on parameters to change them");
-        // quickpick.onDidHide(() => {
-        //     if (quickpick.selectedItems.length === 0) {
-        //         globals.LOG.debug(localize("createFile.noOptionSelected", "No option selected. Operation cancelled."));
-        //         vscode.window.showInformationMessage(localize("createFile.operationCancelled", "Operation cancelled."));
-        //     }
-        // });
         const choice = await vscode.window.showQuickPick(editableItems, {
             ignoreFocusOut: true,
             matchOnDescription: false,
@@ -851,7 +847,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      * @param node - a IZoweJobTreeNode node
      * @param storedSearch - The original search string
      */
-    private applySearchLabelToNode(node: IZoweJobTreeNode, storedSearchObj: JobSearchCriteria) {
+    private applySearchLabelToNode(node: IZoweJobTreeNode, storedSearchObj: IJobSearchCriteria) {
         if (storedSearchObj) {
             node.searchId = "";
             node.owner = "*";
@@ -860,23 +856,6 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             node.owner = storedSearchObj.Owner || "*";
             node.prefix = storedSearchObj.Prefix || "*";
             node.status = storedSearchObj.Status || "*";
-            // const criteria: string[] = storedSearch.split(" ");
-            // for (const crit of criteria) {
-            //     let index = crit.indexOf(ZosJobsProvider.JobId);
-            //     if (index > -1) {
-            //         index += ZosJobsProvider.JobId.length;
-            //         node.searchId = crit.substring(index).trim();
-            //     }
-            //     index = crit.indexOf(ZosJobsProvider.Owner);
-            //     if (index > -1) {
-            //         index += ZosJobsProvider.Owner.length;
-            //         node.owner = crit.substring(index).trim();
-            //     }
-            //     index = crit.indexOf(ZosJobsProvider.Prefix);
-            //     if (index > -1) {
-            //         index += ZosJobsProvider.Prefix.length;
-            //         node.prefix = crit.substring(index).trim();
-            //     }
         }
     }
 
