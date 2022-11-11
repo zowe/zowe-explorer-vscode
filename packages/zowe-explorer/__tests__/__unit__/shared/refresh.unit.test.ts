@@ -25,6 +25,7 @@ import * as refreshActions from "../../../src/shared/refresh";
 import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
 import * as globals from "../../../src/globals";
 import * as utils from "../../../src/utils/ProfilesUtils";
+import * as sessUtils from "../../../src/utils/SessionUtils";
 
 function createGlobalMocks() {
     const globalMocks = {
@@ -82,6 +83,10 @@ function createGlobalMocks() {
     Object.defineProperty(globals, "LOG", { value: globalMocks.mockLog, configurable: true });
     Object.defineProperty(globals.LOG, "debug", { value: globalMocks.mockDebug, configurable: true });
     Object.defineProperty(globals.LOG, "error", { value: globalMocks.mockError, configurable: true });
+    Object.defineProperty(sessUtils, "removeSession", {
+        value: jest.fn().mockImplementationOnce(() => Promise.resolve()),
+        configurable: true,
+    });
 
     return globalMocks;
 }
@@ -122,7 +127,7 @@ describe("Refresh Unit Tests - Function refreshAll", () => {
                 };
             }),
         });
-        Object.defineProperty(utils, "removeSession", {
+        Object.defineProperty(sessUtils, "removeSession", {
             value: jest.fn().mockImplementationOnce(() => Promise.resolve()),
             configurable: true,
         });

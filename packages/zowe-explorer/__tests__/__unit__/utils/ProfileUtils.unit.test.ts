@@ -11,24 +11,13 @@
 
 import * as fs from "fs";
 import * as path from "path";
-import * as vscode from "vscode";
-import { writeOverridesFile, removeSession } from "../../../src/utils/ProfilesUtils";
-import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
-import {
-    createIProfile,
-    createISession,
-    createPersistentConfig,
-    createTreeView,
-} from "../../../__mocks__/mockCreators/shared";
+import { writeOverridesFile } from "../../../src/utils/ProfilesUtils";
 
 jest.mock("fs");
 
 afterEach(() => {
     jest.clearAllMocks();
 });
-
-// Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/master/src/util/testing.ts
-const mocked = <T extends (...args: any[]) => any>(fn: T): jest.Mock<ReturnType<T>> => fn as any;
 
 describe("ProfileUtils.writeOverridesFile Unit Tests", () => {
     function createBlockMocks() {
@@ -85,42 +74,5 @@ describe("ProfileUtils.writeOverridesFile Unit Tests", () => {
         expect(spyRead).toBeCalledTimes(0);
         spy.mockClear();
         spyRead.mockClear();
-    });
-});
-
-describe("ProfileUtils.removeSession Unit Tests", () => {
-    function createBlockMocks() {
-        const newMocks = {
-            session: createISession(),
-            imperativeProfile: createIProfile(),
-            treeView: createTreeView(),
-            testDatasetTree: null,
-            datasetSessionNode: null,
-            mockGetConfiguration: jest.fn(),
-        };
-        newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
-        newMocks.testDatasetTree = createDatasetTree(newMocks.datasetSessionNode, newMocks.treeView);
-        newMocks.testDatasetTree.addFileHistory("[profile1]: TEST.NODE");
-        Object.defineProperty(vscode.window, "createTreeView", { value: jest.fn(), configurable: true });
-        Object.defineProperty(vscode, "ConfigurationTarget", { value: jest.fn(), configurable: true });
-        newMocks.mockGetConfiguration.mockReturnValue(createPersistentConfig());
-        Object.defineProperty(vscode.workspace, "getConfiguration", {
-            value: newMocks.mockGetConfiguration,
-            configurable: true,
-        });
-
-        return newMocks;
-    }
-    it("should remove session from treeView", async () => {
-        const blockMocks = createBlockMocks();
-        const originalLength = blockMocks.testDatasetTree.mSessionNodes.length;
-        await removeSession(blockMocks.testDatasetTree, blockMocks.imperativeProfile.name);
-        expect(blockMocks.testDatasetTree.mSessionNodes.length).toEqual(originalLength - 1);
-    });
-    it("should not find session in treeView", async () => {
-        const blockMocks = createBlockMocks();
-        const originalLength = blockMocks.testDatasetTree.mSessionNodes.length;
-        await removeSession(blockMocks.testDatasetTree, "fake");
-        expect(blockMocks.testDatasetTree.mSessionNodes.length).toEqual(originalLength);
     });
 });

@@ -35,7 +35,7 @@ import {
 } from "../../../__mocks__/mockCreators/shared";
 import { getIconByNode } from "../../../src/generators/icons";
 import { createJesApi } from "../../../__mocks__/mockCreators/api";
-import * as utils from "../../../src/utils/ProfilesUtils";
+import * as sessUtils from "../../../src/utils/SessionUtils";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -147,7 +147,7 @@ async function createGlobalMocks() {
         value: jest.fn(() => globalMocks.mockProfileInstance),
         configurable: true,
     });
-    Object.defineProperty(utils, "removeSession", {
+    Object.defineProperty(sessUtils, "removeSession", {
         value: jest.fn().mockImplementationOnce(() => Promise.resolve()),
         configurable: true,
     });
