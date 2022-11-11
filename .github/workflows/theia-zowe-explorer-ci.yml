@@ -43,6 +43,11 @@ jobs:
       - name: Copy vsix to theia folder
         run: cp dist/*.vsix temp/plugins
 
+      - name: Get and rename vsix
+        run: |
+          action_get=ls temp/plugins >> $GITHUB_ENV
+          mv ${{env.action_get}} zowe-explorer.vsix
+
       # Verify vsix
       - run: ls -la temp/plugins
 
