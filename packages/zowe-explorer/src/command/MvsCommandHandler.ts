@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { IProfileLoaded, Session } from "@zowe/imperative";
+import { imperative } from "@zowe/cli";
 import * as globals from "../globals";
 import { ValidProfileEnum, IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { PersistentFilters } from "../PersistentFilters";
@@ -67,8 +67,8 @@ export class MvsCommandHandler extends ZoweCommandProvider {
      * @param session the session the command is to run against (optional) user is prompted if not supplied
      * @param command the command string (optional) user is prompted if not supplied
      */
-    public async issueMvsCommand(session?: Session, command?: string, node?: IZoweTreeNode) {
-        let profile: IProfileLoaded;
+    public async issueMvsCommand(session?: imperative.Session, command?: string, node?: IZoweTreeNode) {
+        let profile: imperative.IProfileLoaded;
         if (node) {
             await this.checkCurrentProfile(node);
             if (!session) {
@@ -80,7 +80,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
         }
         if (!session) {
             const profiles = Profiles.getInstance();
-            const allProfiles: IProfileLoaded[] = profiles.allProfiles;
+            const allProfiles: imperative.IProfileLoaded[] = profiles.allProfiles;
             const profileNamesList = allProfiles.map((temprofile) => {
                 return temprofile.name;
             });
@@ -227,7 +227,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
      * @param session The Session object
      * @param command the command string
      */
-    private async issueCommand(profile: IProfileLoaded, command: string) {
+    private async issueCommand(profile: imperative.IProfileLoaded, command: string) {
         try {
             if (command) {
                 // If the user has started their command with a / then remove it

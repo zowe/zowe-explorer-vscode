@@ -31,7 +31,6 @@
 // import * as vscode from "vscode";
 // import * as utils from "../../src/utils/ProfilesUtils";
 // import * as child_process from "child_process";
-// import { Logger, SessConstants } from "@zowe/imperative";
 // import * as globals from "../../src/globals";
 // import { ValidProfileEnum, IZoweNodeType, ProfilesCache } from "@zowe/zowe-explorer-api";
 // import { ZosmfSession } from "@zowe/cli";
@@ -124,11 +123,6 @@
 //     });
 //     Object.defineProperty(vscode, "ProgressLocation", { value: newMocks.ProgressLocation, configurable: true });
 //     Object.defineProperty(vscode.window, "withProgress", { value: newMocks.withProgress, configurable: true });
-//     Object.defineProperty(globals, "PROFILESCACHE", { value: createInstanceOfProfilesCache(), configurable: true });
-//     Object.defineProperty(globals.PROFILESCACHE, "getProfileInfo", {
-//         value: jest.fn().mockReturnValue(createInstanceOfProfileInfo()),
-//         configurable: true,
-//     });
 //     Object.defineProperty(ProfilesCache, "getProfileInfo", {
 //         value: jest.fn(() => Promise.resolve(createInstanceOfProfileInfo())),
 //         configurable: true,

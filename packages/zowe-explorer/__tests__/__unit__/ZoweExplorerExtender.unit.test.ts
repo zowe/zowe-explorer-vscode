@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 
-import { Logger } from "@zowe/imperative";
+import { imperative } from "@zowe/cli";
 import {
     createISession,
     createAltTypeIProfile,
@@ -28,7 +28,7 @@ import { Profiles } from "../../src/Profiles";
 describe("ZoweExplorerExtender unit tests", () => {
     async function createBlockMocks() {
         const newMocks = {
-            log: Logger.getAppLogger(),
+            log: imperative.Logger.getAppLogger(),
             session: createISession(),
             imperativeProfile: createIProfile(),
             altTypeProfile: createAltTypeIProfile(),

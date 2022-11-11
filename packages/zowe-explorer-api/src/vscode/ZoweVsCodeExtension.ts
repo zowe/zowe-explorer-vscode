@@ -118,12 +118,12 @@ export class ZoweVsCodeExtension {
             loadProfile.profile.user = loadSession.user = creds[0];
             loadProfile.profile.password = loadSession.password = creds[1];
 
-            let saved = false;
+            let saved = true;
             if (!options.secure && !profInfo.usingTeamConfig) {
                 saved = await ZoweVsCodeExtension.saveCredentials(loadProfile);
             }
 
-            if (options.secure || saved || profInfo.usingTeamConfig) {
+            if (saved || profInfo.usingTeamConfig) {
                 // v1 write changes to the file, v2 autoStore value determines if written to file
                 const upd = { profileName: loadProfile.name, profileType: loadProfile.type };
                 await profInfo.updateProperty({ ...upd, property: "user", value: creds[0], setSecure: options.secure });
@@ -151,14 +151,15 @@ export class ZoweVsCodeExtension {
     }
 
     private static async saveCredentials(profile: imperative.IProfileLoaded): Promise<boolean> {
+        let save = false;
         const saveButton = "Save Credentials";
         const message = `Save entered credentials in plain text for future use with profile ${profile.name}?\nSaving credentials will update the local information file.`;
         await vscode.window.showInformationMessage(message, { modal: true }, ...[saveButton]).then((selection) => {
             if (selection) {
-                return true;
+                save = true;
             }
         });
-        return false;
+        return save;
     }
 
     private static async promptUserPass(options: IPromptUserPassOptions): Promise<string[] | undefined> {

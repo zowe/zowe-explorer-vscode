@@ -18,11 +18,9 @@ import { ValidProfileEnum, IZoweTree, IZoweJobTreeNode } from "@zowe/zowe-explor
 import { Job, Spool } from "./ZoweJobNode";
 import * as nls from "vscode-nls";
 import { toUniqueJobFileUri } from "../SpoolProvider";
-import { IProfileLoaded, Session } from "@zowe/imperative";
 import * as globals from "../globals";
 import { refreshAll as refreshAllJobs } from "../shared/refresh";
 import { UIViews } from "../shared/ui-views";
-import { getDocumentFilePath } from "../shared/utils";
 
 // Set up localization
 nls.config({
@@ -36,7 +34,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  *
  * @param job The job to download the spool content from
  */
-export async function downloadSpool(job: IZoweJobTreeNode) {
+export async function downloadSpool(jobs: IZoweJobTreeNode[]) {
     try {
         const dirUri = await vscode.window.showOpenDialog({
             openLabel: localize("downloadSpool.select", "Select"),
@@ -45,11 +43,13 @@ export async function downloadSpool(job: IZoweJobTreeNode) {
             canSelectMany: false,
         });
         if (dirUri !== undefined) {
-            ZoweExplorerApiRegister.getJesApi(job.getProfile()).downloadSpoolContent({
-                jobid: job.job.jobid,
-                jobname: job.job.jobname,
-                outDir: dirUri[0].fsPath,
-            });
+            for (const job of jobs) {
+                await ZoweExplorerApiRegister.getJesApi(job.getProfile()).downloadSpoolContent({
+                    jobid: job.job.jobid,
+                    jobname: job.job.jobname,
+                    outDir: dirUri[0].fsPath,
+                });
+            }
         }
     } catch (error) {
         await errorHandling(error, null, error.message);
@@ -65,7 +65,7 @@ export async function downloadSpool(job: IZoweJobTreeNode) {
  */
 export async function getSpoolContent(session: string, spool: zowe.IJobFile, refreshTimestamp: number) {
     const profiles = Profiles.getInstance();
-    let zosmfProfile: IProfileLoaded;
+    let zosmfProfile: zowe.imperative.IProfileLoaded;
     try {
         zosmfProfile = profiles.loadNamedProfile(session);
     } catch (error) {
@@ -73,10 +73,10 @@ export async function getSpoolContent(session: string, spool: zowe.IJobFile, ref
         return;
     }
     await profiles.checkCurrentProfile(zosmfProfile);
-    if (profiles.validProfile === ValidProfileEnum.VALID || profiles.validProfile === ValidProfileEnum.UNVERIFIED) {
+    if (profiles.validProfile !== ValidProfileEnum.INVALID) {
         const uri = toUniqueJobFileUri(session, spool)(refreshTimestamp.toString());
         try {
-            await vscode.window.showTextDocument(uri);
+            await vscode.window.showTextDocument(uri, { preview: false });
         } catch (error) {
             const isTextDocActive =
                 vscode.window.activeTextEditor &&
@@ -102,13 +102,25 @@ export async function getSpoolContentFromMainframe(node: IZoweJobTreeNode) {
         // see an issue #845 for the details
         .filter((item) => !(item.id === undefined && item.ddname === undefined && item.stepname === undefined));
     spools.forEach(async (spool) => {
-        if (`${spool.stepname}:${spool.ddname}(${spool.id})` === node.label.toString()) {
+        if (
+            `${spool.stepname}:${spool.ddname} - ${spool["record-count"]}` === node.label.toString() ||
+            `${spool.stepname}:${spool.ddname} - ${spool.procstep}` === node.label.toString()
+        ) {
             let prefix = spool.stepname;
             if (prefix === undefined) {
                 prefix = spool.procstep;
             }
+
+            const procstep = spool.procstep ? spool.procstep : undefined;
+            let newLabel: string;
+            if (procstep) {
+                newLabel = `${spool.stepname}:${spool.ddname} - ${procstep}`;
+            } else {
+                newLabel = `${spool.stepname}:${spool.ddname} - ${spool["record-count"]}`;
+            }
+
             const spoolNode = new Spool(
-                `${spool.stepname}:${spool.ddname}(${spool.id})`,
+                newLabel,
                 vscode.TreeItemCollapsibleState.None,
                 node.getParent(),
                 node.getSession(),
@@ -157,7 +169,7 @@ export async function downloadJcl(job: Job) {
     try {
         const jobJcl = await ZoweExplorerApiRegister.getJesApi(job.getProfile()).getJclForJob(job.job);
         const jclDoc = await vscode.workspace.openTextDocument({ language: "jcl", content: jobJcl });
-        await vscode.window.showTextDocument(jclDoc);
+        await vscode.window.showTextDocument(jclDoc, { preview: false });
     } catch (error) {
         await errorHandling(error, null, error.message);
     }
@@ -408,22 +420,3 @@ async function deleteMultipleJobs(
         await errorHandling(userMessage);
     }
 }
-
-// class Spool extends Job {
-//     constructor(
-//         label: string,
-//         mCollapsibleState: vscode.TreeItemCollapsibleState,
-//         mParent: IZoweJobTreeNode,
-//         session: Session,
-//         spool: zowe.IJobFile,
-//         job: zowe.IJob,
-//         parent: IZoweJobTreeNode
-//     ) {
-//         super(label, mCollapsibleState, mParent, session, job, parent.getProfile());
-//         this.contextValue = globals.JOBS_SPOOL_CONTEXT;
-//         const icon = getIconByNode(this);
-//         if (icon) {
-//             this.iconPath = icon.path;
-//         }
-//     }
-// }

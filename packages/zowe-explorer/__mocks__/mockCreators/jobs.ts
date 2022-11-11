@@ -12,12 +12,11 @@
 import { Job } from "../../src/job/ZoweJobNode";
 import * as vscode from "vscode";
 import * as globals from "../../src/globals";
-import * as zowe from "@zowe/cli";
-import * as imperative from "@zowe/imperative";
+import { IJob, IJobFile, imperative } from "@zowe/cli";
 import { removeNodeFromArray } from "./shared";
 import { PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 
-export function createIJobObject(): zowe.IJob {
+export function createIJobObject(): IJob {
     return {
         jobid: "JOB1234",
         jobname: "TESTJOB",
@@ -46,7 +45,7 @@ export function createIJobObject(): zowe.IJob {
     };
 }
 
-export function createIJobFile(): zowe.IJobFile {
+export function createIJobFile(): IJobFile {
     return {
         "byte-count": 128,
         "job-correlator": "correlator",
@@ -67,7 +66,7 @@ export function createIJobFile(): zowe.IJobFile {
 
 export function createJobsTree(
     session: imperative.Session,
-    iJob: zowe.IJob,
+    iJob: IJob,
     profile: imperative.IProfileLoaded,
     treeView: any
 ): any {
@@ -140,7 +139,7 @@ export function createJobFavoritesNode() {
 }
 
 // Because the JobDetail class in ZosJobsProvider.ts is not exported:
-export class MockJobDetail implements zowe.IJob {
+export class MockJobDetail implements IJob {
     public jobid: string;
     public jobname: string;
     public subsystem: string;

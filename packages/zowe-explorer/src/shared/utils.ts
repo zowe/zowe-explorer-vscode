@@ -21,11 +21,9 @@ import {
     IZoweUSSTreeNode,
     IZoweJobTreeNode,
 } from "@zowe/zowe-explorer-api";
-import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
-import { ISession, IProfileLoaded, ITaskWithStatus } from "@zowe/imperative";
 import * as nls from "vscode-nls";
-import { IZosFilesResponse } from "@zowe/cli";
+import { IZosFilesResponse, imperative } from "@zowe/cli";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 
 // Set up localization
@@ -203,7 +201,7 @@ export async function uploadContent(
     node: IZoweDatasetTreeNode | IZoweUSSTreeNode,
     doc: vscode.TextDocument,
     remotePath: string,
-    profile?: IProfileLoaded,
+    profile?: imperative.IProfileLoaded,
     binary?: boolean,
     etagToUpload?: string,
     returnEtag?: boolean
@@ -221,7 +219,7 @@ export async function uploadContent(
     } else {
         // if new api method exists, use it
         if (ZoweExplorerApiRegister.getUssApi(profile).putContent) {
-            const task: ITaskWithStatus = {
+            const task: imperative.ITaskWithStatus = {
                 percentComplete: 0,
                 statusMessage: localize("uploadContent.putContents", "Uploading USS file"),
                 stageName: 0, // TaskStage.IN_PROGRESS - https://github.com/kulshekhar/ts-jest/issues/281
@@ -256,7 +254,7 @@ export async function willForceUpload(
     node: IZoweDatasetTreeNode | IZoweUSSTreeNode,
     doc: vscode.TextDocument,
     remotePath: string,
-    profile?: IProfileLoaded,
+    profile?: imperative.IProfileLoaded,
     binary?: boolean,
     returnEtag?: boolean
 ): Promise<void> {

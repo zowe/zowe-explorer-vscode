@@ -15,7 +15,6 @@ import * as zowe from "@zowe/cli";
 import * as os from "os";
 import * as fs from "fs";
 import * as fsextra from "fs-extra";
-import * as imperative from "@zowe/imperative";
 import * as extension from "../../src/extension";
 import * as globals from "../../src/globals";
 import { ValidProfileEnum, ProfilesCache } from "@zowe/zowe-explorer-api";
@@ -81,8 +80,10 @@ async function createGlobalMocks() {
                 readProfilesFromDisk: jest.fn(),
             };
         }),
+        mockSetGlobalSecurityValue: jest.fn(),
+        mockWriteOverridesFile: jest.fn(),
         mockProfCacheProfileInfo: createInstanceOfProfileInfo(),
-        mockProfilesCache: new ProfilesCache(imperative.Logger.getAppLogger()),
+        mockProfilesCache: new ProfilesCache(zowe.imperative.Logger.getAppLogger()),
         testTreeView: null,
         enums: jest.fn().mockImplementation(() => {
             return {
@@ -97,7 +98,7 @@ async function createGlobalMocks() {
                 Web: 2,
             };
         }),
-        testSession: new imperative.Session({
+        testSession: new zowe.imperative.Session({
             user: "fake",
             password: "fake",
             hostname: "fake",
@@ -126,6 +127,7 @@ async function createGlobalMocks() {
         appName: vscode.env.appName,
         expectedCommands: [
             "zowe.extRefresh",
+            "zowe.updateSecureCredentials",
             "zowe.promptCredentials",
             "zowe.all.config.init",
             "zowe.ds.addSession",
@@ -228,7 +230,7 @@ async function createGlobalMocks() {
     };
 
     Object.defineProperty(fs, "mkdirSync", { value: globalMocks.mockMkdirSync, configurable: true });
-    Object.defineProperty(imperative, "CliProfileManager", {
+    Object.defineProperty(zowe.imperative, "CliProfileManager", {
         value: globalMocks.mockCliProfileManager,
         configurable: true,
     });
@@ -259,6 +261,10 @@ async function createGlobalMocks() {
     });
     Object.defineProperty(vscode.workspace, "onDidChangeConfiguration", {
         value: globalMocks.mockOnDidChangeConfiguration,
+        configurable: true,
+    });
+    Object.defineProperty(globals, "setGlobalSecurityValue", {
+        value: globalMocks.mockSetGlobalSecurityValue,
         configurable: true,
     });
     Object.defineProperty(fs, "readdirSync", { value: globalMocks.mockReaddirSync, configurable: true });
@@ -308,7 +314,7 @@ async function createGlobalMocks() {
         value: globalMocks.mockGetImperativeConfig,
         configurable: true,
     });
-    Object.defineProperty(imperative, "ImperativeConfig", {
+    Object.defineProperty(zowe.imperative, "ImperativeConfig", {
         value: globalMocks.mockImperativeConfig,
         configurable: true,
     });
@@ -373,7 +379,7 @@ async function createGlobalMocks() {
 describe("Extension Unit Tests", () => {
     it("Testing that activate correctly executes", async () => {
         const globalMocks = await createGlobalMocks();
-        Object.defineProperty(imperative, "ProfileInfo", {
+        Object.defineProperty(zowe.imperative, "ProfileInfo", {
             value: globalMocks.mockImperativeProfileInfo,
             configurable: true,
         });
@@ -464,7 +470,7 @@ describe("Extension Unit Tests", () => {
 
         expect(globals.ISTHEIA).toEqual(true);
         // tslint:disable-next-line: no-magic-numbers
-        expect(globalMocks.mockMkdirSync.mock.calls.length).toBe(4);
+        expect(globalMocks.mockMkdirSync.mock.calls.length).toBe(6);
         expect(globalMocks.mockRegisterCommand.mock.calls.length).toBe(globals.COMMAND_COUNT);
         globalMocks.mockRegisterCommand.mock.calls.forEach((call, i) => {
             expect(globalMocks.mockRegisterCommand.mock.calls[i][1]).toBeInstanceOf(Function);

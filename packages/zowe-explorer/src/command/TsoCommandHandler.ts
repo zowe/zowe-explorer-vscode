@@ -12,14 +12,13 @@
 import * as vscode from "vscode";
 import * as nls from "vscode-nls";
 import * as globals from "../globals";
-import * as imperative from "@zowe/imperative";
-import { ValidProfileEnum, IZoweTreeNode, ProfilesCache, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { ValidProfileEnum, IZoweTreeNode, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { PersistentFilters } from "../PersistentFilters";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, FilterDescriptor, FilterItem, resolveQuickPickHelper } from "../utils/ProfilesUtils";
 import { ZoweCommandProvider } from "../abstract/ZoweCommandProvider";
-import { IStartTsoParms } from "@zowe/cli";
+import { IStartTsoParms, imperative } from "@zowe/cli";
 import { UIViews } from "../shared/ui-views";
 
 // Set up localization
@@ -313,10 +312,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
      * @returns Promise<IStartTsoParms>
      */
     private async getTsoParams(): Promise<IStartTsoParms> {
-        let profileInfo = await globals.PROFILESCACHE.getProfileInfo();
-        if (!profileInfo) {
-            profileInfo = await Profiles.getInstance().getProfileInfo();
-        }
+        const profileInfo = await Profiles.getInstance().getProfileInfo();
         const tsoParms: IStartTsoParms = {};
 
         // Keys in the IStartTsoParms interface

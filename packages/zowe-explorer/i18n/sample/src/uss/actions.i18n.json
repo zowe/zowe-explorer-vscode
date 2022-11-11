@@ -10,5 +10,8 @@
   "saveUSSFile.response.title": "Saving file...",
   "saveFile.error.ZosmfEtagMismatchError": "Rest API failure with HTTP(S) status 412",
   "saveFile.error.etagMismatch": "Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict.",
-  "saveUSSFile.log.error.save": "Error encountered when saving USS file: "
+  "saveUSSFile.log.error.save": "Error encountered when saving USS file: ",
+  "deleteUssPrompt.confirmation.delete": "Delete",
+  "deleteUssPrompt.confirmation.message": "Are you sure you want to delete the following item?\nThis will permanently remove the following file or folder from your system.\n\n{0}",
+  "deleteUssPrompt.confirmation.cancel.log.debug": "Delete action was canceled."
 }

@@ -12,8 +12,7 @@
 import * as vscode from "vscode";
 import * as jobUtils from "../job/utils";
 import * as globals from "../globals";
-import { IJob } from "@zowe/cli";
-import { IProfileLoaded, Logger, Session } from "@zowe/imperative";
+import { IJob, imperative } from "@zowe/cli";
 import {
     ValidProfileEnum,
     IZoweTree,
@@ -54,7 +53,7 @@ type JobSearchCriteria = {
  * @class ZosJobsProvider
  * @implements {vscode.TreeDataProvider}
  */
-export async function createJobsTree(log: Logger) {
+export async function createJobsTree(log: imperative.Logger) {
     const tree = new ZosJobsProvider();
     await tree.initializeJobsTree(log);
     await tree.addSession();
@@ -178,7 +177,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         const setting = PersistentFilters.getDirectValue(globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION) as boolean;
         // Loads profile associated with passed sessionName, default if none passed
         if (sessionName) {
-            const theProfile: IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
+            const theProfile: imperative.IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
             if (theProfile) {
                 await this.addSingleSession(theProfile);
             }
@@ -189,25 +188,27 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 }
             }
         } else {
-            const allProfiles = Profiles.getInstance().allProfiles;
-            for (const sessionProfile of allProfiles) {
-                // If session is already added, do nothing
-                if (this.mSessionNodes.find((tempNode) => tempNode.label.toString() === sessionProfile.name)) {
-                    continue;
-                }
-                for (const session of this.mHistory.getSessions()) {
-                    if (session === sessionProfile.name) {
-                        await this.addSingleSession(sessionProfile);
-                        for (const node of this.mSessionNodes) {
-                            const name = node.getProfileName();
-                            if (name === sessionProfile.name) {
-                                await resetValidationSettings(node, setting);
+            const allProfiles: imperative.IProfileLoaded[] = Profiles.getInstance().allProfiles;
+            if (allProfiles) {
+                for (const sessionProfile of allProfiles) {
+                    // If session is already added, do nothing
+                    if (this.mSessionNodes.find((tempNode) => tempNode.label.toString() === sessionProfile.name)) {
+                        return;
+                    }
+                    for (const session of this.mHistory.getSessions()) {
+                        if (session === sessionProfile.name) {
+                            await this.addSingleSession(sessionProfile);
+                            for (const node of this.mSessionNodes) {
+                                const name = node.getProfileName();
+                                if (name === sessionProfile.name) {
+                                    await resetValidationSettings(node, setting);
+                                }
                             }
                         }
                     }
                 }
             }
-            if (this.mSessionNodes.length === 1) {
+            if (profileType && this.mSessionNodes.length === 1) {
                 await this.addSingleSession(Profiles.getInstance().getDefaultProfile(profileType));
             }
         }
@@ -263,7 +264,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      * Initialize the favorites and history information
      * @param log - Logger
      */
-    public async initializeJobsTree(log: Logger) {
+    public async initializeJobsTree(log: imperative.Logger) {
         this.log = log;
         this.log.debug(localize("initializeJobsTree.log.debug", "Initializing profiles with jobs favorites."));
         const lines: string[] = this.mHistory.readFavorites();
@@ -331,11 +332,11 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      * @param log
      * @param parentNode
      */
-    public async loadProfilesForFavorites(log: Logger, parentNode: IZoweJobTreeNode) {
+    public async loadProfilesForFavorites(log: imperative.Logger, parentNode: IZoweJobTreeNode) {
         const profileName = parentNode.label as string;
         const updatedFavsForProfile: IZoweJobTreeNode[] = [];
-        let profile: IProfileLoaded;
-        let session: Session;
+        let profile: imperative.IProfileLoaded;
+        let session: imperative.Session;
         this.log = log;
         this.log.debug(
             localize("loadProfilesForFavorites.log.debug", "Loading profile: {0} for jobs favorites", profileName)
@@ -889,15 +890,23 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      * Adds a single session to the jobs tree
      *
      */
-    private async addSingleSession(profile: IProfileLoaded) {
+    private async addSingleSession(profile: imperative.IProfileLoaded) {
         if (profile) {
             // If session is already added, do nothing
             if (this.mSessionNodes.find((tNode) => tNode.label.toString() === profile.name)) {
                 return;
             }
             // Uses loaded profile to create a zosmf session with Zowe
-            // const session = ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
-            const session = await ZoweExplorerApiRegister.getJesApi(profile).getSession();
+            let session: imperative.Session;
+            try {
+                session = await ZoweExplorerApiRegister.getJesApi(profile).getSession();
+            } catch (err) {
+                if (err.toString().includes("hostname")) {
+                    this.log.error(err);
+                } else {
+                    await errorHandling(err, profile.name);
+                }
+            }
             // Creates ZoweNode to track new session and pushes it to mSessionNodes
             const node = new Job(profile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, null, profile);
             node.contextValue = globals.JOBS_SESSION_CONTEXT;

@@ -13,7 +13,6 @@ import * as fs from "fs";
 import * as crypto from "crypto";
 import * as tmp from "tmp";
 import * as zowe from "@zowe/cli";
-import * as imperative from "@zowe/imperative";
 import * as path from "path";
 import * as vscode from "vscode";
 
@@ -82,12 +81,13 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
         const transferOptions = {
             transferType: options.binary ? TRANSFER_TYPE_BINARY : TRANSFER_TYPE_ASCII,
             localFile: targetFile,
+            encoding: options.encoding,
         };
         let connection: any;
         try {
             connection = await this.ftpClient(this.checkedProfile());
             if (connection && targetFile) {
-                imperative.IO.createDirsSyncFromFilePath(targetFile);
+                zowe.imperative.IO.createDirsSyncFromFilePath(targetFile);
                 await DataSetUtils.downloadDataSet(connection, dataSetName, transferOptions);
                 result.success = true;
                 result.commandResponse = "";
@@ -111,6 +111,7 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
         const transferOptions = {
             transferType: options.binary ? TRANSFER_TYPE_BINARY : TRANSFER_TYPE_ASCII,
             localFile: inputFilePath,
+            encoding: options.encoding,
         };
         const file = path.basename(inputFilePath).replace(/[^a-z0-9]+/gi, "");
         const member = file.substr(0, 8);
@@ -244,6 +245,7 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
         const transferOptions = {
             transferType: options ? TRANSFER_TYPE_BINARY : TRANSFER_TYPE_ASCII,
             content: "",
+            encoding: options.encoding,
         };
         const result = this.getDefaultResponse();
         let connection: any;

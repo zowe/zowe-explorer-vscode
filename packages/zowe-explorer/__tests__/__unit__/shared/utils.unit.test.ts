@@ -11,7 +11,7 @@
 
 import * as sharedUtils from "../../../src/shared/utils";
 import * as globals from "../../../src/globals";
-import { IProfileLoaded, Logger, IProfile, Session } from "@zowe/imperative";
+import { imperative } from "@zowe/cli";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import * as vscode from "vscode";
 import * as path from "path";
@@ -22,44 +22,46 @@ import {
     createFileResponse,
     createInstanceOfProfile,
     createTextDocument,
-    createInstanceOfProfilesCache,
 } from "../../../__mocks__/mockCreators/shared";
-import { ProfilesCache } from "@zowe/zowe-explorer-api";
 import { createDatasetSessionNode } from "../../../__mocks__/mockCreators/datasets";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
 import { Job } from "../../../src/job/ZoweJobNode";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
+import { ProfilesCache } from "@zowe/zowe-explorer-api";
 
 jest.mock("path");
 
 async function createGlobalMocks() {
-    const newVariables = {
+    const newMocks = {
         session: createISession(),
         profileOne: createIProfile(),
         mockGetInstance: jest.fn(),
-        profiles: null,
+        mockProfileInstance: null,
+        mockProfilesCache: null,
     };
-    newVariables.profiles = createInstanceOfProfile(newVariables.profileOne);
+    newMocks.mockProfilesCache = new ProfilesCache(imperative.Logger.getAppLogger());
+    newMocks.mockProfileInstance = createInstanceOfProfile(createIProfile());
+    Object.defineProperty(Profiles, "CreateInstance", {
+        value: () => newMocks.mockProfileInstance,
+        configurable: true,
+    });
+    Object.defineProperty(Profiles, "getInstance", {
+        value: () => newMocks.mockProfileInstance,
+        configurable: true,
+    });
 
-    return newVariables;
+    Object.defineProperty(newMocks.mockProfilesCache, "getConfigInstance", {
+        value: jest.fn(() => {
+            return {
+                usingTeamConfig: false,
+            };
+        }),
+    });
+
+    return newMocks;
 }
-
-Object.defineProperty(globals, "PROFILESCACHE", {
-    value: jest.fn().mockReturnValue(createInstanceOfProfilesCache()),
-});
-Object.defineProperty(globals.PROFILESCACHE, "getConfigInstance", {
-    value: jest.fn(() => {
-        return {
-            usingTeamConfig: false,
-        };
-    }),
-});
-Object.defineProperty(Profiles, "getInstance", {
-    value: () => createInstanceOfProfile(createIProfile()),
-    configurable: true,
-});
 
 describe("Shared Utils Unit Tests - Function node.concatChildNodes()", () => {
     it("Checks that concatChildNodes returns the proper array of children", async () => {
@@ -125,46 +127,40 @@ describe("Shared Utils Unit Tests - Function node.labelRefresh()", () => {
 });
 
 describe("syncSessionNode shared util function", () => {
-    const serviceProfileName = "test";
-    const serviceProfileValue = {
-        name: serviceProfileName,
-        profile: {},
-    };
-    const serviceProfileType = "zosmf";
     const serviceProfile = {
-        profile: serviceProfileValue,
-        type: serviceProfileType,
+        name: "test",
+        profile: {},
+        type: "zosmf",
         message: "",
         failNotFound: true,
     };
 
-    const anySession = undefined;
-    const sessionNode = createDatasetSessionNode(anySession, serviceProfile);
+    const sessionNode = createDatasetSessionNode(undefined, serviceProfile);
 
     it("should update a session and a profile in the provided node", async () => {
         const globalMocks = await createGlobalMocks();
         // given
-        Object.defineProperty(globals.PROFILESCACHE, "loadNamedProfile", {
-            value: jest.fn().mockReturnValue(serviceProfile),
+        Object.defineProperty(globalMocks.mockProfilesCache, "loadNamedProfile", {
+            value: jest.fn().mockReturnValue(createIProfile()),
         });
-        const expectedSession = new Session({});
-        const sessionFromProfile = jest.fn().mockResolvedValueOnce(expectedSession);
+        const expectedSession = new imperative.Session({});
+        const sessionForProfile = () => new imperative.Session({});
         // when
-        await utils.syncSessionNode(Profiles.getInstance())(sessionFromProfile)(sessionNode);
+        await utils.syncSessionNode(Profiles.getInstance())(sessionForProfile)(sessionNode);
         expect(await sessionNode.getSession()).toEqual(expectedSession);
-        expect(sessionNode.getProfile()).toEqual(serviceProfile);
+        expect(await sessionNode.getProfile()).toEqual(createIProfile());
         expect(sessionNode.collapsibleState).toEqual(vscode.TreeItemCollapsibleState.Collapsed);
     });
     it("should do nothing, if there is no profile from provided node in the file system", async () => {
         const profiles = createInstanceOfProfile(serviceProfile);
         profiles.loadNamedProfile = jest.fn(() =>
             jest.fn(() => {
-                throw new Error(`There is no such profile with name: ${serviceProfileName}`);
+                throw new Error(`There is no such profile with name: ${serviceProfile.name}`);
             })
         );
         profiles.getBaseProfile = jest.fn(() => undefined);
         // when
-        const dummyFn = () => new Session({});
+        const dummyFn = () => new imperative.Session({});
         await utils.syncSessionNode(profiles)(dummyFn)(sessionNode);
         // then
         const initialSession = sessionNode.getSession();
@@ -236,7 +232,7 @@ describe("Test uploadContents", () => {
     it("should test with uss node that new API method is called if it exists", async () => {
         const putContent = jest.fn();
         ZoweExplorerApiRegister.getUssApi = jest.fn<any, Parameters<typeof ZoweExplorerApiRegister.getUssApi>>(
-            (profile: IProfileLoaded) => {
+            (profile: imperative.IProfileLoaded) => {
                 return {
                     putContent,
                 };
@@ -261,7 +257,7 @@ describe("Test uploadContents", () => {
     it("should test with uss node that old API method is called", async () => {
         const putContents = jest.fn();
         ZoweExplorerApiRegister.getUssApi = jest.fn<any, Parameters<typeof ZoweExplorerApiRegister.getUssApi>>(
-            (profile: IProfileLoaded) => {
+            (profile: imperative.IProfileLoaded) => {
                 return {
                     putContents,
                 };
@@ -281,7 +277,7 @@ describe("Test uploadContents", () => {
     it("should test with data set node that old API method is called", async () => {
         const putContents = jest.fn();
         ZoweExplorerApiRegister.getMvsApi = jest.fn<any, Parameters<typeof ZoweExplorerApiRegister.getMvsApi>>(
-            (profile: IProfileLoaded) => {
+            (profile: imperative.IProfileLoaded) => {
                 return {
                     putContents,
                 };
