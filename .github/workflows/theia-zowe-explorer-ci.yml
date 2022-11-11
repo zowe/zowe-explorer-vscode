@@ -73,11 +73,16 @@ jobs:
 
       - name: Update Settings file
         run: |
-          echo 'action_read=cat packages/zowe-explorer/__tests__/__theia__/mockFiles/settings.json' > $GITHUB_ENV
+          echo 'docker_ps=docker ps -aqf "name=theia"' > $GITHUB_ENV
           docker exec -i theia mkdir .theia
-          docker exec -i theia ls -al
-          docker exec -i theia cat ${{env.action_read}}
-          docker exec -i theia echo ${{env.action_read}} >| .theia/settings.json
+          docker cp packages/zowe-explorer/__tests__/__theia__/mockFiles/settings.json ${{env.docker_ps}}:/home/theia/.theia
+
+      - name: Restart Theia with uploaded changes
+        run: |
+          docker stop ${{env.docker_ps}}
+          docker start -i ${{env.docker_ps}}
+          sleep 30s
+          curl --fail http://localhost:3000
 
       - name: Prep integration test files
         run: yarn workspace vscode-extension-for-zowe build:integration
