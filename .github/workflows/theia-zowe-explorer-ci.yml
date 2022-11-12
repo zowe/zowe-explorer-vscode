@@ -71,14 +71,14 @@ jobs:
 
       - name: Update Settings file
         run: |
-          echo 'DOCKERPS=docker ps -aqf "name=theia"' >> $GITHUB_ENV
+          echo 'DOCKERPS=$(docker ps -aqf "name=theia")' >> $GITHUB_ENV
           docker exec -i theia mkdir .theia
-          docker cp packages/zowe-explorer/__tests__/__theia__/mockFiles/settings.json $env.DOCKERPS:/home/theia/.theia
+          docker cp packages/zowe-explorer/__tests__/__theia__/mockFiles/settings.json ${{ env.DOCKERPS }}:/home/theia/.theia
 
       - name: Restart Theia with uploaded changes
         run: |
-          docker stop $env.DOCKERPS
-          docker start -i $env.DOCKERPS
+          docker stop ${{ env.DOCKERPS }}
+          docker start -i ${{ env.DOCKERPS }}
           sleep 30s
           curl --fail http://localhost:3000
 

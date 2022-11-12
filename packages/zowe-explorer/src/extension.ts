@@ -8,7 +8,6 @@
  * Copyright Contributors to the Zowe Project.                                     *
  *                                                                                 *
  */
-// kick off theia tests
 
 import * as fs from "fs";
 import * as globals from "./globals";
