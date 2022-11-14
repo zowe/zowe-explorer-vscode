@@ -80,6 +80,8 @@ async function createGlobalMocks() {
                 readProfilesFromDisk: jest.fn(),
             };
         }),
+        mockSetGlobalSecurityValue: jest.fn(),
+        mockWriteOverridesFile: jest.fn(),
         mockProfCacheProfileInfo: createInstanceOfProfileInfo(),
         mockProfilesCache: new ProfilesCache(zowe.imperative.Logger.getAppLogger()),
         testTreeView: null,
@@ -261,6 +263,10 @@ async function createGlobalMocks() {
     });
     Object.defineProperty(vscode.workspace, "onDidChangeConfiguration", {
         value: globalMocks.mockOnDidChangeConfiguration,
+        configurable: true,
+    });
+    Object.defineProperty(globals, "setGlobalSecurityValue", {
+        value: globalMocks.mockSetGlobalSecurityValue,
         configurable: true,
     });
     Object.defineProperty(fs, "readdirSync", { value: globalMocks.mockReaddirSync, configurable: true });
@@ -466,7 +472,7 @@ describe("Extension Unit Tests", () => {
 
         expect(globals.ISTHEIA).toEqual(true);
         // tslint:disable-next-line: no-magic-numbers
-        expect(globalMocks.mockMkdirSync.mock.calls.length).toBe(4);
+        expect(globalMocks.mockMkdirSync.mock.calls.length).toBe(6);
         expect(globalMocks.mockRegisterCommand.mock.calls.length).toBe(globals.COMMAND_COUNT);
         globalMocks.mockRegisterCommand.mock.calls.forEach((call, i) => {
             expect(globalMocks.mockRegisterCommand.mock.calls[i][1]).toBeInstanceOf(Function);

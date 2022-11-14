@@ -13,10 +13,12 @@
 
 import * as vscode from "vscode";
 import * as globals from "../globals";
+import * as path from "path";
+import * as fs from "fs";
 import { getSecurityModules, IZoweTreeNode, ZoweTreeNode, getZoweDir, getFullPath } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import * as nls from "vscode-nls";
-import { imperative } from "@zowe/cli";
+import { imperative, getImperativeConfig } from "@zowe/cli";
 import { UIViews } from "../shared/ui-views";
 
 // Set up localization
@@ -245,7 +247,7 @@ export async function readConfigFromDisk() {
     let rootPath: string;
     try {
         const mProfileInfo = await getProfileInfo(globals.ISTHEIA);
-        if (vscode.workspace.workspaceFolders) {
+        if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0]) {
             rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
             await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir(), projectDir: getFullPath(rootPath) });
         } else {
@@ -281,8 +283,8 @@ export async function readConfigFromDisk() {
 export async function openConfigOnError(error: Error) {
     if (error.message.toString().includes("Error parsing JSON")) {
         const errorArray = error.message.toString().split("'");
-        const path = errorArray[1];
-        await Profiles.getInstance().openConfigFile(path);
+        const errorPath = errorArray[1];
+        await Profiles.getInstance().openConfigFile(errorPath);
     }
 }
 
@@ -327,5 +329,55 @@ export async function promptCredentials(node: IZoweTreeNode) {
                 profileName
             )
         );
+    }
+}
+
+export async function initializeZoweFolder(): Promise<void> {
+    // ensure the Secure Credentials Enabled value is read
+    // set globals.PROFILE_SECURITY value accordingly
+    globals.setGlobalSecurityValue();
+    // Ensure that ~/.zowe folder exists
+    // Ensure that the ~/.zowe/settings/imperative.json exists
+    // TODO: update code below once this imperative issue is resolved.
+    // https://github.com/zowe/imperative/issues/840
+    const zoweDir = getZoweDir();
+    if (!fs.existsSync(zoweDir)) {
+        fs.mkdirSync(zoweDir);
+    }
+    const settingsPath = path.join(zoweDir, "settings");
+    if (!fs.existsSync(settingsPath)) {
+        fs.mkdirSync(settingsPath);
+    }
+    const settingsFile = path.join(settingsPath, "imperative.json");
+    if (!fs.existsSync(settingsFile)) {
+        writeOverridesFile();
+    }
+    // If not using team config, ensure that the ~/.zowe/profiles directory
+    // exists with appropriate types within
+    if (!imperative.ImperativeConfig.instance.config?.exists) {
+        await imperative.CliProfileManager.initialize({
+            configuration: getImperativeConfig().profiles,
+            profileRootDirectory: path.join(zoweDir, "profiles"),
+        });
+    }
+}
+
+export function writeOverridesFile() {
+    let content;
+    let fileContent: string;
+    const settingsFile = path.join(getZoweDir(), "settings", "imperative.json");
+    if (fs.existsSync(settingsFile)) {
+        content = JSON.parse(fs.readFileSync(settingsFile).toString());
+        if (content && content?.overrides) {
+            if (content?.overrides?.CredentialManager === globals.PROFILE_SECURITY) {
+                return;
+            }
+            content.overrides.CredentialManager = globals.PROFILE_SECURITY;
+            fileContent = JSON.stringify(content, null, 2);
+            fs.writeFileSync(settingsFile, fileContent, "utf8");
+        }
+    } else {
+        fileContent = JSON.stringify({ overrides: { CredentialManager: globals.PROFILE_SECURITY } }, null, 2);
+        fs.writeFileSync(settingsFile, fileContent, "utf8");
     }
 }
