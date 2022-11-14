@@ -20,6 +20,11 @@ import { IPromptCredentialsOptions, IPromptUserPassOptions } from "./doc/IPrompt
  * Collection of utility functions for writing Zowe Explorer VS Code extensions.
  */
 export class ZoweVsCodeExtension {
+    private static profilesCache = new ProfilesCache(
+        imperative.Logger.getAppLogger(),
+        vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
+    );
+
     /**
      * @param {string} [requiredVersion] Optional semver string specifying the minimal required version
      *           of Zowe Explorer that needs to be installed for the API to be usable to the client.
@@ -27,10 +32,6 @@ export class ZoweVsCodeExtension {
      *          to access the Zowe Explorer APIs or `undefined`. Also `undefined` if requiredVersion
      *          is larger than the version of Zowe Explorer found.
      */
-    private static profilesCache = new ProfilesCache(
-        imperative.Logger.getAppLogger(),
-        vscode.workspace.workspaceFolders?.[0].uri.fsPath
-    );
     public static getZoweExplorerApi(requiredVersion?: string): ZoweExplorerApi.IApiRegisterClient {
         const zoweExplorerApi = vscode.extensions.getExtension("Zowe.vscode-extension-for-zowe");
         if (zoweExplorerApi?.exports) {

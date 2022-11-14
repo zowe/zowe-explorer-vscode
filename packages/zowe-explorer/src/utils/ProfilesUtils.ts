@@ -247,7 +247,7 @@ export async function readConfigFromDisk() {
     let rootPath: string;
     try {
         const mProfileInfo = await getProfileInfo(globals.ISTHEIA);
-        if (vscode.workspace.workspaceFolders) {
+        if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0]) {
             rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
             await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir(), projectDir: getFullPath(rootPath) });
         } else {
