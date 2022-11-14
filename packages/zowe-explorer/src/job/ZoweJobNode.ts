@@ -312,6 +312,17 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
         return this._searchId;
     }
 
+    private statusNotSupportedMsg(status: string) {
+        if (status !== "*") {
+            vscode.window.showWarningMessage(
+                localize(
+                    "getJobs.status.not.supported",
+                    "Filtering by job status is not yet supported with this profile type. Will show jobs with all statuses."
+                )
+            );
+        }
+    }
+
     private async getJobs(owner: string, prefix: string, searchId: string, status: string): Promise<zowe.IJob[]> {
         let jobsInternal: zowe.IJob[] = [];
         const sessNode = this.getSessionNode();
@@ -320,11 +331,20 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
             jobsInternal.push(await ZoweExplorerApiRegister.getJesApi(cachedProfile).getJob(searchId));
         } else {
             try {
-                jobsInternal = await ZoweExplorerApiRegister.getJesApi(cachedProfile).getJobsByParameters({
-                    owner,
-                    prefix,
-                    status,
-                });
+                if (ZoweExplorerApiRegister.getJesApi(cachedProfile).getJobsByParameters) {
+                    jobsInternal = await ZoweExplorerApiRegister.getJesApi(cachedProfile).getJobsByParameters({
+                        owner,
+                        prefix,
+                        status,
+                    });
+                } else {
+                    this.statusNotSupportedMsg(status);
+                    jobsInternal = await ZoweExplorerApiRegister.getJesApi(cachedProfile).getJobsByOwnerAndPrefix(
+                        owner,
+                        prefix
+                    );
+                }
+
                 /**
                  *    Note: Temporary fix
                  *    This current fix is necessary since in certain instances the Zowe

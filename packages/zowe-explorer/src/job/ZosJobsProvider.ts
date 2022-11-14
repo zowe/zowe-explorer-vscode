@@ -618,7 +618,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             });
         }
         if (choice === this.createOwner) {
-            await this.handleEditingMultiJobParameters(globals.JOB_PROPERTIES, node); // here create search label
+            await this.handleEditingMultiJobParameters(globals.JOB_PROPERTIES, node);
             return;
         }
         if (choice === this.createId) {
@@ -829,7 +829,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 labelRefresh(node);
                 node.dirty = true;
                 this.refreshElement(node);
-                return new Promise((resolve) => resolve(` + Submit this Job Search Query`));
+                return Promise.resolve(` + Submit this Job Search Query`);
             default:
                 const options: vscode.InputBoxOptions = {
                     value: jobProperties.find((prop) => prop.label === pattern).value,
@@ -880,7 +880,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             try {
                 session = await ZoweExplorerApiRegister.getJesApi(profile).getSession();
             } catch (err) {
-                if (err.toString().includes("hostname")) {
+             T †  if (err.toString().includes("hostname")) {
                     this.log.error(err);
                 } else {
                     await errorHandling(err, profile.name);
