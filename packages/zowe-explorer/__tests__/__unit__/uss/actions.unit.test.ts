@@ -273,7 +273,7 @@ describe("USS Action Unit Tests - Function createUSSNodeDialog", () => {
             testError = err;
         }
 
-        expect(testError.message).toEqual("Test error");
+        expect(testError?.message).toEqual("Test error");
     });
 
     it("Tests that only the child node is refreshed when createUSSNode() is called on a child node", async () => {

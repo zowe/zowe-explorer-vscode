@@ -2741,7 +2741,7 @@ describe("Profiles Unit Tests - Function getCombinedProfile", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        const response = await (await blockMocks.mockProfileInstance).getCombinedProfile(
+        const response = await blockMocks.mockProfileInstance.getCombinedProfile(
             globalMocks.testProfile,
             blockMocks.testBaseProfile
         );
@@ -2759,7 +2759,7 @@ describe("Profiles Unit Tests - Function getCombinedProfile", () => {
         globalMocks.testProfile.profile.user = null;
         globalMocks.testProfile.profile.password = null;
 
-        const response = await (await blockMocks.mockProfileInstance).getCombinedProfile(
+        const response = await blockMocks.mockProfileInstance.getCombinedProfile(
             globalMocks.testProfile,
             blockMocks.testBaseProfile
         );
@@ -2776,7 +2776,7 @@ describe("Profiles Unit Tests - Function getCombinedProfile", () => {
         blockMocks.testBaseProfile.profile.host = globalMocks.testProfile.profile.host;
         blockMocks.testBaseProfile.profile.port = globalMocks.testProfile.profile.port;
 
-        const response = await (await blockMocks.mockProfileInstance).getCombinedProfile(
+        const response = await blockMocks.mockProfileInstance.getCombinedProfile(
             globalMocks.testProfile,
             blockMocks.testBaseProfile
         );
@@ -2795,7 +2795,7 @@ describe("Profiles Unit Tests - Function getCombinedProfile", () => {
         blockMocks.testBaseProfile.profile.tokenValue = undefined;
         blockMocks.testBaseProfile.profile.tokenType = undefined;
 
-        const response = await (await blockMocks.mockProfileInstance).getCombinedProfile(
+        const response = await blockMocks.mockProfileInstance.getCombinedProfile(
             globalMocks.testProfile,
             blockMocks.testBaseProfile
         );
