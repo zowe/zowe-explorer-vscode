@@ -1288,6 +1288,11 @@ export async function pasteMember(
             const inputBoxOptions: vscode.InputBoxOptions = {
                 value: beforeMemberName,
                 placeHolder: localize("pasteMember.inputBox.placeHolder", "Name of Data Set Member"),
+                validateInput: (text) => {
+                    return dsUtils.validateDataSetName(text) === true
+                        ? null
+                        : localize("dataset.validation", "Enter valid dataset name");
+                },
             };
             memberName = await vscode.window.showInputBox(inputBoxOptions);
             if (!memberName) {

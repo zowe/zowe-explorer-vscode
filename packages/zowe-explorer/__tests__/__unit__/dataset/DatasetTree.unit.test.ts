@@ -2475,7 +2475,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
     });
     it("Checking validate validateDataSetName util function fail on max ds length", async () => {
         const dsName = "#DSNAMET.DSNAME.DSNAME.DSNAME.DSNAME.DSNAMETE";
-        expect(dsName.length - 1 == globals.MAX_DATASET_LENGTH).toBe(true);
+        expect(dsName.length - 1 === globals.MAX_DATASET_LENGTH).toBe(true);
         expect(dsUtils.validateDataSetName(dsName)).toBe(false);
     });
 
