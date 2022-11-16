@@ -403,9 +403,9 @@ export async function createMember(
     const options: vscode.InputBoxOptions = {
         placeHolder: localize("createMember.inputBox.placeholder", "Name of Member"),
         validateInput: (text) => {
-            return dsUtils.validateDataSetName(text) === true
+            return dsUtils.validateMemberName(text) === true
                 ? null
-                : localize("dataset.validation", "Enter valid dataset name");
+                : localize("member.validation", "Enter valid member name");
         },
     };
     const name = await vscode.window.showInputBox(options);
@@ -1289,9 +1289,9 @@ export async function pasteMember(
                 value: beforeMemberName,
                 placeHolder: localize("pasteMember.inputBox.placeHolder", "Name of Data Set Member"),
                 validateInput: (text) => {
-                    return dsUtils.validateDataSetName(text) === true
+                    return dsUtils.validateMemberName(text) === true
                         ? null
-                        : localize("dataset.validation", "Enter valid dataset name");
+                        : localize("member.validation", "Enter valid member name");
                 },
             };
             memberName = await vscode.window.showInputBox(inputBoxOptions);

@@ -15,6 +15,7 @@
   "deleteDatasetPrompt.deleteCounter": "Deleting nodes",
   "deleteMulti.datasetNode": "The following {0} item(s) were deleted:{1}",
   "createMember.inputBox.placeholder": "Name of Member",
+  "member.validation": "Enter valid member name",
   "createMember.log.debug.createNewDataSet": "creating new data set member of name ",
   "createMember.log.error": "Error encountered when creating member! ",
   "createMember.error": "Unable to create member: ",

@@ -30,9 +30,15 @@ export function getNodeLabels(node: IZoweNodeType) {
     }
 }
 export function validateDataSetName(dsName: string): boolean {
-    const dsPattern = /^[a-zA-Z#@\$][a-zA-Z0-9#@\$\-]{0,7}(\.[a-zA-Z#@\$][a-zA-Z0-9#@\$\-]{0,7})*$/;
     if (dsName.length > globals.MAX_DATASET_LENGTH) {
         return false;
     }
-    return dsPattern.test(dsName);
+    return globals.DS_NAME_REGEX_CHECK.test(dsName);
+}
+
+export function validateMemberName(member: string): boolean {
+    if (member.length > globals.MAX_MEMBER_LENGTH) {
+        return false;
+    }
+    return globals.MEMBER_NAME_REGEX_CHECK.test(member);
 }

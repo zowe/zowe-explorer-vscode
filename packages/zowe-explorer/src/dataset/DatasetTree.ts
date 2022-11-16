@@ -34,8 +34,7 @@ import { resetValidationSettings } from "../shared/actions";
 import { closeOpenedTextFile } from "../utils/workspace";
 import { PersistentFilters } from "../PersistentFilters";
 import { IDataSet, IListOptions, imperative } from "@zowe/cli";
-import { UIViews } from "../shared/ui-views";
-import { validateDataSetName } from "./utils";
+import { validateDataSetName, validateMemberName } from "./utils";
 
 // Set up localization
 nls.config({
@@ -1155,9 +1154,9 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         const options: vscode.InputBoxOptions = {
             value: beforeMemberName,
             validateInput: (text) => {
-                return validateDataSetName(text) === true
+                return validateMemberName(text) === true
                     ? null
-                    : localize("dataset.validation", "Enter valid dataset name");
+                    : localize("member.validation", "Enter valid member name");
             },
         };
         let afterMemberName = await vscode.window.showInputBox(options);
