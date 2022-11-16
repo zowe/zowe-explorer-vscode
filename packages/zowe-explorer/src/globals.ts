@@ -260,7 +260,16 @@ export function setActivated(value: boolean) {
 }
 
 export async function setGlobalSecurityValue() {
-    const settingEnabled: boolean = await vscode.workspace.getConfiguration().get(SETTINGS_SECURE_CREDENTIALS_ENABLED);
+    if (this.ISTHEIA) {
+        PROFILE_SECURITY = false;
+        await vscode.workspace
+            .getConfiguration()
+            .update(this.SETTINGS_SECURE_CREDENTIALS_ENABLED, false, vscode.ConfigurationTarget.Global);
+        return;
+    }
+    const settingEnabled: boolean = await vscode.workspace
+        .getConfiguration()
+        .get(this.SETTINGS_SECURE_CREDENTIALS_ENABLED);
     if (!settingEnabled) {
         PROFILE_SECURITY = false;
     } else {

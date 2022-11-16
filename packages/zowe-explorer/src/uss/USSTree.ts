@@ -320,7 +320,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 }
             }
         } else {
-            const profiles: imperative.IProfileLoaded[] = Profiles.getInstance()?.allProfiles;
+            const profiles: imperative.IProfileLoaded[] = await Profiles.getInstance().fetchAllProfiles();
             if (profiles) {
                 for (const theProfile of profiles) {
                     // If session is already added, do nothing
@@ -329,7 +329,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                             (tempNode) => tempNode.label.toString().trim() === theProfile.name.trim()
                         )
                     ) {
-                        return;
+                        continue;
                     }
                     for (const session of this.mHistory.getSessions()) {
                         if (session && session.trim() === theProfile.name) {
@@ -344,8 +344,14 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                     }
                 }
             }
-            if (profileType && this.mSessionNodes.length === 1) {
-                await this.addSingleSession(Profiles.getInstance().getDefaultProfile(profileType));
+            if (this.mSessionNodes.length === 1) {
+                try {
+                    await this.addSingleSession(Profiles.getInstance().getDefaultProfile(profileType));
+                } catch (error) {
+                    // catch and log error of no default,
+                    // if not type passed getDefaultProfile assumes zosmf
+                    this.log.warn(error);
+                }
             }
         }
         this.refresh();
