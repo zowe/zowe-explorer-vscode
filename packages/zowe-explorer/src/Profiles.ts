@@ -54,7 +54,7 @@ let InputBoxOptions: vscode.InputBoxOptions;
 export class Profiles extends ProfilesCache {
     // Processing stops if there are no profiles detected
     public static async createInstance(log: zowe.imperative.Logger): Promise<Profiles> {
-        Profiles.loader = new Profiles(log, vscode.workspace.workspaceFolders?.[0].uri.fsPath);
+        Profiles.loader = new Profiles(log, vscode.workspace.workspaceFolders?.[0]?.uri.fsPath);
         await Profiles.loader.refresh(ZoweExplorerApiRegister.getInstance());
         return Profiles.loader;
     }
@@ -641,7 +641,7 @@ export class Profiles extends ProfilesCache {
             let user = false;
             let global = true;
             let rootPath = getZoweDir();
-            if (vscode.workspace.workspaceFolders) {
+            if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0]) {
                 const choice = await this.getConfigLocationPrompt("create");
                 if (choice === undefined) {
                     vscode.window.showInformationMessage(
@@ -650,7 +650,7 @@ export class Profiles extends ProfilesCache {
                     return;
                 }
                 if (choice === "project") {
-                    rootPath = vscode.workspace.workspaceFolders?.[0].uri.fsPath;
+                    rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
                     user = true;
                     global = false;
                 }
@@ -673,7 +673,7 @@ export class Profiles extends ProfilesCache {
                 homeDir: getZoweDir(),
                 projectDir: getFullPath(rootPath),
             });
-            if (vscode.workspace.workspaceFolders) {
+            if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0]) {
                 config.api.layers.activate(user, global, rootPath);
             }
 
@@ -716,24 +716,6 @@ export class Profiles extends ProfilesCache {
             vscode.window.showErrorMessage(
                 localize("Profiles.getProfileInfo.error", "Error in creating team configuration file: {0}", err.message)
             );
-        }
-    }
-
-    public updateImperativeSettings() {
-        try {
-            const fileName = path.join(getZoweDir(), "settings", "imperative.json");
-            const updatedSettings = {
-                overrides: {
-                    CredentialManager: false,
-                },
-            };
-            fs.writeFile(fileName, JSON.stringify(updatedSettings), "utf8", (err) => {
-                if (err) {
-                    this.log.error("Could not update imperative.json settings file", err);
-                }
-            });
-        } catch (error) {
-            this.log.error(error);
         }
     }
 
@@ -1464,7 +1446,7 @@ export class Profiles extends ProfilesCache {
         const existingLayers: zowe.imperative.IConfigLayer[] = [];
         const config = await zowe.imperative.Config.load("zowe", {
             homeDir: getZoweDir(),
-            projectDir: vscode.workspace.workspaceFolders?.[0].uri.fsPath,
+            projectDir: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath,
         });
         const layers = config.layers;
         layers.forEach((layer) => {
@@ -1919,7 +1901,6 @@ export class Profiles extends ProfilesCache {
             for (const profile of Object.entries(newConfig.profiles)) {
                 delete newConfig.profiles[profile[0]].secure;
             }
-            this.updateImperativeSettings();
             newConfig.autoStore = false;
         }
     }

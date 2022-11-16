@@ -10,7 +10,6 @@
  */
 
 import * as fs from "fs";
-import * as path from "path";
 import * as globals from "./globals";
 import * as vscode from "vscode";
 import * as ussActions from "./uss/actions";
@@ -29,8 +28,7 @@ import {
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import { Profiles } from "./Profiles";
-import { promptCredentials, readConfigFromDisk } from "./utils/ProfilesUtils";
-import { getImperativeConfig, imperative } from "@zowe/cli";
+import { initializeZoweFolder, promptCredentials, readConfigFromDisk, writeOverridesFile } from "./utils/ProfilesUtils";
 import { createDatasetTree } from "./dataset/DatasetTree";
 import { createJobsTree } from "./job/ZosJobsProvider";
 import { createUSSTree } from "./uss/USSTree";
@@ -89,32 +87,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     }
 
     try {
-        // Ensure that ~/.zowe folder exists
-        if (!imperative.ImperativeConfig.instance.config?.exists) {
-            const zoweDir = getZoweDir();
-            // Should we replace the instance.config above with (await getProfileInfo(globals.ISTHEIA)).exists
-            await imperative.CliProfileManager.initialize({
-                configuration: getImperativeConfig().profiles,
-                profileRootDirectory: path.join(zoweDir, "profiles"),
-            });
-
-            // TODO(zFernand0): Will address the commented code below once this imperative issue is resolved.
-            // https://github.com/zowe/imperative/issues/840
-
-            // const settingsPath = path.join(zoweDir, "settings");
-            // if (!fs.existsSync(settingsPath)) {
-            //     fs.mkdirSync(settingsPath);
-            // }
-            // const imperativeSettings = path.join(settingsPath, "imperative.json");
-            // if (!fs.existsSync(imperativeSettings)) {
-            //     fs.writeFileSync(imperativeSettings, JSON.stringify({
-            //         overrides: {
-            //             CredentialManager: "@zowe/cli"
-            //         }
-            //     }));
-            // }
-        }
-
+        await initializeZoweFolder();
         await readConfigFromDisk();
     } catch (err) {
         globals.LOG.error(err);
@@ -160,14 +133,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
 
     // Update imperative.json to false only when VS Code setting is set to false
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.updateSecureCredentials", () => {
-            const isSettingEnabled: boolean = vscode.workspace
-                .getConfiguration()
-                .get(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED);
-
-            if (!isSettingEnabled) {
-                Profiles.getInstance().updateImperativeSettings();
-            }
+        vscode.commands.registerCommand("zowe.updateSecureCredentials", async () => {
+            await globals.setGlobalSecurityValue();
+            writeOverridesFile();
         })
     );
 
@@ -209,9 +177,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             }
         })
     );
-
-    // Update imperative.json to false if VS Code setting is set to false
-    await vscode.commands.executeCommand("zowe.updateSecureCredentials");
 
     if (datasetProvider) {
         initDatasetProvider(context, datasetProvider);
@@ -331,6 +296,7 @@ async function watchConfigProfile(context: vscode.ExtensionContext) {
 
     const workspaceProfileWatcher =
         vscode.workspace.workspaceFolders &&
+        vscode.workspace.workspaceFolders[0] &&
         vscode.workspace.createFileSystemWatcher(
             new vscode.RelativePattern(
                 vscode.workspace.workspaceFolders[0].uri.fsPath,
