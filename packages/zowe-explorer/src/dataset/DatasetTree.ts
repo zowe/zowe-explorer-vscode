@@ -460,12 +460,12 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 }
             }
         } else {
-            const profiles: imperative.IProfileLoaded[] = Profiles.getInstance()?.allProfiles;
+            const profiles: imperative.IProfileLoaded[] = await Profiles.getInstance().fetchAllProfiles();
             if (profiles) {
                 for (const theProfile of profiles) {
                     // If session is already added, do nothing
                     if (this.mSessionNodes.find((tempNode) => tempNode.label.toString() === theProfile.name)) {
-                        return;
+                        continue;
                     }
                     for (const session of this.mHistory.getSessions()) {
                         if (session === theProfile.name) {
@@ -482,8 +482,14 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     }
                 }
             }
-            if (profileType && this.mSessionNodes.length === 1) {
-                await this.addSingleSession(Profiles.getInstance().getDefaultProfile(profileType));
+            if (this.mSessionNodes.length === 1) {
+                try {
+                    await this.addSingleSession(Profiles.getInstance().getDefaultProfile(profileType));
+                } catch (error) {
+                    // catch and log error of no default,
+                    // if not type passed getDefaultProfile assumes zosmf
+                    this.log.warn(error);
+                }
             }
         }
         this.refresh();

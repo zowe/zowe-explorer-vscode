@@ -223,6 +223,9 @@ export function createInstanceOfProfile(profile: imperative.IProfileLoaded) {
         getProfileFromConfig: jest.fn(),
         getProfileLoaded: jest.fn(),
         openConfigFile: jest.fn(),
+        fetchAllProfiles: jest.fn(() => {
+            return [{ name: "sestest" }, { name: "profile1" }, { name: "profile2" }];
+        }),
     } as any;
 }
 
