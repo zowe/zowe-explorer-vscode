@@ -29,3 +29,16 @@ export function getNodeLabels(node: IZoweNodeType) {
         return { ...getProfileAndDataSetName(node), memberName: undefined };
     }
 }
+export function validateDataSetName(dsName: string): boolean {
+    if (dsName.length > globals.MAX_DATASET_LENGTH) {
+        return false;
+    }
+    return globals.DS_NAME_REGEX_CHECK.test(dsName);
+}
+
+export function validateMemberName(member: string): boolean {
+    if (member.length > globals.MAX_MEMBER_LENGTH) {
+        return false;
+    }
+    return globals.MEMBER_NAME_REGEX_CHECK.test(member);
+}
