@@ -83,7 +83,16 @@
       "out/"
     ],
     "reporters": [
-      "default"
+      "default",
+      "jest-junit",
+      "jest-stare",
+      "jest-html-reporter"
+    ],
+    "coverageReporters": [
+      "json",
+      "lcov",
+      "text",
+      "cobertura"
     ],
     "coverageDirectory": "<rootDir>/results/unit/coverage"
   },
