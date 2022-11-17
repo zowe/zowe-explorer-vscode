@@ -211,24 +211,37 @@ export const DATA_SET_PROPERTIES = [
 
 export const JOB_STATUS = [
     {
+        key: `All`,
+        label: `*`,
+        value: null,
+        picked: true,
+    },
+    {
         key: `Active`,
         label: `Active`,
         value: `Active`,
+        picked: false,
     },
     {
         key: `Input`,
         label: `Input`,
         value: null,
+        picked: false,
     },
     {
         key: `Output`,
         label: `Output`,
         value: null,
+        picked: false,
     },
+];
+
+export const JOB_STATUS_UNSUPPORTED = [
     {
-        key: `All`, // key is not used
-        label: `All`,
+        key: `All`,
+        label: `*`,
         value: null,
+        picked: true,
     },
 ];
 
@@ -251,7 +264,7 @@ export const JOB_PROPERTIES = [
         key: `job-status`,
         label: `Job Status`,
         value: "*",
-        show: false,
+        show: true,
         placeHolder: localize("searchJobs.status", `Enter job status`),
     },
 ];

@@ -692,6 +692,9 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             } else {
                 searchCriteria = await this.applySavedFavoritesSearchLabel(node);
             }
+            if (!searchCriteria) {
+                return undefined;
+            }
             node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
             const icon = getIconByNode(node);
             if (icon) {
@@ -788,13 +791,12 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         return this.createSearchLabel(owner, prefix, jobId, "*");
     }
 
-    private async setJobStatus() {
-        const choice = await vscode.window.showQuickPick(globals.JOB_STATUS);
+    private async setJobStatus(node: IZoweJobTreeNode) {
+        const apiExists = ZoweExplorerApiRegister.getJesApi(node.getProfile()).getJobsByParameters;
+        const jobStatusSelection = apiExists ? globals.JOB_STATUS : globals.JOB_STATUS_UNSUPPORTED;
+        let choice = await vscode.window.showQuickPick(jobStatusSelection);
         if (!choice) {
-            vscode.window.showInformationMessage(
-                localize("enterPattern.pattern", "No selection made. Operation cancelled.")
-            );
-            return undefined;
+            choice = globals.JOB_STATUS.find((status) => status.label === "*");
         }
         return choice;
     }
@@ -812,10 +814,16 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             ignoreFocusOut: true,
             matchOnDescription: false,
         });
+        if (!choice) {
+            vscode.window.showInformationMessage(
+                localize("enterPattern.pattern", "No selection made. Operation cancelled.")
+            );
+            return;
+        }
         const pattern = choice.label;
         switch (pattern) {
             case "Job Status":
-                const statusChoice = await this.setJobStatus();
+                const statusChoice = await this.setJobStatus(node);
                 jobProperties.find((prop) => prop.key === "job-status").value = statusChoice.label;
                 break;
             case " + Submit this Job Search Query":
@@ -880,7 +888,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             try {
                 session = await ZoweExplorerApiRegister.getJesApi(profile).getSession();
             } catch (err) {
-             T †  if (err.toString().includes("hostname")) {
+                if (err.toString().includes("hostname")) {
                     this.log.error(err);
                 } else {
                     await errorHandling(err, profile.name);
