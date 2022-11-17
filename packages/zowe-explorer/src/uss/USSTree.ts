@@ -140,7 +140,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             ignoreFocusOut: true,
             validateInput: (value) => this.checkDuplicateLabel(parentPath + value, loadedNodes),
         };
-        const newName = await UIViews.inputBox(options);
+        const newName = await vscode.window.showInputBox(options);
         if (newName && parentPath + newName !== originalNode.fullPath) {
             try {
                 const newNamePath = path.posix.join(parentPath, newName);
@@ -632,7 +632,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                     value: remotepath,
                 };
                 // get user input
-                remotepath = await UIViews.inputBox(options);
+                remotepath = await vscode.window.showInputBox(options);
                 if (!remotepath || remotepath.length === 0) {
                     vscode.window.showInformationMessage(localize("filterPrompt.enterPath", "You must enter a path."));
                     return;

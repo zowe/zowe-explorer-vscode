@@ -636,7 +636,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                         value: owner,
                     };
                     // get user input
-                    owner = await UIViews.inputBox(options);
+                    owner = await vscode.window.showInputBox(options);
                     if (owner === undefined) {
                         vscode.window.showInformationMessage(
                             localize("jobsFilterPrompt.enterPrefix", "Search Cancelled")
@@ -655,7 +655,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                         value: prefix,
                     };
                     // get user input
-                    prefix = await UIViews.inputBox(options);
+                    prefix = await vscode.window.showInputBox(options);
                     if (prefix === undefined) {
                         vscode.window.showInformationMessage(
                             localize("jobsFilterPrompt.enterPrefix", "Search Cancelled")
@@ -672,7 +672,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                             value: jobid,
                         };
                         // get user input
-                        jobid = await UIViews.inputBox(options);
+                        jobid = await vscode.window.showInputBox(options);
                         if (jobid === undefined) {
                             vscode.window.showInformationMessage(
                                 localize("jobsFilterPrompt.enterPrefix", "Search Cancelled")
@@ -687,7 +687,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                         value: jobid,
                     };
                     // get user input
-                    jobid = await UIViews.inputBox(options);
+                    jobid = await vscode.window.showInputBox(options);
                     if (!jobid) {
                         vscode.window.showInformationMessage(
                             localize("jobsFilterPrompt.enterPrefix", "Search Cancelled")
