@@ -39,8 +39,7 @@
         {
           "id": "zowe",
           "title": "%viewsContainers.activitybar%",
-          "icon": "resources/zowe.svg",
-          "when": "!isWeb"
+          "icon": "resources/zowe.svg"
         }
       ]
     },
@@ -48,18 +47,15 @@
       "zowe": [
         {
           "id": "zowe.ds.explorer",
-          "name": "%zowe.ds.explorer%",
-          "when": "!isWeb"
+          "name": "%zowe.ds.explorer%"
         },
         {
           "id": "zowe.uss.explorer",
-          "name": "%zowe.uss.explorer%",
-          "when": "!isWeb"
+          "name": "%zowe.uss.explorer%"
         },
         {
           "id": "zowe.jobs.explorer",
-          "name": "%zowe.jobs.explorer%",
-          "when": "!isWeb"
+          "name": "%zowe.jobs.explorer%"
         }
       ]
     },

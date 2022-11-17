@@ -296,13 +296,9 @@ export class ProfilesCache {
      */
     public async fetchAllProfiles(): Promise<zowe.imperative.IProfileLoaded[]> {
         const profiles: zowe.imperative.IProfileLoaded[] = [];
-        const profInfo = await this.getProfileInfo();
-        const profileAttrs = profInfo.getAllProfiles();
-        for (const prof of profileAttrs) {
-            const profAttr = this.getMergedAttrs(profInfo, prof);
-            let profile = this.getProfileLoaded(prof.profName, prof.profType, profAttr);
-            profile = this.checkMergingConfigSingleProfile(profile);
-            profiles.push(profile);
+        for (const type of this.allTypes) {
+            const profsByType = await this.fetchAllProfilesByType(type);
+            profiles.push(...profsByType);
         }
         this.allProfiles = profiles;
         return profiles;
