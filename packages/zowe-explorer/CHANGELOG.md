@@ -6,6 +6,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Bugfix: Added validation check while creating, renaming and using allocate alike feature for datasets [#1849](https://github.com/zowe/vscode-extension-for-zowe/issues/1849)
 - Fixed login/logout errors from Team config file watcher. [#1924](https://github.com/zowe/vscode-extension-for-zowe/issues/1924)
 - Fixed the loading of previously saved profiles in the tree views.
 - Fixed default zosmf profile being added to tree view when no other sessions are saved from previous sessions. [#1992](https://github.com/zowe/vscode-extension-for-zowe/issues/1992)
