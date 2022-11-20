@@ -560,48 +560,44 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         // This is the profile object context
         let choice: vscode.QuickPickItem;
         let searchCriteria: string = "";
-        const hasHistory = this.mHistory.getSearchHistory().length > 0;
-        if (hasHistory) {
-            // Check if user has created some history
-            const items: vscode.QuickPickItem[] = this.mHistory
-                .getSearchHistory()
-                .map((element) => new FilterItem({ text: element }));
-            if (globals.ISTHEIA) {
-                // Theia doesn't work properly when directly creating a QuickPick
-                const options1: vscode.QuickPickOptions = {
-                    placeHolder: localize("searchHistory.options.prompt", "Select a filter"),
-                };
-                // get user selection
-                choice = await vscode.window.showQuickPick([this.createOwner, this.createId, ...items], options1);
-                if (!choice) {
-                    vscode.window.showInformationMessage(
-                        localize("enterPattern.pattern", "No selection made. Operation cancelled.")
-                    );
-                    return;
+        const items: vscode.QuickPickItem[] = this.mHistory
+            .getSearchHistory()
+            .map((element) => new FilterItem({ text: element }));
+        if (globals.ISTHEIA) {
+            // Theia doesn't work properly when directly creating a QuickPick
+            const options1: vscode.QuickPickOptions = {
+                placeHolder: localize("searchHistory.options.prompt", "Select a filter"),
+            };
+            // get user selection
+            choice = await vscode.window.showQuickPick([this.createOwner, this.createId, ...items], options1);
+            if (!choice) {
+                vscode.window.showInformationMessage(
+                    localize("enterPattern.pattern", "No selection made. Operation cancelled.")
+                );
+                return;
+            }
+            searchCriteria = choice === this.createOwner || choice === this.createId ? "" : choice.label;
+        } else {
+            // VSCode route to create a QuickPick
+            const quickpick = vscode.window.createQuickPick();
+            quickpick.items = [this.createOwner, this.createId, ...items];
+            quickpick.placeholder = localize("searchHistory.options.prompt", "Select a filter");
+            quickpick.ignoreFocusOut = true;
+            quickpick.show();
+            choice = await resolveQuickPickHelper(quickpick);
+            quickpick.hide();
+            if (!choice) {
+                vscode.window.showInformationMessage(
+                    localize("enterPattern.pattern", "No selection made. Operation cancelled.")
+                );
+                return;
+            }
+            if (choice instanceof FilterDescriptor) {
+                if (quickpick.value.length > 0) {
+                    searchCriteria = this.interpretFreeform(quickpick.value); // is this called?
                 }
-                searchCriteria = choice === this.createOwner || choice === this.createId ? "" : choice.label;
             } else {
-                // VSCode route to create a QuickPick
-                const quickpick = vscode.window.createQuickPick();
-                quickpick.items = [this.createOwner, this.createId, ...items];
-                quickpick.placeholder = localize("searchHistory.options.prompt", "Select a filter");
-                quickpick.ignoreFocusOut = true;
-                quickpick.show();
-                choice = await resolveQuickPickHelper(quickpick);
-                quickpick.hide();
-                if (!choice) {
-                    vscode.window.showInformationMessage(
-                        localize("enterPattern.pattern", "No selection made. Operation cancelled.")
-                    );
-                    return;
-                }
-                if (choice instanceof FilterDescriptor) {
-                    if (quickpick.value.length > 0) {
-                        searchCriteria = this.interpretFreeform(quickpick.value); // is this called?
-                    }
-                } else {
-                    searchCriteria = choice.label;
-                }
+                searchCriteria = choice.label;
             }
         }
         const searchCriteriaObj: IJobSearchCriteria = {
@@ -703,7 +699,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             labelRefresh(node);
             node.dirty = true;
             this.refreshElement(node);
-            this.addSearchHistory(searchCriteria); // history added here
+            this.addSearchHistory(searchCriteria);
         }
     }
 
