@@ -247,35 +247,24 @@ export async function deleteDatasetPrompt(
     selectedNodes = selectedNodes.filter((val) => !childArray.includes(val));
 
     if (includedSelection || !node) {
-        // Filter out sessions, favorite nodes, or information messages
+        // Filter out sessions and information messages
         nodes = selectedNodes.filter(
             (selectedNode) =>
                 selectedNode.getParent() &&
-                !contextually.isFavorite(selectedNode) &&
-                !contextually.isFavorite(selectedNode.getParent()) &&
                 !contextually.isSession(selectedNode) &&
                 !contextually.isInformation(selectedNode)
         );
     } else {
-        if (
-            node.getParent() &&
-            !contextually.isFavorite(node) &&
-            !contextually.isFavorite(node.getParent()) &&
-            !contextually.isSession(node) &&
-            !contextually.isInformation(node)
-        ) {
+        if (node.getParent() && !contextually.isSession(node) && !contextually.isInformation(node)) {
             nodes = [];
             nodes.push(node);
         }
     }
 
-    // Check that there are items to be deleted, this can be caused by trying to delete favorites right now
+    // Check that there are items to be deleted
     if (!nodes || nodes.length === 0) {
         vscode.window.showInformationMessage(
-            localize(
-                "deleteDatasetPrompt.nodesToDelete.empty",
-                "Deleting data sets and members from the Favorites section is currently not supported."
-            )
+            localize("deleteDatasetPrompt.nodesToDelete.empty", "No data sets selected for deletion, cancelling...")
         );
         return;
     }

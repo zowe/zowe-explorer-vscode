@@ -7,7 +7,7 @@
   "createDataSet.log.error": "Error encountered when creating data set! ",
   "createDataSet.error": "Error encountered when creating data set! ",
   "enterPattern.pattern": "You must enter a pattern.",
-  "deleteDatasetPrompt.nodesToDelete.empty": "Deleting data sets and members from the Favorites section is currently not supported.",
+  "deleteDatasetPrompt.nodesToDelete.empty": "No data sets selected for deletion, cancelled.",
   "deleteDatasetPrompt.log.debug": "Deleting data set(s): ",
   "deleteDatasetPrompt.confirmation.delete": "Delete",
   "deleteDatasetPrompt.confirmation.message": "Are you sure you want to delete the following {0} item(s)?\nThis will permanently remove these data sets and/or members from your system.\n\n{1}",
