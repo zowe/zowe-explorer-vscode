@@ -592,37 +592,38 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 );
                 return;
             }
-            searchCriteria = choice.label;
         }
-        const searchCriteriaObj: IJobSearchCriteria = {
+
+        let searchCriteriaObj: IJobSearchCriteria = {
             Owner: undefined,
             Prefix: undefined,
             JobId: undefined,
             Status: undefined,
         };
-        if (searchCriteria) {
-            const searchOptionArray = searchCriteria.split(" ");
-            searchOptionArray.forEach((searchOption) => {
-                const keyValue = searchOption.split(":");
-                searchCriteriaObj[keyValue[0].trim()] = keyValue[1].trim();
-            });
+
+        switch (choice) {
+            // clicked Create Job Query
+            case this.createOwner:
+                searchCriteriaObj = await this.handleEditingMultiJobParameters(globals.JOB_PROPERTIES, node);
+                break;
+            // clikced search by Job Id
+            case this.createId:
+                const options = {
+                    prompt: localize("jobsFilterPrompt.inputBox.prompt.jobid", "Enter a Job id"),
+                    value: searchCriteriaObj.JobId,
+                };
+                searchCriteriaObj.JobId = await ZoweVsCodeExtension.inputBox(options);
+                if (!searchCriteriaObj.JobId) {
+                    vscode.window.showInformationMessage(localize("jobsFilterPrompt.enterPrefix", "Search Cancelled"));
+                    return;
+                }
+                break;
+            // clicked on history item
+            default:
+                searchCriteria = choice.label;
+                searchCriteriaObj = this.parseJobSearchQuery(searchCriteria);
         }
-        if (choice === this.createOwner) {
-            await this.handleEditingMultiJobParameters(globals.JOB_PROPERTIES, node);
-            return;
-        }
-        if (choice === this.createId) {
-            const options = {
-                prompt: localize("jobsFilterPrompt.inputBox.prompt.jobid", "Enter a Job id"),
-                value: searchCriteriaObj.JobId,
-            };
-            // get user input
-            searchCriteriaObj.JobId = await ZoweVsCodeExtension.inputBox(options);
-            if (!searchCriteriaObj.JobId) {
-                vscode.window.showInformationMessage(localize("jobsFilterPrompt.enterPrefix", "Search Cancelled"));
-                return;
-            }
-        }
+
         searchCriteria = this.createSearchLabel(
             searchCriteriaObj.Owner,
             searchCriteriaObj.Prefix,
@@ -779,17 +780,18 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 jobProperties.find((prop) => prop.key === "job-status").value = statusChoice.label;
                 break;
             case " + Submit this Job Search Query":
-                node.searchId = "";
                 node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+                node.searchId = "";
                 node.prefix = jobProperties.find((prop) => prop.key === "prefix").value;
                 node.owner = jobProperties.find((prop) => prop.key === "owner").value;
                 node.status = jobProperties.find((prop) => prop.key === "job-status").value;
-                const searchCriteria = this.createSearchLabel(node.owner, node.prefix, node.jobid, node.status);
-                this.addSearchHistory(searchCriteria);
-                labelRefresh(node);
-                node.dirty = true;
-                this.refreshElement(node);
-                return Promise.resolve(` + Submit this Job Search Query`);
+                const searchCriteriaObj: IJobSearchCriteria = {
+                    Owner: node.owner,
+                    Prefix: node.prefix,
+                    JobId: node.jobid,
+                    Status: node.status,
+                };
+                return Promise.resolve(searchCriteriaObj);
             default:
                 const options: vscode.InputBoxOptions = {
                     value: jobProperties.find((prop) => prop.label === pattern).value,

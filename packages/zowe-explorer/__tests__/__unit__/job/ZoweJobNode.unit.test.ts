@@ -395,7 +395,7 @@ describe("ZoweJobNode unit tests - Function addFavorite", () => {
         const profileNodeInFavs: IZoweJobTreeNode = globalMocks.testJobsProvider.mFavorites[0];
 
         expect(profileNodeInFavs.children.length).toEqual(1);
-        expect(profileNodeInFavs.children[0].label).toEqual("Owner:myHLQ Prefix:*");
+        expect(profileNodeInFavs.children[0].label).toEqual("Owner:myHLQ Prefix:* Status:*");
         expect(profileNodeInFavs.children[0].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX);
     });
 });
@@ -756,15 +756,15 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
         blockMocks.theia = true;
         globalMocks.mockShowQuickPick.mockReturnValueOnce(blockMocks.qpItem);
         globalMocks.mockShowInputBox.mockReturnValueOnce("MYHLQY");
-        globalMocks.mockShowInputBox.mockReturnValueOnce("");
-        globalMocks.mockShowInputBox.mockReturnValueOnce(""); // need the jobId in this case
+        globalMocks.mockShowInputBox.mockReturnValueOnce("zzz");
+        globalMocks.mockShowInputBox.mockReturnValueOnce("vvv"); // need the jobId in this case
 
         await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
 
         expect(globalMocks.testJobsProvider.mSessionNodes[1].contextValue).toEqual(
             globals.JOBS_SESSION_CONTEXT + "_Active"
         );
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("MYHLQY");
+        expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("MYHLQY"); // here
         expect(globalMocks.testJobsProvider.mSessionNodes[1].prefix).toEqual("*");
         expect(globalMocks.testJobsProvider.mSessionNodes[1].searchId).toEqual("");
     });
