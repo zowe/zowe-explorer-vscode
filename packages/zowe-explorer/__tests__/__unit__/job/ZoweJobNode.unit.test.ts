@@ -321,34 +321,6 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
     });
 });
 
-describe("ZoweJobNode unit tests - Function interpretFreeform", () => {
-    it("Tests that interpretFreeform returns the correct string interpretations", async () => {
-        const globalMocks = await createGlobalMocks();
-
-        expect(globalMocks.testJobsProvider.interpretFreeform("STC01234")).toEqual("JobId:STC01234");
-        expect(globalMocks.testJobsProvider.interpretFreeform("job STC01234")).toEqual("JobId:STC01234");
-        expect(globalMocks.testJobsProvider.interpretFreeform("STC01234 JOB")).toEqual("JobId:STC01234");
-        expect(globalMocks.testJobsProvider.interpretFreeform("JOB12345")).toEqual("JobId:JOB12345");
-        expect(globalMocks.testJobsProvider.interpretFreeform("JOB0123456")).toEqual("JobId:JOB01234");
-        expect(globalMocks.testJobsProvider.interpretFreeform("JOB012345N")).toEqual("JobId:JOB01234");
-        // We interpret this as an owner prefix as the value is invalid as a job
-        expect(globalMocks.testJobsProvider.interpretFreeform("JOB0X25N")).toEqual("Owner:JOB0X25N");
-        expect(globalMocks.testJobsProvider.interpretFreeform("MYHLQ*")).toEqual("Owner:MYHLQ*");
-        expect(globalMocks.testJobsProvider.interpretFreeform("Owner: MYHLQ pRefix: STYYY*")).toEqual(
-            "Owner:MYHLQ Prefix:STYYY*"
-        );
-        expect(globalMocks.testJobsProvider.interpretFreeform("jobid: JOB0X25N")).toEqual("JobId:JOB0X25N");
-        expect(globalMocks.testJobsProvider.interpretFreeform("MYHLQ")).toEqual("Owner:MYHLQ");
-        // Although Job ID is invalid the user is explicit
-        expect(globalMocks.testJobsProvider.interpretFreeform("MYHLQ* myJobname")).toEqual(
-            "Owner:MYHLQ* Prefix:myJobname"
-        );
-        expect(globalMocks.testJobsProvider.interpretFreeform("MYHLQ* myJob")).toEqual("Owner:MYHLQ* Prefix:myJob");
-        expect(globalMocks.testJobsProvider.interpretFreeform("MYHLQ* myJob*")).toEqual("Owner:MYHLQ* Prefix:myJob*");
-        expect(globalMocks.testJobsProvider.interpretFreeform("* * STC01234")).toEqual("JobId:STC01234");
-    });
-});
-
 describe("ZoweJobNode unit tests - Function flipState", () => {
     it("Tests that flipState is executed successfully", async () => {
         const globalMocks = await createGlobalMocks();
