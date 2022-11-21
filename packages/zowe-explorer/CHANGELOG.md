@@ -2,6 +2,12 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## TBD Release
+
+### Bug fixes
+
+- Fixed "Allocate Like" feature failing to respect original dataset params and pattern (if specified). [#1974](https://github.com/zowe/vscode-extension-for-zowe/issues/1974)
+
 ## `2.4.1`
 
 ### Bug fixes
