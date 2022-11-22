@@ -415,6 +415,7 @@ export async function createMember(
         }
         parent.dirty = true;
         datasetProvider.refreshElement(parent);
+
         openPS(
             new ZoweDatasetNode(
                 name,
@@ -428,6 +429,17 @@ export async function createMember(
             true,
             datasetProvider
         );
+
+        // Refresh corresponding tree parent to reflect addition
+        const findCorrespondingNode = contextually.isFavorite(parent)
+            ? datasetProvider.findNonFavoritedNode.bind(datasetProvider)
+            : datasetProvider.findFavoritedNode.bind(datasetProvider);
+
+        const otherTreeParent = findCorrespondingNode(parent);
+        if (otherTreeParent != null) {
+            datasetProvider.refreshElement(otherTreeParent);
+        }
+
         datasetProvider.refresh();
     }
 }
@@ -1001,18 +1013,20 @@ export async function submitMember(node: api.IZoweTreeNode) {
 export async function deleteDataset(node: api.IZoweTreeNode, datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>) {
     let label = "";
     let fav = false;
+
+    const parent = node.getParent();
     try {
-        const parentContext = node.getParent().contextValue;
+        const parentContext = parent.contextValue;
         if (parentContext.includes(globals.FAV_SUFFIX)) {
             label = node.getLabel() as string;
             fav = true;
             if (parentContext.includes(globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX)) {
-                label = node.getParent().getLabel().toString() + "(" + node.getLabel().toString() + ")";
+                label = parent.getLabel().toString() + "(" + node.getLabel().toString() + ")";
             }
         } else if (parentContext.includes(globals.DS_SESSION_CONTEXT)) {
             label = node.getLabel() as string;
         } else if (parentContext.includes(globals.DS_PDS_CONTEXT)) {
-            label = node.getParent().getLabel().toString() + "(" + node.getLabel().toString() + ")";
+            label = parent.getLabel().toString() + "(" + node.getLabel().toString() + ")";
         } else {
             throw Error(localize("deleteDataSet.invalidNode.error", "deleteDataSet() called from invalid node."));
         }
@@ -1046,10 +1060,22 @@ export async function deleteDataset(node: api.IZoweTreeNode, datasetProvider: ap
                 ses.dirty = true;
             }
         });
-        datasetProvider.removeFavorite(node);
     } else {
         node.getSessionNode().dirty = true;
-        datasetProvider.removeFavorite(node);
+    }
+    datasetProvider.removeFavorite(node);
+
+    const isMember = contextually.isDsMember(node);
+
+    // TODO(Trae): Change favorites impl. to avoid searching through favorites array for every action
+    // Perhaps 1:1 mapping e.g. custom Map class?
+
+    // Refresh corresponding tree parent to reflect deletion
+    const dsFavParent = fav
+        ? datasetProvider.findNonFavoritedNode(isMember ? node.getParent() : node)
+        : datasetProvider.findFavoritedNode(isMember ? node.getParent() : node);
+    if (dsFavParent != null) {
+        datasetProvider.refreshElement(isMember ? dsFavParent : dsFavParent.getParent());
     }
     datasetProvider.refreshElement(node.getSessionNode());
 

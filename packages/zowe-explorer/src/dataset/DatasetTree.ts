@@ -644,8 +644,12 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      */
     public findNonFavoritedNode(node: IZoweDatasetTreeNode) {
         const profileName = node.getProfileName();
-        const sessionNode = this.mSessionNodes.find((session) => session.label.toString() === profileName);
+        const sessionNode = this.mSessionNodes.find((session) => session.label.toString().trim() === profileName);
         return sessionNode.children.find((temp) => temp.label === node.label);
+    }
+
+    public findEquivalentNode(node: IZoweDatasetTreeNode, isFavorite: boolean) {
+        return isFavorite ? this.findNonFavoritedNode(node) : this.findFavoritedNode(node);
     }
 
     /**
@@ -1201,12 +1205,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 );
                 throw err;
             }
-            let otherParent;
-            if (contextually.isFavorite(node.getParent())) {
-                otherParent = this.findNonFavoritedNode(node.getParent());
-            } else {
-                otherParent = this.findFavoritedNode(node.getParent());
-            }
+            const otherParent = this.findEquivalentNode(node.getParent(), contextually.isFavorite(node.getParent()));
             if (otherParent) {
                 const otherMember = otherParent.children.find((child) => child.label === beforeMemberName);
                 if (otherMember) {
