@@ -4,7 +4,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ## `2.4.1`
 
-## TBD
+## TBD Release
 
 -Multiple select for hide session [#1555](https://github.com/zowe/vscode-extension-for-zowe/issues/1555)
 
