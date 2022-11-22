@@ -10,7 +10,7 @@
  */
 
 /**
- * This interface defines the options that can be sent into the dwanload data set function
+ * This interface defines the options that can be sent into the download data set function
  */
 
 const log4js = require("log4js");
@@ -47,7 +47,7 @@ export interface ICommandArguments {
 
 interface NodeModule {
     exports: any;
-    require: NodeRequireFunction;
+    require: NodeRequire;
     id: string;
     filename: string;
     loaded: boolean;

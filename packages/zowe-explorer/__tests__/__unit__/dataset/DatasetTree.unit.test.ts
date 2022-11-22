@@ -1959,7 +1959,7 @@ describe("Dataset Tree Unit Tests - Function openItemFromPath", () => {
         );
         testTree.mSessionNodes[1].children.push(node);
         testTree.mSessionNodes[1].pattern = "test";
-        spyOn(testTree.mSessionNodes[1], "getChildren").and.returnValue(Promise.resolve([node]));
+        jest.spyOn(testTree.mSessionNodes[1], "getChildren").mockReturnValue(Promise.resolve([node]));
 
         await testTree.openItemFromPath(
             `[${blockMocks.datasetSessionNode.label}]: ${node.label}`,
@@ -1985,8 +1985,8 @@ describe("Dataset Tree Unit Tests - Function openItemFromPath", () => {
         const child = new ZoweDatasetNode("TESTMEMB", vscode.TreeItemCollapsibleState.None, parent, null);
         testTree.mSessionNodes[1].children.push(parent);
         testTree.mSessionNodes[1].pattern = "test";
-        spyOn(testTree.mSessionNodes[1], "getChildren").and.returnValue(Promise.resolve([parent]));
-        spyOn(parent, "getChildren").and.returnValue(Promise.resolve([child]));
+        jest.spyOn(testTree.mSessionNodes[1], "getChildren").mockReturnValue(Promise.resolve([parent]));
+        jest.spyOn(parent, "getChildren").mockReturnValue(Promise.resolve([child]));
 
         await testTree.openItemFromPath(
             `[${blockMocks.datasetSessionNode.label}]: ${parent.label}(${child.label})`,
@@ -2012,7 +2012,7 @@ describe("Dataset Tree Unit Tests - Function renameNode", () => {
 
         datasetSessionNode.children.push(node);
         testTree.mSessionNodes.push(datasetSessionNode);
-        spyOn(datasetSessionNode, "getChildren").and.returnValue(Promise.resolve([datasetSessionNode]));
+        jest.spyOn(datasetSessionNode, "getChildren").mockReturnValue(Promise.resolve([datasetSessionNode]));
 
         return {
             imperativeProfile,
