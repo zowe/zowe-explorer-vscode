@@ -556,7 +556,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         return;
     }
 
-    public async applyRegularSessionSearchLabel(node) {
+    public async applyRegularSessionSearchLabel(node): Promise<string | undefined> {
         // This is the profile object context
         let choice: vscode.QuickPickItem;
         let searchCriteria: string = "";
@@ -624,6 +624,10 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 searchCriteriaObj = this.parseJobSearchQuery(searchCriteria);
         }
 
+        if (!searchCriteriaObj) {
+            return undefined;
+        }
+
         searchCriteria = this.createSearchLabel(
             searchCriteriaObj.Owner,
             searchCriteriaObj.Prefix,
@@ -651,7 +655,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         return searchCriteriaObj;
     }
 
-    public async applySavedFavoritesSearchLabel(node) {
+    public async applySavedFavoritesSearchLabel(node): Promise<string> {
         // executing search from saved search in favorites
         const searchCriteria = node.label as string;
         const session = node.getProfileName();

@@ -59,16 +59,12 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
         super(label, collapsibleState, mParent, session, profile);
         this._prefix = "*";
         this._searchId = "";
+        this._jobStatus = "*";
 
         if (session) {
             this._owner = "*";
-            this._jobStatus = "*";
             if (session.ISession.user) {
                 this._owner = session.ISession.user;
-            }
-            // pickup from here. Is this neede?
-            if (session.ISession.status) {
-                this._jobStatus = session.ISession.status;
             }
         }
 
