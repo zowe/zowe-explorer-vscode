@@ -4,6 +4,10 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ## `2.4.1`
 
+## TBD
+
+-Multiple select for hide/delete session [#1555](https://github.com/zowe/vscode-extension-for-zowe/issues/1555)
+
 ### Bug fixes
 
 - Bugfix: Added validation check while creating, renaming and using allocate alike feature for datasets [#1849](https://github.com/zowe/vscode-extension-for-zowe/issues/1849)
