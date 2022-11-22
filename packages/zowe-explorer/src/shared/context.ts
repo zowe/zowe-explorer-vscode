@@ -396,3 +396,12 @@ export function getBaseContext(node: TreeItem): string {
 export function isValidationEnabled(node: TreeItem): boolean {
     return new RegExp("(" + globals.VALIDATE_SUFFIX + "true)").test(node.contextValue);
 }
+
+/**
+ * Helper function which identifies if the node is a jobs session
+ * @param node
+ * @return true if a jobs session, false otherwise
+ */
+export function isJobsSession(node: TreeItem): boolean {
+    return new RegExp("^(" + globals.JOBS_SESSION_CONTEXT + ")").test(node.contextValue);
+}
