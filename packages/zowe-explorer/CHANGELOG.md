@@ -6,7 +6,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ## TBD
 
--Multiple select for hide/delete session [#1555](https://github.com/zowe/vscode-extension-for-zowe/issues/1555)
+-Multiple select for hide session [#1555](https://github.com/zowe/vscode-extension-for-zowe/issues/1555)
 
 ### Bug fixes
 
