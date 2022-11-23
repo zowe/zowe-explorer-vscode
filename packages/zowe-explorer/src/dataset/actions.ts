@@ -1067,16 +1067,18 @@ export async function deleteDataset(node: api.IZoweTreeNode, datasetProvider: ap
 
     const isMember = contextually.isDsMember(node);
 
-    // TODO(Trae): Change favorites impl. to avoid searching through favorites array for every action
-    // Perhaps 1:1 mapping e.g. custom Map class?
+    // If the node is a dataset member, go up a level in the node tree
+    // to find the relevant, matching node
+    const nodeOfInterest = isMember ? node.getParent() : node;
+    const parentNode = fav
+        ? datasetProvider.findNonFavoritedNode(nodeOfInterest)
+        : datasetProvider.findFavoritedNode(nodeOfInterest);
 
-    // Refresh corresponding tree parent to reflect deletion
-    const dsFavParent = fav
-        ? datasetProvider.findNonFavoritedNode(isMember ? node.getParent() : node)
-        : datasetProvider.findFavoritedNode(isMember ? node.getParent() : node);
-    if (dsFavParent != null) {
-        datasetProvider.refreshElement(isMember ? dsFavParent : dsFavParent.getParent());
+    if (parentNode != null) {
+        // Refresh the correct node (parent of node to delete) to reflect changes
+        datasetProvider.refreshElement(isMember ? parentNode : parentNode.getParent());
     }
+
     datasetProvider.refreshElement(node.getSessionNode());
 
     // remove local copy of file

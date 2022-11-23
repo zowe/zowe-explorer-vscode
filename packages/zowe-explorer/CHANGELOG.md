@@ -14,6 +14,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 - Fixed missing localization for certain VScode error/info/warning messages. [#1722](https://github.com/zowe/vscode-extension-for-zowe/issues/1722)
 - Fixed "Allocate Like" error that prevented proper execution. [#1973](https://github.com/zowe/vscode-extension-for-zowe/issues/1973)
+- Fixed de-sync issue between Data Set and Favorites panels when adding or deleting datasets/members that were favorited. [#1488](https://github.com/zowe/vscode-extension-for-zowe/issues/1488)
 
 ## `2.4.1`
 
