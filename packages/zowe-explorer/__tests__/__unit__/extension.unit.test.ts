@@ -156,7 +156,6 @@ async function createGlobalMocks() {
             "zowe.ds.submitMember",
             "zowe.ds.showDSAttributes",
             "zowe.ds.renameDataSet",
-            "zowe.ds.copyMember",
             "zowe.ds.copyDataSet",
             "zowe.ds.pasteMember",
             "zowe.ds.renameDataSetMember",

@@ -89,6 +89,12 @@
         "command": "zowe.extRefresh",
         "key": "ctrl+alt+z",
         "mac": "cmd+alt+z"
+      },
+      {
+        "command": "zowe.ds.copyDataSet",
+        "key": "ctrl+c",
+        "mac": "cmd+c",
+        "when": "focusedView == zowe.ds.explorer"
       }
     ],
     "commands": [
@@ -259,11 +265,6 @@
       {
         "command": "zowe.ds.renameDataSet",
         "title": "%renameDataSet%",
-        "category": "Zowe Explorer"
-      },
-      {
-        "command": "zowe.ds.copyMember",
-        "title": "%copyMember%",
         "category": "Zowe Explorer"
       },
       {
@@ -960,12 +961,7 @@
           "group": "001_zowe_dsCreate@5"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^member.*/  && !listMultiSelection",
-          "command": "zowe.ds.copyMember",
-          "group": "001_zowe_dsCreate@6"
-        },
-        {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^ds.*/ && !listMultiSelection",
+          "when": "view == zowe.ds.explorer",
           "command": "zowe.ds.copyDataSet",
           "group": "001_zowe_dsCreate@6"
         },
@@ -1260,10 +1256,6 @@
         },
         {
           "command": "zowe.ds.uploadDialog",
-          "when": "never"
-        },
-        {
-          "command": "zowe.ds.copyMember",
           "when": "never"
         },
         {

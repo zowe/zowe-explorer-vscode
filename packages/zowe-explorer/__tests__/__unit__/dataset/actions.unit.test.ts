@@ -1879,8 +1879,8 @@ describe("Dataset Actions Unit Tests - Function copyDataSet", () => {
             null
         );
         node.contextValue = globals.DS_DS_CONTEXT;
-
-        await dsActions.copyDataSet(node);
+        const nodeList: ZoweDatasetNode[] = [node];
+        await dsActions.copyDataSet(nodeList);
 
         expect(clipboard.readText()).toBe('{"profileName":"sestest","dataSetName":"HLQ.TEST.DELETE.NODE"}');
     });
@@ -1895,8 +1895,8 @@ describe("Dataset Actions Unit Tests - Function copyDataSet", () => {
             null
         );
         node.contextValue = globals.DS_DS_CONTEXT + globals.FAV_SUFFIX;
-
-        await dsActions.copyDataSet(node);
+        const nodeList: ZoweDatasetNode[] = [node];
+        await dsActions.copyDataSet(nodeList);
 
         expect(clipboard.readText()).toBe('{"profileName":"sestest","dataSetName":"HLQ.TEST.DELETE.NODE"}');
     });
@@ -1913,8 +1913,8 @@ describe("Dataset Actions Unit Tests - Function copyDataSet", () => {
         parent.contextValue = globals.DS_PDS_CONTEXT;
         const child = new ZoweDatasetNode("child", vscode.TreeItemCollapsibleState.None, parent, null);
         child.contextValue = globals.DS_MEMBER_CONTEXT;
-
-        await dsActions.copyDataSet(child);
+        const nodeList: ZoweDatasetNode[] = [child];
+        await dsActions.copyDataSet(nodeList);
 
         expect(clipboard.readText()).toBe('{"profileName":"sestest","dataSetName":"parent","memberName":"child"}');
     });
@@ -1931,8 +1931,8 @@ describe("Dataset Actions Unit Tests - Function copyDataSet", () => {
         parent.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
         const child = new ZoweDatasetNode("child", vscode.TreeItemCollapsibleState.None, parent, null);
         child.contextValue = globals.DS_MEMBER_CONTEXT;
-
-        await dsActions.copyDataSet(child);
+        const nodeList: ZoweDatasetNode[] = [child];
+        await dsActions.copyDataSet(nodeList);
 
         expect(clipboard.readText()).toBe('{"profileName":"sestest","dataSetName":"parent","memberName":"child"}');
     });

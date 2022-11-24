@@ -1198,8 +1198,10 @@ export async function enterPattern(node: api.IZoweDatasetTreeNode, datasetProvid
  * @export
  * @param {IZoweNodeType} node - The node to copy
  */
-export async function copyDataSet(node: api.IZoweNodeType) {
-    return vscode.env.clipboard.writeText(JSON.stringify(dsUtils.getNodeLabels(node)));
+export async function copyDataSet(nodesList: api.IZoweNodeType[]) {
+    let uniq = (contextValue) => [...new Set(contextValue)];
+
+    return vscode.env.clipboard.writeText(JSON.stringify(dsUtils.getNodeLabels(nodesList[0])));
 }
 
 /**
