@@ -53,7 +53,9 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
         if (msg.includes("hostname")) {
             const mProfileInfo = await Profiles.getInstance().getProfileInfo();
             if (mProfileInfo.usingTeamConfig) {
-                vscode.window.showErrorMessage("Required parameter 'host' must not be blank");
+                vscode.window.showErrorMessage(
+                    localize("errorHandling.invalid.host", "Required parameter 'host' must not be blank.")
+                );
                 const profAllAttrs = mProfileInfo.getAllProfiles();
                 for (const prof of profAllAttrs) {
                     if (prof.profName === label.trim()) {
@@ -82,7 +84,7 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
                         });
                     } else {
                         const message = localize(
-                            "ErrorHandling.authentication.login",
+                            "errorHandling.authentication.login",
                             "Log in to Authentication Service"
                         );
                         vscode.window.showErrorMessage(errToken, message).then(async (selection) => {
@@ -98,7 +100,7 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
             if (isTheia()) {
                 vscode.window.showErrorMessage(errMsg);
             } else {
-                const checkCredsButton = localize("ErrorHandling.checkCredentials.button", "Check Credentials");
+                const checkCredsButton = localize("errorHandling.checkCredentials.button", "Check Credentials");
                 await vscode.window
                     .showErrorMessage(errMsg, { modal: true }, ...[checkCredsButton])
                     .then(async (selection) => {
@@ -106,7 +108,7 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
                             await Profiles.getInstance().promptCredentials(label.trim(), true);
                         } else {
                             vscode.window.showInformationMessage(
-                                localize("ErrorHandling.checkCredentials.cancelled", "Operation Cancelled")
+                                localize("errorHandling.checkCredentials.cancelled", "Operation Cancelled")
                             );
                         }
                     });
