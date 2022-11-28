@@ -140,7 +140,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             ignoreFocusOut: true,
             validateInput: (value) => this.checkDuplicateLabel(parentPath + value, loadedNodes),
         };
-        const newName = await UIViews.inputBox(options);
+        const newName = await vscode.window.showInputBox(options);
         if (newName && parentPath + newName !== originalNode.fullPath) {
             try {
                 const newNamePath = path.posix.join(parentPath, newName);
@@ -320,7 +320,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 }
             }
         } else {
-            const profiles: imperative.IProfileLoaded[] = Profiles.getInstance()?.allProfiles;
+            const profiles: imperative.IProfileLoaded[] = await Profiles.getInstance().fetchAllProfiles();
             if (profiles) {
                 for (const theProfile of profiles) {
                     // If session is already added, do nothing
@@ -329,7 +329,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                             (tempNode) => tempNode.label.toString().trim() === theProfile.name.trim()
                         )
                     ) {
-                        return;
+                        continue;
                     }
                     for (const session of this.mHistory.getSessions()) {
                         if (session && session.trim() === theProfile.name) {
@@ -344,8 +344,14 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                     }
                 }
             }
-            if (profileType && this.mSessionNodes.length === 1) {
-                await this.addSingleSession(Profiles.getInstance().getDefaultProfile(profileType));
+            if (this.mSessionNodes.length === 1) {
+                try {
+                    await this.addSingleSession(Profiles.getInstance().getDefaultProfile(profileType));
+                } catch (error) {
+                    // catch and log error of no default,
+                    // if not type passed getDefaultProfile assumes zosmf
+                    this.log.warn(error);
+                }
             }
         }
         this.refresh();
@@ -626,7 +632,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                     value: remotepath,
                 };
                 // get user input
-                remotepath = await UIViews.inputBox(options);
+                remotepath = await vscode.window.showInputBox(options);
                 if (!remotepath || remotepath.length === 0) {
                     vscode.window.showInformationMessage(localize("filterPrompt.enterPath", "You must enter a path."));
                     return;

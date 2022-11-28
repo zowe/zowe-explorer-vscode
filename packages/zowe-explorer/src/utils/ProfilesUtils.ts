@@ -302,7 +302,7 @@ export async function promptCredentials(node: IZoweTreeNode) {
     let profileName: string;
     if (node == null) {
         // prompt for profile
-        profileName = await UIViews.inputBox({
+        profileName = await vscode.window.showInputBox({
             placeHolder: localize("createNewConnection.option.prompt.profileName.placeholder", "Connection Name"),
             prompt: localize("createNewConnection.option.prompt.profileName", "Enter a name for the connection."),
             ignoreFocusOut: true,
@@ -335,7 +335,7 @@ export async function promptCredentials(node: IZoweTreeNode) {
 export async function initializeZoweFolder(): Promise<void> {
     // ensure the Secure Credentials Enabled value is read
     // set globals.PROFILE_SECURITY value accordingly
-    globals.setGlobalSecurityValue();
+    await globals.setGlobalSecurityValue();
     // Ensure that ~/.zowe folder exists
     // Ensure that the ~/.zowe/settings/imperative.json exists
     // TODO: update code below once this imperative issue is resolved.
@@ -348,10 +348,7 @@ export async function initializeZoweFolder(): Promise<void> {
     if (!fs.existsSync(settingsPath)) {
         fs.mkdirSync(settingsPath);
     }
-    const settingsFile = path.join(settingsPath, "imperative.json");
-    if (!fs.existsSync(settingsFile)) {
-        writeOverridesFile();
-    }
+    writeOverridesFile();
     // If not using team config, ensure that the ~/.zowe/profiles directory
     // exists with appropriate types within
     if (!imperative.ImperativeConfig.instance.config?.exists) {

@@ -19,6 +19,7 @@ import { Job } from "../../../src/job/ZoweJobNode";
 import { ValidProfileEnum, IZoweJobTreeNode, ProfilesCache } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
+import * as sessUtils from "../../../src/utils/SessionUtils";
 import * as utils from "../../../src/utils/ProfilesUtils";
 import {
     createIProfile,
@@ -89,6 +90,7 @@ async function createGlobalMocks() {
             return { value: globalMocks.mockProfileInfo, configurable: true };
         }),
     });
+    globalMocks.mockProfileInstance = createInstanceOfProfile(globalMocks.testProfile);
     Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true });
     Object.defineProperty(vscode.window, "withProgress", { value: globalMocks.withProgress, configurable: true });
     Object.defineProperty(zowe, "GetJobs", { value: globalMocks.mockGetJobs, configurable: true });
@@ -128,6 +130,10 @@ async function createGlobalMocks() {
     });
     Object.defineProperty(globalMocks.mockDeleteJobs, "deleteJob", {
         value: globalMocks.mockDeleteJob,
+        configurable: true,
+    });
+    Object.defineProperty(sessUtils, "removeSession", {
+        value: jest.fn().mockImplementationOnce(() => Promise.resolve()),
         configurable: true,
     });
 
