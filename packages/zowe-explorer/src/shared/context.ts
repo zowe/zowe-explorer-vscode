@@ -227,12 +227,21 @@ export function isDsSession(node: TreeItem): boolean {
 }
 
 /**
+ * Helper function which identifies if the node is a partitioned, unfavorited dataset
+ * @param node
+ * @return true if a partitioned and unfavorited dataset, false otherwise
+ */
+export function isPdsNotFav(node: TreeItem): boolean {
+    return new RegExp("^(?!.*" + globals.FAV_SUFFIX + ")" + globals.DS_PDS_CONTEXT).test(node.contextValue);
+}
+
+/**
  * Helper function which identifies if the node is a partitioned dataset
  * @param node
  * @return true if a partitioned dataset, false otherwise
  */
-export function isPdsNotFav(node: TreeItem): boolean {
-    return new RegExp("^(?!.*" + globals.FAV_SUFFIX + ")" + globals.DS_PDS_CONTEXT).test(node.contextValue);
+export function isPds(node: TreeItem): boolean {
+    return new RegExp("^(" + globals.DS_PDS_CONTEXT + ")").test(node.contextValue);
 }
 
 /**
