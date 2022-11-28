@@ -473,12 +473,19 @@ function initDatasetProvider(context: vscode.ExtensionContext) {
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.showDSAttributes", async (node, nodeList) => {
-            let selectedNodes = getSelectedNodeList(node, nodeList);
-            selectedNodes = selectedNodes.filter(
-                (element) => contextuals.isDs(element) || contextuals.isPdsNotFav(element)
+            const selectedNodes = getSelectedNodeList(node, nodeList).filter(
+                (element) => contextuals.isDs(element) || contextuals.isPds(element)
             );
             for (const item of selectedNodes) {
                 await dsActions.showDSAttributes(item, datasetProvider);
+            }
+        })
+    );
+    context.subscriptions.push(
+        vscode.commands.registerCommand("zowe.ds.showPDSMemberAttributes", async (node, nodeList) => {
+            const selectedNodes = getSelectedNodeList(node, nodeList).filter((elem) => contextuals.isDsMember(elem));
+            for (const item of selectedNodes) {
+                await dsActions.showPDSMemberAttributes(item, datasetProvider);
             }
         })
     );

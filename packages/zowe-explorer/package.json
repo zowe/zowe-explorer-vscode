@@ -257,6 +257,11 @@
         "category": "Zowe Explorer"
       },
       {
+        "command": "zowe.ds.showPDSMemberAttributes",
+        "title": "%showPDSMemberAttributes%",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.ds.renameDataSet",
         "title": "%renameDataSet%",
         "category": "Zowe Explorer"
@@ -973,6 +978,11 @@
           "when": "view == zowe.ds.explorer && viewItem =~ /^pds.*/",
           "command": "zowe.ds.pasteMember",
           "group": "001_zowe_dsCreate@7"
+        },
+        {
+          "when": "view == zowe.ds.explorer && viewItem =~ /^member.*/",
+          "command": "zowe.ds.showPDSMemberAttributes",
+          "group": "001_zowe_dsCreate@8"
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",

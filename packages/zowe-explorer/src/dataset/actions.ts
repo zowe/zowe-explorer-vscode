@@ -821,19 +821,6 @@ export async function showDSAttributes(
             throw err;
         }
 
-        // shouldn't be possible for there to be two cataloged data sets with the same name,
-        // but just in case we'll display all of the results
-        // if there's only one result (which there should be), we will just pass in attributes[0]
-        // so that prettyJson doesn't display the attributes as an array with a hyphen character
-        const attributesText = zowe.imperative.TextUtils.prettyJson(
-            attributes.length > 1 ? attributes : attributes[0],
-            undefined,
-            false
-        );
-        // const attributesFilePath = path.join(ZOWETEMPFOLDER, label + ".yaml");
-        // fs.writeFileSync(attributesFilePath, attributesText);
-        // const document = await vscode.workspace.openTextDocument(attributesFilePath);
-        // await vscode.window.showTextDocument(document);
         const attributesMessage = localize("attributes.title", "Attributes");
         const webviewHTML = `<!DOCTYPE html>
         <html lang="en">
@@ -842,7 +829,90 @@ export async function showDSAttributes(
             <title>${label} "${attributesMessage}"</title>
         </head>
         <body>
-        ${attributesText.replace(/\n/g, "</br>")}
+        <table style="margin-top: 2em; border-spacing: 2em 0">
+        ${Object.keys(attributes[0]).reduce(
+            (html, key) =>
+                html.concat(`
+                <tr>
+                    <td align="left" style="color: yellow; font-weight: bold">${key}:</td>
+                    <td align="right" style="color: ${
+                        typeof attributes[0][key] === "number" ? "dodgerblue" : "white"
+                    }">${attributes[0][key]}</td>
+                </tr>
+        `),
+            ""
+        )}
+        </table>
+        </body>
+        </html>`;
+        const column = vscode.window.activeTextEditor ? vscode.window.activeTextEditor.viewColumn : undefined;
+        const panel: vscode.WebviewPanel = vscode.window.createWebviewPanel(
+            "zowe",
+            label + " " + localize("attributes.title", "Attributes"),
+            column || 1,
+            {}
+        );
+        panel.webview.html = webviewHTML;
+    }
+}
+
+export async function showPDSMemberAttributes(
+    node: api.IZoweDatasetTreeNode,
+    datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>
+) {
+    await datasetProvider.checkCurrentProfile(node);
+    if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
+        const label = node.label as string;
+        const dsName = node.getParent().getLabel() as string;
+        globals.LOG.debug(localize("showPDSMemberAttributes.debug", "showing attributes of member ") + label);
+        let attributes: any;
+        try {
+            attributes = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).allMembers(dsName.toUpperCase(), {
+                attributes: true,
+                pattern: label.toUpperCase(),
+            });
+            attributes = attributes.apiResponse.items;
+            if (attributes.length === 0) {
+                throw new Error(
+                    localize("showPDSMemberAttributes.lengthError", "No matching member names found for query: ") +
+                        label
+                );
+            }
+        } catch (err) {
+            globals.LOG.error(
+                localize("showPDSMemberAttributes.log.error", "Error encountered when listing attributes! ") +
+                    JSON.stringify(err)
+            );
+            await errorHandling(
+                err,
+                node.getProfileName(),
+                localize("showPDSMemberAttributes.error", "Unable to list attributes: ") + err.message
+            );
+            throw err;
+        }
+
+        const attributesMessage = localize("attributes.title", "Attributes");
+        const webviewHTML = `<!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <title>${label} "${attributesMessage}"</title>
+        </head>
+        <body>
+        <table style="margin-top: 2em; border-spacing: 2em 0">
+        ${Object.keys(attributes[0]).reduce(
+            (html, key) =>
+                html.concat(`
+                <tr>
+                    <td align="left" style="color: yellow; font-weight: bold">${key}:</td>
+                    <td align="right" style="color: ${
+                        typeof attributes[0][key] === "number" ? "dodgerblue" : "white"
+                    }">${attributes[0][key]}</td>
+                </tr>
+        `),
+            ""
+        )}
+        </table>
         </body>
         </html>`;
         const column = vscode.window.activeTextEditor ? vscode.window.activeTextEditor.viewColumn : undefined;

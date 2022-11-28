@@ -19,6 +19,7 @@
   "createDataset": "Create New Data Set",
   "createMember": "Create New Member",
   "showDSAttributes": "Show Data Set Attributes",
+  "showPDSMemberAttributes": "Show Member Attributes",
   "deleteDataset": "Delete",
   "deleteMember": "Delete",
   "allocateLike": "Allocate Like (New Data Set with Same Attributes)",
