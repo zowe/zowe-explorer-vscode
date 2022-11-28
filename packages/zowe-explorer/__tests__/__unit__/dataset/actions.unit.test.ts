@@ -1606,7 +1606,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
     });
 });
 
-describe("Dataset Actions Unit Tests - Function showDSAttributes", () => {
+describe("Dataset Actions Unit Tests - Function showAttributes", () => {
     function createBlockMocks() {
         const session = createISession();
         const sessionWithoutCredentials = createISessionWithoutCredentials();
@@ -1661,7 +1661,7 @@ describe("Dataset Actions Unit Tests - Function showDSAttributes", () => {
             },
         });
 
-        await dsActions.showDSAttributes(node, blockMocks.testDatasetTree);
+        await dsActions.showAttributes(node, blockMocks.testDatasetTree);
 
         expect(datasetListSpy).toBeCalledWith(node.label.toString(), { attributes: true });
         expect(mocked(vscode.window.createWebviewPanel)).toBeCalled();
@@ -1700,7 +1700,7 @@ describe("Dataset Actions Unit Tests - Function showDSAttributes", () => {
             },
         });
 
-        await dsActions.showDSAttributes(node, blockMocks.testDatasetTree);
+        await dsActions.showAttributes(node, blockMocks.testDatasetTree);
 
         expect(datasetListSpy).toBeCalledWith(node.label.toString(), { attributes: true });
         expect(mocked(vscode.window.createWebviewPanel)).toBeCalled();
@@ -1732,7 +1732,7 @@ describe("Dataset Actions Unit Tests - Function showDSAttributes", () => {
             },
         });
 
-        await dsActions.showDSAttributes(node, blockMocks.testDatasetTree);
+        await dsActions.showAttributes(node, blockMocks.testDatasetTree);
 
         expect(datasetListSpy).toBeCalledWith(node.label.toString(), { attributes: true });
         expect(mocked(vscode.window.createWebviewPanel)).toBeCalled();
@@ -1765,7 +1765,7 @@ describe("Dataset Actions Unit Tests - Function showDSAttributes", () => {
             },
         });
 
-        await dsActions.showDSAttributes(node, blockMocks.testDatasetTree);
+        await dsActions.showAttributes(node, blockMocks.testDatasetTree);
 
         expect(datasetListSpy).toBeCalledWith(normalisedLabel, { attributes: true });
         expect(mocked(vscode.window.createWebviewPanel)).toBeCalled();
@@ -1798,7 +1798,7 @@ describe("Dataset Actions Unit Tests - Function showDSAttributes", () => {
             },
         });
 
-        await dsActions.showDSAttributes(node, blockMocks.testDatasetTree);
+        await dsActions.showAttributes(node, blockMocks.testDatasetTree);
 
         expect(datasetListSpy).toBeCalledWith(normalisedLabel, { attributes: true });
         expect(mocked(vscode.window.createWebviewPanel)).toBeCalled();
@@ -1830,11 +1830,11 @@ describe("Dataset Actions Unit Tests - Function showDSAttributes", () => {
             },
         });
 
-        await expect(dsActions.showDSAttributes(node, blockMocks.testDatasetTree)).rejects.toEqual(
-            Error("No matching data set names found for query: AUSER.A1557332.A996850.TEST1")
+        await expect(dsActions.showAttributes(node, blockMocks.testDatasetTree)).rejects.toEqual(
+            Error("No matching names found for query: AUSER.A1557332.A996850.TEST1")
         );
         expect(mocked(vscode.window.showErrorMessage)).toBeCalledWith(
-            "Unable to list attributes: No matching data set names found for query: AUSER.A1557332.A996850.TEST1 Error: No matching data set names found for query: AUSER.A1557332.A996850.TEST1"
+            "Unable to list attributes: No matching names found for query: AUSER.A1557332.A996850.TEST1 Error: No matching names found for query: AUSER.A1557332.A996850.TEST1"
         );
         expect(mocked(vscode.window.createWebviewPanel)).not.toBeCalled();
     });
