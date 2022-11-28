@@ -50,6 +50,9 @@ nls.config({
 })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 let savedProfileContents = new Uint8Array();
+let datasetProvider: IZoweTree<IZoweDatasetTreeNode>;
+let ussFileProvider: IZoweTree<IZoweUSSTreeNode>;
+let jobsProvider: IZoweTree<IZoweJobTreeNode>;
 
 /**
  * The function that runs when the extension is loaded
@@ -69,10 +72,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     globals.defineGlobals(preferencesTempPath);
 
     hideTempFolder(getZoweDir());
-
-    let datasetProvider: IZoweTree<IZoweDatasetTreeNode>;
-    let ussFileProvider: IZoweTree<IZoweUSSTreeNode>;
-    let jobsProvider: IZoweTree<IZoweJobTreeNode>;
 
     try {
         globals.initLogger(context);
@@ -179,13 +178,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     );
 
     if (datasetProvider) {
-        initDatasetProvider(context, datasetProvider);
+        initDatasetProvider(context);
     }
     if (ussFileProvider) {
-        initUSSProvider(context, ussFileProvider);
+        initUSSProvider(context);
     }
     if (jobsProvider) {
-        initJobsProvider(context, jobsProvider);
+        initJobsProvider(context);
     }
     if (datasetProvider || ussFileProvider) {
         context.subscriptions.push(
@@ -276,12 +275,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
 
     ZoweExplorerExtender.createInstance(datasetProvider, ussFileProvider, jobsProvider);
     await SettingsConfig.standardizeSettings();
-
-    try {
-        await watchConfigProfile(context);
-    } catch (e) {
-        globals.LOG.error(e);
-    }
+    await watchConfigProfile(context);
     globals.setActivated(true);
     return ZoweExplorerApiRegister.getInstance();
 }
@@ -313,7 +307,9 @@ async function watchConfigProfile(context: vscode.ExtensionContext) {
             return;
         }
         savedProfileContents = newProfileContents;
-        await vscode.commands.executeCommand("zowe.extRefresh");
+        await refreshActions.refreshAll(datasetProvider);
+        await refreshActions.refreshAll(ussFileProvider);
+        await refreshActions.refreshAll(jobsProvider);
     };
 
     globalProfileWatcher.onDidCreate(async () => {
@@ -344,7 +340,7 @@ async function watchConfigProfile(context: vscode.ExtensionContext) {
         });
 }
 
-function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
+function initDatasetProvider(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.all.config.init", async () => {
             datasetProvider.createZoweSchema(datasetProvider);
@@ -365,7 +361,6 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.refreshAll", async () => {
-            await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
             await refreshActions.refreshAll(datasetProvider);
         })
     );
@@ -553,7 +548,7 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
     initSubscribers(context, datasetProvider);
 }
 
-function initUSSProvider(context: vscode.ExtensionContext, ussFileProvider: IZoweTree<IZoweUSSTreeNode>) {
+function initUSSProvider(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.uss.addFavorite", async (node, nodeList) => {
             const selectedNodes = getSelectedNodeList(node, nodeList);
@@ -577,7 +572,6 @@ function initUSSProvider(context: vscode.ExtensionContext, ussFileProvider: IZow
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.uss.refreshAll", async () => {
-            await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
             await refreshActions.refreshAll(ussFileProvider);
         })
     );
@@ -726,7 +720,7 @@ function initUSSProvider(context: vscode.ExtensionContext, ussFileProvider: IZow
     initSubscribers(context, ussFileProvider);
 }
 
-function initJobsProvider(context: vscode.ExtensionContext, jobsProvider: IZoweTree<IZoweJobTreeNode>) {
+function initJobsProvider(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.jobs.zosJobsOpenspool", (session, spool, refreshTimestamp) =>
             jobActions.getSpoolContent(session, spool, refreshTimestamp)
@@ -755,7 +749,6 @@ function initJobsProvider(context: vscode.ExtensionContext, jobsProvider: IZoweT
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.jobs.refreshAllJobs", async () => {
-            await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
             await refreshActions.refreshAll(jobsProvider);
         })
     );

@@ -121,6 +121,7 @@ async function createGlobalMocks() {
             disableValidationContext: jest.fn(),
             enableValidationContext: jest.fn(),
             validationArraySetup: jest.fn(),
+            fetchAllProfiles: jest.fn(),
             getProfileInfo: () => createInstanceOfProfileInfo(),
         },
         mockExtension: null,

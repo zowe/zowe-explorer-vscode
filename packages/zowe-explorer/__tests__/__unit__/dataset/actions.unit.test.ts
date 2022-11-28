@@ -157,7 +157,11 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
             blockMocks.session
         );
 
-        const mySpy = jest.spyOn(UIViews, "inputBox").mockImplementationOnce(() => Promise.resolve("testMember"));
+        const mySpy = mocked(vscode.window.showInputBox).mockImplementation((options) => {
+            options.validateInput("testMember");
+            return Promise.resolve("testMember");
+        });
+
         mocked(vscode.window.withProgress).mockImplementation((progLocation, callback) => {
             return callback();
         });
@@ -171,7 +175,10 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
 
         await dsActions.createMember(parent, blockMocks.testDatasetTree);
 
-        expect(mySpy).toBeCalledWith({ placeHolder: "Name of Member" });
+        expect(mySpy).toBeCalledWith({
+            placeHolder: "Name of Member",
+            validateInput: expect.any(Function),
+        });
         expect(mocked(zowe.Upload.bufferToDataSet)).toBeCalledWith(
             blockMocks.zosmfSession,
             Buffer.from(""),
@@ -227,7 +234,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
         parent.label = `${parent.label}`;
         parent.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
 
-        const mySpy = jest.spyOn(UIViews, "inputBox").mockImplementationOnce(() => Promise.resolve("testMember"));
+        const mySpy = mocked(vscode.window.showInputBox).mockResolvedValue("testMember");
         mocked(vscode.window.withProgress).mockImplementation((progLocation, callback) => {
             return callback();
         });
@@ -241,7 +248,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
 
         await dsActions.createMember(parent, blockMocks.testDatasetTree);
 
-        expect(mySpy).toBeCalledWith({ placeHolder: "Name of Member" });
+        expect(mySpy).toBeCalledWith({ placeHolder: "Name of Member", validateInput: expect.any(Function) });
         expect(mocked(zowe.Upload.bufferToDataSet)).toBeCalledWith(
             blockMocks.zosmfSession,
             Buffer.from(""),
@@ -1062,7 +1069,7 @@ describe("Dataset Actions Unit Tests - Function enterPattern", () => {
         node.pattern = "TEST";
         node.contextValue = globals.DS_SESSION_CONTEXT;
 
-        const mySpy = jest.spyOn(UIViews, "inputBox").mockImplementationOnce(() => Promise.resolve("test"));
+        const mySpy = mocked(vscode.window.showInputBox).mockResolvedValue("test");
         await dsActions.enterPattern(node, blockMocks.testDatasetTree);
 
         expect(mySpy).toBeCalledWith({
@@ -2623,7 +2630,10 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         blockMocks.testDatasetTree.createFilterString.mockResolvedValue("test");
         blockMocks.testDatasetTree.getSearchHistory.mockReturnValue([]);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        mocked(vscode.window.showInputBox).mockResolvedValue("test");
+        mocked(vscode.window.showInputBox).mockImplementation((options) => {
+            options.validateInput("test");
+            return Promise.resolve("test");
+        });
         mocked(vscode.window.showQuickPick).mockResolvedValue(" + Allocate Data Set" as any);
         const createDataSetSpy = jest.spyOn(blockMocks.mvsApi, "createDataSet");
         createDataSetSpy.mockReset();
@@ -3186,7 +3196,10 @@ describe("Dataset Actions Unit Tests - Function allocateLike", () => {
 
         mocked(vscode.window.createQuickPick).mockReturnValue(quickPickContent);
         mocked(Profiles.getInstance).mockReturnValue(profileInstance);
-        mocked(vscode.window.showInputBox).mockResolvedValue("test");
+        mocked(vscode.window.showInputBox).mockImplementation((options) => {
+            options.validateInput("test");
+            return Promise.resolve("test");
+        });
         jest.spyOn(datasetSessionNode, "getChildren").mockResolvedValue([testNode, testSDSNode]);
         testDatasetTree.createFilterString.mockResolvedValue("test");
         jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValue(quickPickItem);

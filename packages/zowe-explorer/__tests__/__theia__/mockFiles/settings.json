@@ -1,0 +1,27 @@
+{
+  "zowe.ds.history": {
+    "persistence": true,
+    "favorites": [],
+    "history": [],
+    "sessions": [],
+    "fileHistory": [],
+    "searchHistory": []
+  },
+  "zowe.uss.history": {
+    "persistence": true,
+    "favorites": [],
+    "history": [],
+    "sessions": [],
+    "fileHistory": [],
+    "searchHistory": []
+  },
+  "zowe.jobs.history": {
+    "persistence": true,
+    "favorites": [],
+    "history": [],
+    "sessions": [],
+    "fileHistory": [],
+    "searchHistory": []
+  },
+  "zowe.security.secureCredentialsEnabled": false
+}

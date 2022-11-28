@@ -34,7 +34,7 @@ import { resetValidationSettings } from "../shared/actions";
 import { closeOpenedTextFile } from "../utils/workspace";
 import { PersistentFilters } from "../PersistentFilters";
 import { IDataSet, IListOptions, imperative } from "@zowe/cli";
-import { UIViews } from "../shared/ui-views";
+import { validateDataSetName, validateMemberName } from "./utils";
 
 // Set up localization
 nls.config({
@@ -461,12 +461,12 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 }
             }
         } else {
-            const profiles: imperative.IProfileLoaded[] = Profiles.getInstance()?.allProfiles;
+            const profiles: imperative.IProfileLoaded[] = await Profiles.getInstance().fetchAllProfiles();
             if (profiles) {
                 for (const theProfile of profiles) {
                     // If session is already added, do nothing
                     if (this.mSessionNodes.find((tempNode) => tempNode.label.toString() === theProfile.name)) {
-                        return;
+                        continue;
                     }
                     for (const session of this.mHistory.getSessions()) {
                         if (session === theProfile.name) {
@@ -483,8 +483,14 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     }
                 }
             }
-            if (profileType && this.mSessionNodes.length === 1) {
-                await this.addSingleSession(Profiles.getInstance().getDefaultProfile(profileType));
+            if (this.mSessionNodes.length === 1) {
+                try {
+                    await this.addSingleSession(Profiles.getInstance().getDefaultProfile(profileType));
+                } catch (error) {
+                    // catch and log error of no default,
+                    // if not type passed getDefaultProfile assumes zosmf
+                    this.log.warn(error);
+                }
             }
         }
         this.refresh();
@@ -935,7 +941,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     value: pattern,
                 };
                 // get user input
-                pattern = await UIViews.inputBox(options2);
+                pattern = await vscode.window.showInputBox(options2);
                 if (!pattern) {
                     vscode.window.showInformationMessage(
                         localize("datasetFilterPrompt.enterPattern", "You must enter a pattern.")
@@ -1152,8 +1158,15 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     private async renameDataSetMember(node: IZoweDatasetTreeNode) {
         const beforeMemberName = node.label as string;
         const dataSetName = node.getParent().getLabel() as string;
-        const options: vscode.InputBoxOptions = { value: beforeMemberName };
-        let afterMemberName = await UIViews.inputBox(options);
+        const options: vscode.InputBoxOptions = {
+            value: beforeMemberName,
+            validateInput: (text) => {
+                return validateMemberName(text) === true
+                    ? null
+                    : localize("member.validation", "Enter valid member name");
+            },
+        };
+        let afterMemberName = await vscode.window.showInputBox(options);
         if (!afterMemberName) {
             vscode.window.showInformationMessage(localize("renameDataSet.cancelled", "Rename operation cancelled."));
             return;
@@ -1215,8 +1228,15 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      */
     private async renameDataSet(node: IZoweDatasetTreeNode) {
         const beforeDataSetName = node.label as string;
-        const options: vscode.InputBoxOptions = { value: beforeDataSetName };
-        let afterDataSetName = await UIViews.inputBox(options);
+        const options: vscode.InputBoxOptions = {
+            value: beforeDataSetName,
+            validateInput: (text) => {
+                return validateDataSetName(text) === true
+                    ? null
+                    : localize("dataset.validation", "Enter valid dataset name");
+            },
+        };
+        let afterDataSetName = await vscode.window.showInputBox(options);
         if (!afterDataSetName) {
             vscode.window.showInformationMessage(localize("renameDataSet.cancelled", "Rename operation cancelled."));
             return;

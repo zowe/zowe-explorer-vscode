@@ -213,7 +213,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
                 valueSelection: response ? [response.length, response.length] : undefined,
             };
             // get user input
-            response = await UIViews.inputBox(options2);
+            response = await vscode.window.showInputBox(options2);
             if (!response) {
                 vscode.window.showInformationMessage(localize("issueMvsCommand.enter.command", "No command entered."));
                 return;

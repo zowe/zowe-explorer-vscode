@@ -2,11 +2,15 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
-## TBD Release
+## `2.4.1`
 
 ### Bug fixes
 
-- Fixed the `Secure Credentials Enabled` setting to update the `~/.zowe/settings/imperative.json` file upon change of the setting without overwriting other data in the file.
+- Bugfix: Added validation check while creating, renaming and using allocate alike feature for datasets [#1849](https://github.com/zowe/vscode-extension-for-zowe/issues/1849)
+- Fixed login/logout errors from Team config file watcher. [#1924](https://github.com/zowe/vscode-extension-for-zowe/issues/1924)
+- Fixed the loading of previously saved profiles in the tree views.
+- Fixed default zosmf profile being added to tree view when no previous sessions have been added. [#1992](https://github.com/zowe/vscode-extension-for-zowe/issues/1992)
+- Fixed the `Secure Credentials Enabled` setting to update the `~/.zowe/settings/imperative.json` file upon change of the setting without overwriting preexisting data in the file.
 - Fixed errors encountered from not having Zowe CLI installed by creating the `~/.zowe/settings/imperative.json` file during activation if it doesn't already exist. This file is for Zowe Explorer to know the Security Credential Manager used for secure profile information and removes the Zowe CLI installation prerequisite. [#1850](https://github.com/zowe/vscode-extension-for-zowe/issues/1850)
 - Fixed Zowe Explorer failing to activate in environment with empty workspace. [#1994](https://github.com/zowe/vscode-extension-for-zowe/issues/1994)
 
