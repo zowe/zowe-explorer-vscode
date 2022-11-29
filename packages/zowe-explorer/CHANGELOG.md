@@ -6,6 +6,10 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 -Multiple select for hide session [#1555](https://github.com/zowe/vscode-extension-for-zowe/issues/1555)
 
+### Bug fixes
+
+- Fixed missing localization for certain VScode error/info/warning messages. [#1722](https://github.com/zowe/vscode-extension-for-zowe/issues/1722)
+
 ## `2.4.1`
 
 ### Bug fixes

@@ -299,7 +299,7 @@ export async function willForceUpload(
                     }
                 });
             } else {
-                vscode.window.showInformationMessage("Upload cancelled.");
+                vscode.window.showInformationMessage(localize("uploadContent.cancelled", "Upload cancelled."));
                 await markFileAsDirty(doc);
             }
         });
