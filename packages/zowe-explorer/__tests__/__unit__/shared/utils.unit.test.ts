@@ -29,7 +29,7 @@ import { Job } from "../../../src/job/ZoweJobNode";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
-import { ProfilesCache } from "@zowe/zowe-explorer-api";
+import { IZoweTreeNode, ProfilesCache, ZoweTreeNode } from "@zowe/zowe-explorer-api";
 
 jest.mock("path");
 
@@ -626,4 +626,39 @@ describe("Shared Utils Unit Tests - Function getDocumentFilePath", () => {
             path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.SPFLOG1.log")
         );
     });
+});
+
+describe("Shared Utils Unit Tests - Function getSelectedNodeList", () => {
+    it("Testing that getSelectedNodeList returns the correct array when single node is selected", async () => {
+        let selectedNodes = [];
+        const aNode = createTestNode();
+        selectedNodes.push(aNode);
+        let nodeList = sharedUtils.getSelectedNodeList(aNode, selectedNodes);
+
+        expect(nodeList).toEqual(selectedNodes);
+    });
+
+    it("Testing that getSelectedNodeList returns the correct array when single node is selected via quickKeys", async () => {
+        let selectedNodes;
+        const aNode = createTestNode();
+        let nodeList = sharedUtils.getSelectedNodeList(aNode, selectedNodes);
+
+        expect(nodeList[0]).toEqual(aNode);
+    });
+
+    it("Testing that getSelectedNodeList returns the correct array when multiple node is selected", async () => {
+        let selectedNodes = [];
+        const aNode = createTestNode();
+        selectedNodes.push(aNode);
+        const bNode = createTestNode();
+        selectedNodes.push(bNode);
+        let nodeList = sharedUtils.getSelectedNodeList(aNode, selectedNodes);
+
+        expect(nodeList).toEqual(selectedNodes);
+    });
+
+    function createTestNode() {
+        const node = new ZoweDatasetNode("testLabel", vscode.TreeItemCollapsibleState.Collapsed, null, null, null);
+        return node;
+    }
 });

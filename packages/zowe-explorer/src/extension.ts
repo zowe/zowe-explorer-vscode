@@ -42,6 +42,7 @@ import { handleSaving } from "./utils/workspace";
 import { ZoweDatasetNode } from "./dataset/ZoweDatasetNode";
 import * as contextuals from "../src/shared/context";
 import { Job } from "./job/ZoweJobNode";
+import { getSelectedNodeList } from "./shared/utils";
 
 // Set up localization
 nls.config({
@@ -886,16 +887,6 @@ function initSubscribers(context: vscode.ExtensionContext, theProvider: IZoweTre
             await theProvider.flipState(e.element, true);
         });
     }
-}
-
-function getSelectedNodeList(node: IZoweTreeNode, nodeList: IZoweTreeNode[]): IZoweTreeNode[] {
-    let resultNodeList: IZoweTreeNode[] = [];
-    if (!nodeList) {
-        resultNodeList.push(node);
-    } else {
-        resultNodeList = nodeList;
-    }
-    return resultNodeList;
 }
 
 /**
