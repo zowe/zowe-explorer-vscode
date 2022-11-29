@@ -493,12 +493,13 @@ function initDatasetProvider(context: vscode.ExtensionContext) {
             } else {
                 selectedNodes = getSelectedNodeList(node, nodeList);
             }
-            selectedNodes = selectedNodes.filter((element) => contextuals.isDsMember(element));
             dsActions.copyDataSet(selectedNodes);
         })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.pasteMember", (node) => dsActions.pasteMember(node, datasetProvider))
+        vscode.commands.registerCommand("zowe.ds.pasteMember", async (node) => {
+            dsActions.pasteDataSet(node, datasetProvider);
+        })
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.renameDataSetMember", (node) => datasetProvider.rename(node))

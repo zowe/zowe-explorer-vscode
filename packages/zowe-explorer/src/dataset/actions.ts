@@ -1199,9 +1199,21 @@ export async function enterPattern(node: api.IZoweDatasetTreeNode, datasetProvid
  * @param {IZoweNodeType} node - The node to copy
  */
 export async function copyDataSet(nodesList: api.IZoweNodeType[]) {
-    let uniq = (contextValue) => [...new Set(contextValue)];
-
-    return vscode.env.clipboard.writeText(JSON.stringify(dsUtils.getNodeLabels(nodesList[0])));
+    const unique = [...new Set(nodesList.map((item) => item.contextValue))];
+    if (unique.length > 1) {
+        vscode.window.showErrorMessage(
+            `${"Can't copy multiple dataset with different types"}: ${" Please select same types to copy"}`
+        );
+        return;
+    }
+    if (nodesList.length === 1 && nodesList[0].contextValue == globals.DS_MEMBER_CONTEXT) {
+        return vscode.env.clipboard.writeText(JSON.stringify(dsUtils.getNodeLabels(nodesList[0])));
+    }
+    let filePaths = [];
+    nodesList.forEach((el) => {
+        filePaths.push(dsUtils.getNodeLabels(el));
+    });
+    return vscode.env.clipboard.writeText(JSON.stringify(filePaths));
 }
 
 /**
@@ -1489,5 +1501,63 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
         }
     } catch (err) {
         vscode.window.showErrorMessage(err.message);
+    }
+}
+
+/**
+ * Paste member
+ *
+ * @export
+ * @param {ZoweNode} node - The node to paste to
+ * @param {DatasetTree} datasetProvider - the tree which contains the nodes
+ */
+export async function pasteDataSet(
+    node: api.IZoweDatasetTreeNode,
+    datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>
+) {
+    let clipboardContent;
+
+    if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
+        try {
+            clipboardContent = JSON.parse(await vscode.env.clipboard.readText());
+        } catch (err) {
+            throw Error("Invalid clipboard. Copy from data set first");
+        }
+
+        if (clipboardContent.length === 1 && clipboardContent[0].memberName) {
+            return pasteMember(node, datasetProvider);
+        }
+
+        for (const content of clipboardContent) {
+            if (content.memberName) {
+                //member
+                try {
+                    await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).copyDataSetMember(
+                        { dsn: content.dataSetName, member: content.memberName },
+                        { dsn: node.getLabel().toString(), member: content.memberName }
+                    );
+                } catch (err) {
+                    vscode.window.showErrorMessage(err.message);
+                    return;
+                }
+            } else {
+                // pds
+                const inputBoxOptions: vscode.InputBoxOptions = {
+                    value: content.datasetName,
+                    placeHolder: localize("pasteMember.inputBox.placeHolder", "Name of Data Set Member"),
+                    validateInput: (text) => {
+                        return dsUtils.validateDataSetName(text) && (content.datasetName !== text) === true
+                            ? null
+                            : "Enter valid member name";
+                    },
+                };
+                const sequential = await vscode.window.showInputBox(inputBoxOptions);
+                if (!sequential) {
+                    return;
+                }
+                const newOptions = { "from-dataset": { dsn: content.dataSetName } };
+                return await zowe.Copy.dataSet(this.getSession(), { dsn: sequential }, newOptions);
+            }
+        }
     }
 }
