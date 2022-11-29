@@ -1,9 +1,10 @@
 {
   "errorHandling.invalid.credentials": "Invalid Credentials. Please ensure the username and password for {0} are valid or this may lead to a lock-out.",
   "errorHandling.invalid.token": "Your connection is no longer active. Please log in to an authentication service to restore the connection.",
-  "ErrorHandling.authentication.login": "Log in to Authentication Service",
-  "ErrorHandling.checkCredentials.button": "Check Credentials",
-  "ErrorHandling.checkCredentials.cancelled": "Operation Cancelled",
+  "errorHandling.invalid.host": "Required parameter 'host' must not be blank.",
+  "errorHandling.authentication.login": "Log in to Authentication Service",
+  "errorHandling.checkCredentials.button": "Check Credentials",
+  "errorHandling.checkCredentials.cancelled": "Operation Cancelled",
   "getProfile.notTreeItem": "Tree Item is not a Zowe Explorer item.",
   "zowe.promptCredentials.notSupported": "\"Update Credentials\" operation not supported when \"autoStore\" is false",
   "createNewConnection.option.prompt.profileName.placeholder": "Connection Name",

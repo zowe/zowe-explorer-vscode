@@ -917,7 +917,9 @@ export class Profiles extends ProfilesCache {
                 }
             }
             await this.saveProfile(schemaValues, schemaValues.name, profileType);
-            vscode.window.showInformationMessage("Profile " + newProfileName + " was created.");
+            vscode.window.showInformationMessage(
+                localize("createProfile.success.info", "Profile {0} was created.", newProfileName)
+            );
             // Trigger a ProfilesCache.createConfigInstance with a fresh Config.load
             // This shall capture any profiles created (v1 or v2)
             await readConfigFromDisk();
