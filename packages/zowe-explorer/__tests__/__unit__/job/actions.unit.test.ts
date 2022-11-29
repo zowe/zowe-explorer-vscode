@@ -1048,7 +1048,6 @@ describe("job deletion command", () => {
         await jobActions.deleteCommand(jobsProvider, jobNode);
 
         expect(mocked(jobsProvider.delete)).toBeCalledWith(jobNode);
-        expect(jobsProvider.refreshElement).toHaveBeenCalledWith(null);
     });
 
     it("should delete multiple jobs from the jobs provider", async () => {
@@ -1104,6 +1103,5 @@ describe("job deletion command", () => {
 
         // assert
         expect(mocked(jobsProvider.delete)).toBeCalledWith(jobNode);
-        expect(jobsProvider.refreshElement).toHaveBeenCalledWith(null);
     });
 });

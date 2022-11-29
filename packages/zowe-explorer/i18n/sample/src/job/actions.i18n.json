@@ -11,6 +11,6 @@
   "deleteJobPrompt.confirmation.delete": "Delete",
   "deleteJobPrompt.confirmation.cancel.log.debug": "Delete action was canceled.",
   "deleteJobPrompt.deleteCancelled": "Delete action was cancelled.",
-  "deleteCommand.job": "Job {0} deleted.",
+  "deleteCommand.job": "Job {0} was deleted.",
   "deleteCommand.multipleJobs": "The following jobs were deleted: {0}"
 }
