@@ -641,7 +641,7 @@ describe("Shared Utils Unit Tests - Function getSelectedNodeList", () => {
     it("Testing that getSelectedNodeList returns the correct array when single node is selected via quickKeys", async () => {
         const selectedNodes = undefined;
         const aNode = createTestNode();
-        let nodeList = sharedUtils.getSelectedNodeList(aNode, selectedNodes);
+        const nodeList = sharedUtils.getSelectedNodeList(aNode, selectedNodes);
 
         expect(nodeList[0]).toEqual(aNode);
     });
