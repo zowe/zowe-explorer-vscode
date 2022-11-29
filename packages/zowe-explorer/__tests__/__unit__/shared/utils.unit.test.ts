@@ -630,16 +630,16 @@ describe("Shared Utils Unit Tests - Function getDocumentFilePath", () => {
 
 describe("Shared Utils Unit Tests - Function getSelectedNodeList", () => {
     it("Testing that getSelectedNodeList returns the correct array when single node is selected", async () => {
-        let selectedNodes = [];
+        const selectedNodes = [];
         const aNode = createTestNode();
         selectedNodes.push(aNode);
-        let nodeList = sharedUtils.getSelectedNodeList(aNode, selectedNodes);
+        const nodeList = sharedUtils.getSelectedNodeList(aNode, selectedNodes);
 
         expect(nodeList).toEqual(selectedNodes);
     });
 
     it("Testing that getSelectedNodeList returns the correct array when single node is selected via quickKeys", async () => {
-        let selectedNodes;
+        const selectedNodes = undefined;
         const aNode = createTestNode();
         let nodeList = sharedUtils.getSelectedNodeList(aNode, selectedNodes);
 
@@ -647,12 +647,12 @@ describe("Shared Utils Unit Tests - Function getSelectedNodeList", () => {
     });
 
     it("Testing that getSelectedNodeList returns the correct array when multiple node is selected", async () => {
-        let selectedNodes = [];
+        const selectedNodes = [];
         const aNode = createTestNode();
         selectedNodes.push(aNode);
         const bNode = createTestNode();
         selectedNodes.push(bNode);
-        let nodeList = sharedUtils.getSelectedNodeList(aNode, selectedNodes);
+        const nodeList = sharedUtils.getSelectedNodeList(aNode, selectedNodes);
 
         expect(nodeList).toEqual(selectedNodes);
     });
