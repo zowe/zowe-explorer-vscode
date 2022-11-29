@@ -856,11 +856,10 @@ export async function showAttributes(
         </table>
         </body>
         </html>`;
-        const column = vscode.window.activeTextEditor ? vscode.window.activeTextEditor.viewColumn : undefined;
         const panel: vscode.WebviewPanel = vscode.window.createWebviewPanel(
             "zowe",
             label + " " + localize("attributes.title", "Attributes"),
-            column || 1,
+            vscode.window.activeTextEditor ? vscode.window.activeTextEditor.viewColumn : 1,
             {}
         );
         panel.webview.html = webviewHTML;
