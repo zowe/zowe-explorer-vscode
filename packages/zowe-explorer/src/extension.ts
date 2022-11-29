@@ -443,13 +443,16 @@ function initDatasetProvider(context: vscode.ExtensionContext) {
         })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.removeSession", async (node, nodeList) => {
-            let selectedNodes = getSelectedNodeList(node, nodeList);
-            selectedNodes = selectedNodes.filter((element) => contextuals.isDsSession(element));
-            for (const item of selectedNodes) {
-                datasetProvider.deleteSession(item);
+        vscode.commands.registerCommand(
+            "zowe.ds.removeSession",
+            async (node: IZoweDatasetTreeNode, nodeList: IZoweDatasetTreeNode[]) => {
+                let selectedNodes = getSelectedNodeList(node, nodeList);
+                selectedNodes = selectedNodes.filter((sNode) => contextuals.isDsSession(sNode));
+                for (const select of selectedNodes) {
+                    datasetProvider.deleteSession(select);
+                }
             }
-        })
+        )
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.removeFavorite", async (node, nodeList) => {

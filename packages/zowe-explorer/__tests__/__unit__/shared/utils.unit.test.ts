@@ -29,7 +29,7 @@ import { Job } from "../../../src/job/ZoweJobNode";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
-import { IZoweTreeNode, ProfilesCache, ZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { ProfilesCache } from "@zowe/zowe-explorer-api";
 
 jest.mock("path");
 
