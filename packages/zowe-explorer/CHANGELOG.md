@@ -6,6 +6,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Fixed missing localization for certain VScode error/info/warning messages. [#1722](https://github.com/zowe/vscode-extension-for-zowe/issues/1722)
 - Fixed "Allocate Like" feature failing to respect original dataset params and pattern (if specified). [#1974](https://github.com/zowe/vscode-extension-for-zowe/issues/1974)
 
 ## `2.4.1`
