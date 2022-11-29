@@ -46,6 +46,21 @@ interface IJobSearchCriteria {
     Status: string | undefined;
 }
 
+interface IJobStatusOption {
+    key: string;
+    label: string;
+    value: string;
+    picked: boolean;
+}
+
+interface IJobPickerOption {
+    key: string;
+    label: string;
+    value: string;
+    show: boolean;
+    placeHolder: string;
+}
+
 /**
  * Creates the Job tree that contains nodes of sessions, jobs and spool items
  *
@@ -556,7 +571,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         return;
     }
 
-    public async applyRegularSessionSearchLabel(node): Promise<string | undefined> {
+    public async applyRegularSessionSearchLabel(node: IZoweJobTreeNode): Promise<string | undefined> {
         // This is the profile object context
         let choice: vscode.QuickPickItem;
         let searchCriteria: string = "";
@@ -638,7 +653,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         return searchCriteria;
     }
 
-    public parseJobSearchQuery(searchCriteria: string | undefined) {
+    public parseJobSearchQuery(searchCriteria: string) {
         const searchCriteriaObj: IJobSearchCriteria = {
             Owner: undefined,
             Prefix: undefined,
@@ -754,7 +769,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         throw new Error("Method not implemented.");
     }
 
-    private async setJobStatus(node: IZoweJobTreeNode) {
+    private async setJobStatus(node: IZoweJobTreeNode): Promise<IJobStatusOption> {
         const apiExists = ZoweExplorerApiRegister.getJesApi(node.getProfile()).getJobsByParameters;
         const jobStatusSelection = apiExists ? globals.JOB_STATUS : globals.JOB_STATUS_UNSUPPORTED;
         let choice = await vscode.window.showQuickPick(jobStatusSelection);
@@ -764,12 +779,13 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         return choice;
     }
 
-    private async handleEditingMultiJobParameters(jobProperties, node) {
+    private async handleEditingMultiJobParameters(jobProperties: IJobPickerOption[], node: IZoweJobTreeNode) {
         const editableItems = [];
         editableItems.push(new FilterItem({ text: ` + Submit this Job Search Query`, show: true }));
         jobProperties.forEach((prop) => {
             if (prop.key === "owner" && !prop.value) {
-                prop.value = node.profile.profile.user;
+                const session = node.getSession();
+                prop.value = session?.ISession?.user;
             }
             editableItems.push(new FilterItem({ text: prop.label, description: prop.value, show: prop.show }));
         });
@@ -798,7 +814,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 const searchCriteriaObj: IJobSearchCriteria = {
                     Owner: node.owner,
                     Prefix: node.prefix,
-                    JobId: node.jobid,
+                    JobId: undefined,
                     Status: node.status,
                 };
                 return Promise.resolve(searchCriteriaObj);
@@ -821,9 +837,6 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      */
     private applySearchLabelToNode(node: IZoweJobTreeNode, storedSearchObj: IJobSearchCriteria) {
         if (storedSearchObj) {
-            node.searchId = "";
-            node.owner = "*";
-            node.prefix = "*";
             node.searchId = storedSearchObj.JobId || "";
             node.owner = storedSearchObj.Owner || "*";
             node.prefix = storedSearchObj.Prefix || "*";
@@ -868,7 +881,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             }
             node.dirty = true;
             this.mSessionNodes.push(node);
-            this.mHistory.addSession(profile.name); // here
+            this.mHistory.addSession(profile.name);
         }
     }
 }
