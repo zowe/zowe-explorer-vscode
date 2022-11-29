@@ -5,5 +5,6 @@
   "saveFile.error.theiaDetected": "A merge conflict has been detected. Since you are running inside Theia editor, a merge conflict resolution is not available yet.",
   "saveFile.info.confirmUpload": "Would you like to overwrite the remote file?",
   "saveFile.overwriteConfirmation.yes": "Yes",
-  "saveFile.overwriteConfirmation.no": "No"
+  "saveFile.overwriteConfirmation.no": "No",
+  "uploadContent.cancelled": "Upload cancelled."
 }
