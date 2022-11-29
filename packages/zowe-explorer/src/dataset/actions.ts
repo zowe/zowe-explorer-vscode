@@ -431,11 +431,7 @@ export async function createMember(
         );
 
         // Refresh corresponding tree parent to reflect addition
-        const findCorrespondingNode = contextually.isFavorite(parent)
-            ? datasetProvider.findNonFavoritedNode.bind(datasetProvider)
-            : datasetProvider.findFavoritedNode.bind(datasetProvider);
-
-        const otherTreeParent = findCorrespondingNode(parent);
+        const otherTreeParent = datasetProvider.findEquivalentNode(parent, contextually.isFavorite(parent));
         if (otherTreeParent != null) {
             datasetProvider.refreshElement(otherTreeParent);
         }
@@ -1070,9 +1066,7 @@ export async function deleteDataset(node: api.IZoweTreeNode, datasetProvider: ap
     // If the node is a dataset member, go up a level in the node tree
     // to find the relevant, matching node
     const nodeOfInterest = isMember ? node.getParent() : node;
-    const parentNode = fav
-        ? datasetProvider.findNonFavoritedNode(nodeOfInterest)
-        : datasetProvider.findFavoritedNode(nodeOfInterest);
+    const parentNode = datasetProvider.findEquivalentNode(nodeOfInterest, fav);
 
     if (parentNode != null) {
         // Refresh the correct node (parent of node to delete) to reflect changes

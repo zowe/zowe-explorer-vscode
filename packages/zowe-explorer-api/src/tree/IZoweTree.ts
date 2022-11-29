@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { IZoweNodeType, IZoweDatasetTreeNode, IZoweUSSTreeNode } from "./IZoweTreeNode";
+import { IZoweNodeType, IZoweUSSTreeNode } from "./IZoweTreeNode";
 import { PersistenceSchemaEnum } from "../profiles/UserSettings";
 
 /**
@@ -160,7 +160,7 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
     // TODO
     refreshPS(node: IZoweNodeType);
 
-    uploadDialog(node: IZoweDatasetTreeNode): any;
+    uploadDialog(node: IZoweNodeType): any;
 
     // TODO replace with filterPrompt
     // datasetFilterPrompt(node: IZoweNodeType): any;
@@ -203,17 +203,22 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
     /**
      * Finds an equivalent node but not as a favorite
      *
-     * @param {IZoweDatasetTreeNode} node
+     * @param {IZoweNodeType} node
      * @deprecated should not be visible outside of class
      */
     findFavoritedNode(node: IZoweNodeType): IZoweNodeType;
     /**
      * Finds the equivalent node but not as a favorite
      *
-     * @param {IZoweDatasetTreeNode} node
+     * @param {IZoweNodeType} node
      * @deprecated should not be visible outside of class
      */
     findNonFavoritedNode(node: IZoweNodeType): IZoweNodeType;
+    /**
+     * Finds the equivalent node, based on isFavorite
+     * @param {IZoweNodeType} node
+     */
+    findEquivalentNode(node: IZoweNodeType, isFavorite: boolean): IZoweNodeType;
     /**
      * Updates favorite
      *
@@ -223,10 +228,10 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
     /**
      * Renames a node from the favorites list
      *
-     * @param {IZoweDatasetTreeNode} node
+     * @param {IZoweNodeType} node
      * @deprecated should not be visible outside of class
      */
-    renameFavorite(node: IZoweDatasetTreeNode, newLabel: string);
+    renameFavorite(node: IZoweNodeType, newLabel: string);
     /**
      * Renames a node based on the profile and it's label
      * @deprecated should not be visible outside of class
@@ -250,7 +255,7 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
      * Returns a new dataset filter string, from an old filter and a new string
      *
      * @param {string} newFilter the new filter to add
-     * @param {IZoweDatasetTreeNode} node the node with the old filter
+     * @param {IZoweNodeType} node the node with the old filter
      */
     createFilterString?(newFilter: string, node: IZoweNodeType);
     /**

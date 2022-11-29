@@ -291,6 +291,14 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
     }
 
     /**
+     * Finds the equivalent node based on whether the passed node is a favorite.
+     * @param node
+     */
+    public findEquivalentNode(node: IZoweJobTreeNode, isFavorite: boolean): IZoweJobTreeNode {
+        return isFavorite ? this.findNonFavoritedNode(node) : this.findFavoritedNode(node);
+    }
+
+    /**
      * Creates and returns new profile node, and pushes it to mFavorites
      * @param profileName Name of profile
      * @returns {Job}

@@ -648,6 +648,10 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         return sessionNode.children.find((temp) => temp.label === node.label);
     }
 
+    /**
+     * Finds the equivalent node depending on whether the passed node is a favorite.
+     * @param node
+     */
     public findEquivalentNode(node: IZoweDatasetTreeNode, isFavorite: boolean) {
         return isFavorite ? this.findNonFavoritedNode(node) : this.findFavoritedNode(node);
     }

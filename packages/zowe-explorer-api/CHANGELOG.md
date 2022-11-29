@@ -7,8 +7,9 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 ### New features and enhancements
 
 - New API call `getJobsByParameters` to allow filtering jobs by status.
+- Added `findEquivalentNode` function to IZoweTree to find a corresponding favorited/non-favorited node.
 
-## 2.4.1
+## `2.4.1`
 
 ### Bug fixes
 
