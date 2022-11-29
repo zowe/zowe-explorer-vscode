@@ -2,6 +2,10 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## TBD Release
+
+-Add multiselect copy/paste feature on uss view [#1549](https://github.com/zowe/vscode-extension-for-zowe/issues/1549)
+
 ## `2.4.1`
 
 ### Bug fixes
@@ -15,10 +19,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed Zowe Explorer failing to activate in environment with empty workspace. [#1994](https://github.com/zowe/vscode-extension-for-zowe/issues/1994)
 
 ## `2.4.0`
-
-## TBD Release
-
--Add multiselect copy/paste feature on uss view [#1549](https://github.com/zowe/vscode-extension-for-zowe/issues/1549)
 
 ### New features and enhancements
 

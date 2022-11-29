@@ -2,6 +2,10 @@
 
 All notable changes to the "zowe-explorer-api" extension will be documented in this file.
 
+## TBD Release
+
+- copy api for files and directories on USS tree ( paste selected local files into current node )
+
 ## `2.4.1`
 
 ### Bug fixes
@@ -10,10 +14,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Fixed `ZoweVsCodeExtension` failing to initialize in environment with empty workspace. [#1994](https://github.com/zowe/vscode-extension-for-zowe/issues/1994)
 
 ## `2.4.0`
-
-## TBD Release
-
-- copy api for files and directories on USS tree ( paste selected local files into current node )
 
 - Fixed refresh for Zowe Explorer activation and Refresh Extension issues in web based editors. [#1807](https://github.com/zowe/vscode-extension-for-zowe/issues/1807)
 
