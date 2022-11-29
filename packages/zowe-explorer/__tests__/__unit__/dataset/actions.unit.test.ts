@@ -123,33 +123,33 @@ function createGlobalMocks() {
 // Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/master/src/util/testing.ts
 const mocked = <T extends (...args: any[]) => any>(fn: T): jest.Mock<ReturnType<T>> => fn as any;
 
+const createBlockMocksShared = () => {
+    const session = createISession();
+    const imperativeProfile = createIProfile();
+    const zosmfSession = createSessCfgFromArgs(imperativeProfile);
+    const treeView = createTreeView();
+    const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+    const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
+    const mvsApi = createMvsApi(imperativeProfile);
+    bindMvsApi(mvsApi);
+
+    return {
+        session,
+        zosmfSession,
+        treeView,
+        imperativeProfile,
+        datasetSessionNode,
+        mvsApi,
+        testDatasetTree,
+    };
+};
+
 describe("Dataset Actions Unit Tests - Function createMember", () => {
-    function createBlockMocks() {
-        const session = createISession();
-        const imperativeProfile = createIProfile();
-        const zosmfSession = createSessCfgFromArgs(imperativeProfile);
-        const treeView = createTreeView();
-        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
-        const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
-        const mvsApi = createMvsApi(imperativeProfile);
-        bindMvsApi(mvsApi);
-
-        return {
-            session,
-            zosmfSession,
-            treeView,
-            imperativeProfile,
-            datasetSessionNode,
-            mvsApi,
-            testDatasetTree,
-        };
-    }
-
     afterAll(() => jest.restoreAllMocks());
 
     it("Checking of common dataset member creation", async () => {
         createGlobalMocks();
-        const blockMocks = createBlockMocks();
+        const blockMocks = createBlockMocksShared();
         const parent = new ZoweDatasetNode(
             "parent",
             vscode.TreeItemCollapsibleState.Collapsed,
@@ -188,7 +188,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
     });
     it("Checking failed attempt to create dataset member", async () => {
         createGlobalMocks();
-        const blockMocks = createBlockMocks();
+        const blockMocks = createBlockMocksShared();
         const parent = new ZoweDatasetNode(
             "parent",
             vscode.TreeItemCollapsibleState.Collapsed,
@@ -208,7 +208,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
     });
     it("Checking of attempt to create member without name", async () => {
         createGlobalMocks();
-        const blockMocks = createBlockMocks();
+        const blockMocks = createBlockMocksShared();
         const parent = new ZoweDatasetNode(
             "parent",
             vscode.TreeItemCollapsibleState.Collapsed,
@@ -223,7 +223,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
     });
     it("Checking of member creation for favorite dataset", async () => {
         createGlobalMocks();
-        const blockMocks = createBlockMocks();
+        const blockMocks = createBlockMocksShared();
         const parent = new ZoweDatasetNode(
             "parent",
             vscode.TreeItemCollapsibleState.Collapsed,
@@ -259,33 +259,12 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
 });
 
 describe("Dataset Actions Unit Tests - Function refreshPS", () => {
-    function createBlockMocks() {
-        const session = createISession();
-        const imperativeProfile = createIProfile();
-        const zosmfSession = createSessCfgFromArgs(imperativeProfile);
-        const treeView = createTreeView();
-        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
-        const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
-        const mvsApi = createMvsApi(imperativeProfile);
-        bindMvsApi(mvsApi);
-
-        return {
-            session,
-            zosmfSession,
-            treeView,
-            imperativeProfile,
-            datasetSessionNode,
-            mvsApi,
-            testDatasetTree,
-        };
-    }
-
     afterAll(() => jest.restoreAllMocks());
 
     it("Checking common PS dataset refresh", async () => {
         globals.defineGlobals("");
         createGlobalMocks();
-        const blockMocks = createBlockMocks();
+        const blockMocks = createBlockMocksShared();
         const node = new ZoweDatasetNode(
             "HLQ.TEST.AFILE7",
             vscode.TreeItemCollapsibleState.None,
@@ -317,7 +296,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
     it("Checking duplicate PS dataset refresh attempt", async () => {
         globals.defineGlobals("");
         createGlobalMocks();
-        const blockMocks = createBlockMocks();
+        const blockMocks = createBlockMocksShared();
         const node = new ZoweDatasetNode(
             "HLQ.TEST.AFILE7",
             vscode.TreeItemCollapsibleState.None,
@@ -341,7 +320,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
     it("Checking failed attempt to refresh PS dataset (not found exception)", async () => {
         globals.defineGlobals("");
         createGlobalMocks();
-        const blockMocks = createBlockMocks();
+        const blockMocks = createBlockMocksShared();
         const node = new ZoweDatasetNode(
             "HLQ.TEST.AFILE7",
             vscode.TreeItemCollapsibleState.None,
@@ -362,7 +341,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
     it("Checking failed attempt to refresh PDS Member", async () => {
         globals.defineGlobals("");
         createGlobalMocks();
-        const blockMocks = createBlockMocks();
+        const blockMocks = createBlockMocksShared();
         const parent = new ZoweDatasetNode(
             "parent",
             vscode.TreeItemCollapsibleState.Collapsed,
@@ -393,7 +372,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
     it("Checking favorite empty PDS refresh", async () => {
         globals.defineGlobals("");
         createGlobalMocks();
-        const blockMocks = createBlockMocks();
+        const blockMocks = createBlockMocksShared();
         const node = new ZoweDatasetNode(
             "HLQ.TEST.AFILE7",
             vscode.TreeItemCollapsibleState.None,
@@ -419,7 +398,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
     it("Checking favorite PDS Member refresh", async () => {
         globals.defineGlobals("");
         createGlobalMocks();
-        const blockMocks = createBlockMocks();
+        const blockMocks = createBlockMocksShared();
         const parent = new ZoweDatasetNode(
             "parent",
             vscode.TreeItemCollapsibleState.Collapsed,
@@ -446,7 +425,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
     it("Checking favorite PS refresh", async () => {
         globals.defineGlobals("");
         createGlobalMocks();
-        const blockMocks = createBlockMocks();
+        const blockMocks = createBlockMocksShared();
         const parent = new ZoweDatasetNode(
             "parent",
             vscode.TreeItemCollapsibleState.Collapsed,
@@ -1034,32 +1013,11 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
 });
 
 describe("Dataset Actions Unit Tests - Function enterPattern", () => {
-    function createBlockMocks() {
-        const session = createISession();
-        const imperativeProfile = createIProfile();
-        const zosmfSession = createSessCfgFromArgs(imperativeProfile);
-        const treeView = createTreeView();
-        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
-        const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
-        const mvsApi = createMvsApi(imperativeProfile);
-        bindMvsApi(mvsApi);
-
-        return {
-            session,
-            zosmfSession,
-            treeView,
-            imperativeProfile,
-            datasetSessionNode,
-            mvsApi,
-            testDatasetTree,
-        };
-    }
-
     afterAll(() => jest.restoreAllMocks());
 
     it("Checking common dataset filter action", async () => {
         createGlobalMocks();
-        const blockMocks = createBlockMocks();
+        const blockMocks = createBlockMocksShared();
         const node = new ZoweDatasetNode(
             "node",
             vscode.TreeItemCollapsibleState.None,
@@ -1080,7 +1038,7 @@ describe("Dataset Actions Unit Tests - Function enterPattern", () => {
     });
     it("Checking common dataset filter failed attempt", async () => {
         createGlobalMocks();
-        const blockMocks = createBlockMocks();
+        const blockMocks = createBlockMocksShared();
         const node = new ZoweDatasetNode(
             "node",
             vscode.TreeItemCollapsibleState.None,
@@ -1097,7 +1055,7 @@ describe("Dataset Actions Unit Tests - Function enterPattern", () => {
     });
     it("Checking favorite dataset filter action", async () => {
         createGlobalMocks();
-        const blockMocks = createBlockMocks();
+        const blockMocks = createBlockMocksShared();
         const favoriteSample = new ZoweDatasetNode(
             "[sestest]: HLQ.TEST",
             vscode.TreeItemCollapsibleState.None,
