@@ -574,7 +574,7 @@ describe("ZosJobsProvider - Function applyRegularSessionSearchLabel", () => {
         );
         expect(applySearchLabelToNode).toHaveBeenCalled();
     });
-    xit("Should return search criteria Theia route", async () => {
+    it("Should return search criteria Theia route", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
         blockMocks.theia = true;
@@ -586,11 +586,82 @@ describe("ZosJobsProvider - Function applyRegularSessionSearchLabel", () => {
             Status: "*",
         });
         globalMocks.mockShowQuickPick.mockReturnValueOnce(blockMocks.qpContent.items[0]);
-        jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(() => Promise.resolve(blockMocks.qpItem));
         await globalMocks.testJobsProvider.applyRegularSessionSearchLabel(
             globalMocks.testJobsProvider.mSessionNodes[1]
         );
         expect(applySearchLabelToNode).toHaveBeenCalled();
+    });
+});
+
+describe("ZosJobsProvider - Function parseJobSearchQuery", async () => {
+    const emptySearchCriteriaObj = {
+        Owner: undefined,
+        Prefix: undefined,
+        JobId: undefined,
+        Status: undefined,
+    };
+    it("should return empty object for undefined criteria", async () => {
+        const globalMocks = await createGlobalMocks();
+        const actualCriteriaObj = globalMocks.testJobsProvider.parseJobSearchQuery(undefined);
+        expect(actualCriteriaObj).toEqual(emptySearchCriteriaObj);
+    });
+    it("should parse a valid search criteria", async () => {
+        const globalMocks = await createGlobalMocks();
+        const actualCriteriaObj = globalMocks.testJobsProvider.parseJobSearchQuery("Owner:zowe Prefix:* Status:*");
+        const expectedSearchCriteriaObj = {
+            Owner: "zowe",
+            Prefix: "*",
+            JobId: undefined,
+            Status: "*",
+        };
+        expect(actualCriteriaObj).toEqual(expectedSearchCriteriaObj);
+    });
+    it("should parse search criteria without status", async () => {
+        const globalMocks = await createGlobalMocks();
+        const actualCriteriaObj = globalMocks.testJobsProvider.parseJobSearchQuery("Owner:zowe Prefix:*");
+        const expectedSearchCriteriaObj = {
+            Owner: "zowe",
+            Prefix: "*",
+            JobId: undefined,
+            Status: undefined,
+        };
+        expect(actualCriteriaObj).toEqual(expectedSearchCriteriaObj);
+    });
+    it("should parse valid items out of bad query with special characters", async () => {
+        const globalMocks = await createGlobalMocks();
+        const actualCriteriaObj = globalMocks.testJobsProvider.parseJobSearchQuery(
+            "Owner:zowe::\\// . : Prefix:BA*      Status:ACTIVE"
+        );
+        const expectedSearchCriteriaObj = {
+            Owner: "zowe",
+            Prefix: "BA*",
+            JobId: undefined,
+            Status: "ACTIVE",
+        };
+        expect(actualCriteriaObj).toEqual(expectedSearchCriteriaObj);
+    });
+    it("should return empty object for query with only :", async () => {
+        const globalMocks = await createGlobalMocks();
+        const actualCriteriaObj = globalMocks.testJobsProvider.parseJobSearchQuery("::::::::::");
+        expect(actualCriteriaObj).toEqual(emptySearchCriteriaObj);
+    });
+    it("should not add extra key value pairs to searchCriteriaObj", async () => {
+        const globalMocks = await createGlobalMocks();
+        const actualCriteriaObj = globalMocks.testJobsProvider.parseJobSearchQuery(
+            "Owner:zowe Prefix:* Random:value Another:random JobId:123"
+        );
+        const expectedSearchCriteriaObj = {
+            Owner: "zowe",
+            Prefix: "*",
+            JobId: "123",
+            Status: undefined,
+        };
+        expect(actualCriteriaObj).toEqual(expectedSearchCriteriaObj);
+    });
+    it("should return empty searchCriteriaObj for empty string", async () => {
+        const globalMocks = await createGlobalMocks();
+        const actualCriteriaObj = globalMocks.testJobsProvider.parseJobSearchQuery("      ");
+        expect(actualCriteriaObj).toEqual(emptySearchCriteriaObj);
     });
 });
 

@@ -638,20 +638,26 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         return searchCriteria;
     }
 
-    public parseJobSearchQuery(searchCriteria: string) {
+    public parseJobSearchQuery(searchCriteria: string | undefined) {
         const searchCriteriaObj: IJobSearchCriteria = {
             Owner: undefined,
             Prefix: undefined,
             JobId: undefined,
             Status: undefined,
         };
-        if (searchCriteria) {
-            const searchOptionArray = searchCriteria.split(" ");
-            searchOptionArray.forEach((searchOption) => {
-                const keyValue = searchOption.split(":");
-                searchCriteriaObj[keyValue[0].trim()] = keyValue[1].trim();
-            });
+        Object.preventExtensions(searchCriteriaObj);
+        if (!searchCriteria) {
+            return searchCriteriaObj;
         }
+        const searchOptionArray = searchCriteria.split(" ");
+        searchOptionArray.forEach((searchOption) => {
+            const keyValue = searchOption.split(":");
+            const key = keyValue[0]?.trim();
+            const value = keyValue[1]?.trim();
+            try {
+                searchCriteriaObj[key] = value;
+            } catch (e) {}
+        });
         return searchCriteriaObj;
     }
 
