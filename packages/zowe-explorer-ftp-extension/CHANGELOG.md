@@ -1,5 +1,9 @@
 # Change Log
 
+## `1.22.2`
+
+- Updated dependencies for improved security.
+
 ## `1.22.1`
 
 ### Bug fixes
