@@ -645,6 +645,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
     public async copyUssFile() {
         const clipboardContents = await vscode.env.clipboard.readText();
+        if (!clipboardContents && clipboardContents.length < 1) {
+            return;
+        }
         const localFileNames = clipboardContents.split(",");
         const prof = this.getProfile();
         const remotePath = this.fullPath;
@@ -664,7 +667,8 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         const fileList = apiResponse.apiResponse?.items;
         for (const localFile of localFileNames) {
             if (localFile.endsWith("/")) {
-                api.uploadDirectory(localFile.slice(0, -1), remotePath, options);
+                const directoryPath = localFile.slice(0, -1);
+                await api.uploadDirectory(directoryPath, remotePath + "/" + directoryPath.split("/").pop(), options);
             } else {
                 let fname = localFile.split("/").pop();
                 if (
@@ -674,9 +678,10 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 ) {
                     fname += "(copy)";
                 }
-                api.putContent(localFile, remotePath.concat("/", fname), options);
+                await api.putContent(localFile, remotePath.concat("/", fname), options);
             }
         }
+        vscode.env.clipboard.writeText("");
     }
     private returnmProfileName(): string {
         return this.mProfileName;

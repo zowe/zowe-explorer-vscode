@@ -395,10 +395,25 @@ export async function copyUssFilesToClipboard(selectedNodes: IZoweUSSTreeNode[])
     const filePaths: any[] = [];
     for (const node of selectedNodes) {
         if (contextually.isUssDirectory(node)) {
-            filePaths.push(node.getUSSDocumentFilePath() + "/");
+            await refreshChildNodesDirectory(node);
+            await filePaths.push(node.getUSSDocumentFilePath() + "/");
         } else {
+            await node.refreshUSS();
             filePaths.push(node.getUSSDocumentFilePath());
         }
     }
     vscode.env.clipboard.writeText(filePaths.join(","));
+}
+
+async function refreshChildNodesDirectory(node: IZoweUSSTreeNode) {
+    const childNodes = await node.getChildren();
+    if (childNodes.length > 0) {
+        for (const child of childNodes) {
+            await refreshChildNodesDirectory(child);
+        }
+    } else {
+        if (node.contextValue !== globals.USS_DIR_CONTEXT) {
+            await node.refreshUSS();
+        }
+    }
 }

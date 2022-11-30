@@ -42,6 +42,7 @@ import { handleSaving } from "./utils/workspace";
 import { ZoweDatasetNode } from "./dataset/ZoweDatasetNode";
 import * as contextuals from "../src/shared/context";
 import { Job } from "./job/ZoweJobNode";
+import { ZoweUSSNode } from "./uss/ZoweUSSNode";
 
 // Set up localization
 nls.config({
@@ -711,9 +712,17 @@ function initUSSProvider(context: vscode.ExtensionContext) {
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.uss.pasteUssFile", async (node: IZoweUSSTreeNode) => {
-            const selectedNode = (ussFileProvider.getTreeView().selection as IZoweUSSTreeNode[])[0];
-            await selectedNode.copyUssFile();
-            ussFileProvider.refreshElement(selectedNode);
+            const selectedNode = (ussFileProvider.getTreeView().selection as IZoweUSSTreeNode[])[0] as ZoweUSSNode;
+            await vscode.window.withProgress(
+                {
+                    location: vscode.ProgressLocation.Window,
+                    title: localize("ZoweUssNode.copyUpload.progress", "Uploading copied files ..."),
+                },
+                () => {
+                    return selectedNode.copyUssFile();
+                }
+            );
+            ussFileProvider.refreshElement(selectedNode.getParent());
         })
     );
     context.subscriptions.push(
@@ -726,7 +735,15 @@ function initUSSProvider(context: vscode.ExtensionContext) {
                 } else {
                     selectedNodes = ussFileProvider.getTreeView().selection;
                 }
-                ussActions.copyUssFilesToClipboard(selectedNodes);
+                await vscode.window.withProgress(
+                    {
+                        location: vscode.ProgressLocation.Window,
+                        title: localize("ZoweUssNode.copyDownload.progress", "Downloading copied files ..."),
+                    },
+                    () => {
+                        return ussActions.copyUssFilesToClipboard(selectedNodes);
+                    }
+                );
             }
         )
     );
