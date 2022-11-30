@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - v?-lts
       - next
     paths:
       - package.json
