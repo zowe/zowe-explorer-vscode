@@ -20,7 +20,7 @@ import {
     PersistenceSchemaEnum,
     ZoweVsCodeExtension,
 } from "@zowe/zowe-explorer-api";
-import { FilterItem, resolveQuickPickHelper, errorHandling } from "../utils/ProfilesUtils";
+import { FilterItem, errorHandling } from "../utils/ProfilesUtils";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Job } from "./ZoweJobNode";
@@ -86,8 +86,14 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
 
     public mSessionNodes: IZoweJobTreeNode[] = [];
     public mFavorites: IZoweJobTreeNode[] = [];
-    public createOwner = new jobUtils.OwnerFilterDescriptor();
-    public createId = new jobUtils.JobIdFilterDescriptor();
+    public searchByQuery = new FilterItem({
+        text: globals.plusSign + localize("zosJobsProvider.option.prompt.createId", "Create Job Search Filter"),
+        menuType: globals.JobPickerTypes.QuerySearch,
+    });
+    public searchById = new FilterItem({
+        text: globals.plusSign + localize("zosJobsProvider.option.prompt.createOwner", "Job Id Search"),
+        menuType: globals.JobPickerTypes.IdSearch,
+    });
     private treeView: vscode.TreeView<IZoweJobTreeNode>;
 
     constructor() {
@@ -577,35 +583,35 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         return;
     }
 
-    public async applyRegularSessionSearchLabel(node: IZoweJobTreeNode): Promise<string | undefined> {
-        // This is the profile object context
-        let choice: vscode.QuickPickItem;
-        let searchCriteria: string = "";
-        const items: vscode.QuickPickItem[] = this.mHistory
+    public async getUserJobsMenuChoice(): Promise<FilterItem> {
+        const items: FilterItem[] = this.mHistory
             .getSearchHistory()
-            .map((element) => new FilterItem({ text: element }));
+            .map((element) => new FilterItem({ text: element, menuType: globals.JobPickerTypes.History }));
         if (globals.ISTHEIA) {
             // Theia doesn't work properly when directly creating a QuickPick
-            const options1: vscode.QuickPickOptions = {
+            const selectFilter: vscode.QuickPickOptions = {
                 placeHolder: localize("searchHistory.options.prompt", "Select a filter"),
             };
             // get user selection
-            choice = await vscode.window.showQuickPick([this.createOwner, this.createId, ...items], options1);
+            const choice = await vscode.window.showQuickPick(
+                [this.searchByQuery, this.searchById, ...items],
+                selectFilter
+            );
             if (!choice) {
                 vscode.window.showInformationMessage(
                     localize("enterPattern.pattern", "No selection made. Operation cancelled.")
                 );
                 return;
             }
-            searchCriteria = choice === this.createOwner || choice === this.createId ? "" : choice.label;
+            return choice;
         } else {
             // VSCode route to create a QuickPick
             const quickpick = vscode.window.createQuickPick();
-            quickpick.items = [this.createOwner, this.createId, ...items];
+            quickpick.items = [this.searchByQuery, this.searchById, ...items];
             quickpick.placeholder = localize("searchHistory.options.prompt", "Select a filter");
             quickpick.ignoreFocusOut = true;
             quickpick.show();
-            choice = await resolveQuickPickHelper(quickpick);
+            const choice = await jobUtils.resolveQuickPickHelper(quickpick);
             quickpick.hide();
             if (!choice) {
                 vscode.window.showInformationMessage(
@@ -613,53 +619,79 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 );
                 return;
             }
+            return choice;
+        }
+    }
+
+    public async getUserSearchQueryInput(
+        choice: FilterItem,
+        node: IZoweJobTreeNode
+    ): Promise<IJobSearchCriteria | undefined> {
+        if (!choice) {
+            return undefined;
+        }
+        const { menuType } = choice.filterItem;
+        const { QuerySearch, History, IdSearch } = globals.JobPickerTypes;
+
+        if (menuType === QuerySearch) {
+            return this.handleEditingMultiJobParameters(globals.JOB_PROPERTIES, node);
+        }
+        if (menuType === IdSearch) {
+            return this.handleSearchByJobId();
         }
 
-        let searchCriteriaObj: IJobSearchCriteria = {
-            Owner: undefined,
-            Prefix: undefined,
-            JobId: undefined,
-            Status: undefined,
-        };
-
-        switch (choice) {
-            // clicked Create Job Query
-            case this.createOwner:
-                searchCriteriaObj = await this.handleEditingMultiJobParameters(globals.JOB_PROPERTIES, node);
-                break;
-            // clikced search by Job Id
-            case this.createId:
-                const options = {
-                    prompt: localize("jobsFilterPrompt.inputBox.prompt.jobid", "Enter a Job id"),
-                    value: searchCriteriaObj.JobId,
-                };
-                searchCriteriaObj.JobId = await ZoweVsCodeExtension.inputBox(options);
-                if (!searchCriteriaObj.JobId) {
-                    vscode.window.showInformationMessage(localize("jobsFilterPrompt.enterPrefix", "Search Cancelled"));
-                    return;
-                }
-                break;
-            // clicked on history item
-            default:
-                searchCriteria = choice.label;
-                searchCriteriaObj = this.parseJobSearchQuery(searchCriteria);
+        if (menuType === History) {
+            const parsedHistory = this.parseJobSearchQuery(choice.label);
+            if (parsedHistory.JobId) {
+                return this.handleSearchByJobId(parsedHistory.JobId);
+            } else {
+                const quickPickFilledItems = this.getSearchQueryOptions(parsedHistory);
+                return this.handleEditingMultiJobParameters(quickPickFilledItems, node);
+            }
         }
+    }
+
+    public async applyRegularSessionSearchLabel(node: IZoweJobTreeNode): Promise<string | undefined> {
+        let searchCriteria;
+        const choice = await this.getUserJobsMenuChoice();
+        const searchCriteriaObj = await this.getUserSearchQueryInput(choice, node);
 
         if (!searchCriteriaObj) {
             return undefined;
         }
-
-        searchCriteria = this.createSearchLabel(
-            searchCriteriaObj.Owner,
-            searchCriteriaObj.Prefix,
-            searchCriteriaObj.JobId,
-            searchCriteriaObj.Status
-        );
+        if (globals.ISTHEIA) {
+            searchCriteria = choice === this.searchByQuery || choice === this.searchById ? "" : choice.label;
+        } else {
+            searchCriteria = this.createSearchLabel(
+                searchCriteriaObj.Owner,
+                searchCriteriaObj.Prefix,
+                searchCriteriaObj.JobId,
+                searchCriteriaObj.Status
+            );
+        }
         this.applySearchLabelToNode(node, searchCriteriaObj);
         return searchCriteria;
     }
 
-    public parseJobSearchQuery(searchCriteria: string) {
+    public async handleSearchByJobId(jobId?: string): Promise<IJobSearchCriteria> {
+        const options = {
+            prompt: localize("jobsFilterPrompt.inputBox.prompt.jobid", "Enter a Job id"),
+            value: jobId,
+        };
+        const newUserJobId = await ZoweVsCodeExtension.inputBox(options);
+        if (!newUserJobId) {
+            vscode.window.showInformationMessage(localize("jobsFilterPrompt.enterPrefix", "Search Cancelled"));
+            return;
+        }
+        return {
+            Owner: undefined,
+            Prefix: undefined,
+            JobId: newUserJobId,
+            Status: undefined,
+        };
+    }
+
+    public parseJobSearchQuery(searchCriteria: string): IJobSearchCriteria {
         const searchCriteriaObj: IJobSearchCriteria = {
             Owner: undefined,
             Prefix: undefined,
@@ -680,6 +712,22 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             } catch (e) {}
         });
         return searchCriteriaObj;
+    }
+
+    public getSearchQueryOptions(searchObj: IJobSearchCriteria): IJobPickerOption[] {
+        const historyPopulatedItems = globals.JOB_PROPERTIES;
+        historyPopulatedItems.forEach((prop) => {
+            if (prop.key === "owner") {
+                prop.value = searchObj.Owner;
+            }
+            if (prop.key === "prefix") {
+                prop.value = searchObj.Prefix;
+            }
+            if (prop.key === "job-status") {
+                prop.value = searchObj.Status;
+            }
+        });
+        return historyPopulatedItems;
     }
 
     public async applySavedFavoritesSearchLabel(node): Promise<string> {

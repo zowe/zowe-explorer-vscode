@@ -245,7 +245,6 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                     },
                     () => {
                         if (ZoweExplorerApiRegister.getCommandApi(profile).issueTsoCommandWithParms) {
-                            // here how it's done
                             return ZoweExplorerApiRegister.getCommandApi(profile).issueTsoCommandWithParms(
                                 command,
                                 tsoParams

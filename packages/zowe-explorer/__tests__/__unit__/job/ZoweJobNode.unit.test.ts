@@ -535,67 +535,41 @@ describe("ZosJobsProvider - Function searchPrompt", () => {
 });
 
 describe("ZosJobsProvider - Function applyRegularSessionSearchLabel", () => {
-    async function createBlockMocks(globalMocks) {
-        const newMocks = {
-            testJobNodeNoCred: new Job(
-                "jobtest",
-                vscode.TreeItemCollapsibleState.Expanded,
-                globalMocks.jobNode,
-                globalMocks.testSessionNoCred,
-                globalMocks.testIJob,
-                globalMocks.testProfile
-            ),
-            qpItem: globalMocks.testJobsProvider.createOwner,
-            theia: false,
-            mockCheckCurrentProfile: jest.fn(),
-            qpContent: createQuickPickContent(
-                "",
-                [globalMocks.testJobsProvider.createOwner, globalMocks.testJobsProvider.createId],
-                "Select a filter"
-            ),
-        };
-
-        newMocks.testJobNodeNoCred.contextValue = globals.JOBS_SESSION_CONTEXT;
-        globalMocks.testJobsProvider.initializeJobsTree(zowe.imperative.Logger.getAppLogger());
-        globalMocks.mockCreateSessCfgFromArgs.mockReturnValue(globalMocks.testSessionNoCred);
-        globalMocks.mockCreateQuickPick.mockReturnValue(newMocks.qpContent);
-        Object.defineProperty(globals, "ISTHEIA", { get: () => newMocks.theia });
-        jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(() => Promise.resolve(newMocks.qpItem));
-
-        return newMocks;
-    }
-    it("Should return search criteria VS Code route", async () => {
+    it("should call applySearchLabelToNode", async () => {
         const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-        const applySearchLabelToNode = jest.spyOn(globalMocks.testJobsProvider, "applySearchLabelToNode");
-        jest.spyOn(globalMocks.testJobsProvider, "handleEditingMultiJobParameters").mockReturnValue({
+        const searchObj = {
             Owner: "zowe",
             Prefix: "*",
             JobId: undefined,
             Status: "*",
-        });
-        jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(() => Promise.resolve(blockMocks.qpItem));
-        await globalMocks.testJobsProvider.applyRegularSessionSearchLabel(
+        };
+        jest.spyOn(globalMocks.testJobsProvider, "getUserJobsMenuChoice").mockReturnValue({ text: "test" });
+        jest.spyOn(globalMocks.testJobsProvider, "getUserSearchQueryInput").mockReturnValue(searchObj);
+        jest.spyOn(globalMocks.testJobsProvider, "createSearchLabel").mockReturnValue(searchObj);
+        const applySearchLabelToNode = jest.spyOn(globalMocks.testJobsProvider, "applySearchLabelToNode");
+        const returnedSearchCriteria = await globalMocks.testJobsProvider.applyRegularSessionSearchLabel(
             globalMocks.testJobsProvider.mSessionNodes[1]
         );
+        expect(returnedSearchCriteria).toEqual(searchObj);
         expect(applySearchLabelToNode).toHaveBeenCalled();
     });
-    it("Should return search criteria Theia route", async () => {
+    it("should not call applySearchLabelToNode and return undefined", async () => {
         const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-        blockMocks.theia = true;
-        const applySearchLabelToNode = jest.spyOn(globalMocks.testJobsProvider, "applySearchLabelToNode");
-        jest.spyOn(globalMocks.testJobsProvider, "handleEditingMultiJobParameters").mockReturnValue({
-            Owner: "zowe",
-            Prefix: "*",
+        const searchObj = {
+            Owner: undefined,
+            Prefix: undefined,
             JobId: undefined,
-            Status: "*",
-        });
-        globalMocks.mockShowQuickPick.mockReturnValueOnce(blockMocks.qpContent.items[0]);
-        await globalMocks.testJobsProvider.applyRegularSessionSearchLabel(
+            Status: undefined,
+        };
+        jest.spyOn(globalMocks.testJobsProvider, "getUserJobsMenuChoice").mockReturnValue({ text: "test" });
+        jest.spyOn(globalMocks.testJobsProvider, "getUserSearchQueryInput").mockReturnValue(undefined);
+        jest.spyOn(globalMocks.testJobsProvider, "createSearchLabel").mockReturnValue(searchObj);
+        const applySearchLabelToNode = jest.spyOn(globalMocks.testJobsProvider, "applySearchLabelToNode");
+        const returnedSearchCriteria = await globalMocks.testJobsProvider.applyRegularSessionSearchLabel(
             globalMocks.testJobsProvider.mSessionNodes[1]
         );
-        expect(applySearchLabelToNode).toHaveBeenCalled();
+        expect(returnedSearchCriteria).toEqual(undefined);
+        expect(applySearchLabelToNode).not.toHaveBeenCalled();
     });
 });
 

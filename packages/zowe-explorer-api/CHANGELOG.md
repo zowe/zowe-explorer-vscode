@@ -2,7 +2,7 @@
 
 All notable changes to the "zowe-explorer-api" extension will be documented in this file.
 
-## `2.4.1`
+## TBD Release
 
 - New API call `getJobsByParameters` to allow filtering jobs by status.
 

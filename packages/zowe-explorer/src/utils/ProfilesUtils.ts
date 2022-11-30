@@ -175,11 +175,12 @@ export interface IFilterItem {
     description?: string;
     show?: boolean;
     icon?: string;
+    menuType?: globals.JobPickerTypes;
 }
 
 // tslint:disable-next-line: max-classes-per-file
 export class FilterItem implements vscode.QuickPickItem {
-    constructor(private filterItem: IFilterItem) {}
+    constructor(public filterItem: IFilterItem) {}
     get label(): string {
         const icon = this.filterItem.icon ? this.filterItem.icon + " " : null;
         return (icon ?? "") + this.filterItem.text;

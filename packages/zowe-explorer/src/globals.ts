@@ -214,6 +214,7 @@ export const DATA_SET_PROPERTIES = [
 ];
 
 export const JOB_STATUS = [
+    // shuld this be frozen?
     {
         key: `All`,
         label: `*`,
@@ -272,6 +273,14 @@ export const JOB_PROPERTIES = [
         placeHolder: localize("searchJobs.status", `Enter job status`),
     },
 ];
+
+export enum JobPickerTypes {
+    QuerySearch = "QuerySearch",
+    IdSearch = "IdSearch",
+    History = "History",
+}
+
+export const plusSign = "\uFF0B ";
 
 /**
  * Defines all global variables

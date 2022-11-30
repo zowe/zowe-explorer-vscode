@@ -692,7 +692,7 @@ export async function createFile(
 
         try {
             // Allocate the data set
-            await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).createDataSet(typeEnum, dsName, dsPropsForAPI); // how mvs does it
+            await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).createDataSet(typeEnum, dsName, dsPropsForAPI);
             node.dirty = true;
 
             const theFilter = await datasetProvider.createFilterString(dsName, node);

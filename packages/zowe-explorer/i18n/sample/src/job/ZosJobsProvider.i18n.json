@@ -1,5 +1,7 @@
 {
   "Favorites": "Favorites",
+  "zosJobsProvider.option.prompt.createId": "Create Job Search Filter",
+  "zosJobsProvider.option.prompt.createOwner": "Job Id Search",
   "initializeJobsTree.log.debug": "Initializing profiles with jobs favorites.",
   "initializeJobsTree.no.favorites": "No jobs favorites found.",
   "loadProfilesForFavorites.log.debug": "Loading profile: {0} for jobs favorites",
