@@ -628,10 +628,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         // Get node's profile node in favorites
         const profileName = node.getProfileName();
         const profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profileName);
-        if (!profileNodeInFavorites) {
-            return;
-        }
-        return profileNodeInFavorites.children.find(
+        return profileNodeInFavorites?.children.find(
             (temp) => temp.label === node.getLabel().toString() && temp.contextValue.includes(node.contextValue)
         );
     }
@@ -645,7 +642,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     public findNonFavoritedNode(node: IZoweDatasetTreeNode) {
         const profileName = node.getProfileName();
         const sessionNode = this.mSessionNodes.find((session) => session.label.toString().trim() === profileName);
-        return sessionNode.children.find((temp) => temp.label === node.label);
+        return sessionNode?.children.find((temp) => temp.label === node.label);
     }
 
     /**

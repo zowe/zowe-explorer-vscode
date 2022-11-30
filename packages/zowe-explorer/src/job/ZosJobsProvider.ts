@@ -291,6 +291,27 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
     }
 
     /**
+     * Finds the equivalent, favorited node.
+     * @param node
+     */
+    public findFavoritedNode(node: IZoweJobTreeNode): IZoweJobTreeNode {
+        const profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, node.getProfileName());
+        return profileNodeInFavorites?.children.find(
+            (temp) => temp.label === node.getLabel().toString() && temp.contextValue.includes(node.contextValue)
+        );
+    }
+
+    /**
+     * Finds the equivalent, non-favorited node.
+     * @param node
+     */
+    public findNonFavoritedNode(node: IZoweJobTreeNode): IZoweJobTreeNode {
+        const profileName = node.getProfileName();
+        const sessionNode = this.mSessionNodes.find((session) => session.label.toString().trim() === profileName);
+        return sessionNode?.children.find((temp) => temp.label === node.label);
+    }
+
+    /**
      * Finds the equivalent node based on whether the passed node is a favorite.
      * @param node
      */
