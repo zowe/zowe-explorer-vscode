@@ -396,7 +396,7 @@ export async function copyUssFilesToClipboard(selectedNodes: IZoweUSSTreeNode[])
     for (const node of selectedNodes) {
         if (contextually.isUssDirectory(node)) {
             await refreshChildNodesDirectory(node);
-            await filePaths.push(node.getUSSDocumentFilePath() + "/");
+            filePaths.push(node.getUSSDocumentFilePath() + "/");
         } else {
             await node.refreshUSS();
             filePaths.push(node.getUSSDocumentFilePath());

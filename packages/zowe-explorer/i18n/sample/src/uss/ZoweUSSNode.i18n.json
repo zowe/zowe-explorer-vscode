@@ -16,7 +16,5 @@
   "openUSS.log.info.failedToOpenAsText.yes": "Re-download",
   "openUSS.log.info.failedToOpenAsText.no": "Cancel",
   "openUSS.log.info.failedToOpenAsText": "Failed to open file as text. Re-download file as binary?",
-  "uploadFile.putContents": "Uploading USS file",
-  "ZoweUssNode.copyDownload.progress": "Downloading copied files ...",
-  "ZoweUssNode.copyUpload.progress": "Uploading copied files ..."
+  "uploadFile.putContents": "Uploading USS file"
 }
