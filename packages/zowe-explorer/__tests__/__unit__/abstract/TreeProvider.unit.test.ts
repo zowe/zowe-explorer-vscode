@@ -110,6 +110,9 @@ async function createGlobalMocks() {
                     setting: true,
                 }),
                 getProfileInfo: () => globalMocks.mockProfileInfo,
+                fetchAllProfiles: jest.fn(() => {
+                    return [{ name: "sestest" }, { name: "profile1" }, { name: "profile2" }];
+                }),
             };
         }),
         configurable: true,

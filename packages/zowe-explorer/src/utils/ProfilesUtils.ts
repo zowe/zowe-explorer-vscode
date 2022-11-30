@@ -53,7 +53,9 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
         if (msg.includes("hostname")) {
             const mProfileInfo = await Profiles.getInstance().getProfileInfo();
             if (mProfileInfo.usingTeamConfig) {
-                vscode.window.showErrorMessage("Required parameter 'host' must not be blank");
+                vscode.window.showErrorMessage(
+                    localize("errorHandling.invalid.host", "Required parameter 'host' must not be blank.")
+                );
                 const profAllAttrs = mProfileInfo.getAllProfiles();
                 for (const prof of profAllAttrs) {
                     if (prof.profName === label.trim()) {
@@ -82,7 +84,7 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
                         });
                     } else {
                         const message = localize(
-                            "ErrorHandling.authentication.login",
+                            "errorHandling.authentication.login",
                             "Log in to Authentication Service"
                         );
                         vscode.window.showErrorMessage(errToken, message).then(async (selection) => {
@@ -98,7 +100,7 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
             if (isTheia()) {
                 vscode.window.showErrorMessage(errMsg);
             } else {
-                const checkCredsButton = localize("ErrorHandling.checkCredentials.button", "Check Credentials");
+                const checkCredsButton = localize("errorHandling.checkCredentials.button", "Check Credentials");
                 await vscode.window
                     .showErrorMessage(errMsg, { modal: true }, ...[checkCredsButton])
                     .then(async (selection) => {
@@ -106,7 +108,7 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
                             await Profiles.getInstance().promptCredentials(label.trim(), true);
                         } else {
                             vscode.window.showInformationMessage(
-                                localize("ErrorHandling.checkCredentials.cancelled", "Operation Cancelled")
+                                localize("errorHandling.checkCredentials.cancelled", "Operation Cancelled")
                             );
                         }
                     });
@@ -247,7 +249,7 @@ export async function readConfigFromDisk() {
     let rootPath: string;
     try {
         const mProfileInfo = await getProfileInfo(globals.ISTHEIA);
-        if (vscode.workspace.workspaceFolders) {
+        if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0]) {
             rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
             await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir(), projectDir: getFullPath(rootPath) });
         } else {
@@ -302,7 +304,7 @@ export async function promptCredentials(node: IZoweTreeNode) {
     let profileName: string;
     if (node == null) {
         // prompt for profile
-        profileName = await UIViews.inputBox({
+        profileName = await vscode.window.showInputBox({
             placeHolder: localize("createNewConnection.option.prompt.profileName.placeholder", "Connection Name"),
             prompt: localize("createNewConnection.option.prompt.profileName", "Enter a name for the connection."),
             ignoreFocusOut: true,
@@ -335,7 +337,7 @@ export async function promptCredentials(node: IZoweTreeNode) {
 export async function initializeZoweFolder(): Promise<void> {
     // ensure the Secure Credentials Enabled value is read
     // set globals.PROFILE_SECURITY value accordingly
-    globals.setGlobalSecurityValue();
+    await globals.setGlobalSecurityValue();
     // Ensure that ~/.zowe folder exists
     // Ensure that the ~/.zowe/settings/imperative.json exists
     // TODO: update code below once this imperative issue is resolved.
@@ -348,10 +350,7 @@ export async function initializeZoweFolder(): Promise<void> {
     if (!fs.existsSync(settingsPath)) {
         fs.mkdirSync(settingsPath);
     }
-    const settingsFile = path.join(settingsPath, "imperative.json");
-    if (!fs.existsSync(settingsFile)) {
-        writeOverridesFile();
-    }
+    writeOverridesFile();
     // If not using team config, ensure that the ~/.zowe/profiles directory
     // exists with appropriate types within
     if (!imperative.ImperativeConfig.instance.config?.exists) {

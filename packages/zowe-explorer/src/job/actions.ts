@@ -220,7 +220,7 @@ export async function modifyCommand(job: Job) {
         const options: vscode.InputBoxOptions = {
             prompt: localize("modifyCommand.inputBox.prompt", "Modify Command"),
         };
-        const command = await UIViews.inputBox(options);
+        const command = await vscode.window.showInputBox(options);
         if (command !== undefined) {
             const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(job.getProfile());
             if (commandApi) {
@@ -283,7 +283,7 @@ export async function setOwner(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZ
     const options: vscode.InputBoxOptions = {
         prompt: localize("setOwner.inputBox.prompt", "Owner"),
     };
-    const newOwner = await UIViews.inputBox(options);
+    const newOwner = await vscode.window.showInputBox(options);
     job.owner = newOwner;
     jobsProvider.refreshElement(job);
 }
@@ -298,7 +298,7 @@ export async function setPrefix(job: IZoweJobTreeNode, jobsProvider: IZoweTree<I
     const options: vscode.InputBoxOptions = {
         prompt: localize("setPrefix.inputBox.prompt", "Prefix"),
     };
-    const newPrefix = await UIViews.inputBox(options);
+    const newPrefix = await vscode.window.showInputBox(options);
     job.prefix = newPrefix;
     jobsProvider.refreshElement(job);
 }

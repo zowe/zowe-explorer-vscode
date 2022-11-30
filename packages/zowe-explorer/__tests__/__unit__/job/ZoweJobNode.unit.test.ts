@@ -19,6 +19,7 @@ import { Job } from "../../../src/job/ZoweJobNode";
 import { ValidProfileEnum, IZoweJobTreeNode, ProfilesCache } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
+import * as sessUtils from "../../../src/utils/SessionUtils";
 import * as utils from "../../../src/utils/ProfilesUtils";
 import {
     createIProfile,
@@ -89,6 +90,7 @@ async function createGlobalMocks() {
             return { value: globalMocks.mockProfileInfo, configurable: true };
         }),
     });
+    globalMocks.mockProfileInstance = createInstanceOfProfile(globalMocks.testProfile);
     Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true });
     Object.defineProperty(vscode.window, "withProgress", { value: globalMocks.withProgress, configurable: true });
     Object.defineProperty(zowe, "GetJobs", { value: globalMocks.mockGetJobs, configurable: true });
@@ -128,6 +130,10 @@ async function createGlobalMocks() {
     });
     Object.defineProperty(globalMocks.mockDeleteJobs, "deleteJob", {
         value: globalMocks.mockDeleteJob,
+        configurable: true,
+    });
+    Object.defineProperty(sessUtils, "removeSession", {
+        value: jest.fn().mockImplementationOnce(() => Promise.resolve()),
         configurable: true,
     });
 
@@ -561,8 +567,8 @@ describe("ZosJobsProvider - Function applyRegularSessionSearchLabel", () => {
     it("Should return search criteria VS Code route", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
-        const applySearchLabelToNode = spyOn(globalMocks.testJobsProvider, "applySearchLabelToNode");
-        spyOn(globalMocks.testJobsProvider, "handleEditingMultiJobParameters").and.returnValue({
+        const applySearchLabelToNode = jest.spyOn(globalMocks.testJobsProvider, "applySearchLabelToNode");
+        jest.spyOn(globalMocks.testJobsProvider, "handleEditingMultiJobParameters").mockReturnValue({
             Owner: "zowe",
             Prefix: "*",
             JobId: undefined,
@@ -578,8 +584,8 @@ describe("ZosJobsProvider - Function applyRegularSessionSearchLabel", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
         blockMocks.theia = true;
-        const applySearchLabelToNode = spyOn(globalMocks.testJobsProvider, "applySearchLabelToNode");
-        spyOn(globalMocks.testJobsProvider, "handleEditingMultiJobParameters").and.returnValue({
+        const applySearchLabelToNode = jest.spyOn(globalMocks.testJobsProvider, "applySearchLabelToNode");
+        jest.spyOn(globalMocks.testJobsProvider, "handleEditingMultiJobParameters").mockReturnValue({
             Owner: "zowe",
             Prefix: "*",
             JobId: undefined,
@@ -669,7 +675,7 @@ describe("ZosJobsProvider - Function handleEditingMultiJobParameters", () => {
     it("should resolve and retun if user cancels quick pick", async () => {
         const globalMocks = await createGlobalMocks();
         globalMocks.mockShowQuickPick.mockReturnValueOnce(undefined);
-        const setJobStatus = spyOn(globalMocks.testJobsProvider, "setJobStatus");
+        const setJobStatus = jest.spyOn(globalMocks.testJobsProvider, "setJobStatus");
         await globalMocks.testJobsProvider.handleEditingMultiJobParameters(
             globals.JOB_PROPERTIES,
             globalMocks.testJobsProvider.mSessionNodes[0]
@@ -678,7 +684,7 @@ describe("ZosJobsProvider - Function handleEditingMultiJobParameters", () => {
     });
     it("should set job status if user chose Job Status in Quck Pick", async () => {
         const globalMocks = await createGlobalMocks();
-        const setJobStatus = spyOn(globalMocks.testJobsProvider, "setJobStatus").and.returnValue({
+        const setJobStatus = jest.spyOn(globalMocks.testJobsProvider, "setJobStatus").mockReturnValue({
             key: `All`,
             label: `*`,
             value: null,
@@ -716,7 +722,7 @@ describe("ZosJobsProvider - Function handleEditingMultiJobParameters", () => {
             },
         ];
         const globalMocks = await createGlobalMocks();
-        const setJobStatus = spyOn(globalMocks.testJobsProvider, "setJobStatus");
+        const setJobStatus = jest.spyOn(globalMocks.testJobsProvider, "setJobStatus");
         globalMocks.mockShowQuickPick.mockReturnValueOnce({ label: " + Submit this Job Search Query" });
         const result = await globalMocks.testJobsProvider.handleEditingMultiJobParameters(
             myJobProperties,

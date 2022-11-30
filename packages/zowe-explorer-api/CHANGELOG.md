@@ -2,6 +2,13 @@
 
 All notable changes to the "zowe-explorer-api" extension will be documented in this file.
 
+## `2.4.1`
+
+### Bug fixes
+
+- Added an API to obtain an up to date array of Profiles from registered types, `ProfilesCache.fetchAllProfiles()`.
+- Fixed `ZoweVsCodeExtension` failing to initialize in environment with empty workspace. [#1994](https://github.com/zowe/vscode-extension-for-zowe/issues/1994)
+
 ## `2.4.0`
 
 - Fixed refresh for Zowe Explorer activation and Refresh Extension issues in web based editors. [#1807](https://github.com/zowe/vscode-extension-for-zowe/issues/1807)

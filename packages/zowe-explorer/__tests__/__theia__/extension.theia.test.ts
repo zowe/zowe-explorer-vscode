@@ -14,7 +14,7 @@ import * as chaiAsPromised from "chai-as-promised";
 import * as driverFirefox from "./theia/extension.theiaFirefox";
 import * as driverChrome from "./theia/extension.theiaChrome";
 
-const TIMEOUT = 45000;
+const TIMEOUT = 60000;
 const SLEEPTIME = 15000;
 const SHORTSLEEPTIME = 2000;
 const wait5sec = 5000;

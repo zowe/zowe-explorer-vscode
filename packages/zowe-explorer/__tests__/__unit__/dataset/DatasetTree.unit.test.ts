@@ -40,6 +40,7 @@ import {
 import { bindMvsApi, createMvsApi } from "../../../__mocks__/mockCreators/api";
 import * as workspaceUtils from "../../../src/utils/workspace";
 import { PersistentFilters } from "../../../src/PersistentFilters";
+import * as dsUtils from "../../../src/dataset/utils";
 
 jest.mock("fs");
 jest.mock("util");
@@ -150,7 +151,7 @@ function createGlobalMocks() {
     return globalMocks;
 }
 
-// Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/master/src/util/testing.ts
+// Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/eadf408f90ca2007b85f5a61c6c0b74b4e431943/src/utils/testing.ts
 const mocked = <T extends (...args: any[]) => any>(fn: T): jest.Mock<ReturnType<T>> => fn as any;
 
 describe("Dataset Tree Unit Tests - Initialisation", () => {
@@ -1958,7 +1959,7 @@ describe("Dataset Tree Unit Tests - Function openItemFromPath", () => {
         );
         testTree.mSessionNodes[1].children.push(node);
         testTree.mSessionNodes[1].pattern = "test";
-        spyOn(testTree.mSessionNodes[1], "getChildren").and.returnValue(Promise.resolve([node]));
+        jest.spyOn(testTree.mSessionNodes[1], "getChildren").mockReturnValue(Promise.resolve([node]));
 
         await testTree.openItemFromPath(
             `[${blockMocks.datasetSessionNode.label}]: ${node.label}`,
@@ -1984,8 +1985,8 @@ describe("Dataset Tree Unit Tests - Function openItemFromPath", () => {
         const child = new ZoweDatasetNode("TESTMEMB", vscode.TreeItemCollapsibleState.None, parent, null);
         testTree.mSessionNodes[1].children.push(parent);
         testTree.mSessionNodes[1].pattern = "test";
-        spyOn(testTree.mSessionNodes[1], "getChildren").and.returnValue(Promise.resolve([parent]));
-        spyOn(parent, "getChildren").and.returnValue(Promise.resolve([child]));
+        jest.spyOn(testTree.mSessionNodes[1], "getChildren").mockReturnValue(Promise.resolve([parent]));
+        jest.spyOn(parent, "getChildren").mockReturnValue(Promise.resolve([child]));
 
         await testTree.openItemFromPath(
             `[${blockMocks.datasetSessionNode.label}]: ${parent.label}(${child.label})`,
@@ -2011,7 +2012,7 @@ describe("Dataset Tree Unit Tests - Function renameNode", () => {
 
         datasetSessionNode.children.push(node);
         testTree.mSessionNodes.push(datasetSessionNode);
-        spyOn(datasetSessionNode, "getChildren").and.returnValue(Promise.resolve([datasetSessionNode]));
+        jest.spyOn(datasetSessionNode, "getChildren").mockReturnValue(Promise.resolve([datasetSessionNode]));
 
         return {
             imperativeProfile,
@@ -2305,9 +2306,18 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
 
         const renameDataSetMemberSpy = jest.spyOn(blockMocks.mvsApi, "renameDataSetMember");
 
-        await testTree.rename(child);
+        const testValidDsName = async (text: string) => {
+            mocked(vscode.window.showInputBox).mockImplementation((options) => {
+                options.validateInput(text);
+                return Promise.resolve(text);
+            });
+            await testTree.rename(child);
+            expect(renameDataSetMemberSpy).toHaveBeenLastCalledWith("HLQ.TEST.RENAME.NODE", "mem1", "MEM2");
+        };
 
-        expect(renameDataSetMemberSpy).toHaveBeenLastCalledWith("HLQ.TEST.RENAME.NODE", "mem1", "MEM2");
+        await testValidDsName("HLQ.TEST.RENAME.NODE");
+
+        await testTree.rename(child);
     });
     it("Checking function with PDS Member given in lowercase", async () => {
         globals.defineGlobals("");
@@ -2455,5 +2465,47 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
 
         expect(renameDataSetMemberSpy).toHaveBeenLastCalledWith("HLQ.TEST.RENAME.NODE", "mem1", "MEM2");
         expect(error).toBe(defaultError);
+    });
+    it("Checking validate validateDataSetName util function successfully execution", async () => {
+        expect(dsUtils.validateDataSetName("#DSNAME.DSNAME")).toBe(true);
+    });
+
+    it("Checking validate validateDataSetName util function fail", async () => {
+        expect(dsUtils.validateDataSetName("#DSNAME.DSNAMEMORETHAN8CHARS.TEST")).toBe(false);
+    });
+    it("Checking validate validateDataSetName util function fail on max ds length", async () => {
+        const dsName = "#DSNAMET.DSNAME.DSNAME.DSNAME.DSNAME.DSNAMETE";
+        expect(dsName.length - 1 === globals.MAX_DATASET_LENGTH).toBe(true);
+        expect(dsUtils.validateDataSetName(dsName)).toBe(false);
+    });
+
+    it("Tests that rename() validates the dataset name", async () => {
+        globals.defineGlobals("");
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        mocked(workspaceUtils.closeOpenedTextFile).mockResolvedValueOnce(false);
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        const node = new ZoweDatasetNode(
+            "HLQ.TEST.RENAME.NODE",
+            vscode.TreeItemCollapsibleState.None,
+            testTree.mSessionNodes[1],
+            blockMocks.session
+        );
+        const renameDataSetSpy = jest.spyOn(blockMocks.mvsApi, "renameDataSet");
+        const testValidDsName = async (text: string) => {
+            mocked(vscode.window.showInputBox).mockImplementation((options) => {
+                options.validateInput(text);
+                return Promise.resolve(text);
+            });
+            const oldName = node.label;
+            await testTree.rename(node);
+            expect(renameDataSetSpy).toHaveBeenLastCalledWith(oldName, text);
+        };
+
+        await testValidDsName("HLQ.TEST.RENAME.NODE.NEW.TEST");
+        await testValidDsName("INVALID-DATASET-NAME");
     });
 });

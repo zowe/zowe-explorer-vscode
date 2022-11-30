@@ -18,6 +18,7 @@ import { resetValidationSettings, returnIconState } from "./actions";
 import { labelRefresh } from "./utils";
 import * as contextually from "../shared/context";
 import * as globals from "../globals";
+import { removeSession } from "../utils/SessionUtils";
 
 /**
  * View (DATA SETS, JOBS, USS) refresh button
@@ -28,19 +29,27 @@ import * as globals from "../globals";
 export async function refreshAll(treeProvider: IZoweTree<IZoweTreeNode>) {
     await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
     treeProvider.mSessionNodes.forEach(async (sessNode) => {
-        const setting = (await PersistentFilters.getDirectValue(
-            globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION
-        )) as boolean;
-        if (contextually.isSessionNotFav(sessNode)) {
-            labelRefresh(sessNode);
-            sessNode.children = [];
-            sessNode.dirty = true;
-            resetValidationSettings(sessNode, setting);
-            returnIconState(sessNode);
-            await syncSessionNode(Profiles.getInstance())((profileValue) =>
-                ZoweExplorerApiRegister.getCommonApi(profileValue).getSession()
-            )(sessNode);
+        const profiles = await Profiles.getInstance().fetchAllProfiles();
+        const found = profiles.some((prof) => prof.name === sessNode.label.toString().trim());
+        if (found || sessNode.label.toString() === "Favorites") {
+            const setting = (await PersistentFilters.getDirectValue(
+                globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION
+            )) as boolean;
+            if (contextually.isSessionNotFav(sessNode)) {
+                labelRefresh(sessNode);
+                sessNode.children = [];
+                sessNode.dirty = true;
+                if (sessNode.label.toString() !== "Favorites") {
+                    resetValidationSettings(sessNode, setting);
+                }
+                returnIconState(sessNode);
+                await syncSessionNode(Profiles.getInstance())((profileValue) =>
+                    ZoweExplorerApiRegister.getCommonApi(profileValue).getSession()
+                )(sessNode);
+            }
+            treeProvider.refresh();
+        } else {
+            await removeSession(treeProvider, sessNode.label.toString().trim());
         }
     });
-    treeProvider.refresh();
 }

@@ -88,6 +88,10 @@ export const SETTINGS_JOBS_HISTORY = "zowe.jobs.history";
 export const SETTINGS_SECURE_CREDENTIALS_ENABLED = "zowe.security.secureCredentialsEnabled";
 export const EXTENDER_CONFIG: imperative.ICommandProfileTypeConfiguration[] = [];
 export const ZOWE_CLI_SCM = "@zowe/cli";
+export const MAX_DATASET_LENGTH = 44;
+export const MAX_MEMBER_LENGTH = 8;
+export const DS_NAME_REGEX_CHECK = /^[a-zA-Z#@\$][a-zA-Z0-9#@\$\-]{0,7}(\.[a-zA-Z#@\$][a-zA-Z0-9#@\$\-]{0,7})*$/;
+export const MEMBER_NAME_REGEX_CHECK = /^[a-zA-Z#@\$][a-zA-Z0-9#@\$]{0,7}$/;
 export let ACTIVATED = false;
 export let PROFILE_SECURITY: string | boolean = ZOWE_CLI_SCM;
 
@@ -316,7 +320,16 @@ export function setActivated(value: boolean) {
 }
 
 export async function setGlobalSecurityValue() {
-    const settingEnabled: boolean = await vscode.workspace.getConfiguration().get(SETTINGS_SECURE_CREDENTIALS_ENABLED);
+    if (this.ISTHEIA) {
+        PROFILE_SECURITY = false;
+        await vscode.workspace
+            .getConfiguration()
+            .update(this.SETTINGS_SECURE_CREDENTIALS_ENABLED, false, vscode.ConfigurationTarget.Global);
+        return;
+    }
+    const settingEnabled: boolean = await vscode.workspace
+        .getConfiguration()
+        .get(this.SETTINGS_SECURE_CREDENTIALS_ENABLED);
     if (!settingEnabled) {
         PROFILE_SECURITY = false;
     } else {

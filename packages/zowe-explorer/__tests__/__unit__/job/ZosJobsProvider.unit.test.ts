@@ -35,6 +35,7 @@ import {
 } from "../../../__mocks__/mockCreators/shared";
 import { getIconByNode } from "../../../src/generators/icons";
 import { createJesApi } from "../../../__mocks__/mockCreators/api";
+import * as sessUtils from "../../../src/utils/SessionUtils";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -146,6 +147,10 @@ async function createGlobalMocks() {
         value: jest.fn(() => globalMocks.mockProfileInstance),
         configurable: true,
     });
+    Object.defineProperty(sessUtils, "removeSession", {
+        value: jest.fn().mockImplementationOnce(() => Promise.resolve()),
+        configurable: true,
+    });
 
     // Jes API mocks
     globalMocks.jesApi = ZoweExplorerApiRegister.getJesApi(globalMocks.testProfile);
@@ -157,7 +162,6 @@ async function createGlobalMocks() {
     globalMocks.mockGetJob.mockReturnValue(globalMocks.testIJob);
     globalMocks.mockGetJobsByOwnerAndPrefix.mockReturnValue([globalMocks.testIJob, globalMocks.testIJobComplete]);
     globalMocks.mockProfileInstance.editSession = jest.fn(() => globalMocks.testProfile);
-
     globalMocks.mockGetConfiguration.mockReturnValue({
         persistence: true,
         get: (setting: string) => [],
@@ -179,29 +183,22 @@ async function createGlobalMocks() {
 const mocked = <T extends (...args: any[]) => any>(fn: T): jest.Mock<ReturnType<T>> => fn as any;
 
 describe("ZosJobsProvider unit tests - Function getChildren", () => {
-    function createBlockMocks() {
-        const imperativeProfile = createIProfile();
-        const profileInstance = createInstanceOfProfile(imperativeProfile);
-        const session = createISession();
-        const jobSessionNode = createJobSessionNode(session, imperativeProfile);
-        const jobFavoritesNode = createJobFavoritesNode();
-        const treeView = createTreeView();
-        const testIJob = createIJobObject();
-        mocked(Profiles.getInstance).mockReturnValue(profileInstance);
-
-        return {
-            profileInstance,
-            session,
-            jobSessionNode,
-            jobFavoritesNode,
-            treeView,
-            testIJob,
+    function createBlockMocks(globalMocks) {
+        const newMocks = {
+            session: createISession(),
+            jobSessionNode: null,
+            jobFavoritesNode: createJobFavoritesNode(),
+            treeView: createTreeView(),
+            testIJob: createIJobObject(),
         };
+        newMocks.jobSessionNode = createJobSessionNode(newMocks.session, globalMocks.testProfile);
+
+        return newMocks;
     }
 
     it("Tests that getChildren returns the Favorites and sessions when called at the root node", async () => {
-        createGlobalMocks();
-        const blockMocks = createBlockMocks();
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new ZosJobsProvider();
         testTree.mSessionNodes.push(blockMocks.jobSessionNode);
@@ -216,8 +213,8 @@ describe("ZosJobsProvider unit tests - Function getChildren", () => {
         expect(blockMocks.jobSessionNode).toMatchObject(children[1]);
     });
     it("Tests that getChildren returns favorites profile node when called on Favorites", async () => {
-        createGlobalMocks();
-        const blockMocks = createBlockMocks();
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
 
         const testTree = new ZosJobsProvider();
@@ -238,8 +235,8 @@ describe("ZosJobsProvider unit tests - Function getChildren", () => {
         expect(children).toEqual([favProfileNode]);
     });
     it("Tests that getChildren gets profile-loaded favorites for profile node in Favorites section ", async () => {
-        createGlobalMocks();
-        const blockMocks = createBlockMocks();
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
 
         const testTree = new ZosJobsProvider();
@@ -262,8 +259,8 @@ describe("ZosJobsProvider unit tests - Function getChildren", () => {
         expect(loadProfilesForFavoritesSpy).toHaveBeenCalledWith(log, favProfileNode);
     });
     it("Tests that getChildren gets children of a session element", async () => {
-        createGlobalMocks();
-        const blockMocks = createBlockMocks();
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
 
         const testTree = new ZosJobsProvider();
@@ -280,17 +277,16 @@ describe("ZosJobsProvider unit tests - Function getChildren", () => {
 
 describe("ZosJobsProvider unit tests - Function initializeFavChildNodeForProfile", () => {
     function createBlockMocks() {
-        const session = createISession();
-        const imperativeProfile = createIProfile();
-        const jobSessionNode = createJobSessionNode(session, imperativeProfile);
-        const jobFavoritesNode = createJobFavoritesNode();
-
-        return {
-            imperativeProfile,
-            session,
-            jobSessionNode,
-            jobFavoritesNode,
+        const newMocks = {
+            session: createISession(),
+            imperativeProfile: createIProfile(),
+            jobSessionNode: null,
+            jobFavoritesNode: createJobFavoritesNode(),
         };
+
+        newMocks.jobSessionNode = createJobSessionNode(newMocks.session, newMocks.imperativeProfile);
+
+        return newMocks;
     }
     it("Checks that profile-less node is initiated for favorited Job", async () => {
         createGlobalMocks();
@@ -431,6 +427,9 @@ describe("ZosJobsProvider unit tests - Function loadProfilesForFavorites", () =>
                     }),
                     validProfile: ValidProfileEnum.VALID,
                     getProfileInfo: jest.fn(() => createInstanceOfProfileInfo()),
+                    fetchAllProfiles: jest.fn(() => {
+                        return [{ name: "sestest" }, { name: "profile1" }, { name: "profile2" }];
+                    }),
                 };
             }),
         });
@@ -475,8 +474,12 @@ describe("ZosJobsProvider unit tests - Function loadProfilesForFavorites", () =>
                         return blockMocks.imperativeProfile;
                     }),
                     getProfileInfo: jest.fn(() => createInstanceOfProfileInfo()),
+                    fetchAllProfiles: jest.fn(() => {
+                        return [{ name: "sestest" }, { name: "profile1" }, { name: "profile2" }];
+                    }),
                 };
             }),
+            configurable: true,
         });
         mocked(vscode.window.showErrorMessage).mockResolvedValueOnce({ title: "Remove" });
         await testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
