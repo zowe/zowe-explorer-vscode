@@ -27,6 +27,7 @@ import {
     createDatasetSessionNode,
     createDatasetFavoritesNode,
     createDatasetTree,
+    createDSMemberAttributes,
 } from "../../../__mocks__/mockCreators/datasets";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import { bindMvsApi, createMvsApi } from "../../../__mocks__/mockCreators/api";
@@ -1624,6 +1625,45 @@ describe("Dataset Actions Unit Tests - Function showAttributes", () => {
         expect(datasetListSpy).toBeCalledWith(node.label.toString(), { attributes: true });
         expect(mocked(vscode.window.createWebviewPanel)).toBeCalled();
     });
+
+    it("Checking PS dataset member attributes showing", async () => {
+        globals.defineGlobals("");
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        const node = new ZoweDatasetNode(
+            "AUSER.A1557332.A996850.TEST1",
+            vscode.TreeItemCollapsibleState.None,
+            blockMocks.datasetSessionNode,
+            null
+        );
+        node.contextValue = globals.DS_DS_CONTEXT;
+        const nodeMember = new ZoweDatasetNode("MEMBER1", vscode.TreeItemCollapsibleState.None, node, null);
+        nodeMember.contextValue = globals.DS_MEMBER_CONTEXT;
+
+        mocked(vscode.window.createWebviewPanel).mockReturnValueOnce({
+            webview: {
+                html: "",
+            },
+        } as any);
+        const allMembersSpy = jest.spyOn(blockMocks.mvsApi, "allMembers");
+        allMembersSpy.mockResolvedValueOnce({
+            success: true,
+            commandResponse: "",
+            apiResponse: {
+                items: [createDSMemberAttributes(nodeMember.label.toString())],
+            },
+        });
+
+        await dsActions.showAttributes(nodeMember, blockMocks.testDatasetTree);
+
+        expect(allMembersSpy).toBeCalledWith(node.label.toString().toUpperCase(), {
+            attributes: true,
+            pattern: nodeMember.label.toString().toUpperCase(),
+        });
+        expect(mocked(vscode.window.createWebviewPanel)).toBeCalled();
+    });
+
     it("Checking PS dataset attributes showing with Unverified Profile", async () => {
         globals.defineGlobals("");
         createGlobalMocks();
