@@ -1708,4 +1708,11 @@ describe("ZoweUSSNode Unit Tests - Function node.copyUssFile()", () => {
         ussUtils.disposeClipboardContents();
         expect(vscode.env.clipboard.readText()).toEqual(undefined);
     });
+    it("Tests node.copyUssFile() reads clipboard contents and returns as nothing is copied", async () => {
+        const globalMocks = await createGlobalMocks();
+        globalMocks.readText.mockResolvedValueOnce("");
+        const blockMocks = createBlockMocks(globalMocks);
+
+        expect(await blockMocks.testNode.copyUssFile()).toEqual(undefined);
+    });
 });

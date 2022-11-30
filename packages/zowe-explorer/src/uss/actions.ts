@@ -405,7 +405,7 @@ export async function copyUssFilesToClipboard(selectedNodes: IZoweUSSTreeNode[])
     vscode.env.clipboard.writeText(filePaths.join(","));
 }
 
-async function refreshChildNodesDirectory(node: IZoweUSSTreeNode) {
+export async function refreshChildNodesDirectory(node: IZoweUSSTreeNode) {
     const childNodes = await node.getChildren();
     if (childNodes.length > 0) {
         for (const child of childNodes) {

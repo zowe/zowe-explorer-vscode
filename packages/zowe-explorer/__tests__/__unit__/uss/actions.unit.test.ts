@@ -769,4 +769,31 @@ describe("USS Action Unit Tests - copy file / directory", () => {
         expect(blockMocks.nodes[0].refreshUSS).toBeCalled();
         expect(blockMocks.nodes[1].refreshUSS).toHaveBeenCalledTimes(0);
     });
+
+    it("tests refreshChildNodesDirectory executed successfully with empty directory", async () => {
+        jest.clearAllMocks();
+        const globalMocks = createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        ussNodeActions.refreshChildNodesDirectory(blockMocks.nodes[0]);
+        blockMocks.nodes[0].refreshUSS = jest.fn().mockResolvedValueOnce(blockMocks.nodes[0]);
+        expect(blockMocks.nodes[0].refreshUSS).toBeCalledTimes(0);
+    });
+
+    it("tests refreshChildNodesDirectory executed successfully with file", async () => {
+        jest.clearAllMocks();
+        const globalMocks = createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        ussNodeActions.refreshChildNodesDirectory(blockMocks.nodes[0]);
+        blockMocks.nodes[1].refreshUSS = jest.fn().mockResolvedValueOnce(blockMocks.nodes[1]);
+        expect(blockMocks.nodes[1].refreshUSS).toBeCalledTimes(0);
+    });
+    it("tests refreshChildNodesDirectory executed successfully on a node with a child ", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        const node = new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed, null, null, "/");
+        node.getChildren = jest.fn().mockResolvedValueOnce([blockMocks.nodes[0]]);
+        ussNodeActions.refreshChildNodesDirectory(node);
+
+        expect(blockMocks.nodes[0].refreshUSS).toBeCalledTimes(0);
+    });
 });
