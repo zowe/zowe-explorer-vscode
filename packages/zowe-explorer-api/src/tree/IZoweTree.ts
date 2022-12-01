@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { IZoweNodeType, IZoweUSSTreeNode } from "./IZoweTreeNode";
+import { IZoweTreeNode } from "./IZoweTreeNode";
 import { PersistenceSchemaEnum } from "../profiles/UserSettings";
 
 /**
@@ -26,16 +26,16 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
     /**
      * Root session nodes
      */
-    mSessionNodes: IZoweNodeType[];
+    mSessionNodes: IZoweTreeNode[];
     /**
      * Root favorites node
      */
-    mFavoriteSession: IZoweNodeType;
+    mFavoriteSession: IZoweTreeNode;
     /**
      * Array of favorite nodes
      * @deprecated should not be visible outside of class
      */
-    mFavorites: IZoweNodeType[];
+    mFavorites: IZoweTreeNode[];
 
     /**
      * Adds a session to the container
@@ -47,48 +47,48 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
      * Edit a session to the container
      * @param node This parameter identifies the node that needs to be called
      */
-    editSession(node: IZoweNodeType, zoweFileProvider: IZoweTree<IZoweNodeType>): Promise<void>;
+    editSession(node: IZoweTreeNode, zoweFileProvider: IZoweTree<IZoweTreeNode>): Promise<void>;
 
     /**
      * Add a new session to the container
      * @param zoweFileProvider The tree to which the profile should be added
      */
-    createZoweSession(zoweFileProvider: IZoweTree<IZoweNodeType>): Promise<void>;
+    createZoweSession(zoweFileProvider: IZoweTree<IZoweTreeNode>): Promise<void>;
 
     /**
      * Create a brand new Schema
      * @param zoweFileProvider The tree from which the schema will be created
      */
-    createZoweSchema(zoweFileProvider: IZoweTree<IZoweNodeType>): Promise<void>;
+    createZoweSchema(zoweFileProvider: IZoweTree<IZoweTreeNode>): Promise<void>;
 
     /**
      * Adds a favorite node
      * @param favorite Adds a favorite node
      */
-    checkCurrentProfile(node: IZoweNodeType);
+    checkCurrentProfile(node: IZoweTreeNode);
 
     /**
      * Log in to authentication service
      * @param node This parameter identifies the node that needs to be called
      */
-    ssoLogin(node: IZoweNodeType);
+    ssoLogin(node: IZoweTreeNode);
 
     /**
      * Log out from authentication service
      * @param node This parameter identifies the node that needs to be called
      */
-    ssoLogout(node: IZoweNodeType);
+    ssoLogout(node: IZoweTreeNode);
 
     /**
      * Adds a favorite node
      * @param favorite Adds a favorite node
      */
-    addFavorite(favorite: IZoweNodeType);
+    addFavorite(favorite: IZoweTreeNode);
     /**
      * Removes a favorite node
      * @param favorite Adds a favorite node
      */
-    removeFavorite(node: IZoweNodeType);
+    removeFavorite(node: IZoweTreeNode);
     /**
      * Removes profile node from Favorites section
      * @param profileName
@@ -102,7 +102,7 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
      * Refreshes an element of the tree
      * @param favorite Node to refresh
      */
-    refreshElement(node: IZoweNodeType): void;
+    refreshElement(node: IZoweTreeNode): void;
     /**
      * Event Emitters used to notify subscribers that the refresh event has fired
      */
@@ -112,65 +112,60 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
      * @param element the node being flipped
      * @param isOpen the intended state of the the tree view provider, true or false
      */
-    flipState(element: IZoweNodeType, isOpen: boolean);
+    flipState(element: IZoweTreeNode, isOpen: boolean);
 
     /**
      * Rename the node. Begins a dialog.
      * @param the node to be renamed
      */
-    rename(node: IZoweNodeType);
+    rename(node: IZoweTreeNode);
     /**
      * Opens the node. Begins a dialog.
      * @param node: the node to be opened
      * @param preview: open in preview of edit mode
      */
-    open(node: IZoweNodeType, preview: boolean);
+    open(node: IZoweTreeNode, preview: boolean);
     /**
      * Begins a copy operation on the node.
      * @param node: the node to be copied
      */
-    copy(node: IZoweNodeType);
+    copy(node: IZoweTreeNode);
     /**
      * Concludes a copy/paste operation on the node.
      * @param node: the node to be pasted
      */
-    paste(node: IZoweNodeType);
+    paste(node: IZoweTreeNode);
     /**
      * Deletes a node.
      * @param node: the node to be deleted
      */
-    delete(node: IZoweNodeType);
+    delete(node: IZoweTreeNode);
     /**
      * Reveals and selects a node within the tree.
      * @param treeView: the vscode tree container
      * @param node: the node to be selected
      */
-    setItem(treeView: vscode.TreeView<IZoweNodeType>, node: IZoweNodeType);
+    setItem(treeView: vscode.TreeView<IZoweTreeNode>, node: IZoweTreeNode);
     /**
      * Saves the currently employed filter as a favorite.
      * @param node: A root node representing a session
      */
-    saveSearch(node: IZoweNodeType);
+    saveSearch(node: IZoweTreeNode);
     /**
      * Saves an edited file.
      * @param node: the node to be saved
      */
     saveFile(document: vscode.TextDocument);
 
-    // TODO
-    refreshPS(node: IZoweNodeType);
+    refreshPS(node: IZoweTreeNode);
 
-    uploadDialog(node: IZoweNodeType): any;
+    uploadDialog(node: IZoweTreeNode): any;
 
-    // TODO replace with filterPrompt
-    // datasetFilterPrompt(node: IZoweNodeType): any;
-    // filterPrompt(node: IZoweUSSTreeNode): any;
-    // searchPrompt(node: IZoweJobTreeNode): any;
     /**
-     * Begins a filter/serach operation on a node.
+     * Begins a filter/search operation on a node.
      * @param node: the root node to be searched from
      */
-    filterPrompt(node: IZoweNodeType);
+    filterPrompt(node: IZoweTreeNode);
 
     /**
      * Adds a search history element to persisted settings.
@@ -190,35 +185,35 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
      * Deletes a root node from the tree.
      * @param node: A root node representing a session
      */
-    deleteSession(node: IZoweNodeType): any;
+    deleteSession(node: IZoweTreeNode): any;
     /**
      * Lets the user open a dataset by filtering the currently-loaded list
      */
-    getAllLoadedItems?(): Promise<IZoweUSSTreeNode[]>;
+    getAllLoadedItems?(): Promise<IZoweTreeNode[]>;
     /**
      * Retrieves the vscode tree container
      */
-    getTreeView(): vscode.TreeView<IZoweNodeType>;
+    getTreeView(): vscode.TreeView<IZoweTreeNode>;
 
     /**
      * Finds an equivalent node but not as a favorite
      *
-     * @param {IZoweNodeType} node
+     * @param {IZoweTreeNode} node
      * @deprecated should not be visible outside of class
      */
-    findFavoritedNode(node: IZoweNodeType): IZoweNodeType;
+    findFavoritedNode(node: IZoweTreeNode): IZoweTreeNode;
     /**
      * Finds the equivalent node but not as a favorite
      *
-     * @param {IZoweNodeType} node
+     * @param {IZoweTreeNode} node
      * @deprecated should not be visible outside of class
      */
-    findNonFavoritedNode(node: IZoweNodeType): IZoweNodeType;
+    findNonFavoritedNode(node: IZoweTreeNode): IZoweTreeNode;
     /**
      * Finds the equivalent node, based on isFavorite
-     * @param {IZoweNodeType} node
+     * @param {IZoweTreeNode} node
      */
-    findEquivalentNode(node: IZoweNodeType, isFavorite: boolean): IZoweNodeType;
+    findEquivalentNode(node: IZoweTreeNode, isFavorite: boolean): IZoweTreeNode;
     /**
      * Updates favorite
      *
@@ -228,10 +223,10 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
     /**
      * Renames a node from the favorites list
      *
-     * @param {IZoweNodeType} node
+     * @param {IZoweTreeNode} node
      * @deprecated should not be visible outside of class
      */
-    renameFavorite(node: IZoweNodeType, newLabel: string);
+    renameFavorite(node: IZoweTreeNode, newLabel: string);
     /**
      * Renames a node based on the profile and it's label
      * @deprecated should not be visible outside of class
@@ -255,9 +250,9 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
      * Returns a new dataset filter string, from an old filter and a new string
      *
      * @param {string} newFilter the new filter to add
-     * @param {IZoweNodeType} node the node with the old filter
+     * @param {IZoweTreeNode} node the node with the old filter
      */
-    createFilterString?(newFilter: string, node: IZoweNodeType);
+    createFilterString?(newFilter: string, node: IZoweTreeNode);
     /**
      * @param {string} profileLabel
      * @param {string} beforeLabel
@@ -268,7 +263,7 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
      * Opens an item & reveals it in the tree
      *
      * @param {string} path the path of the item
-     * @param {IZoweNodeType} sessionNode the session to use
+     * @param {IZoweTreeNode} sessionNode the session to use
      */
-    openItemFromPath?(path: string, sessionNode: IZoweNodeType);
+    openItemFromPath?(path: string, sessionNode: IZoweTreeNode);
 }

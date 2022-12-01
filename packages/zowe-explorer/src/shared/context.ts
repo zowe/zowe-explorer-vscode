@@ -245,15 +245,6 @@ export function isPds(node: TreeItem): boolean {
 }
 
 /**
- * Helper function which identifies if the node is a partitioned dataset
- * @param node
- * @return true if a partitioned dataset, false otherwise
- */
-export function isPds(node: TreeItem): boolean {
-    return new RegExp("^(" + globals.DS_PDS_CONTEXT + ")").test(node.contextValue);
-}
-
-/**
  * Helper function which identifies if the node is a USS Directory
  * @param node
  * @return true if a USS Directory, false otherwise
