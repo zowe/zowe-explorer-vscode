@@ -310,7 +310,7 @@ export class ZosmfJesApi extends ZosmfApiCommon implements ZoweExplorerApi.IJes 
     }
 
     public async getJobsByOwnerAndPrefix(owner: string, prefix: string): Promise<zowe.IJob[]> {
-        return await zowe.GetJobs.getJobsByOwnerAndPrefix(this.getSession(), owner, prefix); // look here
+        return await zowe.GetJobs.getJobsByOwnerAndPrefix(this.getSession(), owner, prefix);
     }
 
     public async getJob(jobid: string): Promise<zowe.IJob> {

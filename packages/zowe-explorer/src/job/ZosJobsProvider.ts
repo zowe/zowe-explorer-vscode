@@ -645,8 +645,8 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             if (parsedHistory.JobId) {
                 return this.handleSearchByJobId(parsedHistory.JobId);
             } else {
-                const quickPickFilledItems = this.getSearchQueryOptions(parsedHistory);
-                return this.handleEditingMultiJobParameters(quickPickFilledItems, node);
+                const quickPickPrefilledItems = this.getPopulatedPickerValues(parsedHistory);
+                return this.handleEditingMultiJobParameters(quickPickPrefilledItems, node);
             }
         }
     }
@@ -714,7 +714,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         return searchCriteriaObj;
     }
 
-    public getSearchQueryOptions(searchObj: IJobSearchCriteria): IJobPickerOption[] {
+    public getPopulatedPickerValues(searchObj: IJobSearchCriteria): IJobPickerOption[] {
         const historyPopulatedItems = globals.JOB_PROPERTIES;
         historyPopulatedItems.forEach((prop) => {
             if (prop.key === "owner") {
