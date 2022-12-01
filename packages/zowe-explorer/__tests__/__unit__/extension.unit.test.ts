@@ -526,7 +526,6 @@ describe("Extension Unit Tests", () => {
     it("Tests getSelectedNodeList executes successfully when no multiple selection", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
-        const nodeList = [blockMocks.rootNode, blockMocks.testNode];
         const res = extension.getSelectedNodeList(blockMocks.testNode, undefined);
         expect(res[0]).toEqual(blockMocks.testNode);
     });
