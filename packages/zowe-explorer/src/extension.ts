@@ -910,7 +910,7 @@ function initSubscribers(context: vscode.ExtensionContext, theProvider: IZoweTre
     }
 }
 
-function getSelectedNodeList(node: IZoweTreeNode, nodeList: IZoweTreeNode[]): IZoweTreeNode[] {
+export function getSelectedNodeList(node: IZoweTreeNode, nodeList: IZoweTreeNode[]): IZoweTreeNode[] {
     let resultNodeList: IZoweTreeNode[] = [];
     if (!nodeList) {
         resultNodeList.push(node);
