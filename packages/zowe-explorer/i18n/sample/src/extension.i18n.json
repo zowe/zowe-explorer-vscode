@@ -9,7 +9,5 @@
   "activate.didSaveText.notDirty": " is not a dirty file ",
   "activate.didSaveText.isDataSet": "File is a data set-- saving ",
   "activate.didSaveText.isUSSFile": "File is a USS file -- saving",
-  "activate.didSaveText.notDataSet": " is not a data set or USS file ",
-  "ZoweUssNode.copyUpload.progress": "Uploading copied files ...",
-  "ZoweUssNode.copyDownload.progress": "Downloading copied files ..."
+  "activate.didSaveText.notDataSet": " is not a data set or USS file "
 }

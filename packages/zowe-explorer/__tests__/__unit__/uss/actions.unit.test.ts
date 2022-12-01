@@ -36,6 +36,7 @@ import * as isbinaryfile from "isbinaryfile";
 import * as fs from "fs";
 import { createUssApi, bindUssApi } from "../../../__mocks__/mockCreators/api";
 import * as refreshActions from "../../../src/shared/refresh";
+import { getSelectedNodeList } from "../../../src/extension";
 
 function createGlobalMocks() {
     const globalMocks = {
@@ -169,6 +170,8 @@ function createGlobalMocks() {
 
     return globalMocks;
 }
+// Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/master/src/util/testing.ts
+const mocked = <T extends (...args: any[]) => any>(fn: T): jest.Mock<ReturnType<T>> => fn as any;
 
 describe("USS Action Unit Tests - Function createUSSNodeDialog", () => {
     async function createBlockMocks(globalMocks) {
@@ -724,6 +727,7 @@ describe("USS Action Unit Tests - copy file / directory", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
             nodes: null,
+            treeNodes: null,
         };
 
         newMocks.nodes = [
@@ -753,6 +757,24 @@ describe("USS Action Unit Tests - copy file / directory", () => {
         newMocks.nodes[0].getChildren = jest.fn().mockResolvedValueOnce([]);
         newMocks.nodes[1].getProfile = jest.fn().mockResolvedValueOnce({ name: "test" });
         newMocks.nodes[0].getProfile = jest.fn().mockResolvedValueOnce({ name: "test" });
+
+        newMocks.treeNodes = {
+            testUSSTree: null,
+            ussNode: createUSSNode(globalMocks.testSession, createIProfile()),
+            testTreeView: createTreeView(),
+            mockCheckCurrentProfile: jest.fn(),
+            ussApi: createUssApi(globalMocks.testProfile),
+            ussNodes: null,
+        };
+        newMocks.treeNodes.testUSSTree = createUSSTree(
+            [createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile)],
+            [newMocks.treeNodes.ussNode],
+            newMocks.treeNodes.testTreeView
+        );
+
+        mocked(vscode.window.withProgress).mockResolvedValueOnce((progLocation, callback) => {
+            callback();
+        });
 
         return newMocks;
     }
@@ -795,5 +817,37 @@ describe("USS Action Unit Tests - copy file / directory", () => {
         ussNodeActions.refreshChildNodesDirectory(node);
 
         expect(blockMocks.nodes[0].refreshUSS).toBeCalledTimes(0);
+    });
+
+    it("tests copyUssFiles executed successfully via context menu with selected nodes", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        ussNodeActions.copyUssFiles(
+            blockMocks.treeNodes.ussNode,
+            blockMocks.treeNodes.ussNodes,
+            blockMocks.treeNodes.testUSSTree
+        );
+        expect(getSelectedNodeList(blockMocks.treeNodes.ussNode, blockMocks.treeNodes.ussNodes)).toEqual([
+            blockMocks.treeNodes.ussNode,
+        ]);
+    });
+    it("tests copyUssFiles executed successfully via quick keys with selected nodes", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        ussNodeActions.copyUssFiles(null, null, blockMocks.treeNodes.testUSSTree);
+        expect(getSelectedNodeList(blockMocks.treeNodes.ussNode, blockMocks.treeNodes.ussNodes)).toEqual([
+            blockMocks.treeNodes.ussNode,
+        ]);
+    });
+
+    it("tests pasteUssFile executed successfully with selected nodes", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        const parent = blockMocks.treeNodes.testUSSTree.getTreeView();
+        parent.selection = blockMocks.nodes[0];
+        ussNodeActions.pasteUssFile(blockMocks.treeNodes.testUSSTree);
+        expect(getSelectedNodeList(blockMocks.treeNodes.ussNode, blockMocks.treeNodes.ussNodes)).toEqual([
+            blockMocks.treeNodes.ussNode,
+        ]);
     });
 });

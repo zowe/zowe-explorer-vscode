@@ -712,38 +712,14 @@ function initUSSProvider(context: vscode.ExtensionContext) {
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.uss.pasteUssFile", async (node: IZoweUSSTreeNode) => {
-            const selectedNode = (ussFileProvider.getTreeView().selection as IZoweUSSTreeNode[])[0] as ZoweUSSNode;
-            await vscode.window.withProgress(
-                {
-                    location: vscode.ProgressLocation.Window,
-                    title: localize("ZoweUssNode.copyUpload.progress", "Uploading copied files ..."),
-                },
-                () => {
-                    return selectedNode.copyUssFile();
-                }
-            );
-            ussFileProvider.refreshElement(selectedNode.getParent());
+            ussActions.pasteUssFile(ussFileProvider);
         })
     );
     context.subscriptions.push(
         vscode.commands.registerCommand(
             "zowe.uss.copyUssFile",
             async (node: IZoweUSSTreeNode, nodeList: IZoweUSSTreeNode[]) => {
-                let selectedNodes;
-                if (node || nodeList) {
-                    selectedNodes = getSelectedNodeList(node, nodeList) as IZoweUSSTreeNode[];
-                } else {
-                    selectedNodes = ussFileProvider.getTreeView().selection;
-                }
-                await vscode.window.withProgress(
-                    {
-                        location: vscode.ProgressLocation.Window,
-                        title: localize("ZoweUssNode.copyDownload.progress", "Downloading copied files ..."),
-                    },
-                    () => {
-                        return ussActions.copyUssFilesToClipboard(selectedNodes);
-                    }
-                );
+                ussActions.copyUssFiles(node, nodeList, ussFileProvider);
             }
         )
     );

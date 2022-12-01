@@ -27,6 +27,7 @@ import { refreshAll } from "../shared/refresh";
 import { UIViews } from "../shared/ui-views";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 import { fileExistsCaseSensitveSync } from "./utils";
+import { getSelectedNodeList } from "../extension";
 
 // Set up localization
 nls.config({
@@ -405,6 +406,28 @@ export async function copyUssFilesToClipboard(selectedNodes: IZoweUSSTreeNode[])
     vscode.env.clipboard.writeText(filePaths.join(","));
 }
 
+export async function copyUssFiles(
+    node: IZoweUSSTreeNode,
+    nodeList: IZoweUSSTreeNode[],
+    ussFileProvider: IZoweTree<IZoweUSSTreeNode>
+) {
+    let selectedNodes;
+    if (node || nodeList) {
+        selectedNodes = getSelectedNodeList(node, nodeList) as IZoweUSSTreeNode[];
+    } else {
+        selectedNodes = ussFileProvider.getTreeView().selection;
+    }
+    await vscode.window.withProgress(
+        {
+            location: vscode.ProgressLocation.Window,
+            title: localize("ZoweUssNode.copyDownload.progress", "Downloading copied files ..."),
+        },
+        () => {
+            return copyUssFilesToClipboard(selectedNodes);
+        }
+    );
+}
+
 export async function refreshChildNodesDirectory(node: IZoweUSSTreeNode) {
     const childNodes = await node.getChildren();
     if (childNodes.length > 0) {
@@ -416,4 +439,20 @@ export async function refreshChildNodesDirectory(node: IZoweUSSTreeNode) {
             await node.refreshUSS();
         }
     }
+}
+
+export async function pasteUssFile(ussFileProvider: IZoweTree<IZoweUSSTreeNode>) {
+    const a = ussFileProvider.getTreeView().selection as IZoweUSSTreeNode[];
+    const selectedNode = a.length > 0 ? (a[0] as IZoweUSSTreeNode) : (a as unknown as IZoweUSSTreeNode);
+
+    await vscode.window.withProgress(
+        {
+            location: vscode.ProgressLocation.Window,
+            title: localize("ZoweUssNode.copyUpload.progress", "Uploading copied files ..."),
+        },
+        () => {
+            return selectedNode.copyUssFile();
+        }
+    );
+    ussFileProvider.refreshElement(selectedNode.getParent());
 }
