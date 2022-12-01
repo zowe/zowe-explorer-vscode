@@ -42,7 +42,6 @@ import { handleSaving } from "./utils/workspace";
 import { ZoweDatasetNode } from "./dataset/ZoweDatasetNode";
 import * as contextuals from "../src/shared/context";
 import { Job } from "./job/ZoweJobNode";
-import { ZoweUSSNode } from "./uss/ZoweUSSNode";
 
 // Set up localization
 nls.config({

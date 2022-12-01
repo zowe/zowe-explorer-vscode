@@ -443,7 +443,7 @@ export async function refreshChildNodesDirectory(node: IZoweUSSTreeNode) {
 
 export async function pasteUssFile(ussFileProvider: IZoweTree<IZoweUSSTreeNode>) {
     const a = ussFileProvider.getTreeView().selection as IZoweUSSTreeNode[];
-    const selectedNode = a.length > 0 ? (a[0] as IZoweUSSTreeNode) : (a as unknown as IZoweUSSTreeNode);
+    const selectedNode = a.length > 0 ? a[0] : (a as unknown as IZoweUSSTreeNode);
 
     await vscode.window.withProgress(
         {
