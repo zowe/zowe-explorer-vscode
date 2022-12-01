@@ -6,6 +6,8 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 - New API call `getJobsByParameters` to allow filtering jobs by status.
 
+## 2.4.1
+
 ### Bug fixes
 
 - Added an API to obtain an up to date array of Profiles from registered types, `ProfilesCache.fetchAllProfiles()`.

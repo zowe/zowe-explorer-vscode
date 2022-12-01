@@ -103,7 +103,6 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                     },
                     () => {
                         const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
-                        // now we getting somewhere
                         return ZoweExplorerApiRegister.getJesApi(cachedProfile).getSpoolFiles(
                             this.job.jobname,
                             this.job.jobid

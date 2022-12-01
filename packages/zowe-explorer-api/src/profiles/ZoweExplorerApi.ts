@@ -356,7 +356,7 @@ export namespace ZoweExplorerApi {
         /**
          * Returns a list of jobs for a specific user and prefix.
          *
-         * @deprecated Use getJobsByOwnerAndPrefix
+         * @deprecated Use getJobsByParameters
          * @param {string} owner
          * @param {string} prefix
          * @returns {Promise<zowe.IJob[]>} an array if IJob

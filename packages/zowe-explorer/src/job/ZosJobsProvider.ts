@@ -87,11 +87,11 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
     public mSessionNodes: IZoweJobTreeNode[] = [];
     public mFavorites: IZoweJobTreeNode[] = [];
     public searchByQuery = new FilterItem({
-        text: globals.plusSign + localize("zosJobsProvider.option.prompt.createId", "Create Job Search Filter"),
+        text: globals.plusSign + localize("zosJobsProvider.option.prompt.createId", "Create job search filter"),
         menuType: globals.JobPickerTypes.QuerySearch,
     });
     public searchById = new FilterItem({
-        text: globals.plusSign + localize("zosJobsProvider.option.prompt.createOwner", "Job Id Search"),
+        text: globals.plusSign + localize("zosJobsProvider.option.prompt.createOwner", "Job id search"),
         menuType: globals.JobPickerTypes.IdSearch,
     });
     private treeView: vscode.TreeView<IZoweJobTreeNode>;
@@ -583,7 +583,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         return;
     }
 
-    public async getUserJobsMenuChoice(): Promise<FilterItem> {
+    public async getUserJobsMenuChoice(): Promise<FilterItem | undefined> {
         const items: FilterItem[] = this.mHistory
             .getSearchHistory()
             .map((element) => new FilterItem({ text: element, menuType: globals.JobPickerTypes.History }));
@@ -601,7 +601,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 vscode.window.showInformationMessage(
                     localize("enterPattern.pattern", "No selection made. Operation cancelled.")
                 );
-                return;
+                return undefined;
             }
             return choice;
         } else {
@@ -617,7 +617,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 vscode.window.showInformationMessage(
                     localize("enterPattern.pattern", "No selection made. Operation cancelled.")
                 );
-                return;
+                return undefined;
             }
             return choice;
         }

@@ -14,6 +14,8 @@ import { createJobsTree, ZosJobsProvider } from "../../../src/job/ZosJobsProvide
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import * as globals from "../../../src/globals";
+import * as jobUtils from "../../../src/job/utils";
+import * as utils from "../../../src/utils/ProfilesUtils";
 import { IZoweJobTreeNode, ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import {
     createIJobFile,
@@ -625,5 +627,39 @@ describe("ZosJobsProvider unit tests - Function removeFavProfile", () => {
         await globalMocks.testJobsProvider.removeFavProfile(blockMocks.profileNodeInFavs.label, false);
 
         expect(globalMocks.testJobsProvider.mFavorites.length).toEqual(0);
+    });
+});
+
+describe("ZosJobsProvider unit tests - Function getUserJobsMenuChoice", () => {
+    it("should return undefined and warn if user did not select a menu", async () => {
+        const globalMocks = await createGlobalMocks();
+        globalMocks.mockCreateQuickPick.mockReturnValue({
+            show: () => Promise.resolve(undefined),
+            hide: () => Promise.resolve(undefined),
+            onDidAccept: () => Promise.resolve(undefined),
+            onDidHide: () => Promise.resolve(undefined),
+        });
+        const showInformationMessage = jest.spyOn(vscode.window, "showInformationMessage");
+        jest.spyOn(globalMocks.testJobsProvider.mHistory, "getSearchHistory").mockReturnValue([]);
+        jest.spyOn(jobUtils, "resolveQuickPickHelper").mockReturnValue(undefined);
+        const result = await globalMocks.testJobsProvider.getUserJobsMenuChoice();
+        expect(result).toEqual(undefined);
+        expect(showInformationMessage).toHaveBeenCalled();
+    });
+    it("should return user menu choice and not show vscode warning", async () => {
+        const globalMocks = await createGlobalMocks();
+        globalMocks.mockCreateQuickPick.mockReturnValue({
+            show: () => Promise.resolve(undefined),
+            hide: () => Promise.resolve(undefined),
+            onDidAccept: () => Promise.resolve(undefined),
+            onDidHide: () => Promise.resolve(undefined),
+        });
+        const showInformationMessage = jest.spyOn(vscode.window, "showInformationMessage");
+        jest.spyOn(globalMocks.testJobsProvider.mHistory, "getSearchHistory").mockReturnValue([]);
+        const menuItem = new utils.FilterItem({ text: "searchById" });
+        jest.spyOn(jobUtils, "resolveQuickPickHelper").mockReturnValue(Promise.resolve(menuItem));
+        const result = await globalMocks.testJobsProvider.getUserJobsMenuChoice();
+        expect(result).toEqual(menuItem);
+        expect(showInformationMessage).not.toHaveBeenCalled();
     });
 });
