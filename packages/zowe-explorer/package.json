@@ -1724,7 +1724,6 @@
     "@types/chai-as-promised": "^7.1.0",
     "@types/expect": "^1.20.3",
     "@types/fs-extra": "^7.0.0",
-    "@types/jest": "^25.1.0",
     "@types/promise-queue": "^2.2.0",
     "@types/selenium-webdriver": "^3.0.4",
     "@types/yargs": "^11.0.0",
@@ -1747,10 +1746,6 @@
     "gulp-fs": "^0.0.2",
     "gulp-sourcemaps": "^2.6.5",
     "gulp-typescript": "^5.0.1",
-    "jest": "^25.1.0",
-    "jest-html-reporter": "^3.3.0",
-    "jest-junit": "^10.0.0",
-    "jest-stare": "^2.2.0",
     "jsdoc": "^3.6.3",
     "jsdom": "^16.0.0",
     "keytar": "^7.2.0",
@@ -1760,7 +1755,6 @@
     "run-sequence": "^2.2.1",
     "selenium-webdriver": "^3.6.0",
     "sinon": "^6.1.0",
-    "ts-jest": "^25.3.0",
     "ts-loader": "^7.0.1",
     "ts-node": "^8.10.1",
     "tslint": "^5.17.0",
@@ -1777,9 +1771,9 @@
   },
   "jest": {
     "moduleFileExtensions": [
+      "js",
       "ts",
-      "tsx",
-      "js"
+      "tsx"
     ],
     "testPathIgnorePatterns": [
       "<rootDir>/src/decorators"
@@ -1788,13 +1782,13 @@
       "<rootDir>/results/unit"
     ],
     "transform": {
-      "^.+\\.(ts|tsx)$": "ts-jest"
-    },
-    "globals": {
-      "ts-jest": {
-        "tsConfig": "tsconfig.json",
-        "diagnostics": false
-      }
+      "^.+\\.(ts|tsx)$": [
+        "ts-jest",
+        {
+          "tsconfig": "tsconfig.json",
+          "diagnostics": false
+        }
+      ]
     },
     "testRegex": "__tests__.*\\.(spec|test)\\.ts$",
     "modulePathIgnorePatterns": [
@@ -1817,7 +1811,8 @@
     "coverageDirectory": "<rootDir>/results/unit/coverage",
     "setupFilesAfterEnv": [
       "<rootDir>/__tests__/__unit__/jest.setup.ts"
-    ]
+    ],
+    "preset": "ts-jest"
   },
   "jest-html-reporter": {
     "pageTitle": "Zowe Extension Tests",

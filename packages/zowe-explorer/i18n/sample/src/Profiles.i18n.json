@@ -30,6 +30,7 @@
   "createNewConnection.booleanValue": "Operation Cancelled",
   "createNewConnection.default": "Operation Cancelled",
   "createNewConnection.duplicateProfileName": "Profile name already exists. Please create a profile using a different name",
+  "createProfile.success.info": "Profile {0} was created.",
   "createNewConnection.option.prompt.username.placeholder": "User Name",
   "createNewConnection.option.prompt.username": "Enter the user name for the connection. Leave blank to not store.",
   "createNewConnection.option.prompt.password.placeholder": "Password",
