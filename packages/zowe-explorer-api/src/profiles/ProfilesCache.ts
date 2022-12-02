@@ -353,7 +353,7 @@ export class ProfilesCache {
                     type,
                 });
             } catch (error) {
-                this.log.debug(error);
+                this.log.debug(error as string);
             }
             if (profileManager) {
                 this.profileManagerByType.set(type, profileManager);
@@ -392,7 +392,7 @@ export class ProfilesCache {
         try {
             return (await this.getProfileInfo()).isSecured();
         } catch (error) {
-            this.log.error(error);
+            this.log.error(error as string);
         }
     }
 
@@ -418,7 +418,7 @@ export class ProfilesCache {
                     (typeof value2 === "string" && value2.length > 0);
             }
         } catch (error) {
-            this.log.error(error);
+            this.log.error(error as string);
         }
         return imperativeIsSecure;
     }
