@@ -14,6 +14,8 @@ import { createJobsTree, ZosJobsProvider } from "../../../src/job/ZosJobsProvide
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import * as globals from "../../../src/globals";
+import * as jobUtils from "../../../src/job/utils";
+import * as utils from "../../../src/utils/ProfilesUtils";
 import { IZoweJobTreeNode, ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import {
     createIJobFile,
@@ -625,5 +627,153 @@ describe("ZosJobsProvider unit tests - Function removeFavProfile", () => {
         await globalMocks.testJobsProvider.removeFavProfile(blockMocks.profileNodeInFavs.label, false);
 
         expect(globalMocks.testJobsProvider.mFavorites.length).toEqual(0);
+    });
+});
+
+describe("ZosJobsProvider unit tests - Function getUserJobsMenuChoice", () => {
+    let showInformationMessage;
+    let globalMocks;
+    beforeEach(async () => {
+        globalMocks = await createGlobalMocks();
+        showInformationMessage = jest.spyOn(vscode.window, "showInformationMessage");
+        globalMocks.mockCreateQuickPick.mockReturnValue({
+            show: () => Promise.resolve(undefined),
+            hide: () => Promise.resolve(undefined),
+            onDidAccept: () => Promise.resolve(undefined),
+            onDidHide: () => Promise.resolve(undefined),
+        });
+        jest.spyOn(globalMocks.testJobsProvider.mHistory, "getSearchHistory").mockReturnValue(["JobId:123"]);
+    });
+    it("should return undefined and warn if user did not select a menu", async () => {
+        jest.spyOn(jobUtils, "resolveQuickPickHelper").mockReturnValue(undefined);
+        const result = await globalMocks.testJobsProvider.getUserJobsMenuChoice();
+        expect(result).toEqual(undefined);
+        expect(showInformationMessage).toHaveBeenCalled();
+    });
+    it("should return user menu choice and not show vscode warning", async () => {
+        const menuItem = new utils.FilterItem({ text: "searchById" });
+        jest.spyOn(jobUtils, "resolveQuickPickHelper").mockReturnValue(Promise.resolve(menuItem));
+        const result = await globalMocks.testJobsProvider.getUserJobsMenuChoice();
+        expect(result).toEqual(menuItem);
+        expect(showInformationMessage).not.toHaveBeenCalled();
+    });
+});
+
+describe("ZosJobsProvider unit tests - Function getUserSearchQueryInput", () => {
+    let globalMocks;
+    let handleEditingMultiJobParameters;
+    let handleSearchByJobId;
+    beforeEach(async () => {
+        globalMocks = await createGlobalMocks();
+        handleEditingMultiJobParameters = jest.spyOn(globalMocks.testJobsProvider, "handleEditingMultiJobParameters");
+        handleSearchByJobId = jest.spyOn(globalMocks.testJobsProvider, "handleSearchByJobId");
+    });
+    it("should call handleEditingMultiJobParameters if user chose QuerySearch menu", async () => {
+        const multiSearchMenu = new utils.FilterItem({
+            text: "Create search query",
+            menuType: globals.JobPickerTypes.QuerySearch,
+        });
+        await globalMocks.testJobsProvider.getUserSearchQueryInput(
+            multiSearchMenu,
+            globalMocks.testJobsProvider.mSessionNodes[1]
+        );
+        expect(handleEditingMultiJobParameters).toHaveBeenCalled();
+    });
+    it("should call handleSearchByJobId if user chose IdSearch menu", async () => {
+        const multiSearchMenu = new utils.FilterItem({
+            text: "Create search query",
+            menuType: globals.JobPickerTypes.IdSearch,
+        });
+        await globalMocks.testJobsProvider.getUserSearchQueryInput(
+            multiSearchMenu,
+            globalMocks.testJobsProvider.mSessionNodes[1]
+        );
+        expect(handleEditingMultiJobParameters).not.toHaveBeenCalled();
+        expect(handleSearchByJobId).toHaveBeenCalled();
+    });
+    it("should call handleSearchByJobId if user chose History item with job id", async () => {
+        const multiSearchMenu = new utils.FilterItem({
+            text: "Create search query",
+            menuType: globals.JobPickerTypes.History,
+        });
+
+        jest.spyOn(globalMocks.testJobsProvider, "parseJobSearchQuery").mockReturnValue({
+            Owner: undefined,
+            Prefix: undefined,
+            JobId: "123",
+            Status: undefined,
+        });
+        await globalMocks.testJobsProvider.getUserSearchQueryInput(
+            multiSearchMenu,
+            globalMocks.testJobsProvider.mSessionNodes[1]
+        );
+        expect(handleEditingMultiJobParameters).not.toHaveBeenCalled();
+        expect(handleSearchByJobId).toHaveBeenCalled();
+    });
+    it("should call handleEditingMultiJobParameters if user chose History item with query", async () => {
+        const multiSearchMenu = new utils.FilterItem({
+            text: "Create search query",
+            menuType: globals.JobPickerTypes.History,
+        });
+
+        jest.spyOn(globalMocks.testJobsProvider, "parseJobSearchQuery").mockReturnValue({
+            Owner: "zowe",
+            Prefix: undefined,
+            JobId: undefined,
+            Status: "ACTIVE",
+        });
+        await globalMocks.testJobsProvider.getUserSearchQueryInput(
+            multiSearchMenu,
+            globalMocks.testJobsProvider.mSessionNodes[1]
+        );
+        expect(handleEditingMultiJobParameters).toHaveBeenCalled();
+        expect(handleSearchByJobId).not.toHaveBeenCalled();
+    });
+    it("should return undefined if no user choice was made", async () => {
+        const result = await globalMocks.testJobsProvider.getUserSearchQueryInput(
+            undefined,
+            globalMocks.testJobsProvider.mSessionNodes[1]
+        );
+        expect(handleEditingMultiJobParameters).not.toHaveBeenCalled();
+        expect(handleSearchByJobId).not.toHaveBeenCalled();
+        expect(result).toEqual(undefined);
+    });
+});
+
+describe("ZosJobsProvider unit tests - Function getPopulatedPickerArray", () => {
+    it("should return picker option with prefilled query", async () => {
+        const globalMocks = await createGlobalMocks();
+        const parsedHistoryObj = {
+            Owner: "kristina",
+            Prefix: "job*",
+            JobId: undefined,
+            Status: "output",
+        };
+
+        const actualPickerObj = globalMocks.testJobsProvider.getPopulatedPickerValues(parsedHistoryObj);
+        const expectedObj = [
+            {
+                key: `owner`,
+                label: `Job Owner`,
+                value: "kristina",
+                show: true,
+                placeHolder: `Enter job owner id`,
+            },
+            {
+                key: `prefix`,
+                label: `Job Prefix`,
+                value: "job*",
+                show: true,
+                placeHolder: `Enter job prefix`,
+            },
+            {
+                key: `job-status`,
+                label: `Job Status`,
+                value: "output",
+                show: true,
+                placeHolder: `Enter job status`,
+            },
+        ];
+        expect(actualPickerObj).toEqual(expectedObj);
     });
 });

@@ -278,7 +278,7 @@ describe("ZoweJobNode unit tests - Function onDidConfiguration", () => {
 });
 
 describe("ZoweJobNode unit tests - Function getChildren", () => {
-    it("Tests that getChildren returns the jobs of the session, when called on the session", async () => {
+    xit("Tests that getChildren returns the jobs of the session, when called on the session", async () => {
         const globalMocks = await createGlobalMocks();
 
         await globalMocks.testJobsProvider.addSession("fake");
@@ -326,34 +326,6 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
         expect(spoolFiles.length).toBe(1);
         expect(spoolFiles[0].label).toEqual("STEP:STDOUT - 1");
         expect(spoolFiles[0].owner).toEqual("*");
-    });
-});
-
-describe("ZoweJobNode unit tests - Function interpretFreeform", () => {
-    it("Tests that interpretFreeform returns the correct string interpretations", async () => {
-        const globalMocks = await createGlobalMocks();
-
-        expect(globalMocks.testJobsProvider.interpretFreeform("STC01234")).toEqual("JobId:STC01234");
-        expect(globalMocks.testJobsProvider.interpretFreeform("job STC01234")).toEqual("JobId:STC01234");
-        expect(globalMocks.testJobsProvider.interpretFreeform("STC01234 JOB")).toEqual("JobId:STC01234");
-        expect(globalMocks.testJobsProvider.interpretFreeform("JOB12345")).toEqual("JobId:JOB12345");
-        expect(globalMocks.testJobsProvider.interpretFreeform("JOB0123456")).toEqual("JobId:JOB01234");
-        expect(globalMocks.testJobsProvider.interpretFreeform("JOB012345N")).toEqual("JobId:JOB01234");
-        // We interpret this as an owner prefix as the value is invalid as a job
-        expect(globalMocks.testJobsProvider.interpretFreeform("JOB0X25N")).toEqual("Owner:JOB0X25N");
-        expect(globalMocks.testJobsProvider.interpretFreeform("MYHLQ*")).toEqual("Owner:MYHLQ*");
-        expect(globalMocks.testJobsProvider.interpretFreeform("Owner: MYHLQ pRefix: STYYY*")).toEqual(
-            "Owner:MYHLQ Prefix:STYYY*"
-        );
-        expect(globalMocks.testJobsProvider.interpretFreeform("jobid: JOB0X25N")).toEqual("JobId:JOB0X25N");
-        expect(globalMocks.testJobsProvider.interpretFreeform("MYHLQ")).toEqual("Owner:MYHLQ");
-        // Although Job ID is invalid the user is explicit
-        expect(globalMocks.testJobsProvider.interpretFreeform("MYHLQ* myJobname")).toEqual(
-            "Owner:MYHLQ* Prefix:myJobname"
-        );
-        expect(globalMocks.testJobsProvider.interpretFreeform("MYHLQ* myJob")).toEqual("Owner:MYHLQ* Prefix:myJob");
-        expect(globalMocks.testJobsProvider.interpretFreeform("MYHLQ* myJob*")).toEqual("Owner:MYHLQ* Prefix:myJob*");
-        expect(globalMocks.testJobsProvider.interpretFreeform("* * STC01234")).toEqual("JobId:STC01234");
     });
 });
 
@@ -431,7 +403,7 @@ describe("ZoweJobNode unit tests - Function addFavorite", () => {
         const profileNodeInFavs: IZoweJobTreeNode = globalMocks.testJobsProvider.mFavorites[0];
 
         expect(profileNodeInFavs.children.length).toEqual(1);
-        expect(profileNodeInFavs.children[0].label).toEqual("Owner:myHLQ Prefix:*");
+        expect(profileNodeInFavs.children[0].label).toEqual("Owner:myHLQ Prefix:* Status:*");
         expect(profileNodeInFavs.children[0].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX);
     });
 });
@@ -539,368 +511,200 @@ describe("ZoweJobNode unit tests - Function saveSearch", () => {
     });
 });
 
-describe("ZoweJobNode unit tests - Function searchPrompt", () => {
-    async function createBlockMocks(globalMocks) {
-        const newMocks = {
-            testJobNodeNoCred: new Job(
-                "jobtest",
-                vscode.TreeItemCollapsibleState.Expanded,
-                globalMocks.jobNode,
-                globalMocks.testSessionNoCred,
-                globalMocks.testIJob,
-                globalMocks.testProfile
-            ),
-            qpItem: globalMocks.testJobsProvider.createOwner,
-            theia: false,
-            mockCheckCurrentProfile: jest.fn(),
-            qpContent: createQuickPickContent(
-                "",
-                [globalMocks.testJobsProvider.createOwner, globalMocks.testJobsProvider.createId],
-                "Select a filter"
-            ),
+describe("ZosJobsProvider - Function searchPrompt", () => {
+    it("should exit if searchCriteria is undefined", async () => {
+        const globalMocks = await createGlobalMocks();
+        jest.spyOn(globalMocks.testJobsProvider, "applyRegularSessionSearchLabel").mockReturnValue(undefined);
+        const addSearchHistory = jest.spyOn(globalMocks.testJobsProvider, "addSearchHistory");
+        const refreshElement = jest.spyOn(globalMocks.testJobsProvider, "refreshElement");
+        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
+        expect(globalMocks.testJobsProvider);
+        expect(addSearchHistory).not.toHaveBeenCalled();
+        expect(refreshElement).not.toHaveBeenCalled();
+    });
+    it("should add history if searchCriteria is returned", async () => {
+        const globalMocks = await createGlobalMocks();
+        jest.spyOn(globalMocks.testJobsProvider, "applyRegularSessionSearchLabel").mockReturnValue(
+            "Owner:kristina Prefix:* Status:*"
+        );
+        const addSearchHistory = jest.spyOn(globalMocks.testJobsProvider, "addSearchHistory");
+        const refreshElement = jest.spyOn(globalMocks.testJobsProvider, "refreshElement");
+        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
+        expect(globalMocks.testJobsProvider);
+        expect(addSearchHistory).toHaveBeenCalled();
+        expect(refreshElement).toHaveBeenCalled();
+    });
+});
+
+describe("ZosJobsProvider - Function applyRegularSessionSearchLabel", () => {
+    it("should call applySearchLabelToNode", async () => {
+        const globalMocks = await createGlobalMocks();
+        const searchObj = {
+            Owner: "zowe",
+            Prefix: "*",
+            JobId: undefined,
+            Status: "*",
         };
-
-        newMocks.testJobNodeNoCred.contextValue = globals.JOBS_SESSION_CONTEXT;
-        globalMocks.testJobsProvider.initializeJobsTree(zowe.imperative.Logger.getAppLogger());
-        globalMocks.mockCreateSessCfgFromArgs.mockReturnValue(globalMocks.testSessionNoCred);
-        globalMocks.mockCreateQuickPick.mockReturnValue(newMocks.qpContent);
-        Object.defineProperty(globals, "ISTHEIA", { get: () => newMocks.theia });
-        jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(() => Promise.resolve(newMocks.qpItem));
-
-        return newMocks;
-    }
-
-    it("Testing that prompt credentials is called when searchPrompt is triggered", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        globalMocks.mockShowInputBox.mockReturnValueOnce("MYHLQ");
-        globalMocks.mockShowInputBox.mockReturnValueOnce("");
-        globalMocks.mockShowInputBox.mockReturnValueOnce("");
-
-        await globalMocks.testJobsProvider.searchPrompt(blockMocks.testJobNodeNoCred);
-
-        expect(blockMocks.testJobNodeNoCred.contextValue).toEqual(globals.JOBS_SESSION_CONTEXT + "_Active");
-        expect(blockMocks.testJobNodeNoCred.owner).toEqual("MYHLQ");
-        expect(blockMocks.testJobNodeNoCred.prefix).toEqual("*");
-        expect(blockMocks.testJobNodeNoCred.searchId).toEqual("");
-    });
-
-    it("Testing searchPrompt is successfully canceled when user enters no credentials", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        globalMocks.mockShowInputBox.mockReturnValueOnce(undefined);
-
-        await globalMocks.testJobsProvider.searchPrompt(blockMocks.testJobNodeNoCred);
-
-        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
-        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Search Cancelled");
-    });
-
-    it("Testing that prompt credentials is called when searchPrompt is triggered for fav", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        blockMocks.testJobNodeNoCred.label = "[sestest]: Owner:fakeUser Prefix:*";
-        blockMocks.testJobNodeNoCred.contextValue = globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX;
-        globalMocks.mockShowInputBox.mockReturnValueOnce("MYHLQ");
-        globalMocks.mockShowInputBox.mockReturnValueOnce("");
-        globalMocks.mockShowInputBox.mockReturnValueOnce("");
-
-        await globalMocks.testJobsProvider.searchPrompt(blockMocks.testJobNodeNoCred);
-
-        expect(Profiles.getInstance().validProfile).toBe(ValidProfileEnum.VALID);
-    });
-
-    it("Testing that searchPrompt is successfully executed when searching by owner, VSCode route", async () => {
-        const globalMocks = await createGlobalMocks();
-        await createBlockMocks(globalMocks);
-
-        globalMocks.mockShowInputBox.mockReturnValueOnce("MYHLQ");
-        globalMocks.mockShowInputBox.mockReturnValueOnce("");
-        globalMocks.mockShowInputBox.mockReturnValueOnce(""); // need the jobId in this case
-
-        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
-
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].contextValue).toEqual(
-            globals.JOBS_SESSION_CONTEXT + "_Active"
+        jest.spyOn(globalMocks.testJobsProvider, "getUserJobsMenuChoice").mockReturnValue({ text: "test" });
+        jest.spyOn(globalMocks.testJobsProvider, "getUserSearchQueryInput").mockReturnValue(searchObj);
+        jest.spyOn(globalMocks.testJobsProvider, "createSearchLabel").mockReturnValue(searchObj);
+        const applySearchLabelToNode = jest.spyOn(globalMocks.testJobsProvider, "applySearchLabelToNode");
+        const returnedSearchCriteria = await globalMocks.testJobsProvider.applyRegularSessionSearchLabel(
+            globalMocks.testJobsProvider.mSessionNodes[1]
         );
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("MYHLQ");
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].prefix).toEqual("*");
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].searchId).toEqual("");
+        expect(returnedSearchCriteria).toEqual(searchObj);
+        expect(applySearchLabelToNode).toHaveBeenCalled();
     });
-
-    it("Testing that searchPrompt is successfully executed when searching by prefix, VSCode route", async () => {
+    it("should not call applySearchLabelToNode and return undefined", async () => {
         const globalMocks = await createGlobalMocks();
-        await createBlockMocks(globalMocks);
-
-        globalMocks.mockShowInputBox.mockReturnValueOnce("");
-        globalMocks.mockShowInputBox.mockReturnValueOnce("STO*");
-
-        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
-
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].contextValue).toEqual(
-            globals.JOBS_SESSION_CONTEXT + "_Active"
+        const searchObj = {
+            Owner: undefined,
+            Prefix: undefined,
+            JobId: undefined,
+            Status: undefined,
+        };
+        jest.spyOn(globalMocks.testJobsProvider, "getUserJobsMenuChoice").mockReturnValue({ text: "test" });
+        jest.spyOn(globalMocks.testJobsProvider, "getUserSearchQueryInput").mockReturnValue(undefined);
+        jest.spyOn(globalMocks.testJobsProvider, "createSearchLabel").mockReturnValue(searchObj);
+        const applySearchLabelToNode = jest.spyOn(globalMocks.testJobsProvider, "applySearchLabelToNode");
+        const returnedSearchCriteria = await globalMocks.testJobsProvider.applyRegularSessionSearchLabel(
+            globalMocks.testJobsProvider.mSessionNodes[1]
         );
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("*");
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].prefix).toEqual("STO*");
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].searchId).toEqual("");
+        expect(returnedSearchCriteria).toEqual(undefined);
+        expect(applySearchLabelToNode).not.toHaveBeenCalled();
     });
+});
 
-    it("Testing that searchPrompt is successfully executed when searching by prefix, VSCode route with Unverified profile", async () => {
+describe("ZosJobsProvider - Function parseJobSearchQuery", () => {
+    const emptySearchCriteriaObj = {
+        Owner: undefined,
+        Prefix: undefined,
+        JobId: undefined,
+        Status: undefined,
+    };
+    it("should return empty object for undefined criteria", async () => {
         const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-        await createBlockMocks(globalMocks);
-
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    checkCurrentProfile: blockMocks.mockCheckCurrentProfile.mockReturnValueOnce({
-                        name: globalMocks.testProfile.name,
-                        status: "unverified",
-                    }),
-                    validProfile: ValidProfileEnum.UNVERIFIED,
-                };
-            }),
-        });
-
-        globalMocks.mockShowInputBox.mockReturnValueOnce("");
-        globalMocks.mockShowInputBox.mockReturnValueOnce("STO*");
-
-        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
-
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].contextValue).toEqual(
-            globals.JOBS_SESSION_CONTEXT + "_Unverified"
+        const actualCriteriaObj = globalMocks.testJobsProvider.parseJobSearchQuery(undefined);
+        expect(actualCriteriaObj).toEqual(emptySearchCriteriaObj);
+    });
+    it("should parse a valid search criteria", async () => {
+        const globalMocks = await createGlobalMocks();
+        const actualCriteriaObj = globalMocks.testJobsProvider.parseJobSearchQuery("Owner:zowe Prefix:* Status:*");
+        const expectedSearchCriteriaObj = {
+            Owner: "zowe",
+            Prefix: "*",
+            JobId: undefined,
+            Status: "*",
+        };
+        expect(actualCriteriaObj).toEqual(expectedSearchCriteriaObj);
+    });
+    it("should parse search criteria without status", async () => {
+        const globalMocks = await createGlobalMocks();
+        const actualCriteriaObj = globalMocks.testJobsProvider.parseJobSearchQuery("Owner:zowe Prefix:*");
+        const expectedSearchCriteriaObj = {
+            Owner: "zowe",
+            Prefix: "*",
+            JobId: undefined,
+            Status: undefined,
+        };
+        expect(actualCriteriaObj).toEqual(expectedSearchCriteriaObj);
+    });
+    it("should parse valid items out of bad query with special characters", async () => {
+        const globalMocks = await createGlobalMocks();
+        const actualCriteriaObj = globalMocks.testJobsProvider.parseJobSearchQuery(
+            "Owner:zowe::\\// . : Prefix:BA*      Status:ACTIVE"
         );
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("*");
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].prefix).toEqual("STO*");
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].searchId).toEqual("");
+        const expectedSearchCriteriaObj = {
+            Owner: "zowe",
+            Prefix: "BA*",
+            JobId: undefined,
+            Status: "ACTIVE",
+        };
+        expect(actualCriteriaObj).toEqual(expectedSearchCriteriaObj);
     });
-
-    it("Testing that searchPrompt is successfully executed when searching by owner & prefix, VSCode route", async () => {
+    it("should return empty object for query with only :", async () => {
         const globalMocks = await createGlobalMocks();
-        await createBlockMocks(globalMocks);
-
-        globalMocks.mockShowInputBox.mockReturnValueOnce("MYHLQ");
-        globalMocks.mockShowInputBox.mockReturnValueOnce("STO*");
-
-        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
-
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].contextValue).toEqual(
-            globals.JOBS_SESSION_CONTEXT + "_Active"
+        const actualCriteriaObj = globalMocks.testJobsProvider.parseJobSearchQuery("::::::::::");
+        expect(actualCriteriaObj).toEqual(emptySearchCriteriaObj);
+    });
+    it("should not add extra key value pairs to searchCriteriaObj", async () => {
+        const globalMocks = await createGlobalMocks();
+        const actualCriteriaObj = globalMocks.testJobsProvider.parseJobSearchQuery(
+            "Owner:zowe Prefix:* Random:value Another:random JobId:123"
         );
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("MYHLQ");
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].prefix).toEqual("STO*");
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].searchId).toEqual("");
+        const expectedSearchCriteriaObj = {
+            Owner: "zowe",
+            Prefix: "*",
+            JobId: "123",
+            Status: undefined,
+        };
+        expect(actualCriteriaObj).toEqual(expectedSearchCriteriaObj);
     });
-
-    it("Testing that searchPrompt is successfully executed when searching by job ID, VSCode route", async () => {
+    it("should return empty searchCriteriaObj for empty string", async () => {
         const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        blockMocks.qpItem = globalMocks.testJobsProvider.createId;
-        globalMocks.mockShowInputBox.mockReturnValueOnce("STO12345");
-
-        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
-
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].contextValue).toEqual(
-            globals.JOBS_SESSION_CONTEXT + "_Active"
-        );
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("*");
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].prefix).toEqual("*");
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].searchId).toEqual("STO12345");
+        const actualCriteriaObj = globalMocks.testJobsProvider.parseJobSearchQuery("      ");
+        expect(actualCriteriaObj).toEqual(emptySearchCriteriaObj);
     });
+});
 
-    it("Testing that searchPrompt is successfully canceled by the user at the owner input box, VSCode route", async () => {
+describe("ZosJobsProvider - Function handleEditingMultiJobParameters", () => {
+    it("should resolve and retun if user cancels quick pick", async () => {
         const globalMocks = await createGlobalMocks();
-        await createBlockMocks(globalMocks);
-
-        globalMocks.mockShowInputBox.mockReturnValueOnce(undefined);
-
-        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
-
-        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
-        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Search Cancelled");
-    });
-
-    it("Testing that searchPrompt is successfully executed when user selects from the recent searches list, VSCode route", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        blockMocks.qpContent.items = ["Owner:fake Prefix:*"];
-        globalMocks.mockShowQuickPick.mockReturnValueOnce(blockMocks.qpContent.items[0]);
-        globalMocks.mockShowInputBox.mockReturnValueOnce("fake");
-        globalMocks.mockShowInputBox.mockReturnValueOnce("*");
-
-        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
-
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("FAKE");
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].prefix).toEqual("*");
-    });
-
-    it("Testing that searchPrompt is successfully canceled by the user at first quick pick selection, VSCode route", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        blockMocks.qpItem = undefined;
-
-        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
-
-        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
-        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("No selection made. Operation cancelled.");
-    });
-
-    it("Testing that searchPrompt is successfully executed, favorites route", async () => {
-        const globalMocks = await createGlobalMocks();
-        await createBlockMocks(globalMocks);
-
-        globalMocks.testJobNode.label = "Owner:stonecc Prefix:*";
-        globalMocks.testJobNode.contextValue = globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX;
-        const checkSession = jest.spyOn(globalMocks.testJobsProvider, "addSession");
-        expect(checkSession).not.toHaveBeenCalled();
-
-        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobNode);
-
-        expect(checkSession).toHaveBeenCalledTimes(1);
-        expect(checkSession).toHaveBeenLastCalledWith("sestest");
-    });
-
-    it("Testing that searchPrompt from favorited search can pass session values into node in Sessions", async () => {
-        const globalMocks = await createGlobalMocks();
-        await createBlockMocks(globalMocks);
-        globalMocks.testJobNode.label = "Owner:stonecc Prefix:*";
-        globalMocks.testJobNode.contextValue = globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX;
-
-        const sessionNoCreds = createISessionWithoutCredentials();
-        globalMocks.testJobsProvider.mSessionNodes[1].session = sessionNoCreds;
-        const sessNodeNoCreds = globalMocks.testJobsProvider.mSessionNodes[1];
-
-        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobNode);
-
-        expect(sessNodeNoCreds.session.ISession.user).toEqual(globalMocks.testJobNode.session.ISession.user);
-        expect(sessNodeNoCreds.session.ISession.password).toEqual(globalMocks.testJobNode.session.ISession.password);
-        expect(sessNodeNoCreds.session.ISession.base64EncodedAuth).toEqual(
-            globalMocks.testJobNode.session.ISession.base64EncodedAuth
-        );
-    });
-
-    it("Testing that searchPrompt is successfully executed when searching by owner, Theia route", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        blockMocks.theia = true;
-        globalMocks.mockShowQuickPick.mockReturnValueOnce(blockMocks.qpItem);
-        globalMocks.mockShowInputBox.mockReturnValueOnce("MYHLQY");
-        globalMocks.mockShowInputBox.mockReturnValueOnce("");
-        globalMocks.mockShowInputBox.mockReturnValueOnce(""); // need the jobId in this case
-
-        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
-
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].contextValue).toEqual(
-            globals.JOBS_SESSION_CONTEXT + "_Active"
-        );
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("MYHLQY");
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].prefix).toEqual("*");
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].searchId).toEqual("");
-    });
-
-    it("Testing that searchPrompt is successfully executed when searching by prefix, Theia route", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        blockMocks.theia = true;
-        globalMocks.mockShowQuickPick.mockReturnValueOnce(blockMocks.qpItem);
-        globalMocks.mockShowInputBox.mockReturnValueOnce("");
-        globalMocks.mockShowInputBox.mockReturnValueOnce("STO*");
-
-        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
-
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].contextValue).toEqual(
-            globals.JOBS_SESSION_CONTEXT + "_Active"
-        );
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("*");
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].prefix).toEqual("STO*");
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].searchId).toEqual("");
-    });
-
-    it("Testing that searchPrompt is successfully executed when searching by owner & prefix, Theia route", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        blockMocks.theia = true;
-        globalMocks.mockShowQuickPick.mockReturnValueOnce(blockMocks.qpItem);
-        globalMocks.mockShowInputBox.mockReturnValueOnce("MYHLQX");
-        globalMocks.mockShowInputBox.mockReturnValueOnce("STO*");
-
-        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
-
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].contextValue).toEqual(
-            globals.JOBS_SESSION_CONTEXT + "_Active"
-        );
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("MYHLQX");
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].prefix).toEqual("STO*");
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].searchId).toEqual("");
-    });
-
-    it("Testing that searchPrompt is successfully executed when searching by job ID, Theia route", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        blockMocks.theia = true;
-        blockMocks.qpItem = globalMocks.testJobsProvider.createId;
-        globalMocks.mockShowQuickPick.mockReturnValueOnce(blockMocks.qpItem);
-        globalMocks.mockShowInputBox.mockReturnValueOnce("STO12345");
-
-        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
-
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].contextValue).toEqual(
-            globals.JOBS_SESSION_CONTEXT + "_Active"
-        );
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("*");
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].prefix).toEqual("*");
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].searchId).toEqual("STO12345");
-    });
-
-    it("Testing that searchPrompt is successfully canceled by the user at the owner input box, Theia route", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        blockMocks.theia = true;
-        globalMocks.mockShowInputBox.mockReturnValueOnce(undefined);
-        globalMocks.mockShowQuickPick.mockReturnValueOnce(blockMocks.qpItem);
-
-        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
-
-        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
-        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Search Cancelled");
-    });
-
-    it("Testing that searchPrompt is successfully executed when user selects from the recent searches list, Theia route", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        blockMocks.theia = true;
-        blockMocks.qpItem = new utils.FilterItem({ text: "Owner:fake Prefix:*" });
-        globalMocks.mockShowQuickPick.mockReturnValueOnce(blockMocks.qpItem);
-
-        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
-
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("fake");
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].prefix).toEqual("*");
-    });
-
-    it("Testing that searchPrompt is successfully canceled by the user at first quick pick selection, Theia route", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        blockMocks.theia = true;
         globalMocks.mockShowQuickPick.mockReturnValueOnce(undefined);
-
-        // Assert edge condition user cancels the quick pick
-        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
-
-        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
-        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("No selection made. Operation cancelled.");
+        const setJobStatus = jest.spyOn(globalMocks.testJobsProvider, "setJobStatus");
+        await globalMocks.testJobsProvider.handleEditingMultiJobParameters(
+            globalMocks.testJobsProvider.JOB_PROPERTIES,
+            globalMocks.testJobsProvider.mSessionNodes[0]
+        );
+        expect(setJobStatus).not.toHaveBeenCalled();
+    });
+    it("should set job status if user chose Job Status in Quick Pick", async () => {
+        const globalMocks = await createGlobalMocks();
+        const setJobStatus = jest.spyOn(globalMocks.testJobsProvider, "setJobStatus").mockReturnValue({
+            key: `All`,
+            label: `*`,
+            value: null,
+            picked: true,
+        });
+        globalMocks.mockShowQuickPick.mockReturnValueOnce({ label: "Job Status" });
+        await globalMocks.testJobsProvider.handleEditingMultiJobParameters(
+            globalMocks.testJobsProvider.JOB_PROPERTIES,
+            globalMocks.testJobsProvider.mSessionNodes[0]
+        );
+        expect(setJobStatus).toHaveBeenCalled();
+    });
+    it("return search criteria object if user clciks submit in Qucik Pick", async () => {
+        const myJobProperties = [
+            {
+                key: `owner`,
+                label: `Job Owner`,
+                value: "zowe",
+                show: true,
+                placeHolder: "Enter job owner id",
+            },
+            {
+                key: `prefix`,
+                label: `Job Prefix`,
+                value: "KRI*",
+                show: true,
+                placeHolder: "Enter job prefix",
+            },
+            {
+                key: `job-status`,
+                label: `Job Status`,
+                value: "ACTIVE",
+                show: true,
+                placeHolder: "Enter job status",
+            },
+        ];
+        const globalMocks = await createGlobalMocks();
+        const setJobStatus = jest.spyOn(globalMocks.testJobsProvider, "setJobStatus");
+        globalMocks.mockShowQuickPick.mockReturnValueOnce({ label: " + Submit this Job Search Query" });
+        const result = await globalMocks.testJobsProvider.handleEditingMultiJobParameters(
+            myJobProperties,
+            globalMocks.testJobsProvider.mSessionNodes[0]
+        );
+        expect(setJobStatus).not.toHaveBeenCalled();
+        expect(result).toEqual({ Owner: "zowe", Prefix: "KRI*", JobId: undefined, Status: "ACTIVE" });
     });
 });

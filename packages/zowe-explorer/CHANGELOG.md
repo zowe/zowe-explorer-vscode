@@ -4,6 +4,12 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ## TBD Release
 
+### New features and enhancements
+
+- Added ability to filter jobs by status. Improved Job filtering User experience.[#1925](https://github.com/zowe/vscode-extension-for-zowe/issues/1925)
+- Added option to view PDS member attributes, and updated formatting for attributes webview. [#1577](https://github.com/zowe/vscode-extension-for-zowe/issues/1577)
+- Streamlined attribute viewing options into one feature - "Show Attributes".
+
 ### Bug fixes
 
 - Fixed missing localization for certain VScode error/info/warning messages. [#1722](https://github.com/zowe/vscode-extension-for-zowe/issues/1722)
