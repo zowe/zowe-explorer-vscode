@@ -1158,6 +1158,28 @@ describe("Dataset Tree Unit Tests - Function removeFavorite", () => {
         expect(removeFavProfileSpy).toHaveBeenCalledWith(profileNodeInFavs.label, false);
         expect(testTree.mFavorites.length).toBe(0);
     });
+
+    it("Checking removeFavorite when calling with a node that is not favorited", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        const node = new ZoweDatasetNode(
+            "Dataset",
+            vscode.TreeItemCollapsibleState.None,
+            testTree.mSessionNodes[1],
+            null
+        );
+
+        const updateFavoritesSpy = jest.spyOn(testTree, "updateFavorites");
+        const removeFavoriteSpy = jest.spyOn(testTree, "removeFavorite");
+
+        await testTree.removeFavorite(node);
+        expect(removeFavoriteSpy).toHaveReturned();
+        expect(updateFavoritesSpy).not.toHaveBeenCalled();
+    });
 });
 describe("Dataset Tree Unit Tests - Function  - Function removeFavProfile", () => {
     function createBlockMocks() {
