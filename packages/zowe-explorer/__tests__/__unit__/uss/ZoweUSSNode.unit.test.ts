@@ -748,7 +748,6 @@ describe("ZoweUSSNode Unit Tests - Function node.deleteUSSNode()", () => {
 
         try {
             await blockMocks.ussNode.deleteUSSNode(blockMocks.testUSSTree, "", false);
-            // tslint:disable-next-line:no-empty
         } catch (err) {}
 
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(1);
@@ -1178,7 +1177,6 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
 
         try {
             await child.openUSS(false, true, blockMocks.testUSSTree);
-            // tslint:disable-next-line: no-empty
         } catch (err) {}
 
         expect(globalMocks.ussFile.mock.calls.length).toBe(0);
@@ -1332,7 +1330,6 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
 
         try {
             await brat.openUSS(false, true, blockMocks.testUSSTree);
-            // tslint:disable-next-line: no-empty
         } catch (err) {}
 
         expect(globalMocks.ussFile.mock.calls.length).toBe(0);

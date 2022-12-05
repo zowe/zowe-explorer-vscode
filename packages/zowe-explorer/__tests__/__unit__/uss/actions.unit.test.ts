@@ -79,7 +79,6 @@ function createGlobalMocks() {
     globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.testProfile);
     // Mock the logger
     globals.defineGlobals("/test/path/");
-    // tslint:disable-next-line: no-object-literal-type-assertion
     const extensionMock = jest.fn(
         () =>
             ({
@@ -600,7 +599,6 @@ describe("USS Action Unit Tests - Functions uploadDialog & uploadFile", () => {
 
         try {
             await ussNodeActions.uploadDialog(blockMocks.ussNode, blockMocks.testUSSTree);
-            // tslint:disable-next-line:no-empty
         } catch (err) {}
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(1);
     });

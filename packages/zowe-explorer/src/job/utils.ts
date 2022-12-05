@@ -19,14 +19,12 @@ nls.config({
 })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
-// tslint:disable-next-line: max-classes-per-file
 export class JobIdFilterDescriptor extends FilterDescriptor {
     constructor() {
         super("\uFF0B " + localize("zosJobsProvider.option.prompt.createId", "Job Id search"));
     }
 }
 
-// tslint:disable-next-line: max-classes-per-file
 export class OwnerFilterDescriptor extends FilterDescriptor {
     constructor() {
         super("\uFF0B " + localize("zosJobsProvider.option.prompt.createOwner", "Owner/Prefix Job Search"));

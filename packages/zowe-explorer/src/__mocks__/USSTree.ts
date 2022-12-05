@@ -38,7 +38,6 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
      * @memberof USSTree
      */
     @MockMethod()
-    // tslint:disable-next-line:no-empty
     public addFavorite(node: IZoweUSSTreeNode) {}
 
     /**
@@ -47,7 +46,6 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
      * @memberof USSTree
      */
     @MockMethod()
-    // tslint:disable-next-line:no-empty
     public async openItemFromPath(itemPath: string, sessionNode: IZoweUSSTreeNode) {}
 
     /**
@@ -55,7 +53,6 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
      * @memberof USSTree
      */
     @MockMethod()
-    // tslint:disable-next-line:no-empty
     public removeFavorite(node: IZoweUSSTreeNode) {}
 
     /**
@@ -82,7 +79,6 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
      * @memberof USSTree
      */
     @MockMethod()
-    // tslint:disable-next-line:no-empty
     public setItem(treeView: vscode.TreeView<IZoweTreeNode>, item: IZoweTreeNode) {}
 
     /**
@@ -90,7 +86,6 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
      * @memberof USSTree
      */
     @MockMethod()
-    // tslint:disable-next-line:no-empty
     public addSearchHistory(criteria: string) {}
 
     /**
@@ -98,7 +93,6 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
      * @memberof USSTree
      */
     @MockMethod()
-    // tslint:disable-next-line:no-empty
     public refreshElement(element: IZoweDatasetTreeNode) {}
 
     /**
@@ -106,7 +100,6 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
      * @memberof USSTree
      */
     @MockMethod()
-    // tslint:disable-next-line:no-empty
     public checkCurrentProfile(node: IZoweUSSTreeNode) {}
 
     /**
@@ -114,7 +107,6 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
      * @memberof USSTree
      */
     @MockMethod()
-    // tslint:disable-next-line:no-empty
     public removeFileHistory(name: string) {}
 
     /**
@@ -122,7 +114,6 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
      * @memberof USSTree
      */
     @MockMethod()
-    // tslint:disable-next-line:no-empty
     public addFileHistory(criteria: string) {}
 
     /**
@@ -130,7 +121,6 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
      * @memberof USSTree
      */
     @MockMethod()
-    // tslint:disable-next-line:no-empty
     public getFileHistory(): string[] {
         return null;
     }

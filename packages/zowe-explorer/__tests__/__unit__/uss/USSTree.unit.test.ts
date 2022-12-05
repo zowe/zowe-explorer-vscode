@@ -1178,7 +1178,6 @@ describe("USSTree Unit Tests - Function USSTree.rename()", () => {
 
         try {
             await globalMocks.testTree.rename(globalMocks.testUSSNode);
-            // tslint:disable-next-line:no-empty
         } catch (err) {}
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(1);
     });

@@ -10,7 +10,6 @@
  */
 
 import { Builder, By, Key, until, Button } from "selenium-webdriver";
-// tslint:disable-next-line: no-submodule-imports
 import * as firefox from "selenium-webdriver/firefox";
 import { TheiaLocator, DatasetsLocators, UssLocators, JobsLocators } from "./Locators";
 

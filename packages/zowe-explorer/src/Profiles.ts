@@ -1213,7 +1213,6 @@ export class Profiles extends ProfilesCache {
                         break;
                 }
             } catch (error) {
-                // tslint:disable-next-line: no-magic-numbers
                 if (error.errorCode === 401) {
                     await errorHandling(error, theProfile.name);
                 }

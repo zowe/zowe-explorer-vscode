@@ -61,7 +61,6 @@ const profileOne: imperative.IProfileLoaded = {
 getConfiguration.mockReturnValue({
     persistence: true,
     get: (setting: string) => ["[test]: /u{session}"],
-    // tslint:disable-next-line: no-empty
     update: jest.fn(() => {
         {
         }

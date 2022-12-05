@@ -9,7 +9,6 @@
  *                                                                                 *
  */
 
-// tslint:disable:no-shadowed-variable
 jest.mock("vscode");
 jest.mock("@zowe/cli");
 jest.mock("Session");

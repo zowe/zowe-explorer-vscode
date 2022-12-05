@@ -9,8 +9,6 @@
  *                                                                                 *
  */
 
-// tslint:disable: max-classes-per-file
-
 import * as zowe from "@zowe/cli";
 import { ZoweExplorerApi, ZosmfUssApi, ZosmfJesApi, ZosmfMvsApi } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";

@@ -139,9 +139,7 @@ export async function deleteFromDisk(node: IZoweUSSTreeNode, filePath: string) {
         if (fs.existsSync(filePath)) {
             fs.unlinkSync(filePath);
         }
-    } catch (err) {
-        // tslint:disable-next-line: no-empty
-    }
+    } catch (err) {}
 }
 
 export async function uploadDialog(node: IZoweUSSTreeNode, ussFileProvider: IZoweTree<IZoweUSSTreeNode>) {

@@ -48,7 +48,6 @@ export async function createJobsTree(log: imperative.Logger) {
     return tree;
 }
 
-// tslint:disable-next-line: max-classes-per-file
 export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZoweJobTreeNode> {
     public static readonly JobId = "JobId:";
     public static readonly Owner = "Owner:";
@@ -881,7 +880,6 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
 /**
  * Helper class to allow generation of job details by history or favorite
  */
-// tslint:disable-next-line: max-classes-per-file
 class JobDetail implements IJob {
     public jobid: string;
     public jobname: string;

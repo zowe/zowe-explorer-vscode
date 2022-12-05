@@ -70,20 +70,15 @@ export class BrightProfile {
     constructor(public profile: Profile) {}
 }
 
-// tslint:disable-next-line:max-classes-per-file
 export class Session {
     constructor(public ISession: ISessionOptions) {}
 }
 
-// tslint:disable-next-line:class-name
-// tslint:disable-next-line:max-classes-per-file
 export class Profile {
     constructor(public name: string, public type: string) {}
 }
 
-// tslint:disable-next-line:max-classes-per-file
 export class CliProfileManager {
-    // tslint:disable-next-line:no-empty
     constructor(options: ICliOptions) {}
 
     public load(opts: ILoadOptions) {
@@ -150,7 +145,6 @@ export class ProfileInfo {
     }
 }
 
-// tslint:disable-next-line:max-classes-per-file
 export class ImperativeConfig {
     public static instance = {
         cliHome: "./__tests__/.zowe",
@@ -167,18 +161,14 @@ export class ImperativeConfig {
     public cliHome: "./__tests__/.zowe";
 }
 
-// tslint:disable-next-line:max-classes-per-file
 export class CredentialManagerFactory {}
 
-// tslint:disable-next-line:max-classes-per-file
 export class DefaultCredentialManager {
     public test: "test";
 }
 
-// tslint:disable-next-line:max-classes-per-file
 export class AbstractCredentialManager {}
 
-// tslint:disable-next-line:max-classes-per-file
 export class Logger {
     public static initLogger(loggingConfig: IConfigLogging): any {}
     public static getAppLogger(): Logger {
@@ -186,12 +176,10 @@ export class Logger {
     }
 }
 
-// tslint:disable-next-line:max-classes-per-file
 export class ConnectionPropsForSessCfg {
     public static resolveSessCfgProps(): void {}
 }
 
-// tslint:disable-next-line:max-classes-per-file
 export class TextUtils {
     public static prettyJson(object: any, options?: any, color?: boolean, append?: string): string {
         return JSON.stringify(object);

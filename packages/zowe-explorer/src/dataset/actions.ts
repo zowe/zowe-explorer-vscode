@@ -586,7 +586,6 @@ export async function createFile(
         localize("createFile.editAttributes", "Edit Attributes"),
     ];
     // Make a nice new mutable array for the DS properties
-    // tslint:disable-next-line: prefer-const
     let newDSProperties = JSON.parse(JSON.stringify(globals.DATA_SET_PROPERTIES));
 
     datasetProvider.checkCurrentProfile(node);

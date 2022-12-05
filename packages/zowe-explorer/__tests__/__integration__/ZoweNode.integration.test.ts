@@ -12,7 +12,6 @@
 import { imperative, ZosmfSession } from "@zowe/cli";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
-// tslint:disable-next-line:no-implicit-dependencies
 import * as expect from "expect";
 import * as vscode from "vscode";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
@@ -122,7 +121,6 @@ describe("ZoweNode Integration Tests", async () => {
         ];
 
         sampleChildren[0].command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [sampleChildren[0]] };
-        // tslint:disable-next-line:no-magic-numbers
         sampleChildren[3].command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [sampleChildren[3]] };
 
         // Checking that the rootChildren are what they are expected to be
@@ -152,7 +150,6 @@ describe("ZoweNode Integration Tests", async () => {
         // The method should throw an error.
         const undefinedNode = new ZoweDatasetNode(undefined, undefined, undefined, undefined, DS_PDS_CONTEXT);
         undefinedNode.dirty = true;
-        // tslint:disable-next-line:max-line-length
         await expectChai(undefinedNode.getChildren()).to.eventually.be.rejectedWith("Invalid node");
     }).timeout(TIMEOUT);
 

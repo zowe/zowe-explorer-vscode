@@ -202,7 +202,6 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
 
         try {
             await dsActions.createMember(parent, blockMocks.testDatasetTree);
-            // tslint:disable-next-line:no-empty
         } catch (err) {}
 
         expect(mocked(vscode.window.showErrorMessage)).toBeCalledWith("Unable to create member: test Error: test");
@@ -2520,7 +2519,6 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         await dsActions.createFile(blockMocks.datasetSessionNode, blockMocks.testDatasetTree);
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_PS);
 
-        // tslint:disable-next-line:no-magic-numbers
         expect(createDataSetSpy).toHaveBeenCalledTimes(5);
     });
     it("Checking of proper configuration being picked up for different DS types with credentials prompt", async () => {
@@ -2568,7 +2566,6 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         await dsActions.createFile(node, blockMocks.testDatasetTree);
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_PS);
 
-        // tslint:disable-next-line:no-magic-numbers
         expect(createDataSetSpy).toHaveBeenCalledTimes(5);
     });
     it("Checking of proper configuration being picked up for different DS types with credentials prompt for favorite", async () => {
@@ -2616,7 +2613,6 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         await dsActions.createFile(node, blockMocks.testDatasetTree);
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_PS);
 
-        // tslint:disable-next-line:no-magic-numbers
         expect(createDataSetSpy).toHaveBeenCalledTimes(5);
     });
     it("Checking PS dataset creation", async () => {
@@ -3128,7 +3124,6 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
 
         try {
             await dsActions.openPS(node, true, blockMocks.testDatasetTree);
-            // tslint:disable-next-line:no-empty
         } catch (err) {}
 
         expect(mocked(vscode.window.showErrorMessage)).toBeCalledWith("openPS() called from invalid node.");

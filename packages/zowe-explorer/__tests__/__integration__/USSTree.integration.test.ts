@@ -9,12 +9,10 @@
  *                                                                                 *
  */
 
-// tslint:disable:no-magic-numbers
 import { imperative, ZosmfSession } from "@zowe/cli";
 import * as chai from "chai";
 import * as sinon from "sinon";
 import * as chaiAsPromised from "chai-as-promised";
-// tslint:disable-next-line:no-implicit-dependencies
 import * as expect from "expect";
 import * as vscode from "vscode";
 import * as testConst from "../../resources/testProfileData";

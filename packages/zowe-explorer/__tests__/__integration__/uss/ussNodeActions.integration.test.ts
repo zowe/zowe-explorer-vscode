@@ -9,7 +9,6 @@
  *                                                                                 *
  */
 
-// tslint:disable:no-magic-numbers
 import { Create, Delete, imperative, List, ZosmfSession } from "@zowe/cli";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";

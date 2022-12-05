@@ -346,7 +346,6 @@ async function createGlobalMocks() {
     });
 
     // Create a mocked extension context
-    // tslint:disable-next-line: no-object-literal-type-assertion
     const mockExtensionCreator = jest.fn(
         () =>
             ({
@@ -384,13 +383,11 @@ describe("Extension Unit Tests", () => {
             value: globalMocks.mockImperativeProfileInfo,
             configurable: true,
         });
-        // tslint:disable-next-line: no-object-literal-type-assertion
         globalMocks.mockReadFileSync.mockReturnValueOnce('{ "overrides": { "CredentialManager": "Managed by ANO" }}');
         globalMocks.mockExistsSync.mockReturnValueOnce(false);
         globalMocks.mockGetConfiguration.mockReturnValue({
             persistence: true,
             get: (setting: string) => "",
-            // tslint:disable-next-line: no-empty
             update: jest.fn(() => {
                 {
                 }
@@ -406,7 +403,6 @@ describe("Extension Unit Tests", () => {
         await extension.activate(globalMocks.mockExtension);
 
         // Check that tree providers are initialized successfully
-        // tslint:disable-next-line: no-magic-numbers
         expect(globalMocks.mockCreateTreeView.mock.calls.length).toBe(3);
         expect(globalMocks.mockCreateTreeView.mock.calls[0][0]).toBe("zowe.ds.explorer");
         expect(globalMocks.mockCreateTreeView.mock.calls[1][0]).toBe("zowe.uss.explorer");
@@ -440,7 +436,6 @@ describe("Extension Unit Tests", () => {
         globalMocks.mockExistsSync.mockReturnValueOnce(false);
         globalMocks.mockGetConfiguration.mockReturnValueOnce({
             get: (setting: string) => "theia",
-            // tslint:disable-next-line: no-empty
             update: jest.fn(() => {
                 {
                 }
@@ -454,7 +449,6 @@ describe("Extension Unit Tests", () => {
         });
         globalMocks.mockGetConfiguration.mockReturnValueOnce({
             get: (setting: string) => "files",
-            // tslint:disable-next-line: no-empty
             update: jest.fn(() => {
                 {
                 }
@@ -470,7 +464,6 @@ describe("Extension Unit Tests", () => {
         await extension.activate(globalMocks.mockExtension);
 
         expect(globals.ISTHEIA).toEqual(true);
-        // tslint:disable-next-line: no-magic-numbers
         expect(globalMocks.mockMkdirSync.mock.calls.length).toBe(6);
         expect(globalMocks.mockRegisterCommand.mock.calls.length).toBe(globals.COMMAND_COUNT);
         globalMocks.mockRegisterCommand.mock.calls.forEach((call, i) => {

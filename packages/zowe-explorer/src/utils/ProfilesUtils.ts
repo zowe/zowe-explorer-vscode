@@ -69,7 +69,6 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
     }
 
     switch (httpErrCode) {
-        // tslint:disable-next-line: no-magic-numbers
         case 401:
             if (label.includes("[")) {
                 label = label.substring(0, label.indexOf(" [")).trim();
@@ -177,7 +176,6 @@ export interface IFilterItem {
     icon?: string;
 }
 
-// tslint:disable-next-line: max-classes-per-file
 export class FilterItem implements vscode.QuickPickItem {
     constructor(private filterItem: IFilterItem) {}
     get label(): string {
@@ -196,7 +194,6 @@ export class FilterItem implements vscode.QuickPickItem {
     }
 }
 
-// tslint:disable-next-line: max-classes-per-file
 export class FilterDescriptor implements vscode.QuickPickItem {
     constructor(private text: string) {}
     get label(): string {

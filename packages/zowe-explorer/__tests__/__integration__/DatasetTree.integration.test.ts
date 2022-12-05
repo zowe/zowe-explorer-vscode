@@ -9,7 +9,6 @@
  *                                                                                 *
  */
 
-// tslint:disable:no-magic-numbers
 import { Create, CreateDataSetTypeEnum, Delete, imperative, List, Upload, ZosmfSession } from "@zowe/cli";
 import * as expect from "expect";
 import * as vscode from "vscode";

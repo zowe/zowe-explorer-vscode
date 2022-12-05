@@ -28,7 +28,6 @@ nls.config({
 })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
-// tslint:disable-next-line: max-classes-per-file
 export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
     public static readonly JobId = "JobId:";
     public static readonly Owner = "Owner:";
@@ -36,13 +35,9 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
 
     public children: IZoweJobTreeNode[] = [];
     public dirty = true;
-    // tslint:disable-next-line: variable-name
     private _owner: string;
-    // tslint:disable-next-line: variable-name
     private _prefix: string;
-    // tslint:disable-next-line: variable-name
     private _searchId: string;
-    // tslint:disable-next-line: variable-name
     private _tooltip: string;
 
     constructor(
@@ -334,7 +329,6 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
     }
 }
 
-// tslint:disable-next-line: max-classes-per-file
 export class Spool extends Job {
     constructor(
         label: string,

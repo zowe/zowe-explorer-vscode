@@ -167,7 +167,6 @@ function appendSuffix(label: string): string {
 export function checkForAddedSuffix(filename: string): boolean {
     // identify how close to the end of the string the last . is
     const dotPos = filename.length - (1 + filename.lastIndexOf("."));
-    // tslint:disable-next-line: no-magic-numbers
     return (
         dotPos >= 2 &&
         dotPos <= 4 && // if the last characters are 2 to 4 long and lower case it has been added

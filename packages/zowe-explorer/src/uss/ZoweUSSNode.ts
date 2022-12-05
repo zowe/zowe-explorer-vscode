@@ -375,7 +375,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 if (fs.existsSync(filePath)) {
                     fs.unlinkSync(filePath);
                 }
-                // tslint:disable-next-line: no-empty
             } catch (err) {}
         } catch (err) {
             vscode.window.showErrorMessage(
