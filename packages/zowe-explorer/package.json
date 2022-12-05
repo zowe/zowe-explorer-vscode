@@ -252,8 +252,8 @@
         "category": "Zowe Explorer"
       },
       {
-        "command": "zowe.ds.showDSAttributes",
-        "title": "%showDSAttributes%",
+        "command": "zowe.ds.showAttributes",
+        "title": "%showAttributes%",
         "category": "Zowe Explorer"
       },
       {
@@ -935,8 +935,8 @@
           "group": "000_zowe_dsMainframeInteraction@8"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|migr|ds|vsam).*/",
-          "command": "zowe.ds.showDSAttributes",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|migr|member|ds|vsam).*/",
+          "command": "zowe.ds.showAttributes",
           "group": "001_zowe_dsCreate@1"
         },
         {
@@ -1247,7 +1247,7 @@
           "when": "never"
         },
         {
-          "command": "zowe.ds.showDSAttributes",
+          "command": "zowe.ds.showAttributes",
           "when": "never"
         },
         {
