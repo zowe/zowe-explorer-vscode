@@ -83,6 +83,8 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
     public static readonly Status = "Status";
     public static readonly defaultDialogText: string = localize("SpecifyCriteria", "Create new..");
     private static readonly persistenceSchema: PersistenceSchemaEnum = PersistenceSchemaEnum.Job;
+    private static readonly submitJobQueryLabel = " + Submit this Job Search Query";
+    private static readonly chooseJobStatusLabel = "Job Status";
 
     public JOB_PROPERTIES = [
         {
@@ -101,7 +103,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         },
         {
             key: `job-status`,
-            label: `Job Status`,
+            label: ZosJobsProvider.chooseJobStatusLabel,
             value: "*",
             show: true,
             placeHolder: localize("searchJobs.status", `Enter job status`),
@@ -859,7 +861,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
 
     private async handleEditingMultiJobParameters(jobProperties: IJobPickerOption[], node: IZoweJobTreeNode) {
         const editableItems = [];
-        editableItems.push(new FilterItem({ text: ` + Submit this Job Search Query`, show: true }));
+        editableItems.push(new FilterItem({ text: ZosJobsProvider.submitJobQueryLabel, show: true }));
         jobProperties.forEach((prop) => {
             if (prop.key === "owner" && !prop.value) {
                 const session = node.getSession();
@@ -879,11 +881,11 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         }
         const pattern = choice.label;
         switch (pattern) {
-            case "Job Status":
+            case ZosJobsProvider.chooseJobStatusLabel:
                 const statusChoice = await this.setJobStatus(node);
                 jobProperties.find((prop) => prop.key === "job-status").value = statusChoice.label;
                 break;
-            case " + Submit this Job Search Query":
+            case ZosJobsProvider.submitJobQueryLabel:
                 node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
                 node.searchId = "";
                 node.prefix = jobProperties.find((prop) => prop.key === "prefix").value;
