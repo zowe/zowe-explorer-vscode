@@ -214,7 +214,6 @@ export const DATA_SET_PROPERTIES = [
 ];
 
 export const JOB_STATUS = [
-    // shuld this be frozen?
     {
         key: `All`,
         label: `*`,
@@ -247,30 +246,6 @@ export const JOB_STATUS_UNSUPPORTED = [
         label: `*`,
         value: null,
         picked: true,
-    },
-];
-
-export const JOB_PROPERTIES = [
-    {
-        key: `owner`,
-        label: `Job Owner`,
-        value: undefined,
-        show: true,
-        placeHolder: localize("searchJobs.owner.id", `Enter job owner id`),
-    },
-    {
-        key: `prefix`,
-        label: `Job Prefix`,
-        value: "*",
-        show: true,
-        placeHolder: localize("searchJobs.prefix", `Enter job prefix`),
-    },
-    {
-        key: `job-status`,
-        label: `Job Status`,
-        value: "*",
-        show: true,
-        placeHolder: localize("searchJobs.status", `Enter job status`),
     },
 ];
 

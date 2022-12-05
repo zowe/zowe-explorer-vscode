@@ -84,6 +84,30 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
     public static readonly defaultDialogText: string = localize("SpecifyCriteria", "Create new..");
     private static readonly persistenceSchema: PersistenceSchemaEnum = PersistenceSchemaEnum.Job;
 
+    public JOB_PROPERTIES = [
+        {
+            key: `owner`,
+            label: `Job Owner`,
+            value: undefined,
+            show: true,
+            placeHolder: localize("searchJobs.owner.id", `Enter job owner id`),
+        },
+        {
+            key: `prefix`,
+            label: `Job Prefix`,
+            value: "*",
+            show: true,
+            placeHolder: localize("searchJobs.prefix", `Enter job prefix`),
+        },
+        {
+            key: `job-status`,
+            label: `Job Status`,
+            value: "*",
+            show: true,
+            placeHolder: localize("searchJobs.status", `Enter job status`),
+        },
+    ];
+
     public mSessionNodes: IZoweJobTreeNode[] = [];
     public mFavorites: IZoweJobTreeNode[] = [];
     public searchByQuery = new FilterItem({
@@ -634,7 +658,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         const { QuerySearch, History, IdSearch } = globals.JobPickerTypes;
 
         if (menuType === QuerySearch) {
-            return this.handleEditingMultiJobParameters(globals.JOB_PROPERTIES, node);
+            return this.handleEditingMultiJobParameters(this.JOB_PROPERTIES, node);
         }
         if (menuType === IdSearch) {
             return this.handleSearchByJobId();
@@ -715,7 +739,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
     }
 
     public getPopulatedPickerValues(searchObj: IJobSearchCriteria): IJobPickerOption[] {
-        const historyPopulatedItems = globals.JOB_PROPERTIES;
+        const historyPopulatedItems = this.JOB_PROPERTIES;
         historyPopulatedItems.forEach((prop) => {
             if (prop.key === "owner") {
                 prop.value = searchObj.Owner;
@@ -871,6 +895,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                     JobId: undefined,
                     Status: node.status,
                 };
+                this.resetJobProperties(jobProperties);
                 return Promise.resolve(searchCriteriaObj);
             default:
                 const options: vscode.InputBoxOptions = {
@@ -882,6 +907,20 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 );
         }
         return Promise.resolve(this.handleEditingMultiJobParameters(jobProperties, node));
+    }
+    private resetJobProperties(jobProperties: IJobPickerOption[]) {
+        jobProperties.forEach((prop) => {
+            if (prop.key === "owner") {
+                prop.value = undefined;
+            }
+            if (prop.key === "prefix") {
+                prop.value = "*";
+            }
+            if (prop.key === "job-status") {
+                prop.value = "*";
+            }
+        });
+        return jobProperties;
     }
 
     /**

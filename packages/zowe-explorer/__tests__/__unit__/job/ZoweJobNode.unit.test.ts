@@ -651,12 +651,12 @@ describe("ZosJobsProvider - Function handleEditingMultiJobParameters", () => {
         globalMocks.mockShowQuickPick.mockReturnValueOnce(undefined);
         const setJobStatus = jest.spyOn(globalMocks.testJobsProvider, "setJobStatus");
         await globalMocks.testJobsProvider.handleEditingMultiJobParameters(
-            globals.JOB_PROPERTIES,
+            globalMocks.testJobsProvider.JOB_PROPERTIES,
             globalMocks.testJobsProvider.mSessionNodes[0]
         );
         expect(setJobStatus).not.toHaveBeenCalled();
     });
-    it("should set job status if user chose Job Status in Quck Pick", async () => {
+    it("should set job status if user chose Job Status in Quick Pick", async () => {
         const globalMocks = await createGlobalMocks();
         const setJobStatus = jest.spyOn(globalMocks.testJobsProvider, "setJobStatus").mockReturnValue({
             key: `All`,
@@ -666,7 +666,7 @@ describe("ZosJobsProvider - Function handleEditingMultiJobParameters", () => {
         });
         globalMocks.mockShowQuickPick.mockReturnValueOnce({ label: "Job Status" });
         await globalMocks.testJobsProvider.handleEditingMultiJobParameters(
-            globals.JOB_PROPERTIES,
+            globalMocks.testJobsProvider.JOB_PROPERTIES,
             globalMocks.testJobsProvider.mSessionNodes[0]
         );
         expect(setJobStatus).toHaveBeenCalled();

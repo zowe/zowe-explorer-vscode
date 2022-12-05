@@ -1,5 +1,8 @@
 {
   "Favorites": "Favorites",
+  "searchJobs.owner.id": "Enter job owner id",
+  "searchJobs.prefix": "Enter job prefix",
+  "searchJobs.status": "Enter job status",
   "zosJobsProvider.option.prompt.createId": "Create job search filter",
   "zosJobsProvider.option.prompt.createOwner": "Job id search",
   "initializeJobsTree.log.debug": "Initializing profiles with jobs favorites.",
