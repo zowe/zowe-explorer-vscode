@@ -289,7 +289,7 @@ describe("USS Action Unit Tests - Function createUSSNodeDialog", () => {
         globalMocks.mockShowInputBox.mockReturnValueOnce("USSFolder");
         jest.spyOn(blockMocks.ussNode, "getChildren").mockResolvedValueOnce([]);
         const isTopLevel = false;
-        spyOn(refreshActions, "refreshAll");
+        jest.spyOn(refreshActions, "refreshAll");
 
         await ussNodeActions.createUSSNode(blockMocks.ussNode, blockMocks.testUSSTree, "folder", isTopLevel);
         expect(blockMocks.testUSSTree.refreshElement).toHaveBeenCalled();

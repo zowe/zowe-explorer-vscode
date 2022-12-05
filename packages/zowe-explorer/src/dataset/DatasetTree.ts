@@ -658,6 +658,11 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         // Get node's profile node in favorites
         const profileName = node.getProfileName();
         const profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profileName);
+
+        if (profileNodeInFavorites === undefined) {
+            return;
+        }
+
         profileNodeInFavorites.children = profileNodeInFavorites.children.filter(
             (temp) => !(temp.label === node.label && temp.contextValue.startsWith(node.contextValue))
         );
@@ -774,7 +779,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         let theFilter = this.getSearchHistory()[0] || null;
 
         // Check if filter is currently applied
-        if (node.pattern !== "" && theFilter) {
+        if (node.pattern != null && node.pattern !== "" && theFilter) {
             const currentFilters = node.pattern.split(",");
 
             // Check if current filter includes the new node

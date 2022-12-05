@@ -519,7 +519,7 @@ describe("USSTree Unit Tests - Function USSTree.openItemFromPath()", () => {
         const globalMocks = await createGlobalMocks();
         globalMocks.withProgress.mockReturnValue(globalMocks.testResponse);
 
-        spyOn(globalMocks.testTree, "getChildren").and.returnValue(Promise.resolve([]));
+        jest.spyOn(globalMocks.testTree, "getChildren").mockReturnValue(Promise.resolve([]));
         const fileHistorySpy = jest.spyOn(globalMocks.testTree, "removeFileHistory");
 
         await globalMocks.testTree.openItemFromPath("/d.txt", globalMocks.testTree.mSessionNodes[1]);
@@ -1305,7 +1305,7 @@ describe("USSTree Unit Tests - Function USSTree.openItemFromPath()", () => {
             null,
             "/a/b"
         );
-        spyOn(globalMocks.testTree, "getChildren").and.returnValue(Promise.resolve([file]));
+        jest.spyOn(globalMocks.testTree, "getChildren").mockReturnValue(Promise.resolve([file]));
 
         await globalMocks.testTree.openItemFromPath("/a/b/c.txt", globalMocks.testTree.mSessionNodes[1]);
         expect(globalMocks.testTree.getSearchHistory().includes("[sestest]: /a/b/c.txt")).toBe(true);
@@ -1314,7 +1314,7 @@ describe("USSTree Unit Tests - Function USSTree.openItemFromPath()", () => {
     it("Tests that openItemFromPath fails when the node no longer exists", async () => {
         const globalMocks = await createGlobalMocks();
 
-        spyOn(globalMocks.testTree, "getChildren").and.returnValue(Promise.resolve([]));
+        jest.spyOn(globalMocks.testTree, "getChildren").mockReturnValue(Promise.resolve([]));
         const fileHistorySpy = jest.spyOn(globalMocks.testTree, "removeFileHistory");
 
         await globalMocks.testTree.openItemFromPath("/d.txt", globalMocks.testTree.mSessionNodes[1]);

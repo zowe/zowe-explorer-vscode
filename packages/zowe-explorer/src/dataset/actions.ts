@@ -142,9 +142,10 @@ export async function allocateLike(
     // Refresh tree and open new node, if applicable
     if (!currSession) {
         currSession = datasetProvider.mSessionNodes.find(
-            (thisSession) => thisSession.label.toString() === profile.name
+            (thisSession) => thisSession.label.toString().trim() === profile.name
         );
     }
+
     const theFilter = await datasetProvider.createFilterString(newDSName, currSession);
     currSession.tooltip = currSession.pattern = theFilter.toUpperCase();
     datasetProvider.addSearchHistory(theFilter);

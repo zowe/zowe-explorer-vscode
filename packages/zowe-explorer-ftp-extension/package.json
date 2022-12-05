@@ -59,9 +59,9 @@
   },
   "jest": {
     "moduleFileExtensions": [
+      "js",
       "ts",
-      "tsx",
-      "js"
+      "tsx"
     ],
     "testPathIgnorePatterns": [
       "<rootDir>/src/decorators"
@@ -70,13 +70,13 @@
       "<rootDir>/results/unit"
     ],
     "transform": {
-      "^.+\\.(ts|tsx)$": "ts-jest"
-    },
-    "globals": {
-      "ts-jest": {
-        "tsConfig": "tsconfig.json",
-        "diagnostics": false
-      }
+      "^.+\\.(ts|tsx)$": [
+        "ts-jest",
+        {
+          "tsconfig": "tsconfig.json",
+          "diagnostics": false
+        }
+      ]
     },
     "testRegex": "__tests__.*\\.(spec|test)\\.ts$",
     "modulePathIgnorePatterns": [
@@ -94,7 +94,8 @@
       "text",
       "cobertura"
     ],
-    "coverageDirectory": "<rootDir>/results/unit/coverage"
+    "coverageDirectory": "<rootDir>/results/unit/coverage",
+    "preset": "ts-jest"
   },
   "jest-html-reporter": {
     "pageTitle": "Zowe FTP Extension Tests",
