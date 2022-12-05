@@ -28,6 +28,10 @@ import * as glob from "glob";
 export function run(): Promise<void> {
     // Create the mocha test
     const mocha = new Mocha({
+        reporter: "mocha-junit-reporter",
+        reporterOptions: {
+            mochaFile: __dirname + "/../../results/integration/junit.xml",
+        },
         ui: "bdd",
     });
     mocha.useColors(true);
