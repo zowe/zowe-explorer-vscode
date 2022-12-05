@@ -213,6 +213,50 @@ export const DATA_SET_PROPERTIES = [
     },
 ];
 
+export const JOB_STATUS = [
+    {
+        key: `All`,
+        label: `*`,
+        value: null,
+        picked: true,
+    },
+    {
+        key: `Active`,
+        label: `Active`,
+        value: `Active`,
+        picked: false,
+    },
+    {
+        key: `Input`,
+        label: `Input`,
+        value: null,
+        picked: false,
+    },
+    {
+        key: `Output`,
+        label: `Output`,
+        value: null,
+        picked: false,
+    },
+];
+
+export const JOB_STATUS_UNSUPPORTED = [
+    {
+        key: `All`,
+        label: `*`,
+        value: null,
+        picked: true,
+    },
+];
+
+export enum JobPickerTypes {
+    QuerySearch = "QuerySearch",
+    IdSearch = "IdSearch",
+    History = "History",
+}
+
+export const plusSign = "\uFF0B ";
+
 /**
  * Defines all global variables
  * @param tempPath File path for temporary folder defined in preferences

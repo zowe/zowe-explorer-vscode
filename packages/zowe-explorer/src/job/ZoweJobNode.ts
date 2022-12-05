@@ -33,6 +33,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
     public static readonly JobId = "JobId:";
     public static readonly Owner = "Owner:";
     public static readonly Prefix = "Prefix:";
+    public static readonly Status = "Status:";
 
     public children: IZoweJobTreeNode[] = [];
     public dirty = true;
@@ -42,6 +43,8 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
     private _prefix: string;
     // tslint:disable-next-line: variable-name
     private _searchId: string;
+    // tslint:disable-next-line: variable-name
+    private _jobStatus: string;
     // tslint:disable-next-line: variable-name
     private _tooltip: string;
 
@@ -54,15 +57,17 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
         profile: zowe.imperative.IProfileLoaded
     ) {
         super(label, collapsibleState, mParent, session, profile);
-        if (session) {
-            if (session.ISession.user) {
-                this._owner = session.ISession.user;
-            } else {
-                this._owner = "*";
-            }
-        }
         this._prefix = "*";
         this._searchId = "";
+        this._jobStatus = "*";
+
+        if (session) {
+            this._owner = "*";
+            if (session.ISession.user) {
+                this._owner = session.ISession.user;
+            }
+        }
+
         const icon = getIconByNode(this);
         if (icon) {
             this.iconPath = icon.path;
@@ -175,7 +180,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                         title: localize("ZoweJobNode.getJobs.jobs", "Get Jobs command submitted."),
                     },
                     () => {
-                        return this.getJobs(this._owner, this._prefix, this._searchId);
+                        return this.getJobs(this._owner, this._prefix, this._searchId, this._jobStatus); // change here
                     }
                 );
                 jobs.forEach((job) => {
@@ -268,6 +273,16 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
         return this._owner;
     }
 
+    set status(newStatus: string) {
+        if (newStatus) {
+            this._jobStatus = newStatus;
+        }
+    }
+
+    get status() {
+        return this._jobStatus;
+    }
+
     set prefix(newPrefix: string) {
         if (newPrefix !== undefined) {
             if (newPrefix.length === 0) {
@@ -292,7 +307,18 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
         return this._searchId;
     }
 
-    private async getJobs(owner, prefix, searchId): Promise<zowe.IJob[]> {
+    private statusNotSupportedMsg(status: string) {
+        if (status !== "*") {
+            vscode.window.showWarningMessage(
+                localize(
+                    "getJobs.status.not.supported",
+                    "Filtering by job status is not yet supported with this profile type. Will show jobs with all statuses."
+                )
+            );
+        }
+    }
+
+    private async getJobs(owner: string, prefix: string, searchId: string, status: string): Promise<zowe.IJob[]> {
         let jobsInternal: zowe.IJob[] = [];
         const sessNode = this.getSessionNode();
         const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
@@ -300,10 +326,20 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
             jobsInternal.push(await ZoweExplorerApiRegister.getJesApi(cachedProfile).getJob(searchId));
         } else {
             try {
-                jobsInternal = await ZoweExplorerApiRegister.getJesApi(cachedProfile).getJobsByOwnerAndPrefix(
-                    owner,
-                    prefix
-                );
+                if (ZoweExplorerApiRegister.getJesApi(cachedProfile).getJobsByParameters) {
+                    jobsInternal = await ZoweExplorerApiRegister.getJesApi(cachedProfile).getJobsByParameters({
+                        owner,
+                        prefix,
+                        status,
+                    });
+                } else {
+                    this.statusNotSupportedMsg(status);
+                    jobsInternal = await ZoweExplorerApiRegister.getJesApi(cachedProfile).getJobsByOwnerAndPrefix(
+                        owner,
+                        prefix
+                    );
+                }
+
                 /**
                  *    Note: Temporary fix
                  *    This current fix is necessary since in certain instances the Zowe

@@ -13,8 +13,14 @@ import * as vscode from "vscode";
 import * as jobUtils from "../job/utils";
 import * as globals from "../globals";
 import { IJob, imperative } from "@zowe/cli";
-import { ValidProfileEnum, IZoweTree, IZoweJobTreeNode, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
-import { FilterItem, FilterDescriptor, resolveQuickPickHelper, errorHandling } from "../utils/ProfilesUtils";
+import {
+    ValidProfileEnum,
+    IZoweTree,
+    IZoweJobTreeNode,
+    PersistenceSchemaEnum,
+    ZoweVsCodeExtension,
+} from "@zowe/zowe-explorer-api";
+import { FilterItem, errorHandling } from "../utils/ProfilesUtils";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Job } from "./ZoweJobNode";
@@ -26,13 +32,34 @@ import * as contextually from "../shared/context";
 import * as nls from "vscode-nls";
 import { resetValidationSettings } from "../shared/actions";
 import { PersistentFilters } from "../PersistentFilters";
-import { UIViews } from "../shared/ui-views";
 // Set up localization
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
     bundleFormat: nls.BundleFormat.standalone,
 })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
+
+interface IJobSearchCriteria {
+    Owner: string | undefined;
+    Prefix: string | undefined;
+    JobId: string | undefined;
+    Status: string | undefined;
+}
+
+interface IJobStatusOption {
+    key: string;
+    label: string;
+    value: string;
+    picked: boolean;
+}
+
+interface IJobPickerOption {
+    key: string;
+    label: string;
+    value: string;
+    show: boolean;
+    placeHolder: string;
+}
 
 /**
  * Creates the Job tree that contains nodes of sessions, jobs and spool items
@@ -53,13 +80,46 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
     public static readonly JobId = "JobId:";
     public static readonly Owner = "Owner:";
     public static readonly Prefix = "Prefix:";
+    public static readonly Status = "Status";
     public static readonly defaultDialogText: string = localize("SpecifyCriteria", "Create new..");
     private static readonly persistenceSchema: PersistenceSchemaEnum = PersistenceSchemaEnum.Job;
+    private static readonly submitJobQueryLabel = " + Submit this Job Search Query";
+    private static readonly chooseJobStatusLabel = "Job Status";
+
+    public JOB_PROPERTIES = [
+        {
+            key: `owner`,
+            label: `Job Owner`,
+            value: undefined,
+            show: true,
+            placeHolder: localize("searchJobs.owner.id", `Enter job owner id`),
+        },
+        {
+            key: `prefix`,
+            label: `Job Prefix`,
+            value: "*",
+            show: true,
+            placeHolder: localize("searchJobs.prefix", `Enter job prefix`),
+        },
+        {
+            key: `job-status`,
+            label: ZosJobsProvider.chooseJobStatusLabel,
+            value: "*",
+            show: true,
+            placeHolder: localize("searchJobs.status", `Enter job status`),
+        },
+    ];
 
     public mSessionNodes: IZoweJobTreeNode[] = [];
     public mFavorites: IZoweJobTreeNode[] = [];
-    public createOwner = new jobUtils.OwnerFilterDescriptor();
-    public createId = new jobUtils.JobIdFilterDescriptor();
+    public searchByQuery = new FilterItem({
+        text: globals.plusSign + localize("zosJobsProvider.option.prompt.createId", "Create job search filter"),
+        menuType: globals.JobPickerTypes.QuerySearch,
+    });
+    public searchById = new FilterItem({
+        text: globals.plusSign + localize("zosJobsProvider.option.prompt.createOwner", "Job id search"),
+        menuType: globals.JobPickerTypes.IdSearch,
+    });
     private treeView: vscode.TreeView<IZoweJobTreeNode>;
 
     constructor() {
@@ -426,7 +486,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         if (contextually.isSession(node)) {
             // Favorite a search/session
             favJob = new Job(
-                this.createSearchLabel(node.owner, node.prefix, node.searchId),
+                this.createSearchLabel(node.owner, node.prefix, node.searchId, node.status),
                 vscode.TreeItemCollapsibleState.None,
                 profileNodeInFavorites,
                 node.getSession(),
@@ -549,6 +609,170 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         return;
     }
 
+    public async getUserJobsMenuChoice(): Promise<FilterItem | undefined> {
+        const items: FilterItem[] = this.mHistory
+            .getSearchHistory()
+            .map((element) => new FilterItem({ text: element, menuType: globals.JobPickerTypes.History }));
+        if (globals.ISTHEIA) {
+            // Theia doesn't work properly when directly creating a QuickPick
+            const selectFilter: vscode.QuickPickOptions = {
+                placeHolder: localize("searchHistory.options.prompt", "Select a filter"),
+            };
+            // get user selection
+            const choice = await vscode.window.showQuickPick(
+                [this.searchByQuery, this.searchById, ...items],
+                selectFilter
+            );
+            if (!choice) {
+                vscode.window.showInformationMessage(
+                    localize("enterPattern.pattern", "No selection made. Operation cancelled.")
+                );
+                return undefined;
+            }
+            return choice;
+        } else {
+            // VSCode route to create a QuickPick
+            const quickpick = vscode.window.createQuickPick();
+            quickpick.items = [this.searchByQuery, this.searchById, ...items];
+            quickpick.placeholder = localize("searchHistory.options.prompt", "Select a filter");
+            quickpick.ignoreFocusOut = true;
+            quickpick.show();
+            const choice = await jobUtils.resolveQuickPickHelper(quickpick);
+            quickpick.hide();
+            if (!choice) {
+                vscode.window.showInformationMessage(
+                    localize("enterPattern.pattern", "No selection made. Operation cancelled.")
+                );
+                return undefined;
+            }
+            return choice;
+        }
+    }
+
+    public async getUserSearchQueryInput(
+        choice: FilterItem,
+        node: IZoweJobTreeNode
+    ): Promise<IJobSearchCriteria | undefined> {
+        if (!choice) {
+            return undefined;
+        }
+        const { menuType } = choice.filterItem;
+        const { QuerySearch, History, IdSearch } = globals.JobPickerTypes;
+
+        if (menuType === QuerySearch) {
+            return this.handleEditingMultiJobParameters(this.JOB_PROPERTIES, node);
+        }
+        if (menuType === IdSearch) {
+            return this.handleSearchByJobId();
+        }
+
+        if (menuType === History) {
+            const parsedHistory = this.parseJobSearchQuery(choice.label);
+            if (parsedHistory.JobId) {
+                return this.handleSearchByJobId(parsedHistory.JobId);
+            } else {
+                const quickPickPrefilledItems = this.getPopulatedPickerValues(parsedHistory);
+                return this.handleEditingMultiJobParameters(quickPickPrefilledItems, node);
+            }
+        }
+    }
+
+    public async applyRegularSessionSearchLabel(node: IZoweJobTreeNode): Promise<string | undefined> {
+        let searchCriteria;
+        const choice = await this.getUserJobsMenuChoice();
+        const searchCriteriaObj = await this.getUserSearchQueryInput(choice, node);
+
+        if (!searchCriteriaObj) {
+            return undefined;
+        }
+        if (globals.ISTHEIA) {
+            searchCriteria = choice === this.searchByQuery || choice === this.searchById ? "" : choice.label;
+        } else {
+            searchCriteria = this.createSearchLabel(
+                searchCriteriaObj.Owner,
+                searchCriteriaObj.Prefix,
+                searchCriteriaObj.JobId,
+                searchCriteriaObj.Status
+            );
+        }
+        this.applySearchLabelToNode(node, searchCriteriaObj);
+        return searchCriteria;
+    }
+
+    public async handleSearchByJobId(jobId?: string): Promise<IJobSearchCriteria> {
+        const options = {
+            prompt: localize("jobsFilterPrompt.inputBox.prompt.jobid", "Enter a Job id"),
+            value: jobId,
+        };
+        const newUserJobId = await ZoweVsCodeExtension.inputBox(options);
+        if (!newUserJobId) {
+            vscode.window.showInformationMessage(localize("jobsFilterPrompt.enterPrefix", "Search Cancelled"));
+            return;
+        }
+        return {
+            Owner: undefined,
+            Prefix: undefined,
+            JobId: newUserJobId,
+            Status: undefined,
+        };
+    }
+
+    public parseJobSearchQuery(searchCriteria: string): IJobSearchCriteria {
+        const searchCriteriaObj: IJobSearchCriteria = {
+            Owner: undefined,
+            Prefix: undefined,
+            JobId: undefined,
+            Status: undefined,
+        };
+        Object.preventExtensions(searchCriteriaObj);
+        if (!searchCriteria) {
+            return searchCriteriaObj;
+        }
+        const searchOptionArray = searchCriteria.split(" ");
+        searchOptionArray.forEach((searchOption) => {
+            const keyValue = searchOption.split(":");
+            const key = keyValue[0]?.trim();
+            const value = keyValue[1]?.trim();
+            try {
+                searchCriteriaObj[key] = value;
+            } catch (e) {}
+        });
+        return searchCriteriaObj;
+    }
+
+    public getPopulatedPickerValues(searchObj: IJobSearchCriteria): IJobPickerOption[] {
+        const historyPopulatedItems = this.JOB_PROPERTIES;
+        historyPopulatedItems.forEach((prop) => {
+            if (prop.key === "owner") {
+                prop.value = searchObj.Owner;
+            }
+            if (prop.key === "prefix") {
+                prop.value = searchObj.Prefix;
+            }
+            if (prop.key === "job-status") {
+                prop.value = searchObj.Status;
+            }
+        });
+        return historyPopulatedItems;
+    }
+
+    public async applySavedFavoritesSearchLabel(node): Promise<string> {
+        // executing search from saved search in favorites
+        const searchCriteria = node.label as string;
+        const session = node.getProfileName();
+        const faveNode = node;
+        await this.addSession(session);
+        node = this.mSessionNodes.find((tempNode) => tempNode.label.toString() === session);
+        if (!node.getSession().ISession.user || !node.getSession().ISession.password) {
+            node.getSession().ISession.user = faveNode.getSession().ISession.user;
+            node.getSession().ISession.password = faveNode.getSession().ISession.password;
+            node.getSession().ISession.base64EncodedAuth = faveNode.getSession().ISession.base64EncodedAuth;
+        }
+        const jobQueryObj = this.parseJobSearchQuery(searchCriteria);
+        this.applySearchLabelToNode(node, jobQueryObj);
+        return searchCriteria;
+    }
+
     /**
      * Prompts the user for search details to populate the [TreeView]{@link vscode.TreeView}
      *
@@ -556,160 +780,16 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      * @returns {Promise<void>}
      */
     public async searchPrompt(node: IZoweJobTreeNode) {
-        let choice: vscode.QuickPickItem;
-        let searchCriteria: string = "";
-        const hasHistory = this.mHistory.getSearchHistory().length > 0;
         await this.checkCurrentProfile(node);
+        let searchCriteria: string = "";
         if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID || !contextually.isValidationEnabled(node)) {
             if (contextually.isSessionNotFav(node)) {
-                // This is the profile object context
-                if (hasHistory) {
-                    // Check if user has created some history
-                    const items: vscode.QuickPickItem[] = this.mHistory
-                        .getSearchHistory()
-                        .map((element) => new FilterItem({ text: element }));
-                    if (globals.ISTHEIA) {
-                        // Theia doesn't work properly when directly creating a QuickPick
-                        const options1: vscode.QuickPickOptions = {
-                            placeHolder: localize("searchHistory.options.prompt", "Select a filter"),
-                        };
-                        // get user selection
-                        choice = await vscode.window.showQuickPick(
-                            [this.createOwner, this.createId, ...items],
-                            options1
-                        );
-                        if (!choice) {
-                            vscode.window.showInformationMessage(
-                                localize("enterPattern.pattern", "No selection made. Operation cancelled.")
-                            );
-                            return;
-                        }
-                        searchCriteria = choice === this.createOwner || choice === this.createId ? "" : choice.label;
-                    } else {
-                        // VSCode route to create a QuickPick
-                        const quickpick = vscode.window.createQuickPick();
-                        quickpick.items = [this.createOwner, this.createId, ...items];
-                        quickpick.placeholder = localize("searchHistory.options.prompt", "Select a filter");
-                        quickpick.ignoreFocusOut = true;
-                        quickpick.show();
-                        choice = await resolveQuickPickHelper(quickpick);
-                        quickpick.hide();
-                        if (!choice) {
-                            vscode.window.showInformationMessage(
-                                localize("enterPattern.pattern", "No selection made. Operation cancelled.")
-                            );
-                            return;
-                        }
-                        if (choice instanceof FilterDescriptor) {
-                            if (quickpick.value.length > 0) {
-                                searchCriteria = this.interpretFreeform(quickpick.value);
-                            }
-                        } else {
-                            searchCriteria = choice.label;
-                        }
-                    }
-                }
-                let options: vscode.InputBoxOptions;
-                let owner: string;
-                let prefix: string;
-                let jobid: string;
-                if (searchCriteria) {
-                    owner = searchCriteria.match(/Owner:/) ? searchCriteria.match(/(?<=Owner\:).*(?=\s)/)[0] : null;
-                    prefix = searchCriteria.match(/Prefix:/) ? searchCriteria.match(/(?<=Prefix\:).*$/)[0] : null;
-                    jobid = searchCriteria.match(/JobId:/) ? searchCriteria.match(/(?<=JobId\:).*$/)[0] : null;
-                }
-                // manually entering a search
-                if (!hasHistory || choice === this.createOwner || searchCriteria.match(/Owner:/)) {
-                    // User has selected owner/prefix option
-                    options = {
-                        prompt: localize(
-                            "jobsFilterPrompt.inputBox.prompt.owner",
-                            "Enter the Job Owner. Default is *."
-                        ),
-                        validateInput: (value: string) =>
-                            value.match(/ /g)
-                                ? localize(
-                                      "jobs.enter.valid.owner",
-                                      "Please enter a valid owner name (no spaces allowed)."
-                                  )
-                                : "",
-                        value: owner,
-                    };
-                    // get user input
-                    owner = await vscode.window.showInputBox(options);
-                    if (owner === undefined) {
-                        vscode.window.showInformationMessage(
-                            localize("jobsFilterPrompt.enterPrefix", "Search Cancelled")
-                        );
-                        return;
-                    }
-                    if (!owner) {
-                        owner = "*";
-                    }
-                    owner = owner.toUpperCase();
-                    options = {
-                        prompt: localize(
-                            "jobsFilterPrompt.inputBox.prompt.prefix",
-                            "Enter a Job prefix. Default is *."
-                        ),
-                        value: prefix,
-                    };
-                    // get user input
-                    prefix = await vscode.window.showInputBox(options);
-                    if (prefix === undefined) {
-                        vscode.window.showInformationMessage(
-                            localize("jobsFilterPrompt.enterPrefix", "Search Cancelled")
-                        );
-                        return;
-                    }
-                    if (!prefix) {
-                        prefix = "*";
-                    }
-                    prefix = prefix.toUpperCase();
-                    if (!hasHistory || choice === this.createId) {
-                        options = {
-                            prompt: localize("jobsFilterPrompt.inputBox.prompt.jobid", "Enter a Job id"),
-                            value: jobid,
-                        };
-                        // get user input
-                        jobid = await vscode.window.showInputBox(options);
-                        if (jobid === undefined) {
-                            vscode.window.showInformationMessage(
-                                localize("jobsFilterPrompt.enterPrefix", "Search Cancelled")
-                            );
-                            return;
-                        }
-                    }
-                } else {
-                    // User has selected JobId option
-                    options = {
-                        prompt: localize("jobsFilterPrompt.inputBox.prompt.jobid", "Enter a Job id"),
-                        value: jobid,
-                    };
-                    // get user input
-                    jobid = await vscode.window.showInputBox(options);
-                    if (!jobid) {
-                        vscode.window.showInformationMessage(
-                            localize("jobsFilterPrompt.enterPrefix", "Search Cancelled")
-                        );
-                        return;
-                    }
-                }
-                searchCriteria = this.createSearchLabel(owner, prefix, jobid);
-                this.applySearchLabelToNode(node, searchCriteria);
+                searchCriteria = await this.applyRegularSessionSearchLabel(node);
             } else {
-                // executing search from saved search in favorites
-                searchCriteria = node.label as string;
-                const session = node.getProfileName();
-                const faveNode = node;
-                await this.addSession(session);
-                node = this.mSessionNodes.find((tempNode) => tempNode.label.toString() === session);
-                if (!node.getSession().ISession.user || !node.getSession().ISession.password) {
-                    node.getSession().ISession.user = faveNode.getSession().ISession.user;
-                    node.getSession().ISession.password = faveNode.getSession().ISession.password;
-                    node.getSession().ISession.base64EncodedAuth = faveNode.getSession().ISession.base64EncodedAuth;
-                }
-                this.applySearchLabelToNode(node, searchCriteria);
+                searchCriteria = await this.applySavedFavoritesSearchLabel(node);
+            }
+            if (!searchCriteria) {
+                return undefined;
             }
             node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
             const icon = getIconByNode(node);
@@ -747,19 +827,20 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      * @param prefix - The job prefix search item
      * @param jobid - A specific jobid search item
      */
-    public createSearchLabel(owner: string, prefix: string, jobid: string): string {
-        let revisedCriteria: string = "";
-
+    public createSearchLabel(owner: string, prefix: string, jobid: string, status: string): string {
         const alphaNumeric = new RegExp("^w+$");
         if (jobid && !alphaNumeric.exec(jobid.trim())) {
-            revisedCriteria = Job.JobId + jobid.toUpperCase().trim();
-        } else {
-            if (owner) {
-                revisedCriteria = Job.Owner + owner.trim() + " ";
-            }
-            if (prefix) {
-                revisedCriteria += Job.Prefix + prefix.trim();
-            }
+            return Job.JobId + jobid.toUpperCase().trim();
+        }
+        let revisedCriteria = "";
+        if (owner) {
+            revisedCriteria = Job.Owner + owner.trim() + " ";
+        }
+        if (prefix) {
+            revisedCriteria += Job.Prefix + prefix.trim() + " ";
+        }
+        if (status) {
+            revisedCriteria += Job.Status + status.trim();
         }
         return revisedCriteria.trim();
     }
@@ -768,41 +849,80 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         throw new Error("Method not implemented.");
     }
 
-    public interpretFreeform(input: string): string {
-        let jobId: string;
-        let owner: string;
-        let prefix: string;
+    private async setJobStatus(node: IZoweJobTreeNode): Promise<IJobStatusOption> {
+        const apiExists = ZoweExplorerApiRegister.getJesApi(node.getProfile()).getJobsByParameters;
+        const jobStatusSelection = apiExists ? globals.JOB_STATUS : globals.JOB_STATUS_UNSUPPORTED;
+        let choice = await vscode.window.showQuickPick(jobStatusSelection);
+        if (!choice) {
+            choice = globals.JOB_STATUS.find((status) => status.label === "*");
+        }
+        return choice;
+    }
 
-        // test if it's like our stored structure
-        const criteria: string[] = input.split(" ");
-        criteria.forEach((crit, index) => {
-            if (crit.toUpperCase().indexOf(ZosJobsProvider.JobId.toUpperCase()) > -1 && criteria.length >= index + 2) {
-                jobId = criteria[index + 1].trim().toUpperCase();
+    private async handleEditingMultiJobParameters(jobProperties: IJobPickerOption[], node: IZoweJobTreeNode) {
+        const editableItems = [];
+        editableItems.push(new FilterItem({ text: ZosJobsProvider.submitJobQueryLabel, show: true }));
+        jobProperties.forEach((prop) => {
+            if (prop.key === "owner" && !prop.value) {
+                const session = node.getSession();
+                prop.value = session?.ISession?.user;
             }
-            if (crit.toUpperCase().indexOf(ZosJobsProvider.Owner.toUpperCase()) > -1 && criteria.length >= index + 2) {
-                owner = criteria[index + 1].trim().toUpperCase();
+            editableItems.push(new FilterItem({ text: prop.label, description: prop.value, show: prop.show }));
+        });
+        const choice = await vscode.window.showQuickPick(editableItems, {
+            ignoreFocusOut: true,
+            matchOnDescription: false,
+        });
+        if (!choice) {
+            vscode.window.showInformationMessage(
+                localize("enterPattern.pattern", "No selection made. Operation cancelled.")
+            );
+            return;
+        }
+        const pattern = choice.label;
+        switch (pattern) {
+            case ZosJobsProvider.chooseJobStatusLabel:
+                const statusChoice = await this.setJobStatus(node);
+                jobProperties.find((prop) => prop.key === "job-status").value = statusChoice.label;
+                break;
+            case ZosJobsProvider.submitJobQueryLabel:
+                node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+                node.searchId = "";
+                node.prefix = jobProperties.find((prop) => prop.key === "prefix").value;
+                node.owner = jobProperties.find((prop) => prop.key === "owner").value;
+                node.status = jobProperties.find((prop) => prop.key === "job-status").value;
+                const searchCriteriaObj: IJobSearchCriteria = {
+                    Owner: node.owner,
+                    Prefix: node.prefix,
+                    JobId: undefined,
+                    Status: node.status,
+                };
+                this.resetJobProperties(jobProperties);
+                return Promise.resolve(searchCriteriaObj);
+            default:
+                const options: vscode.InputBoxOptions = {
+                    value: jobProperties.find((prop) => prop.label === pattern).value,
+                    placeHolder: jobProperties.find((prop) => prop.label === pattern).placeHolder,
+                };
+                jobProperties.find((prop) => prop.label === pattern).value = await ZoweVsCodeExtension.inputBox(
+                    options
+                );
+        }
+        return Promise.resolve(this.handleEditingMultiJobParameters(jobProperties, node));
+    }
+    private resetJobProperties(jobProperties: IJobPickerOption[]) {
+        jobProperties.forEach((prop) => {
+            if (prop.key === "owner") {
+                prop.value = undefined;
             }
-            if (crit.toUpperCase().indexOf(ZosJobsProvider.Prefix.toUpperCase()) > -1 && criteria.length >= index + 2) {
-                prefix = criteria[index + 1].trim().toUpperCase();
+            if (prop.key === "prefix") {
+                prop.value = "*";
+            }
+            if (prop.key === "job-status") {
+                prop.value = "*";
             }
         });
-        // test for a jobId on it's own
-        const jobPattern = new RegExp("[a-zA-Z]{3}[0-9]{5}");
-        const jobs = jobPattern.exec(input);
-        if (jobs && jobs.length > 0) {
-            return this.createSearchLabel("*", "*", jobs[0]);
-        }
-        if (!owner && !prefix && !jobId) {
-            const validPattern = new RegExp("[a-zA-Z0-9*]{2,8}");
-            criteria.forEach((crit, index) => {
-                if (index === 0 && validPattern.test(crit)) {
-                    owner = crit.trim();
-                } else if (index === 1 && validPattern.test(crit)) {
-                    prefix = crit.trim();
-                }
-            });
-        }
-        return this.createSearchLabel(owner, prefix, jobId);
+        return jobProperties;
     }
 
     /**
@@ -810,29 +930,12 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      * @param node - a IZoweJobTreeNode node
      * @param storedSearch - The original search string
      */
-    private applySearchLabelToNode(node: IZoweJobTreeNode, storedSearch: string) {
-        if (storedSearch) {
-            node.searchId = "";
-            node.owner = "*";
-            node.prefix = "*";
-            const criteria: string[] = storedSearch.split(" ");
-            for (const crit of criteria) {
-                let index = crit.indexOf(ZosJobsProvider.JobId);
-                if (index > -1) {
-                    index += ZosJobsProvider.JobId.length;
-                    node.searchId = crit.substring(index).trim();
-                }
-                index = crit.indexOf(ZosJobsProvider.Owner);
-                if (index > -1) {
-                    index += ZosJobsProvider.Owner.length;
-                    node.owner = crit.substring(index).trim();
-                }
-                index = crit.indexOf(ZosJobsProvider.Prefix);
-                if (index > -1) {
-                    index += ZosJobsProvider.Prefix.length;
-                    node.prefix = crit.substring(index).trim();
-                }
-            }
+    private applySearchLabelToNode(node: IZoweJobTreeNode, storedSearchObj: IJobSearchCriteria) {
+        if (storedSearchObj) {
+            node.searchId = storedSearchObj.JobId || "";
+            node.owner = storedSearchObj.Owner || "*";
+            node.prefix = storedSearchObj.Prefix || "*";
+            node.status = storedSearchObj.Status || "*";
         }
     }
 
