@@ -21,17 +21,18 @@
 // to report the results back to the caller. When the tests are finished, return
 // a possible error to the callback or null if none.
 
+import * as fs from "fs";
 import * as path from "path";
 import * as Mocha from "mocha";
 import * as glob from "glob";
 
 export function run(): Promise<void> {
     // Create the mocha test
+    const junitFile = __dirname + "/../../results/integration/junit.xml";
+    fs.mkdirSync(path.dirname(junitFile), { recursive: true });
     const mocha = new Mocha({
         reporter: "mocha-junit-reporter",
-        reporterOptions: {
-            mochaFile: __dirname + "/../../results/integration/junit.xml",
-        },
+        reporterOptions: { mochaFile: junitFile },
         ui: "bdd",
     });
     mocha.useColors(true);
