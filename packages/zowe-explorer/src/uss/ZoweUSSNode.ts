@@ -665,20 +665,33 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         const api = ZoweExplorerApiRegister.getUssApi(this.profile);
         const apiResponse = await api.fileList(remotePath);
         const fileList = apiResponse.apiResponse?.items;
+
         for (const localFile of localFileNames) {
-            if (localFile.endsWith("/")) {
-                const directoryPath = localFile.slice(0, -1);
-                await api.uploadDirectory(directoryPath, remotePath + "/" + directoryPath.split("/").pop(), options);
-            } else {
-                let fname = localFile.split("/").pop();
-                if (
-                    fileList?.find((file) => {
-                        return file.name === fname;
-                    })
-                ) {
-                    fname += "(copy)";
+            try {
+                if (localFile.endsWith("/")) {
+                    const directoryPath = localFile.slice(0, -1);
+                    await api.uploadDirectory(
+                        directoryPath,
+                        remotePath + "/" + directoryPath.split("/").pop(),
+                        options
+                    );
+                } else {
+                    let fname = localFile.split("/").pop();
+                    if (
+                        fileList?.find((file) => {
+                            return file.name === fname;
+                        })
+                    ) {
+                        fname += "(copy)";
+                    }
+                    await api.putContent(localFile, remotePath.concat("/", fname), options);
                 }
-                await api.putContent(localFile, remotePath.concat("/", fname), options);
+            } catch (error) {
+                await errorHandling(
+                    error,
+                    this.label.toString(),
+                    localize("copyUssFile.error", "Error uploading files")
+                );
             }
         }
         disposeClipboardContents();

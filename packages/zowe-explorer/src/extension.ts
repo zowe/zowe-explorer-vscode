@@ -710,7 +710,7 @@ function initUSSProvider(context: vscode.ExtensionContext) {
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.uss.pasteUssFile", async (node: IZoweUSSTreeNode) => {
-            ussActions.pasteUssFile(ussFileProvider);
+            ussActions.pasteUssFile(ussFileProvider, node);
         })
     );
     context.subscriptions.push(

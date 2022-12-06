@@ -845,7 +845,7 @@ describe("USS Action Unit Tests - copy file / directory", () => {
         const blockMocks = await createBlockMocks(globalMocks);
         const parent = blockMocks.treeNodes.testUSSTree.getTreeView();
         parent.selection = blockMocks.nodes[0];
-        ussNodeActions.pasteUssFile(blockMocks.treeNodes.testUSSTree);
+        ussNodeActions.pasteUssFile(blockMocks.treeNodes.testUSSTree, undefined);
         expect(getSelectedNodeList(blockMocks.treeNodes.ussNode, blockMocks.treeNodes.ussNodes)).toEqual([
             blockMocks.treeNodes.ussNode,
         ]);
