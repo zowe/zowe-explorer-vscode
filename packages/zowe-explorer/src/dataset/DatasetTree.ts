@@ -628,10 +628,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         // Get node's profile node in favorites
         const profileName = node.getProfileName();
         const profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profileName);
-        if (!profileNodeInFavorites) {
-            return;
-        }
-        return profileNodeInFavorites.children.find(
+        return profileNodeInFavorites?.children.find(
             (temp) => temp.label === node.getLabel().toString() && temp.contextValue.includes(node.contextValue)
         );
     }
@@ -644,8 +641,16 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      */
     public findNonFavoritedNode(node: IZoweDatasetTreeNode) {
         const profileName = node.getProfileName();
-        const sessionNode = this.mSessionNodes.find((session) => session.label.toString() === profileName);
-        return sessionNode.children.find((temp) => temp.label === node.label);
+        const sessionNode = this.mSessionNodes.find((session) => session.label.toString().trim() === profileName);
+        return sessionNode?.children.find((temp) => temp.label === node.label);
+    }
+
+    /**
+     * Finds the equivalent node depending on whether the passed node is a favorite.
+     * @param node
+     */
+    public findEquivalentNode(node: IZoweDatasetTreeNode, isFavorite: boolean) {
+        return isFavorite ? this.findNonFavoritedNode(node) : this.findFavoritedNode(node);
     }
 
     /**
@@ -1201,12 +1206,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 );
                 throw err;
             }
-            let otherParent;
-            if (contextually.isFavorite(node.getParent())) {
-                otherParent = this.findNonFavoritedNode(node.getParent());
-            } else {
-                otherParent = this.findFavoritedNode(node.getParent());
-            }
+            const otherParent = this.findEquivalentNode(node.getParent(), contextually.isFavorite(node.getParent()));
             if (otherParent) {
                 const otherMember = otherParent.children.find((child) => child.label === beforeMemberName);
                 if (otherMember) {

@@ -198,6 +198,14 @@ describe("Context helper tests", () => {
             expect(contextually.isPdsNotFav(treeItem)).toBe(treeItem.contextValue === DS_PDS_CONTEXT);
         }
     });
+
+    it("Test PDS (regardless of favorite)", async () => {
+        for (const ctx of testList) {
+            treeItem.contextValue = ctx;
+            expect(contextually.isPds(treeItem)).toBe(treeItem.contextValue.indexOf(DS_PDS_CONTEXT) >= 0);
+        }
+    });
+
     it("Test Favorite text or Binary", async () => {
         for (const ctx of testList) {
             treeItem.contextValue = ctx;
