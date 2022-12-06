@@ -631,6 +631,71 @@ describe("ZosJobsProvider unit tests - Function removeFavProfile", () => {
     });
 });
 
+describe("ZosJobsProvider Unit Tests - Function findEquivalentNode()", () => {
+    it("Testing that findEquivalentNode() returns the corresponding nodes", async () => {
+        const globalMocks = await createGlobalMocks();
+        const favNodeParent = new Job(
+            "sestest",
+            vscode.TreeItemCollapsibleState.Expanded,
+            globalMocks.testJobsProvider.mSessionNodes[0],
+            globalMocks.testJobsProvider.mSessionNodes[0].getSession(),
+            null,
+            globalMocks.testProfile
+        );
+        const favNode = new Job(
+            "exampleName",
+            vscode.TreeItemCollapsibleState.Expanded,
+            null,
+            favNodeParent.getSession(),
+            globalMocks.testIJob,
+            globalMocks.testProfile
+        );
+        favNode.contextValue = globals.JOBS_JOB_CONTEXT + globals.FAV_SUFFIX;
+        favNodeParent.children.push(favNode);
+        // Create a copy of the above job object to designate as a non-favorited node
+        const nonFavNode = new Job(
+            "exampleName",
+            vscode.TreeItemCollapsibleState.Expanded,
+            null,
+            globalMocks.testSession,
+            globalMocks.testIJob,
+            globalMocks.testProfile
+        );
+        nonFavNode.contextValue = globals.JOBS_JOB_CONTEXT;
+
+        globalMocks.testJobsProvider.mFavorites.push(favNodeParent);
+        globalMocks.testJobsProvider.mSessionNodes[0].children.push(favNodeParent);
+        globalMocks.testJobsProvider.mSessionNodes[1].children.push(nonFavNode);
+
+        expect(globalMocks.testJobsProvider.findEquivalentNode(favNode, true)).toStrictEqual(nonFavNode);
+        expect(globalMocks.testJobsProvider.findEquivalentNode(nonFavNode, false)).toStrictEqual(favNode);
+    });
+});
+
+describe("ZosJobsProvider Unit Tests - unimplemented functions", () => {
+    it("Testing that each unimplemented function throws an error", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        const unimplementedFns = [
+            globalMocks.testJobsProvider.rename,
+            globalMocks.testJobsProvider.open,
+            globalMocks.testJobsProvider.copy,
+            globalMocks.testJobsProvider.paste,
+            globalMocks.testJobsProvider.saveFile,
+            globalMocks.testJobsProvider.refreshPS,
+            globalMocks.testJobsProvider.uploadDialog,
+        ];
+
+        for (const fn of unimplementedFns) {
+            try {
+                fn(undefined);
+            } catch (e) {
+                expect(e.message).toEqual("Method not implemented.");
+            }
+        }
+    });
+});
+
 describe("ZosJobsProvider unit tests - Function getUserJobsMenuChoice", () => {
     let showInformationMessage;
     let globalMocks;

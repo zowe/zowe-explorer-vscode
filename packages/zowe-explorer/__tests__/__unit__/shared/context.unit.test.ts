@@ -178,7 +178,7 @@ describe("Context helper tests", () => {
         }
     });
 
-    it("PDS (regardless of favorite status)", async () => {
+    it("Test PDS (regardless of favorite)", async () => {
         for (const ctx of testList) {
             treeItem.contextValue = ctx;
             expect(contextually.isPds(treeItem)).toBe(treeItem.contextValue.indexOf(DS_PDS_CONTEXT) >= 0);

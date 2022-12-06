@@ -74,6 +74,7 @@ export function createDatasetTree(sessionNode: ZoweDatasetNode, treeView: any, f
         renameNode: jest.fn(),
         findFavoritedNode: jest.fn(),
         findNonFavoritedNode: jest.fn(),
+        findEquivalentNode: jest.fn(),
         getProfileName: jest.fn(),
         getSession: jest.fn(),
         getProfiles: jest.fn(),

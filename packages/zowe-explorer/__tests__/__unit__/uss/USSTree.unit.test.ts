@@ -823,23 +823,29 @@ describe("USSTree Unit Tests - Function USSTree.getAllLoadedItems()", () => {
     });
 });
 
+const setupUssFavNode = (globalMocks): ZoweUSSNode => {
+    const ussFavNode = createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile);
+    const ussFavNodeParent = new ZoweUSSNode(
+        "sestest",
+        vscode.TreeItemCollapsibleState.Expanded,
+        null,
+        globalMocks.testSession,
+        null,
+        false,
+        globalMocks.testProfile.name
+    );
+    ussFavNodeParent.children.push(ussFavNode);
+    globalMocks.testTree.mFavorites.push(ussFavNodeParent);
+
+    return ussFavNode;
+};
+
 describe("USSTree Unit Tests - Function USSTree.findFavoritedNode()", () => {
     it("Testing that findFavoritedNode() returns the favorite of a non-favorited node", async () => {
         const globalMocks = await createGlobalMocks();
         globalMocks.testUSSNode.contextValue = globals.DS_TEXT_FILE_CONTEXT;
 
-        const ussFavNode = createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile);
-        const ussFavNodeParent = new ZoweUSSNode(
-            "sestest",
-            vscode.TreeItemCollapsibleState.Expanded,
-            null,
-            globalMocks.testSession,
-            null,
-            false,
-            globalMocks.testProfile.name
-        );
-        ussFavNodeParent.children.push(ussFavNode);
-        globalMocks.testTree.mFavorites.push(ussFavNodeParent);
+        const ussFavNode = setupUssFavNode(globalMocks);
 
         const foundNode = await globalMocks.testTree.findFavoritedNode(globalMocks.testUSSNode);
 
@@ -860,21 +866,23 @@ describe("USSTree Unit Tests - Function USSTree.findFavoritedNode()", () => {
 describe("USSTree Unit Tests - Function USSTree.findNonFavoritedNode()", () => {
     it("Testing that findNonFavoritedNode() returns the non-favorite from a favorite node", async () => {
         const globalMocks = await createGlobalMocks();
-        const ussFavNode = createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile);
-        const ussFavNodeParent = new ZoweUSSNode(
-            "sestest",
-            vscode.TreeItemCollapsibleState.Expanded,
-            null,
-            globalMocks.testSession,
-            null,
-            false,
-            globalMocks.testProfile.name
-        );
-        ussFavNodeParent.children.push(ussFavNode);
-        globalMocks.testTree.mFavorites.push(ussFavNodeParent);
+        const ussFavNode = setupUssFavNode(globalMocks);
+
         globalMocks.testTree.mSessionNodes[1].children.push(globalMocks.testUSSNode);
 
         const nonFaveNode = await globalMocks.testTree.findNonFavoritedNode(ussFavNode);
+        expect(nonFaveNode).toStrictEqual(globalMocks.testUSSNode);
+    });
+});
+
+describe("USSTree Unit Tests - Function USSTree.findEquivalentNode()", () => {
+    it("Testing that findEquivalentNode() returns the corresponding node for a favorite node", async () => {
+        const globalMocks = await createGlobalMocks();
+        const ussFavNode = setupUssFavNode(globalMocks);
+
+        globalMocks.testTree.mSessionNodes[1].children.push(globalMocks.testUSSNode);
+
+        const nonFaveNode = await globalMocks.testTree.findEquivalentNode(ussFavNode, true);
         expect(nonFaveNode).toStrictEqual(globalMocks.testUSSNode);
     });
 });
