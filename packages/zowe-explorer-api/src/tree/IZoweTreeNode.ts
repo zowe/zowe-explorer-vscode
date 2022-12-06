@@ -274,6 +274,11 @@ export interface IZoweJobTreeNode extends IZoweTreeNode {
      */
     owner?: string;
     /**
+     * Job Status i.e "ACTIVE"
+     * Attribute of Job query
+     */
+    status?: string;
+    /**
      * Retrieves child nodes of this IZoweJobTreeNode
      *
      * @returns {Promise<IZoweJobTreeNode[]>}

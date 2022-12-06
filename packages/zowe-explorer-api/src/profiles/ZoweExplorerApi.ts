@@ -346,8 +346,17 @@ export namespace ZoweExplorerApi {
      */
     export interface IJes extends ICommon {
         /**
+         * Returns a list of jobs for any parameters.
+         *
+         * @param {string} owner
+         * @returns {Promise<zowe.IJob[]>} an array if IJob
+         */
+        getJobsByParameters?(params: zowe.IGetJobsParms): Promise<zowe.IJob[]>;
+
+        /**
          * Returns a list of jobs for a specific user and prefix.
          *
+         * @deprecated Use getJobsByParameters
          * @param {string} owner
          * @param {string} prefix
          * @returns {Promise<zowe.IJob[]>} an array if IJob

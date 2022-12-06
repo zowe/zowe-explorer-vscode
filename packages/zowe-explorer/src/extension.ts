@@ -472,13 +472,12 @@ function initDatasetProvider(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand("zowe.ds.submitMember", async (node) => dsActions.submitMember(node))
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.showDSAttributes", async (node, nodeList) => {
-            let selectedNodes = getSelectedNodeList(node, nodeList);
-            selectedNodes = selectedNodes.filter(
-                (element) => contextuals.isDs(element) || contextuals.isPdsNotFav(element)
+        vscode.commands.registerCommand("zowe.ds.showAttributes", async (node, nodeList) => {
+            const selectedNodes = getSelectedNodeList(node, nodeList).filter(
+                (element) => contextuals.isDs(element) || contextuals.isPds(element) || contextuals.isDsMember(element)
             );
             for (const item of selectedNodes) {
-                await dsActions.showDSAttributes(item, datasetProvider);
+                await dsActions.showAttributes(item, datasetProvider);
             }
         })
     );
