@@ -1882,7 +1882,9 @@ describe("Dataset Actions Unit Tests - Function copyDataSet", () => {
         const nodeList: ZoweDatasetNode[] = [node];
         await dsActions.copyDataSet(nodeList);
 
-        expect(clipboard.readText()).toBe('{"profileName":"sestest","dataSetName":"HLQ.TEST.DELETE.NODE"}');
+        expect(clipboard.readText()).toBe(
+            '[{"profileName":"sestest","dataSetName":"HLQ.TEST.DELETE.NODE","contextValue":"ds"}]'
+        );
     });
     it("Checking copy the label of a favorite node to the clipboard", async () => {
         globals.defineGlobals("");
@@ -1898,7 +1900,9 @@ describe("Dataset Actions Unit Tests - Function copyDataSet", () => {
         const nodeList: ZoweDatasetNode[] = [node];
         await dsActions.copyDataSet(nodeList);
 
-        expect(clipboard.readText()).toBe('{"profileName":"sestest","dataSetName":"HLQ.TEST.DELETE.NODE"}');
+        expect(clipboard.readText()).toBe(
+            '[{"profileName":"sestest","dataSetName":"HLQ.TEST.DELETE.NODE","contextValue":"ds_fav"}]'
+        );
     });
     it("Checking copy the label of a member to the clipboard", async () => {
         globals.defineGlobals("");
@@ -1916,7 +1920,9 @@ describe("Dataset Actions Unit Tests - Function copyDataSet", () => {
         const nodeList: ZoweDatasetNode[] = [child];
         await dsActions.copyDataSet(nodeList);
 
-        expect(clipboard.readText()).toBe('{"profileName":"sestest","dataSetName":"parent","memberName":"child"}');
+        expect(clipboard.readText()).toBe(
+            '{"profileName":"sestest","dataSetName":"parent","memberName":"child","contextValue":"member"}'
+        );
     });
     it("Checking copy the label of a favorite member to the clipboard", async () => {
         globals.defineGlobals("");
@@ -1934,7 +1940,9 @@ describe("Dataset Actions Unit Tests - Function copyDataSet", () => {
         const nodeList: ZoweDatasetNode[] = [child];
         await dsActions.copyDataSet(nodeList);
 
-        expect(clipboard.readText()).toBe('{"profileName":"sestest","dataSetName":"parent","memberName":"child"}');
+        expect(clipboard.readText()).toBe(
+            '{"profileName":"sestest","dataSetName":"parent","memberName":"child","contextValue":"member"}'
+        );
     });
 });
 

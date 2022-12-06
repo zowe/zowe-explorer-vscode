@@ -95,6 +95,12 @@
         "key": "ctrl+c",
         "mac": "cmd+c",
         "when": "focusedView == zowe.ds.explorer"
+      },
+      {
+        "command": "zowe.ds.pasteMember",
+        "key": "ctrl+v",
+        "mac": "cmd+v",
+        "when": "focusedView == zowe.ds.explorer"
       }
     ],
     "commands": [
@@ -961,7 +967,7 @@
           "group": "001_zowe_dsCreate@5"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem != /^(?!.*_fav.*)session.*/)",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^ds.*/",
           "command": "zowe.ds.copyDataSet",
           "group": "001_zowe_dsCreate@6"
         },

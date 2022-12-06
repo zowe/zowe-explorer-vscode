@@ -497,8 +497,8 @@ function initDatasetProvider(context: vscode.ExtensionContext) {
         })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.pasteMember", async (node) => {
-            dsActions.pasteDataSet(node, datasetProvider);
+        vscode.commands.registerCommand("zowe.ds.pasteMember", async () => {
+            dsActions.pasteDataSet(datasetProvider);
         })
     );
     context.subscriptions.push(
