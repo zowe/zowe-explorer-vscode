@@ -865,7 +865,7 @@
           "group": "098_zowe_ussProfileAuthentication@5"
         },
         {
-          "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/",
+          "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/ && !listMultiSelection",
           "command": "zowe.uss.editSession",
           "group": "099_zowe_ussProfileModification@1"
         },
@@ -875,7 +875,7 @@
           "group": "099_zowe_ussProfileModification@98"
         },
         {
-          "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/",
+          "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/  && !listMultiSelection",
           "command": "zowe.uss.deleteProfile",
           "group": "099_zowe_ussProfileModification@99"
         },
@@ -1075,7 +1075,7 @@
           "group": "098_zowe_dsProfileAuthentication@10"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav.*)session.*/ && !listMultiSelection",
           "command": "zowe.ds.editSession",
           "group": "099_zowe_dsProfileModification@0"
         },
@@ -1085,7 +1085,7 @@
           "group": "099_zowe_dsProfileModification@98"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav.*)session.*/  && !listMultiSelection",
           "command": "zowe.ds.deleteProfile",
           "group": "099_zowe_dsProfileModification@99"
         },
@@ -1210,7 +1210,7 @@
           "group": "098_zowe_jobsProfileAuthentication@7"
         },
         {
-          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/",
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/ && !listMultiSelection",
           "command": "zowe.jobs.editSession",
           "group": "099_zowe_jobsProfileModification@0"
         },
@@ -1220,7 +1220,7 @@
           "group": "099_zowe_jobsProfileModification@98"
         },
         {
-          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/",
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/  && !listMultiSelection",
           "command": "zowe.jobs.deleteProfile",
           "group": "099_zowe_jobsProfileModification@99"
         }
