@@ -10,6 +10,10 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Added `findEquivalentNode` function to IZoweTree to find a corresponding favorited/non-favorited node.
 - Updated `IZoweTree`: changed `IZoweNodeType -> IZoweTreeNode` to prevent incompatibility w/ custom/future Zowe node types
 
+### Bug fixes
+
+- Added logging in places where errors were being caught and ignored.
+
 ## `2.4.1`
 
 ### Bug fixes
