@@ -125,3 +125,20 @@ export function createDatasetAttributes(label: string, context: string) {
         vols: "3BP001",
     };
 }
+
+export function createDSMemberAttributes(label: string) {
+    return {
+        member: label,
+        vers: 1,
+        mod: 0,
+        c4date: "2019/05/08",
+        m4date: "2020/05/08",
+        cnorc: 11,
+        inorc: 11,
+        mnorc: 0,
+        mtime: "08:54",
+        msec: "41",
+        user: ">7CHARS",
+        sclm: "N",
+    };
+}

@@ -142,9 +142,10 @@ export async function allocateLike(
     // Refresh tree and open new node, if applicable
     if (!currSession) {
         currSession = datasetProvider.mSessionNodes.find(
-            (thisSession) => thisSession.label.toString() === profile.name
+            (thisSession) => thisSession.label.toString().trim() === profile.name
         );
     }
+
     const theFilter = await datasetProvider.createFilterString(newDSName, currSession);
     currSession.tooltip = currSession.pattern = theFilter.toUpperCase();
     datasetProvider.addSearchHistory(theFilter);
@@ -783,57 +784,55 @@ async function handleUserSelection(newDSProperties, dsType): Promise<string> {
  * Shows data set attributes in a new text editor
  *
  * @export
- * @param {IZoweDatasetTreeNode} parent - The parent Node
+ * @param {IZoweDatasetTreeNode} node   - The node to show attributes for
  * @param {DatasetTree} datasetProvider - the tree which contains the nodes
  */
-export async function showDSAttributes(
-    parent: api.IZoweDatasetTreeNode,
+export async function showAttributes(
+    node: api.IZoweDatasetTreeNode,
     datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>
 ) {
-    await datasetProvider.checkCurrentProfile(parent);
+    await datasetProvider.checkCurrentProfile(node);
     if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
-        const label = parent.label as string;
-        globals.LOG.debug(localize("showDSAttributes.debug", "showing attributes of data set ") + label);
+        const label = node.label as string;
+        globals.LOG.debug(localize("showAttributes.debug", "showing attributes for ") + label);
         let attributes: any;
         try {
-            attributes = await ZoweExplorerApiRegister.getMvsApi(parent.getProfile()).dataSet(label, {
-                attributes: true,
-            });
-            attributes = attributes.apiResponse.items;
-            attributes = attributes.filter((dataSet) => {
-                return dataSet.dsname.toUpperCase() === label.toUpperCase();
-            });
-            if (attributes.length === 0) {
-                throw new Error(
-                    localize("showDSAttributes.lengthError", "No matching data set names found for query: ") + label
+            if (contextually.isDsMember(node)) {
+                const dsName = node.getParent().getLabel() as string;
+                attributes = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).allMembers(
+                    dsName.toUpperCase(),
+                    {
+                        attributes: true,
+                        pattern: label.toUpperCase(),
+                    }
                 );
+            } else {
+                attributes = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).dataSet(label, {
+                    attributes: true,
+                });
+            }
+            attributes = attributes.apiResponse.items;
+            if (contextually.isDs(node)) {
+                attributes = attributes.filter((dataSet) => {
+                    return dataSet.dsname.toUpperCase() === label.toUpperCase();
+                });
+            }
+            if (attributes.length === 0) {
+                throw new Error(localize("showAttributes.lengthError", "No matching names found for query: ") + label);
             }
         } catch (err) {
             globals.LOG.error(
-                localize("showDSAttributes.log.error", "Error encountered when listing attributes! ") +
+                localize("showAttributes.log.error", "Error encountered when listing attributes! ") +
                     JSON.stringify(err)
             );
             await errorHandling(
                 err,
-                parent.getProfileName(),
-                localize("showDSAttributes.error", "Unable to list attributes: ") + err.message
+                node.getProfileName(),
+                localize("showAttributes.error", "Unable to list attributes: ") + err.message
             );
             throw err;
         }
 
-        // shouldn't be possible for there to be two cataloged data sets with the same name,
-        // but just in case we'll display all of the results
-        // if there's only one result (which there should be), we will just pass in attributes[0]
-        // so that prettyJson doesn't display the attributes as an array with a hyphen character
-        const attributesText = zowe.imperative.TextUtils.prettyJson(
-            attributes.length > 1 ? attributes : attributes[0],
-            undefined,
-            false
-        );
-        // const attributesFilePath = path.join(ZOWETEMPFOLDER, label + ".yaml");
-        // fs.writeFileSync(attributesFilePath, attributesText);
-        // const document = await vscode.workspace.openTextDocument(attributesFilePath);
-        // await vscode.window.showTextDocument(document);
         const attributesMessage = localize("attributes.title", "Attributes");
         const webviewHTML = `<!DOCTYPE html>
         <html lang="en">
@@ -842,14 +841,26 @@ export async function showDSAttributes(
             <title>${label} "${attributesMessage}"</title>
         </head>
         <body>
-        ${attributesText.replace(/\n/g, "</br>")}
+        <table style="margin-top: 2em; border-spacing: 2em 0">
+        ${Object.keys(attributes[0]).reduce(
+            (html, key) =>
+                html.concat(`
+                <tr>
+                    <td align="left" style="color: yellow; font-weight: bold">${key}:</td>
+                    <td align="right" style="color: ${
+                        typeof attributes[0][key] === "number" ? "dodgerblue" : "white"
+                    }">${attributes[0][key]}</td>
+                </tr>
+        `),
+            ""
+        )}
+        </table>
         </body>
         </html>`;
-        const column = vscode.window.activeTextEditor ? vscode.window.activeTextEditor.viewColumn : undefined;
         const panel: vscode.WebviewPanel = vscode.window.createWebviewPanel(
             "zowe",
             label + " " + localize("attributes.title", "Attributes"),
-            column || 1,
+            vscode.window.activeTextEditor ? vscode.window.activeTextEditor.viewColumn : 1,
             {}
         );
         panel.webview.html = webviewHTML;

@@ -155,7 +155,7 @@ async function createGlobalMocks() {
             "zowe.ds.removeFavProfile",
             "zowe.ds.submitJcl",
             "zowe.ds.submitMember",
-            "zowe.ds.showDSAttributes",
+            "zowe.ds.showAttributes",
             "zowe.ds.renameDataSet",
             "zowe.ds.copyMember",
             "zowe.ds.copyDataSet",
