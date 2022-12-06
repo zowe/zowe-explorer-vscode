@@ -65,6 +65,7 @@ async function createGlobalMocks() {
     Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
     Object.defineProperty(globals.LOG, "debug", { value: jest.fn(), configurable: true });
     Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
+    Object.defineProperty(globals.LOG, "warn", { value: jest.fn(), configurable: true });
 
     return globalMocks;
 }

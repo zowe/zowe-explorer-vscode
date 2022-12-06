@@ -449,6 +449,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                     ];
                 }
             } catch (error) {
+                this.log.error(error);
                 const errMessage: string =
                     localize(
                         "initializeJobsFavorites.error.profile1",
