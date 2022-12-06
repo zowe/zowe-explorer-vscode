@@ -12,7 +12,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added option to view PDS member attributes, and updated formatting for attributes webview. [#1577](https://github.com/zowe/vscode-extension-for-zowe/issues/1577)
 - Streamlined attribute viewing options into one feature - "Show Attributes".
 
-
 ### Bug fixes
 
 - Fixed missing localization for certain VScode error/info/warning messages. [#1722](https://github.com/zowe/vscode-extension-for-zowe/issues/1722)
