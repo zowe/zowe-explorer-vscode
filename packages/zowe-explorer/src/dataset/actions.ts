@@ -247,35 +247,24 @@ export async function deleteDatasetPrompt(
     selectedNodes = selectedNodes.filter((val) => !childArray.includes(val));
 
     if (includedSelection || !node) {
-        // Filter out sessions, favorite nodes, or information messages
+        // Filter out sessions and information messages
         nodes = selectedNodes.filter(
             (selectedNode) =>
                 selectedNode.getParent() &&
-                !contextually.isFavorite(selectedNode) &&
-                !contextually.isFavorite(selectedNode.getParent()) &&
                 !contextually.isSession(selectedNode) &&
                 !contextually.isInformation(selectedNode)
         );
     } else {
-        if (
-            node.getParent() &&
-            !contextually.isFavorite(node) &&
-            !contextually.isFavorite(node.getParent()) &&
-            !contextually.isSession(node) &&
-            !contextually.isInformation(node)
-        ) {
+        if (node.getParent() && !contextually.isSession(node) && !contextually.isInformation(node)) {
             nodes = [];
             nodes.push(node);
         }
     }
 
-    // Check that there are items to be deleted, this can be caused by trying to delete favorites right now
+    // Check that there are items to be deleted
     if (!nodes || nodes.length === 0) {
         vscode.window.showInformationMessage(
-            localize(
-                "deleteDatasetPrompt.nodesToDelete.empty",
-                "Deleting data sets and members from the Favorites section is currently not supported."
-            )
+            localize("deleteDatasetPrompt.nodesToDelete.empty", "No data sets selected for deletion, cancelling...")
         );
         return;
     }
@@ -426,6 +415,7 @@ export async function createMember(
         }
         parent.dirty = true;
         datasetProvider.refreshElement(parent);
+
         openPS(
             new ZoweDatasetNode(
                 name,
@@ -439,6 +429,13 @@ export async function createMember(
             true,
             datasetProvider
         );
+
+        // Refresh corresponding tree parent to reflect addition
+        const otherTreeParent = datasetProvider.findEquivalentNode(parent, contextually.isFavorite(parent));
+        if (otherTreeParent != null) {
+            datasetProvider.refreshElement(otherTreeParent);
+        }
+
         datasetProvider.refresh();
     }
 }
@@ -1011,18 +1008,20 @@ export async function submitMember(node: api.IZoweTreeNode) {
 export async function deleteDataset(node: api.IZoweTreeNode, datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>) {
     let label = "";
     let fav = false;
+
+    const parent = node.getParent();
     try {
-        const parentContext = node.getParent().contextValue;
+        const parentContext = parent.contextValue;
         if (parentContext.includes(globals.FAV_SUFFIX)) {
             label = node.getLabel() as string;
             fav = true;
             if (parentContext.includes(globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX)) {
-                label = node.getParent().getLabel().toString() + "(" + node.getLabel().toString() + ")";
+                label = parent.getLabel().toString() + "(" + node.getLabel().toString() + ")";
             }
         } else if (parentContext.includes(globals.DS_SESSION_CONTEXT)) {
             label = node.getLabel() as string;
         } else if (parentContext.includes(globals.DS_PDS_CONTEXT)) {
-            label = node.getParent().getLabel().toString() + "(" + node.getLabel().toString() + ")";
+            label = parent.getLabel().toString() + "(" + node.getLabel().toString() + ")";
         } else {
             throw Error(localize("deleteDataSet.invalidNode.error", "deleteDataSet() called from invalid node."));
         }
@@ -1056,11 +1055,23 @@ export async function deleteDataset(node: api.IZoweTreeNode, datasetProvider: ap
                 ses.dirty = true;
             }
         });
-        datasetProvider.removeFavorite(node);
     } else {
         node.getSessionNode().dirty = true;
-        datasetProvider.removeFavorite(node);
     }
+    datasetProvider.removeFavorite(node);
+
+    const isMember = contextually.isDsMember(node);
+
+    // If the node is a dataset member, go up a level in the node tree
+    // to find the relevant, matching node
+    const nodeOfInterest = isMember ? node.getParent() : node;
+    const parentNode = datasetProvider.findEquivalentNode(nodeOfInterest, fav);
+
+    if (parentNode != null) {
+        // Refresh the correct node (parent of node to delete) to reflect changes
+        datasetProvider.refreshElement(isMember ? parentNode : parentNode.getParent());
+    }
+
     datasetProvider.refreshElement(node.getSessionNode());
 
     // remove local copy of file
@@ -1070,7 +1081,7 @@ export async function deleteDataset(node: api.IZoweTreeNode, datasetProvider: ap
             fs.unlinkSync(fileName);
         }
     } catch (err) {
-        // do nothing
+        globals.LOG.warn(err);
     }
 }
 
@@ -1230,6 +1241,7 @@ export async function hMigrateDataSet(node: ZoweDatasetNode) {
         try {
             return ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hMigrateDataSet(dataSetName);
         } catch (err) {
+            globals.LOG.error(err);
             vscode.window.showErrorMessage(err.message);
             return;
         }
@@ -1257,6 +1269,7 @@ export async function hRecallDataSet(node: ZoweDatasetNode) {
         try {
             return ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hRecallDataSet(dataSetName);
         } catch (err) {
+            globals.LOG.error(err);
             vscode.window.showErrorMessage(err.message);
             return;
         }
@@ -1327,6 +1340,7 @@ export async function pasteMember(
                     { dsn: dataSetName, member: memberName }
                 );
             } catch (err) {
+                globals.LOG.error(err);
                 vscode.window.showErrorMessage(err.message);
                 return;
             }
@@ -1496,6 +1510,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
             vscode.window.showErrorMessage(uploadResponse.commandResponse);
         }
     } catch (err) {
+        globals.LOG.error(err);
         vscode.window.showErrorMessage(err.message);
     }
 }

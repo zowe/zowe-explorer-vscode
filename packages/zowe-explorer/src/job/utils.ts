@@ -9,24 +9,11 @@
  *                                                                                 *
  */
 
-import { FilterDescriptor } from "../utils/ProfilesUtils";
+import { FilterItem } from "../utils/ProfilesUtils";
 
-import * as nls from "vscode-nls";
-// Set up localization
-nls.config({
-    messageFormat: nls.MessageFormat.bundle,
-    bundleFormat: nls.BundleFormat.standalone,
-})();
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
-
-export class JobIdFilterDescriptor extends FilterDescriptor {
-    constructor() {
-        super("\uFF0B " + localize("zosJobsProvider.option.prompt.createId", "Job Id search"));
-    }
-}
-
-export class OwnerFilterDescriptor extends FilterDescriptor {
-    constructor() {
-        super("\uFF0B " + localize("zosJobsProvider.option.prompt.createOwner", "Owner/Prefix Job Search"));
-    }
+export async function resolveQuickPickHelper(quickpick): Promise<FilterItem | undefined> {
+    return new Promise<FilterItem | undefined>((c) => {
+        quickpick.onDidAccept(() => c(quickpick.activeItems[0]));
+        quickpick.onDidHide(() => c(undefined));
+    });
 }

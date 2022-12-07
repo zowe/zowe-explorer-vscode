@@ -379,6 +379,7 @@ export class Profiles extends ProfilesCache {
             try {
                 config = await this.getProfileInfo();
             } catch (error) {
+                this.log.error(error);
                 await openConfigOnError(error);
                 vscode.window.showErrorMessage(
                     localize(
@@ -710,6 +711,7 @@ export class Profiles extends ProfilesCache {
             await this.promptToRefreshForProfiles(rootPath);
             return path.join(rootPath, configName);
         } catch (err) {
+            this.log.error(err);
             await openConfigOnError(err);
             vscode.window.showErrorMessage(
                 localize("Profiles.getProfileInfo.error", "Error in creating team configuration file: {0}", err.message)
@@ -1213,10 +1215,6 @@ export class Profiles extends ProfilesCache {
                         break;
                 }
             } catch (error) {
-                if (error.errorCode === 401) {
-                    await errorHandling(error, theProfile.name);
-                }
-
                 await errorHandling(error, theProfile.name);
                 this.log.debug("Validate Error - Invalid Profile: " + error);
                 filteredProfile = {
@@ -1254,6 +1252,7 @@ export class Profiles extends ProfilesCache {
                 .getCommonApi(serviceProfile)
                 .getTokenTypeName();
         } catch (error) {
+            this.log.info(error);
             vscode.window.showInformationMessage(
                 localize("ssoAuth.noBase", "This profile does not support token authentication.")
             );
@@ -1281,6 +1280,7 @@ export class Profiles extends ProfilesCache {
                     profile: { ...node.getProfile().profile, ...session },
                 });
             } catch (error) {
+                this.log.error(error);
                 vscode.window.showErrorMessage(
                     localize("ssoLogin.unableToLogin", "Unable to log in. ") + error.message
                 );
@@ -1318,6 +1318,7 @@ export class Profiles extends ProfilesCache {
                         profile: { ...node.getProfile().profile, ...updBaseProfile },
                     });
                 } catch (error) {
+                    this.log.error(error);
                     vscode.window.showErrorMessage(
                         localize("ssoLogin.unableToLogin", "Unable to log in. ") + error.message
                     );
@@ -1370,6 +1371,7 @@ export class Profiles extends ProfilesCache {
                 localize("ssoLogout.successful", "Logout from authentication service was successful.")
             );
         } catch (error) {
+            this.log.error(error);
             vscode.window.showErrorMessage(localize("ssoLogout.unableToLogout", "Unable to log out. ") + error.message);
             return;
         }
@@ -1893,6 +1895,7 @@ export class Profiles extends ProfilesCache {
         try {
             this.getCliProfileManager(this.loadedProfile.type).update(updateParms);
         } catch (error) {
+            this.log.error(error);
             vscode.window.showErrorMessage(error.message);
         }
     }

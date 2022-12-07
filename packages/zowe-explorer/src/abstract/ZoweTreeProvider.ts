@@ -13,7 +13,6 @@ import * as vscode from "vscode";
 import * as globals from "../globals";
 import { imperative } from "@zowe/cli";
 import { PersistentFilters } from "../PersistentFilters";
-import { OwnerFilterDescriptor } from "../job/utils";
 import { getIconByNode, getIconById, IconId } from "../generators/icons";
 import * as contextually from "../shared/context";
 import {
@@ -41,7 +40,6 @@ export class ZoweTreeProvider {
         IZoweTreeNode | undefined
     >();
     public readonly onDidChangeTreeData: vscode.Event<IZoweTreeNode | void> = this.mOnDidChangeTreeData.event;
-    public createOwner = new OwnerFilterDescriptor();
 
     protected mHistory: PersistentFilters;
     protected log: imperative.Logger = imperative.Logger.getAppLogger();

@@ -6,6 +6,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Added ability to filter jobs by status. Improved Job filtering User experience.[#1925](https://github.com/zowe/vscode-extension-for-zowe/issues/1925)
 - Added option to view PDS member attributes, and updated formatting for attributes webview. [#1577](https://github.com/zowe/vscode-extension-for-zowe/issues/1577)
 - Streamlined attribute viewing options into one feature - "Show Attributes".
 
@@ -13,6 +14,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 - Fixed missing localization for certain VScode error/info/warning messages. [#1722](https://github.com/zowe/vscode-extension-for-zowe/issues/1722)
 - Fixed "Allocate Like" error that prevented proper execution. [#1973](https://github.com/zowe/vscode-extension-for-zowe/issues/1973)
+- Fixed de-sync issue between Data Set and Favorites panels when adding or deleting datasets/members that were favorited. [#1488](https://github.com/zowe/vscode-extension-for-zowe/issues/1488)
+- Added logging in places where errors were being caught and ignored.
 
 ## `2.4.1`
 

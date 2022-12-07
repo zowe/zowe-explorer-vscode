@@ -69,6 +69,7 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
                 }
             } catch (error) {
                 // todo: initialize and use logging
+                zowe.imperative.Logger.getAppLogger().error(error);
             }
         }
         return this.session;
@@ -305,6 +306,10 @@ export class ZosmfMvsApi extends ZosmfApiCommon implements ZoweExplorerApi.IMvs 
  */
 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 export class ZosmfJesApi extends ZosmfApiCommon implements ZoweExplorerApi.IJes {
+    public async getJobsByParameters(params: zowe.IGetJobsParms): Promise<zowe.IJob[]> {
+        return await zowe.GetJobs.getJobsByParameters(this.getSession(), params);
+    }
+
     public async getJobsByOwnerAndPrefix(owner: string, prefix: string): Promise<zowe.IJob[]> {
         return await zowe.GetJobs.getJobsByOwnerAndPrefix(this.getSession(), owner, prefix);
     }

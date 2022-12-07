@@ -139,7 +139,9 @@ export async function deleteFromDisk(node: IZoweUSSTreeNode, filePath: string) {
         if (fs.existsSync(filePath)) {
             fs.unlinkSync(filePath);
         }
-    } catch (err) {}
+    } catch (err) {
+        globals.LOG.warn(err);
+    }
 }
 
 export async function uploadDialog(node: IZoweUSSTreeNode, ussFileProvider: IZoweTree<IZoweUSSTreeNode>) {
@@ -342,6 +344,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
                 }
                 this.downloaded = true;
 
+                globals.LOG.warn(err);
                 vscode.window.showWarningMessage(
                     localize(
                         "saveFile.error.etagMismatch",
