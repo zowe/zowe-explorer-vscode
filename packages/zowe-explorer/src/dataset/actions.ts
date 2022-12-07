@@ -1234,13 +1234,14 @@ export async function hMigrateDataSet(node: ZoweDatasetNode) {
     await Profiles.getInstance().checkCurrentProfile(node.getProfile());
     if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
         const { dataSetName } = dsUtils.getNodeLabels(node);
-        vscode.window.showInformationMessage(
-            localize("hMigrate.requestSent1", "Migration of dataset: ") +
-                dataSetName +
-                localize("hMigrate.requestSent2", " requested.")
-        );
         try {
-            return ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hMigrateDataSet(dataSetName);
+            const response = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hMigrateDataSet(dataSetName);
+            vscode.window.showInformationMessage(
+                localize("hMigrate.requestSent1", "Migration of dataset: ") +
+                    dataSetName +
+                    localize("hMigrate.requestSent2", " requested.")
+            );
+            return response;
         } catch (err) {
             globals.LOG.error(err);
             vscode.window.showErrorMessage(err.message);
@@ -1262,13 +1263,14 @@ export async function hRecallDataSet(node: ZoweDatasetNode) {
     await Profiles.getInstance().checkCurrentProfile(node.getProfile());
     if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
         const { dataSetName } = dsUtils.getNodeLabels(node);
-        vscode.window.showInformationMessage(
-            localize("hRecall.requestSent1", "Recall of dataset: ") +
-                dataSetName +
-                localize("hRecall.requestSent2", " requested.")
-        );
         try {
-            return ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hRecallDataSet(dataSetName);
+            const response = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hRecallDataSet(dataSetName);
+            vscode.window.showInformationMessage(
+                localize("hRecall.requestSent1", "Recall of dataset: ") +
+                    dataSetName +
+                    localize("hRecall.requestSent2", " requested.")
+            );
+            return response;
         } catch (err) {
             globals.LOG.error(err);
             vscode.window.showErrorMessage(err.message);
