@@ -85,6 +85,8 @@ async function createGlobalMocks() {
         mockProfilesCache: new ProfilesCache(zowe.imperative.Logger.getAppLogger()),
     };
 
+    Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
+    Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
     Object.defineProperty(globalMocks.mockProfilesCache, "getProfileInfo", {
         value: jest.fn(() => {
             return { value: globalMocks.mockProfileInfo, configurable: true };

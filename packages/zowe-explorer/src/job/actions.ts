@@ -234,6 +234,7 @@ export async function modifyCommand(job: Job) {
         }
     } catch (error) {
         if (error.toString().includes("non-existing")) {
+            globals.LOG.error(error);
             vscode.window.showErrorMessage(
                 localize("jobActions.modifyCommand.apiNonExisting", "Not implemented yet for profile of type: ") +
                     job.getProfile().type
@@ -262,6 +263,7 @@ export async function stopCommand(job: Job) {
         }
     } catch (error) {
         if (error.toString().includes("non-existing")) {
+            globals.LOG.error(error);
             vscode.window.showErrorMessage(
                 localize("jobActions.stopCommand.apiNonExisting", "Not implemented yet for profile of type: ") +
                     job.getProfile().type
@@ -383,6 +385,7 @@ async function deleteMultipleJobs(
                 await jobsProvider.delete(job);
                 return job;
             } catch (error) {
+                globals.LOG.error(error);
                 return error;
             }
         })

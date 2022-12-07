@@ -159,6 +159,8 @@ async function createGlobalMocks() {
     globalMocks.mockGetJesApi.mockReturnValue(globalMocks.jesApi);
     ZoweExplorerApiRegister.getJesApi = globalMocks.mockGetJesApi.bind(ZoweExplorerApiRegister);
 
+    Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
+    Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
     globalMocks.createTreeView.mockReturnValue("testTreeView");
     globalMocks.testSessionNode = createJobSessionNode(globalMocks.testSession, globalMocks.testProfile);
     globalMocks.mockGetJob.mockReturnValue(globalMocks.testIJob);
@@ -264,7 +266,6 @@ describe("ZosJobsProvider unit tests - Function getChildren", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
-
         const testTree = new ZosJobsProvider();
         testTree.mSessionNodes.push(blockMocks.jobSessionNode);
         testTree.mSessionNodes[1].dirty = true;
