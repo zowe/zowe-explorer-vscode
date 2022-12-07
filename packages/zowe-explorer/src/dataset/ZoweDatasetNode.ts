@@ -141,7 +141,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             }
 
             // Loops through all the returned dataset members and creates nodes for them
-            for (const item of response.apiResponse.items) {
+            for (const item of response.apiResponse.items ?? response.apiResponse) {
                 const existing = this.children.find((element) => element.label.toString() === item.dsname);
                 if (existing) {
                     elementChildren[existing.label.toString()] = existing;
@@ -157,7 +157,10 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         this.getProfile()
                     );
                     elementChildren[temp.label.toString()] = temp;
-                } else if (item.migr && item.migr.toUpperCase() === "YES") {
+                } else if (
+                    (item.migr && item.migr.toUpperCase() === "YES") ||
+                    item.error instanceof zowe.imperative.ImperativeError
+                ) {
                     const temp = new ZoweDatasetNode(
                         item.dsname,
                         vscode.TreeItemCollapsibleState.None,
@@ -267,15 +270,14 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             options.attributes = true;
             let label: string;
             if (contextually.isSessionNotFav(this)) {
-                this.pattern = this.pattern.toUpperCase();
-                // loop through each pattern for datasets
-                for (const pattern of this.pattern.split(",")) {
-                    responses.push(
-                        await ZoweExplorerApiRegister.getMvsApi(cachedProfile).dataSet(pattern.trim(), {
-                            attributes: true,
-                        })
-                    );
-                }
+                responses.push(
+                    await ZoweExplorerApiRegister.getMvsApi(cachedProfile).dataSetsMatchingPattern(
+                        this.pattern
+                            .toUpperCase()
+                            .split(",")
+                            .map((p) => p.trim())
+                    )
+                );
             } else if (this.memberPattern !== undefined) {
                 this.memberPattern = this.memberPattern.toUpperCase();
                 for (const memPattern of this.memberPattern.split(",")) {
