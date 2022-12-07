@@ -69,7 +69,7 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
                 }
             } catch (error) {
                 // todo: initialize and use logging
-                zowe.imperative.Logger.getAppLogger().error(error);
+                zowe.imperative.Logger.getAppLogger().error(error as string);
             }
         }
         return this.session;

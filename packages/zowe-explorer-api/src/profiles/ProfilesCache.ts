@@ -199,7 +199,7 @@ export class ProfilesCache {
                 this.profilesForValidation.pop();
             }
         } catch (error) {
-            this.log.error(error);
+            this.log.error(error as string);
         }
     }
 
@@ -216,7 +216,7 @@ export class ProfilesCache {
         try {
             url = new URL(newUrl);
         } catch (error) {
-            this.log.debug(error);
+            this.log.debug(error as string);
             return validationResult;
         }
 
@@ -492,7 +492,7 @@ export class ProfilesCache {
                 this.profilesByType.set(type, allProfilesByType);
             } catch (error) {
                 // do nothing, skip if profile type is not included in config file
-                this.log.warn(error);
+                this.log.warn(error as string);
             }
         });
         this.allProfiles = [];
