@@ -1082,7 +1082,7 @@ export async function deleteDataset(node: api.IZoweTreeNode, datasetProvider: ap
             fs.unlinkSync(fileName);
         }
     } catch (err) {
-        // do nothing
+        globals.LOG.warn(err);
     }
 }
 
@@ -1242,6 +1242,7 @@ export async function hMigrateDataSet(node: ZoweDatasetNode) {
         try {
             return ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hMigrateDataSet(dataSetName);
         } catch (err) {
+            globals.LOG.error(err);
             vscode.window.showErrorMessage(err.message);
             return;
         }
@@ -1269,6 +1270,7 @@ export async function hRecallDataSet(node: ZoweDatasetNode) {
         try {
             return ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hRecallDataSet(dataSetName);
         } catch (err) {
+            globals.LOG.error(err);
             vscode.window.showErrorMessage(err.message);
             return;
         }
@@ -1339,6 +1341,7 @@ export async function pasteMember(
                     { dsn: dataSetName, member: memberName }
                 );
             } catch (err) {
+                globals.LOG.error(err);
                 vscode.window.showErrorMessage(err.message);
                 return;
             }
@@ -1508,6 +1511,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
             vscode.window.showErrorMessage(uploadResponse.commandResponse);
         }
     } catch (err) {
+        globals.LOG.error(err);
         vscode.window.showErrorMessage(err.message);
     }
 }

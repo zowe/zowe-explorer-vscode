@@ -78,6 +78,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         globals.initLogger(context);
         globals.LOG.debug(localize("initialize.log.debug", "Initialized logger from VSCode extension"));
     } catch (err) {
+        globals.LOG.error(err);
         const errorMessage = localize(
             "initialize.log.error",
             "Error encountered while activating and initializing logger! "
@@ -89,6 +90,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         await initializeZoweFolder();
         await readConfigFromDisk();
     } catch (err) {
+        globals.LOG.error(err);
         const errorMessage = localize("initialize.profiles.error", "Error reading or initializing Zowe CLI profiles.");
         vscode.window.showWarningMessage(`${errorMessage}: ${err.message}`);
     }

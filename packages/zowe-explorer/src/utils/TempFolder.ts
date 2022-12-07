@@ -116,6 +116,7 @@ export async function cleanTempDir() {
     try {
         await cleanDir(globals.ZOWETEMPFOLDER);
     } catch (err) {
+        globals.LOG.error(err);
         vscode.window.showErrorMessage(localize("deactivate.error", "Unable to delete temporary folder. ") + err);
     }
 }

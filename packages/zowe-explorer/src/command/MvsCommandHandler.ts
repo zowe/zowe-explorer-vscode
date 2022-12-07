@@ -137,6 +137,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
             }
         } catch (error) {
             if (error.toString().includes("non-existing")) {
+                globals.LOG.error(error);
                 vscode.window.showErrorMessage(
                     localize("issueMvsCommand.apiNonExisting", "Not implemented yet for profile of type: ") +
                         profile.type
