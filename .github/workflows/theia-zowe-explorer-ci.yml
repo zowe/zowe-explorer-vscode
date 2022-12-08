@@ -73,3 +73,9 @@ jobs:
         run: yarn workspace vscode-extension-for-zowe build:integration
 
       - run: yarn workspace vscode-extension-for-zowe test:theia
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: theia-zowe-explorer-results
+          path: packages/zowe-explorer/results/
