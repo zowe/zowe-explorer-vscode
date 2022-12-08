@@ -163,6 +163,7 @@ async function createGlobalMocks() {
             "zowe.ds.renameDataSetMember",
             "zowe.ds.hMigrateDataSet",
             "zowe.ds.hRecallDataSet",
+            "zowe.ds.showImperativeErrorDetails",
             "zowe.ds.disableValidation",
             "zowe.ds.enableValidation",
             "zowe.ds.ssoLogin",

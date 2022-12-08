@@ -55,6 +55,7 @@ export const DS_TEXT_FILE_CONTEXT = "textFile";
 export const DS_FAV_TEXT_FILE_CONTEXT = "textFile_fav";
 export const DS_BINARY_FILE_CONTEXT = "binaryFile";
 export const DS_MIGRATED_FILE_CONTEXT = "migr";
+export const DS_IMPERATIVE_ERROR_CONTEXT = "impError";
 export const USS_SESSION_CONTEXT = "ussSession";
 export const USS_DIR_CONTEXT = "directory";
 export const USS_FAV_DIR_CONTEXT = "directory_fav";

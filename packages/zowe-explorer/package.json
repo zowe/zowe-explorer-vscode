@@ -282,6 +282,11 @@
         "category": "Zowe Explorer"
       },
       {
+        "command": "zowe.ds.showImperativeErrorDetails",
+        "title": "%showImperativeErrorDetails%",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.ds.pasteMember",
         "title": "%paste%",
         "category": "Zowe Explorer"
@@ -1005,6 +1010,11 @@
           "group": "002_zowe_dsWorkspace@4"
         },
         {
+          "when": "view == zowe.ds.explorer && viewItem =~ /^impError.*/",
+          "command": "zowe.ds.showImperativeErrorDetails",
+          "group": "099_zowe_dsModification@0"
+        },
+        {
           "when": "view == zowe.ds.explorer && viewItem =~ /^migr.*/",
           "command": "zowe.ds.hRecallDataSet",
           "group": "099_zowe_dsModification@0"
@@ -1305,6 +1315,10 @@
         },
         {
           "command": "zowe.ds.hRecallDataSet",
+          "when": "never"
+        },
+        {
+          "command": "zowe.ds.showImperativeErrorDetails",
           "when": "never"
         },
         {

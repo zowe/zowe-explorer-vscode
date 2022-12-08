@@ -128,6 +128,8 @@ export function isDocument(node: TreeItem): boolean {
             globals.JOBS_SPOOL_CONTEXT +
             "|" +
             globals.DS_MIGRATED_FILE_CONTEXT +
+            "|" +
+            globals.DS_IMPERATIVE_ERROR_CONTEXT +
             ")"
     ).test(node.contextValue);
 }
@@ -148,6 +150,15 @@ export function isInformation(node: TreeItem): boolean {
  */
 export function isMigrated(node: TreeItem): boolean {
     return new RegExp("^(" + globals.DS_MIGRATED_FILE_CONTEXT + ")").test(node.contextValue);
+}
+
+/**
+ * Helper function which identifies if the node has an imperative error
+ * @param node
+ * @return true if there was an error obtaining information about this dataset, false otherwise
+ */
+export function hasImperativeError(node: TreeItem): boolean {
+    return new RegExp("^(" + globals.DS_IMPERATIVE_ERROR_CONTEXT + ")").test(node.contextValue);
 }
 
 /**

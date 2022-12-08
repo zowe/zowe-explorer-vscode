@@ -31,6 +31,7 @@ export enum IconId {
     "folder" = "folder",
     "folderOpen" = "folderOpen",
     "migrated" = "migrated",
+    "imperativeError" = "imperativeError",
     "vsam" = "vsam",
     "home" = "home",
 }
@@ -63,6 +64,7 @@ const items = [
     require("./items/folder"),
     require("./items/folderOpen"),
     require("./items/migrated"),
+    require("./items/imperativeError"),
     require("./items/vsam"),
     require("./items/home"),
     require("./items/filterFolder"),

@@ -1228,7 +1228,7 @@ export async function copyDataSet(node: api.IZoweNodeType) {
  * Migrate data sets
  *
  * @export
- * @param {IZoweDatasetTreeNode} node - The node to paste to
+ * @param {IZoweDatasetTreeNode} node - The node to migrate
  */
 export async function hMigrateDataSet(node: ZoweDatasetNode) {
     await Profiles.getInstance().checkCurrentProfile(node.getProfile());
@@ -1257,7 +1257,7 @@ export async function hMigrateDataSet(node: ZoweDatasetNode) {
  * Recall data sets
  *
  * @export
- * @param {IZoweDatasetTreeNode} node - The node to paste to
+ * @param {IZoweDatasetTreeNode} node - The node to recall
  */
 export async function hRecallDataSet(node: ZoweDatasetNode) {
     await Profiles.getInstance().checkCurrentProfile(node.getProfile());
@@ -1275,6 +1275,36 @@ export async function hRecallDataSet(node: ZoweDatasetNode) {
             globals.LOG.error(err);
             vscode.window.showErrorMessage(err.message);
             return;
+        }
+    } else {
+        vscode.window.showErrorMessage(localize("hMigrateDataSet.checkProfile", "Profile is invalid"));
+        return;
+    }
+}
+
+/**
+ * Show Imperative Error details when gathering attributes for these data sets
+ *
+ * @export
+ * @param {IZoweDatasetTreeNode} node - The node to get details from
+ */
+export async function showImperativeErrorDetails(node: ZoweDatasetNode) {
+    await Profiles.getInstance().checkCurrentProfile(node.getProfile());
+    if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
+        const { dataSetName } = dsUtils.getNodeLabels(node);
+        if (node.errorDetails) {
+            globals.LOG.error(JSON.stringify(node.errorDetails, null, 2));
+            vscode.window.showErrorMessage(node.errorDetails.message);
+        } else {
+            try {
+                await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hRecallDataSet(dataSetName);
+                vscode.window.showErrorMessage(
+                    localize("showImperativeErrorDetails.noErrorDetails", "Unable to gather more information")
+                );
+            } catch (err) {
+                globals.LOG.error(err);
+                vscode.window.showErrorMessage(err.message);
+            }
         }
     } else {
         vscode.window.showErrorMessage(localize("hMigrateDataSet.checkProfile", "Profile is invalid"));

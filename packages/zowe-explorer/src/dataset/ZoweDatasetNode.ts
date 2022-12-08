@@ -39,6 +39,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public memberPattern = "";
     public dirty = true;
     public children: ZoweDatasetNode[] = [];
+    public errorDetails: zowe.imperative.ImperativeError;
 
     /**
      * Creates an instance of ZoweDatasetNode
@@ -157,10 +158,21 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         this.getProfile()
                     );
                     elementChildren[temp.label.toString()] = temp;
-                } else if (
-                    (item.migr && item.migr.toUpperCase() === "YES") ||
-                    item.error instanceof zowe.imperative.ImperativeError
-                ) {
+                    // Creates a ZoweDatasetNode for a dataset with imperative errors
+                } else if (item.error instanceof zowe.imperative.ImperativeError) {
+                    const temp = new ZoweDatasetNode(
+                        item.dsname,
+                        vscode.TreeItemCollapsibleState.None,
+                        this,
+                        null,
+                        globals.DS_IMPERATIVE_ERROR_CONTEXT,
+                        undefined,
+                        this.getProfile()
+                    );
+                    temp.errorDetails = item.error; // Save imperative error to avoid extra z/OS requests
+                    elementChildren[temp.label.toString()] = temp;
+                    // Creates a ZoweDatasetNode for a migrated dataset
+                } else if (item.migr && item.migr.toUpperCase() === "YES") {
                     const temp = new ZoweDatasetNode(
                         item.dsname,
                         vscode.TreeItemCollapsibleState.None,
@@ -272,13 +284,18 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             if (contextually.isSessionNotFav(this)) {
                 responses.push(
                     await ZoweExplorerApiRegister.getMvsApi(cachedProfile).dataSetsMatchingPattern(
-                        this.pattern
-                            .toUpperCase()
-                            .split(",")
-                            .map((p) => p.trim())
+                        // remove duplicate patterns
+                        [
+                            ...new Set(
+                                this.pattern
+                                    .toUpperCase()
+                                    .split(",")
+                                    .map((p) => p.trim())
+                            ),
+                        ]
                     )
                 );
-            } else if (this.memberPattern !== undefined) {
+            } else if (this.memberPattern) {
                 this.memberPattern = this.memberPattern.toUpperCase();
                 for (const memPattern of this.memberPattern.split(",")) {
                     options.pattern = memPattern;
