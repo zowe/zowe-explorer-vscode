@@ -631,6 +631,36 @@ describe("ZosJobsProvider unit tests - Function removeFavProfile", () => {
     });
 });
 
+describe("ZosJobsProvider unit tests - Function delete", () => {
+    const createTestJob = async (globalMocks) => {
+        globalMocks.testJobsProvider.mFavorites = [];
+        const testJobNode = new Job(
+            "IEFBR14(JOB1234) - CC 0000",
+            vscode.TreeItemCollapsibleState.Collapsed,
+            globalMocks.testJobsProvider.mSessionNodes[1],
+            globalMocks.testJobsProvider.mSessionNodes[1].getSession(),
+            globalMocks.testIJob,
+            globalMocks.testProfile
+        );
+        return testJobNode;
+    };
+
+    it("Removes a job node from session parent and refreshes job provider", async () => {
+        const globalMocks = await createGlobalMocks();
+        const testJob = await createTestJob(globalMocks);
+
+        const deleteSpy = jest.spyOn(globalMocks.testJobsProvider, "delete");
+        const removeFavoriteSpy = jest.spyOn(globalMocks.testJobsProvider, "removeFavorite");
+        const refreshSpy = jest.spyOn(globalMocks.testJobsProvider, "refresh");
+
+        await globalMocks.testJobsProvider.delete(testJob);
+        expect(deleteSpy).toHaveBeenCalledWith(testJob);
+        expect(removeFavoriteSpy).toHaveBeenCalledWith(testJob);
+        expect(globalMocks.testJobsProvider.mSessionNodes[1]).not.toContain(testJob);
+        expect(refreshSpy).toHaveBeenCalled();
+    });
+});
+
 describe("ZosJobsProvider Unit Tests - Function findEquivalentNode()", () => {
     it("Testing that findEquivalentNode() returns the corresponding nodes", async () => {
         const globalMocks = await createGlobalMocks();
