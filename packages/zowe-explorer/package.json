@@ -1160,7 +1160,7 @@
           "group": "001_zowe_jobsSystemSpecific@2"
         },
         {
-          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)(server|job).*/ && !listMultiSelection",
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)(server|job).*/",
           "command": "zowe.jobs.addFavorite",
           "group": "002_zowe_jobsWorkspace@0"
         },
