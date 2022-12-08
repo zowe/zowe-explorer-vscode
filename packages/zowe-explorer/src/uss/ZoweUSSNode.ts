@@ -259,9 +259,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             delete this.getSessionNode().binaryFiles[this.fullPath];
         }
         if (this.getParent() && this.getParent().contextValue === globals.FAV_PROFILE_CONTEXT) {
-            this.binary
-                ? (this.contextValue = globals.DS_BINARY_FILE_CONTEXT + globals.FAV_SUFFIX)
-                : (this.contextValue = globals.DS_TEXT_FILE_CONTEXT + globals.FAV_SUFFIX);
+            this.contextValue = this.binary
+                ? globals.DS_BINARY_FILE_CONTEXT + globals.FAV_SUFFIX
+                : globals.DS_TEXT_FILE_CONTEXT + globals.FAV_SUFFIX;
         }
 
         const icon = getIconByNode(this);
@@ -483,7 +483,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     vscode.window.showInformationMessage(
                         localize(
                             "openUSS.name.exists",
-                            "There is already file with same name please change your OS file system settings and make case sensitive if you want edit this files"
+                            "There is already a file with the same name. Please change your OS file system settings if you want to give case sensitive file names"
                         )
                     );
                 } else {
@@ -657,6 +657,7 @@ let saveListener = null;
  * Helper function which sets up listener for save wiping out the data after certain delay to prevent the fact of second save
  * @param wipeOutTime {number}
  */
+// eslint-disable-next-line no-magic-numbers
 export function attachRecentSaveListener(wipeOutTime = 500) {
     if (saveListener) {
         saveListener.dispose();

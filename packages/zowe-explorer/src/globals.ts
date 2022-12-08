@@ -96,11 +96,11 @@ export let ACTIVATED = false;
 export let PROFILE_SECURITY: string | boolean = ZOWE_CLI_SCM;
 
 export enum CreateDataSetTypeWithKeysEnum {
-    DATA_SET_BINARY = 0,
-    DATA_SET_C = 1,
-    DATA_SET_CLASSIC = 2,
-    DATA_SET_PARTITIONED = 3,
-    DATA_SET_SEQUENTIAL = 4,
+    DATA_SET_BINARY,
+    DATA_SET_C,
+    DATA_SET_CLASSIC,
+    DATA_SET_PARTITIONED,
+    DATA_SET_SEQUENTIAL,
 }
 export const DATA_SET_PROPERTIES = [
     {

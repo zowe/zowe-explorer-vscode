@@ -8,6 +8,21 @@ env:
   node: true
   es6: true
 rules:
+  "@typescript-eslint/consistent-type-assertions": warn
+  "@typescript-eslint/no-namespace": warn
+  "@typescript-eslint/no-var-requires": warn
+  no-unused-expressions: off
+  "@typescript-eslint/no-unused-expressions": warn
+  curly: warn
+  max-len:
+    - warn
+    - code: 150
+  no-irregular-whitespace: warn
+  no-magic-numbers:
+    - warn
+    - "ignore": [-1, 0, 1, 2, 4]
+  no-multiple-empty-lines: warn
+  space-in-parens: warn
   zowe-explorer/no-unmocked-core-modules:
     - error
     - coreModuleNames:

@@ -39,9 +39,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
     private _owner: string;
     private _prefix: string;
     private _searchId: string;
-    // tslint:disable-next-line: variable-name
     private _jobStatus: string;
-    // tslint:disable-next-line: variable-name
     private _tooltip: string;
 
     constructor(

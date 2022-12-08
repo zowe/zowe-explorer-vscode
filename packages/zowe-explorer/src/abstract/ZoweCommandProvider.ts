@@ -29,6 +29,7 @@ nls.config({
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export class ZoweCommandProvider {
+    // eslint-disable-next-line no-magic-numbers
     private static readonly totalFilters: number = 10;
     private static readonly persistenceSchema: string = globals.SETTINGS_COMMANDS_HISTORY;
 
