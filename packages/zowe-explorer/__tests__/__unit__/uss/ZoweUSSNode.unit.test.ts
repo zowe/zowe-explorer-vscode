@@ -1715,4 +1715,17 @@ describe("ZoweUSSNode Unit Tests - Function node.copyUssFile()", () => {
 
         expect(await blockMocks.testNode.copyUssFile()).toEqual(undefined);
     });
+
+    it("Tests node.copyUssFile() reads clipboard contents and fails to upload directory & file", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        globalMocks.readText.mockResolvedValueOnce("users/directory/file,users/directory/");
+        const blockMocks = createBlockMocks(globalMocks);
+
+        jest.spyOn(blockMocks.mockUssApi, "fileList").mockResolvedValueOnce(blockMocks.fileResponse);
+        jest.spyOn(blockMocks.mockUssApi, "putContent").mockResolvedValueOnce(blockMocks.fileResponse);
+        jest.spyOn(blockMocks.mockUssApi, "uploadDirectory").mockRejectedValueOnce(blockMocks.fileResponse);
+
+        await blockMocks.testNode.copyUssFile();
+    });
 });

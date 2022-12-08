@@ -772,10 +772,6 @@ describe("USS Action Unit Tests - copy file / directory", () => {
             newMocks.treeNodes.testTreeView
         );
 
-        mocked(vscode.window.withProgress).mockResolvedValueOnce((progLocation, callback) => {
-            callback();
-        });
-
         return newMocks;
     }
 
@@ -846,6 +842,17 @@ describe("USS Action Unit Tests - copy file / directory", () => {
         const parent = blockMocks.treeNodes.testUSSTree.getTreeView();
         parent.selection = blockMocks.nodes[0];
         ussNodeActions.pasteUssFile(blockMocks.treeNodes.testUSSTree, undefined);
+        expect(getSelectedNodeList(blockMocks.treeNodes.ussNode, blockMocks.treeNodes.ussNodes)).toEqual([
+            blockMocks.treeNodes.ussNode,
+        ]);
+    });
+    it("tests pasteUssFile executed successfully with one node", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        const parent = blockMocks.treeNodes.testUSSTree.getTreeView();
+        parent.selection = blockMocks.nodes[0];
+        jest.spyOn(ussNodeActions, "copyUssFilesToClipboard").mockResolvedValueOnce();
+        ussNodeActions.pasteUssFile(blockMocks.treeNodes.testUSSTree, blockMocks.nodes[0]);
         expect(getSelectedNodeList(blockMocks.treeNodes.ussNode, blockMocks.treeNodes.ussNodes)).toEqual([
             blockMocks.treeNodes.ussNode,
         ]);
