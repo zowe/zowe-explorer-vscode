@@ -1175,7 +1175,7 @@
           "group": "002_zowe_jobsWorkspace@0"
         },
         {
-          "when": "view == zowe.jobs.explorer && viewItem == profile_fav !listMultiSelection",
+          "when": "view == zowe.jobs.explorer && viewItem == profile_fav && !listMultiSelection",
           "command": "zowe.jobs.removeFavProfile",
           "group": "002_zowe_jobsWorkspace"
         },
