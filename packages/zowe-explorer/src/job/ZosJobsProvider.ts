@@ -291,6 +291,35 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
     }
 
     /**
+     * Finds the equivalent, favorited node.
+     * @param node
+     */
+    public findFavoritedNode(node: IZoweJobTreeNode): IZoweJobTreeNode {
+        const profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, node.getProfileName());
+        return profileNodeInFavorites?.children.find(
+            (temp) => temp.label === node.getLabel().toString() && temp.contextValue.includes(node.contextValue)
+        );
+    }
+
+    /**
+     * Finds the equivalent, non-favorited node.
+     * @param node
+     */
+    public findNonFavoritedNode(node: IZoweJobTreeNode): IZoweJobTreeNode {
+        const profileName = node.getProfileName();
+        const sessionNode = this.mSessionNodes.find((session) => session.label.toString().trim() === profileName);
+        return sessionNode?.children.find((temp) => temp.label === node.label);
+    }
+
+    /**
+     * Finds the equivalent node based on whether the passed node is a favorite.
+     * @param node
+     */
+    public findEquivalentNode(node: IZoweJobTreeNode, isFavorite: boolean): IZoweJobTreeNode {
+        return isFavorite ? this.findNonFavoritedNode(node) : this.findFavoritedNode(node);
+    }
+
+    /**
      * Creates and returns new profile node, and pushes it to mFavorites
      * @param profileName Name of profile
      * @returns {Job}
@@ -420,6 +449,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                     ];
                 }
             } catch (error) {
+                this.log.error(error);
                 const errMessage: string =
                     localize(
                         "initializeJobsFavorites.error.profile1",

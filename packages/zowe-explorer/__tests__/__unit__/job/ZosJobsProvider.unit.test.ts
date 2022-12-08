@@ -159,6 +159,8 @@ async function createGlobalMocks() {
     globalMocks.mockGetJesApi.mockReturnValue(globalMocks.jesApi);
     ZoweExplorerApiRegister.getJesApi = globalMocks.mockGetJesApi.bind(ZoweExplorerApiRegister);
 
+    Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
+    Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
     globalMocks.createTreeView.mockReturnValue("testTreeView");
     globalMocks.testSessionNode = createJobSessionNode(globalMocks.testSession, globalMocks.testProfile);
     globalMocks.mockGetJob.mockReturnValue(globalMocks.testIJob);
@@ -264,7 +266,6 @@ describe("ZosJobsProvider unit tests - Function getChildren", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
-
         const testTree = new ZosJobsProvider();
         testTree.mSessionNodes.push(blockMocks.jobSessionNode);
         testTree.mSessionNodes[1].dirty = true;
@@ -627,6 +628,71 @@ describe("ZosJobsProvider unit tests - Function removeFavProfile", () => {
         await globalMocks.testJobsProvider.removeFavProfile(blockMocks.profileNodeInFavs.label, false);
 
         expect(globalMocks.testJobsProvider.mFavorites.length).toEqual(0);
+    });
+});
+
+describe("ZosJobsProvider Unit Tests - Function findEquivalentNode()", () => {
+    it("Testing that findEquivalentNode() returns the corresponding nodes", async () => {
+        const globalMocks = await createGlobalMocks();
+        const favNodeParent = new Job(
+            "sestest",
+            vscode.TreeItemCollapsibleState.Expanded,
+            globalMocks.testJobsProvider.mSessionNodes[0],
+            globalMocks.testJobsProvider.mSessionNodes[0].getSession(),
+            null,
+            globalMocks.testProfile
+        );
+        const favNode = new Job(
+            "exampleName",
+            vscode.TreeItemCollapsibleState.Expanded,
+            null,
+            favNodeParent.getSession(),
+            globalMocks.testIJob,
+            globalMocks.testProfile
+        );
+        favNode.contextValue = globals.JOBS_JOB_CONTEXT + globals.FAV_SUFFIX;
+        favNodeParent.children.push(favNode);
+        // Create a copy of the above job object to designate as a non-favorited node
+        const nonFavNode = new Job(
+            "exampleName",
+            vscode.TreeItemCollapsibleState.Expanded,
+            null,
+            globalMocks.testSession,
+            globalMocks.testIJob,
+            globalMocks.testProfile
+        );
+        nonFavNode.contextValue = globals.JOBS_JOB_CONTEXT;
+
+        globalMocks.testJobsProvider.mFavorites.push(favNodeParent);
+        globalMocks.testJobsProvider.mSessionNodes[0].children.push(favNodeParent);
+        globalMocks.testJobsProvider.mSessionNodes[1].children.push(nonFavNode);
+
+        expect(globalMocks.testJobsProvider.findEquivalentNode(favNode, true)).toStrictEqual(nonFavNode);
+        expect(globalMocks.testJobsProvider.findEquivalentNode(nonFavNode, false)).toStrictEqual(favNode);
+    });
+});
+
+describe("ZosJobsProvider Unit Tests - unimplemented functions", () => {
+    it("Testing that each unimplemented function throws an error", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        const unimplementedFns = [
+            globalMocks.testJobsProvider.rename,
+            globalMocks.testJobsProvider.open,
+            globalMocks.testJobsProvider.copy,
+            globalMocks.testJobsProvider.paste,
+            globalMocks.testJobsProvider.saveFile,
+            globalMocks.testJobsProvider.refreshPS,
+            globalMocks.testJobsProvider.uploadDialog,
+        ];
+
+        for (const fn of unimplementedFns) {
+            try {
+                fn(undefined);
+            } catch (e) {
+                expect(e.message).toEqual("Method not implemented.");
+            }
+        }
     });
 });
 

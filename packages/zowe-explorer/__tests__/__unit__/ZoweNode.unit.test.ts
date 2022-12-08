@@ -17,15 +17,7 @@ import * as vscode from "vscode";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import { List, imperative } from "@zowe/cli";
 import { Profiles } from "../../src/Profiles";
-import {
-    DS_PDS_CONTEXT,
-    DS_SESSION_CONTEXT,
-    INFORMATION_CONTEXT,
-    DS_MEMBER_CONTEXT,
-    DS_MIGRATED_FILE_CONTEXT,
-    DS_DS_CONTEXT,
-    VSAM_CONTEXT,
-} from "../../src/globals";
+import * as globals from "../../src/globals";
 
 describe("Unit Tests (Jest)", () => {
     // Globals
@@ -53,6 +45,8 @@ describe("Unit Tests (Jest)", () => {
         return callback();
     });
 
+    Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
+    Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode, "ProgressLocation", { value: ProgressLocation });
     Object.defineProperty(vscode.window, "withProgress", { value: withProgress });
 
@@ -74,7 +68,7 @@ describe("Unit Tests (Jest)", () => {
      *************************************************************************************************************/
     it("Testing that the ZoweDatasetNode is defined", async () => {
         const testNode = new ZoweDatasetNode("BRTVS99", vscode.TreeItemCollapsibleState.None, null, session);
-        testNode.contextValue = DS_SESSION_CONTEXT;
+        testNode.contextValue = globals.DS_SESSION_CONTEXT;
 
         expect(testNode.label).toBeDefined();
         expect(testNode.collapsibleState).toBeDefined();
@@ -105,7 +99,7 @@ describe("Unit Tests (Jest)", () => {
             profileOne
         );
         rootNode.dirty = true;
-        rootNode.contextValue = DS_SESSION_CONTEXT;
+        rootNode.contextValue = globals.DS_SESSION_CONTEXT;
         rootNode.pattern = "SAMPLE, SAMPLE.PUBLIC, SAMPLE";
         let rootChildren = await rootNode.getChildren();
 
@@ -125,7 +119,7 @@ describe("Unit Tests (Jest)", () => {
                 vscode.TreeItemCollapsibleState.None,
                 rootNode,
                 null,
-                DS_MIGRATED_FILE_CONTEXT,
+                globals.DS_MIGRATED_FILE_CONTEXT,
                 undefined,
                 profileOne
             ),
@@ -152,7 +146,7 @@ describe("Unit Tests (Jest)", () => {
                 vscode.TreeItemCollapsibleState.None,
                 rootNode,
                 null,
-                VSAM_CONTEXT,
+                globals.VSAM_CONTEXT,
                 undefined,
                 profileOne
             ),
@@ -217,7 +211,7 @@ describe("Unit Tests (Jest)", () => {
             undefined,
             profileOne
         );
-        rootNode.contextValue = DS_SESSION_CONTEXT;
+        rootNode.contextValue = globals.DS_SESSION_CONTEXT;
         rootNode.dirty = true;
         const subNode = new ZoweDatasetNode(
             "sub",
@@ -284,7 +278,7 @@ describe("Unit Tests (Jest)", () => {
                 undefined,
                 profileOne
             );
-            rootNode.contextValue = DS_SESSION_CONTEXT;
+            rootNode.contextValue = globals.DS_SESSION_CONTEXT;
             rootNode.pattern = "THROW ERROR";
             rootNode.dirty = true;
             await rootNode.getChildren();
@@ -319,7 +313,7 @@ describe("Unit Tests (Jest)", () => {
                 undefined,
                 profileOne
             );
-            rootNode.contextValue = DS_SESSION_CONTEXT;
+            rootNode.contextValue = globals.DS_SESSION_CONTEXT;
             rootNode.dirty = true;
             const subNode = new ZoweDatasetNode(
                 "Response Fail",
@@ -357,11 +351,11 @@ describe("Unit Tests (Jest)", () => {
             vscode.TreeItemCollapsibleState.None,
             rootNode,
             null,
-            INFORMATION_CONTEXT,
+            globals.INFORMATION_CONTEXT,
             undefined,
             profileOne
         );
-        rootNode.contextValue = DS_SESSION_CONTEXT;
+        rootNode.contextValue = globals.DS_SESSION_CONTEXT;
         rootNode.dirty = false;
         await expect(await rootNode.getChildren()).toEqual([infoChild]);
     });
@@ -385,11 +379,11 @@ describe("Unit Tests (Jest)", () => {
             vscode.TreeItemCollapsibleState.None,
             rootNode,
             null,
-            INFORMATION_CONTEXT,
+            globals.INFORMATION_CONTEXT,
             undefined,
             profileOne
         );
-        rootNode.contextValue = DS_SESSION_CONTEXT;
+        rootNode.contextValue = globals.DS_SESSION_CONTEXT;
         await expect(await rootNode.getChildren()).toEqual([infoChild]);
     });
 
@@ -407,9 +401,9 @@ describe("Unit Tests (Jest)", () => {
             undefined,
             profileOne
         );
-        rootNode.contextValue = DS_SESSION_CONTEXT;
+        rootNode.contextValue = globals.DS_SESSION_CONTEXT;
         const subNode = new ZoweDatasetNode(
-            DS_PDS_CONTEXT,
+            globals.DS_PDS_CONTEXT,
             vscode.TreeItemCollapsibleState.Collapsed,
             rootNode,
             null,
@@ -418,7 +412,7 @@ describe("Unit Tests (Jest)", () => {
             profileOne
         );
         const member = new ZoweDatasetNode(
-            DS_MEMBER_CONTEXT,
+            globals.DS_MEMBER_CONTEXT,
             vscode.TreeItemCollapsibleState.None,
             subNode,
             null,
@@ -443,11 +437,11 @@ describe("Unit Tests (Jest)", () => {
             profileOne
         );
         rootNode.dirty = true;
-        rootNode.contextValue = DS_DS_CONTEXT;
+        rootNode.contextValue = globals.DS_DS_CONTEXT;
         expect(await rootNode.getChildren()).toHaveLength(0);
-        rootNode.contextValue = DS_MEMBER_CONTEXT;
+        rootNode.contextValue = globals.DS_MEMBER_CONTEXT;
         expect(await rootNode.getChildren()).toHaveLength(0);
-        rootNode.contextValue = INFORMATION_CONTEXT;
+        rootNode.contextValue = globals.INFORMATION_CONTEXT;
         expect(await rootNode.getChildren()).toHaveLength(0);
     });
     /*************************************************************************************************************
@@ -476,7 +470,7 @@ describe("Unit Tests (Jest)", () => {
             ),
         ];
         rootNode.dirty = false;
-        rootNode.contextValue = DS_PDS_CONTEXT;
+        rootNode.contextValue = globals.DS_PDS_CONTEXT;
         expect((await rootNode.getChildren())[0].label).toEqual("onestep");
     });
 
@@ -502,7 +496,7 @@ describe("Unit Tests (Jest)", () => {
             profileOne
         );
         pds.dirty = true;
-        pds.contextValue = DS_PDS_CONTEXT;
+        pds.contextValue = globals.DS_PDS_CONTEXT;
         expect((await pds.getChildren())[0].label).toEqual("BRTVS99");
     });
 
@@ -528,7 +522,7 @@ describe("Unit Tests (Jest)", () => {
             profileOne
         );
         pds.dirty = true;
-        pds.contextValue = DS_PDS_CONTEXT;
+        pds.contextValue = globals.DS_PDS_CONTEXT;
         const allMembers = jest.fn();
         allMembers.mockImplementationOnce(() => {
             return {
