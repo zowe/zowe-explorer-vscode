@@ -967,12 +967,12 @@
           "group": "001_zowe_dsCreate@5"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^ds.*/",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(ds|member).*/",
           "command": "zowe.ds.copyDataSet",
           "group": "001_zowe_dsCreate@6"
         },
         {
-          "when": "view == zowe.ds.explorer",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(session|pds).*/",
           "command": "zowe.ds.pasteMember",
           "group": "001_zowe_dsCreate@7"
         },

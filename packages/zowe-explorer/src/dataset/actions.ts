@@ -1523,20 +1523,15 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
  * @export
  * @param {DatasetTree} datasetProvider - the tree which contains the nodes
  */
-export async function pasteDataSet(datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>) {
+export async function pasteDataSet(datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>, node:ZoweDatasetNode) {
     let clipboardContent;
     try {
         clipboardContent = JSON.parse(await vscode.env.clipboard.readText());
     } catch (err) {
         throw Error("Invalid clipboard. Copy from data set first");
     }
-    const node = datasetProvider.getTreeView().selection[0];
-    if (
-        node.contextValue === globals.DS_MEMBER_CONTEXT ||
-        (node.contextValue === globals.DS_DS_CONTEXT &&
-            clipboardContent.find((x) => x.contextValue !== globals.DS_DS_CONTEXT)) ||
-        node.contextValue === globals.DS_PDS_CONTEXT
-    ) {
+    const node2 = datasetProvider.getTreeView().selection[0];
+    if (node.contextValue === globals.DS_MEMBER_CONTEXT || node.contextValue === globals.DS_DS_CONTEXT) {
         return;
     }
 
