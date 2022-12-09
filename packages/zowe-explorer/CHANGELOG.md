@@ -5,6 +5,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ## TBD Release
 
 -Add multiselect copy/paste feature on uss view [#1549](https://github.com/zowe/vscode-extension-for-zowe/issues/1549)
+-Multiple select for hide session [#1555](https://github.com/zowe/vscode-extension-for-zowe/issues/1555)
 
 ### New features and enhancements
 
