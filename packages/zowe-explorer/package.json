@@ -1744,7 +1744,7 @@
     "build": "yarn createTestProfileData && gulp build && yarn license && webpack --mode development",
     "build:integration": "yarn createTestProfileData && gulp build && yarn license && tsc --build --pretty",
     "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
-    "test:theia": "mocha ./out/__tests__/__theia__/*.theia.test.js --timeout 50000",
+    "test:theia": "mocha ./out/__tests__/__theia__/*.theia.test.js --timeout 50000 --reporter mocha-junit-reporter --reporter-options mochaFile=./results/integration/junit.xml",
     "test": "yarn test:unit",
     "updateStrings": "node ../../scripts/stringUpdateScript.js && prettier --write  --loglevel warn ./i18n package.nls*",
     "package": "vsce package --allow-star-activation --yarn && node ../../scripts/mv-pack.js vscode-extension-for-zowe vsix",
