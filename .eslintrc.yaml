@@ -17,11 +17,18 @@ rules:
   max-len:
     - warn
     - code: 150
+  no-duplicate-case: warn
+  no-duplicate-imports: warn
+  no-extra-bind: warn
   no-irregular-whitespace: warn
   no-magic-numbers:
     - warn
     - "ignore": [-1, 0, 1, 2, 4]
   no-multiple-empty-lines: warn
+  no-return-await: warn
+  no-sequences: warn
+  no-sparse-arrays: warn
+  prefer-object-spread: warn
   space-in-parens: warn
   zowe-explorer/no-unmocked-core-modules:
     - error
