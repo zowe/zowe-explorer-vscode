@@ -722,9 +722,9 @@ function initJobsProvider(context: vscode.ExtensionContext) {
         )
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.deleteJob", async (job, jobs) =>
-            jobActions.deleteCommand(jobsProvider, job, jobs)
-        )
+        vscode.commands.registerCommand("zowe.jobs.deleteJob", async (job, jobs) => {
+            await jobActions.deleteCommand(jobsProvider, job, jobs);
+        })
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.jobs.runModifyCommand", (job) => jobActions.modifyCommand(job))

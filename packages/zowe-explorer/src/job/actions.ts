@@ -349,14 +349,15 @@ async function deleteSingleJob(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZ
         );
         return;
     }
+
     try {
         await jobsProvider.delete(job);
     } catch (error) {
         await errorHandling(error.toString(), job.getProfile().name, error.message.toString());
         return;
     }
-    await refreshAllJobs(jobsProvider);
-    vscode.window.showInformationMessage(localize("deleteCommand.job", "Job {0} deleted.", jobName));
+
+    vscode.window.showInformationMessage(localize("deleteCommand.job", "Job {0} was deleted.", jobName));
 }
 
 async function deleteMultipleJobs(
@@ -399,7 +400,6 @@ async function deleteMultipleJobs(
         })
         .filter((result) => result !== undefined);
     if (deletedJobs.length) {
-        await refreshAllJobs(jobsProvider);
         vscode.window.showInformationMessage(
             localize(
                 "deleteCommand.multipleJobs",

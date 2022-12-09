@@ -37,6 +37,7 @@ async function createGlobalMocks() {
         mockGetAllProfileNames: jest.fn(),
         mockReveal: jest.fn(),
         mockCreateTreeView: jest.fn(),
+        mockExecuteCommand: jest.fn(),
         mockRegisterCommand: jest.fn(),
         mockOnDidSaveTextDocument: jest.fn(),
         mockOnDidChangeSelection: jest.fn(),
@@ -244,6 +245,10 @@ async function createGlobalMocks() {
         value: globalMocks.mockRegisterCommand,
         configurable: true,
     });
+    Object.defineProperty(vscode.commands, "executeCommand", {
+        value: globalMocks.mockExecuteCommand,
+        configurable: true,
+    });
     Object.defineProperty(vscode.workspace, "onDidSaveTextDocument", {
         value: globalMocks.mockOnDidSaveTextDocument,
         configurable: true,
@@ -417,7 +422,8 @@ describe("Extension Unit Tests", () => {
         // Checking if commands are registered properly
         expect(globalMocks.mockRegisterCommand.mock.calls.length).toBe(globals.COMMAND_COUNT);
         globalMocks.mockRegisterCommand.mock.calls.forEach((call, i) => {
-            expect(globalMocks.mockRegisterCommand.mock.calls[i][1]).toBeInstanceOf(Function);
+            expect(call[0]).toStrictEqual(globalMocks.expectedCommands[i]);
+            expect(call[1]).toBeInstanceOf(Function);
         });
         const actualCommands = [];
         globalMocks.mockRegisterCommand.mock.calls.forEach((call) => {
@@ -467,7 +473,8 @@ describe("Extension Unit Tests", () => {
         expect(globalMocks.mockMkdirSync.mock.calls.length).toBe(6);
         expect(globalMocks.mockRegisterCommand.mock.calls.length).toBe(globals.COMMAND_COUNT);
         globalMocks.mockRegisterCommand.mock.calls.forEach((call, i) => {
-            expect(globalMocks.mockRegisterCommand.mock.calls[i][1]).toBeInstanceOf(Function);
+            expect(call[0]).toStrictEqual(globalMocks.expectedCommands[i]);
+            expect(call[1]).toBeInstanceOf(Function);
         });
         const actualCommands = [];
         globalMocks.mockRegisterCommand.mock.calls.forEach((call) => {

@@ -271,6 +271,8 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         try {
             await ZoweExplorerApiRegister.getJesApi(node.getProfile()).deleteJob(node.job.jobname, node.job.jobid);
             await this.removeFavorite(this.createJobsFavorite(node));
+            node.getSessionNode().children = node.getSessionNode().children.filter((n) => n !== node);
+            this.refresh();
         } catch (error) {
             await errorHandling(error, node.getProfileName(), error.message);
         }
