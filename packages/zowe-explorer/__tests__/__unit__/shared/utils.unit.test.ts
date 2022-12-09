@@ -627,3 +627,38 @@ describe("Shared Utils Unit Tests - Function getDocumentFilePath", () => {
         );
     });
 });
+
+describe("Shared Utils Unit Tests - Function getSelectedNodeList", () => {
+    it("Testing that getSelectedNodeList returns the correct array when single node is selected", async () => {
+        const selectedNodes = [];
+        const aNode = createTestNode();
+        selectedNodes.push(aNode);
+        const nodeList = sharedUtils.getSelectedNodeList(aNode, selectedNodes);
+
+        expect(nodeList).toEqual(selectedNodes);
+    });
+
+    it("Testing that getSelectedNodeList returns the correct array when single node is selected via quickKeys", async () => {
+        const selectedNodes = undefined;
+        const aNode = createTestNode();
+        const nodeList = sharedUtils.getSelectedNodeList(aNode, selectedNodes);
+
+        expect(nodeList[0]).toEqual(aNode);
+    });
+
+    it("Testing that getSelectedNodeList returns the correct array when multiple node is selected", async () => {
+        const selectedNodes = [];
+        const aNode = createTestNode();
+        selectedNodes.push(aNode);
+        const bNode = createTestNode();
+        selectedNodes.push(bNode);
+        const nodeList = sharedUtils.getSelectedNodeList(aNode, selectedNodes);
+
+        expect(nodeList).toEqual(selectedNodes);
+    });
+
+    function createTestNode() {
+        const node = new ZoweDatasetNode("testLabel", vscode.TreeItemCollapsibleState.Collapsed, null, null, null);
+        return node;
+    }
+});

@@ -89,6 +89,27 @@ describe("Context helper tests", () => {
 
     const treeItem = new TreeItem("Test", 0);
 
+    function callCaseMocksJobSession() {
+        expect(contextually.isSession(treeItem)).toBe(true);
+        expect(contextually.isSessionNotFav(treeItem)).toBe(true);
+        expect(contextually.isUssSession(treeItem)).toBe(false);
+        expect(contextually.isDsSession(treeItem)).toBe(false);
+        expect(contextually.isJobsSession(treeItem)).toBe(true);
+    }
+    function callCaseMocksUssSession() {
+        expect(contextually.isSession(treeItem)).toBe(true);
+        expect(contextually.isSessionNotFav(treeItem)).toBe(true);
+        expect(contextually.isUssSession(treeItem)).toBe(true);
+        expect(contextually.isDsSession(treeItem)).toBe(false);
+        expect(contextually.isJobsSession(treeItem)).toBe(false);
+    }
+    function callCaseMocksDsSession() {
+        expect(contextually.isSessionNotFav(treeItem)).toBe(true);
+        expect(contextually.isDsSession(treeItem)).toBe(true);
+        expect(contextually.isUssSession(treeItem)).toBe(false);
+        expect(contextually.isJobsSession(treeItem)).toBe(false);
+    }
+
     it("Test USS", async () => {
         for (const ctx of testList) {
             treeItem.contextValue = ctx;
@@ -272,38 +293,33 @@ describe("Context helper tests", () => {
             treeItem.contextValue = ctx;
             switch (ctx) {
                 case JOBS_SESSION_CONTEXT:
-                    expect(contextually.isSession(treeItem)).toBe(true);
-                    expect(contextually.isSessionNotFav(treeItem)).toBe(true);
-                    expect(contextually.isUssSession(treeItem)).toBe(false);
-                    expect(contextually.isDsSession(treeItem)).toBe(false);
+                    callCaseMocksJobSession();
                     break;
                 case USS_SESSION_CONTEXT:
-                    expect(contextually.isSession(treeItem)).toBe(true);
-                    expect(contextually.isSessionNotFav(treeItem)).toBe(true);
-                    expect(contextually.isUssSession(treeItem)).toBe(true);
-                    expect(contextually.isDsSession(treeItem)).toBe(false);
+                    callCaseMocksUssSession();
                     break;
                 case DS_SESSION_CONTEXT:
-                    expect(contextually.isSessionNotFav(treeItem)).toBe(true);
-                    expect(contextually.isDsSession(treeItem)).toBe(true);
-                    expect(contextually.isUssSession(treeItem)).toBe(false);
+                    callCaseMocksDsSession();
                     break;
                 case JOBS_SESSION_CONTEXT_FAV:
                     expect(contextually.isSession(treeItem)).toBe(true);
                     expect(contextually.isSessionNotFav(treeItem)).toBe(false);
                     expect(contextually.isUssSession(treeItem)).toBe(false);
                     expect(contextually.isDsSession(treeItem)).toBe(false);
+                    expect(contextually.isJobsSession(treeItem)).toBe(true);
                     break;
                 case USS_SESSION_CONTEXT_FAV:
                     expect(contextually.isSession(treeItem)).toBe(true);
                     expect(contextually.isSessionNotFav(treeItem)).toBe(false);
                     expect(contextually.isUssSession(treeItem)).toBe(true);
                     expect(contextually.isDsSession(treeItem)).toBe(false);
+                    expect(contextually.isJobsSession(treeItem)).toBe(false);
                     break;
                 case DS_SESSION_CONTEXT_FAV:
                     expect(contextually.isSessionNotFav(treeItem)).toBe(false);
                     expect(contextually.isDsSession(treeItem)).toBe(true);
                     expect(contextually.isUssSession(treeItem)).toBe(false);
+                    expect(contextually.isJobsSession(treeItem)).toBe(false);
                     break;
                 default:
                     expect(contextually.isSession(treeItem)).toBe(false);
@@ -327,19 +343,13 @@ describe("Context helper tests", () => {
             treeItem.contextValue = ctx;
             switch (ctx) {
                 case JOBS_SESSION_CONTEXT:
-                    expect(contextually.isSessionNotFav(treeItem)).toBe(true);
-                    expect(contextually.isUssSession(treeItem)).toBe(false);
-                    expect(contextually.isDsSession(treeItem)).toBe(false);
+                    callCaseMocksJobSession();
                     break;
                 case USS_SESSION_CONTEXT:
-                    expect(contextually.isSessionNotFav(treeItem)).toBe(true);
-                    expect(contextually.isUssSession(treeItem)).toBe(true);
-                    expect(contextually.isDsSession(treeItem)).toBe(false);
+                    callCaseMocksUssSession();
                     break;
                 case DS_SESSION_CONTEXT:
-                    expect(contextually.isSessionNotFav(treeItem)).toBe(true);
-                    expect(contextually.isDsSession(treeItem)).toBe(true);
-                    expect(contextually.isUssSession(treeItem)).toBe(false);
+                    callCaseMocksDsSession();
                     break;
                 default:
                     expect(contextually.isSessionNotFav(treeItem)).toBe(false);
