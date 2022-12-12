@@ -14,7 +14,7 @@ import { imperative, IZosFilesResponse } from "@zowe/cli";
 import * as fs from "fs";
 import * as globals from "../globals";
 import * as path from "path";
-import { concatChildNodes, willForceUpload, uploadContent } from "../shared/utils";
+import { concatChildNodes, willForceUpload, uploadContent, getSelectedNodeList } from "../shared/utils";
 import { errorHandling } from "../utils/ProfilesUtils";
 import { ValidProfileEnum, IZoweTree, IZoweUSSTreeNode } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
@@ -24,10 +24,8 @@ import * as contextually from "../shared/context";
 import { setFileSaved } from "../utils/workspace";
 import * as nls from "vscode-nls";
 import { refreshAll } from "../shared/refresh";
-import { UIViews } from "../shared/ui-views";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 import { fileExistsCaseSensitveSync } from "./utils";
-import { getSelectedNodeList } from "../extension";
 
 // Set up localization
 nls.config({

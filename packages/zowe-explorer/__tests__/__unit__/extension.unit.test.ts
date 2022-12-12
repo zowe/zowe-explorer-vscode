@@ -23,6 +23,7 @@ import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import { createInstanceOfProfileInfo, createIProfile, createTreeView } from "../../__mocks__/mockCreators/shared";
 import { PersistentFilters } from "../../src/PersistentFilters";
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
+import { getSelectedNodeList } from "../../src/shared/utils";
 
 jest.mock("vscode");
 jest.mock("fs");
@@ -526,14 +527,14 @@ describe("Extension Unit Tests", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
         const nodeList = [blockMocks.rootNode, blockMocks.testNode];
-        const res = extension.getSelectedNodeList(blockMocks.testNode, nodeList);
+        const res = getSelectedNodeList(blockMocks.testNode, nodeList);
         expect(res).toEqual(nodeList);
     });
 
     it("Tests getSelectedNodeList executes successfully when no multiple selection", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
-        const res = extension.getSelectedNodeList(blockMocks.testNode, undefined);
+        const res = getSelectedNodeList(blockMocks.testNode, undefined);
         expect(res[0]).toEqual(blockMocks.testNode);
     });
 });

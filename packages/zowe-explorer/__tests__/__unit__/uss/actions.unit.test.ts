@@ -36,7 +36,7 @@ import * as isbinaryfile from "isbinaryfile";
 import * as fs from "fs";
 import { createUssApi, bindUssApi } from "../../../__mocks__/mockCreators/api";
 import * as refreshActions from "../../../src/shared/refresh";
-import { getSelectedNodeList } from "../../../src/extension";
+import { getSelectedNodeList } from "../../../src/shared/utils";
 
 function createGlobalMocks() {
     const globalMocks = {
