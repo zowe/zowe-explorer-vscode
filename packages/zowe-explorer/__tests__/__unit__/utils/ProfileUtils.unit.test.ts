@@ -11,7 +11,8 @@
 
 import * as fs from "fs";
 import * as path from "path";
-import { writeOverridesFile } from "../../../src/utils/ProfilesUtils";
+import { errorHandling, writeOverridesFile } from "../../../src/utils/ProfilesUtils";
+import * as globals from "../../../src/globals";
 
 jest.mock("fs");
 
@@ -35,6 +36,8 @@ describe("ProfileUtils.writeOverridesFile Unit Tests", () => {
             },
             configurable: true,
         });
+        Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
+        Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
 
         return newMocks;
     }
@@ -74,5 +77,15 @@ describe("ProfileUtils.writeOverridesFile Unit Tests", () => {
         expect(spyRead).toBeCalledTimes(0);
         spy.mockClear();
         spyRead.mockClear();
+    });
+    it("should log error details", async () => {
+        createBlockMocks();
+        const errorDetails = new Error("i haz error");
+        const label = "test";
+        const moreInfo = "Task failed successfully";
+        await errorHandling(errorDetails, label, moreInfo);
+        expect(globals.LOG.error).toBeCalledWith(
+            `Error: ${errorDetails.message}\n` + JSON.stringify({ errorDetails, label, moreInfo })
+        );
     });
 });
