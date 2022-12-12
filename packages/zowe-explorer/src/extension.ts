@@ -444,7 +444,16 @@ function initDatasetProvider(context: vscode.ExtensionContext) {
         })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.removeSession", async (node) => datasetProvider.deleteSession(node))
+        vscode.commands.registerCommand(
+            "zowe.ds.removeSession",
+            async (node: IZoweDatasetTreeNode, nodeList: IZoweDatasetTreeNode[]) => {
+                let selectedNodes = getSelectedNodeList(node, nodeList);
+                selectedNodes = selectedNodes.filter((sNode) => contextuals.isDsSession(sNode));
+                for (const select of selectedNodes) {
+                    datasetProvider.deleteSession(select);
+                }
+            }
+        )
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.removeFavorite", async (node, nodeList) => {
@@ -613,9 +622,13 @@ function initUSSProvider(context: vscode.ExtensionContext) {
         )
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.removeSession", async (node: IZoweUSSTreeNode) =>
-            ussFileProvider.deleteSession(node)
-        )
+        vscode.commands.registerCommand("zowe.uss.removeSession", async (node: IZoweUSSTreeNode, nodeList) => {
+            let selectedNodes = getSelectedNodeList(node, nodeList);
+            selectedNodes = selectedNodes.filter((element) => contextuals.isUssSession(element));
+            for (const item of selectedNodes) {
+                ussFileProvider.deleteSession(item);
+            }
+        })
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.uss.createFile", async (node: IZoweUSSTreeNode) =>
@@ -739,9 +752,9 @@ function initJobsProvider(context: vscode.ExtensionContext) {
         )
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.deleteJob", async (job, jobs) =>
-            jobActions.deleteCommand(jobsProvider, job, jobs)
-        )
+        vscode.commands.registerCommand("zowe.jobs.deleteJob", async (job, jobs) => {
+            await jobActions.deleteCommand(jobsProvider, job, jobs);
+        })
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.jobs.runModifyCommand", (job) => jobActions.modifyCommand(job))
@@ -785,7 +798,13 @@ function initJobsProvider(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand("zowe.jobs.setPrefix", (job) => jobActions.setPrefix(job, jobsProvider))
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.removeJobsSession", (job) => jobsProvider.deleteSession(job))
+        vscode.commands.registerCommand("zowe.jobs.removeJobsSession", (job, jobList) => {
+            let selectedNodes = getSelectedNodeList(job, jobList);
+            selectedNodes = selectedNodes.filter((element) => contextuals.isJobsSession(element));
+            for (const item of selectedNodes) {
+                jobsProvider.deleteSession(item);
+            }
+        })
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.jobs.downloadSpool", async (node, nodeList) => {
