@@ -36,7 +36,6 @@ import * as isbinaryfile from "isbinaryfile";
 import * as fs from "fs";
 import { createUssApi, bindUssApi } from "../../../__mocks__/mockCreators/api";
 import * as refreshActions from "../../../src/shared/refresh";
-import { getSelectedNodeList } from "../../../src/shared/utils";
 
 function createGlobalMocks() {
     const globalMocks = {
@@ -827,7 +826,7 @@ describe("USS Action Unit Tests - copy file / directory", () => {
             blockMocks.treeNodes.ussNodes,
             blockMocks.treeNodes.testUSSTree
         );
-        expect(getSelectedNodeList(blockMocks.treeNodes.ussNode, blockMocks.treeNodes.ussNodes)).toEqual([
+        expect(sharedUtils.getSelectedNodeList(blockMocks.treeNodes.ussNode, blockMocks.treeNodes.ussNodes)).toEqual([
             blockMocks.treeNodes.ussNode,
         ]);
     });
@@ -835,7 +834,7 @@ describe("USS Action Unit Tests - copy file / directory", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
         ussNodeActions.copyUssFiles(null, null, blockMocks.treeNodes.testUSSTree);
-        expect(getSelectedNodeList(blockMocks.treeNodes.ussNode, blockMocks.treeNodes.ussNodes)).toEqual([
+        expect(sharedUtils.getSelectedNodeList(blockMocks.treeNodes.ussNode, blockMocks.treeNodes.ussNodes)).toEqual([
             blockMocks.treeNodes.ussNode,
         ]);
     });
@@ -846,7 +845,7 @@ describe("USS Action Unit Tests - copy file / directory", () => {
         const parent = blockMocks.treeNodes.testUSSTree.getTreeView();
         parent.selection = blockMocks.nodes[0];
         ussNodeActions.pasteUssFile(blockMocks.treeNodes.testUSSTree, undefined);
-        expect(getSelectedNodeList(blockMocks.treeNodes.ussNode, blockMocks.treeNodes.ussNodes)).toEqual([
+        expect(sharedUtils.getSelectedNodeList(blockMocks.treeNodes.ussNode, blockMocks.treeNodes.ussNodes)).toEqual([
             blockMocks.treeNodes.ussNode,
         ]);
     });
@@ -857,7 +856,7 @@ describe("USS Action Unit Tests - copy file / directory", () => {
         parent.selection = blockMocks.nodes[0];
         jest.spyOn(ussNodeActions, "copyUssFilesToClipboard").mockResolvedValueOnce();
         ussNodeActions.pasteUssFile(blockMocks.treeNodes.testUSSTree, blockMocks.nodes[0]);
-        expect(getSelectedNodeList(blockMocks.treeNodes.ussNode, blockMocks.treeNodes.ussNodes)).toEqual([
+        expect(sharedUtils.getSelectedNodeList(blockMocks.treeNodes.ussNode, blockMocks.treeNodes.ussNodes)).toEqual([
             blockMocks.treeNodes.ussNode,
         ]);
     });

@@ -74,6 +74,7 @@ async function createGlobalMocks() {
         fileExistsCaseSensitveSync: jest.fn(),
         readText: jest.fn(),
         fileToUSSFile: jest.fn(),
+        basePath: jest.fn(),
     };
 
     globalMocks.openTextDocument.mockResolvedValue(globalMocks.mockTextDocument);
@@ -160,6 +161,7 @@ async function createGlobalMocks() {
         configurable: true,
     });
     Object.defineProperty(vscode.env.clipboard, "readText", { value: globalMocks.readText, configurable: true });
+    Object.defineProperty(path, "basename", { value: globalMocks.basePath, configurable: true });
 
     return globalMocks;
 }
@@ -1663,13 +1665,12 @@ describe("ZoweUSSNode Unit Tests - Function node.copyUssFile()", () => {
         newMocks.testNode.fullPath = "/users/temp/test";
         newMocks.getUssApiMock.mockReturnValue(newMocks.mockUssApi);
         ZoweExplorerApiRegister.getUssApi = newMocks.getUssApiMock.bind(ZoweExplorerApiRegister);
-
+        globalMocks.readText.mockResolvedValue("users/directory/file,users/directory/");
+        globalMocks.basePath.mockResolvedValue("/temp");
         return newMocks;
     }
     it("Tests node.copyUssFile() reads clipboard contents and upload directory & file sucessfully", async () => {
         const globalMocks = await createGlobalMocks();
-
-        globalMocks.readText.mockResolvedValueOnce("users/directory/file,users/directory/");
         const blockMocks = createBlockMocks(globalMocks);
 
         jest.spyOn(blockMocks.mockUssApi, "fileList").mockResolvedValueOnce(blockMocks.fileResponse);
@@ -1681,33 +1682,29 @@ describe("ZoweUSSNode Unit Tests - Function node.copyUssFile()", () => {
 
     it("Tests node.copyUssFile() reads clipboard contents finds same file name on destination directory", async () => {
         const globalMocks = await createGlobalMocks();
-
-        globalMocks.readText.mockResolvedValueOnce("users/directory/file,users/directory/");
         const blockMocks = createBlockMocks(globalMocks);
 
         jest.spyOn(blockMocks.mockUssApi, "fileList").mockResolvedValueOnce(blockMocks.fileResponseSame);
         jest.spyOn(blockMocks.mockUssApi, "putContent").mockResolvedValueOnce(blockMocks.fileResponseSame);
         jest.spyOn(blockMocks.mockUssApi, "uploadDirectory").mockResolvedValueOnce(blockMocks.fileResponseSame);
 
-        await blockMocks.testNode.copyUssFile();
+        blockMocks.testNode.copyUssFile();
     });
 
     it("Tests node.copyUssFile() could not retriieve fileList api response", async () => {
         const globalMocks = await createGlobalMocks();
-
-        globalMocks.readText.mockResolvedValueOnce("users/directory/file,users/directory/");
         const blockMocks = createBlockMocks(globalMocks);
 
         jest.spyOn(blockMocks.mockUssApi, "fileList").mockResolvedValueOnce(blockMocks.fileResponseEmpty);
         jest.spyOn(blockMocks.mockUssApi, "putContent").mockResolvedValueOnce(blockMocks.fileResponseSame);
         jest.spyOn(blockMocks.mockUssApi, "uploadDirectory").mockResolvedValueOnce(blockMocks.fileResponseSame);
 
-        await blockMocks.testNode.copyUssFile();
+        blockMocks.testNode.copyUssFile();
     });
     it("Tests util disposeClipboardContents function correctly free clipboardContents", async () => {
         vscode.env.clipboard.writeText("test");
         ussUtils.disposeClipboardContents();
-        expect(vscode.env.clipboard.readText()).toEqual(undefined);
+        expect(vscode.env.clipboard.readText()).toEqual(Promise.resolve({}));
     });
     it("Tests node.copyUssFile() reads clipboard contents and returns as nothing is copied", async () => {
         const globalMocks = await createGlobalMocks();
@@ -1719,14 +1716,12 @@ describe("ZoweUSSNode Unit Tests - Function node.copyUssFile()", () => {
 
     it("Tests node.copyUssFile() reads clipboard contents and fails to upload directory & file", async () => {
         const globalMocks = await createGlobalMocks();
-
-        globalMocks.readText.mockResolvedValueOnce("users/directory/file,users/directory/");
         const blockMocks = createBlockMocks(globalMocks);
 
         jest.spyOn(blockMocks.mockUssApi, "fileList").mockResolvedValueOnce(blockMocks.fileResponse);
         jest.spyOn(blockMocks.mockUssApi, "putContent").mockResolvedValueOnce(blockMocks.fileResponse);
         jest.spyOn(blockMocks.mockUssApi, "uploadDirectory").mockRejectedValueOnce(blockMocks.fileResponse);
 
-        await blockMocks.testNode.copyUssFile();
+        blockMocks.testNode.copyUssFile();
     });
 });
