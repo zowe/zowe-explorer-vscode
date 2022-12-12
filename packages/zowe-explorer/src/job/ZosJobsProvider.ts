@@ -14,6 +14,8 @@ import * as jobUtils from "../job/utils";
 import * as globals from "../globals";
 import { IJob, imperative } from "@zowe/cli";
 import {
+    Gui,
+    MessageSeverity,
     ValidProfileEnum,
     IZoweTree,
     IZoweJobTreeNode,
@@ -469,7 +471,11 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                         getAppName(globals.ISTHEIA)
                     );
                 const btnLabelRemove = localize("initializeJobsFavorites.error.buttonRemove", "Remove");
-                vscode.window.showErrorMessage(errMessage, { modal: true }, btnLabelRemove).then(async (selection) => {
+                Gui.showMessage(errMessage, {
+                    items: [btnLabelRemove],
+                    severity: MessageSeverity.ERROR,
+                    vsCodeOpts: { modal: true },
+                }).then(async (selection) => {
                     if (selection === btnLabelRemove) {
                         await this.removeFavProfile(profileName, false);
                     }
@@ -614,13 +620,15 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 profileName
             );
             const continueRemove = localize("removeFavProfile.continue", "Continue");
-            await vscode.window
-                .showWarningMessage(checkConfirmation, { modal: true }, ...[continueRemove])
-                .then((selection) => {
-                    if (!selection || selection === "Cancel") {
-                        cancelled = true;
-                    }
-                });
+            await Gui.showMessage(checkConfirmation, {
+                items: [continueRemove],
+                severity: MessageSeverity.WARN,
+                vsCodeOpts: { modal: true },
+            }).then((selection) => {
+                if (!selection || selection === "Cancel") {
+                    cancelled = true;
+                }
+            });
         }
         if (cancelled) {
             return;
@@ -651,33 +659,26 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 placeHolder: localize("searchHistory.options.prompt", "Select a filter"),
             };
             // get user selection
-            const choice = await vscode.window.showQuickPick(
-                [this.searchByQuery, this.searchById, ...items],
-                selectFilter
-            );
+            const choice = await Gui.quickPick([this.searchByQuery, this.searchById, ...items], selectFilter);
             if (!choice) {
-                vscode.window.showInformationMessage(
-                    localize("enterPattern.pattern", "No selection made. Operation cancelled.")
-                );
+                Gui.showMessage(localize("enterPattern.pattern", "No selection made. Operation cancelled."));
                 return undefined;
             }
             return choice;
         } else {
             // VSCode route to create a QuickPick
-            const quickpick = vscode.window.createQuickPick();
+            const quickpick = Gui.createQuickPick();
             quickpick.items = [this.searchByQuery, this.searchById, ...items];
             quickpick.placeholder = localize("searchHistory.options.prompt", "Select a filter");
             quickpick.ignoreFocusOut = true;
             quickpick.show();
-            const choice = await jobUtils.resolveQuickPickHelper(quickpick);
+            const choice = await Gui.resolveQuickPick(quickpick);
             quickpick.hide();
             if (!choice) {
-                vscode.window.showInformationMessage(
-                    localize("enterPattern.pattern", "No selection made. Operation cancelled.")
-                );
+                Gui.showMessage(localize("enterPattern.pattern", "No selection made. Operation cancelled."));
                 return undefined;
             }
-            return choice;
+            return choice as FilterItem;
         }
     }
 
@@ -736,9 +737,9 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             prompt: localize("jobsFilterPrompt.inputBox.prompt.jobid", "Enter a Job id"),
             value: jobId,
         };
-        const newUserJobId = await ZoweVsCodeExtension.inputBox(options);
+        const newUserJobId = await Gui.inputBox(options);
         if (!newUserJobId) {
-            vscode.window.showInformationMessage(localize("jobsFilterPrompt.enterPrefix", "Search Cancelled"));
+            Gui.showMessage(localize("jobsFilterPrompt.enterPrefix", "Search Cancelled"));
             return;
         }
         return {
@@ -884,7 +885,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
     private async setJobStatus(node: IZoweJobTreeNode): Promise<IJobStatusOption> {
         const apiExists = ZoweExplorerApiRegister.getJesApi(node.getProfile()).getJobsByParameters;
         const jobStatusSelection = apiExists ? globals.JOB_STATUS : globals.JOB_STATUS_UNSUPPORTED;
-        let choice = await vscode.window.showQuickPick(jobStatusSelection);
+        let choice = await Gui.quickPick(jobStatusSelection);
         if (!choice) {
             choice = globals.JOB_STATUS.find((status) => status.label === "*");
         }
@@ -892,7 +893,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
     }
 
     private async handleEditingMultiJobParameters(jobProperties: IJobPickerOption[], node: IZoweJobTreeNode) {
-        const editableItems = [];
+        const editableItems: FilterItem[] = [];
         editableItems.push(new FilterItem({ text: ZosJobsProvider.submitJobQueryLabel, show: true }));
         jobProperties.forEach((prop) => {
             if (prop.key === "owner" && !prop.value) {
@@ -901,14 +902,12 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             }
             editableItems.push(new FilterItem({ text: prop.label, description: prop.value, show: prop.show }));
         });
-        const choice = await vscode.window.showQuickPick(editableItems, {
+        const choice = await Gui.quickPick(editableItems, {
             ignoreFocusOut: true,
             matchOnDescription: false,
         });
         if (!choice) {
-            vscode.window.showInformationMessage(
-                localize("enterPattern.pattern", "No selection made. Operation cancelled.")
-            );
+            Gui.showMessage(localize("enterPattern.pattern", "No selection made. Operation cancelled."));
             return;
         }
         const pattern = choice.label;
@@ -936,9 +935,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                     value: jobProperties.find((prop) => prop.label === pattern).value,
                     placeHolder: jobProperties.find((prop) => prop.label === pattern).placeHolder,
                 };
-                jobProperties.find((prop) => prop.label === pattern).value = await ZoweVsCodeExtension.inputBox(
-                    options
-                );
+                jobProperties.find((prop) => prop.label === pattern).value = await Gui.inputBox(options);
         }
         return Promise.resolve(this.handleEditingMultiJobParameters(jobProperties, node));
     }

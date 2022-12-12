@@ -12,9 +12,10 @@
 import * as semver from "semver";
 import * as vscode from "vscode";
 import { ProfilesCache, ZoweExplorerApi } from "../profiles";
-import { IZoweLogger, MessageSeverityEnum } from "../logger/IZoweLogger";
+import { IZoweLogger, MessageSeverity } from "../logger/IZoweLogger";
 import { imperative } from "@zowe/cli";
 import { IPromptCredentialsOptions, IPromptUserPassOptions } from "./doc/IPromptCredentials";
+import { Gui } from "../globals/Gui";
 
 /**
  * Collection of utility functions for writing Zowe Explorer VS Code extensions.
@@ -48,25 +49,10 @@ export class ZoweVsCodeExtension {
     /**
      * Reveal an error in VSCode, and log the error to the Imperative log
      *
+     * @deprecated Use `Gui.showMessage` instead
      */
-    public static showVsCodeMessage(message: string, severity: MessageSeverityEnum, logger: IZoweLogger): void {
-        logger.logImperativeMessage(message, severity);
-
-        let errorMessage;
-        switch (true) {
-            case severity < 3:
-                errorMessage = `${logger.getExtensionName()}: ${message}`;
-                void vscode.window.showInformationMessage(errorMessage);
-                break;
-            case severity === 3:
-                errorMessage = `${logger.getExtensionName()}: ${message}`;
-                void vscode.window.showWarningMessage(errorMessage);
-                break;
-            case severity > 3:
-                errorMessage = `${logger.getExtensionName()}: ${message}`;
-                void vscode.window.showErrorMessage(errorMessage);
-                break;
-        }
+    public static showVsCodeMessage(message: string, severity: MessageSeverity, logger: IZoweLogger): void {
+        void Gui.showMessage(message, { severity: severity, logger: logger });
     }
 
     /**
@@ -142,20 +128,11 @@ export class ZoweVsCodeExtension {
         return undefined;
     }
 
-    public static async inputBox(inputBoxOptions: vscode.InputBoxOptions): Promise<string> {
-        if (!inputBoxOptions.validateInput) {
-            // adding this for the theia breaking changes with input boxes
-            // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-            inputBoxOptions.validateInput = (value) => null;
-        }
-        return await vscode.window.showInputBox(inputBoxOptions);
-    }
-
     private static async saveCredentials(profile: imperative.IProfileLoaded): Promise<boolean> {
         let save = false;
         const saveButton = "Save Credentials";
         const message = `Save entered credentials in plain text for future use with profile ${profile.name}?\nSaving credentials will update the local information file.`;
-        await vscode.window.showInformationMessage(message, { modal: true }, ...[saveButton]).then((selection) => {
+        await Gui.showMessage(message, { items: [saveButton], vsCodeOpts: { modal: true } }).then((selection) => {
             if (selection) {
                 save = true;
             }
@@ -166,7 +143,7 @@ export class ZoweVsCodeExtension {
     private static async promptUserPass(options: IPromptUserPassOptions): Promise<string[] | undefined> {
         let newUser = options.session.user;
         if (!newUser || options.rePrompt) {
-            newUser = await ZoweVsCodeExtension.inputBox({
+            newUser = await Gui.inputBox({
                 placeHolder: "User Name",
                 prompt: "Enter the user name for the connection. Leave blank to not store.",
                 ignoreFocusOut: true,
@@ -181,7 +158,7 @@ export class ZoweVsCodeExtension {
 
         let newPass = options.session.password;
         if (!newPass || options.rePrompt) {
-            newPass = await ZoweVsCodeExtension.inputBox({
+            newPass = await Gui.inputBox({
                 placeHolder: "Password",
                 prompt: "Enter the password for the connection. Leave blank to not store.",
                 password: true,

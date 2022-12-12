@@ -12,14 +12,13 @@
 import * as vscode from "vscode";
 import { imperative } from "@zowe/cli";
 import * as globals from "../globals";
-import { ValidProfileEnum, IZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { ValidProfileEnum, IZoweTreeNode, Gui, MessageSeverity } from "@zowe/zowe-explorer-api";
 import { PersistentFilters } from "../PersistentFilters";
 import { Profiles } from "../Profiles";
 import { FilterDescriptor, FilterItem, resolveQuickPickHelper, errorHandling } from "../utils/ProfilesUtils";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import * as nls from "vscode-nls";
 import { ZoweCommandProvider } from "../abstract/ZoweCommandProvider";
-import { UIViews } from "../shared/ui-views";
 
 // Set up localization
 nls.config({
@@ -93,11 +92,9 @@ export class MvsCommandHandler extends ZoweCommandProvider {
                     ignoreFocusOut: true,
                     canPickMany: false,
                 };
-                const sesName = await vscode.window.showQuickPick(profileNamesList, quickPickOptions);
+                const sesName = await Gui.quickPick(profileNamesList, quickPickOptions);
                 if (sesName === undefined) {
-                    vscode.window.showInformationMessage(
-                        localize("issueMvsCommand.undefined.profilename", "Operation Cancelled")
-                    );
+                    Gui.showMessage(localize("issueMvsCommand.undefined.profilename", "Operation Cancelled"));
                     return;
                 }
                 profile = allProfiles.filter((temprofile) => temprofile.name === sesName)[0];
@@ -107,13 +104,13 @@ export class MvsCommandHandler extends ZoweCommandProvider {
                 if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
                     session = ZoweExplorerApiRegister.getMvsApi(profile).getSession();
                 } else {
-                    vscode.window.showErrorMessage(localize("issueMvsCommand.checkProfile", "Profile is invalid"));
+                    Gui.showMessage(localize("issueMvsCommand.checkProfile", "Profile is invalid"), {
+                        severity: MessageSeverity.ERROR,
+                    });
                     return;
                 }
             } else {
-                vscode.window.showInformationMessage(
-                    localize("issueMvsCommand.noProfilesLoaded", "No profiles available")
-                );
+                Gui.showMessage(localize("issueMvsCommand.noProfilesLoaded", "No profiles available"));
                 return;
             }
         } else {
@@ -131,16 +128,19 @@ export class MvsCommandHandler extends ZoweCommandProvider {
                     }
                     await this.issueCommand(profile, command1);
                 } else {
-                    vscode.window.showErrorMessage(localize("issueMvsCommand.checkProfile", "Profile is invalid"));
+                    Gui.showMessage(localize("issueMvsCommand.checkProfile", "Profile is invalid"), {
+                        severity: MessageSeverity.ERROR,
+                    });
                     return;
                 }
             }
         } catch (error) {
             if (error.toString().includes("non-existing")) {
                 globals.LOG.error(error);
-                vscode.window.showErrorMessage(
+                Gui.showMessage(
                     localize("issueMvsCommand.apiNonExisting", "Not implemented yet for profile of type: ") +
-                        profile.type
+                        profile.type,
+                    { severity: MessageSeverity.ERROR }
                 );
             } else {
                 await errorHandling(error.toString(), profile.name, error.message.toString());
@@ -166,16 +166,16 @@ export class MvsCommandHandler extends ZoweCommandProvider {
                             : ""),
                 };
                 // get user selection
-                const choice = await vscode.window.showQuickPick([createPick, ...items], options1);
+                const choice = await Gui.quickPick([createPick, ...items], options1);
                 if (!choice) {
-                    vscode.window.showInformationMessage(
+                    Gui.showMessage(
                         localize("issueMvsCommand.options.noselection", "No selection made. Operation cancelled.")
                     );
                     return;
                 }
                 response = choice === createPick ? "" : choice.label;
             } else {
-                const quickpick = vscode.window.createQuickPick();
+                const quickpick = Gui.createQuickPick();
                 quickpick.placeholder = alwaysEdit
                     ? localize("issueMvsCommand.command.hostnameAlt", "Select an MVS command to run against ") +
                       hostname +
@@ -188,10 +188,10 @@ export class MvsCommandHandler extends ZoweCommandProvider {
                 quickpick.items = [createPick, ...items];
                 quickpick.ignoreFocusOut = true;
                 quickpick.show();
-                const choice = await resolveQuickPickHelper(quickpick);
+                const choice = await Gui.resolveQuickPick(quickpick);
                 quickpick.hide();
                 if (!choice) {
-                    vscode.window.showInformationMessage(
+                    Gui.showMessage(
                         localize("issueMvsCommand.options.noselection", "No selection made. Operation cancelled.")
                     );
                     return;
@@ -213,9 +213,9 @@ export class MvsCommandHandler extends ZoweCommandProvider {
                 valueSelection: response ? [response.length, response.length] : undefined,
             };
             // get user input
-            response = await vscode.window.showInputBox(options2);
+            response = await Gui.inputBox(options2);
             if (!response) {
-                vscode.window.showInformationMessage(localize("issueMvsCommand.enter.command", "No command entered."));
+                Gui.showMessage(localize("issueMvsCommand.enter.command", "No command entered."));
                 return;
             }
         }

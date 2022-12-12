@@ -15,11 +15,18 @@ import * as vscode from "vscode";
 import * as globals from "../globals";
 import * as path from "path";
 import * as fs from "fs";
-import { getSecurityModules, IZoweTreeNode, ZoweTreeNode, getZoweDir, getFullPath } from "@zowe/zowe-explorer-api";
+import {
+    getSecurityModules,
+    IZoweTreeNode,
+    ZoweTreeNode,
+    getZoweDir,
+    getFullPath,
+    Gui,
+    MessageSeverity,
+} from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import * as nls from "vscode-nls";
 import { imperative, getImperativeConfig } from "@zowe/cli";
-import { UIViews } from "../shared/ui-views";
 
 // Set up localization
 nls.config({
@@ -54,8 +61,9 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
         if (msg.includes("hostname")) {
             const mProfileInfo = await Profiles.getInstance().getProfileInfo();
             if (mProfileInfo.usingTeamConfig) {
-                vscode.window.showErrorMessage(
-                    localize("errorHandling.invalid.host", "Required parameter 'host' must not be blank.")
+                Gui.showMessage(
+                    localize("errorHandling.invalid.host", "Required parameter 'host' must not be blank."),
+                    { severity: MessageSeverity.ERROR }
                 );
                 const profAllAttrs = mProfileInfo.getAllProfiles();
                 for (const prof of profAllAttrs) {
@@ -80,7 +88,7 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
                 const tokenError: string = errorDetails.mDetails.additionalDetails;
                 if (tokenError.includes("Token is not valid or expired.")) {
                     if (isTheia()) {
-                        vscode.window.showErrorMessage(errToken).then(async () => {
+                        Gui.showMessage(errToken, { severity: MessageSeverity.ERROR }).then(async () => {
                             await Profiles.getInstance().ssoLogin(null, label);
                         });
                     } else {
@@ -88,7 +96,7 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
                             "errorHandling.authentication.login",
                             "Log in to Authentication Service"
                         );
-                        vscode.window.showErrorMessage(errToken, message).then(async (selection) => {
+                        Gui.showMessage(errToken, { items: [message] }).then(async (selection) => {
                             if (selection) {
                                 await Profiles.getInstance().ssoLogin(null, label);
                             }
@@ -99,27 +107,27 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
             }
 
             if (isTheia()) {
-                vscode.window.showErrorMessage(errMsg);
+                Gui.showMessage(errMsg, { severity: MessageSeverity.ERROR });
             } else {
                 const checkCredsButton = localize("errorHandling.checkCredentials.button", "Check Credentials");
-                await vscode.window
-                    .showErrorMessage(errMsg, { modal: true }, ...[checkCredsButton])
-                    .then(async (selection) => {
-                        if (selection === checkCredsButton) {
-                            await Profiles.getInstance().promptCredentials(label.trim(), true);
-                        } else {
-                            vscode.window.showInformationMessage(
-                                localize("errorHandling.checkCredentials.cancelled", "Operation Cancelled")
-                            );
-                        }
-                    });
+                await Gui.showMessage(errMsg, {
+                    items: [checkCredsButton],
+                    severity: MessageSeverity.ERROR,
+                    vsCodeOpts: { modal: true },
+                }).then(async (selection) => {
+                    if (selection === checkCredsButton) {
+                        await Profiles.getInstance().promptCredentials(label.trim(), true);
+                    } else {
+                        Gui.showMessage(localize("errorHandling.checkCredentials.cancelled", "Operation Cancelled"));
+                    }
+                });
             }
             break;
         default:
             if (moreInfo === undefined) {
                 moreInfo = errorDetails.toString().includes("Error") ? "" : "Error:";
             }
-            vscode.window.showErrorMessage(moreInfo + " " + errorDetails);
+            Gui.showMessage(moreInfo + " " + errorDetails, { severity: MessageSeverity.ERROR });
             break;
     }
     return;
@@ -163,6 +171,11 @@ export const syncSessionNode =
         sessionNode.setSessionToChoice(session);
     };
 
+/**
+ * @deprecated Use `Gui.resolveQuickPick` instead
+ * @param quickpick The quick pick object to resolve
+ * @returns a Promise containing the result of the quick pick
+ */
 export async function resolveQuickPickHelper(
     quickpick: vscode.QuickPick<vscode.QuickPickItem>
 ): Promise<vscode.QuickPickItem | undefined> {
@@ -296,7 +309,7 @@ export async function openConfigOnError(error: Error) {
 export async function promptCredentials(node: IZoweTreeNode) {
     const mProfileInfo = await Profiles.getInstance().getProfileInfo();
     if (mProfileInfo.usingTeamConfig && !mProfileInfo.getTeamConfig().properties.autoStore) {
-        vscode.window.showInformationMessage(
+        Gui.showMessage(
             localize(
                 "zowe.promptCredentials.notSupported",
                 '"Update Credentials" operation not supported when "autoStore" is false'
@@ -307,16 +320,14 @@ export async function promptCredentials(node: IZoweTreeNode) {
     let profileName: string;
     if (node == null) {
         // prompt for profile
-        profileName = await vscode.window.showInputBox({
+        profileName = await Gui.inputBox({
             placeHolder: localize("createNewConnection.option.prompt.profileName.placeholder", "Connection Name"),
             prompt: localize("createNewConnection.option.prompt.profileName", "Enter a name for the connection."),
             ignoreFocusOut: true,
         });
 
         if (profileName === undefined) {
-            vscode.window.showInformationMessage(
-                localize("createNewConnection.undefined.passWord", "Operation Cancelled")
-            );
+            Gui.showMessage(localize("createNewConnection.undefined.passWord", "Operation Cancelled"));
             return;
         }
         profileName = profileName.trim();
@@ -327,7 +338,7 @@ export async function promptCredentials(node: IZoweTreeNode) {
     const creds = await Profiles.getInstance().promptCredentials(profileName, true);
 
     if (creds != null) {
-        vscode.window.showInformationMessage(
+        Gui.showMessage(
             localize(
                 "promptCredentials.updatedCredentials",
                 "Credentials for {0} were successfully updated",

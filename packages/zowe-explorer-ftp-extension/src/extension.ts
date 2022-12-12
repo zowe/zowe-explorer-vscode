@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as path from "path";
-import { IZoweLogger, MessageSeverityEnum, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { IZoweLogger, MessageSeverity, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { FtpUssApi } from "./ZoweExplorerFtpUssApi";
 import { FtpMvsApi } from "./ZoweExplorerFtpMvsApi";
 import { FtpJesApi } from "./ZoweExplorerFtpJesApi";
@@ -49,7 +49,7 @@ async function registerFtpApis(): Promise<boolean> {
 
         ZoweVsCodeExtension.showVsCodeMessage(
             "Zowe Explorer was modified for FTP support.",
-            MessageSeverityEnum.INFO,
+            MessageSeverity.INFO,
             ZoweLogger
         );
 
@@ -57,7 +57,7 @@ async function registerFtpApis(): Promise<boolean> {
     }
     ZoweVsCodeExtension.showVsCodeMessage(
         "Zowe Explorer was not found: either it is not installed or you are using an older version without extensibility API.",
-        MessageSeverityEnum.FATAL,
+        MessageSeverity.FATAL,
         ZoweLogger
     );
     return false;

@@ -13,7 +13,7 @@ import * as loggerConfig from "../log4jsconfig.json";
 import * as path from "path";
 import { imperative } from "@zowe/cli";
 
-export enum MessageSeverityEnum {
+export enum MessageSeverity {
     TRACE = 0,
     DEBUG = 1,
     INFO = 2,
@@ -59,25 +59,25 @@ export class IZoweLogger {
      * Log an error to the Imperative log
      *
      */
-    public logImperativeMessage(message: string, severity: MessageSeverityEnum): void {
+    public logImperativeMessage(message: string, severity: MessageSeverity): void {
         const messageWithExtensionName = `message from extension ${this.extensionName}: ${message}`;
         switch (severity) {
-            case MessageSeverityEnum.TRACE:
+            case MessageSeverity.TRACE:
                 this.log.trace(`TRACE ${messageWithExtensionName}`);
                 break;
-            case MessageSeverityEnum.DEBUG:
+            case MessageSeverity.DEBUG:
                 this.log.debug(`DEBUG ${messageWithExtensionName}`);
                 break;
-            case MessageSeverityEnum.INFO:
+            case MessageSeverity.INFO:
                 this.log.debug(`INFO ${messageWithExtensionName}`);
                 break;
-            case MessageSeverityEnum.WARN:
+            case MessageSeverity.WARN:
                 this.log.debug(`WARNING ${messageWithExtensionName}`);
                 break;
-            case MessageSeverityEnum.ERROR:
+            case MessageSeverity.ERROR:
                 this.log.debug(`ERROR ${messageWithExtensionName}`);
                 break;
-            case MessageSeverityEnum.FATAL:
+            case MessageSeverity.FATAL:
                 this.log.debug(`FATAL ERROR ${messageWithExtensionName}`);
                 break;
         }

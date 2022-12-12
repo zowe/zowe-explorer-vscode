@@ -14,7 +14,14 @@ import * as globals from "../globals";
 import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
-import { IZoweUSSTreeNode, ZoweTreeNode, IZoweTree, ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import {
+    IZoweUSSTreeNode,
+    ZoweTreeNode,
+    IZoweTree,
+    ValidProfileEnum,
+    Gui,
+    MessageSeverity,
+} from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
@@ -144,7 +151,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         }
 
         if (!this.label) {
-            vscode.window.showErrorMessage(localize("getChildren.error.invalidNode", "Invalid node"));
+            Gui.showMessage(localize("getChildren.error.invalidNode", "Invalid node"), {
+                severity: MessageSeverity.ERROR,
+            });
             throw Error("Invalid node");
         }
 
@@ -360,9 +369,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     ) {
         const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
         if (cancelled) {
-            vscode.window.showInformationMessage(
-                localize("deleteUssPrompt.deleteCancelled", "Delete action was cancelled.")
-            );
+            Gui.showMessage(localize("deleteUssPrompt.deleteCancelled", "Delete action was cancelled."));
             return;
         }
         try {
@@ -379,15 +386,13 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             } catch (err) {}
         } catch (err) {
             globals.LOG.error(err);
-            vscode.window.showErrorMessage(
-                localize("deleteUSSNode.error.node", "Unable to delete node: ") + err.message
-            );
+            Gui.showMessage(localize("deleteUSSNode.error.node", "Unable to delete node: ") + err.message, {
+                severity: MessageSeverity.ERROR,
+            });
             throw err;
         }
 
-        vscode.window.showInformationMessage(
-            localize("deleteUssNode.itemDeleted", "The item {0} has been deleted.", this.label.toString())
-        );
+        Gui.showMessage(localize("deleteUssNode.itemDeleted", "The item {0} has been deleted.", this.label.toString()));
 
         // Remove node from the USS Favorites tree
         ussFileProvider.removeFavorite(this);
@@ -471,9 +476,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                         label = this.fullPath;
                         break;
                     default:
-                        vscode.window.showErrorMessage(
-                            localize("openUSS.error.invalidNode", "open() called from invalid node.")
-                        );
+                        Gui.showMessage(localize("openUSS.error.invalidNode", "open() called from invalid node."), {
+                            severity: MessageSeverity.ERROR,
+                        });
                         throw Error(localize("openUSS.error.invalidNode", "open() called from invalid node."));
                 }
 
@@ -481,7 +486,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 // check if some other file is already created with the same name avoid opening file warn user
                 const fileExists = fs.existsSync(documentFilePath);
                 if (fileExists && !fileExistsCaseSensitveSync(documentFilePath)) {
-                    vscode.window.showInformationMessage(
+                    Gui.showMessage(
                         localize(
                             "openUSS.name.exists",
                             "There is already file with same name please change your OS file system settings and make case sensitive if you want edit this files"
@@ -545,9 +550,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 label = this.label;
                 break;
             default:
-                vscode.window.showErrorMessage(
-                    localize("refreshUSS.error.invalidNode", "refreshUSS() called from invalid node.")
-                );
+                Gui.showMessage(localize("refreshUSS.error.invalidNode", "refreshUSS() called from invalid node."), {
+                    severity: MessageSeverity.ERROR,
+                });
                 throw Error(localize("refreshUSS.error.invalidNode", "refreshUSS() called from invalid node."));
         }
         try {
@@ -587,7 +592,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         } catch (err) {
             if (err.message.includes(localize("refreshUSS.error.notFound", "not found"))) {
                 globals.LOG.warn(err);
-                vscode.window.showInformationMessage(
+                Gui.showMessage(
                     localize("refreshUSS.file1", "Unable to find file: ") +
                         label +
                         localize("refreshUSS.file2", " was probably deleted.")
@@ -614,12 +619,12 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 const yesResponse = localize("openUSS.log.info.failedToOpenAsText.yes", "Re-download");
                 const noResponse = localize("openUSS.log.info.failedToOpenAsText.no", "Cancel");
 
-                const response = await vscode.window.showErrorMessage(
+                const response = await Gui.showMessage(
                     localize(
                         "openUSS.log.info.failedToOpenAsText",
                         "Failed to open file as text. Re-download file as binary?"
                     ),
-                    ...[yesResponse, noResponse]
+                    { items: [yesResponse, noResponse], severity: MessageSeverity.ERROR }
                 );
 
                 if (response === yesResponse.toString()) {

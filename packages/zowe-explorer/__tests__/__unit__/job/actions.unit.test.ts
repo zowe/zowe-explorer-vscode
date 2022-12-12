@@ -36,7 +36,6 @@ import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/
 import { Profiles } from "../../../src/Profiles";
 import * as SpoolProvider from "../../../src/SpoolProvider";
 import * as refreshActions from "../../../src/shared/refresh";
-import { UIViews } from "../../../src/shared/ui-views";
 
 const activeTextEditorDocument = jest.fn();
 

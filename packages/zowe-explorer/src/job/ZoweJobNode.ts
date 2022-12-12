@@ -13,7 +13,7 @@
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import * as globals from "../globals";
-import { IZoweJobTreeNode, ZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweJobTreeNode, MessageSeverity, ZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
 import { getIconByNode } from "../generators/icons";
@@ -309,11 +309,12 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
 
     private statusNotSupportedMsg(status: string) {
         if (status !== "*") {
-            vscode.window.showWarningMessage(
+            Gui.showMessage(
                 localize(
                     "getJobs.status.not.supported",
                     "Filtering by job status is not yet supported with this profile type. Will show jobs with all statuses."
-                )
+                ),
+                { severity: MessageSeverity.WARN }
             );
         }
     }

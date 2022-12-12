@@ -18,12 +18,14 @@ import * as jobActions from "./job/actions";
 import * as refreshActions from "./shared/refresh";
 import * as sharedActions from "./shared/actions";
 import {
+    Gui,
     IZoweDatasetTreeNode,
     IZoweJobTreeNode,
     IZoweUSSTreeNode,
     IZoweTreeNode,
     IZoweTree,
     getZoweDir,
+    MessageSeverity,
 } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
@@ -82,7 +84,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             "initialize.log.error",
             "Error encountered while activating and initializing logger! "
         );
-        vscode.window.showErrorMessage(`${errorMessage}: ${err.message}`);
+        Gui.showMessage(`${errorMessage}: ${err.message}`, { severity: MessageSeverity.ERROR });
     }
 
     try {
@@ -91,7 +93,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     } catch (err) {
         globals.LOG.error(err);
         const errorMessage = localize("initialize.profiles.error", "Error reading or initializing Zowe CLI profiles.");
-        vscode.window.showWarningMessage(`${errorMessage}: ${err.message}`);
+        Gui.showMessage(`${errorMessage}: ${err.message}`, { severity: MessageSeverity.WARN });
     }
 
     // Initialize profile manager

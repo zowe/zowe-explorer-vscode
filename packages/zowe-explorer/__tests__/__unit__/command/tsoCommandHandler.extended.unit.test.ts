@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { ZoweVsCodeExtension, ProfilesCache } from "@zowe/zowe-explorer-api";
+import { Gui, ZoweVsCodeExtension, ProfilesCache } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../src/Profiles";
 import { TsoCommandHandler } from "../../../src/command/TsoCommandHandler";
 import { imperative } from "@zowe/cli";
@@ -69,7 +69,7 @@ describe("TsoCommandHandler extended testing", () => {
                     };
                 }),
             });
-            const spyBox = jest.spyOn(ZoweVsCodeExtension, "inputBox").mockResolvedValue("TEST1");
+            const spyBox = jest.spyOn(Gui, "inputBox").mockResolvedValue("TEST1");
 
             const result = await (TsoCommandHandler.getInstance() as any).getTsoParams();
             expect(spyBox).toHaveBeenCalled();

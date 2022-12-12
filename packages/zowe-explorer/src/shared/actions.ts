@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import * as globals from "../globals";
 import { openPS } from "../dataset/actions";
-import { IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweNodeType, IZoweTree } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweNodeType, IZoweTree } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { filterTreeByString } from "../shared/utils";
 import { FilterItem, resolveQuickPickHelper, FilterDescriptor } from "../utils/ProfilesUtils";
@@ -38,7 +38,7 @@ export async function searchInAllLoadedItems(
     let pattern: string;
     const items: IZoweNodeType[] = [];
     const qpItems = [];
-    const quickpick = vscode.window.createQuickPick();
+    const quickpick = Gui.createQuickPick();
     quickpick.placeholder = localize("searchHistory.options.prompt", "Enter a filter");
     quickpick.ignoreFocusOut = true;
     quickpick.onDidChangeValue(async (value) => {
@@ -60,9 +60,7 @@ export async function searchInAllLoadedItems(
     }
 
     if (items.length === 0) {
-        vscode.window.showInformationMessage(
-            localize("searchInAllLoadedItems.noneLoaded", "No items are loaded in the tree.")
-        );
+        Gui.showMessage(localize("searchInAllLoadedItems.noneLoaded", "No items are loaded in the tree."));
         return;
     }
 
@@ -94,11 +92,9 @@ export async function searchInAllLoadedItems(
     quickpick.items = [...qpItems];
 
     quickpick.show();
-    const choice = await resolveQuickPickHelper(quickpick);
+    const choice = await Gui.resolveQuickPick(quickpick);
     if (!choice) {
-        vscode.window.showInformationMessage(
-            localize("searchInAllLoadedItems.enterPattern", "You must enter a pattern.")
-        );
+        Gui.showMessage(localize("searchInAllLoadedItems.enterPattern", "You must enter a pattern."));
         return;
     } else {
         pattern = choice.label;
@@ -187,26 +183,22 @@ export async function openRecentMemberPrompt(
                 placeHolder: localize("memberHistory.options.prompt", "Select a recent member to open"),
             };
 
-            const choice = await vscode.window.showQuickPick([createPick, ...items], options1);
+            const choice = await Gui.quickPick([createPick, ...items], options1);
             if (!choice) {
-                vscode.window.showInformationMessage(
-                    localize("enterPattern.pattern", "No selection made. Operation cancelled.")
-                );
+                Gui.showMessage(localize("enterPattern.pattern", "No selection made. Operation cancelled."));
                 return;
             }
             pattern = choice === createPick ? "" : choice.label;
         } else {
-            const quickpick = vscode.window.createQuickPick();
+            const quickpick = Gui.createQuickPick();
             quickpick.items = [createPick, ...items];
             quickpick.placeholder = localize("memberHistory.options.prompt", "Select a recent member to open");
             quickpick.ignoreFocusOut = true;
             quickpick.show();
-            const choice = await resolveQuickPickHelper(quickpick);
+            const choice = await Gui.resolveQuickPick(quickpick);
             quickpick.hide();
             if (!choice || choice === createPick) {
-                vscode.window.showInformationMessage(
-                    localize("enterPattern.pattern", "No selection made. Operation cancelled.")
-                );
+                Gui.showMessage(localize("enterPattern.pattern", "No selection made. Operation cancelled."));
                 return;
             } else if (choice instanceof FilterDescriptor) {
                 pattern = quickpick.value;
@@ -232,7 +224,7 @@ export async function openRecentMemberPrompt(
             await datasetTree.openItemFromPath(pattern, sessionNode);
         }
     } else {
-        vscode.window.showInformationMessage(localize("getRecentMembers.empty", "No recent members found."));
+        Gui.showMessage(localize("getRecentMembers.empty", "No recent members found."));
         return;
     }
 }

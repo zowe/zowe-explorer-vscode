@@ -14,13 +14,12 @@ import * as zowe from "@zowe/cli";
 import { errorHandling } from "../utils/ProfilesUtils";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
-import { ValidProfileEnum, IZoweTree, IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
+import { Gui, MessageSeverity, ValidProfileEnum, IZoweTree, IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
 import { Job, Spool } from "./ZoweJobNode";
 import * as nls from "vscode-nls";
 import { toUniqueJobFileUri } from "../SpoolProvider";
 import * as globals from "../globals";
 import { refreshAll as refreshAllJobs } from "../shared/refresh";
-import { UIViews } from "../shared/ui-views";
 
 // Set up localization
 nls.config({
@@ -220,14 +219,14 @@ export async function modifyCommand(job: Job) {
         const options: vscode.InputBoxOptions = {
             prompt: localize("modifyCommand.inputBox.prompt", "Modify Command"),
         };
-        const command = await vscode.window.showInputBox(options);
+        const command = await Gui.inputBox(options);
         if (command !== undefined) {
             const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(job.getProfile());
             if (commandApi) {
                 const response = await ZoweExplorerApiRegister.getCommandApi(job.getProfile()).issueMvsCommand(
                     `f ${job.job.jobname},${command}`
                 );
-                vscode.window.showInformationMessage(
+                Gui.showMessage(
                     localize("jobActions.modifyCommand.response", "Command response: ") + response.commandResponse
                 );
             }
@@ -235,7 +234,7 @@ export async function modifyCommand(job: Job) {
     } catch (error) {
         if (error.toString().includes("non-existing")) {
             globals.LOG.error(error);
-            vscode.window.showErrorMessage(
+            Gui.showMessage(
                 localize("jobActions.modifyCommand.apiNonExisting", "Not implemented yet for profile of type: ") +
                     job.getProfile().type
             );
@@ -257,16 +256,17 @@ export async function stopCommand(job: Job) {
             const response = await ZoweExplorerApiRegister.getCommandApi(job.getProfile()).issueMvsCommand(
                 `p ${job.job.jobname}`
             );
-            vscode.window.showInformationMessage(
+            Gui.showMessage(
                 localize("jobActions.stopCommand.response", "Command response: ") + response.commandResponse
             );
         }
     } catch (error) {
         if (error.toString().includes("non-existing")) {
             globals.LOG.error(error);
-            vscode.window.showErrorMessage(
+            Gui.showMessage(
                 localize("jobActions.stopCommand.apiNonExisting", "Not implemented yet for profile of type: ") +
-                    job.getProfile().type
+                    job.getProfile().type,
+                { severity: MessageSeverity.ERROR }
             );
         } else {
             await errorHandling(error.toString(), job.getProfile().name, error.message.toString());
@@ -285,7 +285,7 @@ export async function setOwner(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZ
     const options: vscode.InputBoxOptions = {
         prompt: localize("setOwner.inputBox.prompt", "Owner"),
     };
-    const newOwner = await vscode.window.showInputBox(options);
+    const newOwner = await Gui.inputBox(options);
     job.owner = newOwner;
     jobsProvider.refreshElement(job);
 }
@@ -300,7 +300,7 @@ export async function setPrefix(job: IZoweJobTreeNode, jobsProvider: IZoweTree<I
     const options: vscode.InputBoxOptions = {
         prompt: localize("setPrefix.inputBox.prompt", "Prefix"),
     };
-    const newPrefix = await vscode.window.showInputBox(options);
+    const newPrefix = await Gui.inputBox(options);
     job.prefix = newPrefix;
     jobsProvider.refreshElement(job);
 }
@@ -341,12 +341,14 @@ async function deleteSingleJob(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZ
         jobName.replace(/(,)/g, "\n")
     );
     const deleteButton = localize("deleteJobPrompt.confirmation.delete", "Delete");
-    const result = await vscode.window.showWarningMessage(message, { modal: true }, deleteButton);
+    const result = await Gui.showMessage(message, {
+        items: [deleteButton],
+        severity: MessageSeverity.WARN,
+        vsCodeOpts: { modal: true },
+    });
     if (!result || result === "Cancel") {
         globals.LOG.debug(localize("deleteJobPrompt.confirmation.cancel.log.debug", "Delete action was canceled."));
-        vscode.window.showInformationMessage(
-            localize("deleteJobPrompt.deleteCancelled", "Delete action was cancelled.")
-        );
+        Gui.showMessage(localize("deleteJobPrompt.deleteCancelled", "Delete action was cancelled."));
         return;
     }
 
@@ -357,7 +359,7 @@ async function deleteSingleJob(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZ
         return;
     }
 
-    vscode.window.showInformationMessage(localize("deleteCommand.job", "Job {0} was deleted.", jobName));
+    Gui.showMessage(localize("deleteCommand.job", "Job {0} was deleted.", jobName));
 }
 
 async function deleteMultipleJobs(
@@ -372,12 +374,14 @@ async function deleteMultipleJobs(
         jobs.length,
         jobs.map(toJobname).toString().replace(/(,)/g, "\n")
     );
-    const deleteChoice = await vscode.window.showWarningMessage(message, { modal: true }, deleteButton);
+    const deleteChoice = await Gui.showMessage(message, {
+        items: [deleteButton],
+        severity: MessageSeverity.WARN,
+        vsCodeOpts: { modal: true },
+    });
     if (!deleteChoice || deleteChoice === "Cancel") {
         globals.LOG.debug(localize("deleteJobPrompt.confirmation.cancel.log.debug", "Delete action was canceled."));
-        vscode.window.showInformationMessage(
-            localize("deleteJobPrompt.deleteCancelled", "Delete action was cancelled.")
-        );
+        Gui.showMessage(localize("deleteJobPrompt.deleteCancelled", "Delete action was cancelled."));
         return;
     }
     const deletionResult: ReadonlyArray<IZoweJobTreeNode | Error> = await Promise.all(
@@ -400,7 +404,7 @@ async function deleteMultipleJobs(
         })
         .filter((result) => result !== undefined);
     if (deletedJobs.length) {
-        vscode.window.showInformationMessage(
+        Gui.showMessage(
             localize(
                 "deleteCommand.multipleJobs",
                 "The following jobs were deleted: {0}",

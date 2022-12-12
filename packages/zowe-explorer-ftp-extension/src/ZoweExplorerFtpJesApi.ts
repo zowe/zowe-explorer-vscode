@@ -10,7 +10,7 @@
  */
 
 import * as zowe from "@zowe/cli";
-import { MessageSeverityEnum, ZoweExplorerApi, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { MessageSeverity, ZoweExplorerApi, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { JobUtils, DataSetUtils, TRANSFER_TYPE_ASCII } from "@zowe/zos-ftp-for-zowe-cli";
 import { DownloadJobs, IJobFile } from "@zowe/cli";
 import { IJob, IJobStatus, ISpoolFile } from "@zowe/zos-ftp-for-zowe-cli/lib/api/JobInterface";
@@ -118,7 +118,7 @@ export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
                 if (jobDetails.spoolFiles == null || jobDetails.spoolFiles.length === 0) {
                     ZoweVsCodeExtension.showVsCodeMessage(
                         "No spool files were available.",
-                        MessageSeverityEnum.ERROR,
+                        MessageSeverity.ERROR,
                         ZoweLogger
                     );
                     throw new Error();
@@ -187,7 +187,7 @@ export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
     public getJclForJob(job: zowe.IJob): Promise<string> {
         ZoweVsCodeExtension.showVsCodeMessage(
             "Get jcl is not supported in the FTP extension.",
-            MessageSeverityEnum.ERROR,
+            MessageSeverity.ERROR,
             ZoweLogger
         );
         throw new Error();
@@ -196,7 +196,7 @@ export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
     public submitJcl(jcl: string, internalReaderRecfm?: string, internalReaderLrecl?: string): Promise<zowe.IJob> {
         ZoweVsCodeExtension.showVsCodeMessage(
             "Submit jcl is not supported in the FTP extension.",
-            MessageSeverityEnum.ERROR,
+            MessageSeverity.ERROR,
             ZoweLogger
         );
         throw new Error();
