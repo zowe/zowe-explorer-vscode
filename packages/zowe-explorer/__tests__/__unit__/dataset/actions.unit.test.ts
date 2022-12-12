@@ -3168,7 +3168,7 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
         }
 
         expect(showErrorMessageSpy).toBeCalledWith("openPS() called from invalid node.");
-        expect(logErrorSpy).toBeCalledTimes(4);
+        expect(logErrorSpy).toBeCalledTimes(2);
     });
 });
 
