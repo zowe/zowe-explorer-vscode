@@ -151,6 +151,11 @@ export class ProfileInfo {
 }
 
 // tslint:disable-next-line:max-classes-per-file
+export class ImperativeError {
+    public message = "";
+}
+
+// tslint:disable-next-line:max-classes-per-file
 export class ImperativeConfig {
     public static instance = {
         cliHome: "./__tests__/.zowe",
