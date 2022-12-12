@@ -651,6 +651,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         if (!clipboardContents && clipboardContents.length < 1) {
             return;
         }
+
         const localFileNames = clipboardContents.split(",");
         const prof = this.getProfile();
         const remotePath = this.fullPath;
@@ -665,21 +666,17 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         if (prof.profile.encoding) {
             options.encoding = prof.profile.encoding;
         }
-        const api = ZoweExplorerApiRegister.getUssApi(this.profile);
-        const apiResponse = await api.fileList(remotePath);
-        const fileList = apiResponse.apiResponse?.items;
+        try {
+            const api = ZoweExplorerApiRegister.getUssApi(this.profile);
+            const apiResponse = await api.fileList(remotePath);
+            const fileList = apiResponse.apiResponse?.items;
 
-        for (const localFile of localFileNames) {
-            try {
+            for (const localFile of localFileNames) {
                 if (localFile.endsWith("/")) {
                     const directoryPath = localFile.slice(0, -1);
-                    await api.uploadDirectory(
-                        directoryPath,
-                        remotePath + "/" + directoryPath.split("/").pop(),
-                        options
-                    );
+                    await api.uploadDirectory(directoryPath, remotePath + "/" + path.basename(directoryPath), options);
                 } else {
-                    let fname = localFile.split("/").pop();
+                    let fname = path.basename(localFile);
                     if (
                         fileList?.find((file) => {
                             return file.name === fname;
@@ -689,13 +686,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     }
                     await api.putContent(localFile, remotePath.concat("/", fname), options);
                 }
-            } catch (error) {
-                await errorHandling(
-                    error,
-                    this.label.toString(),
-                    localize("copyUssFile.error", "Error uploading files")
-                );
             }
+        } catch (error) {
+            await errorHandling(error, this.label.toString(), localize("copyUssFile.error", "Error uploading files"));
         }
         disposeClipboardContents();
     }
