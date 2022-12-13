@@ -1549,14 +1549,16 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
  * @export
  * @param {DatasetTree} datasetProvider - the tree which contains the nodes
  */
-export async function pasteDataSet(datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>, node:ZoweDatasetNode) {
+export async function pasteDataSet(datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>, node: ZoweDatasetNode) {
     let clipboardContent;
     try {
         clipboardContent = JSON.parse(await vscode.env.clipboard.readText());
     } catch (err) {
         throw Error("Invalid clipboard. Copy from data set first");
     }
-    const node2 = datasetProvider.getTreeView().selection[0];
+    if (!node) {
+        node = datasetProvider.getTreeView().selection[0] as ZoweDatasetNode;
+    }
     if (node.contextValue === globals.DS_MEMBER_CONTEXT || node.contextValue === globals.DS_DS_CONTEXT) {
         return;
     }
@@ -1584,32 +1586,6 @@ export async function pasteDataSet(datasetProvider: api.IZoweTree<api.IZoweDatas
                         } catch (err) {
                             vscode.window.showErrorMessage(err.message);
                             return;
-                        }
-                    } else {
-                        // ds
-                        const inputBoxOptions: vscode.InputBoxOptions = {
-                            value: content.datasetName,
-                            placeHolder: localize("pasteMember.inputBox.placeHolder", "Name of Data Set Member"),
-                            validateInput: (text) => {
-                                return dsUtils.validateDataSetName(text) && (content.datasetName !== text) === true
-                                    ? null
-                                    : "Enter valid member name";
-                            },
-                        };
-                        const sequential = await vscode.window.showInputBox(inputBoxOptions);
-                        if (!sequential) {
-                            return;
-                        }
-                        try {
-                            const fPath = getDocumentFilePath(node.getLabel().toString(), node);
-                            const newOptions = { "from-dataset": { dsn: content.datasetName, member: null } };
-                            return await zowe.Copy.dataSet(
-                                node.getSession(),
-                                { dsn: content.dataSetName, member: null },
-                                newOptions
-                            );
-                        } catch (e) {
-                            await errorHandling(e, node.getProfileName(), e.message);
                         }
                     }
                 }
@@ -1660,16 +1636,50 @@ export function downloadDataset(node: ZoweDatasetNode) {
  */
 export async function copySequentialDatasets(nodes: ZoweDatasetNode[]) {
     for (const node of nodes) {
-        await ZoweExplorerApiRegister.getMvsApi(nodes[0].getProfile()).allocateLikeDataSet(
-            node.getLabel().toString(),
-            dsUtils.getNodeLabels(node).dataSetName
-        );
-
         try {
-            // await ZoweExplorerApiRegister.getMvsApi(nodes[0].getProfile()).allocateLikeDataSet(
-            //     newDSName.toUpperCase(),
-            //     dsUtils.getNodeLabels(node).dataSetName
-            // );
+            // await refreshPS(node);
+            const lbl = node.getLabel().toString();
+            const inputBoxOptions: vscode.InputBoxOptions = {
+                value: lbl,
+                placeHolder: localize("pasteMember.inputBox.placeHolder", "Name of Data Set"),
+                validateInput: (text) => {
+                    return dsUtils.validateDataSetName(text) && (lbl !== text) === true
+                        ? null
+                        : "Enter valid dataset name";
+                },
+            };
+
+            const sequential = await vscode.window.showInputBox(inputBoxOptions);
+            if (!sequential) {
+                return;
+            }
+            const res = await ZoweExplorerApiRegister.getMvsApi(nodes[0].getProfile()).allocateLikeDataSet(
+                sequential,
+                lbl
+            );
+            if (res.success) {
+                const uploadOptions: IUploadOptions = {
+                    etag: node?.getEtag(),
+                    returnEtag: true,
+                };
+                await vscode.window.withProgress(
+                    {
+                        location: vscode.ProgressLocation.Window,
+                        title: localize("saveFile.response.save.title", "Saving data set..."),
+                    },
+                    () => {
+                        const prof = node?.getProfile();
+                        if (prof.profile.encoding) {
+                            uploadOptions.encoding = prof.profile.encoding;
+                        }
+                        return ZoweExplorerApiRegister.getMvsApi(prof).putContents(
+                            getDocumentFilePath(node.getLabel().toString(), node),
+                            sequential,
+                            uploadOptions
+                        );
+                    }
+                );
+            }
         } catch (err) {
             globals.LOG.error(
                 localize("createDataSet.log.error", "Error encountered when creating data set! ") + JSON.stringify(err)
