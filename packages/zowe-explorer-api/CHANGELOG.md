@@ -2,6 +2,8 @@
 
 All notable changes to the "zowe-explorer-api" extension will be documented in this file.
 
+## TBD RELEASE
+
 ## `2.5.0`
 
 - Copy and Paste added to IZoweTree API for files and directories on USS tree.
