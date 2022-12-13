@@ -19,7 +19,6 @@ import { getSecurityModules, IZoweTreeNode, ZoweTreeNode, getZoweDir, getFullPat
 import { Profiles } from "../Profiles";
 import * as nls from "vscode-nls";
 import { imperative, getImperativeConfig } from "@zowe/cli";
-import { UIViews } from "../shared/ui-views";
 
 // Set up localization
 nls.config({
@@ -45,6 +44,7 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
         "errorHandling.invalid.token",
         "Your connection is no longer active. Please log in to an authentication service to restore the connection."
     );
+    globals.LOG.error(`${errorDetails}\n` + JSON.stringify({ errorDetails, label, moreInfo }));
 
     if (errorDetails.mDetails !== undefined) {
         httpErrCode = errorDetails.mDetails.errorCode;
@@ -154,6 +154,7 @@ export const syncSessionNode =
         try {
             profile = Profiles.getInstance().loadNamedProfile(profileName, profileType);
         } catch (e) {
+            globals.LOG.warn(e);
             return;
         }
         sessionNode.setProfileToChoice(profile);
@@ -175,11 +176,12 @@ export interface IFilterItem {
     description?: string;
     show?: boolean;
     icon?: string;
+    menuType?: globals.JobPickerTypes;
 }
 
 // tslint:disable-next-line: max-classes-per-file
 export class FilterItem implements vscode.QuickPickItem {
-    constructor(private filterItem: IFilterItem) {}
+    constructor(public filterItem: IFilterItem) {}
     get label(): string {
         const icon = this.filterItem.icon ? this.filterItem.icon + " " : null;
         return (icon ?? "") + this.filterItem.text;

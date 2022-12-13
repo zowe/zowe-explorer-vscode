@@ -244,6 +244,14 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
     }
 
     /**
+     * Finds the equivalent node based on whether the passed node is a favorite.
+     * @param node
+     */
+    public findEquivalentNode(node: IZoweUSSTreeNode, isFavorite: boolean): IZoweUSSTreeNode {
+        return isFavorite ? this.findNonFavoritedNode(node) : this.findFavoritedNode(node);
+    }
+
+    /**
      * This function is for renaming the non-favorited equivalent of a favorited node for a given profile.
      * @param profileLabel
      * @param oldNamePath
@@ -819,6 +827,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                     return [infoNode];
                 }
             } catch (error) {
+                this.log.error(error);
                 const errMessage: string =
                     localize(
                         "initializeUSSFavorites.error.profile1",

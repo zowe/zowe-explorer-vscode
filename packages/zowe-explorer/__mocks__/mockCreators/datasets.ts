@@ -74,6 +74,7 @@ export function createDatasetTree(sessionNode: ZoweDatasetNode, treeView: any, f
         renameNode: jest.fn(),
         findFavoritedNode: jest.fn(),
         findNonFavoritedNode: jest.fn(),
+        findEquivalentNode: jest.fn(),
         getProfileName: jest.fn(),
         getSession: jest.fn(),
         getProfiles: jest.fn(),
@@ -123,5 +124,22 @@ export function createDatasetAttributes(label: string, context: string) {
         used: "6",
         vol: "3BP001",
         vols: "3BP001",
+    };
+}
+
+export function createDSMemberAttributes(label: string) {
+    return {
+        member: label,
+        vers: 1,
+        mod: 0,
+        c4date: "2019/05/08",
+        m4date: "2020/05/08",
+        cnorc: 11,
+        inorc: 11,
+        mnorc: 0,
+        mtime: "08:54",
+        msec: "41",
+        user: ">7CHARS",
+        sclm: "N",
     };
 }

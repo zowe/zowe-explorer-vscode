@@ -140,7 +140,7 @@ export async function deleteFromDisk(node: IZoweUSSTreeNode, filePath: string) {
             fs.unlinkSync(filePath);
         }
     } catch (err) {
-        // tslint:disable-next-line: no-empty
+        globals.LOG.warn(err);
     }
 }
 
@@ -344,6 +344,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
                 }
                 this.downloaded = true;
 
+                globals.LOG.warn(err);
                 vscode.window.showWarningMessage(
                     localize(
                         "saveFile.error.etagMismatch",
