@@ -5,10 +5,11 @@
 # Allowlist what we need
 !out/**/extension.js
 !out/**/*.nls.metadata*.json
-!resources
+!resources/**/*.png
+!resources/**/*.svg
 
 !CHANGELOG.md
-!LICENSE.txt
+!LICENSE
 !log4jsconfig.json
 !package*.json
 !README.md

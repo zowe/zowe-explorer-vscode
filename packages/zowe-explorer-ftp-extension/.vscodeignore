@@ -4,9 +4,9 @@
 
 # Allowlist what we need
 !out/src/extension.js
-!resources
+!resources/**/*.png
 
 !CHANGELOG.md
-!LICENSE.txt
+!LICENSE
 !package.json
 !README.md
