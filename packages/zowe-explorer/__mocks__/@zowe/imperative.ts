@@ -152,7 +152,13 @@ export class ProfileInfo {
 
 // tslint:disable-next-line:max-classes-per-file
 export class ImperativeError {
-    public message = "";
+    public msg: string;
+    constructor(mDetails: ImperativeError) {
+        this.msg = mDetails.msg;
+    }
+    public get message() {
+        return this.msg;
+    }
 }
 
 // tslint:disable-next-line:max-classes-per-file

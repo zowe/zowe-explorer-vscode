@@ -1290,7 +1290,9 @@ export async function hRecallDataSet(node: ZoweDatasetNode) {
  */
 export async function showImperativeErrorDetails(node: ZoweDatasetNode) {
     await Profiles.getInstance().checkCurrentProfile(node.getProfile());
-    if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
+    if (Profiles.getInstance().validProfile === api.ValidProfileEnum.INVALID) {
+        vscode.window.showErrorMessage(localize("hMigrateDataSet.checkProfile", "Profile is invalid"));
+    } else {
         const { dataSetName } = dsUtils.getNodeLabels(node);
         if (node.errorDetails) {
             globals.LOG.error(JSON.stringify(node.errorDetails, null, 2));
@@ -1302,13 +1304,10 @@ export async function showImperativeErrorDetails(node: ZoweDatasetNode) {
                     localize("showImperativeErrorDetails.noErrorDetails", "Unable to gather more information")
                 );
             } catch (err) {
-                globals.LOG.error(err);
+                globals.LOG.error(JSON.stringify(err, null, 2));
                 vscode.window.showErrorMessage(err.message);
             }
         }
-    } else {
-        vscode.window.showErrorMessage(localize("hMigrateDataSet.checkProfile", "Profile is invalid"));
-        return;
     }
 }
 

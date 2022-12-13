@@ -22,6 +22,7 @@ import { Profiles } from "../../src/Profiles";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import { createInstanceOfProfileInfo, createIProfile, createTreeView } from "../../__mocks__/mockCreators/shared";
 import { PersistentFilters } from "../../src/PersistentFilters";
+import * as dsActions from "../../src/dataset/actions";
 
 jest.mock("vscode");
 jest.mock("fs");
@@ -384,8 +385,10 @@ async function createGlobalMocks() {
 }
 
 describe("Extension Unit Tests", () => {
-    it("Testing that activate correctly executes", async () => {
-        const globalMocks = await createGlobalMocks();
+    const allCommands = {};
+    let globalMocks;
+    beforeAll(async () => {
+        globalMocks = await createGlobalMocks();
         Object.defineProperty(zowe.imperative, "ProfileInfo", {
             value: globalMocks.mockImperativeProfileInfo,
             configurable: true,
@@ -426,17 +429,32 @@ describe("Extension Unit Tests", () => {
 
         // Checking if commands are registered properly
         expect(globalMocks.mockRegisterCommand.mock.calls.length).toBe(globals.COMMAND_COUNT);
+
         globalMocks.mockRegisterCommand.mock.calls.forEach((call, i) => {
             expect(call[0]).toStrictEqual(globalMocks.expectedCommands[i]);
             expect(call[1]).toBeInstanceOf(Function);
+            allCommands[call[0]] = call[1];
         });
-        const actualCommands = [];
-        globalMocks.mockRegisterCommand.mock.calls.forEach((call) => {
-            actualCommands.push(call[0]);
-        });
-        expect(actualCommands).toEqual(globalMocks.expectedCommands);
     });
 
+    it("Testing that activate correctly executes", async () => {
+        expect(Object.keys(allCommands)).toEqual(globalMocks.expectedCommands);
+    });
+
+    it("zowe.ds.showImperativeErrorDetails", async () => {
+        const testNode: any = { getProfile: jest.fn(), getParent: jest.fn().mockReturnValue({ getLabel: jest.fn() }) };
+        const impErrorSpy = jest.spyOn(dsActions, "showImperativeErrorDetails");
+        impErrorSpy.mockImplementation(jest.fn()); // prevent the actual function from being called
+        await allCommands["zowe.ds.showImperativeErrorDetails"](testNode);
+        expect(impErrorSpy).not.toHaveBeenCalled();
+
+        testNode.contextValue = globals.DS_IMPERATIVE_ERROR_CONTEXT;
+        await allCommands["zowe.ds.showImperativeErrorDetails"](testNode);
+        expect(impErrorSpy).toHaveBeenCalledWith(testNode);
+    });
+});
+
+describe("Extension Unit Tests - THEIA", () => {
     it("Tests that activate() works correctly for Theia", async () => {
         const globalMocks = await createGlobalMocks();
 

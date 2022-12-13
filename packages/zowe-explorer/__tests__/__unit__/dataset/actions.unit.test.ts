@@ -2457,6 +2457,94 @@ describe("Dataset Actions Unit Tests - Function hRecallDataSet", () => {
         expect(mocked(vscode.window.showInformationMessage)).toHaveBeenCalled();
     });
 });
+describe("Dataset Actions Unit Tests - Function showImperativeErrorDetails", () => {
+    function createBlockMocks() {
+        const session = createISession();
+        const sessionWithoutCredentials = createISessionWithoutCredentials();
+        const imperativeProfile = createIProfile();
+        const profileInstance = createInstanceOfProfile(imperativeProfile);
+        const zosmfSession = createSessCfgFromArgs(imperativeProfile);
+        const treeView = createTreeView();
+        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
+        const mvsApi = createMvsApi(imperativeProfile);
+        const mockCheckCurrentProfile = jest.fn();
+        bindMvsApi(mvsApi);
+
+        return {
+            session,
+            sessionWithoutCredentials,
+            zosmfSession,
+            treeView,
+            imperativeProfile,
+            datasetSessionNode,
+            mvsApi,
+            profileInstance,
+            testDatasetTree,
+            mockCheckCurrentProfile,
+        };
+    }
+
+    afterAll(() => jest.restoreAllMocks());
+
+    it("Checking PS dataset with impError as contextValue", async () => {
+        globals.defineGlobals("");
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        const testError = new zowe.imperative.ImperativeError({ msg: "test" });
+        const testErrorString = JSON.stringify(testError, null, 2);
+        const node = new ZoweDatasetNode(
+            "HLQ.TEST.TO.NODE",
+            vscode.TreeItemCollapsibleState.None,
+            blockMocks.datasetSessionNode,
+            null,
+            globals.DS_IMPERATIVE_ERROR_CONTEXT
+        );
+
+        const spyRecall = jest.spyOn(blockMocks.mvsApi, "hRecallDataSet");
+        const spyLogError = mocked(globals.LOG.error);
+
+        // succeeded at recalling the dataset
+        spyRecall.mockResolvedValueOnce({ success: true } as any);
+        await dsActions.showImperativeErrorDetails(node);
+        expect(spyRecall).toHaveBeenCalledWith("HLQ.TEST.TO.NODE");
+        expect(mocked(vscode.window.showErrorMessage)).toHaveBeenCalled();
+        spyRecall.mockReset();
+
+        // failed recalling the dataset
+        spyRecall.mockRejectedValueOnce(testError);
+        await dsActions.showImperativeErrorDetails(node);
+        expect(spyRecall).toHaveBeenCalledWith("HLQ.TEST.TO.NODE");
+        expect(mocked(vscode.window.showErrorMessage)).toHaveBeenCalledWith(testError.message);
+        expect(spyLogError).toHaveBeenCalledWith(testErrorString);
+        spyRecall.mockReset();
+        spyLogError.mockReset();
+
+        // error details was already cached (this should always be the expected path)
+        node.errorDetails = testError;
+        await dsActions.showImperativeErrorDetails(node);
+        expect(spyRecall).not.toHaveBeenCalled();
+        expect(mocked(vscode.window.showErrorMessage)).toHaveBeenCalledWith(testError.message);
+        expect(spyLogError).toHaveBeenCalledWith(testErrorString);
+        spyRecall.mockReset();
+        spyLogError.mockReset();
+
+        // Invalid profile provided
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    checkCurrentProfile: jest.fn(),
+                    validProfile: ValidProfileEnum.INVALID,
+                };
+            }),
+        });
+        await dsActions.showImperativeErrorDetails(node);
+        expect(mocked(vscode.window.showErrorMessage)).toHaveBeenCalled();
+        expect(spyRecall).not.toHaveBeenCalled();
+        expect(spyLogError).not.toHaveBeenCalled();
+    });
+});
 
 describe("Dataset Actions Unit Tests - Function createFile", () => {
     function createBlockMocks() {
