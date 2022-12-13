@@ -322,3 +322,13 @@ export function isZoweJobTreeNode(
 ): node is IZoweJobTreeNode {
     return (node as IZoweJobTreeNode).job !== undefined;
 }
+
+export function getSelectedNodeList(node: IZoweTreeNode, nodeList: IZoweTreeNode[]): IZoweTreeNode[] {
+    let resultNodeList: IZoweTreeNode[] = [];
+    if (!nodeList) {
+        resultNodeList.push(node);
+    } else {
+        resultNodeList = nodeList;
+    }
+    return resultNodeList;
+}

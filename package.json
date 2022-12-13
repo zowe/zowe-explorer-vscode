@@ -36,6 +36,7 @@
     "jest-junit": "^15.0.0",
     "jest-stare": "^2.4.1",
     "mocha": "^6.0.0",
+    "mocha-junit-reporter": "^2.2.0",
     "prettier": "2.6.0",
     "rimraf": "^3.0.2",
     "ts-jest": "^29.0.3",
