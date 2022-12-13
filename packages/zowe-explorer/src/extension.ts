@@ -296,7 +296,9 @@ async function watchConfigProfile(context: vscode.ExtensionContext) {
         );
 
     context.subscriptions.push(workspaceProfileWatcher);
-    workspaceProfileWatcher && context.subscriptions.push(globalProfileWatcher);
+    if (workspaceProfileWatcher) {
+        context.subscriptions.push(globalProfileWatcher);
+    }
 
     const onChangeProfileAction = async (uri: vscode.Uri) => {
         const newProfileContents = await vscode.workspace.fs.readFile(uri);
@@ -321,20 +323,19 @@ async function watchConfigProfile(context: vscode.ExtensionContext) {
         await vscode.commands.executeCommand("zowe.extRefresh");
     });
 
-    workspaceProfileWatcher &&
+    if (workspaceProfileWatcher) {
         workspaceProfileWatcher.onDidCreate(async () => {
             await vscode.commands.executeCommand("zowe.extRefresh");
         });
 
-    workspaceProfileWatcher &&
         workspaceProfileWatcher.onDidChange(async (uri: vscode.Uri) => {
             await onChangeProfileAction(uri);
         });
 
-    workspaceProfileWatcher &&
         workspaceProfileWatcher.onDidDelete(async () => {
             await vscode.commands.executeCommand("zowe.extRefresh");
         });
+    }
 }
 
 function initDatasetProvider(context: vscode.ExtensionContext) {

@@ -54,9 +54,9 @@ export class ZoweVsCodeExtension {
 
         const errorMessage = `${logger.getExtensionName()}: ${message}`;
 
-        if (severity < 3) {
+        if (severity < MessageSeverityEnum.WARN) {
             void vscode.window.showInformationMessage(errorMessage);
-        } else if (severity === 3) {
+        } else if (severity === MessageSeverityEnum.WARN) {
             void vscode.window.showWarningMessage(errorMessage);
         } else {
             void vscode.window.showErrorMessage(errorMessage);
@@ -136,13 +136,13 @@ export class ZoweVsCodeExtension {
         return undefined;
     }
 
-    public static async inputBox(inputBoxOptions: vscode.InputBoxOptions): Promise<string> {
+    public static inputBox(inputBoxOptions: vscode.InputBoxOptions): Thenable<string> {
         if (!inputBoxOptions.validateInput) {
             // adding this for the theia breaking changes with input boxes
             // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
             inputBoxOptions.validateInput = (value) => null;
         }
-        return await vscode.window.showInputBox(inputBoxOptions);
+        return vscode.window.showInputBox(inputBoxOptions);
     }
 
     private static async saveCredentials(profile: imperative.IProfileLoaded): Promise<boolean> {

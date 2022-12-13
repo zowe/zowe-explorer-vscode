@@ -261,8 +261,8 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
         };
     }
 
-    private async hashFile(filename: string): Promise<string> {
-        return await new Promise((resolve) => {
+    private hashFile(filename: string): Promise<string> {
+        return new Promise((resolve) => {
             const hash = crypto.createHash("sha1");
             const input = fs.createReadStream(filename);
             input.on("readable", () => {

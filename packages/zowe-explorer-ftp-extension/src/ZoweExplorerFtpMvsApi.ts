@@ -26,6 +26,8 @@ import { ZoweLogger } from "./extension";
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
+const MAX_MEMBER_NAME_LEN = 8;
+
 export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     public async dataSet(filter: string, options?: zowe.IListOptions): Promise<zowe.IZosFilesResponse> {
@@ -116,7 +118,7 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
             encoding: options.encoding,
         };
         const file = path.basename(inputFilePath).replace(/[^a-z0-9]+/gi, "");
-        const member = file.substr(0, 8);
+        const member = file.substr(0, MAX_MEMBER_NAME_LEN);
         let targetDataset: string;
         const end = dataSetName.indexOf("(");
         let dataSetNameWithoutMember: string;
@@ -397,8 +399,8 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
         };
     }
 
-    private async hashFile(filename: string): Promise<string> {
-        return await new Promise((resolve) => {
+    private hashFile(filename: string): Promise<string> {
+        return new Promise((resolve) => {
             const hash = crypto.createHash("sha1");
             const input = fs.createReadStream(filename);
             input.on("readable", () => {
