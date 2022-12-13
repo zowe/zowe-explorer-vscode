@@ -22,7 +22,7 @@
   "scripts": {
     "build": "yarn clean && tsc -p ./",
     "test": "echo \"zowe-explorer-api: coming soon.\"",
-    "lint": "concurrently -n \"_eslint_,prettier\" \"eslint . --ext .ts\" \"prettier --check .\"",
+    "lint": "concurrently -n \"_eslint_,prettier\" \"eslint .\" \"prettier --check .\"",
     "lintErrors": "echo \"zowe-explorer-api: coming soon.\"",
     "pretty": "prettier --write .",
     "clean": "rimraf lib",

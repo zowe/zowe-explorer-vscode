@@ -1,2 +1,5 @@
 node_modules/**
 out/**
+__mocks__/**
+__tests__/**
+*.js
