@@ -5,6 +5,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ### Bug fixes
 
 - Added logging in places where errors were being caught and ignored.
+- Fixed all existing ESLint errors within the API logic.
 
 ## `2.4.1`
 
