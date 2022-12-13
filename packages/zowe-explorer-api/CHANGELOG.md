@@ -4,6 +4,10 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ## TBD Release
 
+- copy api for files and directories on USS tree ( paste selected local files into current node )
+
+## `2.4.1`
+
 ### Bug fixes
 
 - Added logging in places where errors were being caught and ignored.

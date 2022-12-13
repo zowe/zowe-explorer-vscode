@@ -9,7 +9,7 @@
  *                                                                                 *
  */
 
-import { imperative, IZosFilesResponse } from "@zowe/cli";
+import { imperative, IUploadOptions, IZosFilesResponse } from "@zowe/cli";
 import * as globals from "../globals";
 import * as vscode from "vscode";
 import * as fs from "fs";
@@ -19,7 +19,7 @@ import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
 import { getIconByNode } from "../generators/icons/index";
-import { fileExistsCaseSensitveSync, injectAdditionalDataToTooltip } from "../uss/utils";
+import { disposeClipboardContents, fileExistsCaseSensitveSync, injectAdditionalDataToTooltip } from "../uss/utils";
 import * as contextually from "../shared/context";
 import { closeOpenedTextFile } from "../utils/workspace";
 import * as nls from "vscode-nls";
@@ -646,6 +646,52 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         return path.join(globals.USS_DIR || "", "/" + this.getSessionNode().getProfileName() + "/", this.fullPath);
     }
 
+    public async copyUssFile() {
+        const clipboardContents = await vscode.env.clipboard.readText();
+        if (!clipboardContents && clipboardContents.length < 1) {
+            return;
+        }
+
+        const localFileNames = clipboardContents.split(",");
+        const prof = this.getProfile();
+        const remotePath = this.fullPath;
+        const task: imperative.ITaskWithStatus = {
+            percentComplete: 0,
+            statusMessage: localize("uploadFile.putContents", "Uploading USS file"),
+            stageName: 0,
+        };
+        const options: IUploadOptions = {
+            task,
+        };
+        if (prof.profile.encoding) {
+            options.encoding = prof.profile.encoding;
+        }
+        try {
+            const api = ZoweExplorerApiRegister.getUssApi(this.profile);
+            const apiResponse = await api.fileList(remotePath);
+            const fileList = apiResponse.apiResponse?.items;
+
+            for (const localFile of localFileNames) {
+                if (localFile.endsWith("/")) {
+                    const directoryPath = localFile.slice(0, -1);
+                    await api.uploadDirectory(directoryPath, remotePath + "/" + path.basename(directoryPath), options);
+                } else {
+                    let fname = path.basename(localFile);
+                    if (
+                        fileList?.find((file) => {
+                            return file.name === fname;
+                        })
+                    ) {
+                        fname += "(copy)";
+                    }
+                    await api.putContent(localFile, remotePath.concat("/", fname), options);
+                }
+            }
+        } catch (error) {
+            await errorHandling(error, this.label.toString(), localize("copyUssFile.error", "Error uploading files"));
+        }
+        disposeClipboardContents();
+    }
     private returnmProfileName(): string {
         return this.mProfileName;
     }
