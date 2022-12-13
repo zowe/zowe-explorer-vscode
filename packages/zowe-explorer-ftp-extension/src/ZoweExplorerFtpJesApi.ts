@@ -14,11 +14,22 @@ import { MessageSeverityEnum, ZoweExplorerApi, ZoweVsCodeExtension } from "@zowe
 import { JobUtils, DataSetUtils, TRANSFER_TYPE_ASCII } from "@zowe/zos-ftp-for-zowe-cli";
 import { DownloadJobs, IJobFile } from "@zowe/cli";
 import { IJob, IJobStatus, ISpoolFile } from "@zowe/zos-ftp-for-zowe-cli/lib/api/JobInterface";
-import { AbstractFtpApi } from "./ZoweExplorerAbstractFtpApi";
+import { AbstractFtpApi, ConnectionType } from "./ZoweExplorerAbstractFtpApi";
 import { ZoweLogger } from "./extension";
 // The Zowe FTP CLI plugin is written and uses mostly JavaScript, so relax the rules here.
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+
+interface IJobRefactor extends IJob {
+    jobId: string;
+    jobName: string;
+}
+
+interface ISpoolFileRefactor extends ISpoolFile {
+    stepName: string;
+    procStep: string;
+    ddName: string;
+}
 
 export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
     public async getJobsByOwnerAndPrefix(owner: string, prefix: string): Promise<zowe.IJob[]> {
@@ -38,8 +49,8 @@ export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
                     return {
                         ...result,
                         /* it’s prepared for the potential change in zftp api, renaming jobid to jobId, jobname to jobName. */
-                        jobid: (job as any).jobId || job.jobid,
-                        jobname: (job as any).jobName || job.jobname,
+                        jobid: (job as IJobRefactor).jobId || job.jobid,
+                        jobname: (job as IJobRefactor).jobName || job.jobname,
                         owner: job.owner,
                         class: job.class,
                         status: job.status,
@@ -53,7 +64,7 @@ export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
 
     public async getJob(jobid: string): Promise<zowe.IJob> {
         const result = this.getIJobResponse();
-        let connection: any;
+        let connection;
         try {
             connection = await this.ftpClient(this.checkedProfile());
             if (connection) {
@@ -63,8 +74,8 @@ export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
                     return {
                         ...result,
                         /* it’s prepared for the potential change in zftp api, renaming jobid to jobId, jobname to jobName. */
-                        jobid: (jobStatus as any).jobId || jobStatus.jobid,
-                        jobname: (jobStatus as any).jobName || jobStatus.jobname,
+                        jobid: (jobStatus as IJobRefactor).jobId || jobStatus.jobid,
+                        jobname: (jobStatus as IJobRefactor).jobName || jobStatus.jobname,
                         owner: jobStatus.owner,
                         class: jobStatus.class,
                         status: jobStatus.status,
@@ -79,7 +90,7 @@ export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
 
     public async getSpoolFiles(jobname: string, jobid: string): Promise<zowe.IJobFile[]> {
         const result = this.getIJobFileResponse();
-        let connection: any;
+        let connection: unknown;
         try {
             connection = await this.ftpClient(this.checkedProfile());
             if (connection) {
@@ -94,26 +105,25 @@ export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
                             jobname: jobname,
                             "byte-count": file.byteCount,
                             id: file.id,
-                            stepname: (file as any).stepName || file.stepname,
-                            procstep: (file as any).procStep || file.procstep,
+                            stepname: (file as ISpoolFileRefactor).stepName || file.stepname,
+                            procstep: (file as ISpoolFileRefactor).procStep || file.procstep,
                             class: file.class,
-                            ddname: (file as any).ddName || file.ddname,
+                            ddname: (file as ISpoolFileRefactor).ddName || file.ddname,
                         };
                     });
                 }
             }
             return [result];
         } finally {
-            this.releaseConnection(connection);
+            this.releaseConnection(connection as ConnectionType);
         }
     }
     public async downloadSpoolContent(parms: zowe.IDownloadAllSpoolContentParms): Promise<void> {
-        let connection: any;
+        let connection;
         try {
             connection = await this.ftpClient(this.checkedProfile());
             /* it's duplicate code with zftp. We may add new job API in the next zftp to cover spool file downloading. */
             if (connection) {
-                const destination = parms.outDir == null ? "./output/" : parms.outDir;
                 const jobDetails = await JobUtils.findJobByID(connection, parms.jobid);
                 if (jobDetails.spoolFiles == null || jobDetails.spoolFiles.length === 0) {
                     ZoweVsCodeExtension.showVsCodeMessage(
@@ -162,7 +172,7 @@ export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
     }
 
     public async getSpoolContentById(jobname: string, jobid: string, spoolId: number): Promise<string> {
-        let connection: any;
+        let connection;
         try {
             connection = await this.ftpClient(this.checkedProfile());
             if (connection) {
@@ -184,6 +194,7 @@ export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
         }
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     public getJclForJob(job: zowe.IJob): Promise<string> {
         ZoweVsCodeExtension.showVsCodeMessage(
             "Get jcl is not supported in the FTP extension.",
@@ -193,6 +204,7 @@ export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
         throw new Error();
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     public submitJcl(jcl: string, internalReaderRecfm?: string, internalReaderLrecl?: string): Promise<zowe.IJob> {
         ZoweVsCodeExtension.showVsCodeMessage(
             "Submit jcl is not supported in the FTP extension.",
@@ -204,7 +216,7 @@ export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
 
     public async submitJob(jobDataSet: string): Promise<zowe.IJob> {
         const result = this.getIJobResponse();
-        let connection: any;
+        let connection;
         try {
             connection = await this.ftpClient(this.checkedProfile());
             if (connection) {
@@ -224,7 +236,7 @@ export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
         }
     }
     public async deleteJob(jobname: string, jobid: string): Promise<void> {
-        let connection: any;
+        let connection;
         try {
             connection = await this.ftpClient(this.checkedProfile());
             if (connection) {
