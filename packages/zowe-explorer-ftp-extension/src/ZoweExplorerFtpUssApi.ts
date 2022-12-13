@@ -35,7 +35,7 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
         }
 
         if (session.ussListConnection.connected === true) {
-            const response: any[] = await UssUtils.listFiles(session.ussListConnection, ussFilePath);
+            const response = await UssUtils.listFiles(session.ussListConnection, ussFilePath);
             if (response) {
                 result.success = true;
                 result.apiResponse.items = response.map((element) => ({
@@ -62,7 +62,7 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
             localFile: targetFile,
             size: 1,
         };
-        let connection: any;
+        let connection;
         try {
             connection = await this.ftpClient(this.checkedProfile());
             if (connection && targetFile) {
@@ -94,7 +94,7 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
             localFile: inputFilePath,
         };
         const result = this.getDefaultResponse();
-        let connection: any;
+        let connection;
         try {
             connection = await this.ftpClient(this.checkedProfile());
             if (!connection) {
@@ -162,7 +162,7 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
         mode?: string
     ): Promise<zowe.IZosFilesResponse> {
         const result = this.getDefaultResponse();
-        let connection: any;
+        let connection;
         try {
             connection = await this.ftpClient(this.checkedProfile());
             if (connection) {
@@ -190,7 +190,7 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
 
     public async delete(ussPath: string, recursive?: boolean): Promise<zowe.IZosFilesResponse> {
         const result = this.getDefaultResponse();
-        let connection: any;
+        let connection;
         try {
             connection = await this.ftpClient(this.checkedProfile());
             if (connection) {
@@ -213,7 +213,7 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
 
     public async rename(currentUssPath: string, newUssPath: string): Promise<zowe.IZosFilesResponse> {
         const result = this.getDefaultResponse();
-        let connection: any;
+        let connection;
         try {
             connection = await this.ftpClient(this.checkedProfile());
             if (connection) {
@@ -230,15 +230,13 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
         }
     }
 
-    private async deleteDirectory(ussPath: string, connection: any): Promise<any> {
+    private async deleteDirectory(ussPath: string, connection): Promise<void> {
         const result = this.getDefaultResponse();
         try {
             connection = await this.ftpClient(this.checkedProfile());
-            const response: any = await UssUtils.deleteDirectory(connection, ussPath);
-            if (response) {
-                result.success = true;
-                result.commandResponse = "Delete Completed";
-            }
+            await UssUtils.deleteDirectory(connection, ussPath);
+            result.success = true;
+            result.commandResponse = "Delete Completed";
         } finally {
             this.releaseConnection(connection);
         }

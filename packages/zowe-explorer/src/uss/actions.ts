@@ -14,7 +14,7 @@ import { imperative, IZosFilesResponse } from "@zowe/cli";
 import * as fs from "fs";
 import * as globals from "../globals";
 import * as path from "path";
-import { concatChildNodes, willForceUpload, uploadContent } from "../shared/utils";
+import { concatChildNodes, willForceUpload, uploadContent, getSelectedNodeList } from "../shared/utils";
 import { errorHandling } from "../utils/ProfilesUtils";
 import { ValidProfileEnum, IZoweTree, IZoweUSSTreeNode } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
@@ -24,7 +24,6 @@ import * as contextually from "../shared/context";
 import { setFileSaved } from "../utils/workspace";
 import * as nls from "vscode-nls";
 import { refreshAll } from "../shared/refresh";
-import { UIViews } from "../shared/ui-views";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 import { fileExistsCaseSensitveSync } from "./utils";
 
@@ -391,4 +390,73 @@ export async function deleteUSSFilesPrompt(nodes: IZoweUSSTreeNode[]): Promise<b
         }
     });
     return cancelled;
+}
+export async function copyUssFilesToClipboard(selectedNodes: IZoweUSSTreeNode[]) {
+    const filePaths: any[] = [];
+    for (const node of selectedNodes) {
+        if (contextually.isUssDirectory(node)) {
+            await refreshChildNodesDirectory(node);
+            filePaths.push(node.getUSSDocumentFilePath() + "/");
+        } else {
+            await node.refreshUSS();
+            filePaths.push(node.getUSSDocumentFilePath());
+        }
+    }
+    vscode.env.clipboard.writeText(filePaths.join(","));
+}
+
+export async function copyUssFiles(
+    node: IZoweUSSTreeNode,
+    nodeList: IZoweUSSTreeNode[],
+    ussFileProvider: IZoweTree<IZoweUSSTreeNode>
+) {
+    let selectedNodes;
+    if (node || nodeList) {
+        selectedNodes = getSelectedNodeList(node, nodeList) as IZoweUSSTreeNode[];
+    } else {
+        selectedNodes = ussFileProvider.getTreeView().selection;
+    }
+    await vscode.window.withProgress(
+        {
+            location: vscode.ProgressLocation.Window,
+            title: localize("ZoweUssNode.copyDownload.progress", "Downloading copied files ..."),
+        },
+        () => {
+            return copyUssFilesToClipboard(selectedNodes);
+        }
+    );
+}
+
+export async function refreshChildNodesDirectory(node: IZoweUSSTreeNode) {
+    const childNodes = await node.getChildren();
+    if (childNodes.length > 0) {
+        for (const child of childNodes) {
+            await refreshChildNodesDirectory(child);
+        }
+    } else {
+        if (node.contextValue !== globals.USS_DIR_CONTEXT) {
+            await node.refreshUSS();
+        }
+    }
+}
+
+export async function pasteUssFile(ussFileProvider: IZoweTree<IZoweUSSTreeNode>, node: IZoweUSSTreeNode) {
+    const a = ussFileProvider.getTreeView().selection as IZoweUSSTreeNode[];
+    let selectedNode;
+    if (node) {
+        selectedNode = node;
+    } else {
+        selectedNode = a.length > 0 ? a[0] : (a as unknown as IZoweUSSTreeNode);
+    }
+
+    await vscode.window.withProgress(
+        {
+            location: vscode.ProgressLocation.Window,
+            title: localize("ZoweUssNode.copyUpload.progress", "Uploading copied files ..."),
+        },
+        () => {
+            return selectedNode.copyUssFile();
+        }
+    );
+    ussFileProvider.refreshElement(selectedNode.getParent());
 }

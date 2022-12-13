@@ -159,7 +159,7 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
 
     refreshPS(node: IZoweTreeNode);
 
-    uploadDialog(node: IZoweTreeNode): any;
+    uploadDialog(node: IZoweTreeNode);
 
     /**
      * Begins a filter/search operation on a node.
@@ -185,7 +185,7 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
      * Deletes a root node from the tree.
      * @param node: A root node representing a session
      */
-    deleteSession(node: IZoweTreeNode): any;
+    deleteSession(node: IZoweTreeNode);
     /**
      * Lets the user open a dataset by filtering the currently-loaded list
      */

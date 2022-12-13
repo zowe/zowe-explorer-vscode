@@ -13,5 +13,7 @@
   "saveUSSFile.log.error.save": "Error encountered when saving USS file: ",
   "deleteUssPrompt.confirmation.delete": "Delete",
   "deleteUssPrompt.confirmation.message": "Are you sure you want to delete the following item?\nThis will permanently remove the following file or folder from your system.\n\n{0}",
-  "deleteUssPrompt.confirmation.cancel.log.debug": "Delete action was canceled."
+  "deleteUssPrompt.confirmation.cancel.log.debug": "Delete action was canceled.",
+  "ZoweUssNode.copyDownload.progress": "Downloading copied files ...",
+  "ZoweUssNode.copyUpload.progress": "Uploading copied files ..."
 }
