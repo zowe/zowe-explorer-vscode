@@ -55,7 +55,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
     constructor() {
         super();
 
-        this.outputChannel = vscode.window.createOutputChannel(
+        this.outputChannel = Gui.createOutputChannel(
             localize("issueMvsCommand.outputchannel.title", "Zowe MVS Command")
         );
     }
@@ -92,7 +92,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
                     ignoreFocusOut: true,
                     canPickMany: false,
                 };
-                const sesName = await Gui.quickPick(profileNamesList, quickPickOptions);
+                const sesName = await Gui.showQuickPick(profileNamesList, quickPickOptions);
                 if (sesName === undefined) {
                     Gui.showMessage(localize("issueMvsCommand.undefined.profilename", "Operation Cancelled"));
                     return;
@@ -166,7 +166,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
                             : ""),
                 };
                 // get user selection
-                const choice = await Gui.quickPick([createPick, ...items], options1);
+                const choice = await Gui.showQuickPick([createPick, ...items], options1);
                 if (!choice) {
                     Gui.showMessage(
                         localize("issueMvsCommand.options.noselection", "No selection made. Operation cancelled.")
@@ -213,7 +213,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
                 valueSelection: response ? [response.length, response.length] : undefined,
             };
             // get user input
-            response = await Gui.inputBox(options2);
+            response = await Gui.showInputBox(options2);
             if (!response) {
                 Gui.showMessage(localize("issueMvsCommand.enter.command", "No command entered."));
                 return;
@@ -236,7 +236,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
                     command = command.substring(1);
                 }
                 this.outputChannel.appendLine(`> ${command}`);
-                const submitResponse = await vscode.window.withProgress(
+                const submitResponse = await Gui.withProgress(
                     {
                         location: vscode.ProgressLocation.Notification,
                         title: localize("issueMvsCommand.command.submitted", "MVS command submitted."),

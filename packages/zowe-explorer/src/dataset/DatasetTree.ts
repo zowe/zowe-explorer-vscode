@@ -101,7 +101,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             this.mFavoriteSession.iconPath = icon.path;
         }
         this.mSessionNodes = [this.mFavoriteSession];
-        this.treeView = vscode.window.createTreeView("zowe.ds.explorer", {
+        this.treeView = Gui.createTreeView("zowe.ds.explorer", {
             treeDataProvider: this,
             canSelectMany: true,
         });
@@ -924,7 +924,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                             placeHolder: localize("searchHistory.options.prompt", "Select a filter"),
                         };
                         // get user selection
-                        const choice = await Gui.quickPick([createPick, ...items], options1);
+                        const choice = await Gui.showQuickPick([createPick, ...items], options1);
                         if (!choice) {
                             Gui.showMessage(
                                 localize("enterPattern.pattern", "No selection made. Operation cancelled.")
@@ -963,7 +963,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     value: pattern,
                 };
                 // get user input
-                pattern = await Gui.inputBox(options2);
+                pattern = await Gui.showInputBox(options2);
                 if (!pattern) {
                     Gui.showMessage(localize("datasetFilterPrompt.enterPattern", "You must enter a pattern."));
                     return;
@@ -1186,7 +1186,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     : localize("member.validation", "Enter valid member name");
             },
         };
-        let afterMemberName = await Gui.inputBox(options);
+        let afterMemberName = await Gui.showInputBox(options);
         if (!afterMemberName) {
             Gui.showMessage(localize("renameDataSet.cancelled", "Rename operation cancelled."));
             return;
@@ -1251,7 +1251,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     : localize("dataset.validation", "Enter valid dataset name");
             },
         };
-        let afterDataSetName = await Gui.inputBox(options);
+        let afterDataSetName = await Gui.showInputBox(options);
         if (!afterDataSetName) {
             Gui.showMessage(localize("renameDataSet.cancelled", "Rename operation cancelled."));
             return;

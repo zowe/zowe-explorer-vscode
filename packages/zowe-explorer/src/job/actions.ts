@@ -35,7 +35,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  */
 export async function downloadSpool(jobs: IZoweJobTreeNode[]) {
     try {
-        const dirUri = await vscode.window.showOpenDialog({
+        const dirUri = await Gui.showOpenDialog({
             openLabel: localize("downloadSpool.select", "Select"),
             canSelectFolders: true,
             canSelectFiles: false,
@@ -75,7 +75,7 @@ export async function getSpoolContent(session: string, spool: zowe.IJobFile, ref
     if (profiles.validProfile !== ValidProfileEnum.INVALID) {
         const uri = toUniqueJobFileUri(session, spool)(refreshTimestamp.toString());
         try {
-            await vscode.window.showTextDocument(uri, { preview: false });
+            await Gui.showTextDocument(uri, { preview: false });
         } catch (error) {
             const isTextDocActive =
                 vscode.window.activeTextEditor &&
@@ -168,7 +168,7 @@ export async function downloadJcl(job: Job) {
     try {
         const jobJcl = await ZoweExplorerApiRegister.getJesApi(job.getProfile()).getJclForJob(job.job);
         const jclDoc = await vscode.workspace.openTextDocument({ language: "jcl", content: jobJcl });
-        await vscode.window.showTextDocument(jclDoc, { preview: false });
+        await Gui.showTextDocument(jclDoc, { preview: false });
     } catch (error) {
         await errorHandling(error, null, error.message);
     }
@@ -219,7 +219,7 @@ export async function modifyCommand(job: Job) {
         const options: vscode.InputBoxOptions = {
             prompt: localize("modifyCommand.inputBox.prompt", "Modify Command"),
         };
-        const command = await Gui.inputBox(options);
+        const command = await Gui.showInputBox(options);
         if (command !== undefined) {
             const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(job.getProfile());
             if (commandApi) {
@@ -285,7 +285,7 @@ export async function setOwner(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZ
     const options: vscode.InputBoxOptions = {
         prompt: localize("setOwner.inputBox.prompt", "Owner"),
     };
-    const newOwner = await Gui.inputBox(options);
+    const newOwner = await Gui.showInputBox(options);
     job.owner = newOwner;
     jobsProvider.refreshElement(job);
 }
@@ -300,7 +300,7 @@ export async function setPrefix(job: IZoweJobTreeNode, jobsProvider: IZoweTree<I
     const options: vscode.InputBoxOptions = {
         prompt: localize("setPrefix.inputBox.prompt", "Prefix"),
     };
-    const newPrefix = await Gui.inputBox(options);
+    const newPrefix = await Gui.showInputBox(options);
     job.prefix = newPrefix;
     jobsProvider.refreshElement(job);
 }

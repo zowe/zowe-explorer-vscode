@@ -143,7 +143,7 @@ export class ZoweVsCodeExtension {
     private static async promptUserPass(options: IPromptUserPassOptions): Promise<string[] | undefined> {
         let newUser = options.session.user;
         if (!newUser || options.rePrompt) {
-            newUser = await Gui.inputBox({
+            newUser = await Gui.showInputBox({
                 placeHolder: "User Name",
                 prompt: "Enter the user name for the connection. Leave blank to not store.",
                 ignoreFocusOut: true,
@@ -158,7 +158,7 @@ export class ZoweVsCodeExtension {
 
         let newPass = options.session.password;
         if (!newPass || options.rePrompt) {
-            newPass = await Gui.inputBox({
+            newPass = await Gui.showInputBox({
                 placeHolder: "Password",
                 prompt: "Enter the password for the connection. Leave blank to not store.",
                 password: true,

@@ -284,7 +284,7 @@ export async function willForceUpload(
         )
         .then(async (selection) => {
             if (selection === localize("saveFile.overwriteConfirmation.yes", "Yes")) {
-                const uploadResponse = vscode.window.withProgress(
+                const uploadResponse = Gui.withProgress(
                     {
                         location: vscode.ProgressLocation.Notification,
                         title,

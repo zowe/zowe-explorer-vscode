@@ -413,7 +413,7 @@ export class Profiles extends ProfilesCache {
                     ),
                     value: profileName,
                 };
-                profileName = await Gui.inputBox(options);
+                profileName = await Gui.showInputBox(options);
                 if (!profileName) {
                     Gui.showMessage(
                         localize(
@@ -547,7 +547,7 @@ export class Profiles extends ProfilesCache {
                     switch (response) {
                         case "number":
                             options = await this.optionsValue(value, schema, editSession[value]);
-                            const updValue = await Gui.inputBox(options);
+                            const updValue = await Gui.showInputBox(options);
                             if (!Number.isNaN(Number(updValue))) {
                                 updSchemaValues[value] = Number(updValue);
                             } else {
@@ -575,7 +575,7 @@ export class Profiles extends ProfilesCache {
                             break;
                         default:
                             options = await this.optionsValue(value, schema, editSession[value]);
-                            const updDefValue = await Gui.inputBox(options);
+                            const updDefValue = await Gui.showInputBox(options);
                             if (updDefValue === undefined) {
                                 Gui.showMessage(localize("editConnection.default", "Operation Cancelled"));
                                 return undefined;
@@ -617,7 +617,7 @@ export class Profiles extends ProfilesCache {
                 ignoreFocusOut: true,
                 canPickMany: false,
             };
-            profileType = await Gui.quickPick(typeOptions, quickPickTypeOptions);
+            profileType = await Gui.showQuickPick(typeOptions, quickPickTypeOptions);
         }
         return profileType;
     }
@@ -842,7 +842,7 @@ export class Profiles extends ProfilesCache {
                     switch (response) {
                         case "number":
                             options = await this.optionsValue(value, schema);
-                            const enteredValue = Number(await Gui.inputBox(options));
+                            const enteredValue = Number(await Gui.showInputBox(options));
                             if (!Number.isNaN(Number(enteredValue))) {
                                 if ((value === "encoding" || value === "responseTimeout") && enteredValue === 0) {
                                     delete schemaValues[value];
@@ -868,7 +868,7 @@ export class Profiles extends ProfilesCache {
                             break;
                         default:
                             options = await this.optionsValue(value, schema);
-                            const defValue = await Gui.inputBox(options);
+                            const defValue = await Gui.showInputBox(options);
                             if (defValue === undefined) {
                                 Gui.showMessage(localize("createNewConnection.default", "Operation Cancelled"));
                                 return undefined;
@@ -960,7 +960,7 @@ export class Profiles extends ProfilesCache {
             ignoreFocusOut: true,
             canPickMany: false,
         };
-        const sesName = await Gui.quickPick(profileNamesList, quickPickList);
+        const sesName = await Gui.showQuickPick(profileNamesList, quickPickList);
 
         if (sesName === undefined) {
             Gui.showMessage(localize("deleteProfile.undefined.profilename", "Operation Cancelled"));
@@ -1136,7 +1136,7 @@ export class Profiles extends ProfilesCache {
         if (filteredProfile === undefined) {
             try {
                 if (getSessStatus.getStatus) {
-                    profileStatus = await vscode.window.withProgress(
+                    profileStatus = await Gui.withProgress(
                         {
                             location: vscode.ProgressLocation.Notification,
                             title: localize(
@@ -1345,7 +1345,7 @@ export class Profiles extends ProfilesCache {
 
     public async openConfigFile(filePath: string) {
         const document = await vscode.workspace.openTextDocument(filePath);
-        await vscode.window.showTextDocument(document);
+        await Gui.showTextDocument(document);
     }
 
     private async getConfigLocationPrompt(action: string): Promise<string> {
@@ -1374,7 +1374,7 @@ export class Profiles extends ProfilesCache {
             "getConfigLocationPrompt.showQuickPick.project",
             "Project: in the current working directory"
         );
-        const location = await Gui.quickPick([globalText, projectText], quickPickOptions);
+        const location = await Gui.showQuickPick([globalText, projectText], quickPickOptions);
         // call check for existing and prompt here
         switch (location) {
             case globalText:
@@ -1512,7 +1512,7 @@ export class Profiles extends ProfilesCache {
         };
         // confirm that the user really wants to delete
         if (
-            (await Gui.quickPick(
+            (await Gui.showQuickPick(
                 [
                     localize("deleteProfile.showQuickPick.delete", "Delete"),
                     localize("deleteProfile.showQuickPick.cancel", "Cancel"),
@@ -1568,7 +1568,7 @@ export class Profiles extends ProfilesCache {
                 }
             },
         };
-        zosURL = await Gui.inputBox(options);
+        zosURL = await Gui.showInputBox(options);
 
         let hostName: string;
         if (!zosURL) {
@@ -1608,7 +1608,7 @@ export class Profiles extends ProfilesCache {
                 prompt: schema[input].optionDefinition.description.toString(),
             };
         }
-        port = Number(await Gui.inputBox(options));
+        port = Number(await Gui.showInputBox(options));
 
         if (port === 0 && schema[input].optionDefinition.hasOwnProperty("defaultValue")) {
             port = Number(schema[input].optionDefinition.defaultValue.toString());
@@ -1633,7 +1633,7 @@ export class Profiles extends ProfilesCache {
             ignoreFocusOut: true,
             value: userName,
         };
-        userName = await Gui.inputBox(InputBoxOptions);
+        userName = await Gui.showInputBox(InputBoxOptions);
 
         if (userName === undefined) {
             Gui.showMessage(localize("createNewConnection.undefined.passWord", "Operation Cancelled"));
@@ -1660,7 +1660,7 @@ export class Profiles extends ProfilesCache {
             ignoreFocusOut: true,
             value: passWord,
         };
-        passWord = await Gui.inputBox(InputBoxOptions);
+        passWord = await Gui.showInputBox(InputBoxOptions);
 
         if (passWord === undefined) {
             Gui.showMessage(localize("createNewConnection.undefined.passWord", "Operation Cancelled"));
@@ -1708,7 +1708,7 @@ export class Profiles extends ProfilesCache {
 
         const ruOptions = Array.from(selectRU);
 
-        const chosenRU = await Gui.quickPick(ruOptions, quickPickOptions);
+        const chosenRU = await Gui.showQuickPick(ruOptions, quickPickOptions);
 
         if (chosenRU && chosenRU.includes(trueString)) {
             rejectUnauthorize = true;
@@ -1731,7 +1731,7 @@ export class Profiles extends ProfilesCache {
             canPickMany: false,
         };
         const selectBoolean = ["True", "False"];
-        const chosenValue = await Gui.quickPick(selectBoolean, quickPickBooleanOptions);
+        const chosenValue = await Gui.showQuickPick(selectBoolean, quickPickBooleanOptions);
         if (chosenValue === selectBoolean[0]) {
             isTrue = true;
         } else if (chosenValue === selectBoolean[1]) {

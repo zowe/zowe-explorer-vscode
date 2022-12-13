@@ -142,7 +142,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             this.mFavoriteSession.iconPath = icon.path;
         }
         this.mSessionNodes = [this.mFavoriteSession];
-        this.treeView = vscode.window.createTreeView("zowe.jobs.explorer", {
+        this.treeView = Gui.createTreeView("zowe.jobs.explorer", {
             treeDataProvider: this,
             canSelectMany: true,
         });
@@ -659,7 +659,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 placeHolder: localize("searchHistory.options.prompt", "Select a filter"),
             };
             // get user selection
-            const choice = await Gui.quickPick([this.searchByQuery, this.searchById, ...items], selectFilter);
+            const choice = await Gui.showQuickPick([this.searchByQuery, this.searchById, ...items], selectFilter);
             if (!choice) {
                 Gui.showMessage(localize("enterPattern.pattern", "No selection made. Operation cancelled."));
                 return undefined;
@@ -737,7 +737,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             prompt: localize("jobsFilterPrompt.inputBox.prompt.jobid", "Enter a Job id"),
             value: jobId,
         };
-        const newUserJobId = await Gui.inputBox(options);
+        const newUserJobId = await Gui.showInputBox(options);
         if (!newUserJobId) {
             Gui.showMessage(localize("jobsFilterPrompt.enterPrefix", "Search Cancelled"));
             return;
@@ -885,7 +885,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
     private async setJobStatus(node: IZoweJobTreeNode): Promise<IJobStatusOption> {
         const apiExists = ZoweExplorerApiRegister.getJesApi(node.getProfile()).getJobsByParameters;
         const jobStatusSelection = apiExists ? globals.JOB_STATUS : globals.JOB_STATUS_UNSUPPORTED;
-        let choice = await Gui.quickPick(jobStatusSelection);
+        let choice = await Gui.showQuickPick(jobStatusSelection);
         if (!choice) {
             choice = globals.JOB_STATUS.find((status) => status.label === "*");
         }
@@ -902,7 +902,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             }
             editableItems.push(new FilterItem({ text: prop.label, description: prop.value, show: prop.show }));
         });
-        const choice = await Gui.quickPick(editableItems, {
+        const choice = await Gui.showQuickPick(editableItems, {
             ignoreFocusOut: true,
             matchOnDescription: false,
         });
@@ -935,7 +935,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                     value: jobProperties.find((prop) => prop.label === pattern).value,
                     placeHolder: jobProperties.find((prop) => prop.label === pattern).placeHolder,
                 };
-                jobProperties.find((prop) => prop.label === pattern).value = await Gui.inputBox(options);
+                jobProperties.find((prop) => prop.label === pattern).value = await Gui.showInputBox(options);
         }
         return Promise.resolve(this.handleEditingMultiJobParameters(jobProperties, node));
     }

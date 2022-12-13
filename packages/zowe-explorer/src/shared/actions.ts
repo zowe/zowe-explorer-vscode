@@ -183,7 +183,7 @@ export async function openRecentMemberPrompt(
                 placeHolder: localize("memberHistory.options.prompt", "Select a recent member to open"),
             };
 
-            const choice = await Gui.quickPick([createPick, ...items], options1);
+            const choice = await Gui.showQuickPick([createPick, ...items], options1);
             if (!choice) {
                 Gui.showMessage(localize("enterPattern.pattern", "No selection made. Operation cancelled."));
                 return;

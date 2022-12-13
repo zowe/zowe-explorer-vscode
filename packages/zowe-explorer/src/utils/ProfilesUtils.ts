@@ -320,7 +320,7 @@ export async function promptCredentials(node: IZoweTreeNode) {
     let profileName: string;
     if (node == null) {
         // prompt for profile
-        profileName = await Gui.inputBox({
+        profileName = await Gui.showInputBox({
             placeHolder: localize("createNewConnection.option.prompt.profileName.placeholder", "Connection Name"),
             prompt: localize("createNewConnection.option.prompt.profileName", "Enter a name for the connection."),
             ignoreFocusOut: true,

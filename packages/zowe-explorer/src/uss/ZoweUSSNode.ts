@@ -163,7 +163,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         try {
             const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
             responses.push(
-                await vscode.window.withProgress(
+                await Gui.withProgress(
                     {
                         location: vscode.ProgressLocation.Notification,
                         title: localize("ZoweUssNode.getList.progress", "Get USS file list command submitted."),
@@ -500,7 +500,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                         const chooseBinary =
                             this.binary ||
                             (await ZoweExplorerApiRegister.getUssApi(cachedProfile).isFileTagBinOrAscii(this.fullPath));
-                        const response = await vscode.window.withProgress(
+                        const response = await Gui.withProgress(
                             {
                                 location: vscode.ProgressLocation.Notification,
                                 title: "Opening USS file...",
@@ -563,7 +563,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             if (isDirty) {
                 attachRecentSaveListener();
 
-                vscode.window.showTextDocument(this.openedDocumentInstance);
+                Gui.showTextDocument(this.openedDocumentInstance);
                 await vscode.commands.executeCommand("workbench.action.closeActiveEditor");
                 wasSaved = getRecentSaveStatus();
 
@@ -632,9 +632,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 }
             } else {
                 if (previewFile === true) {
-                    await vscode.window.showTextDocument(document);
+                    await Gui.showTextDocument(document);
                 } else {
-                    await vscode.window.showTextDocument(document, { preview: false });
+                    await Gui.showTextDocument(document, { preview: false });
                 }
             }
         } else {

@@ -16,7 +16,7 @@ import * as zowe from "@zowe/cli";
 import * as globals from "../globals";
 import * as path from "path";
 import * as api from "@zowe/zowe-explorer-api";
-import { FilterItem, errorHandling, resolveQuickPickHelper } from "../utils/ProfilesUtils";
+import { FilterItem, errorHandling } from "../utils/ProfilesUtils";
 import { getDocumentFilePath, concatChildNodes, checkForAddedSuffix, willForceUpload } from "../shared/utils";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Profiles } from "../Profiles";
@@ -94,7 +94,7 @@ export async function allocateLike(
                     : localize("dataset.validation", "Enter valid dataset name");
             },
         };
-        likeDSName = await api.Gui.inputBox(inputBoxOptions);
+        likeDSName = await api.Gui.showInputBox(inputBoxOptions);
         if (!likeDSName) {
             api.Gui.showMessage(localize("allocateLike.noNewName", "You must enter a new data set name."));
             return;
@@ -115,7 +115,7 @@ export async function allocateLike(
                 : localize("dataset.validation", "Enter valid dataset name");
         },
     };
-    const newDSName = await api.Gui.inputBox(options);
+    const newDSName = await api.Gui.showInputBox(options);
     if (!newDSName) {
         api.Gui.showMessage(localize("allocateLike.noNewName", "You must enter a new data set name."));
         return;
@@ -163,7 +163,7 @@ export async function uploadDialog(node: ZoweDatasetNode, datasetProvider: api.I
         canSelectMany: true,
     };
 
-    const value = await vscode.window.showOpenDialog(fileOpenOptions);
+    const value = await api.Gui.showOpenDialog(fileOpenOptions);
 
     if (value && value.length) {
         await Promise.all(
@@ -327,7 +327,7 @@ export async function deleteDatasetPrompt(
     }
     if (nodes.length > 1) {
         // Delete multiple selected nodes
-        await vscode.window.withProgress(
+        await api.Gui.withProgress(
             {
                 location: vscode.ProgressLocation.Notification,
                 title: localize("deleteDatasetPrompt.deleteCounter", "Deleting nodes"),
@@ -397,7 +397,7 @@ export async function createMember(
                 : localize("member.validation", "Enter valid member name");
         },
     };
-    const name = await api.Gui.inputBox(options);
+    const name = await api.Gui.showInputBox(options);
     globals.LOG.debug(
         localize("createMember.log.debug.createNewDataSet", "creating new data set member of name ") + name
     );
@@ -478,7 +478,7 @@ export async function openPS(
             // if local copy exists, open that instead of pulling from mainframe
             const documentFilePath = getDocumentFilePath(label, node);
             if (!fs.existsSync(documentFilePath)) {
-                const response = await vscode.window.withProgress(
+                const response = await api.Gui.withProgress(
                     {
                         location: vscode.ProgressLocation.Notification,
                         title: "Opening data set...",
@@ -496,9 +496,9 @@ export async function openPS(
             }
             const document = await vscode.workspace.openTextDocument(getDocumentFilePath(label, node));
             if (previewMember === true) {
-                await vscode.window.showTextDocument(document);
+                await api.Gui.showTextDocument(document);
             } else {
-                await vscode.window.showTextDocument(document, { preview: false });
+                await api.Gui.showTextDocument(document, { preview: false });
             }
             if (datasetProvider) {
                 datasetProvider.addFileHistory(`[${node.getProfileName()}]: ${label}`);
@@ -597,7 +597,7 @@ export async function createFile(
                     : localize("dataset.validation", "Enter valid dataset name");
             },
         };
-        dsName = await api.Gui.inputBox(options);
+        dsName = await api.Gui.showInputBox(options);
         if (dsName) {
             dsName = dsName.trim().toUpperCase();
             newDSProperties.forEach((property) => {
@@ -615,7 +615,7 @@ export async function createFile(
         }
 
         // 2nd step: Get data set type
-        const type = await api.Gui.quickPick(stepTwoChoices, stepTwoOptions);
+        const type = await api.Gui.showQuickPick(stepTwoChoices, stepTwoOptions);
         if (type == null) {
             globals.LOG.debug(
                 localize("createFile.noValidTypeSelected", "No valid data set type selected. Operation cancelled.")
@@ -640,7 +640,7 @@ export async function createFile(
         }
 
         // 3rd step: Ask if we allocate, or show DS attributes
-        const choice = await api.Gui.quickPick(stepThreeChoices, stepThreeOptions);
+        const choice = await api.Gui.showQuickPick(stepThreeChoices, stepThreeOptions);
         if (choice == null) {
             globals.LOG.debug(localize("createFile.noOptionSelected", "No option selected. Operation cancelled."));
             api.Gui.showMessage(localize("createFile.operationCancelled", "Operation cancelled."));
@@ -763,7 +763,7 @@ async function handleUserSelection(newDSProperties, dsType): Promise<string> {
                     value: newDSProperties.find((prop) => prop.label === pattern).value,
                     placeHolder: newDSProperties.find((prop) => prop.label === pattern).placeHolder,
                 };
-                newDSProperties.find((prop) => prop.label === pattern).value = await api.Gui.inputBox(options);
+                newDSProperties.find((prop) => prop.label === pattern).value = await api.Gui.showInputBox(options);
                 break;
         }
         return Promise.resolve(handleUserSelection(newDSProperties, dsType));
@@ -847,7 +847,7 @@ export async function showAttributes(
         </table>
         </body>
         </html>`;
-        const panel: vscode.WebviewPanel = vscode.window.createWebviewPanel(
+        const panel: vscode.WebviewPanel = api.Gui.createWebviewPanel(
             "zowe",
             label + " " + localize("attributes.title", "Attributes"),
             vscode.window.activeTextEditor ? vscode.window.activeTextEditor.viewColumn : 1,
@@ -893,7 +893,7 @@ export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetT
                 ignoreFocusOut: true,
                 canPickMany: false,
             };
-            sessProfileName = await api.Gui.quickPick(profileNamesList, quickPickOptions);
+            sessProfileName = await api.Gui.showQuickPick(profileNamesList, quickPickOptions);
         } else {
             api.Gui.showMessage(localize("submitJcl.noProfile", "No profiles available"));
         }
@@ -971,9 +971,9 @@ export async function submitMember(node: api.IZoweTreeNode) {
                 sessProfile = node.getProfile();
                 break;
             default:
-                vscode.window.showErrorMessage(
-                    localize("submitMember.invalidNode", "submitMember() called from invalid node.")
-                );
+                api.Gui.showMessage(localize("submitMember.invalidNode", "submitMember() called from invalid node."), {
+                    severity: api.MessageSeverity.ERROR,
+                });
                 throw Error(localize("submitMember.error.invalidNode", "submitMember() called from invalid node."));
         }
         try {
@@ -1113,11 +1113,11 @@ export async function refreshPS(node: api.IZoweDatasetTreeNode) {
         node.setEtag(response.apiResponse.etag);
 
         const document = await vscode.workspace.openTextDocument(documentFilePath);
-        vscode.window.showTextDocument(document, { preview: false });
+        api.Gui.showTextDocument(document, { preview: false });
         // if there are unsaved changes, vscode won't automatically display the updates, so close and reopen
         if (document.isDirty) {
             await vscode.commands.executeCommand("workbench.action.closeActiveEditor");
-            vscode.window.showTextDocument(document, { preview: false });
+            api.Gui.showTextDocument(document, { preview: false });
         }
     } catch (err) {
         globals.LOG.error(
@@ -1177,7 +1177,7 @@ export async function enterPattern(node: api.IZoweDatasetTreeNode, datasetProvid
             value: node.pattern,
         };
         // get user input
-        pattern = await api.Gui.inputBox(options);
+        pattern = await api.Gui.showInputBox(options);
         if (!pattern) {
             api.Gui.showMessage(localize("enterPattern.pattern", "You must enter a pattern."));
             return;
@@ -1237,11 +1237,13 @@ export async function hMigrateDataSet(node: ZoweDatasetNode) {
             return ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hMigrateDataSet(dataSetName);
         } catch (err) {
             globals.LOG.error(err);
-            vscode.window.showErrorMessage(err.message);
+            api.Gui.showMessage(err.message, { severity: api.MessageSeverity.ERROR });
             return;
         }
     } else {
-        vscode.window.showErrorMessage(localize("hMigrateDataSet.checkProfile", "Profile is invalid"));
+        api.Gui.showMessage(localize("hMigrateDataSet.checkProfile", "Profile is invalid"), {
+            severity: api.MessageSeverity.ERROR,
+        });
         return;
     }
 }
@@ -1265,11 +1267,13 @@ export async function hRecallDataSet(node: ZoweDatasetNode) {
             return ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hRecallDataSet(dataSetName);
         } catch (err) {
             globals.LOG.error(err);
-            vscode.window.showErrorMessage(err.message);
+            api.Gui.showMessage(err.message, { severity: api.MessageSeverity.ERROR });
             return;
         }
     } else {
-        vscode.window.showErrorMessage(localize("hMigrateDataSet.checkProfile", "Profile is invalid"));
+        api.Gui.showMessage(localize("hMigrateDataSet.checkProfile", "Profile is invalid"), {
+            severity: api.MessageSeverity.ERROR,
+        });
         return;
     }
 }
@@ -1312,7 +1316,7 @@ export async function pasteMember(
                         : localize("member.validation", "Enter valid member name");
                 },
             };
-            memberName = await api.Gui.inputBox(inputBoxOptions);
+            memberName = await api.Gui.showInputBox(inputBoxOptions);
             if (!memberName) {
                 return;
             }
@@ -1336,7 +1340,7 @@ export async function pasteMember(
                 );
             } catch (err) {
                 globals.LOG.error(err);
-                vscode.window.showErrorMessage(err.message);
+                api.Gui.showMessage(err.message, { severity: api.MessageSeverity.ERROR });
                 return;
             }
             if (memberName) {
@@ -1382,8 +1386,9 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
     const profile = Profiles.getInstance().loadNamedProfile(sesName);
     if (!profile) {
         globals.LOG.error(localize("saveFile.log.error.session", "Couldn't locate session when saving data set!"));
-        return vscode.window.showErrorMessage(
-            localize("saveFile.log.error.session", "Couldn't locate session when saving data set!")
+        return api.Gui.showMessage(
+            localize("saveFile.log.error.session", "Couldn't locate session when saving data set!"),
+            { severity: api.MessageSeverity.ERROR }
         );
     }
 
@@ -1406,11 +1411,12 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
             // Checks if file still exists on server
             const response = await ZoweExplorerApiRegister.getMvsApi(profile).dataSet(label);
             if (!response.apiResponse.items.length) {
-                return vscode.window.showErrorMessage(
+                return api.Gui.showMessage(
                     localize(
                         "saveFile.error.saveFailed",
                         "Data set failed to save. Data set may have been deleted on mainframe."
-                    )
+                    ),
+                    { severity: api.MessageSeverity.ERROR }
                 );
             }
         } catch (err) {
@@ -1437,7 +1443,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
     };
 
     try {
-        const uploadResponse = await vscode.window.withProgress(
+        const uploadResponse = await api.Gui.withProgress(
             {
                 location: vscode.ProgressLocation.Window,
                 title: localize("saveFile.response.save.title", "Saving data set..."),
@@ -1451,7 +1457,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
             }
         );
         if (uploadResponse.success) {
-            vscode.window.setStatusBarMessage(uploadResponse.commandResponse, globals.STATUS_BAR_TIMEOUT_MS);
+            api.Gui.setStatusBarMessage(uploadResponse.commandResponse, globals.STATUS_BAR_TIMEOUT_MS);
             // set local etag with the new etag from the updated file on mainframe
             if (node) {
                 node.setEtag(uploadResponse.apiResponse[0].etag);
@@ -1503,10 +1509,10 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
                 }
             }
         } else {
-            vscode.window.showErrorMessage(uploadResponse.commandResponse);
+            api.Gui.showMessage(uploadResponse.commandResponse, { severity: api.MessageSeverity.ERROR });
         }
     } catch (err) {
         globals.LOG.error(err);
-        vscode.window.showErrorMessage(err.message);
+        api.Gui.showMessage(err.message, { severity: api.MessageSeverity.ERROR });
     }
 }

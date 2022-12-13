@@ -92,7 +92,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             this.mFavoriteSession.iconPath = icon.path;
         }
         this.mSessionNodes = [this.mFavoriteSession as IZoweUSSTreeNode];
-        this.treeView = vscode.window.createTreeView("zowe.uss.explorer", {
+        this.treeView = Gui.createTreeView("zowe.uss.explorer", {
             treeDataProvider: this,
             canSelectMany: true,
         });
@@ -146,7 +146,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             ignoreFocusOut: true,
             validateInput: (value) => this.checkDuplicateLabel(parentPath + value, loadedNodes),
         };
-        const newName = await Gui.inputBox(options);
+        const newName = await Gui.showInputBox(options);
         if (newName && parentPath + newName !== originalNode.fullPath) {
             try {
                 const newNamePath = path.posix.join(parentPath, newName);
@@ -611,7 +611,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                             placeHolder: localize("searchHistory.options.prompt", "Select a filter"),
                         };
                         // get user selection
-                        const choice = await Gui.quickPick([createPick, ...items], options1);
+                        const choice = await Gui.showQuickPick([createPick, ...items], options1);
                         if (!choice) {
                             Gui.showMessage(
                                 localize("enterPattern.pattern", "No selection made. Operation cancelled.")
@@ -648,7 +648,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                     value: remotepath,
                 };
                 // get user input
-                remotepath = await Gui.inputBox(options);
+                remotepath = await Gui.showInputBox(options);
                 if (!remotepath || remotepath.length === 0) {
                     Gui.showMessage(localize("filterPrompt.enterPath", "You must enter a path."));
                     return;

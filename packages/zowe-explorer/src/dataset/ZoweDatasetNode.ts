@@ -119,7 +119,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
         // Gets the datasets from the pattern or members of the dataset and displays any thrown errors
         let responses: zowe.IZosFilesResponse[] = [];
-        responses = await vscode.window.withProgress(
+        responses = await Gui.withProgress(
             {
                 location: vscode.ProgressLocation.Notification,
                 title: localize("getChildren.getDatasets.progress", "Get Dataset list command submitted."),

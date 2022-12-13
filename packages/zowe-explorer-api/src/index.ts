@@ -21,4 +21,4 @@ export * from "./tree/IZoweTreeNode";
 export * from "./vscode/ZoweVsCodeExtension";
 export * from "./security/KeytarApi";
 export * from "./security/KeytarCredentialManager";
-export { default as Gui } from "./globals/Gui";
+export * from "./globals/Gui";

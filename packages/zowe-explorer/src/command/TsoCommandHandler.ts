@@ -55,7 +55,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
     constructor() {
         super();
 
-        this.outputChannel = vscode.window.createOutputChannel(
+        this.outputChannel = Gui.createOutputChannel(
             localize("issueTsoCommand.outputchannel.title", "Zowe TSO Command")
         );
     }
@@ -92,7 +92,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                     ignoreFocusOut: true,
                     canPickMany: false,
                 };
-                const sesName = await Gui.quickPick(profileNamesList, quickPickOptions);
+                const sesName = await Gui.showQuickPick(profileNamesList, quickPickOptions);
                 if (sesName === undefined) {
                     Gui.showMessage(localize("issueTsoCommand.cancelled", "Operation Cancelled"));
                     return;
@@ -175,7 +175,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                             : ""),
                 };
                 // get user selection
-                const choice = await Gui.quickPick([createPick, ...items], options1);
+                const choice = await Gui.showQuickPick([createPick, ...items], options1);
                 if (!choice) {
                     Gui.showMessage(localize("issueTsoCommand.options.noselection", "No selection made."));
                     return;
@@ -218,7 +218,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                 valueSelection: response ? [response.length, response.length] : undefined,
             };
             // get user input
-            response = await Gui.inputBox(options2);
+            response = await Gui.showInputBox(options2);
             if (!response) {
                 Gui.showMessage(localize("issueTsoCommand.enter.command", "No command entered."));
                 return;
@@ -241,7 +241,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                     command = command.substring(1);
                 }
                 this.outputChannel.appendLine(`> ${command}`);
-                const submitResponse = await vscode.window.withProgress(
+                const submitResponse = await Gui.withProgress(
                     {
                         location: vscode.ProgressLocation.Notification,
                         title: localize("issueTsoCommand.command.submitted", "TSO command submitted."),
@@ -297,7 +297,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                     ignoreFocusOut: true,
                     canPickMany: false,
                 };
-                const sesName = await Gui.quickPick(tsoProfileNamesList, quickPickOptions);
+                const sesName = await Gui.showQuickPick(tsoProfileNamesList, quickPickOptions);
                 if (sesName === undefined) {
                     Gui.showMessage(localize("issueTsoCommand.cancelled", "Operation Cancelled"));
                     return;
@@ -351,7 +351,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                 ignoreFocusOut: true,
                 value: tsoParms.account,
             };
-            tsoParms.account = await Gui.inputBox(InputBoxOptions);
+            tsoParms.account = await Gui.showInputBox(InputBoxOptions);
             if (!tsoParms.account) {
                 Gui.showMessage(localize("issueTsoCommand.cancelled", "Operation Cancelled."));
                 return;
