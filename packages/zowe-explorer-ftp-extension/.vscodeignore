@@ -1,8 +1,12 @@
-.vscode/**
-.*ignore
-.*rc*
-*.config.js
-tsconfig.json
-**/*.map
-**/*.ts
-*.vsix
+# Ignore everything
+*
+*/**
+
+# Allowlist what we need
+!out/src/extension.js
+!resources
+
+!CHANGELOG.md
+!LICENSE.txt
+!package.json
+!README.md
