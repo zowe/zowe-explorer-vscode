@@ -385,7 +385,7 @@ async function createGlobalMocks() {
 }
 
 describe("Extension Unit Tests", () => {
-    const allCommands = {};
+    const allCommands: { cmd: string; fun: Function; toMock: Function }[] = [];
     let globalMocks;
     beforeAll(async () => {
         globalMocks = await createGlobalMocks();
@@ -433,13 +433,15 @@ describe("Extension Unit Tests", () => {
         globalMocks.mockRegisterCommand.mock.calls.forEach((call, i) => {
             expect(call[0]).toStrictEqual(globalMocks.expectedCommands[i]);
             expect(call[1]).toBeInstanceOf(Function);
-            allCommands[call[0]] = call[1];
+            allCommands.push({ cmd: call[0], fun: call[1], toMock: jest.fn() });
         });
     });
 
     it("Testing that activate correctly executes", async () => {
-        expect(Object.keys(allCommands)).toEqual(globalMocks.expectedCommands);
+        expect(allCommands.map((c) => c.cmd)).toEqual(globalMocks.expectedCommands);
     });
+
+    it.each(allCommands)("Method: %s", async (cmd, fun, toMock) => {});
 
     it("zowe.ds.showImperativeErrorDetails", async () => {
         const testNode: any = { getProfile: jest.fn(), getParent: jest.fn().mockReturnValue({ getLabel: jest.fn() }) };
