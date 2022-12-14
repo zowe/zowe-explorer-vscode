@@ -130,8 +130,6 @@ async function createGlobalMocks() {
         appName: vscode.env.appName,
         expectedCommands: [
             "zowe.extRefresh",
-            "zowe.updateSecureCredentials",
-            "zowe.promptCredentials",
             "zowe.all.config.init",
             "zowe.ds.addSession",
             "zowe.ds.addFavorite",
@@ -222,6 +220,8 @@ async function createGlobalMocks() {
             "zowe.jobs.enableValidation",
             "zowe.jobs.ssoLogin",
             "zowe.jobs.ssoLogout",
+            "zowe.updateSecureCredentials",
+            "zowe.promptCredentials",
             "zowe.openRecentMember",
             "zowe.searchInAllLoadedItems",
             "zowe.ds.deleteProfile",
@@ -356,10 +356,10 @@ async function createGlobalMocks() {
     // tslint:disable-next-line: no-object-literal-type-assertion
     const mockExtensionCreator = jest.fn(
         () =>
-            ({
-                subscriptions: [],
-                extensionPath: path.join(__dirname, ".."),
-            } as vscode.ExtensionContext)
+        ({
+            subscriptions: [],
+            extensionPath: path.join(__dirname, ".."),
+        } as vscode.ExtensionContext)
     );
     globalMocks.mockExtension = new mockExtensionCreator();
 
@@ -385,7 +385,7 @@ async function createGlobalMocks() {
 }
 
 describe("Extension Unit Tests", () => {
-    const allCommands: { cmd: string; fun: Function; toMock: Function }[] = [];
+    const allCommands: { cmd: string, fun: Function, toMock: Function }[] = [];
     let globalMocks;
     beforeAll(async () => {
         globalMocks = await createGlobalMocks();
@@ -438,20 +438,18 @@ describe("Extension Unit Tests", () => {
     });
 
     it("Testing that activate correctly executes", async () => {
-        expect(allCommands.map((c) => c.cmd)).toEqual(globalMocks.expectedCommands);
+        expect(allCommands.map(c => c.cmd)).toEqual(globalMocks.expectedCommands);
     });
-
-    it.each(allCommands)("Method: %s", async (cmd, fun, toMock) => {});
 
     it("zowe.ds.showImperativeErrorDetails", async () => {
         const testNode: any = { getProfile: jest.fn(), getParent: jest.fn().mockReturnValue({ getLabel: jest.fn() }) };
         const impErrorSpy = jest.spyOn(dsActions, "showImperativeErrorDetails");
         impErrorSpy.mockImplementation(jest.fn()); // prevent the actual function from being called
-        await allCommands["zowe.ds.showImperativeErrorDetails"](testNode);
+        await allCommands.find(p => p.cmd === "zowe.ds.showImperativeErrorDetails")?.fun(testNode);
         expect(impErrorSpy).not.toHaveBeenCalled();
 
         testNode.contextValue = globals.DS_IMPERATIVE_ERROR_CONTEXT;
-        await allCommands["zowe.ds.showImperativeErrorDetails"](testNode);
+        await allCommands.find(p => p.cmd === "zowe.ds.showImperativeErrorDetails")?.fun(testNode);
         expect(impErrorSpy).toHaveBeenCalledWith(testNode);
     });
 });

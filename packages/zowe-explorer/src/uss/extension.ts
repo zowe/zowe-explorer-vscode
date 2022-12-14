@@ -18,6 +18,7 @@ import { Profiles } from "../Profiles";
 import * as contextuals from "../../src/shared/context";
 import { getSelectedNodeList } from "../shared/utils";
 import { createUSSTree } from "./USSTree";
+import { initSubscribers } from "../shared/extension";
 
 export async function initUSSProvider(context: vscode.ExtensionContext) {
     const ussFileProvider: IZoweTree<IZoweUSSTreeNode> = await createUSSTree(globals.LOG);
@@ -197,17 +198,4 @@ export async function initUSSProvider(context: vscode.ExtensionContext) {
 
     initSubscribers(context, ussFileProvider);
     return ussFileProvider;
-}
-
-function initSubscribers(context: vscode.ExtensionContext, theProvider: IZoweTree<IZoweTreeNode>) {
-    const theTreeView = theProvider.getTreeView();
-    context.subscriptions.push(theTreeView);
-    if (!globals.ISTHEIA) {
-        theTreeView.onDidCollapseElement(async (e) => {
-            await theProvider.flipState(e.element, false);
-        });
-        theTreeView.onDidExpandElement(async (e) => {
-            await theProvider.flipState(e.element, true);
-        });
-    }
 }

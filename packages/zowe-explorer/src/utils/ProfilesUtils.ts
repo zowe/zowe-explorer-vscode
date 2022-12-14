@@ -143,24 +143,24 @@ export function isTheia(): boolean {
 type SessionForProfile = (profile: imperative.IProfileLoaded) => imperative.Session;
 export const syncSessionNode =
     (profiles: Profiles) =>
-    (getSessionForProfile: SessionForProfile) =>
-    async (sessionNode: IZoweTreeNode): Promise<void> => {
-        sessionNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+        (getSessionForProfile: SessionForProfile) =>
+            async (sessionNode: IZoweTreeNode): Promise<void> => {
+                sessionNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
 
-        const profileType = sessionNode.getProfile().type;
-        const profileName = sessionNode.getProfileName();
+                const profileType = sessionNode.getProfile().type;
+                const profileName = sessionNode.getProfileName();
 
-        let profile: imperative.IProfileLoaded;
-        try {
-            profile = Profiles.getInstance().loadNamedProfile(profileName, profileType);
-        } catch (e) {
-            globals.LOG.warn(e);
-            return;
-        }
-        sessionNode.setProfileToChoice(profile);
-        const session = getSessionForProfile(profile);
-        sessionNode.setSessionToChoice(session);
-    };
+                let profile: imperative.IProfileLoaded;
+                try {
+                    profile = Profiles.getInstance().loadNamedProfile(profileName, profileType);
+                } catch (e) {
+                    globals.LOG.warn(e);
+                    return;
+                }
+                sessionNode.setProfileToChoice(profile);
+                const session = getSessionForProfile(profile);
+                sessionNode.setSessionToChoice(session);
+            };
 
 export async function resolveQuickPickHelper(
     quickpick: vscode.QuickPick<vscode.QuickPickItem>
@@ -181,7 +181,7 @@ export interface IFilterItem {
 
 // tslint:disable-next-line: max-classes-per-file
 export class FilterItem implements vscode.QuickPickItem {
-    constructor(public filterItem: IFilterItem) {}
+    constructor(public filterItem: IFilterItem) { }
     get label(): string {
         const icon = this.filterItem.icon ? this.filterItem.icon + " " : null;
         return (icon ?? "") + this.filterItem.text;
@@ -200,7 +200,7 @@ export class FilterItem implements vscode.QuickPickItem {
 
 // tslint:disable-next-line: max-classes-per-file
 export class FilterDescriptor implements vscode.QuickPickItem {
-    constructor(private text: string) {}
+    constructor(private text: string) { }
     get label(): string {
         return this.text;
     }
@@ -266,11 +266,10 @@ export async function readConfigFromDisk() {
             const layers = mProfileInfo.getTeamConfig().layers || [];
             const layerSummary = layers.map(
                 (config: imperative.IConfigLayer) =>
-                    `Path: ${config.path}: ${
-                        config.exists
-                            ? "Found, with the following defaults:" +
-                              JSON.stringify(config.properties?.defaults || "Undefined default")
-                            : "Not available"
+                    `Path: ${config.path}: ${config.exists
+                        ? "Found, with the following defaults:" +
+                        JSON.stringify(config.properties?.defaults || "Undefined default")
+                        : "Not available"
                     } `
             );
             globals.LOG.debug(
@@ -380,5 +379,23 @@ export function writeOverridesFile() {
     } else {
         fileContent = JSON.stringify({ overrides: { CredentialManager: globals.PROFILE_SECURITY } }, null, 2);
         fs.writeFileSync(settingsFile, fileContent, "utf8");
+    }
+}
+
+export async function initializeZoweProfiles(): Promise<void> {
+    try {
+        await initializeZoweFolder();
+        await readConfigFromDisk();
+    } catch (err) {
+        globals.LOG.error(err);
+        const errorMessage = localize("initialize.profiles.error", "Error reading or initializing Zowe CLI profiles.");
+        await vscode.window.showWarningMessage(`${errorMessage}: ${err.message}`);
+    }
+
+    if (!fs.existsSync(globals.ZOWETEMPFOLDER)) {
+        fs.mkdirSync(globals.ZOWETEMPFOLDER);
+        fs.mkdirSync(globals.ZOWE_TMP_FOLDER);
+        fs.mkdirSync(globals.USS_DIR);
+        fs.mkdirSync(globals.DS_DIR);
     }
 }

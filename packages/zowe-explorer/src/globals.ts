@@ -25,6 +25,7 @@ nls.config({
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 // Globals
+export let SETTINGS_TEMP_FOLDER_LOCATION;
 export let ZOWETEMPFOLDER;
 export let ZOWE_TMP_FOLDER;
 export let USS_DIR;
@@ -95,6 +96,7 @@ export const DS_NAME_REGEX_CHECK = /^[a-zA-Z#@\$][a-zA-Z0-9#@\$\-]{0,7}(\.[a-zA-
 export const MEMBER_NAME_REGEX_CHECK = /^[a-zA-Z#@\$][a-zA-Z0-9#@\$]{0,7}$/;
 export let ACTIVATED = false;
 export let PROFILE_SECURITY: string | boolean = ZOWE_CLI_SCM;
+export let SAVED_PROFILE_CONTENTS = new Uint8Array();
 
 export enum CreateDataSetTypeWithKeysEnum {
     DATA_SET_BINARY = 0,
@@ -269,6 +271,7 @@ export function defineGlobals(tempPath: string | undefined) {
         this.ISTHEIA = true;
     }
 
+    SETTINGS_TEMP_FOLDER_LOCATION = tempPath;
     // Set temp path & folder paths
     ZOWETEMPFOLDER = tempPath ? path.join(tempPath, "temp") : path.join(__dirname, "..", "..", "resources", "temp");
 
@@ -302,6 +305,10 @@ export function initLogger(context: vscode.ExtensionContext) {
 
 export function setActivated(value: boolean) {
     ACTIVATED = value;
+}
+
+export function setSavedProfileContents(value: Uint8Array) {
+    SAVED_PROFILE_CONTENTS = value;
 }
 
 export async function setGlobalSecurityValue() {

@@ -19,6 +19,7 @@ import { createJobsTree } from "./ZosJobsProvider";
 import * as contextuals from "../../src/shared/context";
 import { Job } from "./ZoweJobNode";
 import { getSelectedNodeList } from "../shared/utils";
+import { initSubscribers } from "../shared/extension";
 
 export async function initJobsProvider(context: vscode.ExtensionContext) {
     const jobsProvider: IZoweTree<IZoweJobTreeNode> = await createJobsTree(globals.LOG);
@@ -171,15 +172,3 @@ export async function initJobsProvider(context: vscode.ExtensionContext) {
     return jobsProvider;
 }
 
-function initSubscribers(context: vscode.ExtensionContext, theProvider: IZoweTree<IZoweTreeNode>) {
-    const theTreeView = theProvider.getTreeView();
-    context.subscriptions.push(theTreeView);
-    if (!globals.ISTHEIA) {
-        theTreeView.onDidCollapseElement(async (e) => {
-            await theProvider.flipState(e.element, false);
-        });
-        theTreeView.onDidExpandElement(async (e) => {
-            await theProvider.flipState(e.element, true);
-        });
-    }
-}

@@ -17,7 +17,8 @@
     "experimentalDecorators": true,
     "removeComments": true,
     "resolveJsonModule": true,
-    "rootDir": "."
+    "rootDir": ".",
+    "types": ["node", "jest", "mocha"]
   },
   "exclude": ["node_modules", ".vscode-test"],
   "include": [
