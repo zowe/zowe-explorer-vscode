@@ -47,12 +47,11 @@ export enum MessageSeverityEnum {
  */
 export class IZoweLogger {
     private log: imperative.Logger;
-    private extensionName: string;
+
     /**
      * Creates an instance of the Imperative logger
-     *
      */
-    public constructor(extensionName: string, loggingPath: string) {
+    public constructor(private extensionName: string, loggingPath: string) {
         for (const appenderName of Object.keys(loggerConfig.log4jsConfig.appenders)) {
             LOGGER_CONFIG.log4jsConfig.appenders[appenderName].filename = path.join(
                 loggingPath,
@@ -73,30 +72,13 @@ export class IZoweLogger {
     }
 
     /**
-     * Log an error to the Imperative log
-     *
+     * Log an error message to the Imperative logger.
+     * Default severity is DEBUG if not specified.
      */
-    public logImperativeMessage(message: string, severity: MessageSeverityEnum): void {
-        const messageWithExtensionName = `message from extension ${this.extensionName}: ${message}`;
-        switch (severity) {
-            case MessageSeverityEnum.TRACE:
-                this.log.trace(`TRACE ${messageWithExtensionName}`);
-                break;
-            case MessageSeverityEnum.DEBUG:
-                this.log.debug(`DEBUG ${messageWithExtensionName}`);
-                break;
-            case MessageSeverityEnum.INFO:
-                this.log.debug(`INFO ${messageWithExtensionName}`);
-                break;
-            case MessageSeverityEnum.WARN:
-                this.log.debug(`WARNING ${messageWithExtensionName}`);
-                break;
-            case MessageSeverityEnum.ERROR:
-                this.log.debug(`ERROR ${messageWithExtensionName}`);
-                break;
-            case MessageSeverityEnum.FATAL:
-                this.log.debug(`FATAL ERROR ${messageWithExtensionName}`);
-                break;
-        }
+    public logImperativeMessage(message: string, severity?: MessageSeverityEnum): void {
+        const messageWithExtensionName = `[${this.extensionName}] ${message}`;
+        const severityName = MessageSeverityEnum[severity ?? MessageSeverityEnum.DEBUG];
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+        this.log[severityName.toLowerCase()](messageWithExtensionName);
     }
 }
