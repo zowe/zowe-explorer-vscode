@@ -22,6 +22,8 @@ import { Profiles } from "../../src/Profiles";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import { createInstanceOfProfileInfo, createIProfile, createTreeView } from "../../__mocks__/mockCreators/shared";
 import { PersistentFilters } from "../../src/PersistentFilters";
+import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
+import { getSelectedNodeList } from "../../src/shared/utils";
 
 jest.mock("vscode");
 jest.mock("fs");
@@ -193,6 +195,8 @@ async function createGlobalMocks() {
             "zowe.uss.enableValidation",
             "zowe.uss.ssoLogin",
             "zowe.uss.ssoLogout",
+            "zowe.uss.pasteUssFile",
+            "zowe.uss.copyUssFile",
             "zowe.jobs.zosJobsOpenspool",
             "zowe.jobs.deleteJob",
             "zowe.jobs.runModifyCommand",
@@ -382,6 +386,35 @@ async function createGlobalMocks() {
 }
 
 describe("Extension Unit Tests", () => {
+    function createBlockMocks(globalMocks: any) {
+        const blockMocks = {
+            rootNode: new ZoweUSSNode(
+                "root",
+                vscode.TreeItemCollapsibleState.Collapsed,
+                null,
+                globalMocks.session,
+                null,
+                false,
+                "test",
+                undefined
+            ),
+            testNode: null,
+        };
+        blockMocks.testNode = new ZoweUSSNode(
+            globals.DS_PDS_CONTEXT,
+            vscode.TreeItemCollapsibleState.Collapsed,
+            blockMocks.rootNode,
+            null,
+            null,
+            false,
+            "test",
+            undefined
+        );
+
+        blockMocks.rootNode.contextValue = globals.USS_SESSION_CONTEXT;
+        return blockMocks;
+    }
+
     it("Testing that activate correctly executes", async () => {
         const globalMocks = await createGlobalMocks();
         Object.defineProperty(zowe.imperative, "ProfileInfo", {
@@ -487,5 +520,20 @@ describe("Extension Unit Tests", () => {
             actualCommands.push(call[0]);
         });
         expect(actualCommands).toEqual(globalMocks.expectedCommands);
+    });
+
+    it("Tests getSelectedNodeList executes successfully with multiple selection", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        const nodeList = [blockMocks.rootNode, blockMocks.testNode];
+        const res = getSelectedNodeList(blockMocks.testNode, nodeList);
+        expect(res).toEqual(nodeList);
+    });
+
+    it("Tests getSelectedNodeList executes successfully when no multiple selection", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        const res = getSelectedNodeList(blockMocks.testNode, undefined);
+        expect(res[0]).toEqual(blockMocks.testNode);
     });
 });

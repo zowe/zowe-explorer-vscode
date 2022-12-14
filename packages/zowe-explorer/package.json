@@ -91,6 +91,18 @@
         "mac": "cmd+alt+z"
       },
       {
+        "command": "zowe.uss.copyUssFile",
+        "key": "ctrl+c",
+        "mac": "cmd+c",
+        "when": "focusedView == zowe.uss.explorer || viewItem =~ /^(?!.*_fav.*)(textFile.*|binaryFile.*)/"
+      },
+      {
+        "command": "zowe.uss.pasteUssFile",
+        "key": "ctrl+v",
+        "mac": "cmd+v",
+        "when": "focusedView == zowe.uss.explorer || viewItem =~ /^(directory.*|ussSession.*)/ && !listSupportsMultiselect"
+      },
+      {
         "command": "zowe.ds.copyDataSet",
         "key": "ctrl+c",
         "mac": "cmd+c",
@@ -532,6 +544,16 @@
         "category": "Zowe Explorer"
       },
       {
+        "command": "zowe.uss.copyUssFile",
+        "title": "%copyFile%",
+        "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.uss.pasteUssFile",
+        "title": "%pasteFile%",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.jobs.deleteJob",
         "title": "%deleteJob%",
         "category": "Zowe Explorer",
@@ -795,6 +817,16 @@
           "when": "view == zowe.uss.explorer && viewItem =~ /^directory.*/ && !listMultiSelection",
           "command": "zowe.uss.uploadDialog",
           "group": "001_zowe_ussCreate@3"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)(textFile.*|binaryFile.*|directory.*)/",
+          "command": "zowe.uss.copyUssFile",
+          "group": "001_zowe_ussCreate@4"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)(textFile.*|binaryFile.*|directory.*)/",
+          "command": "zowe.uss.pasteUssFile",
+          "group": "001_zowe_ussCreate@5"
         },
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^textFile.*/",
@@ -1411,6 +1443,14 @@
         },
         {
           "command": "zowe.uss.uploadDialog",
+          "when": "never"
+        },
+        {
+          "command": "zowe.uss.copyUssFile",
+          "when": "never"
+        },
+        {
+          "command": "zowe.uss.pasteUssFile",
           "when": "never"
         },
         {
