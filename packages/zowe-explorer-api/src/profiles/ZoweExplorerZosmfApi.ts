@@ -12,20 +12,22 @@
 import * as zowe from "@zowe/cli";
 import { ZoweExplorerApi } from "./ZoweExplorerApi";
 
+export const PROFILE_TYPE = "zosmf";
+
 /**
  * An implementation of the Zowe Explorer API Common interface for zOSMF.
  */
 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
     public static getProfileTypeName(): string {
-        return "zosmf";
+        return PROFILE_TYPE;
     }
 
     private session: zowe.imperative.Session;
     public constructor(public profile?: zowe.imperative.IProfileLoaded) {}
 
     public getProfileTypeName(): string {
-        return ZosmfUssApi.getProfileTypeName();
+        return ZosmfApiCommon.getProfileTypeName();
     }
 
     public getSessionFromCommandArgument(cmdArgs: zowe.imperative.ICommandArguments): zowe.imperative.Session {
