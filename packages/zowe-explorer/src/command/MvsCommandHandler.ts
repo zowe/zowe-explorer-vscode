@@ -104,9 +104,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
                 if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
                     session = ZoweExplorerApiRegister.getMvsApi(profile).getSession();
                 } else {
-                    Gui.showMessage(localize("issueMvsCommand.checkProfile", "Profile is invalid"), {
-                        severity: MessageSeverity.ERROR,
-                    });
+                    Gui.errorMessage(localize("issueMvsCommand.checkProfile", "Profile is invalid"));
                     return;
                 }
             } else {
@@ -128,19 +126,16 @@ export class MvsCommandHandler extends ZoweCommandProvider {
                     }
                     await this.issueCommand(profile, command1);
                 } else {
-                    Gui.showMessage(localize("issueMvsCommand.checkProfile", "Profile is invalid"), {
-                        severity: MessageSeverity.ERROR,
-                    });
+                    Gui.errorMessage(localize("issueMvsCommand.checkProfile", "Profile is invalid"));
                     return;
                 }
             }
         } catch (error) {
             if (error.toString().includes("non-existing")) {
                 globals.LOG.error(error);
-                Gui.showMessage(
+                Gui.errorMessage(
                     localize("issueMvsCommand.apiNonExisting", "Not implemented yet for profile of type: ") +
-                        profile.type,
-                    { severity: MessageSeverity.ERROR }
+                        profile.type
                 );
             } else {
                 await errorHandling(error.toString(), profile.name, error.message.toString());

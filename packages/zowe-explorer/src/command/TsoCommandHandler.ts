@@ -104,15 +104,11 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                 if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
                     session = ZoweExplorerApiRegister.getMvsApi(profile).getSession();
                 } else {
-                    Gui.showMessage(localize("issueTsoCommand.checkProfile", "Profile is invalid"), {
-                        severity: MessageSeverity.ERROR,
-                    });
+                    Gui.errorMessage(localize("issueTsoCommand.checkProfile", "Profile is invalid"));
                     return;
                 }
             } else {
-                Gui.showMessage(localize("issueTsoCommand.noProfilesLoaded", "No profiles available"), {
-                    severity: MessageSeverity.ERROR,
-                });
+                Gui.showMessage(localize("issueTsoCommand.noProfilesLoaded", "No profiles available"));
                 return;
             }
         } else {
@@ -137,19 +133,16 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                     }
                     await this.issueCommand(command1, profile, tsoParams);
                 } else {
-                    Gui.showMessage(localize("issueTsoCommand.checkProfile", "Profile is invalid"), {
-                        severity: MessageSeverity.ERROR,
-                    });
+                    Gui.errorMessage(localize("issueTsoCommand.checkProfile", "Profile is invalid"));
                     return;
                 }
             }
         } catch (error) {
             if (error.toString().includes("non-existing")) {
                 globals.LOG.error(error);
-                Gui.showMessage(
+                Gui.errorMessage(
                     localize("issueTsoCommand.apiNonExisting", "Not implemented yet for profile of type: ") +
-                        profile.type,
-                    { severity: MessageSeverity.ERROR }
+                        profile.type
                 );
             } else {
                 await errorHandling(error.toString(), profile.name, error.message.toString());
@@ -272,9 +265,8 @@ export class TsoCommandHandler extends ZoweCommandProvider {
         } catch (error) {
             if (error.toString().includes("account number")) {
                 globals.LOG.error(error);
-                Gui.showMessage(
-                    localize("issueTsoCommand.accountNumberNotSupplied", "Error: No account number was supplied."),
-                    { severity: MessageSeverity.ERROR }
+                Gui.errorMessage(
+                    localize("issueTsoCommand.accountNumberNotSupplied", "Error: No account number was supplied.")
                 );
             } else {
                 await errorHandling(error.toString(), profile.name, error.message.toString());

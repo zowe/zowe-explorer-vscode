@@ -312,7 +312,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
             setFileSaved(true);
             // this part never runs! zowe.Upload.fileToUSSFile doesn't return success: false, it just throws the error which is caught below!!!!!
         } else {
-            Gui.showMessage(uploadResponse.commandResponse, { severity: MessageSeverity.ERROR });
+            Gui.errorMessage(uploadResponse.commandResponse);
         }
     } catch (err) {
         // TODO: error handling must not be zosmf specific
@@ -342,12 +342,11 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
                 this.downloaded = true;
 
                 globals.LOG.warn(err);
-                Gui.showMessage(
+                Gui.warningMessage(
                     localize(
                         "saveFile.error.etagMismatch",
                         "Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict."
-                    ),
-                    { severity: MessageSeverity.WARN }
+                    )
                 );
                 if (vscode.window.activeTextEditor) {
                     const startPosition = new vscode.Position(0, 0);
@@ -382,9 +381,8 @@ export async function deleteUSSFilesPrompt(nodes: IZoweUSSTreeNode[]): Promise<b
         fileNames.toString()
     );
     let cancelled = false;
-    await Gui.showMessage(message, {
+    await Gui.warningMessage(message, {
         items: [deleteButton],
-        severity: MessageSeverity.WARN,
         vsCodeOpts: { modal: true },
     }).then((selection) => {
         if (!selection || selection === "Cancel") {

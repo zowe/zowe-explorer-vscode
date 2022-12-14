@@ -15,7 +15,7 @@ import * as fs from "fs";
 import * as zowe from "@zowe/cli";
 import { DatasetTree } from "../../../src/dataset/DatasetTree";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
-import { IZoweDatasetTreeNode, ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweDatasetTreeNode, ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
@@ -60,7 +60,7 @@ function createGlobalMocks() {
     globalMocks.mockProfileInstance = createInstanceOfProfile(globalMocks.testProfileLoaded);
 
     Object.defineProperty(vscode.window, "createTreeView", { value: jest.fn(), configurable: true });
-    Object.defineProperty(vscode.window, "showInformationMessage", { value: jest.fn(), configurable: true });
+    Object.defineProperty(Gui, "showMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showTextDocument", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.workspace, "getConfiguration", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.workspace, "openTextDocument", { value: jest.fn(), configurable: true });
@@ -143,10 +143,11 @@ function createGlobalMocks() {
         }),
         configurable: true,
     });
-    Object.defineProperty(vscode.window, "showWarningMessage", {
+    Object.defineProperty(Gui, "warningMessage", {
         value: globalMocks.mockShowWarningMessage,
         configurable: true,
     });
+    Object.defineProperty(Gui, "errorMessage", { value: jest.fn(), configurable: true });
 
     return globalMocks;
 }
@@ -293,7 +294,7 @@ describe("Dataset Tree Unit tests - Function initializeFavChildNodeForProfile", 
             null
         );
         favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
-        const showErrorMessageSpy = jest.spyOn(vscode.window, "showErrorMessage");
+        const showErrorMessageSpy = jest.spyOn(Gui, "errorMessage");
         await testTree.initializeFavChildNodeForProfile("BRTVS99.BAD", "badContextValue", favProfileNode);
 
         expect(showErrorMessageSpy).toBeCalledTimes(1);
@@ -559,7 +560,7 @@ describe("Dataset Tree Unit Tests - Function loadProfilesForFavorites", () => {
         );
         const testTree = new DatasetTree();
         testTree.mFavorites.push(favProfileNode);
-        const showErrorMessageSpy = jest.spyOn(vscode.window, "showErrorMessage");
+        const showErrorMessageSpy = jest.spyOn(Gui, "errorMessage");
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -572,7 +573,7 @@ describe("Dataset Tree Unit Tests - Function loadProfilesForFavorites", () => {
                 };
             }),
         });
-        mocked(vscode.window.showErrorMessage).mockResolvedValueOnce({ title: "Remove" });
+        mocked(Gui.errorMessage).mockResolvedValueOnce("Remove");
         await testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
         expect(showErrorMessageSpy).toBeCalledTimes(1);
         showErrorMessageSpy.mockClear();
@@ -1081,7 +1082,7 @@ describe("Dataset Tree Unit Tests - Function addFavorite", () => {
 
         testTree.addFavorite(child);
 
-        expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith("PDS already in favorites");
+        expect(mocked(Gui.showMessage)).toBeCalledWith("PDS already in favorites");
     });
 });
 describe("Dataset Tree Unit Tests - Function removeFavorite", () => {
@@ -1429,7 +1430,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
 
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
 
-        expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith("You must enter a pattern.");
+        expect(mocked(Gui.showMessage)).toBeCalledWith("You must enter a pattern.");
     });
     it("Checking usage of existing filter - Theia", async () => {
         const globalMocks = await createGlobalMocks();
@@ -1460,7 +1461,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
 
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
 
-        expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith("No selection made. Operation cancelled.");
+        expect(mocked(Gui.showMessage)).toBeCalledWith("No selection made. Operation cancelled.");
     });
     it("Checking function on favorites", async () => {
         const globalMocks = await createGlobalMocks();
@@ -1561,7 +1562,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
 
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
 
-        expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith("You must enter a pattern.");
+        expect(mocked(Gui.showMessage)).toBeCalledWith("You must enter a pattern.");
     });
     it("Checking usage of existing filter", async () => {
         const globalMocks = await createGlobalMocks();
@@ -1574,7 +1575,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce(quickPickItem);
         mocked(vscode.window.showInputBox).mockResolvedValueOnce("HLQ.PROD1.STUFF");
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
-        const resolveQuickPickSpy = jest.spyOn(utils, "resolveQuickPickHelper");
+        const resolveQuickPickSpy = jest.spyOn(Gui, "resolveQuickPick");
         resolveQuickPickSpy.mockResolvedValueOnce(quickPickItem);
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
@@ -1594,7 +1595,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         );
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce(quickPickItem);
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
-        const resolveQuickPickSpy = jest.spyOn(utils, "resolveQuickPickHelper");
+        const resolveQuickPickSpy = jest.spyOn(Gui, "resolveQuickPick");
         resolveQuickPickSpy.mockResolvedValueOnce(quickPickItem);
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
@@ -1602,7 +1603,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
 
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
 
-        expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith("No selection made. Operation cancelled.");
+        expect(mocked(Gui.showMessage)).toBeCalledWith("No selection made. Operation cancelled.");
     });
 });
 describe("Dataset Tree Unit Tests - Function editSession", () => {

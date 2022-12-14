@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
-import { ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { Gui, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { Job } from "../../../src/job/ZoweJobNode";
 import {
     createISession,
@@ -40,9 +40,9 @@ import * as refreshActions from "../../../src/shared/refresh";
 const activeTextEditorDocument = jest.fn();
 
 function createGlobalMocks() {
-    Object.defineProperty(vscode.window, "showInformationMessage", { value: jest.fn(), configurable: true });
-    Object.defineProperty(vscode.window, "showInputBox", { value: jest.fn(), configurable: true });
-    Object.defineProperty(vscode.window, "showErrorMessage", { value: jest.fn(), configurable: true });
+    Object.defineProperty(Gui, "showMessage", { value: jest.fn(), configurable: true });
+    Object.defineProperty(Gui, "warningMessage", { value: jest.fn(), configurable: true });
+    Object.defineProperty(Gui, "errorMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe, "IssueCommand", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe.IssueCommand, "issueSimple", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showOpenDialog", { value: jest.fn(), configurable: true });
@@ -54,6 +54,7 @@ function createGlobalMocks() {
     Object.defineProperty(zowe.ZosmfSession, "createSessCfgFromArgs", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe, "DownloadJobs", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe.DownloadJobs, "downloadAllSpoolContentCommon", { value: jest.fn(), configurable: true });
+    Object.defineProperty(vscode.window, "showInputBox", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "activeTextEditor", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showQuickPick", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window.activeTextEditor, "document", {
@@ -100,9 +101,11 @@ describe("Jobs Actions Unit Tests - Function setPrefix", () => {
         await jobActions.setPrefix(node, blockMocks.testJobsTree);
 
         expect(mySpy.mock.calls.length).toBe(1);
-        expect(mySpy).toHaveBeenCalledWith({
-            prompt: "Prefix",
-        });
+        expect(mySpy).toHaveBeenCalledWith(
+            expect.objectContaining({
+                prompt: "Prefix",
+            })
+        );
 
         mySpy.mockRestore();
     });
@@ -140,9 +143,11 @@ describe("Jobs Actions Unit Tests - Function setOwner", () => {
         await jobActions.setOwner(node, blockMocks.testJobsTree);
 
         expect(mySpy.mock.calls.length).toBe(1);
-        expect(mySpy).toHaveBeenCalledWith({
-            prompt: "Owner",
-        });
+        expect(mySpy).toHaveBeenCalledWith(
+            expect.objectContaining({
+                prompt: "Owner",
+            })
+        );
 
         mySpy.mockRestore();
     });
@@ -179,10 +184,8 @@ describe("Jobs Actions Unit Tests - Function stopCommand", () => {
             commandResponse: "fake response",
         });
         await jobActions.stopCommand(node);
-        expect(mocked(vscode.window.showInformationMessage).mock.calls.length).toBe(1);
-        expect(mocked(vscode.window.showInformationMessage).mock.calls[0][0]).toEqual(
-            "Command response: fake response"
-        );
+        expect(mocked(Gui.showMessage).mock.calls.length).toBe(1);
+        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual("Command response: fake response");
     });
     it("Checking failed attempt to issue stop command for Job Node.", async () => {
         createGlobalMocks();
@@ -201,7 +204,7 @@ describe("Jobs Actions Unit Tests - Function stopCommand", () => {
             commandResponse: "fake response",
         });
         await jobActions.stopCommand(node);
-        expect(mocked(vscode.window.showErrorMessage).mock.calls.length).toBe(1);
+        expect(mocked(Gui.errorMessage).mock.calls.length).toBe(1);
     });
 });
 
@@ -237,10 +240,8 @@ describe("Jobs Actions Unit Tests - Function modifyCommand", () => {
             commandResponse: "fake response",
         });
         await jobActions.modifyCommand(node);
-        expect(mocked(vscode.window.showInformationMessage).mock.calls.length).toBe(1);
-        expect(mocked(vscode.window.showInformationMessage).mock.calls[0][0]).toEqual(
-            "Command response: fake response"
-        );
+        expect(mocked(Gui.showMessage).mock.calls.length).toBe(1);
+        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual("Command response: fake response");
     });
     it("Checking failed attempt to modify Job Node", async () => {
         createGlobalMocks();
@@ -260,7 +261,7 @@ describe("Jobs Actions Unit Tests - Function modifyCommand", () => {
             commandResponse: "fake response",
         });
         await jobActions.modifyCommand(node);
-        expect(mocked(vscode.window.showErrorMessage).mock.calls.length).toBe(1);
+        expect(mocked(Gui.errorMessage).mock.calls.length).toBe(1);
     });
 });
 
@@ -326,7 +327,7 @@ describe("Jobs Actions Unit Tests - Function downloadSpool", () => {
         };
         mocked(vscode.window.showOpenDialog).mockResolvedValue([fileUri as vscode.Uri]);
         await jobActions.downloadSpool(undefined);
-        expect(mocked(vscode.window.showErrorMessage).mock.calls.length).toBe(1);
+        expect(mocked(Gui.errorMessage).mock.calls.length).toBe(1);
     });
 });
 
@@ -363,7 +364,7 @@ describe("Jobs Actions Unit Tests - Function downloadJcl", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         await jobActions.downloadJcl(undefined);
-        expect(mocked(vscode.window.showErrorMessage)).toBeCalled();
+        expect(mocked(Gui.errorMessage)).toBeCalled();
     });
 });
 
@@ -419,9 +420,9 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         await dsActions.submitJcl(blockMocks.testDatasetTree);
 
         expect(submitJclSpy).toBeCalled();
-        expect(mocked(vscode.window.showInformationMessage)).toBeCalled();
-        expect(mocked(vscode.window.showInformationMessage).mock.calls.length).toBe(1);
-        expect(mocked(vscode.window.showInformationMessage).mock.calls[0][0]).toEqual(
+        expect(mocked(Gui.showMessage)).toBeCalled();
+        expect(mocked(Gui.showMessage).mock.calls.length).toBe(1);
+        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
             "Job submitted [JOB1234](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
         );
     });
@@ -447,9 +448,9 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         await dsActions.submitJcl(blockMocks.testDatasetTree);
 
         expect(submitJclSpy).toBeCalled();
-        expect(mocked(vscode.window.showInformationMessage)).toBeCalled();
-        expect(mocked(vscode.window.showInformationMessage).mock.calls.length).toBe(1);
-        expect(mocked(vscode.window.showInformationMessage).mock.calls[0][0]).toEqual(
+        expect(mocked(Gui.showMessage)).toBeCalled();
+        expect(mocked(Gui.showMessage).mock.calls.length).toBe(1);
+        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
             "Job submitted [JOB1234](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
         );
     });
@@ -517,8 +518,8 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         await dsActions.submitMember(member);
         expect(submitJobSpy).toBeCalled();
         expect(submitJobSpy.mock.calls[0][0]).toEqual("dataset(member)");
-        expect(mocked(vscode.window.showInformationMessage)).toBeCalled();
-        expect(mocked(vscode.window.showInformationMessage).mock.calls[0][0]).toEqual(
+        expect(mocked(Gui.showMessage)).toBeCalled();
+        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
             "Job submitted [JOB1234](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
         );
     });
@@ -552,8 +553,8 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         await dsActions.submitMember(member);
         expect(submitJobSpy).toBeCalled();
         expect(submitJobSpy.mock.calls[0][0]).toEqual("dataset(member)");
-        expect(mocked(vscode.window.showInformationMessage)).toBeCalled();
-        expect(mocked(vscode.window.showInformationMessage).mock.calls[0][0]).toEqual(
+        expect(mocked(Gui.showMessage)).toBeCalled();
+        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
             "Job submitted [JOB1234](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
         );
     });
@@ -575,8 +576,8 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         await dsActions.submitMember(dataset);
         expect(submitJobSpy).toBeCalled();
         expect(submitJobSpy.mock.calls[0][0]).toEqual("dataset");
-        expect(mocked(vscode.window.showInformationMessage)).toBeCalled();
-        expect(mocked(vscode.window.showInformationMessage).mock.calls[0][0]).toEqual(
+        expect(mocked(Gui.showMessage)).toBeCalled();
+        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
             "Job submitted [JOB1234](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
         );
     });
@@ -612,8 +613,8 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         await dsActions.submitMember(favoriteMember);
         expect(submitJobSpy).toBeCalled();
         expect(submitJobSpy.mock.calls[0][0]).toEqual("TEST.JCL(pds)");
-        expect(mocked(vscode.window.showInformationMessage)).toBeCalled();
-        expect(mocked(vscode.window.showInformationMessage).mock.calls[0][0]).toEqual(
+        expect(mocked(Gui.showMessage)).toBeCalled();
+        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
             "Job submitted [JOB1234](command:zowe.jobs.setJobSpool?%5B%22test%22%2C%22JOB1234%22%5D)"
         );
     });
@@ -642,8 +643,8 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         await dsActions.submitMember(favoriteDataset);
         expect(submitJobSpy).toBeCalled();
         expect(submitJobSpy.mock.calls[0][0]).toEqual("TEST.JCL");
-        expect(mocked(vscode.window.showInformationMessage)).toBeCalled();
-        expect(mocked(vscode.window.showInformationMessage).mock.calls[0][0]).toEqual(
+        expect(mocked(Gui.showMessage)).toBeCalled();
+        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
             "Job submitted [JOB1234](command:zowe.jobs.setJobSpool?%5B%22test%22%2C%22JOB1234%22%5D)"
         );
     });
@@ -674,11 +675,9 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
             expect(e.message).toEqual("submitMember() called from invalid node.");
         }
         expect(submitJobSpy).not.toBeCalled();
-        expect(mocked(vscode.window.showInformationMessage)).not.toBeCalled();
-        expect(mocked(vscode.window.showErrorMessage)).toBeCalled();
-        expect(mocked(vscode.window.showErrorMessage).mock.calls[0][0]).toEqual(
-            "submitMember() called from invalid node."
-        );
+        expect(mocked(Gui.showMessage)).not.toBeCalled();
+        expect(mocked(Gui.errorMessage)).toBeCalled();
+        expect(mocked(Gui.errorMessage).mock.calls[0][0]).toEqual("submitMember() called from invalid node.");
     });
 });
 
@@ -771,7 +770,7 @@ describe("Jobs Actions Unit Tests - Function getSpoolContent", () => {
         await jobActions.getSpoolContent(session, spoolFile, anyTimestamp);
 
         expect(mocked(vscode.window.showTextDocument)).not.toBeCalled();
-        expect(mocked(vscode.window.showErrorMessage)).toBeCalledWith("Test Error: Test");
+        expect(mocked(Gui.errorMessage)).toBeCalledWith("Test Error: Test");
     });
     it("should show an error message in case document cannot be shown for some reason", async () => {
         createGlobalMocks();
@@ -787,7 +786,7 @@ describe("Jobs Actions Unit Tests - Function getSpoolContent", () => {
 
         await jobActions.getSpoolContent(session, spoolFile, anyTimestamp);
 
-        expect(mocked(vscode.window.showErrorMessage)).toBeCalledWith("Test Error: Test");
+        expect(mocked(Gui.errorMessage)).toBeCalledWith("Test Error: Test");
     });
 });
 
@@ -1029,7 +1028,7 @@ describe("job deletion command", () => {
 
     const mockWarningMsg = (option: string) => {
         const warningDialogStub = jest.fn();
-        Object.defineProperty(vscode.window, "showWarningMessage", {
+        Object.defineProperty(Gui, "warningMessage", {
             value: warningDialogStub,
             configurable: true,
         });

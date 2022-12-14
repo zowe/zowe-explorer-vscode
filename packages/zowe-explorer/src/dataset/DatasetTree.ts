@@ -340,14 +340,13 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             }
         } else {
             // This case should not happen if the regex for initializeFavorites is defined correctly, but is here as a catch-all just in case.
-            Gui.showMessage(
+            Gui.errorMessage(
                 localize(
                     "initializeFavChildNodeForProfile.error",
                     "Error creating data set favorite node: {0} for profile {1}.",
                     label,
                     profileName
-                ),
-                { severity: MessageSeverity.ERROR }
+                )
             );
         }
         return node;
@@ -409,9 +408,8 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                         getAppName(globals.ISTHEIA)
                     );
                 const btnLabelRemove = localize("loadProfilesForFavorites.error.buttonRemove", "Remove");
-                Gui.showMessage(errMessage, {
+                Gui.errorMessage(errMessage, {
                     items: [btnLabelRemove],
-                    severity: MessageSeverity.ERROR,
                     vsCodeOpts: { modal: true },
                 }).then(async (selection) => {
                     if (selection === btnLabelRemove) {
@@ -728,9 +726,8 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 profileName
             );
             const continueRemove = localize("removeFavProfile.continue", "Continue");
-            await Gui.showMessage(checkConfirmation, {
+            await Gui.warningMessage(checkConfirmation, {
                 items: [continueRemove],
-                severity: MessageSeverity.WARN,
                 vsCodeOpts: { modal: true },
             }).then((selection) => {
                 if (!selection || selection === "Cancel") {

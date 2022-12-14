@@ -380,13 +380,12 @@ export class Profiles extends ProfilesCache {
             } catch (error) {
                 this.log.error(error);
                 await openConfigOnError(error);
-                Gui.showMessage(
+                Gui.errorMessage(
                     localize(
                         "Profiles.getProfileInfo.error",
                         "Error in creating team configuration file: {0}",
                         error.message
-                    ),
-                    { severity: MessageSeverity.ERROR }
+                    )
                 );
             }
             if (config.usingTeamConfig) {
@@ -697,13 +696,8 @@ export class Profiles extends ProfilesCache {
         } catch (err) {
             this.log.error(err);
             await openConfigOnError(err);
-            Gui.showMessage(
-                localize(
-                    "Profiles.getProfileInfo.error",
-                    "Error in creating team configuration file: {0}",
-                    err.message
-                ),
-                { severity: MessageSeverity.ERROR }
+            Gui.errorMessage(
+                localize("Profiles.getProfileInfo.error", "Error in creating team configuration file: {0}", err.message)
             );
         }
     }
@@ -886,12 +880,11 @@ export class Profiles extends ProfilesCache {
         try {
             for (const profile of this.allProfiles) {
                 if (profile.name.toLowerCase() === profileName.toLowerCase()) {
-                    Gui.showMessage(
+                    Gui.errorMessage(
                         localize(
                             "createNewConnection.duplicateProfileName",
                             "Profile name already exists. Please create a profile using a different name"
-                        ),
-                        { severity: MessageSeverity.ERROR }
+                        )
                     );
                     return undefined;
                 }
@@ -1251,9 +1244,7 @@ export class Profiles extends ProfilesCache {
                 });
             } catch (error) {
                 this.log.error(error);
-                Gui.showMessage(localize("ssoLogin.unableToLogin", "Unable to log in. ") + error.message, {
-                    severity: MessageSeverity.ERROR,
-                });
+                Gui.errorMessage(localize("ssoLogin.unableToLogin", "Unable to log in. ") + error.message);
                 return;
             }
         } else {
@@ -1289,9 +1280,7 @@ export class Profiles extends ProfilesCache {
                     });
                 } catch (error) {
                     this.log.error(error);
-                    Gui.showMessage(localize("ssoLogin.unableToLogin", "Unable to log in. ") + error.message, {
-                        severity: MessageSeverity.ERROR,
-                    });
+                    Gui.errorMessage(localize("ssoLogin.unableToLogin", "Unable to log in. ") + error.message);
                     return;
                 }
             }
@@ -1336,9 +1325,7 @@ export class Profiles extends ProfilesCache {
             Gui.showMessage(localize("ssoLogout.successful", "Logout from authentication service was successful."));
         } catch (error) {
             this.log.error(error);
-            Gui.showMessage(localize("ssoLogout.unableToLogout", "Unable to log out. ") + error.message, {
-                severity: MessageSeverity.ERROR,
-            });
+            Gui.errorMessage(localize("ssoLogout.unableToLogout", "Unable to log out. ") + error.message);
             return;
         }
     }
@@ -1439,13 +1426,11 @@ export class Profiles extends ProfilesCache {
                 "Team Configuration file created. Location: {0}. \n Please update file and refresh Zowe Explorer via button or command palette.",
                 rootPath
             );
-            await Gui.showMessage(infoMsg, { severity: MessageSeverity.INFO, items: [reloadButton] }).then(
-                async (selection) => {
-                    if (selection === reloadButton) {
-                        await vscode.commands.executeCommand("zowe.extRefresh");
-                    }
+            await Gui.showMessage(infoMsg, { items: [reloadButton] }).then(async (selection) => {
+                if (selection === reloadButton) {
+                    await vscode.commands.executeCommand("zowe.extRefresh");
                 }
-            );
+            });
         }
         return undefined;
     }
@@ -1856,7 +1841,7 @@ export class Profiles extends ProfilesCache {
             this.getCliProfileManager(this.loadedProfile.type).update(updateParms);
         } catch (error) {
             this.log.error(error);
-            Gui.showMessage(error.message, { severity: MessageSeverity.ERROR });
+            Gui.errorMessage(error.message);
         }
     }
 

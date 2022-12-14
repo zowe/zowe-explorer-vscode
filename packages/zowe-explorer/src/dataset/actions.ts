@@ -302,9 +302,8 @@ export async function deleteDatasetPrompt(
         nodesToDelete.length,
         nodesToDelete.toString().replace(/(,)/g, "\n")
     );
-    await api.Gui.showMessage(message, {
+    await api.Gui.warningMessage(message, {
         items: [deleteButton],
-        severity: api.MessageSeverity.WARN,
         vsCodeOpts: { modal: true },
     }).then((selection) => {
         if (!selection || selection === "Cancel") {
@@ -467,9 +466,7 @@ export async function openPS(
                     label = node.getParent().getLabel().toString() + "(" + node.getLabel().toString() + ")";
                     break;
                 default:
-                    api.Gui.showMessage(localize("openPS.invalidNode", "openPS() called from invalid node."), {
-                        severity: api.MessageSeverity.ERROR,
-                    });
+                    api.Gui.errorMessage(localize("openPS.invalidNode", "openPS() called from invalid node."));
                     throw Error(localize("openPS.error.invalidNode", "openPS() called from invalid node. "));
             }
             globals.LOG.debug(
@@ -866,12 +863,11 @@ export async function showAttributes(
 // This function does not appear to currently be made available in the UI
 export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>) {
     if (!vscode.window.activeTextEditor) {
-        api.Gui.showMessage(
+        api.Gui.errorMessage(
             localize(
                 "submitJcl.noDocumentOpen",
                 "No editor with a document that could be submitted as JCL is currently open."
-            ),
-            { severity: api.MessageSeverity.ERROR }
+            )
         );
         return;
     }
@@ -935,9 +931,7 @@ export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetT
             );
         }
     } else {
-        api.Gui.showMessage(localize("submitJcl.checkProfile", "Profile is invalid"), {
-            severity: api.MessageSeverity.ERROR,
-        });
+        api.Gui.errorMessage(localize("submitJcl.checkProfile", "Profile is invalid"));
         return;
     }
 }
@@ -971,9 +965,7 @@ export async function submitMember(node: api.IZoweTreeNode) {
                 sessProfile = node.getProfile();
                 break;
             default:
-                api.Gui.showMessage(localize("submitMember.invalidNode", "submitMember() called from invalid node."), {
-                    severity: api.MessageSeverity.ERROR,
-                });
+                api.Gui.errorMessage(localize("submitMember.invalidNode", "submitMember() called from invalid node."));
                 throw Error(localize("submitMember.error.invalidNode", "submitMember() called from invalid node."));
         }
         try {
@@ -1237,13 +1229,11 @@ export async function hMigrateDataSet(node: ZoweDatasetNode) {
             return ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hMigrateDataSet(dataSetName);
         } catch (err) {
             globals.LOG.error(err);
-            api.Gui.showMessage(err.message, { severity: api.MessageSeverity.ERROR });
+            api.Gui.errorMessage(err.message);
             return;
         }
     } else {
-        api.Gui.showMessage(localize("hMigrateDataSet.checkProfile", "Profile is invalid"), {
-            severity: api.MessageSeverity.ERROR,
-        });
+        api.Gui.errorMessage(localize("hMigrateDataSet.checkProfile", "Profile is invalid"));
         return;
     }
 }
@@ -1267,13 +1257,11 @@ export async function hRecallDataSet(node: ZoweDatasetNode) {
             return ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hRecallDataSet(dataSetName);
         } catch (err) {
             globals.LOG.error(err);
-            api.Gui.showMessage(err.message, { severity: api.MessageSeverity.ERROR });
+            api.Gui.errorMessage(err.message);
             return;
         }
     } else {
-        api.Gui.showMessage(localize("hMigrateDataSet.checkProfile", "Profile is invalid"), {
-            severity: api.MessageSeverity.ERROR,
-        });
+        api.Gui.errorMessage(localize("hMigrateDataSet.checkProfile", "Profile is invalid"));
         return;
     }
 }
@@ -1340,7 +1328,7 @@ export async function pasteMember(
                 );
             } catch (err) {
                 globals.LOG.error(err);
-                api.Gui.showMessage(err.message, { severity: api.MessageSeverity.ERROR });
+                api.Gui.errorMessage(err.message);
                 return;
             }
             if (memberName) {
@@ -1386,9 +1374,8 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
     const profile = Profiles.getInstance().loadNamedProfile(sesName);
     if (!profile) {
         globals.LOG.error(localize("saveFile.log.error.session", "Couldn't locate session when saving data set!"));
-        return api.Gui.showMessage(
-            localize("saveFile.log.error.session", "Couldn't locate session when saving data set!"),
-            { severity: api.MessageSeverity.ERROR }
+        return api.Gui.errorMessage(
+            localize("saveFile.log.error.session", "Couldn't locate session when saving data set!")
         );
     }
 
@@ -1411,12 +1398,11 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
             // Checks if file still exists on server
             const response = await ZoweExplorerApiRegister.getMvsApi(profile).dataSet(label);
             if (!response.apiResponse.items.length) {
-                return api.Gui.showMessage(
+                return api.Gui.errorMessage(
                     localize(
                         "saveFile.error.saveFailed",
                         "Data set failed to save. Data set may have been deleted on mainframe."
-                    ),
-                    { severity: api.MessageSeverity.ERROR }
+                    )
                 );
             }
         } catch (err) {
@@ -1488,12 +1474,11 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
                 if (node && downloadEtag !== node.getEtag()) {
                     node.setEtag(downloadEtag);
                 }
-                api.Gui.showMessage(
+                api.Gui.warningMessage(
                     localize(
                         "saveFile.error.etagMismatch",
                         "Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict."
-                    ),
-                    { severity: api.MessageSeverity.WARN }
+                    )
                 );
                 if (vscode.window.activeTextEditor) {
                     // Store document in a separate variable, to be used on merge conflict
@@ -1509,10 +1494,10 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
                 }
             }
         } else {
-            api.Gui.showMessage(uploadResponse.commandResponse, { severity: api.MessageSeverity.ERROR });
+            api.Gui.errorMessage(uploadResponse.commandResponse);
         }
     } catch (err) {
         globals.LOG.error(err);
-        api.Gui.showMessage(err.message, { severity: api.MessageSeverity.ERROR });
+        api.Gui.errorMessage(err.message);
     }
 }

@@ -263,10 +263,9 @@ export async function stopCommand(job: Job) {
     } catch (error) {
         if (error.toString().includes("non-existing")) {
             globals.LOG.error(error);
-            Gui.showMessage(
+            Gui.errorMessage(
                 localize("jobActions.stopCommand.apiNonExisting", "Not implemented yet for profile of type: ") +
-                    job.getProfile().type,
-                { severity: MessageSeverity.ERROR }
+                    job.getProfile().type
             );
         } else {
             await errorHandling(error.toString(), job.getProfile().name, error.message.toString());
@@ -341,9 +340,8 @@ async function deleteSingleJob(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZ
         jobName.replace(/(,)/g, "\n")
     );
     const deleteButton = localize("deleteJobPrompt.confirmation.delete", "Delete");
-    const result = await Gui.showMessage(message, {
+    const result = await Gui.warningMessage(message, {
         items: [deleteButton],
-        severity: MessageSeverity.WARN,
         vsCodeOpts: { modal: true },
     });
     if (!result || result === "Cancel") {
@@ -374,9 +372,8 @@ async function deleteMultipleJobs(
         jobs.length,
         jobs.map(toJobname).toString().replace(/(,)/g, "\n")
     );
-    const deleteChoice = await Gui.showMessage(message, {
+    const deleteChoice = await Gui.warningMessage(message, {
         items: [deleteButton],
-        severity: MessageSeverity.WARN,
         vsCodeOpts: { modal: true },
     });
     if (!deleteChoice || deleteChoice === "Cancel") {

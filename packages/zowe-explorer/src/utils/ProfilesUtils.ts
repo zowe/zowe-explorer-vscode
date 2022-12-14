@@ -61,9 +61,8 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
         if (msg.includes("hostname")) {
             const mProfileInfo = await Profiles.getInstance().getProfileInfo();
             if (mProfileInfo.usingTeamConfig) {
-                Gui.showMessage(
-                    localize("errorHandling.invalid.host", "Required parameter 'host' must not be blank."),
-                    { severity: MessageSeverity.ERROR }
+                Gui.errorMessage(
+                    localize("errorHandling.invalid.host", "Required parameter 'host' must not be blank.")
                 );
                 const profAllAttrs = mProfileInfo.getAllProfiles();
                 for (const prof of profAllAttrs) {
@@ -88,7 +87,7 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
                 const tokenError: string = errorDetails.mDetails.additionalDetails;
                 if (tokenError.includes("Token is not valid or expired.")) {
                     if (isTheia()) {
-                        Gui.showMessage(errToken, { severity: MessageSeverity.ERROR }).then(async () => {
+                        Gui.errorMessage(errToken).then(async () => {
                             await Profiles.getInstance().ssoLogin(null, label);
                         });
                     } else {
@@ -107,12 +106,11 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
             }
 
             if (isTheia()) {
-                Gui.showMessage(errMsg, { severity: MessageSeverity.ERROR });
+                Gui.errorMessage(errMsg);
             } else {
                 const checkCredsButton = localize("errorHandling.checkCredentials.button", "Check Credentials");
-                await Gui.showMessage(errMsg, {
+                await Gui.errorMessage(errMsg, {
                     items: [checkCredsButton],
-                    severity: MessageSeverity.ERROR,
                     vsCodeOpts: { modal: true },
                 }).then(async (selection) => {
                     if (selection === checkCredsButton) {
@@ -127,7 +125,7 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
             if (moreInfo === undefined) {
                 moreInfo = errorDetails.toString().includes("Error") ? "" : "Error:";
             }
-            Gui.showMessage(moreInfo + " " + errorDetails, { severity: MessageSeverity.ERROR });
+            Gui.errorMessage(moreInfo + " " + errorDetails);
             break;
     }
     return;

@@ -111,9 +111,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         }
 
         if (!this.label) {
-            Gui.showMessage(localize("getChildren.error.invalidNode", "Invalid node"), {
-                severity: MessageSeverity.ERROR,
-            });
+            Gui.errorMessage(localize("getChildren.error.invalidNode", "Invalid node"));
             throw Error(localize("getChildren.error.invalidNode", "Invalid node"));
         }
 

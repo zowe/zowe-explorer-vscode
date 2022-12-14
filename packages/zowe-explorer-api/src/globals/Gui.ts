@@ -234,7 +234,7 @@ export namespace Gui {
      * @returns Whether `doc` is a `vscode.TextDocument`
      */
     export function isTextDocument(doc): doc is vscode.TextDocument {
-        return "uri" in doc;
+        return doc != null && typeof doc === "object" && "uri" in doc;
     }
 
     /**

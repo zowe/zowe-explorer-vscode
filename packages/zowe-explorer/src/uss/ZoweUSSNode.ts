@@ -151,9 +151,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         }
 
         if (!this.label) {
-            Gui.showMessage(localize("getChildren.error.invalidNode", "Invalid node"), {
-                severity: MessageSeverity.ERROR,
-            });
+            Gui.errorMessage(localize("getChildren.error.invalidNode", "Invalid node"));
             throw Error("Invalid node");
         }
 
@@ -386,9 +384,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             } catch (err) {}
         } catch (err) {
             globals.LOG.error(err);
-            Gui.showMessage(localize("deleteUSSNode.error.node", "Unable to delete node: ") + err.message, {
-                severity: MessageSeverity.ERROR,
-            });
+            Gui.errorMessage(localize("deleteUSSNode.error.node", "Unable to delete node: ") + err.message);
             throw err;
         }
 
@@ -476,9 +472,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                         label = this.fullPath;
                         break;
                     default:
-                        Gui.showMessage(localize("openUSS.error.invalidNode", "open() called from invalid node."), {
-                            severity: MessageSeverity.ERROR,
-                        });
+                        Gui.errorMessage(localize("openUSS.error.invalidNode", "open() called from invalid node."));
                         throw Error(localize("openUSS.error.invalidNode", "open() called from invalid node."));
                 }
 
@@ -550,9 +544,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 label = this.label;
                 break;
             default:
-                Gui.showMessage(localize("refreshUSS.error.invalidNode", "refreshUSS() called from invalid node."), {
-                    severity: MessageSeverity.ERROR,
-                });
+                Gui.errorMessage(localize("refreshUSS.error.invalidNode", "refreshUSS() called from invalid node."));
                 throw Error(localize("refreshUSS.error.invalidNode", "refreshUSS() called from invalid node."));
         }
         try {
@@ -619,12 +611,12 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 const yesResponse = localize("openUSS.log.info.failedToOpenAsText.yes", "Re-download");
                 const noResponse = localize("openUSS.log.info.failedToOpenAsText.no", "Cancel");
 
-                const response = await Gui.showMessage(
+                const response = await Gui.errorMessage(
                     localize(
                         "openUSS.log.info.failedToOpenAsText",
                         "Failed to open file as text. Re-download file as binary?"
                     ),
-                    { items: [yesResponse, noResponse], severity: MessageSeverity.ERROR }
+                    { items: [yesResponse, noResponse] }
                 );
 
                 if (response === yesResponse.toString()) {

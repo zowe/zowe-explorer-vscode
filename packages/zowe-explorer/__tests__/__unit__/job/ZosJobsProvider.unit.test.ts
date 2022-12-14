@@ -16,7 +16,7 @@ import * as zowe from "@zowe/cli";
 import * as globals from "../../../src/globals";
 import * as jobUtils from "../../../src/job/utils";
 import * as utils from "../../../src/utils/ProfilesUtils";
-import { IZoweJobTreeNode, ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweJobTreeNode, ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import {
     createIJobFile,
     createIJobObject,
@@ -741,14 +741,14 @@ describe("ZosJobsProvider unit tests - Function getUserJobsMenuChoice", () => {
         jest.spyOn(globalMocks.testJobsProvider.mHistory, "getSearchHistory").mockReturnValue(["JobId:123"]);
     });
     it("should return undefined and warn if user did not select a menu", async () => {
-        jest.spyOn(jobUtils, "resolveQuickPickHelper").mockReturnValue(undefined);
+        jest.spyOn(Gui, "resolveQuickPick").mockReturnValue(undefined);
         const result = await globalMocks.testJobsProvider.getUserJobsMenuChoice();
         expect(result).toEqual(undefined);
         expect(showInformationMessage).toHaveBeenCalled();
     });
     it("should return user menu choice and not show vscode warning", async () => {
         const menuItem = new utils.FilterItem({ text: "searchById" });
-        jest.spyOn(jobUtils, "resolveQuickPickHelper").mockReturnValue(Promise.resolve(menuItem));
+        jest.spyOn(Gui, "resolveQuickPick").mockReturnValue(Promise.resolve(menuItem));
         const result = await globalMocks.testJobsProvider.getUserJobsMenuChoice();
         expect(result).toEqual(menuItem);
         expect(showInformationMessage).not.toHaveBeenCalled();

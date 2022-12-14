@@ -31,6 +31,7 @@ export enum MessageSeverity {
 export class IZoweLogger {
     private log: imperative.Logger;
     private extensionName: string;
+
     /**
      * Creates an instance of the Imperative logger
      *

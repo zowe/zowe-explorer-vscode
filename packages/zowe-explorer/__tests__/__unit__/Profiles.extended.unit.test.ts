@@ -27,7 +27,7 @@ import * as vscode from "vscode";
 import * as utils from "../../src/utils/ProfilesUtils";
 import * as globals from "../../src/globals";
 import * as zowe from "@zowe/cli";
-import { ProfilesCache } from "@zowe/zowe-explorer-api";
+import { Gui, ProfilesCache } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../src/Profiles";
 
 // jest.mock("vscode");
@@ -88,7 +88,7 @@ async function createGlobalMocks() {
     });
     Object.defineProperty(vscode.window, "showQuickPick", { value: newMocks.mockShowQuickPick, configurable: true });
 
-    Object.defineProperty(vscode.window, "createQuickPick", {
+    Object.defineProperty(Gui, "createQuickPick", {
         value: jest.fn(() => {
             return newMocks.mockCreateQuickPick;
         }),
@@ -374,8 +374,8 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
     it("Tests that createZoweSession presents correct message when escaping selection of quickpick", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
-        const spy = jest.spyOn(vscode.window, "createQuickPick");
-        jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(undefined);
+        const spy = jest.spyOn(Gui, "createQuickPick");
+        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(undefined);
         await Profiles.getInstance().createZoweSession(blockMocks.testDatasetTree);
         expect(spy).toBeCalled();
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("No selection made. Operation cancelled.");

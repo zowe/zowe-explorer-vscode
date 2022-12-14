@@ -85,7 +85,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             "initialize.log.error",
             "Error encountered while activating and initializing logger! "
         );
-        Gui.showMessage(`${errorMessage}: ${err.message}`, { severity: MessageSeverity.ERROR });
+        Gui.errorMessage(`${errorMessage}: ${err.message}`);
     }
 
     try {
@@ -94,7 +94,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     } catch (err) {
         globals.LOG.error(err);
         const errorMessage = localize("initialize.profiles.error", "Error reading or initializing Zowe CLI profiles.");
-        Gui.showMessage(`${errorMessage}: ${err.message}`, { severity: MessageSeverity.WARN });
+        Gui.warningMessage(`${errorMessage}: ${err.message}`);
     }
 
     // Initialize profile manager

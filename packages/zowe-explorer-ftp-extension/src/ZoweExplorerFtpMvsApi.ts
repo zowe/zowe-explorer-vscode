@@ -161,9 +161,8 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
                 const message2 = "The exceeding part will be truncated.";
                 const message3 = "Do you want to continue?";
                 const warningMessage = `${message1} ${message2}\n${message3}`;
-                const select = await Gui.showMessage(warningMessage, {
+                const select = await Gui.warningMessage(warningMessage, {
                     items: ["Yes", "No"],
-                    severity: MessageSeverity.WARN,
                 });
                 if (select === "No") {
                     result.commandResponse = "";

@@ -268,12 +268,11 @@ export async function willForceUpload(
         title = localize("saveUSSFile.response.title", "Saving file...");
     }
     if (globals.ISTHEIA) {
-        Gui.showMessage(
+        Gui.warningMessage(
             localize(
                 "saveFile.error.theiaDetected",
                 "A merge conflict has been detected. Since you are running inside Theia editor, a merge conflict resolution is not available yet."
-            ),
-            { severity: MessageSeverity.WARN }
+            )
         );
     }
     vscode.window

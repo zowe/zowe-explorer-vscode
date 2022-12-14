@@ -9,7 +9,7 @@
  *                                                                                 *
  */
 
-import { IZoweUSSTreeNode, ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweUSSTreeNode, ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
@@ -582,7 +582,7 @@ describe("USSTree Unit Tests - Function USSTree.filterPrompt()", () => {
             theia: false,
             qpValue: "",
             qpItem: new utils.FilterDescriptor("\uFF0B " + "Create a new filter"),
-            resolveQuickPickHelper: jest.spyOn(utils, "resolveQuickPickHelper"),
+            resolveQuickPickHelper: jest.spyOn(Gui, "resolveQuickPick"),
         };
         Object.defineProperty(globals, "ISTHEIA", { get: () => newMocks.theia });
         newMocks.resolveQuickPickHelper.mockImplementation(() => Promise.resolve(newMocks.qpItem));
@@ -960,7 +960,7 @@ describe("USSTree Unit Tests - Function USSTree.saveSearch()", () => {
                 "/"
             ),
             file: null,
-            resolveQuickPickHelper: jest.spyOn(utils, "resolveQuickPickHelper"),
+            resolveQuickPickHelper: jest.spyOn(Gui, "resolveQuickPick"),
         };
         globalMocks.testTree.mFavorites = [];
         newMocks.file = new ZoweUSSNode("abcd", vscode.TreeItemCollapsibleState.None, newMocks.folder, null, "/parent");

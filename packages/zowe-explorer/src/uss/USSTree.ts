@@ -126,14 +126,14 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             const docIsChild = checkIfChildPath(currentFilePath, doc.fileName);
             if (doc.fileName === currentFilePath || docIsChild === true) {
                 if (doc.isDirty === true) {
-                    Gui.showMessage(
+                    Gui.errorMessage(
                         localize(
                             "renameUSS.unsavedWork",
                             "Unable to rename {0} because you have unsaved changes in this {1}. Please save your work before renaming the {1}.",
                             originalNode.fullPath,
                             nodeType
                         ),
-                        { severity: MessageSeverity.ERROR, vsCodeOpts: { modal: true } }
+                        { vsCodeOpts: { modal: true } }
                     );
                     return;
                 }
@@ -515,9 +515,8 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 profileName
             );
             const continueRemove = localize("removeFavProfile.continue", "Continue");
-            await Gui.showMessage(checkConfirmation, {
+            await Gui.warningMessage(checkConfirmation, {
                 items: [continueRemove],
-                severity: MessageSeverity.WARN,
                 vsCodeOpts: { modal: true },
             }).then((selection) => {
                 if (!selection || selection === "Cancel") {
@@ -853,9 +852,8 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                         getAppName(globals.ISTHEIA)
                     );
                 const btnLabelRemove = localize("initializeUSSFavorites.error.buttonRemove", "Remove");
-                Gui.showMessage(errMessage, {
+                Gui.errorMessage(errMessage, {
                     items: [btnLabelRemove],
-                    severity: MessageSeverity.ERROR,
                     vsCodeOpts: { modal: true },
                 }).then(async (selection) => {
                     if (selection === btnLabelRemove) {

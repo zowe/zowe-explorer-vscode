@@ -471,9 +471,8 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                         getAppName(globals.ISTHEIA)
                     );
                 const btnLabelRemove = localize("initializeJobsFavorites.error.buttonRemove", "Remove");
-                Gui.showMessage(errMessage, {
+                Gui.errorMessage(errMessage, {
                     items: [btnLabelRemove],
-                    severity: MessageSeverity.ERROR,
                     vsCodeOpts: { modal: true },
                 }).then(async (selection) => {
                     if (selection === btnLabelRemove) {
@@ -620,9 +619,8 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 profileName
             );
             const continueRemove = localize("removeFavProfile.continue", "Continue");
-            await Gui.showMessage(checkConfirmation, {
+            await Gui.warningMessage(checkConfirmation, {
                 items: [continueRemove],
-                severity: MessageSeverity.WARN,
                 vsCodeOpts: { modal: true },
             }).then((selection) => {
                 if (!selection || selection === "Cancel") {

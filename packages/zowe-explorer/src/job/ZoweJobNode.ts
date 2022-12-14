@@ -309,12 +309,11 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
 
     private statusNotSupportedMsg(status: string) {
         if (status !== "*") {
-            Gui.showMessage(
+            Gui.warningMessage(
                 localize(
                     "getJobs.status.not.supported",
                     "Filtering by job status is not yet supported with this profile type. Will show jobs with all statuses."
-                ),
-                { severity: MessageSeverity.WARN }
+                )
             );
         }
     }
