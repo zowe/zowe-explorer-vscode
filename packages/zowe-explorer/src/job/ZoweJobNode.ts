@@ -13,7 +13,7 @@
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import * as globals from "../globals";
-import { Gui, IZoweJobTreeNode, MessageSeverity, ZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweJobTreeNode, ZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
 import { getIconByNode } from "../generators/icons";

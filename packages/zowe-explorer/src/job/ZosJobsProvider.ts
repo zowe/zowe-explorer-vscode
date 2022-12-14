@@ -15,12 +15,10 @@ import * as globals from "../globals";
 import { IJob, imperative } from "@zowe/cli";
 import {
     Gui,
-    MessageSeverity,
     ValidProfileEnum,
     IZoweTree,
     IZoweJobTreeNode,
     PersistenceSchemaEnum,
-    ZoweVsCodeExtension,
 } from "@zowe/zowe-explorer-api";
 import { FilterItem, errorHandling } from "../utils/ProfilesUtils";
 import { Profiles } from "../Profiles";

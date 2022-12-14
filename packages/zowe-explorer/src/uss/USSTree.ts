@@ -16,7 +16,6 @@ import { imperative } from "@zowe/cli";
 import {
     FilterItem,
     FilterDescriptor,
-    resolveQuickPickHelper,
     errorHandling,
     syncSessionNode,
 } from "../utils/ProfilesUtils";
@@ -25,7 +24,6 @@ import {
     Gui,
     IZoweTree,
     IZoweUSSTreeNode,
-    MessageSeverity,
     ValidProfileEnum,
     PersistenceSchemaEnum,
 } from "@zowe/zowe-explorer-api";

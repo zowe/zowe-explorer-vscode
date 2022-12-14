@@ -30,13 +30,11 @@ import {
     ZoweVsCodeExtension,
     getFullPath,
     getZoweDir,
-    MessageSeverity,
 } from "@zowe/zowe-explorer-api";
 import {
     errorHandling,
     FilterDescriptor,
     FilterItem,
-    resolveQuickPickHelper,
     readConfigFromDisk,
     openConfigOnError,
 } from "./utils/ProfilesUtils";

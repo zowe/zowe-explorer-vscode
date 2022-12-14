@@ -12,10 +12,10 @@
 import * as vscode from "vscode";
 import { imperative } from "@zowe/cli";
 import * as globals from "../globals";
-import { ValidProfileEnum, IZoweTreeNode, Gui, MessageSeverity } from "@zowe/zowe-explorer-api";
+import { ValidProfileEnum, IZoweTreeNode, Gui } from "@zowe/zowe-explorer-api";
 import { PersistentFilters } from "../PersistentFilters";
 import { Profiles } from "../Profiles";
-import { FilterDescriptor, FilterItem, resolveQuickPickHelper, errorHandling } from "../utils/ProfilesUtils";
+import { FilterDescriptor, FilterItem, errorHandling } from "../utils/ProfilesUtils";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import * as nls from "vscode-nls";
 import { ZoweCommandProvider } from "../abstract/ZoweCommandProvider";

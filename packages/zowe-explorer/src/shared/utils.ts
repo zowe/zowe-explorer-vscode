@@ -21,7 +21,6 @@ import {
     IZoweDatasetTreeNode,
     IZoweUSSTreeNode,
     IZoweJobTreeNode,
-    MessageSeverity,
 } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import * as nls from "vscode-nls";

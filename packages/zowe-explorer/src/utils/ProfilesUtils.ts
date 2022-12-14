@@ -22,7 +22,6 @@ import {
     getZoweDir,
     getFullPath,
     Gui,
-    MessageSeverity,
 } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import * as nls from "vscode-nls";

@@ -25,7 +25,6 @@ import {
     IZoweTreeNode,
     IZoweTree,
     getZoweDir,
-    MessageSeverity,
 } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";

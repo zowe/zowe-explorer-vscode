@@ -16,7 +16,6 @@ import * as globals from "../globals";
 import * as dsActions from "./actions";
 import {
     Gui,
-    MessageSeverity,
     ValidProfileEnum,
     IZoweTree,
     IZoweDatasetTreeNode,
@@ -27,7 +26,6 @@ import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import {
     FilterDescriptor,
     FilterItem,
-    resolveQuickPickHelper,
     errorHandling,
     syncSessionNode,
 } from "../utils/ProfilesUtils";

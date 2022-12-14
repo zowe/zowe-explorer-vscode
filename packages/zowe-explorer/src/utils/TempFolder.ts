@@ -17,7 +17,7 @@ import { moveSync } from "fs-extra";
 import * as nls from "vscode-nls";
 import { errorHandling } from "../utils/ProfilesUtils";
 import { PersistentFilters } from "../PersistentFilters";
-import { Gui, MessageSeverity } from "@zowe/zowe-explorer-api";
+import { Gui } from "@zowe/zowe-explorer-api";
 
 // Set up localization
 nls.config({
