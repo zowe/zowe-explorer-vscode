@@ -1048,7 +1048,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                             if (!child.pattern) {
                                 for (const each of dsn) {
                                     let inc = false;
-                                    inc = await this.checkFilterPattern(name[index], each);
+                                    inc = this.checkFilterPattern(name[index], each);
                                     if (inc) {
                                         child.pattern = item.dsn;
                                         includes = true;
@@ -1068,7 +1068,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                                 ).allMembers(label, options);
                                 let existing = false;
                                 for (const mem of memResponse.apiResponse.items) {
-                                    existing = await this.checkFilterPattern(mem.member, item.member);
+                                    existing = this.checkFilterPattern(mem.member, item.member);
                                     if (existing) {
                                         child.memberPattern = item.member;
                                         if (!child.contextValue.includes(globals.FILTER_SEARCH)) {
@@ -1102,7 +1102,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         }
     }
 
-    public async checkFilterPattern(dsName: string, itemName: string): Promise<boolean> {
+    public checkFilterPattern(dsName: string, itemName: string): boolean {
         let existing: boolean;
         if (!/(\*?)(\w+)(\*)(\w+)(\*?)/.test(itemName)) {
             if (/^[^*](\w+)[^*]$/.test(itemName)) {
