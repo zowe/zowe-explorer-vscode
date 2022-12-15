@@ -12,7 +12,7 @@
 import * as zowe from "@zowe/cli";
 import { ZoweExplorerApi } from "./ZoweExplorerApi";
 
-export const PROFILE_TYPE = "zosmf";
+export const PROFILE_TYPE_ZOSMF = "zosmf";
 
 /**
  * An implementation of the Zowe Explorer API Common interface for zOSMF.
@@ -20,7 +20,7 @@ export const PROFILE_TYPE = "zosmf";
 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
     public static getProfileTypeName(): string {
-        return PROFILE_TYPE;
+        return PROFILE_TYPE_ZOSMF;
     }
 
     private session: zowe.imperative.Session;
