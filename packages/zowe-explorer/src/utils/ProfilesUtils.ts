@@ -15,14 +15,7 @@ import * as vscode from "vscode";
 import * as globals from "../globals";
 import * as path from "path";
 import * as fs from "fs";
-import {
-    getSecurityModules,
-    IZoweTreeNode,
-    ZoweTreeNode,
-    getZoweDir,
-    getFullPath,
-    Gui,
-} from "@zowe/zowe-explorer-api";
+import { getSecurityModules, IZoweTreeNode, ZoweTreeNode, getZoweDir, getFullPath, Gui } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import * as nls from "vscode-nls";
 import { imperative, getImperativeConfig } from "@zowe/cli";

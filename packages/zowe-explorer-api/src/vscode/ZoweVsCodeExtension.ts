@@ -12,7 +12,6 @@
 import * as semver from "semver";
 import * as vscode from "vscode";
 import { ProfilesCache, ZoweExplorerApi } from "../profiles";
-import { IZoweLogger, MessageSeverity } from "../logger/IZoweLogger";
 import { imperative } from "@zowe/cli";
 import { IPromptCredentialsOptions, IPromptUserPassOptions } from "./doc/IPromptCredentials";
 import { Gui } from "../globals/Gui";
@@ -44,15 +43,6 @@ export class ZoweVsCodeExtension {
             return zoweExplorerApi.exports as ZoweExplorerApi.IApiRegisterClient;
         }
         return undefined;
-    }
-
-    /**
-     * Reveal an error in VSCode, and log the error to the Imperative log
-     *
-     * @deprecated Use `Gui.showMessage` instead
-     */
-    public static showVsCodeMessage(message: string, severity: MessageSeverity, logger: IZoweLogger): void {
-        void Gui.showMessage(message, { severity: severity, logger: logger });
     }
 
     /**

@@ -14,13 +14,7 @@ import * as globals from "../globals";
 import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
-import {
-    IZoweUSSTreeNode,
-    ZoweTreeNode,
-    IZoweTree,
-    ValidProfileEnum,
-    Gui,
-} from "@zowe/zowe-explorer-api";
+import { IZoweUSSTreeNode, ZoweTreeNode, IZoweTree, ValidProfileEnum, Gui } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, syncSessionNode } from "../utils/ProfilesUtils";

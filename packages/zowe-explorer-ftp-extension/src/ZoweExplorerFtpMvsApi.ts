@@ -14,11 +14,10 @@ import * as crypto from "crypto";
 import * as tmp from "tmp";
 import * as zowe from "@zowe/cli";
 import * as path from "path";
-import * as vscode from "vscode";
 
 import { CreateDataSetTypeEnum, IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 
-import { Gui, MessageSeverity, ZoweExplorerApi, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { Gui, MessageSeverity, ZoweExplorerApi } from "@zowe/zowe-explorer-api";
 import { DataSetUtils, TRANSFER_TYPE_ASCII, TRANSFER_TYPE_BINARY } from "@zowe/zos-ftp-for-zowe-cli";
 import { AbstractFtpApi } from "./ZoweExplorerAbstractFtpApi";
 import { ZoweLogger } from "./extension";
@@ -94,7 +93,7 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
                 result.apiResponse.etag = await this.hashFile(targetFile);
             } else {
                 ZoweLogger.logImperativeMessage(result.commandResponse, MessageSeverity.ERROR);
-                ZoweVsCodeExtension.showVsCodeMessage(result.commandResponse, MessageSeverity.ERROR, ZoweLogger);
+                await Gui.errorMessage(result.commandResponse, { logger: ZoweLogger });
                 throw new Error();
             }
             return result;
@@ -143,11 +142,9 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
                 const contentsTag = await this.getContentsTag(dataSetName);
                 if (contentsTag && contentsTag !== options.etag) {
                     // TODO: extension.ts should not check for zosmf errors.
-                    ZoweVsCodeExtension.showVsCodeMessage(
-                        "Save conflict. Please pull the latest content from mainframe first.",
-                        MessageSeverity.ERROR,
-                        ZoweLogger
-                    );
+                    await Gui.errorMessage("Save conflict. Please pull the latest content from mainframe first.", {
+                        logger: ZoweLogger,
+                    });
                     throw new Error();
                 }
             }
@@ -234,7 +231,7 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
                 result.success = true;
                 result.commandResponse = "Data set created successfully.";
             } else {
-                ZoweVsCodeExtension.showVsCodeMessage(result.commandResponse, MessageSeverity.ERROR, ZoweLogger);
+                await Gui.errorMessage(result.commandResponse, { logger: ZoweLogger });
                 throw new Error();
             }
             return result;
@@ -254,7 +251,7 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
         try {
             connection = await this.ftpClient(this.checkedProfile());
             if (!connection) {
-                ZoweVsCodeExtension.showVsCodeMessage(result.commandResponse, MessageSeverity.ERROR, ZoweLogger);
+                await Gui.errorMessage(result.commandResponse, { logger: ZoweLogger });
                 throw new Error();
             }
 
@@ -267,25 +264,17 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
         }
     }
 
-    public allocateLikeDataSet(dataSetName: string, likeDataSetName: string): Promise<zowe.IZosFilesResponse> {
-        ZoweVsCodeExtension.showVsCodeMessage(
-            "Allocate like dataset is not supported in ftp extension.",
-            MessageSeverity.ERROR,
-            ZoweLogger
-        );
+    public async allocateLikeDataSet(dataSetName: string, likeDataSetName: string): Promise<zowe.IZosFilesResponse> {
+        await Gui.errorMessage("Allocate like dataset is not supported in ftp extension.", { logger: ZoweLogger });
         throw new Error();
     }
 
-    public copyDataSetMember(
+    public async copyDataSetMember(
         { dsn: fromDataSetName, member: fromMemberName }: zowe.IDataSet,
         { dsn: toDataSetName, member: toMemberName }: zowe.IDataSet,
         options?: { replace?: boolean }
     ): Promise<zowe.IZosFilesResponse> {
-        ZoweVsCodeExtension.showVsCodeMessage(
-            "Copy dataset is not supported in ftp extension.",
-            MessageSeverity.ERROR,
-            ZoweLogger
-        );
+        await Gui.errorMessage("Copy dataset is not supported in ftp extension.", { logger: ZoweLogger });
         throw new Error();
     }
 
@@ -299,7 +288,7 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
                 result.success = true;
                 result.commandResponse = "Rename completed successfully.";
             } else {
-                ZoweVsCodeExtension.showVsCodeMessage(result.commandResponse, MessageSeverity.ERROR, ZoweLogger);
+                await Gui.errorMessage(result.commandResponse, { logger: ZoweLogger });
                 throw new Error();
             }
             return result;
@@ -324,7 +313,7 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
                 result.success = true;
                 result.commandResponse = "Rename completed successfully.";
             } else {
-                ZoweVsCodeExtension.showVsCodeMessage(result.commandResponse, MessageSeverity.ERROR, ZoweLogger);
+                await Gui.infoMessage(result.commandResponse, { logger: ZoweLogger });
                 throw new Error();
             }
             return result;
@@ -333,21 +322,13 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
         }
     }
 
-    public hMigrateDataSet(dataSetName: string): Promise<zowe.IZosFilesResponse> {
-        ZoweVsCodeExtension.showVsCodeMessage(
-            "Migrate dataset is not supported in ftp extension.",
-            MessageSeverity.ERROR,
-            ZoweLogger
-        );
+    public async hMigrateDataSet(dataSetName: string): Promise<zowe.IZosFilesResponse> {
+        await Gui.errorMessage("Migrate dataset is not supported in ftp extension.", { logger: ZoweLogger });
         throw new Error();
     }
 
-    public hRecallDataSet(dataSetName: string): Promise<zowe.IZosFilesResponse> {
-        ZoweVsCodeExtension.showVsCodeMessage(
-            "Recall dataset is not supported in ftp extension.",
-            MessageSeverity.ERROR,
-            ZoweLogger
-        );
+    public async hRecallDataSet(dataSetName: string): Promise<zowe.IZosFilesResponse> {
+        await Gui.errorMessage("Recall dataset is not supported in ftp extension.", { logger: ZoweLogger });
         throw new Error();
     }
     public async deleteDataSet(
@@ -363,7 +344,7 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
                 result.success = true;
                 result.commandResponse = "Delete completed successfully.";
             } else {
-                ZoweVsCodeExtension.showVsCodeMessage(result.commandResponse, MessageSeverity.ERROR, ZoweLogger);
+                await Gui.errorMessage(result.commandResponse, { logger: ZoweLogger });
                 throw new Error();
             }
             return result;

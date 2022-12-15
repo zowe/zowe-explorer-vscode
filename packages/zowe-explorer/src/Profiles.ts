@@ -12,7 +12,6 @@
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import * as path from "path";
-import * as fs from "fs";
 import {
     Gui,
     IZoweTree,

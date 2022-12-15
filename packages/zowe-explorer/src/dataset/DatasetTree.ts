@@ -14,21 +14,10 @@ import * as nls from "vscode-nls";
 
 import * as globals from "../globals";
 import * as dsActions from "./actions";
-import {
-    Gui,
-    ValidProfileEnum,
-    IZoweTree,
-    IZoweDatasetTreeNode,
-    PersistenceSchemaEnum,
-} from "@zowe/zowe-explorer-api";
+import { Gui, ValidProfileEnum, IZoweTree, IZoweDatasetTreeNode, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
-import {
-    FilterDescriptor,
-    FilterItem,
-    errorHandling,
-    syncSessionNode,
-} from "../utils/ProfilesUtils";
+import { FilterDescriptor, FilterItem, errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
 import { sortTreeItems, getAppName, getDocumentFilePath, labelRefresh } from "../shared/utils";
 import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
