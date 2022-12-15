@@ -22,7 +22,9 @@ import { initSubscribers } from "../shared/extension";
 
 export async function initUSSProvider(context: vscode.ExtensionContext) {
     const ussFileProvider: IZoweTree<IZoweUSSTreeNode> = await createUSSTree(globals.LOG);
-    if (ussFileProvider == null) return null;
+    if (ussFileProvider == null) {
+        return null;
+    }
 
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.uss.addFavorite", async (node, nodeList) => {

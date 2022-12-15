@@ -21,7 +21,7 @@ import { ISubscriptionTesting } from "../extension.unit.test";
 import { ITestContext, processSubscriptions, spyOnSubscriptions } from "../../__common__/testUtils";
 
 describe("Test src/dataset/extension", () => {
-    describe("initDatasetProvider", function () {
+    describe("initDatasetProvider", () => {
         let registerCommand;
         let onDidChangeConfiguration;
         let spyCreateJobsTree;
@@ -195,10 +195,10 @@ describe("Test src/dataset/extension", () => {
         ];
 
         beforeAll(async () => {
-            registerCommand = (cmd: string, fun: Function) => {
+            registerCommand = (cmd: string, fun: () => void) => {
                 return { [cmd]: fun };
             };
-            onDidChangeConfiguration = (fun: Function) => {
+            onDidChangeConfiguration = (fun: () => void) => {
                 return { onDidChangeConfiguration: fun };
             };
             spyCreateJobsTree = jest.spyOn(jobTree, "createJobsTree");
@@ -221,8 +221,8 @@ describe("Test src/dataset/extension", () => {
 
         it("should not initialize if it is unable to create the dataset tree", async () => {
             spyCreateJobsTree.mockResolvedValue(null);
-            const dsProvider = await initJobsProvider({} as any);
-            expect(dsProvider).toBe(null);
+            const myProvider = await initJobsProvider({} as any);
+            expect(myProvider).toBe(null);
         });
     });
 });

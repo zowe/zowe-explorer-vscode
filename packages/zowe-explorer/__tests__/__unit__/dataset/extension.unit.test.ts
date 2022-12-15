@@ -28,7 +28,7 @@ describe("Test src/dataset/extension", () => {
         const test: ITestContext = {
             context: { subscriptions: [] },
             value: { label: "test" },
-            _: { _: "_" }
+            _: { _: "_" },
         };
         const dsProvider: { [key: string]: jest.Mock } = {
             createZoweSchema: jest.fn(),
@@ -277,10 +277,10 @@ describe("Test src/dataset/extension", () => {
         ];
 
         beforeAll(async () => {
-            registerCommand = (cmd: string, fun: Function) => {
+            registerCommand = (cmd: string, fun: () => void) => {
                 return { [cmd]: fun };
             };
-            onDidChangeConfiguration = (fun: Function) => {
+            onDidChangeConfiguration = (fun: () => void) => {
                 return { onDidChangeConfiguration: fun };
             };
             spyCreateDatasetTree = jest.spyOn(dsTree, "createDatasetTree");
@@ -303,8 +303,8 @@ describe("Test src/dataset/extension", () => {
 
         it("should not initialize if it is unable to create the dataset tree", async () => {
             spyCreateDatasetTree.mockResolvedValue(null);
-            const dsProvider = await initDatasetProvider({} as any);
-            expect(dsProvider).toBe(null);
+            const myProvider = await initDatasetProvider({} as any);
+            expect(myProvider).toBe(null);
         });
     });
 });

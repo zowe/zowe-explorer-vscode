@@ -23,7 +23,9 @@ import { initSubscribers } from "../shared/extension";
 
 export async function initJobsProvider(context: vscode.ExtensionContext) {
     const jobsProvider: IZoweTree<IZoweJobTreeNode> = await createJobsTree(globals.LOG);
-    if (jobsProvider == null) return null;
+    if (jobsProvider == null) {
+        return null;
+    }
 
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.jobs.zosJobsOpenspool", (session, spool, refreshTimestamp) =>

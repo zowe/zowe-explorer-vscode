@@ -23,7 +23,9 @@ import { initSubscribers } from "../shared/extension";
 
 export async function initDatasetProvider(context: vscode.ExtensionContext) {
     const datasetProvider: IZoweTree<IZoweDatasetTreeNode> = await createDatasetTree(globals.LOG);
-    if (datasetProvider == null) return null;
+    if (datasetProvider == null) {
+        return null;
+    }
 
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.all.config.init", async () => {

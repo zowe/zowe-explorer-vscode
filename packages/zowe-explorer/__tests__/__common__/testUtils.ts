@@ -25,9 +25,7 @@ export interface ISubscriptionTesting {
 export function spyOnSubscriptions(commands: any[]) {
     commands.forEach((cmd) => {
         cmd.mock.forEach((spy, index) => {
-            spy.mockImplementation(
-                cmd.returnValue?.[index] ? jest.fn((_) => cmd.returnValue[index]) : jest.fn()
-            );
+            spy.mockImplementation(cmd.returnValue?.[index] ? jest.fn((_) => cmd.returnValue[index]) : jest.fn());
         });
     });
 }
