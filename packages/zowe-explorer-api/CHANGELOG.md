@@ -2,9 +2,9 @@
 
 All notable changes to the "zowe-explorer-api" extension will be documented in this file.
 
-## TBD Release
+## `2.5.0`
 
-- copy api for files and directories on USS tree ( paste selected local files into current node )
+- Copy and Paste added to IZoweTree API for files and directories on USS tree.
 
 ## `2.4.1`
 
