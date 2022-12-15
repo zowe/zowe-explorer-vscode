@@ -17,14 +17,19 @@ import * as dsActions from "../../../src/dataset/actions";
 import * as sharedExtension from "../../../src/shared/extension";
 import { initDatasetProvider } from "../../../src/dataset/extension";
 import { Profiles } from "../../../src/Profiles";
+import { ISubscriptionTesting } from "../extension.unit.test";
+import { ITestContext, processSubscriptions, spyOnSubscriptions } from "../../__common__/testUtils";
 
 describe("Test src/dataset/extension", () => {
     describe("initDatasetProvider", () => {
-        let context;
         let registerCommand;
         let onDidChangeConfiguration;
         let spyCreateDatasetTree;
-        const testNode = { label: "node" } as any;
+        const test: ITestContext = {
+            context: { subscriptions: [] },
+            value: { label: "test" },
+            _: { _: "_" }
+        };
         const dsProvider: { [key: string]: jest.Mock } = {
             createZoweSchema: jest.fn(),
             createZoweSession: jest.fn(),
@@ -39,7 +44,7 @@ describe("Test src/dataset/extension", () => {
             ssoLogout: jest.fn(),
             onDidChangeConfiguration: jest.fn(),
         };
-        const commands: { name: string; mock: jest.SpyInstance[]; args: any[][]; returnValue?: any[] }[] = [
+        const commands: ISubscriptionTesting[] = [
             {
                 name: "zowe.all.config.init",
                 mock: [jest.spyOn(dsProvider, "createZoweSchema")],
@@ -53,7 +58,7 @@ describe("Test src/dataset/extension", () => {
             {
                 name: "zowe.ds.addFavorite",
                 mock: [jest.spyOn(dsProvider, "addFavorite")],
-                args: [[testNode]],
+                args: [[test.value]],
             },
             {
                 name: "zowe.ds.refreshAll",
@@ -67,7 +72,7 @@ describe("Test src/dataset/extension", () => {
                     jest.spyOn(contextuals, "isDsMember"),
                     jest.spyOn(dsActions, "refreshPS"),
                 ],
-                args: [[testNode], [testNode], [testNode]],
+                args: [[test.value], [test.value], [test.value]],
                 returnValue: [false, true],
             },
             {
@@ -77,53 +82,53 @@ describe("Test src/dataset/extension", () => {
                     jest.spyOn(contextuals, "isPdsNotFav"),
                     jest.spyOn(dsActions, "refreshDataset"),
                 ],
-                args: [[testNode], [testNode], [testNode, dsProvider]],
+                args: [[test.value], [test.value], [test.value, dsProvider]],
                 returnValue: [false, true],
             },
             {
                 name: "zowe.ds.pattern",
                 mock: [jest.spyOn(dsProvider, "filterPrompt")],
-                args: [[testNode]],
+                args: [[test.value]],
             },
             {
                 name: "zowe.ds.editSession",
                 mock: [jest.spyOn(dsProvider, "editSession")],
-                args: [[testNode, dsProvider]],
+                args: [[test.value, dsProvider]],
             },
             {
                 name: "zowe.ds.ZoweNode.openPS",
                 mock: [jest.spyOn(dsActions, "openPS")],
-                args: [[testNode, true, dsProvider]],
+                args: [[test.value, true, dsProvider]],
             },
             {
                 name: "zowe.ds.createDataset",
                 mock: [jest.spyOn(dsActions, "createFile")],
-                args: [[testNode, dsProvider]],
+                args: [[test.value, dsProvider]],
             },
             {
                 name: "zowe.ds.createMember",
                 mock: [jest.spyOn(dsActions, "createMember")],
-                args: [[testNode, dsProvider]],
+                args: [[test.value, dsProvider]],
             },
             {
                 name: "zowe.ds.deleteDataset",
                 mock: [jest.spyOn(dsActions, "deleteDatasetPrompt")],
-                args: [[dsProvider, testNode]],
+                args: [[dsProvider, test.value]],
             },
             {
                 name: "zowe.ds.allocateLike",
                 mock: [jest.spyOn(dsActions, "allocateLike")],
-                args: [[dsProvider, testNode]],
+                args: [[dsProvider, test.value]],
             },
             {
                 name: "zowe.ds.uploadDialog",
                 mock: [jest.spyOn(dsActions, "uploadDialog")],
-                args: [[testNode, dsProvider]],
+                args: [[test.value, dsProvider]],
             },
             {
                 name: "zowe.ds.deleteMember",
                 mock: [jest.spyOn(dsActions, "deleteDatasetPrompt")],
-                args: [[dsProvider, testNode]],
+                args: [[dsProvider, test.value]],
             },
             {
                 name: "zowe.ds.editDataSet",
@@ -132,7 +137,7 @@ describe("Test src/dataset/extension", () => {
                     jest.spyOn(contextuals, "isDsMember"),
                     jest.spyOn(dsActions, "openPS"),
                 ],
-                args: [[testNode], [testNode], [testNode, false, dsProvider]],
+                args: [[test.value], [test.value], [test.value, false, dsProvider]],
                 returnValue: [false, true],
             },
             {
@@ -142,34 +147,34 @@ describe("Test src/dataset/extension", () => {
                     jest.spyOn(contextuals, "isDsMember"),
                     jest.spyOn(dsActions, "openPS"),
                 ],
-                args: [[testNode], [testNode], [testNode, false, dsProvider]],
+                args: [[test.value], [test.value], [test.value, false, dsProvider]],
                 returnValue: [false, true],
             },
             {
                 name: "zowe.ds.removeSession",
                 mock: [jest.spyOn(contextuals, "isDsSession"), jest.spyOn(dsProvider, "deleteSession")],
-                args: [[testNode], [testNode]],
+                args: [[test.value], [test.value]],
                 returnValue: [true],
             },
             {
                 name: "zowe.ds.removeFavorite",
                 mock: [jest.spyOn(dsProvider, "removeFavorite")],
-                args: [[testNode]],
+                args: [[test.value]],
             },
             {
                 name: "zowe.ds.saveSearch",
                 mock: [jest.spyOn(dsProvider, "addFavorite")],
-                args: [[testNode]],
+                args: [[test.value]],
             },
             {
                 name: "zowe.ds.removeSavedSearch",
                 mock: [jest.spyOn(dsProvider, "removeFavorite")],
-                args: [[testNode]],
+                args: [[test.value]],
             },
             {
                 name: "zowe.ds.removeFavProfile",
                 mock: [jest.spyOn(dsProvider, "removeFavProfile")],
-                args: [[testNode.label, true]],
+                args: [[test.value.label, true]],
             },
             {
                 name: "zowe.ds.submitJcl",
@@ -179,7 +184,7 @@ describe("Test src/dataset/extension", () => {
             {
                 name: "zowe.ds.submitMember",
                 mock: [jest.spyOn(dsActions, "submitMember")],
-                args: [[testNode]],
+                args: [[test.value]],
             },
             {
                 name: "zowe.ds.showAttributes",
@@ -189,33 +194,33 @@ describe("Test src/dataset/extension", () => {
                     jest.spyOn(contextuals, "isDsMember"),
                     jest.spyOn(dsActions, "showAttributes"),
                 ],
-                args: [[testNode], [testNode], [testNode], [testNode, dsProvider]],
+                args: [[test.value], [test.value], [test.value], [test.value, dsProvider]],
                 returnValue: [false, false, true],
             },
             {
                 name: "zowe.ds.renameDataSet",
                 mock: [jest.spyOn(dsProvider, "rename")],
-                args: [[testNode]],
+                args: [[test.value]],
             },
             {
                 name: "zowe.ds.copyMember",
                 mock: [jest.spyOn(dsActions, "copyDataSet")],
-                args: [[testNode]],
+                args: [[test.value]],
             },
             {
                 name: "zowe.ds.copyDataSet",
                 mock: [jest.spyOn(dsActions, "copyDataSet")],
-                args: [[testNode]],
+                args: [[test.value]],
             },
             {
                 name: "zowe.ds.pasteMember",
                 mock: [jest.spyOn(dsActions, "pasteMember")],
-                args: [[testNode, dsProvider]],
+                args: [[test.value, dsProvider]],
             },
             {
                 name: "zowe.ds.renameDataSetMember",
                 mock: [jest.spyOn(dsProvider, "rename")],
-                args: [[testNode]],
+                args: [[test.value]],
             },
             {
                 name: "zowe.ds.hMigrateDataSet",
@@ -224,13 +229,13 @@ describe("Test src/dataset/extension", () => {
                     jest.spyOn(contextuals, "isPdsNotFav"),
                     jest.spyOn(dsActions, "hMigrateDataSet"),
                 ],
-                args: [[testNode], [testNode], [testNode]],
+                args: [[test.value], [test.value], [test.value]],
                 returnValue: [false, true],
             },
             {
                 name: "zowe.ds.hRecallDataSet",
                 mock: [jest.spyOn(contextuals, "isMigrated"), jest.spyOn(dsActions, "hRecallDataSet")],
-                args: [[testNode], [testNode]],
+                args: [[test.value], [test.value]],
                 returnValue: [true],
             },
             {
@@ -239,7 +244,7 @@ describe("Test src/dataset/extension", () => {
                     jest.spyOn(contextuals, "hasImperativeError"),
                     jest.spyOn(dsActions, "showImperativeErrorDetails"),
                 ],
-                args: [[testNode], [testNode]],
+                args: [[test.value], [test.value]],
                 returnValue: [true],
             },
             {
@@ -257,22 +262,21 @@ describe("Test src/dataset/extension", () => {
             {
                 name: "zowe.ds.ssoLogin",
                 mock: [jest.spyOn(dsProvider, "ssoLogin")],
-                args: [[testNode]],
+                args: [[test.value]],
             },
             {
                 name: "zowe.ds.ssoLogout",
                 mock: [jest.spyOn(dsProvider, "ssoLogout")],
-                args: [[testNode]],
+                args: [[test.value]],
             },
             {
                 name: "onDidChangeConfiguration",
                 mock: [jest.spyOn(dsProvider, "onDidChangeConfiguration")],
-                args: [[testNode]],
+                args: [[test.value]],
             },
         ];
 
         beforeAll(async () => {
-            context = { subscriptions: [] };
             registerCommand = (cmd: string, fun: Function) => {
                 return { [cmd]: fun };
             };
@@ -285,14 +289,8 @@ describe("Test src/dataset/extension", () => {
             Object.defineProperty(vscode.workspace, "onDidChangeConfiguration", { value: onDidChangeConfiguration });
 
             spyCreateDatasetTree.mockResolvedValue(dsProvider as any);
-            commands.forEach((cmd) => {
-                cmd.mock.forEach((spy, index) => {
-                    spy.mockImplementation(
-                        cmd.returnValue?.[index] ? jest.fn((_) => cmd.returnValue[index]) : jest.fn()
-                    );
-                });
-            });
-            await initDatasetProvider(context);
+            spyOnSubscriptions(commands);
+            await initDatasetProvider(test.context);
         });
         beforeEach(() => {
             spyCreateDatasetTree.mockResolvedValue(dsProvider as any);
@@ -301,14 +299,7 @@ describe("Test src/dataset/extension", () => {
             jest.restoreAllMocks();
         });
 
-        commands.forEach((command, index) => {
-            it(`Test: ${command.name}`, async () => {
-                await context.subscriptions[index][command.name](testNode);
-                command.mock.forEach((spy, mockIndex) => {
-                    expect(spy).toHaveBeenCalledWith(...command.args[mockIndex]);
-                });
-            });
-        });
+        processSubscriptions(commands, test);
 
         it("should not initialize if it is unable to create the dataset tree", async () => {
             spyCreateDatasetTree.mockResolvedValue(null);

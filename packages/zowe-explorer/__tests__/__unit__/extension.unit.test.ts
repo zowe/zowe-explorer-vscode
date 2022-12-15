@@ -25,6 +25,14 @@ import { createInstanceOfProfileInfo, createIProfile, createTreeView } from "../
 import { PersistentFilters } from "../../src/PersistentFilters";
 import * as dsActions from "../../src/dataset/actions";
 
+export interface ISubscriptionTesting {
+    name: string;
+    mock: jest.SpyInstance[];
+    args: any[][];
+    returnValue?: any[];
+    parm?: any[];
+}
+
 jest.mock("vscode");
 jest.mock("fs");
 jest.mock("fs-extra");
@@ -357,10 +365,10 @@ async function createGlobalMocks() {
     // tslint:disable-next-line: no-object-literal-type-assertion
     const mockExtensionCreator = jest.fn(
         () =>
-            ({
-                subscriptions: [],
-                extensionPath: path.join(__dirname, ".."),
-            } as vscode.ExtensionContext)
+        ({
+            subscriptions: [],
+            extensionPath: path.join(__dirname, ".."),
+        } as vscode.ExtensionContext)
     );
     globalMocks.mockExtension = new mockExtensionCreator();
 
