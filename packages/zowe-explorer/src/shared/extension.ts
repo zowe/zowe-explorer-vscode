@@ -14,11 +14,7 @@ import * as vscode from "vscode";
 import * as refreshActions from "./refresh";
 import * as nls from "vscode-nls";
 import * as sharedActions from "./actions";
-import {
-    IZoweTreeNode,
-    IZoweTree,
-    getZoweDir,
-} from "@zowe/zowe-explorer-api";
+import { IZoweTreeNode, IZoweTree, getZoweDir } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Profiles } from "../Profiles";
 import { hideTempFolder, moveTempFolder } from "../utils/TempFolder";
@@ -124,17 +120,17 @@ export async function registerCommonCommands(context: vscode.ExtensionContext, p
                         "onDidSaveTextDocument1",
                         "File was saved -- determining whether the file is a USS file or Data set.\n Comparing (case insensitive) "
                     ) +
-                    savedFile.document.fileName +
-                    localize("onDidSaveTextDocument2", " against directory ") +
-                    globals.DS_DIR +
-                    localize("onDidSaveTextDocument3", "and") +
-                    globals.USS_DIR
+                        savedFile.document.fileName +
+                        localize("onDidSaveTextDocument2", " against directory ") +
+                        globals.DS_DIR +
+                        localize("onDidSaveTextDocument3", "and") +
+                        globals.USS_DIR
                 );
                 if (!savedFile.document.isDirty) {
                     globals.LOG.debug(
                         localize("activate.didSaveText.file", "File ") +
-                        savedFile.document.fileName +
-                        localize("activate.didSaveText.notDirty", " is not a dirty file ")
+                            savedFile.document.fileName +
+                            localize("activate.didSaveText.notDirty", " is not a dirty file ")
                     );
                 } else if (savedFile.document.fileName.toUpperCase().indexOf(globals.DS_DIR.toUpperCase()) >= 0) {
                     globals.LOG.debug(localize("activate.didSaveText.isDataSet", "File is a data set-- saving "));
@@ -145,8 +141,8 @@ export async function registerCommonCommands(context: vscode.ExtensionContext, p
                 } else {
                     globals.LOG.debug(
                         localize("activate.didSaveText.file", "File ") +
-                        savedFile.document.fileName +
-                        localize("activate.didSaveText.notDataSet", " is not a data set or USS file ")
+                            savedFile.document.fileName +
+                            localize("activate.didSaveText.notDataSet", " is not a data set or USS file ")
                     );
                 }
             })
@@ -200,22 +196,26 @@ export async function watchConfigProfile(context: vscode.ExtensionContext, provi
     }
 
     const watchers: vscode.FileSystemWatcher[] = [];
-    watchers.push(vscode.workspace.createFileSystemWatcher(
-        new vscode.RelativePattern(getZoweDir(), "{zowe.config,zowe.config.user}.json")
-    ));
+    watchers.push(
+        vscode.workspace.createFileSystemWatcher(
+            new vscode.RelativePattern(getZoweDir(), "{zowe.config,zowe.config.user}.json")
+        )
+    );
 
     if (vscode.workspace.workspaceFolders?.[0] != null) {
-        watchers.push(vscode.workspace.createFileSystemWatcher(
-            new vscode.RelativePattern(
-                vscode.workspace.workspaceFolders[0].uri.fsPath,
-                "{zowe.config,zowe.config.user}.json"
+        watchers.push(
+            vscode.workspace.createFileSystemWatcher(
+                new vscode.RelativePattern(
+                    vscode.workspace.workspaceFolders[0].uri.fsPath,
+                    "{zowe.config,zowe.config.user}.json"
+                )
             )
-        ));
+        );
     }
 
     context.subscriptions.push(...watchers);
 
-    watchers.map(watcher => {
+    watchers.map((watcher) => {
         watcher.onDidCreate(async () => {
             await vscode.commands.executeCommand("zowe.extRefresh");
         });

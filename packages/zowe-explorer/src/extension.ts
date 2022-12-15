@@ -54,7 +54,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     const providers: IZoweProviders = {
         ds: await initDatasetProvider(context),
         uss: await initUSSProvider(context),
-        job: await initJobsProvider(context)
+        job: await initJobsProvider(context),
     };
 
     await registerCommonCommands(context, providers);

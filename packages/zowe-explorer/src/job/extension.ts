@@ -171,4 +171,3 @@ export async function initJobsProvider(context: vscode.ExtensionContext) {
     initSubscribers(context, jobsProvider);
     return jobsProvider;
 }
-
