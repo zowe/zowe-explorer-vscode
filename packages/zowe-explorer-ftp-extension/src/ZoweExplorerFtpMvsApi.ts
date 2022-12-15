@@ -26,6 +26,7 @@ import { ZoweLogger } from "./extension";
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
 export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     public async dataSet(filter: string, options?: zowe.IListOptions): Promise<zowe.IZosFilesResponse> {
         const result = this.getDefaultResponse();
         const session = this.getSession(this.profile);
@@ -33,7 +34,7 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
             session.mvsListConnection = await this.ftpClient(this.checkedProfile());
         }
         if (session.mvsListConnection.connected === true) {
-            const response: any[] = await DataSetUtils.listDataSets(session.mvsListConnection, filter);
+            const response = await DataSetUtils.listDataSets(session.mvsListConnection, filter);
             if (response) {
                 result.success = true;
                 result.apiResponse.items = response.map((element) => ({
@@ -51,13 +52,14 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
         return result;
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     public async allMembers(dataSetName: string, options?: zowe.IListOptions): Promise<zowe.IZosFilesResponse> {
         const result = this.getDefaultResponse();
-        let connection: any;
+        let connection;
         try {
             connection = await this.ftpClient(this.checkedProfile());
             if (connection) {
-                const response: any[] = await DataSetUtils.listMembers(connection, dataSetName);
+                const response = await DataSetUtils.listMembers(connection, dataSetName);
                 if (response) {
                     result.success = true;
                     result.apiResponse.items = response.map((element) => ({
@@ -82,7 +84,7 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
             localFile: targetFile,
             encoding: options.encoding,
         };
-        let connection: any;
+        let connection;
         try {
             connection = await this.ftpClient(this.checkedProfile());
             if (connection && targetFile) {
@@ -130,7 +132,7 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
             targetDataset = dataSetName + "(" + member + ")";
         }
         const result = this.getDefaultResponse();
-        let connection: any;
+        let connection;
         try {
             connection = await this.ftpClient(this.checkedProfile());
             if (!connection) {
@@ -223,7 +225,7 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
         const allocateOptions = {
             dcb: dcb,
         };
-        let connection: any;
+        let connection;
         try {
             connection = await this.ftpClient(this.checkedProfile());
             if (connection) {
@@ -247,7 +249,7 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
             encoding: options.encoding,
         };
         const result = this.getDefaultResponse();
-        let connection: any;
+        let connection;
         try {
             connection = await this.ftpClient(this.checkedProfile());
             if (!connection) {
@@ -264,14 +266,18 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
         }
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     public async allocateLikeDataSet(dataSetName: string, likeDataSetName: string): Promise<zowe.IZosFilesResponse> {
         await Gui.errorMessage("Allocate like dataset is not supported in ftp extension.", { logger: ZoweLogger });
         throw new Error();
     }
 
     public async copyDataSetMember(
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         { dsn: fromDataSetName, member: fromMemberName }: zowe.IDataSet,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         { dsn: toDataSetName, member: toMemberName }: zowe.IDataSet,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         options?: { replace?: boolean }
     ): Promise<zowe.IZosFilesResponse> {
         await Gui.errorMessage("Copy dataset is not supported in ftp extension.", { logger: ZoweLogger });
@@ -280,7 +286,7 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
 
     public async renameDataSet(currentDataSetName: string, newDataSetName: string): Promise<zowe.IZosFilesResponse> {
         const result = this.getDefaultResponse();
-        let connection: any;
+        let connection;
         try {
             connection = await this.ftpClient(this.checkedProfile());
             if (connection) {
@@ -305,7 +311,7 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
         const result = this.getDefaultResponse();
         const currentName = dataSetName + "(" + currentMemberName + ")";
         const newName = dataSetName + "(" + newMemberName + ")";
-        let connection: any;
+        let connection;
         try {
             connection = await this.ftpClient(this.checkedProfile());
             if (connection) {
@@ -322,21 +328,24 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
         }
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     public async hMigrateDataSet(dataSetName: string): Promise<zowe.IZosFilesResponse> {
         await Gui.errorMessage("Migrate dataset is not supported in ftp extension.", { logger: ZoweLogger });
         throw new Error();
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     public async hRecallDataSet(dataSetName: string): Promise<zowe.IZosFilesResponse> {
         await Gui.errorMessage("Recall dataset is not supported in ftp extension.", { logger: ZoweLogger });
         throw new Error();
     }
     public async deleteDataSet(
         dataSetName: string,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         options?: zowe.IDeleteDatasetOptions
     ): Promise<zowe.IZosFilesResponse> {
         const result = this.getDefaultResponse();
-        let connection: any;
+        let connection;
         try {
             connection = await this.ftpClient(this.checkedProfile());
             if (connection) {

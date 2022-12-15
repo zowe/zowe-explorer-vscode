@@ -43,12 +43,12 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
                     const cmdArgs: zowe.imperative.ICommandArguments = {
                         $0: "zowe",
                         _: [""],
-                        host: serviceProfile.profile.host,
-                        port: serviceProfile.profile.port,
-                        basePath: serviceProfile.profile.basePath,
-                        rejectUnauthorized: serviceProfile.profile.rejectUnauthorized,
-                        user: serviceProfile.profile.user,
-                        password: serviceProfile.profile.password,
+                        host: serviceProfile.profile.host as string,
+                        port: serviceProfile.profile.port as number,
+                        basePath: serviceProfile.profile.basePath as string,
+                        rejectUnauthorized: serviceProfile.profile.rejectUnauthorized as boolean,
+                        user: serviceProfile.profile.user as string,
+                        password: serviceProfile.profile.password as string,
                     };
 
                     this.session = this.getSessionFromCommandArgument(cmdArgs);
@@ -57,19 +57,19 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
                     const cmdArgs: zowe.imperative.ICommandArguments = {
                         $0: "zowe",
                         _: [""],
-                        host: serviceProfile.profile.host,
-                        port: serviceProfile.profile.port,
-                        basePath: serviceProfile.profile.basePath,
-                        rejectUnauthorized: serviceProfile.profile.rejectUnauthorized,
-                        tokenType: serviceProfile.profile.tokenType,
-                        tokenValue: serviceProfile.profile.tokenValue,
+                        host: serviceProfile.profile.host as string,
+                        port: serviceProfile.profile.port as number,
+                        basePath: serviceProfile.profile.basePath as string,
+                        rejectUnauthorized: serviceProfile.profile.rejectUnauthorized as boolean,
+                        tokenType: serviceProfile.profile.tokenType as string,
+                        tokenValue: serviceProfile.profile.tokenValue as string,
                     };
 
                     this.session = this.getSessionFromCommandArgument(cmdArgs);
                 }
             } catch (error) {
                 // todo: initialize and use logging
-                zowe.imperative.Logger.getAppLogger().error(error);
+                zowe.imperative.Logger.getAppLogger().error(error as string);
             }
         }
         return this.session;
@@ -84,12 +84,12 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
                 const cmdArgs: zowe.imperative.ICommandArguments = {
                     $0: "zowe",
                     _: [""],
-                    host: serviceProfile.profile.host,
-                    port: serviceProfile.profile.port,
-                    basePath: serviceProfile.profile.basePath,
-                    rejectUnauthorized: serviceProfile.profile.rejectUnauthorized,
-                    tokenType: serviceProfile.profile.tokenType,
-                    tokenValue: serviceProfile.profile.tokenValue,
+                    host: serviceProfile.profile.host as string,
+                    port: serviceProfile.profile.port as number,
+                    basePath: serviceProfile.profile.basePath as string,
+                    rejectUnauthorized: serviceProfile.profile.rejectUnauthorized as boolean,
+                    tokenType: serviceProfile.profile.tokenType as string,
+                    tokenValue: serviceProfile.profile.tokenValue as string,
                 };
 
                 validateSession = this.getSessionFromCommandArgument(cmdArgs);
@@ -98,12 +98,12 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
                 const cmdArgs: zowe.imperative.ICommandArguments = {
                     $0: "zowe",
                     _: [""],
-                    host: serviceProfile.profile.host,
-                    port: serviceProfile.profile.port,
-                    basePath: serviceProfile.profile.basePath,
-                    rejectUnauthorized: serviceProfile.profile.rejectUnauthorized,
-                    user: serviceProfile.profile.user,
-                    password: serviceProfile.profile.password,
+                    host: serviceProfile.profile.host as string,
+                    port: serviceProfile.profile.port as number,
+                    basePath: serviceProfile.profile.basePath as string,
+                    rejectUnauthorized: serviceProfile.profile.rejectUnauthorized as boolean,
+                    user: serviceProfile.profile.user as string,
+                    password: serviceProfile.profile.password as string,
                 };
 
                 validateSession = this.getSessionFromCommandArgument(cmdArgs);

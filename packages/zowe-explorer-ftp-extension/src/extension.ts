@@ -26,6 +26,7 @@ export function activate(context: vscode.ExtensionContext): void {
     void registerFtpApis();
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function deactivate(context: vscode.ExtensionContext): void {
     sessionMap.forEach((session) => session.releaseConnections());
     sessionMap.clear();

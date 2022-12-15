@@ -89,7 +89,7 @@ export class KeytarCredentialManager extends imperative.AbstractCredentialManage
             imperativeIsSecure =
                 (typeof value1 === "string" && value1.length > 0) || (typeof value2 === "string" && value2.length > 0);
         } catch (error) {
-            imperative.Logger.getAppLogger().warn(error);
+            imperative.Logger.getAppLogger().warn(error as string);
             return undefined;
         }
         return imperativeIsSecure ? getSecurityModules(moduleName, isTheia) : undefined;
@@ -223,13 +223,13 @@ export function getSecurityModules(moduleName: string, isTheia: boolean): NodeMo
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return r(`${appRoot}/node_modules/${moduleName}`);
     } catch (err) {
-        imperative.Logger.getAppLogger().warn(err);
+        imperative.Logger.getAppLogger().warn(err as string);
     }
     try {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return r(`${appRoot}/node_modules.asar/${moduleName}`);
     } catch (err) {
-        imperative.Logger.getAppLogger().warn(err);
+        imperative.Logger.getAppLogger().warn(err as string);
     }
     return undefined;
 }

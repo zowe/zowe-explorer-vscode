@@ -173,6 +173,8 @@ function createGlobalMocks() {
 
     return globalMocks;
 }
+// Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/master/src/util/testing.ts
+const mocked = <T extends (...args: any[]) => any>(fn: T): jest.Mock<ReturnType<T>> => fn as any;
 
 describe("USS Action Unit Tests - Function createUSSNodeDialog", () => {
     async function createBlockMocks(globalMocks) {
@@ -721,5 +723,141 @@ describe("USS Action Unit Tests - function uploadFile", () => {
 
         await ussNodeActions.uploadFile(blockMocks.ussNode, { fileName: "madeup" } as any);
         expect(ZoweExplorerApiRegister.getUssApi(null).putContent).toBeCalled();
+    });
+});
+
+describe("USS Action Unit Tests - copy file / directory", () => {
+    async function createBlockMocks(globalMocks) {
+        const newMocks = {
+            nodes: null,
+            treeNodes: null,
+        };
+
+        newMocks.nodes = [
+            new ZoweUSSNode(
+                "u/myuser/testFile",
+                vscode.TreeItemCollapsibleState.None,
+                null,
+                globalMocks.testSession,
+                "/"
+            ),
+            new ZoweUSSNode(
+                "u/myuser/testDirectory",
+                vscode.TreeItemCollapsibleState.None,
+                null,
+                globalMocks.testSession,
+                "/"
+            ),
+        ];
+
+        newMocks.nodes[0].contextValue = globals.DS_TEXT_FILE_CONTEXT;
+        newMocks.nodes[1].contextValue = globals.USS_DIR_CONTEXT;
+        newMocks.nodes[0].refreshUSS = jest.fn().mockResolvedValueOnce(newMocks.nodes[0]);
+        newMocks.nodes[1].refreshUSS = jest.fn().mockResolvedValueOnce(newMocks.nodes[1]);
+        newMocks.nodes[1].getParent = jest.fn().mockResolvedValueOnce(undefined);
+        newMocks.nodes[0].getParent = jest.fn().mockResolvedValueOnce(undefined);
+        newMocks.nodes[1].getChildren = jest.fn().mockResolvedValueOnce([]);
+        newMocks.nodes[0].getChildren = jest.fn().mockResolvedValueOnce([]);
+        newMocks.nodes[1].getProfile = jest.fn().mockResolvedValueOnce({ name: "test" });
+        newMocks.nodes[0].getProfile = jest.fn().mockResolvedValueOnce({ name: "test" });
+
+        newMocks.treeNodes = {
+            testUSSTree: null,
+            ussNode: createUSSNode(globalMocks.testSession, createIProfile()),
+            testTreeView: createTreeView(),
+            mockCheckCurrentProfile: jest.fn(),
+            ussApi: createUssApi(globalMocks.testProfile),
+            ussNodes: null,
+        };
+        newMocks.treeNodes.testUSSTree = createUSSTree(
+            [createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile)],
+            [newMocks.treeNodes.ussNode],
+            newMocks.treeNodes.testTreeView
+        );
+
+        return newMocks;
+    }
+
+    it("Copy file(s), Directory(s) paths into clipboard", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        await ussNodeActions.copyUssFilesToClipboard(blockMocks.nodes);
+
+        expect(globalMocks.writeText).toBeCalledWith(
+            blockMocks.nodes[0].getUSSDocumentFilePath() + "," + blockMocks.nodes[1].getUSSDocumentFilePath() + "/"
+        );
+        expect(blockMocks.nodes[0].refreshUSS).toBeCalled();
+        expect(blockMocks.nodes[1].refreshUSS).toHaveBeenCalledTimes(0);
+    });
+
+    it("tests refreshChildNodesDirectory executed successfully with empty directory", async () => {
+        jest.clearAllMocks();
+        const globalMocks = createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        ussNodeActions.refreshChildNodesDirectory(blockMocks.nodes[0]);
+        blockMocks.nodes[0].refreshUSS = jest.fn().mockResolvedValueOnce(blockMocks.nodes[0]);
+        expect(blockMocks.nodes[0].refreshUSS).toBeCalledTimes(0);
+    });
+
+    it("tests refreshChildNodesDirectory executed successfully with file", async () => {
+        jest.clearAllMocks();
+        const globalMocks = createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        ussNodeActions.refreshChildNodesDirectory(blockMocks.nodes[0]);
+        blockMocks.nodes[1].refreshUSS = jest.fn().mockResolvedValueOnce(blockMocks.nodes[1]);
+        expect(blockMocks.nodes[1].refreshUSS).toBeCalledTimes(0);
+    });
+    it("tests refreshChildNodesDirectory executed successfully on a node with a child ", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        const node = new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed, null, null, "/");
+        node.getChildren = jest.fn().mockResolvedValueOnce([blockMocks.nodes[0]]);
+        ussNodeActions.refreshChildNodesDirectory(node);
+
+        expect(blockMocks.nodes[0].refreshUSS).toBeCalledTimes(0);
+    });
+
+    it("tests copyUssFiles executed successfully via context menu with selected nodes", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        ussNodeActions.copyUssFiles(
+            blockMocks.treeNodes.ussNode,
+            blockMocks.treeNodes.ussNodes,
+            blockMocks.treeNodes.testUSSTree
+        );
+        expect(sharedUtils.getSelectedNodeList(blockMocks.treeNodes.ussNode, blockMocks.treeNodes.ussNodes)).toEqual([
+            blockMocks.treeNodes.ussNode,
+        ]);
+    });
+    it("tests copyUssFiles executed successfully via quick keys with selected nodes", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        ussNodeActions.copyUssFiles(null, null, blockMocks.treeNodes.testUSSTree);
+        expect(sharedUtils.getSelectedNodeList(blockMocks.treeNodes.ussNode, blockMocks.treeNodes.ussNodes)).toEqual([
+            blockMocks.treeNodes.ussNode,
+        ]);
+    });
+
+    it("tests pasteUssFile executed successfully with selected nodes", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        const parent = blockMocks.treeNodes.testUSSTree.getTreeView();
+        parent.selection = blockMocks.nodes[0];
+        ussNodeActions.pasteUssFile(blockMocks.treeNodes.testUSSTree, undefined);
+        expect(sharedUtils.getSelectedNodeList(blockMocks.treeNodes.ussNode, blockMocks.treeNodes.ussNodes)).toEqual([
+            blockMocks.treeNodes.ussNode,
+        ]);
+    });
+    it("tests pasteUssFile executed successfully with one node", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        const parent = blockMocks.treeNodes.testUSSTree.getTreeView();
+        parent.selection = blockMocks.nodes[0];
+        jest.spyOn(ussNodeActions, "copyUssFilesToClipboard").mockResolvedValueOnce();
+        ussNodeActions.pasteUssFile(blockMocks.treeNodes.testUSSTree, blockMocks.nodes[0]);
+        expect(sharedUtils.getSelectedNodeList(blockMocks.treeNodes.ussNode, blockMocks.treeNodes.ussNodes)).toEqual([
+            blockMocks.treeNodes.ussNode,
+        ]);
     });
 });
