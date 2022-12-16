@@ -8,19 +8,27 @@ describe("IZoweLogger", () => {
     const extensionName = "test";
     const loggingPath = __dirname;
 
-    const expectLogWithSeverity = (logger: IZoweLogger, methodName: keyof imperative.Logger, severity: MessageSeverityEnum): void => {
+    const expectLogWithSeverity = (
+        logger: IZoweLogger,
+        methodName: keyof imperative.Logger,
+        severity: MessageSeverityEnum
+    ): void => {
         const loggerSpy = jest.spyOn(logger.getImperativeLogger() as any, methodName);
         const logMessage = methodName.split("").reverse().join("");
         logger.logImperativeMessage(logMessage, severity);
         expect(loggerSpy).toBeCalledWith(`[${extensionName}] ${logMessage}`);
-    }
+    };
 
     it("should use extension name and logging path", () => {
         const initLoggerSpy = jest.spyOn(imperative.Logger, "initLogger");
         const testLogger = new IZoweLogger(extensionName, loggingPath);
         expect(testLogger.getExtensionName()).toBe(extensionName);
         expect(initLoggerSpy).toBeCalledWith(loggerConfig);
-        expect(Object.values(loggerConfig.log4jsConfig.appenders).every((appender) => appender.filename.startsWith(loggingPath))).toBe(true);
+        expect(
+            Object.values(loggerConfig.log4jsConfig.appenders).every((appender) =>
+                appender.filename.startsWith(loggingPath)
+            )
+        ).toBe(true);
     });
 
     it("should log Imperative message with TRACE severity", () => {

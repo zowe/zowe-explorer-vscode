@@ -12,15 +12,13 @@
 import * as zowe from "@zowe/cli";
 import { ZoweExplorerApi } from "./ZoweExplorerApi";
 
-export const PROFILE_TYPE_ZOSMF = "zosmf";
-
 /**
  * An implementation of the Zowe Explorer API Common interface for zOSMF.
  */
 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
     public static getProfileTypeName(): string {
-        return PROFILE_TYPE_ZOSMF;
+        return zowe.ZosmfProfile.type;
     }
 
     private session: zowe.imperative.Session;
@@ -40,35 +38,7 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
     public getSession(profile?: zowe.imperative.IProfileLoaded): zowe.imperative.Session {
         if (!this.session) {
             try {
-                if (!this.profile.profile.tokenValue) {
-                    const serviceProfile = profile || this.profile;
-                    const cmdArgs: zowe.imperative.ICommandArguments = {
-                        $0: "zowe",
-                        _: [""],
-                        host: serviceProfile.profile.host as string,
-                        port: serviceProfile.profile.port as number,
-                        basePath: serviceProfile.profile.basePath as string,
-                        rejectUnauthorized: serviceProfile.profile.rejectUnauthorized as boolean,
-                        user: serviceProfile.profile.user as string,
-                        password: serviceProfile.profile.password as string,
-                    };
-
-                    this.session = this.getSessionFromCommandArgument(cmdArgs);
-                } else {
-                    const serviceProfile = this.profile;
-                    const cmdArgs: zowe.imperative.ICommandArguments = {
-                        $0: "zowe",
-                        _: [""],
-                        host: serviceProfile.profile.host as string,
-                        port: serviceProfile.profile.port as number,
-                        basePath: serviceProfile.profile.basePath as string,
-                        rejectUnauthorized: serviceProfile.profile.rejectUnauthorized as boolean,
-                        tokenType: serviceProfile.profile.tokenType as string,
-                        tokenValue: serviceProfile.profile.tokenValue as string,
-                    };
-
-                    this.session = this.getSessionFromCommandArgument(cmdArgs);
-                }
+                this.session = this._getSession(profile || this.profile);
             } catch (error) {
                 // todo: initialize and use logging
                 zowe.imperative.Logger.getAppLogger().error(error as string);
@@ -77,40 +47,37 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
         return this.session;
     }
 
+    private _getSession(serviceProfile: zowe.imperative.IProfileLoaded): zowe.imperative.Session {
+        let cmdArgs: zowe.imperative.ICommandArguments = {
+            $0: "zowe",
+            _: [""],
+            host: serviceProfile.profile.host as string,
+            port: serviceProfile.profile.port as number,
+            basePath: serviceProfile.profile.basePath as string,
+            rejectUnauthorized: serviceProfile.profile.rejectUnauthorized as boolean,
+            user: serviceProfile.profile.user as string,
+            password: serviceProfile.profile.password as string,
+        };
+        if (!serviceProfile.profile.tokenValue) {
+            cmdArgs = {
+                ...cmdArgs,
+                user: serviceProfile.profile.user as string,
+                password: serviceProfile.profile.password as string,
+            };
+        } else {
+            cmdArgs = {
+                ...cmdArgs,
+                tokenType: serviceProfile.profile.tokenType as string,
+                tokenValue: serviceProfile.profile.tokenValue as string,
+            };
+        }
+        return this.getSessionFromCommandArgument(cmdArgs);
+    }
+
     public async getStatus(validateProfile?: zowe.imperative.IProfileLoaded, profileType?: string): Promise<string> {
         // This API call is specific for z/OSMF profiles
-        let validateSession: zowe.imperative.Session;
         if (profileType === "zosmf") {
-            if (validateProfile.profile.tokenValue) {
-                const serviceProfile = validateProfile;
-                const cmdArgs: zowe.imperative.ICommandArguments = {
-                    $0: "zowe",
-                    _: [""],
-                    host: serviceProfile.profile.host as string,
-                    port: serviceProfile.profile.port as number,
-                    basePath: serviceProfile.profile.basePath as string,
-                    rejectUnauthorized: serviceProfile.profile.rejectUnauthorized as boolean,
-                    tokenType: serviceProfile.profile.tokenType as string,
-                    tokenValue: serviceProfile.profile.tokenValue as string,
-                };
-
-                validateSession = this.getSessionFromCommandArgument(cmdArgs);
-            } else {
-                const serviceProfile = validateProfile;
-                const cmdArgs: zowe.imperative.ICommandArguments = {
-                    $0: "zowe",
-                    _: [""],
-                    host: serviceProfile.profile.host as string,
-                    port: serviceProfile.profile.port as number,
-                    basePath: serviceProfile.profile.basePath as string,
-                    rejectUnauthorized: serviceProfile.profile.rejectUnauthorized as boolean,
-                    user: serviceProfile.profile.user as string,
-                    password: serviceProfile.profile.password as string,
-                };
-
-                validateSession = this.getSessionFromCommandArgument(cmdArgs);
-            }
-
+            const validateSession = this._getSession(validateProfile);
             const sessionStatus = await zowe.CheckStatus.getZosmfInfo(validateSession);
 
             if (sessionStatus) {
@@ -269,7 +236,7 @@ export class ZosmfMvsApi extends ZosmfApiCommon implements ZoweExplorerApi.IMvs 
                 };
             }
         } else {
-            // If we decide to match 1:1 the Zowe.Copy.dataSet implementation, we will need to break the interface definition in the ZoweExploreApi
+            // If we decide to match 1:1 the Zowe.Copy.dataSet implementation, we will need to break the interface definition in the ZoweExplorerApi
             newOptions = { "from-dataset": { dsn: fromDataSetName, member: fromMemberName } };
         }
         return await zowe.Copy.dataSet(this.getSession(), { dsn: toDataSetName, member: toMemberName }, newOptions);
