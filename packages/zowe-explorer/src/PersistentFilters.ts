@@ -40,11 +40,7 @@ export class PersistentFilters {
     private mFileHistory: string[] = [];
     private mSessions: string[] = [];
 
-    constructor(
-        schema: string,
-        private maxSearchHistory = globals.MAX_SEARCH_HISTORY,
-        private maxFileHistory = globals.MAX_FILE_HISTORY
-    ) {
+    constructor(schema: string, private maxSearchHistory = globals.MAX_SEARCH_HISTORY, private maxFileHistory = globals.MAX_FILE_HISTORY) {
         this.schema = schema;
         this.initialize();
     }

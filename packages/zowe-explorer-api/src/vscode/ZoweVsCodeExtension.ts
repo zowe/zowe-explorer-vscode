@@ -20,10 +20,7 @@ import { IPromptCredentialsOptions, IPromptUserPassOptions } from "./doc/IPrompt
  * Collection of utility functions for writing Zowe Explorer VS Code extensions.
  */
 export class ZoweVsCodeExtension {
-    private static profilesCache = new ProfilesCache(
-        imperative.Logger.getAppLogger(),
-        vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
-    );
+    private static profilesCache = new ProfilesCache(imperative.Logger.getAppLogger(), vscode.workspace.workspaceFolders?.[0]?.uri.fsPath);
 
     /**
      * @param {string} [requiredVersion] Optional semver string specifying the minimal required version
@@ -35,8 +32,7 @@ export class ZoweVsCodeExtension {
     public static getZoweExplorerApi(requiredVersion?: string): ZoweExplorerApi.IApiRegisterClient {
         const zoweExplorerApi = vscode.extensions.getExtension("Zowe.vscode-extension-for-zowe");
         if (zoweExplorerApi?.exports) {
-            const zoweExplorerVersion =
-                ((zoweExplorerApi.packageJSON as Record<string, unknown>).version as string) || "15.0.0";
+            const zoweExplorerVersion = ((zoweExplorerApi.packageJSON as Record<string, unknown>).version as string) || "15.0.0";
             if (requiredVersion && semver.valid(requiredVersion) && !semver.gte(zoweExplorerVersion, requiredVersion)) {
                 return undefined;
             }

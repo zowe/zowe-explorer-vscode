@@ -52,14 +52,7 @@ describe("jobNodeActions integration test", async () => {
     };
 
     // Test Jobs session node & tree
-    const jobSessionNode = new Job(
-        testConst.profile.name,
-        vscode.TreeItemCollapsibleState.Collapsed,
-        null,
-        session,
-        null,
-        null
-    );
+    const jobSessionNode = new Job(testConst.profile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, null, null);
     jobSessionNode.contextValue = globals.JOBS_SESSION_CONTEXT;
     const testJobsTree = new ZosJobsProvider();
     testJobsTree.mSessionNodes.push(jobSessionNode);
@@ -95,9 +88,7 @@ describe("jobNodeActions integration test", async () => {
     const oldSettings = vscode.workspace.getConfiguration(globals.SETTINGS_DS_HISTORY);
 
     after(async () => {
-        await vscode.workspace
-            .getConfiguration()
-            .update(globals.SETTINGS_DS_HISTORY, oldSettings, vscode.ConfigurationTarget.Global);
+        await vscode.workspace.getConfiguration().update(globals.SETTINGS_DS_HISTORY, oldSettings, vscode.ConfigurationTarget.Global);
     });
 
     describe("refreshAll", async () => {

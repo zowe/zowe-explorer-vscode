@@ -88,15 +88,7 @@ describe("Unit Tests (Jest)", () => {
             }),
         });
         // Creating a rootNode
-        const rootNode = new ZoweDatasetNode(
-            "root",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            null,
-            session,
-            undefined,
-            undefined,
-            profileOne
-        );
+        const rootNode = new ZoweDatasetNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, session, undefined, undefined, profileOne);
         rootNode.dirty = true;
         rootNode.contextValue = globals.DS_SESSION_CONTEXT;
         rootNode.pattern = "SAMPLE, SAMPLE.PUBLIC, SAMPLE";
@@ -104,15 +96,7 @@ describe("Unit Tests (Jest)", () => {
 
         // Creating structure of files and folders under BRTVS99 profile
         const sampleChildren: ZoweDatasetNode[] = [
-            new ZoweDatasetNode(
-                "BRTVS99",
-                vscode.TreeItemCollapsibleState.None,
-                rootNode,
-                null,
-                undefined,
-                undefined,
-                profileOne
-            ),
+            new ZoweDatasetNode("BRTVS99", vscode.TreeItemCollapsibleState.None, rootNode, null, undefined, undefined, profileOne),
             new ZoweDatasetNode(
                 "BRTVS99.CA10",
                 vscode.TreeItemCollapsibleState.None,
@@ -131,24 +115,8 @@ describe("Unit Tests (Jest)", () => {
                 undefined,
                 profileOne
             ),
-            new ZoweDatasetNode(
-                "BRTVS99.DDIR",
-                vscode.TreeItemCollapsibleState.Collapsed,
-                rootNode,
-                null,
-                undefined,
-                undefined,
-                profileOne
-            ),
-            new ZoweDatasetNode(
-                "BRTVS99.VS1",
-                vscode.TreeItemCollapsibleState.None,
-                rootNode,
-                null,
-                globals.VSAM_CONTEXT,
-                undefined,
-                profileOne
-            ),
+            new ZoweDatasetNode("BRTVS99.DDIR", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null, undefined, undefined, profileOne),
+            new ZoweDatasetNode("BRTVS99.VS1", vscode.TreeItemCollapsibleState.None, rootNode, null, globals.VSAM_CONTEXT, undefined, profileOne),
         ];
         sampleChildren[0].command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [sampleChildren[0]] };
 
@@ -163,15 +131,7 @@ describe("Unit Tests (Jest)", () => {
         expect(rootChildren).toEqual(sampleChildren);
 
         // Check that error is thrown when label is blank
-        const errorNode = new ZoweDatasetNode(
-            "",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            null,
-            session,
-            undefined,
-            undefined,
-            profileOne
-        );
+        const errorNode = new ZoweDatasetNode("", vscode.TreeItemCollapsibleState.Collapsed, null, session, undefined, undefined, profileOne);
         errorNode.dirty = true;
         await expect(errorNode.getChildren()).rejects.toEqual(Error("Invalid node"));
 
@@ -201,49 +161,17 @@ describe("Unit Tests (Jest)", () => {
             }),
         });
         // Creating a rootNode
-        const rootNode = new ZoweDatasetNode(
-            "root",
-            vscode.TreeItemCollapsibleState.None,
-            null,
-            session,
-            undefined,
-            undefined,
-            profileOne
-        );
+        const rootNode = new ZoweDatasetNode("root", vscode.TreeItemCollapsibleState.None, null, session, undefined, undefined, profileOne);
         rootNode.contextValue = globals.DS_SESSION_CONTEXT;
         rootNode.dirty = true;
-        const subNode = new ZoweDatasetNode(
-            "sub",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            rootNode,
-            null,
-            undefined,
-            undefined,
-            profileOne
-        );
+        const subNode = new ZoweDatasetNode("sub", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null, undefined, undefined, profileOne);
         subNode.dirty = true;
         const subChildren = await subNode.getChildren();
 
         // Creating structure of files and folders under BRTVS99 profile
         const sampleChildren: ZoweDatasetNode[] = [
-            new ZoweDatasetNode(
-                "BRTVS99",
-                vscode.TreeItemCollapsibleState.None,
-                subNode,
-                null,
-                undefined,
-                undefined,
-                profileOne
-            ),
-            new ZoweDatasetNode(
-                "BRTVS99.DDIR",
-                vscode.TreeItemCollapsibleState.None,
-                subNode,
-                null,
-                undefined,
-                undefined,
-                profileOne
-            ),
+            new ZoweDatasetNode("BRTVS99", vscode.TreeItemCollapsibleState.None, subNode, null, undefined, undefined, profileOne),
+            new ZoweDatasetNode("BRTVS99.DDIR", vscode.TreeItemCollapsibleState.None, subNode, null, undefined, undefined, profileOne),
         ];
 
         sampleChildren[0].command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [sampleChildren[0]] };
@@ -256,8 +184,7 @@ describe("Unit Tests (Jest)", () => {
      * Checks that the catch block is reached when an error is thrown
      *************************************************************************************************************/
     it(
-        "Checks that when bright.List.dataSet/allMembers() causes an error on the zowe call, " +
-            "it throws an error and the catch block is reached",
+        "Checks that when bright.List.dataSet/allMembers() causes an error on the zowe call, " + "it throws an error and the catch block is reached",
         async () => {
             Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
@@ -268,15 +195,7 @@ describe("Unit Tests (Jest)", () => {
             });
             showErrorMessage.mockReset();
             // Creating a rootNode
-            const rootNode = new ZoweDatasetNode(
-                "root",
-                vscode.TreeItemCollapsibleState.Collapsed,
-                null,
-                session,
-                undefined,
-                undefined,
-                profileOne
-            );
+            const rootNode = new ZoweDatasetNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, session, undefined, undefined, profileOne);
             rootNode.contextValue = globals.DS_SESSION_CONTEXT;
             rootNode.pattern = "THROW ERROR";
             rootNode.dirty = true;
@@ -292,8 +211,7 @@ describe("Unit Tests (Jest)", () => {
      * Checks that returning an unsuccessful response results in an error being thrown and caught
      *************************************************************************************************************/
     it(
-        "Checks that when bright.List.dataSet/allMembers() returns an unsuccessful response, " +
-            "it returns a label of 'No datasets found'",
+        "Checks that when bright.List.dataSet/allMembers() returns an unsuccessful response, " + "it returns a label of 'No datasets found'",
         async () => {
             Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
@@ -303,15 +221,7 @@ describe("Unit Tests (Jest)", () => {
                 }),
             });
             // Creating a rootNode
-            const rootNode = new ZoweDatasetNode(
-                "root",
-                vscode.TreeItemCollapsibleState.Collapsed,
-                null,
-                session,
-                undefined,
-                undefined,
-                profileOne
-            );
+            const rootNode = new ZoweDatasetNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, session, undefined, undefined, profileOne);
             rootNode.contextValue = globals.DS_SESSION_CONTEXT;
             rootNode.dirty = true;
             const subNode = new ZoweDatasetNode(
@@ -336,15 +246,7 @@ describe("Unit Tests (Jest)", () => {
      *************************************************************************************************************/
     it("Checks that passing a session node that is not dirty the getChildren() method is exited early", async () => {
         // Creating a rootNode
-        const rootNode = new ZoweDatasetNode(
-            "root",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            null,
-            session,
-            undefined,
-            undefined,
-            profileOne
-        );
+        const rootNode = new ZoweDatasetNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, session, undefined, undefined, profileOne);
         const infoChild = new ZoweDatasetNode(
             "Use the search button to display datasets",
             vscode.TreeItemCollapsibleState.None,
@@ -364,15 +266,7 @@ describe("Unit Tests (Jest)", () => {
      *************************************************************************************************************/
     it("Checks that passing a session node with no hlq the getChildren() method is exited early", async () => {
         // Creating a rootNode
-        const rootNode = new ZoweDatasetNode(
-            "root",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            null,
-            session,
-            undefined,
-            undefined,
-            profileOne
-        );
+        const rootNode = new ZoweDatasetNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, session, undefined, undefined, profileOne);
         const infoChild = new ZoweDatasetNode(
             "Use the search button to display datasets",
             vscode.TreeItemCollapsibleState.None,
@@ -391,15 +285,7 @@ describe("Unit Tests (Jest)", () => {
      *************************************************************************************************************/
     it("Checks that a member can reach its session properly", async () => {
         // Creating a rootNode
-        const rootNode = new ZoweDatasetNode(
-            "root",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            null,
-            session,
-            undefined,
-            undefined,
-            profileOne
-        );
+        const rootNode = new ZoweDatasetNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, session, undefined, undefined, profileOne);
         rootNode.contextValue = globals.DS_SESSION_CONTEXT;
         const subNode = new ZoweDatasetNode(
             globals.DS_PDS_CONTEXT,
@@ -426,15 +312,7 @@ describe("Unit Tests (Jest)", () => {
      *************************************************************************************************************/
     it("Testing that certain types can't have children", async () => {
         // Creating a rootNode
-        const rootNode = new ZoweDatasetNode(
-            "root",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            null,
-            session,
-            undefined,
-            undefined,
-            profileOne
-        );
+        const rootNode = new ZoweDatasetNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, session, undefined, undefined, profileOne);
         rootNode.dirty = true;
         rootNode.contextValue = globals.DS_DS_CONTEXT;
         expect(await rootNode.getChildren()).toHaveLength(0);
@@ -448,25 +326,9 @@ describe("Unit Tests (Jest)", () => {
      *************************************************************************************************************/
     it("Tests that we shouldn't be updating children", async () => {
         // Creating a rootNode
-        const rootNode = new ZoweDatasetNode(
-            "root",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            null,
-            session,
-            undefined,
-            undefined,
-            profileOne
-        );
+        const rootNode = new ZoweDatasetNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, session, undefined, undefined, profileOne);
         rootNode.children = [
-            new ZoweDatasetNode(
-                "onestep",
-                vscode.TreeItemCollapsibleState.Collapsed,
-                null,
-                session,
-                undefined,
-                undefined,
-                profileOne
-            ),
+            new ZoweDatasetNode("onestep", vscode.TreeItemCollapsibleState.Collapsed, null, session, undefined, undefined, profileOne),
         ];
         rootNode.dirty = false;
         rootNode.contextValue = globals.DS_PDS_CONTEXT;

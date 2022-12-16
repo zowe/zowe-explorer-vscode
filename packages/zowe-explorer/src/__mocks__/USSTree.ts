@@ -27,9 +27,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
     public mSessionNodes: ZoweUSSNode[] = [];
 
     // Event Emitters used to notify subscribers that the refresh event has fired
-    public mOnDidChangeTreeData: vscode.EventEmitter<ZoweUSSNode | undefined> = new vscode.EventEmitter<
-        ZoweUSSNode | undefined
-    >();
+    public mOnDidChangeTreeData: vscode.EventEmitter<ZoweUSSNode | undefined> = new vscode.EventEmitter<ZoweUSSNode | undefined>();
     public readonly onDidChangeTreeData: vscode.Event<ZoweUSSNode | undefined> = this.mOnDidChangeTreeData.event;
     public mFavorites: ZoweUSSNode[];
 

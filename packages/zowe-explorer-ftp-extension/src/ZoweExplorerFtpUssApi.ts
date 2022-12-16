@@ -137,11 +137,7 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
 
         // Check if inputDirectory is directory
         if (!zowe.imperative.IO.isDir(inputDirectoryPath)) {
-            ZoweVsCodeExtension.showVsCodeMessage(
-                "The local directory path provided does not exist.",
-                MessageSeverityEnum.ERROR,
-                ZoweLogger
-            );
+            ZoweVsCodeExtension.showVsCodeMessage("The local directory path provided does not exist.", MessageSeverityEnum.ERROR, ZoweLogger);
             throw new Error();
         }
         // getting list of files from directory

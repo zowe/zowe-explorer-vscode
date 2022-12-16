@@ -236,9 +236,7 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
 
         await Profiles.getInstance().createNewConnection("");
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
-        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe(
-            "Profile name was not supplied. Operation Cancelled"
-        );
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile name was not supplied. Operation Cancelled");
     });
 
     it("Tests that createNewConnection fails if profileType is missing", async () => {
@@ -247,9 +245,7 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
 
         await Profiles.getInstance().createNewConnection(globalMocks.testProfile.name, undefined);
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
-        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe(
-            "No profile type was chosen. Operation Cancelled"
-        );
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("No profile type was chosen. Operation Cancelled");
         spy.mockClear();
     });
 
@@ -262,9 +258,7 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
 
         await Profiles.getInstance().createNewConnection(globalMocks.testProfile.name, "zosmf");
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
-        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe(
-            "No valid value for z/OS URL. Operation Cancelled"
-        );
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("No valid value for z/OS URL. Operation Cancelled");
         spy.mockClear();
     });
 
@@ -301,12 +295,8 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
 
         let spy = jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValue(blockMocks.testSchemas);
         spy = jest.spyOn(globalMocks.mockProfileInstance, "urlInfo").mockReturnValue(globalMocks.mockUrlInfo);
-        spy = jest
-            .spyOn(globalMocks.mockProfileInstance, "userInfo")
-            .mockReturnValue(globalMocks.testProfile.profile.user);
-        spy = jest
-            .spyOn(globalMocks.mockProfileInstance, "passwordInfo")
-            .mockReturnValue(globalMocks.testProfile.profile.password);
+        spy = jest.spyOn(globalMocks.mockProfileInstance, "userInfo").mockReturnValue(globalMocks.testProfile.profile.user);
+        spy = jest.spyOn(globalMocks.mockProfileInstance, "passwordInfo").mockReturnValue(globalMocks.testProfile.profile.password);
         globalMocks.mockCreateInputBox.mockResolvedValueOnce(undefined);
 
         await Profiles.getInstance().createNewConnection(globalMocks.testProfile.name, "zosmf");
@@ -320,18 +310,12 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
 
         let spy = jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValue(blockMocks.testSchemas);
         spy = jest.spyOn(globalMocks.mockProfileInstance, "urlInfo").mockReturnValue(globalMocks.mockUrlInfo);
-        spy = jest
-            .spyOn(globalMocks.mockProfileInstance, "userInfo")
-            .mockReturnValue(globalMocks.testProfile.profile.user);
-        spy = jest
-            .spyOn(globalMocks.mockProfileInstance, "passwordInfo")
-            .mockReturnValue(globalMocks.testProfile.profile.password);
+        spy = jest.spyOn(globalMocks.mockProfileInstance, "userInfo").mockReturnValue(globalMocks.testProfile.profile.user);
+        spy = jest.spyOn(globalMocks.mockProfileInstance, "passwordInfo").mockReturnValue(globalMocks.testProfile.profile.password);
         spy = jest.spyOn(globalMocks.mockProfileInstance, "ruInfo").mockReturnValue(false);
 
         await Profiles.getInstance().createNewConnection(globalMocks.testProfile.name, "zosmf");
-        expect(globalMocks.mockShowErrorMessage.mock.calls[0][0]).toBe(
-            "Profile name already exists. Please create a profile using a different name"
-        );
+        expect(globalMocks.mockShowErrorMessage.mock.calls[0][0]).toBe("Profile name already exists. Please create a profile using a different name");
         spy.mockClear();
     });
 
@@ -341,12 +325,8 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
 
         let spy = jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValue(blockMocks.testSchemas);
         spy = jest.spyOn(globalMocks.mockProfileInstance, "urlInfo").mockReturnValue(globalMocks.mockUrlInfo);
-        spy = jest
-            .spyOn(globalMocks.mockProfileInstance, "userInfo")
-            .mockReturnValue(globalMocks.testProfile.profile.user);
-        spy = jest
-            .spyOn(globalMocks.mockProfileInstance, "passwordInfo")
-            .mockReturnValue(globalMocks.testProfile.profile.password);
+        spy = jest.spyOn(globalMocks.mockProfileInstance, "userInfo").mockReturnValue(globalMocks.testProfile.profile.user);
+        spy = jest.spyOn(globalMocks.mockProfileInstance, "passwordInfo").mockReturnValue(globalMocks.testProfile.profile.password);
         spy = jest.spyOn(globalMocks.mockProfileInstance, "ruInfo").mockReturnValue(false);
 
         await Profiles.getInstance().createNewConnection("fake", "zosmf");
@@ -363,8 +343,7 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
             testDatasetSessionNode: null,
             testDatasetTree: null,
             quickPickItem: createQuickPickItem(),
-            qpPlaceholder:
-                'Choose "Create new..." to define a new profile or select an existing profile to add to the Data Set Explorer',
+            qpPlaceholder: 'Choose "Create new..." to define a new profile or select an existing profile to add to the Data Set Explorer',
         };
         newMocks.testDatasetSessionNode = createDatasetSessionNode(newMocks.session, globalMocks.mockProfileInstance);
         newMocks.testDatasetTree = createDatasetTree(newMocks.testDatasetSessionNode, newMocks.treeView);
@@ -465,8 +444,7 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
             testDatasetTree: null,
             quickPickItem: createQuickPickItem(),
             mockWsFolder: null,
-            qpPlaceholder:
-                'Choose "Create new..." to define a new profile or select an existing profile to add to the Data Set Explorer',
+            qpPlaceholder: 'Choose "Create new..." to define a new profile or select an existing profile to add to the Data Set Explorer',
         };
         newMocks.testDatasetSessionNode = createDatasetSessionNode(newMocks.session, globalMocks.mockProfileInstance);
         newMocks.testDatasetTree = createDatasetTree(newMocks.testDatasetSessionNode, newMocks.treeView);

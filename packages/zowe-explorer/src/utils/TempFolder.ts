@@ -47,14 +47,8 @@ export async function moveTempFolder(previousTempPath: string, currentTempPath: 
         fs.mkdirSync(globals.USS_DIR);
         fs.mkdirSync(globals.DS_DIR);
     } catch (err) {
-        globals.LOG.error(
-            localize("moveTempFolder.error", "Error encountered when creating temporary folder! ") + JSON.stringify(err)
-        );
-        await errorHandling(
-            err,
-            null,
-            localize("moveTempFolder.error", "Error encountered when creating temporary folder! ") + err.message
-        );
+        globals.LOG.error(localize("moveTempFolder.error", "Error encountered when creating temporary folder! ") + JSON.stringify(err));
+        await errorHandling(err, null, localize("moveTempFolder.error", "Error encountered when creating temporary folder! ") + err.message);
     }
     const previousTemp = path.join(previousTempPath, "temp");
     try {
@@ -106,9 +100,7 @@ export async function cleanDir(directory) {
  */
 export async function cleanTempDir() {
     // Get temp folder cleanup preference from settings
-    const preferencesTempCleanupEnabled = PersistentFilters.getDirectValue(
-        globals.SETTINGS_TEMP_FOLDER_CLEANUP
-    ) as boolean;
+    const preferencesTempCleanupEnabled = PersistentFilters.getDirectValue(globals.SETTINGS_TEMP_FOLDER_CLEANUP) as boolean;
     // logger hasn't necessarily been initialized yet, don't use the `log` in this function
     if (!fs.existsSync(globals.ZOWETEMPFOLDER) || !preferencesTempCleanupEnabled) {
         return;

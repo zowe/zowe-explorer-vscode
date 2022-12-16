@@ -41,12 +41,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  * @param {ussTree} ussFileProvider - Current ussTree used to populate the TreeView
  * @returns {Promise<void>}
  */
-export async function createUSSNode(
-    node: IZoweUSSTreeNode,
-    ussFileProvider: IZoweTree<IZoweUSSTreeNode>,
-    nodeType: string,
-    isTopLevel?: boolean
-) {
+export async function createUSSNode(node: IZoweUSSTreeNode, ussFileProvider: IZoweTree<IZoweUSSTreeNode>, nodeType: string, isTopLevel?: boolean) {
     await ussFileProvider.checkCurrentProfile(node);
     let filePath;
     if (contextually.isSession(node)) {
@@ -88,11 +83,7 @@ export async function createUSSNode(
                 ussFileProvider.refreshElement(node);
             }
         } catch (err) {
-            await errorHandling(
-                err,
-                node.mProfileName,
-                localize("createUSSNode.error.create", "Unable to create node: ") + err.message
-            );
+            await errorHandling(err, node.mProfileName, localize("createUSSNode.error.create", "Unable to create node: ") + err.message);
             throw err;
         }
     }
@@ -113,10 +104,7 @@ export async function refreshDirectory(node: IZoweUSSTreeNode, ussFileProvider: 
 
 export async function createUSSNodeDialog(node: IZoweUSSTreeNode, ussFileProvider: IZoweTree<IZoweUSSTreeNode>) {
     await ussFileProvider.checkCurrentProfile(node);
-    if (
-        Profiles.getInstance().validProfile === ValidProfileEnum.VALID ||
-        Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED
-    ) {
+    if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID || Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED) {
         const quickPickOptions: vscode.QuickPickOptions = {
             placeHolder: `What would you like to create at ${node.fullPath}?`,
             ignoreFocusOut: true,
@@ -213,9 +201,7 @@ export async function uploadFile(node: IZoweUSSTreeNode, doc: vscode.TextDocumen
 export async function copyPath(node: IZoweUSSTreeNode) {
     if (globals.ISTHEIA) {
         // Remove when Theia supports VS Code API for accessing system clipboard
-        vscode.window.showInformationMessage(
-            localize("copyPath.infoMessage", "Copy Path is not yet supported in Theia.")
-        );
+        vscode.window.showInformationMessage(localize("copyPath.infoMessage", "Copy Path is not yet supported in Theia."));
         return;
     }
     vscode.env.clipboard.writeText(node.fullPath);
@@ -228,11 +214,7 @@ export async function copyPath(node: IZoweUSSTreeNode) {
  * @param binary Whether the file should be downloaded as binary or not
  * @param ussFileProvider Our USSTree object
  */
-export async function changeFileType(
-    node: IZoweUSSTreeNode,
-    binary: boolean,
-    ussFileProvider: IZoweTree<IZoweUSSTreeNode>
-) {
+export async function changeFileType(node: IZoweUSSTreeNode, binary: boolean, ussFileProvider: IZoweTree<IZoweUSSTreeNode>) {
     node.setBinary(binary);
     await node.openUSS(true, true, ussFileProvider);
     ussFileProvider.refresh();
@@ -293,8 +275,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
 
     try {
         if (sesNode) {
-            binary =
-                binary || (await ZoweExplorerApiRegister.getUssApi(sesNode.getProfile()).isFileTagBinOrAscii(remote));
+            binary = binary || (await ZoweExplorerApiRegister.getUssApi(sesNode.getProfile()).isFileTagBinOrAscii(remote));
         }
         const uploadResponse: IZosFilesResponse = await vscode.window.withProgress(
             {
@@ -318,11 +299,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
         }
     } catch (err) {
         // TODO: error handling must not be zosmf specific
-        if (
-            err.message.includes(
-                localize("saveFile.error.ZosmfEtagMismatchError", "Rest API failure with HTTP(S) status 412")
-            )
-        ) {
+        if (err.message.includes(localize("saveFile.error.ZosmfEtagMismatchError", "Rest API failure with HTTP(S) status 412"))) {
             if (globals.ISTHEIA) {
                 await willForceUpload(node, doc, remote, node.getProfile(), binary, returnEtag);
             } else {
@@ -363,9 +340,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
                 }
             }
         } else {
-            globals.LOG.error(
-                localize("saveUSSFile.log.error.save", "Error encountered when saving USS file: ") + JSON.stringify(err)
-            );
+            globals.LOG.error(localize("saveUSSFile.log.error.save", "Error encountered when saving USS file: ") + JSON.stringify(err));
             await errorHandling(err, sesName, err.message);
         }
     }
@@ -405,11 +380,7 @@ export async function copyUssFilesToClipboard(selectedNodes: IZoweUSSTreeNode[])
     vscode.env.clipboard.writeText(filePaths.join(","));
 }
 
-export async function copyUssFiles(
-    node: IZoweUSSTreeNode,
-    nodeList: IZoweUSSTreeNode[],
-    ussFileProvider: IZoweTree<IZoweUSSTreeNode>
-) {
+export async function copyUssFiles(node: IZoweUSSTreeNode, nodeList: IZoweUSSTreeNode[], ussFileProvider: IZoweTree<IZoweUSSTreeNode>) {
     let selectedNodes;
     if (node || nodeList) {
         selectedNodes = getSelectedNodeList(node, nodeList) as IZoweUSSTreeNode[];

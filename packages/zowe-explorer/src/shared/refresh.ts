@@ -32,9 +32,7 @@ export async function refreshAll(treeProvider: IZoweTree<IZoweTreeNode>) {
         const profiles = await Profiles.getInstance().fetchAllProfiles();
         const found = profiles.some((prof) => prof.name === sessNode.label.toString().trim());
         if (found || sessNode.label.toString() === "Favorites") {
-            const setting = (await PersistentFilters.getDirectValue(
-                globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION
-            )) as boolean;
+            const setting = (await PersistentFilters.getDirectValue(globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION)) as boolean;
             if (contextually.isSessionNotFav(sessNode)) {
                 labelRefresh(sessNode);
                 sessNode.children = [];
@@ -43,9 +41,9 @@ export async function refreshAll(treeProvider: IZoweTree<IZoweTreeNode>) {
                     resetValidationSettings(sessNode, setting);
                 }
                 returnIconState(sessNode);
-                await syncSessionNode(Profiles.getInstance())((profileValue) =>
-                    ZoweExplorerApiRegister.getCommonApi(profileValue).getSession()
-                )(sessNode);
+                await syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getCommonApi(profileValue).getSession())(
+                    sessNode
+                );
             }
             treeProvider.refresh();
         } else {

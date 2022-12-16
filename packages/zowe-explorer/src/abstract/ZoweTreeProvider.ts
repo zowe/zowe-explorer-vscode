@@ -15,13 +15,7 @@ import { imperative } from "@zowe/cli";
 import { PersistentFilters } from "../PersistentFilters";
 import { getIconByNode, getIconById, IconId } from "../generators/icons";
 import * as contextually from "../shared/context";
-import {
-    IZoweTreeNode,
-    IZoweDatasetTreeNode,
-    IZoweNodeType,
-    IZoweTree,
-    PersistenceSchemaEnum,
-} from "@zowe/zowe-explorer-api";
+import { IZoweTreeNode, IZoweDatasetTreeNode, IZoweNodeType, IZoweTree, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { setProfile, setSession, errorHandling } from "../utils/ProfilesUtils";
 
@@ -36,9 +30,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export class ZoweTreeProvider {
     // Event Emitters used to notify subscribers that the refresh event has fired
-    public mOnDidChangeTreeData: vscode.EventEmitter<IZoweTreeNode | void> = new vscode.EventEmitter<
-        IZoweTreeNode | undefined
-    >();
+    public mOnDidChangeTreeData: vscode.EventEmitter<IZoweTreeNode | void> = new vscode.EventEmitter<IZoweTreeNode | undefined>();
     public readonly onDidChangeTreeData: vscode.Event<IZoweTreeNode | void> = this.mOnDidChangeTreeData.event;
 
     protected mHistory: PersistentFilters;
@@ -111,9 +103,7 @@ export class ZoweTreeProvider {
      * @param isOpen the intended state of the the tree view provider, true or false
      */
     public async flipState(element: IZoweTreeNode, isOpen: boolean = false) {
-        element.collapsibleState = isOpen
-            ? vscode.TreeItemCollapsibleState.Expanded
-            : vscode.TreeItemCollapsibleState.Collapsed;
+        element.collapsibleState = isOpen ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed;
         const icon = getIconByNode(element);
         if (icon) {
             element.iconPath = icon.path;
@@ -132,9 +122,7 @@ export class ZoweTreeProvider {
             if (!setting.persistence) {
                 setting.favorites = [];
                 setting.history = [];
-                await vscode.workspace
-                    .getConfiguration()
-                    .update(this.persistenceSchema, setting, vscode.ConfigurationTarget.Global);
+                await vscode.workspace.getConfiguration().update(this.persistenceSchema, setting, vscode.ConfigurationTarget.Global);
             }
         }
     }
@@ -195,8 +183,7 @@ export class ZoweTreeProvider {
         if (profileStatus.status === "inactive") {
             if (
                 contextually.isSessionNotFav(node) &&
-                (node.contextValue.toLowerCase().includes("session") ||
-                    node.contextValue.toLowerCase().includes("server"))
+                (node.contextValue.toLowerCase().includes("session") || node.contextValue.toLowerCase().includes("server"))
             ) {
                 node.contextValue = node.contextValue.replace(/(?<=.*)(_Active|_Inactive|_Unverified)$/, "");
                 node.contextValue = node.contextValue + globals.INACTIVE_CONTEXT;
@@ -225,8 +212,7 @@ export class ZoweTreeProvider {
         } else if (profileStatus.status === "active") {
             if (
                 contextually.isSessionNotFav(node) &&
-                (node.contextValue.toLowerCase().includes("session") ||
-                    node.contextValue.toLowerCase().includes("server"))
+                (node.contextValue.toLowerCase().includes("session") || node.contextValue.toLowerCase().includes("server"))
             ) {
                 node.contextValue = node.contextValue.replace(/(?<=.*)(_Active|_Inactive|_Unverified)$/, "");
                 node.contextValue = node.contextValue + globals.ACTIVE_CONTEXT;
@@ -238,8 +224,7 @@ export class ZoweTreeProvider {
         } else if (profileStatus.status === "unverified") {
             if (
                 contextually.isSessionNotFav(node) &&
-                (node.contextValue.toLowerCase().includes("session") ||
-                    node.contextValue.toLowerCase().includes("server"))
+                (node.contextValue.toLowerCase().includes("session") || node.contextValue.toLowerCase().includes("server"))
             ) {
                 node.contextValue = node.contextValue.replace(/(?<=.*)(_Active|_Inactive|_Unverified)$/, "");
                 node.contextValue = node.contextValue + globals.UNVERIFIED_CONTEXT;

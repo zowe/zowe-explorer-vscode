@@ -23,11 +23,9 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 export class SettingsConfig {
     public static async standardizeSettings(): Promise<void> {
         const globalIsNotMigrated =
-            SettingsConfig.configurations.inspect(globals.SETTINGS_VERSION).globalValue !==
-            SettingsConfig.currentVersionNumber;
+            SettingsConfig.configurations.inspect(globals.SETTINGS_VERSION).globalValue !== SettingsConfig.currentVersionNumber;
         const workspaceIsNotMigrated =
-            SettingsConfig.configurations.inspect(globals.SETTINGS_VERSION).workspaceValue !==
-            SettingsConfig.currentVersionNumber;
+            SettingsConfig.configurations.inspect(globals.SETTINGS_VERSION).workspaceValue !== SettingsConfig.currentVersionNumber;
         const workspaceIsOpen = vscode.workspace.workspaceFolders !== undefined;
         const zoweSettingsExist = SettingsConfig.zoweOldConfigurations.length > 0;
 
@@ -59,12 +57,8 @@ export class SettingsConfig {
         "Zowe-Jobs-Persistent": globals.SETTINGS_JOBS_HISTORY,
     };
     private static configurations = vscode.workspace.getConfiguration();
-    private static zoweOldConfigurations = Object.keys(SettingsConfig.configurations).filter((key) =>
-        key.match(new RegExp("Zowe-*|Zowe\\s*", "g"))
-    );
-    private static currentVersionNumber = semver.major(
-        vscode.extensions.getExtension("zowe.vscode-extension-for-zowe").packageJSON.version
-    );
+    private static zoweOldConfigurations = Object.keys(SettingsConfig.configurations).filter((key) => key.match(new RegExp("Zowe-*|Zowe\\s*", "g")));
+    private static currentVersionNumber = semver.major(vscode.extensions.getExtension("zowe.vscode-extension-for-zowe").packageJSON.version);
     private static async promptReload(): Promise<void> {
         // Prompt user to reload VS Code window
         const reloadButton = localize("standardization.reload.button", "Reload Window");
@@ -80,9 +74,7 @@ export class SettingsConfig {
     }
 
     private static async standardizeGlobalSettings(): Promise<void> {
-        let globalIsMigrated =
-            SettingsConfig.configurations.inspect(globals.SETTINGS_VERSION).globalValue !==
-            SettingsConfig.currentVersionNumber;
+        let globalIsMigrated = SettingsConfig.configurations.inspect(globals.SETTINGS_VERSION).globalValue !== SettingsConfig.currentVersionNumber;
 
         // Standardize global settings when old Zowe settings were found
         if (SettingsConfig.zoweOldConfigurations.length > 0) {
@@ -97,11 +89,7 @@ export class SettingsConfig {
                 const newSetting = SettingsConfig.configurationDictionary[configuration];
 
                 if (globalValue !== undefined) {
-                    await SettingsConfig.configurations.update(
-                        newSetting,
-                        globalValue,
-                        vscode.ConfigurationTarget.Global
-                    );
+                    await SettingsConfig.configurations.update(newSetting, globalValue, vscode.ConfigurationTarget.Global);
                     globalIsMigrated = true;
                 }
             });
@@ -136,11 +124,7 @@ export class SettingsConfig {
                 const newSetting = SettingsConfig.configurationDictionary[configuration];
 
                 if (workspaceValue !== undefined) {
-                    await SettingsConfig.configurations.update(
-                        newSetting,
-                        workspaceValue,
-                        vscode.ConfigurationTarget.Workspace
-                    );
+                    await SettingsConfig.configurations.update(newSetting, workspaceValue, vscode.ConfigurationTarget.Workspace);
                     workspaceIsMigrated = true;
                 }
             }

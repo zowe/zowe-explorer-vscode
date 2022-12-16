@@ -13,12 +13,7 @@ import * as vscode from "vscode";
 import { ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { PersistentFilters } from "../../../src/PersistentFilters";
 import { Profiles } from "../../../src/Profiles";
-import {
-    createInstanceOfProfile,
-    createIProfile,
-    createISessionWithoutCredentials,
-    createTreeView,
-} from "../../../__mocks__/mockCreators/shared";
+import { createInstanceOfProfile, createIProfile, createISessionWithoutCredentials, createTreeView } from "../../../__mocks__/mockCreators/shared";
 import { createFavoriteUSSNode, createUSSNode, createUSSTree } from "../../../__mocks__/mockCreators/uss";
 import { createIJobObject, createJobsTree } from "../../../__mocks__/mockCreators/jobs";
 import * as refreshActions from "../../../src/shared/refresh";
@@ -109,12 +104,7 @@ describe("Refresh Unit Tests - Function refreshAll", () => {
             createTreeView()
         );
         newMocks.testUSSTree.mSessionNodes.push(newMocks.ussNode);
-        newMocks.jobsTree = createJobsTree(
-            globalMocks.session,
-            newMocks.iJob,
-            newMocks.profileInstance,
-            newMocks.treeView
-        );
+        newMocks.jobsTree = createJobsTree(globalMocks.session, newMocks.iJob, newMocks.profileInstance, newMocks.treeView);
         newMocks.jobsTree.mSessionNodes.push(newMocks.datasetSessionNode);
         newMocks.testDatasetTree = createDatasetTree(newMocks.datasetSessionNode, newMocks.treeView);
         newMocks.testDatasetTree.mSessionNodes.push(newMocks.datasetSessionNode);

@@ -46,15 +46,7 @@ describe("ZoweUSSNode Integration Tests", async () => {
     const sessCfg = ZosmfSession.createSessCfgFromArgs(cmdArgs);
     imperative.ConnectionPropsForSessCfg.resolveSessCfgProps(sessCfg, cmdArgs);
     const session = new imperative.Session(sessCfg);
-    const sessNode = new ZoweUSSNode(
-        testConst.profile.name,
-        vscode.TreeItemCollapsibleState.Expanded,
-        null,
-        session,
-        null,
-        false,
-        testProfile.name
-    );
+    const sessNode = new ZoweUSSNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, testProfile.name);
     sessNode.contextValue = USS_SESSION_CONTEXT;
     sessNode.dirty = true;
     const path = testConst.ussPattern;
@@ -65,25 +57,13 @@ describe("ZoweUSSNode Integration Tests", async () => {
      *************************************************************************************************************/
     it("Testing that the ZoweUSSNode is defined", async () => {
         // Tests empty node
-        const emptyPONode = new ZoweUSSNode(
-            path + "/aDir4",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            sessNode,
-            null,
-            null
-        );
+        const emptyPONode = new ZoweUSSNode(path + "/aDir4", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null, null);
 
         expect(emptyPONode.label).toBeDefined();
         expect(emptyPONode.collapsibleState).toBeDefined();
 
         // Tests PS node
-        const PSNode = new ZoweUSSNode(
-            path + "/aFile3.txt",
-            vscode.TreeItemCollapsibleState.None,
-            sessNode,
-            null,
-            null
-        );
+        const PSNode = new ZoweUSSNode(path + "/aFile3.txt", vscode.TreeItemCollapsibleState.None, sessNode, null, null);
 
         expect(PSNode.label).toBeDefined();
         expect(PSNode.collapsibleState).toBeDefined();
@@ -178,13 +158,7 @@ describe("ZoweUSSNode Integration Tests", async () => {
     it("Testing that getSession() works as expected", async () => {
         const dir1 = new ZoweUSSNode(path + "./aDir5", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null, null);
         const dir2 = new ZoweUSSNode(path + "/aDir6", vscode.TreeItemCollapsibleState.None, sessNode, null, null);
-        const file1 = new ZoweUSSNode(
-            path + "/aDir5/aFile4.txt",
-            vscode.TreeItemCollapsibleState.None,
-            dir1,
-            null,
-            null
-        );
+        const file1 = new ZoweUSSNode(path + "/aDir5/aFile4.txt", vscode.TreeItemCollapsibleState.None, dir1, null, null);
 
         expect(sessNode.getSession()).toEqual(session);
         expect(dir1.getSession()).toEqual(session);

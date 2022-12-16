@@ -165,23 +165,15 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 )
             );
         } catch (err) {
-            await errorHandling(
-                err,
-                this.label.toString(),
-                localize("getChildren.error.response", "Retrieving response from ") + `uss-file-list`
-            );
-            await syncSessionNode(Profiles.getInstance())((profileValue) =>
-                ZoweExplorerApiRegister.getUssApi(profileValue).getSession()
-            )(sessNode);
+            await errorHandling(err, this.label.toString(), localize("getChildren.error.response", "Retrieving response from ") + `uss-file-list`);
+            await syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getUssApi(profileValue).getSession())(sessNode);
         }
         // push nodes to an object with property names to avoid duplicates
         const elementChildren = {};
         responses.forEach((response) => {
             // Throws reject if the Zowe command does not throw an error but does not succeed
             if (!response.success) {
-                throw Error(
-                    localize("getChildren.responses.error.response", "The response from Zowe CLI was not successful")
-                );
+                throw Error(localize("getChildren.responses.error.response", "The response from Zowe CLI was not successful"));
             }
 
             // Loops through all the returned file references members and creates nodes for them
@@ -189,8 +181,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 const existing = this.children.find(
                     // Ensure both parent path and short label match.
                     // (Can't use mParent fullPath since that is already updated with new value by this point in getChildren.)
-                    (element: ZoweUSSNode) =>
-                        element.parentPath === this.fullPath && element.label.toString() === item.name
+                    (element: ZoweUSSNode) => element.parentPath === this.fullPath && element.label.toString() === item.name
                 );
                 if (existing) {
                     elementChildren[existing.label.toString()] = existing;
@@ -259,9 +250,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             delete this.getSessionNode().binaryFiles[this.fullPath];
         }
         if (this.getParent() && this.getParent().contextValue === globals.FAV_PROFILE_CONTEXT) {
-            this.contextValue = this.binary
-                ? globals.DS_BINARY_FILE_CONTEXT + globals.FAV_SUFFIX
-                : globals.DS_TEXT_FILE_CONTEXT + globals.FAV_SUFFIX;
+            this.contextValue = this.binary ? globals.DS_BINARY_FILE_CONTEXT + globals.FAV_SUFFIX : globals.DS_TEXT_FILE_CONTEXT + globals.FAV_SUFFIX;
         }
 
         const icon = getIconByNode(this);
@@ -353,23 +342,14 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         vscode.commands.executeCommand("zowe.uss.refreshUSSInTree", this);
     }
 
-    public async deleteUSSNode(
-        ussFileProvider: IZoweTree<IZoweUSSTreeNode>,
-        filePath: string,
-        cancelled: boolean = false
-    ) {
+    public async deleteUSSNode(ussFileProvider: IZoweTree<IZoweUSSTreeNode>, filePath: string, cancelled: boolean = false) {
         const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
         if (cancelled) {
-            vscode.window.showInformationMessage(
-                localize("deleteUssPrompt.deleteCancelled", "Delete action was cancelled.")
-            );
+            vscode.window.showInformationMessage(localize("deleteUssPrompt.deleteCancelled", "Delete action was cancelled."));
             return;
         }
         try {
-            await ZoweExplorerApiRegister.getUssApi(cachedProfile).delete(
-                this.fullPath,
-                contextually.isUssDirectory(this)
-            );
+            await ZoweExplorerApiRegister.getUssApi(cachedProfile).delete(this.fullPath, contextually.isUssDirectory(this));
             this.getParent().dirty = true;
             try {
                 if (fs.existsSync(filePath)) {
@@ -378,15 +358,11 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             } catch (err) {}
         } catch (err) {
             globals.LOG.error(err);
-            vscode.window.showErrorMessage(
-                localize("deleteUSSNode.error.node", "Unable to delete node: ") + err.message
-            );
+            vscode.window.showErrorMessage(localize("deleteUSSNode.error.node", "Unable to delete node: ") + err.message);
             throw err;
         }
 
-        vscode.window.showInformationMessage(
-            localize("deleteUssNode.itemDeleted", "The item {0} has been deleted.", this.label.toString())
-        );
+        vscode.window.showInformationMessage(localize("deleteUssNode.itemDeleted", "The item {0} has been deleted.", this.label.toString()));
 
         // Remove node from the USS Favorites tree
         ussFileProvider.removeFavorite(this);
@@ -453,10 +429,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      */
     public async openUSS(download = false, previewFile: boolean, ussFileProvider?: IZoweTree<IZoweUSSTreeNode>) {
         await ussFileProvider.checkCurrentProfile(this);
-        if (
-            Profiles.getInstance().validProfile === ValidProfileEnum.VALID ||
-            Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED
-        ) {
+        if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID || Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED) {
             try {
                 let label: string;
                 switch (true) {
@@ -470,9 +443,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                         label = this.fullPath;
                         break;
                     default:
-                        vscode.window.showErrorMessage(
-                            localize("openUSS.error.invalidNode", "open() called from invalid node.")
-                        );
+                        vscode.window.showErrorMessage(localize("openUSS.error.invalidNode", "open() called from invalid node."));
                         throw Error(localize("openUSS.error.invalidNode", "open() called from invalid node."));
                 }
 
@@ -492,8 +463,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                         const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
                         const fullPath = this.fullPath;
                         const chooseBinary =
-                            this.binary ||
-                            (await ZoweExplorerApiRegister.getUssApi(cachedProfile).isFileTagBinOrAscii(this.fullPath));
+                            this.binary || (await ZoweExplorerApiRegister.getUssApi(cachedProfile).isFileTagBinOrAscii(this.fullPath));
                         const response = await vscode.window.withProgress(
                             {
                                 location: vscode.ProgressLocation.Notification,
@@ -544,9 +514,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 label = this.label;
                 break;
             default:
-                vscode.window.showErrorMessage(
-                    localize("refreshUSS.error.invalidNode", "refreshUSS() called from invalid node.")
-                );
+                vscode.window.showErrorMessage(localize("refreshUSS.error.invalidNode", "refreshUSS() called from invalid node."));
                 throw Error(localize("refreshUSS.error.invalidNode", "refreshUSS() called from invalid node."));
         }
         try {
@@ -568,9 +536,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
                 const response = await ZoweExplorerApiRegister.getUssApi(cachedProfile).getContents(this.fullPath, {
                     file: ussDocumentFilePath,
-                    binary:
-                        this.binary ||
-                        (await ZoweExplorerApiRegister.getUssApi(cachedProfile).isFileTagBinOrAscii(this.fullPath)),
+                    binary: this.binary || (await ZoweExplorerApiRegister.getUssApi(cachedProfile).isFileTagBinOrAscii(this.fullPath)),
                     returnEtag: true,
                     encoding: cachedProfile?.profile.encoding,
                 });
@@ -587,9 +553,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             if (err.message.includes(localize("refreshUSS.error.notFound", "not found"))) {
                 globals.LOG.warn(err);
                 vscode.window.showInformationMessage(
-                    localize("refreshUSS.file1", "Unable to find file: ") +
-                        label +
-                        localize("refreshUSS.file2", " was probably deleted.")
+                    localize("refreshUSS.file1", "Unable to find file: ") + label + localize("refreshUSS.file2", " was probably deleted.")
                 );
             } else {
                 await errorHandling(err, this.mProfileName, err.message);
@@ -614,10 +578,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 const noResponse = localize("openUSS.log.info.failedToOpenAsText.no", "Cancel");
 
                 const response = await vscode.window.showErrorMessage(
-                    localize(
-                        "openUSS.log.info.failedToOpenAsText",
-                        "Failed to open file as text. Re-download file as binary?"
-                    ),
+                    localize("openUSS.log.info.failedToOpenAsText", "Failed to open file as text. Re-download file as binary?"),
                     ...[yesResponse, noResponse]
                 );
 

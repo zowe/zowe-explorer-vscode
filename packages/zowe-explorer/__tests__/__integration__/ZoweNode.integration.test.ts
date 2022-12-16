@@ -65,12 +65,7 @@ describe("ZoweNode Integration Tests", async () => {
      *************************************************************************************************************/
     it("Testing that the ZoweDatasetNode is defined", async () => {
         // Tests empty PO node
-        const emptyPONode = new ZoweDatasetNode(
-            pattern + ".TCLASSIC",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            sessNode,
-            null
-        );
+        const emptyPONode = new ZoweDatasetNode(pattern + ".TCLASSIC", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
 
         expect(emptyPONode.label).toBeDefined();
         expect(emptyPONode.collapsibleState).toBeDefined();
@@ -110,12 +105,7 @@ describe("ZoweNode Integration Tests", async () => {
         // Creating structure of files and folders under BRTVS99 profile
         const sampleChildren: ZoweDatasetNode[] = [
             new ZoweDatasetNode(pattern + ".PUBLIC.BIN", vscode.TreeItemCollapsibleState.None, sessNode, null),
-            new ZoweDatasetNode(
-                pattern + ".PUBLIC.TCLASSIC",
-                vscode.TreeItemCollapsibleState.Collapsed,
-                sessNode,
-                null
-            ),
+            new ZoweDatasetNode(pattern + ".PUBLIC.TCLASSIC", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null),
             new ZoweDatasetNode(pattern + ".PUBLIC.TPDS", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null),
             new ZoweDatasetNode(pattern + ".PUBLIC.TPS", vscode.TreeItemCollapsibleState.None, sessNode, null),
         ];
@@ -173,19 +163,9 @@ describe("ZoweNode Integration Tests", async () => {
      * Checks that getSession() returns the expected value
      *************************************************************************************************************/
     it("Testing that getSession() works as expected", async () => {
-        const PDSNode = new ZoweDatasetNode(
-            pattern + ".TPDS",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            sessNode,
-            null
-        );
+        const PDSNode = new ZoweDatasetNode(pattern + ".TPDS", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
         const PSNode = new ZoweDatasetNode(pattern + ".TPS", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        const MemNode = new ZoweDatasetNode(
-            pattern + ".TPDS(TCHILD1)",
-            vscode.TreeItemCollapsibleState.None,
-            PDSNode,
-            null
-        );
+        const MemNode = new ZoweDatasetNode(pattern + ".TPDS(TCHILD1)", vscode.TreeItemCollapsibleState.None, PDSNode, null);
 
         expect(sessNode.getSession()).toEqual(session);
         expect(PDSNode.getSession()).toEqual(session);

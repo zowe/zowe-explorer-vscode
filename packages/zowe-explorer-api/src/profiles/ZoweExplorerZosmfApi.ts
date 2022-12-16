@@ -171,19 +171,11 @@ export class ZosmfUssApi extends ZosmfApiCommon implements ZoweExplorerApi.IUss 
         });
     }
 
-    public putContent(
-        inputFilePath: string,
-        ussFilePath: string,
-        options: zowe.IUploadOptions
-    ): Promise<zowe.IZosFilesResponse> {
+    public putContent(inputFilePath: string, ussFilePath: string, options: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse> {
         return zowe.Upload.fileToUssFile(this.getSession(), inputFilePath, ussFilePath, options);
     }
 
-    public uploadDirectory(
-        inputDirectoryPath: string,
-        ussDirectoryPath: string,
-        options?: zowe.IUploadOptions
-    ): Promise<zowe.IZosFilesResponse> {
+    public uploadDirectory(inputDirectoryPath: string, ussDirectoryPath: string, options?: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse> {
         return zowe.Upload.dirToUSSDirRecursive(this.getSession(), inputDirectoryPath, ussDirectoryPath, options);
     }
 
@@ -224,11 +216,7 @@ export class ZosmfMvsApi extends ZosmfApiCommon implements ZoweExplorerApi.IMvs 
         return zowe.Download.dataSet(this.getSession(), dataSetName, options);
     }
 
-    public putContents(
-        inputFilePath: string,
-        dataSetName: string,
-        options?: zowe.IUploadOptions
-    ): Promise<zowe.IZosFilesResponse> {
+    public putContents(inputFilePath: string, dataSetName: string, options?: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse> {
         return zowe.Upload.pathToDataSet(this.getSession(), inputFilePath, dataSetName, options);
     }
 
@@ -274,11 +262,7 @@ export class ZosmfMvsApi extends ZosmfApiCommon implements ZoweExplorerApi.IMvs 
         return zowe.Rename.dataSet(this.getSession(), currentDataSetName, newDataSetName);
     }
 
-    public renameDataSetMember(
-        dataSetName: string,
-        oldMemberName: string,
-        newMemberName: string
-    ): Promise<zowe.IZosFilesResponse> {
+    public renameDataSetMember(dataSetName: string, oldMemberName: string, newMemberName: string): Promise<zowe.IZosFilesResponse> {
         return zowe.Rename.dataSetMember(this.getSession(), dataSetName, oldMemberName, newMemberName);
     }
 

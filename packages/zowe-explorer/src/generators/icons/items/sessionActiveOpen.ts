@@ -21,11 +21,7 @@ const icon: IIconItem = {
     path: getIconPathInResources("folder-root-connected-open.svg"),
     check: (node) => {
         const parentCheck = sessionActive.check(node);
-        return (
-            parentCheck &&
-            node.collapsibleState === TreeItemCollapsibleState.Expanded &&
-            node.contextValue.includes(ACTIVE_CONTEXT)
-        );
+        return parentCheck && node.collapsibleState === TreeItemCollapsibleState.Expanded && node.contextValue.includes(ACTIVE_CONTEXT);
     },
 };
 

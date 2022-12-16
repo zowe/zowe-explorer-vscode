@@ -80,9 +80,7 @@ describe("dsNodeActions integration test", async () => {
     const oldSettings = vscode.workspace.getConfiguration(globals.SETTINGS_DS_HISTORY);
 
     after(async () => {
-        await vscode.workspace
-            .getConfiguration()
-            .update(globals.SETTINGS_DS_HISTORY, oldSettings, vscode.ConfigurationTarget.Global);
+        await vscode.workspace.getConfiguration().update(globals.SETTINGS_DS_HISTORY, oldSettings, vscode.ConfigurationTarget.Global);
     });
 
     describe("Refresh ALL", async () => {

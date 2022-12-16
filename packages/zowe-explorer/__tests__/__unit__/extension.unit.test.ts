@@ -388,16 +388,7 @@ async function createGlobalMocks() {
 describe("Extension Unit Tests", () => {
     function createBlockMocks(globalMocks: any) {
         const blockMocks = {
-            rootNode: new ZoweUSSNode(
-                "root",
-                vscode.TreeItemCollapsibleState.Collapsed,
-                null,
-                globalMocks.session,
-                null,
-                false,
-                "test",
-                undefined
-            ),
+            rootNode: new ZoweUSSNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, globalMocks.session, null, false, "test", undefined),
             testNode: null,
         };
         blockMocks.testNode = new ZoweUSSNode(

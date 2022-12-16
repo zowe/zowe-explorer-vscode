@@ -113,10 +113,7 @@ export const DATA_SET_PROPERTIES = [
         key: `avgblk`,
         label: `Average Block Length`,
         value: null,
-        placeHolder: localize(
-            "createFile.attribute.avgblk",
-            `Enter the average block length (if allocation unit = BLK)`
-        ),
+        placeHolder: localize("createFile.attribute.avgblk", `Enter the average block length (if allocation unit = BLK)`),
     },
     {
         key: `blksize`,
@@ -206,10 +203,7 @@ export const DATA_SET_PROPERTIES = [
         key: `volser`,
         label: `Volume Serial`,
         value: null,
-        placeHolder: localize(
-            "createFile.attribute.volser",
-            `Enter the volume serial on which the data set should be placed`
-        ),
+        placeHolder: localize("createFile.attribute.volser", `Enter the volume serial on which the data set should be placed`),
     },
 ];
 
@@ -306,14 +300,10 @@ export function setActivated(value: boolean) {
 export async function setGlobalSecurityValue() {
     if (this.ISTHEIA) {
         PROFILE_SECURITY = false;
-        await vscode.workspace
-            .getConfiguration()
-            .update(this.SETTINGS_SECURE_CREDENTIALS_ENABLED, false, vscode.ConfigurationTarget.Global);
+        await vscode.workspace.getConfiguration().update(this.SETTINGS_SECURE_CREDENTIALS_ENABLED, false, vscode.ConfigurationTarget.Global);
         return;
     }
-    const settingEnabled: boolean = await vscode.workspace
-        .getConfiguration()
-        .get(this.SETTINGS_SECURE_CREDENTIALS_ENABLED);
+    const settingEnabled: boolean = await vscode.workspace.getConfiguration().get(this.SETTINGS_SECURE_CREDENTIALS_ENABLED);
     if (!settingEnabled) {
         PROFILE_SECURITY = false;
     } else {
