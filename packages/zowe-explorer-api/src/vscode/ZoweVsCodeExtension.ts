@@ -15,6 +15,7 @@ import { ProfilesCache, ZoweExplorerApi } from "../profiles";
 import { imperative } from "@zowe/cli";
 import { IPromptCredentialsOptions, IPromptUserPassOptions } from "./doc/IPromptCredentials";
 import { Gui } from "../globals/Gui";
+import { MessageSeverity, IZoweLogger } from "../logger";
 
 /**
  * Collection of utility functions for writing Zowe Explorer VS Code extensions.
@@ -43,6 +44,28 @@ export class ZoweVsCodeExtension {
             return zoweExplorerApi.exports as ZoweExplorerApi.IApiRegisterClient;
         }
         return undefined;
+    }
+
+    /**
+     * Show a message within VS Code dialog, and log it to an Imperative logger
+     * @param message The message to display
+     * @param severity The level of severity for the message (see `MessageSeverity`)
+     * @param logger The IZoweLogger object for logging the message
+     *
+     * @deprecated Please use `Gui.showMessage` instead
+     */
+    public static showVsCodeMessage(message: string, severity: MessageSeverity, logger: IZoweLogger): void {
+        void Gui.showMessage(message, { severity: severity, logger: logger });
+    }
+
+    /**
+     * Opens an input box dialog within VS Code, given an options object
+     * @param inputBoxOptions The options for this input box
+     *
+     * @deprecated Use `Gui.showInputBox` instead
+     */
+    public static async inputBox(inputBoxOptions: vscode.InputBoxOptions): Promise<string> {
+        return await Gui.showInputBox(inputBoxOptions);
     }
 
     /**
