@@ -9,10 +9,11 @@
  *                                                                                 *
  */
 
-import { sessionMap } from "../../../src/extension";
+import { sessionMap, ZoweLogger } from "../../../src/extension";
 import { AbstractFtpApi } from "../../../src/ZoweExplorerAbstractFtpApi";
 import { FtpSession } from "../../../src/ftpSession";
 import { FTPConfig, IZosFTPProfile } from "@zowe/zos-ftp-for-zowe-cli";
+import { Gui, MessageSeverity } from "@zowe/zowe-explorer-api";
 
 jest.mock("zos-node-accessor");
 
@@ -46,6 +47,81 @@ describe("AbstractFtpApi", () => {
         // eslint-disable-next-line @typescript-eslint/unbound-method
         expect(session.releaseConnections).toBeCalledTimes(1);
         expect(sessionMap.size).toBe(0);
+    });
+
+    it("should show a fatal message when trying to load an invalid profile.", () => {
+        Object.defineProperty(Gui, "showMessage", { value: jest.fn(), configurable: true });
+        const instance = new Dummy();
+        instance.profile = {
+            profile: {},
+            message: undefined,
+            type: undefined,
+            failNotFound: undefined,
+        };
+        try {
+            instance.getSession(undefined);
+        } catch (err) {
+            expect(err).not.toBeUndefined();
+            expect(err).toBeInstanceOf(Error);
+            expect(Gui.showMessage).toHaveBeenCalledWith(
+                "Internal error: ZoweVscFtpRestApi instance was not initialized with a valid Zowe profile.",
+                {
+                    severity: MessageSeverity.FATAL,
+                    logger: ZoweLogger,
+                }
+            );
+        }
+    });
+
+    it("should show a fatal message when trying to call getStatus with invalid credentials.", async () => {
+        Object.defineProperty(Gui, "errorMessage", { value: jest.fn(), configurable: true });
+        Object.defineProperty(AbstractFtpApi, "ftpClient", {
+            value: jest.fn((profile) => {
+                throw new Error("Example error");
+            }),
+            configurable: true,
+        });
+        Object.defineProperty(FTPConfig, "connectFromArguments", { value: jest.fn(), configurable: true });
+        const instance = new Dummy();
+        instance.profile = {
+            profile: {},
+            message: undefined,
+            type: undefined,
+            failNotFound: undefined,
+        };
+        try {
+            await instance.getStatus(undefined, "zftp");
+        } catch (err) {
+            expect(err).not.toBeUndefined();
+            expect(err).toBeInstanceOf(Error);
+            expect(Gui.errorMessage).toHaveBeenCalledWith(
+                "Invalid Credentials. Please ensure the username and password for  are valid or this may lead to a lock out.",
+                {
+                    logger: ZoweLogger,
+                }
+            );
+        }
+    });
+
+    it("should show a fatal message when using checkedProfile on an invalid profile", () => {
+        Object.defineProperty(Gui, "showMessage", { value: jest.fn(), configurable: true });
+        const instance = new Dummy();
+        instance.profile = {
+            profile: {},
+            message: undefined,
+            type: undefined,
+            failNotFound: undefined,
+        };
+        try {
+            expect(Gui.showMessage).toBeCalledWith("Internal error: ZoweVscFtpRestApi instance was not initialized with a valid Zowe profile.", {
+                severity: MessageSeverity.FATAL,
+                logger: ZoweLogger,
+            });
+            instance.checkedProfile();
+        } catch (err) {
+            expect(err).not.toBeUndefined();
+            expect(err).toBeInstanceOf(Error);
+        }
     });
 
     it("should load all properties from zftp profile", async () => {
