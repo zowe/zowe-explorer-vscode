@@ -1,8 +1,9 @@
 {
   "compilerOptions": {
-    "types": ["node"],
+    "types": ["node", "jest"],
     "target": "es2015",
     "module": "commonjs",
+    "noEmit": true,
     "declaration": true,
     "moduleResolution": "node",
     "noImplicitAny": false,
@@ -14,6 +15,6 @@
     "newLine": "lf",
     "resolveJsonModule": true
   },
-  "include": ["src/**/*"],
+  "include": ["__tests__", "__mocks__"],
   "exclude": ["lib", "node_modules"]
 }

@@ -32,6 +32,12 @@
     "package": "yarn license && yarn lint && yarn build && npm pack && node ../../scripts/mv-pack.js zowe-zowe-explorer-api tgz"
   },
   "jest": {
+    "globals": {
+      "ts-jest": {
+        "diagnostics": false,
+        "tsconfig": "tsconfig-tests.json"
+      }
+    },
     "moduleFileExtensions": [
       "js",
       "ts",
@@ -44,13 +50,7 @@
       "<rootDir>/results/unit"
     ],
     "transform": {
-      "^.+\\.(ts|tsx)$": [
-        "ts-jest",
-        {
-          "tsconfig": "tsconfig.json",
-          "diagnostics": false
-        }
-      ]
+      "^.+\\.(ts|tsx)$": "ts-jest"
     },
     "testRegex": "__tests__.*\\.(spec|test)\\.ts$",
     "modulePathIgnorePatterns": [
