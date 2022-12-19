@@ -8,6 +8,9 @@
  * Copyright Contributors to the Zowe Project.                                     *
  *                                                                                 *
  */
+
+// This shouldn't be considered redeclared, as its contained within a mock.
+// eslint-disable-next-line no-shadow
 export const enum MessageSeverity {
     TRACE = 0,
     DEBUG = 1,

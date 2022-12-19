@@ -19,6 +19,13 @@ export interface GuiMessageOptions {
     vsCodeOpts?: vscode.MessageOptions;
 }
 
+export interface WebviewOptions {
+    viewType: string;
+    title: string;
+    showOptions: vscode.ViewColumn | { viewColumn: vscode.ViewColumn; preserveFocus?: boolean };
+    vscode?: vscode.WebviewPanelOptions & vscode.WebviewOptions;
+}
+
 export namespace Gui {
     /**
      * Creates a new output channel with the given name and language ID
@@ -56,20 +63,12 @@ export namespace Gui {
 
     /**
      * Create and show a new webview panel
-     * @param viewType The type of the webview
-     * @param title The title of the panel
-     * @param showOptions Any options for how the webview is shown in the editor
-     * @param options Settings for the new panel
+     * @param options Settings for the new panel (@see WebviewOptions for more info)
      *
      * @see vscode.window.createWebviewPanel for more details
      */
-    export function createWebviewPanel(
-        viewType: string,
-        title: string,
-        showOptions: vscode.ViewColumn | { viewColumn: vscode.ViewColumn; preserveFocus?: boolean },
-        options?: vscode.WebviewPanelOptions & vscode.WebviewOptions
-    ): vscode.WebviewPanel {
-        return vscode.window.createWebviewPanel(viewType, title, showOptions, options);
+    export function createWebviewPanel(options: WebviewOptions): vscode.WebviewPanel {
+        return vscode.window.createWebviewPanel(options.viewType, options.title, options.showOptions, options.vscode);
     }
 
     /**

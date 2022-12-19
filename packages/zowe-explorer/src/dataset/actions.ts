@@ -844,12 +844,11 @@ export async function showAttributes(
         </table>
         </body>
         </html>`;
-        const panel: vscode.WebviewPanel = api.Gui.createWebviewPanel(
-            "zowe",
-            label + " " + localize("attributes.title", "Attributes"),
-            vscode.window.activeTextEditor ? vscode.window.activeTextEditor.viewColumn : 1,
-            {}
-        );
+        const panel: vscode.WebviewPanel = api.Gui.createWebviewPanel({
+            viewType: "zowe",
+            title: label + " " + localize("attributes.title", "Attributes"),
+            showOptions: vscode.window.activeTextEditor ? vscode.window.activeTextEditor.viewColumn : 1,
+        });
         panel.webview.html = webviewHTML;
     }
 }

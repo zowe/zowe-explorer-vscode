@@ -52,12 +52,7 @@ describe("AbstractFtpApi", () => {
     it("should show a fatal message when trying to load an invalid profile.", () => {
         Object.defineProperty(Gui, "showMessage", { value: jest.fn(), configurable: true });
         const instance = new Dummy();
-        instance.profile = {
-            profile: {},
-            message: undefined,
-            type: undefined,
-            failNotFound: undefined,
-        };
+        instance.profile = profile;
         try {
             instance.getSession(undefined);
         } catch (err) {
@@ -75,13 +70,11 @@ describe("AbstractFtpApi", () => {
 
     it("should show a fatal message when trying to call getStatus with invalid credentials.", async () => {
         Object.defineProperty(Gui, "errorMessage", { value: jest.fn(), configurable: true });
-        Object.defineProperty(AbstractFtpApi, "ftpClient", {
-            value: jest.fn((profile) => {
-                throw new Error("Example error");
-            }),
-            configurable: true,
-        });
-        Object.defineProperty(FTPConfig, "connectFromArguments", { value: jest.fn(), configurable: true });
+        jest.spyOn(FTPConfig, "connectFromArguments").mockImplementationOnce(
+            jest.fn((val) => {
+                throw new Error("Failed: missing credentials");
+            })
+        );
         const instance = new Dummy();
         instance.profile = {
             profile: {},
@@ -92,19 +85,24 @@ describe("AbstractFtpApi", () => {
         try {
             await instance.getStatus(undefined, "zftp");
         } catch (err) {
-            expect(err).not.toBeUndefined();
-            expect(err).toBeInstanceOf(Error);
             expect(Gui.errorMessage).toHaveBeenCalledWith(
-                "Invalid Credentials. Please ensure the username and password for  are valid or this may lead to a lock out.",
+                "Invalid Credentials. Please ensure the username and password for undefined are valid or this may lead to a lock-out.",
                 {
                     logger: ZoweLogger,
                 }
             );
+            expect(err).not.toBeUndefined();
+            expect(err).toBeInstanceOf(Error);
         }
     });
 
-    it("should show a fatal message when using checkedProfile on an invalid profile", () => {
-        Object.defineProperty(Gui, "showMessage", { value: jest.fn(), configurable: true });
+    it("should show a different fatal message when trying to call getStatus and an exception occurs.", async () => {
+        Object.defineProperty(Gui, "errorMessage", { value: jest.fn(), configurable: true });
+        jest.spyOn(FTPConfig, "connectFromArguments").mockImplementationOnce(
+            jest.fn((prof) => {
+                throw new Error("Something happened");
+            })
+        );
         const instance = new Dummy();
         instance.profile = {
             profile: {},
@@ -113,15 +111,55 @@ describe("AbstractFtpApi", () => {
             failNotFound: undefined,
         };
         try {
-            expect(Gui.showMessage).toBeCalledWith("Internal error: ZoweVscFtpRestApi instance was not initialized with a valid Zowe profile.", {
-                severity: MessageSeverity.FATAL,
+            await instance.getStatus(undefined, "zftp");
+        } catch (err) {
+            expect(Gui.errorMessage).toHaveBeenCalledWith("Something happened", {
                 logger: ZoweLogger,
             });
+            expect(err).not.toBeUndefined();
+            expect(err).toBeInstanceOf(Error);
+        }
+    });
+
+    it("should show a fatal message when using checkedProfile on an invalid profile", () => {
+        Object.defineProperty(Gui, "showMessage", { value: jest.fn(), configurable: true });
+        const instance = new Dummy();
+        instance.profile = {
+            message: "",
+            type: "",
+            failNotFound: true,
+        };
+        try {
+            expect(Gui.showMessage).toBeCalledWith(
+                "Internal error: ZoweVscFtpRestApi instance was not initialized with a valid Zowe profile.",
+                {
+                    severity: MessageSeverity.FATAL,
+                    logger: ZoweLogger,
+                }
+            );
             instance.checkedProfile();
         } catch (err) {
             expect(err).not.toBeUndefined();
             expect(err).toBeInstanceOf(Error);
         }
+    });
+
+    it("should return active from sessionStatus when getStatus is called w/ correct profile", async () => {
+        Object.defineProperty(Gui, "showMessage", { value: jest.fn(), configurable: true });
+        const instance = new Dummy(profile);
+        jest.spyOn(FTPConfig, "connectFromArguments").mockImplementationOnce(
+            jest.fn((prof) => Promise.resolve({ test: "Test successful object" }))
+        );
+
+        const status = await instance.getStatus(profile, "zftp");
+        expect(status).toStrictEqual("active");
+    });
+
+    it("should return unverified from sessionStatus when getStatus is called w/ unexpected profile type", async () => {
+        const instance = new Dummy(profile);
+
+        const status = await instance.getStatus(profile, "test_profile_type");
+        expect(status).toStrictEqual("unverified");
     });
 
     it("should load all properties from zftp profile", async () => {
