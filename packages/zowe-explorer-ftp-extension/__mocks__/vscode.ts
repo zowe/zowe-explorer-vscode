@@ -18,14 +18,17 @@ export namespace window {
      * @param items A set of items that will be rendered as actions in the message.
      * @return A thenable that resolves to the selected item or `undefined` when being dismissed.
      */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     export function showInformationMessage(message: string, ...items: string[]): undefined {
         return undefined;
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     export function showErrorMessage(message: string, ...items: string[]): undefined {
         return undefined;
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     export function setStatusBarMessage(message: string, ...items: string[]): undefined {
         return undefined;
     }

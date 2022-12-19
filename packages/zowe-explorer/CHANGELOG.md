@@ -6,11 +6,22 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Added the ability to list all datasets, even those with Imperative Errors. [#235](https://github.com/zowe/vscode-extension-for-zowe/issues/235) & [#2036](https://github.com/zowe/vscode-extension-for-zowe/issues/2036)
+
+### Bug fixes
+
+- Fixed issue where "Show Attributes" feature used conflicting colors with light VS Code themes. [#2048](https://github.com/zowe/vscode-extension-for-zowe/issues/2048)
+
+## `2.5.0`
+
+### New features and enhancements
+
 - Multiple select for hide session [#1555](https://github.com/zowe/vscode-extension-for-zowe/issues/1555)
 - Added ability to filter jobs by status. Improved Job filtering User experience.[#1925](https://github.com/zowe/vscode-extension-for-zowe/issues/1925)
 - Added option to view PDS member attributes, and updated formatting for attributes webview. [#1577](https://github.com/zowe/vscode-extension-for-zowe/issues/1577)
 - Streamlined attribute viewing options into one feature - "Show Attributes".
-- Added the ability to list all datasets, even those with Imperative Errors. [#235](https://github.com/zowe/vscode-extension-for-zowe/issues/235) & [#2036](https://github.com/zowe/vscode-extension-for-zowe/issues/2036)
+- Added multiple select copy/paste feature on uss view [#1549](https://github.com/zowe/vscode-extension-for-zowe/issues/1549)
+- Added multiple select for hide session [#1555](https://github.com/zowe/vscode-extension-for-zowe/issues/1555)
 
 ### Bug fixes
 
