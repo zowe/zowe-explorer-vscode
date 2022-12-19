@@ -155,6 +155,15 @@ describe("AbstractFtpApi", () => {
         expect(status).toStrictEqual("active");
     });
 
+    it("should return inactive from sessionStatus when getStatus is called w/ correct profile", async () => {
+        Object.defineProperty(Gui, "showMessage", { value: jest.fn(), configurable: true });
+        const instance = new Dummy(profile);
+        jest.spyOn(FTPConfig, "connectFromArguments").mockImplementationOnce(jest.fn((prof) => Promise.resolve(false)));
+
+        const status = await instance.getStatus(profile, "zftp");
+        expect(status).toStrictEqual("inactive");
+    });
+
     it("should return unverified from sessionStatus when getStatus is called w/ unexpected profile type", async () => {
         const instance = new Dummy(profile);
 

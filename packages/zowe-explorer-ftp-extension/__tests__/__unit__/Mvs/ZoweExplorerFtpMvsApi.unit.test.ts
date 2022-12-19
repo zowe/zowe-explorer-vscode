@@ -17,10 +17,13 @@ import { FtpMvsApi } from "../../../src/ZoweExplorerFtpMvsApi";
 import { DataSetUtils } from "@zowe/zos-ftp-for-zowe-cli";
 import TestUtils from "../utils/TestUtils";
 import * as tmp from "tmp";
-import { sessionMap } from "../../../src/extension";
+import { sessionMap, ZoweLogger } from "../../../src/extension";
+import { FTPConfig } from "@zowe/zos-ftp-for-zowe-cli";
+import { Gui, IZoweLogger } from "@zowe/zowe-explorer-api";
 
 // two methods to mock modules: create a __mocks__ file for zowe-explorer-api.ts and direct mock for extension.ts
 jest.mock("../../../__mocks__/@zowe/zowe-explorer-api.ts");
+Gui.errorMessage = jest.fn();
 jest.mock("../../../src/extension.ts");
 jest.mock("vscode");
 const stream = require("stream");
@@ -134,6 +137,25 @@ describe("FtpMvsApi", () => {
         expect(result.commandResponse).toContain("Member created successfully.");
         expect(DataSetUtils.uploadDataSet).toBeCalledTimes(1);
         expect(MvsApi.releaseConnection).toBeCalled();
+    });
+
+    it("should fail to call getContents if an exception occurs in FtpClient.", async () => {
+        DataSetUtils.uploadDataSet = jest.fn();
+        const mockParams = {
+            dataSetName: "IBMUSER.DS2(M1)",
+            type: "file",
+            options: { encoding: "" },
+        };
+        jest.spyOn(FTPConfig, "connectFromArguments").mockImplementationOnce((val) => {
+            throw new Error("getContents example error");
+        });
+        try {
+            const result = await MvsApi.getContents(mockParams.dataSetName, mockParams.options);
+        } catch (err) {
+            expect(Gui.errorMessage).toHaveBeenCalledWith("Could not get a valid FTP connection.", {
+                logger: ZoweLogger,
+            });
+        }
     });
 
     it("should rename dataset or dataset member.", async () => {

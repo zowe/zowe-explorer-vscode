@@ -20,7 +20,11 @@ export const enum MessageSeverity {
     FATAL = 5,
 }
 
-export class IZoweLogger {}
+export class IZoweLogger {
+    public logImperativeMessage(message: string, severity: MessageSeverity): void {
+        return undefined;
+    }
+}
 
 export interface GuiMessageOptions {
     severity?: MessageSeverity;
