@@ -23,15 +23,6 @@ import { Profiles } from "../../src/Profiles";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import { createInstanceOfProfileInfo, createIProfile, createTreeView } from "../../__mocks__/mockCreators/shared";
 import { PersistentFilters } from "../../src/PersistentFilters";
-import * as dsActions from "../../src/dataset/actions";
-
-export interface ISubscriptionTesting {
-    name: string;
-    mock: jest.SpyInstance[];
-    args: any[][];
-    returnValue?: any[];
-    parm?: any[];
-}
 
 jest.mock("vscode");
 jest.mock("fs");

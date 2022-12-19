@@ -14,29 +14,34 @@ export interface ITestContext {
     value: any;
     _: any;
 }
-export interface ISubscriptionTesting {
+
+export interface IJestMock {
+    spy: jest.SpyInstance;
+    arg: any[];
+    ret?: any;
+}
+export interface IJestIt {
     name: string;
-    mock: jest.SpyInstance[];
-    args: any[][];
-    returnValue?: any[];
+    mock: IJestMock[];
     parm?: any[];
+    title?: string;
 }
 
-export function spyOnSubscriptions(commands: any[]) {
-    commands.forEach((cmd) => {
-        cmd.mock.forEach((spy, index) => {
-            spy.mockImplementation(cmd.returnValue?.[index] ? jest.fn((_) => cmd.returnValue[index]) : jest.fn());
+export function spyOnSubscriptions(subscriptions: any[]) {
+    subscriptions.forEach((sub) => {
+        sub.mock.forEach((mock) => {
+            mock.spy.mockClear().mockImplementation(mock.ret ? jest.fn((_) => mock.ret) : jest.fn());
         });
     });
 }
 
-export function processSubscriptions(commands: ISubscriptionTesting[], test: ITestContext) {
-    commands.forEach((command, index) => {
-        it(`Test: ${command.name}`, async () => {
-            const parms = command.parm ?? [test.value];
-            await test.context.subscriptions[index][command.name](...parms);
-            command.mock.forEach((spy, mockIndex) => {
-                expect(spy).toHaveBeenCalledWith(...command.args[mockIndex]);
+export function processSubscriptions(subscriptions: IJestIt[], test: ITestContext) {
+    subscriptions.forEach((sub, index) => {
+        it(sub.title ?? `Test: ${sub.name}`, async () => {
+            const parms = sub.parm ?? [test.value];
+            await test.context.subscriptions[index][sub.name](...parms);
+            sub.mock.forEach((mock) => {
+                expect(mock.spy).toHaveBeenCalledWith(...mock.arg);
             });
         });
     });

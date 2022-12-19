@@ -17,8 +17,7 @@ import * as jobActions from "../../../src/job/actions";
 import * as sharedExtension from "../../../src/shared/extension";
 import { initJobsProvider } from "../../../src/job/extension";
 import { Profiles } from "../../../src/Profiles";
-import { ISubscriptionTesting } from "../extension.unit.test";
-import { ITestContext, processSubscriptions, spyOnSubscriptions } from "../../__common__/testUtils";
+import { IJestIt, ITestContext, processSubscriptions, spyOnSubscriptions } from "../../__common__/testUtils";
 
 describe("Test src/dataset/extension", () => {
     describe("initDatasetProvider", () => {
@@ -44,153 +43,148 @@ describe("Test src/dataset/extension", () => {
             ssoLogout: jest.fn(),
             onDidChangeConfiguration: jest.fn(),
         };
-        const commands: ISubscriptionTesting[] = [
+        const commands: IJestIt[] = [
             {
                 name: "zowe.jobs.zosJobsOpenspool",
                 parm: [test._, test.value, test._],
-                mock: [jest.spyOn(jobActions, "getSpoolContent")],
-                args: [[test._, test.value, test._]],
+                mock: [{ spy: jest.spyOn(jobActions, "getSpoolContent"), arg: [test._, test.value, test._] }],
             },
             {
                 name: "zowe.jobs.deleteJob",
                 parm: [test.value, test._],
-                mock: [jest.spyOn(jobActions, "deleteCommand")],
-                args: [[jobsProvider, test.value, test._]],
+                mock: [{ spy: jest.spyOn(jobActions, "deleteCommand"), arg: [jobsProvider, test.value, test._] }],
             },
             {
                 name: "zowe.jobs.runModifyCommand",
-                mock: [jest.spyOn(jobActions, "modifyCommand")],
-                args: [[test.value]],
+                mock: [{ spy: jest.spyOn(jobActions, "modifyCommand"), arg: [test.value] }],
             },
             {
                 name: "zowe.jobs.runStopCommand",
-                mock: [jest.spyOn(jobActions, "stopCommand")],
-                args: [[test.value]],
+                mock: [{ spy: jest.spyOn(jobActions, "stopCommand"), arg: [test.value] }],
             },
             {
                 name: "zowe.jobs.refreshJobsServer",
-                mock: [jest.spyOn(jobActions, "refreshJobsServer")],
-                args: [[test.value, jobsProvider]],
+                mock: [{ spy: jest.spyOn(jobActions, "refreshJobsServer"), arg: [test.value, jobsProvider] }],
             },
             {
                 name: "zowe.jobs.refreshAllJobs",
-                mock: [jest.spyOn(refreshActions, "refreshAll")],
-                args: [[jobsProvider]],
+                mock: [{ spy: jest.spyOn(refreshActions, "refreshAll"), arg: [jobsProvider] }],
             },
             {
                 name: "zowe.jobs.refreshJob",
                 parm: [{ mParent: test.value }],
-                mock: [jest.spyOn(jobActions, "refreshJob")],
-                args: [[test.value, jobsProvider]],
+                mock: [{ spy: jest.spyOn(jobActions, "refreshJob"), arg: [test.value, jobsProvider] }],
             },
             {
                 name: "zowe.jobs.refreshSpool",
                 parm: [{ mParent: { mParent: test.value } }],
-                mock: [jest.spyOn(jobActions, "getSpoolContentFromMainframe"), jest.spyOn(jobActions, "refreshJob")],
-                args: [[{ mParent: { mParent: test.value } }], [test.value, jobsProvider]],
+                mock: [
+                    {
+                        spy: jest.spyOn(jobActions, "getSpoolContentFromMainframe"),
+                        arg: [{ mParent: { mParent: test.value } }],
+                    },
+                    { spy: jest.spyOn(jobActions, "refreshJob"), arg: [test.value, jobsProvider] },
+                ],
             },
             {
                 name: "zowe.jobs.addJobsSession",
-                mock: [jest.spyOn(jobsProvider, "createZoweSession")],
-                args: [[jobsProvider]],
+                mock: [{ spy: jest.spyOn(jobsProvider, "createZoweSession"), arg: [jobsProvider] }],
             },
             {
                 name: "zowe.jobs.setOwner",
-                mock: [jest.spyOn(jobActions, "setOwner")],
-                args: [[test.value, jobsProvider]],
+                mock: [{ spy: jest.spyOn(jobActions, "setOwner"), arg: [test.value, jobsProvider] }],
             },
             {
                 name: "zowe.jobs.setPrefix",
-                mock: [jest.spyOn(jobActions, "setPrefix")],
-                args: [[test.value, jobsProvider]],
+                mock: [{ spy: jest.spyOn(jobActions, "setPrefix"), arg: [test.value, jobsProvider] }],
             },
             {
                 name: "zowe.jobs.removeJobsSession",
-                mock: [jest.spyOn(contextuals, "isJobsSession"), jest.spyOn(jobsProvider, "deleteSession")],
-                args: [[test.value], [test.value]],
-                returnValue: [true],
+                mock: [
+                    { spy: jest.spyOn(contextuals, "isJobsSession"), arg: [test.value], ret: true },
+                    { spy: jest.spyOn(jobsProvider, "deleteSession"), arg: [test.value] },
+                ],
             },
             {
                 name: "zowe.jobs.downloadSpool",
-                mock: [jest.spyOn(jobActions, "downloadSpool")],
-                // Selected nodes array is passed to the downloadSpool method
-                // Hence why the expected value is `[test.value]`
-                args: [[[test.value]]],
+                mock: [
+                    // Selected nodes array is passed to the downloadSpool method
+                    // Hence why the expected value is `[test.value]`
+                    { spy: jest.spyOn(jobActions, "downloadSpool"), arg: [[test.value]] },
+                ],
             },
             {
                 name: "zowe.jobs.getJobJcl",
-                mock: [jest.spyOn(contextuals, "isJob"), jest.spyOn(jobActions, "downloadJcl")],
-                args: [[test.value], [test.value]],
-                returnValue: [true],
+                mock: [
+                    { spy: jest.spyOn(contextuals, "isJob"), arg: [test.value], ret: true },
+                    { spy: jest.spyOn(jobActions, "downloadJcl"), arg: [test.value] },
+                ],
             },
             {
                 name: "zowe.jobs.setJobSpool",
                 parm: [test._, test.value],
-                mock: [jest.spyOn(jobActions, "focusOnJob")],
-                args: [[jobsProvider, test._, test.value]],
+                mock: [{ spy: jest.spyOn(jobActions, "focusOnJob"), arg: [jobsProvider, test._, test.value] }],
             },
             {
                 name: "zowe.jobs.search",
-                mock: [jest.spyOn(jobsProvider, "filterPrompt")],
-                args: [[test.value]],
+                mock: [{ spy: jest.spyOn(jobsProvider, "filterPrompt"), arg: [test.value] }],
             },
             {
                 name: "zowe.jobs.editSession",
-                mock: [jest.spyOn(jobsProvider, "editSession")],
-                args: [[test.value, jobsProvider]],
+                mock: [{ spy: jest.spyOn(jobsProvider, "editSession"), arg: [test.value, jobsProvider] }],
             },
             {
                 name: "zowe.jobs.addFavorite",
-                mock: [jest.spyOn(jobsProvider, "addFavorite")],
-                args: [[test.value]],
+                mock: [{ spy: jest.spyOn(jobsProvider, "addFavorite"), arg: [test.value] }],
             },
             {
                 name: "zowe.jobs.removeFavorite",
-                mock: [jest.spyOn(jobsProvider, "removeFavorite")],
-                args: [[test.value]],
+                mock: [{ spy: jest.spyOn(jobsProvider, "removeFavorite"), arg: [test.value] }],
             },
             {
                 name: "zowe.jobs.saveSearch",
-                mock: [jest.spyOn(jobsProvider, "saveSearch")],
-                args: [[test.value]],
+                mock: [{ spy: jest.spyOn(jobsProvider, "saveSearch"), arg: [test.value] }],
             },
             {
                 name: "zowe.jobs.removeSearchFavorite",
-                mock: [jest.spyOn(jobsProvider, "removeFavorite")],
-                args: [[test.value]],
+                mock: [{ spy: jest.spyOn(jobsProvider, "removeFavorite"), arg: [test.value] }],
             },
             {
                 name: "zowe.jobs.removeFavProfile",
                 parm: [{ label: test.value }],
-                mock: [jest.spyOn(jobsProvider, "removeFavProfile")],
-                args: [[test.value, true]],
+                mock: [{ spy: jest.spyOn(jobsProvider, "removeFavProfile"), arg: [test.value, true] }],
             },
             {
                 name: "zowe.jobs.disableValidation",
-                mock: [jest.spyOn(Profiles, "getInstance")],
-                args: [[]],
-                returnValue: [{ enableValidation: jest.fn(), disableValidation: jest.fn() }],
+                mock: [
+                    {
+                        spy: jest.spyOn(Profiles, "getInstance"),
+                        arg: [],
+                        ret: { enableValidation: jest.fn(), disableValidation: jest.fn() },
+                    },
+                ],
             },
             {
                 name: "zowe.jobs.enableValidation",
-                mock: [jest.spyOn(Profiles, "getInstance")],
-                args: [[]],
-                returnValue: [{ enableValidation: jest.fn(), disableValidation: jest.fn() }],
+                mock: [
+                    {
+                        spy: jest.spyOn(Profiles, "getInstance"),
+                        arg: [],
+                        ret: { enableValidation: jest.fn(), disableValidation: jest.fn() },
+                    },
+                ],
             },
             {
                 name: "zowe.jobs.ssoLogin",
-                mock: [jest.spyOn(jobsProvider, "ssoLogin")],
-                args: [[test.value]],
+                mock: [{ spy: jest.spyOn(jobsProvider, "ssoLogin"), arg: [test.value] }],
             },
             {
                 name: "zowe.jobs.ssoLogout",
-                mock: [jest.spyOn(jobsProvider, "ssoLogout")],
-                args: [[test.value]],
+                mock: [{ spy: jest.spyOn(jobsProvider, "ssoLogout"), arg: [test.value] }],
             },
             {
                 name: "onDidChangeConfiguration",
-                mock: [jest.spyOn(jobsProvider, "onDidChangeConfiguration")],
-                args: [[test.value]],
+                mock: [{ spy: jest.spyOn(jobsProvider, "onDidChangeConfiguration"), arg: [test.value] }],
             },
         ];
 

@@ -17,8 +17,7 @@ import * as dsActions from "../../../src/dataset/actions";
 import * as sharedExtension from "../../../src/shared/extension";
 import { initDatasetProvider } from "../../../src/dataset/extension";
 import { Profiles } from "../../../src/Profiles";
-import { ISubscriptionTesting } from "../extension.unit.test";
-import { ITestContext, processSubscriptions, spyOnSubscriptions } from "../../__common__/testUtils";
+import { IJestIt, ITestContext, processSubscriptions, spyOnSubscriptions } from "../../__common__/testUtils";
 
 describe("Test src/dataset/extension", () => {
     describe("initDatasetProvider", () => {
@@ -44,235 +43,204 @@ describe("Test src/dataset/extension", () => {
             ssoLogout: jest.fn(),
             onDidChangeConfiguration: jest.fn(),
         };
-        const commands: ISubscriptionTesting[] = [
+        const commands: IJestIt[] = [
             {
                 name: "zowe.all.config.init",
-                mock: [jest.spyOn(dsProvider, "createZoweSchema")],
-                args: [[dsProvider]],
+                mock: [{ spy: jest.spyOn(dsProvider, "createZoweSchema"), arg: [dsProvider] }],
             },
             {
                 name: "zowe.ds.addSession",
-                mock: [jest.spyOn(dsProvider, "createZoweSession")],
-                args: [[dsProvider]],
+                mock: [{ spy: jest.spyOn(dsProvider, "createZoweSession"), arg: [dsProvider] }],
             },
             {
                 name: "zowe.ds.addFavorite",
-                mock: [jest.spyOn(dsProvider, "addFavorite")],
-                args: [[test.value]],
+                mock: [{ spy: jest.spyOn(dsProvider, "addFavorite"), arg: [test.value] }],
             },
             {
                 name: "zowe.ds.refreshAll",
-                mock: [jest.spyOn(refreshActions, "refreshAll")],
-                args: [[dsProvider]],
+                mock: [{ spy: jest.spyOn(refreshActions, "refreshAll"), arg: [dsProvider] }],
             },
             {
                 name: "zowe.ds.refreshNode",
                 mock: [
-                    jest.spyOn(contextuals, "isDs"),
-                    jest.spyOn(contextuals, "isDsMember"),
-                    jest.spyOn(dsActions, "refreshPS"),
+                    { spy: jest.spyOn(contextuals, "isDs"), arg: [test.value], ret: false },
+                    { spy: jest.spyOn(contextuals, "isDsMember"), arg: [test.value], ret: true },
+                    { spy: jest.spyOn(dsActions, "refreshPS"), arg: [test.value] },
                 ],
-                args: [[test.value], [test.value], [test.value]],
-                returnValue: [false, true],
             },
             {
                 name: "zowe.ds.refreshDataset",
                 mock: [
-                    jest.spyOn(contextuals, "isDs"),
-                    jest.spyOn(contextuals, "isPdsNotFav"),
-                    jest.spyOn(dsActions, "refreshDataset"),
+                    { spy: jest.spyOn(contextuals, "isDs"), arg: [test.value], ret: false },
+                    { spy: jest.spyOn(contextuals, "isPdsNotFav"), arg: [test.value], ret: true },
+                    { spy: jest.spyOn(dsActions, "refreshDataset"), arg: [test.value, dsProvider] },
                 ],
-                args: [[test.value], [test.value], [test.value, dsProvider]],
-                returnValue: [false, true],
             },
             {
                 name: "zowe.ds.pattern",
-                mock: [jest.spyOn(dsProvider, "filterPrompt")],
-                args: [[test.value]],
+                mock: [{ spy: jest.spyOn(dsProvider, "filterPrompt"), arg: [test.value] }],
             },
             {
                 name: "zowe.ds.editSession",
-                mock: [jest.spyOn(dsProvider, "editSession")],
-                args: [[test.value, dsProvider]],
+                mock: [{ spy: jest.spyOn(dsProvider, "editSession"), arg: [test.value, dsProvider] }],
             },
             {
                 name: "zowe.ds.ZoweNode.openPS",
-                mock: [jest.spyOn(dsActions, "openPS")],
-                args: [[test.value, true, dsProvider]],
+                mock: [{ spy: jest.spyOn(dsActions, "openPS"), arg: [test.value, true, dsProvider] }],
             },
             {
                 name: "zowe.ds.createDataset",
-                mock: [jest.spyOn(dsActions, "createFile")],
-                args: [[test.value, dsProvider]],
+                mock: [{ spy: jest.spyOn(dsActions, "createFile"), arg: [test.value, dsProvider] }],
             },
             {
                 name: "zowe.ds.createMember",
-                mock: [jest.spyOn(dsActions, "createMember")],
-                args: [[test.value, dsProvider]],
+                mock: [{ spy: jest.spyOn(dsActions, "createMember"), arg: [test.value, dsProvider] }],
             },
             {
                 name: "zowe.ds.deleteDataset",
-                mock: [jest.spyOn(dsActions, "deleteDatasetPrompt")],
-                args: [[dsProvider, test.value]],
+                mock: [{ spy: jest.spyOn(dsActions, "deleteDatasetPrompt"), arg: [dsProvider, test.value] }],
             },
             {
                 name: "zowe.ds.allocateLike",
-                mock: [jest.spyOn(dsActions, "allocateLike")],
-                args: [[dsProvider, test.value]],
+                mock: [{ spy: jest.spyOn(dsActions, "allocateLike"), arg: [dsProvider, test.value] }],
             },
             {
                 name: "zowe.ds.uploadDialog",
-                mock: [jest.spyOn(dsActions, "uploadDialog")],
-                args: [[test.value, dsProvider]],
+                mock: [{ spy: jest.spyOn(dsActions, "uploadDialog"), arg: [test.value, dsProvider] }],
             },
             {
                 name: "zowe.ds.deleteMember",
-                mock: [jest.spyOn(dsActions, "deleteDatasetPrompt")],
-                args: [[dsProvider, test.value]],
+                mock: [{ spy: jest.spyOn(dsActions, "deleteDatasetPrompt"), arg: [dsProvider, test.value] }],
             },
             {
                 name: "zowe.ds.editDataSet",
                 mock: [
-                    jest.spyOn(contextuals, "isDs"),
-                    jest.spyOn(contextuals, "isDsMember"),
-                    jest.spyOn(dsActions, "openPS"),
+                    { spy: jest.spyOn(contextuals, "isDs"), arg: [test.value], ret: false },
+                    { spy: jest.spyOn(contextuals, "isDsMember"), arg: [test.value], ret: true },
+                    { spy: jest.spyOn(dsActions, "openPS"), arg: [test.value, false, dsProvider] },
                 ],
-                args: [[test.value], [test.value], [test.value, false, dsProvider]],
-                returnValue: [false, true],
             },
             {
                 name: "zowe.ds.editMember",
                 mock: [
-                    jest.spyOn(contextuals, "isDs"),
-                    jest.spyOn(contextuals, "isDsMember"),
-                    jest.spyOn(dsActions, "openPS"),
+                    { spy: jest.spyOn(contextuals, "isDs"), arg: [test.value], ret: false },
+                    { spy: jest.spyOn(contextuals, "isDsMember"), arg: [test.value], ret: true },
+                    { spy: jest.spyOn(dsActions, "openPS"), arg: [test.value, false, dsProvider] },
                 ],
-                args: [[test.value], [test.value], [test.value, false, dsProvider]],
-                returnValue: [false, true],
             },
             {
                 name: "zowe.ds.removeSession",
-                mock: [jest.spyOn(contextuals, "isDsSession"), jest.spyOn(dsProvider, "deleteSession")],
-                args: [[test.value], [test.value]],
-                returnValue: [true],
+                mock: [
+                    { spy: jest.spyOn(contextuals, "isDsSession"), arg: [test.value], ret: true },
+                    { spy: jest.spyOn(dsProvider, "deleteSession"), arg: [test.value] },
+                ],
             },
             {
                 name: "zowe.ds.removeFavorite",
-                mock: [jest.spyOn(dsProvider, "removeFavorite")],
-                args: [[test.value]],
+                mock: [{ spy: jest.spyOn(dsProvider, "removeFavorite"), arg: [test.value] }],
             },
             {
                 name: "zowe.ds.saveSearch",
-                mock: [jest.spyOn(dsProvider, "addFavorite")],
-                args: [[test.value]],
+                mock: [{ spy: jest.spyOn(dsProvider, "addFavorite"), arg: [test.value] }],
             },
             {
                 name: "zowe.ds.removeSavedSearch",
-                mock: [jest.spyOn(dsProvider, "removeFavorite")],
-                args: [[test.value]],
+                mock: [{ spy: jest.spyOn(dsProvider, "removeFavorite"), arg: [test.value] }],
             },
             {
                 name: "zowe.ds.removeFavProfile",
-                mock: [jest.spyOn(dsProvider, "removeFavProfile")],
-                args: [[test.value.label, true]],
+                mock: [{ spy: jest.spyOn(dsProvider, "removeFavProfile"), arg: [test.value.label, true] }],
             },
             {
                 name: "zowe.ds.submitJcl",
-                mock: [jest.spyOn(dsActions, "submitJcl")],
-                args: [[dsProvider]],
+                mock: [{ spy: jest.spyOn(dsActions, "submitJcl"), arg: [dsProvider] }],
             },
             {
                 name: "zowe.ds.submitMember",
-                mock: [jest.spyOn(dsActions, "submitMember")],
-                args: [[test.value]],
+                mock: [{ spy: jest.spyOn(dsActions, "submitMember"), arg: [test.value] }],
             },
             {
                 name: "zowe.ds.showAttributes",
                 mock: [
-                    jest.spyOn(contextuals, "isDs"),
-                    jest.spyOn(contextuals, "isPds"),
-                    jest.spyOn(contextuals, "isDsMember"),
-                    jest.spyOn(dsActions, "showAttributes"),
+                    { spy: jest.spyOn(contextuals, "isDs"), arg: [test.value], ret: false },
+                    { spy: jest.spyOn(contextuals, "isPds"), arg: [test.value], ret: false },
+                    { spy: jest.spyOn(contextuals, "isDsMember"), arg: [test.value], ret: true },
+                    { spy: jest.spyOn(dsActions, "showAttributes"), arg: [test.value, dsProvider] },
                 ],
-                args: [[test.value], [test.value], [test.value], [test.value, dsProvider]],
-                returnValue: [false, false, true],
             },
             {
                 name: "zowe.ds.renameDataSet",
-                mock: [jest.spyOn(dsProvider, "rename")],
-                args: [[test.value]],
+                mock: [{ spy: jest.spyOn(dsProvider, "rename"), arg: [test.value] }],
             },
             {
                 name: "zowe.ds.copyMember",
-                mock: [jest.spyOn(dsActions, "copyDataSet")],
-                args: [[test.value]],
+                mock: [{ spy: jest.spyOn(dsActions, "copyDataSet"), arg: [test.value] }],
             },
             {
                 name: "zowe.ds.copyDataSet",
-                mock: [jest.spyOn(dsActions, "copyDataSet")],
-                args: [[test.value]],
+                mock: [{ spy: jest.spyOn(dsActions, "copyDataSet"), arg: [test.value] }],
             },
             {
                 name: "zowe.ds.pasteMember",
-                mock: [jest.spyOn(dsActions, "pasteMember")],
-                args: [[test.value, dsProvider]],
+                mock: [{ spy: jest.spyOn(dsActions, "pasteMember"), arg: [test.value, dsProvider] }],
             },
             {
                 name: "zowe.ds.renameDataSetMember",
-                mock: [jest.spyOn(dsProvider, "rename")],
-                args: [[test.value]],
+                mock: [{ spy: jest.spyOn(dsProvider, "rename"), arg: [test.value] }],
             },
             {
                 name: "zowe.ds.hMigrateDataSet",
                 mock: [
-                    jest.spyOn(contextuals, "isDs"),
-                    jest.spyOn(contextuals, "isPdsNotFav"),
-                    jest.spyOn(dsActions, "hMigrateDataSet"),
+                    { spy: jest.spyOn(contextuals, "isDs"), arg: [test.value], ret: false },
+                    { spy: jest.spyOn(contextuals, "isPdsNotFav"), arg: [test.value], ret: true },
+                    { spy: jest.spyOn(dsActions, "hMigrateDataSet"), arg: [test.value] },
                 ],
-                args: [[test.value], [test.value], [test.value]],
-                returnValue: [false, true],
             },
             {
                 name: "zowe.ds.hRecallDataSet",
-                mock: [jest.spyOn(contextuals, "isMigrated"), jest.spyOn(dsActions, "hRecallDataSet")],
-                args: [[test.value], [test.value]],
-                returnValue: [true],
+                mock: [
+                    { spy: jest.spyOn(contextuals, "isMigrated"), arg: [test.value], ret: true },
+                    { spy: jest.spyOn(dsActions, "hRecallDataSet"), arg: [test.value] },
+                ],
             },
             {
                 name: "zowe.ds.showImperativeErrorDetails",
                 mock: [
-                    jest.spyOn(contextuals, "hasImperativeError"),
-                    jest.spyOn(dsActions, "showImperativeErrorDetails"),
+                    { spy: jest.spyOn(contextuals, "hasImperativeError"), arg: [test.value], ret: true },
+                    { spy: jest.spyOn(dsActions, "showImperativeErrorDetails"), arg: [test.value] },
                 ],
-                args: [[test.value], [test.value]],
-                returnValue: [true],
             },
             {
                 name: "zowe.ds.disableValidation",
-                mock: [jest.spyOn(Profiles, "getInstance")],
-                args: [[]],
-                returnValue: [{ enableValidation: jest.fn(), disableValidation: jest.fn() }],
+                mock: [
+                    {
+                        spy: jest.spyOn(Profiles, "getInstance"),
+                        arg: [],
+                        ret: { enableValidation: jest.fn(), disableValidation: jest.fn() },
+                    },
+                ],
             },
             {
                 name: "zowe.ds.enableValidation",
-                mock: [jest.spyOn(Profiles, "getInstance")],
-                args: [[]],
-                returnValue: [{ enableValidation: jest.fn(), disableValidation: jest.fn() }],
+                mock: [
+                    {
+                        spy: jest.spyOn(Profiles, "getInstance"),
+                        arg: [],
+                        ret: { enableValidation: jest.fn(), disableValidation: jest.fn() },
+                    },
+                ],
             },
             {
                 name: "zowe.ds.ssoLogin",
-                mock: [jest.spyOn(dsProvider, "ssoLogin")],
-                args: [[test.value]],
+                mock: [{ spy: jest.spyOn(dsProvider, "ssoLogin"), arg: [test.value] }],
             },
             {
                 name: "zowe.ds.ssoLogout",
-                mock: [jest.spyOn(dsProvider, "ssoLogout")],
-                args: [[test.value]],
+                mock: [{ spy: jest.spyOn(dsProvider, "ssoLogout"), arg: [test.value] }],
             },
             {
                 name: "onDidChangeConfiguration",
-                mock: [jest.spyOn(dsProvider, "onDidChangeConfiguration")],
-                args: [[test.value]],
+                mock: [{ spy: jest.spyOn(dsProvider, "onDidChangeConfiguration"), arg: [test.value] }],
             },
         ];
 

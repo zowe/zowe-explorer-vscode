@@ -39,7 +39,11 @@ export interface IZoweProviders {
     // [key: string]: IZoweTree<IZoweTreeNode>;
 }
 
-export function registerRefreshCommand(context: vscode.ExtensionContext, activate: () => void, deactivate: () => void) {
+export function registerRefreshCommand(
+    context: vscode.ExtensionContext,
+    activate: (context: vscode.ExtensionContext) => void,
+    deactivate: () => void
+) {
     // set a command to silently reload extension
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.extRefresh", async () => {
