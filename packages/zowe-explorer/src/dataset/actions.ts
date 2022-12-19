@@ -728,8 +728,10 @@ export async function showAttributes(node: api.IZoweDatasetTreeNode, datasetProv
             (html, key) =>
                 html.concat(`
                 <tr>
-                    <td align="left" style="color: yellow; font-weight: bold">${key}:</td>
-                    <td align="right" style="color: ${typeof attributes[0][key] === "number" ? "dodgerblue" : "white"}">${attributes[0][key]}</td>
+                    <td align="left" style="color: var(--vscode-editorLink-activeForeground); font-weight: bold">${key}:</td>
+                    <td align="right" style="color: ${
+                        isNaN(attributes[0][key]) ? "var(--vscode-settings-textInputForeground)" : "var(--vscode-problemsWarningIcon-foreground)"
+                    }">${attributes[0][key]}</td>
                 </tr>
         `),
             ""
