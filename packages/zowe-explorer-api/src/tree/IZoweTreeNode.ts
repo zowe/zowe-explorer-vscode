@@ -240,6 +240,11 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      * @param {USSTree} ussFileProvider
      */
     saveSearch?(ussFileProvider: IZoweTree<IZoweUSSTreeNode>);
+    /**
+     * uploads selected uss node(s) to from clipboard to mainframe
+     *
+     */
+    copyUssFile?();
 }
 
 /**

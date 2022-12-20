@@ -12,6 +12,7 @@
 // tslint:disable-next-line: no-duplicate-imports
 import * as path from "path";
 import * as fs from "fs";
+import * as vscode from "vscode";
 import { ZoweUSSNode } from "../uss/ZoweUSSNode";
 
 /**
@@ -46,4 +47,12 @@ export function fileExistsCaseSensitveSync(filepath) {
         return false;
     }
     return fileExistsCaseSensitveSync(dir);
+}
+
+/**
+ * Removes clipboard contents
+ * @returns {void}
+ */
+export function disposeClipboardContents() {
+    vscode.env.clipboard.writeText("");
 }
