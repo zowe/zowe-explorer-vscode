@@ -54,7 +54,7 @@ describe("AbstractFtpApi", () => {
         const instance = new Dummy();
         instance.profile = profile;
         try {
-            instance.getSession(undefined);
+            instance.getSession();
         } catch (err) {
             expect(err).not.toBeUndefined();
             expect(err).toBeInstanceOf(Error);
