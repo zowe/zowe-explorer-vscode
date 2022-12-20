@@ -6,6 +6,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+-add feature copy datasets ( pds, sequential, members across pds) with multi select capabilities. [#2051] https://github.com/zowe/vscode-extension-for-zowe/pull/2051
+
 ### Bug fixes
 
 - Fixed issue where "Show Attributes" feature used conflicting colors with light VS Code themes. [#2048](https://github.com/zowe/vscode-extension-for-zowe/issues/2048)
