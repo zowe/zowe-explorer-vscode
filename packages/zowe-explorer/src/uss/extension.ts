@@ -153,6 +153,19 @@ export async function initUSSProvider(context: vscode.ExtensionContext) {
         )
     );
     context.subscriptions.push(
+        vscode.commands.registerCommand("zowe.uss.pasteUssFile", async (node: IZoweUSSTreeNode) => {
+            ussActions.pasteUssFile(ussFileProvider, node);
+        })
+    );
+    context.subscriptions.push(
+        vscode.commands.registerCommand(
+            "zowe.uss.copyUssFile",
+            async (node: IZoweUSSTreeNode, nodeList: IZoweUSSTreeNode[]) => {
+                ussActions.copyUssFiles(node, nodeList, ussFileProvider);
+            }
+        )
+    );
+    context.subscriptions.push(
         vscode.commands.registerCommand("zowe.uss.editFile", (node: IZoweUSSTreeNode) =>
             node.openUSS(false, false, ussFileProvider)
         )

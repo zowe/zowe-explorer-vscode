@@ -65,7 +65,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     globals.setActivated(true);
     return ZoweExplorerApiRegister.getInstance();
 }
-
 /**
  * Called by VSCode on shutdown
  *

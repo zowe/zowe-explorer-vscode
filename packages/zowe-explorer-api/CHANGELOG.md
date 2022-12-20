@@ -6,14 +6,26 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
-- New API call `getJobsByParameters` to allow filtering jobs by status.
 - New API call `dataSetsMatchingPattern` to allow filtering datasets via a pattern.
-- Added `findEquivalentNode` function to IZoweTree to find a corresponding favorited/non-favorited node.
-- Updated `IZoweTree`: changed `IZoweNodeType -> IZoweTreeNode` to prevent incompatibility w/ custom/future Zowe node types
+
+### Bug fixes
+
+## `2.5.0`
+
+- Copy and Paste added to IZoweTree API for files and directories on USS tree.
+
+## `2.4.1`
 
 ### Bug fixes
 
 - Added logging in places where errors were being caught and ignored.
+- Fixed all existing ESLint errors within the API logic.
+
+### New features and enhancements
+
+- New API call `getJobsByParameters` to allow filtering jobs by status.
+- Added `findEquivalentNode` function to IZoweTree to find a corresponding favorited/non-favorited node.
+- Updated `IZoweTree`: changed `IZoweNodeType -> IZoweTreeNode` to prevent incompatibility w/ custom/future Zowe node types
 
 ## `2.4.1`
 
