@@ -17,7 +17,13 @@ import * as globals from "../globals";
 import * as path from "path";
 import * as api from "@zowe/zowe-explorer-api";
 import { FilterItem, errorHandling, resolveQuickPickHelper } from "../utils/ProfilesUtils";
-import { getDocumentFilePath, concatChildNodes, checkForAddedSuffix, willForceUpload } from "../shared/utils";
+import {
+    getDocumentFilePath,
+    concatChildNodes,
+    checkForAddedSuffix,
+    willForceUpload,
+    getSelectedNodeList,
+} from "../shared/utils";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Profiles } from "../Profiles";
 import { getIconByNode } from "../generators/icons";
@@ -25,7 +31,6 @@ import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { DatasetTree } from "./DatasetTree";
 import * as contextually from "../shared/context";
 import { setFileSaved } from "../utils/workspace";
-import { UIViews } from "../shared/ui-views";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 
 // Set up localization
@@ -1215,39 +1220,51 @@ export async function enterPattern(node: api.IZoweDatasetTreeNode, datasetProvid
 }
 
 /**
- * Copy data set info
+ * Copy data sets
  *
  * @export
- * @param {ZoweDatasetNode[]} nodesList - Nodes to copy
+ * @param {ZoweDatasetNode} node Node to copy,
+ * @param {ZoweDatasetNode[]} nodeList - Multiple selected Nodes to copy
+ * @param datasetProvider
  */
-export async function copyDataSet(nodesList: ZoweDatasetNode[]) {
-    const unique = [...new Set(nodesList.map((item) => item.contextValue))];
+export async function copyDataSet(
+    node,
+    nodeList: ZoweDatasetNode[],
+    datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>
+) {
+    let selectedNodes;
+    if (!(node || nodeList)) {
+        selectedNodes = datasetProvider.getTreeView().selection;
+    } else {
+        selectedNodes = getSelectedNodeList(node, nodeList);
+    }
+
+    const unique = [...new Set(selectedNodes.map((item) => item.contextValue))];
     if (unique.length > 1) {
         vscode.window.showErrorMessage(
             `${"Can't copy multiple dataset with different types"}: ${"Select same types to copy"}`
         );
         return;
     }
-    if (nodesList.find((node) => node.contextValue == globals.DS_PDS_CONTEXT)) {
-        vscode.window.showErrorMessage(
-            `${"Can't copy partitioned datasets"}: ${"Select member(s) of a pds or sequential dataset(s) to copy"}`
-        );
-    }
-    if (nodesList.length === 1 && nodesList[0].contextValue === globals.DS_MEMBER_CONTEXT) {
-        return vscode.env.clipboard.writeText(JSON.stringify(dsUtils.getNodeLabels(nodesList[0])));
+    if (selectedNodes.length === 1 && selectedNodes[0].contextValue === globals.DS_MEMBER_CONTEXT) {
+        // single member
+        return vscode.env.clipboard.writeText(JSON.stringify(dsUtils.getNodeLabels(selectedNodes[0])));
     }
     if (unique.includes(globals.DS_MEMBER_CONTEXT)) {
+        // multiple member
         const filePaths = [];
-        nodesList.forEach((el) => {
+        selectedNodes.forEach((el) => {
             filePaths.push(dsUtils.getNodeLabels(el));
         });
         return vscode.env.clipboard.writeText(JSON.stringify(filePaths));
     }
     if (unique.includes(globals.DS_DS_CONTEXT)) {
-        return copySequentialDatasets(nodesList);
+        await copySequentialDatasets(selectedNodes);
+        return refreshDataset(selectedNodes[0].getParent(), datasetProvider);
     }
     if (unique.includes(globals.DS_PDS_CONTEXT)) {
-        return copyPartitionedDatasets(nodesList);
+        await copyPartitionedDatasets(selectedNodes);
+        return refreshDataset(selectedNodes[0].getParent(), datasetProvider);
     }
 }
 
@@ -1544,28 +1561,25 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
 }
 
 /**
- * Paste member
+ * Paste members
  *
  * @export
  * @param {DatasetTree} datasetProvider - the tree which contains the nodes
  */
-export async function pasteDataSet(datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>, node: ZoweDatasetNode) {
+export async function pasteDataSetMembers(
+    datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>,
+    node: ZoweDatasetNode
+) {
     let clipboardContent;
     try {
         clipboardContent = JSON.parse(await vscode.env.clipboard.readText());
     } catch (err) {
-        throw Error("Invalid clipboard. Copy from data set first");
-    }
-    if (!node) {
-        node = datasetProvider.getTreeView().selection[0] as ZoweDatasetNode;
-    }
-    if (node.contextValue === globals.DS_MEMBER_CONTEXT || node.contextValue === globals.DS_DS_CONTEXT) {
+        vscode.window.showErrorMessage(localize("paste.dataSet", "Invalid paste. Copy dataset(s) first"));
         return;
     }
 
     if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
         if (!Array.isArray(clipboardContent) && clipboardContent.memberName) {
-            vscode.env.clipboard.writeText(""); // TODO change it to dispose function
             return pasteMember(node, datasetProvider);
         }
 
@@ -1574,10 +1588,9 @@ export async function pasteDataSet(datasetProvider: api.IZoweTree<api.IZoweDatas
                 location: vscode.ProgressLocation.Window,
                 title: localize("paste.dataSet.InPrg", "Uploading File(s)"),
             },
-            async () => {
+            async function copyDsMember() {
                 for (const content of clipboardContent) {
                     if (content.memberName) {
-                        // member
                         try {
                             await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).copyDataSetMember(
                                 { dsn: content.dataSetName, member: content.memberName },
@@ -1602,7 +1615,7 @@ export async function pasteDataSet(datasetProvider: api.IZoweTree<api.IZoweDatas
  * @export
  * @param {ZoweDatasetNode} node - node to be downloaded
  */
-export function downloadDataset(node: ZoweDatasetNode) {
+export function downloadDs(node: ZoweDatasetNode) {
     const profile = node.getProfile();
     let lbl: string;
     switch (true) {
@@ -1637,7 +1650,7 @@ export function downloadDataset(node: ZoweDatasetNode) {
 export async function copySequentialDatasets(nodes: ZoweDatasetNode[]) {
     for (const node of nodes) {
         try {
-            // await refreshPS(node);
+            await downloadDs(node);
             const lbl = node.getLabel().toString();
             const inputBoxOptions: vscode.InputBoxOptions = {
                 value: lbl,
@@ -1665,7 +1678,7 @@ export async function copySequentialDatasets(nodes: ZoweDatasetNode[]) {
                 await vscode.window.withProgress(
                     {
                         location: vscode.ProgressLocation.Window,
-                        title: localize("saveFile.response.save.title", "Saving data set..."),
+                        title: localize("paste.dataSet.InPrg", "Uploading File(s)"),
                     },
                     () => {
                         const prof = node?.getProfile();
@@ -1682,12 +1695,12 @@ export async function copySequentialDatasets(nodes: ZoweDatasetNode[]) {
             }
         } catch (err) {
             globals.LOG.error(
-                localize("createDataSet.log.error", "Error encountered when creating data set! ") + JSON.stringify(err)
+                localize("copyDataSet.log.error", "Error encountered when copy data set! ") + JSON.stringify(err)
             );
             await errorHandling(
                 err,
                 dsUtils.getNodeLabels(node).dataSetName,
-                localize("createDataSet.error", "Unable to create data set: ") + err.message
+                localize("copyDataSet.error", "Unable to copy data set: ") + err.message
             );
             throw err;
         }
@@ -1700,8 +1713,65 @@ export async function copySequentialDatasets(nodes: ZoweDatasetNode[]) {
  * @export
  * @param {ZoweDatasetNode[]} nodes - nodes to be copied
  */
-export function copyPartitionedDatasets(nodes: ZoweDatasetNode[]) {
+export async function copyPartitionedDatasets(nodes: ZoweDatasetNode[]) {
     for (const node of nodes) {
-        downloadDataset(node);
+        try {
+            const lbl = node.getLabel().toString();
+            const inputBoxOptions: vscode.InputBoxOptions = {
+                value: lbl,
+                placeHolder: localize("pasteMember.inputBox.placeHolder", "Name of Data Set"),
+                validateInput: (text) => {
+                    return dsUtils.validateDataSetName(text) && (lbl !== text) === true
+                        ? null
+                        : "Enter valid dataset name";
+                },
+            };
+
+            const partitionedDs = await vscode.window.showInputBox(inputBoxOptions);
+            if (!partitionedDs) {
+                return;
+            }
+            const res = await ZoweExplorerApiRegister.getMvsApi(nodes[0].getProfile()).allocateLikeDataSet(
+                partitionedDs,
+                lbl
+            );
+            if (res.success) {
+                const uploadOptions: IUploadOptions = {
+                    etag: node?.getEtag(),
+                    returnEtag: true,
+                };
+
+                const children = await node.getChildren();
+
+                await vscode.window.withProgress(
+                    {
+                        location: vscode.ProgressLocation.Window,
+                        title: localize("paste.dataSet.InPrg", "Uploading File(s)"),
+                    },
+                    () => {
+                        const prof = node?.getProfile();
+                        if (prof.profile.encoding) {
+                            uploadOptions.encoding = prof.profile.encoding;
+                        }
+                        for (const child of children) {
+                            ZoweExplorerApiRegister.getMvsApi(node.getProfile()).copyDataSetMember(
+                                { dsn: lbl, member: child.getLabel().toString() },
+                                { dsn: partitionedDs, member: child.getLabel().toString() }
+                            );
+                        }
+                        return Promise.resolve();
+                    }
+                );
+            }
+        } catch (error) {
+            globals.LOG.error(
+                localize("copyDataSet.log.error", "Error encountered when copy data set! ") + JSON.stringify(error)
+            );
+            await errorHandling(
+                error,
+                dsUtils.getNodeLabels(node).dataSetName,
+                localize("copyDataSet.error", "Unable to copy data set: ") + error.message
+            );
+        }
     }
 }

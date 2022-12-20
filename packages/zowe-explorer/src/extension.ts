@@ -498,18 +498,13 @@ function initDatasetProvider(context: vscode.ExtensionContext) {
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.copyDataSet", async (node, nodeList) => {
-            let selectedNodes;
-            if (!(node && nodeList)) {
-                selectedNodes = datasetProvider.getTreeView().selection;
-            } else {
-                selectedNodes = getSelectedNodeList(node, nodeList);
-            }
-            dsActions.copyDataSet(selectedNodes);
+            dsActions.copyDataSet(node, nodeList, datasetProvider);
         })
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.pasteMember", async (node: ZoweDatasetNode) => {
-            dsActions.pasteDataSet(datasetProvider, node);
+            dsActions.pasteDataSetMembers(datasetProvider, node);
+            dsActions.refreshDataset(node.getParent(), datasetProvider);
         })
     );
     context.subscriptions.push(

@@ -72,7 +72,7 @@
   "hMigrateDataSet.checkProfile": "Profile is invalid",
   "hRecall.requestSent1": "Recall of dataset: ",
   "hRecall.requestSent2": " requested.",
-  "pasteMember.inputBox.placeHolder": "Name of Data Set Member",
+  "pasteMember.inputBox.placeHolder": "Name of Data Set",
   "saveFile.log.debug.request": "requested to save data set: ",
   "saveFile.log.debug.path": "path.relative returned a non-blank directory.",
   "saveFile.log.debug.directory": "Assuming we are not in the DS_DIR directory: ",
@@ -83,6 +83,9 @@
   "saveFile.response.save.title": "Saving data set...",
   "saveFile.error.ZosmfEtagMismatchError": "Rest API failure with HTTP(S) status 412",
   "saveFile.error.etagMismatch": "Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict.",
+  "paste.dataSet": "Invalid paste. Copy dataset(s) first",
   "paste.dataSet.InPrg": "Uploading File(s)",
-  "download.invalidNode": "downloadDataset() called with invalid node."
+  "download.invalidNode": "downloadDataset() called with invalid node. ",
+  "copyDataSet.log.error": "Error encountered when copy data set! ",
+  "copyDataSet.error": "Unable to copy data set: "
 }

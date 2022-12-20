@@ -1004,7 +1004,7 @@
           "group": "001_zowe_dsCreate@5"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^(ds|member).*/",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(ds|member|pds).*/",
           "command": "zowe.ds.copyDataSet",
           "group": "001_zowe_dsCreate@6"
         },

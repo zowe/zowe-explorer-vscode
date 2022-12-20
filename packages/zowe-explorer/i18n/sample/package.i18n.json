@@ -84,7 +84,7 @@
   "renameDataSet": "Rename Data Set",
   "renameMember": "Rename Member",
   "copyDataSet": "Copy Data Set",
-  "paste": "Paste Member",
+  "paste": "Paste",
   "hMigrateDataSet": "Migrate Data Set",
   "hRecallDataSet": "Recall Data Set",
   "profile.configuration.title": "Zowe z/OSMF Profiles",

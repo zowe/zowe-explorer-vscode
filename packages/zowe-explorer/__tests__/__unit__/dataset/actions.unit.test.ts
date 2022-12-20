@@ -38,7 +38,7 @@ import * as fs from "fs";
 import * as sharedUtils from "../../../src/shared/utils";
 import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
-import { UIViews } from "../../../src/shared/ui-views";
+import { getNodeLabels } from "../../../src/dataset/utils";
 
 // Missing the definition of path module, because I need the original logic for tests
 jest.mock("fs");
@@ -1853,6 +1853,26 @@ describe("Dataset Actions Unit Tests - Function copyDataSet", () => {
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
         const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
         const mvsApi = createMvsApi(imperativeProfile);
+        const pdsSessionNode = new ZoweDatasetNode(
+            "sestest",
+            vscode.TreeItemCollapsibleState.Expanded,
+            datasetSessionNode,
+            session,
+            undefined,
+            undefined,
+            profileInstance
+        );
+        pdsSessionNode.contextValue = globals.DS_PDS_CONTEXT;
+        const pdsMemberNode = new ZoweDatasetNode(
+            "sestest",
+            vscode.TreeItemCollapsibleState.Expanded,
+            pdsSessionNode,
+            session,
+            undefined,
+            undefined,
+            profileInstance
+        );
+        pdsMemberNode.contextValue = globals.DS_MEMBER_CONTEXT;
         bindMvsApi(mvsApi);
 
         return {
@@ -1865,28 +1885,60 @@ describe("Dataset Actions Unit Tests - Function copyDataSet", () => {
             mvsApi,
             profileInstance,
             testDatasetTree,
+            pdsSessionNode,
+            pdsMemberNode,
         };
     }
 
     afterAll(() => jest.restoreAllMocks());
 
-    it("Checking copy the label of a node to the clipboard", async () => {
+    it("Checking copy the info of a member node to the clipboard", async () => {
         globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         const node = new ZoweDatasetNode(
             "HLQ.TEST.DELETE.NODE",
             vscode.TreeItemCollapsibleState.None,
-            blockMocks.datasetSessionNode,
+            blockMocks.pdsSessionNode,
             null
         );
-        node.contextValue = globals.DS_DS_CONTEXT;
+        node.contextValue = globals.DS_MEMBER_CONTEXT;
         const nodeList: ZoweDatasetNode[] = [node];
-        await dsActions.copyDataSet(nodeList);
+        await dsActions.copyDataSet(null, nodeList, null);
 
         expect(clipboard.readText()).toBe(
-            '[{"profileName":"sestest","dataSetName":"HLQ.TEST.DELETE.NODE","contextValue":"ds"}]'
+            '{"profileName":"sestest","dataSetName":"sestest","memberName":"HLQ.TEST.DELETE.NODE","contextValue":"member"}'
         );
+    });
+    it("Testing warning of multiple datasets with different types to be copied", async () => {
+        globals.defineGlobals("");
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const Membernode = new ZoweDatasetNode(
+            "HLQ.TEST.DELETE.NODE",
+            vscode.TreeItemCollapsibleState.None,
+            blockMocks.pdsSessionNode,
+            null
+        );
+        const pdsNode = new ZoweDatasetNode(
+            "HLQ.TEST.DELETE.NODE",
+            vscode.TreeItemCollapsibleState.None,
+            blockMocks.pdsSessionNode,
+            null
+        );
+        pdsNode.contextValue = globals.DS_PDS_CONTEXT;
+        Membernode.contextValue = globals.DS_MEMBER_CONTEXT;
+        const nodeList: ZoweDatasetNode[] = [Membernode, pdsNode];
+        await dsActions.copyDataSet(null, nodeList, null);
+    });
+    it("Testing copy of PDS", async () => {
+        globals.defineGlobals("");
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const selectedNodeSpy = jest.spyOn(sharedUtils, "getSelectedNodeList");
+        await dsActions.copyDataSet(blockMocks.pdsSessionNode, null, blockMocks.testDatasetTree);
+        expect(selectedNodeSpy).toBeCalledWith(blockMocks.pdsSessionNode, null);
+        expect(mocked(vscode.window.showErrorMessage)).not.toBeCalled();
     });
     it("Checking copy the label of a favorite node to the clipboard", async () => {
         globals.defineGlobals("");
@@ -1900,13 +1952,12 @@ describe("Dataset Actions Unit Tests - Function copyDataSet", () => {
         );
         node.contextValue = globals.DS_DS_CONTEXT + globals.FAV_SUFFIX;
         const nodeList: ZoweDatasetNode[] = [node];
-        await dsActions.copyDataSet(nodeList);
-
+        await dsActions.copyDataSet(null, nodeList, blockMocks.testDatasetTree);
         expect(clipboard.readText()).toBe(
-            '[{"profileName":"sestest","dataSetName":"HLQ.TEST.DELETE.NODE","contextValue":"ds_fav"}]'
+            '{"profileName":"sestest","dataSetName":"sestest","memberName":"HLQ.TEST.DELETE.NODE","contextValue":"member"}'
         );
     });
-    it("Checking copy the label of a member to the clipboard", async () => {
+    it("Checking copy the label of a member to the clipboard via quickkeys", async () => {
         globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
@@ -1919,12 +1970,199 @@ describe("Dataset Actions Unit Tests - Function copyDataSet", () => {
         parent.contextValue = globals.DS_PDS_CONTEXT;
         const child = new ZoweDatasetNode("child", vscode.TreeItemCollapsibleState.None, parent, null);
         child.contextValue = globals.DS_MEMBER_CONTEXT;
-        const nodeList: ZoweDatasetNode[] = [child];
-        await dsActions.copyDataSet(nodeList);
+        await dsActions.copyDataSet(null, null, blockMocks.testDatasetTree);
+        expect(clipboard.readText()).toBe(
+            '{"profileName":"sestest","dataSetName":"sestest","memberName":"HLQ.TEST.DELETE.NODE","contextValue":"member"}'
+        );
+    });
+    it("Checking copy the info of multiple members to the clipboard", async () => {
+        globals.defineGlobals("");
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const parent = new ZoweDatasetNode(
+            "parent",
+            vscode.TreeItemCollapsibleState.None,
+            blockMocks.datasetSessionNode,
+            null
+        );
+        parent.contextValue = globals.DS_MEMBER_CONTEXT;
+        const child = new ZoweDatasetNode("child", vscode.TreeItemCollapsibleState.None, parent, null);
+        child.contextValue = globals.DS_MEMBER_CONTEXT;
+        const nodeList: ZoweDatasetNode[] = [child, child];
+        await dsActions.copyDataSet(null, nodeList, blockMocks.testDatasetTree);
 
         expect(clipboard.readText()).toBe(
-            '{"profileName":"sestest","dataSetName":"parent","memberName":"child","contextValue":"member"}'
+            '[{"profileName":"sestest","dataSetName":"parent","memberName":"child","contextValue":"member"},{"profileName":"sestest","dataSetName":"parent","memberName":"child","contextValue":"member"}]'
         );
+    });
+    it("Checking copy of sequential datasets with empty new datasetname", async () => {
+        globals.defineGlobals("");
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const child = new ZoweDatasetNode(
+            "child",
+            vscode.TreeItemCollapsibleState.None,
+            blockMocks.datasetSessionNode,
+            null
+        );
+        child.contextValue = globals.DS_DS_CONTEXT;
+        await expect(dsActions.copyDataSet(child, null, blockMocks.testDatasetTree)).toStrictEqual(Promise.resolve());
+    });
+    it("Checking copy of sequential datasets", async () => {
+        globals.defineGlobals("");
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const child = new ZoweDatasetNode(
+            "child",
+            vscode.TreeItemCollapsibleState.None,
+            blockMocks.datasetSessionNode,
+            null
+        );
+        child.contextValue = globals.DS_DS_CONTEXT;
+        const profile = blockMocks.imperativeProfile;
+        const fakeEncoding = 9999;
+        profile.profile.encoding = fakeEncoding;
+
+        mocked(vscode.window.showInputBox).mockImplementation((options) => {
+            options.validateInput("test");
+            return Promise.resolve("test");
+        });
+        const allocSpy = jest.spyOn(blockMocks.mvsApi, "allocateLikeDataSet");
+        allocSpy.mockResolvedValue({
+            success: true,
+            commandResponse: "",
+            apiResponse: {},
+        });
+        mocked(vscode.window.withProgress).mockImplementation((params, fn) => {
+            fn();
+            return Promise.resolve(params);
+        });
+        await dsActions.copyDataSet(child, null, blockMocks.testDatasetTree);
+        expect(mocked(vscode.window.showErrorMessage)).not.toHaveBeenCalled();
+        await expect(dsActions.copyDataSet(child, null, blockMocks.testDatasetTree)).toStrictEqual(Promise.resolve());
+    });
+
+    it("Checking failed copy of sequential datasets", async () => {
+        globals.defineGlobals("");
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const child = new ZoweDatasetNode(
+            "child",
+            vscode.TreeItemCollapsibleState.None,
+            blockMocks.datasetSessionNode,
+            null
+        );
+        child.contextValue = globals.DS_DS_CONTEXT;
+        const profile = blockMocks.imperativeProfile;
+        const fakeEncoding = 9999;
+        profile.profile.encoding = fakeEncoding;
+
+        mocked(vscode.window.showInputBox).mockImplementation((options) => {
+            options.validateInput("test");
+            return Promise.resolve("test");
+        });
+        const allocSpy = jest.spyOn(blockMocks.mvsApi, "allocateLikeDataSet");
+        allocSpy.mockRejectedValueOnce({
+            success: true,
+            commandResponse: "",
+            apiResponse: {},
+        });
+        mocked(vscode.window.withProgress).mockImplementation((params, fn) => {
+            fn();
+            return Promise.resolve(params);
+        });
+        try {
+            await dsActions.copyDataSet(child, null, blockMocks.testDatasetTree);
+            expect(mocked(vscode.window.showErrorMessage)).not.toHaveBeenCalled();
+            await expect(dsActions.copyDataSet(child, null, blockMocks.testDatasetTree)).toStrictEqual(
+                Promise.resolve()
+            );
+        } catch (error) {
+            // do nth
+        }
+    });
+    it("Checking copy of partitioned datasets", async () => {
+        globals.defineGlobals("");
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const parent = new ZoweDatasetNode(
+            "parent",
+            vscode.TreeItemCollapsibleState.None,
+            blockMocks.datasetSessionNode,
+            null
+        );
+
+        const datasetNode = new ZoweDatasetNode(
+            "datasetNode",
+            vscode.TreeItemCollapsibleState.Expanded,
+            parent,
+            blockMocks.zosmfSession,
+            undefined,
+            undefined,
+            blockMocks.imperativeProfile
+        );
+
+        datasetNode.contextValue = globals.DS_PDS_CONTEXT;
+        const profile = blockMocks.imperativeProfile;
+        const fakeEncoding = 9999;
+        profile.profile.encoding = fakeEncoding;
+        mocked(vscode.window.showInputBox).mockImplementation((options) => {
+            options.validateInput("test");
+            return Promise.resolve("test");
+        });
+        jest.spyOn(datasetNode, "getChildren").mockResolvedValue([parent, parent]);
+
+        const copySpy = jest.spyOn(blockMocks.mvsApi, "copyDataSetMember");
+        copySpy.mockResolvedValue({
+            success: true,
+            commandResponse: "",
+            apiResponse: {},
+        });
+        mocked(vscode.window.withProgress).mockImplementation((params, fn) => {
+            fn();
+            return Promise.resolve(params);
+        });
+        await dsActions.copyDataSet(datasetNode, null, blockMocks.testDatasetTree);
+        await expect(mocked(vscode.window.showErrorMessage)).not.toHaveBeenCalled();
+        await expect(dsActions.copyDataSet(datasetNode, null, blockMocks.testDatasetTree)).toStrictEqual(
+            Promise.resolve()
+        );
+    });
+
+    it("Checking fail of copy partitioned datasets", async () => {
+        globals.defineGlobals("");
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const child = new ZoweDatasetNode(
+            "child",
+            vscode.TreeItemCollapsibleState.None,
+            blockMocks.datasetSessionNode,
+            null
+        );
+
+        blockMocks.datasetSessionNode.contextValue = globals.DS_PDS_CONTEXT;
+        const profile = blockMocks.imperativeProfile;
+        const fakeEncoding = 9999;
+        profile.profile.encoding = fakeEncoding;
+
+        await mocked(vscode.window.showInputBox).mockImplementation((options) => {
+            options.validateInput("test");
+            return Promise.resolve("test");
+        });
+        jest.spyOn(blockMocks.datasetSessionNode, "getChildren").mockRejectedValue([child]);
+        await mocked(vscode.window.withProgress).mockImplementation((params, fn) => {
+            fn();
+            return Promise.resolve(params);
+        });
+        try {
+            await dsActions.copyDataSet(blockMocks.datasetSessionNode, null, blockMocks.testDatasetTree);
+            await expect(mocked(vscode.window.showErrorMessage)).not.toHaveBeenCalled();
+            await expect(
+                dsActions.copyDataSet(blockMocks.datasetSessionNode, null, blockMocks.testDatasetTree)
+            ).toStrictEqual(Promise.resolve());
+        } catch (error) {
+            // do nth
+        }
     });
     it("Checking copy the label of a favorite member to the clipboard", async () => {
         globals.defineGlobals("");
@@ -1940,11 +2178,162 @@ describe("Dataset Actions Unit Tests - Function copyDataSet", () => {
         const child = new ZoweDatasetNode("child", vscode.TreeItemCollapsibleState.None, parent, null);
         child.contextValue = globals.DS_MEMBER_CONTEXT;
         const nodeList: ZoweDatasetNode[] = [child];
-        await dsActions.copyDataSet(nodeList);
+        await dsActions.copyDataSet(null, nodeList, blockMocks.testDatasetTree);
 
         expect(clipboard.readText()).toBe(
             '{"profileName":"sestest","dataSetName":"parent","memberName":"child","contextValue":"member"}'
         );
+    });
+    it("Testing pasteDataSetMembers() fails and gives error message with empty clipboard", async () => {
+        globals.defineGlobals("");
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        vscode.env.clipboard.writeText("");
+        const node = new ZoweDatasetNode(
+            "HLQ.TEST.TO.NODE",
+            vscode.TreeItemCollapsibleState.None,
+            blockMocks.datasetSessionNode,
+            null,
+            undefined,
+            undefined,
+            blockMocks.imperativeProfile
+        );
+        const errSpy = jest.spyOn(vscode.window, "showErrorMessage");
+        await expect(dsActions.pasteDataSetMembers(blockMocks.testDatasetTree, node)).toEqual(Promise.resolve());
+        expect(errSpy).toBeCalled();
+    });
+    it("Testing pasteDataSetMembers() fails and gives error message with empty clipboard", async () => {
+        globals.defineGlobals("");
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        vscode.env.clipboard.writeText("");
+        const node = new ZoweDatasetNode(
+            "HLQ.TEST.TO.NODE",
+            vscode.TreeItemCollapsibleState.None,
+            blockMocks.datasetSessionNode,
+            null,
+            undefined,
+            undefined,
+            blockMocks.imperativeProfile
+        );
+        const errSpy = jest.spyOn(vscode.window, "showErrorMessage");
+        await expect(dsActions.pasteDataSetMembers(blockMocks.testDatasetTree, node)).toEqual(Promise.resolve());
+        expect(errSpy).toBeCalled();
+    });
+    it("Testing pasteDataSetMembers() succesfully runs pasteMember()", async () => {
+        globals.defineGlobals("");
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        vscode.env.clipboard.writeText(JSON.stringify(getNodeLabels(blockMocks.pdsMemberNode)));
+        const errSpy = jest.spyOn(dsActions, "pasteMember");
+        errSpy.mockResolvedValueOnce(null);
+        await expect(dsActions.pasteDataSetMembers(blockMocks.testDatasetTree, blockMocks.pdsMemberNode)).toEqual(
+            Promise.resolve()
+        );
+    });
+
+    it("Testing pasteDataSetMembers() succesfully runs with multiple members", async () => {
+        globals.defineGlobals("");
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const node = new ZoweDatasetNode(
+            "HLQ.TEST.TO.NODE",
+            vscode.TreeItemCollapsibleState.None,
+            blockMocks.pdsSessionNode,
+            null,
+            undefined,
+            undefined,
+            blockMocks.imperativeProfile
+        );
+        node.contextValue = globals.DS_MEMBER_CONTEXT;
+        const nodeList = [node, node, node];
+
+        const filePaths = [];
+        nodeList.forEach((el) => {
+            filePaths.push(getNodeLabels(el));
+        });
+        vscode.env.clipboard.writeText(JSON.stringify(filePaths));
+
+        mocked(vscode.window.withProgress).mockImplementation((params, fn) => {
+            fn();
+            return Promise.resolve(params);
+        });
+        const copySpy = jest.spyOn(blockMocks.mvsApi, "copyDataSetMember");
+        copySpy.mockResolvedValue({
+            success: true,
+            commandResponse: "",
+            apiResponse: {},
+        });
+
+        await dsActions.pasteDataSetMembers(blockMocks.testDatasetTree, node);
+        expect(mocked(vscode.window.showErrorMessage)).not.toHaveBeenCalled();
+    });
+    it("Testing pasteDataSetMembers() fails with multiple members", async () => {
+        globals.defineGlobals("");
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const node = new ZoweDatasetNode(
+            "HLQ.TEST.TO.NODE",
+            vscode.TreeItemCollapsibleState.None,
+            blockMocks.pdsSessionNode,
+            null,
+            undefined,
+            undefined,
+            blockMocks.imperativeProfile
+        );
+        node.contextValue = globals.DS_MEMBER_CONTEXT;
+        const nodeList = [node, node, node];
+
+        const filePaths = [];
+        nodeList.forEach((el) => {
+            filePaths.push(getNodeLabels(el));
+        });
+        vscode.env.clipboard.writeText(JSON.stringify(filePaths));
+
+        mocked(vscode.window.withProgress).mockImplementation((params, fn) => {
+            fn();
+            return Promise.resolve(params);
+        });
+        const copySpy = jest.spyOn(blockMocks.mvsApi, "copyDataSetMember");
+        copySpy.mockRejectedValueOnce("");
+        await expect(dsActions.pasteDataSetMembers(blockMocks.testDatasetTree, node)).toBeFalsy;
+    });
+
+    it("Testing downloadDs() called with invalid node", async () => {
+        globals.defineGlobals("");
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const node = new ZoweDatasetNode(
+            "HLQ.TEST.TO.NODE",
+            vscode.TreeItemCollapsibleState.None,
+            blockMocks.pdsSessionNode,
+            null,
+            undefined,
+            undefined,
+            blockMocks.imperativeProfile
+        );
+        blockMocks.pdsSessionNode.contextValue = "fakeContext";
+        try {
+            await dsActions.downloadDs(node);
+        } catch (err) {
+            // do nth
+        }
+    });
+
+    it("Testing downloadDs() called with a member", async () => {
+        globals.defineGlobals("");
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const node = new ZoweDatasetNode(
+            "HLQ.TEST.TO.NODE",
+            vscode.TreeItemCollapsibleState.None,
+            blockMocks.pdsSessionNode,
+            null,
+            undefined,
+            undefined,
+            blockMocks.imperativeProfile
+        );
+        await expect(dsActions.downloadDs(node)).not.toBeUndefined();
     });
 });
 
