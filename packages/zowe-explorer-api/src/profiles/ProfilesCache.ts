@@ -84,7 +84,7 @@ export class ProfilesCache {
      */
     public loadNamedProfile(name: string, type?: string): zowe.imperative.IProfileLoaded {
         for (const profile of this.allProfiles) {
-            if (profile.name === name && (type ? profile.type === type : true)) {
+            if (profile.name === name && (!type || profile.type === type)) {
                 return profile;
             }
         }
@@ -126,7 +126,7 @@ export class ProfilesCache {
      * Gets default Profile attributes from imperative
      *
      * @param {ProfileInfo} mProfileInfo
-     * @param {string} profileType Type of Profile, optional
+     * @param {string} profileType Type of Profile
      *
      * @returns {IProfAttrs}
      */
@@ -152,7 +152,7 @@ export class ProfilesCache {
      * Used for extenders to register with Zowe Explorer that do not need their
      * profile type in the existing MVS, USS, and JES
      *
-     * @param {string} profileTypeName Type of Profile, defaults to "zosmf" if nothing passed.
+     * @param {string} profileTypeName Type of Profile
      *
      * @returns {void}
      */
@@ -220,12 +220,7 @@ export class ProfilesCache {
             return validationResult;
         }
 
-        if (newUrl.includes(":443")) {
-            validationResult.port = 443;
-        } else {
-            validationResult.port = Number(url.port);
-        }
-
+        validationResult.port = Number(url.port);
         validationResult.host = url.hostname;
         validationResult.valid = true;
         return validationResult;

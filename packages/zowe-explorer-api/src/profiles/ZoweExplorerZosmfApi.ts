@@ -55,8 +55,6 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
             port: serviceProfile.profile.port as number,
             basePath: serviceProfile.profile.basePath as string,
             rejectUnauthorized: serviceProfile.profile.rejectUnauthorized as boolean,
-            user: serviceProfile.profile.user as string,
-            password: serviceProfile.profile.password as string,
         };
         if (!serviceProfile.profile.tokenValue) {
             cmdArgs = {
