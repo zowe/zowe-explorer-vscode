@@ -32,9 +32,9 @@ import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { getProfileInfo, getProfile } from "./utils/ProfilesUtils";
 
 // Set up localization
-// import * as nls from "vscode-nls";
-// nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
-// const localize: nls.LocalizeFunc = nls.loadMessageBundle();
+import * as nls from "vscode-nls";
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 /**
  * The Zowe Explorer API Register singleton that gets exposed to other VS Code
@@ -43,6 +43,49 @@ import { getProfileInfo, getProfile } from "./utils/ProfilesUtils";
  */
 export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtender, ZoweExplorerTreeApi {
     public static ZoweExplorerExtenderInst: ZoweExplorerExtender;
+
+    /**
+     * Shows an error when the Zowe configs are improperly configured, as well as
+     * an option to show the config.
+     *
+     * @param configPath The path where the Zowe configs are located
+     * @param profileType The type of profile, if using v1 configs
+     */
+    public static showZoweConfigError(configPath: string, profileType?: string) {
+        vscode.window
+            .showErrorMessage(
+                localize(
+                    "initialize.profiles.error",
+                    'Error encountered when loading your Zowe config. Click "Show Config" for more details.'
+                ),
+                "Show Config"
+            )
+            .then((value) => {
+                if (value === "Show Config") {
+                    const configInfo = {
+                        usingTeamConfig: true,
+                        location: path.join(configPath, "zowe.config.user.json"),
+                    };
+                    let uri: vscode.Uri;
+                    try {
+                        fs.statSync(configInfo.location);
+                    } catch (err) {
+                        configInfo.location = path.join(configPath, "zowe.config.json");
+                        try {
+                            fs.statSync(configInfo.location);
+                        } catch (err) {
+                            configInfo.usingTeamConfig = false;
+                        }
+                    }
+                    if (configInfo.usingTeamConfig) {
+                        uri = vscode.Uri.file(configInfo.location);
+                    } else {
+                        uri = vscode.Uri.file(`${configPath}/profiles/${profileType}/${profileType}_meta.yaml`);
+                    }
+                    vscode.window.showTextDocument(uri);
+                }
+            });
+    }
 
     /**
      * Access the singleton instance.
@@ -105,11 +148,15 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
          */
         let usingTeamConfig: boolean;
         let mProfileInfo: zowe.imperative.ProfileInfo;
+        let projectPath: string;
+        let projectV2Config = false;
         try {
             mProfileInfo = await getProfileInfo(globals.ISTHEIA);
             if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0]) {
                 const rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
-                await mProfileInfo.readProfilesFromDisk({ homeDir: zoweDir, projectDir: getFullPath(rootPath) });
+                projectPath = getFullPath(rootPath);
+                fs.stat(`${projectPath}/zowe.config.json`, (err, stats) => (projectV2Config = err.code == null));
+                await mProfileInfo.readProfilesFromDisk({ homeDir: zoweDir, projectDir: projectPath });
             } else {
                 await mProfileInfo.readProfilesFromDisk({ homeDir: zoweDir, projectDir: undefined });
             }
@@ -119,6 +166,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
             if (error.toString().includes("Error parsing JSON")) {
                 usingTeamConfig = true;
             }
+            ZoweExplorerExtender.showZoweConfigError(zoweDir, profileType);
         }
 
         if (profileTypeConfigurations && !usingTeamConfig) {

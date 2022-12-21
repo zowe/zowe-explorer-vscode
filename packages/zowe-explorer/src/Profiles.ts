@@ -41,7 +41,6 @@ import {
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import * as globals from "./globals";
 import * as nls from "vscode-nls";
-import { UIViews } from "./shared/ui-views";
 
 // Set up localization
 nls.config({

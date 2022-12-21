@@ -19,6 +19,7 @@ import { getSecurityModules, IZoweTreeNode, ZoweTreeNode, getZoweDir, getFullPat
 import { Profiles } from "../Profiles";
 import * as nls from "vscode-nls";
 import { imperative, getImperativeConfig } from "@zowe/cli";
+import { ZoweExplorerExtender } from "../ZoweExplorerExtender";
 
 // Set up localization
 nls.config({
@@ -279,7 +280,9 @@ export async function readConfigFromDisk() {
             );
         }
     } catch (error) {
-        await openConfigOnError(error);
+        if (error.message.includes("Error parsing JSON")) {
+            ZoweExplorerExtender.showZoweConfigError(getZoweDir());
+        }
         throw new Error(error);
     }
 }
