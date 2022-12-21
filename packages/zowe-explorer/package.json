@@ -1710,6 +1710,12 @@
           "description": "%zowe.jobs.history%",
           "scope": "application"
         },
+        "zowe.jobs.confirmSubmission": {
+          "type": "boolean",
+          "default": true,
+          "description": "%zowe.jobs.confirmSubmission%",
+          "scope": "window"
+        },
         "zowe.commands.alwaysEdit": {
           "type": "boolean",
           "default": true,

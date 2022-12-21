@@ -74,6 +74,7 @@
   "zowe.files.temporaryDownloadsFolder.path": "Path to temporary folder location",
   "zowe.uss.history": "Toggle if USS favorite files persist locally",
   "zowe.jobs.history": "Toggle if Jobs favorite files persist locally",
+  "zowe.jobs.confirmSubmission": "Require user confirmation before submitting a job",
   "zowe.commands.history": "Toggle if Commands persist locally",
   "zowe.automaticProfileValidation": "Allow automatic validation of profiles.",
   "zowe.settings.version": "Track if migration has been processed",

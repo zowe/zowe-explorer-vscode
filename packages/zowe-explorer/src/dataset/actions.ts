@@ -962,6 +962,23 @@ export async function submitMember(node: api.IZoweTreeNode) {
     let sessProfile: zowe.imperative.IProfileLoaded;
     const profiles = Profiles.getInstance();
     await profiles.checkCurrentProfile(node.getProfile());
+
+    if (vscode.workspace.getConfiguration().get("zowe.jobs.confirmSubmission") === true) {
+        const selection = await vscode.window.showWarningMessage(
+            localize(
+                "submitMember.confirm",
+                "Are you sure you want to submit the following job? {0}",
+                node.getLabel().toString()
+            ),
+            { modal: true },
+            "Submit"
+        );
+
+        if (selection !== "Submit") {
+            return;
+        }
+    }
+
     if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
         switch (true) {
             // For favorited or non-favorited sequential DS:
