@@ -41,9 +41,14 @@ import { UIViews } from "../../../src/shared/ui-views";
 const activeTextEditorDocument = jest.fn();
 
 function createGlobalMocks() {
+    Object.defineProperty(vscode.workspace, "getConfiguration", {
+        value: jest.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", false]])),
+        configurable: true,
+    });
     Object.defineProperty(vscode.window, "showInformationMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showInputBox", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showErrorMessage", { value: jest.fn(), configurable: true });
+    Object.defineProperty(vscode.window, "showWarningMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe, "IssueCommand", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe.IssueCommand, "issueSimple", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showOpenDialog", { value: jest.fn(), configurable: true });
@@ -680,6 +685,49 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         expect(mocked(vscode.window.showErrorMessage).mock.calls[0][0]).toEqual(
             "submitMember() called from invalid node."
         );
+    });
+
+    it("Checking Submit Job with the confirmation dialog enabled", async () => {
+        createGlobalMocks();
+        Object.defineProperty(vscode.workspace, "getConfiguration", {
+            value: jest.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", true]])),
+            configurable: true,
+        });
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        const dataset = new ZoweDatasetNode(
+            "dataset",
+            vscode.TreeItemCollapsibleState.Collapsed,
+            blockMocks.datasetSessionNode,
+            null
+        );
+        dataset.contextValue = globals.DS_DS_CONTEXT;
+
+        // Test for "Submit"
+        mocked(vscode.window.showWarningMessage).mockResolvedValue({ title: "Submit" });
+        await dsActions.submitMember(dataset);
+        expect(mocked(vscode.window.showWarningMessage)).toBeCalledWith(
+            "Are you sure you want to submit the following job? " + dataset.getLabel(),
+            { modal: true },
+            { title: "Submit" }
+        );
+        // Logic should continue for submitMember (2 getInstance calls during this call)
+        expect(mocked(Profiles.getInstance)).toBeCalledTimes(2);
+
+        // Test for "Cancel" or closing the dialog
+        mocked(vscode.window.showWarningMessage).mockReturnValueOnce(undefined);
+        await dsActions.submitMember(dataset);
+        expect(mocked(vscode.window.showWarningMessage)).toBeCalledWith(
+            "Are you sure you want to submit the following job? " + dataset.getLabel(),
+            { modal: true },
+            { title: "Submit" }
+        );
+        // Function should return early when dialog is dismissed;
+        // # of getInstance calls should only increase by 1 (beginning of function)
+
+        // eslint-disable-next-line no-magic-numbers
+        // tslint:disable-next-line:no-magic-numbers
+        expect(mocked(Profiles.getInstance)).toBeCalledTimes(3);
     });
 });
 

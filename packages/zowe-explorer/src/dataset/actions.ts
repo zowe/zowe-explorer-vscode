@@ -971,14 +971,13 @@ export async function submitMember(node: api.IZoweTreeNode) {
                 node.getLabel().toString()
             ),
             { modal: true },
-            "Submit"
+            { title: "Submit" }
         );
 
-        if (selection !== "Submit") {
+        if (selection == null || selection?.title !== "Submit") {
             return;
         }
     }
-
     if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
         switch (true) {
             // For favorited or non-favorited sequential DS:
