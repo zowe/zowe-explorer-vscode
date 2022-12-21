@@ -1579,36 +1579,33 @@ export async function pasteDataSetMembers(
         vscode.window.showErrorMessage(localize("paste.dataSet", "Invalid paste. Copy dataset(s) first"));
         return;
     }
+    if (!Array.isArray(clipboardContent) && clipboardContent.memberName) {
+        return pasteMember(node, datasetProvider);
+    }
 
-    if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
-        if (!Array.isArray(clipboardContent) && clipboardContent.memberName) {
-            return pasteMember(node, datasetProvider);
-        }
-
-        await vscode.window.withProgress(
-            {
-                location: vscode.ProgressLocation.Window,
-                title: localize("paste.dataSet.InPrg", "Uploading File(s)"),
-            },
-            async function copyDsMember() {
-                for (const content of clipboardContent) {
-                    if (content.memberName) {
-                        try {
-                            await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).copyDataSetMember(
-                                { dsn: content.dataSetName, member: content.memberName },
-                                { dsn: node.getLabel().toString(), member: content.memberName }
-                            );
-                        } catch (err) {
-                            vscode.window.showErrorMessage(err.message);
-                            return;
-                        }
+    await vscode.window.withProgress(
+        {
+            location: vscode.ProgressLocation.Window,
+            title: localize("paste.dataSet.InPrg", "Uploading File(s)"),
+        },
+        async function copyDsMember() {
+            for (const content of clipboardContent) {
+                if (content.memberName) {
+                    try {
+                        await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).copyDataSetMember(
+                            { dsn: content.dataSetName, member: content.memberName },
+                            { dsn: node.getLabel().toString(), member: content.memberName }
+                        );
+                    } catch (err) {
+                        vscode.window.showErrorMessage(err.message);
+                        return;
                     }
                 }
-                datasetProvider.refreshElement(node);
-                vscode.env.clipboard.writeText(""); // TODO change it to dispose function
             }
-        );
-    }
+            datasetProvider.refreshElement(node);
+            vscode.env.clipboard.writeText("");
+        }
+    );
 }
 
 /**
@@ -1744,6 +1741,10 @@ export async function copyPartitionedDatasets(nodes: ZoweDatasetNode[]) {
                 };
 
                 const children = await node.getChildren();
+                const prof = node?.getProfile();
+                if (prof.profile.encoding) {
+                    uploadOptions.encoding = prof.profile.encoding;
+                }
 
                 await vscode.window.withProgress(
                     {
@@ -1751,10 +1752,6 @@ export async function copyPartitionedDatasets(nodes: ZoweDatasetNode[]) {
                         title: localize("paste.dataSet.InPrg", "Uploading File(s)"),
                     },
                     () => {
-                        const prof = node?.getProfile();
-                        if (prof.profile.encoding) {
-                            uploadOptions.encoding = prof.profile.encoding;
-                        }
                         for (const child of children) {
                             ZoweExplorerApiRegister.getMvsApi(node.getProfile()).copyDataSetMember(
                                 { dsn: lbl, member: child.getLabel().toString() },
