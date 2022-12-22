@@ -6,6 +6,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Added file association for `zowe.config.json` and `zowe.config.user.json` to automatically detect them as JSON with Comments. [#1997](https://github.com/zowe/vscode-extension-for-zowe/issues/1997)
 - Updated error dialog when Zowe config is invalid, with option to "Show Config" within VS Code for diagnostics. [#1986](https://github.com/zowe/vscode-extension-for-zowe/issues/1986)
 
 ### Bug fixes
