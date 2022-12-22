@@ -22,10 +22,10 @@ The Zowe Explorer extension modernizes the way developers and system administrat
 - [Sample use cases](#sample-use-cases)
 - [Prerequisites tasks](#prerequisite-tasks)
 - [Getting started](#getting-started)
+  - [Configuring Zowe Explorer](#configuring-zowe-explorer)
 - [Usage tips](#usage-tips)
 - [Keyboard shortcuts](#keyboard-shortcuts)
 - [Extending Zowe Explorer](#extending-zowe-explorer)
-- [Configuring Zowe Explorer](#configuring-zowe-explorer)
 - [More information](#more-information)
 
 > Zowe Explorer is compatible only with Theia 1.18.0 or higher.
@@ -260,7 +260,15 @@ Review the following use cases and their procedures to understand how to work wi
 
 This section includes steps for the tasks you need to complete to get started using Zowe Explorer.
 
-Create a [v1 profile](#create-a-v1-profile) or a [team configuration file](#create-a-team-configuration-file) for profile manangement, review the [sample use cases](#sample-use-cases) to familiarize yourself with the capabilities of Zowe Explorer, and you are ready to use Zowe Explorer.
+Configure Zowe Explorer, create a [v1 profile](#create-a-v1-profile) or a [team configuration file](#create-a-team-configuration-file) for profile manangement, review the [sample use cases](#sample-use-cases) to familiarize yourself with the capabilities of Zowe Explorer, and you are ready to use Zowe Explorer.
+
+### Configuring Zowe Explorer
+
+You can configure Zowe Explorer by changing the extension settings. For more information, see [Configuring Zowe Explorer](https://docs.zowe.org/stable/user-guide/ze-install#configuring-zowe-explorer)
+
+When environment conditions do not support the Zowe CLI built-in Credential Manager, see [Modifying the Secure Credentials Enabled Setting](https://docs.zowe.org/stable/user-guide/ze-install#modifying-the-secure-credentials-enabled-setting)
+
+
 
 ### Create a v1 profile
 
@@ -405,12 +413,6 @@ For the comprehensive Zowe Explorer documentation that also includes information
 You can add new functionalities to Zowe Explorer by creating your own extension. For more information, see [Extensions for Zowe Explorer](https://github.com/zowe/vscode-extension-for-zowe/blob/main/docs/README-Extending.md).
 
 **Tip:** View an example of a Zowe Explorer extension: [Zowe Explorer FTP extension documentation](https://github.com/zowe/zowe-explorer-ftp-extension#zowe-explorer-ftp-extension).
-
-## Configuring Zowe Explorer
-
-You can configure Zowe Explorer by changing the extension settings. For more information, see [Configuring Zowe Explorer](https://docs.zowe.org/stable/user-guide/ze-install#configuring-zowe-explorer)
-
-When environment conditions do not support the Zowe CLI built-in Credential Manager, see [Modifying the Secure Credentials Enabled Setting](https://docs.zowe.org/stable/user-guide/ze-install#modifying-the-secure-credentials-enabled-setting)
 
 ## More information
 
