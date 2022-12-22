@@ -3,13 +3,13 @@ name: Theia Zowe Explorer CI
 
 on:
   push:
-    paths:
-      - packages/zowe-explorer/**
-      - packages/zowe-explorer-api/**
+    # paths:
+    #   - packages/zowe-explorer/**
+    #   - packages/zowe-explorer-api/**
   pull_request:
-    paths:
-      - packages/zowe-explorer/**
-      - packages/zowe-explorer-api/**
+    # paths:
+    #   - packages/zowe-explorer/**
+    #   - packages/zowe-explorer-api/**
 
 jobs:
   ze-theia-build:
@@ -47,7 +47,7 @@ jobs:
       - run: ls -la temp/plugins
 
       - name: Start Theia
-        run: docker run --name theia --init -d -p 3000:3000 --user theia -v "${PWD}/temp/plugins/:/home/theia/plugins" quay.io/zowe-explorer/theia:latest
+        run: docker run --name theia --init -d -p 3000:3000 --user theia -v "${PWD}/temp/plugins/:/home/theia/plugins" t1m0thyj/theia-alpine:latest
       # NOTE(Kelosky): alternatively, we could run docker via something like this; however, we cannot hot reload
       #                hosted VS Code extensions after theia is started (at least at the time this was written).
       # services:
