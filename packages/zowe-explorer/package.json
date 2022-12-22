@@ -1748,7 +1748,15 @@
           "scope": "window"
         }
       }
-    }
+    },
+    "languages": [
+      {
+        "id": "jsonc",
+        "filenamePatterns": [
+          "zowe.config*.json"
+        ]
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "yarn createTestProfileData && gulp build && yarn license && yarn lint && webpack --mode production && yarn updateStrings && yarn run compile-web",
