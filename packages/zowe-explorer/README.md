@@ -22,7 +22,6 @@ The Zowe Explorer extension modernizes the way developers and system administrat
 - [Sample use cases](#sample-use-cases)
 - [Prerequisites tasks](#prerequisite-tasks)
 - [Getting started](#getting-started)
-  - [Configuring Zowe Explorer](#configuring-zowe-explorer)
 - [Usage tips](#usage-tips)
 - [Keyboard shortcuts](#keyboard-shortcuts)
 - [Extending Zowe Explorer](#extending-zowe-explorer)
@@ -264,11 +263,9 @@ Configure Zowe Explorer, create a [v1 profile](#create-a-v1-profile) or a [team 
 
 ### Configuring Zowe Explorer
 
-You can configure Zowe Explorer by changing the extension settings. For more information, see [Configuring Zowe Explorer](https://docs.zowe.org/stable/user-guide/ze-install#configuring-zowe-explorer)
+You can configure Zowe Explorer by changing the extension settings. For more information, see [Configuring Zowe Explorer](https://docs.zowe.org/stable/user-guide/ze-install#configuring-zowe-explorer).
 
-When environment conditions do not support the Zowe CLI built-in Credential Manager, see [Modifying the Secure Credentials Enabled Setting](https://docs.zowe.org/stable/user-guide/ze-install#modifying-the-secure-credentials-enabled-setting)
-
-
+When environment conditions do not support the Zowe CLI built-in Credential Manager, see [Modifying the Secure Credentials Enabled Setting](https://docs.zowe.org/stable/user-guide/ze-install#modifying-the-secure-credentials-enabled-setting).
 
 ### Create a v1 profile
 
