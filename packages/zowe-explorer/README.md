@@ -409,3 +409,5 @@ You can add new functionalities to Zowe Explorer by creating your own extension.
 
 - For the complete Zowe Explorer documentation, see [Zowe Docs](https://docs.zowe.org/stable/user-guide/ze-install.html).
 - Join the **#zowe-explorer** channel on [Slack](https://openmainframeproject.slack.com/) to stay in touch with the Zowe community.
+- For information on Zowe Explorer configuration, see [Configuring Zowe Explorer](https://docs.zowe.org/stable/user-guide/ze-install#configuring-zowe-explorer)
+  - For information on how Zowe Explorer supports non-keytar-friendly environments, see [Modifying the Secure Credentials Enabled Setting](https://docs.zowe.org/stable/user-guide/ze-install#modifying-the-secure-credentials-enabled-setting)
