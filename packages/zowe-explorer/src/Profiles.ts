@@ -39,6 +39,7 @@ import {
     openConfigOnError,
 } from "./utils/ProfilesUtils";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
+import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import * as globals from "./globals";
 import * as nls from "vscode-nls";
 
@@ -927,6 +928,7 @@ export class Profiles extends ProfilesCache {
             return newProfileName;
         } catch (error) {
             await errorHandling(error.message);
+            ZoweExplorerExtender.showZoweConfigError(getZoweDir());
         }
     }
 

@@ -11,8 +11,8 @@
 
 import * as fs from "fs";
 import * as path from "path";
-import { errorHandling, writeOverridesFile } from "../../../src/utils/ProfilesUtils";
 import * as globals from "../../../src/globals";
+import * as profileUtils from "../../../src/utils/ProfilesUtils";
 
 jest.mock("fs");
 
@@ -49,7 +49,7 @@ describe("ProfileUtils.writeOverridesFile Unit Tests", () => {
             JSON.stringify({ overrides: { CredentialManager: false, testValue: true } }, null, 2)
         );
         const spy = jest.spyOn(fs, "writeFileSync");
-        writeOverridesFile();
+        profileUtils.writeOverridesFile();
         expect(spy).toBeCalledWith(blockMocks.zoweDir, content, blockMocks.encoding);
         spy.mockClear();
     });
@@ -57,7 +57,7 @@ describe("ProfileUtils.writeOverridesFile Unit Tests", () => {
         const fileJson = { overrides: { CredentialManager: "@zowe/cli", testValue: true } };
         jest.spyOn(fs, "readFileSync").mockReturnValueOnce(JSON.stringify(fileJson, null, 2));
         const spy = jest.spyOn(fs, "writeFileSync");
-        writeOverridesFile();
+        profileUtils.writeOverridesFile();
         expect(spy).toBeCalledTimes(0);
         spy.mockClear();
     });
@@ -72,7 +72,7 @@ describe("ProfileUtils.writeOverridesFile Unit Tests", () => {
         const content = JSON.stringify(blockMocks.mockFileRead, null, 2);
         const spyRead = jest.spyOn(fs, "readFileSync");
         const spy = jest.spyOn(fs, "writeFileSync");
-        writeOverridesFile();
+        profileUtils.writeOverridesFile();
         expect(spy).toBeCalledWith(blockMocks.zoweDir, content, blockMocks.encoding);
         expect(spyRead).toBeCalledTimes(0);
         spy.mockClear();
@@ -83,7 +83,7 @@ describe("ProfileUtils.writeOverridesFile Unit Tests", () => {
         const errorDetails = new Error("i haz error");
         const label = "test";
         const moreInfo = "Task failed successfully";
-        await errorHandling(errorDetails, label, moreInfo);
+        await profileUtils.errorHandling(errorDetails, label, moreInfo);
         expect(globals.LOG.error).toBeCalledWith(
             `Error: ${errorDetails.message}\n` + JSON.stringify({ errorDetails, label, moreInfo })
         );

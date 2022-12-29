@@ -25,9 +25,11 @@ import { createUSSSessionNode, createUSSTree } from "../../__mocks__/mockCreator
 import { createJobsTree, createIJobObject } from "../../__mocks__/mockCreators/jobs";
 import { ZoweExplorerExtender } from "../../src/ZoweExplorerExtender";
 import { Profiles } from "../../src/Profiles";
-
+import * as path from "path";
 import * as fs from "fs";
 jest.mock("fs");
+
+const mocked = <T extends (...args: any[]) => any>(fn: T): jest.Mock<ReturnType<T>> => fn as any;
 
 describe("ZoweExplorerExtender unit tests", () => {
     async function createBlockMocks() {
@@ -41,11 +43,12 @@ describe("ZoweExplorerExtender unit tests", () => {
             profiles: null,
             mockGetConfiguration: jest.fn(),
             mockErrorMessage: jest.fn(),
+            mockStatSync: jest.fn(),
             mockTextDocument: jest.fn(),
         };
 
+        Object.defineProperty(fs, "statSync", { value: newMocks.mockStatSync, configurable: true });
         newMocks.profiles = createInstanceOfProfile(newMocks.imperativeProfile);
-        Object.defineProperty(fs, "statSync", { value: jest.fn(), configurable: true });
         Object.defineProperty(Profiles, "getInstance", {
             value: jest
                 .fn(() => {
@@ -108,30 +111,59 @@ describe("ZoweExplorerExtender unit tests", () => {
         expect(blockMocks.instTest.jobsProvider).toBe(undefined);
     });
 
-    it("dismisses Zowe config error dialog and does not open editor if error is dismissed", async () => {
+    it("properly handles Zowe config error dialog based on user input", async () => {
         const blockMocks = await createBlockMocks();
         ZoweExplorerExtender.createInstance();
 
-        blockMocks.mockErrorMessage.mockImplementationOnce((msg, ...items) => Promise.resolve(undefined));
-        await ZoweExplorerExtender.showZoweConfigError("TEST_CFG_PATH");
-        expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(
-            'Error encountered when loading your Zowe config. Click "Show Config" for more details.',
-            "Show Config"
-        );
-        expect(vscode.window.showTextDocument).not.toBeCalled();
-    });
+        Object.defineProperty(vscode.Uri, "file", { value: jest.fn(), configurable: true });
 
-    it("opens editor if Show Config is selected in Zowe config error dialog", async () => {
-        const blockMocks = await createBlockMocks();
-        ZoweExplorerExtender.createInstance();
-
-        blockMocks.mockErrorMessage.mockImplementationOnce((msg, ...items) => Promise.resolve("Show Config"));
-        await ZoweExplorerExtender.showZoweConfigError("TEST_CFG_PATH");
-        expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(
-            'Error encountered when loading your Zowe config. Click "Show Config" for more details.',
-            "Show Config"
-        );
-        expect(fs.statSync).toBeCalled();
-        expect(vscode.window.showTextDocument).toBeCalled();
+        const userInputs = [
+            {
+                choice: undefined,
+                fileChecks: ["zowe.config.user.json"],
+            },
+            {
+                choice: "Show Config",
+                fileChecks: ["zowe.config.user.json"],
+            },
+            {
+                choice: "Show Config",
+                fileChecks: ["zowe.config.user.json", "zowe.config.json"],
+            },
+            {
+                choice: "Show Config",
+                fileChecks: ["zowe.config.user.json", "zowe.config.json"],
+                v1: true,
+            },
+        ];
+        for (const userInput of userInputs) {
+            blockMocks.mockErrorMessage.mockImplementationOnce((msg, ...items) => Promise.resolve(userInput.choice));
+            if (userInput.fileChecks.length > 1) {
+                const mockFn = userInput.v1
+                    ? blockMocks.mockStatSync.mockImplementation
+                    : blockMocks.mockStatSync.mockImplementationOnce;
+                mockFn((...args) => {
+                    throw new Error("Failed to find config json");
+                });
+            }
+            await ZoweExplorerExtender.showZoweConfigError("TEST_CFG_PATH", "exampleType");
+            expect(blockMocks.mockErrorMessage).toHaveBeenCalledWith(
+                'Error encountered when loading your Zowe config. Click "Show Config" for more details.',
+                "Show Config"
+            );
+            if (userInput.choice == null) {
+                expect(vscode.window.showTextDocument).not.toHaveBeenCalled();
+            } else {
+                for (const fileName of userInput.fileChecks) {
+                    expect(blockMocks.mockStatSync).toHaveBeenCalledWith(path.join("TEST_CFG_PATH", fileName));
+                }
+                if (userInput.v1) {
+                    expect(vscode.Uri.file).toHaveBeenCalledWith(
+                        "TEST_CFG_PATH/profiles/exampleType/exampleType_meta.yaml"
+                    );
+                }
+                expect(vscode.window.showTextDocument).toHaveBeenCalled();
+            }
+        }
     });
 });

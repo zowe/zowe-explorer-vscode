@@ -51,7 +51,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
      * @param configPath The path where the Zowe configs are located
      * @param profileType The type of profile, if using v1 configs
      */
-    public static showZoweConfigError(configPath: string, profileType?: string) {
+    public static async showZoweConfigError(configPath: string, profileType?: string) {
         vscode.window
             .showErrorMessage(
                 localize(
@@ -60,8 +60,8 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
                 ),
                 "Show Config"
             )
-            .then((value) => {
-                if (value === "Show Config") {
+            .then((selection) => {
+                if (selection === "Show Config") {
                     const configInfo = {
                         usingTeamConfig: true,
                         location: path.join(configPath, "zowe.config.user.json"),
@@ -149,13 +149,11 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
         let usingTeamConfig: boolean;
         let mProfileInfo: zowe.imperative.ProfileInfo;
         let projectPath: string;
-        let projectV2Config = false;
         try {
             mProfileInfo = await getProfileInfo(globals.ISTHEIA);
             if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0]) {
                 const rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
                 projectPath = getFullPath(rootPath);
-                fs.stat(`${projectPath}/zowe.config.json`, (err, stats) => (projectV2Config = err.code == null));
                 await mProfileInfo.readProfilesFromDisk({ homeDir: zoweDir, projectDir: projectPath });
             } else {
                 await mProfileInfo.readProfilesFromDisk({ homeDir: zoweDir, projectDir: undefined });

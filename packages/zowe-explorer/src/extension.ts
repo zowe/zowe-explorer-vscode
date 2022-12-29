@@ -92,7 +92,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         await readConfigFromDisk();
     } catch (err) {
         globals.LOG.error(err);
-        ZoweExplorerExtender.showZoweConfigError(zoweDir);
+        ZoweExplorerExtender.showZoweConfigError(getZoweDir());
     }
 
     // Initialize profile manager
