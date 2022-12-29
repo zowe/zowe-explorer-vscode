@@ -429,6 +429,15 @@ export interface TextDocument {
     fileName?: string;
 }
 
+export class Uri {
+    public static parse(value: string, strict?: boolean): Uri {
+        return this;
+    }
+    public static file(path: string): Uri {
+        return this;
+    }
+}
+
 /**
  * The clipboard provides read and write access to the system's clipboard.
  */
