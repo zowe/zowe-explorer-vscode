@@ -1712,7 +1712,7 @@
         },
         "zowe.jobs.confirmSubmission": {
           "type": "boolean",
-          "default": true,
+          "default": false,
           "description": "%zowe.jobs.confirmSubmission%",
           "scope": "window"
         },
