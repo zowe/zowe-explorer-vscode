@@ -150,8 +150,11 @@ describe("ZoweExplorerExtender unit tests", () => {
             }
             await ZoweExplorerExtender.showZoweConfigError(
                 userInput.v1
-                    ? "Error reading profile file 'TEST_CFG_PATH/profiles/exampleType/'"
-                    : "V2_PROFILE_EXAMPLE_ERR"
+                    ? `Error reading profile file ("${path.join(
+                          zoweDir,
+                          "profiles/exampleType/exampleType_meta.yaml"
+                      )}")`
+                    : "Error parsing JSON"
             );
             expect(blockMocks.mockErrorMessage).toHaveBeenCalledWith(
                 'Error encountered when loading your Zowe config. Click "Show Config" for more details.',
@@ -160,13 +163,14 @@ describe("ZoweExplorerExtender unit tests", () => {
             if (userInput.choice == null) {
                 expect(vscode.window.showTextDocument).not.toHaveBeenCalled();
             } else {
-                for (const fileName of userInput.fileChecks) {
-                    expect(blockMocks.mockStatSync).toHaveBeenCalledWith(path.join(zoweDir, fileName));
-                }
                 if (userInput.v1) {
                     expect(vscode.Uri.file).toHaveBeenCalledWith(
                         path.join(zoweDir, "profiles/exampleType/exampleType_meta.yaml")
                     );
+                } else {
+                    for (const fileName of userInput.fileChecks) {
+                        expect(blockMocks.mockStatSync).toHaveBeenCalledWith(path.join(zoweDir, fileName));
+                    }
                 }
                 expect(vscode.window.showTextDocument).toHaveBeenCalled();
             }

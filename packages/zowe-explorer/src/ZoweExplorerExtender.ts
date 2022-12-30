@@ -51,13 +51,6 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
      * @param errorDetails Details of the error (to be parsed for config name and path)
      */
     public static async showZoweConfigError(errorDetails: string) {
-        const errorContainsConfigPath = errorDetails.includes("Error parsing JSON in the file");
-        const configPath = errorContainsConfigPath
-            ? errorDetails.match(/Error parsing JSON in the file \'(.+?)\'/)[1]
-            : getZoweDir();
-        const profileType = errorDetails.includes("Error reading profile file")
-            ? errorDetails.match(/(?:.+)[\\/]{1,2}profiles[\\/]{1,2}(.+?)[\\/]{1,2}/)[1]
-            : undefined;
         vscode.window
             .showErrorMessage(
                 localize(
@@ -67,34 +60,50 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
                 "Show Config"
             )
             .then((selection) => {
-                if (selection === "Show Config") {
-                    const configInfo = {
-                        usingTeamConfig: true,
-                        location: errorContainsConfigPath ? configPath : path.join(configPath, "zowe.config.user.json"),
-                    };
-                    let uri: vscode.Uri;
-                    if (!errorContainsConfigPath) {
-                        try {
-                            fs.statSync(configInfo.location);
-                        } catch (err) {
-                            configInfo.location = path.join(configPath, "zowe.config.json");
-                            try {
-                                fs.statSync(configInfo.location);
-                            } catch (err) {
-                                configInfo.usingTeamConfig = false;
-                            }
-                        }
-                    }
-                    if (configInfo.usingTeamConfig) {
-                        uri = vscode.Uri.file(configInfo.location);
-                    } else {
-                        uri = vscode.Uri.file(
-                            path.join(configPath, `/profiles/${profileType}/${profileType}_meta.yaml`)
-                        );
-                    }
-                    vscode.window.showTextDocument(uri);
+                if (selection !== "Show Config") {
+                    return;
                 }
+
+                // Parse the v2 config path if it exists; otherwise look for a v1 config path
+                const configMatch = errorDetails.includes("Error parsing JSON in the file")
+                    ? errorDetails.match(/Error parsing JSON in the file \'(.+?)\'/)
+                    : errorDetails.match(/Error reading profile file \(\"(.+?)\"\)/);
+
+                let configPath = configMatch != null ? configMatch[1] : null;
+                if (configPath == null) {
+                    // If unable to parse config path from error message,
+                    // try to build a v2 config path from zowe dir
+                    configPath = this.getConfigLocation(getZoweDir());
+
+                    // If configPath is still null, we can't find a v2 config - return.
+                    if (configPath == null) {
+                        return;
+                    }
+                }
+                vscode.window.showTextDocument(vscode.Uri.file(configPath));
             });
+    }
+
+    /**
+     * Returns the location of a Zowe config (if it exists) relative to rootPath.
+     * @param rootPath The root path to check for Zowe configs
+     */
+    public static getConfigLocation(rootPath: string): string | null {
+        // First check for a user-specific v2 config
+        let location = path.join(rootPath, "zowe.config.user.json");
+        try {
+            fs.statSync(location);
+        } catch (err) {
+            // Fallback to regular v2 config if user-specific config doesn't exist
+            location = path.join(rootPath, "zowe.config.json");
+            try {
+                fs.statSync(location);
+            } catch (err) {
+                return null;
+            }
+        }
+
+        return location;
     }
 
     /**
