@@ -72,8 +72,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     // Determine the runtime framework to support special behavior for Theia
     globals.defineGlobals(preferencesTempPath);
 
-    const zoweDir = getZoweDir();
-    hideTempFolder(zoweDir);
+    hideTempFolder(getZoweDir());
 
     try {
         globals.initLogger(context);
@@ -92,7 +91,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         await readConfigFromDisk();
     } catch (err) {
         globals.LOG.error(err);
-        ZoweExplorerExtender.showZoweConfigError(zoweDir);
+        ZoweExplorerExtender.showZoweConfigError(err.message);
     }
 
     // Initialize profile manager

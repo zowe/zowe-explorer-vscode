@@ -928,7 +928,7 @@ export class Profiles extends ProfilesCache {
             return newProfileName;
         } catch (error) {
             await errorHandling(error.message);
-            ZoweExplorerExtender.showZoweConfigError(getZoweDir());
+            ZoweExplorerExtender.showZoweConfigError(error.message);
         }
     }
 

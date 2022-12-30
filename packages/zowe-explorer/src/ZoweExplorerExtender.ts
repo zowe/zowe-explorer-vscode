@@ -48,10 +48,16 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
      * Shows an error when the Zowe configs are improperly configured, as well as
      * an option to show the config.
      *
-     * @param configPath The path where the Zowe configs are located
-     * @param profileType The type of profile, if using v1 configs
+     * @param errorDetails Details of the error (to be parsed for config name and path)
      */
-    public static async showZoweConfigError(configPath: string, profileType?: string) {
+    public static async showZoweConfigError(errorDetails: string) {
+        const errorContainsConfigPath = errorDetails.includes("Error parsing JSON in the file");
+        const configPath = errorContainsConfigPath
+            ? errorDetails.match(/Error parsing JSON in the file \'(.+?)\'/)[1]
+            : getZoweDir();
+        const profileType = errorDetails.includes("Error reading profile file")
+            ? errorDetails.match(/(?:.+)[\\/]{1,2}profiles[\\/]{1,2}(.+?)[\\/]{1,2}/)[1]
+            : undefined;
         vscode.window
             .showErrorMessage(
                 localize(
@@ -64,23 +70,27 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
                 if (selection === "Show Config") {
                     const configInfo = {
                         usingTeamConfig: true,
-                        location: path.join(configPath, "zowe.config.user.json"),
+                        location: errorContainsConfigPath ? configPath : path.join(configPath, "zowe.config.user.json"),
                     };
                     let uri: vscode.Uri;
-                    try {
-                        fs.statSync(configInfo.location);
-                    } catch (err) {
-                        configInfo.location = path.join(configPath, "zowe.config.json");
+                    if (!errorContainsConfigPath) {
                         try {
                             fs.statSync(configInfo.location);
                         } catch (err) {
-                            configInfo.usingTeamConfig = false;
+                            configInfo.location = path.join(configPath, "zowe.config.json");
+                            try {
+                                fs.statSync(configInfo.location);
+                            } catch (err) {
+                                configInfo.usingTeamConfig = false;
+                            }
                         }
                     }
                     if (configInfo.usingTeamConfig) {
                         uri = vscode.Uri.file(configInfo.location);
                     } else {
-                        uri = vscode.Uri.file(`${configPath}/profiles/${profileType}/${profileType}_meta.yaml`);
+                        uri = vscode.Uri.file(
+                            path.join(configPath, `/profiles/${profileType}/${profileType}_meta.yaml`)
+                        );
                     }
                     vscode.window.showTextDocument(uri);
                 }
@@ -161,7 +171,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
             if (error.toString().includes("Error parsing JSON")) {
                 usingTeamConfig = true;
             }
-            ZoweExplorerExtender.showZoweConfigError(zoweDir, profileType);
+            ZoweExplorerExtender.showZoweConfigError(error.message);
         }
 
         if (profileTypeConfigurations && !usingTeamConfig) {

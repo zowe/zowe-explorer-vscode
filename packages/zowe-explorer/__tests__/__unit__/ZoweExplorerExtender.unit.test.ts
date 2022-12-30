@@ -27,6 +27,7 @@ import { ZoweExplorerExtender } from "../../src/ZoweExplorerExtender";
 import { Profiles } from "../../src/Profiles";
 import * as path from "path";
 import * as fs from "fs";
+import { getZoweDir } from "@zowe/zowe-explorer-api";
 jest.mock("fs");
 
 const mocked = <T extends (...args: any[]) => any>(fn: T): jest.Mock<ReturnType<T>> => fn as any;
@@ -136,6 +137,7 @@ describe("ZoweExplorerExtender unit tests", () => {
                 v1: true,
             },
         ];
+        const zoweDir = getZoweDir();
         for (const userInput of userInputs) {
             blockMocks.mockErrorMessage.mockImplementationOnce((msg, ...items) => Promise.resolve(userInput.choice));
             if (userInput.fileChecks.length > 1) {
@@ -146,7 +148,11 @@ describe("ZoweExplorerExtender unit tests", () => {
                     throw new Error("Failed to find config json");
                 });
             }
-            await ZoweExplorerExtender.showZoweConfigError("TEST_CFG_PATH", "exampleType");
+            await ZoweExplorerExtender.showZoweConfigError(
+                userInput.v1
+                    ? "Error reading profile file 'TEST_CFG_PATH/profiles/exampleType/'"
+                    : "V2_PROFILE_EXAMPLE_ERR"
+            );
             expect(blockMocks.mockErrorMessage).toHaveBeenCalledWith(
                 'Error encountered when loading your Zowe config. Click "Show Config" for more details.',
                 "Show Config"
@@ -155,11 +161,11 @@ describe("ZoweExplorerExtender unit tests", () => {
                 expect(vscode.window.showTextDocument).not.toHaveBeenCalled();
             } else {
                 for (const fileName of userInput.fileChecks) {
-                    expect(blockMocks.mockStatSync).toHaveBeenCalledWith(path.join("TEST_CFG_PATH", fileName));
+                    expect(blockMocks.mockStatSync).toHaveBeenCalledWith(path.join(zoweDir, fileName));
                 }
                 if (userInput.v1) {
                     expect(vscode.Uri.file).toHaveBeenCalledWith(
-                        "TEST_CFG_PATH/profiles/exampleType/exampleType_meta.yaml"
+                        path.join(zoweDir, "profiles/exampleType/exampleType_meta.yaml")
                     );
                 }
                 expect(vscode.window.showTextDocument).toHaveBeenCalled();
