@@ -29,6 +29,7 @@ import * as globals from "../../src/globals";
 import * as zowe from "@zowe/cli";
 import { ProfilesCache } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../src/Profiles";
+import { ZoweExplorerExtender } from "../../src/ZoweExplorerExtender";
 
 // jest.mock("vscode");
 jest.mock("child_process");
@@ -351,6 +352,36 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
 
         await Profiles.getInstance().createNewConnection("fake", "zosmf");
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile fake was created.");
+        spy.mockClear();
+    });
+
+    it("Tests that createNewConnection throws an exception and shows a config error", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const mockSaveProfile = jest
+            .spyOn(ProfilesCache.prototype as any, "saveProfile")
+            .mockImplementationOnce(async (values, name, type) => {
+                throw new Error("saveProfile error");
+            });
+        const mockShowZoweConfigError = jest.spyOn(ZoweExplorerExtender, "showZoweConfigError").mockImplementation();
+
+        let spy = jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValue(blockMocks.testSchemas);
+        spy = jest.spyOn(globalMocks.mockProfileInstance, "urlInfo").mockReturnValue(globalMocks.mockUrlInfo);
+        spy = jest
+            .spyOn(globalMocks.mockProfileInstance, "userInfo")
+            .mockReturnValue(globalMocks.testProfile.profile.user);
+        spy = jest
+            .spyOn(globalMocks.mockProfileInstance, "passwordInfo")
+            .mockReturnValue(globalMocks.testProfile.profile.password);
+        spy = jest.spyOn(globalMocks.mockProfileInstance, "ruInfo").mockReturnValue(false);
+        const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
+
+        await Profiles.getInstance().createNewConnection("fake", "zosmf");
+        expect(mockSaveProfile).toHaveBeenCalled();
+        expect(globalMocks.mockShowInformationMessage).not.toHaveBeenCalled();
+        expect(errorHandlingSpy).toHaveBeenCalledWith("saveProfile error");
+        expect(mockShowZoweConfigError).toHaveBeenCalledWith("saveProfile error");
         spy.mockClear();
     });
 });
