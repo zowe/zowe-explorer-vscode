@@ -64,6 +64,7 @@ export class SettingsConfig {
         const reloadButton = localize("standardization.reload.button", "Reload Window");
         const infoMsg = localize(
             "standardization.reload.infoMessage",
+            // eslint-disable-next-line max-len
             "Settings have been successfully migrated for Zowe Explorer version 2 and above. To apply these settings, please reload your VS Code window."
         );
         await vscode.window.showInformationMessage(infoMsg, ...[reloadButton])?.then(async (selection) => {

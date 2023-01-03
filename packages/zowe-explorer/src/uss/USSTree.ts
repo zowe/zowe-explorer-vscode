@@ -760,7 +760,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                         "Error: You have Zowe USS favorites that refer to a non-existent CLI profile named: {0}",
                         profileName
                     ) +
-                    localize("intializeUSSFavorites.error.profile2", ". To resolve this, you can remove {0}", profileName) +
+                    localize("initializeUSSFavorites.error.profile2", ". To resolve this, you can remove {0}", profileName) +
                     localize(
                         "initializeUSSFavorites.error.profile3",
                         " from the Favorites section of Zowe Explorer's USS view. Would you like to do this now? ",

@@ -1297,6 +1297,7 @@ export class Profiles extends ProfilesCache {
                 const createButton = localize("checkExistingConfig.createNew.button", "Create New");
                 const message = localize(
                     "checkExistingConfig.createNew.message",
+                    // eslint-disable-next-line max-len
                     `A Team Configuration File already exists in this location\n{0}\nContinuing may alter the existing file, would you like to proceed?`,
                     file.path
                 );

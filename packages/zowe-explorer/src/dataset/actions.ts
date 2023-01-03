@@ -263,6 +263,7 @@ export async function deleteDatasetPrompt(datasetProvider: api.IZoweTree<api.IZo
     const deleteButton = localize("deleteDatasetPrompt.confirmation.delete", "Delete");
     const message = localize(
         "deleteDatasetPrompt.confirmation.message",
+        // eslint-disable-next-line max-len
         `Are you sure you want to delete the following {0} item(s)?\nThis will permanently remove these data sets and/or members from your system.\n\n{1}`,
         nodesToDelete.length,
         nodesToDelete.toString().replace(/(,)/g, "\n")

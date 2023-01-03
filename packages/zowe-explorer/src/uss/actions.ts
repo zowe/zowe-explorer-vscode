@@ -77,6 +77,7 @@ export async function createUSSNode(node: IZoweUSSTreeNode, ussFileProvider: IZo
                 vscode.window.showInformationMessage(
                     localize(
                         "createUSSNode.name.exists",
+                        // eslint-disable-next-line max-len
                         "There is already a file with the same name. Please change your OS file system settings if you want to give case sensitive file names."
                     )
                 );

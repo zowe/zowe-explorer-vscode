@@ -27,8 +27,6 @@ nls.config({
 })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
-const HTTP_UNAUTHORIZED = 401;
-
 /*************************************************************************************************************
  * Error Handling
  * @param {errorDetails} error.mDetails
@@ -69,7 +67,7 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
     }
 
     switch (httpErrCode) {
-        case HTTP_UNAUTHORIZED:
+        case imperative.RestConstants.HTTP_STATUS_401:
             if (label.includes("[")) {
                 label = label.substring(0, label.indexOf(" [")).trim();
             }
