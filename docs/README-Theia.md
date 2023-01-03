@@ -49,7 +49,7 @@ As the default Theia Docker image does not include the VS Code Plugin extension 
 1. Make sure are not running any other Theia app anymore or change the mapped port in the command. Then run this command to download the image and start a container
 
    ```bash
-   docker run -it --init -p 3000:3000 theiaide/theia-full:next --plugins=local-dir:/home/theia/plugins
+   docker run -it --init -p 3000:3000 t1m0thyj/theia-alpine --plugins=local-dir:/home/theia/plugins
    ```
 
 1. Open a Web browser and navigate to <http://localhost:3000>.
@@ -57,18 +57,10 @@ As the default Theia Docker image does not include the VS Code Plugin extension 
 1. At the moment the Zowe Explorer is not included, yet. You can update the docker container by copying the extension into the container:
 
    ```bash
-   docker cp ~/Downloads/Zowe.vscode-extension-for-zowe-0.29.0.vsix ${container-id}:/home/theia
+   docker cp dist/vscode-extension-for-zowe-X.Y.Z.vsix ${container-id}:/home/theia/plugins
    ```
 
    Replace `${container-id}` with the actual container id and adjust for your OS.
-
-1. And then move it in the right place as root:
-
-   ```bash
-   $ docker exec -u 0 -it ${container-id} bash
-   # mkdir plugins
-   # mv Zowe.vscode-extension-for-zowe-0.29.0.vsix plugins
-   ```
 
 1. Then stop and start the container and reload your browser.
 
