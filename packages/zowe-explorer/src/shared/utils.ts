@@ -33,6 +33,19 @@ nls.config({
 })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
+export enum JobSubmitDialogOpts {
+    Disabled,
+    YourJobs,
+    OtherUserJobs,
+    AllJobs,
+}
+export const JOB_SUBMIT_DIALOG_OPTS = [
+    localize("zowe.jobs.confirmSubmission.disabled", "Disabled"),
+    localize("zowe.jobs.confirmSubmission.yourJobs", "Your jobs"),
+    localize("zowe.jobs.confirmSubmission.otherUserJobs", "Other user jobs"),
+    localize("zowe.jobs.confirmSubmission.allJobs", "All jobs"),
+];
+
 export function filterTreeByString(value: string, treeItems: vscode.QuickPickItem[]): vscode.QuickPickItem[] {
     const filteredArray = [];
     value = value.toUpperCase().replace(".", ".").replace(/\*/g, "(.*)");

@@ -17,7 +17,14 @@ import * as globals from "../globals";
 import * as path from "path";
 import * as api from "@zowe/zowe-explorer-api";
 import { FilterItem, errorHandling, resolveQuickPickHelper } from "../utils/ProfilesUtils";
-import { getDocumentFilePath, concatChildNodes, checkForAddedSuffix, willForceUpload } from "../shared/utils";
+import {
+    checkForAddedSuffix,
+    concatChildNodes,
+    getDocumentFilePath,
+    JobSubmitDialogOpts,
+    JOB_SUBMIT_DIALOG_OPTS,
+    willForceUpload,
+} from "../shared/utils";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Profiles } from "../Profiles";
 import { getIconByNode } from "../generators/icons";
@@ -25,7 +32,6 @@ import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { DatasetTree } from "./DatasetTree";
 import * as contextually from "../shared/context";
 import { setFileSaved } from "../utils/workspace";
-import { UIViews } from "../shared/ui-views";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 
 // Set up localization
@@ -984,18 +990,18 @@ export async function submitMember(node: api.IZoweTreeNode) {
         return selection != null && selection?.title === "Submit";
     };
 
-    if (confirmationOption !== "Disabled") {
+    if (confirmationOption !== JOB_SUBMIT_DIALOG_OPTS[JobSubmitDialogOpts.Disabled]) {
         const ownsJob = datasetName.split(".")[0] === nodeProfile.profile?.user?.toUpperCase();
         if (confirmationOption === "All jobs") {
             if (!(await showConfirmationDialog())) {
                 return;
             }
         } else {
-            if (!ownsJob && confirmationOption === "Other user jobs") {
+            if (!ownsJob && confirmationOption === JOB_SUBMIT_DIALOG_OPTS[JobSubmitDialogOpts.OtherUserJobs]) {
                 if (!(await showConfirmationDialog())) {
                     return;
                 }
-            } else if (ownsJob && confirmationOption === "Your jobs") {
+            } else if (ownsJob && confirmationOption === JOB_SUBMIT_DIALOG_OPTS[JobSubmitDialogOpts.YourJobs]) {
                 if (!(await showConfirmationDialog())) {
                     return;
                 }

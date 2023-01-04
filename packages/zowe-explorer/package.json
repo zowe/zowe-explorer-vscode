@@ -1714,16 +1714,16 @@
           "type": "string",
           "default": "All jobs",
           "enum": [
-            "Disabled",
-            "Your jobs",
-            "Other user jobs",
-            "All jobs"
+            "%zowe.jobs.confirmSubmission.disabled%",
+            "%zowe.jobs.confirmSubmission.yourJobs%",
+            "%zowe.jobs.confirmSubmission.otherUserJobs%",
+            "%zowe.jobs.confirmSubmission.allJobs%"
           ],
           "enumDescriptions": [
-            "No confirmation dialogs will be shown when submitting a job.",
-            "Shows a confirmation dialog when submitting your jobs.",
-            "Shows a confirmation dialog when submitting jobs from another user.",
-            "Shows a confirmation dialog when submitting any job."
+            "%zowe.jobs.confirmSubmission.disabled.desc%",
+            "%zowe.jobs.confirmSubmission.yourJobs.desc%",
+            "%zowe.jobs.confirmSubmission.otherUserJobs.desc%",
+            "%zowe.jobs.confirmSubmission.allJobs.desc%"
           ],
           "description": "%zowe.jobs.confirmSubmission%",
           "scope": "window"

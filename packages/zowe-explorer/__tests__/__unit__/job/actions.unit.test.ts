@@ -36,7 +36,7 @@ import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/
 import { Profiles } from "../../../src/Profiles";
 import * as SpoolProvider from "../../../src/SpoolProvider";
 import * as refreshActions from "../../../src/shared/refresh";
-import { UIViews } from "../../../src/shared/ui-views";
+import { JobSubmitDialogOpts, JOB_SUBMIT_DIALOG_OPTS } from "../../../src/shared/utils";
 
 const activeTextEditorDocument = jest.fn();
 
@@ -689,7 +689,6 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
 
     it("has proper Submit Job output for all confirmation dialog options", async () => {
         createGlobalMocks();
-        const dialogOptions = ["Disabled", "Your jobs", "Other user jobs", "All jobs"];
 
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
@@ -701,17 +700,17 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         );
         dataset.contextValue = globals.DS_DS_CONTEXT;
 
-        for (let o = 0; o < dialogOptions.length; o++) {
-            const option = dialogOptions[o];
+        for (let o = 0; o < JOB_SUBMIT_DIALOG_OPTS.length; o++) {
+            const option = JOB_SUBMIT_DIALOG_OPTS[o];
             Object.defineProperty(vscode.workspace, "getConfiguration", {
                 value: jest.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", option]])),
                 configurable: true,
             });
 
-            if (option === "Disabled") {
+            if (option === JOB_SUBMIT_DIALOG_OPTS[JobSubmitDialogOpts.Disabled]) {
                 await dsActions.submitMember(dataset);
                 expect(mocked(vscode.window.showWarningMessage)).not.toHaveBeenCalled();
-            } else if (option === "Other user jobs") {
+            } else if (option === JOB_SUBMIT_DIALOG_OPTS[JobSubmitDialogOpts.OtherUserJobs]) {
                 dataset.label = "OTHERUSER.DATASET";
                 mocked(vscode.window.showWarningMessage).mockResolvedValueOnce({ title: "Submit" });
                 await dsActions.submitMember(dataset);
@@ -720,7 +719,10 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
                     { modal: true },
                     { title: "Submit" }
                 );
-            } else if (option === "All jobs" || option === "Your jobs") {
+            } else if (
+                option === JOB_SUBMIT_DIALOG_OPTS[JobSubmitDialogOpts.AllJobs] ||
+                option === JOB_SUBMIT_DIALOG_OPTS[JobSubmitDialogOpts.YourJobs]
+            ) {
                 dataset.label = "TESTUSER.DATASET";
                 mocked(vscode.window.showWarningMessage).mockResolvedValueOnce({ title: "Submit" });
                 await dsActions.submitMember(dataset);
