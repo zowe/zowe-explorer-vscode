@@ -1711,8 +1711,20 @@
           "scope": "application"
         },
         "zowe.jobs.confirmSubmission": {
-          "type": "boolean",
-          "default": false,
+          "type": "string",
+          "default": "All jobs",
+          "enum": [
+            "Disabled",
+            "Your jobs",
+            "Other user jobs",
+            "All jobs"
+          ],
+          "enumDescriptions": [
+            "No confirmation dialogs will be shown when submitting a job.",
+            "Shows a confirmation dialog when submitting your jobs.",
+            "Shows a confirmation dialog when submitting jobs from another user.",
+            "Shows a confirmation dialog when submitting any job."
+          ],
           "description": "%zowe.jobs.confirmSubmission%",
           "scope": "window"
         },

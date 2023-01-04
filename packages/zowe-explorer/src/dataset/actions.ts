@@ -961,9 +961,16 @@ export async function submitMember(node: api.IZoweTreeNode) {
     let sesName: string;
     let sessProfile: zowe.imperative.IProfileLoaded;
     const profiles = Profiles.getInstance();
-    await profiles.checkCurrentProfile(node.getProfile());
+    const nodeProfile = node.getProfile();
+    await profiles.checkCurrentProfile(nodeProfile);
 
-    if (vscode.workspace.getConfiguration().get("zowe.jobs.confirmSubmission") === true) {
+    const datasetName =
+        contextually.isDs(node) && !contextually.isPds(node)
+            ? node.getLabel().toString()
+            : node.getParent().getLabel().toString();
+    const confirmationOption = vscode.workspace.getConfiguration().get("zowe.jobs.confirmSubmission");
+
+    const showConfirmationDialog = async () => {
         const selection = await vscode.window.showWarningMessage(
             localize(
                 "submitMember.confirm",
@@ -974,10 +981,28 @@ export async function submitMember(node: api.IZoweTreeNode) {
             { title: "Submit" }
         );
 
-        if (selection == null || selection?.title !== "Submit") {
-            return;
+        return selection != null && selection?.title === "Submit";
+    };
+
+    if (confirmationOption !== "Disabled") {
+        const ownsJob = datasetName.split(".")[0] === nodeProfile.profile?.user?.toUpperCase();
+        if (confirmationOption === "All jobs") {
+            if (!(await showConfirmationDialog())) {
+                return;
+            }
+        } else {
+            if (!ownsJob && confirmationOption === "Other user jobs") {
+                if (!(await showConfirmationDialog())) {
+                    return;
+                }
+            } else if (ownsJob && confirmationOption === "Your jobs") {
+                if (!(await showConfirmationDialog())) {
+                    return;
+                }
+            }
         }
     }
+
     if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
         switch (true) {
             // For favorited or non-favorited sequential DS:
