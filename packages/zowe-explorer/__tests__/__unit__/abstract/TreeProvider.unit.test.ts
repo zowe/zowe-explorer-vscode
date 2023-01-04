@@ -26,7 +26,7 @@ import { createUSSTree } from "../../../src/uss/USSTree";
 import { createIJobObject } from "../../../__mocks__/mockCreators/jobs";
 import { Job } from "../../../src/job/ZoweJobNode";
 import { createJobsTree } from "../../../src/job/ZosJobsProvider";
-import { PersistentFilters } from "../../../src/PersistentFilters";
+import { SettingsConfig } from "../../../src/utils/SettingsConfig";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -119,7 +119,7 @@ async function createGlobalMocks() {
         }),
         configurable: true,
     });
-    Object.defineProperty(PersistentFilters, "getDirectValue", {
+    Object.defineProperty(SettingsConfig, "getDirectValue", {
         value: jest.fn(() => {
             return {
                 "zowe.automaticProfileValidation": true,

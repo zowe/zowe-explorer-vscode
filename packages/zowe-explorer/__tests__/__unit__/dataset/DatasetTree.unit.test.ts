@@ -41,6 +41,7 @@ import { bindMvsApi, createMvsApi } from "../../../__mocks__/mockCreators/api";
 import * as workspaceUtils from "../../../src/utils/workspace";
 import { PersistentFilters } from "../../../src/PersistentFilters";
 import * as dsUtils from "../../../src/dataset/utils";
+import { SettingsConfig } from "../../../src/utils/SettingsConfig";
 
 jest.mock("fs");
 jest.mock("util");
@@ -107,7 +108,7 @@ function createGlobalMocks() {
         }),
         configurable: true,
     });
-    Object.defineProperty(PersistentFilters, "getDirectValue", {
+    Object.defineProperty(SettingsConfig, "getDirectValue", {
         value: jest.fn(() => {
             return {
                 "zowe.automaticProfileValidation": true,

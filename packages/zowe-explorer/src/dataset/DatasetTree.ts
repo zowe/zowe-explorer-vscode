@@ -32,9 +32,9 @@ import * as fs from "fs";
 import * as contextually from "../shared/context";
 import { resetValidationSettings } from "../shared/actions";
 import { closeOpenedTextFile } from "../utils/workspace";
-import { PersistentFilters } from "../PersistentFilters";
 import { IDataSet, IListOptions, imperative } from "@zowe/cli";
 import { validateDataSetName, validateMemberName } from "./utils";
+import { SettingsConfig } from "../utils/SettingsConfig";
 
 // Set up localization
 nls.config({
@@ -445,7 +445,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * @param {string} [profileType] - optional; loads profiles of a certain type if passed
      */
     public async addSession(sessionName?: string, profileType?: string) {
-        const setting = PersistentFilters.getDirectValue(globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION) as boolean;
+        const setting = SettingsConfig.getDirectValue(globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION) as boolean;
         // Loads profile associated with passed sessionName, default if none passed
         if (sessionName) {
             const profile: imperative.IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
@@ -746,13 +746,13 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     public async onDidChangeConfiguration(e) {
         // Empties the persistent favorites & history arrays, if the user has set persistence to False
         if (e.affectsConfiguration(DatasetTree.persistenceSchema)) {
-            const setting: any = { ...vscode.workspace.getConfiguration().get(DatasetTree.persistenceSchema) };
+            const setting: any = {
+                ...SettingsConfig.getDirectValue(DatasetTree.persistenceSchema),
+            };
             if (!setting.persistence) {
                 setting.favorites = [];
                 setting.history = [];
-                await vscode.workspace
-                    .getConfiguration()
-                    .update(DatasetTree.persistenceSchema, setting, vscode.ConfigurationTarget.Global);
+                await SettingsConfig.setDirectValue(DatasetTree.persistenceSchema, setting);
             }
         }
     }

@@ -17,6 +17,7 @@ import {
     workspaceUtilFileSaveInterval,
     workspaceUtilFileSaveMaxIterationCount,
 } from "../config/constants";
+import * as globals from "../globals";
 
 interface IExtTextEditor extends vscode.TextEditor {
     id: string;

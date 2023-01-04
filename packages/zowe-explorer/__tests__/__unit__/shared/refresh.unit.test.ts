@@ -11,7 +11,6 @@
 
 import * as vscode from "vscode";
 import { ValidProfileEnum } from "@zowe/zowe-explorer-api";
-import { PersistentFilters } from "../../../src/PersistentFilters";
 import { Profiles } from "../../../src/Profiles";
 import {
     createInstanceOfProfile,
@@ -25,6 +24,7 @@ import * as refreshActions from "../../../src/shared/refresh";
 import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
 import * as globals from "../../../src/globals";
 import * as sessUtils from "../../../src/utils/SessionUtils";
+import { SettingsConfig } from "../../../src/utils/SettingsConfig";
 
 function createGlobalMocks() {
     const globalMocks = {
@@ -72,7 +72,7 @@ function createGlobalMocks() {
         configurable: true,
     });
 
-    Object.defineProperty(PersistentFilters, "getDirectValue", {
+    Object.defineProperty(SettingsConfig, "getDirectValue", {
         value: jest.fn(() => {
             return {
                 "zowe.automaticProfileValidation": true,
@@ -119,7 +119,7 @@ describe("Refresh Unit Tests - Function refreshAll", () => {
         newMocks.testDatasetTree = createDatasetTree(newMocks.datasetSessionNode, newMocks.treeView);
         newMocks.testDatasetTree.mSessionNodes.push(newMocks.datasetSessionNode);
 
-        Object.defineProperty(PersistentFilters, "getDirectValue", {
+        Object.defineProperty(SettingsConfig, "getDirectValue", {
             value: jest.fn(() => {
                 return {
                     "zowe.automaticProfileValidation": true,

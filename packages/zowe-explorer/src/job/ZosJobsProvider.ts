@@ -28,10 +28,10 @@ import { getAppName, sortTreeItems, labelRefresh } from "../shared/utils";
 import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
 import { getIconByNode } from "../generators/icons";
 import * as contextually from "../shared/context";
+import { resetValidationSettings } from "../shared/actions";
+import { SettingsConfig } from "../utils/SettingsConfig";
 
 import * as nls from "vscode-nls";
-import { resetValidationSettings } from "../shared/actions";
-import { PersistentFilters } from "../PersistentFilters";
 // Set up localization
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
@@ -221,7 +221,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      * @param {string} [profileType] - optional; loads profiles of a certain type if passed
      */
     public async addSession(sessionName?: string, profileType?: string) {
-        const setting = PersistentFilters.getDirectValue(globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION) as boolean;
+        const setting = SettingsConfig.getDirectValue(globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION) as boolean;
         // Loads profile associated with passed sessionName, default if none passed
         if (sessionName) {
             const theProfile: imperative.IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
@@ -837,13 +837,13 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
 
     public async onDidChangeConfiguration(e: vscode.ConfigurationChangeEvent) {
         if (e.affectsConfiguration(ZosJobsProvider.persistenceSchema)) {
-            const setting: any = { ...vscode.workspace.getConfiguration().get(ZosJobsProvider.persistenceSchema) };
+            const setting: any = {
+                ...SettingsConfig.getDirectValue(ZosJobsProvider.persistenceSchema),
+            };
             if (!setting.persistence) {
                 setting.favorites = [];
                 setting.history = [];
-                await vscode.workspace
-                    .getConfiguration()
-                    .update(ZosJobsProvider.persistenceSchema, setting, vscode.ConfigurationTarget.Global);
+                await SettingsConfig.setDirectValue(ZosJobsProvider.persistenceSchema, setting);
             }
         }
     }
