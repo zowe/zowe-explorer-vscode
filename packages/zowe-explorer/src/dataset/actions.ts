@@ -957,25 +957,13 @@ export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetT
 }
 
 /**
- * Submit the selected dataset member as a Job.
+ * Shows a confirmation dialog (if needed) when submitting a job.
  *
- * @export
- * @param node The dataset member
+ * @param node The node/member that is being submitted
+ * @param ownsJob Whether the current user profile owns this job
+ * @returns Whether the job submission should continue.
  */
-export async function submitMember(node: api.IZoweTreeNode) {
-    let label: string;
-    let sesName: string;
-    let sessProfile: zowe.imperative.IProfileLoaded;
-    const profiles = Profiles.getInstance();
-    const nodeProfile = node.getProfile();
-    await profiles.checkCurrentProfile(nodeProfile);
-
-    const datasetName =
-        contextually.isDs(node) && !contextually.isPds(node)
-            ? node.getLabel().toString()
-            : node.getParent().getLabel().toString();
-    const confirmationOption: string = vscode.workspace.getConfiguration().get("zowe.jobs.confirmSubmission");
-
+async function confirmJobSubmission(node: api.IZoweTreeNode, ownsJob: boolean): Promise<boolean> {
     const showConfirmationDialog = async () => {
         const selection = await vscode.window.showWarningMessage(
             localize(
@@ -990,26 +978,52 @@ export async function submitMember(node: api.IZoweTreeNode) {
         return selection != null && selection?.title === "Submit";
     };
 
-    const ownsJob = datasetName.split(".")[0] === nodeProfile.profile?.user?.toUpperCase();
+    const confirmationOption: string = vscode.workspace.getConfiguration().get("zowe.jobs.confirmSubmission");
     switch (JOB_SUBMIT_DIALOG_OPTS.indexOf(confirmationOption)) {
         case JobSubmitDialogOpts.OtherUserJobs:
             if (!ownsJob && !(await showConfirmationDialog())) {
-                return;
+                return false;
             }
             break;
         case JobSubmitDialogOpts.YourJobs:
             if (ownsJob && !(await showConfirmationDialog())) {
-                return;
+                return false;
             }
             break;
         case JobSubmitDialogOpts.AllJobs:
             if (!(await showConfirmationDialog())) {
-                return;
+                return false;
             }
             break;
         case JobSubmitDialogOpts.Disabled:
         default:
             break;
+    }
+
+    return true;
+}
+
+/**
+ * Submit the selected dataset member as a Job.
+ *
+ * @export
+ * @param node The dataset member
+ */
+export async function submitMember(node: api.IZoweTreeNode) {
+    let label: string;
+    let sesName: string;
+    let sessProfile: zowe.imperative.IProfileLoaded;
+    const profiles = Profiles.getInstance();
+    const nodeProfile = node.getProfile();
+    await profiles.checkCurrentProfile(nodeProfile);
+
+    const datasetName = contextually.isDsMember(node)
+        ? node.getParent().getLabel().toString()
+        : node.getLabel().toString();
+    const ownsJob = datasetName.split(".")[0] === nodeProfile.profile?.user?.toUpperCase();
+
+    if (!(await confirmJobSubmission(node, ownsJob))) {
+        return;
     }
 
     if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
