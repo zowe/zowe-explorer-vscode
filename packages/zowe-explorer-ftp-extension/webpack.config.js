@@ -60,6 +60,29 @@ const config = {
     module: {
         rules: [
             {
+                test: /\.js$/,
+                include: /node_modules\/@zowe\/imperative\/node_modules\/openid-client/,
+                use: {
+                    loader: "babel-loader",
+                    options: {
+                        presets: [
+                            [
+                                "@babel/preset-env",
+                                {
+                                    targets: { node: "current" },
+                                },
+                            ],
+                            "@babel/preset-typescript",
+                        ],
+                        plugins: [
+                            "@babel/plugin-proposal-private-methods",
+                            "@babel/plugin-proposal-class-properties",
+                            "@babel/plugin-proposal-object-rest-spread",
+                        ],
+                    },
+                },
+            },
+            {
                 test: /\.ts$/,
                 exclude: /node_modules/,
                 use: [
