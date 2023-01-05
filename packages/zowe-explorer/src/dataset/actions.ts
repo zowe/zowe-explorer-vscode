@@ -974,7 +974,7 @@ export async function submitMember(node: api.IZoweTreeNode) {
         contextually.isDs(node) && !contextually.isPds(node)
             ? node.getLabel().toString()
             : node.getParent().getLabel().toString();
-    const confirmationOption = vscode.workspace.getConfiguration().get("zowe.jobs.confirmSubmission");
+    const confirmationOption: string = vscode.workspace.getConfiguration().get("zowe.jobs.confirmSubmission");
 
     const showConfirmationDialog = async () => {
         const selection = await vscode.window.showWarningMessage(
@@ -990,23 +990,24 @@ export async function submitMember(node: api.IZoweTreeNode) {
         return selection != null && selection?.title === "Submit";
     };
 
-    if (confirmationOption !== JOB_SUBMIT_DIALOG_OPTS[JobSubmitDialogOpts.Disabled]) {
-        const ownsJob = datasetName.split(".")[0] === nodeProfile.profile?.user?.toUpperCase();
-        if (confirmationOption === "All jobs") {
+    const ownsJob = datasetName.split(".")[0] === nodeProfile.profile?.user?.toUpperCase();
+    switch (JOB_SUBMIT_DIALOG_OPTS.indexOf(confirmationOption)) {
+        case JobSubmitDialogOpts.OtherUserJobs:
+            if (!ownsJob && !(await showConfirmationDialog())) {
+                return;
+            }
+        case JobSubmitDialogOpts.YourJobs:
+            if (ownsJob && !(await showConfirmationDialog())) {
+                return;
+            }
+        case JobSubmitDialogOpts.AllJobs:
             if (!(await showConfirmationDialog())) {
                 return;
             }
-        } else {
-            if (!ownsJob && confirmationOption === JOB_SUBMIT_DIALOG_OPTS[JobSubmitDialogOpts.OtherUserJobs]) {
-                if (!(await showConfirmationDialog())) {
-                    return;
-                }
-            } else if (ownsJob && confirmationOption === JOB_SUBMIT_DIALOG_OPTS[JobSubmitDialogOpts.YourJobs]) {
-                if (!(await showConfirmationDialog())) {
-                    return;
-                }
-            }
-        }
+            break;
+        case JobSubmitDialogOpts.Disabled:
+        default:
+            break;
     }
 
     if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
