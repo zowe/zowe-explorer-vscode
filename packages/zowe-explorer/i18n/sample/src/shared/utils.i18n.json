@@ -6,5 +6,6 @@
   "saveFile.info.confirmUpload": "Would you like to overwrite the remote file?",
   "saveFile.overwriteConfirmation.yes": "Yes",
   "saveFile.overwriteConfirmation.no": "No",
-  "uploadContent.cancelled": "Upload cancelled."
+  "uploadContent.cancelled": "Upload cancelled.",
+  "searchJobs.prefix.invalid": "Invalid job prefix"
 }
