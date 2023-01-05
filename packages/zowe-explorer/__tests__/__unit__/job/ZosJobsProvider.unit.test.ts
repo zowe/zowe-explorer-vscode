@@ -32,6 +32,7 @@ import {
 import { getIconByNode } from "../../../src/generators/icons";
 import { createJesApi } from "../../../__mocks__/mockCreators/api";
 import * as sessUtils from "../../../src/utils/SessionUtils";
+import { jobPrefixValidator } from "../../../src/shared/utils";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -751,6 +752,45 @@ describe("ZosJobsProvider unit tests - Function getUserSearchQueryInput", () => 
         expect(handleSearchByJobId).not.toHaveBeenCalled();
         expect(result).toEqual(undefined);
     });
+    it("tests handleEditingMultiJobParameters default case", async () => {
+        globalMocks.mockShowQuickPick.mockReturnValueOnce({ label: "Job Prefix" });
+        mocked(vscode.window.showInputBox).mockImplementation((options) => {
+            options.value = "test";
+            options.validateInput("test");
+            return Promise.resolve("test");
+        });
+        const jobProps = [
+            {
+                key: `owner`,
+                label: `Job Owner`,
+                value: "owner",
+                show: true,
+                placeHolder: `enter placeholder`,
+            },
+            {
+                key: `prefix`,
+                label: `Job Prefix`,
+                value: "job*",
+                show: true,
+                placeHolder: `Enter job prefix`,
+                validateInput: () => (text) => jobPrefixValidator(text),
+            },
+            {
+                key: `key`,
+                label: `label`,
+                value: "value",
+                show: false,
+                placeHolder: `placeholder`,
+            },
+        ];
+
+        expect(
+            await globalMocks.testJobsProvider.handleEditingMultiJobParameters(
+                jobProps,
+                globalMocks.testJobsProvider.mSessionNodes[0]
+            )
+        ).toEqual(undefined);
+    });
 });
 
 describe("ZosJobsProvider unit tests - Function getPopulatedPickerArray", () => {
@@ -778,6 +818,7 @@ describe("ZosJobsProvider unit tests - Function getPopulatedPickerArray", () => 
                 value: "job*",
                 show: true,
                 placeHolder: `Enter job prefix`,
+                validateInput: () => (text) => jobPrefixValidator(text),
             },
             {
                 key: `job-status`,
@@ -787,6 +828,15 @@ describe("ZosJobsProvider unit tests - Function getPopulatedPickerArray", () => 
                 placeHolder: `Enter job status`,
             },
         ];
-        expect(actualPickerObj).toEqual(expectedObj);
+        expect(JSON.stringify(actualPickerObj)).toEqual(JSON.stringify(expectedObj));
+    });
+});
+
+describe("Jobs utils unit tests - Function jobPrefixValidator", () => {
+    it("should return null with correct input", async () => {
+        expect(jobPrefixValidator("job*")).toBeNull();
+    });
+    it("should return invalid string with invalid input", async () => {
+        expect(jobPrefixValidator("job1234567*")).toContain("Invalid");
     });
 });

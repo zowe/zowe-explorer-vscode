@@ -94,6 +94,7 @@ export const DS_NAME_REGEX_CHECK = /^[a-zA-Z#@\$][a-zA-Z0-9#@\$\-]{0,7}(\.[a-zA-
 export const MEMBER_NAME_REGEX_CHECK = /^[a-zA-Z#@\$][a-zA-Z0-9#@\$]{0,7}$/;
 export let ACTIVATED = false;
 export let PROFILE_SECURITY: string | boolean = ZOWE_CLI_SCM;
+export const JOBS_MAX_PREFIX = 8;
 
 export enum CreateDataSetTypeWithKeysEnum {
     DATA_SET_BINARY,
