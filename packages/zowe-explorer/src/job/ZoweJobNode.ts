@@ -252,10 +252,8 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
             } else {
                 return `${this.job.jobname}(${this.job.jobid})`;
             }
-        } else if (this.searchId.length > 0) {
-            return `${this.label} - job id: ${this.searchId}`;
         } else {
-            return `${this.label} - owner: ${this.owner} prefix: ${this.prefix}`;
+            return this.label;
         }
     }
 
