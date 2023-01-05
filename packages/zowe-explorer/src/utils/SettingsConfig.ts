@@ -10,7 +10,6 @@
  */
 
 import * as vscode from "vscode";
-import * as semver from "semver";
 import * as globals from "../globals";
 import * as nls from "vscode-nls";
 
@@ -24,15 +23,24 @@ export class SettingsConfig {
     /**
      * Retrieves a generic setting either in user or workspace.
      * <pre>{@code
-     *  SettingsConfig.getDirectValue("zowe.commands.alwaysEdit") as boolean;
+     *  SettingsConfig.getDirectValue<boolean>("zowe.commands.alwaysEdit");
      * }</pre>
-     * @param key - string. The attribute value that needs retrieving
+     * @param {string} key - The config property that needs retrieving
      */
     public static getDirectValue<T>(key: string): T {
         const [first, ...rest] = key.split(".");
         return vscode.workspace.getConfiguration(first).get(rest.join("."));
     }
 
+    /**
+     * Updates a generic setting either in user or workspace.
+     * <pre>{@code
+     *  SettingsConfig.setDirectValue("zowe.commands.alwaysEdit", true);
+     * }</pre>
+     * @param {string} key - The config property that needs updating
+     * @param {any} value - The value to assign for the config property
+     * @param target - VS Code configuration target (global or workspace)
+     */
     public static setDirectValue(
         key: string,
         value: any,

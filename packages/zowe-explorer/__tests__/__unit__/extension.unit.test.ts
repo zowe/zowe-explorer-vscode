@@ -20,7 +20,12 @@ import * as globals from "../../src/globals";
 import { ValidProfileEnum, ProfilesCache } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../src/Profiles";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
-import { createInstanceOfProfileInfo, createIProfile, createTreeView } from "../../__mocks__/mockCreators/shared";
+import {
+    createGetConfigMock,
+    createInstanceOfProfileInfo,
+    createIProfile,
+    createTreeView,
+} from "../../__mocks__/mockCreators/shared";
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
 import { getSelectedNodeList } from "../../src/shared/utils";
 import { SettingsConfig } from "../../src/utils/SettingsConfig";
@@ -342,10 +347,8 @@ async function createGlobalMocks() {
         value: jest.fn(() => globalMocks.testProfileOps),
     });
     Object.defineProperty(SettingsConfig, "getDirectValue", {
-        value: jest.fn(() => {
-            return {
-                "zowe.automaticProfileValidation": true,
-            };
+        value: createGetConfigMock({
+            "zowe.automaticProfileValidation": true,
         }),
     });
     Object.defineProperty(globalMocks.mockProfilesCache, "getProfileInfo", {
@@ -428,11 +431,7 @@ describe("Extension Unit Tests", () => {
         globalMocks.mockGetConfiguration.mockReturnValue({
             persistence: true,
             get: (setting: string) => "",
-            // tslint:disable-next-line: no-empty
-            update: jest.fn(() => {
-                {
-                }
-            }),
+            update: jest.fn(),
             inspect: (configuration: string) => {
                 return {
                     workspaceValue: undefined,
@@ -477,27 +476,10 @@ describe("Extension Unit Tests", () => {
         globalMocks.mockExistsSync.mockReset();
         globalMocks.mockReaddirSync.mockReset();
         globalMocks.mockExistsSync.mockReturnValueOnce(false);
-        globalMocks.mockGetConfiguration.mockReturnValueOnce({
-            get: (setting: string) => "theia",
-            // tslint:disable-next-line: no-empty
-            update: jest.fn(() => {
-                {
-                }
-            }),
-            inspect: (configuration: string) => {
-                return {
-                    workspaceValue: undefined,
-                    globalValue: undefined,
-                };
-            },
-        });
-        globalMocks.mockGetConfiguration.mockReturnValueOnce({
-            get: (setting: string) => "files",
-            // tslint:disable-next-line: no-empty
-            update: jest.fn(() => {
-                {
-                }
-            }),
+        globalMocks.mockGetConfiguration.mockReturnValue({
+            persistence: true,
+            get: (setting: string) => "",
+            update: jest.fn(),
             inspect: (configuration: string) => {
                 return {
                     workspaceValue: undefined,

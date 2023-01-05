@@ -16,6 +16,7 @@ import {
     createISession,
     createFileResponse,
     createInstanceOfProfileInfo,
+    createGetConfigMock,
 } from "../../../__mocks__/mockCreators/shared";
 import { createUSSSessionNode } from "../../../__mocks__/mockCreators/uss";
 import { ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
@@ -120,10 +121,8 @@ async function createGlobalMocks() {
         configurable: true,
     });
     Object.defineProperty(SettingsConfig, "getDirectValue", {
-        value: jest.fn(() => {
-            return {
-                "zowe.automaticProfileValidation": true,
-            };
+        value: createGetConfigMock({
+            "zowe.automaticProfileValidation": true,
         }),
     });
 

@@ -31,6 +31,7 @@ import {
     createPersistentConfig,
     createValidIProfile,
     createInstanceOfProfileInfo,
+    createGetConfigMock,
 } from "../../../__mocks__/mockCreators/shared";
 import {
     createDatasetSessionNode,
@@ -109,10 +110,8 @@ function createGlobalMocks() {
         configurable: true,
     });
     Object.defineProperty(SettingsConfig, "getDirectValue", {
-        value: jest.fn(() => {
-            return {
-                "zowe.automaticProfileValidation": true,
-            };
+        value: createGetConfigMock({
+            "zowe.automaticProfileValidation": true,
         }),
     });
     Object.defineProperty(globalMocks.mockProfilesCache, "getConfigInstance", {

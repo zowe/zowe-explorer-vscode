@@ -13,6 +13,7 @@ import * as vscode from "vscode";
 import { ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../src/Profiles";
 import {
+    createGetConfigMock,
     createInstanceOfProfile,
     createIProfile,
     createISessionWithoutCredentials,
@@ -73,10 +74,8 @@ function createGlobalMocks() {
     });
 
     Object.defineProperty(SettingsConfig, "getDirectValue", {
-        value: jest.fn(() => {
-            return {
-                "zowe.automaticProfileValidation": true,
-            };
+        value: createGetConfigMock({
+            "zowe.automaticProfileValidation": true,
         }),
     });
     Object.defineProperty(globals, "LOG", { value: globalMocks.mockLog, configurable: true });
@@ -120,10 +119,8 @@ describe("Refresh Unit Tests - Function refreshAll", () => {
         newMocks.testDatasetTree.mSessionNodes.push(newMocks.datasetSessionNode);
 
         Object.defineProperty(SettingsConfig, "getDirectValue", {
-            value: jest.fn(() => {
-                return {
-                    "zowe.automaticProfileValidation": true,
-                };
+            value: createGetConfigMock({
+                "zowe.automaticProfileValidation": true,
             }),
         });
         Object.defineProperty(sessUtils, "removeSession", {

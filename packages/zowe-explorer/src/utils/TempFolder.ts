@@ -125,7 +125,7 @@ export async function cleanTempDir() {
  * @export
  */
 export async function hideTempFolder(zoweDir: string) {
-    if (SettingsConfig.getDirectValue(globals.SETTINGS_TEMP_FOLDER_HIDE) as boolean) {
+    if (SettingsConfig.getDirectValue<boolean>(globals.SETTINGS_TEMP_FOLDER_HIDE)) {
         await SettingsConfig.setDirectValue("files.exclude", { [zoweDir]: true, [globals.ZOWETEMPFOLDER]: true });
     }
 }

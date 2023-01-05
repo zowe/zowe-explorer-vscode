@@ -26,7 +26,6 @@ import { DatasetTree } from "./DatasetTree";
 import * as contextually from "../shared/context";
 import { setFileSaved } from "../utils/workspace";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
-import { SettingsConfig } from "../utils/SettingsConfig";
 
 // Set up localization
 import * as nls from "vscode-nls";
@@ -521,23 +520,23 @@ export function getDataSetTypeAndOptions(type: string) {
     switch (type) {
         case localize("createFile.dataSetBinary", "Data Set Binary"):
             typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_BINARY;
-            createOptions = SettingsConfig.getDirectValue(globals.SETTINGS_DS_DEFAULT_BINARY);
+            createOptions = vscode.workspace.getConfiguration(globals.SETTINGS_DS_DEFAULT_BINARY);
             break;
         case localize("createFile.dataSetC", "Data Set C"):
             typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_C;
-            createOptions = SettingsConfig.getDirectValue(globals.SETTINGS_DS_DEFAULT_C);
+            createOptions = vscode.workspace.getConfiguration(globals.SETTINGS_DS_DEFAULT_C);
             break;
         case localize("createFile.dataSetClassic", "Data Set Classic"):
             typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_CLASSIC;
-            createOptions = SettingsConfig.getDirectValue(globals.SETTINGS_DS_DEFAULT_CLASSIC);
+            createOptions = vscode.workspace.getConfiguration(globals.SETTINGS_DS_DEFAULT_CLASSIC);
             break;
         case localize("createFile.dataSetPartitioned", "Data Set Partitioned"):
             typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED;
-            createOptions = SettingsConfig.getDirectValue(globals.SETTINGS_DS_DEFAULT_PDS);
+            createOptions = vscode.workspace.getConfiguration(globals.SETTINGS_DS_DEFAULT_PDS);
             break;
         case localize("createFile.dataSetSequential", "Data Set Sequential"):
             typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL;
-            createOptions = SettingsConfig.getDirectValue(globals.SETTINGS_DS_DEFAULT_PS);
+            createOptions = vscode.workspace.getConfiguration(globals.SETTINGS_DS_DEFAULT_PS);
             break;
     }
     return {
