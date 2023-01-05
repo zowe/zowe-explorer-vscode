@@ -13,11 +13,11 @@ import { IconHierarchyType, IconId, IIconItem } from "../index";
 import { getIconPathInResources } from "../../../shared/utils";
 import { hasImperativeError } from "../../../shared/context";
 
-const imperativeError: IIconItem = {
-    id: IconId.imperativeError,
+const fileError: IIconItem = {
+    id: IconId.fileError,
     type: IconHierarchyType.base,
-    path: getIconPathInResources("imperativeError.svg"),
+    path: getIconPathInResources("fileError.svg"),
     check: (node) => hasImperativeError(node),
 };
 
-export default imperativeError;
+export default fileError;

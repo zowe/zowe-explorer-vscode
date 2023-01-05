@@ -88,7 +88,7 @@
   "paste": "Paste Member",
   "hMigrateDataSet": "Migrate Data Set",
   "hRecallDataSet": "Recall Data Set",
-  "showImperativeErrorDetails": "Show More Information",
+  "showImperativeErrorDetails": "Show Error Details",
   "profile.configuration.title": "Zowe z/OSMF Profiles",
   "profile.configuration.name": "Profile Name",
   "profile.configuration.url": "z/OSMF URL",
