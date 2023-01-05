@@ -968,7 +968,7 @@ async function confirmJobSubmission(node: api.IZoweTreeNode, ownsJob: boolean): 
         const selection = await vscode.window.showWarningMessage(
             localize(
                 "submitMember.confirm",
-                "Are you sure you want to submit the following job? {0}",
+                "Are you sure you want to submit the following job?\n\n{0}",
                 node.getLabel().toString()
             ),
             { modal: true },

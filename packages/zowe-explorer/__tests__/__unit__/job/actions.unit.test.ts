@@ -715,7 +715,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
                 mocked(vscode.window.showWarningMessage).mockResolvedValueOnce({ title: "Submit" });
                 await dsActions.submitMember(dataset);
                 expect(mocked(vscode.window.showWarningMessage)).toBeCalledWith(
-                    "Are you sure you want to submit the following job? " + dataset.getLabel(),
+                    "Are you sure you want to submit the following job?\n\n" + dataset.getLabel(),
                     { modal: true },
                     { title: "Submit" }
                 );
@@ -727,7 +727,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
                 mocked(vscode.window.showWarningMessage).mockResolvedValueOnce({ title: "Submit" });
                 await dsActions.submitMember(dataset);
                 expect(mocked(vscode.window.showWarningMessage)).toBeCalledWith(
-                    "Are you sure you want to submit the following job? " + dataset.getLabel(),
+                    "Are you sure you want to submit the following job?\n\n" + dataset.getLabel(),
                     { modal: true },
                     { title: "Submit" }
                 );
@@ -739,7 +739,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         mocked(vscode.window.showWarningMessage).mockReturnValueOnce(undefined);
         await dsActions.submitMember(dataset);
         expect(mocked(vscode.window.showWarningMessage)).toBeCalledWith(
-            "Are you sure you want to submit the following job? " + dataset.getLabel(),
+            "Are you sure you want to submit the following job?\n\n" + dataset.getLabel(),
             { modal: true },
             { title: "Submit" }
         );

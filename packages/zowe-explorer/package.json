@@ -1712,7 +1712,7 @@
         },
         "zowe.jobs.confirmSubmission": {
           "type": "string",
-          "default": "All jobs",
+          "default": "%zowe.jobs.confirmSubmission.allJobs%",
           "enum": [
             "%zowe.jobs.confirmSubmission.disabled%",
             "%zowe.jobs.confirmSubmission.yourJobs%",
