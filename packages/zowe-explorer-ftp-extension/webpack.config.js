@@ -61,7 +61,8 @@ const config = {
         rules: [
             {
                 test: /\.js$/,
-                include: /node_modules\/@zowe\/imperative\/node_modules\/openid-client/,
+                // include: /node_modules\/@zowe\/imperative\/node_modules\/openid-client/,
+                include: /node_modules\/openid-client/,
                 use: {
                     loader: "babel-loader",
                     options: {
