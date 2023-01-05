@@ -996,10 +996,12 @@ export async function submitMember(node: api.IZoweTreeNode) {
             if (!ownsJob && !(await showConfirmationDialog())) {
                 return;
             }
+            break;
         case JobSubmitDialogOpts.YourJobs:
             if (ownsJob && !(await showConfirmationDialog())) {
                 return;
             }
+            break;
         case JobSubmitDialogOpts.AllJobs:
             if (!(await showConfirmationDialog())) {
                 return;
