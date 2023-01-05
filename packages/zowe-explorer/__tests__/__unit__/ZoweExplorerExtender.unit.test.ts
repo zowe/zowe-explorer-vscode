@@ -118,44 +118,45 @@ describe("ZoweExplorerExtender unit tests", () => {
 
         Object.defineProperty(vscode.Uri, "file", { value: jest.fn(), configurable: true });
 
+        const zoweDir = getZoweDir();
         const userInputs = [
             {
                 choice: undefined,
+                configError: "Error parsing JSON",
                 fileChecks: ["zowe.config.user.json"],
+                mockStatSync: blockMocks.mockStatSync.mockImplementationOnce,
             },
             {
                 choice: "Show Config",
+                configError: "Error parsing JSON",
                 fileChecks: ["zowe.config.user.json"],
+                mockStatSync: blockMocks.mockStatSync.mockImplementationOnce,
             },
             {
                 choice: "Show Config",
+                configError: "Error parsing JSON",
                 fileChecks: ["zowe.config.user.json", "zowe.config.json"],
+                mockStatSync: blockMocks.mockStatSync.mockImplementationOnce,
             },
             {
                 choice: "Show Config",
+                configError: `Error reading profile file ("${path.join(
+                    zoweDir,
+                    "profiles/exampleType/exampleType_meta.yaml"
+                )}")`,
                 fileChecks: ["zowe.config.user.json", "zowe.config.json"],
                 v1: true,
+                mockStatSync: blockMocks.mockStatSync.mockImplementation,
             },
         ];
-        const zoweDir = getZoweDir();
         for (const userInput of userInputs) {
             blockMocks.mockErrorMessage.mockImplementationOnce((msg, ...items) => Promise.resolve(userInput.choice));
             if (userInput.fileChecks.length > 1) {
-                const mockFn = userInput.v1
-                    ? blockMocks.mockStatSync.mockImplementation
-                    : blockMocks.mockStatSync.mockImplementationOnce;
-                mockFn((...args) => {
+                userInput.mockStatSync((...args) => {
                     throw new Error("Failed to find config json");
                 });
             }
-            await ZoweExplorerExtender.showZoweConfigError(
-                userInput.v1
-                    ? `Error reading profile file ("${path.join(
-                          zoweDir,
-                          "profiles/exampleType/exampleType_meta.yaml"
-                      )}")`
-                    : "Error parsing JSON"
-            );
+            await ZoweExplorerExtender.showZoweConfigError(userInput.configError);
             expect(blockMocks.mockErrorMessage).toHaveBeenCalledWith(
                 'Error encountered when loading your Zowe config. Click "Show Config" for more details.',
                 "Show Config"

@@ -366,15 +366,13 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
             });
         const mockShowZoweConfigError = jest.spyOn(ZoweExplorerExtender, "showZoweConfigError").mockImplementation();
 
-        let spy = jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValue(blockMocks.testSchemas);
-        spy = jest.spyOn(globalMocks.mockProfileInstance, "urlInfo").mockReturnValue(globalMocks.mockUrlInfo);
-        spy = jest
-            .spyOn(globalMocks.mockProfileInstance, "userInfo")
-            .mockReturnValue(globalMocks.testProfile.profile.user);
-        spy = jest
-            .spyOn(globalMocks.mockProfileInstance, "passwordInfo")
-            .mockReturnValue(globalMocks.testProfile.profile.password);
-        spy = jest.spyOn(globalMocks.mockProfileInstance, "ruInfo").mockReturnValue(false);
+        jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValue(blockMocks.testSchemas);
+        jest.spyOn(globalMocks.mockProfileInstance, "urlInfo").mockReturnValue(globalMocks.mockUrlInfo);
+        jest.spyOn(globalMocks.mockProfileInstance, "userInfo").mockReturnValue(globalMocks.testProfile.profile.user);
+        jest.spyOn(globalMocks.mockProfileInstance, "passwordInfo").mockReturnValue(
+            globalMocks.testProfile.profile.password
+        );
+        jest.spyOn(globalMocks.mockProfileInstance, "ruInfo").mockReturnValue(false);
         const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
 
         await Profiles.getInstance().createNewConnection("fake", "zosmf");
@@ -382,7 +380,6 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
         expect(globalMocks.mockShowInformationMessage).not.toHaveBeenCalled();
         expect(errorHandlingSpy).toHaveBeenCalledWith("saveProfile error");
         expect(mockShowZoweConfigError).toHaveBeenCalledWith("saveProfile error");
-        spy.mockClear();
     });
 });
 
