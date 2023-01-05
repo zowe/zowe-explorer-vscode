@@ -3,13 +3,13 @@ name: Theia Zowe Explorer CI
 
 on:
   push:
-    # paths:
-    #   - packages/zowe-explorer/**
-    #   - packages/zowe-explorer-api/**
+    paths:
+      - packages/zowe-explorer/**
+      - packages/zowe-explorer-api/**
   pull_request:
-    # paths:
-    #   - packages/zowe-explorer/**
-    #   - packages/zowe-explorer-api/**
+    paths:
+      - packages/zowe-explorer/**
+      - packages/zowe-explorer-api/**
 
 jobs:
   ze-theia-build:
