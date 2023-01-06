@@ -263,29 +263,30 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         const responses: zowe.IZosFilesResponse[] = [];
         try {
             const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
-            const options: zowe.IListOptions = {};
-            options.attributes = true;
-            let label: string;
+            const options: zowe.IListOptions = {
+                attributes: true,
+                responseTimeout: cachedProfile.profile.responseTimeout,
+            };
             if (contextually.isSessionNotFav(this)) {
                 this.pattern = this.pattern.toUpperCase();
                 // loop through each pattern for datasets
                 for (const pattern of this.pattern.split(",")) {
                     responses.push(
-                        await ZoweExplorerApiRegister.getMvsApi(cachedProfile).dataSet(pattern.trim(), {
-                            attributes: true,
-                        })
+                        await ZoweExplorerApiRegister.getMvsApi(cachedProfile).dataSet(pattern.trim(), options)
                     );
                 }
             } else if (this.memberPattern !== undefined) {
                 this.memberPattern = this.memberPattern.toUpperCase();
                 for (const memPattern of this.memberPattern.split(",")) {
                     options.pattern = memPattern;
-                    label = this.label as string;
-                    responses.push(await ZoweExplorerApiRegister.getMvsApi(cachedProfile).allMembers(label, options));
+                    responses.push(
+                        await ZoweExplorerApiRegister.getMvsApi(cachedProfile).allMembers(this.label as string, options)
+                    );
                 }
             } else {
-                label = this.label as string;
-                responses.push(await ZoweExplorerApiRegister.getMvsApi(cachedProfile).allMembers(label, options));
+                responses.push(
+                    await ZoweExplorerApiRegister.getMvsApi(cachedProfile).allMembers(this.label as string, options)
+                );
             }
         } catch (err) {
             await errorHandling(
