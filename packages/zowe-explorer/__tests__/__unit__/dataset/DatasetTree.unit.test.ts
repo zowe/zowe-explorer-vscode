@@ -423,6 +423,26 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
 
         expect(children).toEqual([favProfileNode]);
     });
+    it("Checking function for favorited node with no member pattern", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        const profileNode = new ZoweDatasetNode(
+            "testProfile",
+            vscode.TreeItemCollapsibleState.None,
+            blockMocks.datasetSessionNode,
+            blockMocks.session
+        );
+        profileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
+        profileNode.memberPattern = undefined;
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mFavorites.push(profileNode);
+
+        const children = await testTree.getChildren(testTree.mSessionNodes[0]);
+
+        expect(children).toEqual([profileNode]);
+    });
     it("Checking function for profile node in Favorites section", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
