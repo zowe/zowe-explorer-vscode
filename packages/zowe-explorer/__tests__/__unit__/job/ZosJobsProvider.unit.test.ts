@@ -784,12 +784,9 @@ describe("ZosJobsProvider unit tests - Function getUserSearchQueryInput", () => 
             },
         ];
 
-        expect(
-            await globalMocks.testJobsProvider.handleEditingMultiJobParameters(
-                jobProps,
-                globalMocks.testJobsProvider.mSessionNodes[0]
-            )
-        ).toEqual(undefined);
+        expect(await globalMocks.testJobsProvider.handleEditingMultiJobParameters(jobProps, globalMocks.testJobsProvider.mSessionNodes[0])).toEqual(
+            undefined
+        );
     });
 });
 
