@@ -7,6 +7,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ### New features and enhancements
 
 - Added file association for `zowe.config.json` and `zowe.config.user.json` to automatically detect them as JSON with Comments. [#1997](https://github.com/zowe/vscode-extension-for-zowe/issues/1997)
+- Added favorite job query to jobs view [#1947](https://github.com/zowe/vscode-extension-for-zowe/issues/1947)
 
 ### Bug fixes
 
