@@ -1523,7 +1523,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
-                    loadNamedProfile: jest.fn(),
+                    loadNamedProfile: jest.fn().mockImplementationOnce((name, type) => blockMocks.imperativeProfile),
                     getBaseProfile: jest.fn(),
                     checkCurrentProfile: blockMocks.mockCheckCurrentProfile.mockReturnValueOnce({
                         name: blockMocks.imperativeProfile.name,
