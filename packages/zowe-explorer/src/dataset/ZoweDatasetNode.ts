@@ -283,10 +283,6 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         await ZoweExplorerApiRegister.getMvsApi(cachedProfile).allMembers(this.label as string, options)
                     );
                 }
-            } else {
-                responses.push(
-                    await ZoweExplorerApiRegister.getMvsApi(cachedProfile).allMembers(this.label as string, options)
-                );
             }
         } catch (err) {
             await errorHandling(
