@@ -11,9 +11,9 @@
 
 import { imperative } from "@zowe/cli";
 export class FtpSession extends imperative.Session {
-    public ussListConnection: any;
-    public mvsListConnection: any;
-    public jesListConnection: any;
+    public ussListConnection;
+    public mvsListConnection;
+    public jesListConnection;
     public constructor(newSession: imperative.ISession) {
         super(newSession);
     }

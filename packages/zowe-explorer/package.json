@@ -2,7 +2,7 @@
   "name": "vscode-extension-for-zowe",
   "displayName": "%displayName%",
   "description": "%description%",
-  "version": "2.5.0-SNAPSHOT",
+  "version": "2.6.0-SNAPSHOT",
   "publisher": "Zowe",
   "author": "Zowe",
   "license": "EPL-2.0",
@@ -89,6 +89,18 @@
         "command": "zowe.extRefresh",
         "key": "ctrl+alt+z",
         "mac": "cmd+alt+z"
+      },
+      {
+        "command": "zowe.uss.copyUssFile",
+        "key": "ctrl+c",
+        "mac": "cmd+c",
+        "when": "focusedView == zowe.uss.explorer || viewItem =~ /^(?!.*_fav.*)(textFile.*|binaryFile.*)/"
+      },
+      {
+        "command": "zowe.uss.pasteUssFile",
+        "key": "ctrl+v",
+        "mac": "cmd+v",
+        "when": "focusedView == zowe.uss.explorer || viewItem =~ /^(directory.*|ussSession.*)/ && !listSupportsMultiselect"
       }
     ],
     "commands": [
@@ -525,6 +537,16 @@
         "category": "Zowe Explorer"
       },
       {
+        "command": "zowe.uss.copyUssFile",
+        "title": "%copyFile%",
+        "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.uss.pasteUssFile",
+        "title": "%pasteFile%",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.jobs.deleteJob",
         "title": "%deleteJob%",
         "category": "Zowe Explorer",
@@ -788,6 +810,16 @@
           "when": "view == zowe.uss.explorer && viewItem =~ /^directory.*/ && !listMultiSelection",
           "command": "zowe.uss.uploadDialog",
           "group": "001_zowe_ussCreate@3"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)(textFile.*|binaryFile.*|directory.*)/",
+          "command": "zowe.uss.copyUssFile",
+          "group": "001_zowe_ussCreate@4"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)(textFile.*|binaryFile.*|directory.*)/",
+          "command": "zowe.uss.pasteUssFile",
+          "group": "001_zowe_ussCreate@5"
         },
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^textFile.*/",
@@ -1416,6 +1448,14 @@
           "when": "never"
         },
         {
+          "command": "zowe.uss.copyUssFile",
+          "when": "never"
+        },
+        {
+          "command": "zowe.uss.pasteUssFile",
+          "when": "never"
+        },
+        {
           "command": "zowe.uss.editFile",
           "when": "never"
         },
@@ -1702,7 +1742,15 @@
           "scope": "window"
         }
       }
-    }
+    },
+    "languages": [
+      {
+        "id": "jsonc",
+        "filenamePatterns": [
+          "zowe.config*.json"
+        ]
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "yarn createTestProfileData && gulp build && yarn license && yarn lint && webpack --mode production && yarn updateStrings && yarn run compile-web",
@@ -1740,7 +1788,7 @@
     "@types/promise-queue": "^2.2.0",
     "@types/selenium-webdriver": "^3.0.4",
     "@types/yargs": "^11.0.0",
-    "eslint-plugin-zowe-explorer": "2.5.0-SNAPSHOT",
+    "eslint-plugin-zowe-explorer": "2.6.0-SNAPSHOT",
     "@typescript-eslint/eslint-plugin": "^2.31.0",
     "@typescript-eslint/parser": "^2.31.0",
     "eslint": "^6.8.0",
@@ -1775,7 +1823,7 @@
     "webpack-cli": "^3.3.11"
   },
   "dependencies": {
-    "@zowe/zowe-explorer-api": "2.5.0-SNAPSHOT",
+    "@zowe/zowe-explorer-api": "2.6.0-SNAPSHOT",
     "fs-extra": "8.0.1",
     "isbinaryfile": "4.0.4",
     "js-yaml": "3.13.1",

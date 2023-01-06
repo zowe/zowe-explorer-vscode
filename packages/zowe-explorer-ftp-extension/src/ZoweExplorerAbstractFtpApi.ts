@@ -16,6 +16,10 @@ import { MessageSeverityEnum, ZoweExplorerApi, ZoweVsCodeExtension } from "@zowe
 import { sessionMap, ZoweLogger } from "./extension";
 import { FtpSession } from "./ftpSession";
 
+export interface ConnectionType {
+    close(): void;
+}
+
 export abstract class AbstractFtpApi implements ZoweExplorerApi.ICommon {
     private session?: FtpSession;
 
@@ -66,13 +70,13 @@ export abstract class AbstractFtpApi implements ZoweExplorerApi.ICommon {
         return this.profile;
     }
 
-    public async ftpClient(profile: imperative.IProfileLoaded): Promise<any> {
+    public async ftpClient(profile: imperative.IProfileLoaded): Promise<unknown> {
         const ftpProfile = profile.profile as IZosFTPProfile;
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return await FTPConfig.connectFromArguments(ftpProfile);
     }
 
-    public releaseConnection(connection: any): void {
+    public releaseConnection<T extends ConnectionType>(connection: T): void {
         if (connection != null) {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access
             connection.close();
@@ -80,7 +84,8 @@ export abstract class AbstractFtpApi implements ZoweExplorerApi.ICommon {
         }
     }
 
-    public logout(session: any): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    public logout(session): Promise<void> {
         const ftpsession = sessionMap.get(this.profile);
         if (ftpsession !== undefined) {
             ftpsession.releaseConnections();
@@ -108,7 +113,7 @@ export abstract class AbstractFtpApi implements ZoweExplorerApi.ICommon {
                     throw new Error();
                 } else {
                     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-                    ZoweVsCodeExtension.showVsCodeMessage(e.message, MessageSeverityEnum.ERROR, ZoweLogger);
+                    ZoweVsCodeExtension.showVsCodeMessage(e.message as string, MessageSeverityEnum.ERROR, ZoweLogger);
                     throw new Error();
                 }
             }

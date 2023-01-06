@@ -32,7 +32,7 @@ export let DS_DIR;
 export let CONFIG_PATH; // set during activate
 export let ISTHEIA: boolean = false; // set during activate
 export let LOG: imperative.Logger;
-export const COMMAND_COUNT = 100;
+export const COMMAND_COUNT = 102;
 export const MAX_SEARCH_HISTORY = 5;
 export const MAX_FILE_HISTORY = 10;
 export const STATUS_BAR_TIMEOUT_MS = 5000;
@@ -94,6 +94,7 @@ export const DS_NAME_REGEX_CHECK = /^[a-zA-Z#@\$][a-zA-Z0-9#@\$\-]{0,7}(\.[a-zA-
 export const MEMBER_NAME_REGEX_CHECK = /^[a-zA-Z#@\$][a-zA-Z0-9#@\$]{0,7}$/;
 export let ACTIVATED = false;
 export let PROFILE_SECURITY: string | boolean = ZOWE_CLI_SCM;
+export const JOBS_MAX_PREFIX = 8;
 
 export enum CreateDataSetTypeWithKeysEnum {
     DATA_SET_BINARY = 0,
