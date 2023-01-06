@@ -800,8 +800,6 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             node.getSession().ISession.password = faveNode.getSession().ISession.password;
             node.getSession().ISession.base64EncodedAuth = faveNode.getSession().ISession.base64EncodedAuth;
         }
-        const jobQueryObj = this.parseJobSearchQuery(searchCriteria);
-        this.applySearchLabelToNode(node, jobQueryObj);
         return searchCriteria;
     }
 
@@ -819,6 +817,8 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 searchCriteria = await this.applyRegularSessionSearchLabel(node);
             } else {
                 searchCriteria = await this.applySavedFavoritesSearchLabel(node);
+                const jobQueryObj = this.parseJobSearchQuery(searchCriteria);
+                this.applySearchLabelToNode(node, jobQueryObj);
             }
             if (!searchCriteria) {
                 return undefined;
