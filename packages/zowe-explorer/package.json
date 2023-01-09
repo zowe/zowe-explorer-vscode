@@ -1735,10 +1735,20 @@
           "description": "%zowe.settings.version%",
           "scope": "window"
         },
-        "zowe.security.secureCredentialsEnabled": {
-          "default": true,
-          "type": "boolean",
-          "description": "%zowe.security.secureCredentialsEnabled%",
+        "zowe.security.secureCredentialManager": {
+          "default": "keytar",
+          "type": "string",
+          "enum": [
+            "keytar",
+            "kubernetes",
+            "off"
+          ],
+          "markdownEnumDescriptions": [
+            "Store Zowe credentials on the local machine with Keytar.",
+            "Store Zowe credentials on a kubernetes cluster as secrets.",
+            "Disable secure credentials and allow creation of an unsecure profile."
+          ],
+          "description": "%zowe.security.secureCredentialManager%",
           "scope": "window"
         }
       }

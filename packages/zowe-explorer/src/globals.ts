@@ -16,13 +16,18 @@ import * as loggerConfig from "../log4jsconfig.json";
 
 // Set up localization
 import * as nls from "vscode-nls";
-import { getZoweDir, ProfilesCache } from "@zowe/zowe-explorer-api";
+import { getZoweDir } from "@zowe/zowe-explorer-api";
 
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
     bundleFormat: nls.BundleFormat.standalone,
 })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
+
+interface ICredentialManager {
+    plugin?: string;
+    type: string;
+}
 
 // Globals
 export let ZOWETEMPFOLDER;
@@ -85,7 +90,7 @@ export const SETTINGS_AUTOMATIC_PROFILE_VALIDATION = "zowe.automaticProfileValid
 export const SETTINGS_DS_HISTORY = "zowe.ds.history";
 export const SETTINGS_USS_HISTORY = "zowe.uss.history";
 export const SETTINGS_JOBS_HISTORY = "zowe.jobs.history";
-export const SETTINGS_SECURE_CREDENTIALS_ENABLED = "zowe.security.secureCredentialsEnabled";
+export const SETTINGS_SECURE_CREDENTIAL_MANAGER = "zowe.security.secureCredentialManager";
 export const EXTENDER_CONFIG: imperative.ICommandProfileTypeConfiguration[] = [];
 export const ZOWE_CLI_SCM = "@zowe/cli";
 export const MAX_DATASET_LENGTH = 44;
@@ -93,7 +98,7 @@ export const MAX_MEMBER_LENGTH = 8;
 export const DS_NAME_REGEX_CHECK = /^[a-zA-Z#@\$][a-zA-Z0-9#@\$\-]{0,7}(\.[a-zA-Z#@\$][a-zA-Z0-9#@\$\-]{0,7})*$/;
 export const MEMBER_NAME_REGEX_CHECK = /^[a-zA-Z#@\$][a-zA-Z0-9#@\$]{0,7}$/;
 export let ACTIVATED = false;
-export let PROFILE_SECURITY: string | boolean = ZOWE_CLI_SCM;
+export let PROFILE_SECURITY: string | boolean | ICredentialManager = ZOWE_CLI_SCM;
 export const JOBS_MAX_PREFIX = 8;
 
 export enum CreateDataSetTypeWithKeysEnum {
@@ -312,12 +317,24 @@ export async function setGlobalSecurityValue() {
             .update(this.SETTINGS_SECURE_CREDENTIALS_ENABLED, false, vscode.ConfigurationTarget.Global);
         return;
     }
-    const settingEnabled: boolean = await vscode.workspace
+    const settingSelectedCredentialManager: string = await vscode.workspace
         .getConfiguration()
-        .get(this.SETTINGS_SECURE_CREDENTIALS_ENABLED);
-    if (!settingEnabled) {
-        PROFILE_SECURITY = false;
-    } else {
-        PROFILE_SECURITY = ZOWE_CLI_SCM;
+        .get(this.SETTINGS_SECURE_CREDENTIAL_MANAGER);
+    switch (settingSelectedCredentialManager) {
+        case "keytar":
+            PROFILE_SECURITY = ZOWE_CLI_SCM;
+            break;
+        case "kubernetes":
+            PROFILE_SECURITY = {
+                plugin: ZOWE_CLI_SCM,
+                type: "k8s",
+            };
+            break;
+        case "off":
+            PROFILE_SECURITY = false;
+            break;
+        default:
+            PROFILE_SECURITY = ZOWE_CLI_SCM;
+            break;
     }
 }

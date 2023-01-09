@@ -14,6 +14,10 @@ interface Stats {
     isFile(): boolean;
 }
 
+export const constants = {
+    O_CREAT: "",
+};
+
 export class FakeStats implements Stats {
     isFile(): boolean {
         if (this.path.endsWith(".txt")) {

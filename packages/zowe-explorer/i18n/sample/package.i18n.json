@@ -77,7 +77,7 @@
   "zowe.commands.history": "Toggle if Commands persist locally",
   "zowe.automaticProfileValidation": "Allow automatic validation of profiles.",
   "zowe.settings.version": "Track if migration has been processed",
-  "zowe.security.secureCredentialsEnabled": "Allow credentials to be stored securely. If disabled and autoStore is set to true, z/OS credentials are stored as clear text in zowe.config.json.",
+  "zowe.security.secureCredentialManager": "The type of built-in credential manager to use for securing Zowe credentials",
   "issueTsoCmd": "Issue TSO Command",
   "deleteProfile": "Delete Profile",
   "cmd.deleteProfile": "Delete a Profile Permanently...",

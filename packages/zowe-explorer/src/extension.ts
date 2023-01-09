@@ -172,7 +172,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
                 hideTempFolder(getZoweDir());
             }
 
-            if (e.affectsConfiguration(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED)) {
+            if (e.affectsConfiguration(globals.SETTINGS_SECURE_CREDENTIAL_MANAGER)) {
                 await vscode.commands.executeCommand("zowe.updateSecureCredentials");
             }
         })

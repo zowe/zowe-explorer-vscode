@@ -23,5 +23,5 @@
     "fileHistory": [],
     "searchHistory": []
   },
-  "zowe.security.secureCredentialsEnabled": false
+  "zowe.security.secureCredentialManager": false
 }
