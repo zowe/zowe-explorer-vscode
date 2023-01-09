@@ -16,6 +16,7 @@ import * as vscode from "vscode";
 import { ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { FilterDescriptor } from "../../src/utils/ProfilesUtils";
 import { imperative, ZosmfSession } from "@zowe/cli";
+import { SettingsConfig } from "../../src/utils/SettingsConfig";
 
 export function createPersistentConfig() {
     return {
@@ -83,7 +84,7 @@ export function createIProfile(): imperative.IProfileLoaded {
         profile: {
             host: "fake",
             port: 999,
-            user: undefined,
+            user: "testuser",
             password: undefined,
             rejectUnauthorize: false,
         },
@@ -402,4 +403,9 @@ export function createConfigLoad() {
             },
         ],
     } as any;
+}
+
+const originalGetDirectValue = SettingsConfig.getDirectValue;
+export function createGetConfigMock(settings: { [key: string]: any }) {
+    return jest.fn((key: string) => settings[key] ?? originalGetDirectValue(key));
 }

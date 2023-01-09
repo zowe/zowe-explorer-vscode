@@ -534,6 +534,15 @@ describe("ZosJobsProvider - Function searchPrompt", () => {
         expect(addSearchHistory).toHaveBeenCalled();
         expect(refreshElement).toHaveBeenCalled();
     });
+    it("testing fav node to call applySearchLabelToNode", async () => {
+        const globalMocks = await createGlobalMocks();
+        jest.spyOn(globalMocks.testJobsProvider, "applySavedFavoritesSearchLabel").mockReturnValue(undefined);
+        const applySearchLabelToNode = jest.spyOn(globalMocks.testJobsProvider, "applySearchLabelToNode");
+        const jobSessionNode = new Job("sestest", vscode.TreeItemCollapsibleState.Collapsed, null, null, null, null);
+        jobSessionNode.contextValue = globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX;
+        await globalMocks.testJobsProvider.searchPrompt(jobSessionNode);
+        expect(applySearchLabelToNode).toHaveBeenCalled();
+    });
 });
 
 describe("ZosJobsProvider - Function applyRegularSessionSearchLabel", () => {
