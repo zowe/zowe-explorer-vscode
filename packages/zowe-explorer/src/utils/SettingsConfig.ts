@@ -41,22 +41,16 @@ export class SettingsConfig {
      * @param {any} value - The value to assign for the config property
      * @param target - VS Code configuration target (global or workspace)
      */
-    public static setDirectValue(
-        key: string,
-        value: any,
-        target: vscode.ConfigurationTarget = vscode.ConfigurationTarget.Global
-    ): Thenable<void> {
+    public static setDirectValue(key: string, value: any, target: vscode.ConfigurationTarget = vscode.ConfigurationTarget.Global): Thenable<void> {
         const [first, ...rest] = key.split(".");
         return vscode.workspace.getConfiguration(first).update(rest.join("."), value, target);
     }
 
     public static async standardizeSettings(): Promise<void> {
         const globalIsNotMigrated =
-            SettingsConfig.configurations.inspect(globals.SETTINGS_VERSION).globalValue !==
-            SettingsConfig.currentVersionNumber;
+            SettingsConfig.configurations.inspect(globals.SETTINGS_VERSION).globalValue !== SettingsConfig.currentVersionNumber;
         const workspaceIsNotMigrated =
-            SettingsConfig.configurations.inspect(globals.SETTINGS_VERSION).workspaceValue !==
-            SettingsConfig.currentVersionNumber;
+            SettingsConfig.configurations.inspect(globals.SETTINGS_VERSION).workspaceValue !== SettingsConfig.currentVersionNumber;
         const workspaceIsOpen = vscode.workspace.workspaceFolders !== undefined;
         const zoweSettingsExist = SettingsConfig.zoweOldConfigurations.length > 0;
 
@@ -93,9 +87,7 @@ export class SettingsConfig {
     }
 
     private static get zoweOldConfigurations() {
-        return Object.keys(SettingsConfig.configurations).filter((key) =>
-            key.match(new RegExp("Zowe-*|Zowe\\s*", "g"))
-        );
+        return Object.keys(SettingsConfig.configurations).filter((key) => key.match(new RegExp("Zowe-*|Zowe\\s*", "g")));
     }
 
     private static get currentVersionNumber() {
@@ -107,6 +99,7 @@ export class SettingsConfig {
         const reloadButton = localize("standardization.reload.button", "Reload Window");
         const infoMsg = localize(
             "standardization.reload.infoMessage",
+            // eslint-disable-next-line max-len
             "Settings have been successfully migrated for Zowe Explorer version 2 and above. To apply these settings, please reload your VS Code window."
         );
         await vscode.window.showInformationMessage(infoMsg, ...[reloadButton])?.then(async (selection) => {
@@ -117,9 +110,7 @@ export class SettingsConfig {
     }
 
     private static async standardizeGlobalSettings(): Promise<void> {
-        let globalIsMigrated =
-            SettingsConfig.configurations.inspect(globals.SETTINGS_VERSION).globalValue !==
-            SettingsConfig.currentVersionNumber;
+        let globalIsMigrated = SettingsConfig.configurations.inspect(globals.SETTINGS_VERSION).globalValue !== SettingsConfig.currentVersionNumber;
 
         // Standardize global settings when old Zowe settings were found
         if (SettingsConfig.zoweOldConfigurations.length > 0) {
@@ -165,22 +156,14 @@ export class SettingsConfig {
                 const newSetting = SettingsConfig.configurationDictionary[configuration];
 
                 if (workspaceValue !== undefined) {
-                    await SettingsConfig.setDirectValue(
-                        newSetting,
-                        workspaceValue,
-                        vscode.ConfigurationTarget.Workspace
-                    );
+                    await SettingsConfig.setDirectValue(newSetting, workspaceValue, vscode.ConfigurationTarget.Workspace);
                     workspaceIsMigrated = true;
                 }
             }
         }
 
         if (workspaceIsMigrated) {
-            await SettingsConfig.setDirectValue(
-                globals.SETTINGS_VERSION,
-                SettingsConfig.currentVersionNumber,
-                vscode.ConfigurationTarget.Workspace
-            );
+            await SettingsConfig.setDirectValue(globals.SETTINGS_VERSION, SettingsConfig.currentVersionNumber, vscode.ConfigurationTarget.Workspace);
         }
     }
 }

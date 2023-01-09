@@ -35,10 +35,7 @@ For example to disallow the use of unmocked `fs` module in unit tests
 ```json
 {
   "rules": {
-    "zowe-explorer/no-unmocked-core-modules": [
-      "error",
-      { "coreModuleNames": ["fs"], "filePathPattern": ".*\\.unit\\.test\\..*" }
-    ]
+    "zowe-explorer/no-unmocked-core-modules": ["error", { "coreModuleNames": ["fs"], "filePathPattern": ".*\\.unit\\.test\\..*" }]
   }
 }
 ```

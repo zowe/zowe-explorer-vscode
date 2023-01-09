@@ -34,7 +34,6 @@ describe("ProfilesCache API", () => {
         expect(config.layers[0].path).toContain(__dirname);
         expect(config.layers[1].path).toContain(__dirname);
         expect(config.layers[2].path).toContain(zoweDir);
-        // tslint:disable-next-line:no-magic-numbers
         expect(config.layers[3].path).toContain(zoweDir);
         expect(config.layers.map((layer) => layer.exists)).toEqual([true, true, true, true]);
     });

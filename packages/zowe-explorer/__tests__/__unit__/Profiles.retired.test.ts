@@ -1025,8 +1025,7 @@
 //         const res = await blockMocks.profiles.validateAndParseUrl(input);
 //         expect(res.valid).toBe(true);
 //         expect(res.host).toBe("fake");
-//         // tslint:disable-next-line: no-magic-numbers
-//         expect(res.port).toBe(143);
+//         //         expect(res.port).toBe(143);
 //     });
 
 //     it("Tests that validateAndParseUrl returns invalid for invalid port", async () => {
@@ -1099,8 +1098,7 @@
 //         blockMocks.profiles.getCliProfileManager = () => globalMocks.mockCliProfileManager;
 
 //         const response = blockMocks.profiles.getSchema("zosmf");
-//         // tslint:disable-next-line: no-magic-numbers
-//         expect(response).toEqual(blockMocks.testSchemas[3]);
+//         //         expect(response).toEqual(blockMocks.testSchemas[3]);
 //     });
 // });
 
@@ -2333,8 +2331,7 @@
 //         const ussTree = createUSSTree([], [ussSessionNode], blockMocks.treeView);
 //         const theProfiles = await Profiles.createInstance(blockMocks.log);
 
-//         // tslint:disable-next-line:max-line-length
-//         const response = await theProfiles.disableValidation(blockMocks.datasetSessionNode);
+//         //         const response = await theProfiles.disableValidation(blockMocks.datasetSessionNode);
 //         expect(response.contextValue).toContain(`${globals.VALIDATE_SUFFIX}false`);
 //         expect(response.contextValue).not.toContain(`${globals.VALIDATE_SUFFIX}true`);
 //     });
@@ -2349,8 +2346,7 @@
 //         resultNode.contextValue = `${globals.DS_SESSION_CONTEXT}${globals.VALIDATE_SUFFIX}true`;
 //         const theProfiles = await Profiles.createInstance(blockMocks.log);
 
-//         // tslint:disable-next-line:max-line-length
-//         const response = await theProfiles.disableValidation(resultNode);
+//         //         const response = await theProfiles.disableValidation(resultNode);
 //         expect(response.contextValue).toContain(`${globals.VALIDATE_SUFFIX}false`);
 //         expect(response.contextValue).not.toContain(`${globals.VALIDATE_SUFFIX}true`);
 //     });
@@ -2411,8 +2407,7 @@
 //         resultNode.contextValue = `${globals.DS_SESSION_CONTEXT}${globals.VALIDATE_SUFFIX}false`;
 //         const theProfiles = await Profiles.createInstance(blockMocks.log);
 
-//         // tslint:disable-next-line:max-line-length
-//         const response = await theProfiles.enableValidation(resultNode);
+//         //         const response = await theProfiles.enableValidation(resultNode);
 //         expect(response.contextValue).toContain(`${globals.VALIDATE_SUFFIX}true`);
 //         expect(response.contextValue).not.toContain(`${globals.VALIDATE_SUFFIX}false`);
 //     });
