@@ -332,19 +332,15 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        const mockSaveProfile = jest
-            .spyOn(ProfilesCache.prototype as any, "saveProfile")
-            .mockImplementationOnce(async (values, name, type) => {
-                throw new Error("saveProfile error");
-            });
+        const mockSaveProfile = jest.spyOn(ProfilesCache.prototype as any, "saveProfile").mockImplementationOnce(async (values, name, type) => {
+            throw new Error("saveProfile error");
+        });
         const mockShowZoweConfigError = jest.spyOn(ZoweExplorerExtender, "showZoweConfigError").mockImplementation();
 
         jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValue(blockMocks.testSchemas);
         jest.spyOn(globalMocks.mockProfileInstance, "urlInfo").mockReturnValue(globalMocks.mockUrlInfo);
         jest.spyOn(globalMocks.mockProfileInstance, "userInfo").mockReturnValue(globalMocks.testProfile.profile.user);
-        jest.spyOn(globalMocks.mockProfileInstance, "passwordInfo").mockReturnValue(
-            globalMocks.testProfile.profile.password
-        );
+        jest.spyOn(globalMocks.mockProfileInstance, "passwordInfo").mockReturnValue(globalMocks.testProfile.profile.password);
         jest.spyOn(globalMocks.mockProfileInstance, "ruInfo").mockReturnValue(false);
         const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
 

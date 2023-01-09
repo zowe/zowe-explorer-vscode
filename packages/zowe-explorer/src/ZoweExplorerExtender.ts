@@ -53,10 +53,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
     public static async showZoweConfigError(errorDetails: string) {
         vscode.window
             .showErrorMessage(
-                localize(
-                    "initialize.profiles.error",
-                    'Error encountered when loading your Zowe config. Click "Show Config" for more details.'
-                ),
+                localize("initialize.profiles.error", 'Error encountered when loading your Zowe config. Click "Show Config" for more details.'),
                 "Show Config"
             )
             .then((selection) => {

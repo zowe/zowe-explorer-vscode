@@ -82,8 +82,6 @@ describe("ProfileUtils.writeOverridesFile Unit Tests", () => {
         const label = "test";
         const moreInfo = "Task failed successfully";
         await profileUtils.errorHandling(errorDetails, label, moreInfo);
-        expect(globals.LOG.error).toBeCalledWith(
-            `Error: ${errorDetails.message}\n` + JSON.stringify({ errorDetails, label, moreInfo })
-        );
+        expect(globals.LOG.error).toBeCalledWith(`Error: ${errorDetails.message}\n` + JSON.stringify({ errorDetails, label, moreInfo }));
     });
 });
