@@ -1710,6 +1710,24 @@
           "description": "%zowe.jobs.history%",
           "scope": "application"
         },
+        "zowe.jobs.confirmSubmission": {
+          "type": "string",
+          "default": "%zowe.jobs.confirmSubmission.allJobs%",
+          "enum": [
+            "%zowe.jobs.confirmSubmission.disabled%",
+            "%zowe.jobs.confirmSubmission.yourJobs%",
+            "%zowe.jobs.confirmSubmission.otherUserJobs%",
+            "%zowe.jobs.confirmSubmission.allJobs%"
+          ],
+          "enumDescriptions": [
+            "%zowe.jobs.confirmSubmission.disabled.desc%",
+            "%zowe.jobs.confirmSubmission.yourJobs.desc%",
+            "%zowe.jobs.confirmSubmission.otherUserJobs.desc%",
+            "%zowe.jobs.confirmSubmission.allJobs.desc%"
+          ],
+          "description": "%zowe.jobs.confirmSubmission%",
+          "scope": "window"
+        },
         "zowe.commands.alwaysEdit": {
           "type": "boolean",
           "default": true,

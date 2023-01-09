@@ -236,8 +236,10 @@ Review the following use cases and their procedures to understand how to work wi
 2. Open the **DATA SETS** bar.
 3. Select the data set or data set member you want to submit.
 4. Right-click the data set or member and select the **Submit Job** option.
-
-**Note:** Click on the hyperlink on the notification pop-up to view the job.
+5. If the extension setting **"Jobs: Confirm Submission"** matches the job that you are trying to submit, you will be presented with a submission confirmation dialog.
+   - Click **Submit** within the dialog to confirm submission, or click **Cancel** to cancel the operation.
+   - Otherwise, the job has been submitted.
+6. Once the job has been submitted, click on the hyperlink within the notification pop-up to view the submission (if desired).
 
 ![Submit a JCL](/docs/images/ZE-submit-jcl.gif?raw=true "Submit a JCL")
 
