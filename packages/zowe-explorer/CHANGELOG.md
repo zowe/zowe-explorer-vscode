@@ -9,6 +9,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added Job search prefix validator [1971](https://github.com/zowe/vscode-extension-for-zowe/issues/1971)
 - Added file association for `zowe.config.json` and `zowe.config.user.json` to automatically detect them as JSON with Comments. [#1997](https://github.com/zowe/vscode-extension-for-zowe/issues/1997)
 - Added confirmation message for "Submit Job" feature as an option in extension settings (disabled by default). [#998](https://github.com/zowe/vscode-extension-for-zowe/issues/998)
+- Added favorite job query to jobs view [#1947](https://github.com/zowe/vscode-extension-for-zowe/issues/1947)
 
 ### Bug fixes
 
