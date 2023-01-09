@@ -12,13 +12,7 @@
 import * as vscode from "vscode";
 
 import { imperative } from "@zowe/cli";
-import {
-    createISession,
-    createAltTypeIProfile,
-    createTreeView,
-    createIProfile,
-    createInstanceOfProfile,
-} from "../../__mocks__/mockCreators/shared";
+import { createISession, createAltTypeIProfile, createTreeView, createIProfile, createInstanceOfProfile } from "../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../__mocks__/mockCreators/datasets";
 import { createUSSSessionNode, createUSSTree } from "../../__mocks__/mockCreators/uss";
 import { createJobsTree, createIJobObject } from "../../__mocks__/mockCreators/jobs";

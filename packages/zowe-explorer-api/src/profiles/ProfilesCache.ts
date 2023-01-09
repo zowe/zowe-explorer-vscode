@@ -100,9 +100,7 @@ export class ProfilesCache {
      */
     public updateProfilesArrays(profileLoaded: zowe.imperative.IProfileLoaded): void {
         // update allProfiles array
-        const promptedTypeIndex = this.allProfiles.findIndex(
-            (profile) => profile.type === profileLoaded.type && profile.name === profileLoaded.name
-        );
+        const promptedTypeIndex = this.allProfiles.findIndex((profile) => profile.type === profileLoaded.type && profile.name === profileLoaded.name);
         this.allProfiles[promptedTypeIndex] = profileLoaded;
         // checks if default, if true update defaultProfileByType
         const defaultProf = this.defaultProfileByType.get(profileLoaded.type);
@@ -130,10 +128,7 @@ export class ProfilesCache {
      *
      * @returns {IProfAttrs}
      */
-    public getDefaultConfigProfile(
-        mProfileInfo: zowe.imperative.ProfileInfo,
-        profileType: string
-    ): zowe.imperative.IProfAttrs {
+    public getDefaultConfigProfile(mProfileInfo: zowe.imperative.ProfileInfo, profileType: string): zowe.imperative.IProfAttrs {
         return mProfileInfo.getDefaultProfile(profileType);
     }
 
@@ -171,9 +166,7 @@ export class ProfilesCache {
             for (const type of allTypes) {
                 const tmpAllProfiles: zowe.imperative.IProfileLoaded[] = [];
                 // Step 1: Get all profiles for each registered type
-                const profilesForType = mProfileInfo
-                    .getAllProfiles(type)
-                    .filter((temp) => temp.profLoc.osLoc.length !== 0);
+                const profilesForType = mProfileInfo.getAllProfiles(type).filter((temp) => temp.profLoc.osLoc.length !== 0);
                 if (profilesForType && profilesForType.length > 0) {
                     for (const prof of profilesForType) {
                         // Step 2: Merge args for each profile
@@ -408,9 +401,7 @@ export class ProfilesCache {
                 const baseValue = settings.overrides as Record<string, unknown>;
                 const value1 = baseValue.CredentialManager;
                 const value2 = baseValue["credential-manager"];
-                imperativeIsSecure =
-                    (typeof value1 === "string" && value1.length > 0) ||
-                    (typeof value2 === "string" && value2.length > 0);
+                imperativeIsSecure = (typeof value1 === "string" && value1.length > 0) || (typeof value2 === "string" && value2.length > 0);
             }
         } catch (error) {
             this.log.error(error as string);
@@ -418,11 +409,7 @@ export class ProfilesCache {
         return imperativeIsSecure;
     }
 
-    public getProfileLoaded(
-        profileName: string,
-        profileType: string,
-        profile: zowe.imperative.IProfile
-    ): zowe.imperative.IProfileLoaded {
+    public getProfileLoaded(profileName: string, profileType: string, profile: zowe.imperative.IProfile): zowe.imperative.IProfileLoaded {
         return {
             message: "",
             name: profileName,
@@ -442,11 +429,7 @@ export class ProfilesCache {
     }
 
     // used by Zowe Explorer for v1 profiles
-    protected async saveProfile(
-        profileInfo: Record<string, unknown>,
-        profileName: string,
-        profileType: string
-    ): Promise<zowe.imperative.IProfile> {
+    protected async saveProfile(profileInfo: Record<string, unknown>, profileName: string, profileType: string): Promise<zowe.imperative.IProfile> {
         const newProfile = await this.getCliProfileManager(profileType).save({
             profile: profileInfo,
             name: profileName,
@@ -470,8 +453,7 @@ export class ProfilesCache {
                         baseProfile?.profile?.port &&
                         profile?.profile?.host &&
                         profile?.profile?.port &&
-                        (baseProfile?.profile.host !== profile?.profile.host ||
-                            baseProfile?.profile.port !== profile?.profile.port) &&
+                        (baseProfile?.profile.host !== profile?.profile.host || baseProfile?.profile.port !== profile?.profile.port) &&
                         profile?.profile.tokenType === "apimlAuthenticationToken"
                     ) {
                         profile.profile.tokenType = undefined;
@@ -502,8 +484,7 @@ export class ProfilesCache {
             baseProfile?.profile?.port &&
             profile?.profile?.host &&
             profile?.profile?.port &&
-            (baseProfile?.profile.host !== profile?.profile.host ||
-                baseProfile?.profile.port !== profile?.profile.port) &&
+            (baseProfile?.profile.host !== profile?.profile.host || baseProfile?.profile.port !== profile?.profile.port) &&
             profile?.profile.tokenType === "apimlAuthenticationToken"
         ) {
             profile.profile.tokenType = undefined;
@@ -512,10 +493,7 @@ export class ProfilesCache {
         return profile;
     }
 
-    protected getMergedAttrs(
-        mProfileInfo: zowe.imperative.ProfileInfo,
-        profAttrs: zowe.imperative.IProfAttrs
-    ): zowe.imperative.IProfile {
+    protected getMergedAttrs(mProfileInfo: zowe.imperative.ProfileInfo, profAttrs: zowe.imperative.IProfAttrs): zowe.imperative.IProfile {
         const profile: zowe.imperative.IProfile = {};
         if (profAttrs != null) {
             const mergedArgs = mProfileInfo.mergeArgsForProfile(profAttrs, { getSecureVals: true });
@@ -531,9 +509,7 @@ export class ProfilesCache {
     // and allExternalTypes
     private getAllProfileTypes(registeredTypes: string[]): string[] {
         const externalTypeArray: string[] = Array.from(this.allExternalTypes);
-        const allTypes = registeredTypes.concat(
-            externalTypeArray.filter((exType) => registeredTypes.every((type) => type !== exType))
-        );
+        const allTypes = registeredTypes.concat(externalTypeArray.filter((exType) => registeredTypes.every((type) => type !== exType)));
         return allTypes;
     }
 }

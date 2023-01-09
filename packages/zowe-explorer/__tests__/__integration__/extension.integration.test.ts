@@ -9,7 +9,6 @@
  *                                                                                 *
  */
 
-// tslint:disable:no-magic-numbers
 import * as zowe from "@zowe/cli";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
@@ -30,7 +29,7 @@ import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import { USSTree } from "../../src/uss/USSTree";
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
 import { IZoweTreeNode } from "@zowe/zowe-explorer-api";
-import { PersistentFilters } from "../../src/PersistentFilters";
+import { SettingsConfig } from "../../src/utils/SettingsConfig";
 import * as globals from "../../src/globals";
 
 const TIMEOUT = 45000;
@@ -78,10 +77,8 @@ describe("Extension Integration Tests", async () => {
     testTree.mSessionNodes.push(sessionNode);
 
     let sandbox;
-    const tempSettings = PersistentFilters.getDirectValue(globals.SETTINGS_TEMP_FOLDER_CLEANUP);
-    await vscode.workspace
-        .getConfiguration()
-        .update(globals.SETTINGS_TEMP_FOLDER_CLEANUP, true, vscode.ConfigurationTarget.Global);
+    const tempSettings = SettingsConfig.getDirectValue(globals.SETTINGS_TEMP_FOLDER_CLEANUP);
+    await SettingsConfig.setDirectValue(globals.SETTINGS_TEMP_FOLDER_CLEANUP, true);
 
     beforeEach(async function () {
         this.timeout(TIMEOUT);
@@ -104,12 +101,8 @@ describe("Extension Integration Tests", async () => {
     const dsSettings = vscode.workspace.getConfiguration(globals.SETTINGS_DS_HISTORY);
 
     after(async () => {
-        await vscode.workspace
-            .getConfiguration()
-            .update(globals.SETTINGS_DS_HISTORY, dsSettings, vscode.ConfigurationTarget.Global);
-        await vscode.workspace
-            .getConfiguration()
-            .update(globals.SETTINGS_TEMP_FOLDER_CLEANUP, tempSettings, vscode.ConfigurationTarget.Global);
+        await vscode.workspace.getConfiguration().update(globals.SETTINGS_DS_HISTORY, dsSettings, vscode.ConfigurationTarget.Global);
+        await vscode.workspace.getConfiguration().update(globals.SETTINGS_TEMP_FOLDER_CLEANUP, tempSettings, vscode.ConfigurationTarget.Global);
     });
 
     describe("Creating a Session", () => {
@@ -122,9 +115,7 @@ describe("Extension Integration Tests", async () => {
             const profileNamesList = profileManager.getAllProfileNames().filter(
                 (profileName) =>
                     // Find all cases where a profile is not already displayed
-                    !testTree.mSessionNodes.find(
-                        (node) => node.label.toString().toUpperCase() === profileName.toUpperCase()
-                    )
+                    !testTree.mSessionNodes.find((node) => node.label.toString().toUpperCase() === profileName.toUpperCase())
             );
 
             // Mock user selecting first profile from list
@@ -168,12 +159,7 @@ describe("Extension Integration Tests", async () => {
 
             // 2nd step: User selects DS type
             // 3rd step: User tries to allocate
-            const returnVals = [
-                "Data Set Sequential",
-                " + Allocate Data Set",
-                "Data Set Sequential",
-                " + Allocate Data Set",
-            ];
+            const returnVals = ["Data Set Sequential", " + Allocate Data Set", "Data Set Sequential", " + Allocate Data Set"];
             const quickPickStub = sandbox.stub(vscode.window, "showQuickPick");
             returnVals.forEach((value, index) => {
                 quickPickStub.onCall(index).returns(value);
@@ -193,12 +179,7 @@ describe("Extension Integration Tests", async () => {
             inputBoxStub.returns(testFileName);
 
             const testParentName = pattern + ".EXT.SAMPLE.PDS";
-            const testParentNode = new ZoweDatasetNode(
-                testParentName,
-                vscode.TreeItemCollapsibleState.Collapsed,
-                sessionNode,
-                session
-            );
+            const testParentNode = new ZoweDatasetNode(testParentName, vscode.TreeItemCollapsibleState.Collapsed, sessionNode, session);
             await dsActions.createMember(testParentNode, testTree);
 
             const allMembers = await zowe.List.allMembers(session, testParentName);
@@ -286,12 +267,7 @@ describe("Extension Integration Tests", async () => {
     describe("Allocate Like", () => {
         it("should allocate a copy of the requested data set", async () => {
             const testOriginalName = pattern + ".EXT.SAMPLE.PDS";
-            const testOriginalNode = new ZoweDatasetNode(
-                testOriginalName,
-                vscode.TreeItemCollapsibleState.Collapsed,
-                sessionNode,
-                session
-            );
+            const testOriginalNode = new ZoweDatasetNode(testOriginalName, vscode.TreeItemCollapsibleState.Collapsed, sessionNode, session);
             const testCopyName = pattern + ".ALLOC.LIKE";
 
             const inputStub = sandbox.stub(vscode.window, "showInputBox");
@@ -314,12 +290,7 @@ describe("Extension Integration Tests", async () => {
     describe("Tests for Deleting Data Sets", () => {
         const dataSetName = pattern + ".DELETE.TEST";
         it("should delete a data set", async () => {
-            const testNode = new ZoweDatasetNode(
-                dataSetName,
-                vscode.TreeItemCollapsibleState.None,
-                sessionNode,
-                session
-            );
+            const testNode = new ZoweDatasetNode(dataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
 
             // Mock user selecting first option from list
             await dsActions.deleteDataset(testNode, testTree);
@@ -350,29 +321,16 @@ describe("Extension Integration Tests", async () => {
 
     describe("Opening a PS", () => {
         it("should open a PS", async () => {
-            const node = new ZoweDatasetNode(
-                pattern + ".EXT.PS",
-                vscode.TreeItemCollapsibleState.None,
-                sessionNode,
-                null
-            );
+            const node = new ZoweDatasetNode(pattern + ".EXT.PS", vscode.TreeItemCollapsibleState.None, sessionNode, null);
             await dsActions.openPS(node, true, testTree);
             expect(
-                path.relative(
-                    vscode.window.activeTextEditor.document.fileName,
-                    sharedUtils.getDocumentFilePath(pattern + ".EXT.PS", node)
-                )
+                path.relative(vscode.window.activeTextEditor.document.fileName, sharedUtils.getDocumentFilePath(pattern + ".EXT.PS", node))
             ).to.equal("");
             expect(fs.existsSync(sharedUtils.getDocumentFilePath(pattern + ".EXT.PS", node))).to.equal(true);
         }).timeout(TIMEOUT);
 
         it("should display an error message when openPS is passed an invalid node", async () => {
-            const node = new ZoweDatasetNode(
-                pattern + ".GARBAGE",
-                vscode.TreeItemCollapsibleState.None,
-                sessionNode,
-                null
-            );
+            const node = new ZoweDatasetNode(pattern + ".GARBAGE", vscode.TreeItemCollapsibleState.None, sessionNode, null);
             const errorMessageStub = sandbox.spy(vscode.window, "showErrorMessage");
             await expect(dsActions.openPS(node, true)).to.eventually.be.rejectedWith(Error);
 
@@ -392,20 +350,11 @@ describe("Extension Integration Tests", async () => {
 
             const changedData = "PS Upload Test";
 
-            fs.writeFileSync(
-                path.join(
-                    globals.ZOWETEMPFOLDER,
-                    children[1].label.toString() + "[" + profiles[1].label.toString() + "]"
-                ),
-                changedData
-            );
+            fs.writeFileSync(path.join(globals.ZOWETEMPFOLDER, children[1].label.toString() + "[" + profiles[1].label.toString() + "]"), changedData);
 
             // Upload file
             const doc = await vscode.workspace.openTextDocument(
-                path.join(
-                    globals.ZOWETEMPFOLDER,
-                    children[1].label.toString() + "[" + profiles[1].label.toString() + "]"
-                )
+                path.join(globals.ZOWETEMPFOLDER, children[1].label.toString() + "[" + profiles[1].label.toString() + "]")
             );
             await dsActions.saveFile(doc, testTree);
 
@@ -433,19 +382,13 @@ describe("Extension Integration Tests", async () => {
             const changedData2 = "PO Member Upload Test";
 
             fs.writeFileSync(
-                path.join(
-                    globals.ZOWETEMPFOLDER,
-                    children[0].label.toString() + "(" + childrenMembers[0].label.toString() + ")"
-                ),
+                path.join(globals.ZOWETEMPFOLDER, children[0].label.toString() + "(" + childrenMembers[0].label.toString() + ")"),
                 changedData2
             );
 
             // Upload file
             const doc2 = await vscode.workspace.openTextDocument(
-                path.join(
-                    globals.ZOWETEMPFOLDER,
-                    children[0].label.toString() + "(" + childrenMembers[0].label.toString() + ")"
-                )
+                path.join(globals.ZOWETEMPFOLDER, children[0].label.toString() + "(" + childrenMembers[0].label.toString() + ")")
             );
             dsActions.saveFile(doc2, testTree);
 
@@ -457,10 +400,7 @@ describe("Extension Integration Tests", async () => {
             // Change contents back
             const originalData2 = "";
             fs.writeFileSync(
-                path.join(
-                    globals.ZOWETEMPFOLDER,
-                    children[0].label.toString() + "(" + childrenMembers[0].label.toString() + ")"
-                ),
+                path.join(globals.ZOWETEMPFOLDER, children[0].label.toString() + "(" + childrenMembers[0].label.toString() + ")"),
                 originalData2
             );
         }).timeout(TIMEOUT);
@@ -492,24 +432,12 @@ describe("Extension Integration Tests", async () => {
                 beforeEach(async () => {
                     await Promise.all(
                         [
-                            zowe.Create.dataSet(
-                                sessionNode.getSession(),
-                                zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL,
-                                fromDataSetName
-                            ),
-                            zowe.Create.dataSet(
-                                sessionNode.getSession(),
-                                zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL,
-                                toDataSetName
-                            ),
+                            zowe.Create.dataSet(sessionNode.getSession(), zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, fromDataSetName),
+                            zowe.Create.dataSet(sessionNode.getSession(), zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, toDataSetName),
                         ].map((p) => p.catch((err) => err))
                     );
 
-                    await zowe.Upload.bufferToDataSet(
-                        sessionNode.getSession(),
-                        Buffer.from("1234"),
-                        fromDataSetName
-                    ).catch((err) => err);
+                    await zowe.Upload.bufferToDataSet(sessionNode.getSession(), Buffer.from("1234"), fromDataSetName).catch((err) => err);
                 });
                 afterEach(async () => {
                     await Promise.all(
@@ -525,18 +453,8 @@ describe("Extension Integration Tests", async () => {
                     let contents;
 
                     try {
-                        const fromNode = new ZoweDatasetNode(
-                            fromDataSetName,
-                            vscode.TreeItemCollapsibleState.None,
-                            sessionNode,
-                            session
-                        );
-                        const toNode = new ZoweDatasetNode(
-                            toDataSetName,
-                            vscode.TreeItemCollapsibleState.None,
-                            sessionNode,
-                            session
-                        );
+                        const fromNode = new ZoweDatasetNode(fromDataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
+                        const toNode = new ZoweDatasetNode(toDataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
 
                         await dsActions.copyDataSet(fromNode);
                         await dsActions.pasteMember(toNode, testTree);
@@ -557,17 +475,11 @@ describe("Extension Integration Tests", async () => {
                 const toMemberName = "file2";
 
                 beforeEach(async () => {
-                    await zowe.Create.dataSet(
-                        sessionNode.getSession(),
-                        zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED,
-                        dataSetName
-                    ).catch((err) => err);
-
-                    await zowe.Upload.bufferToDataSet(
-                        sessionNode.getSession(),
-                        Buffer.from("1234"),
-                        `${dataSetName}(${fromMemberName})`
+                    await zowe.Create.dataSet(sessionNode.getSession(), zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED, dataSetName).catch(
+                        (err) => err
                     );
+
+                    await zowe.Upload.bufferToDataSet(sessionNode.getSession(), Buffer.from("1234"), `${dataSetName}(${fromMemberName})`);
                 });
                 afterEach(async () => {
                     await zowe.Delete.dataSet(sessionNode.getSession(), dataSetName).catch((err) => err);
@@ -577,18 +489,8 @@ describe("Extension Integration Tests", async () => {
                     let contents;
 
                     try {
-                        const parentNode = new ZoweDatasetNode(
-                            dataSetName,
-                            vscode.TreeItemCollapsibleState.None,
-                            sessionNode,
-                            session
-                        );
-                        const fromNode = new ZoweDatasetNode(
-                            fromMemberName,
-                            vscode.TreeItemCollapsibleState.None,
-                            parentNode,
-                            session
-                        );
+                        const parentNode = new ZoweDatasetNode(dataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
+                        const fromNode = new ZoweDatasetNode(fromMemberName, vscode.TreeItemCollapsibleState.None, parentNode, session);
                         parentNode.contextValue = globals.DS_PDS_CONTEXT;
                         fromNode.contextValue = globals.DS_MEMBER_CONTEXT;
 
@@ -616,24 +518,12 @@ describe("Extension Integration Tests", async () => {
                 beforeEach(async () => {
                     await Promise.all(
                         [
-                            zowe.Create.dataSet(
-                                sessionNode.getSession(),
-                                zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL,
-                                fromDataSetName
-                            ),
-                            zowe.Create.dataSet(
-                                sessionNode.getSession(),
-                                zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED,
-                                toDataSetName
-                            ),
+                            zowe.Create.dataSet(sessionNode.getSession(), zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, fromDataSetName),
+                            zowe.Create.dataSet(sessionNode.getSession(), zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED, toDataSetName),
                         ].map((p) => p.catch((err) => err))
                     );
 
-                    await zowe.Upload.bufferToDataSet(
-                        sessionNode.getSession(),
-                        Buffer.from("1234"),
-                        fromDataSetName
-                    ).catch((err) => err);
+                    await zowe.Upload.bufferToDataSet(sessionNode.getSession(), Buffer.from("1234"), fromDataSetName).catch((err) => err);
                 });
                 afterEach(async () => {
                     await Promise.all(
@@ -649,18 +539,8 @@ describe("Extension Integration Tests", async () => {
                     let contents;
 
                     try {
-                        const fromNode = new ZoweDatasetNode(
-                            fromDataSetName,
-                            vscode.TreeItemCollapsibleState.None,
-                            sessionNode,
-                            session
-                        );
-                        const toNode = new ZoweDatasetNode(
-                            toDataSetName,
-                            vscode.TreeItemCollapsibleState.None,
-                            sessionNode,
-                            session
-                        );
+                        const fromNode = new ZoweDatasetNode(fromDataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
+                        const toNode = new ZoweDatasetNode(toDataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
                         fromNode.contextValue = globals.DS_DS_CONTEXT;
                         toNode.contextValue = globals.DS_PDS_CONTEXT;
 
@@ -670,10 +550,7 @@ describe("Extension Integration Tests", async () => {
                         await dsActions.copyDataSet(fromNode);
                         await dsActions.pasteMember(toNode, testTree);
 
-                        contents = await zowe.Get.dataSet(
-                            sessionNode.getSession(),
-                            `${toDataSetName}(${toMemberName})`
-                        );
+                        contents = await zowe.Get.dataSet(sessionNode.getSession(), `${toDataSetName}(${toMemberName})`);
                     } catch (err) {
                         error = err;
                     }
@@ -691,24 +568,14 @@ describe("Extension Integration Tests", async () => {
                 beforeEach(async () => {
                     await Promise.all(
                         [
-                            zowe.Create.dataSet(
-                                sessionNode.getSession(),
-                                zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED,
-                                fromDataSetName
-                            ),
-                            zowe.Create.dataSet(
-                                sessionNode.getSession(),
-                                zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL,
-                                toDataSetName
-                            ),
+                            zowe.Create.dataSet(sessionNode.getSession(), zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED, fromDataSetName),
+                            zowe.Create.dataSet(sessionNode.getSession(), zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, toDataSetName),
                         ].map((p) => p.catch((err) => err))
                     );
 
-                    await zowe.Upload.bufferToDataSet(
-                        sessionNode.getSession(),
-                        Buffer.from("1234"),
-                        `${fromDataSetName}(${fromMemberName})`
-                    ).catch((err) => err);
+                    await zowe.Upload.bufferToDataSet(sessionNode.getSession(), Buffer.from("1234"), `${fromDataSetName}(${fromMemberName})`).catch(
+                        (err) => err
+                    );
                 });
                 afterEach(async () => {
                     await Promise.all(
@@ -724,24 +591,9 @@ describe("Extension Integration Tests", async () => {
                     let contents;
 
                     try {
-                        const fromParentNode = new ZoweDatasetNode(
-                            fromDataSetName,
-                            vscode.TreeItemCollapsibleState.None,
-                            sessionNode,
-                            session
-                        );
-                        const fromMemberNode = new ZoweDatasetNode(
-                            fromMemberName,
-                            vscode.TreeItemCollapsibleState.None,
-                            fromParentNode,
-                            session
-                        );
-                        const toNode = new ZoweDatasetNode(
-                            toDataSetName,
-                            vscode.TreeItemCollapsibleState.None,
-                            sessionNode,
-                            session
-                        );
+                        const fromParentNode = new ZoweDatasetNode(fromDataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
+                        const fromMemberNode = new ZoweDatasetNode(fromMemberName, vscode.TreeItemCollapsibleState.None, fromParentNode, session);
+                        const toNode = new ZoweDatasetNode(toDataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
                         fromParentNode.contextValue = globals.DS_PDS_CONTEXT;
                         fromMemberNode.contextValue = globals.DS_MEMBER_CONTEXT;
                         toNode.contextValue = globals.DS_DS_CONTEXT;
@@ -769,11 +621,7 @@ describe("Extension Integration Tests", async () => {
 
                 beforeEach(async () => {
                     await zowe.Delete.dataSet(sessionNode.getSession(), dataSetName).catch((err) => err);
-                    await zowe.Create.dataSet(
-                        sessionNode.getSession(),
-                        zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL,
-                        dataSetName
-                    );
+                    await zowe.Create.dataSet(sessionNode.getSession(), zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, dataSetName);
                 });
 
                 afterEach(async () => {
@@ -784,12 +632,7 @@ describe("Extension Integration Tests", async () => {
                     let error;
 
                     try {
-                        const node = new ZoweDatasetNode(
-                            dataSetName,
-                            vscode.TreeItemCollapsibleState.None,
-                            sessionNode,
-                            session
-                        );
+                        const node = new ZoweDatasetNode(dataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
                         node.contextValue = globals.DS_DS_CONTEXT;
 
                         await dsActions.hMigrateDataSet(node);
@@ -804,11 +647,7 @@ describe("Extension Integration Tests", async () => {
 
                 beforeEach(async () => {
                     await zowe.Delete.dataSet(sessionNode.getSession(), dataSetName).catch((err) => err);
-                    await zowe.Create.dataSet(
-                        sessionNode.getSession(),
-                        zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED,
-                        dataSetName
-                    );
+                    await zowe.Create.dataSet(sessionNode.getSession(), zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED, dataSetName);
                 });
 
                 afterEach(async () => {
@@ -819,12 +658,7 @@ describe("Extension Integration Tests", async () => {
                     let error;
 
                     try {
-                        const node = new ZoweDatasetNode(
-                            dataSetName,
-                            vscode.TreeItemCollapsibleState.None,
-                            sessionNode,
-                            session
-                        );
+                        const node = new ZoweDatasetNode(dataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
                         node.contextValue = globals.DS_DS_CONTEXT;
 
                         await dsActions.hMigrateDataSet(node);
@@ -843,12 +677,7 @@ describe("Extension Integration Tests", async () => {
                     let error;
 
                     try {
-                        const node = new ZoweDatasetNode(
-                            dataSetName,
-                            vscode.TreeItemCollapsibleState.None,
-                            sessionNode,
-                            session
-                        );
+                        const node = new ZoweDatasetNode(dataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
                         node.contextValue = globals.DS_DS_CONTEXT;
 
                         await dsActions.hMigrateDataSet(node);
@@ -868,11 +697,7 @@ describe("Extension Integration Tests", async () => {
 
                 beforeEach(async () => {
                     await zowe.Delete.dataSet(sessionNode.getSession(), dataSetName).catch((err) => err);
-                    await zowe.Create.dataSet(
-                        sessionNode.getSession(),
-                        zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL,
-                        dataSetName
-                    );
+                    await zowe.Create.dataSet(sessionNode.getSession(), zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, dataSetName);
                 });
 
                 afterEach(async () => {
@@ -883,12 +708,7 @@ describe("Extension Integration Tests", async () => {
                     let error;
 
                     try {
-                        const node = new ZoweDatasetNode(
-                            dataSetName,
-                            vscode.TreeItemCollapsibleState.None,
-                            sessionNode,
-                            session
-                        );
+                        const node = new ZoweDatasetNode(dataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
                         node.contextValue = globals.DS_DS_CONTEXT;
 
                         await dsActions.hRecallDataSet(node);
@@ -903,11 +723,7 @@ describe("Extension Integration Tests", async () => {
 
                 beforeEach(async () => {
                     await zowe.Delete.dataSet(sessionNode.getSession(), dataSetName).catch((err) => err);
-                    await zowe.Create.dataSet(
-                        sessionNode.getSession(),
-                        zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED,
-                        dataSetName
-                    );
+                    await zowe.Create.dataSet(sessionNode.getSession(), zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED, dataSetName);
                 });
 
                 afterEach(async () => {
@@ -918,12 +734,7 @@ describe("Extension Integration Tests", async () => {
                     let error;
 
                     try {
-                        const node = new ZoweDatasetNode(
-                            dataSetName,
-                            vscode.TreeItemCollapsibleState.None,
-                            sessionNode,
-                            session
-                        );
+                        const node = new ZoweDatasetNode(dataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
                         node.contextValue = globals.DS_DS_CONTEXT;
 
                         await dsActions.hRecallDataSet(node);
@@ -942,12 +753,7 @@ describe("Extension Integration Tests", async () => {
                     let error;
 
                     try {
-                        const node = new ZoweDatasetNode(
-                            dataSetName,
-                            vscode.TreeItemCollapsibleState.None,
-                            sessionNode,
-                            session
-                        );
+                        const node = new ZoweDatasetNode(dataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
                         node.contextValue = globals.DS_DS_CONTEXT;
 
                         await dsActions.hRecallDataSet(node);
@@ -980,9 +786,7 @@ describe("Extension Integration Tests", async () => {
         it("should assign the temp folder based on preference", async () => {
             // create target folder
             fs.mkdirSync(testingPath);
-            await vscode.workspace
-                .getConfiguration()
-                .update(globals.SETTINGS_TEMP_FOLDER_PATH, testingPath, vscode.ConfigurationTarget.Global);
+            await vscode.workspace.getConfiguration().update(globals.SETTINGS_TEMP_FOLDER_PATH, testingPath, vscode.ConfigurationTarget.Global);
 
             // expect(extension.ZOWETEMPFOLDER).to.equal(`${testingPath}/temp`);
             expect(globals.ZOWETEMPFOLDER).to.equal(path.join(testingPath, "temp"));
@@ -996,14 +800,10 @@ describe("Extension Integration Tests", async () => {
             fs.mkdirSync(providedPathTwo);
 
             // set first preference
-            await vscode.workspace
-                .getConfiguration()
-                .update(globals.SETTINGS_TEMP_FOLDER_PATH, providedPathOne, vscode.ConfigurationTarget.Global);
+            await vscode.workspace.getConfiguration().update(globals.SETTINGS_TEMP_FOLDER_PATH, providedPathOne, vscode.ConfigurationTarget.Global);
 
             // change preference and test for update
-            await vscode.workspace
-                .getConfiguration()
-                .update(globals.SETTINGS_TEMP_FOLDER_PATH, providedPathTwo, vscode.ConfigurationTarget.Global);
+            await vscode.workspace.getConfiguration().update(globals.SETTINGS_TEMP_FOLDER_PATH, providedPathTwo, vscode.ConfigurationTarget.Global);
 
             // expect(extension.ZOWETEMPFOLDER).to.equal(`${providedPathTwo}/temp`);
             expect(globals.ZOWETEMPFOLDER).to.equal(path.join(providedPathTwo, "temp"));
@@ -1015,9 +815,7 @@ describe("Extension Integration Tests", async () => {
 
         it("should assign default temp folder, if preference is empty", async () => {
             const expectedDefaultTemp = path.join(__dirname, "..", "..", "..", "resources", "temp");
-            await vscode.workspace
-                .getConfiguration()
-                .update(globals.SETTINGS_TEMP_FOLDER_PATH, "", vscode.ConfigurationTarget.Global);
+            await vscode.workspace.getConfiguration().update(globals.SETTINGS_TEMP_FOLDER_PATH, "", vscode.ConfigurationTarget.Global);
             expect(globals.ZOWETEMPFOLDER).to.equal(expectedDefaultTemp);
         }).timeout(TIMEOUT);
     });
@@ -1027,11 +825,7 @@ describe("Extension Integration Tests", async () => {
             const log = zowe.imperative.Logger.getAppLogger();
             await vscode.workspace
                 .getConfiguration()
-                .update(
-                    globals.SETTINGS_DS_HISTORY,
-                    { persistence: true, favorites: [] },
-                    vscode.ConfigurationTarget.Global
-                );
+                .update(globals.SETTINGS_DS_HISTORY, { persistence: true, favorites: [] }, vscode.ConfigurationTarget.Global);
             const testTree3 = await createDatasetTree(log);
             expect(testTree3.mFavorites).to.deep.equal([]);
         }).timeout(TIMEOUT);
@@ -1047,18 +841,9 @@ describe("Extension Integration Tests", async () => {
             ];
             await vscode.workspace
                 .getConfiguration()
-                .update(
-                    globals.SETTINGS_DS_HISTORY,
-                    { persistence: true, favorites },
-                    vscode.ConfigurationTarget.Global
-                );
+                .update(globals.SETTINGS_DS_HISTORY, { persistence: true, favorites }, vscode.ConfigurationTarget.Global);
             const testTree3 = await createDatasetTree(log);
-            const initializedFavLabels = [
-                `${pattern}.EXT.PDS`,
-                `${pattern}.EXT.PS`,
-                `${pattern}.EXT.SAMPLE.PDS`,
-                `${pattern}.EXT`,
-            ];
+            const initializedFavLabels = [`${pattern}.EXT.PDS`, `${pattern}.EXT.PS`, `${pattern}.EXT.SAMPLE.PDS`, `${pattern}.EXT`];
             expect(testTree3.mFavorites[0].children.map((node) => node.label)).to.deep.equal(initializedFavLabels);
         }).timeout(TIMEOUT);
 
@@ -1068,11 +853,7 @@ describe("Extension Integration Tests", async () => {
             const favorites = [pattern + ".EXT.PDS[profileName]{pds}", corruptedFavorite];
             await vscode.workspace
                 .getConfiguration()
-                .update(
-                    globals.SETTINGS_DS_HISTORY,
-                    { persistence: true, favorites },
-                    vscode.ConfigurationTarget.Global
-                );
+                .update(globals.SETTINGS_DS_HISTORY, { persistence: true, favorites }, vscode.ConfigurationTarget.Global);
             const logWarnStub = sandbox.spy(log, "warn");
             await createDatasetTree(log);
             expect(logWarnStub.gotCalledOnce);
@@ -1093,24 +874,13 @@ describe("Extension Integration Tests", async () => {
             ];
             await vscode.workspace
                 .getConfiguration()
-                .update(
-                    globals.SETTINGS_DS_HISTORY,
-                    { persistence: true, favorites },
-                    vscode.ConfigurationTarget.Global
-                );
+                .update(globals.SETTINGS_DS_HISTORY, { persistence: true, favorites }, vscode.ConfigurationTarget.Global);
             await testTree.initializeFavorites(log);
             const initializedFavProfileLabels = [`${profileName}`, "badProfileName"];
-            const goodProfileFavLabels = [
-                `${pattern}.EXT.PDS`,
-                `${pattern}.EXT.PS`,
-                `${pattern}.EXT.SAMPLE.PDS`,
-                `${pattern}.EXT`,
-            ];
+            const goodProfileFavLabels = [`${pattern}.EXT.PDS`, `${pattern}.EXT.PS`, `${pattern}.EXT.SAMPLE.PDS`, `${pattern}.EXT`];
             const badProfileFavLabels = [`${pattern}.BAD.PROFILE.EXT.PS`];
             // Profile nodes for both valid and invalid profiles should be created in mFavorites. (Error checking happens on expand.)
-            expect(testTree.mFavorites.map((favProfileNode) => favProfileNode.label)).to.deep.equal(
-                initializedFavProfileLabels
-            );
+            expect(testTree.mFavorites.map((favProfileNode) => favProfileNode.label)).to.deep.equal(initializedFavProfileLabels);
             // Favorite item nodes should be created for favorite profile nodes of both valid and valid profiles.
             expect(testTree.mFavorites[0].children.map((node) => node.label)).to.deep.equal(goodProfileFavLabels);
             expect(testTree.mFavorites[1].children.map((node) => node.label)).to.deep.equal(badProfileFavLabels);
@@ -1184,9 +954,7 @@ describe("Extension Integration Tests - USS", () => {
             // Initialize uss file provider
             const ussFileProvider = new USSTree();
 
-            const nonFavorites = ussFileProvider.mSessionNodes.filter(
-                (node) => node.contextValue !== globals.FAVORITE_CONTEXT
-            );
+            const nonFavorites = ussFileProvider.mSessionNodes.filter((node) => node.contextValue !== globals.FAVORITE_CONTEXT);
             const allNodes = await getAllUSSNodes(nonFavorites);
             for (const node of allNodes) {
                 // For each node, select that node in TreeView by calling reveal()
@@ -1207,9 +975,7 @@ describe("Extension Integration Tests - USS", () => {
             const profileNamesList = profileManager.getAllProfileNames().filter(
                 (profileName) =>
                     // Find all cases where a profile is not already displayed
-                    !ussTestTree.mSessionNodes.find(
-                        (node) => node.label.toString().toUpperCase() === profileName.toUpperCase()
-                    )
+                    !ussTestTree.mSessionNodes.find((node) => node.label.toString().toUpperCase() === profileName.toUpperCase())
             );
 
             // Mock user selecting first profile from list

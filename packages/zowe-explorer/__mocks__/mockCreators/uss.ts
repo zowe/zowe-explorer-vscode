@@ -19,11 +19,7 @@ import { removeNodeFromArray } from "./shared";
 import { USSTree } from "../../src/uss/USSTree";
 import { PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 
-export function createUSSTree(
-    favoriteNodes: ZoweUSSNode[],
-    sessionNodes: ZoweUSSNode[],
-    treeView?: vscode.TreeView<ZoweTreeProvider>
-): USSTree {
+export function createUSSTree(favoriteNodes: ZoweUSSNode[], sessionNodes: ZoweUSSNode[], treeView?: vscode.TreeView<ZoweTreeProvider>): USSTree {
     const newTree = new USSTree();
     newTree.mSessionNodes = [...sessionNodes];
     newTree.mFavorites = favoriteNodes;
@@ -33,13 +29,9 @@ export function createUSSTree(
     newTree.refreshElement = jest.fn();
     newTree.getChildren = jest.fn();
     newTree.addFavorite = jest.fn().mockImplementation((newFavorite) => newTree.mFavorites.push(newFavorite));
-    newTree.removeFavorite = jest
-        .fn()
-        .mockImplementation((badFavorite) => removeNodeFromArray(badFavorite, newTree.mFavorites));
+    newTree.removeFavorite = jest.fn().mockImplementation((badFavorite) => removeNodeFromArray(badFavorite, newTree.mFavorites));
     newTree.openItemFromPath = jest.fn();
-    newTree.deleteSession = jest
-        .fn()
-        .mockImplementation((badSession) => removeNodeFromArray(badSession, newTree.mSessionNodes));
+    newTree.deleteSession = jest.fn().mockImplementation((badSession) => removeNodeFromArray(badSession, newTree.mSessionNodes));
     newTree.getAllLoadedItems = jest.fn();
     newTree.getTreeView = jest.fn().mockImplementation(() => treeView);
     newTree.getTreeItem = jest.fn().mockImplementation(() => new vscode.TreeItem("test"));
@@ -51,24 +43,8 @@ export function createUSSTree(
 }
 
 export function createUSSNode(session, profile) {
-    const mParent = new ZoweUSSNode(
-        "parentNode",
-        vscode.TreeItemCollapsibleState.Expanded,
-        null,
-        session,
-        null,
-        false,
-        profile.name
-    );
-    const ussNode = new ZoweUSSNode(
-        "usstest",
-        vscode.TreeItemCollapsibleState.Expanded,
-        mParent,
-        session,
-        null,
-        false,
-        profile.name
-    );
+    const mParent = new ZoweUSSNode("parentNode", vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, profile.name);
+    const ussNode = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, mParent, session, null, false, profile.name);
     mParent.contextValue = globals.USS_SESSION_CONTEXT;
     ussNode.contextValue = globals.USS_DIR_CONTEXT;
     mParent.fullPath = "/u/myuser";
@@ -101,24 +77,8 @@ export function createUSSSessionNode(session: imperative.Session, profile: imper
 // This is NOT a favorite equivalent of the node created by createdUSSNode.
 // This is a favorited textfile node. createUSSNode creates a USS session node.
 export function createFavoriteUSSNode(session, profile) {
-    const ussNodeF = new ZoweUSSNode(
-        "usstest",
-        vscode.TreeItemCollapsibleState.Expanded,
-        null,
-        session,
-        null,
-        false,
-        profile.name
-    );
-    const mParent = new ZoweUSSNode(
-        "sestest",
-        vscode.TreeItemCollapsibleState.Expanded,
-        null,
-        session,
-        null,
-        false,
-        profile.name
-    );
+    const ussNodeF = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, profile.name);
+    const mParent = new ZoweUSSNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, profile.name);
     mParent.contextValue = globals.FAV_PROFILE_CONTEXT;
     ussNodeF.contextValue = globals.DS_TEXT_FILE_CONTEXT + globals.FAV_SUFFIX;
     ussNodeF.fullPath = "/u/myuser/usstest";

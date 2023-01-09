@@ -31,12 +31,12 @@ type Log4JsCfg = {
 const LOGGER_CONFIG: Log4JsCfg = loggerConfig;
 
 export enum MessageSeverityEnum {
-    TRACE = 0,
-    DEBUG = 1,
-    INFO = 2,
-    WARN = 3,
-    ERROR = 4,
-    FATAL = 5,
+    TRACE,
+    DEBUG,
+    INFO,
+    WARN,
+    ERROR,
+    FATAL,
 }
 
 /**

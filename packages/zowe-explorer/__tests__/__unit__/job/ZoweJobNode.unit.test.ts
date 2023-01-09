@@ -149,8 +149,7 @@ async function createGlobalMocks() {
     globalMocks.mockGetBaseProfile.mockResolvedValue(globalMocks.testProfile);
     globalMocks.mockProfileInstance.getValidSession.mockResolvedValue(globalMocks.testSession);
     globalMocks.mockProfileInstance.getBaseProfile = globalMocks.mockGetBaseProfile;
-    globalMocks.mockProfileInstance.checkProfileValidationSetting =
-        globalMocks.mockValidationSetting.mockReturnValue(true);
+    globalMocks.mockProfileInstance.checkProfileValidationSetting = globalMocks.mockValidationSetting.mockReturnValue(true);
     globalMocks.mockProfileInstance.enableValidationContext = globalMocks.mockEnableValidationContext;
     globalMocks.mockProfileInstance.disableValidationContext = globalMocks.mockDisableValidationContext;
 
@@ -337,17 +336,11 @@ describe("ZoweJobNode unit tests - Function flipState", () => {
         globalMocks.mockCreateSessCfgFromArgs.mockReturnValue(globalMocks.testSession);
 
         await globalMocks.testJobsProvider.flipState(globalMocks.testJobsProvider.mSessionNodes[1], true);
-        expect(JSON.stringify(globalMocks.testJobsProvider.mSessionNodes[1].iconPath)).toContain(
-            "folder-root-unverified-closed.svg"
-        );
+        expect(JSON.stringify(globalMocks.testJobsProvider.mSessionNodes[1].iconPath)).toContain("folder-root-unverified-closed.svg");
         await globalMocks.testJobsProvider.flipState(globalMocks.testJobsProvider.mSessionNodes[1], false);
-        expect(JSON.stringify(globalMocks.testJobsProvider.mSessionNodes[1].iconPath)).toContain(
-            "folder-root-unverified-closed.svg"
-        );
+        expect(JSON.stringify(globalMocks.testJobsProvider.mSessionNodes[1].iconPath)).toContain("folder-root-unverified-closed.svg");
         await globalMocks.testJobsProvider.flipState(globalMocks.testJobsProvider.mSessionNodes[1], true);
-        expect(JSON.stringify(globalMocks.testJobsProvider.mSessionNodes[1].iconPath)).toContain(
-            "folder-root-unverified-closed.svg"
-        );
+        expect(JSON.stringify(globalMocks.testJobsProvider.mSessionNodes[1].iconPath)).toContain("folder-root-unverified-closed.svg");
 
         await globalMocks.testJobsProvider.flipState(globalMocks.testJobNode, true);
         expect(JSON.stringify(globalMocks.testJobNode.iconPath)).toContain("folder-open.svg");
@@ -524,15 +517,22 @@ describe("ZosJobsProvider - Function searchPrompt", () => {
     });
     it("should add history if searchCriteria is returned", async () => {
         const globalMocks = await createGlobalMocks();
-        jest.spyOn(globalMocks.testJobsProvider, "applyRegularSessionSearchLabel").mockReturnValue(
-            "Owner:kristina Prefix:* Status:*"
-        );
+        jest.spyOn(globalMocks.testJobsProvider, "applyRegularSessionSearchLabel").mockReturnValue("Owner:kristina Prefix:* Status:*");
         const addSearchHistory = jest.spyOn(globalMocks.testJobsProvider, "addSearchHistory");
         const refreshElement = jest.spyOn(globalMocks.testJobsProvider, "refreshElement");
         await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
         expect(globalMocks.testJobsProvider);
         expect(addSearchHistory).toHaveBeenCalled();
         expect(refreshElement).toHaveBeenCalled();
+    });
+    it("testing fav node to call applySearchLabelToNode", async () => {
+        const globalMocks = await createGlobalMocks();
+        jest.spyOn(globalMocks.testJobsProvider, "applySavedFavoritesSearchLabel").mockReturnValue(undefined);
+        const applySearchLabelToNode = jest.spyOn(globalMocks.testJobsProvider, "applySearchLabelToNode");
+        const jobSessionNode = new Job("sestest", vscode.TreeItemCollapsibleState.Collapsed, null, null, null, null);
+        jobSessionNode.contextValue = globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX;
+        await globalMocks.testJobsProvider.searchPrompt(jobSessionNode);
+        expect(applySearchLabelToNode).toHaveBeenCalled();
     });
 });
 
@@ -611,9 +611,7 @@ describe("ZosJobsProvider - Function parseJobSearchQuery", () => {
     });
     it("should parse valid items out of bad query with special characters", async () => {
         const globalMocks = await createGlobalMocks();
-        const actualCriteriaObj = globalMocks.testJobsProvider.parseJobSearchQuery(
-            "Owner:zowe::\\// . : Prefix:BA*      Status:ACTIVE"
-        );
+        const actualCriteriaObj = globalMocks.testJobsProvider.parseJobSearchQuery("Owner:zowe::\\// . : Prefix:BA*      Status:ACTIVE");
         const expectedSearchCriteriaObj = {
             Owner: "zowe",
             Prefix: "BA*",
@@ -629,9 +627,7 @@ describe("ZosJobsProvider - Function parseJobSearchQuery", () => {
     });
     it("should not add extra key value pairs to searchCriteriaObj", async () => {
         const globalMocks = await createGlobalMocks();
-        const actualCriteriaObj = globalMocks.testJobsProvider.parseJobSearchQuery(
-            "Owner:zowe Prefix:* Random:value Another:random JobId:123"
-        );
+        const actualCriteriaObj = globalMocks.testJobsProvider.parseJobSearchQuery("Owner:zowe Prefix:* Random:value Another:random JobId:123");
         const expectedSearchCriteriaObj = {
             Owner: "zowe",
             Prefix: "*",

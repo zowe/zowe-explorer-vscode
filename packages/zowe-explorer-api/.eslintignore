@@ -1,3 +1,6 @@
 __mocks__/**
 node_modules/**
 lib/**
+__mocks__/**
+__tests__/**
+*.js

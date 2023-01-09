@@ -16,14 +16,14 @@
     "@types/semver": "^7.3.6"
   },
   "dependencies": {
-    "@zowe/cli": "7.9.0",
+    "@zowe/cli": "7.9.3",
     "semver": "^7.3.5"
   },
   "scripts": {
     "build": "yarn clean && tsc -p ./",
     "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
     "test": "yarn test:unit",
-    "lint": "concurrently -n \"_eslint_,prettier\" \"eslint . --ext .ts\" \"prettier --check .\"",
+    "lint": "concurrently -n \"_eslint_,prettier\" \"eslint .\" \"prettier --check .\"",
     "lintErrors": "echo \"zowe-explorer-api: coming soon.\"",
     "pretty": "prettier --write .",
     "clean": "rimraf lib",

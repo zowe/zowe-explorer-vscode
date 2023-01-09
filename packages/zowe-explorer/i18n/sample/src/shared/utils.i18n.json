@@ -1,4 +1,8 @@
 {
+  "zowe.jobs.confirmSubmission.disabled": "Disabled",
+  "zowe.jobs.confirmSubmission.yourJobs": "Your jobs",
+  "zowe.jobs.confirmSubmission.otherUserJobs": "Other user jobs",
+  "zowe.jobs.confirmSubmission.allJobs": "All jobs",
   "uploadContent.putContents": "Uploading USS file",
   "saveFile.response.save.title": "Saving data set...",
   "saveUSSFile.response.title": "Saving file...",
@@ -6,5 +10,6 @@
   "saveFile.info.confirmUpload": "Would you like to overwrite the remote file?",
   "saveFile.overwriteConfirmation.yes": "Yes",
   "saveFile.overwriteConfirmation.no": "No",
-  "uploadContent.cancelled": "Upload cancelled."
+  "uploadContent.cancelled": "Upload cancelled.",
+  "searchJobs.prefix.invalid": "Invalid job prefix"
 }
