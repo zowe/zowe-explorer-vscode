@@ -41,9 +41,9 @@ export async function refreshAll(treeProvider: IZoweTree<IZoweTreeNode>) {
                     resetValidationSettings(sessNode, setting);
                 }
                 returnIconState(sessNode);
-                await syncSessionNode(Profiles.getInstance())((profileValue) =>
-                    ZoweExplorerApiRegister.getCommonApi(profileValue).getSession()
-                )(sessNode);
+                await syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getCommonApi(profileValue).getSession())(
+                    sessNode
+                );
             }
             treeProvider.refresh();
         } else {

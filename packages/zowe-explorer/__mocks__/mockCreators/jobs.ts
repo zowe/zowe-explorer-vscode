@@ -64,12 +64,7 @@ export function createIJobFile(): IJobFile {
     };
 }
 
-export function createJobsTree(
-    session: imperative.Session,
-    iJob: IJob,
-    profile: imperative.IProfileLoaded,
-    treeView: any
-): any {
+export function createJobsTree(session: imperative.Session, iJob: IJob, profile: imperative.IProfileLoaded, treeView: any): any {
     const jobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, null, session, iJob, profile);
     jobNode.contextValue = globals.JOBS_SESSION_CONTEXT;
 
@@ -110,12 +105,8 @@ export function createJobsTree(
     testJobsTree.addFavorite.mockImplementation((newFavorite) => {
         testJobsTree.mFavorites.push(newFavorite);
     });
-    testJobsTree.deleteSession.mockImplementation((badSession) =>
-        removeNodeFromArray(badSession, testJobsTree.mSessionNodes)
-    );
-    testJobsTree.removeFavorite.mockImplementation((badFavorite) =>
-        removeNodeFromArray(badFavorite, testJobsTree.mFavorites)
-    );
+    testJobsTree.deleteSession.mockImplementation((badSession) => removeNodeFromArray(badSession, testJobsTree.mSessionNodes));
+    testJobsTree.removeFavorite.mockImplementation((badFavorite) => removeNodeFromArray(badFavorite, testJobsTree.mFavorites));
     testJobsTree.removeFavProfile.mockImplementation((badFavProfileName) => {
         const badFavProfileNode = testJobsTree.mFavorites.find((treeNode) => treeNode.label === badFavProfileName);
         removeNodeFromArray(badFavProfileNode, testJobsTree.mFavorites);

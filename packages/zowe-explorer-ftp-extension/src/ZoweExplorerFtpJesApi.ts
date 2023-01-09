@@ -126,11 +126,7 @@ export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
             if (connection) {
                 const jobDetails = await JobUtils.findJobByID(connection, parms.jobid);
                 if (jobDetails.spoolFiles == null || jobDetails.spoolFiles.length === 0) {
-                    ZoweVsCodeExtension.showVsCodeMessage(
-                        "No spool files were available.",
-                        MessageSeverityEnum.ERROR,
-                        ZoweLogger
-                    );
+                    ZoweVsCodeExtension.showVsCodeMessage("No spool files were available.", MessageSeverityEnum.ERROR, ZoweLogger);
                     throw new Error();
                 }
                 const fullSpoolFiles = await JobUtils.getSpoolFiles(connection, jobDetails.jobid);
@@ -152,16 +148,10 @@ export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
                         subsystem: "JES2",
                         stepname: String(spoolFileToDownload.stepname),
                         procstep: String(
-                            spoolFileToDownload.procstep === "N/A" || spoolFileToDownload.procstep == null
-                                ? undefined
-                                : spoolFileToDownload.procstep
+                            spoolFileToDownload.procstep === "N/A" || spoolFileToDownload.procstep == null ? undefined : spoolFileToDownload.procstep
                         ),
                     };
-                    const destinationFile = DownloadJobs.getSpoolDownloadFile(
-                        mockJobFile,
-                        parms.omitJobidDirectory,
-                        parms.outDir
-                    );
+                    const destinationFile = DownloadJobs.getSpoolDownloadFile(mockJobFile, parms.omitJobidDirectory, parms.outDir);
                     zowe.imperative.IO.createDirsSyncFromFilePath(destinationFile);
                     zowe.imperative.IO.writeFile(destinationFile, spoolFileToDownload.contents);
                 }
@@ -196,21 +186,13 @@ export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     public getJclForJob(job: zowe.IJob): Promise<string> {
-        ZoweVsCodeExtension.showVsCodeMessage(
-            "Get jcl is not supported in the FTP extension.",
-            MessageSeverityEnum.ERROR,
-            ZoweLogger
-        );
+        ZoweVsCodeExtension.showVsCodeMessage("Get jcl is not supported in the FTP extension.", MessageSeverityEnum.ERROR, ZoweLogger);
         throw new Error();
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     public submitJcl(jcl: string, internalReaderRecfm?: string, internalReaderLrecl?: string): Promise<zowe.IJob> {
-        ZoweVsCodeExtension.showVsCodeMessage(
-            "Submit jcl is not supported in the FTP extension.",
-            MessageSeverityEnum.ERROR,
-            ZoweLogger
-        );
+        ZoweVsCodeExtension.showVsCodeMessage("Submit jcl is not supported in the FTP extension.", MessageSeverityEnum.ERROR, ZoweLogger);
         throw new Error();
     }
 

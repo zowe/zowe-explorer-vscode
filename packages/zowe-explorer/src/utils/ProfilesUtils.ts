@@ -53,9 +53,7 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
         if (msg.includes("hostname")) {
             const mProfileInfo = await Profiles.getInstance().getProfileInfo();
             if (mProfileInfo.usingTeamConfig) {
-                vscode.window.showErrorMessage(
-                    localize("errorHandling.invalid.host", "Required parameter 'host' must not be blank.")
-                );
+                vscode.window.showErrorMessage(localize("errorHandling.invalid.host", "Required parameter 'host' must not be blank."));
                 const profAllAttrs = mProfileInfo.getAllProfiles();
                 for (const prof of profAllAttrs) {
                     if (prof.profName === label.trim()) {
@@ -69,8 +67,7 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
     }
 
     switch (httpErrCode) {
-        // tslint:disable-next-line: no-magic-numbers
-        case 401:
+        case imperative.RestConstants.HTTP_STATUS_401:
             if (label.includes("[")) {
                 label = label.substring(0, label.indexOf(" [")).trim();
             }
@@ -83,10 +80,7 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
                             await Profiles.getInstance().ssoLogin(null, label);
                         });
                     } else {
-                        const message = localize(
-                            "errorHandling.authentication.login",
-                            "Log in to Authentication Service"
-                        );
+                        const message = localize("errorHandling.authentication.login", "Log in to Authentication Service");
                         vscode.window.showErrorMessage(errToken, message).then(async (selection) => {
                             if (selection) {
                                 await Profiles.getInstance().ssoLogin(null, label);
@@ -101,17 +95,13 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
                 vscode.window.showErrorMessage(errMsg);
             } else {
                 const checkCredsButton = localize("errorHandling.checkCredentials.button", "Check Credentials");
-                await vscode.window
-                    .showErrorMessage(errMsg, { modal: true }, ...[checkCredsButton])
-                    .then(async (selection) => {
-                        if (selection === checkCredsButton) {
-                            await Profiles.getInstance().promptCredentials(label.trim(), true);
-                        } else {
-                            vscode.window.showInformationMessage(
-                                localize("errorHandling.checkCredentials.cancelled", "Operation Cancelled")
-                            );
-                        }
-                    });
+                await vscode.window.showErrorMessage(errMsg, { modal: true }, ...[checkCredsButton]).then(async (selection) => {
+                    if (selection === checkCredsButton) {
+                        await Profiles.getInstance().promptCredentials(label.trim(), true);
+                    } else {
+                        vscode.window.showInformationMessage(localize("errorHandling.checkCredentials.cancelled", "Operation Cancelled"));
+                    }
+                });
             }
             break;
         default:
@@ -162,9 +152,7 @@ export const syncSessionNode =
         sessionNode.setSessionToChoice(session);
     };
 
-export async function resolveQuickPickHelper(
-    quickpick: vscode.QuickPick<vscode.QuickPickItem>
-): Promise<vscode.QuickPickItem | undefined> {
+export async function resolveQuickPickHelper(quickpick: vscode.QuickPick<vscode.QuickPickItem>): Promise<vscode.QuickPickItem | undefined> {
     return new Promise<vscode.QuickPickItem | undefined>((c) => {
         quickpick.onDidAccept(() => c(quickpick.activeItems[0]));
         quickpick.onDidHide(() => c(undefined));
@@ -179,7 +167,6 @@ export interface IFilterItem {
     menuType?: globals.JobPickerTypes;
 }
 
-// tslint:disable-next-line: max-classes-per-file
 export class FilterItem implements vscode.QuickPickItem {
     constructor(public filterItem: IFilterItem) {}
     get label(): string {
@@ -198,7 +185,6 @@ export class FilterItem implements vscode.QuickPickItem {
     }
 }
 
-// tslint:disable-next-line: max-classes-per-file
 export class FilterDescriptor implements vscode.QuickPickItem {
     constructor(private text: string) {}
     get label(): string {
@@ -259,24 +245,17 @@ export async function readConfigFromDisk() {
         }
         if (mProfileInfo.usingTeamConfig) {
             globals.setConfigPath(rootPath);
-            globals.LOG.debug(
-                'Zowe Explorer is using the team configuration file "%s"',
-                mProfileInfo.getTeamConfig().configName
-            );
+            globals.LOG.debug('Zowe Explorer is using the team configuration file "%s"', mProfileInfo.getTeamConfig().configName);
             const layers = mProfileInfo.getTeamConfig().layers || [];
             const layerSummary = layers.map(
                 (config: imperative.IConfigLayer) =>
                     `Path: ${config.path}: ${
                         config.exists
-                            ? "Found, with the following defaults:" +
-                              JSON.stringify(config.properties?.defaults || "Undefined default")
+                            ? "Found, with the following defaults:" + JSON.stringify(config.properties?.defaults || "Undefined default")
                             : "Not available"
                     } `
             );
-            globals.LOG.debug(
-                "Summary of team configuration files considered for Zowe Explorer: %s",
-                JSON.stringify(layerSummary)
-            );
+            globals.LOG.debug("Summary of team configuration files considered for Zowe Explorer: %s", JSON.stringify(layerSummary));
         }
     } catch (error) {
         throw new Error(error);
@@ -287,10 +266,7 @@ export async function promptCredentials(node: IZoweTreeNode) {
     const mProfileInfo = await Profiles.getInstance().getProfileInfo();
     if (mProfileInfo.usingTeamConfig && !mProfileInfo.getTeamConfig().properties.autoStore) {
         vscode.window.showInformationMessage(
-            localize(
-                "zowe.promptCredentials.notSupported",
-                '"Update Credentials" operation not supported when "autoStore" is false'
-            )
+            localize("zowe.promptCredentials.notSupported", '"Update Credentials" operation not supported when "autoStore" is false')
         );
         return;
     }
@@ -304,9 +280,7 @@ export async function promptCredentials(node: IZoweTreeNode) {
         });
 
         if (profileName === undefined) {
-            vscode.window.showInformationMessage(
-                localize("createNewConnection.undefined.passWord", "Operation Cancelled")
-            );
+            vscode.window.showInformationMessage(localize("createNewConnection.undefined.passWord", "Operation Cancelled"));
             return;
         }
         profileName = profileName.trim();
@@ -318,11 +292,7 @@ export async function promptCredentials(node: IZoweTreeNode) {
 
     if (creds != null) {
         vscode.window.showInformationMessage(
-            localize(
-                "promptCredentials.updatedCredentials",
-                "Credentials for {0} were successfully updated",
-                profileName
-            )
+            localize("promptCredentials.updatedCredentials", "Credentials for {0} were successfully updated", profileName)
         );
     }
 }

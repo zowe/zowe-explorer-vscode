@@ -311,11 +311,7 @@ export function createQuickPickItem(): vscode.QuickPickItem {
     return new FilterDescriptor("\uFF0B " + "Create a new filter");
 }
 
-export function createQuickPickContent(
-    entered: any,
-    itemArray: vscode.QuickPickItem[],
-    placeholderString: string
-): any {
+export function createQuickPickContent(entered: any, itemArray: vscode.QuickPickItem[], placeholderString: string): any {
     return {
         placeholder: placeholderString,
         activeItems: itemArray,

@@ -47,14 +47,8 @@ export async function moveTempFolder(previousTempPath: string, currentTempPath: 
         fs.mkdirSync(globals.USS_DIR);
         fs.mkdirSync(globals.DS_DIR);
     } catch (err) {
-        globals.LOG.error(
-            localize("moveTempFolder.error", "Error encountered when creating temporary folder! ") + JSON.stringify(err)
-        );
-        await errorHandling(
-            err,
-            null,
-            localize("moveTempFolder.error", "Error encountered when creating temporary folder! ") + err.message
-        );
+        globals.LOG.error(localize("moveTempFolder.error", "Error encountered when creating temporary folder! ") + JSON.stringify(err));
+        await errorHandling(err, null, localize("moveTempFolder.error", "Error encountered when creating temporary folder! ") + err.message);
     }
     const previousTemp = path.join(previousTempPath, "temp");
     try {

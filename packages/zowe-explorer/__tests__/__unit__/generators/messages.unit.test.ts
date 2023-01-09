@@ -9,12 +9,7 @@
  *                                                                                 *
  */
 
-import {
-    getMessageById,
-    getMessageByNode,
-    MessageCategoryId,
-    MessageContentType,
-} from "../../../src/generators/messages";
+import { getMessageById, getMessageByNode, MessageCategoryId, MessageContentType } from "../../../src/generators/messages";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import { imperative } from "@zowe/cli";
 import { DatasetTree } from "../../../src/dataset/DatasetTree";
@@ -47,15 +42,7 @@ describe("Checking message generator's basics", () => {
             message: "",
             failNotFound: false,
         };
-        return new ZoweDatasetNode(
-            "session",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            null,
-            session,
-            undefined,
-            undefined,
-            profile
-        );
+        return new ZoweDatasetNode("session", vscode.TreeItemCollapsibleState.Collapsed, null, session, undefined, undefined, profile);
     };
     const generateTestDatasetMemberNode = (session: ZoweDatasetNode) => {
         const parent = new ZoweDatasetNode(
