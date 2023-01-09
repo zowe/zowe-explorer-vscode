@@ -108,12 +108,7 @@ describe("Refresh Unit Tests - Function refreshAll", () => {
             createTreeView()
         );
         newMocks.testUSSTree.mSessionNodes.push(newMocks.ussNode);
-        newMocks.jobsTree = createJobsTree(
-            globalMocks.session,
-            newMocks.iJob,
-            newMocks.profileInstance,
-            newMocks.treeView
-        );
+        newMocks.jobsTree = createJobsTree(globalMocks.session, newMocks.iJob, newMocks.profileInstance, newMocks.treeView);
         newMocks.jobsTree.mSessionNodes.push(newMocks.datasetSessionNode);
         newMocks.testDatasetTree = createDatasetTree(newMocks.datasetSessionNode, newMocks.treeView);
         newMocks.testDatasetTree.mSessionNodes.push(newMocks.datasetSessionNode);

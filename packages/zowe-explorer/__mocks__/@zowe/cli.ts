@@ -29,7 +29,6 @@ export function getZoweDir(): string {
     return imperative.ImperativeConfig.instance.cliHome;
 }
 
-// tslint:disable-next-line:no-namespace
 export namespace ZosmfSession {
     export function createSessCfgFromArgs(cmdArgs: imperative.ICommandArguments) {
         return {
@@ -130,13 +129,8 @@ export declare const enum CreateDataSetTypeEnum {
     DATA_SET_SEQUENTIAL = 4,
 }
 
-// tslint:disable-next-line:no-namespace
 export namespace List {
-    export function dataSetsMatchingPattern(
-        session: Session,
-        hlq: string[],
-        options: IListOptions
-    ): Promise<IZosFilesResponse> {
+    export function dataSetsMatchingPattern(session: Session, hlq: string[], options: IListOptions): Promise<IZosFilesResponse> {
         return dataSet(session, hlq[0], options);
     }
 
@@ -229,7 +223,6 @@ export namespace List {
     }
 }
 
-// tslint:disable-next-line:max-classes-per-file
 export class IZosFilesResponse {
     /**
      * indicates if the command ran successfully.

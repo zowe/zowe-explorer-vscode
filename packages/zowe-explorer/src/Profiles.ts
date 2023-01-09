@@ -30,14 +30,7 @@ import {
     getFullPath,
     getZoweDir,
 } from "@zowe/zowe-explorer-api";
-import {
-    errorHandling,
-    FilterDescriptor,
-    FilterItem,
-    resolveQuickPickHelper,
-    readConfigFromDisk,
-    openConfigOnError,
-} from "./utils/ProfilesUtils";
+import { errorHandling, FilterDescriptor, FilterItem, resolveQuickPickHelper, readConfigFromDisk, openConfigOnError } from "./utils/ProfilesUtils";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import * as globals from "./globals";
 import * as nls from "vscode-nls";
@@ -103,8 +96,7 @@ export class Profiles extends ProfilesCache {
                 errorHandling(
                     error,
                     theProfile.name,
-                    localize("checkCurrentProfile.error", "Error encountered in ") +
-                        `checkCurrentProfile.optionalProfiles!`
+                    localize("checkCurrentProfile.error", "Error encountered in ") + `checkCurrentProfile.optionalProfiles!`
                 );
                 return profileStatus;
             }
@@ -210,10 +202,7 @@ export class Profiles extends ProfilesCache {
         return node;
     }
 
-    public async validationArraySetup(
-        theProfile: zowe.imperative.IProfileLoaded,
-        validationSetting: boolean
-    ): Promise<IValidationSetting> {
+    public async validationArraySetup(theProfile: zowe.imperative.IProfileLoaded, validationSetting: boolean): Promise<IValidationSetting> {
         let found: boolean = false;
         let profileSetting: IValidationSetting;
         if (this.profilesValidationSetting.length > 0) {
@@ -291,9 +280,7 @@ export class Profiles extends ProfilesCache {
                 profileNamesList = profileNamesList.filter(
                     (profileName) =>
                         // Find all cases where a profile is not already displayed
-                        !zoweFileProvider.mSessionNodes?.find(
-                            (sessionNode) => sessionNode.getProfileName() === profileName
-                        )
+                        !zoweFileProvider.mSessionNodes?.find((sessionNode) => sessionNode.getProfileName() === profileName)
                 );
             }
         } catch (err) {
@@ -354,9 +341,7 @@ export class Profiles extends ProfilesCache {
         const choice = await resolveQuickPickHelper(quickpick);
         quickpick.hide();
         if (!choice) {
-            vscode.window.showInformationMessage(
-                localize("enterPattern.pattern", "No selection made. Operation cancelled.")
-            );
+            vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made. Operation cancelled."));
             return;
         }
         if (choice === configPick) {
@@ -382,11 +367,7 @@ export class Profiles extends ProfilesCache {
                 this.log.error(error);
                 await openConfigOnError(error);
                 vscode.window.showErrorMessage(
-                    localize(
-                        "Profiles.getProfileInfo.error",
-                        "Error in creating team configuration file: {0}",
-                        error.message
-                    )
+                    localize("Profiles.getProfileInfo.error", "Error in creating team configuration file: {0}", error.message)
                 );
             }
             if (config.usingTeamConfig) {
@@ -403,23 +384,14 @@ export class Profiles extends ProfilesCache {
                 }
 
                 const options = {
-                    placeHolder: localize(
-                        "createNewConnection.option.prompt.profileName.placeholder",
-                        "Connection Name"
-                    ),
-                    prompt: localize(
-                        "createNewConnection.option.prompt.profileName",
-                        "Enter a name for the connection"
-                    ),
+                    placeHolder: localize("createNewConnection.option.prompt.profileName.placeholder", "Connection Name"),
+                    prompt: localize("createNewConnection.option.prompt.profileName", "Enter a name for the connection"),
                     value: profileName,
                 };
                 profileName = await vscode.window.showInputBox(options);
                 if (!profileName) {
                     vscode.window.showInformationMessage(
-                        localize(
-                            "createNewConnection.enterprofileName",
-                            "Profile Name was not supplied. Operation Cancelled"
-                        )
+                        localize("createNewConnection.enterprofileName", "Profile Name was not supplied. Operation Cancelled")
                     );
                     return;
                 }
@@ -441,21 +413,14 @@ export class Profiles extends ProfilesCache {
                 }
             }
         } else if (chosenProfile) {
-            this.log.debug(
-                localize("createZoweSession.log.debug.selectProfile", "User selected profile ") + chosenProfile
-            );
+            this.log.debug(localize("createZoweSession.log.debug.selectProfile", "User selected profile ") + chosenProfile);
             await zoweFileProvider.addSession(chosenProfile);
         } else {
-            this.log.debug(
-                localize("createZoweSession.log.debug.cancelledSelection", "User cancelled profile selection")
-            );
+            this.log.debug(localize("createZoweSession.log.debug.cancelledSelection", "User cancelled profile selection"));
         }
     }
 
-    public async editSession(
-        profileLoaded: zowe.imperative.IProfileLoaded,
-        profileName: string
-    ): Promise<any | undefined> {
+    public async editSession(profileLoaded: zowe.imperative.IProfileLoaded, profileName: string): Promise<any | undefined> {
         if ((await this.getProfileInfo()).usingTeamConfig) {
             const currentProfile = await this.getProfileFromConfig(profileLoaded.name);
             const filePath = currentProfile.profLoc.osLoc[0];
@@ -485,9 +450,7 @@ export class Profiles extends ProfilesCache {
                 case "host":
                     updUrl = await this.urlInfo(editURL);
                     if (updUrl === undefined) {
-                        vscode.window.showInformationMessage(
-                            localize("editConnection.zosmfURL", "No valid value for z/OS URL. Operation Cancelled")
-                        );
+                        vscode.window.showInformationMessage(localize("editConnection.zosmfURL", "No valid value for z/OS URL. Operation Cancelled"));
                         return undefined;
                     }
                     updSchemaValues[value] = updUrl.host;
@@ -500,10 +463,7 @@ export class Profiles extends ProfilesCache {
                         updPort = await this.portInfo(value, schema);
                         if (Number.isNaN(Number(updPort))) {
                             vscode.window.showInformationMessage(
-                                localize(
-                                    "editConnection.undefined.port",
-                                    "Invalid Port number provided or operation was cancelled"
-                                )
+                                localize("editConnection.undefined.port", "Invalid Port number provided or operation was cancelled")
                             );
                             return undefined;
                         }
@@ -514,9 +474,7 @@ export class Profiles extends ProfilesCache {
                 case "user":
                     updUser = await this.userInfo(editUser);
                     if (updUser === undefined) {
-                        vscode.window.showInformationMessage(
-                            localize("editConnection.undefined.username", "Operation Cancelled")
-                        );
+                        vscode.window.showInformationMessage(localize("editConnection.undefined.username", "Operation Cancelled"));
                         return undefined;
                     }
                     updSchemaValues[value] = updUser;
@@ -524,9 +482,7 @@ export class Profiles extends ProfilesCache {
                 case "password":
                     updPass = await this.passwordInfo(editPass);
                     if (updPass === undefined) {
-                        vscode.window.showInformationMessage(
-                            localize("editConnection.undefined.username", "Operation Cancelled")
-                        );
+                        vscode.window.showInformationMessage(localize("editConnection.undefined.username", "Operation Cancelled"));
                         return undefined;
                     }
                     updSchemaValues[value] = updPass;
@@ -534,9 +490,7 @@ export class Profiles extends ProfilesCache {
                 case "rejectUnauthorized":
                     updRU = await this.ruInfo(editrej);
                     if (updRU === undefined) {
-                        vscode.window.showInformationMessage(
-                            localize("editConnection.rejectUnauthorize", "Operation Cancelled")
-                        );
+                        vscode.window.showInformationMessage(localize("editConnection.rejectUnauthorize", "Operation Cancelled"));
                         return undefined;
                     }
                     updSchemaValues[value] = updRU;
@@ -559,9 +513,7 @@ export class Profiles extends ProfilesCache {
                             } else {
                                 switch (true) {
                                     case updValue === undefined:
-                                        vscode.window.showInformationMessage(
-                                            localize("editConnection.number", "Operation Cancelled")
-                                        );
+                                        vscode.window.showInformationMessage(localize("editConnection.number", "Operation Cancelled"));
                                         return undefined;
                                     case schema[value].optionDefinition.hasOwnProperty("defaultValue"):
                                         updSchemaValues[value] = schema[value].optionDefinition.defaultValue;
@@ -576,9 +528,7 @@ export class Profiles extends ProfilesCache {
                             let updIsTrue: boolean;
                             updIsTrue = await this.boolInfo(value, schema);
                             if (updIsTrue === undefined) {
-                                vscode.window.showInformationMessage(
-                                    localize("editConnection.booleanValue", "Operation Cancelled")
-                                );
+                                vscode.window.showInformationMessage(localize("editConnection.booleanValue", "Operation Cancelled"));
                                 return undefined;
                             }
                             updSchemaValues[value] = updIsTrue;
@@ -587,9 +537,7 @@ export class Profiles extends ProfilesCache {
                             options = await this.optionsValue(value, schema, editSession[value]);
                             const updDefValue = await vscode.window.showInputBox(options);
                             if (updDefValue === undefined) {
-                                vscode.window.showInformationMessage(
-                                    localize("editConnection.default", "Operation Cancelled")
-                                );
+                                vscode.window.showInformationMessage(localize("editConnection.default", "Operation Cancelled"));
                                 return undefined;
                             }
                             if (updDefValue === "") {
@@ -609,9 +557,7 @@ export class Profiles extends ProfilesCache {
                 name: profileName,
                 type: profileLoaded.type,
             });
-            vscode.window.showInformationMessage(
-                localize("editConnection.success", "Profile was successfully updated")
-            );
+            vscode.window.showInformationMessage(localize("editConnection.success", "Profile was successfully updated"));
 
             return updSchemaValues;
         } catch (error) {
@@ -644,9 +590,7 @@ export class Profiles extends ProfilesCache {
             if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0]) {
                 const choice = await this.getConfigLocationPrompt("create");
                 if (choice === undefined) {
-                    vscode.window.showInformationMessage(
-                        localize("createZoweSchema.undefined.location", "Operation Cancelled")
-                    );
+                    vscode.window.showInformationMessage(localize("createZoweSchema.undefined.location", "Operation Cancelled"));
                     return;
                 }
                 if (choice === "project") {
@@ -713,9 +657,7 @@ export class Profiles extends ProfilesCache {
         } catch (err) {
             this.log.error(err);
             await openConfigOnError(err);
-            vscode.window.showErrorMessage(
-                localize("Profiles.getProfileInfo.error", "Error in creating team configuration file: {0}", err.message)
-            );
+            vscode.window.showErrorMessage(localize("Profiles.getProfileInfo.error", "Error in creating team configuration file: {0}", err.message));
         }
     }
 
@@ -742,9 +684,7 @@ export class Profiles extends ProfilesCache {
                     }
                     break;
                 default:
-                    vscode.window.showInformationMessage(
-                        localize("createZoweSchema.undefined.location", "Operation Cancelled")
-                    );
+                    vscode.window.showInformationMessage(localize("createZoweSchema.undefined.location", "Operation Cancelled"));
                     return;
             }
             return;
@@ -761,17 +701,13 @@ export class Profiles extends ProfilesCache {
         const newProfileName = profileName.trim();
 
         if (newProfileName === undefined || newProfileName === "") {
-            vscode.window.showInformationMessage(
-                localize("createNewConnection.profileName", "Profile name was not supplied. Operation Cancelled")
-            );
+            vscode.window.showInformationMessage(localize("createNewConnection.profileName", "Profile name was not supplied. Operation Cancelled"));
             return undefined;
         }
 
         const profileType = requestedProfileType ? requestedProfileType : await this.getProfileType();
         if (profileType === undefined) {
-            vscode.window.showInformationMessage(
-                localize("createNewConnection.profileType", "No profile type was chosen. Operation Cancelled")
-            );
+            vscode.window.showInformationMessage(localize("createNewConnection.profileType", "No profile type was chosen. Operation Cancelled"));
             return undefined;
         }
 
@@ -802,10 +738,7 @@ export class Profiles extends ProfilesCache {
                         newPort = await this.portInfo(value, schema);
                         if (Number.isNaN(Number(newPort))) {
                             vscode.window.showInformationMessage(
-                                localize(
-                                    "createNewConnection.undefined.port",
-                                    "Invalid Port number provided or operation was cancelled"
-                                )
+                                localize("createNewConnection.undefined.port", "Invalid Port number provided or operation was cancelled")
                             );
                             return undefined;
                         }
@@ -816,9 +749,7 @@ export class Profiles extends ProfilesCache {
                 case "user":
                     newUser = await this.userInfo();
                     if (newUser === undefined) {
-                        vscode.window.showInformationMessage(
-                            localize("createNewConnection.undefined.username", "Operation Cancelled")
-                        );
+                        vscode.window.showInformationMessage(localize("createNewConnection.undefined.username", "Operation Cancelled"));
                         return undefined;
                     } else if (newUser === "") {
                         delete schemaValues[value];
@@ -829,9 +760,7 @@ export class Profiles extends ProfilesCache {
                 case "password":
                     newPass = await this.passwordInfo();
                     if (newPass === undefined) {
-                        vscode.window.showInformationMessage(
-                            localize("createNewConnection.undefined.username", "Operation Cancelled")
-                        );
+                        vscode.window.showInformationMessage(localize("createNewConnection.undefined.username", "Operation Cancelled"));
                         return undefined;
                     } else if (newPass === "") {
                         delete schemaValues[value];
@@ -842,9 +771,7 @@ export class Profiles extends ProfilesCache {
                 case "rejectUnauthorized":
                     newRU = await this.ruInfo();
                     if (newRU === undefined) {
-                        vscode.window.showInformationMessage(
-                            localize("createNewConnection.rejectUnauthorize", "Operation Cancelled")
-                        );
+                        vscode.window.showInformationMessage(localize("createNewConnection.rejectUnauthorize", "Operation Cancelled"));
                         return undefined;
                     }
                     schemaValues[value] = newRU;
@@ -880,9 +807,7 @@ export class Profiles extends ProfilesCache {
                             let isTrue: boolean;
                             isTrue = await this.boolInfo(value, schema);
                             if (isTrue === undefined) {
-                                vscode.window.showInformationMessage(
-                                    localize("createNewConnection.booleanValue", "Operation Cancelled")
-                                );
+                                vscode.window.showInformationMessage(localize("createNewConnection.booleanValue", "Operation Cancelled"));
                                 return undefined;
                             }
                             schemaValues[value] = isTrue;
@@ -891,9 +816,7 @@ export class Profiles extends ProfilesCache {
                             options = await this.optionsValue(value, schema);
                             const defValue = await vscode.window.showInputBox(options);
                             if (defValue === undefined) {
-                                vscode.window.showInformationMessage(
-                                    localize("createNewConnection.default", "Operation Cancelled")
-                                );
+                                vscode.window.showInformationMessage(localize("createNewConnection.default", "Operation Cancelled"));
                                 return undefined;
                             }
                             if (defValue === "") {
@@ -919,9 +842,7 @@ export class Profiles extends ProfilesCache {
                 }
             }
             await this.saveProfile(schemaValues, schemaValues.name, profileType);
-            vscode.window.showInformationMessage(
-                localize("createProfile.success.info", "Profile {0} was created.", newProfileName)
-            );
+            vscode.window.showInformationMessage(localize("createProfile.success.info", "Profile {0} was created.", newProfileName));
             // Trigger a ProfilesCache.createConfigInstance with a fresh Config.load
             // This shall capture any profiles created (v1 or v2)
             await readConfigFromDisk();
@@ -934,17 +855,11 @@ export class Profiles extends ProfilesCache {
     public async promptCredentials(sessionName: string, rePrompt?: boolean): Promise<string[]> {
         const userInputBoxOptions: vscode.InputBoxOptions = {
             placeHolder: localize("createNewConnection.option.prompt.username.placeholder", "User Name"),
-            prompt: localize(
-                "createNewConnection.option.prompt.username",
-                "Enter the user name for the connection. Leave blank to not store."
-            ),
+            prompt: localize("createNewConnection.option.prompt.username", "Enter the user name for the connection. Leave blank to not store."),
         };
         const passwordInputBoxOptions: vscode.InputBoxOptions = {
             placeHolder: localize("createNewConnection.option.prompt.password.placeholder", "Password"),
-            prompt: localize(
-                "createNewConnection.option.prompt.password",
-                "Enter the password for the connection. Leave blank to not store."
-            ),
+            prompt: localize("createNewConnection.option.prompt.password", "Enter the password for the connection. Leave blank to not store."),
         };
 
         const promptInfo = await ZoweVsCodeExtension.updateCredentials(
@@ -987,9 +902,7 @@ export class Profiles extends ProfilesCache {
         const sesName = await vscode.window.showQuickPick(profileNamesList, quickPickList);
 
         if (sesName === undefined) {
-            vscode.window.showInformationMessage(
-                localize("deleteProfile.undefined.profilename", "Operation Cancelled")
-            );
+            vscode.window.showInformationMessage(localize("deleteProfile.undefined.profilename", "Operation Cancelled"));
             return;
         }
 
@@ -1163,22 +1076,14 @@ export class Profiles extends ProfilesCache {
                     profileStatus = await vscode.window.withProgress(
                         {
                             location: vscode.ProgressLocation.Notification,
-                            title: localize(
-                                "Profiles.validateProfiles.validationProgress",
-                                "Validating {0} Profile.",
-                                theProfile.name
-                            ),
+                            title: localize("Profiles.validateProfiles.validationProgress", "Validating {0} Profile.", theProfile.name),
                             cancellable: true,
                         },
                         async (progress, token) => {
                             token.onCancellationRequested(() => {
                                 // will be returned as undefined
                                 vscode.window.showInformationMessage(
-                                    localize(
-                                        "Profiles.validateProfiles.validationCancelled",
-                                        "Validating {0} was cancelled.",
-                                        theProfile.name
-                                    )
+                                    localize("Profiles.validateProfiles.validationCancelled", "Validating {0} was cancelled.", theProfile.name)
                                 );
                             });
                             return getSessStatus.getStatus(theProfile, theProfile.type);
@@ -1239,21 +1144,15 @@ export class Profiles extends ProfilesCache {
         }
         // This check will handle service profiles that have username and password
         if (serviceProfile.profile.user && serviceProfile.profile.password) {
-            vscode.window.showInformationMessage(
-                localize("ssoAuth.noBase", "This profile does not support token authentication.")
-            );
+            vscode.window.showInformationMessage(localize("ssoAuth.noBase", "This profile does not support token authentication."));
             return;
         }
 
         try {
-            loginTokenType = await ZoweExplorerApiRegister.getInstance()
-                .getCommonApi(serviceProfile)
-                .getTokenTypeName();
+            loginTokenType = await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).getTokenTypeName();
         } catch (error) {
             this.log.info(error);
-            vscode.window.showInformationMessage(
-                localize("ssoAuth.noBase", "This profile does not support token authentication.")
-            );
+            vscode.window.showInformationMessage(localize("ssoAuth.noBase", "This profile does not support token authentication."));
             return;
         }
         if (loginTokenType && loginTokenType !== zowe.imperative.SessConstants.TOKEN_TYPE_APIML) {
@@ -1279,9 +1178,7 @@ export class Profiles extends ProfilesCache {
                 });
             } catch (error) {
                 this.log.error(error);
-                vscode.window.showErrorMessage(
-                    localize("ssoLogin.unableToLogin", "Unable to log in. ") + error.message
-                );
+                vscode.window.showErrorMessage(localize("ssoLogin.unableToLogin", "Unable to log in. ") + error.message);
                 return;
             }
         } else {
@@ -1301,9 +1198,7 @@ export class Profiles extends ProfilesCache {
                         tokenType: loginTokenType,
                         type: zowe.imperative.SessConstants.AUTH_TYPE_TOKEN,
                     });
-                    loginToken = await ZoweExplorerApiRegister.getInstance()
-                        .getCommonApi(serviceProfile)
-                        .login(updSession);
+                    loginToken = await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).login(updSession);
                     const updBaseProfile: zowe.imperative.IProfile = {
                         tokenType: loginTokenType,
                         tokenValue: loginToken,
@@ -1317,42 +1212,31 @@ export class Profiles extends ProfilesCache {
                     });
                 } catch (error) {
                     this.log.error(error);
-                    vscode.window.showErrorMessage(
-                        localize("ssoLogin.unableToLogin", "Unable to log in. ") + error.message
-                    );
+                    vscode.window.showErrorMessage(localize("ssoLogin.unableToLogin", "Unable to log in. ") + error.message);
                     return;
                 }
             }
         }
-        vscode.window.showInformationMessage(
-            localize("ssoLogin.successful", "Login to authentication service was successful.")
-        );
+        vscode.window.showInformationMessage(localize("ssoLogin.successful", "Login to authentication service was successful."));
     }
 
     public async ssoLogout(node: IZoweNodeType): Promise<void> {
         const serviceProfile = node.getProfile();
         // This check will handle service profiles that have username and password
         if (serviceProfile.profile?.user && serviceProfile.profile?.password) {
-            vscode.window.showInformationMessage(
-                localize("ssoAuth.noBase", "This profile does not support token authentication.")
-            );
+            vscode.window.showInformationMessage(localize("ssoAuth.noBase", "This profile does not support token authentication."));
             return;
         }
         try {
             // this will handle extenders
-            if (
-                serviceProfile.type !== "zosmf" &&
-                serviceProfile.profile?.tokenType !== zowe.imperative.SessConstants.TOKEN_TYPE_APIML
-            ) {
+            if (serviceProfile.type !== "zosmf" && serviceProfile.profile?.tokenType !== zowe.imperative.SessConstants.TOKEN_TYPE_APIML) {
                 await ZoweExplorerApiRegister.getInstance()
                     .getCommonApi(serviceProfile)
                     .logout(await node.getSession());
             } else {
                 // this will handle base profile apiml tokens
                 const baseProfile = await this.fetchBaseProfile();
-                const loginTokenType = ZoweExplorerApiRegister.getInstance()
-                    .getCommonApi(serviceProfile)
-                    .getTokenTypeName();
+                const loginTokenType = ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).getTokenTypeName();
                 const updSession = new zowe.imperative.Session({
                     hostname: serviceProfile.profile.host,
                     port: serviceProfile.profile.port,
@@ -1365,9 +1249,7 @@ export class Profiles extends ProfilesCache {
 
                 await this.updateBaseProfileFileLogout(baseProfile);
             }
-            vscode.window.showInformationMessage(
-                localize("ssoLogout.successful", "Logout from authentication service was successful.")
-            );
+            vscode.window.showInformationMessage(localize("ssoLogout.successful", "Logout from authentication service was successful."));
         } catch (error) {
             this.log.error(error);
             vscode.window.showErrorMessage(localize("ssoLogout.unableToLogout", "Unable to log out. ") + error.message);
@@ -1383,29 +1265,17 @@ export class Profiles extends ProfilesCache {
     private async getConfigLocationPrompt(action: string): Promise<string> {
         let placeHolderText: string;
         if (action === "create") {
-            placeHolderText = localize(
-                "getConfigLocationPrompt.placeholder.create",
-                "Select the location where the config file will be initialized"
-            );
+            placeHolderText = localize("getConfigLocationPrompt.placeholder.create", "Select the location where the config file will be initialized");
         } else {
-            placeHolderText = localize(
-                "getConfigLocationPrompt.placeholder.edit",
-                "Select the location of the config file to edit"
-            );
+            placeHolderText = localize("getConfigLocationPrompt.placeholder.edit", "Select the location of the config file to edit");
         }
         const quickPickOptions: vscode.QuickPickOptions = {
             placeHolder: placeHolderText,
             ignoreFocusOut: true,
             canPickMany: false,
         };
-        const globalText = localize(
-            "getConfigLocationPrompt.showQuickPick.global",
-            "Global: in the Zowe home directory"
-        );
-        const projectText = localize(
-            "getConfigLocationPrompt.showQuickPick.project",
-            "Project: in the current working directory"
-        );
+        const globalText = localize("getConfigLocationPrompt.showQuickPick.global", "Global: in the Zowe home directory");
+        const projectText = localize("getConfigLocationPrompt.showQuickPick.project", "Project: in the current working directory");
         const location = await vscode.window.showQuickPick([globalText, projectText], quickPickOptions);
         // call check for existing and prompt here
         switch (location) {
@@ -1427,19 +1297,18 @@ export class Profiles extends ProfilesCache {
                 const createButton = localize("checkExistingConfig.createNew.button", "Create New");
                 const message = localize(
                     "checkExistingConfig.createNew.message",
+                    // eslint-disable-next-line max-len
                     `A Team Configuration File already exists in this location\n{0}\nContinuing may alter the existing file, would you like to proceed?`,
                     file.path
                 );
-                await vscode.window
-                    .showInformationMessage(message, { modal: true }, ...[createButton])
-                    .then(async (selection) => {
-                        if (selection) {
-                            location = path.basename(file.path);
-                        } else {
-                            await this.openConfigFile(file.path);
-                            location = undefined;
-                        }
-                    });
+                await vscode.window.showInformationMessage(message, { modal: true }, ...[createButton]).then(async (selection) => {
+                    if (selection) {
+                        location = path.basename(file.path);
+                    } else {
+                        await this.openConfigFile(file.path);
+                        location = undefined;
+                    }
+                });
             }
         }
         if (found) {
@@ -1492,10 +1361,7 @@ export class Profiles extends ProfilesCache {
         return ret;
     }
 
-    private async updateBaseProfileFileLogin(
-        profile: zowe.imperative.IProfileLoaded,
-        updProfile: zowe.imperative.IProfile
-    ) {
+    private async updateBaseProfileFileLogin(profile: zowe.imperative.IProfileLoaded, updProfile: zowe.imperative.IProfile) {
         const upd = { profileName: profile.name, profileType: profile.type };
         const mProfileInfo = await this.getProfileInfo();
         const setSecure = mProfileInfo.isSecured();
@@ -1532,44 +1398,30 @@ export class Profiles extends ProfilesCache {
         const profileName = deletedProfile.name;
         this.log.debug(localize("deleteProfile.log.debug", "Deleting profile ") + profileName);
         const quickPickOptions: vscode.QuickPickOptions = {
-            placeHolder: localize(
-                "deleteProfile.quickPickOption",
-                "Delete {0}? This will permanently remove it from your system.",
-                profileName
-            ),
+            placeHolder: localize("deleteProfile.quickPickOption", "Delete {0}? This will permanently remove it from your system.", profileName),
             ignoreFocusOut: true,
             canPickMany: false,
         };
         // confirm that the user really wants to delete
         if (
             (await vscode.window.showQuickPick(
-                [
-                    localize("deleteProfile.showQuickPick.delete", "Delete"),
-                    localize("deleteProfile.showQuickPick.cancel", "Cancel"),
-                ],
+                [localize("deleteProfile.showQuickPick.delete", "Delete"), localize("deleteProfile.showQuickPick.cancel", "Cancel")],
                 quickPickOptions
             )) !== localize("deleteProfile.showQuickPick.delete", "Delete")
         ) {
-            this.log.debug(
-                localize("deleteProfile.showQuickPick.log.debug", "User picked Cancel. Cancelling delete of profile")
-            );
+            this.log.debug(localize("deleteProfile.showQuickPick.log.debug", "User picked Cancel. Cancelling delete of profile"));
             return;
         }
 
         try {
             await this.deleteProfileOnDisk(deletedProfile);
         } catch (error) {
-            this.log.error(
-                localize("deleteProfile.delete.log.error", "Error encountered when deleting profile! ") +
-                    JSON.stringify(error)
-            );
+            this.log.error(localize("deleteProfile.delete.log.error", "Error encountered when deleting profile! ") + JSON.stringify(error));
             await errorHandling(error, profileName, error.message);
             throw error;
         }
 
-        vscode.window.showInformationMessage(
-            localize("deleteProfile.success.info", "Profile {0} was deleted.", profileName)
-        );
+        vscode.window.showInformationMessage(localize("deleteProfile.success.info", "Profile {0} was deleted.", profileName));
         return profileName;
     }
 
@@ -1581,10 +1433,7 @@ export class Profiles extends ProfilesCache {
             zosURL = input;
         }
         const options: vscode.InputBoxOptions = {
-            prompt: localize(
-                "createNewConnection.option.prompt.url",
-                "Enter a z/OS URL in the format 'https://url:port'."
-            ),
+            prompt: localize("createNewConnection.option.prompt.url", "Enter a z/OS URL in the format 'https://url:port'."),
             value: zosURL,
             ignoreFocusOut: true,
             placeHolder: localize("createNewConnection.option.prompt.url.placeholder", "https://url:port"),
@@ -1593,10 +1442,7 @@ export class Profiles extends ProfilesCache {
                 if (this.validateAndParseUrl(host).valid) {
                     return undefined;
                 } else {
-                    return localize(
-                        "createNewConnection.invalidzosURL",
-                        "Please enter a valid host URL in the format 'company.com'."
-                    );
+                    return localize("createNewConnection.invalidzosURL", "Please enter a valid host URL in the format 'company.com'.");
                 }
             },
         };
@@ -1658,19 +1504,14 @@ export class Profiles extends ProfilesCache {
         }
         InputBoxOptions = {
             placeHolder: localize("createNewConnection.option.prompt.username.placeholder", "User Name"),
-            prompt: localize(
-                "createNewConnection.option.prompt.username",
-                "Enter the user name for the connection. Leave blank to not store."
-            ),
+            prompt: localize("createNewConnection.option.prompt.username", "Enter the user name for the connection. Leave blank to not store."),
             ignoreFocusOut: true,
             value: userName,
         };
         userName = await vscode.window.showInputBox(InputBoxOptions);
 
         if (userName === undefined) {
-            vscode.window.showInformationMessage(
-                localize("createNewConnection.undefined.passWord", "Operation Cancelled")
-            );
+            vscode.window.showInformationMessage(localize("createNewConnection.undefined.passWord", "Operation Cancelled"));
             return undefined;
         }
 
@@ -1686,10 +1527,7 @@ export class Profiles extends ProfilesCache {
 
         InputBoxOptions = {
             placeHolder: localize("createNewConnection.option.prompt.password.placeholder", "Password"),
-            prompt: localize(
-                "createNewConnection.option.prompt.password",
-                "Enter the password for the connection. Leave blank to not store."
-            ),
+            prompt: localize("createNewConnection.option.prompt.password", "Enter the password for the connection. Leave blank to not store."),
             password: true,
             ignoreFocusOut: true,
             value: passWord,
@@ -1697,9 +1535,7 @@ export class Profiles extends ProfilesCache {
         passWord = await vscode.window.showInputBox(InputBoxOptions);
 
         if (passWord === undefined) {
-            vscode.window.showInformationMessage(
-                localize("createNewConnection.undefined.passWord", "Operation Cancelled")
-            );
+            vscode.window.showInformationMessage(localize("createNewConnection.undefined.passWord", "Operation Cancelled"));
             return undefined;
         }
 
@@ -1710,14 +1546,8 @@ export class Profiles extends ProfilesCache {
         let rejectUnauthorize: boolean;
         let placeholder: string;
         let selectRU: string[];
-        const falseString = localize(
-            "createNewConnection.ru.false",
-            "False - Accept connections with self-signed certificates"
-        );
-        const trueString = localize(
-            "createNewConnection.ru.true",
-            "True - Reject connections with self-signed certificates"
-        );
+        const falseString = localize("createNewConnection.ru.false", "False - Accept connections with self-signed certificates");
+        const trueString = localize("createNewConnection.ru.true", "True - Reject connections with self-signed certificates");
 
         if (input !== undefined) {
             rejectUnauthorize = input;
@@ -1729,10 +1559,7 @@ export class Profiles extends ProfilesCache {
                 selectRU = [trueString, falseString];
             }
         } else {
-            placeholder = localize(
-                "createNewConnection.option.prompt.ru.placeholder",
-                "Reject Unauthorized Connections"
-            );
+            placeholder = localize("createNewConnection.option.prompt.ru.placeholder", "Reject Unauthorized Connections");
             selectRU = [trueString, falseString];
         }
 
@@ -1751,9 +1578,7 @@ export class Profiles extends ProfilesCache {
         } else if (chosenRU && chosenRU.includes(falseString)) {
             rejectUnauthorize = false;
         } else {
-            vscode.window.showInformationMessage(
-                localize("createNewConnection.rejectUnauthorize", "Operation Cancelled")
-            );
+            vscode.window.showInformationMessage(localize("createNewConnection.rejectUnauthorize", "Operation Cancelled"));
             return undefined;
         }
 
@@ -1901,9 +1726,7 @@ export class Profiles extends ProfilesCache {
     // Temporary solution for handling unsecure profiles until CLI team's work is made
     // Remove secure properties and set autoStore to false when vscode setting is true
     private createNonSecureProfile(newConfig: zowe.imperative.IConfig): void {
-        const isSecureCredsEnabled: boolean = SettingsConfig.getDirectValue(
-            globals.SETTINGS_SECURE_CREDENTIALS_ENABLED
-        );
+        const isSecureCredsEnabled: boolean = SettingsConfig.getDirectValue(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED);
         if (!isSecureCredsEnabled) {
             for (const profile of Object.entries(newConfig.profiles)) {
                 delete newConfig.profiles[profile[0]].secure;

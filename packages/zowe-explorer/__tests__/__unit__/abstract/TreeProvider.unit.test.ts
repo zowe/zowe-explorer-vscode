@@ -107,7 +107,6 @@ async function createGlobalMocks() {
                     name: globalMocks.testProfile.name,
                     status: "active",
                 }),
-                // tslint:disable-next-line:max-line-length
                 profileValidationSetting: globalMocks.mockProfilesValidationSetting.mockReturnValue({
                     name: globalMocks.testProfile.name,
                     setting: true,

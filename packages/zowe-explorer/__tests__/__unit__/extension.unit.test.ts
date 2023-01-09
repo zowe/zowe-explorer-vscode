@@ -21,12 +21,7 @@ import { ValidProfileEnum, ProfilesCache } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../src/Profiles";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import * as dsActions from "../../src/dataset/actions";
-import {
-    createGetConfigMock,
-    createInstanceOfProfileInfo,
-    createIProfile,
-    createTreeView,
-} from "../../__mocks__/mockCreators/shared";
+import { createGetConfigMock, createInstanceOfProfileInfo, createIProfile, createTreeView } from "../../__mocks__/mockCreators/shared";
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
 import { getSelectedNodeList } from "../../src/shared/utils";
 import { SettingsConfig } from "../../src/utils/SettingsConfig";
@@ -360,7 +355,6 @@ async function createGlobalMocks() {
     });
 
     // Create a mocked extension context
-    // tslint:disable-next-line: no-object-literal-type-assertion
     const mockExtensionCreator = jest.fn(
         () =>
             ({
@@ -393,16 +387,7 @@ async function createGlobalMocks() {
 
 function createBlockMocks(globalMocks: any) {
     const blockMocks = {
-        rootNode: new ZoweUSSNode(
-            "root",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            null,
-            globalMocks.session,
-            null,
-            false,
-            "test",
-            undefined
-        ),
+        rootNode: new ZoweUSSNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, globalMocks.session, null, false, "test", undefined),
         testNode: null,
     };
     blockMocks.testNode = new ZoweUSSNode(
@@ -429,7 +414,6 @@ describe("Extension Unit Tests", () => {
             value: globalMocks.mockImperativeProfileInfo,
             configurable: true,
         });
-        // tslint:disable-next-line: no-object-literal-type-assertion
         globalMocks.mockReadFileSync.mockReturnValueOnce('{ "overrides": { "CredentialManager": "Managed by ANO" }}');
         globalMocks.mockExistsSync.mockReturnValueOnce(false);
         globalMocks.mockGetConfiguration.mockReturnValue({
@@ -447,7 +431,6 @@ describe("Extension Unit Tests", () => {
         await extension.activate(globalMocks.mockExtension);
 
         // Check that tree providers are initialized successfully
-        // tslint:disable-next-line: no-magic-numbers
         expect(globalMocks.mockCreateTreeView.mock.calls.length).toBe(3);
         expect(globalMocks.mockCreateTreeView.mock.calls[0][0]).toBe("zowe.ds.explorer");
         expect(globalMocks.mockCreateTreeView.mock.calls[1][0]).toBe("zowe.uss.explorer");
@@ -510,7 +493,6 @@ describe("Extension Unit Tests - THEIA", () => {
         await extension.activate(globalMocks.mockExtension);
 
         expect(globals.ISTHEIA).toEqual(true);
-        // tslint:disable-next-line: no-magic-numbers
         expect(globalMocks.mockMkdirSync.mock.calls.length).toBe(6);
         expect(globalMocks.mockRegisterCommand.mock.calls.length).toBe(globals.COMMAND_COUNT);
         globalMocks.mockRegisterCommand.mock.calls.forEach((call, i) => {

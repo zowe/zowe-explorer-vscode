@@ -147,11 +147,7 @@ export namespace ZoweExplorerApi {
          * @param {zowe.IUploadOptions} [options]
          * @returns {Promise<zowe.IZosFilesResponse>}
          */
-        putContent?(
-            inputFilePath: string,
-            ussFilePath: string,
-            options?: zowe.IUploadOptions
-        ): Promise<zowe.IZosFilesResponse>;
+        putContent?(inputFilePath: string, ussFilePath: string, options?: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse>;
 
         /**
          * Uploads directory at the given path.
@@ -161,11 +157,7 @@ export namespace ZoweExplorerApi {
          * @param {IUploadOptions} [options]
          * @returns {Promise<zowe.IZosFilesResponse>}
          */
-        uploadDirectory(
-            inputDirectoryPath: string,
-            ussDirectoryPath: string,
-            options: zowe.IUploadOptions
-        ): Promise<zowe.IZosFilesResponse>;
+        uploadDirectory(inputDirectoryPath: string, ussDirectoryPath: string, options: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse>;
 
         /**
          * Create a new directory or file in the specified path.
@@ -238,11 +230,7 @@ export namespace ZoweExplorerApi {
          * @param {zowe.IUploadOptions} [options]
          * @returns {Promise<zowe.IZosFilesResponse>}
          */
-        putContents(
-            inputFilePath: string,
-            dataSetName: string,
-            options?: zowe.IUploadOptions
-        ): Promise<zowe.IZosFilesResponse>;
+        putContents(inputFilePath: string, dataSetName: string, options?: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse>;
 
         /**
          * Create a new data set with the specified options.
@@ -308,11 +296,7 @@ export namespace ZoweExplorerApi {
          * @param {string} newMemberName
          * @returns {Promise<zowe.IZosFilesResponse>}
          */
-        renameDataSetMember(
-            dataSetName: string,
-            currentMemberName: string,
-            newMemberName: string
-        ): Promise<zowe.IZosFilesResponse>;
+        renameDataSetMember(dataSetName: string, currentMemberName: string, newMemberName: string): Promise<zowe.IZosFilesResponse>;
 
         /**
          * Migrates a data set.
@@ -524,10 +508,7 @@ export namespace ZoweExplorerApi {
          * might want to check for an existing profile folder with meta-file
          * or to create them automatically if it is non-existant.
          */
-        initForZowe(
-            type: string,
-            profileTypeConfigurations?: zowe.imperative.ICommandProfileTypeConfiguration[]
-        ): Promise<void>;
+        initForZowe(type: string, profileTypeConfigurations?: zowe.imperative.ICommandProfileTypeConfiguration[]): Promise<void>;
     }
 
     /**

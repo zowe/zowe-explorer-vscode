@@ -50,9 +50,7 @@ export function isJob(node: TreeItem): boolean {
  * @return true if a favorite pds, ds, false otherwise
  */
 export function isFavoritePsDs(node: TreeItem): boolean {
-    return new RegExp(
-        "^(" + globals.DS_PDS_CONTEXT + "|" + globals.DS_DS_CONTEXT + ")(.*" + globals.FAV_SUFFIX + ")"
-    ).test(node.contextValue);
+    return new RegExp("^(" + globals.DS_PDS_CONTEXT + "|" + globals.DS_DS_CONTEXT + ")(.*" + globals.FAV_SUFFIX + ")").test(node.contextValue);
 }
 
 /**
@@ -88,9 +86,9 @@ export function isFavoritePds(node: TreeItem): boolean {
  * @return true if a Favorite binary or text file, false otherwise
  */
 export function isFavoriteTextOrBinary(node: TreeItem): boolean {
-    return new RegExp(
-        "^(" + globals.DS_BINARY_FILE_CONTEXT + "|" + globals.DS_TEXT_FILE_CONTEXT + ")(.*" + globals.FAV_SUFFIX + ")"
-    ).test(node.contextValue);
+    return new RegExp("^(" + globals.DS_BINARY_FILE_CONTEXT + "|" + globals.DS_TEXT_FILE_CONTEXT + ")(.*" + globals.FAV_SUFFIX + ")").test(
+        node.contextValue
+    );
 }
 
 /**
@@ -178,15 +176,7 @@ export function isFavorite(node: TreeItem): boolean {
  */
 export function isFavoriteSearch(node: TreeItem): boolean {
     return new RegExp(
-        "^(" +
-            globals.JOBS_SESSION_CONTEXT +
-            "|" +
-            globals.USS_SESSION_CONTEXT +
-            "|" +
-            globals.DS_SESSION_CONTEXT +
-            ")(.*" +
-            globals.FAV_SUFFIX +
-            ")"
+        "^(" + globals.JOBS_SESSION_CONTEXT + "|" + globals.USS_SESSION_CONTEXT + "|" + globals.DS_SESSION_CONTEXT + ")(.*" + globals.FAV_SUFFIX + ")"
     ).test(node.contextValue);
 }
 
@@ -279,9 +269,7 @@ export function isUssSession(node: TreeItem): boolean {
  * @return true if a folder, false otherwise
  */
 export function isFolder(node: TreeItem): boolean {
-    return new RegExp(
-        "^(" + globals.JOBS_JOB_CONTEXT + "|" + globals.USS_DIR_CONTEXT + "|" + globals.DS_PDS_CONTEXT + ")"
-    ).test(node.contextValue);
+    return new RegExp("^(" + globals.JOBS_JOB_CONTEXT + "|" + globals.USS_DIR_CONTEXT + "|" + globals.DS_PDS_CONTEXT + ")").test(node.contextValue);
 }
 
 /**
@@ -299,9 +287,9 @@ export function isFilterFolder(node: TreeItem): boolean {
  * @return true if a session, false otherwise
  */
 export function isSession(node: TreeItem): boolean {
-    return new RegExp(
-        "^(" + globals.JOBS_SESSION_CONTEXT + "|" + globals.USS_SESSION_CONTEXT + "|" + globals.DS_SESSION_CONTEXT + ")"
-    ).test(node.contextValue);
+    return new RegExp("^(" + globals.JOBS_SESSION_CONTEXT + "|" + globals.USS_SESSION_CONTEXT + "|" + globals.DS_SESSION_CONTEXT + ")").test(
+        node.contextValue
+    );
 }
 
 /**

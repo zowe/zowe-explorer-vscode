@@ -99,11 +99,11 @@ export let PROFILE_SECURITY: string | boolean = ZOWE_CLI_SCM;
 export const JOBS_MAX_PREFIX = 8;
 
 export enum CreateDataSetTypeWithKeysEnum {
-    DATA_SET_BINARY = 0,
-    DATA_SET_C = 1,
-    DATA_SET_CLASSIC = 2,
-    DATA_SET_PARTITIONED = 3,
-    DATA_SET_SEQUENTIAL = 4,
+    DATA_SET_BINARY,
+    DATA_SET_C,
+    DATA_SET_CLASSIC,
+    DATA_SET_PARTITIONED,
+    DATA_SET_SEQUENTIAL,
 }
 export const DATA_SET_PROPERTIES = [
     {
@@ -116,10 +116,7 @@ export const DATA_SET_PROPERTIES = [
         key: `avgblk`,
         label: `Average Block Length`,
         value: null,
-        placeHolder: localize(
-            "createFile.attribute.avgblk",
-            `Enter the average block length (if allocation unit = BLK)`
-        ),
+        placeHolder: localize("createFile.attribute.avgblk", `Enter the average block length (if allocation unit = BLK)`),
     },
     {
         key: `blksize`,
@@ -209,10 +206,7 @@ export const DATA_SET_PROPERTIES = [
         key: `volser`,
         label: `Volume Serial`,
         value: null,
-        placeHolder: localize(
-            "createFile.attribute.volser",
-            `Enter the volume serial on which the data set should be placed`
-        ),
+        placeHolder: localize("createFile.attribute.volser", `Enter the volume serial on which the data set should be placed`),
     },
 ];
 
@@ -309,11 +303,7 @@ export function setActivated(value: boolean) {
 export async function setGlobalSecurityValue() {
     if (this.ISTHEIA) {
         PROFILE_SECURITY = false;
-        await SettingsConfig.setDirectValue(
-            this.SETTINGS_SECURE_CREDENTIALS_ENABLED,
-            false,
-            vscode.ConfigurationTarget.Global
-        );
+        await SettingsConfig.setDirectValue(this.SETTINGS_SECURE_CREDENTIALS_ENABLED, false, vscode.ConfigurationTarget.Global);
         return;
     }
     const settingEnabled: boolean = SettingsConfig.getDirectValue(this.SETTINGS_SECURE_CREDENTIALS_ENABLED);

@@ -29,14 +29,13 @@ nls.config({
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export class ZoweCommandProvider {
+    // eslint-disable-next-line no-magic-numbers
     private static readonly totalFilters: number = 10;
     private static readonly persistenceSchema: string = globals.SETTINGS_COMMANDS_HISTORY;
 
     public history: PersistentFilters;
     // Event Emitters used to notify subscribers that the refresh event has fired
-    public mOnDidChangeTreeData: vscode.EventEmitter<IZoweTreeNode | void> = new vscode.EventEmitter<
-        IZoweTreeNode | undefined
-    >();
+    public mOnDidChangeTreeData: vscode.EventEmitter<IZoweTreeNode | void> = new vscode.EventEmitter<IZoweTreeNode | undefined>();
     public readonly onDidChangeTreeData: vscode.Event<IZoweTreeNode | void> = this.mOnDidChangeTreeData.event;
     private log: imperative.Logger = imperative.Logger.getAppLogger();
 
@@ -67,8 +66,7 @@ export class ZoweCommandProvider {
         if (profileStatus.status === "inactive") {
             if (
                 contextually.isSessionNotFav(node) &&
-                (node.contextValue.toLowerCase().includes("session") ||
-                    node.contextValue.toLowerCase().includes("server"))
+                (node.contextValue.toLowerCase().includes("session") || node.contextValue.toLowerCase().includes("server"))
             ) {
                 node.contextValue = node.contextValue.replace(/(?<=.*)(_Active|_Inactive|_Unverified)$/, "");
                 node.contextValue = node.contextValue + globals.INACTIVE_CONTEXT;
@@ -97,8 +95,7 @@ export class ZoweCommandProvider {
         } else if (profileStatus.status === "active") {
             if (
                 contextually.isSessionNotFav(node) &&
-                (node.contextValue.toLowerCase().includes("session") ||
-                    node.contextValue.toLowerCase().includes("server"))
+                (node.contextValue.toLowerCase().includes("session") || node.contextValue.toLowerCase().includes("server"))
             ) {
                 node.contextValue = node.contextValue.replace(/(?<=.*)(_Active|_Inactive|_Unverified)$/, "");
                 node.contextValue = node.contextValue + globals.ACTIVE_CONTEXT;
@@ -110,8 +107,7 @@ export class ZoweCommandProvider {
         } else if (profileStatus.status === "unverified") {
             if (
                 contextually.isSessionNotFav(node) &&
-                (node.contextValue.toLowerCase().includes("session") ||
-                    node.contextValue.toLowerCase().includes("server"))
+                (node.contextValue.toLowerCase().includes("session") || node.contextValue.toLowerCase().includes("server"))
             ) {
                 node.contextValue = node.contextValue.replace(/(?<=.*)(_Active|_Inactive|_Unverified)$/, "");
                 node.contextValue = node.contextValue + globals.UNVERIFIED_CONTEXT;

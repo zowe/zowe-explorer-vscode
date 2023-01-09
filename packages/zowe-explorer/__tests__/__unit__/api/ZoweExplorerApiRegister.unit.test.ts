@@ -9,8 +9,6 @@
  *                                                                                 *
  */
 
-// tslint:disable: max-classes-per-file
-
 import * as zowe from "@zowe/cli";
 import { ZoweExplorerApi, ZosmfUssApi, ZosmfJesApi, ZosmfMvsApi } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
@@ -42,18 +40,10 @@ class MockUssApi1 implements ZoweExplorerApi.IUss {
     ): Promise<zowe.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
-    public putContent(
-        inputFilePath: string,
-        ussFilePath: string,
-        options: IUploadOptions
-    ): Promise<zowe.IZosFilesResponse> {
+    public putContent(inputFilePath: string, ussFilePath: string, options: IUploadOptions): Promise<zowe.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
-    public uploadDirectory(
-        inputDirectoryPath: string,
-        ussDirectoryPath: string,
-        options: IUploadOptions
-    ): Promise<zowe.IZosFilesResponse> {
+    public uploadDirectory(inputDirectoryPath: string, ussDirectoryPath: string, options: IUploadOptions): Promise<zowe.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
     public create(ussPath: string, type: string, mode?: string): Promise<zowe.IZosFilesResponse> {
@@ -106,18 +96,10 @@ class MockUssApi2 implements ZoweExplorerApi.IUss {
     ): Promise<zowe.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
-    public putContent(
-        inputFilePath: string,
-        ussFilePath: string,
-        options: IUploadOptions
-    ): Promise<zowe.IZosFilesResponse> {
+    public putContent(inputFilePath: string, ussFilePath: string, options: IUploadOptions): Promise<zowe.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
-    public uploadDirectory(
-        inputDirectoryPath: string,
-        ussDirectoryPath: string,
-        options: IUploadOptions
-    ): Promise<zowe.IZosFilesResponse> {
+    public uploadDirectory(inputDirectoryPath: string, ussDirectoryPath: string, options: IUploadOptions): Promise<zowe.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
     public create(ussPath: string, type: string, mode?: string): Promise<zowe.IZosFilesResponse> {
