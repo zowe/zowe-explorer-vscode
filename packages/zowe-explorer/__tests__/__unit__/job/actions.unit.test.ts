@@ -582,12 +582,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
 
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        const dataset = new ZoweDatasetNode(
-            "TESTUSER.DATASET",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            blockMocks.datasetSessionNode,
-            null
-        );
+        const dataset = new ZoweDatasetNode("TESTUSER.DATASET", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.datasetSessionNode, null);
         dataset.contextValue = globals.DS_DS_CONTEXT;
 
         for (let o = 0; o < JOB_SUBMIT_DIALOG_OPTS.length; o++) {

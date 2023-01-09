@@ -839,11 +839,7 @@ export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetT
 async function confirmJobSubmission(node: api.IZoweTreeNode, ownsJob: boolean): Promise<boolean> {
     const showConfirmationDialog = async () => {
         const selection = await vscode.window.showWarningMessage(
-            localize(
-                "submitMember.confirm",
-                "Are you sure you want to submit the following job?\n\n{0}",
-                node.getLabel().toString()
-            ),
+            localize("submitMember.confirm", "Are you sure you want to submit the following job?\n\n{0}", node.getLabel().toString()),
             { modal: true },
             { title: "Submit" }
         );
@@ -890,9 +886,7 @@ export async function submitMember(node: api.IZoweTreeNode) {
     const nodeProfile = node.getProfile();
     await profiles.checkCurrentProfile(nodeProfile);
 
-    const datasetName = contextually.isDsMember(node)
-        ? node.getParent().getLabel().toString()
-        : node.getLabel().toString();
+    const datasetName = contextually.isDsMember(node) ? node.getParent().getLabel().toString() : node.getLabel().toString();
     const ownsJob = datasetName.split(".")[0] === nodeProfile.profile?.user?.toUpperCase();
 
     if (!(await confirmJobSubmission(node, ownsJob))) {
