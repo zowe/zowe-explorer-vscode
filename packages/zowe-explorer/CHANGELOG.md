@@ -15,6 +15,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 - Fixed issue where "Show Attributes" feature used conflicting colors with light VS Code themes. [#2048](https://github.com/zowe/vscode-extension-for-zowe/issues/2048)
 - Fixed settings not persisting in Theia versions >=1.29.0.
+- Removed extra files from the VSIX bundle to reduce download size by 64%.
 
 ## `2.5.0`
 
