@@ -12,12 +12,7 @@
 import * as vscode from "vscode";
 import { removeSession } from "../../../src/utils/SessionUtils";
 import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
-import {
-    createIProfile,
-    createISession,
-    createPersistentConfig,
-    createTreeView,
-} from "../../../__mocks__/mockCreators/shared";
+import { createIProfile, createISession, createPersistentConfig, createTreeView } from "../../../__mocks__/mockCreators/shared";
 
 describe("SessionUtils removeSession Unit Tests", () => {
     function createBlockMocks() {

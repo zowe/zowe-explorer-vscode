@@ -70,10 +70,10 @@ export abstract class AbstractFtpApi implements ZoweExplorerApi.ICommon {
         return this.profile;
     }
 
-    public async ftpClient(profile: imperative.IProfileLoaded): Promise<unknown> {
+    public ftpClient(profile: imperative.IProfileLoaded): Promise<unknown> {
         const ftpProfile = profile.profile as IZosFTPProfile;
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-        return await FTPConfig.connectFromArguments(ftpProfile);
+        return FTPConfig.connectFromArguments(ftpProfile);
     }
 
     public releaseConnection<T extends ConnectionType>(connection: T): void {

@@ -155,7 +155,6 @@ describe("SpoolProvider Unit Tests", () => {
         expect(getSpoolContentById.mock.calls.length).toEqual(1);
         expect(getSpoolContentById.mock.calls[0][1]).toEqual(iJobFile.jobname);
         expect(getSpoolContentById.mock.calls[0][2]).toEqual(iJobFile.jobid);
-        // tslint:disable-next-line:no-magic-numbers
         expect(getSpoolContentById.mock.calls[0][3]).toEqual(iJobFile.id);
     });
 });

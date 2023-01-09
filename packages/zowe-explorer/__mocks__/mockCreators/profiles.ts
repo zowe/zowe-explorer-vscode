@@ -212,8 +212,7 @@ export function createProfileManager() {
                 createProfileExamples: [
                     {
                         options: "zos123 --host zos123 --port 1443 --user ibmuser --password myp4ss",
-                        description:
-                            "Create a zosmf profile called 'zos123' to connect to z/OSMF at host zos123 and port 1443",
+                        description: "Create a zosmf profile called 'zos123' to connect to z/OSMF at host zos123 and port 1443",
                     },
                     {
                         options: "zos124 --host zos124 --user ibmuser --password myp4ss --reject-unauthorized false",

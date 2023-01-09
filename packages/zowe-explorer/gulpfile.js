@@ -32,10 +32,7 @@ const cleanTask = function () {
 };
 
 const generateI18nTask = function () {
-    return gulp
-        .src(["package.nls.json"])
-        .pipe(nls.createAdditionalLanguageFiles(languages, "i18n"))
-        .pipe(gulp.dest("."));
+    return gulp.src(["package.nls.json"]).pipe(nls.createAdditionalLanguageFiles(languages, "i18n")).pipe(gulp.dest("."));
 };
 
 const generateLocalizationBundle = () => {
