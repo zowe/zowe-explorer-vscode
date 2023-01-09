@@ -271,17 +271,13 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 this.pattern = this.pattern.toUpperCase();
                 // loop through each pattern for datasets
                 for (const pattern of this.pattern.split(",")) {
-                    responses.push(
-                        await ZoweExplorerApiRegister.getMvsApi(cachedProfile).dataSet(pattern.trim(), options)
-                    );
+                    responses.push(await ZoweExplorerApiRegister.getMvsApi(cachedProfile).dataSet(pattern.trim(), options));
                 }
             } else if (this.memberPattern !== undefined) {
                 this.memberPattern = this.memberPattern.toUpperCase();
                 for (const memPattern of this.memberPattern.split(",")) {
                     options.pattern = memPattern;
-                    responses.push(
-                        await ZoweExplorerApiRegister.getMvsApi(cachedProfile).allMembers(this.label as string, options)
-                    );
+                    responses.push(await ZoweExplorerApiRegister.getMvsApi(cachedProfile).allMembers(this.label as string, options));
                 }
             }
         } catch (err) {
