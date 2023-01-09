@@ -24,7 +24,7 @@ import { FilterItem, errorHandling } from "../utils/ProfilesUtils";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Job } from "./ZoweJobNode";
-import { getAppName, sortTreeItems, labelRefresh } from "../shared/utils";
+import { getAppName, sortTreeItems, labelRefresh, jobPrefixValidator } from "../shared/utils";
 import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
 import { getIconByNode } from "../generators/icons";
 import * as contextually from "../shared/context";
@@ -59,6 +59,7 @@ interface IJobPickerOption {
     value: string;
     show: boolean;
     placeHolder: string;
+    validateInput?;
 }
 
 /**
@@ -100,6 +101,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             value: "*",
             show: true,
             placeHolder: localize("searchJobs.prefix", `Enter job prefix`),
+            validateInput: (text) => jobPrefixValidator(text),
         },
         {
             key: `job-status`,
@@ -525,7 +527,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 node.job,
                 node.getProfile()
             );
-            favJob.contextValue = node.contextValue;
+            favJob.contextValue = globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX;
             favJob.command = { command: "zowe.jobs.search", title: "", arguments: [favJob] };
             this.saveSearch(favJob);
         } else {
@@ -800,8 +802,6 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             node.getSession().ISession.password = faveNode.getSession().ISession.password;
             node.getSession().ISession.base64EncodedAuth = faveNode.getSession().ISession.base64EncodedAuth;
         }
-        const jobQueryObj = this.parseJobSearchQuery(searchCriteria);
-        this.applySearchLabelToNode(node, jobQueryObj);
         return searchCriteria;
     }
 
@@ -819,6 +819,8 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 searchCriteria = await this.applyRegularSessionSearchLabel(node);
             } else {
                 searchCriteria = await this.applySavedFavoritesSearchLabel(node);
+                const jobQueryObj = this.parseJobSearchQuery(searchCriteria);
+                this.applySearchLabelToNode(node, jobQueryObj);
             }
             if (!searchCriteria) {
                 return undefined;
@@ -935,6 +937,9 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 const options: vscode.InputBoxOptions = {
                     value: jobProperties.find((prop) => prop.label === pattern).value,
                     placeHolder: jobProperties.find((prop) => prop.label === pattern).placeHolder,
+                    validateInput: (text) => {
+                        return jobProperties.find((prop) => prop.label === pattern)?.validateInput(text);
+                    },
                 };
                 jobProperties.find((prop) => prop.label === pattern).value = await ZoweVsCodeExtension.inputBox(
                     options
