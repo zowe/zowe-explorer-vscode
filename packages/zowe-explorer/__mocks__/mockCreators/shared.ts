@@ -83,7 +83,7 @@ export function createIProfile(): imperative.IProfileLoaded {
         profile: {
             host: "fake",
             port: 999,
-            user: undefined,
+            user: "testuser",
             password: undefined,
             rejectUnauthorize: false,
         },
