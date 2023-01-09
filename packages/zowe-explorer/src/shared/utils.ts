@@ -332,3 +332,12 @@ export function getSelectedNodeList(node: IZoweTreeNode, nodeList: IZoweTreeNode
     }
     return resultNodeList;
 }
+
+/**
+ * Function that validates job prefix
+ * @param {string} text - prefix text
+ * @returns undefined | string
+ */
+export function jobPrefixValidator(text: string): any {
+    return text.length > globals.JOBS_MAX_PREFIX ? localize("searchJobs.prefix.invalid", "Invalid job prefix") : null;
+}
