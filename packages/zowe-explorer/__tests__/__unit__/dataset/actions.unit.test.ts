@@ -38,7 +38,6 @@ import * as fs from "fs";
 import * as sharedUtils from "../../../src/shared/utils";
 import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
-import { UIViews } from "../../../src/shared/ui-views";
 
 // Missing the definition of path module, because I need the original logic for tests
 jest.mock("fs");

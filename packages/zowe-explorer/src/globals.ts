@@ -17,6 +17,7 @@ import * as loggerConfig from "../log4jsconfig.json";
 // Set up localization
 import * as nls from "vscode-nls";
 import { getZoweDir, ProfilesCache } from "@zowe/zowe-explorer-api";
+import { SettingsConfig } from "./utils/SettingsConfig";
 
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
@@ -308,14 +309,14 @@ export function setActivated(value: boolean) {
 export async function setGlobalSecurityValue() {
     if (this.ISTHEIA) {
         PROFILE_SECURITY = false;
-        await vscode.workspace
-            .getConfiguration()
-            .update(this.SETTINGS_SECURE_CREDENTIALS_ENABLED, false, vscode.ConfigurationTarget.Global);
+        await SettingsConfig.setDirectValue(
+            this.SETTINGS_SECURE_CREDENTIALS_ENABLED,
+            false,
+            vscode.ConfigurationTarget.Global
+        );
         return;
     }
-    const settingEnabled: boolean = await vscode.workspace
-        .getConfiguration()
-        .get(this.SETTINGS_SECURE_CREDENTIALS_ENABLED);
+    const settingEnabled: boolean = SettingsConfig.getDirectValue(this.SETTINGS_SECURE_CREDENTIALS_ENABLED);
     if (!settingEnabled) {
         PROFILE_SECURITY = false;
     } else {

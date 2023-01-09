@@ -51,6 +51,7 @@
   "submitJcl.jobSubmitted": "Job submitted ",
   "submitJcl.jobSubmissionFailed": "Job submission failed\n",
   "submitJcl.checkProfile": "Profile is invalid",
+  "submitMember.confirm": "Are you sure you want to submit the following job?\n\n{0}",
   "submitMember.invalidNode": "submitMember() called from invalid node.",
   "submitMember.error.invalidNode": "submitMember() called from invalid node.",
   "submitMember.jobSubmitted": "Job submitted ",
