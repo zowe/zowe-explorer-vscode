@@ -20,12 +20,7 @@ import * as globals from "../../src/globals";
 import { ValidProfileEnum, ProfilesCache } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../src/Profiles";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
-import {
-    createGetConfigMock,
-    createInstanceOfProfileInfo,
-    createIProfile,
-    createTreeView,
-} from "../../__mocks__/mockCreators/shared";
+import { createGetConfigMock, createInstanceOfProfileInfo, createIProfile, createTreeView } from "../../__mocks__/mockCreators/shared";
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
 import { getSelectedNodeList } from "../../src/shared/utils";
 import { SettingsConfig } from "../../src/utils/SettingsConfig";

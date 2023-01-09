@@ -1726,9 +1726,7 @@ export class Profiles extends ProfilesCache {
     // Temporary solution for handling unsecure profiles until CLI team's work is made
     // Remove secure properties and set autoStore to false when vscode setting is true
     private createNonSecureProfile(newConfig: zowe.imperative.IConfig): void {
-        const isSecureCredsEnabled: boolean = SettingsConfig.getDirectValue(
-            globals.SETTINGS_SECURE_CREDENTIALS_ENABLED
-        );
+        const isSecureCredsEnabled: boolean = SettingsConfig.getDirectValue(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED);
         if (!isSecureCredsEnabled) {
             for (const profile of Object.entries(newConfig.profiles)) {
                 delete newConfig.profiles[profile[0]].secure;

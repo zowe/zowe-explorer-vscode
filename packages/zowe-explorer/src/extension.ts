@@ -140,9 +140,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         vscode.workspace.onDidChangeConfiguration(async (e) => {
             // If the temp folder location has been changed, update current temp folder preference
             if (e.affectsConfiguration(globals.SETTINGS_TEMP_FOLDER_PATH)) {
-                const updatedPreferencesTempPath: string = SettingsConfig.getDirectValue(
-                    globals.SETTINGS_TEMP_FOLDER_PATH
-                );
+                const updatedPreferencesTempPath: string = SettingsConfig.getDirectValue(globals.SETTINGS_TEMP_FOLDER_PATH);
                 moveTempFolder(preferencesTempPath, updatedPreferencesTempPath);
                 preferencesTempPath = updatedPreferencesTempPath;
             }

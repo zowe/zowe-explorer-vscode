@@ -41,11 +41,7 @@ export class SettingsConfig {
      * @param {any} value - The value to assign for the config property
      * @param target - VS Code configuration target (global or workspace)
      */
-    public static setDirectValue(
-        key: string,
-        value: any,
-        target: vscode.ConfigurationTarget = vscode.ConfigurationTarget.Global
-    ): Thenable<void> {
+    public static setDirectValue(key: string, value: any, target: vscode.ConfigurationTarget = vscode.ConfigurationTarget.Global): Thenable<void> {
         const [first, ...rest] = key.split(".");
         return vscode.workspace.getConfiguration(first).update(rest.join("."), value, target);
     }
@@ -91,9 +87,7 @@ export class SettingsConfig {
     }
 
     private static get zoweOldConfigurations() {
-        return Object.keys(SettingsConfig.configurations).filter((key) =>
-            key.match(new RegExp("Zowe-*|Zowe\\s*", "g"))
-        );
+        return Object.keys(SettingsConfig.configurations).filter((key) => key.match(new RegExp("Zowe-*|Zowe\\s*", "g")));
     }
 
     private static get currentVersionNumber() {
@@ -162,22 +156,14 @@ export class SettingsConfig {
                 const newSetting = SettingsConfig.configurationDictionary[configuration];
 
                 if (workspaceValue !== undefined) {
-                    await SettingsConfig.setDirectValue(
-                        newSetting,
-                        workspaceValue,
-                        vscode.ConfigurationTarget.Workspace
-                    );
+                    await SettingsConfig.setDirectValue(newSetting, workspaceValue, vscode.ConfigurationTarget.Workspace);
                     workspaceIsMigrated = true;
                 }
             }
         }
 
         if (workspaceIsMigrated) {
-            await SettingsConfig.setDirectValue(
-                globals.SETTINGS_VERSION,
-                SettingsConfig.currentVersionNumber,
-                vscode.ConfigurationTarget.Workspace
-            );
+            await SettingsConfig.setDirectValue(globals.SETTINGS_VERSION, SettingsConfig.currentVersionNumber, vscode.ConfigurationTarget.Workspace);
         }
     }
 }
