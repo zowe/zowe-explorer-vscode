@@ -3,8 +3,8 @@
 */**
 
 # Allowlist what we need
-!out/**/extension.js
-!out/nls.metadata*.json
+!out/src/**/extension.js
+!out/src/nls.metadata*.json
 !resources/**/*.png
 !resources/**/*.svg
 
