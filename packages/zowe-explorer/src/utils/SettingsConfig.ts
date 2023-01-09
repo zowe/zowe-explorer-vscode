@@ -10,7 +10,6 @@
  */
 
 import * as vscode from "vscode";
-import * as semver from "semver";
 import * as globals from "../globals";
 import * as nls from "vscode-nls";
 
@@ -21,6 +20,36 @@ nls.config({
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export class SettingsConfig {
+    /**
+     * Retrieves a generic setting either in user or workspace.
+     * <pre>{@code
+     *  SettingsConfig.getDirectValue<boolean>("zowe.commands.alwaysEdit");
+     * }</pre>
+     * @param {string} key - The config property that needs retrieving
+     */
+    public static getDirectValue<T>(key: string): T {
+        const [first, ...rest] = key.split(".");
+        return vscode.workspace.getConfiguration(first).get(rest.join("."));
+    }
+
+    /**
+     * Updates a generic setting either in user or workspace.
+     * <pre>{@code
+     *  SettingsConfig.setDirectValue("zowe.commands.alwaysEdit", true);
+     * }</pre>
+     * @param {string} key - The config property that needs updating
+     * @param {any} value - The value to assign for the config property
+     * @param target - VS Code configuration target (global or workspace)
+     */
+    public static setDirectValue(
+        key: string,
+        value: any,
+        target: vscode.ConfigurationTarget = vscode.ConfigurationTarget.Global
+    ): Thenable<void> {
+        const [first, ...rest] = key.split(".");
+        return vscode.workspace.getConfiguration(first).update(rest.join("."), value, target);
+    }
+
     public static async standardizeSettings(): Promise<void> {
         const globalIsNotMigrated =
             SettingsConfig.configurations.inspect(globals.SETTINGS_VERSION).globalValue !==
@@ -58,13 +87,21 @@ export class SettingsConfig {
         "Zowe-USS-Persistent": globals.SETTINGS_USS_HISTORY,
         "Zowe-Jobs-Persistent": globals.SETTINGS_JOBS_HISTORY,
     };
-    private static configurations = vscode.workspace.getConfiguration();
-    private static zoweOldConfigurations = Object.keys(SettingsConfig.configurations).filter((key) =>
-        key.match(new RegExp("Zowe-*|Zowe\\s*", "g"))
-    );
-    private static currentVersionNumber = semver.major(
-        vscode.extensions.getExtension("zowe.vscode-extension-for-zowe").packageJSON.version
-    );
+
+    private static get configurations() {
+        return vscode.workspace.getConfiguration();
+    }
+
+    private static get zoweOldConfigurations() {
+        return Object.keys(SettingsConfig.configurations).filter((key) =>
+            key.match(new RegExp("Zowe-*|Zowe\\s*", "g"))
+        );
+    }
+
+    private static get currentVersionNumber() {
+        return vscode.extensions.getExtension("zowe.vscode-extension-for-zowe").packageJSON.version;
+    }
+
     private static async promptReload(): Promise<void> {
         // Prompt user to reload VS Code window
         const reloadButton = localize("standardization.reload.button", "Reload Window");
@@ -97,22 +134,14 @@ export class SettingsConfig {
                 const newSetting = SettingsConfig.configurationDictionary[configuration];
 
                 if (globalValue !== undefined) {
-                    await SettingsConfig.configurations.update(
-                        newSetting,
-                        globalValue,
-                        vscode.ConfigurationTarget.Global
-                    );
+                    await SettingsConfig.setDirectValue(newSetting, globalValue);
                     globalIsMigrated = true;
                 }
             });
         }
 
         if (globalIsMigrated) {
-            await SettingsConfig.configurations.update(
-                globals.SETTINGS_VERSION,
-                SettingsConfig.currentVersionNumber,
-                vscode.ConfigurationTarget.Global
-            );
+            await SettingsConfig.setDirectValue(globals.SETTINGS_VERSION, SettingsConfig.currentVersionNumber);
             await SettingsConfig.promptReload();
         }
     }
@@ -136,7 +165,7 @@ export class SettingsConfig {
                 const newSetting = SettingsConfig.configurationDictionary[configuration];
 
                 if (workspaceValue !== undefined) {
-                    await SettingsConfig.configurations.update(
+                    await SettingsConfig.setDirectValue(
                         newSetting,
                         workspaceValue,
                         vscode.ConfigurationTarget.Workspace
@@ -147,7 +176,7 @@ export class SettingsConfig {
         }
 
         if (workspaceIsMigrated) {
-            await SettingsConfig.configurations.update(
+            await SettingsConfig.setDirectValue(
                 globals.SETTINGS_VERSION,
                 SettingsConfig.currentVersionNumber,
                 vscode.ConfigurationTarget.Workspace

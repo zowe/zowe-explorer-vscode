@@ -11,6 +11,7 @@
 
 import * as vscode from "vscode";
 import * as globals from "./globals";
+import { SettingsConfig } from "./utils/SettingsConfig";
 
 /**
  * Standard history and favorite persistance handling routines
@@ -19,17 +20,6 @@ import * as globals from "./globals";
  * @class PersistentFilters
  */
 export class PersistentFilters {
-    /**
-     * Retrieves a generic setting either in user or workspace.
-     * <pre>{@code
-     *  PersistentFilters.getDirectValue("zowe.commands.alwaysEdit") as boolean;
-     * }</pre>
-     * @param key - string. The attribute value that needs retrieving
-     */
-    public static getDirectValue(key: string): string | boolean | undefined {
-        const settings: any = { ...vscode.workspace.getConfiguration() };
-        return settings.get(key);
-    }
     private static readonly favorites: string = "favorites";
     private static readonly searchHistory: string = "searchHistory";
     private static readonly fileHistory: string = "fileHistory";
@@ -211,7 +201,7 @@ export class PersistentFilters {
         const settings: any = { ...vscode.workspace.getConfiguration(this.schema) };
         if (settings.persistence) {
             settings.favorites = favorites;
-            await vscode.workspace.getConfiguration().update(this.schema, settings, vscode.ConfigurationTarget.Global);
+            await SettingsConfig.setDirectValue(this.schema, settings);
         }
     }
 
@@ -220,7 +210,7 @@ export class PersistentFilters {
         const settings: any = { ...vscode.workspace.getConfiguration(this.schema) };
         if (settings.persistence) {
             settings.searchHistory = this.mSearchHistory;
-            await vscode.workspace.getConfiguration().update(this.schema, settings, vscode.ConfigurationTarget.Global);
+            await SettingsConfig.setDirectValue(this.schema, settings);
         }
     }
 
@@ -229,7 +219,7 @@ export class PersistentFilters {
         const settings: any = { ...vscode.workspace.getConfiguration(this.schema) };
         if (settings.persistence) {
             settings.sessions = this.mSessions;
-            await vscode.workspace.getConfiguration().update(this.schema, settings, vscode.ConfigurationTarget.Global);
+            await SettingsConfig.setDirectValue(this.schema, settings);
         }
     }
 
@@ -238,7 +228,7 @@ export class PersistentFilters {
         const settings: any = { ...vscode.workspace.getConfiguration(this.schema) };
         if (settings.persistence) {
             settings.fileHistory = this.mFileHistory;
-            await vscode.workspace.getConfiguration().update(this.schema, settings, vscode.ConfigurationTarget.Global);
+            await SettingsConfig.setDirectValue(this.schema, settings);
         }
     }
 

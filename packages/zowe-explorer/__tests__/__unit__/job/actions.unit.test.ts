@@ -36,14 +36,19 @@ import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/
 import { Profiles } from "../../../src/Profiles";
 import * as SpoolProvider from "../../../src/SpoolProvider";
 import * as refreshActions from "../../../src/shared/refresh";
-import { UIViews } from "../../../src/shared/ui-views";
+import { JobSubmitDialogOpts, JOB_SUBMIT_DIALOG_OPTS } from "../../../src/shared/utils";
 
 const activeTextEditorDocument = jest.fn();
 
 function createGlobalMocks() {
+    Object.defineProperty(vscode.workspace, "getConfiguration", {
+        value: jest.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", false]])),
+        configurable: true,
+    });
     Object.defineProperty(vscode.window, "showInformationMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showInputBox", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showErrorMessage", { value: jest.fn(), configurable: true });
+    Object.defineProperty(vscode.window, "showWarningMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe, "IssueCommand", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe.IssueCommand, "issueSimple", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showOpenDialog", { value: jest.fn(), configurable: true });
@@ -679,6 +684,64 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         expect(mocked(vscode.window.showErrorMessage)).toBeCalled();
         expect(mocked(vscode.window.showErrorMessage).mock.calls[0][0]).toEqual(
             "submitMember() called from invalid node."
+        );
+    });
+
+    it("has proper Submit Job output for all confirmation dialog options", async () => {
+        createGlobalMocks();
+
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        const dataset = new ZoweDatasetNode(
+            "TESTUSER.DATASET",
+            vscode.TreeItemCollapsibleState.Collapsed,
+            blockMocks.datasetSessionNode,
+            null
+        );
+        dataset.contextValue = globals.DS_DS_CONTEXT;
+
+        for (let o = 0; o < JOB_SUBMIT_DIALOG_OPTS.length; o++) {
+            const option = JOB_SUBMIT_DIALOG_OPTS[o];
+            Object.defineProperty(vscode.workspace, "getConfiguration", {
+                value: jest.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", option]])),
+                configurable: true,
+            });
+
+            if (option === JOB_SUBMIT_DIALOG_OPTS[JobSubmitDialogOpts.Disabled]) {
+                await dsActions.submitMember(dataset);
+                expect(mocked(vscode.window.showWarningMessage)).not.toHaveBeenCalled();
+            } else if (option === JOB_SUBMIT_DIALOG_OPTS[JobSubmitDialogOpts.OtherUserJobs]) {
+                dataset.label = "OTHERUSER.DATASET";
+                mocked(vscode.window.showWarningMessage).mockResolvedValueOnce({ title: "Submit" });
+                await dsActions.submitMember(dataset);
+                expect(mocked(vscode.window.showWarningMessage)).toBeCalledWith(
+                    "Are you sure you want to submit the following job?\n\n" + dataset.getLabel(),
+                    { modal: true },
+                    { title: "Submit" }
+                );
+            } else if (
+                option === JOB_SUBMIT_DIALOG_OPTS[JobSubmitDialogOpts.AllJobs] ||
+                option === JOB_SUBMIT_DIALOG_OPTS[JobSubmitDialogOpts.YourJobs]
+            ) {
+                dataset.label = "TESTUSER.DATASET";
+                mocked(vscode.window.showWarningMessage).mockResolvedValueOnce({ title: "Submit" });
+                await dsActions.submitMember(dataset);
+                expect(mocked(vscode.window.showWarningMessage)).toBeCalledWith(
+                    "Are you sure you want to submit the following job?\n\n" + dataset.getLabel(),
+                    { modal: true },
+                    { title: "Submit" }
+                );
+            }
+            expect(mocked(Profiles.getInstance)).toHaveBeenCalledTimes(2 * (o + 1));
+        }
+
+        // Test for "Cancel" or closing the dialog
+        mocked(vscode.window.showWarningMessage).mockReturnValueOnce(undefined);
+        await dsActions.submitMember(dataset);
+        expect(mocked(vscode.window.showWarningMessage)).toBeCalledWith(
+            "Are you sure you want to submit the following job?\n\n" + dataset.getLabel(),
+            { modal: true },
+            { title: "Submit" }
         );
     });
 });
