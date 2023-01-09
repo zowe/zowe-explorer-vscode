@@ -30,16 +30,11 @@ import {
     getFullPath,
     getZoweDir,
 } from "@zowe/zowe-explorer-api";
-import {
-    errorHandling,
-    FilterDescriptor,
-    FilterItem,
-    readConfigFromDisk,
-    openConfigOnError,
-} from "./utils/ProfilesUtils";
+import { errorHandling, FilterDescriptor, FilterItem, resolveQuickPickHelper, readConfigFromDisk, openConfigOnError } from "./utils/ProfilesUtils";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import * as globals from "./globals";
 import * as nls from "vscode-nls";
+import { SettingsConfig } from "./utils/SettingsConfig";
 
 // Set up localization
 nls.config({
@@ -101,8 +96,7 @@ export class Profiles extends ProfilesCache {
                 errorHandling(
                     error,
                     theProfile.name,
-                    localize("checkCurrentProfile.error", "Error encountered in ") +
-                        `checkCurrentProfile.optionalProfiles!`
+                    localize("checkCurrentProfile.error", "Error encountered in ") + `checkCurrentProfile.optionalProfiles!`
                 );
                 return profileStatus;
             }
@@ -208,10 +202,7 @@ export class Profiles extends ProfilesCache {
         return node;
     }
 
-    public async validationArraySetup(
-        theProfile: zowe.imperative.IProfileLoaded,
-        validationSetting: boolean
-    ): Promise<IValidationSetting> {
+    public async validationArraySetup(theProfile: zowe.imperative.IProfileLoaded, validationSetting: boolean): Promise<IValidationSetting> {
         let found: boolean = false;
         let profileSetting: IValidationSetting;
         if (this.profilesValidationSetting.length > 0) {
@@ -289,9 +280,7 @@ export class Profiles extends ProfilesCache {
                 profileNamesList = profileNamesList.filter(
                     (profileName) =>
                         // Find all cases where a profile is not already displayed
-                        !zoweFileProvider.mSessionNodes?.find(
-                            (sessionNode) => sessionNode.getProfileName() === profileName
-                        )
+                        !zoweFileProvider.mSessionNodes?.find((sessionNode) => sessionNode.getProfileName() === profileName)
                 );
             }
         } catch (err) {
@@ -399,14 +388,8 @@ export class Profiles extends ProfilesCache {
                 }
 
                 const options = {
-                    placeHolder: localize(
-                        "createNewConnection.option.prompt.profileName.placeholder",
-                        "Connection Name"
-                    ),
-                    prompt: localize(
-                        "createNewConnection.option.prompt.profileName",
-                        "Enter a name for the connection"
-                    ),
+                    placeHolder: localize("createNewConnection.option.prompt.profileName.placeholder", "Connection Name"),
+                    prompt: localize("createNewConnection.option.prompt.profileName", "Enter a name for the connection"),
                     value: profileName,
                 };
                 profileName = await Gui.showInputBox(options);
@@ -437,21 +420,14 @@ export class Profiles extends ProfilesCache {
                 }
             }
         } else if (chosenProfile) {
-            this.log.debug(
-                localize("createZoweSession.log.debug.selectProfile", "User selected profile ") + chosenProfile
-            );
+            this.log.debug(localize("createZoweSession.log.debug.selectProfile", "User selected profile ") + chosenProfile);
             await zoweFileProvider.addSession(chosenProfile);
         } else {
-            this.log.debug(
-                localize("createZoweSession.log.debug.cancelledSelection", "User cancelled profile selection")
-            );
+            this.log.debug(localize("createZoweSession.log.debug.cancelledSelection", "User cancelled profile selection"));
         }
     }
 
-    public async editSession(
-        profileLoaded: zowe.imperative.IProfileLoaded,
-        profileName: string
-    ): Promise<any | undefined> {
+    public async editSession(profileLoaded: zowe.imperative.IProfileLoaded, profileName: string): Promise<any | undefined> {
         if ((await this.getProfileInfo()).usingTeamConfig) {
             const currentProfile = await this.getProfileFromConfig(profileLoaded.name);
             const filePath = currentProfile.profLoc.osLoc[0];
@@ -900,17 +876,11 @@ export class Profiles extends ProfilesCache {
     public async promptCredentials(sessionName: string, rePrompt?: boolean): Promise<string[]> {
         const userInputBoxOptions: vscode.InputBoxOptions = {
             placeHolder: localize("createNewConnection.option.prompt.username.placeholder", "User Name"),
-            prompt: localize(
-                "createNewConnection.option.prompt.username",
-                "Enter the user name for the connection. Leave blank to not store."
-            ),
+            prompt: localize("createNewConnection.option.prompt.username", "Enter the user name for the connection. Leave blank to not store."),
         };
         const passwordInputBoxOptions: vscode.InputBoxOptions = {
             placeHolder: localize("createNewConnection.option.prompt.password.placeholder", "Password"),
-            prompt: localize(
-                "createNewConnection.option.prompt.password",
-                "Enter the password for the connection. Leave blank to not store."
-            ),
+            prompt: localize("createNewConnection.option.prompt.password", "Enter the password for the connection. Leave blank to not store."),
         };
 
         const promptInfo = await ZoweVsCodeExtension.updateCredentials(
@@ -1049,7 +1019,7 @@ export class Profiles extends ProfilesCache {
 
         // Delete from Data Set Sessions list
         const dsSetting: any = {
-            ...vscode.workspace.getConfiguration().get(this.dsSchema),
+            ...SettingsConfig.getDirectValue(this.dsSchema),
         };
         let sessDS: string[] = dsSetting.sessions;
         let faveDS: string[] = dsSetting.favorites;
@@ -1061,11 +1031,11 @@ export class Profiles extends ProfilesCache {
         });
         dsSetting.sessions = sessDS;
         dsSetting.favorites = faveDS;
-        await vscode.workspace.getConfiguration().update(this.dsSchema, dsSetting, vscode.ConfigurationTarget.Global);
+        await SettingsConfig.setDirectValue(this.dsSchema, dsSetting);
 
         // Delete from USS Sessions list
         const ussSetting: any = {
-            ...vscode.workspace.getConfiguration().get(this.ussSchema),
+            ...SettingsConfig.getDirectValue(this.ussSchema),
         };
         let sessUSS: string[] = ussSetting.sessions;
         let faveUSS: string[] = ussSetting.favorites;
@@ -1077,11 +1047,11 @@ export class Profiles extends ProfilesCache {
         });
         ussSetting.sessions = sessUSS;
         ussSetting.favorites = faveUSS;
-        await vscode.workspace.getConfiguration().update(this.ussSchema, ussSetting, vscode.ConfigurationTarget.Global);
+        await SettingsConfig.setDirectValue(this.ussSchema, ussSetting);
 
         // Delete from Jobs Sessions list
         const jobsSetting: any = {
-            ...vscode.workspace.getConfiguration().get(this.jobsSchema),
+            ...SettingsConfig.getDirectValue(this.jobsSchema),
         };
         let sessJobs: string[] = jobsSetting.sessions;
         let faveJobs: string[] = jobsSetting.favorites;
@@ -1093,9 +1063,7 @@ export class Profiles extends ProfilesCache {
         });
         jobsSetting.sessions = sessJobs;
         jobsSetting.favorites = faveJobs;
-        await vscode.workspace
-            .getConfiguration()
-            .update(this.jobsSchema, jobsSetting, vscode.ConfigurationTarget.Global);
+        await SettingsConfig.setDirectValue(this.jobsSchema, jobsSetting);
 
         // Remove from list of all profiles
         const index = this.allProfiles.findIndex((deleteItem) => {
@@ -1129,11 +1097,7 @@ export class Profiles extends ProfilesCache {
                     profileStatus = await Gui.withProgress(
                         {
                             location: vscode.ProgressLocation.Notification,
-                            title: localize(
-                                "Profiles.validateProfiles.validationProgress",
-                                "Validating {0} Profile.",
-                                theProfile.name
-                            ),
+                            title: localize("Profiles.validateProfiles.validationProgress", "Validating {0} Profile.", theProfile.name),
                             cancellable: true,
                         },
                         async (progress, token) => {
@@ -1210,9 +1174,7 @@ export class Profiles extends ProfilesCache {
         }
 
         try {
-            loginTokenType = await ZoweExplorerApiRegister.getInstance()
-                .getCommonApi(serviceProfile)
-                .getTokenTypeName();
+            loginTokenType = await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).getTokenTypeName();
         } catch (error) {
             this.log.info(error);
             Gui.showMessage(localize("ssoAuth.noBase", "This profile does not support token authentication."));
@@ -1261,9 +1223,7 @@ export class Profiles extends ProfilesCache {
                         tokenType: loginTokenType,
                         type: zowe.imperative.SessConstants.AUTH_TYPE_TOKEN,
                     });
-                    loginToken = await ZoweExplorerApiRegister.getInstance()
-                        .getCommonApi(serviceProfile)
-                        .login(updSession);
+                    loginToken = await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).login(updSession);
                     const updBaseProfile: zowe.imperative.IProfile = {
                         tokenType: loginTokenType,
                         tokenValue: loginToken,
@@ -1294,19 +1254,14 @@ export class Profiles extends ProfilesCache {
         }
         try {
             // this will handle extenders
-            if (
-                serviceProfile.type !== "zosmf" &&
-                serviceProfile.profile?.tokenType !== zowe.imperative.SessConstants.TOKEN_TYPE_APIML
-            ) {
+            if (serviceProfile.type !== "zosmf" && serviceProfile.profile?.tokenType !== zowe.imperative.SessConstants.TOKEN_TYPE_APIML) {
                 await ZoweExplorerApiRegister.getInstance()
                     .getCommonApi(serviceProfile)
                     .logout(await node.getSession());
             } else {
                 // this will handle base profile apiml tokens
                 const baseProfile = await this.fetchBaseProfile();
-                const loginTokenType = ZoweExplorerApiRegister.getInstance()
-                    .getCommonApi(serviceProfile)
-                    .getTokenTypeName();
+                const loginTokenType = ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).getTokenTypeName();
                 const updSession = new zowe.imperative.Session({
                     hostname: serviceProfile.profile.host,
                     port: serviceProfile.profile.port,
@@ -1335,15 +1290,9 @@ export class Profiles extends ProfilesCache {
     private async getConfigLocationPrompt(action: string): Promise<string> {
         let placeHolderText: string;
         if (action === "create") {
-            placeHolderText = localize(
-                "getConfigLocationPrompt.placeholder.create",
-                "Select the location where the config file will be initialized"
-            );
+            placeHolderText = localize("getConfigLocationPrompt.placeholder.create", "Select the location where the config file will be initialized");
         } else {
-            placeHolderText = localize(
-                "getConfigLocationPrompt.placeholder.edit",
-                "Select the location of the config file to edit"
-            );
+            placeHolderText = localize("getConfigLocationPrompt.placeholder.edit", "Select the location of the config file to edit");
         }
         const quickPickOptions: vscode.QuickPickOptions = {
             placeHolder: placeHolderText,
@@ -1379,19 +1328,18 @@ export class Profiles extends ProfilesCache {
                 const createButton = localize("checkExistingConfig.createNew.button", "Create New");
                 const message = localize(
                     "checkExistingConfig.createNew.message",
+                    // eslint-disable-next-line max-len
                     `A Team Configuration File already exists in this location\n{0}\nContinuing may alter the existing file, would you like to proceed?`,
                     file.path
                 );
-                await vscode.window
-                    .showInformationMessage(message, { modal: true }, ...[createButton])
-                    .then(async (selection) => {
-                        if (selection) {
-                            location = path.basename(file.path);
-                        } else {
-                            await this.openConfigFile(file.path);
-                            location = undefined;
-                        }
-                    });
+                await vscode.window.showInformationMessage(message, { modal: true }, ...[createButton]).then(async (selection) => {
+                    if (selection) {
+                        location = path.basename(file.path);
+                    } else {
+                        await this.openConfigFile(file.path);
+                        location = undefined;
+                    }
+                });
             }
         }
         if (found) {
@@ -1444,10 +1392,7 @@ export class Profiles extends ProfilesCache {
         return ret;
     }
 
-    private async updateBaseProfileFileLogin(
-        profile: zowe.imperative.IProfileLoaded,
-        updProfile: zowe.imperative.IProfile
-    ) {
+    private async updateBaseProfileFileLogin(profile: zowe.imperative.IProfileLoaded, updProfile: zowe.imperative.IProfile) {
         const upd = { profileName: profile.name, profileType: profile.type };
         const mProfileInfo = await this.getProfileInfo();
         const setSecure = mProfileInfo.isSecured();
@@ -1484,11 +1429,7 @@ export class Profiles extends ProfilesCache {
         const profileName = deletedProfile.name;
         this.log.debug(localize("deleteProfile.log.debug", "Deleting profile ") + profileName);
         const quickPickOptions: vscode.QuickPickOptions = {
-            placeHolder: localize(
-                "deleteProfile.quickPickOption",
-                "Delete {0}? This will permanently remove it from your system.",
-                profileName
-            ),
+            placeHolder: localize("deleteProfile.quickPickOption", "Delete {0}? This will permanently remove it from your system.", profileName),
             ignoreFocusOut: true,
             canPickMany: false,
         };
@@ -1502,19 +1443,14 @@ export class Profiles extends ProfilesCache {
                 quickPickOptions
             )) !== localize("deleteProfile.showQuickPick.delete", "Delete")
         ) {
-            this.log.debug(
-                localize("deleteProfile.showQuickPick.log.debug", "User picked Cancel. Cancelling delete of profile")
-            );
+            this.log.debug(localize("deleteProfile.showQuickPick.log.debug", "User picked Cancel. Cancelling delete of profile"));
             return;
         }
 
         try {
             await this.deleteProfileOnDisk(deletedProfile);
         } catch (error) {
-            this.log.error(
-                localize("deleteProfile.delete.log.error", "Error encountered when deleting profile! ") +
-                    JSON.stringify(error)
-            );
+            this.log.error(localize("deleteProfile.delete.log.error", "Error encountered when deleting profile! ") + JSON.stringify(error));
             await errorHandling(error, profileName, error.message);
             throw error;
         }
@@ -1531,10 +1467,7 @@ export class Profiles extends ProfilesCache {
             zosURL = input;
         }
         const options: vscode.InputBoxOptions = {
-            prompt: localize(
-                "createNewConnection.option.prompt.url",
-                "Enter a z/OS URL in the format 'https://url:port'."
-            ),
+            prompt: localize("createNewConnection.option.prompt.url", "Enter a z/OS URL in the format 'https://url:port'."),
             value: zosURL,
             ignoreFocusOut: true,
             placeHolder: localize("createNewConnection.option.prompt.url.placeholder", "https://url:port"),
@@ -1543,10 +1476,7 @@ export class Profiles extends ProfilesCache {
                 if (this.validateAndParseUrl(host).valid) {
                     return undefined;
                 } else {
-                    return localize(
-                        "createNewConnection.invalidzosURL",
-                        "Please enter a valid host URL in the format 'company.com'."
-                    );
+                    return localize("createNewConnection.invalidzosURL", "Please enter a valid host URL in the format 'company.com'.");
                 }
             },
         };
@@ -1608,10 +1538,7 @@ export class Profiles extends ProfilesCache {
         }
         InputBoxOptions = {
             placeHolder: localize("createNewConnection.option.prompt.username.placeholder", "User Name"),
-            prompt: localize(
-                "createNewConnection.option.prompt.username",
-                "Enter the user name for the connection. Leave blank to not store."
-            ),
+            prompt: localize("createNewConnection.option.prompt.username", "Enter the user name for the connection. Leave blank to not store."),
             ignoreFocusOut: true,
             value: userName,
         };
@@ -1634,10 +1561,7 @@ export class Profiles extends ProfilesCache {
 
         InputBoxOptions = {
             placeHolder: localize("createNewConnection.option.prompt.password.placeholder", "Password"),
-            prompt: localize(
-                "createNewConnection.option.prompt.password",
-                "Enter the password for the connection. Leave blank to not store."
-            ),
+            prompt: localize("createNewConnection.option.prompt.password", "Enter the password for the connection. Leave blank to not store."),
             password: true,
             ignoreFocusOut: true,
             value: passWord,
@@ -1656,14 +1580,8 @@ export class Profiles extends ProfilesCache {
         let rejectUnauthorize: boolean;
         let placeholder: string;
         let selectRU: string[];
-        const falseString = localize(
-            "createNewConnection.ru.false",
-            "False - Accept connections with self-signed certificates"
-        );
-        const trueString = localize(
-            "createNewConnection.ru.true",
-            "True - Reject connections with self-signed certificates"
-        );
+        const falseString = localize("createNewConnection.ru.false", "False - Accept connections with self-signed certificates");
+        const trueString = localize("createNewConnection.ru.true", "True - Reject connections with self-signed certificates");
 
         if (input !== undefined) {
             rejectUnauthorize = input;
@@ -1675,10 +1593,7 @@ export class Profiles extends ProfilesCache {
                 selectRU = [trueString, falseString];
             }
         } else {
-            placeholder = localize(
-                "createNewConnection.option.prompt.ru.placeholder",
-                "Reject Unauthorized Connections"
-            );
+            placeholder = localize("createNewConnection.option.prompt.ru.placeholder", "Reject Unauthorized Connections");
             selectRU = [trueString, falseString];
         }
 
@@ -1845,8 +1760,7 @@ export class Profiles extends ProfilesCache {
     // Temporary solution for handling unsecure profiles until CLI team's work is made
     // Remove secure properties and set autoStore to false when vscode setting is true
     private createNonSecureProfile(newConfig: zowe.imperative.IConfig): void {
-        const configuration: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
-        const isSecureCredsEnabled: boolean = configuration.get(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED);
+        const isSecureCredsEnabled: boolean = SettingsConfig.getDirectValue(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED);
         if (!isSecureCredsEnabled) {
             for (const profile of Object.entries(newConfig.profiles)) {
                 delete newConfig.profiles[profile[0]].secure;

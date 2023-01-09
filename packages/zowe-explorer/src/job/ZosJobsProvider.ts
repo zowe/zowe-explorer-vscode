@@ -22,10 +22,10 @@ import { getAppName, sortTreeItems, labelRefresh, jobPrefixValidator } from "../
 import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
 import { getIconByNode } from "../generators/icons";
 import * as contextually from "../shared/context";
+import { resetValidationSettings } from "../shared/actions";
+import { SettingsConfig } from "../utils/SettingsConfig";
 
 import * as nls from "vscode-nls";
-import { resetValidationSettings } from "../shared/actions";
-import { PersistentFilters } from "../PersistentFilters";
 // Set up localization
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
@@ -70,7 +70,6 @@ export async function createJobsTree(log: imperative.Logger) {
     return tree;
 }
 
-// tslint:disable-next-line: max-classes-per-file
 export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZoweJobTreeNode> {
     public static readonly JobId = "JobId:";
     public static readonly Owner = "Owner:";
@@ -121,14 +120,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
     constructor() {
         super(
             ZosJobsProvider.persistenceSchema,
-            new Job(
-                localize("Favorites", "Favorites"),
-                vscode.TreeItemCollapsibleState.Collapsed,
-                null,
-                null,
-                null,
-                null
-            )
+            new Job(localize("Favorites", "Favorites"), vscode.TreeItemCollapsibleState.Collapsed, null, null, null, null)
         );
         this.mFavoriteSession.contextValue = globals.FAVORITE_CONTEXT;
         const icon = getIconByNode(this.mFavoriteSession);
@@ -217,7 +209,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      * @param {string} [profileType] - optional; loads profiles of a certain type if passed
      */
     public async addSession(sessionName?: string, profileType?: string) {
-        const setting = PersistentFilters.getDirectValue(globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION) as boolean;
+        const setting: boolean = SettingsConfig.getDirectValue(globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION);
         // Loads profile associated with passed sessionName, default if none passed
         if (sessionName) {
             const theProfile: imperative.IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
@@ -281,10 +273,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      * @param profileName - The name of the profile you are looking for
      * @returns {IZoweJobTreeNode | undefined} Returns matching profile node if found. Otherwise, returns undefined.
      */
-    public findMatchingProfileInArray(
-        jobsProvider: IZoweJobTreeNode[],
-        profileName: string
-    ): IZoweJobTreeNode | undefined {
+    public findMatchingProfileInArray(jobsProvider: IZoweJobTreeNode[], profileName: string): IZoweJobTreeNode | undefined {
         return jobsProvider.find((treeNode) => treeNode.label === profileName);
     }
 
@@ -323,14 +312,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      * @returns {Job}
      */
     public createProfileNodeForFavs(profileName: string): Job {
-        const favProfileNode = new Job(
-            profileName,
-            vscode.TreeItemCollapsibleState.Collapsed,
-            this.mFavoriteSession,
-            null,
-            null,
-            null
-        );
+        const favProfileNode = new Job(profileName, vscode.TreeItemCollapsibleState.Collapsed, this.mFavoriteSession, null, null, null);
         favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
         const icon = getIconByNode(favProfileNode);
         if (icon) {
@@ -364,11 +346,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 profileNodeInFavorites = this.createProfileNodeForFavs(profileName);
             }
             // Initialize and attach favorited item nodes under their respective profile node in Favorrites
-            const favChildNodeForProfile = await this.initializeFavChildNodeForProfile(
-                favLabel,
-                favContextValue,
-                profileNodeInFavorites
-            );
+            const favChildNodeForProfile = await this.initializeFavChildNodeForProfile(favLabel, favContextValue, profileNodeInFavorites);
             profileNodeInFavorites.children.push(favChildNodeForProfile);
         });
     }
@@ -384,14 +362,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
     public async initializeFavChildNodeForProfile(label: string, contextValue: string, parentNode: IZoweJobTreeNode) {
         let favJob: Job;
         if (contextValue.startsWith(globals.JOBS_JOB_CONTEXT)) {
-            favJob = new Job(
-                label,
-                vscode.TreeItemCollapsibleState.Collapsed,
-                parentNode,
-                null,
-                new JobDetail(label),
-                null
-            );
+            favJob = new Job(label, vscode.TreeItemCollapsibleState.Collapsed, parentNode, null, new JobDetail(label), null);
             favJob.contextValue = globals.JOBS_JOB_CONTEXT + globals.FAV_SUFFIX;
             favJob.command = { command: "zowe.zosJobsSelectjob", title: "", arguments: [favJob] };
         } else {
@@ -418,18 +389,13 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         let profile: imperative.IProfileLoaded;
         let session: imperative.Session;
         this.log = log;
-        this.log.debug(
-            localize("loadProfilesForFavorites.log.debug", "Loading profile: {0} for jobs favorites", profileName)
-        );
+        this.log.debug(localize("loadProfilesForFavorites.log.debug", "Loading profile: {0} for jobs favorites", profileName));
         // Load profile for parent profile node in this.mFavorites array
         if (!parentNode.getProfile() || !parentNode.getSession()) {
             try {
                 profile = Profiles.getInstance().loadNamedProfile(profileName);
                 await Profiles.getInstance().checkCurrentProfile(profile);
-                if (
-                    Profiles.getInstance().validProfile === ValidProfileEnum.VALID ||
-                    !contextually.isValidationEnabled(parentNode)
-                ) {
+                if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID || !contextually.isValidationEnabled(parentNode)) {
                     session = ZoweExplorerApiRegister.getJesApi(profile).getSession();
                     parentNode.setProfileToChoice(profile);
                     parentNode.setSessionToChoice(session);
@@ -454,11 +420,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                         "Error: You have Zowe Job favorites that refer to a non-existent CLI profile named: {0}",
                         profileName
                     ) +
-                    localize(
-                        "initializeJobsFavorites.error.profile2",
-                        ". To resolve this, you can remove {0}",
-                        profileName
-                    ) +
+                    localize("initializeJobsFavorites.error.profile2", ". To resolve this, you can remove {0}", profileName) +
                     localize(
                         "initializeJobsFavorites.error.profile3",
                         " from the Favorites section of Zowe Explorer's Jobs view. Would you like to do this now? ",
@@ -674,10 +636,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         }
     }
 
-    public async getUserSearchQueryInput(
-        choice: FilterItem,
-        node: IZoweJobTreeNode
-    ): Promise<IJobSearchCriteria | undefined> {
+    public async getUserSearchQueryInput(choice: FilterItem, node: IZoweJobTreeNode): Promise<IJobSearchCriteria | undefined> {
         if (!choice) {
             return undefined;
         }
@@ -830,13 +789,13 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
 
     public async onDidChangeConfiguration(e: vscode.ConfigurationChangeEvent) {
         if (e.affectsConfiguration(ZosJobsProvider.persistenceSchema)) {
-            const setting: any = { ...vscode.workspace.getConfiguration().get(ZosJobsProvider.persistenceSchema) };
+            const setting: any = {
+                ...SettingsConfig.getDirectValue(ZosJobsProvider.persistenceSchema),
+            };
             if (!setting.persistence) {
                 setting.favorites = [];
                 setting.history = [];
-                await vscode.workspace
-                    .getConfiguration()
-                    .update(ZosJobsProvider.persistenceSchema, setting, vscode.ConfigurationTarget.Global);
+                await SettingsConfig.setDirectValue(ZosJobsProvider.persistenceSchema, setting);
             }
         }
     }
@@ -1008,7 +967,6 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
 /**
  * Helper class to allow generation of job details by history or favorite
  */
-// tslint:disable-next-line: max-classes-per-file
 class JobDetail implements IJob {
     public jobid: string;
     public jobname: string;

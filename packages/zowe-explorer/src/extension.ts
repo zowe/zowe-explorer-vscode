@@ -65,10 +65,7 @@ let jobsProvider: IZoweTree<IZoweJobTreeNode>;
  */
 export async function activate(context: vscode.ExtensionContext): Promise<ZoweExplorerApiRegister> {
     // Get temp folder location from settings
-    let preferencesTempPath: string = vscode.workspace
-        .getConfiguration()
-        /* tslint:disable:no-string-literal */
-        .get(globals.SETTINGS_TEMP_FOLDER_PATH);
+    let preferencesTempPath: string = SettingsConfig.getDirectValue(globals.SETTINGS_TEMP_FOLDER_PATH);
 
     // Determine the runtime framework to support special behavior for Theia
     globals.defineGlobals(preferencesTempPath);
@@ -146,9 +143,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         })
     );
     const spoolProvider = new SpoolProvider();
-    const providerRegistration = vscode.Disposable.from(
-        vscode.workspace.registerTextDocumentContentProvider(SpoolProvider.scheme, spoolProvider)
-    );
+    const providerRegistration = vscode.Disposable.from(vscode.workspace.registerTextDocumentContentProvider(SpoolProvider.scheme, spoolProvider));
     context.subscriptions.push(spoolProvider, providerRegistration);
 
     // Register functions & event listeners
@@ -156,10 +151,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         vscode.workspace.onDidChangeConfiguration(async (e) => {
             // If the temp folder location has been changed, update current temp folder preference
             if (e.affectsConfiguration(globals.SETTINGS_TEMP_FOLDER_PATH)) {
-                const updatedPreferencesTempPath: string = vscode.workspace
-                    .getConfiguration()
-                    /* tslint:disable:no-string-literal */
-                    .get(globals.SETTINGS_TEMP_FOLDER_PATH);
+                const updatedPreferencesTempPath: string = SettingsConfig.getDirectValue(globals.SETTINGS_TEMP_FOLDER_PATH);
                 moveTempFolder(preferencesTempPath, updatedPreferencesTempPath);
                 preferencesTempPath = updatedPreferencesTempPath;
             }
@@ -190,9 +182,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     }
     if (datasetProvider || ussFileProvider) {
         context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.openRecentMember", () =>
-                sharedActions.openRecentMemberPrompt(datasetProvider, ussFileProvider)
-            )
+            vscode.commands.registerCommand("zowe.openRecentMember", () => sharedActions.openRecentMemberPrompt(datasetProvider, ussFileProvider))
         );
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.searchInAllLoadedItems", async () =>
@@ -294,14 +284,13 @@ async function watchConfigProfile(context: vscode.ExtensionContext) {
         vscode.workspace.workspaceFolders &&
         vscode.workspace.workspaceFolders[0] &&
         vscode.workspace.createFileSystemWatcher(
-            new vscode.RelativePattern(
-                vscode.workspace.workspaceFolders[0].uri.fsPath,
-                "{zowe.config,zowe.config.user}.json"
-            )
+            new vscode.RelativePattern(vscode.workspace.workspaceFolders[0].uri.fsPath, "{zowe.config,zowe.config.user}.json")
         );
 
     context.subscriptions.push(workspaceProfileWatcher);
-    workspaceProfileWatcher && context.subscriptions.push(globalProfileWatcher);
+    if (workspaceProfileWatcher) {
+        context.subscriptions.push(globalProfileWatcher);
+    }
 
     const onChangeProfileAction = async (uri: vscode.Uri) => {
         const newProfileContents = await vscode.workspace.fs.readFile(uri);
@@ -326,20 +315,19 @@ async function watchConfigProfile(context: vscode.ExtensionContext) {
         await vscode.commands.executeCommand("zowe.extRefresh");
     });
 
-    workspaceProfileWatcher &&
+    if (workspaceProfileWatcher) {
         workspaceProfileWatcher.onDidCreate(async () => {
             await vscode.commands.executeCommand("zowe.extRefresh");
         });
 
-    workspaceProfileWatcher &&
         workspaceProfileWatcher.onDidChange(async (uri: vscode.Uri) => {
             await onChangeProfileAction(uri);
         });
 
-    workspaceProfileWatcher &&
         workspaceProfileWatcher.onDidDelete(async () => {
             await vscode.commands.executeCommand("zowe.extRefresh");
         });
+    }
 }
 
 function initDatasetProvider(context: vscode.ExtensionContext) {
@@ -348,11 +336,7 @@ function initDatasetProvider(context: vscode.ExtensionContext) {
             datasetProvider.createZoweSchema(datasetProvider);
         })
     );
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.addSession", async () =>
-            datasetProvider.createZoweSession(datasetProvider)
-        )
-    );
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.addSession", async () => datasetProvider.createZoweSession(datasetProvider)));
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.addFavorite", async (node, nodeList) => {
             const selectedNodes = getSelectedNodeList(node, nodeList);
@@ -369,9 +353,7 @@ function initDatasetProvider(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.refreshNode", async (node, nodeList) => {
             let selectedNodes = getSelectedNodeList(node, nodeList);
-            selectedNodes = selectedNodes.filter(
-                (element) => contextuals.isDs(element) || contextuals.isDsMember(element)
-            );
+            selectedNodes = selectedNodes.filter((element) => contextuals.isDs(element) || contextuals.isDsMember(element));
             for (const item of selectedNodes) {
                 await dsActions.refreshPS(item);
             }
@@ -380,55 +362,31 @@ function initDatasetProvider(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.refreshDataset", async (node, nodeList) => {
             let selectedNodes = getSelectedNodeList(node, nodeList);
-            selectedNodes = selectedNodes.filter(
-                (element) => contextuals.isDs(element) || contextuals.isPdsNotFav(element)
-            );
+            selectedNodes = selectedNodes.filter((element) => contextuals.isDs(element) || contextuals.isPdsNotFav(element));
             for (const item of selectedNodes) {
                 await dsActions.refreshDataset(item, datasetProvider);
             }
         })
     );
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.pattern", (node) => datasetProvider.filterPrompt(node)));
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.pattern", (node) => datasetProvider.filterPrompt(node))
+        vscode.commands.registerCommand("zowe.ds.editSession", async (node) => datasetProvider.editSession(node, datasetProvider))
     );
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.ZoweNode.openPS", (node) => dsActions.openPS(node, true, datasetProvider)));
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.createDataset", (node) => dsActions.createFile(node, datasetProvider)));
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.createMember", (node) => dsActions.createMember(node, datasetProvider)));
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.editSession", async (node) =>
-            datasetProvider.editSession(node, datasetProvider)
-        )
+        vscode.commands.registerCommand("zowe.ds.deleteDataset", (node?) => dsActions.deleteDatasetPrompt(datasetProvider, node))
     );
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.allocateLike", (node) => dsActions.allocateLike(datasetProvider, node)));
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.uploadDialog", (node) => dsActions.uploadDialog(node, datasetProvider)));
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.ZoweNode.openPS", (node) =>
-            dsActions.openPS(node, true, datasetProvider)
-        )
-    );
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.createDataset", (node) => dsActions.createFile(node, datasetProvider))
-    );
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.createMember", (node) => dsActions.createMember(node, datasetProvider))
-    );
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.deleteDataset", (node?) =>
-            dsActions.deleteDatasetPrompt(datasetProvider, node)
-        )
-    );
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.allocateLike", (node) => dsActions.allocateLike(datasetProvider, node))
-    );
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.uploadDialog", (node) => dsActions.uploadDialog(node, datasetProvider))
-    );
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.deleteMember", (node?) =>
-            dsActions.deleteDatasetPrompt(datasetProvider, node)
-        )
+        vscode.commands.registerCommand("zowe.ds.deleteMember", (node?) => dsActions.deleteDatasetPrompt(datasetProvider, node))
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.editDataSet", async (node, nodeList) => {
             let selectedNodes = getSelectedNodeList(node, nodeList);
-            selectedNodes = selectedNodes.filter(
-                (element) => contextuals.isDs(element) || contextuals.isDsMember(element)
-            );
+            selectedNodes = selectedNodes.filter((element) => contextuals.isDs(element) || contextuals.isDsMember(element));
             for (const item of selectedNodes) {
                 await dsActions.openPS(item, false, datasetProvider);
             }
@@ -437,25 +395,20 @@ function initDatasetProvider(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.editMember", async (node, nodeList) => {
             let selectedNodes = getSelectedNodeList(node, nodeList);
-            selectedNodes = selectedNodes.filter(
-                (element) => contextuals.isDs(element) || contextuals.isDsMember(element)
-            );
+            selectedNodes = selectedNodes.filter((element) => contextuals.isDs(element) || contextuals.isDsMember(element));
             for (const item of selectedNodes) {
                 await dsActions.openPS(item, false, datasetProvider);
             }
         })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand(
-            "zowe.ds.removeSession",
-            async (node: IZoweDatasetTreeNode, nodeList: IZoweDatasetTreeNode[]) => {
-                let selectedNodes = getSelectedNodeList(node, nodeList);
-                selectedNodes = selectedNodes.filter((sNode) => contextuals.isDsSession(sNode));
-                for (const select of selectedNodes) {
-                    datasetProvider.deleteSession(select);
-                }
+        vscode.commands.registerCommand("zowe.ds.removeSession", async (node: IZoweDatasetTreeNode, nodeList: IZoweDatasetTreeNode[]) => {
+            let selectedNodes = getSelectedNodeList(node, nodeList);
+            selectedNodes = selectedNodes.filter((sNode) => contextuals.isDsSession(sNode));
+            for (const select of selectedNodes) {
+                datasetProvider.deleteSession(select);
             }
-        )
+        })
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.removeFavorite", async (node, nodeList) => {
@@ -465,25 +418,13 @@ function initDatasetProvider(context: vscode.ExtensionContext) {
             }
         })
     );
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.saveSearch", async (node) => datasetProvider.addFavorite(node)));
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.removeSavedSearch", async (node) => datasetProvider.removeFavorite(node)));
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.saveSearch", async (node) => datasetProvider.addFavorite(node))
+        vscode.commands.registerCommand("zowe.ds.removeFavProfile", async (node) => datasetProvider.removeFavProfile(node.label, true))
     );
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.removeSavedSearch", async (node) =>
-            datasetProvider.removeFavorite(node)
-        )
-    );
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.removeFavProfile", async (node) =>
-            datasetProvider.removeFavProfile(node.label, true)
-        )
-    );
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.submitJcl", async () => dsActions.submitJcl(datasetProvider))
-    );
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.submitMember", async (node) => dsActions.submitMember(node))
-    );
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.submitJcl", async () => dsActions.submitJcl(datasetProvider)));
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.submitMember", async (node) => dsActions.submitMember(node)));
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.showAttributes", async (node, nodeList) => {
             const selectedNodes = getSelectedNodeList(node, nodeList).filter(
@@ -494,27 +435,15 @@ function initDatasetProvider(context: vscode.ExtensionContext) {
             }
         })
     );
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.renameDataSet", (node) => datasetProvider.rename(node))
-    );
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.copyMember", (node) => dsActions.copyDataSet(node))
-    );
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.copyDataSet", (node) => dsActions.copyDataSet(node))
-    );
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.pasteMember", (node) => dsActions.pasteMember(node, datasetProvider))
-    );
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.renameDataSetMember", (node) => datasetProvider.rename(node))
-    );
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.renameDataSet", (node) => datasetProvider.rename(node)));
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.copyMember", (node) => dsActions.copyDataSet(node)));
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.copyDataSet", (node) => dsActions.copyDataSet(node)));
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.pasteMember", (node) => dsActions.pasteMember(node, datasetProvider)));
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.renameDataSetMember", (node) => datasetProvider.rename(node)));
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.hMigrateDataSet", async (node, nodeList) => {
             let selectedNodes = getSelectedNodeList(node, nodeList);
-            selectedNodes = selectedNodes.filter(
-                (element) => contextuals.isDs(element) || contextuals.isPdsNotFav(element)
-            );
+            selectedNodes = selectedNodes.filter((element) => contextuals.isDs(element) || contextuals.isPdsNotFav(element));
             for (const item of selectedNodes) {
                 dsActions.hMigrateDataSet(item as ZoweDatasetNode);
             }
@@ -530,25 +459,13 @@ function initDatasetProvider(context: vscode.ExtensionContext) {
         })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.disableValidation", async (node) =>
-            Profiles.getInstance().disableValidation(node)
-        )
+        vscode.commands.registerCommand("zowe.ds.disableValidation", async (node) => Profiles.getInstance().disableValidation(node))
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.enableValidation", async (node) =>
-            Profiles.getInstance().enableValidation(node)
-        )
+        vscode.commands.registerCommand("zowe.ds.enableValidation", async (node) => Profiles.getInstance().enableValidation(node))
     );
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.ssoLogin", async (node: IZoweTreeNode) =>
-            datasetProvider.ssoLogin(node)
-        )
-    );
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.ssoLogout", async (node: IZoweTreeNode) =>
-            datasetProvider.ssoLogout(node)
-        )
-    );
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.ssoLogin", async (node: IZoweTreeNode) => datasetProvider.ssoLogin(node)));
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.ssoLogout", async (node: IZoweTreeNode) => datasetProvider.ssoLogout(node)));
     context.subscriptions.push(
         vscode.workspace.onDidChangeConfiguration((e) => {
             datasetProvider.onDidChangeConfiguration(e);
@@ -576,9 +493,7 @@ function initUSSProvider(context: vscode.ExtensionContext) {
         })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.addSession", async () =>
-            ussFileProvider.createZoweSession(ussFileProvider)
-        )
+        vscode.commands.registerCommand("zowe.uss.addSession", async () => ussFileProvider.createZoweSession(ussFileProvider))
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.uss.refreshAll", async () => {
@@ -595,9 +510,7 @@ function initUSSProvider(context: vscode.ExtensionContext) {
         })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.refreshUSSInTree", (node: IZoweUSSTreeNode) =>
-            ussActions.refreshUSSInTree(node, ussFileProvider)
-        )
+        vscode.commands.registerCommand("zowe.uss.refreshUSSInTree", (node: IZoweUSSTreeNode) => ussActions.refreshUSSInTree(node, ussFileProvider))
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.uss.refreshDirectory", (node, nodeList) => {
@@ -608,20 +521,12 @@ function initUSSProvider(context: vscode.ExtensionContext) {
             }
         })
     );
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.uss.fullPath", (node: IZoweUSSTreeNode) => ussFileProvider.filterPrompt(node)));
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.fullPath", (node: IZoweUSSTreeNode) =>
-            ussFileProvider.filterPrompt(node)
-        )
+        vscode.commands.registerCommand("zowe.uss.editSession", async (node) => ussFileProvider.editSession(node, ussFileProvider))
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.editSession", async (node) =>
-            ussFileProvider.editSession(node, ussFileProvider)
-        )
-    );
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.ZoweUSSNode.open", (node: IZoweUSSTreeNode) =>
-            node.openUSS(false, true, ussFileProvider)
-        )
+        vscode.commands.registerCommand("zowe.uss.ZoweUSSNode.open", (node: IZoweUSSTreeNode) => node.openUSS(false, true, ussFileProvider))
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.uss.removeSession", async (node: IZoweUSSTreeNode, nodeList) => {
@@ -671,72 +576,41 @@ function initUSSProvider(context: vscode.ExtensionContext) {
         })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.renameNode", async (node: IZoweUSSTreeNode) =>
-            ussFileProvider.rename(node)
-        )
+        vscode.commands.registerCommand("zowe.uss.renameNode", async (node: IZoweUSSTreeNode) => ussFileProvider.rename(node))
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.uploadDialog", async (node: IZoweUSSTreeNode) =>
-            ussActions.uploadDialog(node, ussFileProvider)
-        )
+        vscode.commands.registerCommand("zowe.uss.uploadDialog", async (node: IZoweUSSTreeNode) => ussActions.uploadDialog(node, ussFileProvider))
+    );
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.uss.copyPath", async (node: IZoweUSSTreeNode) => ussActions.copyPath(node)));
+    context.subscriptions.push(
+        vscode.commands.registerCommand("zowe.uss.editFile", (node: IZoweUSSTreeNode) => node.openUSS(false, false, ussFileProvider))
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.copyPath", async (node: IZoweUSSTreeNode) =>
-            ussActions.copyPath(node)
-        )
+        vscode.commands.registerCommand("zowe.uss.saveSearch", async (node: IZoweUSSTreeNode) => ussFileProvider.saveSearch(node))
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.editFile", (node: IZoweUSSTreeNode) =>
-            node.openUSS(false, false, ussFileProvider)
-        )
+        vscode.commands.registerCommand("zowe.uss.removeSavedSearch", async (node: IZoweUSSTreeNode) => ussFileProvider.removeFavorite(node))
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.saveSearch", async (node: IZoweUSSTreeNode) =>
-            ussFileProvider.saveSearch(node)
-        )
+        vscode.commands.registerCommand("zowe.uss.removeFavProfile", async (node) => ussFileProvider.removeFavProfile(node.label, true))
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.removeSavedSearch", async (node: IZoweUSSTreeNode) =>
-            ussFileProvider.removeFavorite(node)
-        )
+        vscode.commands.registerCommand("zowe.uss.disableValidation", async (node) => Profiles.getInstance().disableValidation(node))
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.removeFavProfile", async (node) =>
-            ussFileProvider.removeFavProfile(node.label, true)
-        )
+        vscode.commands.registerCommand("zowe.uss.enableValidation", async (node) => Profiles.getInstance().enableValidation(node))
     );
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.disableValidation", async (node) =>
-            Profiles.getInstance().disableValidation(node)
-        )
-    );
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.enableValidation", async (node) =>
-            Profiles.getInstance().enableValidation(node)
-        )
-    );
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.ssoLogin", async (node: IZoweTreeNode) =>
-            ussFileProvider.ssoLogin(node)
-        )
-    );
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.ssoLogout", async (node: IZoweTreeNode) =>
-            ussFileProvider.ssoLogout(node)
-        )
-    );
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.uss.ssoLogin", async (node: IZoweTreeNode) => ussFileProvider.ssoLogin(node)));
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.uss.ssoLogout", async (node: IZoweTreeNode) => ussFileProvider.ssoLogout(node)));
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.uss.pasteUssFile", async (node: IZoweUSSTreeNode) => {
             ussActions.pasteUssFile(ussFileProvider, node);
         })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand(
-            "zowe.uss.copyUssFile",
-            async (node: IZoweUSSTreeNode, nodeList: IZoweUSSTreeNode[]) => {
-                ussActions.copyUssFiles(node, nodeList, ussFileProvider);
-            }
-        )
+        vscode.commands.registerCommand("zowe.uss.copyUssFile", async (node: IZoweUSSTreeNode, nodeList: IZoweUSSTreeNode[]) => {
+            ussActions.copyUssFiles(node, nodeList, ussFileProvider);
+        })
     );
     context.subscriptions.push(
         vscode.workspace.onDidChangeConfiguration((e) => {
@@ -758,9 +632,7 @@ function initJobsProvider(context: vscode.ExtensionContext) {
             await jobActions.deleteCommand(jobsProvider, job, jobs);
         })
     );
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.runModifyCommand", (job) => jobActions.modifyCommand(job))
-    );
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.runModifyCommand", (job) => jobActions.modifyCommand(job)));
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.jobs.runStopCommand", async (node, nodeList) => {
             const selectedNodes = getSelectedNodeList(node, nodeList) as IZoweJobTreeNode[];
@@ -770,9 +642,7 @@ function initJobsProvider(context: vscode.ExtensionContext) {
         })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.refreshJobsServer", async (job) =>
-            jobActions.refreshJobsServer(job, jobsProvider)
-        )
+        vscode.commands.registerCommand("zowe.jobs.refreshJobsServer", async (job) => jobActions.refreshJobsServer(job, jobsProvider))
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.jobs.refreshAllJobs", async () => {
@@ -790,15 +660,9 @@ function initJobsProvider(context: vscode.ExtensionContext) {
             jobActions.refreshJob(node.mParent.mParent, jobsProvider);
         })
     );
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.addJobsSession", () => jobsProvider.createZoweSession(jobsProvider))
-    );
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.setOwner", (job) => jobActions.setOwner(job, jobsProvider))
-    );
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.setPrefix", (job) => jobActions.setPrefix(job, jobsProvider))
-    );
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.addJobsSession", () => jobsProvider.createZoweSession(jobsProvider)));
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.setOwner", (job) => jobActions.setOwner(job, jobsProvider)));
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.setPrefix", (job) => jobActions.setPrefix(job, jobsProvider)));
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.jobs.removeJobsSession", (job, jobList) => {
             let selectedNodes = getSelectedNodeList(job, jobList);
@@ -824,17 +688,11 @@ function initJobsProvider(context: vscode.ExtensionContext) {
         })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.setJobSpool", async (session, jobId) =>
-            jobActions.focusOnJob(jobsProvider, session, jobId)
-        )
+        vscode.commands.registerCommand("zowe.jobs.setJobSpool", async (session, jobId) => jobActions.focusOnJob(jobsProvider, session, jobId))
     );
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.search", (node) => jobsProvider.filterPrompt(node)));
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.search", (node) => jobsProvider.filterPrompt(node))
-    );
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.editSession", async (node) =>
-            jobsProvider.editSession(node, jobsProvider)
-        )
+        vscode.commands.registerCommand("zowe.jobs.editSession", async (node) => jobsProvider.editSession(node, jobsProvider))
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.jobs.addFavorite", async (node, nodeList) => {
@@ -852,39 +710,19 @@ function initJobsProvider(context: vscode.ExtensionContext) {
             }
         })
     );
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.saveSearch", async (node) => jobsProvider.saveSearch(node)));
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.removeSearchFavorite", async (node) => jobsProvider.removeFavorite(node)));
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.saveSearch", async (node) => jobsProvider.saveSearch(node))
+        vscode.commands.registerCommand("zowe.jobs.removeFavProfile", async (node) => jobsProvider.removeFavProfile(node.label, true))
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.removeSearchFavorite", async (node) =>
-            jobsProvider.removeFavorite(node)
-        )
+        vscode.commands.registerCommand("zowe.jobs.disableValidation", async (node) => Profiles.getInstance().disableValidation(node))
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.removeFavProfile", async (node) =>
-            jobsProvider.removeFavProfile(node.label, true)
-        )
+        vscode.commands.registerCommand("zowe.jobs.enableValidation", async (node) => Profiles.getInstance().enableValidation(node))
     );
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.disableValidation", async (node) =>
-            Profiles.getInstance().disableValidation(node)
-        )
-    );
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.enableValidation", async (node) =>
-            Profiles.getInstance().enableValidation(node)
-        )
-    );
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.ssoLogin", async (node: IZoweTreeNode) =>
-            jobsProvider.ssoLogin(node)
-        )
-    );
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.ssoLogout", async (node: IZoweTreeNode) =>
-            jobsProvider.ssoLogout(node)
-        )
-    );
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.ssoLogin", async (node: IZoweTreeNode) => jobsProvider.ssoLogin(node)));
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.ssoLogout", async (node: IZoweTreeNode) => jobsProvider.ssoLogout(node)));
     context.subscriptions.push(
         vscode.workspace.onDidChangeConfiguration((e) => {
             jobsProvider.onDidChangeConfiguration(e);

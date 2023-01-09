@@ -58,8 +58,7 @@ describe("TsoCommandHandler unit testing", () => {
     });
 
     createQuickPick.mockReturnValue({
-        placeholder:
-            'Choose "Create new..." to define a new profile or select an existing profile to add to the Data Set Explorer',
+        placeholder: 'Choose "Create new..." to define a new profile or select an existing profile to add to the Data Set Explorer',
         activeItems: [qpItem2],
         ignoreFocusOut: true,
         items: [qpItem, qpItem2],
@@ -105,15 +104,7 @@ describe("TsoCommandHandler unit testing", () => {
         failNotFound: false,
     };
 
-    const testNode = new ZoweDatasetNode(
-        "BRTVS99.DDIR",
-        vscode.TreeItemCollapsibleState.Collapsed,
-        null,
-        session,
-        undefined,
-        undefined,
-        profileOne
-    );
+    const testNode = new ZoweDatasetNode("BRTVS99.DDIR", vscode.TreeItemCollapsibleState.Collapsed, null, session, undefined, undefined, profileOne);
 
     Object.defineProperty(vscode.window, "showErrorMessage", { value: showErrorMessage });
     Object.defineProperty(vscode.window, "showInputBox", { value: showInputBox });
@@ -151,10 +142,7 @@ describe("TsoCommandHandler unit testing", () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
-                    allProfiles: [
-                        { name: "firstName", profile: { user: "firstName", password: "12345" } },
-                        { name: "secondName" },
-                    ],
+                    allProfiles: [{ name: "firstName", profile: { user: "firstName", password: "12345" } }, { name: "secondName" }],
                     defaultProfile: { name: "firstName" },
                     zosmfProfile: mockLoadNamedProfile,
                     checkCurrentProfile: jest.fn(() => {
@@ -200,10 +188,7 @@ describe("TsoCommandHandler unit testing", () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
-                    allProfiles: [
-                        { name: "firstName", profile: { user: "firstName", password: "12345" } },
-                        { name: "secondName" },
-                    ],
+                    allProfiles: [{ name: "firstName", profile: { user: "firstName", password: "12345" } }, { name: "secondName" }],
                     defaultProfile: { name: "firstName" },
                     zosmfProfile: mockLoadNamedProfile,
                     checkCurrentProfile: jest.fn(() => {
@@ -245,10 +230,7 @@ describe("TsoCommandHandler unit testing", () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
-                    allProfiles: [
-                        { name: "firstName", profile: { user: "firstName", password: "12345" } },
-                        { name: "secondName" },
-                    ],
+                    allProfiles: [{ name: "firstName", profile: { user: "firstName", password: "12345" } }, { name: "secondName" }],
                     defaultProfile: { name: "firstName" },
                     zosmfProfile: mockLoadNamedProfile,
                     checkCurrentProfile: jest.fn(() => {
@@ -290,10 +272,7 @@ describe("TsoCommandHandler unit testing", () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
-                    allProfiles: [
-                        { name: "firstName", profile: { user: "firstName", password: "12345" } },
-                        { name: "secondName" },
-                    ],
+                    allProfiles: [{ name: "firstName", profile: { user: "firstName", password: "12345" } }, { name: "secondName" }],
                     defaultProfile: { name: "firstName" },
                     zosmfProfile: mockLoadNamedProfile,
                     checkCurrentProfile: jest.fn(() => {
@@ -333,10 +312,7 @@ describe("TsoCommandHandler unit testing", () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
-                    allProfiles: [
-                        { name: "firstName", profile: { user: "firstName", password: "12345" } },
-                        { name: "secondName" },
-                    ],
+                    allProfiles: [{ name: "firstName", profile: { user: "firstName", password: "12345" } }, { name: "secondName" }],
                     defaultProfile: { name: "firstName" },
                     zosmfProfile: mockLoadNamedProfile,
                     checkCurrentProfile: jest.fn(() => {
@@ -376,10 +352,7 @@ describe("TsoCommandHandler unit testing", () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
-                    allProfiles: [
-                        { name: "firstName", profile: { user: "firstName", password: "12345" } },
-                        { name: "secondName" },
-                    ],
+                    allProfiles: [{ name: "firstName", profile: { user: "firstName", password: "12345" } }, { name: "secondName" }],
                     defaultProfile: { name: "firstName" },
                     zosmfProfile: mockLoadNamedProfile,
                     checkCurrentProfile: jest.fn(() => {
@@ -392,8 +365,7 @@ describe("TsoCommandHandler unit testing", () => {
             }),
         });
         createQuickPick.mockReturnValueOnce({
-            placeholder:
-                'Choose "Create new..." to define a new profile or select an existing profile to add to the Data Set Explorer',
+            placeholder: 'Choose "Create new..." to define a new profile or select an existing profile to add to the Data Set Explorer',
             activeItems: [qpItem2],
             ignoreFocusOut: true,
             items: [qpItem, qpItem2],
@@ -454,10 +426,7 @@ describe("TsoCommandHandler unit testing", () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
-                    allProfiles: [
-                        { name: "firstName", profile: { user: undefined, password: undefined } },
-                        { name: "secondName" },
-                    ],
+                    allProfiles: [{ name: "firstName", profile: { user: undefined, password: undefined } }, { name: "secondName" }],
                     defaultProfile: { name: "firstName" },
                     validProfile: ValidProfileEnum.VALID,
                     promptCredentials: jest.fn(() => {
@@ -501,10 +470,7 @@ describe("TsoCommandHandler unit testing", () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
-                    allProfiles: [
-                        { name: "firstName", profile: { user: undefined, password: undefined } },
-                        { name: "secondName" },
-                    ],
+                    allProfiles: [{ name: "firstName", profile: { user: undefined, password: undefined } }, { name: "secondName" }],
                     defaultProfile: { name: "firstName" },
                     validProfile: ValidProfileEnum.VALID,
                     promptCredentials: jest.fn(() => {
@@ -546,10 +512,7 @@ describe("TsoCommandHandler unit testing", () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
-                    allProfiles: [
-                        { name: "firstName", profile: { user: undefined, password: undefined } },
-                        { name: "secondName" },
-                    ],
+                    allProfiles: [{ name: "firstName", profile: { user: undefined, password: undefined } }, { name: "secondName" }],
                     defaultProfile: { name: "firstName" },
                     validateProfiles: jest.fn(),
                     getBaseProfile: jest.fn(),
@@ -573,10 +536,7 @@ describe("TsoCommandHandler unit testing", () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
-                    allProfiles: [
-                        { name: "firstName", profile: { user: "firstName", password: "12345" } },
-                        { name: "secondName" },
-                    ],
+                    allProfiles: [{ name: "firstName", profile: { user: "firstName", password: "12345" } }, { name: "secondName" }],
                     defaultProfile: { name: "firstName" },
                     validProfile: ValidProfileEnum.VALID,
                     getBaseProfile: jest.fn(),
@@ -598,10 +558,7 @@ describe("TsoCommandHandler unit testing", () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
-                    allProfiles: [
-                        { name: "firstName", profile: { user: "firstName", password: "12345" } },
-                        { name: "secondName" },
-                    ],
+                    allProfiles: [{ name: "firstName", profile: { user: "firstName", password: "12345" } }, { name: "secondName" }],
                     defaultProfile: { name: "firstName" },
                     validProfile: ValidProfileEnum.VALID,
                     getBaseProfile: jest.fn(),

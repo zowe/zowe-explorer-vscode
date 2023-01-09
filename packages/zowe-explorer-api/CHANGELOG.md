@@ -22,6 +22,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 - Added logging in places where errors were being caught and ignored.
 - Fixed all existing ESLint errors within the API logic.
+- Removed TSLint (as it is deprecated), and replaced all TSLint rules with their ESLint equivalents. [#2030](https://github.com/zowe/vscode-extension-for-zowe/issues/2030)
 
 ### New features and enhancements
 

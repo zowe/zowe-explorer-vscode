@@ -69,8 +69,7 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
     }
 
     switch (httpErrCode) {
-        // tslint:disable-next-line: no-magic-numbers
-        case 401:
+        case imperative.RestConstants.HTTP_STATUS_401:
             if (label.includes("[")) {
                 label = label.substring(0, label.indexOf(" [")).trim();
             }
@@ -183,7 +182,6 @@ export interface IFilterItem {
     menuType?: globals.JobPickerTypes;
 }
 
-// tslint:disable-next-line: max-classes-per-file
 export class FilterItem implements vscode.QuickPickItem {
     constructor(public filterItem: IFilterItem) {}
     get label(): string {
@@ -202,7 +200,6 @@ export class FilterItem implements vscode.QuickPickItem {
     }
 }
 
-// tslint:disable-next-line: max-classes-per-file
 export class FilterDescriptor implements vscode.QuickPickItem {
     constructor(private text: string) {}
     get label(): string {
@@ -263,24 +260,17 @@ export async function readConfigFromDisk() {
         }
         if (mProfileInfo.usingTeamConfig) {
             globals.setConfigPath(rootPath);
-            globals.LOG.debug(
-                'Zowe Explorer is using the team configuration file "%s"',
-                mProfileInfo.getTeamConfig().configName
-            );
+            globals.LOG.debug('Zowe Explorer is using the team configuration file "%s"', mProfileInfo.getTeamConfig().configName);
             const layers = mProfileInfo.getTeamConfig().layers || [];
             const layerSummary = layers.map(
                 (config: imperative.IConfigLayer) =>
                     `Path: ${config.path}: ${
                         config.exists
-                            ? "Found, with the following defaults:" +
-                              JSON.stringify(config.properties?.defaults || "Undefined default")
+                            ? "Found, with the following defaults:" + JSON.stringify(config.properties?.defaults || "Undefined default")
                             : "Not available"
                     } `
             );
-            globals.LOG.debug(
-                "Summary of team configuration files considered for Zowe Explorer: %s",
-                JSON.stringify(layerSummary)
-            );
+            globals.LOG.debug("Summary of team configuration files considered for Zowe Explorer: %s", JSON.stringify(layerSummary));
         }
     } catch (error) {
         await openConfigOnError(error);

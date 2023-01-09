@@ -19,6 +19,7 @@ import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, FilterDescriptor, FilterItem } from "../utils/ProfilesUtils";
 import { ZoweCommandProvider } from "../abstract/ZoweCommandProvider";
 import { IStartTsoParms, imperative } from "@zowe/cli";
+import { SettingsConfig } from "../utils/SettingsConfig";
 
 // Set up localization
 nls.config({
@@ -47,8 +48,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
         return this.instance;
     }
 
-    private static readonly defaultDialogText: string =
-        "\uFF0B " + localize("command.option.prompt.search", "Create a new TSO Command");
+    private static readonly defaultDialogText: string = "\uFF0B " + localize("command.option.prompt.search", "Create a new TSO Command");
     private static instance: TsoCommandHandler;
     public outputChannel: vscode.OutputChannel;
 
@@ -85,10 +85,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
             });
             if (profileNamesList.length) {
                 const quickPickOptions: vscode.QuickPickOptions = {
-                    placeHolder: localize(
-                        "issueTsoCommand.quickPickOption",
-                        "Select the Profile to use to submit the TSO command"
-                    ),
+                    placeHolder: localize("issueTsoCommand.quickPickOption", "Select the Profile to use to submit the TSO command"),
                     ignoreFocusOut: true,
                     canPickMany: false,
                 };
@@ -127,9 +124,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                     }
                     let command1: string = command;
                     if (!command) {
-                        command1 = await this.getQuickPick(
-                            session && session.ISession ? session.ISession.hostname : "unknown"
-                        );
+                        command1 = await this.getQuickPick(session && session.ISession ? session.ISession.hostname : "unknown");
                     }
                     await this.issueCommand(command1, profile, tsoParams);
                 } else {
@@ -152,20 +147,16 @@ export class TsoCommandHandler extends ZoweCommandProvider {
 
     private async getQuickPick(hostname: string) {
         let response = "";
-        const alwaysEdit = PersistentFilters.getDirectValue(globals.SETTINGS_COMMANDS_ALWAYS_EDIT) as boolean;
+        const alwaysEdit: boolean = SettingsConfig.getDirectValue(globals.SETTINGS_COMMANDS_ALWAYS_EDIT);
         if (this.history.getSearchHistory().length > 0) {
             const createPick = new FilterDescriptor(TsoCommandHandler.defaultDialogText);
-            const items: vscode.QuickPickItem[] = this.history
-                .getSearchHistory()
-                .map((element) => new FilterItem({ text: element }));
+            const items: vscode.QuickPickItem[] = this.history.getSearchHistory().map((element) => new FilterItem({ text: element }));
             if (globals.ISTHEIA) {
                 const options1: vscode.QuickPickOptions = {
                     placeHolder:
                         localize("issueTsoCommand.command.hostname", "Select a TSO command to run against ") +
                         hostname +
-                        (alwaysEdit
-                            ? localize("issueTsoCommand.command.edit", " (An option to edit will follow)")
-                            : ""),
+                        (alwaysEdit ? localize("issueTsoCommand.command.edit", " (An option to edit will follow)") : ""),
                 };
                 // get user selection
                 const choice = await Gui.showQuickPick([createPick, ...items], options1);
@@ -180,8 +171,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                     ? localize("issueTsoCommand.command.hostnameAlt", "Select a TSO command to run against ") +
                       hostname +
                       localize("issueTsoCommand.command.edit", " (An option to edit will follow)")
-                    : localize("issueTsoCommand.command.hostname", "Select a TSO command to run immediately against ") +
-                      hostname;
+                    : localize("issueTsoCommand.command.hostname", "Select a TSO command to run immediately against ") + hostname;
 
                 quickpick.items = [createPick, ...items];
                 quickpick.ignoreFocusOut = true;
@@ -241,10 +231,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                     },
                     () => {
                         if (ZoweExplorerApiRegister.getCommandApi(profile).issueTsoCommandWithParms) {
-                            return ZoweExplorerApiRegister.getCommandApi(profile).issueTsoCommandWithParms(
-                                command,
-                                tsoParams
-                            );
+                            return ZoweExplorerApiRegister.getCommandApi(profile).issueTsoCommandWithParms(command, tsoParams);
                         } else {
                             let acctNum: string;
                             if (!tsoParams) {
@@ -282,10 +269,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
             });
             if (tsoProfileNamesList.length) {
                 const quickPickOptions: vscode.QuickPickOptions = {
-                    placeHolder: localize(
-                        "issueTsoCommand.tsoProfile.quickPickOption",
-                        "Select the TSO Profile to use for account number."
-                    ),
+                    placeHolder: localize("issueTsoCommand.tsoProfile.quickPickOption", "Select the TSO Profile to use for account number."),
                     ignoreFocusOut: true,
                     canPickMany: false,
                 };
@@ -317,14 +301,10 @@ export class TsoCommandHandler extends ZoweCommandProvider {
         const profiles = profileInfo.getAllProfiles("tso");
         let tsoProfile: imperative.IProfileLoaded;
         if (profiles.length > 0) {
-            tsoProfile = await this.selectTsoProfile(
-                profiles.map((p) => imperative.ProfileInfo.profAttrsToProfLoaded(p))
-            );
+            tsoProfile = await this.selectTsoProfile(profiles.map((p) => imperative.ProfileInfo.profAttrsToProfLoaded(p)));
             if (tsoProfile != null) {
                 const prof = profileInfo.mergeArgsForProfile(tsoProfile.profile as imperative.IProfAttrs);
-                iStartTso.forEach(
-                    (p) => (tsoProfile.profile[p] = prof.knownArgs.find((a) => a.argName === p)?.argValue)
-                );
+                iStartTso.forEach((p) => (tsoProfile.profile[p] = prof.knownArgs.find((a) => a.argName === p)?.argValue));
             }
         }
         if (tsoProfile) {
@@ -336,10 +316,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
             // All other properties of tsoParams will be undefined, so defaults will be utilized.
             const InputBoxOptions = {
                 placeHolder: localize("issueTsoCommand.command.account", "Account Number"),
-                prompt: localize(
-                    "issueTsoCommand.option.prompt.acctNum",
-                    "Enter the account number for the TSO connection."
-                ),
+                prompt: localize("issueTsoCommand.option.prompt.acctNum", "Enter the account number for the TSO connection."),
                 ignoreFocusOut: true,
                 value: tsoParms.account,
             };

@@ -18,11 +18,9 @@ const testProfileDataExample = "./resources/testProfileData.example.ts";
 (async () => {
     try {
         await util.promisify(fs.access)(testProfileData);
-        // tslint:disable-next-line: no-console
         console.log(testProfileData, "- File already exists");
     } catch (err) {
         await util.promisify(fs.copyFile)(testProfileDataExample, testProfileData);
-        // tslint:disable-next-line: no-console
         console.log(testProfileData, "- File created");
     }
 })();

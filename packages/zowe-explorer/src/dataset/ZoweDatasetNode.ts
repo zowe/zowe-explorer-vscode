@@ -288,14 +288,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 responses.push(await ZoweExplorerApiRegister.getMvsApi(cachedProfile).allMembers(label, options));
             }
         } catch (err) {
-            await errorHandling(
-                err,
-                this.label.toString(),
-                localize("getChildren.error.response", "Retrieving response from ") + `zowe.List`
-            );
-            await syncSessionNode(Profiles.getInstance())((profileValue) =>
-                ZoweExplorerApiRegister.getMvsApi(profileValue).getSession()
-            )(sessNode);
+            await errorHandling(err, this.label.toString(), localize("getChildren.error.response", "Retrieving response from ") + `zowe.List`);
+            await syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getMvsApi(profileValue).getSession())(sessNode);
         }
         return responses;
     }

@@ -38,9 +38,7 @@ export interface IMessageItem {
     check: (node: CombinedNode) => boolean;
 }
 
-const items = [require("./items/dataset"), require("./items/datasetMember")].map(
-    (item) => item.default
-) as IMessageItem[];
+const items = [require("./items/dataset"), require("./items/datasetMember")].map((item) => item.default) as IMessageItem[];
 
 function mergeMessages(generic: { [index: string]: string }, specific: { [index: string]: string }) {
     if (generic) {

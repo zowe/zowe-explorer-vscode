@@ -177,9 +177,7 @@ describe("Create profiles integration tests", async () => {
 
         const response = await profiles.createNewConnection(testConst.profile.name);
         expect(response).to.equal(undefined);
-        const messageSent = showErrorSpy.calledWith(
-            "Profile name already exists. Please create a profile using a different name"
-        );
+        const messageSent = showErrorSpy.calledWith("Profile name already exists. Please create a profile using a different name");
         expect(messageSent).to.equal(true);
     }).timeout(TIMEOUT);
 });

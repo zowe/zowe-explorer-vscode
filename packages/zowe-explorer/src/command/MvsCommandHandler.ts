@@ -19,6 +19,7 @@ import { FilterDescriptor, FilterItem, errorHandling } from "../utils/ProfilesUt
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import * as nls from "vscode-nls";
 import { ZoweCommandProvider } from "../abstract/ZoweCommandProvider";
+import { SettingsConfig } from "../utils/SettingsConfig";
 
 // Set up localization
 nls.config({
@@ -47,8 +48,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
         return this.instance;
     }
 
-    private static readonly defaultDialogText: string =
-        "\uFF0B " + localize("command.option.prompt.search", "Create a new MVS Command");
+    private static readonly defaultDialogText: string = "\uFF0B " + localize("command.option.prompt.search", "Create a new MVS Command");
     private static instance: MvsCommandHandler;
     public outputChannel: vscode.OutputChannel;
 
@@ -85,10 +85,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
             });
             if (profileNamesList.length) {
                 const quickPickOptions: vscode.QuickPickOptions = {
-                    placeHolder: localize(
-                        "issueMvsCommand.quickPickOption",
-                        "Select the Profile to use to submit the command"
-                    ),
+                    placeHolder: localize("issueMvsCommand.quickPickOption", "Select the Profile to use to submit the command"),
                     ignoreFocusOut: true,
                     canPickMany: false,
                 };
@@ -120,9 +117,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
                 if (commandApi) {
                     let command1: string = command;
                     if (!command) {
-                        command1 = await this.getQuickPick(
-                            session && session.ISession ? session.ISession.hostname : "unknown"
-                        );
+                        command1 = await this.getQuickPick(session && session.ISession ? session.ISession.hostname : "unknown");
                     }
                     await this.issueCommand(profile, command1);
                 } else {
@@ -145,20 +140,16 @@ export class MvsCommandHandler extends ZoweCommandProvider {
 
     private async getQuickPick(hostname: string) {
         let response = "";
-        const alwaysEdit = PersistentFilters.getDirectValue(globals.SETTINGS_COMMANDS_ALWAYS_EDIT) as boolean;
+        const alwaysEdit: boolean = SettingsConfig.getDirectValue(globals.SETTINGS_COMMANDS_ALWAYS_EDIT);
         if (this.history.getSearchHistory().length > 0) {
             const createPick = new FilterDescriptor(MvsCommandHandler.defaultDialogText);
-            const items: vscode.QuickPickItem[] = this.history
-                .getSearchHistory()
-                .map((element) => new FilterItem({ text: element }));
+            const items: vscode.QuickPickItem[] = this.history.getSearchHistory().map((element) => new FilterItem({ text: element }));
             if (globals.ISTHEIA) {
                 const options1: vscode.QuickPickOptions = {
                     placeHolder:
                         localize("issueMvsCommand.command.hostname", "Select an MVS command to run against ") +
                         hostname +
-                        (alwaysEdit
-                            ? localize("issueMvsCommand.command.edit", " (An option to edit will follow)")
-                            : ""),
+                        (alwaysEdit ? localize("issueMvsCommand.command.edit", " (An option to edit will follow)") : ""),
                 };
                 // get user selection
                 const choice = await Gui.showQuickPick([createPick, ...items], options1);
@@ -175,10 +166,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
                     ? localize("issueMvsCommand.command.hostnameAlt", "Select an MVS command to run against ") +
                       hostname +
                       localize("issueMvsCommand.command.edit", " (An option to edit will follow)")
-                    : localize(
-                          "issueMvsCommand.command.hostname",
-                          "Select an MVS command to run immediately against "
-                      ) + hostname;
+                    : localize("issueMvsCommand.command.hostname", "Select an MVS command to run immediately against ") + hostname;
 
                 quickpick.items = [createPick, ...items];
                 quickpick.ignoreFocusOut = true;

@@ -148,16 +148,10 @@ export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
                         subsystem: "JES2",
                         stepname: String(spoolFileToDownload.stepname),
                         procstep: String(
-                            spoolFileToDownload.procstep === "N/A" || spoolFileToDownload.procstep == null
-                                ? undefined
-                                : spoolFileToDownload.procstep
+                            spoolFileToDownload.procstep === "N/A" || spoolFileToDownload.procstep == null ? undefined : spoolFileToDownload.procstep
                         ),
                     };
-                    const destinationFile = DownloadJobs.getSpoolDownloadFile(
-                        mockJobFile,
-                        parms.omitJobidDirectory,
-                        parms.outDir
-                    );
+                    const destinationFile = DownloadJobs.getSpoolDownloadFile(mockJobFile, parms.omitJobidDirectory, parms.outDir);
                     zowe.imperative.IO.createDirsSyncFromFilePath(destinationFile);
                     zowe.imperative.IO.writeFile(destinationFile, spoolFileToDownload.contents);
                 }

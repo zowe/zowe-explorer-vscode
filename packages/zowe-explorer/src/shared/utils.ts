@@ -34,6 +34,19 @@ nls.config({
 })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
+export enum JobSubmitDialogOpts {
+    Disabled,
+    YourJobs,
+    OtherUserJobs,
+    AllJobs,
+}
+export const JOB_SUBMIT_DIALOG_OPTS = [
+    localize("zowe.jobs.confirmSubmission.disabled", "Disabled"),
+    localize("zowe.jobs.confirmSubmission.yourJobs", "Your jobs"),
+    localize("zowe.jobs.confirmSubmission.otherUserJobs", "Other user jobs"),
+    localize("zowe.jobs.confirmSubmission.allJobs", "All jobs"),
+];
+
 export function filterTreeByString(value: string, treeItems: vscode.QuickPickItem[]): vscode.QuickPickItem[] {
     const filteredArray = [];
     value = value.toUpperCase().replace(".", ".").replace(/\*/g, "(.*)");
@@ -77,9 +90,7 @@ export function concatChildNodes(nodes: IZoweNodeType[]) {
  * @param {TreeItem} node - the node element
  */
 export function labelRefresh(node: vscode.TreeItem): void {
-    node.label = node.label.toString().endsWith(" ")
-        ? node.label.toString().substring(0, node.label.toString().length - 1)
-        : node.label + " ";
+    node.label = node.label.toString().endsWith(" ") ? node.label.toString().substring(0, node.label.toString().length - 1) : node.label + " ";
 }
 
 export function sortTreeItems(favorites: vscode.TreeItem[], specificContext) {
@@ -168,7 +179,6 @@ function appendSuffix(label: string): string {
 export function checkForAddedSuffix(filename: string): boolean {
     // identify how close to the end of the string the last . is
     const dotPos = filename.length - (1 + filename.lastIndexOf("."));
-    // tslint:disable-next-line: no-magic-numbers
     return (
         dotPos >= 2 &&
         dotPos <= 4 && // if the last characters are 2 to 4 long and lower case it has been added
@@ -236,14 +246,7 @@ export async function uploadContent(
             const result = ZoweExplorerApiRegister.getUssApi(profile).putContent(doc.fileName, remotePath, options);
             return result;
         } else {
-            return ZoweExplorerApiRegister.getUssApi(profile).putContents(
-                doc.fileName,
-                remotePath,
-                binary,
-                null,
-                etagToUpload,
-                returnEtag
-            );
+            return ZoweExplorerApiRegister.getUssApi(profile).putContents(doc.fileName, remotePath, binary, null, etagToUpload, returnEtag);
         }
     }
 }
@@ -312,15 +315,11 @@ export function isZoweDatasetTreeNode(node: IZoweNodeType): node is IZoweDataset
     return (node as IZoweDatasetTreeNode).pattern !== undefined;
 }
 
-export function isZoweUSSTreeNode(
-    node: IZoweDatasetTreeNode | IZoweUSSTreeNode | IZoweJobTreeNode
-): node is IZoweUSSTreeNode {
+export function isZoweUSSTreeNode(node: IZoweDatasetTreeNode | IZoweUSSTreeNode | IZoweJobTreeNode): node is IZoweUSSTreeNode {
     return (node as IZoweUSSTreeNode).openUSS !== undefined;
 }
 
-export function isZoweJobTreeNode(
-    node: IZoweDatasetTreeNode | IZoweUSSTreeNode | IZoweJobTreeNode
-): node is IZoweJobTreeNode {
+export function isZoweJobTreeNode(node: IZoweDatasetTreeNode | IZoweUSSTreeNode | IZoweJobTreeNode): node is IZoweJobTreeNode {
     return (node as IZoweJobTreeNode).job !== undefined;
 }
 

@@ -61,7 +61,6 @@ const profileOne: imperative.IProfileLoaded = {
 getConfiguration.mockReturnValue({
     persistence: true,
     get: (setting: string) => ["[test]: /u{session}"],
-    // tslint:disable-next-line: no-empty
     update: jest.fn(() => {
         {
         }
@@ -69,39 +68,15 @@ getConfiguration.mockReturnValue({
 });
 
 function getDSNode() {
-    const mParent = new ZoweDatasetNode(
-        "parentNode",
-        vscode.TreeItemCollapsibleState.Expanded,
-        null,
-        session,
-        undefined,
-        undefined,
-        profileOne
-    );
-    const dsNode = new ZoweDatasetNode(
-        "sestest",
-        vscode.TreeItemCollapsibleState.Expanded,
-        mParent,
-        session,
-        undefined,
-        undefined,
-        profileOne
-    );
+    const mParent = new ZoweDatasetNode("parentNode", vscode.TreeItemCollapsibleState.Expanded, null, session, undefined, undefined, profileOne);
+    const dsNode = new ZoweDatasetNode("sestest", vscode.TreeItemCollapsibleState.Expanded, mParent, session, undefined, undefined, profileOne);
     dsNode.contextValue = DS_SESSION_CONTEXT;
     dsNode.pattern = "test hlq";
     return dsNode;
 }
 
 function getFavoriteDSNode() {
-    const mParent = new ZoweDatasetNode(
-        "Favorites",
-        vscode.TreeItemCollapsibleState.Expanded,
-        null,
-        session,
-        undefined,
-        undefined,
-        profileOne
-    );
+    const mParent = new ZoweDatasetNode("Favorites", vscode.TreeItemCollapsibleState.Expanded, null, session, undefined, undefined, profileOne);
     const dsNodeF = new ZoweDatasetNode(
         "[sestest]: sestest",
         vscode.TreeItemCollapsibleState.Expanded,

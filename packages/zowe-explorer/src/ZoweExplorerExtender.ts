@@ -87,10 +87,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
      * @param {string} profileType
      * @param {imperative.ICommandProfileTypeConfiguration[]} profileTypeConfigurations
      */
-    public async initForZowe(
-        profileType: string,
-        profileTypeConfigurations?: zowe.imperative.ICommandProfileTypeConfiguration[]
-    ) {
+    public async initForZowe(profileType: string, profileTypeConfigurations?: zowe.imperative.ICommandProfileTypeConfiguration[]) {
         // Ensure that when a user has not installed the profile type's CLI plugin
         // and/or created a profile that the profile directory in ~/.zowe/profiles
         // will be created with the appropriate meta data. If not called the user will

@@ -167,11 +167,7 @@ describe("FtpMvsApi", () => {
             newMemberName: "NEW",
         };
         const result = await MvsApi.renameDataSet(mockParams.currentDataSetName, mockParams.newDataSetName);
-        await MvsApi.renameDataSetMember(
-            mockParams.dataSetName,
-            mockParams.currentMemberName,
-            mockParams.newMemberName
-        );
+        await MvsApi.renameDataSetMember(mockParams.dataSetName, mockParams.currentMemberName, mockParams.newMemberName);
         expect(result.commandResponse).toContain("Rename completed successfully.");
         expect(DataSetUtils.renameDataSet).toBeCalledTimes(2);
         expect(MvsApi.releaseConnection).toBeCalled();

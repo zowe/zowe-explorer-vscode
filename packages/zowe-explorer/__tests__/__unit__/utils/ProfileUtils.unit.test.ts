@@ -47,9 +47,7 @@ describe("ProfileUtils.writeOverridesFile Unit Tests", () => {
         const blockMocks = createBlockMocks();
         const fileJson = { overrides: { CredentialManager: "@zowe/cli", testValue: true } };
         const content = JSON.stringify(fileJson, null, 2);
-        jest.spyOn(fs, "readFileSync").mockReturnValueOnce(
-            JSON.stringify({ overrides: { CredentialManager: false, testValue: true } }, null, 2)
-        );
+        jest.spyOn(fs, "readFileSync").mockReturnValueOnce(JSON.stringify({ overrides: { CredentialManager: false, testValue: true } }, null, 2));
         const spy = jest.spyOn(fs, "writeFileSync");
         writeOverridesFile();
         expect(spy).toBeCalledWith(blockMocks.zoweDir, content, blockMocks.encoding);
