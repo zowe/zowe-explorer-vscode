@@ -458,14 +458,14 @@ describe("Extension Unit Tests", () => {
 
     it("zowe.ds.showFileErrorDetails", async () => {
         const testNode: any = { getProfile: jest.fn(), getParent: jest.fn().mockReturnValue({ getLabel: jest.fn() }) };
-        const impErrorSpy = jest.spyOn(dsActions, "showFileErrorDetails");
-        impErrorSpy.mockImplementation(jest.fn()); // prevent the actual function from being called
+        const fileErrorSpy = jest.spyOn(dsActions, "showFileErrorDetails");
+        fileErrorSpy.mockImplementation(jest.fn()); // prevent the actual function from being called
         await allCommands["zowe.ds.showFileErrorDetails"](testNode);
-        expect(impErrorSpy).not.toHaveBeenCalled();
+        expect(fileErrorSpy).not.toHaveBeenCalled();
 
         testNode.contextValue = globals.DS_FILE_ERROR_CONTEXT;
         await allCommands["zowe.ds.showFileErrorDetails"](testNode);
-        expect(impErrorSpy).toHaveBeenCalledWith(testNode);
+        expect(fileErrorSpy).toHaveBeenCalledWith(testNode);
     });
 });
 

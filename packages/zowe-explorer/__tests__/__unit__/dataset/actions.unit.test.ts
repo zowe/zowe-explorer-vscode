@@ -2234,7 +2234,7 @@ describe("Dataset Actions Unit Tests - Function showFileErrorDetails", () => {
 
     afterAll(() => jest.restoreAllMocks());
 
-    it("Checking PS dataset with impError as contextValue", async () => {
+    it("Checking PS dataset with fileError as contextValue", async () => {
         globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();

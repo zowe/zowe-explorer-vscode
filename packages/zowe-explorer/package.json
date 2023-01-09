@@ -1042,7 +1042,7 @@
           "group": "002_zowe_dsWorkspace@4"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^impError.*/",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^fileError.*/",
           "command": "zowe.ds.showFileErrorDetails",
           "group": "099_zowe_dsModification@0"
         },
