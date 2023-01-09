@@ -13,13 +13,12 @@ import * as vscode from "vscode";
 import * as nls from "vscode-nls";
 import * as globals from "../globals";
 import { ValidProfileEnum, IZoweTreeNode, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
-import { PersistentFilters } from "../PersistentFilters";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, FilterDescriptor, FilterItem, resolveQuickPickHelper } from "../utils/ProfilesUtils";
 import { ZoweCommandProvider } from "../abstract/ZoweCommandProvider";
 import { IStartTsoParms, imperative } from "@zowe/cli";
-import { UIViews } from "../shared/ui-views";
+import { SettingsConfig } from "../utils/SettingsConfig";
 
 // Set up localization
 nls.config({
@@ -144,7 +143,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
 
     private async getQuickPick(hostname: string) {
         let response = "";
-        const alwaysEdit = PersistentFilters.getDirectValue(globals.SETTINGS_COMMANDS_ALWAYS_EDIT) as boolean;
+        const alwaysEdit: boolean = SettingsConfig.getDirectValue(globals.SETTINGS_COMMANDS_ALWAYS_EDIT);
         if (this.history.getSearchHistory().length > 0) {
             const createPick = new FilterDescriptor(TsoCommandHandler.defaultDialogText);
             const items: vscode.QuickPickItem[] = this.history.getSearchHistory().map((element) => new FilterItem({ text: element }));

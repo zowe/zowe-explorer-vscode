@@ -11,7 +11,13 @@
 
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
 import * as vscode from "vscode";
-import { createIProfile, createISession, createFileResponse, createInstanceOfProfileInfo } from "../../../__mocks__/mockCreators/shared";
+import {
+    createIProfile,
+    createISession,
+    createFileResponse,
+    createInstanceOfProfileInfo,
+    createGetConfigMock,
+} from "../../../__mocks__/mockCreators/shared";
 import { createUSSSessionNode } from "../../../__mocks__/mockCreators/uss";
 import { ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../src/Profiles";
@@ -21,7 +27,7 @@ import { createUSSTree } from "../../../src/uss/USSTree";
 import { createIJobObject } from "../../../__mocks__/mockCreators/jobs";
 import { Job } from "../../../src/job/ZoweJobNode";
 import { createJobsTree } from "../../../src/job/ZosJobsProvider";
-import { PersistentFilters } from "../../../src/PersistentFilters";
+import { SettingsConfig } from "../../../src/utils/SettingsConfig";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -113,11 +119,9 @@ async function createGlobalMocks() {
         }),
         configurable: true,
     });
-    Object.defineProperty(PersistentFilters, "getDirectValue", {
-        value: jest.fn(() => {
-            return {
-                "zowe.automaticProfileValidation": true,
-            };
+    Object.defineProperty(SettingsConfig, "getDirectValue", {
+        value: createGetConfigMock({
+            "zowe.automaticProfileValidation": true,
         }),
     });
 

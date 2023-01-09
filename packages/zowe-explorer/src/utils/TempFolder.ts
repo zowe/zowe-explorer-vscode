@@ -16,7 +16,7 @@ import * as vscode from "vscode";
 import { moveSync } from "fs-extra";
 import * as nls from "vscode-nls";
 import { errorHandling } from "../utils/ProfilesUtils";
-import { PersistentFilters } from "../PersistentFilters";
+import { SettingsConfig } from "./SettingsConfig";
 
 // Set up localization
 nls.config({
@@ -100,7 +100,7 @@ export async function cleanDir(directory) {
  */
 export async function cleanTempDir() {
     // Get temp folder cleanup preference from settings
-    const preferencesTempCleanupEnabled = PersistentFilters.getDirectValue(globals.SETTINGS_TEMP_FOLDER_CLEANUP) as boolean;
+    const preferencesTempCleanupEnabled: boolean = SettingsConfig.getDirectValue(globals.SETTINGS_TEMP_FOLDER_CLEANUP);
     // logger hasn't necessarily been initialized yet, don't use the `log` in this function
     if (!fs.existsSync(globals.ZOWETEMPFOLDER) || !preferencesTempCleanupEnabled) {
         return;
@@ -119,9 +119,7 @@ export async function cleanTempDir() {
  * @export
  */
 export async function hideTempFolder(zoweDir: string) {
-    if (PersistentFilters.getDirectValue(globals.SETTINGS_TEMP_FOLDER_HIDE) as boolean) {
-        vscode.workspace
-            .getConfiguration("files")
-            .update("exclude", { [zoweDir]: true, [globals.ZOWETEMPFOLDER]: true }, vscode.ConfigurationTarget.Global);
+    if (SettingsConfig.getDirectValue<boolean>(globals.SETTINGS_TEMP_FOLDER_HIDE)) {
+        await SettingsConfig.setDirectValue("files.exclude", { [zoweDir]: true, [globals.ZOWETEMPFOLDER]: true });
     }
 }

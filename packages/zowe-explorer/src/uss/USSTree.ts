@@ -25,8 +25,7 @@ import * as contextually from "../shared/context";
 
 import * as nls from "vscode-nls";
 import { resetValidationSettings } from "../shared/actions";
-import { PersistentFilters } from "../PersistentFilters";
-import { UIViews } from "../shared/ui-views";
+import { SettingsConfig } from "../utils/SettingsConfig";
 
 // Set up localization
 nls.config({
@@ -292,7 +291,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      * @param {string} [profileType] - optional; loads profiles of a certain type if passed
      */
     public async addSession(sessionName?: string, profileType?: string) {
-        const setting = PersistentFilters.getDirectValue(globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION) as boolean;
+        const setting: boolean = SettingsConfig.getDirectValue(globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION);
         // Loads profile associated with passed sessionName, persisted profiles or default if none passed
         if (sessionName) {
             const profile: imperative.IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName.trim());

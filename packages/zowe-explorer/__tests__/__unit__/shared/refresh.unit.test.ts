@@ -11,15 +11,21 @@
 
 import * as vscode from "vscode";
 import { ValidProfileEnum } from "@zowe/zowe-explorer-api";
-import { PersistentFilters } from "../../../src/PersistentFilters";
 import { Profiles } from "../../../src/Profiles";
-import { createInstanceOfProfile, createIProfile, createISessionWithoutCredentials, createTreeView } from "../../../__mocks__/mockCreators/shared";
+import {
+    createGetConfigMock,
+    createInstanceOfProfile,
+    createIProfile,
+    createISessionWithoutCredentials,
+    createTreeView,
+} from "../../../__mocks__/mockCreators/shared";
 import { createFavoriteUSSNode, createUSSNode, createUSSTree } from "../../../__mocks__/mockCreators/uss";
 import { createIJobObject, createJobsTree } from "../../../__mocks__/mockCreators/jobs";
 import * as refreshActions from "../../../src/shared/refresh";
 import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
 import * as globals from "../../../src/globals";
 import * as sessUtils from "../../../src/utils/SessionUtils";
+import { SettingsConfig } from "../../../src/utils/SettingsConfig";
 
 function createGlobalMocks() {
     const globalMocks = {
@@ -67,11 +73,9 @@ function createGlobalMocks() {
         configurable: true,
     });
 
-    Object.defineProperty(PersistentFilters, "getDirectValue", {
-        value: jest.fn(() => {
-            return {
-                "zowe.automaticProfileValidation": true,
-            };
+    Object.defineProperty(SettingsConfig, "getDirectValue", {
+        value: createGetConfigMock({
+            "zowe.automaticProfileValidation": true,
         }),
     });
     Object.defineProperty(globals, "LOG", { value: globalMocks.mockLog, configurable: true });
@@ -109,11 +113,9 @@ describe("Refresh Unit Tests - Function refreshAll", () => {
         newMocks.testDatasetTree = createDatasetTree(newMocks.datasetSessionNode, newMocks.treeView);
         newMocks.testDatasetTree.mSessionNodes.push(newMocks.datasetSessionNode);
 
-        Object.defineProperty(PersistentFilters, "getDirectValue", {
-            value: jest.fn(() => {
-                return {
-                    "zowe.automaticProfileValidation": true,
-                };
+        Object.defineProperty(SettingsConfig, "getDirectValue", {
+            value: createGetConfigMock({
+                "zowe.automaticProfileValidation": true,
             }),
         });
         Object.defineProperty(sessUtils, "removeSession", {

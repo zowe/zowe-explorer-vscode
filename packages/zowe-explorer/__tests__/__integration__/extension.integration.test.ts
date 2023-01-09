@@ -29,7 +29,7 @@ import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import { USSTree } from "../../src/uss/USSTree";
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
 import { IZoweTreeNode } from "@zowe/zowe-explorer-api";
-import { PersistentFilters } from "../../src/PersistentFilters";
+import { SettingsConfig } from "../../src/utils/SettingsConfig";
 import * as globals from "../../src/globals";
 
 const TIMEOUT = 45000;
@@ -77,8 +77,8 @@ describe("Extension Integration Tests", async () => {
     testTree.mSessionNodes.push(sessionNode);
 
     let sandbox;
-    const tempSettings = PersistentFilters.getDirectValue(globals.SETTINGS_TEMP_FOLDER_CLEANUP);
-    await vscode.workspace.getConfiguration().update(globals.SETTINGS_TEMP_FOLDER_CLEANUP, true, vscode.ConfigurationTarget.Global);
+    const tempSettings = SettingsConfig.getDirectValue(globals.SETTINGS_TEMP_FOLDER_CLEANUP);
+    await SettingsConfig.setDirectValue(globals.SETTINGS_TEMP_FOLDER_CLEANUP, true);
 
     beforeEach(async function () {
         this.timeout(TIMEOUT);

@@ -34,7 +34,7 @@ import { errorHandling, FilterDescriptor, FilterItem, resolveQuickPickHelper, re
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import * as globals from "./globals";
 import * as nls from "vscode-nls";
-import { UIViews } from "./shared/ui-views";
+import { SettingsConfig } from "./utils/SettingsConfig";
 
 // Set up localization
 nls.config({
@@ -998,7 +998,7 @@ export class Profiles extends ProfilesCache {
 
         // Delete from Data Set Sessions list
         const dsSetting: any = {
-            ...vscode.workspace.getConfiguration().get(this.dsSchema),
+            ...SettingsConfig.getDirectValue(this.dsSchema),
         };
         let sessDS: string[] = dsSetting.sessions;
         let faveDS: string[] = dsSetting.favorites;
@@ -1010,11 +1010,11 @@ export class Profiles extends ProfilesCache {
         });
         dsSetting.sessions = sessDS;
         dsSetting.favorites = faveDS;
-        await vscode.workspace.getConfiguration().update(this.dsSchema, dsSetting, vscode.ConfigurationTarget.Global);
+        await SettingsConfig.setDirectValue(this.dsSchema, dsSetting);
 
         // Delete from USS Sessions list
         const ussSetting: any = {
-            ...vscode.workspace.getConfiguration().get(this.ussSchema),
+            ...SettingsConfig.getDirectValue(this.ussSchema),
         };
         let sessUSS: string[] = ussSetting.sessions;
         let faveUSS: string[] = ussSetting.favorites;
@@ -1026,11 +1026,11 @@ export class Profiles extends ProfilesCache {
         });
         ussSetting.sessions = sessUSS;
         ussSetting.favorites = faveUSS;
-        await vscode.workspace.getConfiguration().update(this.ussSchema, ussSetting, vscode.ConfigurationTarget.Global);
+        await SettingsConfig.setDirectValue(this.ussSchema, ussSetting);
 
         // Delete from Jobs Sessions list
         const jobsSetting: any = {
-            ...vscode.workspace.getConfiguration().get(this.jobsSchema),
+            ...SettingsConfig.getDirectValue(this.jobsSchema),
         };
         let sessJobs: string[] = jobsSetting.sessions;
         let faveJobs: string[] = jobsSetting.favorites;
@@ -1042,7 +1042,7 @@ export class Profiles extends ProfilesCache {
         });
         jobsSetting.sessions = sessJobs;
         jobsSetting.favorites = faveJobs;
-        await vscode.workspace.getConfiguration().update(this.jobsSchema, jobsSetting, vscode.ConfigurationTarget.Global);
+        await SettingsConfig.setDirectValue(this.jobsSchema, jobsSetting);
 
         // Remove from list of all profiles
         const index = this.allProfiles.findIndex((deleteItem) => {
@@ -1726,8 +1726,9 @@ export class Profiles extends ProfilesCache {
     // Temporary solution for handling unsecure profiles until CLI team's work is made
     // Remove secure properties and set autoStore to false when vscode setting is true
     private createNonSecureProfile(newConfig: zowe.imperative.IConfig): void {
-        const configuration: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
-        const isSecureCredsEnabled: boolean = configuration.get(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED);
+        const isSecureCredsEnabled: boolean = SettingsConfig.getDirectValue(
+            globals.SETTINGS_SECURE_CREDENTIALS_ENABLED
+        );
         if (!isSecureCredsEnabled) {
             for (const profile of Object.entries(newConfig.profiles)) {
                 delete newConfig.profiles[profile[0]].secure;

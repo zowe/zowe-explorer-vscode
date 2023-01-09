@@ -20,6 +20,7 @@ import { Profiles } from "../Profiles";
 import { setProfile, setSession, errorHandling } from "../utils/ProfilesUtils";
 
 import * as nls from "vscode-nls";
+import { SettingsConfig } from "../utils/SettingsConfig";
 
 // Set up localization
 nls.config({
@@ -117,12 +118,12 @@ export class ZoweTreeProvider {
     public async onDidChangeConfiguration(e: vscode.ConfigurationChangeEvent) {
         if (e.affectsConfiguration(this.persistenceSchema)) {
             const setting: any = {
-                ...vscode.workspace.getConfiguration().get(this.persistenceSchema),
+                ...SettingsConfig.getDirectValue(this.persistenceSchema),
             };
             if (!setting.persistence) {
                 setting.favorites = [];
                 setting.history = [];
-                await vscode.workspace.getConfiguration().update(this.persistenceSchema, setting, vscode.ConfigurationTarget.Global);
+                await SettingsConfig.setDirectValue(this.persistenceSchema, setting);
             }
         }
     }

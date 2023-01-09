@@ -57,7 +57,7 @@ let jobsProvider: IZoweTree<IZoweJobTreeNode>;
  */
 export async function activate(context: vscode.ExtensionContext): Promise<ZoweExplorerApiRegister> {
     // Get temp folder location from settings
-    let preferencesTempPath: string = vscode.workspace.getConfiguration().get(globals.SETTINGS_TEMP_FOLDER_PATH);
+    let preferencesTempPath: string = SettingsConfig.getDirectValue(globals.SETTINGS_TEMP_FOLDER_PATH);
 
     // Determine the runtime framework to support special behavior for Theia
     globals.defineGlobals(preferencesTempPath);
@@ -140,7 +140,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         vscode.workspace.onDidChangeConfiguration(async (e) => {
             // If the temp folder location has been changed, update current temp folder preference
             if (e.affectsConfiguration(globals.SETTINGS_TEMP_FOLDER_PATH)) {
-                const updatedPreferencesTempPath: string = vscode.workspace.getConfiguration().get(globals.SETTINGS_TEMP_FOLDER_PATH);
+                const updatedPreferencesTempPath: string = SettingsConfig.getDirectValue(
+                    globals.SETTINGS_TEMP_FOLDER_PATH
+                );
                 moveTempFolder(preferencesTempPath, updatedPreferencesTempPath);
                 preferencesTempPath = updatedPreferencesTempPath;
             }
