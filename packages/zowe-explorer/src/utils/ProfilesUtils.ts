@@ -283,14 +283,6 @@ export async function readConfigFromDisk() {
     }
 }
 
-export async function openConfigOnError(error: Error) {
-    if (error.message.toString().includes("Error parsing JSON")) {
-        const errorArray = error.message.toString().split("'");
-        const errorPath = errorArray[1];
-        await Profiles.getInstance().openConfigFile(errorPath);
-    }
-}
-
 export async function promptCredentials(node: IZoweTreeNode) {
     const mProfileInfo = await Profiles.getInstance().getProfileInfo();
     if (mProfileInfo.usingTeamConfig && !mProfileInfo.getTeamConfig().properties.autoStore) {

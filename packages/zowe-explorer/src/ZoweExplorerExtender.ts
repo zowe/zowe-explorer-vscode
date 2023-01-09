@@ -64,18 +64,23 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
                     return;
                 }
 
-                // Parse the v2 config path if it exists; otherwise look for a v1 config path
+                // Parse the v2 config path, or a v1 config path depending on the error message
                 const configMatch = errorDetails.includes("Error parsing JSON in the file")
                     ? errorDetails.match(/Error parsing JSON in the file \'(.+?)\'/)
                     : errorDetails.match(/Error reading profile file \(\"(.+?)\"\)/);
 
                 let configPath = configMatch != null ? configMatch[1] : null;
+                // If configPath is null, build a v2 config location based on the error details
                 if (configPath == null) {
-                    // If unable to parse config path from error message,
-                    // try to build a v2 config path from zowe dir
-                    configPath = this.getConfigLocation(getZoweDir());
+                    const isRootConfigError = errorDetails.match(/(?:[\\]{1,2}|\/)(\.zowe)(?:[\\]{1,2}|\/)/) != null;
+                    // If the v2 config error does not apply to the global Zowe config, check for a project-level config.
+                    if (vscode.workspace.workspaceFolders != null && !isRootConfigError) {
+                        configPath = this.getConfigLocation(vscode.workspace.workspaceFolders[0].uri.fsPath);
+                    } else {
+                        configPath = this.getConfigLocation(getZoweDir());
+                    }
 
-                    // If configPath is still null, we can't find a v2 config - return.
+                    // If the config w/ culprits cannot be found, all v2 config locations have been exhausted - exit.
                     if (configPath == null) {
                         return;
                     }

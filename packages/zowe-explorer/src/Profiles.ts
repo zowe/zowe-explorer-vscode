@@ -36,7 +36,6 @@ import {
     FilterItem,
     resolveQuickPickHelper,
     readConfigFromDisk,
-    openConfigOnError,
 } from "./utils/ProfilesUtils";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
@@ -380,14 +379,7 @@ export class Profiles extends ProfilesCache {
                 config = await this.getProfileInfo();
             } catch (error) {
                 this.log.error(error);
-                await openConfigOnError(error);
-                vscode.window.showErrorMessage(
-                    localize(
-                        "Profiles.getProfileInfo.error",
-                        "Error in creating team configuration file: {0}",
-                        error.message
-                    )
-                );
+                ZoweExplorerExtender.showZoweConfigError(error.message);
             }
             if (config.usingTeamConfig) {
                 const profiles = config.getAllProfiles();
@@ -712,10 +704,7 @@ export class Profiles extends ProfilesCache {
             return path.join(rootPath, configName);
         } catch (err) {
             this.log.error(err);
-            await openConfigOnError(err);
-            vscode.window.showErrorMessage(
-                localize("Profiles.getProfileInfo.error", "Error in creating team configuration file: {0}", err.message)
-            );
+            ZoweExplorerExtender.showZoweConfigError(err.message);
         }
     }
 

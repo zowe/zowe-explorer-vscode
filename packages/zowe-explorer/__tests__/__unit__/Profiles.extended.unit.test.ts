@@ -550,15 +550,15 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("Global: in the Zowe home directory");
         const spyLayers = jest.spyOn(globalMocks.mockProfileInstance, "getConfigLayers");
         spyLayers.mockRejectedValueOnce(new Error("Error parsing JSON"));
-        const spyOpenFile = jest.spyOn(globalMocks.mockProfileInstance, "openConfigFile");
+        const spyZoweConfigError = jest.spyOn(ZoweExplorerExtender, "showZoweConfigError");
         await Profiles.getInstance().createZoweSchema(blockMocks.testDatasetTree);
 
         expect(spyQuickPick).toBeCalled();
-        expect(spyOpenFile).toBeCalled();
+        expect(spyZoweConfigError).toBeCalled();
 
         spyQuickPick.mockClear();
         spyLayers.mockClear();
-        spyOpenFile.mockClear();
+        spyZoweConfigError.mockClear();
     });
     it("Test that createZoweSchema will auto create global if VSC not in project and config doesn't exist", async () => {
         const globalMocks = await createGlobalMocks();
