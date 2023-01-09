@@ -171,7 +171,7 @@ async function createGlobalMocks() {
             "zowe.ds.renameDataSetMember",
             "zowe.ds.hMigrateDataSet",
             "zowe.ds.hRecallDataSet",
-            "zowe.ds.showImperativeErrorDetails",
+            "zowe.ds.showFileErrorDetails",
             "zowe.ds.disableValidation",
             "zowe.ds.enableValidation",
             "zowe.ds.ssoLogin",
@@ -473,15 +473,15 @@ describe("Extension Unit Tests", () => {
         expect(Object.keys(allCommands)).toEqual(globalMocks.expectedCommands);
     });
 
-    it("zowe.ds.showImperativeErrorDetails", async () => {
+    it("zowe.ds.showFileErrorDetails", async () => {
         const testNode: any = { getProfile: jest.fn(), getParent: jest.fn().mockReturnValue({ getLabel: jest.fn() }) };
-        const impErrorSpy = jest.spyOn(dsActions, "showImperativeErrorDetails");
+        const impErrorSpy = jest.spyOn(dsActions, "showFileErrorDetails");
         impErrorSpy.mockImplementation(jest.fn()); // prevent the actual function from being called
-        await allCommands["zowe.ds.showImperativeErrorDetails"](testNode);
+        await allCommands["zowe.ds.showFileErrorDetails"](testNode);
         expect(impErrorSpy).not.toHaveBeenCalled();
 
-        testNode.contextValue = globals.DS_IMPERATIVE_ERROR_CONTEXT;
-        await allCommands["zowe.ds.showImperativeErrorDetails"](testNode);
+        testNode.contextValue = globals.DS_FILE_ERROR_CONTEXT;
+        await allCommands["zowe.ds.showFileErrorDetails"](testNode);
         expect(impErrorSpy).toHaveBeenCalledWith(testNode);
     });
 });

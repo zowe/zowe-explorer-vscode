@@ -439,7 +439,7 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
             vscode.TreeItemCollapsibleState.None,
             testTree.mSessionNodes[1],
             null,
-            globals.DS_IMPERATIVE_ERROR_CONTEXT,
+            globals.DS_FILE_ERROR_CONTEXT,
             undefined,
             blockMocks.imperativeProfile
         );

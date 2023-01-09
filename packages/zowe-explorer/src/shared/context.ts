@@ -129,7 +129,7 @@ export function isDocument(node: TreeItem): boolean {
             "|" +
             globals.DS_MIGRATED_FILE_CONTEXT +
             "|" +
-            globals.DS_IMPERATIVE_ERROR_CONTEXT +
+            globals.DS_FILE_ERROR_CONTEXT +
             ")"
     ).test(node.contextValue);
 }
@@ -153,12 +153,12 @@ export function isMigrated(node: TreeItem): boolean {
 }
 
 /**
- * Helper function which identifies if the node has an imperative error
+ * Helper function which identifies if the node has an error
  * @param node
  * @return true if there was an error obtaining information about this dataset, false otherwise
  */
-export function hasImperativeError(node: TreeItem): boolean {
-    return new RegExp("^(" + globals.DS_IMPERATIVE_ERROR_CONTEXT + ")").test(node.contextValue);
+export function hasFileError(node: TreeItem): boolean {
+    return new RegExp("^(" + globals.DS_FILE_ERROR_CONTEXT + ")").test(node.contextValue);
 }
 
 /**

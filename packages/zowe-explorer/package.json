@@ -294,8 +294,8 @@
         "category": "Zowe Explorer"
       },
       {
-        "command": "zowe.ds.showImperativeErrorDetails",
-        "title": "%showImperativeErrorDetails%",
+        "command": "zowe.ds.showFileErrorDetails",
+        "title": "%showFileErrorDetails%",
         "category": "Zowe Explorer"
       },
       {
@@ -1043,7 +1043,7 @@
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^impError.*/",
-          "command": "zowe.ds.showImperativeErrorDetails",
+          "command": "zowe.ds.showFileErrorDetails",
           "group": "099_zowe_dsModification@0"
         },
         {
@@ -1350,7 +1350,7 @@
           "when": "never"
         },
         {
-          "command": "zowe.ds.showImperativeErrorDetails",
+          "command": "zowe.ds.showFileErrorDetails",
           "when": "never"
         },
         {

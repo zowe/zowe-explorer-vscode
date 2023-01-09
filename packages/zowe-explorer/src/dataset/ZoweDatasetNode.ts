@@ -165,7 +165,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         vscode.TreeItemCollapsibleState.None,
                         this,
                         null,
-                        globals.DS_IMPERATIVE_ERROR_CONTEXT,
+                        globals.DS_FILE_ERROR_CONTEXT,
                         undefined,
                         this.getProfile()
                     );

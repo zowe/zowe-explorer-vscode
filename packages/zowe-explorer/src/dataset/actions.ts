@@ -1349,12 +1349,12 @@ export async function hRecallDataSet(node: ZoweDatasetNode) {
 }
 
 /**
- * Show Imperative Error details when gathering attributes for these data sets
+ * Show File Error details when gathering attributes for these data sets
  *
  * @export
  * @param {IZoweDatasetTreeNode} node - The node to get details from
  */
-export async function showImperativeErrorDetails(node: ZoweDatasetNode) {
+export async function showFileErrorDetails(node: ZoweDatasetNode) {
     await Profiles.getInstance().checkCurrentProfile(node.getProfile());
     if (Profiles.getInstance().validProfile === api.ValidProfileEnum.INVALID) {
         vscode.window.showErrorMessage(localize("hMigrateDataSet.checkProfile", "Profile is invalid"));
@@ -1367,7 +1367,7 @@ export async function showImperativeErrorDetails(node: ZoweDatasetNode) {
             try {
                 await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hRecallDataSet(dataSetName);
                 vscode.window.showErrorMessage(
-                    localize("showImperativeErrorDetails.noErrorDetails", "Unable to gather more information")
+                    localize("showFileErrorDetails.noErrorDetails", "Unable to gather more information")
                 );
             } catch (err) {
                 globals.LOG.error(JSON.stringify(err, null, 2));

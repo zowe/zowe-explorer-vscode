@@ -2456,7 +2456,7 @@ describe("Dataset Actions Unit Tests - Function hRecallDataSet", () => {
         expect(mocked(vscode.window.showInformationMessage)).toHaveBeenCalled();
     });
 });
-describe("Dataset Actions Unit Tests - Function showImperativeErrorDetails", () => {
+describe("Dataset Actions Unit Tests - Function showFileErrorDetails", () => {
     function createBlockMocks() {
         const session = createISession();
         const sessionWithoutCredentials = createISessionWithoutCredentials();
@@ -2498,7 +2498,7 @@ describe("Dataset Actions Unit Tests - Function showImperativeErrorDetails", () 
             vscode.TreeItemCollapsibleState.None,
             blockMocks.datasetSessionNode,
             null,
-            globals.DS_IMPERATIVE_ERROR_CONTEXT
+            globals.DS_FILE_ERROR_CONTEXT
         );
 
         const spyRecall = jest.spyOn(blockMocks.mvsApi, "hRecallDataSet");
@@ -2506,14 +2506,14 @@ describe("Dataset Actions Unit Tests - Function showImperativeErrorDetails", () 
 
         // succeeded at recalling the dataset
         spyRecall.mockResolvedValueOnce({ success: true } as any);
-        await dsActions.showImperativeErrorDetails(node);
+        await dsActions.showFileErrorDetails(node);
         expect(spyRecall).toHaveBeenCalledWith("HLQ.TEST.TO.NODE");
         expect(mocked(vscode.window.showErrorMessage)).toHaveBeenCalled();
         spyRecall.mockReset();
 
         // failed recalling the dataset
         spyRecall.mockRejectedValueOnce(testError);
-        await dsActions.showImperativeErrorDetails(node);
+        await dsActions.showFileErrorDetails(node);
         expect(spyRecall).toHaveBeenCalledWith("HLQ.TEST.TO.NODE");
         expect(mocked(vscode.window.showErrorMessage)).toHaveBeenCalledWith(testError.message);
         expect(spyLogError).toHaveBeenCalledWith(testErrorString);
@@ -2522,7 +2522,7 @@ describe("Dataset Actions Unit Tests - Function showImperativeErrorDetails", () 
 
         // error details was already cached (this should always be the expected path)
         node.errorDetails = testError;
-        await dsActions.showImperativeErrorDetails(node);
+        await dsActions.showFileErrorDetails(node);
         expect(spyRecall).not.toHaveBeenCalled();
         expect(mocked(vscode.window.showErrorMessage)).toHaveBeenCalledWith(testError.message);
         expect(spyLogError).toHaveBeenCalledWith(testErrorString);
@@ -2538,7 +2538,7 @@ describe("Dataset Actions Unit Tests - Function showImperativeErrorDetails", () 
                 };
             }),
         });
-        await dsActions.showImperativeErrorDetails(node);
+        await dsActions.showFileErrorDetails(node);
         expect(mocked(vscode.window.showErrorMessage)).toHaveBeenCalled();
         expect(spyRecall).not.toHaveBeenCalled();
         expect(spyLogError).not.toHaveBeenCalled();
