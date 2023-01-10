@@ -287,7 +287,7 @@
       },
       {
         "command": "zowe.ds.copyDataSet",
-        "title": "%copyDataSet%",
+        "title": "%copyFile%",
         "category": "Zowe Explorer"
       },
       {
