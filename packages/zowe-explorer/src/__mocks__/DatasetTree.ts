@@ -24,9 +24,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweDatasetNode> {
     public mSessionNodes: ZoweDatasetNode[] = [];
 
     // Event Emitters used to notify subscribers that the refresh event has fired
-    public mOnDidChangeTreeData: vscode.EventEmitter<ZoweDatasetNode | undefined> = new vscode.EventEmitter<
-        ZoweDatasetNode | undefined
-    >();
+    public mOnDidChangeTreeData: vscode.EventEmitter<ZoweDatasetNode | undefined> = new vscode.EventEmitter<ZoweDatasetNode | undefined>();
     public readonly onDidChangeTreeData: vscode.Event<ZoweDatasetNode | undefined> = this.mOnDidChangeTreeData.event;
 
     /**

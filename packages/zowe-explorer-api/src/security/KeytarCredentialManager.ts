@@ -86,8 +86,7 @@ export class KeytarCredentialManager extends imperative.AbstractCredentialManage
             const baseValue = settings.overrides as Record<string, unknown>;
             const value1 = baseValue.CredentialManager;
             const value2 = baseValue["credential-manager"];
-            imperativeIsSecure =
-                (typeof value1 === "string" && value1.length > 0) || (typeof value2 === "string" && value2.length > 0);
+            imperativeIsSecure = (typeof value1 === "string" && value1.length > 0) || (typeof value2 === "string" && value2.length > 0);
         } catch (error) {
             imperative.Logger.getAppLogger().warn(error as string);
             return undefined;
@@ -130,17 +129,11 @@ export class KeytarCredentialManager extends imperative.AbstractCredentialManage
             let secureValue: string = await KeytarCredentialManager.keytar.getPassword(service, account);
             // Handle user vs username case // Zowe v1 -> v2 (i.e. @brightside/core@2.x -> @zowe/cli@6+ )
             if (secureValue == null && account.endsWith("_username")) {
-                secureValue = await KeytarCredentialManager.keytar.getPassword(
-                    service,
-                    account.replace("_username", "_user")
-                );
+                secureValue = await KeytarCredentialManager.keytar.getPassword(service, account.replace("_username", "_user"));
             }
             // Handle pass vs password case // Zowe v0 -> v1 (i.e. @brightside/core@1.x -> @brightside/core@2.x)
             if (secureValue == null && account.endsWith("_pass")) {
-                secureValue = await KeytarCredentialManager.keytar.getPassword(
-                    service,
-                    account.replace("_pass", "_password")
-                );
+                secureValue = await KeytarCredentialManager.keytar.getPassword(service, account.replace("_pass", "_password"));
             }
             return secureValue;
         };

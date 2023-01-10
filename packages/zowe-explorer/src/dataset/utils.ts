@@ -12,8 +12,6 @@
 import * as globals from "../globals";
 import { IZoweNodeType } from "@zowe/zowe-explorer-api";
 
-// tslint:disable-next-line: no-duplicate-imports
-
 export function getProfileAndDataSetName(node: IZoweNodeType) {
     let profileName;
     let dataSetName;

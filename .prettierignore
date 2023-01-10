@@ -1,5 +1,7 @@
+.github
 dist
 out
 lib
 results
+scripts
 node_modules

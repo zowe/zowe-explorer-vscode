@@ -20,10 +20,7 @@ import { IPromptCredentialsOptions, IPromptUserPassOptions } from "./doc/IPrompt
  * Collection of utility functions for writing Zowe Explorer VS Code extensions.
  */
 export class ZoweVsCodeExtension {
-    private static profilesCache = new ProfilesCache(
-        imperative.Logger.getAppLogger(),
-        vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
-    );
+    private static profilesCache = new ProfilesCache(imperative.Logger.getAppLogger(), vscode.workspace.workspaceFolders?.[0]?.uri.fsPath);
 
     /**
      * @param {string} [requiredVersion] Optional semver string specifying the minimal required version
@@ -35,8 +32,7 @@ export class ZoweVsCodeExtension {
     public static getZoweExplorerApi(requiredVersion?: string): ZoweExplorerApi.IApiRegisterClient {
         const zoweExplorerApi = vscode.extensions.getExtension("Zowe.vscode-extension-for-zowe");
         if (zoweExplorerApi?.exports) {
-            const zoweExplorerVersion =
-                ((zoweExplorerApi.packageJSON as Record<string, unknown>).version as string) || "15.0.0";
+            const zoweExplorerVersion = ((zoweExplorerApi.packageJSON as Record<string, unknown>).version as string) || "15.0.0";
             if (requiredVersion && semver.valid(requiredVersion) && !semver.gte(zoweExplorerVersion, requiredVersion)) {
                 return undefined;
             }
@@ -54,9 +50,9 @@ export class ZoweVsCodeExtension {
 
         const errorMessage = `${logger.getExtensionName()}: ${message}`;
 
-        if (severity < 3) {
+        if (severity < MessageSeverityEnum.WARN) {
             void vscode.window.showInformationMessage(errorMessage);
-        } else if (severity === 3) {
+        } else if (severity === MessageSeverityEnum.WARN) {
             void vscode.window.showWarningMessage(errorMessage);
         } else {
             void vscode.window.showErrorMessage(errorMessage);
@@ -136,13 +132,13 @@ export class ZoweVsCodeExtension {
         return undefined;
     }
 
-    public static async inputBox(inputBoxOptions: vscode.InputBoxOptions): Promise<string> {
+    public static inputBox(inputBoxOptions: vscode.InputBoxOptions): Thenable<string> {
         if (!inputBoxOptions.validateInput) {
             // adding this for the theia breaking changes with input boxes
             // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
             inputBoxOptions.validateInput = (value) => null;
         }
-        return await vscode.window.showInputBox(inputBoxOptions);
+        return vscode.window.showInputBox(inputBoxOptions);
     }
 
     private static async saveCredentials(profile: imperative.IProfileLoaded): Promise<boolean> {

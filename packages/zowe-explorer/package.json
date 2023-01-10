@@ -1708,6 +1708,24 @@
           "description": "%zowe.jobs.history%",
           "scope": "application"
         },
+        "zowe.jobs.confirmSubmission": {
+          "type": "string",
+          "default": "%zowe.jobs.confirmSubmission.allJobs%",
+          "enum": [
+            "%zowe.jobs.confirmSubmission.disabled%",
+            "%zowe.jobs.confirmSubmission.yourJobs%",
+            "%zowe.jobs.confirmSubmission.otherUserJobs%",
+            "%zowe.jobs.confirmSubmission.allJobs%"
+          ],
+          "enumDescriptions": [
+            "%zowe.jobs.confirmSubmission.disabled.desc%",
+            "%zowe.jobs.confirmSubmission.yourJobs.desc%",
+            "%zowe.jobs.confirmSubmission.otherUserJobs.desc%",
+            "%zowe.jobs.confirmSubmission.allJobs.desc%"
+          ],
+          "description": "%zowe.jobs.confirmSubmission%",
+          "scope": "window"
+        },
         "zowe.commands.alwaysEdit": {
           "type": "boolean",
           "default": true,
@@ -1755,7 +1773,7 @@
     "build": "yarn createTestProfileData && gulp build && yarn license && webpack --mode development",
     "build:integration": "yarn createTestProfileData && gulp build && yarn license && tsc --build --pretty",
     "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
-    "test:theia": "mocha ./out/__tests__/__theia__/*.theia.test.js --timeout 50000 --reporter mocha-junit-reporter --reporter-options mochaFile=./results/integration/junit.xml",
+    "test:theia": "mocha ./out/__tests__/__theia__/*.theia.test.js --timeout 50000 --reporter mocha-multi-reporters --reporter-options configFile=.mocharc.json",
     "test": "yarn test:unit",
     "updateStrings": "node ../../scripts/stringUpdateScript.js && prettier --write  --loglevel warn ./i18n package.nls*",
     "package": "vsce package --allow-star-activation --yarn && node ../../scripts/mv-pack.js vscode-extension-for-zowe vsix",
@@ -1765,9 +1783,9 @@
     "compile-web": "webpack --target webworker --entry ./src/web/extension.ts --output-path ./out/src/web",
     "markdown": "markdownlint CHANGELOG.md README.md",
     "lint:pretty": "prettier --check .",
-    "lint": "yarn lint:src && yarn lint:tests && yarn lint:pretty && yarn markdown",
-    "lint:src": "tslint --format stylish --exclude [\"**/__tests__/**/*.ts\",\"node_modules/**/*\"] \"src/**/*.ts\"",
-    "lint:tests": "tslint --format stylish \"**/__tests__/**/*.ts\" --exclude \"node_modules/**/*\" && eslint \"__tests__/**\"",
+    "lint": "yarn lint:src && yarn lint:pretty && yarn markdown",
+    "lint:src": "eslint --format stylish src/**/*.ts",
+    "lint:tests": "eslint --format stylish __tests__/**/*.ts",
     "clean": "gulp clean",
     "fresh-clone": "yarn clean && rimraf node_modules",
     "lintErrors": "echo \"zowe-explorer: lintErrors coming soon with eslint.\"",
@@ -1789,12 +1807,12 @@
     "eslint-plugin-zowe-explorer": "2.6.0-SNAPSHOT",
     "@typescript-eslint/eslint-plugin": "^2.31.0",
     "@typescript-eslint/parser": "^2.31.0",
-    "eslint": "^6.8.0",
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",
     "chalk": "^2.4.1",
     "cross-env": "^5.2.0",
     "del": "^4.1.1",
+    "eslint": "^6.8.0",
     "event-stream": "^4.0.1",
     "expect": "^24.8.0",
     "geckodriver": "^1.19.1",
@@ -1816,7 +1834,6 @@
     "sinon": "^6.1.0",
     "ts-loader": "^7.0.1",
     "ts-node": "^8.10.1",
-    "tslint": "^5.17.0",
     "webpack": "^4.42.1",
     "webpack-cli": "^3.3.11"
   },

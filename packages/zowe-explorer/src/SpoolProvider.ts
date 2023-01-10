@@ -22,11 +22,7 @@ export default class SpoolProvider implements vscode.TextDocumentContentProvider
     public async provideTextDocumentContent(uri: vscode.Uri): Promise<string> {
         const [sessionName, spool] = decodeJobFile(uri);
         const profile = Profiles.getInstance().loadNamedProfile(sessionName);
-        const result = await ZoweExplorerApiRegister.getJesApi(profile).getSpoolContentById(
-            spool.jobname,
-            spool.jobid,
-            spool.id
-        );
+        const result = await ZoweExplorerApiRegister.getJesApi(profile).getSpoolContentById(spool.jobname, spool.jobid, spool.id);
         return result;
     }
 
