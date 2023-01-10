@@ -17,6 +17,7 @@ import * as loggerConfig from "../log4jsconfig.json";
 // Set up localization
 import * as nls from "vscode-nls";
 import { getZoweDir } from "@zowe/zowe-explorer-api";
+import { SettingsConfig } from "./utils/SettingsConfig";
 
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
@@ -102,11 +103,11 @@ export let PROFILE_SECURITY: string | boolean | ICredentialManager = ZOWE_CLI_SC
 export const JOBS_MAX_PREFIX = 8;
 
 export enum CreateDataSetTypeWithKeysEnum {
-    DATA_SET_BINARY = 0,
-    DATA_SET_C = 1,
-    DATA_SET_CLASSIC = 2,
-    DATA_SET_PARTITIONED = 3,
-    DATA_SET_SEQUENTIAL = 4,
+    DATA_SET_BINARY,
+    DATA_SET_C,
+    DATA_SET_CLASSIC,
+    DATA_SET_PARTITIONED,
+    DATA_SET_SEQUENTIAL,
 }
 export const DATA_SET_PROPERTIES = [
     {
@@ -119,10 +120,7 @@ export const DATA_SET_PROPERTIES = [
         key: `avgblk`,
         label: `Average Block Length`,
         value: null,
-        placeHolder: localize(
-            "createFile.attribute.avgblk",
-            `Enter the average block length (if allocation unit = BLK)`
-        ),
+        placeHolder: localize("createFile.attribute.avgblk", `Enter the average block length (if allocation unit = BLK)`),
     },
     {
         key: `blksize`,
@@ -212,10 +210,7 @@ export const DATA_SET_PROPERTIES = [
         key: `volser`,
         label: `Volume Serial`,
         value: null,
-        placeHolder: localize(
-            "createFile.attribute.volser",
-            `Enter the volume serial on which the data set should be placed`
-        ),
+        placeHolder: localize("createFile.attribute.volser", `Enter the volume serial on which the data set should be placed`),
     },
 ];
 
@@ -312,14 +307,10 @@ export function setActivated(value: boolean) {
 export async function setGlobalSecurityValue() {
     if (this.ISTHEIA) {
         PROFILE_SECURITY = false;
-        await vscode.workspace
-            .getConfiguration()
-            .update(this.SETTINGS_SECURE_CREDENTIALS_ENABLED, false, vscode.ConfigurationTarget.Global);
+        await SettingsConfig.setDirectValue(this.SETTINGS_SECURE_CREDENTIALS_ENABLED, false, vscode.ConfigurationTarget.Global);
         return;
     }
-    const settingSelectedCredentialManager: string = await vscode.workspace
-        .getConfiguration()
-        .get(this.SETTINGS_SECURE_CREDENTIAL_MANAGER);
+    const settingSelectedCredentialManager: string = SettingsConfig.getDirectValue(this.SETTINGS_SECURE_CREDENTIALS_ENABLED);
     switch (settingSelectedCredentialManager) {
         case "keytar":
             PROFILE_SECURITY = ZOWE_CLI_SCM;

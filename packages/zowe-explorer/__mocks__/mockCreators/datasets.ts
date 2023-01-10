@@ -17,15 +17,7 @@ import { removeNodeFromArray } from "./shared";
 import { PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 
 export function createDatasetSessionNode(session: imperative.Session, profile: imperative.IProfileLoaded) {
-    const datasetNode = new ZoweDatasetNode(
-        "sestest",
-        vscode.TreeItemCollapsibleState.Expanded,
-        null,
-        session,
-        undefined,
-        undefined,
-        profile
-    );
+    const datasetNode = new ZoweDatasetNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session, undefined, undefined, profile);
     datasetNode.contextValue = globals.DS_SESSION_CONTEXT;
 
     return datasetNode;
@@ -85,12 +77,8 @@ export function createDatasetTree(sessionNode: ZoweDatasetNode, treeView: any, f
         testDatasetTree.mFileHistory.splice(testDatasetTree.mFileHistory.indexOf(badFile), 1)
     );
     testDatasetTree.getFileHistory.mockImplementation(() => testDatasetTree.mFileHistory);
-    testDatasetTree.deleteSession.mockImplementation((badSession) =>
-        removeNodeFromArray(badSession, testDatasetTree.mSessionNodes)
-    );
-    testDatasetTree.removeFavorite.mockImplementation((badFavorite) =>
-        removeNodeFromArray(badFavorite, testDatasetTree.mFavorites)
-    );
+    testDatasetTree.deleteSession.mockImplementation((badSession) => removeNodeFromArray(badSession, testDatasetTree.mSessionNodes));
+    testDatasetTree.removeFavorite.mockImplementation((badFavorite) => removeNodeFromArray(badFavorite, testDatasetTree.mFavorites));
     testDatasetTree.removeFavProfile.mockImplementation((badFavProfileName) => {
         const badFavProfileNode = testDatasetTree.mFavorites.find((treeNode) => treeNode.label === badFavProfileName);
         removeNodeFromArray(badFavProfileNode, testDatasetTree.mFavorites);

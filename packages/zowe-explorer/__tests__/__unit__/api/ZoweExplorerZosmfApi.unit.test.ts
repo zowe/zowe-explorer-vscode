@@ -69,14 +69,7 @@ describe("Zosmf API tests", () => {
         const api = new ZosmfUssApi();
 
         (api.putContent as any) = jest.fn<ReturnType<typeof api.putContents>, Parameters<typeof api.putContents>>(
-            async (
-                inputFilePath: string,
-                ussFilePath: string,
-                binary?: boolean,
-                localEncoding?: string,
-                etag?: string,
-                returnEtag?: boolean
-            ) => {
+            async (inputFilePath: string, ussFilePath: string, binary?: boolean, localEncoding?: string, etag?: string, returnEtag?: boolean) => {
                 return {
                     success: true,
                     commandResponse: "whatever",
@@ -94,12 +87,7 @@ describe("Zosmf API tests", () => {
 
     it("should test putContent method passes all options to Zowe api method", async () => {
         const fileToUssFile = jest.fn(
-            async (
-                session: zowe.imperative.AbstractSession,
-                inputFile: string,
-                ussname: string,
-                options?: zowe.IUploadOptions
-            ) => {
+            async (session: zowe.imperative.AbstractSession, inputFile: string, ussname: string, options?: zowe.IUploadOptions) => {
                 expect(options).toMatchSnapshot();
                 return { api: "", commandResponse: "", success: true };
             }

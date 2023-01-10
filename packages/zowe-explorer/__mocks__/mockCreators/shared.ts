@@ -16,6 +16,7 @@ import * as vscode from "vscode";
 import { ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { FilterDescriptor } from "../../src/utils/ProfilesUtils";
 import { imperative, ZosmfSession } from "@zowe/cli";
+import { SettingsConfig } from "../../src/utils/SettingsConfig";
 
 export function createPersistentConfig() {
     return {
@@ -310,11 +311,7 @@ export function createQuickPickItem(): vscode.QuickPickItem {
     return new FilterDescriptor("\uFF0B " + "Create a new filter");
 }
 
-export function createQuickPickContent(
-    entered: any,
-    itemArray: vscode.QuickPickItem[],
-    placeholderString: string
-): any {
+export function createQuickPickContent(entered: any, itemArray: vscode.QuickPickItem[], placeholderString: string): any {
     return {
         placeholder: placeholderString,
         activeItems: itemArray,
@@ -402,4 +399,9 @@ export function createConfigLoad() {
             },
         ],
     } as any;
+}
+
+const originalGetDirectValue = SettingsConfig.getDirectValue;
+export function createGetConfigMock(settings: { [key: string]: any }) {
+    return jest.fn((key: string) => settings[key] ?? originalGetDirectValue(key));
 }

@@ -11,9 +11,9 @@
 
 import * as vscode from "vscode";
 import { ValidProfileEnum } from "@zowe/zowe-explorer-api";
-import { PersistentFilters } from "../../../src/PersistentFilters";
 import { Profiles } from "../../../src/Profiles";
 import {
+    createGetConfigMock,
     createInstanceOfProfile,
     createIProfile,
     createISessionWithoutCredentials,
@@ -25,6 +25,7 @@ import * as refreshActions from "../../../src/shared/refresh";
 import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
 import * as globals from "../../../src/globals";
 import * as sessUtils from "../../../src/utils/SessionUtils";
+import { SettingsConfig } from "../../../src/utils/SettingsConfig";
 
 function createGlobalMocks() {
     const globalMocks = {
@@ -72,11 +73,9 @@ function createGlobalMocks() {
         configurable: true,
     });
 
-    Object.defineProperty(PersistentFilters, "getDirectValue", {
-        value: jest.fn(() => {
-            return {
-                "zowe.automaticProfileValidation": true,
-            };
+    Object.defineProperty(SettingsConfig, "getDirectValue", {
+        value: createGetConfigMock({
+            "zowe.automaticProfileValidation": true,
         }),
     });
     Object.defineProperty(globals, "LOG", { value: globalMocks.mockLog, configurable: true });
@@ -109,21 +108,14 @@ describe("Refresh Unit Tests - Function refreshAll", () => {
             createTreeView()
         );
         newMocks.testUSSTree.mSessionNodes.push(newMocks.ussNode);
-        newMocks.jobsTree = createJobsTree(
-            globalMocks.session,
-            newMocks.iJob,
-            newMocks.profileInstance,
-            newMocks.treeView
-        );
+        newMocks.jobsTree = createJobsTree(globalMocks.session, newMocks.iJob, newMocks.profileInstance, newMocks.treeView);
         newMocks.jobsTree.mSessionNodes.push(newMocks.datasetSessionNode);
         newMocks.testDatasetTree = createDatasetTree(newMocks.datasetSessionNode, newMocks.treeView);
         newMocks.testDatasetTree.mSessionNodes.push(newMocks.datasetSessionNode);
 
-        Object.defineProperty(PersistentFilters, "getDirectValue", {
-            value: jest.fn(() => {
-                return {
-                    "zowe.automaticProfileValidation": true,
-                };
+        Object.defineProperty(SettingsConfig, "getDirectValue", {
+            value: createGetConfigMock({
+                "zowe.automaticProfileValidation": true,
             }),
         });
         Object.defineProperty(sessUtils, "removeSession", {

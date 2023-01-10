@@ -93,10 +93,7 @@ export async function getSpoolContent(session: string, spool: zowe.IJobFile, ref
 
 export async function getSpoolContentFromMainframe(node: IZoweJobTreeNode) {
     let spools: zowe.IJobFile[] = [];
-    spools = await ZoweExplorerApiRegister.getJesApi(node.getProfile()).getSpoolFiles(
-        node.job?.jobname,
-        node.job?.jobid
-    );
+    spools = await ZoweExplorerApiRegister.getJesApi(node.getProfile()).getSpoolFiles(node.job?.jobname, node.job?.jobid);
     spools = spools
         // filter out all the objects which do not seem to be correct Job File Document types
         // see an issue #845 for the details
@@ -142,10 +139,7 @@ export async function getSpoolContentFromMainframe(node: IZoweJobTreeNode) {
  */
 export async function refreshJobsServer(node: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>) {
     jobsProvider.checkCurrentProfile(node);
-    if (
-        Profiles.getInstance().validProfile === ValidProfileEnum.VALID ||
-        Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED
-    ) {
+    if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID || Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED) {
         await jobsProvider.refreshElement(node);
     }
 }
@@ -182,9 +176,7 @@ export async function downloadJcl(job: Job) {
  * @param jobId is a job to focus on
  */
 export const focusOnJob = async (jobsProvider: IZoweTree<IZoweJobTreeNode>, sessionName: string, jobId: string) => {
-    let sessionNode: IZoweJobTreeNode | undefined = jobsProvider.mSessionNodes.find(
-        (jobNode) => jobNode.label.toString() === sessionName.trim()
-    );
+    let sessionNode: IZoweJobTreeNode | undefined = jobsProvider.mSessionNodes.find((jobNode) => jobNode.label.toString() === sessionName.trim());
     if (!sessionNode) {
         try {
             await jobsProvider.addSession(sessionName.trim());
@@ -192,9 +184,7 @@ export const focusOnJob = async (jobsProvider: IZoweTree<IZoweJobTreeNode>, sess
             await errorHandling(error, null, error.message);
             return;
         }
-        sessionNode = jobsProvider.mSessionNodes.find(
-            (jobNode) => jobNode.label.toString().trim() === sessionName.trim()
-        );
+        sessionNode = jobsProvider.mSessionNodes.find((jobNode) => jobNode.label.toString().trim() === sessionName.trim());
     }
     try {
         jobsProvider.refreshElement(sessionNode);
@@ -224,20 +214,15 @@ export async function modifyCommand(job: Job) {
         if (command !== undefined) {
             const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(job.getProfile());
             if (commandApi) {
-                const response = await ZoweExplorerApiRegister.getCommandApi(job.getProfile()).issueMvsCommand(
-                    `f ${job.job.jobname},${command}`
-                );
-                vscode.window.showInformationMessage(
-                    localize("jobActions.modifyCommand.response", "Command response: ") + response.commandResponse
-                );
+                const response = await ZoweExplorerApiRegister.getCommandApi(job.getProfile()).issueMvsCommand(`f ${job.job.jobname},${command}`);
+                vscode.window.showInformationMessage(localize("jobActions.modifyCommand.response", "Command response: ") + response.commandResponse);
             }
         }
     } catch (error) {
         if (error.toString().includes("non-existing")) {
             globals.LOG.error(error);
             vscode.window.showErrorMessage(
-                localize("jobActions.modifyCommand.apiNonExisting", "Not implemented yet for profile of type: ") +
-                    job.getProfile().type
+                localize("jobActions.modifyCommand.apiNonExisting", "Not implemented yet for profile of type: ") + job.getProfile().type
             );
         } else {
             await errorHandling(error.toString(), job.getProfile().name, error.message.toString());
@@ -254,19 +239,14 @@ export async function stopCommand(job: Job) {
     try {
         const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(job.getProfile());
         if (commandApi) {
-            const response = await ZoweExplorerApiRegister.getCommandApi(job.getProfile()).issueMvsCommand(
-                `p ${job.job.jobname}`
-            );
-            vscode.window.showInformationMessage(
-                localize("jobActions.stopCommand.response", "Command response: ") + response.commandResponse
-            );
+            const response = await ZoweExplorerApiRegister.getCommandApi(job.getProfile()).issueMvsCommand(`p ${job.job.jobname}`);
+            vscode.window.showInformationMessage(localize("jobActions.stopCommand.response", "Command response: ") + response.commandResponse);
         }
     } catch (error) {
         if (error.toString().includes("non-existing")) {
             globals.LOG.error(error);
             vscode.window.showErrorMessage(
-                localize("jobActions.stopCommand.apiNonExisting", "Not implemented yet for profile of type: ") +
-                    job.getProfile().type
+                localize("jobActions.stopCommand.apiNonExisting", "Not implemented yet for profile of type: ") + job.getProfile().type
             );
         } else {
             await errorHandling(error.toString(), job.getProfile().name, error.message.toString());
@@ -310,11 +290,7 @@ export async function setPrefix(job: IZoweJobTreeNode, jobsProvider: IZoweTree<I
  *
  * @param jobsProvider The tree to which the node belongs
  */
-export async function deleteCommand(
-    jobsProvider: IZoweTree<IZoweJobTreeNode>,
-    job?: IZoweJobTreeNode,
-    jobs?: IZoweJobTreeNode[]
-) {
+export async function deleteCommand(jobsProvider: IZoweTree<IZoweJobTreeNode>, job?: IZoweJobTreeNode, jobs?: IZoweJobTreeNode[]) {
     if (jobs && jobs.length) {
         await deleteMultipleJobs(
             jobs.filter((jobNode) => jobNode.job !== undefined && jobNode.job !== null),
@@ -344,26 +320,19 @@ async function deleteSingleJob(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZ
     const result = await vscode.window.showWarningMessage(message, { modal: true }, deleteButton);
     if (!result || result === "Cancel") {
         globals.LOG.debug(localize("deleteJobPrompt.confirmation.cancel.log.debug", "Delete action was canceled."));
-        vscode.window.showInformationMessage(
-            localize("deleteJobPrompt.deleteCancelled", "Delete action was cancelled.")
-        );
+        vscode.window.showInformationMessage(localize("deleteJobPrompt.deleteCancelled", "Delete action was cancelled."));
         return;
     }
 
     try {
         await jobsProvider.delete(job);
+        vscode.window.showInformationMessage(localize("deleteCommand.job", "Job {0} was deleted.", jobName));
     } catch (error) {
         await errorHandling(error.toString(), job.getProfile().name, error.message.toString());
-        return;
     }
-
-    vscode.window.showInformationMessage(localize("deleteCommand.job", "Job {0} was deleted.", jobName));
 }
 
-async function deleteMultipleJobs(
-    jobs: ReadonlyArray<IZoweJobTreeNode>,
-    jobsProvider: IZoweTree<IZoweJobTreeNode>
-): Promise<void> {
+async function deleteMultipleJobs(jobs: ReadonlyArray<IZoweJobTreeNode>, jobsProvider: IZoweTree<IZoweJobTreeNode>): Promise<void> {
     const deleteButton = localize("deleteJobPrompt.confirmation.delete", "Delete");
     const toJobname = (jobNode: IZoweJobTreeNode) => `${jobNode.job.jobname}(${jobNode.job.jobid})`;
     const message = localize(
@@ -375,9 +344,7 @@ async function deleteMultipleJobs(
     const deleteChoice = await vscode.window.showWarningMessage(message, { modal: true }, deleteButton);
     if (!deleteChoice || deleteChoice === "Cancel") {
         globals.LOG.debug(localize("deleteJobPrompt.confirmation.cancel.log.debug", "Delete action was canceled."));
-        vscode.window.showInformationMessage(
-            localize("deleteJobPrompt.deleteCancelled", "Delete action was cancelled.")
-        );
+        vscode.window.showInformationMessage(localize("deleteJobPrompt.deleteCancelled", "Delete action was cancelled."));
         return;
     }
     const deletionResult: ReadonlyArray<IZoweJobTreeNode | Error> = await Promise.all(
