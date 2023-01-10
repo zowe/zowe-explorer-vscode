@@ -2055,7 +2055,11 @@ describe("Dataset Actions Unit Tests - Function copyDataSet", () => {
             undefined,
             blockMocks.imperativeProfile
         );
-        await expect(dsActions.downloadDs(node)).not.toBeUndefined();
+
+        let label = node.getParent().getLabel().toString() + "(" + node.getLabel().toString() + ")";
+        const filePathSpy = jest.spyOn(sharedUtils, "getDocumentFilePath");
+        await dsActions.downloadDs(node);
+        expect(filePathSpy).toBeCalledWith(label, node);
     });
 });
 
