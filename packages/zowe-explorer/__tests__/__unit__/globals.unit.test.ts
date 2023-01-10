@@ -10,7 +10,6 @@
  */
 
 import * as globals from "../../src/globals";
-import * as vscode from "vscode";
 import { SettingsConfig } from "../../src/utils/SettingsConfig";
 
 describe("Globals Unit Test - Function setGlobalSecurityValue", () => {
