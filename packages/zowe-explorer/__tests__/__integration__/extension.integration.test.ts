@@ -453,19 +453,8 @@ describe("Extension Integration Tests", async () => {
                     let contents;
 
                     try {
-
-                        const fromNode = new ZoweDatasetNode(
-                            fromDataSetName,
-                            vscode.TreeItemCollapsibleState.None,
-                            sessionNode,
-                            session
-                        );
-                        const toNode = new ZoweDatasetNode(
-                            toDataSetName,
-                            vscode.TreeItemCollapsibleState.None,
-                            sessionNode,
-                            session
-                        );
+                        const fromNode = new ZoweDatasetNode(fromDataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
+                        const toNode = new ZoweDatasetNode(toDataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
                         const nodeList: ZoweDatasetNode[] = [fromNode];
                         await dsActions.copyDataSet(nodeList, null, null);
 

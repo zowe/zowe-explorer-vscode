@@ -425,9 +425,7 @@ function initDatasetProvider(context: vscode.ExtensionContext) {
         })
     );
 
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.renameDataSet", (node) => datasetProvider.rename(node))
-    );
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.renameDataSet", (node) => datasetProvider.rename(node)));
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.copyDataSet", async (node, nodeList) => {
             dsActions.copyDataSet(node, nodeList, datasetProvider);
@@ -439,9 +437,7 @@ function initDatasetProvider(context: vscode.ExtensionContext) {
             dsActions.refreshDataset(node.getParent(), datasetProvider);
         })
     );
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.renameDataSetMember", (node) => datasetProvider.rename(node))
-    );
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.renameDataSetMember", (node) => datasetProvider.rename(node)));
 
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.hMigrateDataSet", async (node, nodeList) => {
