@@ -18,6 +18,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed settings not persisting in Theia versions >=1.29.0.
 - Removed TSLint (as it is deprecated), and replaced all TSLint rules with their ESLint equivalents. [#2030](https://github.com/zowe/vscode-extension-for-zowe/issues/2030)
 - Surfaced any errors from a dataset Recall/Migrate operation. [#2032](https://github.com/zowe/vscode-extension-for-zowe/issues/2032)
+- Fixed issue with a success message being returned along with error for Job deletion. [#2075](https://github.com/zowe/vscode-extension-for-zowe/issues/2075)
 
 ## `2.5.0`
 
