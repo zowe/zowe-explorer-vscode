@@ -307,10 +307,10 @@ export function setActivated(value: boolean) {
 export async function setGlobalSecurityValue() {
     if (this.ISTHEIA) {
         PROFILE_SECURITY = false;
-        await SettingsConfig.setDirectValue(this.SETTINGS_SECURE_CREDENTIALS_ENABLED, false, vscode.ConfigurationTarget.Global);
+        await SettingsConfig.setDirectValue(this.SETTINGS_SECURE_CREDENTIAL_MANAGER, "off", vscode.ConfigurationTarget.Global);
         return;
     }
-    const settingSelectedCredentialManager: string = SettingsConfig.getDirectValue(this.SETTINGS_SECURE_CREDENTIALS_ENABLED);
+    const settingSelectedCredentialManager: string = SettingsConfig.getDirectValue(this.SETTINGS_SECURE_CREDENTIAL_MANAGER);
     switch (settingSelectedCredentialManager) {
         case "keytar":
             PROFILE_SECURITY = ZOWE_CLI_SCM;
