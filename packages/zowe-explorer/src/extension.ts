@@ -286,9 +286,16 @@ async function watchConfigProfile(context: vscode.ExtensionContext) {
             return;
         }
         savedProfileContents = newProfileContents;
-        await refreshActions.refreshAll(datasetProvider);
-        await refreshActions.refreshAll(ussFileProvider);
-        await refreshActions.refreshAll(jobsProvider);
+
+        try {
+            await readConfigFromDisk();
+            await refreshActions.refreshAll(datasetProvider);
+            await refreshActions.refreshAll(ussFileProvider);
+            await refreshActions.refreshAll(jobsProvider);
+        } catch (err) {
+            globals.LOG.error(err);
+            ZoweExplorerExtender.showZoweConfigError(err.message);
+        }
     };
 
     globalProfileWatcher.onDidCreate(async () => {
