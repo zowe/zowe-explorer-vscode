@@ -212,20 +212,15 @@ export async function modifyCommand(job: Job) {
         if (command !== undefined) {
             const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(job.getProfile());
             if (commandApi) {
-                const response = await ZoweExplorerApiRegister.getCommandApi(job.getProfile()).issueMvsCommand(
-                    `f ${job.job.jobname},${command}`
-                );
-                Gui.showMessage(
-                    localize("jobActions.modifyCommand.response", "Command response: ") + response.commandResponse
-                );
+                const response = await ZoweExplorerApiRegister.getCommandApi(job.getProfile()).issueMvsCommand(`f ${job.job.jobname},${command}`);
+                Gui.showMessage(localize("jobActions.modifyCommand.response", "Command response: ") + response.commandResponse);
             }
         }
     } catch (error) {
         if (error.toString().includes("non-existing")) {
             globals.LOG.error(error);
             Gui.errorMessage(
-                localize("jobActions.modifyCommand.apiNonExisting", "Not implemented yet for profile of type: ") +
-                    job.getProfile().type
+                localize("jobActions.modifyCommand.apiNonExisting", "Not implemented yet for profile of type: ") + job.getProfile().type
             );
         } else {
             await errorHandling(error.toString(), job.getProfile().name, error.message.toString());
@@ -242,20 +237,13 @@ export async function stopCommand(job: Job) {
     try {
         const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(job.getProfile());
         if (commandApi) {
-            const response = await ZoweExplorerApiRegister.getCommandApi(job.getProfile()).issueMvsCommand(
-                `p ${job.job.jobname}`
-            );
-            Gui.showMessage(
-                localize("jobActions.stopCommand.response", "Command response: ") + response.commandResponse
-            );
+            const response = await ZoweExplorerApiRegister.getCommandApi(job.getProfile()).issueMvsCommand(`p ${job.job.jobname}`);
+            Gui.showMessage(localize("jobActions.stopCommand.response", "Command response: ") + response.commandResponse);
         }
     } catch (error) {
         if (error.toString().includes("non-existing")) {
             globals.LOG.error(error);
-            Gui.errorMessage(
-                localize("jobActions.stopCommand.apiNonExisting", "Not implemented yet for profile of type: ") +
-                    job.getProfile().type
-            );
+            Gui.errorMessage(localize("jobActions.stopCommand.apiNonExisting", "Not implemented yet for profile of type: ") + job.getProfile().type);
         } else {
             await errorHandling(error.toString(), job.getProfile().name, error.message.toString());
         }

@@ -21,7 +21,7 @@ import * as globals from "../../../src/globals";
 import * as ProfileUtils from "../../../src/utils/ProfilesUtils";
 import * as vscode from "vscode";
 import * as TempFolder from "../../../src/utils/TempFolder";
-import { PersistentFilters } from "../../../src/PersistentFilters";
+import { SettingsConfig } from "../../../src/utils/SettingsConfig";
 import { Gui } from "@zowe/zowe-explorer-api";
 
 describe("TempFolder Unit Tests", () => {
@@ -30,7 +30,7 @@ describe("TempFolder Unit Tests", () => {
             value: jest.fn(),
             configurable: true,
         });
-        Object.defineProperty(PersistentFilters, "getDirectValue", {
+        Object.defineProperty(SettingsConfig, "getDirectValue", {
             value: jest.fn(),
             configurable: true,
         });
@@ -47,11 +47,7 @@ describe("TempFolder Unit Tests", () => {
         try {
             await TempFolder.moveTempFolder("testpath1", "testpath2");
         } catch (err) {
-            expect(ProfileUtils.errorHandling).toHaveBeenCalledWith(
-                err,
-                null,
-                "Error encountered when creating temporary folder! " + err.message
-            );
+            expect(ProfileUtils.errorHandling).toHaveBeenCalledWith(err, null, "Error encountered when creating temporary folder! " + err.message);
             expect(globals.LOG.error).toHaveBeenCalledWith("Error encountered when creating temporary folder! {}");
         }
     });
@@ -61,7 +57,7 @@ describe("TempFolder Unit Tests", () => {
         jest.spyOn(fs, "readdirSync").mockImplementation((val) => {
             throw new Error("example cleanDir error");
         });
-        jest.spyOn(PersistentFilters, "getDirectValue").mockImplementationOnce((val) => true);
+        jest.spyOn(SettingsConfig, "getDirectValue").mockImplementationOnce((val) => true);
 
         try {
             await TempFolder.cleanTempDir();

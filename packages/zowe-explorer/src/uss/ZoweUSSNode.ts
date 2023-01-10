@@ -464,8 +464,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                         const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
                         const fullPath = this.fullPath;
                         const chooseBinary =
-                            this.binary ||
-                            (await ZoweExplorerApiRegister.getUssApi(cachedProfile).isFileTagBinOrAscii(this.fullPath));
+                            this.binary || (await ZoweExplorerApiRegister.getUssApi(cachedProfile).isFileTagBinOrAscii(this.fullPath));
                         const response = await Gui.withProgress(
                             {
                                 location: vscode.ProgressLocation.Notification,
@@ -555,9 +554,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             if (err.message.includes(localize("refreshUSS.error.notFound", "not found"))) {
                 globals.LOG.warn(err);
                 Gui.showMessage(
-                    localize("refreshUSS.file1", "Unable to find file: ") +
-                        label +
-                        localize("refreshUSS.file2", " was probably deleted.")
+                    localize("refreshUSS.file1", "Unable to find file: ") + label + localize("refreshUSS.file2", " was probably deleted.")
                 );
             } else {
                 await errorHandling(err, this.mProfileName, err.message);
@@ -582,10 +579,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 const noResponse = localize("openUSS.log.info.failedToOpenAsText.no", "Cancel");
 
                 const response = await Gui.errorMessage(
-                    localize(
-                        "openUSS.log.info.failedToOpenAsText",
-                        "Failed to open file as text. Re-download file as binary?"
-                    ),
+                    localize("openUSS.log.info.failedToOpenAsText", "Failed to open file as text. Re-download file as binary?"),
                     { items: [yesResponse, noResponse] }
                 );
 

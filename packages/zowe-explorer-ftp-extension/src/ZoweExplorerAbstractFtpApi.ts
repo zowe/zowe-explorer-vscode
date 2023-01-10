@@ -34,10 +34,10 @@ export abstract class AbstractFtpApi implements ZoweExplorerApi.ICommon {
         if (!this.session) {
             const ftpProfile = (profile || this.profile)?.profile;
             if (!ftpProfile) {
-                void Gui.showMessage(
-                    "Internal error: ZoweVscFtpRestApi instance was not initialized with a valid Zowe profile.",
-                    { severity: MessageSeverity.FATAL, logger: ZoweLogger }
-                );
+                void Gui.showMessage("Internal error: ZoweVscFtpRestApi instance was not initialized with a valid Zowe profile.", {
+                    severity: MessageSeverity.FATAL,
+                    logger: ZoweLogger,
+                });
                 throw new Error();
             }
 
@@ -59,10 +59,10 @@ export abstract class AbstractFtpApi implements ZoweExplorerApi.ICommon {
 
     public checkedProfile(): imperative.IProfileLoaded {
         if (!this.profile?.profile) {
-            void Gui.showMessage(
-                "Internal error: ZoweVscFtpRestApi instance was not initialized with a valid Zowe profile.",
-                { severity: MessageSeverity.FATAL, logger: ZoweLogger }
-            );
+            void Gui.showMessage("Internal error: ZoweVscFtpRestApi instance was not initialized with a valid Zowe profile.", {
+                severity: MessageSeverity.FATAL,
+                logger: ZoweLogger,
+            });
             throw new Error();
         }
         return this.profile;

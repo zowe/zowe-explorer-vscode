@@ -52,10 +52,10 @@ async function registerFtpApis(): Promise<boolean> {
 
         return true;
     }
-    await Gui.showMessage(
-        "Zowe Explorer was not found: either it is not installed or you are using an older version without extensibility API.",
-        { severity: MessageSeverity.FATAL, logger: ZoweLogger }
-    );
+    await Gui.showMessage("Zowe Explorer was not found: either it is not installed or you are using an older version without extensibility API.", {
+        severity: MessageSeverity.FATAL,
+        logger: ZoweLogger,
+    });
     return false;
 }
 

@@ -604,11 +604,10 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
                 dataset.label = "OTHERUSER.DATASET";
                 mocked(Gui.warningMessage).mockResolvedValueOnce({ title: "Submit" });
                 await dsActions.submitMember(dataset);
-                expect(mocked(Gui.warningMessage)).toBeCalledWith(
-                    "Are you sure you want to submit the following job?\n\n" + dataset.getLabel(),
-                    { modal: true },
-                    { title: "Submit" }
-                );
+                expect(mocked(Gui.warningMessage)).toBeCalledWith("Are you sure you want to submit the following job?\n\n" + dataset.getLabel(), {
+                    items: [{ title: "Submit" }],
+                    vsCodeOpts: { modal: true },
+                });
             } else if (
                 option === JOB_SUBMIT_DIALOG_OPTS[JobSubmitDialogOpts.AllJobs] ||
                 option === JOB_SUBMIT_DIALOG_OPTS[JobSubmitDialogOpts.YourJobs]
@@ -616,11 +615,10 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
                 dataset.label = "TESTUSER.DATASET";
                 mocked(Gui.warningMessage).mockResolvedValueOnce({ title: "Submit" });
                 await dsActions.submitMember(dataset);
-                expect(mocked(Gui.warningMessage)).toBeCalledWith(
-                    "Are you sure you want to submit the following job?\n\n" + dataset.getLabel(),
-                    { modal: true },
-                    { title: "Submit" }
-                );
+                expect(mocked(Gui.warningMessage)).toBeCalledWith("Are you sure you want to submit the following job?\n\n" + dataset.getLabel(), {
+                    items: [{ title: "Submit" }],
+                    vsCodeOpts: { modal: true },
+                });
             }
             expect(mocked(Profiles.getInstance)).toHaveBeenCalledTimes(2 * (o + 1));
         }
@@ -628,11 +626,10 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         // Test for "Cancel" or closing the dialog
         mocked(Gui.warningMessage).mockReturnValueOnce(undefined);
         await dsActions.submitMember(dataset);
-        expect(mocked(Gui.warningMessage)).toBeCalledWith(
-            "Are you sure you want to submit the following job?\n\n" + dataset.getLabel(),
-            { modal: true },
-            { title: "Submit" }
-        );
+        expect(mocked(Gui.warningMessage)).toBeCalledWith("Are you sure you want to submit the following job?\n\n" + dataset.getLabel(), {
+            items: [{ title: "Submit" }],
+            vsCodeOpts: { modal: true },
+        });
     });
 });
 

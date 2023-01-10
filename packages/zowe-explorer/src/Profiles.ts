@@ -366,13 +366,7 @@ export class Profiles extends ProfilesCache {
             } catch (error) {
                 this.log.error(error);
                 await openConfigOnError(error);
-                Gui.errorMessage(
-                    localize(
-                        "Profiles.getProfileInfo.error",
-                        "Error in creating team configuration file: {0}",
-                        error.message
-                    )
-                );
+                Gui.errorMessage(localize("Profiles.getProfileInfo.error", "Error in creating team configuration file: {0}", error.message));
             }
             if (config.usingTeamConfig) {
                 const profiles = config.getAllProfiles();
@@ -394,12 +388,7 @@ export class Profiles extends ProfilesCache {
                 };
                 profileName = await Gui.showInputBox(options);
                 if (!profileName) {
-                    Gui.showMessage(
-                        localize(
-                            "createNewConnection.enterprofileName",
-                            "Profile Name was not supplied. Operation Cancelled"
-                        )
-                    );
+                    Gui.showMessage(localize("createNewConnection.enterprofileName", "Profile Name was not supplied. Operation Cancelled"));
                     return;
                 }
                 chosenProfile = profileName.trim();
@@ -457,9 +446,7 @@ export class Profiles extends ProfilesCache {
                 case "host":
                     updUrl = await this.urlInfo(editURL);
                     if (updUrl === undefined) {
-                        Gui.showMessage(
-                            localize("editConnection.zosmfURL", "No valid value for z/OS URL. Operation Cancelled")
-                        );
+                        Gui.showMessage(localize("editConnection.zosmfURL", "No valid value for z/OS URL. Operation Cancelled"));
                         return undefined;
                     }
                     updSchemaValues[value] = updUrl.host;
@@ -471,12 +458,7 @@ export class Profiles extends ProfilesCache {
                     if (updSchemaValues[value] === undefined) {
                         updPort = await this.portInfo(value, schema);
                         if (Number.isNaN(Number(updPort))) {
-                            Gui.showMessage(
-                                localize(
-                                    "editConnection.undefined.port",
-                                    "Invalid Port number provided or operation was cancelled"
-                                )
-                            );
+                            Gui.showMessage(localize("editConnection.undefined.port", "Invalid Port number provided or operation was cancelled"));
                             return undefined;
                         }
                         updSchemaValues[value] = updPort;
@@ -669,9 +651,7 @@ export class Profiles extends ProfilesCache {
         } catch (err) {
             this.log.error(err);
             await openConfigOnError(err);
-            Gui.errorMessage(
-                localize("Profiles.getProfileInfo.error", "Error in creating team configuration file: {0}", err.message)
-            );
+            Gui.errorMessage(localize("Profiles.getProfileInfo.error", "Error in creating team configuration file: {0}", err.message));
         }
     }
 
@@ -715,17 +695,13 @@ export class Profiles extends ProfilesCache {
         const newProfileName = profileName.trim();
 
         if (newProfileName === undefined || newProfileName === "") {
-            Gui.showMessage(
-                localize("createNewConnection.profileName", "Profile name was not supplied. Operation Cancelled")
-            );
+            Gui.showMessage(localize("createNewConnection.profileName", "Profile name was not supplied. Operation Cancelled"));
             return undefined;
         }
 
         const profileType = requestedProfileType ? requestedProfileType : await this.getProfileType();
         if (profileType === undefined) {
-            Gui.showMessage(
-                localize("createNewConnection.profileType", "No profile type was chosen. Operation Cancelled")
-            );
+            Gui.showMessage(localize("createNewConnection.profileType", "No profile type was chosen. Operation Cancelled"));
             return undefined;
         }
 
@@ -741,9 +717,7 @@ export class Profiles extends ProfilesCache {
                 case "host":
                     newUrl = await this.urlInfo();
                     if (newUrl === undefined) {
-                        Gui.showMessage(
-                            localize("createNewConnection.zosmfURL", "No valid value for z/OS URL. Operation Cancelled")
-                        );
+                        Gui.showMessage(localize("createNewConnection.zosmfURL", "No valid value for z/OS URL. Operation Cancelled"));
                         return undefined;
                     }
                     schemaValues[value] = newUrl.host;
@@ -756,10 +730,7 @@ export class Profiles extends ProfilesCache {
                         newPort = await this.portInfo(value, schema);
                         if (Number.isNaN(Number(newPort))) {
                             Gui.showMessage(
-                                localize(
-                                    "createNewConnection.undefined.port",
-                                    "Invalid Port number provided or operation was cancelled"
-                                )
+                                localize("createNewConnection.undefined.port", "Invalid Port number provided or operation was cancelled")
                             );
                             return undefined;
                         }
@@ -1104,11 +1075,7 @@ export class Profiles extends ProfilesCache {
                             token.onCancellationRequested(() => {
                                 // will be returned as undefined
                                 Gui.showMessage(
-                                    localize(
-                                        "Profiles.validateProfiles.validationCancelled",
-                                        "Validating {0} was cancelled.",
-                                        theProfile.name
-                                    )
+                                    localize("Profiles.validateProfiles.validationCancelled", "Validating {0} was cancelled.", theProfile.name)
                                 );
                             });
                             return getSessStatus.getStatus(theProfile, theProfile.type);
@@ -1299,14 +1266,8 @@ export class Profiles extends ProfilesCache {
             ignoreFocusOut: true,
             canPickMany: false,
         };
-        const globalText = localize(
-            "getConfigLocationPrompt.showQuickPick.global",
-            "Global: in the Zowe home directory"
-        );
-        const projectText = localize(
-            "getConfigLocationPrompt.showQuickPick.project",
-            "Project: in the current working directory"
-        );
+        const globalText = localize("getConfigLocationPrompt.showQuickPick.global", "Global: in the Zowe home directory");
+        const projectText = localize("getConfigLocationPrompt.showQuickPick.project", "Project: in the current working directory");
         const location = await Gui.showQuickPick([globalText, projectText], quickPickOptions);
         // call check for existing and prompt here
         switch (location) {
@@ -1436,10 +1397,7 @@ export class Profiles extends ProfilesCache {
         // confirm that the user really wants to delete
         if (
             (await Gui.showQuickPick(
-                [
-                    localize("deleteProfile.showQuickPick.delete", "Delete"),
-                    localize("deleteProfile.showQuickPick.cancel", "Cancel"),
-                ],
+                [localize("deleteProfile.showQuickPick.delete", "Delete"), localize("deleteProfile.showQuickPick.cancel", "Cancel")],
                 quickPickOptions
             )) !== localize("deleteProfile.showQuickPick.delete", "Delete")
         ) {

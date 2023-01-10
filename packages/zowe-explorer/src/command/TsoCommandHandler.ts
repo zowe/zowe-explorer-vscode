@@ -55,9 +55,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
     constructor() {
         super();
 
-        this.outputChannel = Gui.createOutputChannel(
-            localize("issueTsoCommand.outputchannel.title", "Zowe TSO Command")
-        );
+        this.outputChannel = Gui.createOutputChannel(localize("issueTsoCommand.outputchannel.title", "Zowe TSO Command"));
     }
 
     /**
@@ -135,10 +133,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
         } catch (error) {
             if (error.toString().includes("non-existing")) {
                 globals.LOG.error(error);
-                Gui.errorMessage(
-                    localize("issueTsoCommand.apiNonExisting", "Not implemented yet for profile of type: ") +
-                        profile.type
-                );
+                Gui.errorMessage(localize("issueTsoCommand.apiNonExisting", "Not implemented yet for profile of type: ") + profile.type);
             } else {
                 await errorHandling(error.toString(), profile.name, error.message.toString());
             }
@@ -179,9 +174,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                 const choice = await Gui.resolveQuickPick(quickpick);
                 quickpick.hide();
                 if (!choice) {
-                    Gui.showMessage(
-                        localize("issueTsoCommand.options.noselection", "No selection made. Operation cancelled.")
-                    );
+                    Gui.showMessage(localize("issueTsoCommand.options.noselection", "No selection made. Operation cancelled."));
                     return;
                 }
                 if (choice instanceof FilterDescriptor) {
@@ -252,9 +245,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
         } catch (error) {
             if (error.toString().includes("account number")) {
                 globals.LOG.error(error);
-                Gui.errorMessage(
-                    localize("issueTsoCommand.accountNumberNotSupplied", "Error: No account number was supplied.")
-                );
+                Gui.errorMessage(localize("issueTsoCommand.accountNumberNotSupplied", "Error: No account number was supplied."));
             } else {
                 await errorHandling(error.toString(), profile.name, error.message.toString());
             }

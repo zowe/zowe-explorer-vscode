@@ -552,9 +552,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                         // get user selection
                         const choice = await Gui.showQuickPick([createPick, ...items], options1);
                         if (!choice) {
-                            Gui.showMessage(
-                                localize("enterPattern.pattern", "No selection made. Operation cancelled.")
-                            );
+                            Gui.showMessage(localize("enterPattern.pattern", "No selection made. Operation cancelled."));
                             return;
                         }
                         remotepath = choice === createPick ? "" : choice.label;
@@ -567,9 +565,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                         const choice = await Gui.resolveQuickPick(quickpick);
                         quickpick.hide();
                         if (!choice) {
-                            Gui.showMessage(
-                                localize("enterPattern.pattern", "No selection made. Operation cancelled.")
-                            );
+                            Gui.showMessage(localize("enterPattern.pattern", "No selection made. Operation cancelled."));
                             return;
                         }
                         if (choice instanceof FilterDescriptor) {

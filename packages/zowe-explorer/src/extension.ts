@@ -17,15 +17,7 @@ import * as dsActions from "./dataset/actions";
 import * as jobActions from "./job/actions";
 import * as refreshActions from "./shared/refresh";
 import * as sharedActions from "./shared/actions";
-import {
-    Gui,
-    IZoweDatasetTreeNode,
-    IZoweJobTreeNode,
-    IZoweUSSTreeNode,
-    IZoweTreeNode,
-    IZoweTree,
-    getZoweDir,
-} from "@zowe/zowe-explorer-api";
+import { Gui, IZoweDatasetTreeNode, IZoweJobTreeNode, IZoweUSSTreeNode, IZoweTreeNode, IZoweTree, getZoweDir } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import { Profiles } from "./Profiles";
@@ -77,10 +69,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         globals.LOG.debug(localize("initialize.log.debug", "Initialized logger from VSCode extension"));
     } catch (err) {
         globals.LOG.error(err);
-        const errorMessage = localize(
-            "initialize.log.error",
-            "Error encountered while activating and initializing logger! "
-        );
+        const errorMessage = localize("initialize.log.error", "Error encountered while activating and initializing logger! ");
         Gui.errorMessage(`${errorMessage}: ${err.message}`);
     }
 

@@ -17,7 +17,14 @@ import * as globals from "../globals";
 import * as path from "path";
 import * as api from "@zowe/zowe-explorer-api";
 import { FilterItem, errorHandling } from "../utils/ProfilesUtils";
-import { getDocumentFilePath, concatChildNodes, checkForAddedSuffix, willForceUpload } from "../shared/utils";
+import {
+    getDocumentFilePath,
+    concatChildNodes,
+    checkForAddedSuffix,
+    JobSubmitDialogOpts,
+    JOB_SUBMIT_DIALOG_OPTS,
+    willForceUpload,
+} from "../shared/utils";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Profiles } from "../Profiles";
 import { getIconByNode } from "../generators/icons";
@@ -49,10 +56,7 @@ export async function allocateLike(datasetProvider: api.IZoweTree<api.IZoweDatas
         // The user must choose a session
         const qpItems = [];
         const quickpick = api.Gui.createQuickPick();
-        quickpick.placeholder = localize(
-            "allocateLike.options.prompt",
-            "Select the profile to which the original data set belongs"
-        );
+        quickpick.placeholder = localize("allocateLike.options.prompt", "Select the profile to which the original data set belongs");
         quickpick.ignoreFocusOut = true;
 
         for (const thisSession of datasetProvider.mSessionNodes) {
@@ -229,9 +233,7 @@ export async function deleteDatasetPrompt(datasetProvider: api.IZoweTree<api.IZo
 
     // Check that there are items to be deleted
     if (!nodes || nodes.length === 0) {
-        api.Gui.showMessage(
-            localize("deleteDatasetPrompt.nodesToDelete.empty", "No data sets selected for deletion, cancelling...")
-        );
+        api.Gui.showMessage(localize("deleteDatasetPrompt.nodesToDelete.empty", "No data sets selected for deletion, cancelling..."));
         return;
     }
 
@@ -304,9 +306,7 @@ export async function deleteDatasetPrompt(datasetProvider: api.IZoweTree<api.IZo
                 const total = 100;
                 for (const [index, currNode] of nodes.entries()) {
                     if (token.isCancellationRequested) {
-                        api.Gui.showMessage(
-                            localize("deleteDatasetPrompt.deleteCancelled", "Delete action was cancelled.")
-                        );
+                        api.Gui.showMessage(localize("deleteDatasetPrompt.deleteCancelled", "Delete action was cancelled."));
                         return;
                     }
                     progress.report({
@@ -329,12 +329,7 @@ export async function deleteDatasetPrompt(datasetProvider: api.IZoweTree<api.IZo
     if (nodesDeleted.length > 0) {
         nodesDeleted.sort();
         api.Gui.showMessage(
-            localize(
-                "deleteMulti.datasetNode",
-                "The following {0} item(s) were deleted:{1}",
-                nodesDeleted.length,
-                nodesDeleted.toString()
-            )
+            localize("deleteMulti.datasetNode", "The following {0} item(s) were deleted:{1}", nodesDeleted.length, nodesDeleted.toString())
         );
     }
 
@@ -360,9 +355,7 @@ export async function createMember(parent: api.IZoweDatasetTreeNode, datasetProv
         },
     };
     const name = await api.Gui.showInputBox(options);
-    globals.LOG.debug(
-        localize("createMember.log.debug.createNewDataSet", "creating new data set member of name ") + name
-    );
+    globals.LOG.debug(localize("createMember.log.debug.createNewDataSet", "creating new data set member of name ") + name);
     if (name) {
         const label = parent.label as string;
         try {
@@ -539,9 +532,7 @@ export async function createFile(node: api.IZoweDatasetTreeNode, datasetProvider
                 }
             });
         } else {
-            globals.LOG.debug(
-                localize("createFile.noValidNameEntered", "No valid data set name entered. Operation cancelled")
-            );
+            globals.LOG.debug(localize("createFile.noValidNameEntered", "No valid data set name entered. Operation cancelled"));
             api.Gui.showMessage(localize("createFile.operationCancelled", "Operation cancelled."));
             return;
         }
@@ -549,9 +540,7 @@ export async function createFile(node: api.IZoweDatasetTreeNode, datasetProvider
         // 2nd step: Get data set type
         const type = await api.Gui.showQuickPick(stepTwoChoices, stepTwoOptions);
         if (type == null) {
-            globals.LOG.debug(
-                localize("createFile.noValidTypeSelected", "No valid data set type selected. Operation cancelled.")
-            );
+            globals.LOG.debug(localize("createFile.noValidTypeSelected", "No valid data set type selected. Operation cancelled."));
             api.Gui.showMessage(localize("createFile.operationCancelled", "Operation cancelled."));
             return;
         } else {
@@ -586,9 +575,7 @@ export async function createFile(node: api.IZoweDatasetTreeNode, datasetProvider
                 // 4th step (optional): Show data set attributes
                 const choice2 = await handleUserSelection(newDSProperties, type);
                 if (choice2 == null) {
-                    globals.LOG.debug(
-                        localize("createFile.noOptionSelected", "No option selected. Operation cancelled.")
-                    );
+                    globals.LOG.debug(localize("createFile.noOptionSelected", "No option selected. Operation cancelled."));
                     api.Gui.showMessage(localize("createFile.operationCancelled", "Operation cancelled."));
                     return;
                 } else {
@@ -778,12 +765,7 @@ export async function showAttributes(node: api.IZoweDatasetTreeNode, datasetProv
 // This function does not appear to currently be made available in the UI
 export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>) {
     if (!vscode.window.activeTextEditor) {
-        api.Gui.errorMessage(
-            localize(
-                "submitJcl.noDocumentOpen",
-                "No editor with a document that could be submitted as JCL is currently open."
-            )
-        );
+        api.Gui.errorMessage(localize("submitJcl.noDocumentOpen", "No editor with a document that could be submitted as JCL is currently open."));
         return;
     }
     const doc = vscode.window.activeTextEditor.document;
@@ -854,10 +836,9 @@ export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetT
  */
 async function confirmJobSubmission(node: api.IZoweTreeNode, ownsJob: boolean): Promise<boolean> {
     const showConfirmationDialog = async () => {
-        const selection = await vscode.window.showWarningMessage(
+        const selection = await api.Gui.warningMessage(
             localize("submitMember.confirm", "Are you sure you want to submit the following job?\n\n{0}", node.getLabel().toString()),
-            { modal: true },
-            { title: "Submit" }
+            { items: [{ title: "Submit" }], vsCodeOpts: { modal: true } }
         );
 
         return selection != null && selection?.title === "Submit";
@@ -933,9 +914,7 @@ export async function submitMember(node: api.IZoweTreeNode) {
             const job = await ZoweExplorerApiRegister.getJesApi(sessProfile).submitJob(label);
             const args = [sesName, job.jobid];
             const setJobCmd = `command:zowe.jobs.setJobSpool?${encodeURIComponent(JSON.stringify(args))}`;
-            api.Gui.showMessage(
-                localize("submitMember.jobSubmitted", "Job submitted ") + `[${job.jobid}](${setJobCmd})`
-            );
+            api.Gui.showMessage(localize("submitMember.jobSubmitted", "Job submitted ") + `[${job.jobid}](${setJobCmd})`);
         } catch (error) {
             await errorHandling(error, sesName, localize("submitMember.jobSubmissionFailed", "Job submission failed\n") + error.message);
         }
@@ -1068,11 +1047,7 @@ export async function refreshPS(node: api.IZoweDatasetTreeNode) {
     } catch (err) {
         globals.LOG.error(localize("refreshPS.log.error.refresh", "Error encountered when refreshing data set view: ") + JSON.stringify(err));
         if (err.message.includes(localize("refreshPS.error.notFound", "not found"))) {
-            api.Gui.showMessage(
-                localize("refreshPS.file1", "Unable to find file: ") +
-                    label +
-                    localize("refreshPS.file2", " was probably deleted.")
-            );
+            api.Gui.showMessage(localize("refreshPS.file1", "Unable to find file: ") + label + localize("refreshPS.file2", " was probably deleted."));
         } else {
             await errorHandling(err, node.getProfileName(), err.message);
         }
@@ -1162,9 +1137,7 @@ export async function hMigrateDataSet(node: ZoweDatasetNode) {
     if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
         const { dataSetName } = dsUtils.getNodeLabels(node);
         api.Gui.showMessage(
-            localize("hMigrate.requestSent1", "Migration of dataset: ") +
-                dataSetName +
-                localize("hMigrate.requestSent2", " requested.")
+            localize("hMigrate.requestSent1", "Migration of dataset: ") + dataSetName + localize("hMigrate.requestSent2", " requested.")
         );
         try {
             return ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hMigrateDataSet(dataSetName);
@@ -1189,11 +1162,7 @@ export async function hRecallDataSet(node: ZoweDatasetNode) {
     await Profiles.getInstance().checkCurrentProfile(node.getProfile());
     if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
         const { dataSetName } = dsUtils.getNodeLabels(node);
-        api.Gui.showMessage(
-            localize("hRecall.requestSent1", "Recall of dataset: ") +
-                dataSetName +
-                localize("hRecall.requestSent2", " requested.")
-        );
+        api.Gui.showMessage(localize("hRecall.requestSent1", "Recall of dataset: ") + dataSetName + localize("hRecall.requestSent2", " requested."));
         try {
             return ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hRecallDataSet(dataSetName);
         } catch (err) {
@@ -1306,9 +1275,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
     const profile = Profiles.getInstance().loadNamedProfile(sesName);
     if (!profile) {
         globals.LOG.error(localize("saveFile.log.error.session", "Couldn't locate session when saving data set!"));
-        return api.Gui.errorMessage(
-            localize("saveFile.log.error.session", "Couldn't locate session when saving data set!")
-        );
+        return api.Gui.errorMessage(localize("saveFile.log.error.session", "Couldn't locate session when saving data set!"));
     }
 
     // get session from session name
@@ -1331,10 +1298,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
             const response = await ZoweExplorerApiRegister.getMvsApi(profile).dataSet(label);
             if (!response.apiResponse.items.length) {
                 return api.Gui.errorMessage(
-                    localize(
-                        "saveFile.error.saveFailed",
-                        "Data set failed to save. Data set may have been deleted on mainframe."
-                    )
+                    localize("saveFile.error.saveFailed", "Data set failed to save. Data set may have been deleted on mainframe.")
                 );
             }
         } catch (err) {

@@ -17,13 +17,7 @@ import * as globals from "../../../src/globals";
 import * as jobUtils from "../../../src/job/utils";
 import * as utils from "../../../src/utils/ProfilesUtils";
 import { Gui, IZoweJobTreeNode, ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
-import {
-    createIJobFile,
-    createIJobObject,
-    createJobFavoritesNode,
-    createJobSessionNode,
-    MockJobDetail,
-} from "../../../__mocks__/mockCreators/jobs";
+import { createIJobFile, createIJobObject, createJobFavoritesNode, createJobSessionNode, MockJobDetail } from "../../../__mocks__/mockCreators/jobs";
 import { Job } from "../../../src/job/ZoweJobNode";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";

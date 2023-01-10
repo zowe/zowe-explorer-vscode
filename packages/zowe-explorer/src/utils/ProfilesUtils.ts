@@ -53,9 +53,7 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
         if (msg.includes("hostname")) {
             const mProfileInfo = await Profiles.getInstance().getProfileInfo();
             if (mProfileInfo.usingTeamConfig) {
-                Gui.errorMessage(
-                    localize("errorHandling.invalid.host", "Required parameter 'host' must not be blank.")
-                );
+                Gui.errorMessage(localize("errorHandling.invalid.host", "Required parameter 'host' must not be blank."));
                 const profAllAttrs = mProfileInfo.getAllProfiles();
                 for (const prof of profAllAttrs) {
                     if (prof.profName === label.trim()) {
@@ -82,10 +80,7 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
                             await Profiles.getInstance().ssoLogin(null, label);
                         });
                     } else {
-                        const message = localize(
-                            "errorHandling.authentication.login",
-                            "Log in to Authentication Service"
-                        );
+                        const message = localize("errorHandling.authentication.login", "Log in to Authentication Service");
                         Gui.showMessage(errToken, { items: [message] }).then(async (selection) => {
                             if (selection) {
                                 await Profiles.getInstance().ssoLogin(null, label);
@@ -165,9 +160,7 @@ export const syncSessionNode =
  * @param quickpick The quick pick object to resolve
  * @returns a Promise containing the result of the quick pick
  */
-export async function resolveQuickPickHelper(
-    quickpick: vscode.QuickPick<vscode.QuickPickItem>
-): Promise<vscode.QuickPickItem | undefined> {
+export async function resolveQuickPickHelper(quickpick: vscode.QuickPick<vscode.QuickPickItem>): Promise<vscode.QuickPickItem | undefined> {
     return new Promise<vscode.QuickPickItem | undefined>((c) => {
         quickpick.onDidAccept(() => c(quickpick.activeItems[0]));
         quickpick.onDidHide(() => c(undefined));
@@ -289,12 +282,7 @@ export async function openConfigOnError(error: Error) {
 export async function promptCredentials(node: IZoweTreeNode) {
     const mProfileInfo = await Profiles.getInstance().getProfileInfo();
     if (mProfileInfo.usingTeamConfig && !mProfileInfo.getTeamConfig().properties.autoStore) {
-        Gui.showMessage(
-            localize(
-                "zowe.promptCredentials.notSupported",
-                '"Update Credentials" operation not supported when "autoStore" is false'
-            )
-        );
+        Gui.showMessage(localize("zowe.promptCredentials.notSupported", '"Update Credentials" operation not supported when "autoStore" is false'));
         return;
     }
     let profileName: string;
@@ -318,13 +306,7 @@ export async function promptCredentials(node: IZoweTreeNode) {
     const creds = await Profiles.getInstance().promptCredentials(profileName, true);
 
     if (creds != null) {
-        Gui.showMessage(
-            localize(
-                "promptCredentials.updatedCredentials",
-                "Credentials for {0} were successfully updated",
-                profileName
-            )
-        );
+        Gui.showMessage(localize("promptCredentials.updatedCredentials", "Credentials for {0} were successfully updated", profileName));
     }
 }
 

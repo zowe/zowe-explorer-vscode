@@ -12,9 +12,9 @@
 import * as vscode from "vscode";
 import { IZoweLogger, MessageSeverity } from "../logger";
 
-export interface GuiMessageOptions {
+export interface GuiMessageOptions<T extends string | vscode.MessageItem> {
     severity?: MessageSeverity;
-    items?: string[];
+    items?: T[];
     logger?: IZoweLogger;
     vsCodeOpts?: vscode.MessageOptions;
 }
@@ -77,7 +77,10 @@ export namespace Gui {
      * @param options Additional options for the displayed message
      * @returns A thenable containing the selected item (if items were specified), or `undefined`
      */
-    export function errorMessage(message: string, options?: Omit<GuiMessageOptions, "severity">): Thenable<string> {
+    export function errorMessage<T extends string | vscode.MessageItem>(
+        message: string,
+        options?: Omit<GuiMessageOptions<T>, "severity">
+    ): Thenable<T | undefined> {
         return showMessage(message, {
             ...options,
             severity: MessageSeverity.ERROR,
@@ -90,7 +93,10 @@ export namespace Gui {
      * @param options Additional options for the displayed message
      * @returns A thenable containing the selected item (if items were specified), or `undefined`
      */
-    export function infoMessage(message: string, options?: Omit<GuiMessageOptions, "severity">): Thenable<string> {
+    export function infoMessage<T extends string | vscode.MessageItem>(
+        message: string,
+        options?: Omit<GuiMessageOptions<T>, "severity">
+    ): Thenable<T | undefined> {
         return showMessage(message, {
             ...options,
             severity: MessageSeverity.INFO,
@@ -103,7 +109,10 @@ export namespace Gui {
      * @param options Additional options for the displayed message
      * @returns A thenable containing the selected item (if items were specified), or `undefined`
      */
-    export function warningMessage(message: string, options?: Omit<GuiMessageOptions, "severity">): Thenable<string> {
+    export function warningMessage<T extends string | vscode.MessageItem>(
+        message: string,
+        options?: Omit<GuiMessageOptions<T>, "severity">
+    ): Thenable<T | undefined> {
         return showMessage(message, {
             ...options,
             severity: MessageSeverity.WARN,
@@ -160,9 +169,7 @@ export namespace Gui {
      * @param quickpick The QuickPick object to resolve
      * @returns A promise containing the result of the QuickPick
      */
-    export function resolveQuickPick(
-        quickpick: vscode.QuickPick<vscode.QuickPickItem>
-    ): Promise<vscode.QuickPickItem | undefined> {
+    export function resolveQuickPick(quickpick: vscode.QuickPick<vscode.QuickPickItem>): Promise<vscode.QuickPickItem | undefined> {
         return new Promise<vscode.QuickPickItem | undefined>((c) => {
             quickpick.onDidAccept(() => c(quickpick.activeItems[0]));
             quickpick.onDidHide(() => c(undefined));
@@ -206,7 +213,7 @@ export namespace Gui {
      * @param options Any additional options for the message
      * @returns A thenable containing the selected item (if items were specified), or `undefined`
      */
-    export function showMessage(message: string, options?: GuiMessageOptions): Thenable<string> {
+    export function showMessage<T extends string | vscode.MessageItem>(message: string, options?: GuiMessageOptions<T>): Thenable<T | undefined> {
         const severity = options?.severity ?? MessageSeverity.INFO;
 
         if (options?.logger != null) {
@@ -215,16 +222,15 @@ export namespace Gui {
 
         const msg = options?.logger ? `${options.logger.getExtensionName()}: ${message}` : message;
         if (severity < MessageSeverity.WARN) {
-            return vscode.window.showInformationMessage(
-                msg,
-                options?.vsCodeOpts ?? undefined,
-                ...(options?.items ?? [])
-            );
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any
+            return vscode.window.showInformationMessage(msg, options?.vsCodeOpts ?? undefined, ...((options?.items as any[]) ?? [])) as Thenable<T>;
         } else if (severity === MessageSeverity.WARN) {
-            return vscode.window.showWarningMessage(msg, options?.vsCodeOpts ?? undefined, ...(options?.items ?? []));
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any
+            return vscode.window.showWarningMessage(msg, options?.vsCodeOpts ?? undefined, ...((options?.items as any[]) ?? [])) as Thenable<T>;
         }
 
-        return vscode.window.showErrorMessage(msg, options?.vsCodeOpts ?? undefined, ...(options?.items ?? []));
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any
+        return vscode.window.showErrorMessage(msg, options?.vsCodeOpts ?? undefined, ...((options?.items as any[]) ?? [])) as Thenable<T>;
     }
 
     /**
@@ -265,10 +271,7 @@ export namespace Gui {
      */
     export function withProgress<R>(
         options: vscode.ProgressOptions,
-        task: (
-            progress: vscode.Progress<{ message?: string; increment?: number }>,
-            token: vscode.CancellationToken
-        ) => Thenable<R>
+        task: (progress: vscode.Progress<{ message?: string; increment?: number }>, token: vscode.CancellationToken) => Thenable<R>
     ): Thenable<R> {
         return vscode.window.withProgress(options, task);
     }

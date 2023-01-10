@@ -472,9 +472,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
-        expect(mocked(Gui.showMessage)).toBeCalledWith(
-            `The following 1 item(s) were deleted: ${blockMocks.testDatasetNode.getLabel()}`
-        );
+        expect(mocked(Gui.showMessage)).toBeCalledWith(`The following 1 item(s) were deleted: ${blockMocks.testDatasetNode.getLabel()}`);
     });
 
     it("Should delete one member", async () => {
@@ -489,9 +487,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
         expect(mocked(Gui.showMessage)).toBeCalledWith(
-            `The following 1 item(s) were deleted: ${blockMocks.testMemberNode
-                .getParent()
-                .getLabel()}(${blockMocks.testMemberNode.getLabel()})`
+            `The following 1 item(s) were deleted: ${blockMocks.testMemberNode.getParent().getLabel()}(${blockMocks.testMemberNode.getLabel()})`
         );
     });
 
@@ -506,9 +502,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
-        expect(mocked(Gui.showMessage)).toBeCalledWith(
-            `The following 1 item(s) were deleted: ${blockMocks.testVsamNode.getLabel()}`
-        );
+        expect(mocked(Gui.showMessage)).toBeCalledWith(`The following 1 item(s) were deleted: ${blockMocks.testVsamNode.getLabel()}`);
     });
 
     it("Should delete two datasets", async () => {
@@ -538,9 +532,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
-        expect(mocked(Gui.showMessage)).toBeCalledWith(
-            `The following 1 item(s) were deleted: ${blockMocks.testDatasetNode.getLabel()}`
-        );
+        expect(mocked(Gui.showMessage)).toBeCalledWith(`The following 1 item(s) were deleted: ${blockMocks.testDatasetNode.getLabel()}`);
     });
 
     it("Should delete a favorited data set", async () => {
@@ -754,9 +746,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
 
         await expect(dsActions.deleteDataset(node, blockMocks.testDatasetTree)).rejects.toEqual(Error("not found"));
 
-        expect(mocked(Gui.showMessage)).toBeCalledWith(
-            "Unable to find file: " + node.label + " was probably already deleted."
-        );
+        expect(mocked(Gui.showMessage)).toBeCalledWith("Unable to find file: " + node.label + " was probably already deleted.");
     });
     it("Checking common PS dataset failed deletion attempt", async () => {
         globals.defineGlobals("");
@@ -1039,9 +1029,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         await dsActions.saveFile(testDocument, blockMocks.testDatasetTree);
 
         expect(dataSetSpy).toBeCalledWith("HLQ.TEST.AFILE");
-        expect(mocked(Gui.errorMessage)).toBeCalledWith(
-            "Data set failed to save. Data set may have been deleted on mainframe."
-        );
+        expect(mocked(Gui.errorMessage)).toBeCalledWith("Data set failed to save. Data set may have been deleted on mainframe.");
     });
     it("Checking common dataset saving", async () => {
         globals.defineGlobals("");
@@ -2431,9 +2419,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
             // do nothing
         }
 
-        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith(
-            "Error encountered when creating data set! Generic Error Error: Generic Error"
-        );
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("Error encountered when creating data set! Generic Error Error: Generic Error");
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_PS);
         expect(createDataSetSpy).toHaveBeenCalledWith(zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, "TEST", {
             alcunit: "CYL",

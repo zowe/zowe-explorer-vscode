@@ -55,9 +55,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
     constructor() {
         super();
 
-        this.outputChannel = Gui.createOutputChannel(
-            localize("issueMvsCommand.outputchannel.title", "Zowe MVS Command")
-        );
+        this.outputChannel = Gui.createOutputChannel(localize("issueMvsCommand.outputchannel.title", "Zowe MVS Command"));
     }
 
     /**
@@ -128,10 +126,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
         } catch (error) {
             if (error.toString().includes("non-existing")) {
                 globals.LOG.error(error);
-                Gui.errorMessage(
-                    localize("issueMvsCommand.apiNonExisting", "Not implemented yet for profile of type: ") +
-                        profile.type
-                );
+                Gui.errorMessage(localize("issueMvsCommand.apiNonExisting", "Not implemented yet for profile of type: ") + profile.type);
             } else {
                 await errorHandling(error.toString(), profile.name, error.message.toString());
             }
@@ -154,9 +149,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
                 // get user selection
                 const choice = await Gui.showQuickPick([createPick, ...items], options1);
                 if (!choice) {
-                    Gui.showMessage(
-                        localize("issueMvsCommand.options.noselection", "No selection made. Operation cancelled.")
-                    );
+                    Gui.showMessage(localize("issueMvsCommand.options.noselection", "No selection made. Operation cancelled."));
                     return;
                 }
                 response = choice === createPick ? "" : choice.label;
@@ -174,9 +167,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
                 const choice = await Gui.resolveQuickPick(quickpick);
                 quickpick.hide();
                 if (!choice) {
-                    Gui.showMessage(
-                        localize("issueMvsCommand.options.noselection", "No selection made. Operation cancelled.")
-                    );
+                    Gui.showMessage(localize("issueMvsCommand.options.noselection", "No selection made. Operation cancelled."));
                     return;
                 }
                 if (choice instanceof FilterDescriptor) {

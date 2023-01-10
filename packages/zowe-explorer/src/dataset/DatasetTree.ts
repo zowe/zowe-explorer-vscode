@@ -285,12 +285,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         } else {
             // This case should not happen if the regex for initializeFavorites is defined correctly, but is here as a catch-all just in case.
             Gui.errorMessage(
-                localize(
-                    "initializeFavChildNodeForProfile.error",
-                    "Error creating data set favorite node: {0} for profile {1}.",
-                    label,
-                    profileName
-                )
+                localize("initializeFavChildNodeForProfile.error", "Error creating data set favorite node: {0} for profile {1}.", label, profileName)
             );
         }
         return node;
@@ -781,9 +776,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             children = await parentNode.getChildren();
             memberNode = children.find((child) => child.label.toString() === memberName);
             if (!memberNode) {
-                Gui.showMessage(
-                    localize("findParentNode.unsuccessful", "Node does not exist. It may have been deleted.")
-                );
+                Gui.showMessage(localize("findParentNode.unsuccessful", "Node does not exist. It may have been deleted."));
                 this.removeFileHistory(itemPath);
                 return;
             } else {
@@ -841,9 +834,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                         // get user selection
                         const choice = await Gui.showQuickPick([createPick, ...items], options1);
                         if (!choice) {
-                            Gui.showMessage(
-                                localize("enterPattern.pattern", "No selection made. Operation cancelled.")
-                            );
+                            Gui.showMessage(localize("enterPattern.pattern", "No selection made. Operation cancelled."));
                             return;
                         }
                         pattern = choice === createPick ? "" : choice.label;
@@ -856,9 +847,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                         const choice = await Gui.resolveQuickPick(quickpick);
                         quickpick.hide();
                         if (!choice) {
-                            Gui.showMessage(
-                                localize("enterPattern.pattern", "No selection made. Operation cancelled.")
-                            );
+                            Gui.showMessage(localize("enterPattern.pattern", "No selection made. Operation cancelled."));
                             return;
                         }
                         if (choice instanceof FilterDescriptor) {
