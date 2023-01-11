@@ -16,14 +16,16 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ### Bug fixes
 
 - Fixed issue where "Show Attributes" feature used conflicting colors with light VS Code themes. [#2048](https://github.com/zowe/vscode-extension-for-zowe/issues/2048)
-- Fixed settings not persisting in Theia versions >=1.29.0.
+- Fixed settings not persisting in Theia versions >=1.29.0. [#2065](https://github.com/zowe/vscode-extension-for-zowe/pull/2065)
+- Removed TSLint (as it is deprecated), and replaced all TSLint rules with their ESLint equivalents. [#2030](https://github.com/zowe/vscode-extension-for-zowe/issues/2030)
 - Fixed issue with a success message being returned along with error for Job deletion. [#2075](https://github.com/zowe/vscode-extension-for-zowe/issues/2075)
+- Removed extra files from the VSIX bundle to reduce download size by 64%. [#2042](https://github.com/zowe/vscode-extension-for-zowe/pull/2042)
 
 ## `2.5.0`
 
 ### New features and enhancements
 
-- Added ability to filter jobs by status. Improved Job filtering User experience.[#1925](https://github.com/zowe/vscode-extension-for-zowe/issues/1925)
+- Added ability to filter jobs by status. Improved Job filtering User experience. [#1925](https://github.com/zowe/vscode-extension-for-zowe/issues/1925)
 - Added option to view PDS member attributes, and updated formatting for attributes webview. [#1577](https://github.com/zowe/vscode-extension-for-zowe/issues/1577)
 - Streamlined attribute viewing options into one feature - "Show Attributes".
 - Added multiple select copy/paste feature on uss view [#1549](https://github.com/zowe/vscode-extension-for-zowe/issues/1549)
@@ -36,7 +38,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed de-sync issue between Data Set and Favorites panels when adding or deleting datasets/members that were favorited. [#1488](https://github.com/zowe/vscode-extension-for-zowe/issues/1488)
 - Added logging in places where errors were being caught and ignored.
 - Fixed issue where parent in Jobs list closes after single/multiple job deletion. [#1676](https://github.com/zowe/vscode-extension-for-zowe/issues/1676)
-- Removed TSLint (as it is deprecated), and replaced all TSLint rules with their ESLint equivalents. [#2030](https://github.com/zowe/vscode-extension-for-zowe/issues/2030)
 
 ## `2.4.1`
 
