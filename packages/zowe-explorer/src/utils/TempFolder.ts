@@ -17,6 +17,7 @@ import { moveSync } from "fs-extra";
 import * as nls from "vscode-nls";
 import { errorHandling } from "../utils/ProfilesUtils";
 import { SettingsConfig } from "./SettingsConfig";
+import { Gui } from "@zowe/zowe-explorer-api";
 
 // Set up localization
 nls.config({
@@ -68,7 +69,7 @@ export async function moveTempFolder(previousTempPath: string, currentTempPath: 
         moveSync(previousTemp, globals.ZOWETEMPFOLDER, { overwrite: true });
     } catch (err) {
         globals.LOG.error("Error moving temporary folder! " + JSON.stringify(err));
-        vscode.window.showErrorMessage(err.message);
+        Gui.errorMessage(err.message);
     }
 }
 
@@ -109,7 +110,7 @@ export async function cleanTempDir() {
         await cleanDir(globals.ZOWETEMPFOLDER);
     } catch (err) {
         globals.LOG.error(err);
-        vscode.window.showErrorMessage(localize("deactivate.error", "Unable to delete temporary folder. ") + err);
+        Gui.errorMessage(localize("deactivate.error", "Unable to delete temporary folder. ") + err);
     }
 }
 

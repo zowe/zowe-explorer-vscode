@@ -12,10 +12,11 @@
 import * as vscode from "vscode";
 import * as nls from "vscode-nls";
 import * as globals from "../globals";
-import { ValidProfileEnum, IZoweTreeNode, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { Gui, ValidProfileEnum, IZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { PersistentFilters } from "../PersistentFilters";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
-import { errorHandling, FilterDescriptor, FilterItem, resolveQuickPickHelper } from "../utils/ProfilesUtils";
+import { errorHandling, FilterDescriptor, FilterItem } from "../utils/ProfilesUtils";
 import { ZoweCommandProvider } from "../abstract/ZoweCommandProvider";
 import { IStartTsoParms, imperative } from "@zowe/cli";
 import { SettingsConfig } from "../utils/SettingsConfig";
@@ -54,7 +55,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
     constructor() {
         super();
 
-        this.outputChannel = vscode.window.createOutputChannel(localize("issueTsoCommand.outputchannel.title", "Zowe TSO Command"));
+        this.outputChannel = Gui.createOutputChannel(localize("issueTsoCommand.outputchannel.title", "Zowe TSO Command"));
     }
 
     /**
@@ -86,9 +87,9 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                     ignoreFocusOut: true,
                     canPickMany: false,
                 };
-                const sesName = await vscode.window.showQuickPick(profileNamesList, quickPickOptions);
+                const sesName = await Gui.showQuickPick(profileNamesList, quickPickOptions);
                 if (sesName === undefined) {
-                    vscode.window.showInformationMessage(localize("issueTsoCommand.cancelled", "Operation Cancelled"));
+                    Gui.showMessage(localize("issueTsoCommand.cancelled", "Operation Cancelled"));
                     return;
                 }
                 profile = allProfiles.filter((temprofile) => temprofile.name === sesName)[0];
@@ -98,11 +99,11 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                 if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
                     session = ZoweExplorerApiRegister.getMvsApi(profile).getSession();
                 } else {
-                    vscode.window.showErrorMessage(localize("issueTsoCommand.checkProfile", "Profile is invalid"));
+                    Gui.errorMessage(localize("issueTsoCommand.checkProfile", "Profile is invalid"));
                     return;
                 }
             } else {
-                vscode.window.showInformationMessage(localize("issueTsoCommand.noProfilesLoaded", "No profiles available"));
+                Gui.showMessage(localize("issueTsoCommand.noProfilesLoaded", "No profiles available"));
                 return;
             }
         } else {
@@ -125,16 +126,14 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                     }
                     await this.issueCommand(command1, profile, tsoParams);
                 } else {
-                    vscode.window.showErrorMessage(localize("issueTsoCommand.checkProfile", "Profile is invalid"));
+                    Gui.errorMessage(localize("issueTsoCommand.checkProfile", "Profile is invalid"));
                     return;
                 }
             }
         } catch (error) {
             if (error.toString().includes("non-existing")) {
                 globals.LOG.error(error);
-                vscode.window.showErrorMessage(
-                    localize("issueTsoCommand.apiNonExisting", "Not implemented yet for profile of type: ") + profile.type
-                );
+                Gui.errorMessage(localize("issueTsoCommand.apiNonExisting", "Not implemented yet for profile of type: ") + profile.type);
             } else {
                 await errorHandling(error.toString(), profile.name, error.message.toString());
             }
@@ -155,14 +154,14 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                         (alwaysEdit ? localize("issueTsoCommand.command.edit", " (An option to edit will follow)") : ""),
                 };
                 // get user selection
-                const choice = await vscode.window.showQuickPick([createPick, ...items], options1);
+                const choice = await Gui.showQuickPick([createPick, ...items], options1);
                 if (!choice) {
-                    vscode.window.showInformationMessage(localize("issueTsoCommand.options.noselection", "No selection made."));
+                    Gui.showMessage(localize("issueTsoCommand.options.noselection", "No selection made."));
                     return;
                 }
                 response = choice === createPick ? "" : choice.label;
             } else {
-                const quickpick = vscode.window.createQuickPick();
+                const quickpick = Gui.createQuickPick();
                 quickpick.placeholder = alwaysEdit
                     ? localize("issueTsoCommand.command.hostnameAlt", "Select a TSO command to run against ") +
                       hostname +
@@ -172,10 +171,10 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                 quickpick.items = [createPick, ...items];
                 quickpick.ignoreFocusOut = true;
                 quickpick.show();
-                const choice = await resolveQuickPickHelper(quickpick);
+                const choice = await Gui.resolveQuickPick(quickpick);
                 quickpick.hide();
                 if (!choice) {
-                    vscode.window.showInformationMessage(localize("issueTsoCommand.options.noselection", "No selection made. Operation cancelled."));
+                    Gui.showMessage(localize("issueTsoCommand.options.noselection", "No selection made. Operation cancelled."));
                     return;
                 }
                 if (choice instanceof FilterDescriptor) {
@@ -195,9 +194,9 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                 valueSelection: response ? [response.length, response.length] : undefined,
             };
             // get user input
-            response = await vscode.window.showInputBox(options2);
+            response = await Gui.showInputBox(options2);
             if (!response) {
-                vscode.window.showInformationMessage(localize("issueTsoCommand.enter.command", "No command entered."));
+                Gui.showMessage(localize("issueTsoCommand.enter.command", "No command entered."));
                 return;
             }
         }
@@ -218,7 +217,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                     command = command.substring(1);
                 }
                 this.outputChannel.appendLine(`> ${command}`);
-                const submitResponse = await vscode.window.withProgress(
+                const submitResponse = await Gui.withProgress(
                     {
                         location: vscode.ProgressLocation.Notification,
                         title: localize("issueTsoCommand.command.submitted", "TSO command submitted."),
@@ -246,7 +245,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
         } catch (error) {
             if (error.toString().includes("account number")) {
                 globals.LOG.error(error);
-                vscode.window.showErrorMessage(localize("issueTsoCommand.accountNumberNotSupplied", "Error: No account number was supplied."));
+                Gui.errorMessage(localize("issueTsoCommand.accountNumberNotSupplied", "Error: No account number was supplied."));
             } else {
                 await errorHandling(error.toString(), profile.name, error.message.toString());
             }
@@ -265,9 +264,9 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                     ignoreFocusOut: true,
                     canPickMany: false,
                 };
-                const sesName = await vscode.window.showQuickPick(tsoProfileNamesList, quickPickOptions);
+                const sesName = await Gui.showQuickPick(tsoProfileNamesList, quickPickOptions);
                 if (sesName === undefined) {
-                    vscode.window.showInformationMessage(localize("issueTsoCommand.cancelled", "Operation Cancelled"));
+                    Gui.showMessage(localize("issueTsoCommand.cancelled", "Operation Cancelled"));
                     return;
                 }
                 tsoProfile = tsoProfiles.filter((temprofile) => temprofile.name === sesName)[0];
@@ -312,9 +311,9 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                 ignoreFocusOut: true,
                 value: tsoParms.account,
             };
-            tsoParms.account = await ZoweVsCodeExtension.inputBox(InputBoxOptions);
+            tsoParms.account = await Gui.showInputBox(InputBoxOptions);
             if (!tsoParms.account) {
-                vscode.window.showInformationMessage(localize("issueTsoCommand.cancelled", "Operation Cancelled."));
+                Gui.showMessage(localize("issueTsoCommand.cancelled", "Operation Cancelled."));
                 return;
             }
         }

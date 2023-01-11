@@ -12,6 +12,7 @@
 import * as vscode from "vscode";
 import * as globals from "../globals";
 import * as nls from "vscode-nls";
+import { Gui } from "@zowe/zowe-explorer-api";
 
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
@@ -102,7 +103,7 @@ export class SettingsConfig {
             // eslint-disable-next-line max-len
             "Settings have been successfully migrated for Zowe Explorer version 2 and above. To apply these settings, please reload your VS Code window."
         );
-        await vscode.window.showInformationMessage(infoMsg, ...[reloadButton])?.then(async (selection) => {
+        await Gui.showMessage(infoMsg, { items: [reloadButton] })?.then(async (selection) => {
             if (selection === reloadButton) {
                 await vscode.commands.executeCommand("workbench.action.reloadWindow");
             }
