@@ -13,7 +13,7 @@ import * as zowe from "@zowe/cli";
 import * as vscode from "vscode";
 import * as globals from "../globals";
 import { errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
-import { IZoweDatasetTreeNode, ZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweDatasetTreeNode, ZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { getIconByNode } from "../generators/icons";
 import * as contextually from "../shared/context";
@@ -111,13 +111,13 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         }
 
         if (!this.label) {
-            vscode.window.showErrorMessage(localize("getChildren.error.invalidNode", "Invalid node"));
+            Gui.errorMessage(localize("getChildren.error.invalidNode", "Invalid node"));
             throw Error(localize("getChildren.error.invalidNode", "Invalid node"));
         }
 
         // Gets the datasets from the pattern or members of the dataset and displays any thrown errors
         let responses: zowe.IZosFilesResponse[] = [];
-        responses = await vscode.window.withProgress(
+        responses = await Gui.withProgress(
             {
                 location: vscode.ProgressLocation.Notification,
                 title: localize("getChildren.getDatasets.progress", "Get Dataset list command submitted."),

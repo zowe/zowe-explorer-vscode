@@ -11,6 +11,8 @@
 
 import * as fs from "fs";
 import * as path from "path";
+import { errorHandling, writeOverridesFile } from "../../../src/utils/ProfilesUtils";
+import { Gui } from "@zowe/zowe-explorer-api";
 import * as globals from "../../../src/globals";
 import * as profileUtils from "../../../src/utils/ProfilesUtils";
 import * as vscode from "vscode";
@@ -40,6 +42,7 @@ describe("ProfileUtils.writeOverridesFile Unit Tests", () => {
             },
             configurable: true,
         });
+        Object.defineProperty(Gui, "errorMessage", { value: jest.fn(), configurable: true });
         Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
         Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
         return newMocks;
@@ -84,7 +87,8 @@ describe("ProfileUtils.writeOverridesFile Unit Tests", () => {
         const errorDetails = new Error("i haz error");
         const label = "test";
         const moreInfo = "Task failed successfully";
-        await profileUtils.errorHandling(errorDetails, label, moreInfo);
+        await errorHandling(errorDetails, label, moreInfo);
+        expect(Gui.errorMessage).toBeCalledWith(`${moreInfo} ` + errorDetails);
         expect(globals.LOG.error).toBeCalledWith(`Error: ${errorDetails.message}\n` + JSON.stringify({ errorDetails, label, moreInfo }));
     });
 });
