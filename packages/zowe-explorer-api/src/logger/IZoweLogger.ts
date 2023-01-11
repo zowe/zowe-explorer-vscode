@@ -30,14 +30,19 @@ type Log4JsCfg = {
 
 const LOGGER_CONFIG: Log4JsCfg = loggerConfig;
 
-export enum MessageSeverityEnum {
-    TRACE = 0,
-    DEBUG = 1,
-    INFO = 2,
-    WARN = 3,
-    ERROR = 4,
-    FATAL = 5,
+export const enum MessageSeverity {
+    TRACE,
+    DEBUG,
+    INFO,
+    WARN,
+    ERROR,
+    FATAL,
 }
+
+/**
+ * @deprecated Please use `MessageSeverity` instead
+ */
+export type MessageSeverityEnum = MessageSeverity;
 
 /**
  * Creates an instance of the Imperative logger for extenders to use
@@ -48,6 +53,7 @@ export enum MessageSeverityEnum {
 export class IZoweLogger {
     private log: imperative.Logger;
     private extensionName: string;
+
     /**
      * Creates an instance of the Imperative logger
      *
@@ -76,25 +82,25 @@ export class IZoweLogger {
      * Log an error to the Imperative log
      *
      */
-    public logImperativeMessage(message: string, severity: MessageSeverityEnum): void {
+    public logImperativeMessage(message: string, severity: MessageSeverity): void {
         const messageWithExtensionName = `message from extension ${this.extensionName}: ${message}`;
         switch (severity) {
-            case MessageSeverityEnum.TRACE:
+            case MessageSeverity.TRACE:
                 this.log.trace(`TRACE ${messageWithExtensionName}`);
                 break;
-            case MessageSeverityEnum.DEBUG:
+            case MessageSeverity.DEBUG:
                 this.log.debug(`DEBUG ${messageWithExtensionName}`);
                 break;
-            case MessageSeverityEnum.INFO:
+            case MessageSeverity.INFO:
                 this.log.debug(`INFO ${messageWithExtensionName}`);
                 break;
-            case MessageSeverityEnum.WARN:
+            case MessageSeverity.WARN:
                 this.log.debug(`WARNING ${messageWithExtensionName}`);
                 break;
-            case MessageSeverityEnum.ERROR:
+            case MessageSeverity.ERROR:
                 this.log.debug(`ERROR ${messageWithExtensionName}`);
                 break;
-            case MessageSeverityEnum.FATAL:
+            case MessageSeverity.FATAL:
                 this.log.debug(`FATAL ERROR ${messageWithExtensionName}`);
                 break;
         }

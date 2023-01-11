@@ -17,6 +17,7 @@ import * as loggerConfig from "../log4jsconfig.json";
 // Set up localization
 import * as nls from "vscode-nls";
 import { getZoweDir, ProfilesCache } from "@zowe/zowe-explorer-api";
+import { SettingsConfig } from "./utils/SettingsConfig";
 
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
@@ -56,7 +57,7 @@ export const DS_TEXT_FILE_CONTEXT = "textFile";
 export const DS_FAV_TEXT_FILE_CONTEXT = "textFile_fav";
 export const DS_BINARY_FILE_CONTEXT = "binaryFile";
 export const DS_MIGRATED_FILE_CONTEXT = "migr";
-export const DS_IMPERATIVE_ERROR_CONTEXT = "impError";
+export const DS_FILE_ERROR_CONTEXT = "fileError";
 export const USS_SESSION_CONTEXT = "ussSession";
 export const USS_DIR_CONTEXT = "directory";
 export const USS_FAV_DIR_CONTEXT = "directory_fav";
@@ -97,13 +98,14 @@ export const MEMBER_NAME_REGEX_CHECK = /^[a-zA-Z#@\$][a-zA-Z0-9#@\$]{0,7}$/;
 export let ACTIVATED = false;
 export let PROFILE_SECURITY: string | boolean = ZOWE_CLI_SCM;
 export let SAVED_PROFILE_CONTENTS = new Uint8Array();
+export const JOBS_MAX_PREFIX = 8;
 
 export enum CreateDataSetTypeWithKeysEnum {
-    DATA_SET_BINARY = 0,
-    DATA_SET_C = 1,
-    DATA_SET_CLASSIC = 2,
-    DATA_SET_PARTITIONED = 3,
-    DATA_SET_SEQUENTIAL = 4,
+    DATA_SET_BINARY,
+    DATA_SET_C,
+    DATA_SET_CLASSIC,
+    DATA_SET_PARTITIONED,
+    DATA_SET_SEQUENTIAL,
 }
 export const DATA_SET_PROPERTIES = [
     {
@@ -116,10 +118,7 @@ export const DATA_SET_PROPERTIES = [
         key: `avgblk`,
         label: `Average Block Length`,
         value: null,
-        placeHolder: localize(
-            "createFile.attribute.avgblk",
-            `Enter the average block length (if allocation unit = BLK)`
-        ),
+        placeHolder: localize("createFile.attribute.avgblk", `Enter the average block length (if allocation unit = BLK)`),
     },
     {
         key: `blksize`,
@@ -209,10 +208,7 @@ export const DATA_SET_PROPERTIES = [
         key: `volser`,
         label: `Volume Serial`,
         value: null,
-        placeHolder: localize(
-            "createFile.attribute.volser",
-            `Enter the volume serial on which the data set should be placed`
-        ),
+        placeHolder: localize("createFile.attribute.volser", `Enter the volume serial on which the data set should be placed`),
     },
 ];
 
@@ -314,14 +310,10 @@ export function setSavedProfileContents(value: Uint8Array) {
 export async function setGlobalSecurityValue() {
     if (this.ISTHEIA) {
         PROFILE_SECURITY = false;
-        await vscode.workspace
-            .getConfiguration()
-            .update(this.SETTINGS_SECURE_CREDENTIALS_ENABLED, false, vscode.ConfigurationTarget.Global);
+        await SettingsConfig.setDirectValue(this.SETTINGS_SECURE_CREDENTIALS_ENABLED, false, vscode.ConfigurationTarget.Global);
         return;
     }
-    const settingEnabled: boolean = await vscode.workspace
-        .getConfiguration()
-        .get(this.SETTINGS_SECURE_CREDENTIALS_ENABLED);
+    const settingEnabled: boolean = SettingsConfig.getDirectValue(this.SETTINGS_SECURE_CREDENTIALS_ENABLED);
     if (!settingEnabled) {
         PROFILE_SECURITY = false;
     } else {

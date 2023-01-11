@@ -204,10 +204,10 @@ describe("Test src/dataset/extension", () => {
                 ],
             },
             {
-                name: "zowe.ds.showImperativeErrorDetails",
+                name: "zowe.ds.showFileErrorDetails",
                 mock: [
-                    { spy: jest.spyOn(contextuals, "hasImperativeError"), arg: [test.value], ret: true },
-                    { spy: jest.spyOn(dsActions, "showImperativeErrorDetails"), arg: [test.value] },
+                    { spy: jest.spyOn(contextuals, "hasFileError"), arg: [test.value], ret: true },
+                    { spy: jest.spyOn(dsActions, "showFileErrorDetails"), arg: [test.value] },
                 ],
             },
             {

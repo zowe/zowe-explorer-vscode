@@ -16,14 +16,8 @@ import * as zowe from "@zowe/cli";
 import * as globals from "../../../src/globals";
 import * as jobUtils from "../../../src/job/utils";
 import * as utils from "../../../src/utils/ProfilesUtils";
-import { IZoweJobTreeNode, ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
-import {
-    createIJobFile,
-    createIJobObject,
-    createJobFavoritesNode,
-    createJobSessionNode,
-    MockJobDetail,
-} from "../../../__mocks__/mockCreators/jobs";
+import { Gui, IZoweJobTreeNode, ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { createIJobFile, createIJobObject, createJobFavoritesNode, createJobSessionNode, MockJobDetail } from "../../../__mocks__/mockCreators/jobs";
 import { Job } from "../../../src/job/ZoweJobNode";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
@@ -38,6 +32,7 @@ import {
 import { getIconByNode } from "../../../src/generators/icons";
 import { createJesApi } from "../../../__mocks__/mockCreators/api";
 import * as sessUtils from "../../../src/utils/SessionUtils";
+import { jobPrefixValidator } from "../../../src/shared/utils";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -223,14 +218,7 @@ describe("ZosJobsProvider unit tests - Function getChildren", () => {
 
         const testTree = new ZosJobsProvider();
         const favoriteSessionNode = blockMocks.jobFavoritesNode;
-        const favProfileNode = new Job(
-            "sestest",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            favoriteSessionNode,
-            null,
-            null,
-            null
-        );
+        const favProfileNode = new Job("sestest", vscode.TreeItemCollapsibleState.Collapsed, favoriteSessionNode, null, null, null);
         favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
         testTree.mFavorites.push(favProfileNode);
 
@@ -245,19 +233,10 @@ describe("ZosJobsProvider unit tests - Function getChildren", () => {
 
         const testTree = new ZosJobsProvider();
         const log = zowe.imperative.Logger.getAppLogger();
-        const favProfileNode = new Job(
-            "sestest",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            blockMocks.jobFavoritesNode,
-            null,
-            null,
-            null
-        );
+        const favProfileNode = new Job("sestest", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.jobFavoritesNode, null, null, null);
         favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
         testTree.mFavorites.push(favProfileNode);
-        const loadProfilesForFavoritesSpy = jest
-            .spyOn(testTree, "loadProfilesForFavorites")
-            .mockImplementationOnce(() => Promise.resolve([]));
+        const loadProfilesForFavoritesSpy = jest.spyOn(testTree, "loadProfilesForFavorites").mockImplementationOnce(() => Promise.resolve([]));
 
         await testTree.getChildren(favProfileNode);
         expect(loadProfilesForFavoritesSpy).toHaveBeenCalledWith(log, favProfileNode);
@@ -296,14 +275,7 @@ describe("ZosJobsProvider unit tests - Function initializeFavChildNodeForProfile
         const blockMocks = createBlockMocks();
         const testTree = new ZosJobsProvider();
 
-        const favProfileNode = new Job(
-            "testProfile",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            blockMocks.jobFavoritesNode,
-            null,
-            null,
-            null
-        );
+        const favProfileNode = new Job("testProfile", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.jobFavoritesNode, null, null, null);
         favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
         const node = new Job(
             "testJob(JOB123)",
@@ -320,11 +292,7 @@ describe("ZosJobsProvider unit tests - Function initializeFavChildNodeForProfile
             node.iconPath = targetIcon.path;
         }
 
-        const favChildNodeForProfile = await testTree.initializeFavChildNodeForProfile(
-            "testJob(JOB123)",
-            globals.JOBS_JOB_CONTEXT,
-            favProfileNode
-        );
+        const favChildNodeForProfile = await testTree.initializeFavChildNodeForProfile("testJob(JOB123)", globals.JOBS_JOB_CONTEXT, favProfileNode);
 
         expect(favChildNodeForProfile).toEqual(node);
     });
@@ -333,23 +301,9 @@ describe("ZosJobsProvider unit tests - Function initializeFavChildNodeForProfile
         const blockMocks = createBlockMocks();
         const testTree = new ZosJobsProvider();
 
-        const favProfileNode = new Job(
-            "testProfile",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            blockMocks.jobFavoritesNode,
-            null,
-            null,
-            null
-        );
+        const favProfileNode = new Job("testProfile", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.jobFavoritesNode, null, null, null);
         favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
-        const node = new Job(
-            "Owner:USER Prefix:*",
-            vscode.TreeItemCollapsibleState.None,
-            favProfileNode,
-            null,
-            null,
-            null
-        );
+        const node = new Job("Owner:USER Prefix:*", vscode.TreeItemCollapsibleState.None, favProfileNode, null, null, null);
         node.command = { command: "zowe.jobs.search", title: "", arguments: [node] };
         node.contextValue = globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX;
         const targetIcon = getIconByNode(node);
@@ -387,14 +341,7 @@ describe("ZosJobsProvider unit tests - Function loadProfilesForFavorites", () =>
     it("Checks that loaded profile and session values are added to the profile grouping node in Favorites", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-        const favProfileNode = new Job(
-            "testProfile",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            blockMocks.jobFavoritesNode,
-            null,
-            null,
-            null
-        );
+        const favProfileNode = new Job("testProfile", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.jobFavoritesNode, null, null, null);
         favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
         const testTree = new ZosJobsProvider();
         testTree.mFavorites.push(favProfileNode);
@@ -451,14 +398,7 @@ describe("ZosJobsProvider unit tests - Function loadProfilesForFavorites", () =>
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         const testTree = new ZosJobsProvider();
-        const favProfileNode = new Job(
-            "badTestProfile",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            blockMocks.jobFavoritesNode,
-            null,
-            null,
-            null
-        );
+        const favProfileNode = new Job("badTestProfile", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.jobFavoritesNode, null, null, null);
         favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
         testTree.mFavorites.push(favProfileNode);
         const showErrorMessageSpy = jest.spyOn(vscode.window, "showErrorMessage");
@@ -542,14 +482,7 @@ describe("ZosJobsProvider unit tests - Function loadProfilesForFavorites", () =>
         );
         favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
         // Leave mParent parameter undefined for favJobNode and expectedFavPdsNode to test undefined profile/session condition
-        const favJobNode = new Job(
-            "JOBTEST(JOB1234)",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            null,
-            null,
-            null,
-            null
-        );
+        const favJobNode = new Job("JOBTEST(JOB1234)", vscode.TreeItemCollapsibleState.Collapsed, null, null, null, null);
         favJobNode.contextValue = globals.JOBS_JOB_CONTEXT + globals.FAV_SUFFIX;
         const testTree = new ZosJobsProvider();
         favProfileNode.children.push(favJobNode);
@@ -741,14 +674,14 @@ describe("ZosJobsProvider unit tests - Function getUserJobsMenuChoice", () => {
         jest.spyOn(globalMocks.testJobsProvider.mHistory, "getSearchHistory").mockReturnValue(["JobId:123"]);
     });
     it("should return undefined and warn if user did not select a menu", async () => {
-        jest.spyOn(jobUtils, "resolveQuickPickHelper").mockReturnValue(undefined);
+        jest.spyOn(Gui, "resolveQuickPick").mockReturnValue(undefined);
         const result = await globalMocks.testJobsProvider.getUserJobsMenuChoice();
         expect(result).toEqual(undefined);
         expect(showInformationMessage).toHaveBeenCalled();
     });
     it("should return user menu choice and not show vscode warning", async () => {
         const menuItem = new utils.FilterItem({ text: "searchById" });
-        jest.spyOn(jobUtils, "resolveQuickPickHelper").mockReturnValue(Promise.resolve(menuItem));
+        jest.spyOn(Gui, "resolveQuickPick").mockReturnValue(Promise.resolve(menuItem));
         const result = await globalMocks.testJobsProvider.getUserJobsMenuChoice();
         expect(result).toEqual(menuItem);
         expect(showInformationMessage).not.toHaveBeenCalled();
@@ -769,10 +702,7 @@ describe("ZosJobsProvider unit tests - Function getUserSearchQueryInput", () => 
             text: "Create search query",
             menuType: globals.JobPickerTypes.QuerySearch,
         });
-        await globalMocks.testJobsProvider.getUserSearchQueryInput(
-            multiSearchMenu,
-            globalMocks.testJobsProvider.mSessionNodes[1]
-        );
+        await globalMocks.testJobsProvider.getUserSearchQueryInput(multiSearchMenu, globalMocks.testJobsProvider.mSessionNodes[1]);
         expect(handleEditingMultiJobParameters).toHaveBeenCalled();
     });
     it("should call handleSearchByJobId if user chose IdSearch menu", async () => {
@@ -780,10 +710,7 @@ describe("ZosJobsProvider unit tests - Function getUserSearchQueryInput", () => 
             text: "Create search query",
             menuType: globals.JobPickerTypes.IdSearch,
         });
-        await globalMocks.testJobsProvider.getUserSearchQueryInput(
-            multiSearchMenu,
-            globalMocks.testJobsProvider.mSessionNodes[1]
-        );
+        await globalMocks.testJobsProvider.getUserSearchQueryInput(multiSearchMenu, globalMocks.testJobsProvider.mSessionNodes[1]);
         expect(handleEditingMultiJobParameters).not.toHaveBeenCalled();
         expect(handleSearchByJobId).toHaveBeenCalled();
     });
@@ -799,10 +726,7 @@ describe("ZosJobsProvider unit tests - Function getUserSearchQueryInput", () => 
             JobId: "123",
             Status: undefined,
         });
-        await globalMocks.testJobsProvider.getUserSearchQueryInput(
-            multiSearchMenu,
-            globalMocks.testJobsProvider.mSessionNodes[1]
-        );
+        await globalMocks.testJobsProvider.getUserSearchQueryInput(multiSearchMenu, globalMocks.testJobsProvider.mSessionNodes[1]);
         expect(handleEditingMultiJobParameters).not.toHaveBeenCalled();
         expect(handleSearchByJobId).toHaveBeenCalled();
     });
@@ -818,21 +742,51 @@ describe("ZosJobsProvider unit tests - Function getUserSearchQueryInput", () => 
             JobId: undefined,
             Status: "ACTIVE",
         });
-        await globalMocks.testJobsProvider.getUserSearchQueryInput(
-            multiSearchMenu,
-            globalMocks.testJobsProvider.mSessionNodes[1]
-        );
+        await globalMocks.testJobsProvider.getUserSearchQueryInput(multiSearchMenu, globalMocks.testJobsProvider.mSessionNodes[1]);
         expect(handleEditingMultiJobParameters).toHaveBeenCalled();
         expect(handleSearchByJobId).not.toHaveBeenCalled();
     });
     it("should return undefined if no user choice was made", async () => {
-        const result = await globalMocks.testJobsProvider.getUserSearchQueryInput(
-            undefined,
-            globalMocks.testJobsProvider.mSessionNodes[1]
-        );
+        const result = await globalMocks.testJobsProvider.getUserSearchQueryInput(undefined, globalMocks.testJobsProvider.mSessionNodes[1]);
         expect(handleEditingMultiJobParameters).not.toHaveBeenCalled();
         expect(handleSearchByJobId).not.toHaveBeenCalled();
         expect(result).toEqual(undefined);
+    });
+    it("tests handleEditingMultiJobParameters default case", async () => {
+        globalMocks.mockShowQuickPick.mockReturnValueOnce({ label: "Job Prefix" });
+        mocked(vscode.window.showInputBox).mockImplementation((options) => {
+            options.value = "test";
+            options.validateInput("test");
+            return Promise.resolve("test");
+        });
+        const jobProps = [
+            {
+                key: `owner`,
+                label: `Job Owner`,
+                value: "owner",
+                show: true,
+                placeHolder: `enter placeholder`,
+            },
+            {
+                key: `prefix`,
+                label: `Job Prefix`,
+                value: "job*",
+                show: true,
+                placeHolder: `Enter job prefix`,
+                validateInput: () => (text) => jobPrefixValidator(text),
+            },
+            {
+                key: `key`,
+                label: `label`,
+                value: "value",
+                show: false,
+                placeHolder: `placeholder`,
+            },
+        ];
+
+        expect(await globalMocks.testJobsProvider.handleEditingMultiJobParameters(jobProps, globalMocks.testJobsProvider.mSessionNodes[0])).toEqual(
+            undefined
+        );
     });
 });
 
@@ -861,6 +815,7 @@ describe("ZosJobsProvider unit tests - Function getPopulatedPickerArray", () => 
                 value: "job*",
                 show: true,
                 placeHolder: `Enter job prefix`,
+                validateInput: () => (text) => jobPrefixValidator(text),
             },
             {
                 key: `job-status`,
@@ -870,6 +825,15 @@ describe("ZosJobsProvider unit tests - Function getPopulatedPickerArray", () => 
                 placeHolder: `Enter job status`,
             },
         ];
-        expect(actualPickerObj).toEqual(expectedObj);
+        expect(JSON.stringify(actualPickerObj)).toEqual(JSON.stringify(expectedObj));
+    });
+});
+
+describe("Jobs utils unit tests - Function jobPrefixValidator", () => {
+    it("should return null with correct input", async () => {
+        expect(jobPrefixValidator("job*")).toBeNull();
+    });
+    it("should return invalid string with invalid input", async () => {
+        expect(jobPrefixValidator("job1234567*")).toContain("Invalid");
     });
 });

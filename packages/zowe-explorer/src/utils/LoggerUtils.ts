@@ -9,6 +9,7 @@
  *                                                                                 *
  */
 
+import { Gui } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
 import * as nls from "vscode-nls";
 import * as globals from "../globals";
@@ -30,6 +31,6 @@ export async function initializeZoweLogger(context: vscode.ExtensionContext): Pr
             "initialize.log.error",
             "Error encountered while activating and initializing logger! "
         );
-        await vscode.window.showErrorMessage(`${errorMessage}: ${err.message}`);
+        await Gui.errorMessage(`${errorMessage}: ${err.message}`);
     }
 }

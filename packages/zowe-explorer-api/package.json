@@ -16,12 +16,13 @@
     "@types/semver": "^7.3.6"
   },
   "dependencies": {
-    "@zowe/cli": "7.9.0",
+    "@zowe/cli": "7.9.3",
     "semver": "^7.3.5"
   },
   "scripts": {
     "build": "yarn clean && tsc -p ./",
-    "test": "echo \"zowe-explorer-api: coming soon.\"",
+    "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
+    "test": "yarn test:unit",
     "lint": "concurrently -n \"_eslint_,prettier\" \"eslint . --ext .ts\" \"prettier --check .\"",
     "lintErrors": "echo \"zowe-explorer-api: coming soon.\"",
     "pretty": "prettier --write .",
@@ -29,5 +30,59 @@
     "fresh-clone": "yarn clean && rimraf node_modules",
     "license": "node ../../scripts/license.js",
     "package": "yarn license && yarn lint && yarn build && npm pack && node ../../scripts/mv-pack.js zowe-zowe-explorer-api tgz"
+  },
+  "jest": {
+    "globals": {
+      "ts-jest": {
+        "diagnostics": false,
+        "tsconfig": "tsconfig-tests.json"
+      }
+    },
+    "moduleFileExtensions": [
+      "js",
+      "ts",
+      "tsx"
+    ],
+    "testPathIgnorePatterns": [
+      "<rootDir>/src/decorators"
+    ],
+    "watchPathIgnorePatterns": [
+      "<rootDir>/results/unit"
+    ],
+    "transform": {
+      "^.+\\.(ts|tsx)$": "ts-jest"
+    },
+    "testRegex": "__tests__.*\\.(spec|test)\\.ts$",
+    "modulePathIgnorePatterns": [
+      "__tests__/__integration__/",
+      "__tests__/__theia__/",
+      "out/"
+    ],
+    "reporters": [
+      "default",
+      "jest-junit",
+      "jest-stare",
+      "jest-html-reporter"
+    ],
+    "coverageReporters": [
+      "json",
+      "lcov",
+      "text",
+      "cobertura"
+    ],
+    "coverageDirectory": "<rootDir>/results/unit/coverage",
+    "preset": "ts-jest"
+  },
+  "jest-html-reporter": {
+    "pageTitle": "Zowe Extension Tests",
+    "outputPath": "results/unit/results.html"
+  },
+  "jest-stare": {
+    "resultDir": "results/unit/jest-stare",
+    "coverageLink": "../coverage/lcov-report/index.html"
+  },
+  "jest-junit": {
+    "outputDirectory": "<rootDir>/results/unit",
+    "outputName": "junit.xml"
   }
 }

@@ -13,7 +13,7 @@ import * as zowe from "@zowe/cli";
 import * as vscode from "vscode";
 import * as globals from "../globals";
 import { errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
-import { IZoweDatasetTreeNode, ZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweDatasetTreeNode, ZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { getIconByNode } from "../generators/icons";
 import * as contextually from "../shared/context";
@@ -112,13 +112,13 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         }
 
         if (!this.label) {
-            vscode.window.showErrorMessage(localize("getChildren.error.invalidNode", "Invalid node"));
+            Gui.errorMessage(localize("getChildren.error.invalidNode", "Invalid node"));
             throw Error(localize("getChildren.error.invalidNode", "Invalid node"));
         }
 
         // Gets the datasets from the pattern or members of the dataset and displays any thrown errors
         let responses: zowe.IZosFilesResponse[] = [];
-        responses = await vscode.window.withProgress(
+        responses = await Gui.withProgress(
             {
                 location: vscode.ProgressLocation.Notification,
                 title: localize("getChildren.getDatasets.progress", "Get Dataset list command submitted."),
@@ -165,7 +165,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         vscode.TreeItemCollapsibleState.None,
                         this,
                         null,
-                        globals.DS_IMPERATIVE_ERROR_CONTEXT,
+                        globals.DS_FILE_ERROR_CONTEXT,
                         undefined,
                         this.getProfile()
                     );
@@ -307,14 +307,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 responses.push(await ZoweExplorerApiRegister.getMvsApi(cachedProfile).allMembers(label, options));
             }
         } catch (err) {
-            await errorHandling(
-                err,
-                this.label.toString(),
-                localize("getChildren.error.response", "Retrieving response from ") + `zowe.List`
-            );
-            await syncSessionNode(Profiles.getInstance())((profileValue) =>
-                ZoweExplorerApiRegister.getMvsApi(profileValue).getSession()
-            )(sessNode);
+            await errorHandling(err, this.label.toString(), localize("getChildren.error.response", "Retrieving response from ") + `zowe.List`);
+            await syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getMvsApi(profileValue).getSession())(sessNode);
         }
         return responses;
     }

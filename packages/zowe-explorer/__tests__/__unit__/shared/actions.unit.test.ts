@@ -20,7 +20,7 @@ import {
     createValidIProfile,
 } from "../../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
-import { IZoweNodeType } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweNodeType } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
 import * as globals from "../../../src/globals";
@@ -41,8 +41,7 @@ async function createGlobalMocks() {
                 Notification: 15,
             };
         }),
-        qpPlaceholder:
-            'Choose "Create new..." to define a new profile or select an existing profile to add to the Data Set Explorer',
+        qpPlaceholder: 'Choose "Create new..." to define a new profile or select an existing profile to add to the Data Set Explorer',
     };
 
     globalMocks.withProgress = jest.fn().mockImplementation((progLocation, callback) => {
@@ -103,13 +102,7 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
-        const testNode = new ZoweDatasetNode(
-            "HLQ.PROD2.STUFF",
-            null,
-            blockMocks.datasetSessionNode,
-            blockMocks.session,
-            globals.DS_PDS_CONTEXT
-        );
+        const testNode = new ZoweDatasetNode("HLQ.PROD2.STUFF", null, blockMocks.datasetSessionNode, blockMocks.session, globals.DS_PDS_CONTEXT);
         testNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
         blockMocks.testDatasetTree.getAllLoadedItems.mockResolvedValueOnce([testNode]);
         blockMocks.testUssTree.getAllLoadedItems.mockResolvedValueOnce([]);
@@ -125,7 +118,7 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
         const quickPickContent = createQuickPickContent(qpItem, [qpItem], globalMocks.qpPlaceholder);
         quickPickContent.placeholder = "Select a filter";
         mocked(vscode.window.createQuickPick).mockReturnValue(quickPickContent);
-        jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(qpItem);
+        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(qpItem);
 
         await sharedActions.searchInAllLoadedItems(blockMocks.testDatasetTree, blockMocks.testUssTree);
         expect(blockMocks.testDatasetTree.addSearchHistory).not.toBeCalled();
@@ -134,21 +127,9 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
-        const testNode = new ZoweDatasetNode(
-            "HLQ.PROD2.STUFF",
-            null,
-            blockMocks.datasetSessionNode,
-            blockMocks.session,
-            globals.DS_DS_CONTEXT
-        );
+        const testNode = new ZoweDatasetNode("HLQ.PROD2.STUFF", null, blockMocks.datasetSessionNode, blockMocks.session, globals.DS_DS_CONTEXT);
         testNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
-        const testMember = new ZoweDatasetNode(
-            "TESTMEMB",
-            null,
-            testNode,
-            blockMocks.session,
-            globals.DS_MEMBER_CONTEXT
-        );
+        const testMember = new ZoweDatasetNode("TESTMEMB", null, testNode, blockMocks.session, globals.DS_MEMBER_CONTEXT);
         testMember.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
         testNode.children.push(testMember);
         blockMocks.testDatasetTree.getChildren.mockReturnValue([blockMocks.datasetSessionNode]);
@@ -169,7 +150,7 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
         const quickPickContent = createQuickPickContent(qpItem, [qpItem], globalMocks.qpPlaceholder);
         quickPickContent.placeholder = "Select a filter";
         mocked(vscode.window.createQuickPick).mockReturnValue(quickPickContent);
-        jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(qpItem);
+        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(qpItem);
 
         await sharedActions.searchInAllLoadedItems(blockMocks.testDatasetTree, blockMocks.testUssTree);
         expect(blockMocks.testDatasetTree.addSearchHistory).toBeCalledWith("HLQ.PROD2.STUFF(TESTMEMB)");
@@ -198,7 +179,7 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
         const quickPickContent = createQuickPickContent(qpItem, [qpItem], globalMocks.qpPlaceholder);
         quickPickContent.placeholder = "Select a filter";
         mocked(vscode.window.createQuickPick).mockReturnValue(quickPickContent);
-        jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(qpItem);
+        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(qpItem);
         globalMocks.withProgress.mockImplementationOnce(() => {
             return { apiResponse: [{ etag: null }] };
         });
@@ -234,7 +215,7 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
         const quickPickContent = createQuickPickContent(qpItem, [qpItem], globalMocks.qpPlaceholder);
         quickPickContent.placeholder = "Select a filter";
         mocked(vscode.window.createQuickPick).mockReturnValue(quickPickContent);
-        jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(qpItem);
+        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(qpItem);
         globalMocks.withProgress.mockImplementationOnce(() => {
             return { apiResponse: [{ etag: null }] };
         });
@@ -255,7 +236,7 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
         const quickPickContent = createQuickPickContent(qpItem, qpItem, globalMocks.qpPlaceholder);
         quickPickContent.placeholder = "Select a filter";
         mocked(vscode.window.createQuickPick).mockReturnValue(quickPickContent);
-        jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(qpItem);
+        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(qpItem);
 
         await sharedActions.searchInAllLoadedItems(blockMocks.testDatasetTree, blockMocks.testUssTree);
         expect(blockMocks.testUssTree.addSearchHistory).not.toBeCalled();
@@ -279,12 +260,7 @@ describe("Shared Actions Unit Tests - Function openRecentMemberPrompt", () => {
 
         newMocks.profileInstance = createInstanceOfProfile(newMocks.imperativeProfile);
         mocked(Profiles.getInstance).mockReturnValue(newMocks.profileInstance);
-        newMocks.dsNode = new ZoweDatasetNode(
-            "node",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            newMocks.datasetSessionNode,
-            null
-        );
+        newMocks.dsNode = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.Collapsed, newMocks.datasetSessionNode, null);
         newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
         newMocks.ussSessionNode = createUSSSessionNode(newMocks.session, newMocks.imperativeProfile);
         newMocks.testUSSTree = createUSSTree([], [newMocks.ussSessionNode], newMocks.treeView);
@@ -298,12 +274,7 @@ describe("Shared Actions Unit Tests - Function openRecentMemberPrompt", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
-        const child = new ZoweDatasetNode(
-            "child",
-            vscode.TreeItemCollapsibleState.None,
-            blockMocks.dsNode,
-            blockMocks.session
-        );
+        const child = new ZoweDatasetNode("child", vscode.TreeItemCollapsibleState.None, blockMocks.dsNode, blockMocks.session);
         child.contextValue = globals.DS_MEMBER_CONTEXT;
         child.pattern = child.label as string;
         const qpItem = new utils.FilterDescriptor(child.label.toString());
@@ -312,13 +283,10 @@ describe("Shared Actions Unit Tests - Function openRecentMemberPrompt", () => {
         mocked(blockMocks.testDatasetTree.getFileHistory).mockReturnValueOnce([`[sestest]: node(child)`]);
         mocked(blockMocks.testUSSTree.getFileHistory).mockReturnValueOnce([]);
         mocked(vscode.window.createQuickPick).mockReturnValue(quickPickContent);
-        jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(qpItem);
+        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(qpItem);
 
         await sharedActions.openRecentMemberPrompt(blockMocks.testDatasetTree, blockMocks.testUSSTree);
-        expect(blockMocks.testDatasetTree.openItemFromPath).toBeCalledWith(
-            `[sestest]: node(child)`,
-            blockMocks.datasetSessionNode
-        );
+        expect(blockMocks.testDatasetTree.openItemFromPath).toBeCalledWith(`[sestest]: node(child)`, blockMocks.datasetSessionNode);
     });
 
     it("Tests that openRecentMemberPrompt (opening a recent member) is executed successfully on a DS", async () => {
@@ -332,13 +300,10 @@ describe("Shared Actions Unit Tests - Function openRecentMemberPrompt", () => {
         mocked(blockMocks.testDatasetTree.getFileHistory).mockReturnValueOnce([`[sestest]: node`]);
         mocked(blockMocks.testUSSTree.getFileHistory).mockReturnValueOnce([]);
         mocked(vscode.window.createQuickPick).mockReturnValue(quickPickContent);
-        jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(qpItem);
+        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(qpItem);
 
         await sharedActions.openRecentMemberPrompt(blockMocks.testDatasetTree, blockMocks.testUSSTree);
-        expect(blockMocks.testDatasetTree.openItemFromPath).toBeCalledWith(
-            `[sestest]: node`,
-            blockMocks.datasetSessionNode
-        );
+        expect(blockMocks.testDatasetTree.openItemFromPath).toBeCalledWith(`[sestest]: node`, blockMocks.datasetSessionNode);
     });
 
     it("Tests that openRecentMemberPrompt (opening a recent member) is executed successfully on a USS file", async () => {
@@ -356,22 +321,15 @@ describe("Shared Actions Unit Tests - Function openRecentMemberPrompt", () => {
         );
         node.contextValue = globals.DS_DS_CONTEXT;
         const qpItem = new utils.FilterDescriptor(node.label.toString());
-        const quickPickContent = createQuickPickContent(
-            "[sestest]: /node1/node2/node3.txt",
-            [qpItem],
-            globalMocks.qpPlaceholder
-        );
+        const quickPickContent = createQuickPickContent("[sestest]: /node1/node2/node3.txt", [qpItem], globalMocks.qpPlaceholder);
 
         mocked(blockMocks.testDatasetTree.getFileHistory).mockReturnValueOnce([]);
         mocked(blockMocks.testUSSTree.getFileHistory).mockReturnValueOnce([`[sestest]: /node1/node2/node3.txt`]);
         mocked(vscode.window.createQuickPick).mockReturnValue(quickPickContent);
-        jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(qpItem);
+        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(qpItem);
 
         await sharedActions.openRecentMemberPrompt(blockMocks.testDatasetTree, blockMocks.testUSSTree);
-        expect(blockMocks.testUSSTree.openItemFromPath).toBeCalledWith(
-            `/node1/node2/node3.txt`,
-            blockMocks.ussSessionNode
-        );
+        expect(blockMocks.testUSSTree.openItemFromPath).toBeCalledWith(`/node1/node2/node3.txt`, blockMocks.ussSessionNode);
     });
 });
 
@@ -389,12 +347,7 @@ describe("Shared Actions Unit Tests - Function returnIconState", () => {
 
         newMocks.profileInstance = createInstanceOfProfile(newMocks.imperativeProfile);
         mocked(Profiles.getInstance).mockReturnValue(newMocks.profileInstance);
-        newMocks.dsNode = new ZoweDatasetNode(
-            "node",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            newMocks.datasetSessionNode,
-            null
-        );
+        newMocks.dsNode = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.Collapsed, newMocks.datasetSessionNode, null);
         newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
         newMocks.mockGetIconByNode.mockReturnValue(IconId.sessionActive);
 
@@ -446,12 +399,7 @@ describe("Shared Actions Unit Tests - Function resetValidationSettings", () => {
 
         newMocks.profileInstance = createInstanceOfProfile(newMocks.imperativeProfile);
         mocked(Profiles.getInstance).mockReturnValue(newMocks.profileInstance);
-        newMocks.dsNode = new ZoweDatasetNode(
-            "node",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            newMocks.datasetSessionNode,
-            null
-        );
+        newMocks.dsNode = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.Collapsed, newMocks.datasetSessionNode, null);
         newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
 
         return newMocks;

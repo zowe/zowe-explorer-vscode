@@ -8,6 +8,7 @@ Developers can install the Visual Studio Code Extension for Zowe, which lets use
 - [Run System Tests](#run-system-tests)
 - [Run Zowe Explorer Regression Tests for Theia](#run-zowe-explorer-regression-tests-for-theia)
 - [Localization](#localization)
+- [Packaging](#packaging)
 
 ## Install to VSC from source
 
@@ -207,3 +208,13 @@ Maintainers: Evann Wu (evannw@andrew.cmu.edu), Lauren Li (lauren.li@ibm.com), Kr
    3. Affiliation with Zowe
 
 3. You should receive a response within 3 business days and be added to the Zanata Zowe VS Code Extension project. Click [here](http://docs.zanata.org/en/release/user-guide/translator-guide/) for more information about how to use Zanata to translate.
+
+## Packaging
+
+Run this command to create packages in the "dist" directory: `yarn package`
+
+For SDK packages like `zowe-explorer-api`, a TGZ is produced that can be installed with npm or published to npmjs.org.
+
+For VS Code extensions, a VSIX is produced that can be installed in VS Code or published to the VS Code Marketplace or Open VSX Registry.
+
+**Note:** The list of files included in the VSIX bundle is defined by an allowlist in the ".vscodeignore" file.

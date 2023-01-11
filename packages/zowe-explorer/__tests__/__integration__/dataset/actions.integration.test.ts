@@ -9,7 +9,6 @@
  *                                                                                 *
  */
 
-// tslint:disable:no-magic-numbers
 import { imperative, ZosmfSession } from "@zowe/cli";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
@@ -81,9 +80,7 @@ describe("dsNodeActions integration test", async () => {
     const oldSettings = vscode.workspace.getConfiguration(globals.SETTINGS_DS_HISTORY);
 
     after(async () => {
-        await vscode.workspace
-            .getConfiguration()
-            .update(globals.SETTINGS_DS_HISTORY, oldSettings, vscode.ConfigurationTarget.Global);
+        await vscode.workspace.getConfiguration().update(globals.SETTINGS_DS_HISTORY, oldSettings, vscode.ConfigurationTarget.Global);
     });
 
     describe("Refresh ALL", async () => {

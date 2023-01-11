@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import * as globals from "../globals";
 import { openPS } from "../dataset/actions";
-import { IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweNodeType, IZoweTree } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweNodeType, IZoweTree } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { filterTreeByString } from "../shared/utils";
 import { FilterItem, resolveQuickPickHelper, FilterDescriptor } from "../utils/ProfilesUtils";
@@ -31,14 +31,11 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  * Search for matching items loaded in data set or USS tree
  *
  */
-export async function searchInAllLoadedItems(
-    datasetProvider?: IZoweTree<IZoweDatasetTreeNode>,
-    ussFileProvider?: IZoweTree<IZoweUSSTreeNode>
-) {
+export async function searchInAllLoadedItems(datasetProvider?: IZoweTree<IZoweDatasetTreeNode>, ussFileProvider?: IZoweTree<IZoweUSSTreeNode>) {
     let pattern: string;
     const items: IZoweNodeType[] = [];
     const qpItems = [];
-    const quickpick = vscode.window.createQuickPick();
+    const quickpick = Gui.createQuickPick();
     quickpick.placeholder = localize("searchHistory.options.prompt", "Enter a filter");
     quickpick.ignoreFocusOut = true;
     quickpick.onDidChangeValue(async (value) => {
@@ -60,9 +57,7 @@ export async function searchInAllLoadedItems(
     }
 
     if (items.length === 0) {
-        vscode.window.showInformationMessage(
-            localize("searchInAllLoadedItems.noneLoaded", "No items are loaded in the tree.")
-        );
+        Gui.showMessage(localize("searchInAllLoadedItems.noneLoaded", "No items are loaded in the tree."));
         return;
     }
 
@@ -71,9 +66,7 @@ export async function searchInAllLoadedItems(
         if (contextually.isDs(item) || contextually.isPdsNotFav(item) || contextually.isVsam(item)) {
             if (contextually.isDsMember(item)) {
                 qpItem = new FilterItem({
-                    text: `[${item.getSessionNode().label.toString()}]: ${item
-                        .getParent()
-                        .label.toString()}(${item.label.toString()})`,
+                    text: `[${item.getSessionNode().label.toString()}]: ${item.getParent().label.toString()}(${item.label.toString()})`,
                     description: "Data Set Member",
                 });
             } else {
@@ -84,9 +77,7 @@ export async function searchInAllLoadedItems(
             }
             qpItems.push(qpItem);
         } else if (contextually.isUssDirectory(item) || contextually.isText(item) || contextually.isBinary(item)) {
-            const filterItem = `[${item.getProfileName().trim()}]: ${
-                item.getParent().fullPath
-            }/${item.label.toString()}`;
+            const filterItem = `[${item.getProfileName().trim()}]: ${item.getParent().fullPath}/${item.label.toString()}`;
             qpItem = new FilterItem({ text: filterItem, description: "USS" });
             qpItems.push(qpItem);
         }
@@ -94,11 +85,9 @@ export async function searchInAllLoadedItems(
     quickpick.items = [...qpItems];
 
     quickpick.show();
-    const choice = await resolveQuickPickHelper(quickpick);
+    const choice = await Gui.resolveQuickPick(quickpick);
     if (!choice) {
-        vscode.window.showInformationMessage(
-            localize("searchInAllLoadedItems.enterPattern", "You must enter a pattern.")
-        );
+        Gui.showMessage(localize("searchInAllLoadedItems.enterPattern", "You must enter a pattern."));
         return;
     } else {
         pattern = choice.label;
@@ -163,14 +152,9 @@ export async function searchInAllLoadedItems(
     }
 }
 
-export async function openRecentMemberPrompt(
-    datasetTree: IZoweTree<IZoweDatasetTreeNode>,
-    ussTree: IZoweTree<IZoweUSSTreeNode>
-) {
+export async function openRecentMemberPrompt(datasetTree: IZoweTree<IZoweDatasetTreeNode>, ussTree: IZoweTree<IZoweUSSTreeNode>) {
     if (globals.LOG) {
-        globals.LOG.debug(
-            localize("enterPattern.log.debug.prompt", "Prompting the user to choose a recent member for editing")
-        );
+        globals.LOG.debug(localize("enterPattern.log.debug.prompt", "Prompting the user to choose a recent member for editing"));
     }
     let pattern: string;
 
@@ -178,35 +162,29 @@ export async function openRecentMemberPrompt(
 
     // Get user selection
     if (fileHistory.length > 0) {
-        const createPick = new FilterDescriptor(
-            localize("memberHistory.option.prompt.open", "Select a recent member to open")
-        );
+        const createPick = new FilterDescriptor(localize("memberHistory.option.prompt.open", "Select a recent member to open"));
         const items: vscode.QuickPickItem[] = fileHistory.map((element) => new FilterItem({ text: element }));
         if (globals.ISTHEIA) {
             const options1: vscode.QuickPickOptions = {
                 placeHolder: localize("memberHistory.options.prompt", "Select a recent member to open"),
             };
 
-            const choice = await vscode.window.showQuickPick([createPick, ...items], options1);
+            const choice = await Gui.showQuickPick([createPick, ...items], options1);
             if (!choice) {
-                vscode.window.showInformationMessage(
-                    localize("enterPattern.pattern", "No selection made. Operation cancelled.")
-                );
+                Gui.showMessage(localize("enterPattern.pattern", "No selection made. Operation cancelled."));
                 return;
             }
             pattern = choice === createPick ? "" : choice.label;
         } else {
-            const quickpick = vscode.window.createQuickPick();
+            const quickpick = Gui.createQuickPick();
             quickpick.items = [createPick, ...items];
             quickpick.placeholder = localize("memberHistory.options.prompt", "Select a recent member to open");
             quickpick.ignoreFocusOut = true;
             quickpick.show();
-            const choice = await resolveQuickPickHelper(quickpick);
+            const choice = await Gui.resolveQuickPick(quickpick);
             quickpick.hide();
             if (!choice || choice === createPick) {
-                vscode.window.showInformationMessage(
-                    localize("enterPattern.pattern", "No selection made. Operation cancelled.")
-                );
+                Gui.showMessage(localize("enterPattern.pattern", "No selection made. Operation cancelled."));
                 return;
             } else if (choice instanceof FilterDescriptor) {
                 pattern = quickpick.value;
@@ -220,9 +198,7 @@ export async function openRecentMemberPrompt(
         if (pattern.indexOf("/") > -1) {
             // USS file was selected
             const filePath = pattern.substring(pattern.indexOf("/"));
-            const sessionNode: IZoweUSSTreeNode = ussTree.mSessionNodes.find(
-                (sessNode) => sessNode.getProfileName() === sessionName
-            );
+            const sessionNode: IZoweUSSTreeNode = ussTree.mSessionNodes.find((sessNode) => sessNode.getProfileName() === sessionName);
             await ussTree.openItemFromPath(filePath, sessionNode);
         } else {
             // Data set was selected
@@ -232,7 +208,7 @@ export async function openRecentMemberPrompt(
             await datasetTree.openItemFromPath(pattern, sessionNode);
         }
     } else {
-        vscode.window.showInformationMessage(localize("getRecentMembers.empty", "No recent members found."));
+        Gui.showMessage(localize("getRecentMembers.empty", "No recent members found."));
         return;
     }
 }
@@ -241,11 +217,7 @@ export async function returnIconState(node: IZoweNodeType) {
     const activePathClosed = getIconById(IconId.sessionActive);
     const activePathOpen = getIconById(IconId.sessionActiveOpen);
     const inactivePathClosed = getIconById(IconId.sessionInactive); // So far, we only ever reference the closed inactive icon, not the open one
-    if (
-        node.iconPath === activePathClosed.path ||
-        node.iconPath === activePathOpen.path ||
-        node.iconPath === inactivePathClosed.path
-    ) {
+    if (node.iconPath === activePathClosed.path || node.iconPath === activePathOpen.path || node.iconPath === inactivePathClosed.path) {
         const sessionIcon = getIconById(IconId.session);
         if (sessionIcon) {
             node.iconPath = sessionIcon.path;

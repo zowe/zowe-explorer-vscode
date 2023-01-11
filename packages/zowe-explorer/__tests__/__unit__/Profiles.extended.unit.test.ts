@@ -27,7 +27,7 @@ import * as vscode from "vscode";
 import * as utils from "../../src/utils/ProfilesUtils";
 import * as globals from "../../src/globals";
 import * as zowe from "@zowe/cli";
-import { ProfilesCache } from "@zowe/zowe-explorer-api";
+import { Gui, ProfilesCache } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../src/Profiles";
 
 // jest.mock("vscode");
@@ -86,9 +86,9 @@ async function createGlobalMocks() {
         value: newMocks.mockShowErrorMessage,
         configurable: true,
     });
-    Object.defineProperty(vscode.window, "showQuickPick", { value: newMocks.mockShowQuickPick, configurable: true });
+    Object.defineProperty(Gui, "showQuickPick", { value: newMocks.mockShowQuickPick, configurable: true });
 
-    Object.defineProperty(vscode.window, "createQuickPick", {
+    Object.defineProperty(Gui, "createQuickPick", {
         value: jest.fn(() => {
             return newMocks.mockCreateQuickPick;
         }),
@@ -236,122 +236,95 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
 
         await Profiles.getInstance().createNewConnection("");
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
-        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe(
-            "Profile name was not supplied. Operation Cancelled"
-        );
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile name was not supplied. Operation Cancelled");
     });
 
     it("Tests that createNewConnection fails if profileType is missing", async () => {
         const globalMocks = await createGlobalMocks();
-        const spy = jest.spyOn(globalMocks.mockProfileInstance, "getProfileType").mockImplementation(undefined);
+        jest.spyOn(globalMocks.mockProfileInstance, "getProfileType").mockImplementation(undefined);
 
         await Profiles.getInstance().createNewConnection(globalMocks.testProfile.name, undefined);
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
-        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe(
-            "No profile type was chosen. Operation Cancelled"
-        );
-        spy.mockClear();
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("No profile type was chosen. Operation Cancelled");
     });
 
     it("Tests that createNewConnection fails if zOSMF URL is missing", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        const spy = jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValue(blockMocks.testSchemas);
+        jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValue(blockMocks.testSchemas);
         globalMocks.mockCreateInputBox.mockResolvedValue(undefined);
 
         await Profiles.getInstance().createNewConnection(globalMocks.testProfile.name, "zosmf");
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
-        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe(
-            "No valid value for z/OS URL. Operation Cancelled"
-        );
-        spy.mockClear();
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("No valid value for z/OS URL. Operation Cancelled");
     });
 
     it("Tests that createNewConnection fails if user escapes create at username", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        let spy = jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValue(blockMocks.testSchemas);
-        spy = jest.spyOn(globalMocks.mockProfileInstance, "urlInfo").mockReturnValue(globalMocks.mockUrlInfo);
+        jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValue(blockMocks.testSchemas);
+        jest.spyOn(globalMocks.mockProfileInstance, "urlInfo").mockReturnValue(globalMocks.mockUrlInfo);
         globalMocks.mockCreateInputBox.mockResolvedValueOnce(undefined);
 
         await Profiles.getInstance().createNewConnection(globalMocks.testProfile.name, "zosmf");
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
-        spy.mockClear();
     });
 
     it("Tests that createNewConnection fails if user escapes create at password", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        let spy = jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValue(blockMocks.testSchemas);
-        spy = jest.spyOn(globalMocks.mockProfileInstance, "urlInfo").mockReturnValue(globalMocks.mockUrlInfo);
-        spy = jest.spyOn(globalMocks.mockProfileInstance, "userInfo").mockReturnValue(globalMocks.testProfile.name);
+        jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValue(blockMocks.testSchemas);
+        jest.spyOn(globalMocks.mockProfileInstance, "urlInfo").mockReturnValue(globalMocks.mockUrlInfo);
+        jest.spyOn(globalMocks.mockProfileInstance, "userInfo").mockReturnValue(globalMocks.testProfile.name);
         globalMocks.mockCreateInputBox.mockResolvedValueOnce(undefined);
 
         await Profiles.getInstance().createNewConnection(globalMocks.testProfile.name, "zosmf");
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
-        spy.mockClear();
     });
 
     it("Tests that createNewConnection fails if user escapes create at rejectUnauthorized", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        let spy = jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValue(blockMocks.testSchemas);
-        spy = jest.spyOn(globalMocks.mockProfileInstance, "urlInfo").mockReturnValue(globalMocks.mockUrlInfo);
-        spy = jest
-            .spyOn(globalMocks.mockProfileInstance, "userInfo")
-            .mockReturnValue(globalMocks.testProfile.profile.user);
-        spy = jest
-            .spyOn(globalMocks.mockProfileInstance, "passwordInfo")
-            .mockReturnValue(globalMocks.testProfile.profile.password);
+        jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValue(blockMocks.testSchemas);
+        jest.spyOn(globalMocks.mockProfileInstance, "urlInfo").mockReturnValue(globalMocks.mockUrlInfo);
+        jest.spyOn(globalMocks.mockProfileInstance, "userInfo").mockReturnValue(globalMocks.testProfile.profile.user);
+        jest.spyOn(globalMocks.mockProfileInstance, "passwordInfo").mockReturnValue(globalMocks.testProfile.profile.password);
         globalMocks.mockCreateInputBox.mockResolvedValueOnce(undefined);
 
         await Profiles.getInstance().createNewConnection(globalMocks.testProfile.name, "zosmf");
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
-        spy.mockClear();
     });
 
     it("Tests that createNewConnection fails if profileName is a duplicate", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        let spy = jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValue(blockMocks.testSchemas);
-        spy = jest.spyOn(globalMocks.mockProfileInstance, "urlInfo").mockReturnValue(globalMocks.mockUrlInfo);
-        spy = jest
-            .spyOn(globalMocks.mockProfileInstance, "userInfo")
-            .mockReturnValue(globalMocks.testProfile.profile.user);
-        spy = jest
-            .spyOn(globalMocks.mockProfileInstance, "passwordInfo")
-            .mockReturnValue(globalMocks.testProfile.profile.password);
-        spy = jest.spyOn(globalMocks.mockProfileInstance, "ruInfo").mockReturnValue(false);
+        jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValue(blockMocks.testSchemas);
+        jest.spyOn(globalMocks.mockProfileInstance, "urlInfo").mockReturnValue(globalMocks.mockUrlInfo);
+        jest.spyOn(globalMocks.mockProfileInstance, "userInfo").mockReturnValue(globalMocks.testProfile.profile.user);
+        jest.spyOn(globalMocks.mockProfileInstance, "passwordInfo").mockReturnValue(globalMocks.testProfile.profile.password);
+        jest.spyOn(globalMocks.mockProfileInstance, "ruInfo").mockReturnValue(false);
 
         await Profiles.getInstance().createNewConnection(globalMocks.testProfile.name, "zosmf");
-        expect(globalMocks.mockShowErrorMessage.mock.calls[0][0]).toBe(
-            "Profile name already exists. Please create a profile using a different name"
-        );
-        spy.mockClear();
+        expect(globalMocks.mockShowErrorMessage.mock.calls[0][0]).toBe("Profile name already exists. Please create a profile using a different name");
     });
 
     it("Tests that createNewConnection creates a new profile", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        let spy = jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValue(blockMocks.testSchemas);
-        spy = jest.spyOn(globalMocks.mockProfileInstance, "urlInfo").mockReturnValue(globalMocks.mockUrlInfo);
-        spy = jest
-            .spyOn(globalMocks.mockProfileInstance, "userInfo")
-            .mockReturnValue(globalMocks.testProfile.profile.user);
-        spy = jest
-            .spyOn(globalMocks.mockProfileInstance, "passwordInfo")
-            .mockReturnValue(globalMocks.testProfile.profile.password);
-        spy = jest.spyOn(globalMocks.mockProfileInstance, "ruInfo").mockReturnValue(false);
+        jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValue(blockMocks.testSchemas);
+        jest.spyOn(globalMocks.mockProfileInstance, "urlInfo").mockReturnValue(globalMocks.mockUrlInfo);
+        jest.spyOn(globalMocks.mockProfileInstance, "userInfo").mockReturnValue(globalMocks.testProfile.profile.user);
+        jest.spyOn(globalMocks.mockProfileInstance, "passwordInfo").mockReturnValue(globalMocks.testProfile.profile.password);
+        jest.spyOn(globalMocks.mockProfileInstance, "ruInfo").mockReturnValue(false);
 
         await Profiles.getInstance().createNewConnection("fake", "zosmf");
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile fake was created.");
-        spy.mockClear();
     });
 });
 
@@ -363,8 +336,7 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
             testDatasetSessionNode: null,
             testDatasetTree: null,
             quickPickItem: createQuickPickItem(),
-            qpPlaceholder:
-                'Choose "Create new..." to define a new profile or select an existing profile to add to the Data Set Explorer',
+            qpPlaceholder: 'Choose "Create new..." to define a new profile or select an existing profile to add to the Data Set Explorer',
         };
         newMocks.testDatasetSessionNode = createDatasetSessionNode(newMocks.session, globalMocks.mockProfileInstance);
         newMocks.testDatasetTree = createDatasetTree(newMocks.testDatasetSessionNode, newMocks.treeView);
@@ -374,8 +346,8 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
     it("Tests that createZoweSession presents correct message when escaping selection of quickpick", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
-        const spy = jest.spyOn(vscode.window, "createQuickPick");
-        jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(undefined);
+        const spy = jest.spyOn(Gui, "createQuickPick");
+        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(undefined);
         await Profiles.getInstance().createZoweSession(blockMocks.testDatasetTree);
         expect(spy).toBeCalled();
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("No selection made. Operation cancelled.");
@@ -387,7 +359,7 @@ describe("Profiles Unit Tests - Function editZoweConfigFile", () => {
     it("Tests that editZoweConfigFile presents correct message when escaping selection of quickpick", async () => {
         const globalMocks = await createGlobalMocks();
 
-        const spy = jest.spyOn(vscode.window, "showQuickPick");
+        const spy = jest.spyOn(Gui, "showQuickPick");
         spy.mockResolvedValueOnce(undefined);
         await Profiles.getInstance().editZoweConfigFile();
         expect(spy).toBeCalled();
@@ -397,7 +369,7 @@ describe("Profiles Unit Tests - Function editZoweConfigFile", () => {
     it("Tests that editZoweConfigFile opens correct file when Global is selected", async () => {
         const globalMocks = await createGlobalMocks();
 
-        const spyQuickPick = jest.spyOn(vscode.window, "showQuickPick");
+        const spyQuickPick = jest.spyOn(Gui, "showQuickPick");
         spyQuickPick.mockResolvedValueOnce("Global: in the Zowe home directory" as any);
         const spyOpenFile = jest.spyOn(globalMocks.mockProfileInstance, "openConfigFile");
         await Profiles.getInstance().editZoweConfigFile();
@@ -427,7 +399,7 @@ describe("Profiles Unit Tests - Function editZoweConfigFile", () => {
     it("Tests that editZoweConfigFile opens correct file when Project is selected", async () => {
         const globalMocks = await createGlobalMocks();
 
-        const spyQuickPick = jest.spyOn(vscode.window, "showQuickPick");
+        const spyQuickPick = jest.spyOn(Gui, "showQuickPick");
         spyQuickPick.mockResolvedValueOnce("Project: in the current working directory" as any);
         const spyOpenFile = jest.spyOn(globalMocks.mockProfileInstance, "openConfigFile");
         await Profiles.getInstance().editZoweConfigFile();
@@ -465,8 +437,7 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
             testDatasetTree: null,
             quickPickItem: createQuickPickItem(),
             mockWsFolder: null,
-            qpPlaceholder:
-                'Choose "Create new..." to define a new profile or select an existing profile to add to the Data Set Explorer',
+            qpPlaceholder: 'Choose "Create new..." to define a new profile or select an existing profile to add to the Data Set Explorer',
         };
         newMocks.testDatasetSessionNode = createDatasetSessionNode(newMocks.session, globalMocks.mockProfileInstance);
         newMocks.testDatasetTree = createDatasetTree(newMocks.testDatasetSessionNode, newMocks.treeView);
@@ -485,7 +456,7 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        const spy = jest.spyOn(vscode.window, "showQuickPick");
+        const spy = jest.spyOn(Gui, "showQuickPick");
         spy.mockResolvedValueOnce(undefined);
         await Profiles.getInstance().createZoweSchema(blockMocks.testDatasetTree);
         expect(spy).toBeCalled();
@@ -496,7 +467,7 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        const spyQuickPick = jest.spyOn(vscode.window, "showQuickPick");
+        const spyQuickPick = jest.spyOn(Gui, "showQuickPick");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("Global: in the Zowe home directory");
         const spyLayers = jest.spyOn(globalMocks.mockProfileInstance, "getConfigLayers");
         spyLayers.mockResolvedValueOnce(createConfigLoad().layers);
@@ -518,7 +489,7 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        const spyQuickPick = jest.spyOn(vscode.window, "showQuickPick");
+        const spyQuickPick = jest.spyOn(Gui, "showQuickPick");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("Global: in the Zowe home directory");
         const spyLayers = jest.spyOn(globalMocks.mockProfileInstance, "getConfigLayers");
         spyLayers.mockRejectedValueOnce(new Error("Error parsing JSON"));
@@ -540,7 +511,7 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
             configurable: true,
         });
 
-        const spyQuickPick = jest.spyOn(vscode.window, "showQuickPick");
+        const spyQuickPick = jest.spyOn(Gui, "showQuickPick");
         const spyLayers = jest.spyOn(globalMocks.mockProfileInstance, "getConfigLayers");
         spyLayers.mockResolvedValueOnce([
             {

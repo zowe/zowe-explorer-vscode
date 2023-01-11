@@ -11,7 +11,7 @@
 
 import * as globals from "./globals";
 import * as vscode from "vscode";
-import { getZoweDir } from "@zowe/zowe-explorer-api";
+import { Gui, getZoweDir } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import { Profiles } from "./Profiles";
@@ -34,7 +34,7 @@ import { initializeZoweLogger } from "./utils/LoggerUtils";
  */
 export async function activate(context: vscode.ExtensionContext): Promise<ZoweExplorerApiRegister> {
     // Get temp folder location from settings
-    const tempPath: string = vscode.workspace.getConfiguration().get(globals.SETTINGS_TEMP_FOLDER_PATH);
+    const tempPath: string = SettingsConfig.getDirectValue(globals.SETTINGS_TEMP_FOLDER_PATH);
 
     // Determine the runtime framework to support special behavior for Theia
     globals.defineGlobals(tempPath);

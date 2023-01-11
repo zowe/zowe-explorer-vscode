@@ -10,7 +10,6 @@
  */
 
 import { IZoweTree, IZoweTreeNode } from "@zowe/zowe-explorer-api";
-import { PersistentFilters } from "../PersistentFilters";
 import { Profiles } from "../Profiles";
 import { syncSessionNode } from "../utils/ProfilesUtils";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
@@ -19,6 +18,7 @@ import { labelRefresh } from "./utils";
 import * as contextually from "../shared/context";
 import * as globals from "../globals";
 import { removeSession } from "../utils/SessionUtils";
+import { SettingsConfig } from "../utils/SettingsConfig";
 
 /**
  * View (DATA SETS, JOBS, USS) refresh button
@@ -32,9 +32,7 @@ export async function refreshAll(treeProvider: IZoweTree<IZoweTreeNode>) {
         const profiles = await Profiles.getInstance().fetchAllProfiles();
         const found = profiles.some((prof) => prof.name === sessNode.label.toString().trim());
         if (found || sessNode.label.toString() === "Favorites") {
-            const setting = (await PersistentFilters.getDirectValue(
-                globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION
-            )) as boolean;
+            const setting: boolean = await SettingsConfig.getDirectValue(globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION);
             if (contextually.isSessionNotFav(sessNode)) {
                 labelRefresh(sessNode);
                 sessNode.children = [];
@@ -43,9 +41,9 @@ export async function refreshAll(treeProvider: IZoweTree<IZoweTreeNode>) {
                     resetValidationSettings(sessNode, setting);
                 }
                 returnIconState(sessNode);
-                await syncSessionNode(Profiles.getInstance())((profileValue) =>
-                    ZoweExplorerApiRegister.getCommonApi(profileValue).getSession()
-                )(sessNode);
+                await syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getCommonApi(profileValue).getSession())(
+                    sessNode
+                );
             }
             treeProvider.refresh();
         } else {
