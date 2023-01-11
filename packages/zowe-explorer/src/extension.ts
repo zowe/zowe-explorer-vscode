@@ -433,6 +433,9 @@ function initDatasetProvider(context: vscode.ExtensionContext) {
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.pasteMember", async (node: ZoweDatasetNode) => {
+            if (!node) {
+                node = datasetProvider.getTreeView().selection[0] as ZoweDatasetNode;
+            }
             dsActions.pasteDataSetMembers(datasetProvider, node);
             dsActions.refreshDataset(node.getParent(), datasetProvider);
         })
