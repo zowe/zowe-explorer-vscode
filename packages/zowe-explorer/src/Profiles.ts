@@ -1293,7 +1293,7 @@ export class Profiles extends ProfilesCache {
                     `A Team Configuration File already exists in this location\n{0}\nContinuing may alter the existing file, would you like to proceed?`,
                     file.path
                 );
-                await vscode.window.showInformationMessage(message, { modal: true }, ...[createButton]).then(async (selection) => {
+                await Gui.infoMessage(message, { items: [createButton], vsCodeOpts: { modal: true } }).then(async (selection) => {
                     if (selection) {
                         location = path.basename(file.path);
                     } else {

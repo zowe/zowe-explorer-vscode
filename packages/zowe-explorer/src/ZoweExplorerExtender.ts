@@ -16,6 +16,7 @@ import * as fs from "fs";
 import * as globals from "./globals";
 import * as vscode from "vscode";
 import {
+    Gui,
     ZoweExplorerApi,
     ZoweExplorerTreeApi,
     IZoweTree,
@@ -82,7 +83,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
                         return;
                     }
                 }
-                vscode.window.showTextDocument(vscode.Uri.file(configPath));
+                Gui.showTextDocument(vscode.Uri.file(configPath));
             });
     }
 
