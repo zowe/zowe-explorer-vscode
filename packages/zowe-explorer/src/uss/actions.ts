@@ -430,5 +430,6 @@ export async function pasteUssFile(ussFileProvider: IZoweTree<IZoweUSSTreeNode>,
             return selectedNode.copyUssFile();
         }
     );
-    ussFileProvider.refreshElement(selectedNode.getParent());
+    const nodeToRefresh = node?.contextValue != null && contextually.isUssSession(node) ? selectedNode : selectedNode.getParent();
+    ussFileProvider.refreshElement(nodeToRefresh);
 }

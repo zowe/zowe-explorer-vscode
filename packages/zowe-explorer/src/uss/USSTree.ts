@@ -610,6 +610,9 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             }
             // update the treeview with the new path
             sessionNode.label = `${sessionNode.getProfileName()} [${sanitizedPath}]`;
+            if (!contextually.isFilterFolder(sessionNode)) {
+                sessionNode.contextValue += `_${globals.FILTER_SEARCH}`;
+            }
             sessionNode.dirty = true;
             this.addSearchHistory(sanitizedPath);
         }
