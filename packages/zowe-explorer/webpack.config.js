@@ -61,25 +61,11 @@ const config = {
         rules: [
             {
                 test: /\.js$/,
-                // include: /node_modules\/@zowe\/imperative\/node_modules\/openid-client/,
                 include: /node_modules\/openid-client/,
                 use: {
                     loader: "babel-loader",
                     options: {
-                        presets: [
-                            [
-                                "@babel/preset-env",
-                                {
-                                    targets: { node: "current" },
-                                },
-                            ],
-                            "@babel/preset-typescript",
-                        ],
-                        plugins: [
-                            "@babel/plugin-proposal-private-methods",
-                            "@babel/plugin-proposal-class-properties",
-                            "@babel/plugin-proposal-object-rest-spread",
-                        ],
+                        extends: "../../babel.config.json",
                     },
                 },
             },

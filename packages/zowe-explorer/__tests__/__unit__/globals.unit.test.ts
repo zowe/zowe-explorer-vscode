@@ -13,13 +13,15 @@ import * as globals from "../../src/globals";
 import { SettingsConfig } from "../../src/utils/SettingsConfig";
 
 describe("Globals Unit Test - Function setGlobalSecurityValue", () => {
-    beforeEach(() => {
-        jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((setting) => {
-            if (setting === globals.SETTINGS_SECURE_CREDENTIAL_MANAGER) {
-                return globals.SETTINGS_SECURE_CREDENTIAL_MANAGER;
-            }
+    it("should set the global secure value to 'off' if Theia is in use", async () => {
+        Object.defineProperty(globals, "ISTHEIA", {
+            value: true,
+            configurable: false,
         });
-        jest.spyOn(SettingsConfig, "setDirectValue").mockImplementation();
+        const spySetDirectValue = jest.spyOn(SettingsConfig, "setDirectValue");
+        await globals.setGlobalSecurityValue();
+        expect(globals.PROFILE_SECURITY).toEqual(false);
+        expect(spySetDirectValue).toHaveBeenCalledTimes(1);
     });
 
     it("should set global security value to '@zowe/cli' if using keytar", async () => {
@@ -27,9 +29,8 @@ describe("Globals Unit Test - Function setGlobalSecurityValue", () => {
             value: false,
             configurable: false,
         });
-        Object.defineProperty(globals, "SETTINGS_SECURE_CREDENTIAL_MANAGER", {
-            value: "keytar",
-            configurable: false,
+        jest.spyOn(SettingsConfig, "getDirectValue").mockImplementationOnce(() => {
+            return "keytar";
         });
         await globals.setGlobalSecurityValue();
         expect(globals.PROFILE_SECURITY).toEqual(globals.ZOWE_CLI_SCM);
@@ -40,9 +41,8 @@ describe("Globals Unit Test - Function setGlobalSecurityValue", () => {
             value: false,
             configurable: false,
         });
-        Object.defineProperty(globals, "SETTINGS_SECURE_CREDENTIAL_MANAGER", {
-            value: "kubernetes",
-            configurable: false,
+        jest.spyOn(SettingsConfig, "getDirectValue").mockImplementationOnce(() => {
+            return "kubernetes";
         });
         await globals.setGlobalSecurityValue();
         expect(globals.PROFILE_SECURITY).toEqual({
@@ -56,9 +56,8 @@ describe("Globals Unit Test - Function setGlobalSecurityValue", () => {
             value: false,
             configurable: false,
         });
-        Object.defineProperty(globals, "SETTINGS_SECURE_CREDENTIAL_MANAGER", {
-            value: "off",
-            configurable: false,
+        jest.spyOn(SettingsConfig, "getDirectValue").mockImplementationOnce(() => {
+            return "off";
         });
         await globals.setGlobalSecurityValue();
         expect(globals.PROFILE_SECURITY).toEqual(false);
@@ -69,9 +68,8 @@ describe("Globals Unit Test - Function setGlobalSecurityValue", () => {
             value: false,
             configurable: false,
         });
-        Object.defineProperty(globals, "SETTINGS_SECURE_CREDENTIAL_MANAGER", {
-            value: null,
-            configurable: false,
+        jest.spyOn(SettingsConfig, "getDirectValue").mockImplementationOnce(() => {
+            return null;
         });
         await globals.setGlobalSecurityValue();
         expect(globals.PROFILE_SECURITY).toEqual("@zowe/cli");

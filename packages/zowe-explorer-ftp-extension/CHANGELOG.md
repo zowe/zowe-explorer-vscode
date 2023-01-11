@@ -4,6 +4,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Added Babel plugin for webpack for new k8s credential manager support [#1963](https://github.com/zowe/vscode-extension-for-zowe/issues/1963)
+
 ### Bug fixes
 
 ## `2.5.0`

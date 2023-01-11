@@ -76,6 +76,23 @@ export interface CancellationToken {
     onCancellationRequested: Event<any>;
 }
 
+export enum ConfigurationTarget {
+    /**
+     * Global configuration
+     */
+    Global = 1,
+
+    /**
+     * Workspace configuration
+     */
+    Workspace = 2,
+
+    /**
+     * Workspace folder configuration
+     */
+    WorkspaceFolder = 3,
+}
+
 export class CancellationTokenSource {
     token: CancellationToken;
     fire(): void {

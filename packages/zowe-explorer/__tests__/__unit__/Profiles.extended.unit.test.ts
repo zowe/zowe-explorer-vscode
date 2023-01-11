@@ -29,6 +29,7 @@ import * as globals from "../../src/globals";
 import * as zowe from "@zowe/cli";
 import { ProfilesCache } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../src/Profiles";
+import { SettingsConfig } from "../../src/utils/SettingsConfig";
 
 // jest.mock("vscode");
 jest.mock("child_process");
@@ -70,6 +71,31 @@ async function createGlobalMocks() {
         mockProfilesCache: null,
         mockConfigInstance: createConfigInstance(),
         mockConfigLoad: null,
+        mockTeamConfig: {
+            $schema: "./zowe.schema.json",
+            profiles: {
+                zosmf: {
+                    type: "zosmf",
+                    properties: {
+                        port: 123,
+                    },
+                    secure: [],
+                },
+                base: {
+                    type: "base",
+                    properties: {
+                        host: "sample.com",
+                        rejectUnauthorized: false,
+                    },
+                    secure: ["user", "password"],
+                },
+            },
+            defaults: {
+                zosmf: "zosmf",
+                base: "base",
+            },
+            autoStore: true,
+        },
     };
 
     newMocks.mockProfilesCache = new ProfilesCache(zowe.imperative.Logger.getAppLogger());
@@ -529,5 +555,37 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
 
         spyQuickPick.mockClear();
         spyLayers.mockClear();
+    });
+    it("Test that createNonSecureProfile will create an unsecure profile successfully when credential manager is set to 'off'", async () => {
+        const globalMocks = await createGlobalMocks();
+        const privateProfileInstance = Profiles.getInstance() as any;
+        jest.spyOn(SettingsConfig, "getDirectValue").mockImplementationOnce(() => {
+            return "off";
+        });
+        const expectedTeamConfig = {
+            $schema: "./zowe.schema.json",
+            profiles: {
+                base: {
+                    properties: {
+                        host: "sample.com",
+                        rejectUnauthorized: false,
+                    },
+                    type: "base",
+                },
+                zosmf: {
+                    properties: {
+                        port: 123,
+                    },
+                    type: "zosmf",
+                },
+            },
+            autoStore: false,
+            defaults: {
+                base: "base",
+                zosmf: "zosmf",
+            },
+        };
+        privateProfileInstance.createNonSecureProfile(globalMocks.mockTeamConfig);
+        expect(globalMocks.mockTeamConfig).toEqual(expectedTeamConfig);
     });
 });
