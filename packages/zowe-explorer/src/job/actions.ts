@@ -325,9 +325,9 @@ async function deleteSingleJob(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZ
 
     try {
         await jobsProvider.delete(job);
+        vscode.window.showInformationMessage(localize("deleteCommand.job", "Job {0} was deleted.", jobName));
     } catch (error) {
         await errorHandling(error.toString(), job.getProfile().name, error.message.toString());
-        return;
     }
 
     Gui.showMessage(localize("deleteCommand.job", "Job {0} was deleted.", jobName));
