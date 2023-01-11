@@ -20,7 +20,7 @@ import {
     createValidIProfile,
 } from "../../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
-import { IZoweNodeType } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweNodeType } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
 import * as globals from "../../../src/globals";
@@ -118,7 +118,7 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
         const quickPickContent = createQuickPickContent(qpItem, [qpItem], globalMocks.qpPlaceholder);
         quickPickContent.placeholder = "Select a filter";
         mocked(vscode.window.createQuickPick).mockReturnValue(quickPickContent);
-        jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(qpItem);
+        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(qpItem);
 
         await sharedActions.searchInAllLoadedItems(blockMocks.testDatasetTree, blockMocks.testUssTree);
         expect(blockMocks.testDatasetTree.addSearchHistory).not.toBeCalled();
@@ -150,7 +150,7 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
         const quickPickContent = createQuickPickContent(qpItem, [qpItem], globalMocks.qpPlaceholder);
         quickPickContent.placeholder = "Select a filter";
         mocked(vscode.window.createQuickPick).mockReturnValue(quickPickContent);
-        jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(qpItem);
+        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(qpItem);
 
         await sharedActions.searchInAllLoadedItems(blockMocks.testDatasetTree, blockMocks.testUssTree);
         expect(blockMocks.testDatasetTree.addSearchHistory).toBeCalledWith("HLQ.PROD2.STUFF(TESTMEMB)");
@@ -179,7 +179,7 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
         const quickPickContent = createQuickPickContent(qpItem, [qpItem], globalMocks.qpPlaceholder);
         quickPickContent.placeholder = "Select a filter";
         mocked(vscode.window.createQuickPick).mockReturnValue(quickPickContent);
-        jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(qpItem);
+        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(qpItem);
         globalMocks.withProgress.mockImplementationOnce(() => {
             return { apiResponse: [{ etag: null }] };
         });
@@ -215,7 +215,7 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
         const quickPickContent = createQuickPickContent(qpItem, [qpItem], globalMocks.qpPlaceholder);
         quickPickContent.placeholder = "Select a filter";
         mocked(vscode.window.createQuickPick).mockReturnValue(quickPickContent);
-        jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(qpItem);
+        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(qpItem);
         globalMocks.withProgress.mockImplementationOnce(() => {
             return { apiResponse: [{ etag: null }] };
         });
@@ -236,7 +236,7 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
         const quickPickContent = createQuickPickContent(qpItem, qpItem, globalMocks.qpPlaceholder);
         quickPickContent.placeholder = "Select a filter";
         mocked(vscode.window.createQuickPick).mockReturnValue(quickPickContent);
-        jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(qpItem);
+        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(qpItem);
 
         await sharedActions.searchInAllLoadedItems(blockMocks.testDatasetTree, blockMocks.testUssTree);
         expect(blockMocks.testUssTree.addSearchHistory).not.toBeCalled();
@@ -283,7 +283,7 @@ describe("Shared Actions Unit Tests - Function openRecentMemberPrompt", () => {
         mocked(blockMocks.testDatasetTree.getFileHistory).mockReturnValueOnce([`[sestest]: node(child)`]);
         mocked(blockMocks.testUSSTree.getFileHistory).mockReturnValueOnce([]);
         mocked(vscode.window.createQuickPick).mockReturnValue(quickPickContent);
-        jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(qpItem);
+        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(qpItem);
 
         await sharedActions.openRecentMemberPrompt(blockMocks.testDatasetTree, blockMocks.testUSSTree);
         expect(blockMocks.testDatasetTree.openItemFromPath).toBeCalledWith(`[sestest]: node(child)`, blockMocks.datasetSessionNode);
@@ -300,7 +300,7 @@ describe("Shared Actions Unit Tests - Function openRecentMemberPrompt", () => {
         mocked(blockMocks.testDatasetTree.getFileHistory).mockReturnValueOnce([`[sestest]: node`]);
         mocked(blockMocks.testUSSTree.getFileHistory).mockReturnValueOnce([]);
         mocked(vscode.window.createQuickPick).mockReturnValue(quickPickContent);
-        jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(qpItem);
+        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(qpItem);
 
         await sharedActions.openRecentMemberPrompt(blockMocks.testDatasetTree, blockMocks.testUSSTree);
         expect(blockMocks.testDatasetTree.openItemFromPath).toBeCalledWith(`[sestest]: node`, blockMocks.datasetSessionNode);
@@ -326,7 +326,7 @@ describe("Shared Actions Unit Tests - Function openRecentMemberPrompt", () => {
         mocked(blockMocks.testDatasetTree.getFileHistory).mockReturnValueOnce([]);
         mocked(blockMocks.testUSSTree.getFileHistory).mockReturnValueOnce([`[sestest]: /node1/node2/node3.txt`]);
         mocked(vscode.window.createQuickPick).mockReturnValue(quickPickContent);
-        jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(qpItem);
+        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(qpItem);
 
         await sharedActions.openRecentMemberPrompt(blockMocks.testDatasetTree, blockMocks.testUSSTree);
         expect(blockMocks.testUSSTree.openItemFromPath).toBeCalledWith(`/node1/node2/node3.txt`, blockMocks.ussSessionNode);

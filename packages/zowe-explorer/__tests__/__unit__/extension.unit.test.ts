@@ -17,7 +17,7 @@ import * as fs from "fs";
 import * as fsextra from "fs-extra";
 import * as extension from "../../src/extension";
 import * as globals from "../../src/globals";
-import { ValidProfileEnum, ProfilesCache } from "@zowe/zowe-explorer-api";
+import { Gui, ValidProfileEnum, ProfilesCache } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../src/Profiles";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import * as dsActions from "../../src/dataset/actions";
@@ -287,11 +287,11 @@ async function createGlobalMocks() {
     Object.defineProperty(fs, "rmdirSync", { value: globalMocks.mockRmdirSync, configurable: true });
     Object.defineProperty(fs, "readFileSync", { value: globalMocks.mockReadFileSync, configurable: true });
     Object.defineProperty(fsextra, "moveSync", { value: globalMocks.mockMoveSync, configurable: true });
-    Object.defineProperty(vscode.window, "showErrorMessage", {
+    Object.defineProperty(Gui, "errorMessage", {
         value: globalMocks.mockShowErrorMessage,
         configurable: true,
     });
-    Object.defineProperty(vscode.window, "showWarningMessage", {
+    Object.defineProperty(Gui, "warningMessage", {
         value: globalMocks.mockShowWarningMessage,
         configurable: true,
     });
