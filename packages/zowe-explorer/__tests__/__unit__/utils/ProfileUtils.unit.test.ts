@@ -13,8 +13,12 @@ import * as fs from "fs";
 import * as path from "path";
 import * as globals from "../../../src/globals";
 import * as profileUtils from "../../../src/utils/ProfilesUtils";
+import * as vscode from "vscode";
+import * as zowe from "@zowe/cli";
+import { Profiles } from "../../../src/Profiles";
 
 jest.mock("fs");
+jest.mock("vscode");
 
 afterEach(() => {
     jest.clearAllMocks();
@@ -38,7 +42,6 @@ describe("ProfileUtils.writeOverridesFile Unit Tests", () => {
         });
         Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
         Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
-
         return newMocks;
     }
     it("should have file exist", async () => {
@@ -83,5 +86,29 @@ describe("ProfileUtils.writeOverridesFile Unit Tests", () => {
         const moreInfo = "Task failed successfully";
         await profileUtils.errorHandling(errorDetails, label, moreInfo);
         expect(globals.LOG.error).toBeCalledWith(`Error: ${errorDetails.message}\n` + JSON.stringify({ errorDetails, label, moreInfo }));
+    });
+});
+
+describe("ProfileUtils.promptCredentials Unit Tests", () => {
+    it("calls getProfileInfo", async () => {
+        const mockProfileInstance = new Profiles(zowe.imperative.Logger.getAppLogger());
+        Object.defineProperty(Profiles, "getInstance", {
+            value: () => mockProfileInstance,
+            configurable: true,
+        });
+        Object.defineProperty(mockProfileInstance, "getProfileInfo", {
+            value: jest.fn(() => {
+                return {
+                    profileName: "emptyConfig",
+                };
+            }),
+            configurable: true,
+        });
+        Object.defineProperty(vscode.window, "showInputBox", {
+            value: jest.fn().mockResolvedValue(undefined),
+            configurable: true,
+        });
+        await profileUtils.promptCredentials(null);
+        expect(mockProfileInstance.getProfileInfo).toHaveBeenCalled();
     });
 });
