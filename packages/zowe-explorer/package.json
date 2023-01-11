@@ -109,7 +109,7 @@
         "when": "focusedView == zowe.ds.explorer"
       },
       {
-        "command": "zowe.ds.pasteMember",
+        "command": "zowe.ds.pasteDataSet",
         "key": "ctrl+v",
         "mac": "cmd+v",
         "when": "focusedView == zowe.ds.explorer"
@@ -301,7 +301,7 @@
         "category": "Zowe Explorer"
       },
       {
-        "command": "zowe.ds.pasteMember",
+        "command": "zowe.ds.pasteDataSet",
         "title": "%paste%",
         "category": "Zowe Explorer"
       },
@@ -1010,7 +1010,7 @@
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(session|pds).*/",
-          "command": "zowe.ds.pasteMember",
+          "command": "zowe.ds.pasteDataSet",
           "group": "001_zowe_dsCreate@7"
         },
         {
@@ -1302,7 +1302,7 @@
           "when": "never"
         },
         {
-          "command": "zowe.ds.pasteMember",
+          "command": "zowe.ds.pasteDataSet",
           "when": "never"
         },
         {
