@@ -1503,12 +1503,11 @@ export async function downloadDs(node: ZoweDatasetNode) {
             throw Error(localize("download.invalidNode", "downloadDataset() called with invalid node. "));
     }
     const filePath = getDocumentFilePath(lbl, node);
-    let a = await ZoweExplorerApiRegister.getMvsApi(profile).getContents(lbl, {
+    return ZoweExplorerApiRegister.getMvsApi(profile).getContents(lbl, {
         file: filePath,
         returnEtag: true,
         encoding: profile.profile.encoding,
     });
-    return a;
 }
 
 /**
