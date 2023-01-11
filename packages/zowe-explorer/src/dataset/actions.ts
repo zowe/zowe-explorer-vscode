@@ -1165,7 +1165,7 @@ export async function hRecallDataSet(node: ZoweDatasetNode) {
         const { dataSetName } = dsUtils.getNodeLabels(node);
         try {
             const response = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hRecallDataSet(dataSetName);
-            api.Gui.showInformationMessage(
+            api.Gui.showMessage(
                 localize("hRecall.requestSent1", "Recall of dataset: ") + dataSetName + localize("hRecall.requestSent2", " requested.")
             );
             return response;
@@ -1189,19 +1189,19 @@ export async function hRecallDataSet(node: ZoweDatasetNode) {
 export async function showFileErrorDetails(node: ZoweDatasetNode) {
     await Profiles.getInstance().checkCurrentProfile(node.getProfile());
     if (Profiles.getInstance().validProfile === api.ValidProfileEnum.INVALID) {
-        vscode.window.showErrorMessage(localize("hMigrateDataSet.checkProfile", "Profile is invalid"));
+        api.Gui.errorMessage(localize("hMigrateDataSet.checkProfile", "Profile is invalid"));
     } else {
         const { dataSetName } = dsUtils.getNodeLabels(node);
         if (node.errorDetails) {
             globals.LOG.error(JSON.stringify(node.errorDetails, null, 2));
-            vscode.window.showErrorMessage(node.errorDetails.message);
+            api.Gui.errorMessage(node.errorDetails.message);
         } else {
             try {
                 await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hRecallDataSet(dataSetName);
-                vscode.window.showErrorMessage(localize("showFileErrorDetails.noErrorDetails", "Unable to gather more information"));
+                api.Gui.errorMessage(localize("showFileErrorDetails.noErrorDetails", "Unable to gather more information"));
             } catch (err) {
                 globals.LOG.error(JSON.stringify(err, null, 2));
-                vscode.window.showErrorMessage(err.message);
+                api.Gui.errorMessage(err.message);
             }
         }
     }

@@ -2250,14 +2250,14 @@ describe("Dataset Actions Unit Tests - Function showFileErrorDetails", () => {
         spyRecall.mockResolvedValueOnce({ success: true } as any);
         await dsActions.showFileErrorDetails(node);
         expect(spyRecall).toHaveBeenCalledWith("HLQ.TEST.TO.NODE");
-        expect(mocked(vscode.window.showErrorMessage)).toHaveBeenCalled();
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalled();
         spyRecall.mockReset();
 
         // failed recalling the dataset
         spyRecall.mockRejectedValueOnce(testError);
         await dsActions.showFileErrorDetails(node);
         expect(spyRecall).toHaveBeenCalledWith("HLQ.TEST.TO.NODE");
-        expect(mocked(vscode.window.showErrorMessage)).toHaveBeenCalledWith(testError.message);
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith(testError.message);
         expect(spyLogError).toHaveBeenCalledWith(testErrorString);
         spyRecall.mockReset();
         spyLogError.mockReset();
@@ -2266,7 +2266,7 @@ describe("Dataset Actions Unit Tests - Function showFileErrorDetails", () => {
         node.errorDetails = testError;
         await dsActions.showFileErrorDetails(node);
         expect(spyRecall).not.toHaveBeenCalled();
-        expect(mocked(vscode.window.showErrorMessage)).toHaveBeenCalledWith(testError.message);
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith(testError.message);
         expect(spyLogError).toHaveBeenCalledWith(testErrorString);
         spyRecall.mockReset();
         spyLogError.mockReset();
@@ -2281,7 +2281,7 @@ describe("Dataset Actions Unit Tests - Function showFileErrorDetails", () => {
             }),
         });
         await dsActions.showFileErrorDetails(node);
-        expect(mocked(vscode.window.showErrorMessage)).toHaveBeenCalled();
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalled();
         expect(spyRecall).not.toHaveBeenCalled();
         expect(spyLogError).not.toHaveBeenCalled();
     });
