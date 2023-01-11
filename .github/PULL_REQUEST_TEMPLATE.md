@@ -36,7 +36,6 @@ _Put an `x` in the boxes that apply. You can also fill these out after creating 
 - [ ] There is coverage for the code that I have added
 - [ ] I have tested it manually and there are no regressions found
 - [ ] I have added necessary documentation (if appropriate)
-- [ ] I have updated vscodeignore allowlist (if appropriate)
 - [ ] Any PR dependencies have been merged and published (if appropriate)
 
 ## Further comments

@@ -211,11 +211,10 @@ Maintainers: Evann Wu (evannw@andrew.cmu.edu), Lauren Li (lauren.li@ibm.com), Kr
 
 ## Packaging
 
-Run this command to create packages in the "dist" directory:
-`yarn workspace vscode-extension-for-zowe package`
+Run this command to create packages in the "dist" directory: `yarn package`
 
 For SDK packages like `zowe-explorer-api`, a TGZ is produced that can be installed with npm or published to npmjs.org.
 
 For VS Code extensions, a VSIX is produced that can be installed in VS Code or published to the VS Code Marketplace or Open VSX Registry.
 
-**Note:** To add new files to the VSIX bundle, they must be added to the allowlist in the ".vscodeignore" file.
+**Note:** The list of files included in the VSIX bundle is defined by an allowlist in the ".vscodeignore" file.
