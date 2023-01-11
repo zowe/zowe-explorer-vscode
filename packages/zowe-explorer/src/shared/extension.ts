@@ -108,9 +108,7 @@ export async function registerCommonCommands(context: vscode.ExtensionContext, p
 
     if (providers.ds || providers.uss) {
         context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.openRecentMember", () =>
-                sharedActions.openRecentMemberPrompt(providers.ds, providers.uss)
-            )
+            vscode.commands.registerCommand("zowe.openRecentMember", () => sharedActions.openRecentMemberPrompt(providers.ds, providers.uss))
         );
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.searchInAllLoadedItems", async () =>
@@ -200,19 +198,12 @@ export async function watchConfigProfile(context: vscode.ExtensionContext, provi
     }
 
     const watchers: vscode.FileSystemWatcher[] = [];
-    watchers.push(
-        vscode.workspace.createFileSystemWatcher(
-            new vscode.RelativePattern(getZoweDir(), "{zowe.config,zowe.config.user}.json")
-        )
-    );
+    watchers.push(vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(getZoweDir(), "{zowe.config,zowe.config.user}.json")));
 
     if (vscode.workspace.workspaceFolders?.[0] != null) {
         watchers.push(
             vscode.workspace.createFileSystemWatcher(
-                new vscode.RelativePattern(
-                    vscode.workspace.workspaceFolders[0].uri.fsPath,
-                    "{zowe.config,zowe.config.user}.json"
-                )
+                new vscode.RelativePattern(vscode.workspace.workspaceFolders[0].uri.fsPath, "{zowe.config,zowe.config.user}.json")
             )
         );
     }

@@ -82,8 +82,6 @@ export function decodeJobFile(uri: vscode.Uri): [string, zowe.IJobFile] {
 
 export function initializeSpoolProvider(context: vscode.ExtensionContext) {
     const spoolProvider = new SpoolProvider();
-    const providerRegistration = vscode.Disposable.from(
-        vscode.workspace.registerTextDocumentContentProvider(SpoolProvider.scheme, spoolProvider)
-    );
+    const providerRegistration = vscode.Disposable.from(vscode.workspace.registerTextDocumentContentProvider(SpoolProvider.scheme, spoolProvider));
     context.subscriptions.push(spoolProvider, providerRegistration);
 }
