@@ -247,14 +247,17 @@ describe("ZoweJobNode unit tests - Function delete", () => {
             vscode.TreeItemCollapsibleState.Collapsed,
             null,
             globalMocks.testSession,
-            null,
+            globalMocks.testIJob,
             globalMocks.testProfile
         );
-        const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
 
-        await globalMocks.testJobsProvider.delete(badJobNode);
-
-        expect(errorHandlingSpy).toBeCalledTimes(1);
+        const apiRegisterInstance = ZoweExplorerApiRegister.getInstance();
+        const mockJesApi = await apiRegisterInstance.getJesApi(globalMocks.testProfile);
+        const getJesApiMock = jest.fn();
+        getJesApiMock.mockReturnValue(mockJesApi);
+        apiRegisterInstance.getJesApi = getJesApiMock.bind(apiRegisterInstance);
+        jest.spyOn(mockJesApi, "deleteJob").mockImplementationOnce(() => Promise.reject("test error"));
+        await expect(globalMocks.testJobsProvider.delete(badJobNode.job.jobname, badJobNode.job.jobid)).rejects.toThrow();
     });
 });
 
