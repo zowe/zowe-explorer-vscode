@@ -128,6 +128,12 @@ describe("ZoweExplorerExtender unit tests", () => {
             },
             {
                 choice: "Show Config",
+                configError: `Error parsing JSON in the file '${path.join(zoweDir, "zowe.config.user.json")}'`,
+                fileChecks: ["zowe.config.user.json"],
+                mockStatSync: blockMocks.mockStatSync.mockImplementationOnce,
+            },
+            {
+                choice: "Show Config",
                 configError: "Error parsing JSON",
                 fileChecks: ["zowe.config.user.json", "zowe.config.json"],
                 mockStatSync: blockMocks.mockStatSync.mockImplementationOnce,
