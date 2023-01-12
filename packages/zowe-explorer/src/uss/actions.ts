@@ -16,7 +16,7 @@ import * as globals from "../globals";
 import * as path from "path";
 import { concatChildNodes, willForceUpload, uploadContent, getSelectedNodeList } from "../shared/utils";
 import { errorHandling } from "../utils/ProfilesUtils";
-import { ValidProfileEnum, IZoweTree, IZoweUSSTreeNode } from "@zowe/zowe-explorer-api";
+import { Gui, ValidProfileEnum, IZoweTree, IZoweUSSTreeNode } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { isBinaryFileSync } from "isbinaryfile";
@@ -51,14 +51,14 @@ export async function createUSSNode(node: IZoweUSSTreeNode, ussFileProvider: IZo
             prompt: localize("createUSSNode.inputBox.prompt", "Choose a location to create the {0}", nodeType),
             value: node.tooltip as string,
         };
-        filePath = await vscode.window.showInputBox(filePathOptions);
+        filePath = await Gui.showInputBox(filePathOptions);
     } else {
         filePath = node.fullPath;
     }
     const nameOptions: vscode.InputBoxOptions = {
         placeHolder: localize("createUSSNode.name", "Name of file or directory"),
     };
-    const name = await vscode.window.showInputBox(nameOptions);
+    const name = await Gui.showInputBox(nameOptions);
     if (name && filePath) {
         try {
             filePath = `${filePath}/${name}`;
@@ -75,7 +75,7 @@ export async function createUSSNode(node: IZoweUSSTreeNode, ussFileProvider: IZo
             const localPath = `${node.getUSSDocumentFilePath()}/${name}`;
             const fileExists = fs.existsSync(localPath);
             if (fileExists && !fileExistsCaseSensitveSync(localPath)) {
-                vscode.window.showInformationMessage(
+                Gui.showMessage(
                     localize(
                         "createUSSNode.name.exists",
                         // eslint-disable-next-line max-len
@@ -112,7 +112,7 @@ export async function createUSSNodeDialog(node: IZoweUSSTreeNode, ussFileProvide
             ignoreFocusOut: true,
             canPickMany: false,
         };
-        const type = await vscode.window.showQuickPick([globals.USS_DIR_CONTEXT, "File"], quickPickOptions);
+        const type = await Gui.showQuickPick([globals.USS_DIR_CONTEXT, "File"], quickPickOptions);
         const isTopLevel = true;
         return createUSSNode(node, ussFileProvider, type, isTopLevel);
     }
@@ -140,7 +140,7 @@ export async function uploadDialog(node: IZoweUSSTreeNode, ussFileProvider: IZow
         canSelectMany: true,
     };
 
-    const value = await vscode.window.showOpenDialog(fileOpenOptions);
+    const value = await Gui.showOpenDialog(fileOpenOptions);
 
     await Promise.all(
         value.map(async (item) => {
@@ -203,7 +203,7 @@ export async function uploadFile(node: IZoweUSSTreeNode, doc: vscode.TextDocumen
 export async function copyPath(node: IZoweUSSTreeNode) {
     if (globals.ISTHEIA) {
         // Remove when Theia supports VS Code API for accessing system clipboard
-        vscode.window.showInformationMessage(localize("copyPath.infoMessage", "Copy Path is not yet supported in Theia."));
+        Gui.showMessage(localize("copyPath.infoMessage", "Copy Path is not yet supported in Theia."));
         return;
     }
     vscode.env.clipboard.writeText(node.fullPath);
@@ -279,7 +279,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
         if (sesNode) {
             binary = binary || (await ZoweExplorerApiRegister.getUssApi(sesNode.getProfile()).isFileTagBinOrAscii(remote));
         }
-        const uploadResponse: IZosFilesResponse = await vscode.window.withProgress(
+        const uploadResponse: IZosFilesResponse = await Gui.withProgress(
             {
                 location: vscode.ProgressLocation.Window,
                 title: localize("saveUSSFile.response.title", "Saving file..."),
@@ -289,7 +289,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
             }
         );
         if (uploadResponse.success) {
-            vscode.window.setStatusBarMessage(uploadResponse.commandResponse, globals.STATUS_BAR_TIMEOUT_MS);
+            Gui.setStatusBarMessage(uploadResponse.commandResponse, globals.STATUS_BAR_TIMEOUT_MS);
             // set local etag with the new etag from the updated file on mainframe
             if (node) {
                 node.setEtag(uploadResponse.apiResponse.etag);
@@ -297,7 +297,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
             setFileSaved(true);
             // this part never runs! zowe.Upload.fileToUSSFile doesn't return success: false, it just throws the error which is caught below!!!!!
         } else {
-            vscode.window.showErrorMessage(uploadResponse.commandResponse);
+            Gui.errorMessage(uploadResponse.commandResponse);
         }
     } catch (err) {
         // TODO: error handling must not be zosmf specific
@@ -323,7 +323,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
                 this.downloaded = true;
 
                 globals.LOG.warn(err);
-                vscode.window.showWarningMessage(
+                Gui.warningMessage(
                     localize(
                         "saveFile.error.etagMismatch",
                         "Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict."
@@ -360,7 +360,10 @@ export async function deleteUSSFilesPrompt(nodes: IZoweUSSTreeNode[]): Promise<b
         fileNames.toString()
     );
     let cancelled = false;
-    await vscode.window.showWarningMessage(message, { modal: true }, ...[deleteButton]).then((selection) => {
+    await Gui.warningMessage(message, {
+        items: [deleteButton],
+        vsCodeOpts: { modal: true },
+    }).then((selection) => {
         if (!selection || selection === "Cancel") {
             globals.LOG.debug(localize("deleteUssPrompt.confirmation.cancel.log.debug", "Delete action was canceled."));
             cancelled = true;

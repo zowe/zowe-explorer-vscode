@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
-import { ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { Gui, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
@@ -113,7 +113,7 @@ async function createGlobalMocks() {
         value: globalMocks.showInformationMessage,
         configurable: true,
     });
-    Object.defineProperty(vscode.window, "showTextDocument", {
+    Object.defineProperty(Gui, "showTextDocument", {
         value: globalMocks.mockShowTextDocument,
         configurable: true,
     });

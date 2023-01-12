@@ -13,9 +13,9 @@ import * as vscode from "vscode";
 import * as globals from "../globals";
 import * as path from "path";
 import { imperative } from "@zowe/cli";
-import { FilterItem, FilterDescriptor, resolveQuickPickHelper, errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
+import { FilterItem, FilterDescriptor, errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
 import { sortTreeItems, getAppName, checkIfChildPath } from "../shared/utils";
-import { IZoweTree, IZoweUSSTreeNode, ValidProfileEnum, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweTree, IZoweUSSTreeNode, ValidProfileEnum, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { ZoweUSSNode } from "./ZoweUSSNode";
@@ -72,7 +72,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             this.mFavoriteSession.iconPath = icon.path;
         }
         this.mSessionNodes = [this.mFavoriteSession as IZoweUSSTreeNode];
-        this.treeView = vscode.window.createTreeView("zowe.uss.explorer", {
+        this.treeView = Gui.createTreeView("zowe.uss.explorer", {
             treeDataProvider: this,
             canSelectMany: true,
         });
@@ -106,14 +106,14 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             const docIsChild = checkIfChildPath(currentFilePath, doc.fileName);
             if (doc.fileName === currentFilePath || docIsChild === true) {
                 if (doc.isDirty === true) {
-                    vscode.window.showErrorMessage(
+                    Gui.errorMessage(
                         localize(
                             "renameUSS.unsavedWork",
                             "Unable to rename {0} because you have unsaved changes in this {1}. Please save your work before renaming the {1}.",
                             originalNode.fullPath,
                             nodeType
                         ),
-                        { modal: true }
+                        { vsCodeOpts: { modal: true } }
                     );
                     return;
                 }
@@ -126,7 +126,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             ignoreFocusOut: true,
             validateInput: (value) => this.checkDuplicateLabel(parentPath + value, loadedNodes),
         };
-        const newName = await vscode.window.showInputBox(options);
+        const newName = await Gui.showInputBox(options);
         if (newName && parentPath + newName !== originalNode.fullPath) {
             try {
                 const newNamePath = path.posix.join(parentPath, newName);
@@ -462,7 +462,10 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 profileName
             );
             const continueRemove = localize("removeFavProfile.continue", "Continue");
-            await vscode.window.showWarningMessage(checkConfirmation, { modal: true }, ...[continueRemove]).then((selection) => {
+            await Gui.warningMessage(checkConfirmation, {
+                items: [continueRemove],
+                vsCodeOpts: { modal: true },
+            }).then((selection) => {
                 if (!selection || selection === "Cancel") {
                     cancelled = true;
                 }
@@ -547,22 +550,22 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                             placeHolder: localize("searchHistory.options.prompt", "Select a filter"),
                         };
                         // get user selection
-                        const choice = await vscode.window.showQuickPick([createPick, ...items], options1);
+                        const choice = await Gui.showQuickPick([createPick, ...items], options1);
                         if (!choice) {
-                            vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made. Operation cancelled."));
+                            Gui.showMessage(localize("enterPattern.pattern", "No selection made. Operation cancelled."));
                             return;
                         }
                         remotepath = choice === createPick ? "" : choice.label;
                     } else {
-                        const quickpick = vscode.window.createQuickPick();
+                        const quickpick = Gui.createQuickPick();
                         quickpick.placeholder = localize("searchHistory.options.prompt", "Select a filter");
                         quickpick.items = [createPick, ...items];
                         quickpick.ignoreFocusOut = true;
                         quickpick.show();
-                        const choice = await resolveQuickPickHelper(quickpick);
+                        const choice = await Gui.resolveQuickPick(quickpick);
                         quickpick.hide();
                         if (!choice) {
-                            vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made. Operation cancelled."));
+                            Gui.showMessage(localize("enterPattern.pattern", "No selection made. Operation cancelled."));
                             return;
                         }
                         if (choice instanceof FilterDescriptor) {
@@ -580,9 +583,9 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                     value: remotepath,
                 };
                 // get user input
-                remotepath = await vscode.window.showInputBox(options);
+                remotepath = await Gui.showInputBox(options);
                 if (!remotepath || remotepath.length === 0) {
-                    vscode.window.showInformationMessage(localize("filterPrompt.enterPath", "You must enter a path."));
+                    Gui.showMessage(localize("filterPrompt.enterPath", "You must enter a path."));
                     return;
                 }
             } else {
@@ -769,7 +772,10 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                         getAppName(globals.ISTHEIA)
                     );
                 const btnLabelRemove = localize("initializeUSSFavorites.error.buttonRemove", "Remove");
-                vscode.window.showErrorMessage(errMessage, { modal: true }, btnLabelRemove).then(async (selection) => {
+                Gui.errorMessage(errMessage, {
+                    items: [btnLabelRemove],
+                    vsCodeOpts: { modal: true },
+                }).then(async (selection) => {
                     if (selection === btnLabelRemove) {
                         await this.removeFavProfile(profileName, false);
                     }
@@ -835,7 +841,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         if (selectedNode) {
             selectedNode.openUSS(false, true, this);
         } else {
-            vscode.window.showInformationMessage(localize("findUSSItem.unsuccessful", "File does not exist. It may have been deleted."));
+            Gui.showMessage(localize("findUSSItem.unsuccessful", "File does not exist. It may have been deleted."));
             this.removeFileHistory(`[${sessionNode.getProfileName()}]: ${itemPath}`);
         }
     }

@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "types": ["node", "jest"],
+    "target": "es2015",
+    "module": "commonjs",
+    "noEmit": true,
+    "declaration": true,
+    "moduleResolution": "node",
+    "noImplicitAny": false,
+    "outDir": "./lib",
+    "preserveConstEnums": true,
+    "removeComments": false,
+    "pretty": true,
+    "sourceMap": true,
+    "newLine": "lf",
+    "resolveJsonModule": true
+  },
+  "include": ["__tests__", "__mocks__"],
+  "exclude": ["lib", "node_modules"]
+}

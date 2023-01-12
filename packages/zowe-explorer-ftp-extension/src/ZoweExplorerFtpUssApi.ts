@@ -16,7 +16,7 @@ import * as tmp from "tmp";
 import * as zowe from "@zowe/cli";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 
-import { MessageSeverityEnum, ZoweExplorerApi, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { Gui, ZoweExplorerApi } from "@zowe/zowe-explorer-api";
 import { CoreUtils, UssUtils, TRANSFER_TYPE_ASCII, TRANSFER_TYPE_BINARY } from "@zowe/zos-ftp-for-zowe-cli";
 import { Buffer } from "buffer";
 import { AbstractFtpApi } from "./ZoweExplorerAbstractFtpApi";
@@ -76,7 +76,7 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
                 result.commandResponse = "";
                 result.apiResponse.etag = await this.hashFile(targetFile);
             } else {
-                ZoweVsCodeExtension.showVsCodeMessage(result.commandResponse, MessageSeverityEnum.ERROR, ZoweLogger);
+                await Gui.errorMessage(result.commandResponse, { logger: ZoweLogger });
                 throw new Error();
             }
             return result;
@@ -102,18 +102,16 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
         try {
             connection = await this.ftpClient(this.checkedProfile());
             if (!connection) {
-                ZoweVsCodeExtension.showVsCodeMessage(result.commandResponse, MessageSeverityEnum.ERROR, ZoweLogger);
+                await Gui.errorMessage(result.commandResponse, { logger: ZoweLogger });
                 throw new Error();
             }
             // Save-Save with FTP requires loading the file first
             if (returnEtag && etag) {
                 const contentsTag = await this.getContentsTag(ussFilePath);
                 if (contentsTag && contentsTag !== etag) {
-                    ZoweVsCodeExtension.showVsCodeMessage(
-                        "Save conflict. Please pull the latest content from mainframe first.",
-                        MessageSeverityEnum.ERROR,
-                        ZoweLogger
-                    );
+                    await Gui.errorMessage("Save conflict. Please pull the latest content from mainframe first.", {
+                        logger: ZoweLogger,
+                    });
                     throw new Error();
                 }
             }
@@ -141,7 +139,7 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
 
         // Check if inputDirectory is directory
         if (!zowe.imperative.IO.isDir(inputDirectoryPath)) {
-            ZoweVsCodeExtension.showVsCodeMessage("The local directory path provided does not exist.", MessageSeverityEnum.ERROR, ZoweLogger);
+            await Gui.errorMessage("The local directory path provided does not exist.", { logger: ZoweLogger });
             throw new Error();
         }
         // getting list of files from directory
@@ -179,7 +177,7 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
                 result.success = true;
                 result.commandResponse = "Directory or file created.";
             } else {
-                ZoweVsCodeExtension.showVsCodeMessage(result.commandResponse, MessageSeverityEnum.ERROR, ZoweLogger);
+                await Gui.errorMessage(result.commandResponse, { logger: ZoweLogger });
                 throw new Error();
             }
             return result;
@@ -202,7 +200,7 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
                 result.success = true;
                 result.commandResponse = "Delete completed.";
             } else {
-                ZoweVsCodeExtension.showVsCodeMessage(result.commandResponse, MessageSeverityEnum.ERROR, ZoweLogger);
+                await Gui.errorMessage(result.commandResponse, { logger: ZoweLogger });
                 throw new Error();
             }
             return result;
@@ -221,7 +219,7 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
                 result.success = true;
                 result.commandResponse = "Rename completed.";
             } else {
-                ZoweVsCodeExtension.showVsCodeMessage(result.commandResponse, MessageSeverityEnum.ERROR, ZoweLogger);
+                await Gui.errorMessage(result.commandResponse, { logger: ZoweLogger });
                 throw new Error();
             }
             return result;
