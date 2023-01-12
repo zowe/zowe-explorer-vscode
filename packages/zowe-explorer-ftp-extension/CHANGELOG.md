@@ -4,7 +4,12 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Updated UI/UX method calls to use standalone `Gui` module for better usability and maintainability. [#1967](https://github.com/zowe/vscode-extension-for-zowe/issues/1967)
+
 ### Bug fixes
+
+- Removed TSLint (as it is deprecated), and replaced all TSLint rules with their ESLint equivalents. [#2030](https://github.com/zowe/vscode-extension-for-zowe/issues/2030)
+- Removed extra files from the VSIX bundle to reduce download size by 12%. [#2042](https://github.com/zowe/vscode-extension-for-zowe/pull/2042)
 
 ## `2.5.0`
 
@@ -12,7 +17,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 - Added logging in places where errors were being caught and ignored.
 - Fixed all existing ESLint errors within the API logic.
-- Removed TSLint (as it is deprecated), and replaced all TSLint rules with their ESLint equivalents. [#2030](https://github.com/zowe/vscode-extension-for-zowe/issues/2030)
 
 ## `2.4.1`
 
