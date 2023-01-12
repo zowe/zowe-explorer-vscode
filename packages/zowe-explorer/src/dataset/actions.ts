@@ -179,6 +179,7 @@ export async function uploadFile(node: ZoweDatasetNode, doc: vscode.TextDocument
         const prof = node.getProfile();
         await ZoweExplorerApiRegister.getMvsApi(prof).putContents(doc.fileName, datasetName, {
             encoding: prof.profile.encoding,
+            responseTimeout: prof.profile?.responseTimeout,
         });
     } catch (e) {
         await errorHandling(e, node.getProfileName(), e.message);
@@ -358,8 +359,11 @@ export async function createMember(parent: api.IZoweDatasetTreeNode, datasetProv
     globals.LOG.debug(localize("createMember.log.debug.createNewDataSet", "creating new data set member of name ") + name);
     if (name) {
         const label = parent.label as string;
+        const profile = parent.getProfile();
         try {
-            await ZoweExplorerApiRegister.getMvsApi(parent.getProfile()).createDataSetMember(label + "(" + name + ")");
+            await ZoweExplorerApiRegister.getMvsApi(profile).createDataSetMember(label + "(" + name + ")", {
+                responseTimeout: profile.profile?.responseTimeout,
+            });
         } catch (err) {
             globals.LOG.error(localize("createMember.log.error", "Error encountered when creating member! ") + JSON.stringify(err));
             await errorHandling(err, label, localize("createMember.error", "Unable to create member: ") + err.message);
@@ -426,6 +430,7 @@ export async function openPS(node: api.IZoweDatasetTreeNode, previewMember: bool
                             file: documentFilePath,
                             returnEtag: true,
                             encoding: prof.profile.encoding,
+                            responseTimeout: prof.profile?.responseTimeout,
                         });
                     }
                 );
@@ -600,9 +605,13 @@ export async function createFile(node: api.IZoweDatasetTreeNode, datasetProvider
             }
         });
 
+        const profile = node.getProfile();
         try {
             // Allocate the data set
-            await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).createDataSet(typeEnum, dsName, dsPropsForAPI);
+            await ZoweExplorerApiRegister.getMvsApi(profile).createDataSet(typeEnum, dsName, {
+                responseTimeout: profile?.profile?.responseTimeout,
+                ...dsPropsForAPI,
+            });
             node.dirty = true;
 
             const theFilter = await datasetProvider.createFilterString(dsName, node);
@@ -697,15 +706,18 @@ export async function showAttributes(node: api.IZoweDatasetTreeNode, datasetProv
         globals.LOG.debug(localize("showAttributes.debug", "showing attributes for ") + label);
         let attributes: any;
         try {
+            const nodeProfile = node.getProfile();
             if (contextually.isDsMember(node)) {
                 const dsName = node.getParent().getLabel() as string;
-                attributes = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).allMembers(dsName.toUpperCase(), {
+                attributes = await ZoweExplorerApiRegister.getMvsApi(nodeProfile).allMembers(dsName.toUpperCase(), {
                     attributes: true,
                     pattern: label.toUpperCase(),
+                    responseTimeout: nodeProfile?.profile?.responseTimeout,
                 });
             } else {
-                attributes = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).dataSet(label, {
+                attributes = await ZoweExplorerApiRegister.getMvsApi(nodeProfile).dataSet(label, {
                     attributes: true,
+                    responseTimeout: nodeProfile?.profile?.responseTimeout,
                 });
             }
             attributes = attributes.apiResponse.items;
@@ -950,7 +962,8 @@ export async function deleteDataset(node: api.IZoweTreeNode, datasetProvider: ap
         }
         await datasetProvider.checkCurrentProfile(node);
         if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
-            await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).deleteDataSet(label);
+            const profile = node.getProfile();
+            await ZoweExplorerApiRegister.getMvsApi(profile).deleteDataSet(label, { responseTimeout: profile.profile?.responseTimeout });
         } else {
             return;
         }
@@ -1034,6 +1047,7 @@ export async function refreshPS(node: api.IZoweDatasetTreeNode) {
             file: documentFilePath,
             returnEtag: true,
             encoding: prof.profile.encoding,
+            responseTimeout: prof.profile?.responseTimeout,
         });
         node.setEtag(response.apiResponse.etag);
 
@@ -1217,7 +1231,10 @@ export async function pasteMember(node: api.IZoweDatasetTreeNode, datasetProvide
 
         if (beforeProfileName === profileName) {
             if (memberName) {
-                const responseItem: zowe.IZosFilesResponse = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).allMembers(`${dataSetName}`);
+                const nodeProfile = node.getProfile();
+                const responseItem: zowe.IZosFilesResponse = await ZoweExplorerApiRegister.getMvsApi(nodeProfile).allMembers(`${dataSetName}`, {
+                    responseTimeout: nodeProfile?.profile?.responseTimeout,
+                });
                 if (responseItem.apiResponse.items.some((singleItem) => singleItem.member === memberName.toUpperCase())) {
                     throw Error(`${dataSetName}(${memberName}) already exists. You cannot replace a member`);
                 }
@@ -1295,7 +1312,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
     if (!label.includes("(")) {
         try {
             // Checks if file still exists on server
-            const response = await ZoweExplorerApiRegister.getMvsApi(profile).dataSet(label);
+            const response = await ZoweExplorerApiRegister.getMvsApi(profile).dataSet(label, { responseTimeout: profile.profile?.responseTimeout });
             if (!response.apiResponse.items.length) {
                 return api.Gui.errorMessage(
                     localize("saveFile.error.saveFailed", "Data set failed to save. Data set may have been deleted on mainframe.")
@@ -1335,7 +1352,10 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
                 if (prof.profile.encoding) {
                     uploadOptions.encoding = prof.profile.encoding;
                 }
-                return ZoweExplorerApiRegister.getMvsApi(prof).putContents(doc.fileName, label, uploadOptions);
+                return ZoweExplorerApiRegister.getMvsApi(prof).putContents(doc.fileName, label, {
+                    ...uploadOptions,
+                    responseTimeout: prof.profile?.responseTimeout,
+                });
             }
         );
         if (uploadResponse.success) {
@@ -1362,6 +1382,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
                     file: doc.fileName,
                     returnEtag: true,
                     encoding: prof.profile.encoding,
+                    responseTimeout: prof.profile?.responseTimeout,
                 });
                 // re-assign etag, so that it can be used with subsequent requests
                 const downloadEtag = downloadResponse.apiResponse.etag;

@@ -969,10 +969,12 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                                 }
                             }
                             if (includes && child.contextValue.includes("pds")) {
+                                const childProfile = child.getProfile();
                                 const options: IListOptions = {};
                                 options.pattern = item.memberPattern;
                                 options.attributes = true;
-                                const memResponse = await ZoweExplorerApiRegister.getMvsApi(child.getProfile()).allMembers(label, options);
+                                options.responseTimeout = childProfile.profile?.responseTimeout;
+                                const memResponse = await ZoweExplorerApiRegister.getMvsApi(childProfile).allMembers(label, options);
                                 let existing = false;
                                 for (const mem of memResponse.apiResponse.items) {
                                     existing = await this.checkFilterPattern(mem.member, item.member);
