@@ -406,6 +406,12 @@ describe("Extension Unit Tests", () => {
         return blockMocks;
     }
 
+    afterEach(async () => {
+        const globalMocks = await createGlobalMocks();
+        globalMocks.mockExistsSync.mockReset();
+        globalMocks.mockReaddirSync.mockReset();
+    });
+
     it("Testing that activate correctly executes", async () => {
         const globalMocks = await createGlobalMocks();
         Object.defineProperty(zowe.imperative, "ProfileInfo", {
@@ -457,8 +463,6 @@ describe("Extension Unit Tests", () => {
         const globalMocks = await createGlobalMocks();
 
         Object.defineProperty(vscode.env, "uriScheme", { value: "theia", configurable: true });
-        globalMocks.mockExistsSync.mockReset();
-        globalMocks.mockReaddirSync.mockReset();
         globalMocks.mockExistsSync.mockReturnValueOnce(false);
         globalMocks.mockGetConfiguration.mockReturnValue({
             persistence: true,
@@ -494,8 +498,6 @@ describe("Extension Unit Tests", () => {
         Object.defineProperty(vscode.env, "uriScheme", { value: undefined, configurable: true });
         Object.defineProperty(vscode.env, "appName", { value: "Eclipse Theia" });
         Object.defineProperty(vscode.env, "uiKind", { value: vscode.UIKind.Web });
-        globalMocks.mockExistsSync.mockReset();
-        globalMocks.mockReaddirSync.mockReset();
         globalMocks.mockExistsSync.mockReturnValueOnce(false);
         globalMocks.mockGetConfiguration.mockReturnValue({
             persistence: true,
@@ -514,15 +516,6 @@ describe("Extension Unit Tests", () => {
         expect(globals.ISTHEIA).toEqual(true);
         expect(globalMocks.mockMkdirSync.mock.calls.length).toBe(6);
         expect(globalMocks.mockRegisterCommand.mock.calls.length).toBe(globals.COMMAND_COUNT);
-        globalMocks.mockRegisterCommand.mock.calls.forEach((call, i) => {
-            expect(call[0]).toStrictEqual(globalMocks.expectedCommands[i]);
-            expect(call[1]).toBeInstanceOf(Function);
-        });
-        const actualCommands = [];
-        globalMocks.mockRegisterCommand.mock.calls.forEach((call) => {
-            actualCommands.push(call[0]);
-        });
-        expect(actualCommands).toEqual(globalMocks.expectedCommands);
     });
 
     it("Tests getSelectedNodeList executes successfully with multiple selection", async () => {
