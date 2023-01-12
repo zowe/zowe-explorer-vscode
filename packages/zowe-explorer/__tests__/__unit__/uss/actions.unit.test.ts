@@ -32,6 +32,7 @@ import * as path from "path";
 import * as globals from "../../../src/globals";
 import * as sharedUtils from "../../../src/shared/utils";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
+import { UssFileTree, UssFileType } from "../../../src/uss/FileStructure";
 import * as isbinaryfile from "isbinaryfile";
 import * as fs from "fs";
 import { createUssApi, bindUssApi } from "../../../__mocks__/mockCreators/api";
@@ -721,6 +722,7 @@ describe("USS Action Unit Tests - copy file / directory", () => {
             ussApi: createUssApi(globalMocks.testProfile),
             ussNodes: null,
         };
+
         newMocks.treeNodes.testUSSTree = createUSSTree(
             [createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile)],
             [newMocks.treeNodes.ussNode],
@@ -733,11 +735,34 @@ describe("USS Action Unit Tests - copy file / directory", () => {
     it("Copy file(s), Directory(s) paths into clipboard", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
-
         const fileStructure = JSON.stringify(await ussNodeActions.ussFileStructure(blockMocks.nodes));
         await ussNodeActions.copyUssFilesToClipboard(blockMocks.nodes);
 
         expect(globalMocks.writeText).toBeCalledWith(fileStructure);
+    });
+
+    it("pasteFileTree calls relevant USS API functions", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        let rootTree: UssFileTree = {
+            children: [],
+            baseName: blockMocks.nodes[1].getLabel() as string,
+            ussPath: "",
+            type: UssFileType.Directory,
+        };
+        blockMocks.treeNodes.ussApi.fileList = jest.fn().mockResolvedValue({
+            apiResponse: {
+                items: [blockMocks.nodes[0].getLabel() as string, blockMocks.nodes[1].getLabel() as string],
+            },
+        });
+        blockMocks.treeNodes.ussApi.fileUtils = jest.fn();
+        await blockMocks.nodes[1].pasteFileTree("", rootTree, { api: blockMocks.treeNodes.ussApi });
+        expect(blockMocks.treeNodes.ussApi.fileList).toHaveBeenCalled();
+        expect(blockMocks.treeNodes.ussApi.fileUtils).toHaveBeenCalledWith(`/${blockMocks.nodes[1].getLabel()}`, {
+            from: "",
+            recursive: true,
+            request: "copy",
+        });
     });
 
     it("tests refreshChildNodesDirectory executed successfully with empty directory", async () => {

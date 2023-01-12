@@ -178,4 +178,16 @@ describe("FtpUssApi", () => {
         expect(UssUtils.renameFile).toBeCalledTimes(1);
         expect(UssApi.releaseConnection).toBeCalled();
     });
+
+    it("should not be able to use fileUtils as it is not implemented in the FTP extension.", async () => {
+        try {
+            await UssApi.fileUtils("", {});
+        } catch (err) {
+            expect(err.message).toBe("Method not implemented.");
+        }
+    });
+
+    it("should receive false from isFileTagBinOrAscii as it is not implemented in the FTP extension.", async () => {
+        expect(await UssApi.isFileTagBinOrAscii("")).toBe(false);
+    });
 });
