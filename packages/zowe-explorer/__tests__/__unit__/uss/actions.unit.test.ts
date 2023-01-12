@@ -734,13 +734,10 @@ describe("USS Action Unit Tests - copy file / directory", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
+        const fileStructure = JSON.stringify(await ussNodeActions.ussFileStructure(blockMocks.nodes));
         await ussNodeActions.copyUssFilesToClipboard(blockMocks.nodes);
 
-        expect(globalMocks.writeText).toBeCalledWith(
-            blockMocks.nodes[0].getUSSDocumentFilePath() + "," + blockMocks.nodes[1].getUSSDocumentFilePath() + "/"
-        );
-        expect(blockMocks.nodes[0].refreshUSS).toBeCalled();
-        expect(blockMocks.nodes[1].refreshUSS).toHaveBeenCalledTimes(0);
+        expect(globalMocks.writeText).toBeCalledWith(fileStructure);
     });
 
     it("tests refreshChildNodesDirectory executed successfully with empty directory", async () => {

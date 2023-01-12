@@ -70,7 +70,6 @@ export async function createUSSNode(node: IZoweUSSTreeNode, ussFileProvider: IZo
                 ussFileProvider.refreshElement(node);
             }
             const newNode = await node.getChildren().then((children) => children.find((child) => child.label === name));
-            newNode.setProfileToChoice(node.getProfile());
             await ussFileProvider.getTreeView().reveal(node, { select: true, focus: true });
             ussFileProvider.getTreeView().reveal(newNode, { select: true, focus: true });
             const localPath = `${node.getUSSDocumentFilePath()}/${name}`;
@@ -386,7 +385,7 @@ export async function buildFileStructure(node: IZoweUSSTreeNode): Promise<UssFil
         };
 
         const children = await node.getChildren();
-        if (children.length > 0) {
+        if (children != null && children.length > 0) {
             for (const child of children) {
                 // This node is either another directory or a file
                 const subnode = await buildFileStructure(child);
