@@ -14,7 +14,7 @@ import * as globals from "../globals";
 import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
-import { IZoweUSSTreeNode, ZoweTreeNode, IZoweTree, ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { IZoweUSSTreeNode, ZoweTreeNode, IZoweTree, ValidProfileEnum, ZoweExplorerApi } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
@@ -23,6 +23,7 @@ import { disposeClipboardContents, fileExistsCaseSensitveSync, injectAdditionalD
 import * as contextually from "../shared/context";
 import { closeOpenedTextFile } from "../utils/workspace";
 import * as nls from "vscode-nls";
+import { UssFileTree, UssFileType } from "./FileStructure";
 
 // Set up localization
 nls.config({
@@ -607,13 +608,34 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         return path.join(globals.USS_DIR || "", "/" + this.getSessionNode().getProfileName() + "/", this.fullPath);
     }
 
+    public async pasteFileTree(
+        rootPath: string,
+        tree: UssFileTree,
+        uss: {
+            api: ZoweExplorerApi.IUss;
+            options: IUploadOptions;
+        }
+    ) {
+        // Check root path for conflicts before pasting nodes in this path
+        const apiResponse = await uss.api.fileList(rootPath);
+        const fileList = apiResponse.apiResponse?.items;
+        const hasFileOfSameName = fileList.find((file) => file.name === tree.baseName) != null;
+        const fileName = hasFileOfSameName ? `${tree.baseName} (copy)` : tree.baseName;
+        const outputPath = `${rootPath}/${fileName}`;
+
+        await uss.api.fileUtils(outputPath, {
+            request: "copy",
+            from: tree.ussPath,
+            recursive: tree.type === UssFileType.Directory,
+        });
+    }
+
     public async copyUssFile() {
         const clipboardContents = await vscode.env.clipboard.readText();
         if (!clipboardContents && clipboardContents.length < 1) {
             return;
         }
 
-        const localFileNames = clipboardContents.split(",");
         const prof = this.getProfile();
         const remotePath = this.fullPath;
         const task: imperative.ITaskWithStatus = {
@@ -629,24 +651,13 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         }
         try {
             const api = ZoweExplorerApiRegister.getUssApi(this.profile);
-            const apiResponse = await api.fileList(remotePath);
-            const fileList = apiResponse.apiResponse?.items;
+            const fileTreeToPaste: UssFileTree = JSON.parse(await vscode.env.clipboard.readText());
 
-            for (const localFile of localFileNames) {
-                if (localFile.endsWith("/")) {
-                    const directoryPath = localFile.slice(0, -1);
-                    await api.uploadDirectory(directoryPath, remotePath + "/" + path.basename(directoryPath), options);
-                } else {
-                    let fname = path.basename(localFile);
-                    if (
-                        fileList?.find((file) => {
-                            return file.name === fname;
-                        })
-                    ) {
-                        fname += "(copy)";
-                    }
-                    await api.putContent(localFile, remotePath.concat("/", fname), options);
-                }
+            for (const subnode of fileTreeToPaste.children) {
+                await this.pasteFileTree(remotePath, subnode, {
+                    api: api,
+                    options: options,
+                });
             }
         } catch (error) {
             await errorHandling(error, this.label.toString(), localize("copyUssFile.error", "Error uploading files"));

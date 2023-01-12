@@ -151,6 +151,10 @@ export class ZosmfUssApi extends ZosmfApiCommon implements ZoweExplorerApi.IUss 
         return zowe.Download.ussFile(this.getSession(), inputFilePath, options);
     }
 
+    public fileUtils(outputPath: string, options: object): Promise<Buffer> {
+        return zowe.Utilities.putUSSPayload(this.getSession(), outputPath, options);
+    }
+
     /**
      * API method to wrap to the newer `putContent`.
      * @deprecated

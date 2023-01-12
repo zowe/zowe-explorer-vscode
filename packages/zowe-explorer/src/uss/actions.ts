@@ -26,6 +26,7 @@ import * as nls from "vscode-nls";
 import { refreshAll } from "../shared/refresh";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 import { fileExistsCaseSensitveSync } from "./utils";
+import { UssFileTree, UssFileType } from "./FileStructure";
 
 // Set up localization
 nls.config({
@@ -69,6 +70,7 @@ export async function createUSSNode(node: IZoweUSSTreeNode, ussFileProvider: IZo
                 ussFileProvider.refreshElement(node);
             }
             const newNode = await node.getChildren().then((children) => children.find((child) => child.label === name));
+            newNode.setProfileToChoice(node.getProfile());
             await ussFileProvider.getTreeView().reveal(node, { select: true, focus: true });
             ussFileProvider.getTreeView().reveal(newNode, { select: true, focus: true });
             const localPath = `${node.getUSSDocumentFilePath()}/${name}`;
@@ -367,18 +369,70 @@ export async function deleteUSSFilesPrompt(nodes: IZoweUSSTreeNode[]): Promise<b
     });
     return cancelled;
 }
-export async function copyUssFilesToClipboard(selectedNodes: IZoweUSSTreeNode[]) {
-    const filePaths: any[] = [];
-    for (const node of selectedNodes) {
-        if (contextually.isUssDirectory(node)) {
-            await refreshChildNodesDirectory(node);
-            filePaths.push(node.getUSSDocumentFilePath() + "/");
-        } else {
-            await node.refreshUSS();
-            filePaths.push(node.getUSSDocumentFilePath());
+
+/**
+ * Builds a file/directory structure that can be traversed from root to the innermost children.
+ *
+ * @param node Build a tree structure starting at this node
+ * @returns A tree structure containing all files/directories within this node
+ */
+export async function buildFileStructure(node: IZoweUSSTreeNode): Promise<UssFileTree> {
+    if (contextually.isUssDirectory(node)) {
+        let directory: UssFileTree = {
+            ussPath: node.fullPath,
+            baseName: node.getLabel() as string,
+            type: UssFileType.Directory,
+            children: [],
+        };
+
+        const children = await node.getChildren();
+        if (children.length > 0) {
+            for (const child of children) {
+                // This node is either another directory or a file
+                const subnode = await buildFileStructure(child);
+                directory.children.push(subnode);
+            }
         }
+
+        return directory;
     }
-    vscode.env.clipboard.writeText(filePaths.join(","));
+
+    return {
+        ussPath: node.fullPath,
+        baseName: node.getLabel() as string,
+        type: UssFileType.File,
+    };
+}
+
+/**
+ * Collects USS file info and builds a tree used for copying and pasting files/folders.
+ *
+ * @param selectedNodes The list of USS tree nodes that were selected for copying.
+ * @returns A file tree containing the USS file/directory paths to be pasted.
+ */
+export async function ussFileStructure(selectedNodes: IZoweUSSTreeNode[]): Promise<UssFileTree> {
+    let rootStructure: UssFileTree = {
+        ussPath: "",
+        type: UssFileType.Directory,
+        children: [],
+    };
+
+    for (const node of selectedNodes) {
+        rootStructure.children.push(await buildFileStructure(node));
+    }
+
+    return rootStructure;
+}
+
+/**
+ * Helper function for `copyUssFiles` that will copy the USS file structure to a JSON
+ * object, saving it into a clipboard for future use.
+ *
+ * @param selectedNodes The list of USS tree nodes that were selected for copying.
+ */
+export async function copyUssFilesToClipboard(selectedNodes: IZoweUSSTreeNode[]) {
+    const filePaths = await ussFileStructure(selectedNodes);
+    vscode.env.clipboard.writeText(JSON.stringify(filePaths));
 }
 
 export async function copyUssFiles(node: IZoweUSSTreeNode, nodeList: IZoweUSSTreeNode[], ussFileProvider: IZoweTree<IZoweUSSTreeNode>) {
@@ -391,7 +445,7 @@ export async function copyUssFiles(node: IZoweUSSTreeNode, nodeList: IZoweUSSTre
     await vscode.window.withProgress(
         {
             location: vscode.ProgressLocation.Window,
-            title: localize("ZoweUssNode.copyDownload.progress", "Downloading copied files ..."),
+            title: localize("ZoweUssNode.copyDownload.progress", "Copying file structure..."),
         },
         () => {
             return copyUssFilesToClipboard(selectedNodes);
@@ -424,7 +478,7 @@ export async function pasteUssFile(ussFileProvider: IZoweTree<IZoweUSSTreeNode>,
     await vscode.window.withProgress(
         {
             location: vscode.ProgressLocation.Window,
-            title: localize("ZoweUssNode.copyUpload.progress", "Uploading copied files ..."),
+            title: localize("ZoweUssNode.copyUpload.progress", "Pasting files..."),
         },
         () => {
             return selectedNode.copyUssFile();

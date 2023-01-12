@@ -49,6 +49,10 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
         return result;
     }
 
+    public fileUtils(outputPath: string, options: object): Promise<Buffer> {
+        throw new Error("Function not implemented");
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/require-await, require-await
     public async isFileTagBinOrAscii(ussFilePath: string): Promise<boolean> {
         return false; // TODO: needs to be implemented checking file type

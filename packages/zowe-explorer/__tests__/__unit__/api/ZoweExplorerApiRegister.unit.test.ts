@@ -24,6 +24,9 @@ class MockUssApi1 implements ZoweExplorerApi.IUss {
     public fileList(ussFilePath: string): Promise<zowe.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
+    public fileUtils(outputPath: string, options: object): Promise<Buffer> {
+        throw new Error("Method not implemented.");
+    }
     public isFileTagBinOrAscii(ussFilePath: string): Promise<boolean> {
         throw new Error("Method not implemented.");
     }
@@ -78,6 +81,9 @@ class MockUssApi2 implements ZoweExplorerApi.IUss {
         return "api2typename";
     }
     public fileList(ussFilePath: string): Promise<zowe.IZosFilesResponse> {
+        throw new Error("Method not implemented.");
+    }
+    public fileUtils(outputPath: string, options: object): Promise<Buffer> {
         throw new Error("Method not implemented.");
     }
     public isFileTagBinOrAscii(ussFilePath: string): Promise<boolean> {
