@@ -129,6 +129,7 @@ async function createGlobalMocks() {
         },
         mockExtension: null,
         appName: vscode.env.appName,
+        uriScheme: vscode.env.uriScheme,
         expectedCommands: [
             "zowe.extRefresh",
             "zowe.updateSecureCredentials",
@@ -334,6 +335,7 @@ async function createGlobalMocks() {
     });
     Object.defineProperty(globalMocks.mockIcInstance, "cliHome", { get: globalMocks.mockCliHome });
     Object.defineProperty(vscode.env, "appName", { value: globalMocks.appName, configurable: true });
+    Object.defineProperty(vscode, "uriScheme", { value: globalMocks.uriScheme, configurable: true });
     Object.defineProperty(vscode, "UIKind", { value: globalMocks.UIKindEnums, configurable: true });
     Object.defineProperty(Profiles, "createInstance", {
         value: jest.fn(() => globalMocks.testProfileOps),
@@ -454,8 +456,7 @@ describe("Extension Unit Tests", () => {
     it("Tests that activate() works correctly for Theia", async () => {
         const globalMocks = await createGlobalMocks();
 
-        Object.defineProperty(vscode.env, "appName", { value: "Eclipse Theia" });
-        Object.defineProperty(vscode.env, "uiKind", { value: vscode.UIKind.Web });
+        Object.defineProperty(vscode.env, "uriScheme", { value: "theia" });
         globalMocks.mockExistsSync.mockReset();
         globalMocks.mockReaddirSync.mockReset();
         globalMocks.mockExistsSync.mockReturnValueOnce(false);

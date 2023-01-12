@@ -258,9 +258,8 @@ export const plusSign = "\uFF0B ";
  * @param tempPath File path for temporary folder defined in preferences
  */
 export function defineGlobals(tempPath: string | undefined) {
-    // Set app name
-    const appName = vscode.env.appName;
-    if (appName && !this.VSCODE_APPNAME.includes(appName) && vscode.env.uiKind === vscode.UIKind.Web) {
+    // check if Theia environment
+    if (vscode.env.uriScheme === "theia") {
         this.ISTHEIA = true;
     }
 
