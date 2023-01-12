@@ -17,7 +17,8 @@ import { FtpUssApi } from "../../../src/ZoweExplorerFtpUssApi";
 import { UssUtils } from "@zowe/zos-ftp-for-zowe-cli";
 import TestUtils from "../utils/TestUtils";
 import * as zowe from "@zowe/cli";
-import { sessionMap } from "../../../src/extension";
+import { sessionMap, ZoweLogger } from "../../../src/extension";
+import { Gui } from "@zowe/zowe-explorer-api";
 
 // two methods to mock modules: create a __mocks__ file for zowe-explorer-api.ts and direct mock for extension.ts
 jest.mock("../../../__mocks__/@zowe/zowe-explorer-api.ts");
@@ -180,10 +181,13 @@ describe("FtpUssApi", () => {
     });
 
     it("should not be able to use fileUtils as it is not implemented in the FTP extension.", async () => {
+        Object.defineProperty(Gui, "errorMessage", { value: jest.fn(), configurable: true });
         try {
             await UssApi.fileUtils("", {});
         } catch (err) {
-            expect(err.message).toBe("Method not implemented.");
+            expect(Gui.errorMessage).toHaveBeenCalledWith("Copy/paste operations are currently unsupported for the FTP extension.", {
+                logger: ZoweLogger,
+            });
         }
     });
 

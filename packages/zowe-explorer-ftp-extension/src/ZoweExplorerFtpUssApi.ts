@@ -49,8 +49,9 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
         return result;
     }
 
-    public fileUtils(outputPath: string, options: object): Promise<Buffer> {
-        throw new Error("Method not implemented.");
+    public async fileUtils(outputPath: string, options: object): Promise<Buffer> {
+        await Gui.errorMessage("Copy/paste operations are currently unsupported for the FTP extension.", { logger: ZoweLogger });
+        return Promise.reject();
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/require-await, require-await
