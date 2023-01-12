@@ -102,4 +102,33 @@ describe("Zosmf API tests", () => {
             encoding: "285",
         });
     });
+
+    it("should test that getContents calls zowe.Download.UssFile", async () => {
+        const api = new ZosmfUssApi();
+        api.getSession = jest.fn();
+
+        Object.defineProperty(zowe, "Download", {
+            value: {
+                ussFile: jest.fn(),
+            },
+            configurable: true,
+        });
+
+        await api.getContents("/some/input/path", {});
+        expect(zowe.Download.ussFile).toHaveBeenCalledWith(api.getSession(), "/some/input/path", {});
+    });
+
+    it("should test that fileUtils calls zowe.Utilities.putUSSPayload", async () => {
+        const api = new ZosmfUssApi();
+        api.getSession = jest.fn();
+
+        Object.defineProperty(zowe, "Utilities", {
+            value: {
+                putUSSPayload: jest.fn().mockResolvedValue(Buffer.from("hello world!")),
+            },
+            configurable: true,
+        });
+
+        expect(api.fileUtils("/", {})).resolves.toBe(await zowe.Utilities.putUSSPayload(api.getSession(), "/", {}));
+    });
 });
