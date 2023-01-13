@@ -261,8 +261,12 @@ export const plusSign = "\uFF0B ";
 export function defineGlobals(tempPath: string | undefined) {
     // check if Theia environment
     const appName = vscode.env.appName;
-    if (appName && appName.toLowerCase().includes("theia") && vscode.env.uiKind === vscode.UIKind.Web) {
-        ISTHEIA = true;
+    const uriScheme = vscode.env.uriScheme;
+    if (
+        ((appName && appName.toLowerCase().includes("theia")) || (uriScheme && uriScheme.toLowerCase().includes("theia"))) &&
+        vscode.env.uiKind === vscode.UIKind.Web
+    ) {
+        this.ISTHEIA = true;
     }
 
     // Set temp path & folder paths
