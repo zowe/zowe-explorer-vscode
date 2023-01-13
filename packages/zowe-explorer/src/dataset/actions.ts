@@ -1472,14 +1472,14 @@ export async function pasteDataSetMembers(datasetProvider: api.IZoweTree<api.IZo
     try {
         clipboardContent = JSON.parse(await vscode.env.clipboard.readText());
     } catch (err) {
-        vscode.window.showErrorMessage(localize("paste.dataSet", "Invalid paste. Copy dataset(s) first"));
+        api.Gui.errorMessage(localize("paste.dataSet", "Invalid paste. Copy dataset(s) first"));
         return;
     }
     if (!Array.isArray(clipboardContent) && clipboardContent.memberName) {
         return pasteMember(node, datasetProvider);
     }
 
-    await vscode.window.withProgress(
+    await api.Gui.withProgress(
         {
             location: vscode.ProgressLocation.Window,
             title: localize("paste.dataSet.InPrg", "Uploading File(s)"),
@@ -1493,7 +1493,7 @@ export async function pasteDataSetMembers(datasetProvider: api.IZoweTree<api.IZo
                             { dsn: node.getLabel().toString(), member: content.memberName }
                         );
                     } catch (err) {
-                        vscode.window.showErrorMessage(err.message);
+                        api.Gui.errorMessage(err.message);
                         return;
                     }
                 }
@@ -1553,7 +1553,7 @@ export async function copySequentialDatasets(nodes: ZoweDatasetNode[]) {
                 },
             };
 
-            const sequential = await vscode.window.showInputBox(inputBoxOptions);
+            const sequential = await api.Gui.showInputBox(inputBoxOptions);
             if (!sequential) {
                 return;
             }
@@ -1611,7 +1611,7 @@ export async function copyPartitionedDatasets(nodes: ZoweDatasetNode[]) {
                 },
             };
 
-            const partitionedDs = await vscode.window.showInputBox(inputBoxOptions);
+            const partitionedDs = await api.Gui.showInputBox(inputBoxOptions);
             if (!partitionedDs) {
                 return;
             }
@@ -1628,7 +1628,7 @@ export async function copyPartitionedDatasets(nodes: ZoweDatasetNode[]) {
                     uploadOptions.encoding = prof.profile.encoding;
                 }
 
-                await vscode.window.withProgress(
+                await api.Gui.withProgress(
                     {
                         location: vscode.ProgressLocation.Window,
                         title: localize("paste.dataSet.InPrg", "Uploading File(s)"),

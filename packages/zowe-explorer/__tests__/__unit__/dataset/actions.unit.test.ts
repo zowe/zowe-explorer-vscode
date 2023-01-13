@@ -1730,9 +1730,10 @@ describe("Dataset Actions Unit Tests - Function copyDataSet", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         const selectedNodeSpy = jest.spyOn(sharedUtils, "getSelectedNodeList");
+        const copySpy = jest.spyOn(dsActions, "copyPartitionedDatasets");
+        copySpy.mockResolvedValue(undefined);
         await dsActions.copyDataSet(blockMocks.pdsSessionNode, null, blockMocks.testDatasetTree);
         expect(selectedNodeSpy).toBeCalledWith(blockMocks.pdsSessionNode, null);
-        expect(mocked(vscode.window.showErrorMessage)).not.toBeCalled();
     });
     it("Checking copy the label of a favorite node to the clipboard", async () => {
         globals.defineGlobals("");
@@ -1798,7 +1799,7 @@ describe("Dataset Actions Unit Tests - Function copyDataSet", () => {
             return Promise.resolve(prm);
         });
         await dsActions.copyDataSet(nodeCopy, null, blockMocks.testDatasetTree);
-        expect(mocked(vscode.window.showErrorMessage)).not.toHaveBeenCalled();
+        expect(mocked(Gui.errorMessage)).not.toHaveBeenCalled();
         await expect(dsActions.copyDataSet(nodeCopy, null, blockMocks.testDatasetTree)).toStrictEqual(Promise.resolve());
     });
 
@@ -1877,7 +1878,7 @@ describe("Dataset Actions Unit Tests - Function copyDataSet", () => {
             return Promise.resolve(params);
         });
         await dsActions.copyDataSet(dsNode, null, blockMocks.testDatasetTree);
-        await expect(mocked(vscode.window.showErrorMessage)).not.toHaveBeenCalled();
+        await expect(mocked(Gui.errorMessage)).not.toHaveBeenCalled();
         await expect(dsActions.copyDataSet(dsNode, null, blockMocks.testDatasetTree)).toStrictEqual(Promise.resolve());
     });
 
@@ -1927,7 +1928,7 @@ describe("Dataset Actions Unit Tests - Function copyDataSet", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         vscode.env.clipboard.writeText("");
-        const errSpy = jest.spyOn(vscode.window, "showErrorMessage");
+        const errSpy = jest.spyOn(Gui, "errorMessage");
         await expect(dsActions.pasteDataSetMembers(blockMocks.testDatasetTree, blockMocks.datasetSessionNode)).toEqual(Promise.resolve());
         expect(errSpy).toBeCalled();
     });
@@ -1945,7 +1946,7 @@ describe("Dataset Actions Unit Tests - Function copyDataSet", () => {
             undefined,
             blockMocks.imperativeProfile
         );
-        const errSpy = jest.spyOn(vscode.window, "showErrorMessage");
+        const errSpy = jest.spyOn(Gui, "errorMessage");
         await expect(dsActions.pasteDataSetMembers(blockMocks.testDatasetTree, node)).toEqual(Promise.resolve());
         expect(errSpy).toBeCalled();
     });
@@ -1993,7 +1994,7 @@ describe("Dataset Actions Unit Tests - Function copyDataSet", () => {
         });
 
         await dsActions.pasteDataSetMembers(blockMocks.testDatasetTree, memberNode);
-        expect(mocked(vscode.window.showErrorMessage)).not.toHaveBeenCalled();
+        expect(mocked(Gui.errorMessage)).not.toHaveBeenCalled();
     });
     it("Testing pasteDataSetMembers() fails with multiple members", async () => {
         globals.defineGlobals("");

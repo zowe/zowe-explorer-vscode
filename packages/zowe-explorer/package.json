@@ -306,7 +306,7 @@
         "category": "Zowe Explorer"
       },
       {
-        "command": "zowe.ds.pasteMember",
+        "command": "zowe.ds.pasteDataSet",
         "title": "%paste%",
         "category": "Zowe Explorer"
       },
