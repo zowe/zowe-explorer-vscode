@@ -9,6 +9,7 @@
  *                                                                                 *
  */
 
+import { mkdirSync, writeFileSync } from "fs";
 import { Builder, By, Key, until, Button } from "selenium-webdriver";
 import * as firefox from "selenium-webdriver/firefox";
 import { TheiaLocator, DatasetsLocators, UssLocators, JobsLocators } from "./Locators";
@@ -16,12 +17,23 @@ import { TheiaLocator, DatasetsLocators, UssLocators, JobsLocators } from "./Loc
 const WAITTIME = 30000;
 const SHORTSLEEPTIME = 2000;
 const wait5sec = 5000;
+const RESULTS_DIR = "./results/integration";
 let driverFirefox: any;
 
 export async function openBrowser() {
     const firefoxOptions = new firefox.Options();
     firefoxOptions.headless();
     driverFirefox = new Builder().forBrowser("firefox").setFirefoxOptions(firefoxOptions).build();
+}
+
+export async function takeScreenshot(testName: string) {
+    mkdirSync(RESULTS_DIR, { recursive: true });
+    return new Promise((resolve, reject) => {
+        driverFirefox.takeScreenshot().then((image, err) => {
+            if (err != null) reject(err);
+            resolve(writeFileSync(`${RESULTS_DIR}/${testName}.png`, image, "base64"));
+        });
+    });
 }
 
 export async function OpenTheiaInFirefox() {

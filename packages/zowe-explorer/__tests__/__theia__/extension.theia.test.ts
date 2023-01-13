@@ -31,6 +31,12 @@ describe("Locate Tree Nodes", () => {
         await driverFirefox.clickOnZoweExplorer();
     });
 
+    afterEach(async function () {
+        if (this.currentTest.state === "failed") {
+            await driverFirefox.takeScreenshot(this.currentTest.fullTitle());
+        }
+    });
+
     it("should open Zowe Explorer and find the Favorites node", async () => {
         const favoriteLink = await driverFirefox.getFavouritesNode();
         expect(favoriteLink).to.equal("Favorites");
@@ -61,6 +67,12 @@ describe("Add Default Profile and Profile in DATASETS", () => {
         await driverChrome.OpenTheiaInChrome();
         await driverChrome.sleepTime(SLEEPTIME);
         await driverChrome.clickOnZoweExplorer();
+    });
+
+    afterEach(async function () {
+        if (this.currentTest.state === "failed") {
+            await driverChrome.takeScreenshot(this.currentTest.fullTitle());
+        }
     });
 
     it("Should Add Default Profile in DATASETS", async () => {
@@ -98,6 +110,12 @@ describe("Default profile Visible in USS and JOBS", () => {
         await driverFirefox.sleepTime(wait5sec);
     });
 
+    afterEach(async function () {
+        if (this.currentTest.state === "failed") {
+            await driverFirefox.takeScreenshot(this.currentTest.fullTitle());
+        }
+    });
+
     it("Should Default profile visible in USS", async () => {
         await driverFirefox.clickOnDatasetsTab();
         await driverFirefox.clickOnUssTab();
@@ -123,6 +141,12 @@ describe("Add Existing Profiles in USS and JOBS", () => {
         await driverFirefox.sleepTime(SLEEPTIME);
         await driverFirefox.clickOnZoweExplorer();
         await driverFirefox.sleepTime(wait5sec);
+    });
+
+    afterEach(async function () {
+        if (this.currentTest.state === "failed") {
+            await driverFirefox.takeScreenshot(this.currentTest.fullTitle());
+        }
     });
 
     it("Should Add Existing Profile in USS", async () => {
@@ -154,6 +178,12 @@ describe("Test Adding and Removing Favorites", () => {
         await driverChrome.OpenTheiaInChrome();
         await driverChrome.sleepTime(SLEEPTIME);
         await driverChrome.clickOnZoweExplorer();
+    });
+
+    afterEach(async function () {
+        if (this.currentTest.state === "failed") {
+            await driverChrome.takeScreenshot(this.currentTest.fullTitle());
+        }
     });
 
     it("Should Add Profile to Favorites under DATASETS", async () => {
@@ -224,6 +254,12 @@ describe("Hide Profiles", () => {
         await driverChrome.clickOnZoweExplorer();
     });
 
+    afterEach(async function () {
+        if (this.currentTest.state === "failed") {
+            await driverChrome.takeScreenshot(this.currentTest.fullTitle());
+        }
+    });
+
     it("Should Hide Profile from USS", async () => {
         await driverChrome.clickOnDatasetsTab();
         await driverChrome.sleepTime(SHORTSLEEPTIME);
@@ -255,6 +291,12 @@ describe("Delete Profiles", () => {
         await driverChrome.OpenTheiaInChrome();
         await driverChrome.sleepTime(SLEEPTIME);
         await driverChrome.clickOnZoweExplorer();
+    });
+
+    afterEach(async function () {
+        if (this.currentTest.state === "failed") {
+            await driverChrome.takeScreenshot(this.currentTest.fullTitle());
+        }
     });
 
     it("Should Delete Default Profile from DATA SETS", async () => {

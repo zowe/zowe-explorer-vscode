@@ -9,12 +9,14 @@
  *                                                                                 *
  */
 
+import { mkdirSync, writeFileSync } from "fs";
 import { Builder, By, Key, until, Button } from "selenium-webdriver";
 import * as chrome from "selenium-webdriver/chrome";
 import { TheiaLocator, DatasetsLocators, UssLocators, JobsLocators, TheiaNotificationMessages } from "./Locators";
 
 const WAITTIME = 40000;
 const SHORTSLEEPTIME = 2000;
+const RESULTS_DIR = "./results/integration";
 let driverChrome: any;
 
 export async function openBrowser() {
@@ -22,6 +24,16 @@ export async function openBrowser() {
     chromeOptions.addArguments("headless");
     chromeOptions.addArguments("window-size=1200,1100");
     driverChrome = new Builder().forBrowser("chrome").setChromeOptions(chromeOptions).build();
+}
+
+export async function takeScreenshot(testName: string) {
+    mkdirSync(RESULTS_DIR, { recursive: true });
+    return new Promise((resolve, reject) => {
+        driverChrome.takeScreenshot().then((image, err) => {
+            if (err != null) reject(err);
+            resolve(writeFileSync(`${RESULTS_DIR}/${testName}.png`, image, "base64"));
+        });
+    });
 }
 
 export async function OpenTheiaInChrome() {
