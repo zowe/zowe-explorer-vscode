@@ -9,20 +9,25 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added feature copy datasets ( pds, sequential, members across pds) with multi select capabilities. [#1150](https://github.com/zowe/vscode-extension-for-zowe/issues/1550)
 - Added Job search prefix validator [1971](https://github.com/zowe/vscode-extension-for-zowe/issues/1971)
 - Added file association for `zowe.config.json` and `zowe.config.user.json` to automatically detect them as JSON with Comments. [#1997](https://github.com/zowe/vscode-extension-for-zowe/issues/1997)
+- Added the ability to list all datasets, even those with Imperative Errors. [#235](https://github.com/zowe/vscode-extension-for-zowe/issues/235) & [#2036](https://github.com/zowe/vscode-extension-for-zowe/issues/2036)
 - Added favorite job query to jobs view. [#1947](https://github.com/zowe/vscode-extension-for-zowe/issues/1947)
 - Added confirmation message for "Submit Job" feature as an option in extension settings (set to "All jobs" by default). [#998](https://github.com/zowe/vscode-extension-for-zowe/issues/998)
+- Updated UI/UX method calls to use standalone `Gui` module for better usability and maintainability. [#1967](https://github.com/zowe/vscode-extension-for-zowe/issues/1967)
 
 ### Bug fixes
 
 - Fixed issue where "Show Attributes" feature used conflicting colors with light VS Code themes. [#2048](https://github.com/zowe/vscode-extension-for-zowe/issues/2048)
-- Fixed settings not persisting in Theia versions >=1.29.0.
+- Fixed settings not persisting in Theia versions >=1.29.0. [#2065](https://github.com/zowe/vscode-extension-for-zowe/pull/2065)
+- Removed TSLint (as it is deprecated), and replaced all TSLint rules with their ESLint equivalents. [#2030](https://github.com/zowe/vscode-extension-for-zowe/issues/2030)
 - Fixed issue with a success message being returned along with error for Job deletion. [#2075](https://github.com/zowe/vscode-extension-for-zowe/issues/2075)
+- Removed extra files from the VSIX bundle to reduce download size by 64%. [#2042](https://github.com/zowe/vscode-extension-for-zowe/pull/2042)
+- Surfaced any errors from a dataset Recall/Migrate operation. [#2032](https://github.com/zowe/vscode-extension-for-zowe/issues/2032)
 
 ## `2.5.0`
 
 ### New features and enhancements
 
-- Added ability to filter jobs by status. Improved Job filtering User experience.[#1925](https://github.com/zowe/vscode-extension-for-zowe/issues/1925)
+- Added ability to filter jobs by status. Improved Job filtering User experience. [#1925](https://github.com/zowe/vscode-extension-for-zowe/issues/1925)
 - Added option to view PDS member attributes, and updated formatting for attributes webview. [#1577](https://github.com/zowe/vscode-extension-for-zowe/issues/1577)
 - Streamlined attribute viewing options into one feature - "Show Attributes".
 - Added multiple select copy/paste feature on uss view [#1549](https://github.com/zowe/vscode-extension-for-zowe/issues/1549)
@@ -35,7 +40,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed de-sync issue between Data Set and Favorites panels when adding or deleting datasets/members that were favorited. [#1488](https://github.com/zowe/vscode-extension-for-zowe/issues/1488)
 - Added logging in places where errors were being caught and ignored.
 - Fixed issue where parent in Jobs list closes after single/multiple job deletion. [#1676](https://github.com/zowe/vscode-extension-for-zowe/issues/1676)
-- Removed TSLint (as it is deprecated), and replaced all TSLint rules with their ESLint equivalents. [#2030](https://github.com/zowe/vscode-extension-for-zowe/issues/2030)
 
 ## `2.4.1`
 

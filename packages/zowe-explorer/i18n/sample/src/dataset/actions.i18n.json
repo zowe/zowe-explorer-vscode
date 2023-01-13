@@ -73,6 +73,7 @@
   "hMigrateDataSet.checkProfile": "Profile is invalid",
   "hRecall.requestSent1": "Recall of dataset: ",
   "hRecall.requestSent2": " requested.",
+  "showFileErrorDetails.noErrorDetails": "Unable to gather more information",
   "pasteMember.inputBox.placeHolder": "Name of Data Set",
   "saveFile.log.debug.request": "requested to save data set: ",
   "saveFile.log.debug.path": "path.relative returned a non-blank directory.",

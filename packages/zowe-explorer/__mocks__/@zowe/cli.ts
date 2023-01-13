@@ -130,6 +130,10 @@ export declare const enum CreateDataSetTypeEnum {
 }
 
 export namespace List {
+    export function dataSetsMatchingPattern(session: Session, hlq: string[], options: IListOptions): Promise<IZosFilesResponse> {
+        return dataSet(session, hlq[0], options);
+    }
+
     export function dataSet(session: Session, hlq: string, options: IListOptions): Promise<IZosFilesResponse> {
         if (hlq.toUpperCase() === "THROW ERROR") {
             throw Error("Throwing an error to check error handling for unit tests!");

@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
-import { ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { Gui, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import {
     createSessCfgFromArgs,
     createInstanceOfProfile,
@@ -79,10 +79,10 @@ function createGlobalMocks() {
     Object.defineProperty(zowe, "Upload", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe.Upload, "bufferToDataSet", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe.Upload, "pathToDataSet", { value: jest.fn(), configurable: true });
-    Object.defineProperty(vscode.window, "showErrorMessage", { value: jest.fn(), configurable: true });
-    Object.defineProperty(vscode.window, "showInformationMessage", { value: jest.fn(), configurable: true });
+    Object.defineProperty(Gui, "errorMessage", { value: jest.fn(), configurable: true });
+    Object.defineProperty(Gui, "showMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "setStatusBarMessage", { value: jest.fn(), configurable: true });
-    Object.defineProperty(vscode.window, "showWarningMessage", {
+    Object.defineProperty(Gui, "warningMessage", {
         value: newMocks.mockShowWarningMessage,
         configurable: true,
     });
@@ -191,7 +191,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
             await dsActions.createMember(parent, blockMocks.testDatasetTree);
         } catch (err) {}
 
-        expect(mocked(vscode.window.showErrorMessage)).toBeCalledWith("Unable to create member: test Error: test");
+        expect(mocked(Gui.errorMessage)).toBeCalledWith("Unable to create member: test Error: test");
     });
     it("Checking of attempt to create member without name", async () => {
         createGlobalMocks();
@@ -295,7 +295,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
 
         await dsActions.refreshPS(node);
 
-        expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith("Unable to find file: " + node.label + " was probably deleted.");
+        expect(mocked(Gui.showMessage)).toBeCalledWith("Unable to find file: " + node.label + " was probably deleted.");
         expect(mocked(vscode.commands.executeCommand)).not.toBeCalled();
     });
     it("Checking failed attempt to refresh PDS Member", async () => {
@@ -314,7 +314,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
             file: path.join(globals.DS_DIR, child.getSessionNode().label.toString(), `${child.getParent().label}(${child.label})`),
             returnEtag: true,
         });
-        expect(mocked(vscode.window.showErrorMessage)).toBeCalledWith(" Error");
+        expect(mocked(Gui.errorMessage)).toBeCalledWith(" Error");
     });
     it("Checking favorite empty PDS refresh", async () => {
         globals.defineGlobals("");
@@ -474,9 +474,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
-        expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith(
-            `The following 1 item(s) were deleted: ${blockMocks.testDatasetNode.getLabel()}`
-        );
+        expect(mocked(Gui.showMessage)).toBeCalledWith(`The following 1 item(s) were deleted: ${blockMocks.testDatasetNode.getLabel()}`);
     });
 
     it("Should delete one member", async () => {
@@ -490,7 +488,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
-        expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith(
+        expect(mocked(Gui.showMessage)).toBeCalledWith(
             `The following 1 item(s) were deleted: ${blockMocks.testMemberNode.getParent().getLabel()}(${blockMocks.testMemberNode.getLabel()})`
         );
     });
@@ -506,9 +504,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
-        expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith(
-            `The following 1 item(s) were deleted: ${blockMocks.testVsamNode.getLabel()}`
-        );
+        expect(mocked(Gui.showMessage)).toBeCalledWith(`The following 1 item(s) were deleted: ${blockMocks.testVsamNode.getLabel()}`);
     });
 
     it("Should delete two datasets", async () => {
@@ -522,7 +518,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
-        expect(mocked(vscode.window.showInformationMessage)).toHaveBeenCalledWith(
+        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(
             `The following 2 item(s) were deleted: ${blockMocks.testDatasetNode.getLabel()}, ${blockMocks.testVsamNode.getLabel()}`
         );
     });
@@ -538,9 +534,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
-        expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith(
-            `The following 1 item(s) were deleted: ${blockMocks.testDatasetNode.getLabel()}`
-        );
+        expect(mocked(Gui.showMessage)).toBeCalledWith(`The following 1 item(s) were deleted: ${blockMocks.testDatasetNode.getLabel()}`);
     });
 
     it("Should delete a favorited data set", async () => {
@@ -554,10 +548,9 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
-        expect(mocked(vscode.window.showWarningMessage)).toBeCalledWith(
+        expect(mocked(Gui.warningMessage)).toBeCalledWith(
             `Are you sure you want to delete the following 1 item(s)?\nThis will permanently remove these data sets and/or members from your system.\n\n ${blockMocks.testFavoritedNode.getLabel()}`,
-            { modal: true },
-            "Delete"
+            { items: ["Delete"], vsCodeOpts: { modal: true } }
         );
     });
 
@@ -572,10 +565,9 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
-        expect(mocked(vscode.window.showWarningMessage)).toBeCalledWith(
+        expect(mocked(Gui.warningMessage)).toBeCalledWith(
             `Are you sure you want to delete the following 1 item(s)?\nThis will permanently remove these data sets and/or members from your system.\n\n ${blockMocks.testFavoritedNode.getLabel()}(${blockMocks.testFavMemberNode.getLabel()})`,
-            { modal: true },
-            "Delete"
+            { items: ["Delete"], vsCodeOpts: { modal: true } }
         );
     });
 
@@ -590,7 +582,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
-        expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith("No data sets selected for deletion, cancelling...");
+        expect(mocked(Gui.showMessage)).toBeCalledWith("No data sets selected for deletion, cancelling...");
     });
 
     it("Should account for favorited data sets during deletion", async () => {
@@ -604,7 +596,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
-        expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith(
+        expect(mocked(Gui.showMessage)).toBeCalledWith(
             `The following 2 item(s) were deleted: ${blockMocks.testDatasetNode.getLabel()}, ${blockMocks.testFavoritedNode.getLabel()}`
         );
     });
@@ -756,7 +748,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
 
         await expect(dsActions.deleteDataset(node, blockMocks.testDatasetTree)).rejects.toEqual(Error("not found"));
 
-        expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith("Unable to find file: " + node.label + " was probably already deleted.");
+        expect(mocked(Gui.showMessage)).toBeCalledWith("Unable to find file: " + node.label + " was probably already deleted.");
     });
     it("Checking common PS dataset failed deletion attempt", async () => {
         globals.defineGlobals("");
@@ -779,7 +771,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         deleteSpy.mockRejectedValueOnce(Error(""));
 
         await expect(dsActions.deleteDataset(node, blockMocks.testDatasetTree)).rejects.toEqual(Error(""));
-        expect(mocked(vscode.window.showErrorMessage)).toBeCalledWith(" Error");
+        expect(mocked(Gui.errorMessage)).toBeCalledWith(" Error");
     });
     it("Checking Favorite PDS dataset deletion", async () => {
         globals.defineGlobals("");
@@ -899,11 +891,13 @@ describe("Dataset Actions Unit Tests - Function enterPattern", () => {
         const mySpy = mocked(vscode.window.showInputBox).mockResolvedValue("test");
         await dsActions.enterPattern(node, blockMocks.testDatasetTree);
 
-        expect(mySpy).toBeCalledWith({
-            prompt: "Search Data Sets: use a comma to separate multiple patterns",
-            value: node.pattern,
-        });
-        expect(mocked(vscode.window.showInformationMessage)).not.toBeCalled();
+        expect(mySpy).toBeCalledWith(
+            expect.objectContaining({
+                prompt: "Search Data Sets: use a comma to separate multiple patterns",
+                value: node.pattern,
+            })
+        );
+        expect(mocked(Gui.showMessage)).not.toBeCalled();
     });
     it("Checking common dataset filter failed attempt", async () => {
         createGlobalMocks();
@@ -915,7 +909,7 @@ describe("Dataset Actions Unit Tests - Function enterPattern", () => {
         mocked(vscode.window.showInputBox).mockResolvedValueOnce("");
         await dsActions.enterPattern(node, blockMocks.testDatasetTree);
 
-        expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith("You must enter a pattern.");
+        expect(mocked(Gui.showMessage)).toBeCalledWith("You must enter a pattern.");
     });
     it("Checking favorite dataset filter action", async () => {
         createGlobalMocks();
@@ -1005,7 +999,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
 
         await dsActions.saveFile(testDocument, blockMocks.testDatasetTree);
 
-        expect(mocked(vscode.window.showErrorMessage)).toBeCalledWith("Couldn't locate session when saving data set!");
+        expect(mocked(Gui.errorMessage)).toBeCalledWith("Couldn't locate session when saving data set!");
     });
     it("Checking common dataset saving failed attempt due to its absence on the side of the server", async () => {
         globals.defineGlobals("");
@@ -1037,7 +1031,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         await dsActions.saveFile(testDocument, blockMocks.testDatasetTree);
 
         expect(dataSetSpy).toBeCalledWith("HLQ.TEST.AFILE");
-        expect(mocked(vscode.window.showErrorMessage)).toBeCalledWith("Data set failed to save. Data set may have been deleted on mainframe.");
+        expect(mocked(Gui.errorMessage)).toBeCalledWith("Data set failed to save. Data set may have been deleted on mainframe.");
     });
     it("Checking common dataset saving", async () => {
         globals.defineGlobals("");
@@ -1131,7 +1125,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         await dsActions.saveFile(testDocument, blockMocks.testDatasetTree);
 
         expect(mocked(sharedUtils.concatChildNodes)).toBeCalled();
-        expect(mocked(vscode.window.showErrorMessage)).toBeCalledWith("failed");
+        expect(mocked(Gui.errorMessage)).toBeCalledWith("failed");
     });
     it("Checking favorite dataset saving", async () => {
         globals.defineGlobals("");
@@ -1404,7 +1398,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
 
         await dsActions.saveFile(testDocument, blockMocks.testDatasetTree);
 
-        expect(mocked(vscode.window.showWarningMessage)).toBeCalledWith(
+        expect(mocked(Gui.warningMessage)).toBeCalledWith(
             "Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict."
         );
         expect(mocked(sharedUtils.concatChildNodes)).toBeCalled();
@@ -1642,7 +1636,7 @@ describe("Dataset Actions Unit Tests - Function showAttributes", () => {
         await expect(dsActions.showAttributes(node, blockMocks.testDatasetTree)).rejects.toEqual(
             Error("No matching names found for query: AUSER.A1557332.A996850.TEST1")
         );
-        expect(mocked(vscode.window.showErrorMessage)).toBeCalledWith(
+        expect(mocked(Gui.errorMessage)).toBeCalledWith(
             "Unable to list attributes: No matching names found for query: AUSER.A1557332.A996850.TEST1 Error: No matching names found for query: AUSER.A1557332.A996850.TEST1"
         );
         expect(mocked(vscode.window.createWebviewPanel)).not.toBeCalled();
@@ -2403,7 +2397,7 @@ describe("Dataset Actions Unit Tests - Function hMigrateDataSet", () => {
         await dsActions.hMigrateDataSet(node);
 
         expect(migrateSpy).toHaveBeenCalledWith("HLQ.TEST.TO.NODE");
-        expect(mocked(vscode.window.showInformationMessage)).toHaveBeenCalled();
+        expect(mocked(Gui.showMessage)).toHaveBeenCalled();
     });
 
     it("Checking that hMigrateDataSet throws an error if the user is invalid", async () => {
@@ -2418,7 +2412,7 @@ describe("Dataset Actions Unit Tests - Function hMigrateDataSet", () => {
 
         await dsActions.hMigrateDataSet(node);
 
-        expect(mocked(vscode.window.showErrorMessage)).toHaveBeenCalled();
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalled();
     });
     it("Checking PS dataset migrate for Unverified Profile", async () => {
         globals.defineGlobals("");
@@ -2451,7 +2445,7 @@ describe("Dataset Actions Unit Tests - Function hMigrateDataSet", () => {
         await dsActions.hMigrateDataSet(node);
 
         expect(migrateSpy).toHaveBeenCalledWith("HLQ.TEST.TO.NODE");
-        expect(mocked(vscode.window.showInformationMessage)).toHaveBeenCalled();
+        expect(mocked(Gui.showMessage)).toHaveBeenCalled();
     });
 });
 
@@ -2505,7 +2499,7 @@ describe("Dataset Actions Unit Tests - Function hRecallDataSet", () => {
         await dsActions.hRecallDataSet(node);
 
         expect(recallSpy).toHaveBeenCalledWith("HLQ.TEST.TO.NODE");
-        expect(mocked(vscode.window.showInformationMessage)).toHaveBeenCalled();
+        expect(mocked(Gui.showMessage)).toHaveBeenCalled();
     });
 
     it("Checking PS dataset recall for Unverified profile", async () => {
@@ -2539,7 +2533,95 @@ describe("Dataset Actions Unit Tests - Function hRecallDataSet", () => {
         await dsActions.hRecallDataSet(node);
 
         expect(recallSpy).toHaveBeenCalledWith("HLQ.TEST.TO.NODE");
-        expect(mocked(vscode.window.showInformationMessage)).toHaveBeenCalled();
+        expect(mocked(Gui.showMessage)).toHaveBeenCalled();
+    });
+});
+describe("Dataset Actions Unit Tests - Function showFileErrorDetails", () => {
+    function createBlockMocks() {
+        const session = createISession();
+        const sessionWithoutCredentials = createISessionWithoutCredentials();
+        const imperativeProfile = createIProfile();
+        const profileInstance = createInstanceOfProfile(imperativeProfile);
+        const zosmfSession = createSessCfgFromArgs(imperativeProfile);
+        const treeView = createTreeView();
+        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
+        const mvsApi = createMvsApi(imperativeProfile);
+        const mockCheckCurrentProfile = jest.fn();
+        bindMvsApi(mvsApi);
+
+        return {
+            session,
+            sessionWithoutCredentials,
+            zosmfSession,
+            treeView,
+            imperativeProfile,
+            datasetSessionNode,
+            mvsApi,
+            profileInstance,
+            testDatasetTree,
+            mockCheckCurrentProfile,
+        };
+    }
+
+    afterAll(() => jest.restoreAllMocks());
+
+    it("Checking PS dataset with fileError as contextValue", async () => {
+        globals.defineGlobals("");
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        const testError = new zowe.imperative.ImperativeError({ msg: "test" });
+        const testErrorString = JSON.stringify(testError, null, 2);
+        const node = new ZoweDatasetNode(
+            "HLQ.TEST.TO.NODE",
+            vscode.TreeItemCollapsibleState.None,
+            blockMocks.datasetSessionNode,
+            null,
+            globals.DS_FILE_ERROR_CONTEXT
+        );
+
+        const spyRecall = jest.spyOn(blockMocks.mvsApi, "hRecallDataSet");
+        const spyLogError = mocked(globals.LOG.error);
+
+        // succeeded at recalling the dataset
+        spyRecall.mockResolvedValueOnce({ success: true } as any);
+        await dsActions.showFileErrorDetails(node);
+        expect(spyRecall).toHaveBeenCalledWith("HLQ.TEST.TO.NODE");
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalled();
+        spyRecall.mockReset();
+
+        // failed recalling the dataset
+        spyRecall.mockRejectedValueOnce(testError);
+        await dsActions.showFileErrorDetails(node);
+        expect(spyRecall).toHaveBeenCalledWith("HLQ.TEST.TO.NODE");
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith(testError.message);
+        expect(spyLogError).toHaveBeenCalledWith(testErrorString);
+        spyRecall.mockReset();
+        spyLogError.mockReset();
+
+        // error details was already cached (this should always be the expected path)
+        node.errorDetails = testError;
+        await dsActions.showFileErrorDetails(node);
+        expect(spyRecall).not.toHaveBeenCalled();
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith(testError.message);
+        expect(spyLogError).toHaveBeenCalledWith(testErrorString);
+        spyRecall.mockReset();
+        spyLogError.mockReset();
+
+        // Invalid profile provided
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    checkCurrentProfile: jest.fn(),
+                    validProfile: ValidProfileEnum.INVALID,
+                };
+            }),
+        });
+        await dsActions.showFileErrorDetails(node);
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalled();
+        expect(spyRecall).not.toHaveBeenCalled();
+        expect(spyLogError).not.toHaveBeenCalled();
     });
 });
 
@@ -2763,9 +2845,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
             // do nothing
         }
 
-        expect(mocked(vscode.window.showErrorMessage)).toHaveBeenCalledWith(
-            "Error encountered when creating data set! Generic Error Error: Generic Error"
-        );
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("Error encountered when creating data set! Generic Error Error: Generic Error");
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_PS);
         expect(createDataSetSpy).toHaveBeenCalledWith(zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, "TEST", {
             alcunit: "CYL",
@@ -2792,7 +2872,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce(undefined);
         await dsActions.createFile(node, blockMocks.testDatasetTree);
 
-        expect(mocked(vscode.window.showInformationMessage)).toHaveBeenCalledWith("Operation cancelled.");
+        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith("Operation cancelled.");
         expect(mocked(vscode.workspace.getConfiguration)).not.toBeCalled();
         expect(createDataSetSpy).not.toHaveBeenCalled();
     });
@@ -2864,12 +2944,12 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         const quickPickContent = createQuickPickContent("", [], "");
         mocked(vscode.window.createQuickPick).mockReturnValueOnce(quickPickContent);
         const selectedItem: vscode.QuickPickItem = { label: "Data Set Name" };
-        jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(selectedItem);
+        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(selectedItem);
         mocked(vscode.window.showInputBox).mockResolvedValueOnce("TEST.EDIT");
 
         // Then they try to allocate
         mocked(vscode.window.createQuickPick).mockReturnValueOnce(quickPickContent);
-        jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce({ label: " + Allocate Data Set" });
+        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce({ label: " + Allocate Data Set" });
 
         await dsActions.createFile(node, blockMocks.testDatasetTree);
 
@@ -2908,12 +2988,12 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         const quickPickContent = createQuickPickContent("", [], "");
         mocked(vscode.window.createQuickPick).mockReturnValueOnce(quickPickContent);
         const selectedItem: vscode.QuickPickItem = { label: "Allocation Unit" };
-        jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(selectedItem);
+        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(selectedItem);
         mocked(vscode.window.showInputBox).mockResolvedValueOnce("TRK");
 
         // Then they try to allocate
         mocked(vscode.window.createQuickPick).mockReturnValueOnce(quickPickContent);
-        jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce({ label: " + Allocate Data Set" });
+        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce({ label: " + Allocate Data Set" });
 
         await dsActions.createFile(node, blockMocks.testDatasetTree);
 
@@ -3018,7 +3098,7 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
             // do nothing
         }
 
-        expect(mocked(vscode.window.showErrorMessage)).toBeCalledWith("testError Error: testError");
+        expect(mocked(Gui.errorMessage)).toBeCalledWith("testError Error: testError");
     });
     it("Checking of opening for PDS Member", async () => {
         globals.defineGlobals("");
@@ -3126,7 +3206,7 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
             await dsActions.openPS(node, true, blockMocks.testDatasetTree);
         } catch (err) {}
 
-        expect(mocked(vscode.window.showErrorMessage)).toBeCalledWith("openPS() called from invalid node.");
+        expect(mocked(Gui.errorMessage)).toBeCalledWith("openPS() called from invalid node.");
     });
     it("Checking that error is displayed and logged for opening of node with invalid context value", async () => {
         createGlobalMocks();
@@ -3150,7 +3230,7 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
             undefined,
             blockMocks.imperativeProfile
         );
-        const showErrorMessageSpy = jest.spyOn(vscode.window, "showErrorMessage");
+        const showErrorMessageSpy = jest.spyOn(Gui, "errorMessage");
         const logErrorSpy = jest.spyOn(globals.LOG, "error");
 
         try {
@@ -3190,7 +3270,7 @@ describe("Dataset Actions Unit Tests - Function allocateLike", () => {
         });
         jest.spyOn(datasetSessionNode, "getChildren").mockResolvedValue([testNode, testSDSNode]);
         testDatasetTree.createFilterString.mockResolvedValue("test");
-        jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValue(quickPickItem);
+        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValue(quickPickItem);
         jest.spyOn(dsActions, "openPS").mockImplementation(() => null);
 
         return {
@@ -3242,11 +3322,11 @@ describe("Dataset Actions Unit Tests - Function allocateLike", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
-        jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(null);
+        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(null);
 
         await dsActions.allocateLike(blockMocks.testDatasetTree);
 
-        expect(mocked(vscode.window.showInformationMessage)).toHaveBeenCalledWith("You must select a profile.");
+        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith("You must select a profile.");
     });
     it("Tests that allocateLike fails if no new dataset name is provided", async () => {
         createGlobalMocks();
@@ -3256,7 +3336,7 @@ describe("Dataset Actions Unit Tests - Function allocateLike", () => {
 
         await dsActions.allocateLike(blockMocks.testDatasetTree, blockMocks.testNode);
 
-        expect(mocked(vscode.window.showInformationMessage)).toHaveBeenCalledWith("You must enter a new data set name.");
+        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith("You must enter a new data set name.");
     });
     it("Tests that allocateLike fails if error is thrown", async () => {
         createGlobalMocks();

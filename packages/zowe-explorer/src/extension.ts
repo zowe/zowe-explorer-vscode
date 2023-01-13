@@ -17,7 +17,7 @@ import * as dsActions from "./dataset/actions";
 import * as jobActions from "./job/actions";
 import * as refreshActions from "./shared/refresh";
 import * as sharedActions from "./shared/actions";
-import { IZoweDatasetTreeNode, IZoweJobTreeNode, IZoweUSSTreeNode, IZoweTreeNode, IZoweTree, getZoweDir } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweDatasetTreeNode, IZoweJobTreeNode, IZoweUSSTreeNode, IZoweTreeNode, IZoweTree, getZoweDir } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import { Profiles } from "./Profiles";
@@ -70,7 +70,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     } catch (err) {
         globals.LOG.error(err);
         const errorMessage = localize("initialize.log.error", "Error encountered while activating and initializing logger! ");
-        vscode.window.showErrorMessage(`${errorMessage}: ${err.message}`);
+        Gui.errorMessage(`${errorMessage}: ${err.message}`);
     }
 
     try {
@@ -79,7 +79,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     } catch (err) {
         globals.LOG.error(err);
         const errorMessage = localize("initialize.profiles.error", "Error reading or initializing Zowe CLI profiles.");
-        vscode.window.showWarningMessage(`${errorMessage}: ${err.message}`);
+        Gui.warningMessage(`${errorMessage}: ${err.message}`);
     }
 
     // Initialize profile manager
@@ -457,6 +457,15 @@ function initDatasetProvider(context: vscode.ExtensionContext) {
             selectedNodes = selectedNodes.filter((element) => contextuals.isMigrated(element));
             for (const item of selectedNodes) {
                 dsActions.hRecallDataSet(item as ZoweDatasetNode);
+            }
+        })
+    );
+    context.subscriptions.push(
+        vscode.commands.registerCommand("zowe.ds.showFileErrorDetails", async (node, nodeList) => {
+            let selectedNodes = getSelectedNodeList(node, nodeList);
+            selectedNodes = selectedNodes.filter((element) => contextuals.hasFileError(element));
+            for (const item of selectedNodes) {
+                dsActions.showFileErrorDetails(item as ZoweDatasetNode);
             }
         })
     );

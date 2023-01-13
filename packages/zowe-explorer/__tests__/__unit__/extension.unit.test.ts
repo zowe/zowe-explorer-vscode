@@ -17,9 +17,10 @@ import * as fs from "fs";
 import * as fsextra from "fs-extra";
 import * as extension from "../../src/extension";
 import * as globals from "../../src/globals";
-import { ValidProfileEnum, ProfilesCache } from "@zowe/zowe-explorer-api";
+import { Gui, ValidProfileEnum, ProfilesCache } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../src/Profiles";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
+import * as dsActions from "../../src/dataset/actions";
 import { createGetConfigMock, createInstanceOfProfileInfo, createIProfile, createTreeView } from "../../__mocks__/mockCreators/shared";
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
 import { getSelectedNodeList } from "../../src/shared/utils";
@@ -164,6 +165,7 @@ async function createGlobalMocks() {
             "zowe.ds.renameDataSetMember",
             "zowe.ds.hMigrateDataSet",
             "zowe.ds.hRecallDataSet",
+            "zowe.ds.showFileErrorDetails",
             "zowe.ds.disableValidation",
             "zowe.ds.enableValidation",
             "zowe.ds.ssoLogin",
@@ -284,11 +286,11 @@ async function createGlobalMocks() {
     Object.defineProperty(fs, "rmdirSync", { value: globalMocks.mockRmdirSync, configurable: true });
     Object.defineProperty(fs, "readFileSync", { value: globalMocks.mockReadFileSync, configurable: true });
     Object.defineProperty(fsextra, "moveSync", { value: globalMocks.mockMoveSync, configurable: true });
-    Object.defineProperty(vscode.window, "showErrorMessage", {
+    Object.defineProperty(Gui, "errorMessage", {
         value: globalMocks.mockShowErrorMessage,
         configurable: true,
     });
-    Object.defineProperty(vscode.window, "showWarningMessage", {
+    Object.defineProperty(Gui, "warningMessage", {
         value: globalMocks.mockShowWarningMessage,
         configurable: true,
     });
@@ -382,29 +384,31 @@ async function createGlobalMocks() {
     return globalMocks;
 }
 
+function createBlockMocks(globalMocks: any) {
+    const blockMocks = {
+        rootNode: new ZoweUSSNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, globalMocks.session, null, false, "test", undefined),
+        testNode: null,
+    };
+    blockMocks.testNode = new ZoweUSSNode(
+        globals.DS_PDS_CONTEXT,
+        vscode.TreeItemCollapsibleState.Collapsed,
+        blockMocks.rootNode,
+        null,
+        null,
+        false,
+        "test",
+        undefined
+    );
+
+    blockMocks.rootNode.contextValue = globals.USS_SESSION_CONTEXT;
+    return blockMocks;
+}
+
 describe("Extension Unit Tests", () => {
-    function createBlockMocks(globalMocks: any) {
-        const blockMocks = {
-            rootNode: new ZoweUSSNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, globalMocks.session, null, false, "test", undefined),
-            testNode: null,
-        };
-        blockMocks.testNode = new ZoweUSSNode(
-            globals.DS_PDS_CONTEXT,
-            vscode.TreeItemCollapsibleState.Collapsed,
-            blockMocks.rootNode,
-            null,
-            null,
-            false,
-            "test",
-            undefined
-        );
-
-        blockMocks.rootNode.contextValue = globals.USS_SESSION_CONTEXT;
-        return blockMocks;
-    }
-
-    it("Testing that activate correctly executes", async () => {
-        const globalMocks = await createGlobalMocks();
+    const allCommands = {};
+    let globalMocks;
+    beforeAll(async () => {
+        globalMocks = await createGlobalMocks();
         Object.defineProperty(zowe.imperative, "ProfileInfo", {
             value: globalMocks.mockImperativeProfileInfo,
             configurable: true,
@@ -439,17 +443,32 @@ describe("Extension Unit Tests", () => {
 
         // Checking if commands are registered properly
         expect(globalMocks.mockRegisterCommand.mock.calls.length).toBe(globals.COMMAND_COUNT);
+
         globalMocks.mockRegisterCommand.mock.calls.forEach((call, i) => {
             expect(call[0]).toStrictEqual(globalMocks.expectedCommands[i]);
             expect(call[1]).toBeInstanceOf(Function);
+            allCommands[call[0]] = call[1];
         });
-        const actualCommands = [];
-        globalMocks.mockRegisterCommand.mock.calls.forEach((call) => {
-            actualCommands.push(call[0]);
-        });
-        expect(actualCommands).toEqual(globalMocks.expectedCommands);
     });
 
+    it("Testing that activate correctly executes", async () => {
+        expect(Object.keys(allCommands)).toEqual(globalMocks.expectedCommands);
+    });
+
+    it("zowe.ds.showFileErrorDetails", async () => {
+        const testNode: any = { getProfile: jest.fn(), getParent: jest.fn().mockReturnValue({ getLabel: jest.fn() }) };
+        const fileErrorSpy = jest.spyOn(dsActions, "showFileErrorDetails");
+        fileErrorSpy.mockImplementation(jest.fn()); // prevent the actual function from being called
+        await allCommands["zowe.ds.showFileErrorDetails"](testNode);
+        expect(fileErrorSpy).not.toHaveBeenCalled();
+
+        testNode.contextValue = globals.DS_FILE_ERROR_CONTEXT;
+        await allCommands["zowe.ds.showFileErrorDetails"](testNode);
+        expect(fileErrorSpy).toHaveBeenCalledWith(testNode);
+    });
+});
+
+describe("Extension Unit Tests - THEIA", () => {
     it("Tests that activate() works correctly for Theia", async () => {
         const globalMocks = await createGlobalMocks();
 

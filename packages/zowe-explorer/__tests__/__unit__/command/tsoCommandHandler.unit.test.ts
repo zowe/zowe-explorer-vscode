@@ -12,7 +12,7 @@
 jest.mock("Session");
 
 import * as vscode from "vscode";
-import { ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { Gui, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import * as profileLoader from "../../../src/Profiles";
 import { TsoCommandHandler } from "../../../src/command/TsoCommandHandler";
 import * as utils from "../../../src/utils/ProfilesUtils";
@@ -207,7 +207,7 @@ describe("TsoCommandHandler unit testing", () => {
         const getCommandApiMock = jest.fn();
         getCommandApiMock.mockReturnValue(mockCommandApi);
         apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
-        jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(() => Promise.resolve(qpItem2));
+        jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem2));
         jest.spyOn(mockCommandApi, "issueTsoCommandWithParms").mockReturnValue("iplinfo0" as any);
 
         await tsoActions.issueTsoCommand();
@@ -251,7 +251,7 @@ describe("TsoCommandHandler unit testing", () => {
         const getCommandApiMock = jest.fn();
         getCommandApiMock.mockReturnValue(mockCommandApi);
         apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
-        jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(() => Promise.resolve(qpItem));
+        jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem));
         jest.spyOn(mockCommandApi, "issueTsoCommandWithParms").mockReturnValue("iplinfo3" as any);
 
         await tsoActions.issueTsoCommand();
@@ -292,7 +292,7 @@ describe("TsoCommandHandler unit testing", () => {
         getCommandApiMock.mockReturnValue(mockCommandApi);
         apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
 
-        jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(() => Promise.resolve(undefined));
+        jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(undefined));
 
         await tsoActions.issueTsoCommand();
 
@@ -332,7 +332,7 @@ describe("TsoCommandHandler unit testing", () => {
         getCommandApiMock.mockReturnValue(mockCommandApi);
         apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
 
-        jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(() => Promise.resolve(qpItem));
+        jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem));
 
         await tsoActions.issueTsoCommand();
 
@@ -389,7 +389,7 @@ describe("TsoCommandHandler unit testing", () => {
         getCommandApiMock.mockReturnValue(mockCommandApi);
         apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
 
-        jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(() => Promise.resolve(qpItem));
+        jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem));
 
         await tsoActions.issueTsoCommand();
 
@@ -451,7 +451,7 @@ describe("TsoCommandHandler unit testing", () => {
         getCommandApiMock.mockReturnValue(mockCommandApi);
         apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
 
-        jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(() => Promise.resolve(qpItem));
+        jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem));
         jest.spyOn(mockCommandApi, "issueTsoCommandWithParms").mockReturnValue("iplinfo" as any);
 
         await tsoActions.issueTsoCommand();
@@ -493,7 +493,7 @@ describe("TsoCommandHandler unit testing", () => {
         const getCommandApiMock = jest.fn();
         getCommandApiMock.mockReturnValue(mockCommandApi);
         apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
-        jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(() => Promise.resolve(qpItem));
+        jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem));
         jest.spyOn(mockCommandApi, "issueTsoCommandWithParms").mockReturnValue("iplinfo5" as any);
 
         await tsoActions.issueTsoCommand();

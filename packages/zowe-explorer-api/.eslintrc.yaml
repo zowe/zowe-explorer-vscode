@@ -4,6 +4,7 @@ parserOptions:
   sourceType: module
   project:
     - "./tsconfig.json"
+    - "./tsconfig-tests.json"
 plugins:
   - "@typescript-eslint"
 extends:

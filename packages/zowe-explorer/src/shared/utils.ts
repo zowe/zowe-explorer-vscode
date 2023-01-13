@@ -14,7 +14,7 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import * as globals from "../globals";
-import { IZoweTreeNode, IZoweNodeType, IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweTreeNode, IZoweNodeType, IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import * as nls from "vscode-nls";
 import { IZosFilesResponse, imperative } from "@zowe/cli";
@@ -263,7 +263,7 @@ export async function willForceUpload(
         title = localize("saveUSSFile.response.title", "Saving file...");
     }
     if (globals.ISTHEIA) {
-        vscode.window.showWarningMessage(
+        Gui.warningMessage(
             localize(
                 "saveFile.error.theiaDetected",
                 "A merge conflict has been detected. Since you are running inside Theia editor, a merge conflict resolution is not available yet."
@@ -278,7 +278,7 @@ export async function willForceUpload(
         )
         .then(async (selection) => {
             if (selection === localize("saveFile.overwriteConfirmation.yes", "Yes")) {
-                const uploadResponse = vscode.window.withProgress(
+                const uploadResponse = Gui.withProgress(
                     {
                         location: vscode.ProgressLocation.Notification,
                         title,
@@ -289,14 +289,14 @@ export async function willForceUpload(
                 );
                 uploadResponse.then((response) => {
                     if (response.success) {
-                        vscode.window.showInformationMessage(response.commandResponse);
+                        Gui.showMessage(response.commandResponse);
                         if (node) {
                             node.setEtag(response.apiResponse[0].etag);
                         }
                     }
                 });
             } else {
-                vscode.window.showInformationMessage(localize("uploadContent.cancelled", "Upload cancelled."));
+                Gui.showMessage(localize("uploadContent.cancelled", "Upload cancelled."));
                 await markFileAsDirty(doc);
             }
         });
