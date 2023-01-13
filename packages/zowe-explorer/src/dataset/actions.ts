@@ -1130,17 +1130,18 @@ export async function copyDataSet(node: api.IZoweNodeType) {
  * Migrate data sets
  *
  * @export
- * @param {IZoweDatasetTreeNode} node - The node to paste to
+ * @param {IZoweDatasetTreeNode} node - The node to migrate
  */
 export async function hMigrateDataSet(node: ZoweDatasetNode) {
     await Profiles.getInstance().checkCurrentProfile(node.getProfile());
     if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
         const { dataSetName } = dsUtils.getNodeLabels(node);
-        api.Gui.showMessage(
-            localize("hMigrate.requestSent1", "Migration of dataset: ") + dataSetName + localize("hMigrate.requestSent2", " requested.")
-        );
         try {
-            return ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hMigrateDataSet(dataSetName);
+            const response = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hMigrateDataSet(dataSetName);
+            api.Gui.showMessage(
+                localize("hMigrate.requestSent1", "Migration of dataset: ") + dataSetName + localize("hMigrate.requestSent2", " requested.")
+            );
+            return response;
         } catch (err) {
             globals.LOG.error(err);
             api.Gui.errorMessage(err.message);
@@ -1156,15 +1157,18 @@ export async function hMigrateDataSet(node: ZoweDatasetNode) {
  * Recall data sets
  *
  * @export
- * @param {IZoweDatasetTreeNode} node - The node to paste to
+ * @param {IZoweDatasetTreeNode} node - The node to recall
  */
 export async function hRecallDataSet(node: ZoweDatasetNode) {
     await Profiles.getInstance().checkCurrentProfile(node.getProfile());
     if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
         const { dataSetName } = dsUtils.getNodeLabels(node);
-        api.Gui.showMessage(localize("hRecall.requestSent1", "Recall of dataset: ") + dataSetName + localize("hRecall.requestSent2", " requested."));
         try {
-            return ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hRecallDataSet(dataSetName);
+            const response = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hRecallDataSet(dataSetName);
+            api.Gui.showMessage(
+                localize("hRecall.requestSent1", "Recall of dataset: ") + dataSetName + localize("hRecall.requestSent2", " requested.")
+            );
+            return response;
         } catch (err) {
             globals.LOG.error(err);
             api.Gui.errorMessage(err.message);
@@ -1173,6 +1177,33 @@ export async function hRecallDataSet(node: ZoweDatasetNode) {
     } else {
         api.Gui.errorMessage(localize("hMigrateDataSet.checkProfile", "Profile is invalid"));
         return;
+    }
+}
+
+/**
+ * Show File Error details when gathering attributes for these data sets
+ *
+ * @export
+ * @param {IZoweDatasetTreeNode} node - The node to get details from
+ */
+export async function showFileErrorDetails(node: ZoweDatasetNode) {
+    await Profiles.getInstance().checkCurrentProfile(node.getProfile());
+    if (Profiles.getInstance().validProfile === api.ValidProfileEnum.INVALID) {
+        api.Gui.errorMessage(localize("hMigrateDataSet.checkProfile", "Profile is invalid"));
+    } else {
+        const { dataSetName } = dsUtils.getNodeLabels(node);
+        if (node.errorDetails) {
+            globals.LOG.error(JSON.stringify(node.errorDetails, null, 2));
+            api.Gui.errorMessage(node.errorDetails.message);
+        } else {
+            try {
+                await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hRecallDataSet(dataSetName);
+                api.Gui.errorMessage(localize("showFileErrorDetails.noErrorDetails", "Unable to gather more information"));
+            } catch (err) {
+                globals.LOG.error(JSON.stringify(err, null, 2));
+                api.Gui.errorMessage(err.message);
+            }
+        }
     }
 }
 

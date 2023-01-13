@@ -454,6 +454,15 @@ function initDatasetProvider(context: vscode.ExtensionContext) {
         })
     );
     context.subscriptions.push(
+        vscode.commands.registerCommand("zowe.ds.showFileErrorDetails", async (node, nodeList) => {
+            let selectedNodes = getSelectedNodeList(node, nodeList);
+            selectedNodes = selectedNodes.filter((element) => contextuals.hasFileError(element));
+            for (const item of selectedNodes) {
+                dsActions.showFileErrorDetails(item as ZoweDatasetNode);
+            }
+        })
+    );
+    context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.disableValidation", async (node) => Profiles.getInstance().disableValidation(node))
     );
     context.subscriptions.push(
