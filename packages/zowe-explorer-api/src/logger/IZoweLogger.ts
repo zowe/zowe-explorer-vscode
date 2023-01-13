@@ -30,7 +30,7 @@ type Log4JsCfg = {
 
 const LOGGER_CONFIG: Log4JsCfg = loggerConfig;
 
-export enum MessageSeverityEnum {
+export enum MessageSeverity {
     TRACE,
     DEBUG,
     INFO,
@@ -38,6 +38,11 @@ export enum MessageSeverityEnum {
     ERROR,
     FATAL,
 }
+
+/**
+ * @deprecated Please use `MessageSeverity` instead
+ */
+export type MessageSeverityEnum = MessageSeverity;
 
 /**
  * Creates an instance of the Imperative logger for extenders to use
@@ -75,9 +80,9 @@ export class IZoweLogger {
      * Log an error message to the Imperative logger.
      * Default severity is DEBUG if not specified.
      */
-    public logImperativeMessage(message: string, severity?: MessageSeverityEnum): void {
+    public logImperativeMessage(message: string, severity?: MessageSeverity): void {
         const messageWithExtensionName = `[${this.extensionName}] ${message}`;
-        const severityName = MessageSeverityEnum[severity ?? MessageSeverityEnum.DEBUG];
+        const severityName = MessageSeverity[severity ?? MessageSeverity.DEBUG];
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         this.log[severityName.toLowerCase()](messageWithExtensionName);
     }

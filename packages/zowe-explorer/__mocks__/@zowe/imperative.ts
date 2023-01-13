@@ -234,6 +234,16 @@ export class ProfileInfo {
     }
 }
 
+export class ImperativeError {
+    public msg: string;
+    constructor(mDetails: ImperativeError) {
+        this.msg = mDetails.msg;
+    }
+    public get message() {
+        return this.msg;
+    }
+}
+
 export class ImperativeConfig {
     public static instance = {
         cliHome: "./__tests__/.zowe",

@@ -15,7 +15,7 @@ import * as fs from "fs";
 import * as zowe from "@zowe/cli";
 import { DatasetTree } from "../../../src/dataset/DatasetTree";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
-import { IZoweDatasetTreeNode, ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweDatasetTreeNode, ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
@@ -58,7 +58,7 @@ function createGlobalMocks() {
     globalMocks.mockProfileInstance = createInstanceOfProfile(globalMocks.testProfileLoaded);
 
     Object.defineProperty(vscode.window, "createTreeView", { value: jest.fn(), configurable: true });
-    Object.defineProperty(vscode.window, "showInformationMessage", { value: jest.fn(), configurable: true });
+    Object.defineProperty(Gui, "showMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showTextDocument", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.workspace, "getConfiguration", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.workspace, "openTextDocument", { value: jest.fn(), configurable: true });
@@ -139,10 +139,11 @@ function createGlobalMocks() {
         }),
         configurable: true,
     });
-    Object.defineProperty(vscode.window, "showWarningMessage", {
+    Object.defineProperty(Gui, "warningMessage", {
         value: globalMocks.mockShowWarningMessage,
         configurable: true,
     });
+    Object.defineProperty(Gui, "errorMessage", { value: jest.fn(), configurable: true });
 
     return globalMocks;
 }
@@ -252,7 +253,7 @@ describe("Dataset Tree Unit tests - Function initializeFavChildNodeForProfile", 
         const testTree = new DatasetTree();
         const favProfileNode = new ZoweDatasetNode("testProfile", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
         favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
-        const showErrorMessageSpy = jest.spyOn(vscode.window, "showErrorMessage");
+        const showErrorMessageSpy = jest.spyOn(Gui, "errorMessage");
         await testTree.initializeFavChildNodeForProfile("BRTVS99.BAD", "badContextValue", favProfileNode);
 
         expect(showErrorMessageSpy).toBeCalledTimes(1);
@@ -355,8 +356,65 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
         sampleChildren[0].command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [sampleChildren[0]] };
 
         const children = await testTree.getChildren(testTree.mSessionNodes[1]);
-
+        expect(children.map((c) => c.label)).toEqual(sampleChildren.map((c) => c.label));
         expect(children).toEqual(sampleChildren);
+    });
+    it("Checking function for session node with an imperative error", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        const testError = new zowe.imperative.ImperativeError({ msg: "test" });
+        const spyOnDataSetsMatchingPattern = jest.spyOn(zowe.List, "dataSetsMatchingPattern");
+        spyOnDataSetsMatchingPattern.mockResolvedValueOnce({
+            success: true,
+            commandResponse: null,
+            apiResponse: [
+                { dsname: "HLQ.USER", dsorg: "PS" },
+                { dsname: "HLQ.USER.IMP.ERROR", error: testError },
+                { dsname: "HLQ.USER.MIGRAT", dsorg: "PS", migr: "YES" },
+            ],
+        });
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        blockMocks.datasetSessionNode.pattern = "test";
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        testTree.mSessionNodes[1].dirty = true;
+        const nodeOk = new ZoweDatasetNode(
+            "HLQ.USER",
+            vscode.TreeItemCollapsibleState.None,
+            testTree.mSessionNodes[1],
+            null,
+            undefined,
+            undefined,
+            blockMocks.imperativeProfile
+        );
+        const nodeImpError = new ZoweDatasetNode(
+            "HLQ.USER.IMP.ERROR",
+            vscode.TreeItemCollapsibleState.None,
+            testTree.mSessionNodes[1],
+            null,
+            globals.DS_FILE_ERROR_CONTEXT,
+            undefined,
+            blockMocks.imperativeProfile
+        );
+        nodeImpError.errorDetails = testError;
+        const nodeMigrated = new ZoweDatasetNode(
+            "HLQ.USER.MIGRAT",
+            vscode.TreeItemCollapsibleState.None,
+            testTree.mSessionNodes[1],
+            null,
+            globals.DS_MIGRATED_FILE_CONTEXT,
+            undefined,
+            blockMocks.imperativeProfile
+        );
+        const sampleChildren: ZoweDatasetNode[] = [nodeOk, nodeImpError, nodeMigrated];
+        sampleChildren[0].command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [sampleChildren[0]] };
+
+        const children = await testTree.getChildren(testTree.mSessionNodes[1]);
+        expect(children.map((c) => c.label)).toEqual(sampleChildren.map((c) => c.label));
+        expect(children).toEqual(sampleChildren);
+        spyOnDataSetsMatchingPattern.mockRestore();
     });
     it("Checking function for favorite node", async () => {
         createGlobalMocks();
@@ -503,7 +561,7 @@ describe("Dataset Tree Unit Tests - Function loadProfilesForFavorites", () => {
         );
         const testTree = new DatasetTree();
         testTree.mFavorites.push(favProfileNode);
-        const showErrorMessageSpy = jest.spyOn(vscode.window, "showErrorMessage");
+        const showErrorMessageSpy = jest.spyOn(Gui, "errorMessage");
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -516,7 +574,7 @@ describe("Dataset Tree Unit Tests - Function loadProfilesForFavorites", () => {
                 };
             }),
         });
-        mocked(vscode.window.showErrorMessage).mockResolvedValueOnce({ title: "Remove" });
+        mocked(Gui.errorMessage).mockResolvedValueOnce("Remove");
         await testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
         expect(showErrorMessageSpy).toBeCalledTimes(1);
         showErrorMessageSpy.mockClear();
@@ -989,7 +1047,7 @@ describe("Dataset Tree Unit Tests - Function addFavorite", () => {
 
         testTree.addFavorite(child);
 
-        expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith("PDS already in favorites");
+        expect(mocked(Gui.showMessage)).toBeCalledWith("PDS already in favorites");
     });
 });
 describe("Dataset Tree Unit Tests - Function removeFavorite", () => {
@@ -1293,7 +1351,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
 
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
 
-        expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith("You must enter a pattern.");
+        expect(mocked(Gui.showMessage)).toBeCalledWith("You must enter a pattern.");
     });
     it("Checking usage of existing filter - Theia", async () => {
         const globalMocks = await createGlobalMocks();
@@ -1324,7 +1382,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
 
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
 
-        expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith("No selection made. Operation cancelled.");
+        expect(mocked(Gui.showMessage)).toBeCalledWith("No selection made. Operation cancelled.");
     });
     it("Checking function on favorites", async () => {
         const globalMocks = await createGlobalMocks();
@@ -1417,7 +1475,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
 
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
 
-        expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith("You must enter a pattern.");
+        expect(mocked(Gui.showMessage)).toBeCalledWith("You must enter a pattern.");
     });
     it("Checking usage of existing filter", async () => {
         const globalMocks = await createGlobalMocks();
@@ -1430,7 +1488,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce(quickPickItem);
         mocked(vscode.window.showInputBox).mockResolvedValueOnce("HLQ.PROD1.STUFF");
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
-        const resolveQuickPickSpy = jest.spyOn(utils, "resolveQuickPickHelper");
+        const resolveQuickPickSpy = jest.spyOn(Gui, "resolveQuickPick");
         resolveQuickPickSpy.mockResolvedValueOnce(quickPickItem);
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
@@ -1448,7 +1506,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         mocked(vscode.window.createQuickPick).mockReturnValueOnce(createQuickPickContent("HLQ.PROD1.STUFF", quickPickItem, blockMocks.qpPlaceholder));
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce(quickPickItem);
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
-        const resolveQuickPickSpy = jest.spyOn(utils, "resolveQuickPickHelper");
+        const resolveQuickPickSpy = jest.spyOn(Gui, "resolveQuickPick");
         resolveQuickPickSpy.mockResolvedValueOnce(quickPickItem);
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
@@ -1456,7 +1514,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
 
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
 
-        expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith("No selection made. Operation cancelled.");
+        expect(mocked(Gui.showMessage)).toBeCalledWith("No selection made. Operation cancelled.");
     });
 });
 describe("Dataset Tree Unit Tests - Function editSession", () => {

@@ -27,7 +27,7 @@ import * as vscode from "vscode";
 import * as utils from "../../src/utils/ProfilesUtils";
 import * as globals from "../../src/globals";
 import * as zowe from "@zowe/cli";
-import { ProfilesCache } from "@zowe/zowe-explorer-api";
+import { Gui, ProfilesCache } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../src/Profiles";
 
 // jest.mock("vscode");
@@ -86,9 +86,9 @@ async function createGlobalMocks() {
         value: newMocks.mockShowErrorMessage,
         configurable: true,
     });
-    Object.defineProperty(vscode.window, "showQuickPick", { value: newMocks.mockShowQuickPick, configurable: true });
+    Object.defineProperty(Gui, "showQuickPick", { value: newMocks.mockShowQuickPick, configurable: true });
 
-    Object.defineProperty(vscode.window, "createQuickPick", {
+    Object.defineProperty(Gui, "createQuickPick", {
         value: jest.fn(() => {
             return newMocks.mockCreateQuickPick;
         }),
@@ -346,8 +346,8 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
     it("Tests that createZoweSession presents correct message when escaping selection of quickpick", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
-        const spy = jest.spyOn(vscode.window, "createQuickPick");
-        jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(undefined);
+        const spy = jest.spyOn(Gui, "createQuickPick");
+        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(undefined);
         await Profiles.getInstance().createZoweSession(blockMocks.testDatasetTree);
         expect(spy).toBeCalled();
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("No selection made. Operation cancelled.");
@@ -359,7 +359,7 @@ describe("Profiles Unit Tests - Function editZoweConfigFile", () => {
     it("Tests that editZoweConfigFile presents correct message when escaping selection of quickpick", async () => {
         const globalMocks = await createGlobalMocks();
 
-        const spy = jest.spyOn(vscode.window, "showQuickPick");
+        const spy = jest.spyOn(Gui, "showQuickPick");
         spy.mockResolvedValueOnce(undefined);
         await Profiles.getInstance().editZoweConfigFile();
         expect(spy).toBeCalled();
@@ -369,7 +369,7 @@ describe("Profiles Unit Tests - Function editZoweConfigFile", () => {
     it("Tests that editZoweConfigFile opens correct file when Global is selected", async () => {
         const globalMocks = await createGlobalMocks();
 
-        const spyQuickPick = jest.spyOn(vscode.window, "showQuickPick");
+        const spyQuickPick = jest.spyOn(Gui, "showQuickPick");
         spyQuickPick.mockResolvedValueOnce("Global: in the Zowe home directory" as any);
         const spyOpenFile = jest.spyOn(globalMocks.mockProfileInstance, "openConfigFile");
         await Profiles.getInstance().editZoweConfigFile();
@@ -399,7 +399,7 @@ describe("Profiles Unit Tests - Function editZoweConfigFile", () => {
     it("Tests that editZoweConfigFile opens correct file when Project is selected", async () => {
         const globalMocks = await createGlobalMocks();
 
-        const spyQuickPick = jest.spyOn(vscode.window, "showQuickPick");
+        const spyQuickPick = jest.spyOn(Gui, "showQuickPick");
         spyQuickPick.mockResolvedValueOnce("Project: in the current working directory" as any);
         const spyOpenFile = jest.spyOn(globalMocks.mockProfileInstance, "openConfigFile");
         await Profiles.getInstance().editZoweConfigFile();
@@ -456,7 +456,7 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        const spy = jest.spyOn(vscode.window, "showQuickPick");
+        const spy = jest.spyOn(Gui, "showQuickPick");
         spy.mockResolvedValueOnce(undefined);
         await Profiles.getInstance().createZoweSchema(blockMocks.testDatasetTree);
         expect(spy).toBeCalled();
@@ -467,7 +467,7 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        const spyQuickPick = jest.spyOn(vscode.window, "showQuickPick");
+        const spyQuickPick = jest.spyOn(Gui, "showQuickPick");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("Global: in the Zowe home directory");
         const spyLayers = jest.spyOn(globalMocks.mockProfileInstance, "getConfigLayers");
         spyLayers.mockResolvedValueOnce(createConfigLoad().layers);
@@ -489,7 +489,7 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        const spyQuickPick = jest.spyOn(vscode.window, "showQuickPick");
+        const spyQuickPick = jest.spyOn(Gui, "showQuickPick");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("Global: in the Zowe home directory");
         const spyLayers = jest.spyOn(globalMocks.mockProfileInstance, "getConfigLayers");
         spyLayers.mockRejectedValueOnce(new Error("Error parsing JSON"));
@@ -511,7 +511,7 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
             configurable: true,
         });
 
-        const spyQuickPick = jest.spyOn(vscode.window, "showQuickPick");
+        const spyQuickPick = jest.spyOn(Gui, "showQuickPick");
         const spyLayers = jest.spyOn(globalMocks.mockProfileInstance, "getConfigLayers");
         spyLayers.mockResolvedValueOnce([
             {
