@@ -491,31 +491,6 @@ describe("Extension Unit Tests", () => {
         expect(ZoweExplorerExtender.showZoweConfigError).toHaveBeenCalled();
     });
 
-    it("Tests that activate() fails when trying to load with an invalid config", async () => {
-        Object.defineProperty(zowe.imperative, "ProfileInfo", {
-            value: jest.fn().mockImplementation(() => {
-                throw new Error("Error in ProfileInfo to break activate function");
-            }),
-            configurable: true,
-        });
-        globalMocks.mockReadFileSync.mockReturnValueOnce('{ "overrides": { "CredentialManager": "Managed by ANO" }}');
-        globalMocks.mockExistsSync.mockReturnValueOnce(false);
-        globalMocks.mockGetConfiguration.mockReturnValue({
-            persistence: true,
-            get: (setting: string) => "",
-            update: jest.fn(),
-            inspect: (configuration: string) => {
-                return {
-                    workspaceValue: undefined,
-                    globalValue: undefined,
-                };
-            },
-        });
-
-        await extension.activate(globalMocks.mockExtension);
-        expect(ZoweExplorerExtender.showZoweConfigError).toHaveBeenCalled();
-    });
-
     it("zowe.ds.showFileErrorDetails", async () => {
         const testNode: any = { getProfile: jest.fn(), getParent: jest.fn().mockReturnValue({ getLabel: jest.fn() }) };
         const fileErrorSpy = jest.spyOn(dsActions, "showFileErrorDetails");

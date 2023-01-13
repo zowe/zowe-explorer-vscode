@@ -115,4 +115,32 @@ describe("ProfileUtils.promptCredentials Unit Tests", () => {
         await profileUtils.promptCredentials(null);
         expect(mockProfileInstance.getProfileInfo).toHaveBeenCalled();
     });
+    it("shows a message if Update Credentials operation is called when autoStore = false", async () => {
+        const mockProfileInstance = new Profiles(zowe.imperative.Logger.getAppLogger());
+        Object.defineProperty(Profiles, "getInstance", {
+            value: () => mockProfileInstance,
+            configurable: true,
+        });
+        Object.defineProperty(mockProfileInstance, "getProfileInfo", {
+            value: jest.fn(() => {
+                return {
+                    profileName: "emptyConfig",
+                    usingTeamConfig: true,
+                    getTeamConfig: jest.fn().mockReturnValueOnce({
+                        properties: {
+                            autoStore: false,
+                        },
+                    }),
+                };
+            }),
+            configurable: true,
+        });
+        Object.defineProperty(Gui, "showMessage", {
+            value: jest.fn(),
+            configurable: true,
+        });
+        await profileUtils.promptCredentials(null);
+        expect(mockProfileInstance.getProfileInfo).toHaveBeenCalled();
+        expect(Gui.showMessage).toHaveBeenCalledWith('"Update Credentials" operation not supported when "autoStore" is false');
+    });
 });

@@ -94,19 +94,18 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
     public static getConfigLocation(rootPath: string): string | null {
         // First check for a user-specific v2 config
         let location = path.join(rootPath, "zowe.config.user.json");
-        try {
-            fs.statSync(location);
-        } catch (err) {
-            // Fallback to regular v2 config if user-specific config doesn't exist
-            location = path.join(rootPath, "zowe.config.json");
-            try {
-                fs.statSync(location);
-            } catch (err) {
-                return null;
-            }
+        if (fs.existsSync(location)) {
+            return location;
         }
 
-        return location;
+        // Fallback to regular v2 config if user-specific config doesn't exist
+        location = path.join(rootPath, "zowe.config.json");
+
+        if (fs.existsSync(location)) {
+            return location;
+        }
+
+        return null;
     }
 
     /**

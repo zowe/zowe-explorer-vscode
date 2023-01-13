@@ -21,7 +21,7 @@ import { ZoweExplorerExtender } from "../../src/ZoweExplorerExtender";
 import { Profiles } from "../../src/Profiles";
 import * as path from "path";
 import * as fs from "fs";
-import { getZoweDir } from "@zowe/zowe-explorer-api";
+import { getZoweDir, Gui } from "@zowe/zowe-explorer-api";
 jest.mock("fs");
 
 const mocked = <T extends (...args: any[]) => any>(fn: T): jest.Mock<ReturnType<T>> => fn as any;
@@ -38,11 +38,11 @@ describe("ZoweExplorerExtender unit tests", () => {
             profiles: null,
             mockGetConfiguration: jest.fn(),
             mockErrorMessage: jest.fn(),
-            mockStatSync: jest.fn(),
+            mockExistsSync: jest.fn(),
             mockTextDocument: jest.fn(),
         };
 
-        Object.defineProperty(fs, "statSync", { value: newMocks.mockStatSync, configurable: true });
+        Object.defineProperty(fs, "existsSync", { value: newMocks.mockExistsSync, configurable: true });
         newMocks.profiles = createInstanceOfProfile(newMocks.imperativeProfile);
         Object.defineProperty(Profiles, "getInstance", {
             value: jest
@@ -111,6 +111,7 @@ describe("ZoweExplorerExtender unit tests", () => {
         ZoweExplorerExtender.createInstance();
 
         Object.defineProperty(vscode.Uri, "file", { value: jest.fn(), configurable: true });
+        Object.defineProperty(Gui, "showTextDocument", { value: jest.fn(), configurable: true });
 
         const zoweDir = getZoweDir();
         const userInputs = [
@@ -118,40 +119,41 @@ describe("ZoweExplorerExtender unit tests", () => {
                 choice: undefined,
                 configError: "Error parsing JSON",
                 fileChecks: ["zowe.config.user.json"],
-                mockStatSync: blockMocks.mockStatSync.mockImplementationOnce,
+                mockExistsSync: blockMocks.mockExistsSync.mockImplementationOnce,
             },
             {
                 choice: "Show Config",
                 configError: "Error parsing JSON",
                 fileChecks: ["zowe.config.user.json"],
-                mockStatSync: blockMocks.mockStatSync.mockImplementationOnce,
+                shouldFail: true,
+                mockExistsSync: blockMocks.mockExistsSync.mockImplementationOnce,
             },
             {
                 choice: "Show Config",
                 configError: `Error parsing JSON in the file '${path.join(zoweDir, "zowe.config.user.json")}'`,
+                shouldFail: false,
                 fileChecks: ["zowe.config.user.json"],
-                mockStatSync: blockMocks.mockStatSync.mockImplementationOnce,
+                mockExistsSync: blockMocks.mockExistsSync.mockImplementationOnce,
             },
             {
                 choice: "Show Config",
                 configError: "Error parsing JSON",
                 fileChecks: ["zowe.config.user.json", "zowe.config.json"],
-                mockStatSync: blockMocks.mockStatSync.mockImplementationOnce,
+                shouldFail: false,
+                mockExistsSync: blockMocks.mockExistsSync.mockImplementationOnce,
             },
             {
                 choice: "Show Config",
                 configError: `Error reading profile file ("${path.join(zoweDir, "profiles/exampleType/exampleType_meta.yaml")}")`,
                 fileChecks: ["zowe.config.user.json", "zowe.config.json"],
                 v1: true,
-                mockStatSync: blockMocks.mockStatSync.mockImplementation,
+                mockExistsSync: blockMocks.mockExistsSync.mockImplementation,
             },
         ];
         for (const userInput of userInputs) {
             blockMocks.mockErrorMessage.mockImplementationOnce((msg, ...items) => Promise.resolve(userInput.choice));
             if (userInput.fileChecks.length > 1) {
-                userInput.mockStatSync((...args) => {
-                    throw new Error("Failed to find config json");
-                });
+                userInput.mockExistsSync((path) => false);
             }
             await ZoweExplorerExtender.showZoweConfigError(userInput.configError);
             expect(blockMocks.mockErrorMessage).toHaveBeenCalledWith(
@@ -159,16 +161,20 @@ describe("ZoweExplorerExtender unit tests", () => {
                 "Show Config"
             );
             if (userInput.choice == null) {
-                expect(vscode.window.showTextDocument).not.toHaveBeenCalled();
+                expect(Gui.showTextDocument).not.toHaveBeenCalled();
             } else {
                 if (userInput.v1) {
                     expect(vscode.Uri.file).toHaveBeenCalledWith(path.join(zoweDir, "profiles/exampleType/exampleType_meta.yaml"));
                 } else {
                     for (const fileName of userInput.fileChecks) {
-                        expect(blockMocks.mockStatSync).toHaveBeenCalledWith(path.join(zoweDir, fileName));
+                        expect(blockMocks.mockExistsSync).toHaveBeenCalledWith(path.join(zoweDir, fileName));
                     }
                 }
-                expect(vscode.window.showTextDocument).toHaveBeenCalled();
+                if (userInput.shouldFail) {
+                    expect(Gui.showTextDocument).not.toHaveBeenCalled();
+                } else {
+                    expect(Gui.showTextDocument).toHaveBeenCalled();
+                }
             }
         }
     });
