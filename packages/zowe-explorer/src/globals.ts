@@ -261,7 +261,7 @@ export const plusSign = "\uFF0B ";
 export function defineGlobals(tempPath: string | undefined) {
     // check if Theia environment
     const appName = vscode.env.appName;
-    if (appName && appName.toLowerCase().includes("theia")) {
+    if (appName && appName.toLowerCase().includes("theia") && vscode.env.uiKind === vscode.UIKind.Web) {
         ISTHEIA = true;
     }
 
