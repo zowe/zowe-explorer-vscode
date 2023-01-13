@@ -10,7 +10,7 @@
  */
 
 import { imperative } from "@zowe/cli";
-import { IZoweLogger, MessageSeverityEnum } from "../../../src/logger/IZoweLogger";
+import { IZoweLogger, MessageSeverity } from "../../../src/logger/IZoweLogger";
 import * as loggerConfig from "../../../src/log4jsconfig.json";
 
 jest.mock("fs");
@@ -19,11 +19,7 @@ describe("IZoweLogger", () => {
     const extensionName = "test";
     const loggingPath = __dirname;
 
-    const expectLogWithSeverity = (
-        logger: IZoweLogger,
-        methodName: keyof imperative.Logger,
-        severity: MessageSeverityEnum
-    ): void => {
+    const expectLogWithSeverity = (logger: IZoweLogger, methodName: keyof imperative.Logger, severity: MessageSeverity): void => {
         const loggerSpy = jest.spyOn(logger.getImperativeLogger() as any, methodName);
         const logMessage = methodName.split("").reverse().join("");
         logger.logImperativeMessage(logMessage, severity);
@@ -35,41 +31,37 @@ describe("IZoweLogger", () => {
         const testLogger = new IZoweLogger(extensionName, loggingPath);
         expect(testLogger.getExtensionName()).toBe(extensionName);
         expect(initLoggerSpy).toBeCalledWith(loggerConfig);
-        expect(
-            Object.values(loggerConfig.log4jsConfig.appenders).every((appender) =>
-                appender.filename.startsWith(loggingPath)
-            )
-        ).toBe(true);
+        expect(Object.values(loggerConfig.log4jsConfig.appenders).every((appender) => appender.filename.startsWith(loggingPath))).toBe(true);
     });
 
     it("should log Imperative message with TRACE severity", () => {
         const testLogger = new IZoweLogger(extensionName, loggingPath);
-        expectLogWithSeverity(testLogger, "trace", MessageSeverityEnum.TRACE);
+        expectLogWithSeverity(testLogger, "trace", MessageSeverity.TRACE);
     });
 
     it("should log Imperative message with DEBUG severity", () => {
         const testLogger = new IZoweLogger(extensionName, loggingPath);
-        expectLogWithSeverity(testLogger, "debug", MessageSeverityEnum.DEBUG);
+        expectLogWithSeverity(testLogger, "debug", MessageSeverity.DEBUG);
     });
 
     it("should log Imperative message with INFO severity", () => {
         const testLogger = new IZoweLogger(extensionName, loggingPath);
-        expectLogWithSeverity(testLogger, "info", MessageSeverityEnum.INFO);
+        expectLogWithSeverity(testLogger, "info", MessageSeverity.INFO);
     });
 
     it("should log Imperative message with WARN severity", () => {
         const testLogger = new IZoweLogger(extensionName, loggingPath);
-        expectLogWithSeverity(testLogger, "warn", MessageSeverityEnum.WARN);
+        expectLogWithSeverity(testLogger, "warn", MessageSeverity.WARN);
     });
 
     it("should log Imperative message with ERROR severity", () => {
         const testLogger = new IZoweLogger(extensionName, loggingPath);
-        expectLogWithSeverity(testLogger, "error", MessageSeverityEnum.ERROR);
+        expectLogWithSeverity(testLogger, "error", MessageSeverity.ERROR);
     });
 
     it("should log Imperative message with FATAL severity", () => {
         const testLogger = new IZoweLogger(extensionName, loggingPath);
-        expectLogWithSeverity(testLogger, "fatal", MessageSeverityEnum.FATAL);
+        expectLogWithSeverity(testLogger, "fatal", MessageSeverity.FATAL);
     });
 
     it("should log Imperative message with default severity", () => {

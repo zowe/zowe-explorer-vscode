@@ -17,7 +17,7 @@ jest.mock("@zowe/cli", () => {
     const originalModule = jest.requireActual("@zowe/cli");
     return {
         ...originalModule,
-        getZoweDir: jest.fn().mockReturnValue("~/.zowe")
+        getZoweDir: jest.fn().mockReturnValue("~/.zowe"),
     };
 });
 
@@ -38,25 +38,20 @@ describe("ProfilesCache", () => {
             path.join(__dirname, teamConfig.userConfigName),
             path.join(__dirname, teamConfig.configName),
             path.join(fakeZoweDir, teamConfig.userConfigName),
-            path.join(fakeZoweDir, teamConfig.configName)
+            path.join(fakeZoweDir, teamConfig.configName),
         ]);
     });
 
     it("loadNamedProfile should find profiles by name and type", () => {
         const profInfo = new ProfilesCache(undefined as any);
-        profInfo.allProfiles = [
-            { name: "lpar1", type: "zosmf" } as any,
-            { name: "lpar2", type: "zftp" } as any
-        ];
+        profInfo.allProfiles = [{ name: "lpar1", type: "zosmf" } as any, { name: "lpar2", type: "zftp" } as any];
         expect(profInfo.loadNamedProfile("lpar1").type).toBe("zosmf");
         expect(profInfo.loadNamedProfile("lpar2", "zftp").type).toBe("zftp");
     });
 
     it("loadNamedProfile should fail to find non-existent profile", () => {
         const profInfo = new ProfilesCache(undefined as any);
-        profInfo.allProfiles = [
-            { name: "lpar1", type: "zosmf" } as any
-        ];
+        profInfo.allProfiles = [{ name: "lpar1", type: "zosmf" } as any];
         let caughtError;
         try {
             profInfo.loadNamedProfile("lpar2");
@@ -68,9 +63,7 @@ describe("ProfilesCache", () => {
 
     it("loadNamedProfile should fail to find invalid profile", () => {
         const profInfo = new ProfilesCache(undefined as any);
-        profInfo.allProfiles = [
-            { name: "lpar1", type: "zosmf" } as any
-        ];
+        profInfo.allProfiles = [{ name: "lpar1", type: "zosmf" } as any];
         let caughtError;
         try {
             profInfo.loadNamedProfile("lpar1", "zftp");
@@ -82,14 +75,12 @@ describe("ProfilesCache", () => {
 
     it("updateProfilesArrays should process profile properties and defaults", () => {
         const profInfo = new ProfilesCache(undefined as any);
-        profInfo.allProfiles = [
-            { name: "lpar1", type: "zosmf" } as any
-        ];
+        profInfo.allProfiles = [{ name: "lpar1", type: "zosmf" } as any];
         (profInfo as any).defaultProfileByType = new Map([["zosmf", { ...profInfo.allProfiles[0] }]]);
         profInfo.updateProfilesArrays({
             name: "lpar1",
             type: "zosmf",
-            profile: { host: "example.com" }
+            profile: { host: "example.com" },
         } as any);
         expect(profInfo.allProfiles[0].profile).toBeDefined();
         expect((profInfo as any).defaultProfileByType.get("zosmf").profile).toBeDefined();
@@ -104,17 +95,27 @@ describe("ProfilesCache", () => {
     it("getDefaultConfigProfile should find default profile given type", () => {
         const profInfo = new ProfilesCache(undefined as any);
         const getDefaultProfileMock = jest.fn().mockReturnValue({ profName: "lpar1", profType: "zosmf" });
-        expect(profInfo.getDefaultConfigProfile({
-            getDefaultProfile: getDefaultProfileMock
-        } as any, "zosmf").profName).toBe("lpar1");
+        expect(
+            profInfo.getDefaultConfigProfile(
+                {
+                    getDefaultProfile: getDefaultProfileMock,
+                } as any,
+                "zosmf"
+            ).profName
+        ).toBe("lpar1");
     });
 
     it("getProfiles should find profiles given type", () => {
         const profInfo = new ProfilesCache(undefined as any);
-        (profInfo as any).profilesByType = new Map([["zosmf", [
-            { name: "lpar1", type: "zosmf" },
-            { name: "lpar2", type: "zosmf" }
-        ]]]);
+        (profInfo as any).profilesByType = new Map([
+            [
+                "zosmf",
+                [
+                    { name: "lpar1", type: "zosmf" },
+                    { name: "lpar2", type: "zosmf" },
+                ],
+            ],
+        ]);
         expect(profInfo.getProfiles("zosmf").length).toBe(2);
     });
 

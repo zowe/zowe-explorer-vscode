@@ -32,10 +32,7 @@ const fakeProfile: { [key: string]: string | number | boolean } = {
 };
 const fakeSession = zowe.imperative.Session.createFromUrl(new URL("https://example.com"));
 
-async function expectApiWithSession<T>(
-    { name, spy, args, transform }: ITestApi<T>,
-    apiInstance: ZoweExplorerApi.ICommon
-): Promise<void> {
+async function expectApiWithSession<T>({ name, spy, args, transform }: ITestApi<T>, apiInstance: ZoweExplorerApi.ICommon): Promise<void> {
     spy.mockClear().mockResolvedValue(undefined);
     const getSessionSpy = jest.spyOn(apiInstance, "getSession").mockReturnValue(fakeSession);
     await (apiInstance as any)[name](...args);
@@ -172,10 +169,7 @@ describe("ZosmfUssApi", () => {
             name: "putContents",
             spy: jest.spyOn(zowe.Upload, "fileToUssFile"),
             args: ["localPath", "ussPath"],
-            transform: (args) => [
-                ...args,
-                { binary: undefined, etag: undefined, localEncoding: undefined, returnEtag: undefined },
-            ],
+            transform: (args) => [...args, { binary: undefined, etag: undefined, localEncoding: undefined, returnEtag: undefined }],
         },
         {
             name: "putContent",
