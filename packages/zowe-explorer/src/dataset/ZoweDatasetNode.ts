@@ -39,6 +39,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public memberPattern = "";
     public dirty = true;
     public children: ZoweDatasetNode[] = [];
+    public errorDetails: zowe.imperative.ImperativeError;
 
     /**
      * Creates an instance of ZoweDatasetNode
@@ -141,7 +142,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             }
 
             // Loops through all the returned dataset members and creates nodes for them
-            for (const item of response.apiResponse.items) {
+            for (const item of response.apiResponse.items ?? response.apiResponse) {
                 const existing = this.children.find((element) => element.label.toString() === item.dsname);
                 if (existing) {
                     elementChildren[existing.label.toString()] = existing;
@@ -157,6 +158,20 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         this.getProfile()
                     );
                     elementChildren[temp.label.toString()] = temp;
+                    // Creates a ZoweDatasetNode for a dataset with imperative errors
+                } else if (item.error instanceof zowe.imperative.ImperativeError) {
+                    const temp = new ZoweDatasetNode(
+                        item.dsname,
+                        vscode.TreeItemCollapsibleState.None,
+                        this,
+                        null,
+                        globals.DS_FILE_ERROR_CONTEXT,
+                        undefined,
+                        this.getProfile()
+                    );
+                    temp.errorDetails = item.error; // Save imperative error to avoid extra z/OS requests
+                    elementChildren[temp.label.toString()] = temp;
+                    // Creates a ZoweDatasetNode for a migrated dataset
                 } else if (item.migr && item.migr.toUpperCase() === "YES") {
                     const temp = new ZoweDatasetNode(
                         item.dsname,
@@ -268,12 +283,21 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 responseTimeout: cachedProfile.profile.responseTimeout,
             };
             if (contextually.isSessionNotFav(this)) {
-                this.pattern = this.pattern.toUpperCase();
-                // loop through each pattern for datasets
-                for (const pattern of this.pattern.split(",")) {
-                    responses.push(await ZoweExplorerApiRegister.getMvsApi(cachedProfile).dataSet(pattern.trim(), options));
-                }
-            } else if (this.memberPattern !== undefined) {
+                responses.push(
+                    await ZoweExplorerApiRegister.getMvsApi(cachedProfile).dataSetsMatchingPattern(
+                        // remove duplicate patterns
+                        [
+                            ...new Set(
+                                this.pattern
+                                    .toUpperCase()
+                                    .split(",")
+                                    .map((p) => p.trim())
+                            ),
+                        ],
+                        options
+                    )
+                );
+            } else if (this.memberPattern) {
                 this.memberPattern = this.memberPattern.toUpperCase();
                 for (const memPattern of this.memberPattern.split(",")) {
                     options.pattern = memPattern;

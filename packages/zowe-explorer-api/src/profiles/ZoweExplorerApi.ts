@@ -322,6 +322,15 @@ export namespace ZoweExplorerApi {
          * @returns {Promise<zowe.IZosFilesResponse>}
          */
         deleteDataSet(dataSetName: string, options?: zowe.IDeleteDatasetOptions): Promise<zowe.IZosFilesResponse>;
+
+        /**
+         * Get a list of data sets that match the filter pattern.
+         *
+         * @param {string} filter
+         * @param {zowe.IDsmListOptions} [options]
+         * @returns {Promise<zowe.IZosFilesResponse>}
+         */
+        dataSetsMatchingPattern?(filter: string[], options?: zowe.IDsmListOptions): Promise<zowe.IZosFilesResponse>;
     }
 
     /**
