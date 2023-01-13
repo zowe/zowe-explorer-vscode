@@ -1546,6 +1546,7 @@ export async function copySequentialDatasets(nodes: ZoweDatasetNode[]) {
             await downloadDs(node);
             const lbl = node.getLabel().toString();
             const inputBoxOptions: vscode.InputBoxOptions = {
+                prompt: localize("allocateLike.inputBox.placeHolder", "Enter a name for the new data set"),
                 value: lbl,
                 placeHolder: localize("pasteMember.inputBox.placeHolder", "Name of Data Set"),
                 validateInput: (text) => {
@@ -1604,6 +1605,7 @@ export async function copyPartitionedDatasets(nodes: ZoweDatasetNode[]) {
         try {
             const lbl = node.getLabel().toString();
             const inputBoxOptions: vscode.InputBoxOptions = {
+                prompt: localize("allocateLike.inputBox.placeHolder", "Enter a name for the new data set"),
                 value: lbl,
                 placeHolder: localize("pasteMember.inputBox.placeHolder", "Name of Data Set"),
                 validateInput: (text) => {
