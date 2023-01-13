@@ -462,7 +462,7 @@ describe("Extension Unit Tests", () => {
     it("Tests that activate() works correctly for Theia with uriScheme", async () => {
         const globalMocks = await createGlobalMocks();
 
-        Object.defineProperty(vscode.env, "uriScheme", { value: "theia", configurable: true });
+        Object.defineProperty(vscode.env, "appName", { value: "Eclipse Theia" });
         globalMocks.mockExistsSync.mockReturnValueOnce(false);
         globalMocks.mockGetConfiguration.mockReturnValue({
             persistence: true,
@@ -490,32 +490,6 @@ describe("Extension Unit Tests", () => {
             actualCommands.push(call[0]);
         });
         expect(actualCommands).toEqual(globalMocks.expectedCommands);
-    });
-
-    it("Tests that activate() works correctly for Theia with uriScheme undefined", async () => {
-        const globalMocks = await createGlobalMocks();
-
-        Object.defineProperty(vscode.env, "uriScheme", { value: undefined, configurable: true });
-        Object.defineProperty(vscode.env, "appName", { value: "Eclipse Theia" });
-        Object.defineProperty(vscode.env, "uiKind", { value: vscode.UIKind.Web });
-        globalMocks.mockExistsSync.mockReturnValueOnce(false);
-        globalMocks.mockGetConfiguration.mockReturnValue({
-            persistence: true,
-            get: (setting: string) => "",
-            update: jest.fn(),
-            inspect: (configuration: string) => {
-                return {
-                    workspaceValue: undefined,
-                    globalValue: undefined,
-                };
-            },
-        });
-
-        await extension.activate(globalMocks.mockExtension);
-
-        expect(globals.ISTHEIA).toEqual(true);
-        expect(globalMocks.mockMkdirSync.mock.calls.length).toBe(6);
-        expect(globalMocks.mockRegisterCommand.mock.calls.length).toBe(globals.COMMAND_COUNT);
     });
 
     it("Tests getSelectedNodeList executes successfully with multiple selection", async () => {
