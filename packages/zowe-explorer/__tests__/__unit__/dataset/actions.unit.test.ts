@@ -2198,6 +2198,94 @@ describe("Dataset Actions Unit Tests - Function hRecallDataSet", () => {
         expect(mocked(Gui.showMessage)).toHaveBeenCalled();
     });
 });
+describe("Dataset Actions Unit Tests - Function showFileErrorDetails", () => {
+    function createBlockMocks() {
+        const session = createISession();
+        const sessionWithoutCredentials = createISessionWithoutCredentials();
+        const imperativeProfile = createIProfile();
+        const profileInstance = createInstanceOfProfile(imperativeProfile);
+        const zosmfSession = createSessCfgFromArgs(imperativeProfile);
+        const treeView = createTreeView();
+        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
+        const mvsApi = createMvsApi(imperativeProfile);
+        const mockCheckCurrentProfile = jest.fn();
+        bindMvsApi(mvsApi);
+
+        return {
+            session,
+            sessionWithoutCredentials,
+            zosmfSession,
+            treeView,
+            imperativeProfile,
+            datasetSessionNode,
+            mvsApi,
+            profileInstance,
+            testDatasetTree,
+            mockCheckCurrentProfile,
+        };
+    }
+
+    afterAll(() => jest.restoreAllMocks());
+
+    it("Checking PS dataset with fileError as contextValue", async () => {
+        globals.defineGlobals("");
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        const testError = new zowe.imperative.ImperativeError({ msg: "test" });
+        const testErrorString = JSON.stringify(testError, null, 2);
+        const node = new ZoweDatasetNode(
+            "HLQ.TEST.TO.NODE",
+            vscode.TreeItemCollapsibleState.None,
+            blockMocks.datasetSessionNode,
+            null,
+            globals.DS_FILE_ERROR_CONTEXT
+        );
+
+        const spyRecall = jest.spyOn(blockMocks.mvsApi, "hRecallDataSet");
+        const spyLogError = mocked(globals.LOG.error);
+
+        // succeeded at recalling the dataset
+        spyRecall.mockResolvedValueOnce({ success: true } as any);
+        await dsActions.showFileErrorDetails(node);
+        expect(spyRecall).toHaveBeenCalledWith("HLQ.TEST.TO.NODE");
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalled();
+        spyRecall.mockReset();
+
+        // failed recalling the dataset
+        spyRecall.mockRejectedValueOnce(testError);
+        await dsActions.showFileErrorDetails(node);
+        expect(spyRecall).toHaveBeenCalledWith("HLQ.TEST.TO.NODE");
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith(testError.message);
+        expect(spyLogError).toHaveBeenCalledWith(testErrorString);
+        spyRecall.mockReset();
+        spyLogError.mockReset();
+
+        // error details was already cached (this should always be the expected path)
+        node.errorDetails = testError;
+        await dsActions.showFileErrorDetails(node);
+        expect(spyRecall).not.toHaveBeenCalled();
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith(testError.message);
+        expect(spyLogError).toHaveBeenCalledWith(testErrorString);
+        spyRecall.mockReset();
+        spyLogError.mockReset();
+
+        // Invalid profile provided
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    checkCurrentProfile: jest.fn(),
+                    validProfile: ValidProfileEnum.INVALID,
+                };
+            }),
+        });
+        await dsActions.showFileErrorDetails(node);
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalled();
+        expect(spyRecall).not.toHaveBeenCalled();
+        expect(spyLogError).not.toHaveBeenCalled();
+    });
+});
 
 describe("Dataset Actions Unit Tests - Function createFile", () => {
     function createBlockMocks() {
