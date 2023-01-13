@@ -8,6 +8,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 - Added Job search prefix validator [1971](https://github.com/zowe/vscode-extension-for-zowe/issues/1971)
 - Added file association for `zowe.config.json` and `zowe.config.user.json` to automatically detect them as JSON with Comments. [#1997](https://github.com/zowe/vscode-extension-for-zowe/issues/1997)
+- Added the ability to list all datasets, even those with Imperative Errors. [#235](https://github.com/zowe/vscode-extension-for-zowe/issues/235) & [#2036](https://github.com/zowe/vscode-extension-for-zowe/issues/2036)
 - Added favorite job query to jobs view. [#1947](https://github.com/zowe/vscode-extension-for-zowe/issues/1947)
 - Added confirmation message for "Submit Job" feature as an option in extension settings (set to "All jobs" by default). [#998](https://github.com/zowe/vscode-extension-for-zowe/issues/998)
 - Updated UI/UX method calls to use standalone `Gui` module for better usability and maintainability. [#1967](https://github.com/zowe/vscode-extension-for-zowe/issues/1967)
@@ -19,6 +20,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Removed TSLint (as it is deprecated), and replaced all TSLint rules with their ESLint equivalents. [#2030](https://github.com/zowe/vscode-extension-for-zowe/issues/2030)
 - Fixed issue with a success message being returned along with error for Job deletion. [#2075](https://github.com/zowe/vscode-extension-for-zowe/issues/2075)
 - Removed extra files from the VSIX bundle to reduce download size by 64%. [#2042](https://github.com/zowe/vscode-extension-for-zowe/pull/2042)
+- Surfaced any errors from a dataset Recall/Migrate operation. [#2032](https://github.com/zowe/vscode-extension-for-zowe/issues/2032)
 
 ## `2.5.0`
 
