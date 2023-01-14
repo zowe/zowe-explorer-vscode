@@ -9,6 +9,7 @@
  *                                                                                 *
  */
 
+import { mkdirSync } from "fs";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import * as driverFirefox from "./theia/extension.theiaFirefox";
@@ -18,9 +19,19 @@ const TIMEOUT = 60000;
 const SLEEPTIME = 15000;
 const SHORTSLEEPTIME = 2000;
 const wait5sec = 5000;
+const SCREENSHOT_DIR = "./results/integration/failed";
 declare var it: any;
 const expect = chai.expect;
 chai.use(chaiAsPromised);
+
+function screenshotIfFailed(driver: any) {
+    return async function () {
+        if (this.currentTest.state === "failed") {
+            mkdirSync(SCREENSHOT_DIR, { recursive: true });
+            await driver.takeScreenshot(`${SCREENSHOT_DIR}/${this.currentTest.fullTitle()}.png`);
+        }
+    };
+}
 
 describe("Locate Tree Nodes", () => {
     before(async () => {
@@ -31,11 +42,7 @@ describe("Locate Tree Nodes", () => {
         await driverFirefox.clickOnZoweExplorer();
     });
 
-    afterEach(async function () {
-        if (this.currentTest.state === "failed") {
-            await driverFirefox.takeScreenshot(this.currentTest.fullTitle());
-        }
-    });
+    afterEach(screenshotIfFailed(driverFirefox));
 
     it("should open Zowe Explorer and find the Favorites node", async () => {
         const favoriteLink = await driverFirefox.getFavouritesNode();
@@ -69,11 +76,7 @@ describe("Add Default Profile and Profile in DATASETS", () => {
         await driverChrome.clickOnZoweExplorer();
     });
 
-    afterEach(async function () {
-        if (this.currentTest.state === "failed") {
-            await driverChrome.takeScreenshot(this.currentTest.fullTitle());
-        }
-    });
+    afterEach(screenshotIfFailed(driverChrome));
 
     it("Should Add Default Profile in DATASETS", async () => {
         await driverChrome.clickOnDatasetsPanel();
@@ -110,11 +113,7 @@ describe("Default profile Visible in USS and JOBS", () => {
         await driverFirefox.sleepTime(wait5sec);
     });
 
-    afterEach(async function () {
-        if (this.currentTest.state === "failed") {
-            await driverFirefox.takeScreenshot(this.currentTest.fullTitle());
-        }
-    });
+    afterEach(screenshotIfFailed(driverFirefox));
 
     it("Should Default profile visible in USS", async () => {
         await driverFirefox.clickOnDatasetsTab();
@@ -143,11 +142,7 @@ describe("Add Existing Profiles in USS and JOBS", () => {
         await driverFirefox.sleepTime(wait5sec);
     });
 
-    afterEach(async function () {
-        if (this.currentTest.state === "failed") {
-            await driverFirefox.takeScreenshot(this.currentTest.fullTitle());
-        }
-    });
+    afterEach(screenshotIfFailed(driverFirefox));
 
     it("Should Add Existing Profile in USS", async () => {
         await driverFirefox.clickOnDatasetsTab();
@@ -180,11 +175,7 @@ describe("Test Adding and Removing Favorites", () => {
         await driverChrome.clickOnZoweExplorer();
     });
 
-    afterEach(async function () {
-        if (this.currentTest.state === "failed") {
-            await driverChrome.takeScreenshot(this.currentTest.fullTitle());
-        }
-    });
+    afterEach(screenshotIfFailed(driverChrome));
 
     it("Should Add Profile to Favorites under DATASETS", async () => {
         await driverChrome.addProfileToFavoritesInDatasets();
@@ -254,11 +245,7 @@ describe("Hide Profiles", () => {
         await driverChrome.clickOnZoweExplorer();
     });
 
-    afterEach(async function () {
-        if (this.currentTest.state === "failed") {
-            await driverChrome.takeScreenshot(this.currentTest.fullTitle());
-        }
-    });
+    afterEach(screenshotIfFailed(driverChrome));
 
     it("Should Hide Profile from USS", async () => {
         await driverChrome.clickOnDatasetsTab();
@@ -293,11 +280,7 @@ describe("Delete Profiles", () => {
         await driverChrome.clickOnZoweExplorer();
     });
 
-    afterEach(async function () {
-        if (this.currentTest.state === "failed") {
-            await driverChrome.takeScreenshot(this.currentTest.fullTitle());
-        }
-    });
+    afterEach(screenshotIfFailed(driverChrome));
 
     it("Should Delete Default Profile from DATA SETS", async () => {
         await driverChrome.deleteDefaultProfileInDatasets();
