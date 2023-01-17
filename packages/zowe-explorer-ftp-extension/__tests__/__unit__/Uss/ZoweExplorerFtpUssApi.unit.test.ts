@@ -185,9 +185,10 @@ describe("FtpUssApi", () => {
         try {
             await UssApi.fileUtils("", {});
         } catch (err) {
-            expect(Gui.errorMessage).toHaveBeenCalledWith("Copy/paste operations are currently unsupported for the FTP extension.", {
+            expect(Gui.errorMessage).toHaveBeenCalledWith("fileUtils is not implemented for the FTP extension.", {
                 logger: ZoweLogger,
             });
+            expect(err.message).toStrictEqual("Copy/paste operations are currently unsupported for the FTP extension.");
         }
     });
 
