@@ -29,6 +29,7 @@ import * as globals from "../../src/globals";
 import * as zowe from "@zowe/cli";
 import { Gui, ProfilesCache } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../src/Profiles";
+import { ZoweExplorerExtender } from "../../src/ZoweExplorerExtender";
 
 // jest.mock("vscode");
 jest.mock("child_process");
@@ -326,6 +327,29 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
         await Profiles.getInstance().createNewConnection("fake", "zosmf");
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile fake was created.");
     });
+
+    it("Tests that createNewConnection throws an exception and shows a config error", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const mockSaveProfile = jest.spyOn(ProfilesCache.prototype as any, "saveProfile").mockImplementationOnce(async (values, name, type) => {
+            throw new Error("saveProfile error");
+        });
+        const mockShowZoweConfigError = jest.spyOn(ZoweExplorerExtender, "showZoweConfigError").mockImplementation();
+
+        jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValue(blockMocks.testSchemas);
+        jest.spyOn(globalMocks.mockProfileInstance, "urlInfo").mockReturnValue(globalMocks.mockUrlInfo);
+        jest.spyOn(globalMocks.mockProfileInstance, "userInfo").mockReturnValue(globalMocks.testProfile.profile.user);
+        jest.spyOn(globalMocks.mockProfileInstance, "passwordInfo").mockReturnValue(globalMocks.testProfile.profile.password);
+        jest.spyOn(globalMocks.mockProfileInstance, "ruInfo").mockReturnValue(false);
+        const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
+
+        await Profiles.getInstance().createNewConnection("fake", "zosmf");
+        expect(mockSaveProfile).toHaveBeenCalled();
+        expect(globalMocks.mockShowInformationMessage).not.toHaveBeenCalled();
+        expect(errorHandlingSpy).toHaveBeenCalledWith("saveProfile error");
+        expect(mockShowZoweConfigError).toHaveBeenCalledWith("saveProfile error");
+    });
 });
 
 describe("Profiles Unit Tests - Function createZoweSession", () => {
@@ -493,15 +517,15 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("Global: in the Zowe home directory");
         const spyLayers = jest.spyOn(globalMocks.mockProfileInstance, "getConfigLayers");
         spyLayers.mockRejectedValueOnce(new Error("Error parsing JSON"));
-        const spyOpenFile = jest.spyOn(globalMocks.mockProfileInstance, "openConfigFile");
+        const spyZoweConfigError = jest.spyOn(ZoweExplorerExtender, "showZoweConfigError");
         await Profiles.getInstance().createZoweSchema(blockMocks.testDatasetTree);
 
         expect(spyQuickPick).toBeCalled();
-        expect(spyOpenFile).toBeCalled();
+        expect(spyZoweConfigError).toBeCalled();
 
         spyQuickPick.mockClear();
         spyLayers.mockClear();
-        spyOpenFile.mockClear();
+        spyZoweConfigError.mockClear();
     });
     it("Test that createZoweSchema will auto create global if VSC not in project and config doesn't exist", async () => {
         const globalMocks = await createGlobalMocks();
