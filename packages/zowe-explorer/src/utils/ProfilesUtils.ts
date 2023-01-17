@@ -266,16 +266,7 @@ export async function readConfigFromDisk() {
             globals.LOG.debug("Summary of team configuration files considered for Zowe Explorer: %s", JSON.stringify(layerSummary));
         }
     } catch (error) {
-        await openConfigOnError(error);
         throw new Error(error);
-    }
-}
-
-export async function openConfigOnError(error: Error) {
-    if (error.message.toString().includes("Error parsing JSON")) {
-        const errorArray = error.message.toString().split("'");
-        const errorPath = errorArray[1];
-        await Profiles.getInstance().openConfigFile(errorPath);
     }
 }
 

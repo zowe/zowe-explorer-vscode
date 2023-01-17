@@ -78,8 +78,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         await readConfigFromDisk();
     } catch (err) {
         globals.LOG.error(err);
-        const errorMessage = localize("initialize.profiles.error", "Error reading or initializing Zowe CLI profiles.");
-        Gui.warningMessage(`${errorMessage}: ${err.message}`);
+        ZoweExplorerExtender.showZoweConfigError(err.message);
     }
 
     // Initialize profile manager
@@ -261,6 +260,24 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     return ZoweExplorerApiRegister.getInstance();
 }
 
+export const onChangeProfileAction = async (uri: vscode.Uri) => {
+    const newProfileContents = await vscode.workspace.fs.readFile(uri);
+    if (newProfileContents.toString() === savedProfileContents.toString()) {
+        return;
+    }
+    savedProfileContents = newProfileContents;
+
+    try {
+        await readConfigFromDisk();
+        await refreshActions.refreshAll(datasetProvider);
+        await refreshActions.refreshAll(ussFileProvider);
+        await refreshActions.refreshAll(jobsProvider);
+    } catch (err) {
+        globals.LOG.error(err);
+        ZoweExplorerExtender.showZoweConfigError(err.message);
+    }
+};
+
 async function watchConfigProfile(context: vscode.ExtensionContext) {
     if (globals.ISTHEIA) {
         return undefined;
@@ -280,17 +297,6 @@ async function watchConfigProfile(context: vscode.ExtensionContext) {
     if (workspaceProfileWatcher) {
         context.subscriptions.push(globalProfileWatcher);
     }
-
-    const onChangeProfileAction = async (uri: vscode.Uri) => {
-        const newProfileContents = await vscode.workspace.fs.readFile(uri);
-        if (newProfileContents.toString() === savedProfileContents.toString()) {
-            return;
-        }
-        savedProfileContents = newProfileContents;
-        await refreshActions.refreshAll(datasetProvider);
-        await refreshActions.refreshAll(ussFileProvider);
-        await refreshActions.refreshAll(jobsProvider);
-    };
 
     globalProfileWatcher.onDidCreate(async () => {
         await vscode.commands.executeCommand("zowe.extRefresh");
