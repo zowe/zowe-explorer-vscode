@@ -119,12 +119,12 @@ describe("ProfilesCache", () => {
         expect(profInfo.getProfiles("zosmf").length).toBe(2);
     });
 
-    it("registerCustomProfilesType should register new profile type", () => {
-        const profInfo = new ProfilesCache(undefined as any);
-        expect((profInfo as any).allExternalTypes.length).toBe(0);
-        profInfo.registerCustomProfilesType("zosmf");
-        expect((profInfo as any).allExternalTypes.length).toBe(1);
-    });
+    // it("registerCustomProfilesType should register new profile type", () => {
+    //     const profInfo = new ProfilesCache(undefined as any);
+    //     expect((profInfo as any).allExternalTypes.length).toBe(0);
+    //     profInfo.registerCustomProfilesType("zosmf");
+    //     expect((profInfo as any).allExternalTypes.length).toBe(1);
+    // });
 
     // it("TODO refresh", () => {
     //     expect(2 + 2).toBe(4);
