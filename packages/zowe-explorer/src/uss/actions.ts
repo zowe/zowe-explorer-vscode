@@ -391,7 +391,7 @@ export async function copyUssFiles(node: IZoweUSSTreeNode, nodeList: IZoweUSSTre
     } else {
         selectedNodes = ussFileProvider.getTreeView().selection;
     }
-    await vscode.window.withProgress(
+    await Gui.withProgress(
         {
             location: vscode.ProgressLocation.Window,
             title: localize("ZoweUssNode.copyDownload.progress", "Downloading copied files ..."),
@@ -424,7 +424,7 @@ export async function pasteUssFile(ussFileProvider: IZoweTree<IZoweUSSTreeNode>,
         selectedNode = a.length > 0 ? a[0] : (a as unknown as IZoweUSSTreeNode);
     }
 
-    await vscode.window.withProgress(
+    await Gui.withProgress(
         {
             location: vscode.ProgressLocation.Window,
             title: localize("ZoweUssNode.copyUpload.progress", "Uploading copied files ..."),

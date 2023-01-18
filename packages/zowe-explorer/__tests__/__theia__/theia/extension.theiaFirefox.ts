@@ -9,6 +9,7 @@
  *                                                                                 *
  */
 
+import { writeFileSync } from "fs";
 import { Builder, By, Key, until, Button } from "selenium-webdriver";
 import * as firefox from "selenium-webdriver/firefox";
 import { TheiaLocator, DatasetsLocators, UssLocators, JobsLocators } from "./Locators";
@@ -22,6 +23,11 @@ export async function openBrowser() {
     const firefoxOptions = new firefox.Options();
     firefoxOptions.headless();
     driverFirefox = new Builder().forBrowser("firefox").setFirefoxOptions(firefoxOptions).build();
+}
+
+export async function takeScreenshot(filename: string) {
+    const image = await driverFirefox.takeScreenshot();
+    writeFileSync(filename, image, "base64");
 }
 
 export async function OpenTheiaInFirefox() {

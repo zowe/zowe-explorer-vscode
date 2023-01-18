@@ -2547,12 +2547,12 @@
   dependencies:
     minimatch "5.0.1"
 
-"@zowe/zos-ftp-for-zowe-cli@2.1.0":
-  version "2.1.0"
-  resolved "https://registry.npmjs.org/@zowe/zos-ftp-for-zowe-cli/-/zos-ftp-for-zowe-cli-2.1.0.tgz#4f9249e93052f1a38be09ead0b1205f79c339e34"
-  integrity sha512-CW7tkTYIqVbkBxB9LGr6dwtN5WGg0WDELx/XYHCS/Ak9DaECKzEbwON5+4Aw4E9BryTYIVMORwhmXlj7v2KChQ==
+"@zowe/zos-ftp-for-zowe-cli@2.1.2":
+  version "2.1.2"
+  resolved "https://registry.npmjs.org/@zowe/zos-ftp-for-zowe-cli/-/zos-ftp-for-zowe-cli-2.1.2.tgz#d55417ff80d6c9716ed3b5ea9905fd822f738def"
+  integrity sha512-YWojS16Vr79tNV+3Rm9mfNwTYISCDvQ3NUSiQ3WajNrJ4GEmEnsB1RRSpUwb7CSmpbVlbs5n2JUY3jL8u30tlg==
   dependencies:
-    zos-node-accessor "1.0.12"
+    zos-node-accessor "1.0.14"
 
 "@zowe/zos-jobs-for-zowe-sdk@7.9.3":
   version "7.9.3"
@@ -4388,10 +4388,31 @@ debug-fabulous@1.X:
     memoizee "0.4.X"
     object-assign "4.X"
 
-debug@3.2.6, debug@3.X, debug@4, debug@^2.2.0, debug@^2.3.3, debug@^3.1.0, debug@^4.0.1, debug@^4.1.0, debug@^4.1.1, debug@^4.3.2, debug@^4.3.4, debug@~2.6.8:
-  version "3.1.0"
-  resolved "https://registry.npmjs.org/debug/-/debug-3.1.0.tgz#5bb5a0672628b64149566ba16819e61518c67261"
-  integrity sha512-OX8XqP7/1a9cqkxYw2yXss15f26NKWBpDXQd0/uK/KPqdQhxbPa994hnzjcE2VqQpDslf55723cKPUOGSmMY3g==
+debug@3.2.6:
+  version "3.2.6"
+  resolved "https://registry.npmjs.org/debug/-/debug-3.2.6.tgz#e83d17de16d8a7efb7717edbe5fb10135eee629b"
+  integrity sha512-mel+jf7nrtEl5Pn1Qx46zARXKDpBbvzezse7p7LqINmdoIk8PYP5SySaxEmYv6TZ0JyEKA1hsCId6DIhgITtWQ==
+  dependencies:
+    ms "^2.1.1"
+
+debug@3.X, debug@^3.1.0:
+  version "3.2.7"
+  resolved "https://registry.npmjs.org/debug/-/debug-3.2.7.tgz#72580b7e9145fb39b6676f9c5e5fb100b934179a"
+  integrity sha512-CFjzYYAi4ThfiQvizrFQevTTXHtnCqWfe7x1AhgEscTz6ZbLbfoLRLPugTQyBth6f8ZERVUSyWHFD/7Wu4t1XQ==
+  dependencies:
+    ms "^2.1.1"
+
+debug@4, debug@^4.0.1, debug@^4.1.0, debug@^4.1.1, debug@^4.3.2, debug@^4.3.4:
+  version "4.3.4"
+  resolved "https://registry.npmjs.org/debug/-/debug-4.3.4.tgz#1319f6579357f2338d3337d2cdd4914bb5dcc865"
+  integrity sha512-PRWFHuSU3eDtQJPvnNY7Jcket1j0t5OuOsFzPPzsekD52Zl8qUfFIPEiswXqIvHWGVHOgX+7G/vCNNhehwxfkQ==
+  dependencies:
+    ms "2.1.2"
+
+debug@^2.2.0, debug@^2.3.3, debug@~2.6.8:
+  version "2.6.9"
+  resolved "https://registry.npmjs.org/debug/-/debug-2.6.9.tgz#5d128515df134ff327e90a4c93f4e077a536341f"
+  integrity sha512-bC7ElrdJaJnPbAP+1EotYvqZsb3ecl5wi6Bfi6BJTUcNowp6cvspg0jXznRTKDjm/E7AdgFBVeAPVMNcKGsHMA==
   dependencies:
     ms "2.0.0"
 
@@ -12887,11 +12908,11 @@ yocto-queue@^0.1.0:
   resolved "https://registry.npmjs.org/yocto-queue/-/yocto-queue-0.1.0.tgz#0294eb3dee05028d31ee1a5fa2c556a6aaf10a1b"
   integrity sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==
 
-zos-node-accessor@1.0.12:
-  version "1.0.12"
-  resolved "https://registry.npmjs.org/zos-node-accessor/-/zos-node-accessor-1.0.12.tgz#fce75ced095545850ee065263977af4ed640bef2"
-  integrity sha512-WA4DVgYLMDIYFh5eTvY9zQSgO6MJvClvFX2RMU5NCLbrTDVVoQ8e0tsUsHU2M0X7P7cY28Lrk1nDZSbdQf0imw==
+zos-node-accessor@1.0.14:
+  version "1.0.14"
+  resolved "https://registry.npmjs.org/zos-node-accessor/-/zos-node-accessor-1.0.14.tgz#59ec4f7ea3f20b27acac8a5f23ae4935e9a4bb3d"
+  integrity sha512-+DXcOSBcixulEGPXVEn8ktXZqIP/eSzrQLO8daIELcak1zP89z7rdFRhMcKmEXk11PLq2wcoDzzIq3KPSHBLiA==
   dependencies:
-    debug "~2.6.8"
+    debug "3.1.0"
     ftp4 "~0.3.13"
     q "~1.4.1"
