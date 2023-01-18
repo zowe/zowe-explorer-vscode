@@ -748,6 +748,7 @@ describe("USS Action Unit Tests - copy file / directory", () => {
             children: [],
             baseName: blockMocks.nodes[1].getLabel() as string,
             ussPath: "",
+            sessionName: blockMocks.treeNodes.ussNode.getLabel() as string,
             type: UssFileType.Directory,
         };
         blockMocks.treeNodes.ussApi.fileList = jest.fn().mockResolvedValue({

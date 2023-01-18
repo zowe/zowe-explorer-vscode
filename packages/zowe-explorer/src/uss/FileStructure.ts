@@ -17,19 +17,46 @@ export enum UssFileType {
     Directory,
 }
 
-/**
- * Interprets a file/directory list as a tree structure
- */
-export type UssFileTree = {
+export interface UssFileTree {
+    // The path of the file on the local file system, if it exists
+    localPath?: string;
+
     // The path of the file/directory as defined in USS
     ussPath: string;
 
     // optional as the root node (for tree building) might not have a base name
     baseName?: string;
 
-    // Any files/directories within this file tree
-    children?: UssFileTree[];
+    // Any files/directory trees within this file tree
+    children: UssFileTree[];
 
-    // The type of the file (file or directoryh)
+    // The session where this node comes from (optional for root)
+    sessionName?: string;
+
+    // The type of the file (file or directory)
     type: UssFileType;
-};
+}
+
+/**
+ * Interprets a file/directory list as a tree structure
+ */
+export class UssFileUtils {
+    /**
+     * Whether the file tree is going to be pasted within the same session node.
+     *
+     * @param fileTree The file tree to paste
+     * @param destSessionName The name of the destination session
+     * @returns true if the tree will be pasted in the same session, and false if otherwise.
+     */
+    public static toSameSession(fileTree: UssFileTree, destSessionName: string) {
+        if (fileTree.sessionName && fileTree.sessionName !== destSessionName) {
+            return false;
+        }
+
+        const result =
+            fileTree.children.length <= 0
+                ? true
+                : fileTree.children.reduce((prev, curr) => prev && UssFileUtils.toSameSession(curr, destSessionName), true);
+        return result;
+    }
+}

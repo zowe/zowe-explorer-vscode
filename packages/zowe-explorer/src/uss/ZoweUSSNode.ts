@@ -23,7 +23,7 @@ import { disposeClipboardContents, fileExistsCaseSensitveSync, injectAdditionalD
 import * as contextually from "../shared/context";
 import { closeOpenedTextFile } from "../utils/workspace";
 import * as nls from "vscode-nls";
-import { UssFileTree, UssFileType } from "./FileStructure";
+import { UssFileTree, UssFileType, UssFileUtils } from "./FileStructure";
 
 // Set up localization
 nls.config({
@@ -632,7 +632,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
     public async copyUssFile() {
         const clipboardContents = await vscode.env.clipboard.readText();
-        if (!clipboardContents && clipboardContents.length < 1) {
+        if (clipboardContents == null || clipboardContents.length < 1) {
             return;
         }
 
@@ -653,11 +653,34 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             const api = ZoweExplorerApiRegister.getUssApi(this.profile);
             const fileTreeToPaste: UssFileTree = JSON.parse(await vscode.env.clipboard.readText());
 
-            for (const subnode of fileTreeToPaste.children) {
-                await this.pasteFileTree(remotePath, subnode, {
-                    api: api,
-                    options: options,
-                });
+            if (api.fileUtils && UssFileUtils.toSameSession(fileTreeToPaste, this.getSessionNode().getLabel() as string)) {
+                for (const subnode of fileTreeToPaste.children) {
+                    await this.pasteFileTree(remotePath, subnode, {
+                        api: api,
+                        options: options,
+                    });
+                }
+            } else {
+                const apiResponse = await api.fileList(remotePath);
+                const fileList = apiResponse.apiResponse?.items;
+                for (const file of fileTreeToPaste.children) {
+                    switch (file.type) {
+                        case UssFileType.Directory:
+                            await api.uploadDirectory(file.localPath, remotePath.concat("/", path.basename(file.localPath)), options);
+                            break;
+                        case UssFileType.File:
+                            let fname = path.basename(file.localPath);
+                            if (
+                                fileList?.find((file) => {
+                                    return file.name === fname;
+                                })
+                            ) {
+                                fname += " (copy)";
+                            }
+                            await api.putContent(file.localPath, remotePath.concat("/", fname), options);
+                            break;
+                    }
+                }
             }
         } catch (error) {
             await errorHandling(error, this.label.toString(), localize("copyUssFile.error", "Error uploading files"));

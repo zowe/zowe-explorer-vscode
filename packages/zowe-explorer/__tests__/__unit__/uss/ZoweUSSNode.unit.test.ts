@@ -15,7 +15,7 @@ import { Gui, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
-import { UssFileType } from "../../../src/uss/FileStructure";
+import { UssFileType, UssFileUtils } from "../../../src/uss/FileStructure";
 import {
     createISession,
     createISessionWithoutCredentials,
@@ -1659,8 +1659,17 @@ describe("ZoweUSSNode Unit Tests - Function node.copyUssFile()", () => {
         jest.spyOn(blockMocks.mockUssApi, "putContent").mockResolvedValueOnce(blockMocks.fileResponse);
         jest.spyOn(blockMocks.mockUssApi, "uploadDirectory").mockResolvedValueOnce(blockMocks.fileResponse);
 
+        // Testing paste within same session (copy API)
+        const mockToSameSession = jest.spyOn(UssFileUtils, "toSameSession").mockReturnValueOnce(true);
         await blockMocks.testNode.copyUssFile();
-        expect(blockMocks.pasteFileTreeSpy).toHaveBeenCalled();
+        expect(blockMocks.pasteFileTreeSpy).toHaveBeenCalledTimes(1);
+
+        // Test case w/ copying between two sessions (should fallback to original impl.)
+        mockToSameSession.mockReturnValueOnce(false);
+        await blockMocks.testNode.copyUssFile();
+
+        // count should stay the same as the second case uses a different method
+        expect(blockMocks.pasteFileTreeSpy).toHaveBeenCalledTimes(1);
     });
 
     it("Tests node.copyUssFile() reads clipboard contents finds same file name on destination directory", async () => {
