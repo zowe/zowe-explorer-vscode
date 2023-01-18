@@ -16,6 +16,7 @@ import * as fs from "fs";
 import * as globals from "./globals";
 import * as vscode from "vscode";
 import {
+    Gui,
     ZoweExplorerApi,
     ZoweExplorerTreeApi,
     IZoweTree,
@@ -32,9 +33,9 @@ import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { getProfileInfo, getProfile } from "./utils/ProfilesUtils";
 
 // Set up localization
-// import * as nls from "vscode-nls";
-// nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
-// const localize: nls.LocalizeFunc = nls.loadMessageBundle();
+import * as nls from "vscode-nls";
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 /**
  * The Zowe Explorer API Register singleton that gets exposed to other VS Code
@@ -43,6 +44,69 @@ import { getProfileInfo, getProfile } from "./utils/ProfilesUtils";
  */
 export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtender, ZoweExplorerTreeApi {
     public static ZoweExplorerExtenderInst: ZoweExplorerExtender;
+
+    /**
+     * Shows an error when the Zowe configs are improperly configured, as well as
+     * an option to show the config.
+     *
+     * @param errorDetails Details of the error (to be parsed for config name and path)
+     */
+    public static async showZoweConfigError(errorDetails: string) {
+        vscode.window
+            .showErrorMessage(
+                localize("initialize.profiles.error", 'Error encountered when loading your Zowe config. Click "Show Config" for more details.'),
+                "Show Config"
+            )
+            .then((selection) => {
+                if (selection !== "Show Config") {
+                    return;
+                }
+
+                // Parse the v2 config path, or a v1 config path depending on the error message
+                const configMatch = errorDetails.includes("Error parsing JSON in the file")
+                    ? errorDetails.match(/Error parsing JSON in the file \'(.+?)\'/)
+                    : errorDetails.match(/Error reading profile file \(\"(.+?)\"\)/);
+
+                let configPath = configMatch != null ? configMatch[1] : null;
+                // If configPath is null, build a v2 config location based on the error details
+                if (configPath == null) {
+                    const isRootConfigError = errorDetails.match(/(?:[\\]{1,2}|\/)(\.zowe)(?:[\\]{1,2}|\/)/) != null;
+                    // If the v2 config error does not apply to the global Zowe config, check for a project-level config.
+                    if (vscode.workspace.workspaceFolders != null && !isRootConfigError) {
+                        configPath = this.getConfigLocation(vscode.workspace.workspaceFolders[0].uri.fsPath);
+                    } else {
+                        configPath = this.getConfigLocation(getZoweDir());
+                    }
+
+                    // If the config w/ culprits cannot be found, all v2 config locations have been exhausted - exit.
+                    if (configPath == null) {
+                        return;
+                    }
+                }
+                Gui.showTextDocument(vscode.Uri.file(configPath));
+            });
+    }
+
+    /**
+     * Returns the location of a Zowe config (if it exists) relative to rootPath.
+     * @param rootPath The root path to check for Zowe configs
+     */
+    public static getConfigLocation(rootPath: string): string | null {
+        // First check for a user-specific v2 config
+        let location = path.join(rootPath, "zowe.config.user.json");
+        if (fs.existsSync(location)) {
+            return location;
+        }
+
+        // Fallback to regular v2 config if user-specific config doesn't exist
+        location = path.join(rootPath, "zowe.config.json");
+
+        if (fs.existsSync(location)) {
+            return location;
+        }
+
+        return null;
+    }
 
     /**
      * Access the singleton instance.
@@ -101,9 +165,8 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
          * profile management.
          */
         let usingTeamConfig: boolean;
-        let mProfileInfo: zowe.imperative.ProfileInfo;
         try {
-            mProfileInfo = await getProfileInfo(globals.ISTHEIA);
+            const mProfileInfo = await getProfileInfo(globals.ISTHEIA);
             if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0]) {
                 const rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
                 await mProfileInfo.readProfilesFromDisk({ homeDir: zoweDir, projectDir: getFullPath(rootPath) });
@@ -116,6 +179,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
             if (error.toString().includes("Error parsing JSON")) {
                 usingTeamConfig = true;
             }
+            ZoweExplorerExtender.showZoweConfigError(error.message);
         }
 
         if (profileTypeConfigurations && !usingTeamConfig) {
