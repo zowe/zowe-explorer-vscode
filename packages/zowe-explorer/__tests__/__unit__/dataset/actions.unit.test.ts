@@ -112,7 +112,6 @@ function createGlobalMocks() {
     Object.defineProperty(vscode, "ProgressLocation", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "createWebviewPanel", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.env, "clipboard", { value: clipboard, configurable: true });
-
     mocked(Profiles.getInstance).mockReturnValue(newMocks.profileInstance);
 
     return newMocks;
@@ -1794,11 +1793,17 @@ describe("Dataset Actions Unit Tests - Function copyDataSet", () => {
             commandResponse: "response",
             apiResponse: {},
         });
+        const copySpy = jest.spyOn(blockMocks.mvsApi, "copyDataSet");
+        copySpy.mockResolvedValue({
+            success: true,
+            commandResponse: "",
+            apiResponse: {},
+        });
+
         mocked(vscode.window.withProgress).mockImplementation((prm, fnc) => {
             fnc();
             return Promise.resolve(prm);
         });
-        await dsActions.copyDataSet(nodeCopy, null, blockMocks.testDatasetTree);
         expect(mocked(Gui.errorMessage)).not.toHaveBeenCalled();
         await expect(dsActions.copyDataSet(nodeCopy, null, blockMocks.testDatasetTree)).toStrictEqual(Promise.resolve());
     });

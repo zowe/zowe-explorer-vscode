@@ -1482,7 +1482,7 @@ export async function pasteDataSetMembers(datasetProvider: api.IZoweTree<api.IZo
     await api.Gui.withProgress(
         {
             location: vscode.ProgressLocation.Window,
-            title: localize("paste.dataSet.InPrg", "Uploading File(s)"),
+            title: localize("paste.dataSet.InPrg", "Copying File(s)"),
         },
         async function copyDsMember() {
             for (const content of clipboardContent) {
@@ -1543,7 +1543,6 @@ export async function downloadDs(node: ZoweDatasetNode) {
 export async function copySequentialDatasets(nodes: ZoweDatasetNode[]) {
     for (const node of nodes) {
         try {
-            await downloadDs(node);
             const lbl = node.getLabel().toString();
             const inputBoxOptions: vscode.InputBoxOptions = {
                 prompt: localize("allocateLike.inputBox.placeHolder", "Enter a name for the new data set"),
@@ -1558,6 +1557,7 @@ export async function copySequentialDatasets(nodes: ZoweDatasetNode[]) {
             if (!sequential) {
                 return;
             }
+
             const res = await ZoweExplorerApiRegister.getMvsApi(nodes[0].getProfile()).allocateLikeDataSet(sequential, lbl);
             if (res.success) {
                 const uploadOptions: IUploadOptions = {
@@ -1567,18 +1567,10 @@ export async function copySequentialDatasets(nodes: ZoweDatasetNode[]) {
                 await vscode.window.withProgress(
                     {
                         location: vscode.ProgressLocation.Window,
-                        title: localize("paste.dataSet.InPrg", "Uploading File(s)"),
+                        title: localize("paste.dataSet.InPrg", "Copying File(s)"),
                     },
                     () => {
-                        const prof = node?.getProfile();
-                        if (prof.profile.encoding) {
-                            uploadOptions.encoding = prof.profile.encoding;
-                        }
-                        return ZoweExplorerApiRegister.getMvsApi(prof).putContents(
-                            getDocumentFilePath(node.getLabel().toString(), node),
-                            sequential,
-                            uploadOptions
-                        );
+                        return ZoweExplorerApiRegister.getMvsApi(nodes[0].getProfile()).copyDataSet(lbl, sequential);
                     }
                 );
             }
@@ -1633,7 +1625,7 @@ export async function copyPartitionedDatasets(nodes: ZoweDatasetNode[]) {
                 await api.Gui.withProgress(
                     {
                         location: vscode.ProgressLocation.Window,
-                        title: localize("paste.dataSet.InPrg", "Uploading File(s)"),
+                        title: localize("paste.dataSet.InPrg", "Copying File(s)"),
                     },
                     () => {
                         for (const child of children) {

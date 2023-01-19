@@ -281,6 +281,9 @@ export class ZosmfMvsApi extends ZosmfApiCommon implements ZoweExplorerApi.IMvs 
     public dataSetsMatchingPattern(filter: string[], options?: zowe.IDsmListOptions): Promise<zowe.IZosFilesResponse> {
         return zowe.List.dataSetsMatchingPattern(this.getSession(), filter, options);
     }
+    public copyDataSet(fromDataSetName: string, toDataSetName: string, enq?: string, replace?: boolean): Promise<zowe.IZosFilesResponse> {
+        return zowe.Copy.dataSet(this.getSession(), { dsn: toDataSetName }, { "from-dataset": { dsn: fromDataSetName } });
+    }
 }
 
 /**
