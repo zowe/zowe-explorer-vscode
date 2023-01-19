@@ -1659,6 +1659,20 @@ describe("ZoweUSSNode Unit Tests - Function node.copyUssFile()", () => {
         jest.spyOn(blockMocks.mockUssApi, "putContent").mockResolvedValueOnce(blockMocks.fileResponse);
         jest.spyOn(blockMocks.mockUssApi, "uploadDirectory").mockResolvedValueOnce(blockMocks.fileResponse);
 
+        // Test toSameSession where one of the files has a diff LPAR
+        const isSameSession = UssFileUtils.toSameSession(
+            {
+                localPath: "C://some//local//path",
+                ussPath: "/z/SOMEUSER/path",
+                baseName: "<ROOT>",
+                children: [],
+                sessionName: "session1",
+                type: UssFileType.Directory,
+            },
+            "diffSessionLPAR"
+        );
+        expect(isSameSession).toBe(false);
+
         // Testing paste within same session (copy API)
         const mockToSameSession = jest.spyOn(UssFileUtils, "toSameSession").mockReturnValueOnce(true);
         await blockMocks.testNode.copyUssFile();
