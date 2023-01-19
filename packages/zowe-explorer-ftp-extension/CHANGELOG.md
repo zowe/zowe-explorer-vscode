@@ -4,7 +4,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
-- Updated UI/UX method calls to use standalone `Gui` module for better usability and maintainability. [#1967](https://github.com/zowe/vscode-extension-for-zowe/issues/1967)
+- Updated UI/UX method calls to use standalone `Gui` module for better usability and maintainability . [#1967](https://github.com/zowe/vscode-extension-for-zowe/issues/1967)
 - Updated dependencies for improved security.
 
 ### Bug fixes
