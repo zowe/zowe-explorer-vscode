@@ -14,7 +14,7 @@ jest.mock("fs");
 import * as zowe from "@zowe/cli";
 import { ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import * as ussNodeActions from "../../../src/uss/actions";
-import { UssFileUtils } from "../../../src/uss/FileStructure";
+import { UssFileTree, UssFileType, UssFileUtils } from "../../../src/uss/FileStructure";
 import { createUSSTree, createUSSNode, createFavoriteUSSNode } from "../../../__mocks__/mockCreators/uss";
 import {
     createIProfile,
@@ -33,7 +33,6 @@ import * as path from "path";
 import * as globals from "../../../src/globals";
 import * as sharedUtils from "../../../src/shared/utils";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
-import { UssFileTree, UssFileType } from "../../../src/uss/FileStructure";
 import * as isbinaryfile from "isbinaryfile";
 import * as fs from "fs";
 import { createUssApi, bindUssApi } from "../../../__mocks__/mockCreators/api";
