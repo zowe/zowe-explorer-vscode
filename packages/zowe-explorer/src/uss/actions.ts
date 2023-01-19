@@ -466,7 +466,7 @@ export async function copyUssFiles(node: IZoweUSSTreeNode, nodeList: IZoweUSSTre
 
 export async function refreshChildNodesDirectory(node: IZoweUSSTreeNode) {
     const childNodes = await node.getChildren();
-    if (childNodes.length > 0) {
+    if (childNodes != null && childNodes.length > 0) {
         for (const child of childNodes) {
             await refreshChildNodesDirectory(child);
         }
