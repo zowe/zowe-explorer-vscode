@@ -15,7 +15,7 @@ import { ProfilesCache } from "../../../src/profiles/ProfilesCache";
 
 jest.mock("@zowe/cli", () => {
     const originalModule = jest.requireActual("@zowe/cli");
-    return {
+    return {  // eslint-disable-line @typescript-eslint/no-unsafe-return
         ...originalModule,
         getZoweDir: jest.fn().mockReturnValue("~/.zowe"),
     };

@@ -240,3 +240,7 @@ export class IZosFilesResponse {
      */
     public apiResponse?: any;
 }
+
+export const ZosmfProfile = {
+    type: "zosmf",
+};

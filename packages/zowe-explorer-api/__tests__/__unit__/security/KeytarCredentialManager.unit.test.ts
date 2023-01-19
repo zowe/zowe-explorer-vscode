@@ -24,7 +24,7 @@ describe("KeytarCredentialManager", () => {
         KeytarCredentialManager.keytar = {
             getPassword: jest.fn(),
             setPassword: jest.fn(),
-            deletePassword: jest.fn()
+            deletePassword: jest.fn(),
         };
     });
 
@@ -53,11 +53,13 @@ describe("KeytarCredentialManager", () => {
 
         it("should handle CredentialManager in Imperative settings", () => {
             jest.spyOn(fs, "existsSync").mockReturnValueOnce(true);
-            const readFileSyncSpy = jest.spyOn(fs, "readFileSync").mockReturnValue(JSON.stringify({
-                overrides: {
-                    CredentialManager: scsPluginName
-                }
-            }));
+            const readFileSyncSpy = jest.spyOn(fs, "readFileSync").mockReturnValue(
+                JSON.stringify({
+                    overrides: {
+                        CredentialManager: scsPluginName,
+                    },
+                })
+            );
             const keytar = KeytarCredentialManager.getSecurityModules("keytar", false);
             expect(loggerWarnSpy).not.toHaveBeenCalled();
             expect(readFileSyncSpy).toHaveBeenCalledTimes(1);
@@ -66,11 +68,13 @@ describe("KeytarCredentialManager", () => {
 
         it("should handle credential-manager in Imperative settings", () => {
             jest.spyOn(fs, "existsSync").mockReturnValueOnce(true);
-            const readFileSyncSpy = jest.spyOn(fs, "readFileSync").mockReturnValue(JSON.stringify({
-                overrides: {
-                    "credential-manager": scsPluginName
-                }
-            }));
+            const readFileSyncSpy = jest.spyOn(fs, "readFileSync").mockReturnValue(
+                JSON.stringify({
+                    overrides: {
+                        "credential-manager": scsPluginName,
+                    },
+                })
+            );
             const keytar = KeytarCredentialManager.getSecurityModules("keytar", false);
             expect(loggerWarnSpy).not.toHaveBeenCalled();
             expect(readFileSyncSpy).toHaveBeenCalledTimes(1);
@@ -79,11 +83,13 @@ describe("KeytarCredentialManager", () => {
 
         it("should handle CredentialManager in Imperative settings - Theia", () => {
             jest.spyOn(fs, "existsSync").mockReturnValueOnce(true);
-            const readFileSyncSpy = jest.spyOn(fs, "readFileSync").mockReturnValue(JSON.stringify({
-                overrides: {
-                    CredentialManager: scsPluginName
-                }
-            }));
+            const readFileSyncSpy = jest.spyOn(fs, "readFileSync").mockReturnValue(
+                JSON.stringify({
+                    overrides: {
+                        CredentialManager: scsPluginName,
+                    },
+                })
+            );
             jest.spyOn(process, "cwd").mockReturnValueOnce(__dirname + "/../../../../..");
             const keytar = KeytarCredentialManager.getSecurityModules("keytar", true);
             expect(loggerWarnSpy).not.toHaveBeenCalled();
@@ -121,11 +127,13 @@ describe("KeytarCredentialManager", () => {
 
         it("should handle error loading invalid security module", () => {
             jest.spyOn(fs, "existsSync").mockReturnValueOnce(true);
-            const readFileSyncSpy = jest.spyOn(fs, "readFileSync").mockReturnValue(JSON.stringify({
-                overrides: {
-                    CredentialManager: scsPluginName
-                }
-            }));
+            const readFileSyncSpy = jest.spyOn(fs, "readFileSync").mockReturnValue(
+                JSON.stringify({
+                    overrides: {
+                        CredentialManager: scsPluginName,
+                    },
+                })
+            );
             const keytar = KeytarCredentialManager.getSecurityModules("keytar_bad", false);
             expect(loggerWarnSpy).toHaveBeenCalledTimes(2);
             expect(loggerWarnSpy.mock.calls[0][0].message).toContain("Cannot find module");
@@ -169,8 +177,8 @@ describe("KeytarCredentialManager", () => {
 
         it("should fall back to user if username is missing", async () => {
             const credMgr = new KeytarCredentialManager(globals.SETTINGS_SCS_DEFAULT, fakeDisplayName);
-            KeytarCredentialManager.keytar.getPassword.mockImplementation((service : string, account: string) => {
-                return account.endsWith("_user") ? "secret": null;
+            KeytarCredentialManager.keytar.getPassword.mockImplementation((service: string, account: string) => {
+                return account.endsWith("_user") ? "secret" : null;
             });
             const password = await (credMgr as any).loadCredentials("test_username");
             expect(password).toBe("secret");
@@ -179,8 +187,8 @@ describe("KeytarCredentialManager", () => {
 
         it("should fall back to password if pass is missing", async () => {
             const credMgr = new KeytarCredentialManager(globals.SETTINGS_SCS_DEFAULT, fakeDisplayName);
-            KeytarCredentialManager.keytar.getPassword.mockImplementation((service : string, account: string) => {
-                return account.endsWith("_password") ? "secret": null;
+            KeytarCredentialManager.keytar.getPassword.mockImplementation((service: string, account: string) => {
+                return account.endsWith("_password") ? "secret" : null;
             });
             const password = await (credMgr as any).loadCredentials("test_pass");
             expect(password).toBe("secret");
