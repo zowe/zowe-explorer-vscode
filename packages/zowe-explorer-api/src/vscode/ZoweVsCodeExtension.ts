@@ -116,12 +116,12 @@ export class ZoweVsCodeExtension {
             loadProfile.profile.user = loadSession.user = creds[0];
             loadProfile.profile.password = loadSession.password = creds[1];
 
-            let saved = true;
+            let shouldSave = true;
             if (!options.secure && !profInfo.usingTeamConfig) {
-                saved = await ZoweVsCodeExtension.saveCredentials(loadProfile);
+                shouldSave = await ZoweVsCodeExtension.saveCredentials(loadProfile);
             }
 
-            if (saved || profInfo.usingTeamConfig) {
+            if (shouldSave || profInfo.usingTeamConfig) {
                 // v1 write changes to the file, v2 autoStore value determines if written to file
                 const upd = { profileName: loadProfile.name, profileType: loadProfile.type };
                 await profInfo.updateProperty({ ...upd, property: "user", value: creds[0], setSecure: options.secure });

@@ -148,4 +148,24 @@ describe("Gui unit tests", () => {
         await Gui.showInputBox({});
         expect(mocks.showInputBox).toHaveBeenCalled();
     });
+
+    it("can resolve a quick pick when accepted", async () => {
+        const mockDidAccept = jest.fn((callback: any) => callback());
+        await Gui.resolveQuickPick({
+            activeItems: ["test"],
+            onDidAccept: mockDidAccept,
+            onDidHide: jest.fn()
+        } as any);
+        expect(mockDidAccept).toHaveBeenCalledTimes(1);
+    });
+
+    it("can resolve a quick pick when hidden", async () => {
+        const mockDidHide = jest.fn((callback: any) => callback());
+        await Gui.resolveQuickPick({
+            activeItems: ["test"],
+            onDidAccept: jest.fn(),
+            onDidHide: mockDidHide
+        } as any);
+        expect(mockDidHide).toHaveBeenCalledTimes(1);
+    });
 });
