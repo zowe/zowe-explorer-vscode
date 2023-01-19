@@ -81,6 +81,6 @@ describe("IZoweLogger", () => {
             caughtError = error;
         }
         expect(caughtError).toBeDefined();
-        expect(caughtError.message).toContain("Cannot read properties of undefined");
+        expect(caughtError.message).toMatch(/^Cannot read propert(y|ies)/);
     });
 });
