@@ -114,7 +114,7 @@ export namespace ZoweExplorerApi {
          * @param {object} options Options for the file utility API endpoint
          * @returns {Promise<Buffer>}
          */
-        fileUtils(outputPath: string, options: object): Promise<Buffer>;
+        fileUtils?(outputPath: string, options: object): Promise<Buffer>;
 
         /**
          * Retrieve the contents of a USS file.

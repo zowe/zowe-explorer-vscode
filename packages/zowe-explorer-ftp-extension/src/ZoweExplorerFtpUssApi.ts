@@ -49,11 +49,6 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
         return result;
     }
 
-    public async fileUtils(outputPath: string, options: object): Promise<Buffer> {
-        await Gui.errorMessage("fileUtils is not implemented for the FTP extension.", { logger: ZoweLogger });
-        throw new Error("Copy/paste operations are currently unsupported for the FTP extension.");
-    }
-
     // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/require-await, require-await
     public async isFileTagBinOrAscii(ussFilePath: string): Promise<boolean> {
         return false; // TODO: needs to be implemented checking file type
@@ -84,6 +79,10 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
         } finally {
             this.releaseConnection(connection);
         }
+    }
+
+    public putContent(inputFilePath: string, ussFilePath: string, options?: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse> {
+        return this.putContents(inputFilePath, ussFilePath, options?.binary, options?.localEncoding, options?.etag, options?.returnEtag);
     }
 
     public async putContents(

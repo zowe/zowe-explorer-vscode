@@ -180,18 +180,6 @@ describe("FtpUssApi", () => {
         expect(UssApi.releaseConnection).toBeCalled();
     });
 
-    it("should not be able to use fileUtils as it is not implemented in the FTP extension.", async () => {
-        Object.defineProperty(Gui, "errorMessage", { value: jest.fn(), configurable: true });
-        try {
-            await UssApi.fileUtils("", {});
-        } catch (err) {
-            expect(Gui.errorMessage).toHaveBeenCalledWith("fileUtils is not implemented for the FTP extension.", {
-                logger: ZoweLogger,
-            });
-            expect(err.message).toStrictEqual("Copy/paste operations are currently unsupported for the FTP extension.");
-        }
-    });
-
     it("should receive false from isFileTagBinOrAscii as it is not implemented in the FTP extension.", async () => {
         expect(await UssApi.isFileTagBinOrAscii("")).toBe(false);
     });
