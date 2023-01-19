@@ -9,8 +9,8 @@
  *                                                                                 *
  */
 
+import { writeFileSync } from "fs";
 import { Builder, By, Key, until, Button } from "selenium-webdriver";
-// tslint:disable-next-line: no-submodule-imports
 import * as firefox from "selenium-webdriver/firefox";
 import { TheiaLocator, DatasetsLocators, UssLocators, JobsLocators } from "./Locators";
 
@@ -23,6 +23,11 @@ export async function openBrowser() {
     const firefoxOptions = new firefox.Options();
     firefoxOptions.headless();
     driverFirefox = new Builder().forBrowser("firefox").setFirefoxOptions(firefoxOptions).build();
+}
+
+export async function takeScreenshot(filename: string) {
+    const image = await driverFirefox.takeScreenshot();
+    writeFileSync(filename, image, "base64");
 }
 
 export async function OpenTheiaInFirefox() {
@@ -78,61 +83,45 @@ export async function addProfileDetailsInJobs(profileName: string) {
 }
 
 export async function getUssDefaultProfilename() {
-    const ussProfile = await driverFirefox
-        .wait(until.elementLocated(By.xpath(UssLocators.defaultUssProfileXpath)), WAITTIME)
-        .getText();
+    const ussProfile = await driverFirefox.wait(until.elementLocated(By.xpath(UssLocators.defaultUssProfileXpath)), WAITTIME).getText();
     return ussProfile;
 }
 
 export async function getJobsDefaultProfilename() {
-    const jobsProfile = await driverFirefox
-        .wait(until.elementLocated(By.xpath(JobsLocators.defaultJobsProfileXpath)), WAITTIME)
-        .getText();
+    const jobsProfile = await driverFirefox.wait(until.elementLocated(By.xpath(JobsLocators.defaultJobsProfileXpath)), WAITTIME).getText();
     return jobsProfile;
 }
 
 export async function getUssProfilename() {
-    const ussProfile = await driverFirefox
-        .wait(until.elementLocated(By.xpath(UssLocators.secondUssProfileXpath)), WAITTIME)
-        .getText();
+    const ussProfile = await driverFirefox.wait(until.elementLocated(By.xpath(UssLocators.secondUssProfileXpath)), WAITTIME).getText();
     return ussProfile;
 }
 
 export async function getJobsProfilename() {
-    const jobsProfile = await driverFirefox
-        .wait(until.elementLocated(By.xpath(JobsLocators.secondJobsProfileXpath)), WAITTIME)
-        .getText();
+    const jobsProfile = await driverFirefox.wait(until.elementLocated(By.xpath(JobsLocators.secondJobsProfileXpath)), WAITTIME).getText();
     return jobsProfile;
 }
 
 export async function getFavouritesNode() {
-    const favoriteLink = await driverFirefox
-        .wait(until.elementLocated(By.id(DatasetsLocators.favoriteTabId)), WAITTIME)
-        .getAttribute("title");
+    const favoriteLink = await driverFirefox.wait(until.elementLocated(By.id(DatasetsLocators.favoriteTabId)), WAITTIME).getAttribute("title");
     return favoriteLink;
 }
 
 export async function getDatasetNode() {
     await driverFirefox.wait(until.elementLocated(By.id(DatasetsLocators.datasetTabId)), WAITTIME);
-    const datasetLink = await driverFirefox
-        .wait(until.elementLocated(By.xpath(DatasetsLocators.datasetTabXpath)), WAITTIME)
-        .getText();
+    const datasetLink = await driverFirefox.wait(until.elementLocated(By.xpath(DatasetsLocators.datasetTabXpath)), WAITTIME).getText();
     return datasetLink;
 }
 
 export async function getUssNode() {
     await driverFirefox.wait(until.elementLocated(By.id(UssLocators.ussTabId)), WAITTIME);
-    const ussLink = await driverFirefox
-        .wait(until.elementLocated(By.xpath(UssLocators.ussTabXpath)), WAITTIME)
-        .getText();
+    const ussLink = await driverFirefox.wait(until.elementLocated(By.xpath(UssLocators.ussTabXpath)), WAITTIME).getText();
     return ussLink;
 }
 
 export async function getJobsNode() {
     await driverFirefox.wait(until.elementLocated(By.id(JobsLocators.jobTabId)), WAITTIME);
-    const jobsLink = await driverFirefox
-        .wait(until.elementLocated(By.xpath(JobsLocators.jobTabXpath)), WAITTIME)
-        .getText();
+    const jobsLink = await driverFirefox.wait(until.elementLocated(By.xpath(JobsLocators.jobTabXpath)), WAITTIME).getText();
     return jobsLink;
 }
 

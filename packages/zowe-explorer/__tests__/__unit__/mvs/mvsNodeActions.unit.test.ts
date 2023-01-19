@@ -55,15 +55,7 @@ const profileOne: imperative.IProfileLoaded = {
     message: "",
     failNotFound: false,
 };
-const sessNode = new ZoweDatasetNode(
-    "sestest",
-    vscode.TreeItemCollapsibleState.Expanded,
-    null,
-    session,
-    undefined,
-    undefined,
-    profileOne
-);
+const sessNode = new ZoweDatasetNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session, undefined, undefined, profileOne);
 
 describe("mvsNodeActions", () => {
     afterEach(() => {
@@ -71,15 +63,7 @@ describe("mvsNodeActions", () => {
     });
     // TODO this test is actually throwing an error biut gets away with it from the tests perspective
     it("should call upload dialog and upload file", async () => {
-        const node = new ZoweDatasetNode(
-            "node",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            sessNode,
-            null,
-            null,
-            null,
-            profileOne
-        );
+        const node = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null, null, null, profileOne);
         const nodeAsFavorite = new ZoweDatasetNode(
             "[sestest]: node",
             vscode.TreeItemCollapsibleState.Collapsed,
@@ -104,15 +88,7 @@ describe("mvsNodeActions", () => {
         expect(testTree.refreshElement).toBeCalledWith(nodeAsFavorite);
     });
     it("shouldn't call upload dialog and not upload file if selection is empty", async () => {
-        const node = new ZoweDatasetNode(
-            "node",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            sessNode,
-            null,
-            null,
-            null,
-            profileOne
-        );
+        const node = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null, null, null, profileOne);
         const nodeAsFavorite = new ZoweDatasetNode(
             "[sestest]: node",
             vscode.TreeItemCollapsibleState.Collapsed,
@@ -129,9 +105,7 @@ describe("mvsNodeActions", () => {
         await dsActions.uploadDialog(node, testTree);
 
         expect(showOpenDialog).toBeCalled();
-        expect(showInformationMessage.mock.calls.map((call) => call[0])).toEqual([
-            "No selection made. Operation cancelled.",
-        ]);
+        expect(showInformationMessage.mock.calls.map((call) => call[0])).toEqual(["No selection made. Operation cancelled."]);
         expect(openTextDocument).not.toBeCalled();
         expect(testTree.refreshElement).not.toBeCalled();
     });

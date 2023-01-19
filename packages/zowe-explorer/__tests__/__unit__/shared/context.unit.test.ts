@@ -68,13 +68,7 @@ describe("Context helper tests", () => {
         JOBS_JOB_FAVORITE3,
     ];
 
-    const testListA: string[] = [
-        DS_FAV_CONTEXT,
-        PDS_FAV_CONTEXT,
-        DS_FAV_TEXT_FILE_CONTEXT,
-        USS_FAV_DIR_CONTEXT,
-        JOBS_JOB_FAVORITE3,
-    ];
+    const testListA: string[] = [DS_FAV_CONTEXT, PDS_FAV_CONTEXT, DS_FAV_TEXT_FILE_CONTEXT, USS_FAV_DIR_CONTEXT, JOBS_JOB_FAVORITE3];
     const testListB: string[] = [
         DS_SESSION_CONTEXT,
         DS_PDS_CONTEXT,

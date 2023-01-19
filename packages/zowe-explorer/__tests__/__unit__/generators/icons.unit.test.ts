@@ -42,15 +42,7 @@ describe("Checking icon generator's basics", () => {
             message: "",
             failNotFound: false,
         };
-        return new ZoweDatasetNode(
-            "folder",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            null,
-            session,
-            undefined,
-            undefined,
-            profile
-        );
+        return new ZoweDatasetNode("folder", vscode.TreeItemCollapsibleState.Collapsed, null, session, undefined, undefined, profile);
     };
 
     setGlobalMocks();

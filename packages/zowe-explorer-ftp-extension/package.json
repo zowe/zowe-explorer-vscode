@@ -34,7 +34,7 @@
     "build": "yarn clean && webpack --mode development",
     "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
     "test": "yarn test:unit",
-    "lint": "concurrently -n \"_eslint_,prettier\" \"eslint . --ext .ts\" \"prettier --check .\"",
+    "lint": "concurrently -n \"_eslint_,prettier\" \"eslint .\" \"prettier --check .\"",
     "pretty": "prettier --write .",
     "watch": "webpack --mode development --watch --info-verbosity verbose",
     "clean": "rimraf out",
@@ -48,7 +48,7 @@
   },
   "dependencies": {
     "@zowe/zowe-explorer-api": "2.6.0-SNAPSHOT",
-    "@zowe/zos-ftp-for-zowe-cli": "2.1.0",
+    "@zowe/zos-ftp-for-zowe-cli": "2.1.2",
     "tmp": "0.2.1"
   },
   "devDependencies": {

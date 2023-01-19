@@ -27,9 +27,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
     public mSessionNodes: ZoweUSSNode[] = [];
 
     // Event Emitters used to notify subscribers that the refresh event has fired
-    public mOnDidChangeTreeData: vscode.EventEmitter<ZoweUSSNode | undefined> = new vscode.EventEmitter<
-        ZoweUSSNode | undefined
-    >();
+    public mOnDidChangeTreeData: vscode.EventEmitter<ZoweUSSNode | undefined> = new vscode.EventEmitter<ZoweUSSNode | undefined>();
     public readonly onDidChangeTreeData: vscode.Event<ZoweUSSNode | undefined> = this.mOnDidChangeTreeData.event;
     public mFavorites: ZoweUSSNode[];
 
@@ -38,7 +36,6 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
      * @memberof USSTree
      */
     @MockMethod()
-    // tslint:disable-next-line:no-empty
     public addFavorite(node: IZoweUSSTreeNode) {}
 
     /**
@@ -47,7 +44,6 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
      * @memberof USSTree
      */
     @MockMethod()
-    // tslint:disable-next-line:no-empty
     public async openItemFromPath(itemPath: string, sessionNode: IZoweUSSTreeNode) {}
 
     /**
@@ -55,7 +51,6 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
      * @memberof USSTree
      */
     @MockMethod()
-    // tslint:disable-next-line:no-empty
     public removeFavorite(node: IZoweUSSTreeNode) {}
 
     /**
@@ -82,7 +77,6 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
      * @memberof USSTree
      */
     @MockMethod()
-    // tslint:disable-next-line:no-empty
     public setItem(treeView: vscode.TreeView<IZoweTreeNode>, item: IZoweTreeNode) {}
 
     /**
@@ -90,7 +84,6 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
      * @memberof USSTree
      */
     @MockMethod()
-    // tslint:disable-next-line:no-empty
     public addSearchHistory(criteria: string) {}
 
     /**
@@ -98,7 +91,6 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
      * @memberof USSTree
      */
     @MockMethod()
-    // tslint:disable-next-line:no-empty
     public refreshElement(element: IZoweDatasetTreeNode) {}
 
     /**
@@ -106,7 +98,6 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
      * @memberof USSTree
      */
     @MockMethod()
-    // tslint:disable-next-line:no-empty
     public checkCurrentProfile(node: IZoweUSSTreeNode) {}
 
     /**
@@ -114,7 +105,6 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
      * @memberof USSTree
      */
     @MockMethod()
-    // tslint:disable-next-line:no-empty
     public removeFileHistory(name: string) {}
 
     /**
@@ -122,7 +112,6 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
      * @memberof USSTree
      */
     @MockMethod()
-    // tslint:disable-next-line:no-empty
     public addFileHistory(criteria: string) {}
 
     /**
@@ -130,7 +119,6 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
      * @memberof USSTree
      */
     @MockMethod()
-    // tslint:disable-next-line:no-empty
     public getFileHistory(): string[] {
         return null;
     }

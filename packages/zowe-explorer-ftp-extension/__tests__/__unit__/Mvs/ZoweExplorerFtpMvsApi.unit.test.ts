@@ -14,13 +14,15 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 
 import { FtpMvsApi } from "../../../src/ZoweExplorerFtpMvsApi";
-import { DataSetUtils } from "@zowe/zos-ftp-for-zowe-cli";
+import { DataSetUtils, FTPConfig } from "@zowe/zos-ftp-for-zowe-cli";
 import TestUtils from "../utils/TestUtils";
 import * as tmp from "tmp";
-import { sessionMap } from "../../../src/extension";
+import { sessionMap, ZoweLogger } from "../../../src/extension";
+import { Gui } from "@zowe/zowe-explorer-api";
 
 // two methods to mock modules: create a __mocks__ file for zowe-explorer-api.ts and direct mock for extension.ts
 jest.mock("../../../__mocks__/@zowe/zowe-explorer-api.ts");
+Gui.errorMessage = jest.fn();
 jest.mock("../../../src/extension.ts");
 jest.mock("vscode");
 const stream = require("stream");
@@ -136,6 +138,25 @@ describe("FtpMvsApi", () => {
         expect(MvsApi.releaseConnection).toBeCalled();
     });
 
+    it("should fail to call getContents if an exception occurs in FtpClient.", async () => {
+        DataSetUtils.uploadDataSet = jest.fn();
+        const mockParams = {
+            dataSetName: "IBMUSER.DS2(M1)",
+            type: "file",
+            options: { encoding: "" },
+        };
+        jest.spyOn(FTPConfig, "connectFromArguments").mockImplementationOnce((val) => {
+            throw new Error("getContents example error");
+        });
+        try {
+            await MvsApi.getContents(mockParams.dataSetName, mockParams.options);
+        } catch (err) {
+            expect(Gui.errorMessage).toHaveBeenCalledWith("Could not get a valid FTP connection.", {
+                logger: ZoweLogger,
+            });
+        }
+    });
+
     it("should rename dataset or dataset member.", async () => {
         DataSetUtils.renameDataSet = jest.fn();
         const mockParams = {
@@ -146,11 +167,7 @@ describe("FtpMvsApi", () => {
             newMemberName: "NEW",
         };
         const result = await MvsApi.renameDataSet(mockParams.currentDataSetName, mockParams.newDataSetName);
-        await MvsApi.renameDataSetMember(
-            mockParams.dataSetName,
-            mockParams.currentMemberName,
-            mockParams.newMemberName
-        );
+        await MvsApi.renameDataSetMember(mockParams.dataSetName, mockParams.currentMemberName, mockParams.newMemberName);
         expect(result.commandResponse).toContain("Rename completed successfully.");
         expect(DataSetUtils.renameDataSet).toBeCalledTimes(2);
         expect(MvsApi.releaseConnection).toBeCalled();
