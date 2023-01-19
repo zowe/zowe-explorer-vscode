@@ -267,6 +267,8 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
         const profile = createInstanceOfProfile(imperativeProfile);
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        const mvsApi = createMvsApi(imperativeProfile);
+        bindMvsApi(mvsApi);
 
         return {
             imperativeProfile,
@@ -274,6 +276,7 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
             profile,
             datasetSessionNode,
             treeView,
+            mvsApi,
         };
     }
 
@@ -416,6 +419,51 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
         expect(children).toEqual(sampleChildren);
         spyOnDataSetsMatchingPattern.mockRestore();
     });
+    fit("Checking that we fallback to old dataSet API if newer dataSetsMattchingPattern does not exist", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        const mockMvsApi = await ZoweExplorerApiRegister.getMvsApi(blockMocks.profile);
+        mockMvsApi.dataSetsMatchingPattern = null;
+        const getMvsApiMock = jest.fn();
+        getMvsApiMock.mockReturnValue(mockMvsApi);
+        ZoweExplorerApiRegister.getMvsApi = getMvsApiMock.bind(ZoweExplorerApiRegister);
+
+        const spyOnDataSetsMatchingPattern = jest.spyOn(zowe.List, "dataSetsMatchingPattern");
+        const spyOnDataSet = jest.spyOn(zowe.List, "dataSet");
+        spyOnDataSet.mockResolvedValueOnce({
+            success: true,
+            commandResponse: null,
+            apiResponse: {
+                items: [{ dsname: "HLQ.USER", dsorg: "PS" }],
+            },
+        });
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        blockMocks.datasetSessionNode.pattern = "test";
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        testTree.mSessionNodes[1].dirty = true;
+        const nodeOk = new ZoweDatasetNode(
+            "HLQ.USER",
+            vscode.TreeItemCollapsibleState.None,
+            testTree.mSessionNodes[1],
+            null,
+            undefined,
+            undefined,
+            blockMocks.imperativeProfile
+        );
+        const sampleChildren: ZoweDatasetNode[] = [nodeOk];
+        sampleChildren[0].command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [sampleChildren[0]] };
+
+        const children = await testTree.getChildren(testTree.mSessionNodes[1]);
+        expect(children.map((c) => c.label)).toEqual(sampleChildren.map((c) => c.label));
+        expect(children).toEqual(sampleChildren);
+        expect(spyOnDataSet).toHaveBeenCalled();
+        expect(spyOnDataSetsMatchingPattern).not.toHaveBeenCalled();
+        spyOnDataSet.mockRestore();
+        spyOnDataSetsMatchingPattern.mockRestore();
+    });
     it("Checking function for favorite node", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
@@ -434,6 +482,26 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
         const children = await testTree.getChildren(testTree.mSessionNodes[0]);
 
         expect(children).toEqual([favProfileNode]);
+    });
+    it("Checking function for favorited node with no member pattern", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        const profileNode = new ZoweDatasetNode(
+            "testProfile",
+            vscode.TreeItemCollapsibleState.None,
+            blockMocks.datasetSessionNode,
+            blockMocks.session
+        );
+        profileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
+        profileNode.memberPattern = undefined;
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mFavorites.push(profileNode);
+
+        const children = await testTree.getChildren(testTree.mSessionNodes[0]);
+
+        expect(children).toEqual([profileNode]);
     });
     it("Checking function for profile node in Favorites section", async () => {
         createGlobalMocks();
@@ -1441,7 +1509,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
-                    loadNamedProfile: jest.fn(),
+                    loadNamedProfile: jest.fn().mockImplementationOnce((name, type) => blockMocks.imperativeProfile),
                     getBaseProfile: jest.fn(),
                     checkCurrentProfile: blockMocks.mockCheckCurrentProfile.mockReturnValueOnce({
                         name: blockMocks.imperativeProfile.name,
