@@ -14,6 +14,7 @@ jest.mock("fs");
 import * as zowe from "@zowe/cli";
 import { ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import * as ussNodeActions from "../../../src/uss/actions";
+import { UssFileUtils } from "../../../src/uss/FileStructure";
 import { createUSSTree, createUSSNode, createFavoriteUSSNode } from "../../../__mocks__/mockCreators/uss";
 import {
     createIProfile,
@@ -739,6 +740,36 @@ describe("USS Action Unit Tests - copy file / directory", () => {
         await ussNodeActions.copyUssFilesToClipboard(blockMocks.nodes);
 
         expect(globalMocks.writeText).toBeCalledWith(fileStructure);
+    });
+
+    it("Has the proper responses for toSameSession in UssFileUtils", async () => {
+        // Test toSameSession where one of the files has a diff LPAR
+        let isSameSession = UssFileUtils.toSameSession(
+            {
+                localPath: "C://some//local//path",
+                ussPath: "/z/SOMEUSER/path",
+                baseName: "<ROOT>",
+                children: [],
+                sessionName: "session1",
+                type: UssFileType.Directory,
+            },
+            "diffSessionLPAR"
+        );
+        expect(isSameSession).toBe(false);
+
+        // Test toSameSession where the LPAR is the same, and the file node has no children
+        isSameSession = UssFileUtils.toSameSession(
+            {
+                localPath: "C://some//local//path",
+                ussPath: "/z/SOMEUSER/path",
+                baseName: "<ROOT>",
+                children: [],
+                sessionName: "session1",
+                type: UssFileType.Directory,
+            },
+            "session1"
+        );
+        expect(isSameSession).toBe(true);
     });
 
     it("pasteFileTree calls relevant USS API functions", async () => {
