@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import { Gui } from "../../../src/globals/Gui";
-import { IZoweLogger, MessageSeverity } from "../../../src/logger/IZoweLogger";
+import { MessageSeverity } from "../../../src/logger/IZoweLogger";
 import { IPromptCredentialsOptions, ZoweVsCodeExtension } from "../../../src/vscode";
 
 describe("ZoweVsCodeExtension", () => {
@@ -76,11 +76,10 @@ describe("ZoweVsCodeExtension", () => {
     describe("deprecated methods", () => {
         it("showVsCodeMessage should pass on params to Gui module", () => {
             const showMessageSpy = jest.spyOn(Gui, "showMessage").mockImplementation();
-            const testLogger = new IZoweLogger("test", __dirname);
-            ZoweVsCodeExtension.showVsCodeMessage("test", MessageSeverity.INFO, testLogger);
+            ZoweVsCodeExtension.showVsCodeMessage("test", MessageSeverity.INFO, "fakeLogger" as any);
             expect(showMessageSpy).toHaveBeenCalledWith("test", {
                 severity: MessageSeverity.INFO,
-                logger: testLogger
+                logger: "fakeLogger"
             });
         });
 

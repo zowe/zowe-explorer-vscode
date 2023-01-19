@@ -107,7 +107,7 @@ export class ZoweVsCodeExtension {
     ): Promise<imperative.IProfileLoaded> {
         const cache = this.profilesCache;
         const profInfo = await cache.getProfileInfo();
-        options.secure = options.secure ? options.secure : profInfo.isSecured();
+        const setSecure = options.secure ?? profInfo.isSecured();
         const loadProfile = await cache.getLoadedProfConfig(options.sessionName);
         const loadSession = loadProfile.profile as imperative.ISession;
         const creds = await ZoweVsCodeExtension.promptUserPass({ session: loadSession, ...options });
@@ -117,20 +117,15 @@ export class ZoweVsCodeExtension {
             loadProfile.profile.password = loadSession.password = creds[1];
 
             let shouldSave = true;
-            if (!options.secure && !profInfo.usingTeamConfig) {
+            if (!setSecure && !profInfo.usingTeamConfig) {
                 shouldSave = await ZoweVsCodeExtension.saveCredentials(loadProfile);
             }
 
             if (shouldSave || profInfo.usingTeamConfig) {
                 // v1 write changes to the file, v2 autoStore value determines if written to file
                 const upd = { profileName: loadProfile.name, profileType: loadProfile.type };
-                await profInfo.updateProperty({ ...upd, property: "user", value: creds[0], setSecure: options.secure });
-                await profInfo.updateProperty({
-                    ...upd,
-                    property: "password",
-                    value: creds[1],
-                    setSecure: options.secure,
-                });
+                await profInfo.updateProperty({ ...upd, property: "user", value: creds[0], setSecure });
+                await profInfo.updateProperty({ ...upd, property: "password", value: creds[1], setSecure });
             }
             await cache.refresh(apiRegister);
 
