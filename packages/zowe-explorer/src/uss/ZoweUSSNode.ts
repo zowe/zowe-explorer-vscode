@@ -477,6 +477,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                                     binary: chooseBinary,
                                     returnEtag: true,
                                     encoding: cachedProfile.profile.encoding,
+                                    responseTimeout: cachedProfile.profile?.responseTimeout,
                                 });
                             }
                         );
@@ -541,6 +542,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     binary: this.binary || (await ZoweExplorerApiRegister.getUssApi(cachedProfile).isFileTagBinOrAscii(this.fullPath)),
                     returnEtag: true,
                     encoding: cachedProfile?.profile.encoding,
+                    responseTimeout: cachedProfile?.profile?.responseTimeout,
                 });
                 this.setEtag(response.apiResponse.etag);
                 this.downloaded = true;
@@ -645,6 +647,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         };
         const options: IUploadOptions = {
             task,
+            responseTimeout: prof.profile?.responseTimeout,
         };
         if (prof.profile.encoding) {
             options.encoding = prof.profile.encoding;
