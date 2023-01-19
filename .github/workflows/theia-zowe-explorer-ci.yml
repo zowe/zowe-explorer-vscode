@@ -75,6 +75,7 @@ jobs:
       - run: yarn workspace vscode-extension-for-zowe test:theia
 
       - name: Upload test results
+        if: success() || failure()      
         uses: actions/upload-artifact@v2
         with:
           name: theia-zowe-explorer-results
