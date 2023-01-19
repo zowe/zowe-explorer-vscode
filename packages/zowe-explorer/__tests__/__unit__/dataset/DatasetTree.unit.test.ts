@@ -419,7 +419,7 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
         expect(children).toEqual(sampleChildren);
         spyOnDataSetsMatchingPattern.mockRestore();
     });
-    fit("Checking that we fallback to old dataSet API if newer dataSetsMattchingPattern does not exist", async () => {
+    it("Checking that we fallback to old dataSet API if newer dataSetsMattchingPattern does not exist", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
@@ -438,22 +438,23 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
                 items: [{ dsname: "HLQ.USER", dsorg: "PS" }],
             },
         });
-        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
-        const testTree = new DatasetTree();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
         blockMocks.datasetSessionNode.pattern = "test";
+        const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
         testTree.mSessionNodes[1].dirty = true;
-        const nodeOk = new ZoweDatasetNode(
-            "HLQ.USER",
-            vscode.TreeItemCollapsibleState.None,
-            testTree.mSessionNodes[1],
-            null,
-            undefined,
-            undefined,
-            blockMocks.imperativeProfile
-        );
-        const sampleChildren: ZoweDatasetNode[] = [nodeOk];
+        const sampleChildren: ZoweDatasetNode[] = [
+            new ZoweDatasetNode(
+                "HLQ.USER",
+                vscode.TreeItemCollapsibleState.None,
+                testTree.mSessionNodes[1],
+                null,
+                undefined,
+                undefined,
+                blockMocks.imperativeProfile
+            ),
+        ];
         sampleChildren[0].command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [sampleChildren[0]] };
 
         const children = await testTree.getChildren(testTree.mSessionNodes[1]);
