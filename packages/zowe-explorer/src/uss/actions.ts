@@ -181,6 +181,7 @@ export async function uploadFile(node: IZoweUSSTreeNode, doc: vscode.TextDocumen
             };
             const options: IUploadOptions = {
                 task,
+                responseTimeout: prof.profile?.responseTimeout,
             };
             if (prof.profile.encoding) {
                 options.encoding = prof.profile.encoding;
@@ -313,6 +314,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
                     binary,
                     returnEtag: true,
                     encoding: prof.profile.encoding,
+                    responseTimeout: prof.profile?.responseTimeout,
                 });
                 // re-assign etag, so that it can be used with subsequent requests
                 const downloadEtag = downloadResponse.apiResponse.etag;
