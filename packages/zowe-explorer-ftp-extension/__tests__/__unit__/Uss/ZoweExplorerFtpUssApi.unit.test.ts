@@ -17,8 +17,7 @@ import { FtpUssApi } from "../../../src/ZoweExplorerFtpUssApi";
 import { UssUtils } from "@zowe/zos-ftp-for-zowe-cli";
 import TestUtils from "../utils/TestUtils";
 import * as zowe from "@zowe/cli";
-import { sessionMap, ZoweLogger } from "../../../src/extension";
-import { Gui } from "@zowe/zowe-explorer-api";
+import { sessionMap } from "../../../src/extension";
 
 // two methods to mock modules: create a __mocks__ file for zowe-explorer-api.ts and direct mock for extension.ts
 jest.mock("../../../__mocks__/@zowe/zowe-explorer-api.ts");
@@ -76,25 +75,32 @@ describe("FtpUssApi", () => {
         expect(response._readableState.buffer.head.data.toString()).toContain("Hello world");
     });
 
+    const mockUssFileParams = {
+        inputFilePath: "/tmp/testfile1.txt",
+        ussFilePath: "/a/b/c.txt",
+        etag: "123",
+        returnEtag: true,
+        options: {
+            file: "/tmp/testfile1.txt",
+        },
+    };
+
     it("should upload uss files.", async () => {
         const localFile = "/tmp/testfile1.txt";
         const response = TestUtils.getSingleLineStream();
         UssUtils.uploadFile = jest.fn().mockReturnValue(response);
         UssApi.getContents = jest.fn().mockReturnValue({ apiResponse: { etag: "123" } });
-        const mockParams = {
-            inputFilePath: localFile,
-            ussFilePath: "/a/b/c.txt",
-            etag: "123",
-            returnEtag: true,
-            options: {
-                file: localFile,
-            },
-        };
-        const result = await UssApi.putContents(mockParams.inputFilePath, mockParams.ussFilePath);
+        const result = await UssApi.putContents(mockUssFileParams.inputFilePath, mockUssFileParams.ussFilePath);
         expect(result.commandResponse).toContain("File uploaded successfully.");
         expect(UssUtils.downloadFile).toBeCalledTimes(1);
         expect(UssUtils.uploadFile).toBeCalledTimes(1);
         expect(UssApi.releaseConnection).toBeCalled();
+    });
+
+    it("should call putContents when calling putContent", async () => {
+        const putContentsMock = jest.spyOn(UssApi, "putContents").mockImplementation();
+        await UssApi.putContent(mockUssFileParams.inputFilePath, mockUssFileParams.ussFilePath);
+        expect(putContentsMock).toHaveBeenCalled();
     });
 
     it("should upload uss directory.", async () => {
