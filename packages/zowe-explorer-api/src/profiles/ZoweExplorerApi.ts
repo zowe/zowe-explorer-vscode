@@ -341,7 +341,7 @@ export namespace ZoweExplorerApi {
          * @param {boolean?} replace
          * @returns {Promise<zowe.IZosFilesResponse>}
          */
-        copyDataSet(fromDataSetName: string, toDataSetName: string, enq?: string, replace?: boolean): Promise<zowe.IZosFilesResponse>;
+        copyDataSet?(fromDataSetName: string, toDataSetName: string, enq?: string, replace?: boolean): Promise<zowe.IZosFilesResponse>;
     }
 
     /**
