@@ -2,7 +2,7 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
-## TBD Release
+## `2.6.0`
 
 ### New features and enhancements
 
@@ -13,11 +13,11 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added confirmation message for "Submit Job" feature as an option in extension settings (set to "All jobs" by default). [#998](https://github.com/zowe/vscode-extension-for-zowe/issues/998)
 - Updated UI/UX method calls to use standalone `Gui` module for better usability and maintainability. [#1967](https://github.com/zowe/vscode-extension-for-zowe/issues/1967)
 - Updated error dialog when Zowe config is invalid, with option to "Show Config" within VS Code for diagnostics. [#1986](https://github.com/zowe/vscode-extension-for-zowe/issues/1986)
-- Fixed issue where responseTimeout (in Zowe config) was not provided for supported API calls. [#1907](https://github.com/zowe/vscode-extension-for-zowe/issues/1907)
 
 ### Bug fixes
 
 - Updated check for Theia environment to reduce false positives in different environments. [#2079](https://github.com/zowe/vscode-extension-for-zowe/issues/2079)
+- Fixed issue where responseTimeout (in Zowe config) was not provided for supported API calls. [#1907](https://github.com/zowe/vscode-extension-for-zowe/issues/1907)
 - Fixed issue where "Show Attributes" feature used conflicting colors with light VS Code themes. [#2048](https://github.com/zowe/vscode-extension-for-zowe/issues/2048)
 - Fixed settings not persisting in Theia versions >=1.29.0. [#2065](https://github.com/zowe/vscode-extension-for-zowe/pull/2065)
 - Removed TSLint (as it is deprecated), and replaced all TSLint rules with their ESLint equivalents. [#2030](https://github.com/zowe/vscode-extension-for-zowe/issues/2030)
