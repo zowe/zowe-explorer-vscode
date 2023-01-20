@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
-import { ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { Gui, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { Job } from "../../../src/job/ZoweJobNode";
 import {
     createISession,
@@ -21,12 +21,7 @@ import {
     createTextDocument,
     createInstanceOfProfile,
 } from "../../../__mocks__/mockCreators/shared";
-import {
-    createIJobFile,
-    createIJobObject,
-    createJobSessionNode,
-    createJobsTree,
-} from "../../../__mocks__/mockCreators/jobs";
+import { createIJobFile, createIJobObject, createJobSessionNode, createJobsTree } from "../../../__mocks__/mockCreators/jobs";
 import { createJesApi, bindJesApi } from "../../../__mocks__/mockCreators/api";
 import * as jobActions from "../../../src/job/actions";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
@@ -36,14 +31,19 @@ import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/
 import { Profiles } from "../../../src/Profiles";
 import * as SpoolProvider from "../../../src/SpoolProvider";
 import * as refreshActions from "../../../src/shared/refresh";
-import { UIViews } from "../../../src/shared/ui-views";
+import { JobSubmitDialogOpts, JOB_SUBMIT_DIALOG_OPTS } from "../../../src/shared/utils";
 
 const activeTextEditorDocument = jest.fn();
 
 function createGlobalMocks() {
-    Object.defineProperty(vscode.window, "showInformationMessage", { value: jest.fn(), configurable: true });
-    Object.defineProperty(vscode.window, "showInputBox", { value: jest.fn(), configurable: true });
-    Object.defineProperty(vscode.window, "showErrorMessage", { value: jest.fn(), configurable: true });
+    Object.defineProperty(vscode.workspace, "getConfiguration", {
+        value: jest.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", false]])),
+        configurable: true,
+    });
+    Object.defineProperty(Gui, "showMessage", { value: jest.fn(), configurable: true });
+    Object.defineProperty(Gui, "warningMessage", { value: jest.fn(), configurable: true });
+    Object.defineProperty(Gui, "errorMessage", { value: jest.fn(), configurable: true });
+    Object.defineProperty(vscode.window, "showWarningMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe, "IssueCommand", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe.IssueCommand, "issueSimple", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showOpenDialog", { value: jest.fn(), configurable: true });
@@ -55,6 +55,7 @@ function createGlobalMocks() {
     Object.defineProperty(zowe.ZosmfSession, "createSessCfgFromArgs", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe, "DownloadJobs", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe.DownloadJobs, "downloadAllSpoolContentCommon", { value: jest.fn(), configurable: true });
+    Object.defineProperty(vscode.window, "showInputBox", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "activeTextEditor", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showQuickPick", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window.activeTextEditor, "document", {
@@ -101,9 +102,11 @@ describe("Jobs Actions Unit Tests - Function setPrefix", () => {
         await jobActions.setPrefix(node, blockMocks.testJobsTree);
 
         expect(mySpy.mock.calls.length).toBe(1);
-        expect(mySpy).toHaveBeenCalledWith({
-            prompt: "Prefix",
-        });
+        expect(mySpy).toHaveBeenCalledWith(
+            expect.objectContaining({
+                prompt: "Prefix",
+            })
+        );
 
         mySpy.mockRestore();
     });
@@ -128,22 +131,17 @@ describe("Jobs Actions Unit Tests - Function setOwner", () => {
     it("Checking that the owner is set correctly on the job", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-        const node = new Job(
-            "job",
-            vscode.TreeItemCollapsibleState.None,
-            null,
-            blockMocks.session,
-            blockMocks.iJob,
-            blockMocks.imperativeProfile
-        );
+        const node = new Job("job", vscode.TreeItemCollapsibleState.None, null, blockMocks.session, blockMocks.iJob, blockMocks.imperativeProfile);
 
         const mySpy = mocked(vscode.window.showInputBox).mockResolvedValue("OWNER");
         await jobActions.setOwner(node, blockMocks.testJobsTree);
 
         expect(mySpy.mock.calls.length).toBe(1);
-        expect(mySpy).toHaveBeenCalledWith({
-            prompt: "Owner",
-        });
+        expect(mySpy).toHaveBeenCalledWith(
+            expect.objectContaining({
+                prompt: "Owner",
+            })
+        );
 
         mySpy.mockRestore();
     });
@@ -165,14 +163,7 @@ describe("Jobs Actions Unit Tests - Function stopCommand", () => {
     it("Checking that stop command of Job Node is executed properly", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-        const node = new Job(
-            "job",
-            vscode.TreeItemCollapsibleState.None,
-            null,
-            blockMocks.session,
-            blockMocks.iJob,
-            blockMocks.imperativeProfile
-        );
+        const node = new Job("job", vscode.TreeItemCollapsibleState.None, null, blockMocks.session, blockMocks.iJob, blockMocks.imperativeProfile);
 
         mocked(zowe.IssueCommand.issueSimple).mockResolvedValueOnce({
             success: false,
@@ -180,29 +171,20 @@ describe("Jobs Actions Unit Tests - Function stopCommand", () => {
             commandResponse: "fake response",
         });
         await jobActions.stopCommand(node);
-        expect(mocked(vscode.window.showInformationMessage).mock.calls.length).toBe(1);
-        expect(mocked(vscode.window.showInformationMessage).mock.calls[0][0]).toEqual(
-            "Command response: fake response"
-        );
+        expect(mocked(Gui.showMessage).mock.calls.length).toBe(1);
+        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual("Command response: fake response");
     });
     it("Checking failed attempt to issue stop command for Job Node.", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-        const node = new Job(
-            "job",
-            vscode.TreeItemCollapsibleState.None,
-            null,
-            blockMocks.session,
-            undefined,
-            blockMocks.imperativeProfile
-        );
+        const node = new Job("job", vscode.TreeItemCollapsibleState.None, null, blockMocks.session, undefined, blockMocks.imperativeProfile);
         mocked(zowe.IssueCommand.issueSimple).mockResolvedValueOnce({
             success: false,
             zosmfResponse: [],
             commandResponse: "fake response",
         });
         await jobActions.stopCommand(node);
-        expect(mocked(vscode.window.showErrorMessage).mock.calls.length).toBe(1);
+        expect(mocked(Gui.errorMessage).mock.calls.length).toBe(1);
     });
 });
 
@@ -222,14 +204,7 @@ describe("Jobs Actions Unit Tests - Function modifyCommand", () => {
     it("Checking modification of Job Node", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-        const node = new Job(
-            "job",
-            vscode.TreeItemCollapsibleState.None,
-            null,
-            blockMocks.session,
-            blockMocks.iJob,
-            blockMocks.imperativeProfile
-        );
+        const node = new Job("job", vscode.TreeItemCollapsibleState.None, null, blockMocks.session, blockMocks.iJob, blockMocks.imperativeProfile);
 
         mocked(vscode.window.showInputBox).mockResolvedValue("modify");
         mocked(zowe.IssueCommand.issueSimple).mockResolvedValueOnce({
@@ -238,22 +213,13 @@ describe("Jobs Actions Unit Tests - Function modifyCommand", () => {
             commandResponse: "fake response",
         });
         await jobActions.modifyCommand(node);
-        expect(mocked(vscode.window.showInformationMessage).mock.calls.length).toBe(1);
-        expect(mocked(vscode.window.showInformationMessage).mock.calls[0][0]).toEqual(
-            "Command response: fake response"
-        );
+        expect(mocked(Gui.showMessage).mock.calls.length).toBe(1);
+        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual("Command response: fake response");
     });
     it("Checking failed attempt to modify Job Node", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-        const node = new Job(
-            "job",
-            vscode.TreeItemCollapsibleState.None,
-            null,
-            blockMocks.session,
-            undefined,
-            blockMocks.imperativeProfile
-        );
+        const node = new Job("job", vscode.TreeItemCollapsibleState.None, null, blockMocks.session, undefined, blockMocks.imperativeProfile);
         mocked(vscode.window.showInputBox).mockResolvedValue("modify");
         mocked(zowe.IssueCommand.issueSimple).mockResolvedValueOnce({
             success: false,
@@ -261,7 +227,7 @@ describe("Jobs Actions Unit Tests - Function modifyCommand", () => {
             commandResponse: "fake response",
         });
         await jobActions.modifyCommand(node);
-        expect(mocked(vscode.window.showErrorMessage).mock.calls.length).toBe(1);
+        expect(mocked(Gui.errorMessage).mock.calls.length).toBe(1);
     });
 });
 
@@ -285,14 +251,7 @@ describe("Jobs Actions Unit Tests - Function downloadSpool", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         const jobs: Job[] = [];
-        const node = new Job(
-            "job",
-            vscode.TreeItemCollapsibleState.None,
-            null,
-            blockMocks.session,
-            blockMocks.iJob,
-            blockMocks.imperativeProfile
-        );
+        const node = new Job("job", vscode.TreeItemCollapsibleState.None, null, blockMocks.session, blockMocks.iJob, blockMocks.imperativeProfile);
         const fileUri = {
             fsPath: "/tmp/foo",
             scheme: "",
@@ -327,7 +286,7 @@ describe("Jobs Actions Unit Tests - Function downloadSpool", () => {
         };
         mocked(vscode.window.showOpenDialog).mockResolvedValue([fileUri as vscode.Uri]);
         await jobActions.downloadSpool(undefined);
-        expect(mocked(vscode.window.showErrorMessage).mock.calls.length).toBe(1);
+        expect(mocked(Gui.errorMessage).mock.calls.length).toBe(1);
     });
 });
 
@@ -347,14 +306,7 @@ describe("Jobs Actions Unit Tests - Function downloadJcl", () => {
     it("Checking download of Job JCL", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-        const node = new Job(
-            "job",
-            vscode.TreeItemCollapsibleState.None,
-            null,
-            blockMocks.session,
-            blockMocks.iJob,
-            blockMocks.imperativeProfile
-        );
+        const node = new Job("job", vscode.TreeItemCollapsibleState.None, null, blockMocks.session, blockMocks.iJob, blockMocks.imperativeProfile);
         await jobActions.downloadJcl(node);
         expect(mocked(zowe.GetJobs.getJclForJob)).toBeCalled();
         expect(mocked(vscode.workspace.openTextDocument)).toBeCalled();
@@ -364,7 +316,7 @@ describe("Jobs Actions Unit Tests - Function downloadJcl", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         await jobActions.downloadJcl(undefined);
-        expect(mocked(vscode.window.showErrorMessage)).toBeCalled();
+        expect(mocked(Gui.errorMessage)).toBeCalled();
     });
 });
 
@@ -420,9 +372,9 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         await dsActions.submitJcl(blockMocks.testDatasetTree);
 
         expect(submitJclSpy).toBeCalled();
-        expect(mocked(vscode.window.showInformationMessage)).toBeCalled();
-        expect(mocked(vscode.window.showInformationMessage).mock.calls.length).toBe(1);
-        expect(mocked(vscode.window.showInformationMessage).mock.calls[0][0]).toEqual(
+        expect(mocked(Gui.showMessage)).toBeCalled();
+        expect(mocked(Gui.showMessage).mock.calls.length).toBe(1);
+        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
             "Job submitted [JOB1234](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
         );
     });
@@ -448,9 +400,9 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         await dsActions.submitJcl(blockMocks.testDatasetTree);
 
         expect(submitJclSpy).toBeCalled();
-        expect(mocked(vscode.window.showInformationMessage)).toBeCalled();
-        expect(mocked(vscode.window.showInformationMessage).mock.calls.length).toBe(1);
-        expect(mocked(vscode.window.showInformationMessage).mock.calls[0][0]).toEqual(
+        expect(mocked(Gui.showMessage)).toBeCalled();
+        expect(mocked(Gui.showMessage).mock.calls.length).toBe(1);
+        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
             "Job submitted [JOB1234](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
         );
     });
@@ -503,12 +455,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        const subNode = new ZoweDatasetNode(
-            "dataset",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            blockMocks.datasetSessionNode,
-            null
-        );
+        const subNode = new ZoweDatasetNode("dataset", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.datasetSessionNode, null);
         subNode.contextValue = globals.DS_PDS_CONTEXT;
         const member = new ZoweDatasetNode("member", vscode.TreeItemCollapsibleState.None, subNode, null);
         member.contextValue = globals.DS_MEMBER_CONTEXT;
@@ -518,8 +465,8 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         await dsActions.submitMember(member);
         expect(submitJobSpy).toBeCalled();
         expect(submitJobSpy.mock.calls[0][0]).toEqual("dataset(member)");
-        expect(mocked(vscode.window.showInformationMessage)).toBeCalled();
-        expect(mocked(vscode.window.showInformationMessage).mock.calls[0][0]).toEqual(
+        expect(mocked(Gui.showMessage)).toBeCalled();
+        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
             "Job submitted [JOB1234](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
         );
     });
@@ -538,12 +485,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
                 };
             }),
         });
-        const subNode = new ZoweDatasetNode(
-            "dataset",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            blockMocks.datasetSessionNode,
-            null
-        );
+        const subNode = new ZoweDatasetNode("dataset", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.datasetSessionNode, null);
         subNode.contextValue = globals.DS_PDS_CONTEXT;
         const member = new ZoweDatasetNode("member", vscode.TreeItemCollapsibleState.None, subNode, null);
         member.contextValue = globals.DS_MEMBER_CONTEXT;
@@ -553,8 +495,8 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         await dsActions.submitMember(member);
         expect(submitJobSpy).toBeCalled();
         expect(submitJobSpy.mock.calls[0][0]).toEqual("dataset(member)");
-        expect(mocked(vscode.window.showInformationMessage)).toBeCalled();
-        expect(mocked(vscode.window.showInformationMessage).mock.calls[0][0]).toEqual(
+        expect(mocked(Gui.showMessage)).toBeCalled();
+        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
             "Job submitted [JOB1234](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
         );
     });
@@ -562,12 +504,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        const dataset = new ZoweDatasetNode(
-            "dataset",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            blockMocks.datasetSessionNode,
-            null
-        );
+        const dataset = new ZoweDatasetNode("dataset", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.datasetSessionNode, null);
         dataset.contextValue = globals.DS_DS_CONTEXT;
         const submitJobSpy = jest.spyOn(blockMocks.jesApi, "submitJob");
         submitJobSpy.mockClear();
@@ -576,8 +513,8 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         await dsActions.submitMember(dataset);
         expect(submitJobSpy).toBeCalled();
         expect(submitJobSpy.mock.calls[0][0]).toEqual("dataset");
-        expect(mocked(vscode.window.showInformationMessage)).toBeCalled();
-        expect(mocked(vscode.window.showInformationMessage).mock.calls[0][0]).toEqual(
+        expect(mocked(Gui.showMessage)).toBeCalled();
+        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
             "Job submitted [JOB1234](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
         );
     });
@@ -585,26 +522,11 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        const favProfileNode = new ZoweDatasetNode(
-            "test",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            blockMocks.datasetSessionNode,
-            null
-        );
+        const favProfileNode = new ZoweDatasetNode("test", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.datasetSessionNode, null);
         favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
-        const favoriteSubNode = new ZoweDatasetNode(
-            "TEST.JCL",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            favProfileNode,
-            null
-        );
+        const favoriteSubNode = new ZoweDatasetNode("TEST.JCL", vscode.TreeItemCollapsibleState.Collapsed, favProfileNode, null);
         favoriteSubNode.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
-        const favoriteMember = new ZoweDatasetNode(
-            globals.DS_PDS_CONTEXT,
-            vscode.TreeItemCollapsibleState.Collapsed,
-            favoriteSubNode,
-            null
-        );
+        const favoriteMember = new ZoweDatasetNode(globals.DS_PDS_CONTEXT, vscode.TreeItemCollapsibleState.Collapsed, favoriteSubNode, null);
         favoriteMember.contextValue = globals.DS_MEMBER_CONTEXT;
         const submitJobSpy = jest.spyOn(blockMocks.jesApi, "submitJob");
         submitJobSpy.mockClear();
@@ -613,8 +535,8 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         await dsActions.submitMember(favoriteMember);
         expect(submitJobSpy).toBeCalled();
         expect(submitJobSpy.mock.calls[0][0]).toEqual("TEST.JCL(pds)");
-        expect(mocked(vscode.window.showInformationMessage)).toBeCalled();
-        expect(mocked(vscode.window.showInformationMessage).mock.calls[0][0]).toEqual(
+        expect(mocked(Gui.showMessage)).toBeCalled();
+        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
             "Job submitted [JOB1234](command:zowe.jobs.setJobSpool?%5B%22test%22%2C%22JOB1234%22%5D)"
         );
     });
@@ -622,19 +544,9 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        const favProfileNode = new ZoweDatasetNode(
-            "test",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            blockMocks.datasetSessionNode,
-            null
-        );
+        const favProfileNode = new ZoweDatasetNode("test", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.datasetSessionNode, null);
         favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
-        const favoriteDataset = new ZoweDatasetNode(
-            "TEST.JCL",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            favProfileNode,
-            null
-        );
+        const favoriteDataset = new ZoweDatasetNode("TEST.JCL", vscode.TreeItemCollapsibleState.Collapsed, favProfileNode, null);
         favoriteDataset.contextValue = globals.DS_DS_CONTEXT + globals.FAV_SUFFIX;
         const submitJobSpy = jest.spyOn(blockMocks.jesApi, "submitJob");
         submitJobSpy.mockClear();
@@ -643,8 +555,8 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         await dsActions.submitMember(favoriteDataset);
         expect(submitJobSpy).toBeCalled();
         expect(submitJobSpy.mock.calls[0][0]).toEqual("TEST.JCL");
-        expect(mocked(vscode.window.showInformationMessage)).toBeCalled();
-        expect(mocked(vscode.window.showInformationMessage).mock.calls[0][0]).toEqual(
+        expect(mocked(Gui.showMessage)).toBeCalled();
+        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
             "Job submitted [JOB1234](command:zowe.jobs.setJobSpool?%5B%22test%22%2C%22JOB1234%22%5D)"
         );
     });
@@ -652,19 +564,9 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        const corruptedNode = new ZoweDatasetNode(
-            "gibberish",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            blockMocks.datasetSessionNode,
-            null
-        );
+        const corruptedNode = new ZoweDatasetNode("gibberish", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.datasetSessionNode, null);
         corruptedNode.contextValue = "gibberish";
-        const corruptedSubNode = new ZoweDatasetNode(
-            "gibberishmember",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            corruptedNode,
-            null
-        );
+        const corruptedSubNode = new ZoweDatasetNode("gibberishmember", vscode.TreeItemCollapsibleState.Collapsed, corruptedNode, null);
         const submitJobSpy = jest.spyOn(blockMocks.jesApi, "submitJob");
         submitJobSpy.mockClear();
         submitJobSpy.mockResolvedValueOnce(blockMocks.iJob);
@@ -675,11 +577,59 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
             expect(e.message).toEqual("submitMember() called from invalid node.");
         }
         expect(submitJobSpy).not.toBeCalled();
-        expect(mocked(vscode.window.showInformationMessage)).not.toBeCalled();
-        expect(mocked(vscode.window.showErrorMessage)).toBeCalled();
-        expect(mocked(vscode.window.showErrorMessage).mock.calls[0][0]).toEqual(
-            "submitMember() called from invalid node."
-        );
+        expect(mocked(Gui.showMessage)).not.toBeCalled();
+        expect(mocked(Gui.errorMessage)).toBeCalled();
+        expect(mocked(Gui.errorMessage).mock.calls[0][0]).toEqual("submitMember() called from invalid node.");
+    });
+
+    it("has proper Submit Job output for all confirmation dialog options", async () => {
+        createGlobalMocks();
+
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        const dataset = new ZoweDatasetNode("TESTUSER.DATASET", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.datasetSessionNode, null);
+        dataset.contextValue = globals.DS_DS_CONTEXT;
+
+        for (let o = 0; o < JOB_SUBMIT_DIALOG_OPTS.length; o++) {
+            const option = JOB_SUBMIT_DIALOG_OPTS[o];
+            Object.defineProperty(vscode.workspace, "getConfiguration", {
+                value: jest.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", option]])),
+                configurable: true,
+            });
+
+            if (option === JOB_SUBMIT_DIALOG_OPTS[JobSubmitDialogOpts.Disabled]) {
+                await dsActions.submitMember(dataset);
+                expect(mocked(Gui.warningMessage)).not.toHaveBeenCalled();
+            } else if (option === JOB_SUBMIT_DIALOG_OPTS[JobSubmitDialogOpts.OtherUserJobs]) {
+                dataset.label = "OTHERUSER.DATASET";
+                mocked(Gui.warningMessage).mockResolvedValueOnce({ title: "Submit" });
+                await dsActions.submitMember(dataset);
+                expect(mocked(Gui.warningMessage)).toBeCalledWith("Are you sure you want to submit the following job?\n\n" + dataset.getLabel(), {
+                    items: [{ title: "Submit" }],
+                    vsCodeOpts: { modal: true },
+                });
+            } else if (
+                option === JOB_SUBMIT_DIALOG_OPTS[JobSubmitDialogOpts.AllJobs] ||
+                option === JOB_SUBMIT_DIALOG_OPTS[JobSubmitDialogOpts.YourJobs]
+            ) {
+                dataset.label = "TESTUSER.DATASET";
+                mocked(Gui.warningMessage).mockResolvedValueOnce({ title: "Submit" });
+                await dsActions.submitMember(dataset);
+                expect(mocked(Gui.warningMessage)).toBeCalledWith("Are you sure you want to submit the following job?\n\n" + dataset.getLabel(), {
+                    items: [{ title: "Submit" }],
+                    vsCodeOpts: { modal: true },
+                });
+            }
+            expect(mocked(Profiles.getInstance)).toHaveBeenCalledTimes(2 * (o + 1));
+        }
+
+        // Test for "Cancel" or closing the dialog
+        mocked(Gui.warningMessage).mockReturnValueOnce(undefined);
+        await dsActions.submitMember(dataset);
+        expect(mocked(Gui.warningMessage)).toBeCalledWith("Are you sure you want to submit the following job?\n\n" + dataset.getLabel(), {
+            items: [{ title: "Submit" }],
+            vsCodeOpts: { modal: true },
+        });
     });
 });
 
@@ -772,7 +722,7 @@ describe("Jobs Actions Unit Tests - Function getSpoolContent", () => {
         await jobActions.getSpoolContent(session, spoolFile, anyTimestamp);
 
         expect(mocked(vscode.window.showTextDocument)).not.toBeCalled();
-        expect(mocked(vscode.window.showErrorMessage)).toBeCalledWith("Test Error: Test");
+        expect(mocked(Gui.errorMessage)).toBeCalledWith("Test Error: Test");
     });
     it("should show an error message in case document cannot be shown for some reason", async () => {
         createGlobalMocks();
@@ -788,7 +738,7 @@ describe("Jobs Actions Unit Tests - Function getSpoolContent", () => {
 
         await jobActions.getSpoolContent(session, spoolFile, anyTimestamp);
 
-        expect(mocked(vscode.window.showErrorMessage)).toBeCalledWith("Test Error: Test");
+        expect(mocked(Gui.errorMessage)).toBeCalledWith("Test Error: Test");
     });
 });
 
@@ -1030,7 +980,7 @@ describe("job deletion command", () => {
 
     const mockWarningMsg = (option: string) => {
         const warningDialogStub = jest.fn();
-        Object.defineProperty(vscode.window, "showWarningMessage", {
+        Object.defineProperty(Gui, "warningMessage", {
             value: warningDialogStub,
             configurable: true,
         });

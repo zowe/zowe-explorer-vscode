@@ -58,10 +58,7 @@ interface Thenable<T> {
         onfulfilled?: (value: T) => TResult | Thenable<TResult>,
         onrejected?: (reason: any) => TResult | Thenable<TResult>
     ): Thenable<TResult>;
-    then<TResult>(
-        onfulfilled?: (value: T) => TResult | Thenable<TResult>,
-        onrejected?: (reason: any) => void
-    ): Thenable<TResult>;
+    then<TResult>(onfulfilled?: (value: T) => TResult | Thenable<TResult>, onrejected?: (reason: any) => void): Thenable<TResult>;
 }
 
 /**
@@ -427,6 +424,15 @@ export interface InputBoxOptions {
 
 export interface TextDocument {
     fileName?: string;
+}
+
+export class Uri {
+    public static parse(value: string, strict?: boolean): Uri {
+        return this;
+    }
+    public static file(path: string): Uri {
+        return this;
+    }
 }
 
 /**

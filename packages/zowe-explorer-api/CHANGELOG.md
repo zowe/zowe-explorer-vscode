@@ -6,6 +6,9 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
+- Refactored UI/UX methods into standalone `Gui` module for usability and maintainability. [#1967](https://github.com/zowe/vscode-extension-for-zowe/issues/1967)
+- New API call `dataSetsMatchingPattern` to allow filtering datasets via a pattern.
+
 ### Bug fixes
 
 - Updated Imperative to fix failure to load schema when there is no profile of that type. [zowe/imperative#916](https://github.com/zowe/imperative/pull/916)
@@ -20,6 +23,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 - Added logging in places where errors were being caught and ignored.
 - Fixed all existing ESLint errors within the API logic.
+- Removed TSLint (as it is deprecated), and replaced all TSLint rules with their ESLint equivalents. [#2030](https://github.com/zowe/vscode-extension-for-zowe/issues/2030)
 
 ### New features and enhancements
 

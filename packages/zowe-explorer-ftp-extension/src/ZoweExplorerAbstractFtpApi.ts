@@ -12,7 +12,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { imperative } from "@zowe/cli";
 import { FTPConfig, IZosFTPProfile } from "@zowe/zos-ftp-for-zowe-cli";
-import { MessageSeverityEnum, ZoweExplorerApi, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { Gui, MessageSeverity, ZoweExplorerApi } from "@zowe/zowe-explorer-api";
 import { sessionMap, ZoweLogger } from "./extension";
 import { FtpSession } from "./ftpSession";
 
@@ -34,11 +34,10 @@ export abstract class AbstractFtpApi implements ZoweExplorerApi.ICommon {
         if (!this.session) {
             const ftpProfile = (profile || this.profile)?.profile;
             if (!ftpProfile) {
-                ZoweVsCodeExtension.showVsCodeMessage(
-                    "Internal error: ZoweVscFtpRestApi instance was not initialized with a valid Zowe profile.",
-                    MessageSeverityEnum.FATAL,
-                    ZoweLogger
-                );
+                void Gui.showMessage("Internal error: ZoweVscFtpRestApi instance was not initialized with a valid Zowe profile.", {
+                    severity: MessageSeverity.FATAL,
+                    logger: ZoweLogger,
+                });
                 throw new Error();
             }
 
@@ -60,20 +59,19 @@ export abstract class AbstractFtpApi implements ZoweExplorerApi.ICommon {
 
     public checkedProfile(): imperative.IProfileLoaded {
         if (!this.profile?.profile) {
-            ZoweVsCodeExtension.showVsCodeMessage(
-                "Internal error: ZoweVscFtpRestApi instance was not initialized with a valid Zowe profile.",
-                MessageSeverityEnum.FATAL,
-                ZoweLogger
-            );
+            void Gui.showMessage("Internal error: ZoweVscFtpRestApi instance was not initialized with a valid Zowe profile.", {
+                severity: MessageSeverity.FATAL,
+                logger: ZoweLogger,
+            });
             throw new Error();
         }
         return this.profile;
     }
 
-    public async ftpClient(profile: imperative.IProfileLoaded): Promise<unknown> {
+    public ftpClient(profile: imperative.IProfileLoaded): Promise<unknown> {
         const ftpProfile = profile.profile as IZosFTPProfile;
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-        return await FTPConfig.connectFromArguments(ftpProfile);
+        return FTPConfig.connectFromArguments(ftpProfile);
     }
 
     public releaseConnection<T extends ConnectionType>(connection: T): void {
@@ -109,11 +107,11 @@ export abstract class AbstractFtpApi implements ZoweExplorerApi.ICommon {
                         "Invalid Credentials. Please ensure the username and password for " +
                         validateProfile?.name +
                         " are valid or this may lead to a lock-out.";
-                    ZoweVsCodeExtension.showVsCodeMessage(errMsg, MessageSeverityEnum.ERROR, ZoweLogger);
+                    await Gui.errorMessage(errMsg, { logger: ZoweLogger });
                     throw new Error();
                 } else {
                     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-                    ZoweVsCodeExtension.showVsCodeMessage(e.message as string, MessageSeverityEnum.ERROR, ZoweLogger);
+                    await Gui.errorMessage(e.message as string, { logger: ZoweLogger });
                     throw new Error();
                 }
             }

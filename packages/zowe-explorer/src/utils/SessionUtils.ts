@@ -9,9 +9,9 @@
  *                                                                                 *
  */
 
-import * as vscode from "vscode";
 import { IZoweTree, IZoweTreeNode, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import * as globals from "../globals";
+import { SettingsConfig } from "./SettingsConfig";
 
 export async function removeSession(treeProvider: IZoweTree<IZoweTreeNode>, profileName: string): Promise<void> {
     const treeType = treeProvider.getTreeType();
@@ -50,7 +50,7 @@ export async function removeSession(treeProvider: IZoweTree<IZoweTreeNode>, prof
     });
     // Delete from Sessions list
     const setting: any = {
-        ...vscode.workspace.getConfiguration().get(schema),
+        ...SettingsConfig.getDirectValue(schema),
     };
     let sess: string[] = setting.sessions;
     let fave: string[] = setting.favorites;
@@ -62,5 +62,5 @@ export async function removeSession(treeProvider: IZoweTree<IZoweTreeNode>, prof
     });
     setting.sessions = sess;
     setting.favorites = fave;
-    await vscode.workspace.getConfiguration().update(schema, setting, vscode.ConfigurationTarget.Global);
+    await SettingsConfig.setDirectValue(schema, setting);
 }

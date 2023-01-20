@@ -9,17 +9,15 @@
  *                                                                                 *
  */
 
-import { ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
-import * as vscode from "vscode";
+import { IconHierarchyType, IconId, IIconItem } from "../index";
+import { getIconPathInResources } from "../../../shared/utils";
+import { hasFileError } from "../../../shared/context";
 
-// This class will hold all UI/GUI actions like input boxes, dialog boxes, pop up messages, and so on.
-// This will keep vs code user interaction code separate from logic code.
-// NOTE: This refactor is still under construction
-export class UIViews {
-    /**
-     * @deprecated Please use ZoweVsCodeExtension.inputBox(...)
-     */
-    public static async inputBox(inputBoxOptions: vscode.InputBoxOptions): Promise<string> {
-        return ZoweVsCodeExtension.inputBox(inputBoxOptions);
-    }
-}
+const fileError: IIconItem = {
+    id: IconId.fileError,
+    type: IconHierarchyType.base,
+    path: getIconPathInResources("fileError.svg"),
+    check: (node) => hasFileError(node),
+};
+
+export default fileError;

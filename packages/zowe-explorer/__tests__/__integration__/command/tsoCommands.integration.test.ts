@@ -48,15 +48,7 @@ describe("tsoCommands integration test", async () => {
     const sessCfg = ZosmfSession.createSessCfgFromArgs(cmdArgs);
     imperative.ConnectionPropsForSessCfg.resolveSessCfgProps(sessCfg, cmdArgs);
     const session = new imperative.Session(sessCfg);
-    const testNode = new ZoweDatasetNode(
-        "BRTVS99.DDIR",
-        vscode.TreeItemCollapsibleState.Collapsed,
-        null,
-        session,
-        undefined,
-        undefined,
-        testProfile
-    );
+    const testNode = new ZoweDatasetNode("BRTVS99.DDIR", vscode.TreeItemCollapsibleState.Collapsed, null, session, undefined, undefined, testProfile);
 
     let sandbox;
 

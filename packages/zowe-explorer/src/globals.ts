@@ -17,6 +17,7 @@ import * as loggerConfig from "../log4jsconfig.json";
 // Set up localization
 import * as nls from "vscode-nls";
 import { getZoweDir, ProfilesCache } from "@zowe/zowe-explorer-api";
+import { SettingsConfig } from "./utils/SettingsConfig";
 
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
@@ -32,7 +33,7 @@ export let DS_DIR;
 export let CONFIG_PATH; // set during activate
 export let ISTHEIA: boolean = false; // set during activate
 export let LOG: imperative.Logger;
-export const COMMAND_COUNT = 102;
+export const COMMAND_COUNT = 103;
 export const MAX_SEARCH_HISTORY = 5;
 export const MAX_FILE_HISTORY = 10;
 export const STATUS_BAR_TIMEOUT_MS = 5000;
@@ -55,6 +56,7 @@ export const DS_TEXT_FILE_CONTEXT = "textFile";
 export const DS_FAV_TEXT_FILE_CONTEXT = "textFile_fav";
 export const DS_BINARY_FILE_CONTEXT = "binaryFile";
 export const DS_MIGRATED_FILE_CONTEXT = "migr";
+export const DS_FILE_ERROR_CONTEXT = "fileError";
 export const USS_SESSION_CONTEXT = "ussSession";
 export const USS_DIR_CONTEXT = "directory";
 export const USS_FAV_DIR_CONTEXT = "directory_fav";
@@ -97,11 +99,11 @@ export let PROFILE_SECURITY: string | boolean = ZOWE_CLI_SCM;
 export const JOBS_MAX_PREFIX = 8;
 
 export enum CreateDataSetTypeWithKeysEnum {
-    DATA_SET_BINARY = 0,
-    DATA_SET_C = 1,
-    DATA_SET_CLASSIC = 2,
-    DATA_SET_PARTITIONED = 3,
-    DATA_SET_SEQUENTIAL = 4,
+    DATA_SET_BINARY,
+    DATA_SET_C,
+    DATA_SET_CLASSIC,
+    DATA_SET_PARTITIONED,
+    DATA_SET_SEQUENTIAL,
 }
 export const DATA_SET_PROPERTIES = [
     {
@@ -114,10 +116,7 @@ export const DATA_SET_PROPERTIES = [
         key: `avgblk`,
         label: `Average Block Length`,
         value: null,
-        placeHolder: localize(
-            "createFile.attribute.avgblk",
-            `Enter the average block length (if allocation unit = BLK)`
-        ),
+        placeHolder: localize("createFile.attribute.avgblk", `Enter the average block length (if allocation unit = BLK)`),
     },
     {
         key: `blksize`,
@@ -207,10 +206,7 @@ export const DATA_SET_PROPERTIES = [
         key: `volser`,
         label: `Volume Serial`,
         value: null,
-        placeHolder: localize(
-            "createFile.attribute.volser",
-            `Enter the volume serial on which the data set should be placed`
-        ),
+        placeHolder: localize("createFile.attribute.volser", `Enter the volume serial on which the data set should be placed`),
     },
 ];
 
@@ -263,9 +259,13 @@ export const plusSign = "\uFF0B ";
  * @param tempPath File path for temporary folder defined in preferences
  */
 export function defineGlobals(tempPath: string | undefined) {
-    // Set app name
+    // check if Theia environment
     const appName = vscode.env.appName;
-    if (appName && !this.VSCODE_APPNAME.includes(appName) && vscode.env.uiKind === vscode.UIKind.Web) {
+    const uriScheme = vscode.env.uriScheme;
+    if (
+        ((appName && appName.toLowerCase().includes("theia")) || (uriScheme && uriScheme.toLowerCase().includes("theia"))) &&
+        vscode.env.uiKind === vscode.UIKind.Web
+    ) {
         this.ISTHEIA = true;
     }
 
@@ -307,14 +307,10 @@ export function setActivated(value: boolean) {
 export async function setGlobalSecurityValue() {
     if (this.ISTHEIA) {
         PROFILE_SECURITY = false;
-        await vscode.workspace
-            .getConfiguration()
-            .update(this.SETTINGS_SECURE_CREDENTIALS_ENABLED, false, vscode.ConfigurationTarget.Global);
+        await SettingsConfig.setDirectValue(this.SETTINGS_SECURE_CREDENTIALS_ENABLED, false, vscode.ConfigurationTarget.Global);
         return;
     }
-    const settingEnabled: boolean = await vscode.workspace
-        .getConfiguration()
-        .get(this.SETTINGS_SECURE_CREDENTIALS_ENABLED);
+    const settingEnabled: boolean = SettingsConfig.getDirectValue(this.SETTINGS_SECURE_CREDENTIALS_ENABLED);
     if (!settingEnabled) {
         PROFILE_SECURITY = false;
     } else {

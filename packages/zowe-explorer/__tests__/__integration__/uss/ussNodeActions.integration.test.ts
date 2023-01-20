@@ -9,7 +9,6 @@
  *                                                                                 *
  */
 
-// tslint:disable:no-magic-numbers
 import { Create, Delete, imperative, List, ZosmfSession } from "@zowe/cli";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
@@ -77,9 +76,7 @@ describe("ussNodeActions integration test", async () => {
     const oldSettings = vscode.workspace.getConfiguration(globals.SETTINGS_USS_HISTORY);
 
     after(async () => {
-        await vscode.workspace
-            .getConfiguration()
-            .update(globals.SETTINGS_USS_HISTORY, oldSettings, vscode.ConfigurationTarget.Global);
+        await vscode.workspace.getConfiguration().update(globals.SETTINGS_USS_HISTORY, oldSettings, vscode.ConfigurationTarget.Global);
     });
 
     describe("Initialize USS Favorites", async () => {
@@ -98,19 +95,13 @@ describe("ussNodeActions integration test", async () => {
             ];
             await vscode.workspace
                 .getConfiguration()
-                .update(
-                    globals.SETTINGS_USS_HISTORY,
-                    { persistence: true, favorites },
-                    vscode.ConfigurationTarget.Global
-                );
+                .update(globals.SETTINGS_USS_HISTORY, { persistence: true, favorites }, vscode.ConfigurationTarget.Global);
             await testTree.initializeFavorites(imperative.Logger.getAppLogger());
             const initializedFavProfileLabels = [`${profileName}`, "badProfileName"];
             const goodProfileFavLabels = ["tester1", "testfile1", "tester2", "testfile2"];
             const badProfileFavLabels = ["tester1"];
             // Profile nodes for both valid and invalid profiles should be created in mFavorites. (Error checking happens on expand.)
-            expect(testTree.mFavorites.map((favProfileNode) => favProfileNode.label)).to.deep.equal(
-                initializedFavProfileLabels
-            );
+            expect(testTree.mFavorites.map((favProfileNode) => favProfileNode.label)).to.deep.equal(initializedFavProfileLabels);
             // Favorite item nodes should be created for favorite profile nodes of both valid and valid profiles.
             expect(testTree.mFavorites[0].children.map((node) => node.label)).to.deep.equal(goodProfileFavLabels);
             expect(testTree.mFavorites[1].children.map((node) => node.label)).to.deep.equal(badProfileFavLabels);
@@ -123,10 +114,9 @@ describe("ussNodeActions integration test", async () => {
 
         afterEach(async () => {
             await Promise.all(
-                [
-                    Delete.ussFile(sessionNode.getSession(), beforeFileName),
-                    Delete.ussFile(sessionNode.getSession(), afterFileName),
-                ].map((p) => p.catch((err) => err))
+                [Delete.ussFile(sessionNode.getSession(), beforeFileName), Delete.ussFile(sessionNode.getSession(), afterFileName)].map((p) =>
+                    p.catch((err) => err)
+                )
             );
         });
         beforeEach(async () => {
