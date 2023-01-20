@@ -78,7 +78,7 @@ export class KeytarCredentialManager extends imperative.AbstractCredentialManage
         let imperativeIsSecure = false;
         try {
             const fileName = path.join(getZoweDir(), "settings", "imperative.json");
-            let settings: any = {};
+            let settings: Record<string, unknown> = {};
             if (fs.existsSync(fileName)) {
                 settings = JSON.parse(fs.readFileSync(fileName, "utf8")) as Record<string, unknown>;
             }

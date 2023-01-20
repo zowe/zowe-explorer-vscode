@@ -357,7 +357,7 @@ export class ProfilesCache {
     }
 
     // This will retrieve the saved base profile in the allProfiles array
-    public getBaseProfile(): zowe.imperative.IProfileLoaded {
+    public getBaseProfile(): zowe.imperative.IProfileLoaded | undefined {
         let baseProfile: zowe.imperative.IProfileLoaded;
         for (const baseP of this.allProfiles) {
             if (baseP.type === "base") {
@@ -368,9 +368,10 @@ export class ProfilesCache {
     }
 
     // This will retrieve the base profile from imperative
-    public async fetchBaseProfile(): Promise<zowe.imperative.IProfileLoaded> {
+    public async fetchBaseProfile(): Promise<zowe.imperative.IProfileLoaded | undefined> {
         const mProfileInfo = await this.getProfileInfo();
         const baseProfileAttrs = mProfileInfo.getDefaultProfile("base");
+        if (baseProfileAttrs == null) return undefined;
         const profAttr = this.getMergedAttrs(mProfileInfo, baseProfileAttrs);
         return this.getProfileLoaded(baseProfileAttrs.profName, baseProfileAttrs.profType, profAttr);
     }
@@ -386,6 +387,7 @@ export class ProfilesCache {
         } catch (error) {
             this.log.error(error as string);
         }
+        return true;
     }
 
     /**
@@ -396,15 +398,15 @@ export class ProfilesCache {
     public isSecureCredentialPluginActive(): boolean {
         let imperativeIsSecure = false;
         try {
-            const fileName = path.join(getZoweDir(), "settings", "zowe.imperative.json");
+            const fileName = path.join(getZoweDir(), "settings", "imperative.json");
             let settings: Record<string, unknown>;
             if (fs.existsSync(fileName)) {
                 settings = JSON.parse(fs.readFileSync(fileName, "utf-8")) as Record<string, unknown>;
             }
             if (settings) {
                 const baseValue = settings.overrides as Record<string, unknown>;
-                const value1 = baseValue.CredentialManager;
-                const value2 = baseValue["credential-manager"];
+                const value1 = baseValue?.CredentialManager;
+                const value2 = baseValue?.["credential-manager"];
                 imperativeIsSecure = (typeof value1 === "string" && value1.length > 0) || (typeof value2 === "string" && value2.length > 0);
             }
         } catch (error) {
@@ -424,12 +426,8 @@ export class ProfilesCache {
     }
 
     // used by Zowe Explorer for v1 profiles
-    protected async deleteProfileOnDisk(ProfileInfo: zowe.imperative.IProfileLoaded): Promise<void> {
-        await this.getCliProfileManager(ProfileInfo.type).delete({
-            profile: ProfileInfo,
-            name: ProfileInfo.name,
-            type: ProfileInfo.type,
-        });
+    protected async deleteProfileOnDisk(profileInfo: zowe.imperative.IProfileLoaded): Promise<void> {
+        await this.getCliProfileManager(profileInfo.type).delete({ name: profileInfo.name });
     }
 
     // used by Zowe Explorer for v1 profiles
