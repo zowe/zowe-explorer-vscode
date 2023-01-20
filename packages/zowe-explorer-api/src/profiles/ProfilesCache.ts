@@ -213,7 +213,13 @@ export class ProfilesCache {
             return validationResult;
         }
 
-        validationResult.port = Number(url.port);
+        if (newUrl.includes(":443")) {
+            validationResult.port = zowe.imperative.AbstractSession.DEFAULT_HTTPS_PORT;
+        } else {
+            validationResult.port = Number(url.port);
+        }
+
+        validationResult.protocol = url.protocol.slice(0, -1);
         validationResult.host = url.hostname;
         validationResult.valid = true;
         return validationResult;
@@ -253,10 +259,9 @@ export class ProfilesCache {
      * @returns string[]
      */
     public async getNamesForType(type: string): Promise<string[]> {
-        const profilesForType = await this.fetchAllProfilesByType(type);
-        return profilesForType.map((profile) => {
-            return profile.name;
-        });
+        const mProfileInfo = await this.getProfileInfo();
+        const profilesForType = mProfileInfo.getAllProfiles(type);
+        return profilesForType.map((profAttrs) => profAttrs.profName);
     }
 
     /**
@@ -299,7 +304,7 @@ export class ProfilesCache {
      * @param name profile name
      * @returns IProfileLoaded
      */
-    public async directLoad(type: string, name: string): Promise<zowe.imperative.IProfileLoaded> {
+    public async directLoad(type: string, name: string): Promise<zowe.imperative.IProfileLoaded | undefined> {
         const profsOfType = await this.fetchAllProfilesByType(type);
         if (profsOfType && profsOfType.length > 0) {
             for (const profile of profsOfType) {
@@ -311,14 +316,13 @@ export class ProfilesCache {
         return;
     }
 
-    public async getProfileFromConfig(profileName: string): Promise<zowe.imperative.IProfAttrs> {
+    public async getProfileFromConfig(profileName: string): Promise<zowe.imperative.IProfAttrs | undefined> {
         const mProfileInfo = await this.getProfileInfo();
-        const configAllProfiles = mProfileInfo.getAllProfiles().filter((temp) => temp.profLoc.osLoc.length !== 0);
-        const currentProfile = configAllProfiles.filter((temprofile) => temprofile.profName === profileName)[0];
-        return currentProfile;
+        const configAllProfiles = mProfileInfo.getAllProfiles().filter((prof) => prof.profLoc.osLoc.length !== 0);
+        return configAllProfiles.find((prof) => prof.profName === profileName);
     }
 
-    public async getLoadedProfConfig(profileName: string): Promise<zowe.imperative.IProfileLoaded> {
+    public async getLoadedProfConfig(profileName: string): Promise<zowe.imperative.IProfileLoaded | undefined> {
         const mProfileInfo = await this.getProfileInfo();
         const currentProfile = await this.getProfileFromConfig(profileName);
         if (currentProfile == null) return undefined;
@@ -332,7 +336,7 @@ export class ProfilesCache {
      * @param type string, profile type
      * @returns zowe.imperative.CliProfileManager
      */
-    public getCliProfileManager(type: string): zowe.imperative.CliProfileManager {
+    public getCliProfileManager(type: string): zowe.imperative.CliProfileManager | undefined {
         let profileManager = this.profileManagerByType.get(type);
         if (!profileManager) {
             try {

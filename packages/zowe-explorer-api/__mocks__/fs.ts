@@ -21,6 +21,12 @@ function readFileSync(filePath: string, encoding?: string) {
     return mockReadFileSync(filePath, encoding);
 }
 
+function realpathSync(path: string): string {
+    return path;
+}
+
 fs.readFileSync = readFileSync;
+fs.realpathSync = realpathSync;
+fs.realpathSync.native = realpathSync;
 
 module.exports = fs;
