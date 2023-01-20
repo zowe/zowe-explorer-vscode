@@ -60,13 +60,42 @@ const zftpProfile: Required<Pick<zowe.imperative.IProfileLoaded, "name" | "type"
         port: 21,
     },
 };
+const lpar1ProfileWithToken = {
+    ...lpar1Profile,
+    profile: {
+        ...lpar1Profile.profile,
+        tokenType: "apimlAuthenticationToken",
+        tokenValue: "zosmfToken1",
+    },
+};
+const lpar2ProfileWithToken = {
+    ...lpar2Profile,
+    profile: {
+        ...lpar2Profile.profile,
+        tokenType: "apimlAuthenticationToken",
+        tokenValue: "zosmfToken2",
+    },
+};
+const baseProfileWithToken = {
+    ...baseProfile,
+    profile: {
+        ...baseProfile.profile,
+        tokenType: "apimlAuthenticationToken",
+        tokenValue: "baseToken",
+    },
+};
 
 function createProfInfoMock(profiles: Partial<zowe.imperative.IProfileLoaded>[]): any {
     return {
         getAllProfiles: (profType?: string) =>
             profiles
                 .filter((prof) => !profType || prof.type === profType)
-                .map((prof) => ({ profName: prof.name, profType: prof.type, profLoc: { osLoc: "fakePath" } })),
+                .map((prof) => ({
+                    profName: prof.name,
+                    profType: prof.type,
+                    profLoc: { osLoc: "fakePath" },
+                    isDefaultProfile: prof.name === profiles.find((p) => p.type === profType)?.name,
+                })),
         getDefaultProfile: (profType: string) => {
             const profile: any = profiles.find((prof) => prof.type === profType);
             return profile && { profName: profile.name, profType: profile.type, profLoc: { osLoc: "fakePath" } };
@@ -171,8 +200,50 @@ describe("ProfilesCache", () => {
         expect((profCache as any).allExternalTypes.size).toBe(1);
     });
 
-    // TODO Test getAllTypes here too
-    // describe("refresh", () => {});
+    describe("refresh", () => {
+        const mockLogError = jest.fn();
+        const profileTypes = ["zosmf", "zftp"];
+        const fakeApiRegister = {
+            registeredApiTypes: jest.fn().mockReturnValue(profileTypes),
+        };
+
+        it("should refresh profile data for multiple profile types", async () => {
+            const profCache = new ProfilesCache({ ...fakeLogger, error: mockLogError } as any);
+            jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1Profile, zftpProfile]));
+            await profCache.refresh(fakeApiRegister as any);
+            expect(profCache.allProfiles.length).toEqual(2);
+            expect(profCache.allProfiles[0]).toMatchObject(lpar1Profile);
+            expect(profCache.allProfiles[1]).toMatchObject(zftpProfile);
+            expect(profCache.getAllTypes()).toEqual([...profileTypes, "base"]);
+            expect(mockLogError).not.toHaveBeenCalled();
+        });
+
+        it("should refresh profile data for and merge tokens with base profile", async () => {
+            const profCache = new ProfilesCache({ ...fakeLogger, error: mockLogError } as any);
+            jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(
+                createProfInfoMock([lpar1ProfileWithToken, lpar2ProfileWithToken, baseProfileWithToken])
+            );
+            await profCache.refresh(fakeApiRegister as any);
+            expect(profCache.allProfiles.length).toEqual(3);
+            expect(profCache.allProfiles[0]).toMatchObject(lpar1ProfileWithToken);
+            expect(profCache.allProfiles[1]).toMatchObject(lpar2Profile); // without token
+            expect(profCache.allProfiles[2]).toMatchObject(baseProfileWithToken);
+            expect(profCache.getAllTypes()).toEqual([...profileTypes, "base"]);
+            expect(mockLogError).not.toHaveBeenCalled();
+        });
+
+        it("should handle error when refreshing profile data", async () => {
+            const fakeError = "Profile IO Error";
+            const profCache = new ProfilesCache({ ...fakeLogger, error: mockLogError } as any);
+            jest.spyOn(profCache, "getProfileInfo").mockImplementation(() => {
+                throw fakeError;
+            });
+            await profCache.refresh(fakeApiRegister as any);
+            expect(profCache.allProfiles.length).toEqual(0);
+            expect(profCache.getAllTypes().length).toEqual(0);
+            expect(mockLogError).toHaveBeenCalledWith(fakeError);
+        });
+    });
 
     describe("validateAndParseUrl", () => {
         it("should successfully parse URL with default port", () => {
@@ -224,6 +295,18 @@ describe("ProfilesCache", () => {
             expect(profiles.length).toBe(2);
             expect(profiles[0]).toMatchObject(lpar1Profile);
             expect(profiles[1]).toMatchObject(lpar2Profile);
+        });
+
+        it("should remove token from service profile if base profile overrides it", async () => {
+            const profCache = new ProfilesCache(fakeLogger as any);
+            (profCache as any).defaultProfileByType = new Map([["base", baseProfileWithToken]]);
+            jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1ProfileWithToken, lpar2ProfileWithToken]));
+            const profiles = await profCache.fetchAllProfilesByType("zosmf");
+            expect(profiles.length).toBe(2);
+            expect(profiles[0].profile?.tokenType).toBe(lpar1ProfileWithToken.profile.tokenType);
+            expect(profiles[0].profile?.tokenValue).toBe(lpar1ProfileWithToken.profile.tokenValue);
+            expect(profiles[1].profile?.tokenType).toBeUndefined();
+            expect(profiles[1].profile?.tokenValue).toBeUndefined();
         });
 
         it("should return empty array for unknown profile type", async () => {

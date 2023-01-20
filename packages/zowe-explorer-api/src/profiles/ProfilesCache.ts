@@ -188,9 +188,7 @@ export class ProfilesCache {
             }
             // check for proper merging of apiml tokens
             this.checkMergingConfigAllProfiles();
-            while (this.profilesForValidation.length > 0) {
-                this.profilesForValidation.pop();
-            }
+            this.profilesForValidation = [];
         } catch (error) {
             this.log.error(error as string);
         }
@@ -450,14 +448,7 @@ export class ProfilesCache {
                 const allProfilesByType: zowe.imperative.IProfileLoaded[] = [];
                 const profByType = this.profilesByType.get(type);
                 profByType.forEach((profile) => {
-                    if (
-                        baseProfile?.profile?.host &&
-                        baseProfile?.profile?.port &&
-                        profile?.profile?.host &&
-                        profile?.profile?.port &&
-                        (baseProfile?.profile.host !== profile?.profile.host || baseProfile?.profile.port !== profile?.profile.port) &&
-                        profile?.profile.tokenType === "apimlAuthenticationToken"
-                    ) {
+                    if (this.shouldRemoveTokenFromProfile(profile, baseProfile)) {
                         profile.profile.tokenType = undefined;
                         profile.profile.tokenValue = undefined;
                         // update default profile of type if changed
@@ -471,7 +462,7 @@ export class ProfilesCache {
                 this.profilesByType.set(type, allProfilesByType);
             } catch (error) {
                 // do nothing, skip if profile type is not included in config file
-                this.log.warn(error as string);
+                this.log.debug(error as string);
             }
         });
         this.allProfiles = [];
@@ -481,14 +472,7 @@ export class ProfilesCache {
     // check correct merging of a single profile
     protected checkMergingConfigSingleProfile(profile: zowe.imperative.IProfileLoaded): zowe.imperative.IProfileLoaded {
         const baseProfile = this.defaultProfileByType.get("base");
-        if (
-            baseProfile?.profile?.host &&
-            baseProfile?.profile?.port &&
-            profile?.profile?.host &&
-            profile?.profile?.port &&
-            (baseProfile?.profile.host !== profile?.profile.host || baseProfile?.profile.port !== profile?.profile.port) &&
-            profile?.profile.tokenType === "apimlAuthenticationToken"
-        ) {
+        if (this.shouldRemoveTokenFromProfile(profile, baseProfile)) {
             profile.profile.tokenType = undefined;
             profile.profile.tokenValue = undefined;
         }
@@ -513,5 +497,16 @@ export class ProfilesCache {
         const externalTypeArray: string[] = Array.from(this.allExternalTypes);
         const allTypes = registeredTypes.concat(externalTypeArray.filter((exType) => registeredTypes.every((type) => type !== exType)));
         return allTypes;
+    }
+
+    private shouldRemoveTokenFromProfile(profile: zowe.imperative.IProfileLoaded, baseProfile: zowe.imperative.IProfileLoaded): boolean {
+        return (
+            baseProfile?.profile?.host &&
+            baseProfile?.profile?.port &&
+            profile?.profile?.host &&
+            profile?.profile?.port &&
+            (baseProfile?.profile.host !== profile?.profile.host || baseProfile?.profile.port !== profile?.profile.port) &&
+            profile?.profile.tokenType === zowe.imperative.SessConstants.TOKEN_TYPE_APIML
+        );
     }
 }
