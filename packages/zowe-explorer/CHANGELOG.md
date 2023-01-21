@@ -4,10 +4,9 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ## TBD Release
 
-- Added Job search label to the Jobs tree.
-
 ### New features and enhancements
 
+- Added Job search label to the Jobs tree. Label will show current search query [2062](https://github.com/zowe/vscode-extension-for-zowe/pull/2064).
 - Added Job search prefix validator [1971](https://github.com/zowe/vscode-extension-for-zowe/issues/1971)
 - Added file association for `zowe.config.json` and `zowe.config.user.json` to automatically detect them as JSON with Comments. [#1997](https://github.com/zowe/vscode-extension-for-zowe/issues/1997)
 - Added the ability to list all datasets, even those with Imperative Errors. [#235](https://github.com/zowe/vscode-extension-for-zowe/issues/235) & [#2036](https://github.com/zowe/vscode-extension-for-zowe/issues/2036)
