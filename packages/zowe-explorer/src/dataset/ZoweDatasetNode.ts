@@ -283,20 +283,22 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 responseTimeout: cachedProfile.profile.responseTimeout,
             };
             if (contextually.isSessionNotFav(this)) {
-                responses.push(
-                    await ZoweExplorerApiRegister.getMvsApi(cachedProfile).dataSetsMatchingPattern(
-                        // remove duplicate patterns
-                        [
-                            ...new Set(
-                                this.pattern
-                                    .toUpperCase()
-                                    .split(",")
-                                    .map((p) => p.trim())
-                            ),
-                        ],
-                        options
-                    )
-                );
+                const dsPatterns = [
+                    ...new Set(
+                        this.pattern
+                            .toUpperCase()
+                            .split(",")
+                            .map((p) => p.trim())
+                    ),
+                ];
+                const mvsApi = ZoweExplorerApiRegister.getMvsApi(cachedProfile);
+                if (mvsApi.dataSetsMatchingPattern) {
+                    responses.push(await mvsApi.dataSetsMatchingPattern(dsPatterns));
+                } else {
+                    for (const dsp of dsPatterns) {
+                        responses.push(await mvsApi.dataSet(dsp));
+                    }
+                }
             } else if (this.memberPattern) {
                 this.memberPattern = this.memberPattern.toUpperCase();
                 for (const memPattern of this.memberPattern.split(",")) {

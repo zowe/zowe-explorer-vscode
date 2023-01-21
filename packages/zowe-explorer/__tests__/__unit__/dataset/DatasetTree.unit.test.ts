@@ -267,6 +267,8 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
         const profile = createInstanceOfProfile(imperativeProfile);
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        const mvsApi = createMvsApi(imperativeProfile);
+        bindMvsApi(mvsApi);
 
         return {
             imperativeProfile,
@@ -274,6 +276,7 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
             profile,
             datasetSessionNode,
             treeView,
+            mvsApi,
         };
     }
 
@@ -414,6 +417,52 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
         const children = await testTree.getChildren(testTree.mSessionNodes[1]);
         expect(children.map((c) => c.label)).toEqual(sampleChildren.map((c) => c.label));
         expect(children).toEqual(sampleChildren);
+        spyOnDataSetsMatchingPattern.mockRestore();
+    });
+    it("Checking that we fallback to old dataSet API if newer dataSetsMattchingPattern does not exist", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        const mockMvsApi = await ZoweExplorerApiRegister.getMvsApi(blockMocks.profile);
+        mockMvsApi.dataSetsMatchingPattern = null;
+        const getMvsApiMock = jest.fn();
+        getMvsApiMock.mockReturnValue(mockMvsApi);
+        ZoweExplorerApiRegister.getMvsApi = getMvsApiMock.bind(ZoweExplorerApiRegister);
+
+        const spyOnDataSetsMatchingPattern = jest.spyOn(zowe.List, "dataSetsMatchingPattern");
+        const spyOnDataSet = jest.spyOn(zowe.List, "dataSet");
+        spyOnDataSet.mockResolvedValueOnce({
+            success: true,
+            commandResponse: null,
+            apiResponse: {
+                items: [{ dsname: "HLQ.USER", dsorg: "PS" }],
+            },
+        });
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
+        blockMocks.datasetSessionNode.pattern = "test";
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        testTree.mSessionNodes[1].dirty = true;
+        const sampleChildren: ZoweDatasetNode[] = [
+            new ZoweDatasetNode(
+                "HLQ.USER",
+                vscode.TreeItemCollapsibleState.None,
+                testTree.mSessionNodes[1],
+                null,
+                undefined,
+                undefined,
+                blockMocks.imperativeProfile
+            ),
+        ];
+        sampleChildren[0].command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [sampleChildren[0]] };
+
+        const children = await testTree.getChildren(testTree.mSessionNodes[1]);
+        expect(children.map((c) => c.label)).toEqual(sampleChildren.map((c) => c.label));
+        expect(children).toEqual(sampleChildren);
+        expect(spyOnDataSet).toHaveBeenCalled();
+        expect(spyOnDataSetsMatchingPattern).not.toHaveBeenCalled();
+        spyOnDataSet.mockRestore();
         spyOnDataSetsMatchingPattern.mockRestore();
     });
     it("Checking function for favorite node", async () => {
