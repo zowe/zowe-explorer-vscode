@@ -719,14 +719,12 @@ describe("ZosJobsProvider - tooltip", () => {
     });
     it("should return existing _tooltip", async () => {
         const globalMocks = await createGlobalMocks();
-        console.log("mama", globalMocks.testJobsProvider);
         globalMocks.testJobsProvider.mSessionNodes[1]._tooltip = "my_tooltip";
         const actualTooltip = globalMocks.testJobsProvider.mSessionNodes[1].tooltip;
         expect("my_tooltip").toEqual(actualTooltip);
     });
     it("should return job id tooltip", async () => {
         const globalMocks = await createGlobalMocks();
-        console.log("joba", globalMocks.testJobsProvider.mSessionNodes[1].job);
         const job = { jobname: "myJob", jobid: 123, retcode: 345 };
         globalMocks.testJobsProvider.mSessionNodes[1].job = job;
         const actualTooltip = globalMocks.testJobsProvider.mSessionNodes[1].tooltip;

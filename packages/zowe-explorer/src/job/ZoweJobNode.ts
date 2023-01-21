@@ -220,7 +220,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
         if (this._tooltip) {
             return this._tooltip;
         }
-        if (this.job !== null) {
+        if (this.job) {
             if (this.job.retcode) {
                 return `${this.job.jobname}(${this.job.jobid}) - ${this.job.retcode}`;
             } else {
