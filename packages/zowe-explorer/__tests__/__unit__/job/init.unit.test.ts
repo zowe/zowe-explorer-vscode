@@ -14,13 +14,13 @@ import * as jobTree from "../../../src/job/ZosJobsProvider";
 import * as refreshActions from "../../../src/shared/refresh";
 import * as contextuals from "../../../src/shared/context";
 import * as jobActions from "../../../src/job/actions";
-import * as sharedExtension from "../../../src/shared/extension";
-import { initJobsProvider } from "../../../src/job/extension";
+import * as sharedExtension from "../../../src/shared/init";
+import { initJobsProvider } from "../../../src/job/init";
 import { Profiles } from "../../../src/Profiles";
 import { IJestIt, ITestContext, processSubscriptions, spyOnSubscriptions } from "../../__common__/testUtils";
 
-describe("Test src/dataset/extension", () => {
-    describe("initDatasetProvider", () => {
+describe("Test src/jobs/extension", () => {
+    describe("initJobsProvider", () => {
         let registerCommand;
         let onDidChangeConfiguration;
         let spyCreateJobsTree;
@@ -160,7 +160,7 @@ describe("Test src/dataset/extension", () => {
                     {
                         spy: jest.spyOn(Profiles, "getInstance"),
                         arg: [],
-                        ret: { enableValidation: jest.fn(), disableValidation: jest.fn() },
+                        ret: { disableValidation: jest.fn() },
                     },
                 ],
             },
@@ -170,7 +170,7 @@ describe("Test src/dataset/extension", () => {
                     {
                         spy: jest.spyOn(Profiles, "getInstance"),
                         arg: [],
-                        ret: { enableValidation: jest.fn(), disableValidation: jest.fn() },
+                        ret: { enableValidation: jest.fn() },
                     },
                 ],
             },
@@ -213,7 +213,7 @@ describe("Test src/dataset/extension", () => {
 
         processSubscriptions(commands, test);
 
-        it("should not initialize if it is unable to create the dataset tree", async () => {
+        it("should not initialize if it is unable to create the jobs tree", async () => {
             spyCreateJobsTree.mockResolvedValue(null);
             const myProvider = await initJobsProvider({} as any);
             expect(myProvider).toBe(null);

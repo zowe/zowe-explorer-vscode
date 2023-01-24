@@ -13,6 +13,7 @@ export interface ITestContext {
     context: { subscriptions: any[] } | any;
     value: any;
     _: any;
+    [key: string]: any;
 }
 
 export interface IJestMock {
@@ -30,16 +31,23 @@ export interface IJestIt {
 export function spyOnSubscriptions(subscriptions: any[]) {
     subscriptions.forEach((sub) => {
         sub.mock.forEach((mock) => {
-            mock.spy.mockClear().mockImplementation(mock.ret ? jest.fn((_) => mock.ret) : jest.fn());
+            if (mock.ret) {
+                mock.spy.mockClear().mockReturnValueOnce(mock.ret);
+            } else {
+                mock.spy.mockClear().mockImplementation(jest.fn());
+            }
         });
     });
 }
 
 export function processSubscriptions(subscriptions: IJestIt[], test: ITestContext) {
-    subscriptions.forEach((sub, index) => {
+    const getName = (str: string) => {
+        return str.indexOf(":") >= 0 ? str.substring(0, str.indexOf(":")) : str;
+    };
+    subscriptions.forEach((sub) => {
         it(sub.title ?? `Test: ${sub.name}`, async () => {
             const parms = sub.parm ?? [test.value];
-            await test.context.subscriptions[index][sub.name](...parms);
+            await test.context.subscriptions.find((s) => Object.keys(s)[0] === getName(sub.name))?.[getName(sub.name)](...parms);
             sub.mock.forEach((mock) => {
                 expect(mock.spy).toHaveBeenCalledWith(...mock.arg);
             });

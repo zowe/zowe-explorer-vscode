@@ -15,10 +15,10 @@ import * as ussActions from "./actions";
 import * as refreshActions from "../shared/refresh";
 import { IZoweUSSTreeNode, IZoweTreeNode, IZoweTree } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
-import * as contextuals from "../../src/shared/context";
+import * as contextuals from "../shared/context";
 import { getSelectedNodeList } from "../shared/utils";
 import { createUSSTree } from "./USSTree";
-import { initSubscribers } from "../shared/extension";
+import { initSubscribers } from "../shared/init";
 
 export async function initUSSProvider(context: vscode.ExtensionContext) {
     const ussFileProvider: IZoweTree<IZoweUSSTreeNode> = await createUSSTree(globals.LOG);

@@ -16,10 +16,10 @@ import * as refreshActions from "../shared/refresh";
 import { IZoweJobTreeNode, IZoweTreeNode, IZoweTree } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { createJobsTree } from "./ZosJobsProvider";
-import * as contextuals from "../../src/shared/context";
+import * as contextuals from "../shared/context";
 import { Job } from "./ZoweJobNode";
 import { getSelectedNodeList } from "../shared/utils";
-import { initSubscribers } from "../shared/extension";
+import { initSubscribers } from "../shared/init";
 
 export async function initJobsProvider(context: vscode.ExtensionContext) {
     const jobsProvider: IZoweTree<IZoweJobTreeNode> = await createJobsTree(globals.LOG);

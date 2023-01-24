@@ -17,9 +17,9 @@ import { IZoweDatasetTreeNode, IZoweTreeNode, IZoweTree } from "@zowe/zowe-explo
 import { Profiles } from "../Profiles";
 import { createDatasetTree } from "./DatasetTree";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
-import * as contextuals from "../../src/shared/context";
+import * as contextuals from "../shared/context";
 import { getSelectedNodeList } from "../shared/utils";
-import { initSubscribers } from "../shared/extension";
+import { initSubscribers } from "../shared/init";
 
 export async function initDatasetProvider(context: vscode.ExtensionContext) {
     const datasetProvider: IZoweTree<IZoweDatasetTreeNode> = await createDatasetTree(globals.LOG);

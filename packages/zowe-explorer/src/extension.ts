@@ -11,7 +11,7 @@
 
 import * as globals from "./globals";
 import * as vscode from "vscode";
-import { Gui, getZoweDir } from "@zowe/zowe-explorer-api";
+import { getZoweDir } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import { Profiles } from "./Profiles";
@@ -19,10 +19,10 @@ import { initializeZoweProfiles } from "./utils/ProfilesUtils";
 import { initializeSpoolProvider } from "./SpoolProvider";
 import { cleanTempDir, hideTempFolder } from "./utils/TempFolder";
 import { SettingsConfig } from "./utils/SettingsConfig";
-import { initDatasetProvider } from "./dataset/extension";
-import { initUSSProvider } from "./uss/extension";
-import { initJobsProvider } from "./job/extension";
-import { IZoweProviders, registerCommonCommands, registerRefreshCommand, watchConfigProfile } from "./shared/extension";
+import { initDatasetProvider } from "./dataset/init";
+import { initUSSProvider } from "./uss/init";
+import { initJobsProvider } from "./job/init";
+import { IZoweProviders, registerCommonCommands, registerRefreshCommand, watchConfigProfile } from "./shared/init";
 import { initializeZoweLogger } from "./utils/LoggerUtils";
 
 /**

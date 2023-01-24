@@ -14,8 +14,8 @@ import * as dsTree from "../../../src/dataset/DatasetTree";
 import * as refreshActions from "../../../src/shared/refresh";
 import * as contextuals from "../../../src/shared/context";
 import * as dsActions from "../../../src/dataset/actions";
-import * as sharedExtension from "../../../src/shared/extension";
-import { initDatasetProvider } from "../../../src/dataset/extension";
+import * as sharedExtension from "../../../src/shared/init";
+import { initDatasetProvider } from "../../../src/dataset/init";
 import { Profiles } from "../../../src/Profiles";
 import { IJestIt, ITestContext, processSubscriptions, spyOnSubscriptions } from "../../__common__/testUtils";
 
@@ -216,7 +216,7 @@ describe("Test src/dataset/extension", () => {
                     {
                         spy: jest.spyOn(Profiles, "getInstance"),
                         arg: [],
-                        ret: { enableValidation: jest.fn(), disableValidation: jest.fn() },
+                        ret: { disableValidation: jest.fn() },
                     },
                 ],
             },
@@ -226,7 +226,7 @@ describe("Test src/dataset/extension", () => {
                     {
                         spy: jest.spyOn(Profiles, "getInstance"),
                         arg: [],
-                        ret: { enableValidation: jest.fn(), disableValidation: jest.fn() },
+                        ret: { enableValidation: jest.fn() },
                     },
                 ],
             },
