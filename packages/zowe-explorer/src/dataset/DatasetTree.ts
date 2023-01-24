@@ -873,9 +873,8 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 // executing search from saved search in favorites
                 pattern = node.getLabel() as string;
                 const sessionName = node.getProfileName();
-                if (!this.mSessionNodes.find) {
-                    await this.addSession(sessionName);
-                }
+
+                await this.addSession(sessionName);
                 nonFaveNode = this.mSessionNodes.find((tempNode) => tempNode.label.toString() === sessionName);
                 if (!nonFaveNode.getSession().ISession.user || !nonFaveNode.getSession().ISession.password) {
                     nonFaveNode.getSession().ISession.user = node.getSession().ISession.user;
@@ -884,7 +883,6 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 }
             }
             // looking for members in pattern
-            labelRefresh(node);
             node.children = [];
             node.dirty = true;
             await syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getMvsApi(profileValue).getSession())(node);

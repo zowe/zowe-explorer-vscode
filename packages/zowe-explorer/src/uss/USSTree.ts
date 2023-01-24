@@ -592,9 +592,8 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 // executing search from saved search in favorites
                 remotepath = node.label as string;
                 const profileName = node.getProfileName();
-                if (!this.mSessionNodes.find) {
-                    await this.addSession(profileName);
-                }
+
+                await this.addSession(profileName);
                 const faveNode = node;
                 sessionNode = this.mSessionNodes.find((tempNode) => tempNode.getProfileName() === profileName);
                 if (!sessionNode.getSession().ISession.user || !sessionNode.getSession().ISession.password) {
@@ -603,6 +602,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                     sessionNode.getSession().ISession.base64EncodedAuth = faveNode.getSession().ISession.base64EncodedAuth;
                 }
             }
+
             // Get session for sessionNode
             await syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getUssApi(profileValue).getSession())(node);
             // Sanitization: Replace multiple forward slashes with just one forward slash
@@ -614,7 +614,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 sessionNode.iconPath = icon.path;
             }
             // update the treeview with the new path
-            sessionNode.label = `${sessionNode.getProfileName()} [${sanitizedPath}]`;
+            sessionNode.description = `[${sanitizedPath}]`;
             sessionNode.dirty = true;
             this.addSearchHistory(sanitizedPath);
         }
