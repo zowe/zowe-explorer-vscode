@@ -181,6 +181,7 @@ export async function uploadFile(node: IZoweUSSTreeNode, doc: vscode.TextDocumen
             };
             const options: IUploadOptions = {
                 task,
+                responseTimeout: prof.profile?.responseTimeout,
             };
             if (prof.profile.encoding) {
                 options.encoding = prof.profile.encoding;
@@ -313,6 +314,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
                     binary,
                     returnEtag: true,
                     encoding: prof.profile.encoding,
+                    responseTimeout: prof.profile?.responseTimeout,
                 });
                 // re-assign etag, so that it can be used with subsequent requests
                 const downloadEtag = downloadResponse.apiResponse.etag;
@@ -391,7 +393,7 @@ export async function copyUssFiles(node: IZoweUSSTreeNode, nodeList: IZoweUSSTre
     } else {
         selectedNodes = ussFileProvider.getTreeView().selection;
     }
-    await vscode.window.withProgress(
+    await Gui.withProgress(
         {
             location: vscode.ProgressLocation.Window,
             title: localize("ZoweUssNode.copyDownload.progress", "Downloading copied files ..."),
@@ -424,7 +426,7 @@ export async function pasteUssFile(ussFileProvider: IZoweTree<IZoweUSSTreeNode>,
         selectedNode = a.length > 0 ? a[0] : (a as unknown as IZoweUSSTreeNode);
     }
 
-    await vscode.window.withProgress(
+    await Gui.withProgress(
         {
             location: vscode.ProgressLocation.Window,
             title: localize("ZoweUssNode.copyUpload.progress", "Uploading copied files ..."),

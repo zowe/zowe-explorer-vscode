@@ -19,6 +19,7 @@ import { getSecurityModules, IZoweTreeNode, ZoweTreeNode, getZoweDir, getFullPat
 import { Profiles } from "../Profiles";
 import * as nls from "vscode-nls";
 import { imperative, getImperativeConfig } from "@zowe/cli";
+import { ZoweExplorerExtender } from "../ZoweExplorerExtender";
 
 // Set up localization
 nls.config({
@@ -266,16 +267,7 @@ export async function readConfigFromDisk() {
             globals.LOG.debug("Summary of team configuration files considered for Zowe Explorer: %s", JSON.stringify(layerSummary));
         }
     } catch (error) {
-        await openConfigOnError(error);
         throw new Error(error);
-    }
-}
-
-export async function openConfigOnError(error: Error) {
-    if (error.message.toString().includes("Error parsing JSON")) {
-        const errorArray = error.message.toString().split("'");
-        const errorPath = errorArray[1];
-        await Profiles.getInstance().openConfigFile(errorPath);
     }
 }
 
@@ -363,8 +355,7 @@ export async function initializeZoweProfiles(): Promise<void> {
         await readConfigFromDisk();
     } catch (err) {
         globals.LOG.error(err);
-        const errorMessage = localize("initialize.profiles.error", "Error reading or initializing Zowe CLI profiles.");
-        await Gui.warningMessage(`${errorMessage}: ${err.message}`);
+        ZoweExplorerExtender.showZoweConfigError(err.message);
     }
 
     if (!fs.existsSync(globals.ZOWETEMPFOLDER)) {

@@ -219,7 +219,10 @@ export async function uploadContent(
         if (prof.profile.encoding) {
             uploadOptions.encoding = prof.profile.encoding;
         }
-        return ZoweExplorerApiRegister.getMvsApi(prof).putContents(doc.fileName, remotePath, uploadOptions);
+        return ZoweExplorerApiRegister.getMvsApi(prof).putContents(doc.fileName, remotePath, {
+            responseTimeout: prof.profile?.responseTimeout,
+            ...uploadOptions,
+        });
     } else {
         // if new api method exists, use it
         if (ZoweExplorerApiRegister.getUssApi(profile).putContent) {
@@ -235,6 +238,7 @@ export async function uploadContent(
                 returnEtag,
                 encoding: profile.profile.encoding,
                 task,
+                responseTimeout: profile.profile?.responseTimeout,
             };
             const result = ZoweExplorerApiRegister.getUssApi(profile).putContent(doc.fileName, remotePath, options);
             return result;
