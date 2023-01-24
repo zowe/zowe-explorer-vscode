@@ -23,7 +23,7 @@ describe("Test src/shared/extension", () => {
         const spyExecuteCommand = jest.fn();
         const spyLogError = jest.fn();
 
-        beforeAll(async () => {
+        beforeAll(() => {
             Object.defineProperty(vscode.commands, "registerCommand", {
                 value: (_: string, fun: () => void) => {
                     extRefreshCallback = fun;
@@ -32,7 +32,7 @@ describe("Test src/shared/extension", () => {
             });
             Object.defineProperty(vscode.commands, "executeCommand", { value: spyExecuteCommand });
             Object.defineProperty(globals, "LOG", { value: { error: spyLogError } });
-            await sharedExtension.registerRefreshCommand(context, activate, deactivate);
+            sharedExtension.registerRefreshCommand(context, activate, deactivate);
         });
 
         beforeEach(() => {

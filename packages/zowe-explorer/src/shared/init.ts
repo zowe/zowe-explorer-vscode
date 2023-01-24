@@ -41,8 +41,8 @@ export interface IZoweProviders {
 
 export function registerRefreshCommand(
     context: vscode.ExtensionContext,
-    activate: (context: vscode.ExtensionContext) => void,
-    deactivate: () => void
+    activate: (context: vscode.ExtensionContext) => Promise<ZoweExplorerApiRegister>,
+    deactivate: () => Promise<void>
 ) {
     // set a command to silently reload extension
     context.subscriptions.push(
@@ -210,7 +210,7 @@ export async function watchConfigProfile(context: vscode.ExtensionContext, provi
 
     context.subscriptions.push(...watchers);
 
-    watchers.map((watcher) => {
+    watchers.forEach((watcher) => {
         watcher.onDidCreate(async () => {
             await vscode.commands.executeCommand("zowe.extRefresh");
         });
