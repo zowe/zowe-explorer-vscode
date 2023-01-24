@@ -11,7 +11,6 @@
 
 import * as vscode from "vscode";
 import * as globals from "../../../src/globals";
-import * as contextuals from "../../../src/shared/context";
 import * as refreshActions from "../../../src/shared/refresh";
 import * as sharedActions from "../../../src/shared/actions";
 import * as sharedExtension from "../../../src/shared/init";
