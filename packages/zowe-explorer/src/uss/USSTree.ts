@@ -592,7 +592,6 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 // executing search from saved search in favorites
                 remotepath = node.label as string;
                 const profileName = node.getProfileName();
-
                 await this.addSession(profileName);
                 const faveNode = node;
                 sessionNode = this.mSessionNodes.find((tempNode) => tempNode.getProfileName() === profileName);
@@ -602,7 +601,6 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                     sessionNode.getSession().ISession.base64EncodedAuth = faveNode.getSession().ISession.base64EncodedAuth;
                 }
             }
-
             // Get session for sessionNode
             await syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getUssApi(profileValue).getSession())(node);
             // Sanitization: Replace multiple forward slashes with just one forward slash
