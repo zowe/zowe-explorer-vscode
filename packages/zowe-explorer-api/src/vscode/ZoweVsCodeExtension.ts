@@ -62,8 +62,8 @@ export class ZoweVsCodeExtension {
      *
      * @deprecated Use `Gui.showInputBox` instead
      */
-    public static async inputBox(inputBoxOptions: vscode.InputBoxOptions): Promise<string> {
-        return await Gui.showInputBox(inputBoxOptions);
+    public static inputBox(inputBoxOptions: vscode.InputBoxOptions): Promise<string> {
+        return Promise.resolve(Gui.showInputBox(inputBoxOptions));
     }
 
     /**
