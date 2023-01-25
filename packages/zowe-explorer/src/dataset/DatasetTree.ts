@@ -873,7 +873,6 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 // executing search from saved search in favorites
                 pattern = node.getLabel() as string;
                 const sessionName = node.getProfileName();
-
                 await this.addSession(sessionName);
                 nonFaveNode = this.mSessionNodes.find((tempNode) => tempNode.label.toString() === sessionName);
                 if (!nonFaveNode.getSession().ISession.user || !nonFaveNode.getSession().ISession.password) {
