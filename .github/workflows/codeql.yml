@@ -6,9 +6,6 @@ on:
       - main
       - v1-lts
   pull_request:
-    branches:
-      - main
-      - v1-lts
 
 jobs:
   analyze:
