@@ -186,4 +186,104 @@ describe("Test src/shared/extension", () => {
 
         processSubscriptions(commands, test);
     });
+    describe("registerRefreshCommand", () => {
+        const context: any = { subscriptions: [] };
+        const activate = jest.fn();
+        const deactivate = jest.fn();
+        const dispose = jest.fn();
+        let extRefreshCallback;
+        const spyExecuteCommand = jest.fn();
+        const spyLogError = jest.fn();
+
+        beforeAll(() => {
+            Object.defineProperty(vscode.commands, "registerCommand", {
+                value: (_: string, fun: () => void) => {
+                    extRefreshCallback = fun;
+                    return { dispose };
+                },
+            });
+            Object.defineProperty(vscode.commands, "executeCommand", { value: spyExecuteCommand });
+            Object.defineProperty(globals, "LOG", { value: { error: spyLogError } });
+            sharedExtension.registerRefreshCommand(context, activate, deactivate);
+        });
+
+        beforeEach(() => {
+            jest.clearAllMocks();
+        });
+
+        afterAll(() => {
+            jest.restoreAllMocks();
+        });
+
+        it("Test assuming we are in a Theia environment", async () => {
+            Object.defineProperty(globals, "ISTHEIA", { value: true });
+            await extRefreshCallback();
+            expect(spyExecuteCommand).toHaveBeenCalledWith("workbench.action.reloadWindow");
+            expect(spyExecuteCommand).toHaveBeenCalledTimes(1);
+            expect(deactivate).not.toHaveBeenCalled();
+            expect(dispose).not.toHaveBeenCalled();
+            expect(spyLogError).not.toHaveBeenCalled();
+            expect(activate).not.toHaveBeenCalled();
+        });
+
+        it("Test assuming we are NOT in a Theia environment", async () => {
+            Object.defineProperty(globals, "ISTHEIA", { value: false });
+            await extRefreshCallback();
+            expect(spyExecuteCommand).not.toHaveBeenCalled();
+            expect(deactivate).toHaveBeenCalled();
+            expect(spyLogError).not.toHaveBeenCalled();
+            expect(dispose).toHaveBeenCalled();
+            expect(activate).toHaveBeenCalled();
+        });
+
+        it("Test assuming we are NOT in a Theia environment and unable to dispose of the subscription", async () => {
+            Object.defineProperty(globals, "ISTHEIA", { value: false });
+            const testError = new Error("test");
+            dispose.mockRejectedValue(testError);
+            await extRefreshCallback();
+            expect(spyExecuteCommand).not.toHaveBeenCalled();
+            expect(deactivate).toHaveBeenCalled();
+            expect(spyLogError).toHaveBeenCalledWith(testError);
+            expect(dispose).toHaveBeenCalled();
+            expect(activate).toHaveBeenCalled();
+        });
+    });
+
+    describe("watchConfigProfile", () => {
+
+    });
+
+    describe("initSubscribers", () => {
+        const spyCollapse = jest.fn().mockImplementation((fun) => fun({ element: "collapse" }));
+        const spyExpand = jest.fn().mockImplementation((fun) => fun({ element: "expand" }));
+        const spyFlipState = jest.fn();
+        let context: any;
+        const provider: any = { getTreeView: () => treeView, flipState: spyFlipState };
+        const treeView = { onDidCollapseElement: spyCollapse, onDidExpandElement: spyExpand };
+
+        beforeEach(() => {
+            context = { subscriptions: [] };
+            jest.clearAllMocks();
+        });
+        afterAll(() => {
+            jest.restoreAllMocks();
+        });
+
+        it("should setup listeners if we are NOT in THEIA", () => {
+            Object.defineProperty(globals, "ISTHEIA", { value: false });
+            sharedExtension.initSubscribers(context, provider);
+            expect(context.subscriptions).toContain(treeView);
+            expect(spyCollapse).toHaveBeenCalled();
+            expect(spyExpand).toHaveBeenCalled();
+            expect(spyFlipState).toHaveBeenCalledWith("collapse", false);
+            expect(spyFlipState).toHaveBeenCalledWith("expand", true);
+        });
+        it("should not setup listeners if we are in THEIA", () => {
+            Object.defineProperty(globals, "ISTHEIA", { value: true });
+            sharedExtension.initSubscribers(context, provider);
+            expect(context.subscriptions).toContain(treeView);
+            expect(spyCollapse).not.toHaveBeenCalled();
+            expect(spyExpand).not.toHaveBeenCalled();
+        });
+    });
 });
