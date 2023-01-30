@@ -194,7 +194,7 @@ describe("Profiles Unit Test - Function createInstance", () => {
         const { Profiles: testProfiles } = require("../../src/Profiles");
         jest.spyOn(testProfiles.prototype, "refresh").mockResolvedValueOnce(undefined);
         const profilesInstance = await testProfiles.createInstance(undefined);
-        expect(mockWorkspaceFolders).toHaveBeenCalledTimes(2);
+        expect(mockWorkspaceFolders).toHaveBeenCalledTimes(1);
         expect((profilesInstance as any).cwd).toBeUndefined();
     });
 
@@ -203,7 +203,7 @@ describe("Profiles Unit Test - Function createInstance", () => {
         const { Profiles: testProfiles } = require("../../src/Profiles");
         jest.spyOn(testProfiles.prototype, "refresh").mockResolvedValueOnce(undefined);
         const profilesInstance = await testProfiles.createInstance(undefined);
-        expect(mockWorkspaceFolders).toHaveBeenCalledTimes(2);
+        expect(mockWorkspaceFolders).toHaveBeenCalledTimes(1);
         expect((profilesInstance as any).cwd).toBeUndefined();
     });
 
@@ -216,7 +216,7 @@ describe("Profiles Unit Test - Function createInstance", () => {
         const { Profiles: testProfiles } = require("../../src/Profiles");
         jest.spyOn(testProfiles.prototype, "refresh").mockResolvedValueOnce(undefined);
         const profilesInstance = await testProfiles.createInstance(undefined);
-        expect(mockWorkspaceFolders).toHaveBeenCalledTimes(2);
+        expect(mockWorkspaceFolders).toHaveBeenCalledTimes(1);
         expect((profilesInstance as any).cwd).toBe("fakePath");
     });
 });
