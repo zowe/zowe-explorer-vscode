@@ -458,6 +458,11 @@ export namespace env {
     export const appName = "Visual Studio Code";
 
     /**
+     * The root path of the application.
+     */
+    export const appRoot = __dirname + "/../../..";
+
+    /**
      * The system clipboard.
      */
     export const clipboard: Clipboard = {
