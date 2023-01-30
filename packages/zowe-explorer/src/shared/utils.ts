@@ -236,7 +236,7 @@ export async function uploadContent(
                 localEncoding: null,
                 etag: etagToUpload,
                 returnEtag,
-                encoding: profile.profile.encoding,
+                encoding: profile.profile?.encoding,
                 task,
                 responseTimeout: profile.profile?.responseTimeout,
             };
