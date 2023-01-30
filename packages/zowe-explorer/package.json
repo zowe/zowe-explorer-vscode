@@ -1799,7 +1799,7 @@
     "compile-web": "webpack --target webworker --entry ./src/web/extension.ts --output-path ./out/src/web",
     "markdown": "markdownlint CHANGELOG.md README.md",
     "lint:pretty": "prettier --check .",
-    "lint": "yarn lint:src && yarn lint:pretty && yarn markdown",
+    "lint": "yarn lint:src && yarn lint:tests && yarn lint:pretty && yarn markdown",
     "lint:src": "eslint --format stylish src/**/*.ts",
     "lint:tests": "eslint --format stylish __tests__/**/*.ts",
     "clean": "gulp clean",
