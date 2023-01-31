@@ -250,7 +250,42 @@ describe("Test src/shared/extension", () => {
     });
 
     describe("watchConfigProfile", () => {
+        let context: any;
+        const spyReadFile = jest.fn().mockReturnValue("test");
+        const spyExecuteCommand = jest.fn();
+        const watcher: any = {
+            onDidCreate: jest.fn().mockImplementation((fun) => fun()),
+            onDidDelete: jest.fn().mockImplementation((fun) => fun()),
+            onDidChange: jest.fn().mockImplementation((fun) => fun("uri")),
+        };
+        beforeEach(() => {
+            context = { subscriptions: [] };
+            jest.clearAllMocks();
+            Object.defineProperty(globals, "ISTHEIA", { value: false });
+            Object.defineProperty(vscode.workspace, "createFileSystemWatcher", { value: () => watcher });
+            Object.defineProperty(vscode.workspace, "workspaceFolders", { value: [{ uri: { fsPath: "fsPath" } }] });
+            Object.defineProperty(vscode.commands, "executeCommand", { value: spyExecuteCommand });
+            Object.defineProperty(vscode.workspace, "fs", { value: { readFile: spyReadFile } });
+            Object.defineProperty(globals, "SAVED_PROFILE_CONTENTS", { value: "test" });
+        });
 
+        afterAll(() => {
+            jest.restoreAllMocks();
+        });
+
+        it("should be able to trigger all listeners", async () => {
+            const spyRefreshAll = jest.spyOn(refreshActions, "refreshAll").mockImplementation(jest.fn());
+            await sharedExtension.watchConfigProfile(context, { ds: "ds", uss: "uss", job: "job" } as any);
+            expect(spyExecuteCommand).toHaveBeenCalledWith("zowe.extRefresh");
+            expect(context.subscriptions).toContain(watcher);
+            expect(spyReadFile).toHaveBeenCalledWith("uri");
+
+            spyReadFile.mockReturnValue("other");
+            await sharedExtension.watchConfigProfile(context, { ds: "ds", uss: "uss", job: "job" } as any);
+            expect(spyRefreshAll).toHaveBeenCalledWith("ds");
+            // expect(spyRefreshAll).toHaveBeenCalledWith("uss");
+            // expect(spyRefreshAll).toHaveBeenCalledWith("job");
+        });
     });
 
     describe("initSubscribers", () => {
