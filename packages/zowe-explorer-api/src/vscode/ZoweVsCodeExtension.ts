@@ -21,7 +21,9 @@ import { MessageSeverity, IZoweLogger } from "../logger";
  * Collection of utility functions for writing Zowe Explorer VS Code extensions.
  */
 export class ZoweVsCodeExtension {
-    private static profilesCache = new ProfilesCache(imperative.Logger.getAppLogger(), vscode.workspace.workspaceFolders?.[0]?.uri.fsPath);
+    private static get profilesCache(): ProfilesCache {
+        return new ProfilesCache(imperative.Logger.getAppLogger(), vscode.workspace.workspaceFolders?.[0]?.uri.fsPath);
+    }
 
     /**
      * @param {string} [requiredVersion] Optional semver string specifying the minimal required version
@@ -33,8 +35,8 @@ export class ZoweVsCodeExtension {
     public static getZoweExplorerApi(requiredVersion?: string): ZoweExplorerApi.IApiRegisterClient {
         const zoweExplorerApi = vscode.extensions.getExtension("Zowe.vscode-extension-for-zowe");
         if (zoweExplorerApi?.exports) {
-            const zoweExplorerVersion = ((zoweExplorerApi.packageJSON as Record<string, unknown>).version as string) || "15.0.0";
-            if (requiredVersion && semver.valid(requiredVersion) && !semver.gte(zoweExplorerVersion, requiredVersion)) {
+            const zoweExplorerVersion = (zoweExplorerApi.packageJSON as Record<string, unknown>).version as string;
+            if (requiredVersion && semver.valid(requiredVersion) && zoweExplorerVersion && !semver.gte(zoweExplorerVersion, requiredVersion)) {
                 return undefined;
             }
             return zoweExplorerApi.exports as ZoweExplorerApi.IApiRegisterClient;
@@ -60,8 +62,8 @@ export class ZoweVsCodeExtension {
      *
      * @deprecated Use `Gui.showInputBox` instead
      */
-    public static async inputBox(inputBoxOptions: vscode.InputBoxOptions): Promise<string> {
-        return await Gui.showInputBox(inputBoxOptions);
+    public static inputBox(inputBoxOptions: vscode.InputBoxOptions): Promise<string> {
+        return Promise.resolve(Gui.showInputBox(inputBoxOptions));
     }
 
     /**
@@ -105,7 +107,7 @@ export class ZoweVsCodeExtension {
     ): Promise<imperative.IProfileLoaded> {
         const cache = this.profilesCache;
         const profInfo = await cache.getProfileInfo();
-        options.secure = options.secure ? options.secure : profInfo.isSecured();
+        const setSecure = options.secure ?? profInfo.isSecured();
         const loadProfile = await cache.getLoadedProfConfig(options.sessionName);
         const loadSession = loadProfile.profile as imperative.ISession;
         const creds = await ZoweVsCodeExtension.promptUserPass({ session: loadSession, ...options });
@@ -114,21 +116,16 @@ export class ZoweVsCodeExtension {
             loadProfile.profile.user = loadSession.user = creds[0];
             loadProfile.profile.password = loadSession.password = creds[1];
 
-            let saved = true;
-            if (!options.secure && !profInfo.usingTeamConfig) {
-                saved = await ZoweVsCodeExtension.saveCredentials(loadProfile);
+            let shouldSave = true;
+            if (!setSecure && !profInfo.usingTeamConfig) {
+                shouldSave = await ZoweVsCodeExtension.saveCredentials(loadProfile);
             }
 
-            if (saved || profInfo.usingTeamConfig) {
+            if (shouldSave || profInfo.usingTeamConfig) {
                 // v1 write changes to the file, v2 autoStore value determines if written to file
                 const upd = { profileName: loadProfile.name, profileType: loadProfile.type };
-                await profInfo.updateProperty({ ...upd, property: "user", value: creds[0], setSecure: options.secure });
-                await profInfo.updateProperty({
-                    ...upd,
-                    property: "password",
-                    value: creds[1],
-                    setSecure: options.secure,
-                });
+                await profInfo.updateProperty({ ...upd, property: "user", value: creds[0], setSecure });
+                await profInfo.updateProperty({ ...upd, property: "password", value: creds[1], setSecure });
             }
             await cache.refresh(apiRegister);
 
