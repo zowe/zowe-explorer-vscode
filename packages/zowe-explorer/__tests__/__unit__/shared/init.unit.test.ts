@@ -279,12 +279,11 @@ describe("Test src/shared/extension", () => {
             expect(spyExecuteCommand).toHaveBeenCalledWith("zowe.extRefresh");
             expect(context.subscriptions).toContain(watcher);
             expect(spyReadFile).toHaveBeenCalledWith("uri");
+            expect(spyRefreshAll).not.toHaveBeenCalled();
 
             spyReadFile.mockReturnValue("other");
             await sharedExtension.watchConfigProfile(context, { ds: "ds", uss: "uss", job: "job" } as any);
-            expect(spyRefreshAll).toHaveBeenCalledWith("ds");
-            // expect(spyRefreshAll).toHaveBeenCalledWith("uss");
-            // expect(spyRefreshAll).toHaveBeenCalledWith("job");
+            expect(spyRefreshAll).toHaveBeenCalled();
         });
     });
 
