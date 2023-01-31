@@ -350,6 +350,99 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
         expect(errorHandlingSpy).toHaveBeenCalledWith("saveProfile error");
         expect(mockShowZoweConfigError).toHaveBeenCalledWith("saveProfile error");
     });
+
+    it("Tests that createNewConnection returns 'fake' if the port is undefined and portInfo() returns correct port", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        const customURLInfo = {
+            valid: true,
+            protocol: "https",
+            host: "fake.com",
+            port: undefined,
+        };
+        const port = 443;
+
+        blockMocks.testSchemas.port.optionDefinition.defaultValue = undefined;
+
+        jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValueOnce(blockMocks.testSchemas);
+        jest.spyOn(globalMocks.mockProfileInstance, "urlInfo").mockReturnValueOnce(customURLInfo);
+        jest.spyOn(globalMocks.mockProfileInstance, "portInfo").mockReturnValueOnce(port);
+        jest.spyOn(globalMocks.mockProfileInstance, "userInfo").mockReturnValueOnce(globalMocks.testProfile.profile.user);
+        jest.spyOn(globalMocks.mockProfileInstance, "passwordInfo").mockReturnValueOnce(globalMocks.testProfile.profile.password);
+        jest.spyOn(globalMocks.mockProfileInstance, "ruInfo").mockReturnValueOnce(false);
+
+        await expect(Profiles.getInstance().createNewConnection("fake", "zosmf")).resolves.toBe("fake");
+    });
+
+    it("Tests that createNewConnection returns undefined if the port is undefined and portInfo() returns NaN", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        const customURLInfo = {
+            valid: true,
+            protocol: "https",
+            host: "fake.com",
+            port: undefined,
+        };
+        const port = "InvalidPort";
+
+        blockMocks.testSchemas.port.optionDefinition.defaultValue = undefined;
+
+        jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValueOnce(blockMocks.testSchemas);
+        jest.spyOn(globalMocks.mockProfileInstance, "urlInfo").mockReturnValueOnce(customURLInfo);
+        jest.spyOn(globalMocks.mockProfileInstance, "portInfo").mockReturnValueOnce(port);
+        jest.spyOn(globalMocks.mockProfileInstance, "userInfo").mockReturnValueOnce(globalMocks.testProfile.profile.user);
+        jest.spyOn(globalMocks.mockProfileInstance, "passwordInfo").mockReturnValueOnce(globalMocks.testProfile.profile.password);
+        jest.spyOn(globalMocks.mockProfileInstance, "ruInfo").mockReturnValueOnce(false);
+
+        await expect(Profiles.getInstance().createNewConnection("fake", "zosmf")).resolves.toBe(undefined);
+    });
+
+    it("Tests that createNewConnection enters default case when encoding is present in schema and value is the number 0", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValueOnce(blockMocks.testSchemas);
+        jest.spyOn(globalMocks.mockProfileInstance, "urlInfo").mockReturnValueOnce(globalMocks.mockUrlInfo);
+        jest.spyOn(globalMocks.mockProfileInstance, "userInfo").mockReturnValueOnce(globalMocks.testProfile.profile.user);
+        jest.spyOn(globalMocks.mockProfileInstance, "passwordInfo").mockReturnValueOnce(globalMocks.testProfile.profile.password);
+        jest.spyOn(globalMocks.mockProfileInstance, "ruInfo").mockReturnValueOnce(false);
+
+        blockMocks.testSchemas["encoding"] = {
+            type: "number",
+            optionDefinition: {
+                name: "encoding",
+                aliases: ["ec"],
+                description: "The encoding for download and upload of z/OS data set and USS files.",
+                type: "string",
+            },
+        };
+
+        await expect(Profiles.getInstance().createNewConnection("fake", "zosmf")).resolves.toBe("fake");
+    });
+
+    it("Tests that createNewConnection enters default case when encoding is present in schema and value is NaN", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValueOnce(blockMocks.testSchemas);
+        jest.spyOn(globalMocks.mockProfileInstance, "urlInfo").mockReturnValueOnce(globalMocks.mockUrlInfo);
+        jest.spyOn(globalMocks.mockProfileInstance, "userInfo").mockReturnValueOnce(globalMocks.testProfile.profile.user);
+        jest.spyOn(globalMocks.mockProfileInstance, "passwordInfo").mockReturnValueOnce(globalMocks.testProfile.profile.password);
+        jest.spyOn(globalMocks.mockProfileInstance, "ruInfo").mockReturnValueOnce(false);
+
+        blockMocks.testSchemas["encoding"] = {
+            type: "number",
+            optionDefinition: {
+                name: "encoding",
+                aliases: ["ec"],
+                description: "The encoding for download and upload of z/OS data set and USS files.",
+                type: "string",
+                defaultValue: 3,
+            },
+        };
+
+        await expect(Profiles.getInstance().createNewConnection("fake", "zosmf")).resolves.toBe("fake");
+    });
 });
 
 describe("Profiles Unit Tests - Function createZoweSession", () => {
@@ -553,5 +646,249 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
 
         spyQuickPick.mockClear();
         spyLayers.mockClear();
+    });
+
+    it("Tests that createZoweSchema will return the config file path", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        Object.defineProperty(vscode.workspace, "workspaceFolders", {
+            value: undefined,
+            configurable: true,
+        });
+        jest.spyOn(globalMocks.mockProfileInstance, "checkExistingConfig").mockReturnValue("zowe");
+        jest.spyOn(globalMocks.mockProfileInstance, "getConfigLayers").mockResolvedValueOnce([
+            {
+                path: "file://projectPath/zowe.user.config.json",
+                exists: true,
+                properties: undefined,
+                global: false,
+                user: true,
+            },
+        ]);
+
+        Object.defineProperty(zowe, "getImperativeConfig", {
+            value: jest.fn(() => ({
+                profiles: [],
+                baseProfile: {
+                    type: "base",
+                    schema: {
+                        type: "object",
+                        title: "Base profile",
+                    },
+                } as zowe.imperative.ICommandProfileTypeConfiguration,
+            })),
+            configurable: true,
+        });
+
+        Object.defineProperty(zowe.imperative.Config, "setSchema", {
+            value: jest.fn(),
+            configurable: true,
+        });
+
+        jest.spyOn(globalMocks.mockProfileInstance, "createNonSecureProfile").mockImplementation();
+
+        await expect(Profiles.getInstance().createZoweSchema(blockMocks.testDatasetTree)).resolves.toBe("file:/globalPath/.zowe/zowe.config.json");
+    });
+});
+
+describe("Profiles Unit Tests - function boolInfo", () => {
+    it("should return true when first option selected", async () => {
+        const privateProfile = Profiles.getInstance() as any;
+        jest.spyOn(Gui, "showQuickPick").mockImplementationOnce(() => {
+            return Promise.resolve("True" as any);
+        });
+
+        await expect(
+            privateProfile.boolInfo("rejectUnauthorized", {
+                rejectUnauthorized: {
+                    optionDefinition: {
+                        description: "This is a test",
+                    },
+                },
+            })
+        ).resolves.toBe(true);
+    });
+
+    it("should return false when second option selected", async () => {
+        const privateProfile = Profiles.getInstance() as any;
+        jest.spyOn(Gui, "showQuickPick").mockImplementationOnce(() => {
+            return Promise.resolve("False" as any);
+        });
+
+        await expect(
+            privateProfile.boolInfo("rejectUnauthorized", {
+                rejectUnauthorized: {
+                    optionDefinition: {
+                        description: "This is a test",
+                    },
+                },
+            })
+        ).resolves.toBe(false);
+    });
+
+    it("should return undefined when none is selected", async () => {
+        const privateProfile = Profiles.getInstance() as any;
+        jest.spyOn(Gui, "showQuickPick").mockImplementationOnce(() => {
+            return Promise.resolve(undefined as any);
+        });
+
+        await expect(
+            privateProfile.boolInfo("rejectUnauthorized", {
+                rejectUnauthorized: {
+                    optionDefinition: {
+                        description: "This is a test",
+                    },
+                },
+            })
+        ).resolves.toBe(undefined);
+    });
+});
+
+describe("Profiles Unit Tests - function optionsValue", () => {
+    it("should return the value from option selected", async () => {
+        const privateProfile = Profiles.getInstance() as any;
+        const expectedValue = {
+            placeHolder: "This is a test",
+            prompt: "This is a test",
+        } as vscode.InputBoxOptions;
+        const mockSchema = {
+            rejectUnauthorized: {
+                optionDefinition: {
+                    description: "This is a test",
+                },
+            },
+        };
+        await expect(privateProfile.optionsValue("rejectUnauthorized", mockSchema)).resolves.toEqual(expectedValue);
+    });
+    it("should return the value from default value if available", async () => {
+        const privateProfile = Profiles.getInstance() as any;
+        const expectedValue = {
+            prompt: "This is a test",
+            value: "This is a default value",
+        } as vscode.InputBoxOptions;
+        const mockSchema = {
+            rejectUnauthorized: {
+                optionDefinition: {
+                    description: "This is a test",
+                    defaultValue: "This is a default value",
+                },
+            },
+        };
+        await expect(privateProfile.optionsValue("rejectUnauthorized", mockSchema)).resolves.toEqual(expectedValue);
+    });
+    it("should return the value from input if passed in", async () => {
+        const privateProfile = Profiles.getInstance() as any;
+        const expectedValue = {
+            prompt: "This is a test",
+            value: "inputTest",
+        } as vscode.InputBoxOptions;
+        const mockSchema = {
+            rejectUnauthorized: {
+                optionDefinition: {
+                    description: "This is a test",
+                },
+            },
+        };
+        await expect(privateProfile.optionsValue("rejectUnauthorized", mockSchema, "inputTest")).resolves.toEqual(expectedValue);
+    });
+});
+
+describe("Profiles Unit Tests - function checkType", () => {
+    it("should return a string representing the type: 'string'", async () => {
+        const privateProfile = Profiles.getInstance() as any;
+        const mockInput = ["string", 1, {}];
+        await expect(privateProfile.checkType(mockInput)).resolves.toEqual("string");
+    });
+    it("should return a string representing the type: 'boolean'", async () => {
+        const privateProfile = Profiles.getInstance() as any;
+        const mockInput = [false, 1, "boolean"];
+        await expect(privateProfile.checkType(mockInput)).resolves.toEqual("boolean");
+    });
+    it("should return a string representing the type: 'number'", async () => {
+        const privateProfile = Profiles.getInstance() as any;
+        const mockInput = [false, "number", {}];
+        await expect(privateProfile.checkType(mockInput)).resolves.toEqual("number");
+    });
+    it("should return undefined if no input was passed in", async () => {
+        const privateProfile = Profiles.getInstance() as any;
+        await expect(privateProfile.checkType()).resolves.toEqual(undefined);
+    });
+});
+
+describe("Profiles Unit Tests - function getUrl", () => {
+    it("should return the parsed url with 'https://' prepended", () => {
+        const privateProfile = Profiles.getInstance() as any;
+        expect(privateProfile.getUrl("test.com")).toEqual("https://test.com");
+    });
+    it("should return the same url if 'https://' is already prepended", () => {
+        const privateProfile = Profiles.getInstance() as any;
+        expect(privateProfile.getUrl("https://test.com")).toEqual("https://test.com");
+    });
+    it("should return the parsed url with 'https://' if ':' is present but '//' is not", () => {
+        const privateProfile = Profiles.getInstance() as any;
+        expect(privateProfile.getUrl("localhost:3000")).toEqual("https://localhost:3000");
+    });
+});
+
+describe("Profiles Unit Tests - function portInfo", () => {
+    it("should return port number if valid port", async () => {
+        const privateProfile = Profiles.getInstance() as any;
+        const expectedResult = 443;
+        jest.spyOn(Gui, "showInputBox").mockReturnValueOnce("443" as any);
+        await expect(
+            privateProfile.portInfo("port", {
+                port: {
+                    optionDefinition: {
+                        description: "port",
+                        value: 443,
+                    },
+                },
+            })
+        ).resolves.toEqual(expectedResult);
+    });
+    it("should return port number and set default value for inputBox if present", async () => {
+        const privateProfile = Profiles.getInstance() as any;
+        const expectedResult = 443;
+        const inputBoxSpy = jest.spyOn(Gui, "showInputBox").mockReturnValueOnce("443" as any);
+        await expect(
+            privateProfile.portInfo("port", {
+                port: {
+                    optionDefinition: {
+                        description: "port",
+                        value: 443,
+                        defaultValue: 443,
+                    },
+                },
+            })
+        ).resolves.toEqual(expectedResult);
+        expect(inputBoxSpy).toHaveBeenCalledWith({
+            prompt: "port",
+            value: "443",
+        });
+        inputBoxSpy.mockClear();
+    });
+});
+
+describe("Profiles Unit Tests - function ruInfo", () => {
+    it("should return true and utilize the true prompt first", async () => {
+        const privateProfile = Profiles.getInstance() as any;
+        const quickPickSpy = jest.spyOn(Gui, "showQuickPick").mockReturnValueOnce("True - Reject connections with self-signed certificates" as any);
+        await expect(privateProfile.ruInfo(true)).resolves.toEqual(true);
+        expect(quickPickSpy).toHaveBeenCalledWith(
+            ["True - Reject connections with self-signed certificates", "False - Accept connections with self-signed certificates"],
+            { canPickMany: false, ignoreFocusOut: true, placeHolder: "True - Reject connections with self-signed certificates" }
+        );
+        quickPickSpy.mockClear();
+    });
+    it("should return false and utilize the false prompt first", async () => {
+        const privateProfile = Profiles.getInstance() as any;
+        const quickPickSpy = jest.spyOn(Gui, "showQuickPick").mockReturnValueOnce("False - Accept connections with self-signed certificates" as any);
+        await expect(privateProfile.ruInfo(false)).resolves.toEqual(false);
+        expect(quickPickSpy).toHaveBeenCalledWith(
+            ["False - Accept connections with self-signed certificates", "True - Reject connections with self-signed certificates"],
+            { canPickMany: false, ignoreFocusOut: true, placeHolder: "False - Accept connections with self-signed certificates" }
+        );
+        quickPickSpy.mockClear();
     });
 });

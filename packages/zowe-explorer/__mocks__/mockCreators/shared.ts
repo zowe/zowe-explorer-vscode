@@ -382,6 +382,12 @@ export function createConfigInstance() {
 
 export function createConfigLoad() {
     return {
+        configName: "zowe.config.json",
+        api: {
+            layers: {
+                merge: jest.fn(),
+            },
+        },
         layers: [
             {
                 path: "file://globalPath/.zowe/zowe.config.json",
@@ -398,6 +404,8 @@ export function createConfigLoad() {
                 user: true,
             },
         ],
+        setSchema: jest.fn(),
+        save: jest.fn(),
     } as any;
 }
 
