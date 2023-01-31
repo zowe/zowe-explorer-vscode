@@ -14,7 +14,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 - Refactored UI/UX methods into standalone `Gui` module for usability and maintainability. [#1967](https://github.com/zowe/vscode-extension-for-zowe/issues/1967)
 - New API call `dataSetsMatchingPattern` to allow filtering datasets via a pattern.
-- Added `fileUtils` function to USS API to facilitate copying, moving and other file operations.
+- Added `copy` function to USS API to facilitate with copying files.
 
 ### Bug fixes
 

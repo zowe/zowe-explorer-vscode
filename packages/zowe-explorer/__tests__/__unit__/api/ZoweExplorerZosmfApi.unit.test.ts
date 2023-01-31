@@ -121,7 +121,7 @@ describe("Zosmf API tests", () => {
         );
     });
 
-    it("should test that fileUtils calls zowe.Utilities.putUSSPayload", async () => {
+    it("should test that copy calls zowe.Utilities.putUSSPayload", async () => {
         const api = new ZosmfUssApi();
         api.getSession = jest.fn();
 
@@ -132,6 +132,6 @@ describe("Zosmf API tests", () => {
             configurable: true,
         });
 
-        expect(api.fileUtils("/", {})).toStrictEqual(Promise.resolve(zowe.Utilities.putUSSPayload(api.getSession(), "/", {})));
+        expect(api.copy("/")).toStrictEqual(Promise.resolve(zowe.Utilities.putUSSPayload(api.getSession(), "/", { request: "copy" })));
     });
 });

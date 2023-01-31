@@ -108,13 +108,13 @@ export namespace ZoweExplorerApi {
          */
         isFileTagBinOrAscii(ussFilePath: string): Promise<boolean>;
         /**
-         * Utility operations for USS files or directories.
+         * Copy operation for USS files or directories.
          *
          * @param {string} outputPath the output/destination path for the file/directory
-         * @param {object} options Options for the file utility API endpoint
+         * @param {object} options Other options for the API endpoint
          * @returns {Promise<Buffer>}
          */
-        fileUtils?(outputPath: string, options: object): Promise<Buffer>;
+        copy?(outputPath: string, options?: Omit<object, "request">): Promise<Buffer>;
 
         /**
          * Retrieve the contents of a USS file.

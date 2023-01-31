@@ -625,8 +625,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         const fileName = hasFileOfSameName ? `${tree.baseName} (copy)` : tree.baseName;
         const outputPath = `${rootPath}/${fileName}`;
 
-        await uss.api.fileUtils(outputPath, {
-            request: "copy",
+        await uss.api.copy(outputPath, {
             from: tree.ussPath,
             recursive: tree.type === UssFileType.Directory,
         });
@@ -656,7 +655,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             const api = ZoweExplorerApiRegister.getUssApi(this.profile);
             const fileTreeToPaste: UssFileTree = JSON.parse(await vscode.env.clipboard.readText());
 
-            if (api.fileUtils && UssFileUtils.toSameSession(fileTreeToPaste, this.getSessionNode().getLabel() as string)) {
+            if (api.copy && UssFileUtils.toSameSession(fileTreeToPaste, this.getSessionNode().getLabel() as string)) {
                 for (const subnode of fileTreeToPaste.children) {
                     await this.pasteFileTree(remotePath, subnode, {
                         api: api,

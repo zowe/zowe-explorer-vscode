@@ -786,13 +786,12 @@ describe("USS Action Unit Tests - copy file / directory", () => {
                 items: [blockMocks.nodes[0].getLabel() as string, blockMocks.nodes[1].getLabel() as string],
             },
         });
-        blockMocks.treeNodes.ussApi.fileUtils = jest.fn();
+        blockMocks.treeNodes.ussApi.copy = jest.fn();
         await blockMocks.nodes[1].pasteFileTree("", rootTree, { api: blockMocks.treeNodes.ussApi });
         expect(blockMocks.treeNodes.ussApi.fileList).toHaveBeenCalled();
-        expect(blockMocks.treeNodes.ussApi.fileUtils).toHaveBeenCalledWith(`/${blockMocks.nodes[1].getLabel()}`, {
+        expect(blockMocks.treeNodes.ussApi.copy).toHaveBeenCalledWith(`/${blockMocks.nodes[1].getLabel()}`, {
             from: "",
             recursive: true,
-            request: "copy",
         });
     });
 
