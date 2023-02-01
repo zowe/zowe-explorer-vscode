@@ -27,9 +27,10 @@ import * as vscode from "vscode";
 import * as utils from "../../src/utils/ProfilesUtils";
 import * as globals from "../../src/globals";
 import * as zowe from "@zowe/cli";
-import { Gui, ProfilesCache } from "@zowe/zowe-explorer-api";
+import { Gui, ProfilesCache, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../src/Profiles";
 import { ZoweExplorerExtender } from "../../src/ZoweExplorerExtender";
+import { ZoweExplorerApiRegister } from "../../../zowe-explorer/src/ZoweExplorerApiRegister";
 
 // jest.mock("vscode");
 jest.mock("child_process");
@@ -890,5 +891,214 @@ describe("Profiles Unit Tests - function ruInfo", () => {
             { canPickMany: false, ignoreFocusOut: true, placeHolder: "False - Accept connections with self-signed certificates" }
         );
         quickPickSpy.mockClear();
+    });
+});
+
+describe("Profiles Unit Tests - function urlInfo", () => {
+    it("should return the validated and parsed URL", async () => {
+        const privateProfile = Profiles.getInstance() as any;
+        jest.spyOn(Gui, "showInputBox").mockReturnValueOnce("https://sample.com" as any);
+        await expect(privateProfile.urlInfo("https://sample.com")).resolves.toEqual({ host: "sample.com", port: 0, protocol: null, valid: true });
+    });
+});
+
+describe("Profiles Unit Tests - function getProfileIcon", () => {
+    it("should retrieve the profile icon successfully", () => {
+        const privateProfile = Profiles.getInstance() as any;
+        expect(
+            privateProfile.getProfileIcon([
+                {
+                    global: "test",
+                },
+                {
+                    user: "test",
+                },
+            ])
+        ).toEqual(["$(home)", "$(folder)"]);
+    });
+});
+
+describe("Profiles Unit Tests - function promptCredentials", () => {
+    it("should return the user credentials", async () => {
+        jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValue({
+            isSecured: () => false,
+        } as any);
+        jest.spyOn(ZoweVsCodeExtension, "updateCredentials").mockResolvedValue({
+            profile: {
+                user: "test",
+                password: "12345",
+                base64EncodedAuth: "encodedAuth",
+            } as zowe.imperative.IProfile,
+        } as zowe.imperative.IProfileLoaded);
+        jest.spyOn(Profiles.getInstance(), "updateProfilesArrays").mockImplementation();
+        await expect(Profiles.getInstance().promptCredentials("secure_config_props")).resolves.toEqual(["test", "12345", "encodedAuth"]);
+    });
+});
+
+describe("Profiles Unit Tests - function getDeleteProfile", () => {
+    it("should return the list of profiles cached excluding the now deleted profile", async () => {
+        const privateProfile = Profiles.getInstance() as any;
+        Object.defineProperty(Profiles.getInstance(), "allProfiles", {
+            value: [
+                {
+                    name: "test1",
+                    user: "test1",
+                    password: "123",
+                    message: "",
+                    type: "",
+                    failNotFound: false,
+                } as zowe.imperative.IProfileLoaded,
+                {
+                    name: "test2",
+                    user: "test2",
+                    password: "123",
+                    message: "",
+                    type: "",
+                    failNotFound: false,
+                } as zowe.imperative.IProfileLoaded,
+            ],
+            configurable: true,
+        });
+        jest.spyOn(Gui, "showQuickPick").mockResolvedValue("test2" as any);
+        await expect(privateProfile.getDeleteProfile()).resolves.toEqual({
+            name: "test2",
+            user: "test2",
+            password: "123",
+            message: "",
+            type: "",
+            failNotFound: false,
+        });
+    });
+    it("should show a message saying 'No profiles available'", async () => {
+        const privateProfile = Profiles.getInstance() as any;
+        Object.defineProperty(Profiles.getInstance(), "allProfiles", {
+            value: [],
+            configurable: true,
+        });
+        const showMessageSpy = jest.spyOn(Gui, "showMessage");
+        await expect(privateProfile.getDeleteProfile()).resolves.toEqual(undefined);
+        expect(showMessageSpy).toBeCalledWith("No profiles available");
+    });
+    it("should show a message saying 'Operation Cancelled'", async () => {
+        const privateProfile = Profiles.getInstance() as any;
+        Object.defineProperty(Profiles.getInstance(), "allProfiles", {
+            value: [
+                {
+                    name: "test1",
+                    user: "test1",
+                    password: "123",
+                    message: "",
+                    type: "",
+                    failNotFound: false,
+                } as zowe.imperative.IProfileLoaded,
+                {
+                    name: "test2",
+                    user: "test2",
+                    password: "123",
+                    message: "",
+                    type: "",
+                    failNotFound: false,
+                } as zowe.imperative.IProfileLoaded,
+            ],
+            configurable: true,
+        });
+        const showMessageSpy = jest.spyOn(Gui, "showMessage");
+        jest.spyOn(Gui, "showQuickPick").mockResolvedValue(undefined);
+        await expect(privateProfile.getDeleteProfile()).resolves.toEqual(undefined);
+        expect(showMessageSpy).toBeCalledWith("Operation Cancelled");
+    });
+});
+
+describe("Profiles Unit Tests - function validateProfile", () => {
+    it("should return an object with profile validation status if validated profiles exist", async () => {
+        Object.defineProperty(Profiles.getInstance(), "profilesForValidation", {
+            value: [
+                {
+                    name: "test1",
+                    message: "",
+                    type: "",
+                    status: "active",
+                    failNotFound: false,
+                },
+            ],
+            configurable: true,
+        });
+        jest.spyOn(Gui, "withProgress").mockResolvedValue(undefined);
+        jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockResolvedValueOnce({
+            getStatus: () => "active",
+        } as never);
+        await expect(
+            Profiles.getInstance().validateProfiles({
+                name: "test1",
+                message: "",
+                type: "",
+                failNotFound: false,
+            })
+        ).resolves.toEqual({
+            name: "test1",
+            status: "active",
+        });
+    });
+    it("should return an object with profile validation status of 'active' from session status if validated profiles does not exist", async () => {
+        Object.defineProperty(Profiles.getInstance(), "profilesForValidation", {
+            value: [],
+            configurable: true,
+        });
+        jest.spyOn(Gui, "withProgress").mockResolvedValue("active");
+        jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockResolvedValueOnce({
+            getStatus: () => "active",
+        } as never);
+        await expect(
+            Profiles.getInstance().validateProfiles({
+                name: "test1",
+                message: "",
+                type: "",
+                failNotFound: false,
+            })
+        ).resolves.toEqual({
+            name: "test1",
+            status: "active",
+        });
+    });
+    it("should return an object with profile validation status of 'inactive' from session status if validated profiles does not exist", async () => {
+        Object.defineProperty(Profiles.getInstance(), "profilesForValidation", {
+            value: [],
+            configurable: true,
+        });
+        jest.spyOn(Gui, "withProgress").mockResolvedValue("inactive");
+        jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockResolvedValueOnce({
+            getStatus: () => "inactive",
+        } as never);
+        await expect(
+            Profiles.getInstance().validateProfiles({
+                name: "test1",
+                message: "",
+                type: "",
+                failNotFound: false,
+            })
+        ).resolves.toEqual({
+            name: "test1",
+            status: "inactive",
+        });
+    });
+    it("should return an object with profile validation status of 'unverified' from session status if validated profiles doesn't exist", async () => {
+        Object.defineProperty(Profiles.getInstance(), "profilesForValidation", {
+            value: [],
+            configurable: true,
+        });
+        jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockResolvedValueOnce({
+            getStatus: undefined,
+        } as never);
+        await expect(
+            Profiles.getInstance().validateProfiles({
+                name: "test1",
+                message: "",
+                type: "",
+                failNotFound: false,
+            })
+        ).resolves.toEqual({
+            name: "test1",
+            status: "unverified",
+        });
     });
 });
