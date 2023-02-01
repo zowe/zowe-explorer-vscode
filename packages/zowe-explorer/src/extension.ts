@@ -325,6 +325,17 @@ async function watchConfigProfile(context: vscode.ExtensionContext) {
     }
 }
 
+/**
+ * Temporary solution to fixing issue with VSCode multi-select bug
+ * (where multi-select is still active after deleting the nodes in previous multi-selection)
+ * @param treeProvider The tree provider to reset node selection for
+ */
+function fixVsCodeMultiSelect<T>(treeProvider: IZoweTree<T>) {
+    const treeView = treeProvider.getTreeView();
+    treeView.reveal(treeProvider.mFavoriteSession, { select: true });
+    treeView.reveal(treeProvider.mFavoriteSession, { select: false });
+}
+
 function initDatasetProvider(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.all.config.init", async () => {
@@ -403,6 +414,7 @@ function initDatasetProvider(context: vscode.ExtensionContext) {
             for (const select of selectedNodes) {
                 datasetProvider.deleteSession(select);
             }
+            fixVsCodeMultiSelect(datasetProvider);
         })
     );
     context.subscriptions.push(
@@ -539,6 +551,7 @@ function initUSSProvider(context: vscode.ExtensionContext) {
             for (const item of selectedNodes) {
                 ussFileProvider.deleteSession(item);
             }
+            fixVsCodeMultiSelect(ussFileProvider);
         })
     );
     context.subscriptions.push(
