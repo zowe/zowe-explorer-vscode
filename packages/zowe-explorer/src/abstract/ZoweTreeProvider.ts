@@ -269,5 +269,7 @@ export class ZoweTreeProvider {
     public async expandSession(element: IZoweTreeNode, provider: IZoweTree<IZoweNodeType>) {
         await provider.getTreeView().reveal(element, { expand: false });
         await provider.getTreeView().reveal(element, { expand: true });
+        element.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+        element.dirty = true;
     }
 }
