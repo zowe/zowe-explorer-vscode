@@ -1081,6 +1081,27 @@ describe("Profiles Unit Tests - function validateProfile", () => {
             status: "inactive",
         });
     });
+    it("should handle the error if call to getStatus fails", async () => {
+        Object.defineProperty(Profiles.getInstance(), "profilesForValidation", {
+            value: [],
+            configurable: true,
+        });
+        const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
+        const testError = new Error("failed to validate profile");
+        jest.spyOn(Gui, "withProgress").mockImplementation(() => {
+            throw testError;
+        });
+        jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockResolvedValueOnce({
+            getStatus: () => "inactive",
+        } as never);
+        await Profiles.getInstance().validateProfiles({
+            name: "test1",
+            message: "",
+            type: "",
+            failNotFound: false,
+        });
+        expect(errorHandlingSpy).toBeCalledWith(testError, "test1");
+    });
     it("should return an object with profile validation status of 'unverified' from session status if validated profiles doesn't exist", async () => {
         Object.defineProperty(Profiles.getInstance(), "profilesForValidation", {
             value: [],
