@@ -330,22 +330,34 @@ export async function initializeZoweFolder(): Promise<void> {
 }
 
 export function writeOverridesFile() {
-    let content;
+    let fd: number;
     let fileContent: string;
     const settingsFile = path.join(getZoweDir(), "settings", "imperative.json");
-    if (fs.existsSync(settingsFile)) {
-        content = JSON.parse(fs.readFileSync(settingsFile).toString());
-        if (content && content?.overrides) {
-            if (content?.overrides?.CredentialManager === globals.PROFILE_SECURITY) {
+    try {
+        fd = fs.openSync(settingsFile, "r+");
+        fileContent = fs.readFileSync(fd, "utf-8");
+    } catch {
+        // If reading the file failed because it does not exist, then create it
+        // This should never fail, unless file system is read-only or the file
+        // was created by another process after first openSync call
+        fd = fs.openSync(settingsFile, "wx");
+    }
+    try {
+        let settings: any;
+        if (fileContent) {
+            settings = JSON.parse(fileContent);
+            if (settings && settings?.overrides && settings?.overrides?.CredentialManager !== globals.PROFILE_SECURITY) {
+                settings.overrides.CredentialManager = globals.PROFILE_SECURITY;
+            } else {
                 return;
             }
-            content.overrides.CredentialManager = globals.PROFILE_SECURITY;
-            fileContent = JSON.stringify(content, null, 2);
-            fs.writeFileSync(settingsFile, fileContent, "utf8");
+        } else {
+            settings = { overrides: { CredentialManager: globals.PROFILE_SECURITY } };
         }
-    } else {
-        fileContent = JSON.stringify({ overrides: { CredentialManager: globals.PROFILE_SECURITY } }, null, 2);
-        fs.writeFileSync(settingsFile, fileContent, "utf8");
+        fileContent = JSON.stringify(settings, null, 2);
+        fs.writeSync(fd, fileContent, 0, "utf-8");
+    } finally {
+        fs.closeSync(fd);
     }
 }
 
