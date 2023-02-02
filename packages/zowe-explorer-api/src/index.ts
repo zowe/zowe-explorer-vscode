@@ -22,3 +22,4 @@ export * from "./vscode/ZoweVsCodeExtension";
 export * from "./security/KeytarApi";
 export * from "./security/KeytarCredentialManager";
 export * from "./globals/Gui";
+export * from "./tree/TreeViewUtils";

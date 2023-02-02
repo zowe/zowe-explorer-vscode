@@ -17,7 +17,7 @@ import * as fs from "fs";
 import * as fsextra from "fs-extra";
 import * as extension from "../../src/extension";
 import * as globals from "../../src/globals";
-import { Gui, ValidProfileEnum, ProfilesCache } from "@zowe/zowe-explorer-api";
+import { Gui, ValidProfileEnum, ProfilesCache, TreeViewUtils } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../src/Profiles";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import * as dsActions from "../../src/dataset/actions";
@@ -26,6 +26,8 @@ import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
 import { getSelectedNodeList } from "../../src/shared/utils";
 import { SettingsConfig } from "../../src/utils/SettingsConfig";
 import { ZoweExplorerExtender } from "../../src/ZoweExplorerExtender";
+import { DatasetTree } from "../../src/dataset/DatasetTree";
+import { USSTree } from "../../src/uss/USSTree";
 
 jest.mock("vscode");
 jest.mock("fs");
@@ -503,6 +505,28 @@ describe("Extension Unit Tests", () => {
         testNode.contextValue = globals.DS_FILE_ERROR_CONTEXT;
         await allCommands["zowe.ds.showFileErrorDetails"](testNode);
         expect(fileErrorSpy).toHaveBeenCalledWith(testNode);
+    });
+
+    async function removeSessionTest(command: string, contextValue: string, classPrototype: any) {
+        const testNode: any = {
+            contextValue: contextValue,
+            getProfile: jest.fn(),
+            getParent: jest.fn().mockReturnValue({ getLabel: jest.fn() }),
+            label: "TestNode",
+        };
+        const deleteSessionSpy = jest.spyOn(classPrototype, "deleteSession");
+        const fixVsCodeMultiSelectSpy = jest.spyOn(TreeViewUtils, "fixVsCodeMultiSelect");
+        await allCommands[command](testNode);
+        expect(deleteSessionSpy).toHaveBeenCalled();
+        expect(fixVsCodeMultiSelectSpy).toHaveBeenCalled();
+    }
+
+    it("zowe.ds.removeSession", async () => {
+        removeSessionTest("zowe.ds.removeSession", globals.DS_SESSION_CONTEXT, DatasetTree.prototype);
+    });
+
+    it("zowe.uss.removeSession", async () => {
+        removeSessionTest("zowe.uss.removeSession", globals.USS_SESSION_CONTEXT, USSTree.prototype);
     });
 });
 
