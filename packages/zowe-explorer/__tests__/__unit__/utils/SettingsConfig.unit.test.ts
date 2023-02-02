@@ -2,7 +2,7 @@ import { SettingsConfig } from "../../../src/utils/SettingsConfig";
 import * as vscode from "vscode";
 import { Gui } from "@zowe/zowe-explorer-api";
 
-describe("Profiles Unit Tests - function promptReload", () => {
+describe("SettingsConfig Unit Tests - function promptReload", () => {
     it("should trigger a reload when prompted", async () => {
         const privateSettingsConfig = SettingsConfig as any;
         jest.spyOn(Gui, "showMessage").mockResolvedValueOnce("Reload Window");
@@ -12,7 +12,7 @@ describe("Profiles Unit Tests - function promptReload", () => {
     });
 });
 
-describe("Profiles Unit Tests - function standardizeGlobalSettings", () => {
+describe("SettingsConfig Unit Tests - function standardizeGlobalSettings", () => {
     it("should standardize the global settings", async () => {
         const privateSettingsConfig = SettingsConfig as any;
         jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
@@ -32,7 +32,7 @@ describe("Profiles Unit Tests - function standardizeGlobalSettings", () => {
     });
 });
 
-describe("Profiles Unit Tests - function standardizeWorkspaceSettings", () => {
+describe("SettingsConfig Unit Tests - function standardizeWorkspaceSettings", () => {
     it("should standardize workspace settings", async () => {
         const privateSettingsConfig = SettingsConfig as any;
         jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({

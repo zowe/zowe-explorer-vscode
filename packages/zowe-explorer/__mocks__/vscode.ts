@@ -144,6 +144,10 @@ export namespace window {
          */
         isCloseAffordance?: boolean;
     }
+
+    export function createOutputChannel(name: string, languageId?: string): any {
+        return {};
+    }
 }
 export namespace commands {
     /**
