@@ -17,16 +17,7 @@ import * as dsActions from "./dataset/actions";
 import * as jobActions from "./job/actions";
 import * as refreshActions from "./shared/refresh";
 import * as sharedActions from "./shared/actions";
-import {
-    Gui,
-    IZoweDatasetTreeNode,
-    IZoweJobTreeNode,
-    IZoweUSSTreeNode,
-    IZoweTreeNode,
-    IZoweTree,
-    getZoweDir,
-    TreeViewUtils,
-} from "@zowe/zowe-explorer-api";
+import { Gui, IZoweDatasetTreeNode, IZoweJobTreeNode, IZoweUSSTreeNode, IZoweTreeNode, IZoweTree, getZoweDir } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import { Profiles } from "./Profiles";
@@ -40,6 +31,7 @@ import * as nls from "vscode-nls";
 import { TsoCommandHandler } from "./command/TsoCommandHandler";
 import { cleanTempDir, moveTempFolder, hideTempFolder } from "./utils/TempFolder";
 import { SettingsConfig } from "./utils/SettingsConfig";
+import { TreeViewUtils } from "./utils/TreeViewUtils";
 import { handleSaving } from "./utils/workspace";
 import { ZoweDatasetNode } from "./dataset/ZoweDatasetNode";
 import * as contextuals from "../src/shared/context";

@@ -9,16 +9,17 @@
  *                                                                                 *
  */
 
-export * from "./profiles/UserSettings";
-export * from "./profiles/ProfilesCache";
-export * from "./profiles/ZoweExplorerApi";
-export * from "./profiles/ZoweExplorerZosmfApi";
-export * from "./logger/IZoweLogger";
-export * from "./tree/ZoweExplorerTreeApi";
-export * from "./tree/ZoweTreeNode";
-export * from "./tree/IZoweTree";
-export * from "./tree/IZoweTreeNode";
-export * from "./vscode/ZoweVsCodeExtension";
-export * from "./security/KeytarApi";
-export * from "./security/KeytarCredentialManager";
-export * from "./globals/Gui";
+import { IZoweTree } from "@zowe/zowe-explorer-api";
+
+export class TreeViewUtils {
+    /**
+     * Temporary solution to fixing issue with VSCode multi-select bug
+     * (where multi-select is still active after deleting the nodes in previous multi-selection)
+     * @param treeProvider The tree provider to reset multi-selection for
+     */
+    public static async fixVsCodeMultiSelect<T>(treeProvider: IZoweTree<T>): Promise<void> {
+        const treeView = treeProvider.getTreeView();
+        await treeView.reveal(treeProvider.mFavoriteSession, { select: true });
+        await treeView.reveal(treeProvider.mFavoriteSession, { select: false });
+    }
+}

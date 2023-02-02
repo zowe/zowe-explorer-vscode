@@ -17,7 +17,7 @@ import * as fs from "fs";
 import * as fsextra from "fs-extra";
 import * as extension from "../../src/extension";
 import * as globals from "../../src/globals";
-import { Gui, ValidProfileEnum, ProfilesCache, TreeViewUtils } from "@zowe/zowe-explorer-api";
+import { Gui, ValidProfileEnum, ProfilesCache } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../src/Profiles";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import * as dsActions from "../../src/dataset/actions";
@@ -25,9 +25,11 @@ import { createGetConfigMock, createInstanceOfProfileInfo, createIProfile, creat
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
 import { getSelectedNodeList } from "../../src/shared/utils";
 import { SettingsConfig } from "../../src/utils/SettingsConfig";
+import { TreeViewUtils } from "../../src/utils/TreeViewUtils";
 import { ZoweExplorerExtender } from "../../src/ZoweExplorerExtender";
 import { DatasetTree } from "../../src/dataset/DatasetTree";
 import { USSTree } from "../../src/uss/USSTree";
+import expectExport = require("expect");
 
 jest.mock("vscode");
 jest.mock("fs");
@@ -507,26 +509,33 @@ describe("Extension Unit Tests", () => {
         expect(fileErrorSpy).toHaveBeenCalledWith(testNode);
     });
 
-    async function removeSessionTest(command: string, contextValue: string, classPrototype: any) {
+    async function removeSessionTest(command: string, contextValue: string, providerObject: any) {
         const testNode: any = {
             contextValue: contextValue,
             getProfile: jest.fn(),
             getParent: jest.fn().mockReturnValue({ getLabel: jest.fn() }),
             label: "TestNode",
         };
-        const deleteSessionSpy = jest.spyOn(classPrototype, "deleteSession");
+        const deleteSessionSpy = jest.spyOn(providerObject.prototype, "deleteSession");
+        const revealSpy = jest.fn();
+        const getTreeViewSpy = jest.spyOn(providerObject.prototype, "getTreeView").mockReturnValue({
+            reveal: revealSpy,
+        });
         const fixVsCodeMultiSelectSpy = jest.spyOn(TreeViewUtils, "fixVsCodeMultiSelect");
         await allCommands[command](testNode);
         expect(deleteSessionSpy).toHaveBeenCalled();
         expect(fixVsCodeMultiSelectSpy).toHaveBeenCalled();
+        expect(getTreeViewSpy).toHaveBeenCalled();
+        expect(revealSpy.mock.calls[0][1]).toStrictEqual({ select: true });
+        expect(revealSpy.mock.calls[1][1]).toStrictEqual({ select: false });
     }
 
     it("zowe.ds.removeSession", async () => {
-        removeSessionTest("zowe.ds.removeSession", globals.DS_SESSION_CONTEXT, DatasetTree.prototype);
+        removeSessionTest("zowe.ds.removeSession", globals.DS_SESSION_CONTEXT, DatasetTree);
     });
 
     it("zowe.uss.removeSession", async () => {
-        removeSessionTest("zowe.uss.removeSession", globals.USS_SESSION_CONTEXT, USSTree.prototype);
+        removeSessionTest("zowe.uss.removeSession", globals.USS_SESSION_CONTEXT, USSTree);
     });
 });
 
