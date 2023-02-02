@@ -388,6 +388,7 @@ export namespace workspace {
             inspect: () => {
                 return {};
             },
+            get: () => {},
         };
     }
 
