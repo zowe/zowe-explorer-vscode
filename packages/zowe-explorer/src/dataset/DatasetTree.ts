@@ -717,12 +717,12 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
 
             // Check if current filter includes the new node
             const matchedFilters = currentFilters.filter((filter) => {
-                const regex = new RegExp(filter.trim().replace(`*`, "") + "$");
+                const regex = new RegExp(filter.trim().replace(/\*/g, "") + "$");
                 return regex.test(newFilter);
             });
 
             if (matchedFilters.length === 0) {
-                // remove the last segement with a dot of the name for the new filter
+                // remove the last segment with a dot of the name for the new filter
                 theFilter = `${node.pattern},${newFilter}`;
             } else {
                 theFilter = node.pattern;

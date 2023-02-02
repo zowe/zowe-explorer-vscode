@@ -42,7 +42,7 @@ export const JOB_SUBMIT_DIALOG_OPTS = [
 
 export function filterTreeByString(value: string, treeItems: vscode.QuickPickItem[]): vscode.QuickPickItem[] {
     const filteredArray = [];
-    value = value.toUpperCase().replace(".", ".").replace(/\*/g, "(.*)");
+    value = value.toUpperCase().replace(/\*/g, "(.*)");
     const regex = new RegExp(value);
     treeItems.forEach((item) => {
         if (item.label.toUpperCase().match(regex)) {
@@ -236,7 +236,7 @@ export async function uploadContent(
                 localEncoding: null,
                 etag: etagToUpload,
                 returnEtag,
-                encoding: profile.profile.encoding,
+                encoding: profile.profile?.encoding,
                 task,
                 responseTimeout: profile.profile?.responseTimeout,
             };
