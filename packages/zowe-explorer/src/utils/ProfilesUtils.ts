@@ -19,6 +19,7 @@ import { getSecurityModules, IZoweTreeNode, ZoweTreeNode, getZoweDir, getFullPat
 import { Profiles } from "../Profiles";
 import * as nls from "vscode-nls";
 import { imperative, getImperativeConfig } from "@zowe/cli";
+import { ZoweExplorerExtender } from "../ZoweExplorerExtender";
 
 // Set up localization
 nls.config({
@@ -345,5 +346,22 @@ export function writeOverridesFile() {
     } else {
         fileContent = JSON.stringify({ overrides: { CredentialManager: globals.PROFILE_SECURITY } }, null, 2);
         fs.writeFileSync(settingsFile, fileContent, "utf8");
+    }
+}
+
+export async function initializeZoweProfiles(): Promise<void> {
+    try {
+        await initializeZoweFolder();
+        await readConfigFromDisk();
+    } catch (err) {
+        globals.LOG.error(err);
+        ZoweExplorerExtender.showZoweConfigError(err.message);
+    }
+
+    if (!fs.existsSync(globals.ZOWETEMPFOLDER)) {
+        fs.mkdirSync(globals.ZOWETEMPFOLDER);
+        fs.mkdirSync(globals.ZOWE_TMP_FOLDER);
+        fs.mkdirSync(globals.USS_DIR);
+        fs.mkdirSync(globals.DS_DIR);
     }
 }
