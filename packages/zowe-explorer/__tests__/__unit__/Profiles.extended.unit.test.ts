@@ -32,10 +32,10 @@ import { Profiles } from "../../src/Profiles";
 import { ZoweExplorerExtender } from "../../src/ZoweExplorerExtender";
 import { ZoweExplorerApiRegister } from "../../../zowe-explorer/src/ZoweExplorerApiRegister";
 import { createUSSSessionNode, createUSSTree } from "../../__mocks__/mockCreators/uss";
-import { createIJobObject, createJobFavoritesNode, createJobSessionNode, createJobsTree } from "../../__mocks__/mockCreators/jobs";
+import { createIJobObject, createJobsTree } from "../../__mocks__/mockCreators/jobs";
 import * as path from "path";
+import { SettingsConfig } from "../../src/utils/SettingsConfig";
 
-// jest.mock("vscode");
 jest.mock("child_process");
 jest.mock("fs");
 jest.mock("fs-extra");
@@ -1125,5 +1125,59 @@ describe("Profiles Unit Tests - function validateProfile", () => {
             name: "test1",
             status: "unverified",
         });
+    });
+});
+
+describe("Profiles Unit Tests - function deleteProfile", () => {
+    it("should delete profile", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        const datasetSessionNode = createDatasetSessionNode(globalMocks.testSession, globalMocks.testProfile);
+        const datasetTree = createDatasetTree(datasetSessionNode, globalMocks.testProfile);
+        const ussSessionNode = [createUSSSessionNode(globalMocks.testSession, globalMocks.testProfile)];
+        const ussTree = createUSSTree([], ussSessionNode);
+        const jobsTree = createJobsTree(globalMocks.testSession, createIJobObject(), globalMocks.testProfile, createTreeView());
+
+        jest.spyOn(datasetTree, "getFileHistory").mockReturnValue(["[SESTEST]: TEST.LIST"]);
+        jest.spyOn(ussTree, "getFileHistory").mockReturnValue(["[SESTEST]: /u/test/test.txt"]);
+
+        const testNode = new (ZoweTreeNode as any)("test", vscode.TreeItemCollapsibleState.None, undefined);
+        testNode.setProfileToChoice(globalMocks.testProfile);
+        testNode.contextValue = "session server";
+
+        jest.spyOn(Profiles.getInstance() as any, "deletePrompt").mockReturnValue("success");
+        jest.spyOn(SettingsConfig, "setDirectValue").mockImplementation();
+
+        // mock DS call to vs code settings
+        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce({
+            persistence: true,
+            favorites: ["test"],
+            history: [],
+            sessions: ["test", "test1", "test2"],
+            fileHistory: ["[TEST]: TEST.LIST"],
+            searchHistory: ["TEST.*"],
+        });
+
+        // mock USS call to vs code settings
+        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce({
+            persistence: true,
+            favorites: ["test"],
+            history: [],
+            sessions: ["test", "test1", "test2"],
+            fileHistory: ["[TEST]: /u/test/test.txt"],
+            searchHistory: ["/u/test"],
+        });
+
+        // mock Jobs call to vs code settings
+        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce({
+            persistence: true,
+            favorites: ["test"],
+            history: [],
+            sessions: ["test", "test1", "test2"],
+            fileHistory: ["TEST"],
+            searchHistory: ["Owner:TEST Prefix:*"],
+        });
+
+        await expect(Profiles.getInstance().deleteProfile(datasetTree, ussTree, jobsTree, testNode)).resolves.not.toThrow();
     });
 });

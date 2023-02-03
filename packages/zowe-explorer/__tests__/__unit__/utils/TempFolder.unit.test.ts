@@ -72,8 +72,8 @@ describe("TempFolder Unit Tests", () => {
         const moveSyncSpy = jest.spyOn(fsExtra, "moveSync");
         await expect(TempFolder.moveTempFolder("testpath", "testpath123")).resolves.toEqual(undefined);
         expect(moveSyncSpy).toBeCalledTimes(1);
-        const expectedPath1 = "testpath1/temp".split(path.sep).join(path.posix.sep);
-        const expectedPath2 = "testpath2/temp".split(path.sep).join(path.posix.sep);
+        const expectedPath1 = process.platform === "win32" ? "testpath1\\\\temp" : "testpath1/temp".split(path.sep).join(path.posix.sep);
+        const expectedPath2 = process.platform === "win32" ? "testpath2\\\\temp" : "testpath2/temp".split(path.sep).join(path.posix.sep);
         expect(moveSyncSpy).toBeCalledWith(expectedPath1, expectedPath2, { overwrite: true });
     });
 
