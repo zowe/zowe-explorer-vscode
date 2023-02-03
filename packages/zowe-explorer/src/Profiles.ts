@@ -933,6 +933,7 @@ export class Profiles extends ProfilesCache {
         }
 
         // Delete from data det file history
+        console.log(datasetTree);
         const fileHistory: string[] = datasetTree.getFileHistory();
         fileHistory
             .slice()
@@ -942,6 +943,7 @@ export class Profiles extends ProfilesCache {
                 datasetTree.removeFileHistory(ds);
             });
 
+        console.log(fileHistory);
         // Delete from Data Set Favorites
         datasetTree.removeFavProfile(deleteLabel, false);
 

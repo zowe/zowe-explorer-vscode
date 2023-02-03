@@ -72,7 +72,9 @@ describe("TempFolder Unit Tests", () => {
         const moveSyncSpy = jest.spyOn(fsExtra, "moveSync");
         await expect(TempFolder.moveTempFolder("testpath", "testpath123")).resolves.toEqual(undefined);
         expect(moveSyncSpy).toBeCalledTimes(1);
-        expect(moveSyncSpy).toBeCalledWith("testpath1/temp", "testpath2/temp", { overwrite: true });
+        const expectedPath1 = "testpath1/temp".split(path.sep).join(path.posix.sep);
+        const expectedPath2 = "testpath2/temp".split(path.sep).join(path.posix.sep);
+        expect(moveSyncSpy).toBeCalledWith(expectedPath1, expectedPath2, { overwrite: true });
     });
 
     it("cleanDir should throw an error when a filesystem exception occurs", async () => {

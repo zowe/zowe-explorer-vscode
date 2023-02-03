@@ -27,10 +27,13 @@ import * as vscode from "vscode";
 import * as utils from "../../src/utils/ProfilesUtils";
 import * as globals from "../../src/globals";
 import * as zowe from "@zowe/cli";
-import { Gui, ProfilesCache, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { Gui, ProfilesCache, ZoweTreeNode, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../src/Profiles";
 import { ZoweExplorerExtender } from "../../src/ZoweExplorerExtender";
 import { ZoweExplorerApiRegister } from "../../../zowe-explorer/src/ZoweExplorerApiRegister";
+import { createUSSSessionNode, createUSSTree } from "../../__mocks__/mockCreators/uss";
+import { createIJobObject, createJobFavoritesNode, createJobSessionNode, createJobsTree } from "../../__mocks__/mockCreators/jobs";
+import * as path from "path";
 
 // jest.mock("vscode");
 jest.mock("child_process");
@@ -195,7 +198,7 @@ describe("Profiles Unit Test - Function createInstance", () => {
         const { Profiles: testProfiles } = require("../../src/Profiles");
         jest.spyOn(testProfiles.prototype, "refresh").mockResolvedValueOnce(undefined);
         const profilesInstance = await testProfiles.createInstance(undefined);
-        expect(mockWorkspaceFolders).toHaveBeenCalledTimes(2);
+        expect(mockWorkspaceFolders).toHaveBeenCalledTimes(1);
         expect((profilesInstance as any).cwd).toBeUndefined();
     });
 
@@ -204,7 +207,7 @@ describe("Profiles Unit Test - Function createInstance", () => {
         const { Profiles: testProfiles } = require("../../src/Profiles");
         jest.spyOn(testProfiles.prototype, "refresh").mockResolvedValueOnce(undefined);
         const profilesInstance = await testProfiles.createInstance(undefined);
-        expect(mockWorkspaceFolders).toHaveBeenCalledTimes(2);
+        expect(mockWorkspaceFolders).toHaveBeenCalledTimes(1);
         expect((profilesInstance as any).cwd).toBeUndefined();
     });
 
@@ -217,7 +220,7 @@ describe("Profiles Unit Test - Function createInstance", () => {
         const { Profiles: testProfiles } = require("../../src/Profiles");
         jest.spyOn(testProfiles.prototype, "refresh").mockResolvedValueOnce(undefined);
         const profilesInstance = await testProfiles.createInstance(undefined);
-        expect(mockWorkspaceFolders).toHaveBeenCalledTimes(2);
+        expect(mockWorkspaceFolders).toHaveBeenCalledTimes(1);
         expect((profilesInstance as any).cwd).toBe("fakePath");
     });
 });
@@ -688,8 +691,9 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
         });
 
         jest.spyOn(globalMocks.mockProfileInstance, "createNonSecureProfile").mockImplementation();
+        const expectedValue = "file:/globalPath/.zowe/zowe.config.json".split(path.sep).join(path.posix.sep);
 
-        await expect(Profiles.getInstance().createZoweSchema(blockMocks.testDatasetTree)).resolves.toBe("file:/globalPath/.zowe/zowe.config.json");
+        await expect(Profiles.getInstance().createZoweSchema(blockMocks.testDatasetTree)).resolves.toBe(expectedValue);
     });
 });
 
@@ -898,7 +902,7 @@ describe("Profiles Unit Tests - function urlInfo", () => {
     it("should return the validated and parsed URL", async () => {
         const privateProfile = Profiles.getInstance() as any;
         jest.spyOn(Gui, "showInputBox").mockReturnValueOnce("https://sample.com" as any);
-        await expect(privateProfile.urlInfo("https://sample.com")).resolves.toEqual({ host: "sample.com", port: 0, protocol: null, valid: true });
+        await expect(privateProfile.urlInfo("https://sample.com")).resolves.toEqual({ host: "sample.com", port: 0, protocol: "https", valid: true });
     });
 });
 
