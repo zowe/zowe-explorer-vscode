@@ -12,6 +12,15 @@ extends:
   - plugin:@typescript-eslint/recommended
   - plugin:@typescript-eslint/recommended-requiring-type-checking
   - prettier
+overrides:
+  - files: ["__tests__/**/*.ts"]
+    rules:
+      no-magic-numbers: off
+      "@typescript-eslint/no-explicit-any": off
+      "@typescript-eslint/no-unsafe-argument": off
+      "@typescript-eslint/no-unsafe-assignment": off
+      "@typescript-eslint/no-unsafe-member-access": off
+      "@typescript-eslint/no-unsafe-call": off
 rules:
   "@typescript-eslint/no-namespace": off
   "@typescript-eslint/explicit-function-return-type": error
@@ -31,5 +40,5 @@ rules:
   # incompatibility fixes with eslint for javascript
   no-shadow: 0
   "@typescript-eslint/no-shadow": warn
-  "no-unused-vars": 0
+  no-unused-vars: 0
   "@typescript-eslint/no-unused-vars": ["warn", { "args": "none" }]

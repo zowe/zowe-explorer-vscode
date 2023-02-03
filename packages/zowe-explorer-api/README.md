@@ -1,5 +1,8 @@
 # Extensibility API for Zowe Explorer
 
+[![version](https://img.shields.io/npm/v/@zowe/zowe-explorer-api)](https://img.shields.io/npm/v/@zowe/zowe-explorer-api)
+[![downloads](https://img.shields.io/npm/dt/@zowe/zowe-explorer-api)](https://img.shields.io/npm/dt/@zowe/zowe-explorer-api)
+
 Extensibility API for Zowe Explorer is a collection of APIs that can be used to extend the [Zowe Explorer](https://github.com/zowe/vscode-extension-for-zowe) VS Code extension with alternative z/OS interaction protocols and new capabilities.
 
 The current state of this API is experimental, but the goal is provide a stabilized version that can be used for Zowe Conformance certifications in the future. See this issue for more details: <https://github.com/zowe/vscode-extension-for-zowe/issues/837>.

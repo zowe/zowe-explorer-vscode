@@ -78,14 +78,14 @@ export class KeytarCredentialManager extends imperative.AbstractCredentialManage
         let imperativeIsSecure = false;
         try {
             const fileName = path.join(getZoweDir(), "settings", "imperative.json");
-            let settings;
+            let settings: Record<string, unknown> = {};
             if (fs.existsSync(fileName)) {
                 settings = JSON.parse(fs.readFileSync(fileName, "utf8")) as Record<string, unknown>;
             }
             // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
             const baseValue = settings.overrides as Record<string, unknown>;
-            const value1 = baseValue.CredentialManager;
-            const value2 = baseValue["credential-manager"];
+            const value1 = baseValue?.CredentialManager;
+            const value2 = baseValue?.["credential-manager"];
             imperativeIsSecure = (typeof value1 === "string" && value1.length > 0) || (typeof value2 === "string" && value2.length > 0);
         } catch (error) {
             imperative.Logger.getAppLogger().warn(error as string);
@@ -107,7 +107,7 @@ export class KeytarCredentialManager extends imperative.AbstractCredentialManage
      */
     protected async deleteCredentials(account: string): Promise<void> {
         if (!(await this.deleteCredentialsHelper(account))) {
-            imperative.Logger.getAppLogger().debug("errorHandling.deleteCredentials", "Unable to delete credentials.");
+            imperative.Logger.getAppLogger().debug("Unable to delete credentials.");
         }
     }
 

@@ -476,7 +476,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                                     file: documentFilePath,
                                     binary: chooseBinary,
                                     returnEtag: true,
-                                    encoding: cachedProfile.profile.encoding,
+                                    encoding: cachedProfile.profile?.encoding,
                                     responseTimeout: cachedProfile.profile?.responseTimeout,
                                 });
                             }
@@ -541,7 +541,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     file: ussDocumentFilePath,
                     binary: this.binary || (await ZoweExplorerApiRegister.getUssApi(cachedProfile).isFileTagBinOrAscii(this.fullPath)),
                     returnEtag: true,
-                    encoding: cachedProfile?.profile.encoding,
+                    encoding: cachedProfile?.profile?.encoding,
                     responseTimeout: cachedProfile?.profile?.responseTimeout,
                 });
                 this.setEtag(response.apiResponse.etag);
@@ -646,11 +646,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         };
         const options: IUploadOptions = {
             task,
+            encoding: prof.profile?.encoding,
             responseTimeout: prof.profile?.responseTimeout,
         };
-        if (prof.profile.encoding) {
-            options.encoding = prof.profile.encoding;
-        }
         try {
             const api = ZoweExplorerApiRegister.getUssApi(this.profile);
             const fileTreeToPaste: UssFileTree = JSON.parse(await vscode.env.clipboard.readText());

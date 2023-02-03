@@ -717,12 +717,12 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
 
             // Check if current filter includes the new node
             const matchedFilters = currentFilters.filter((filter) => {
-                const regex = new RegExp(filter.trim().replace(`*`, "") + "$");
+                const regex = new RegExp(filter.trim().replace(/\*/g, "") + "$");
                 return regex.test(newFilter);
             });
 
             if (matchedFilters.length === 0) {
-                // remove the last segement with a dot of the name for the new filter
+                // remove the last segment with a dot of the name for the new filter
                 theFilter = `${node.pattern},${newFilter}`;
             } else {
                 theFilter = node.pattern;
@@ -957,7 +957,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                             if (!child.pattern) {
                                 for (const each of dsn) {
                                     let inc = false;
-                                    inc = await this.checkFilterPattern(name[index], each);
+                                    inc = this.checkFilterPattern(name[index], each);
                                     if (inc) {
                                         child.pattern = item.dsn;
                                         includes = true;
@@ -977,7 +977,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                                 const memResponse = await ZoweExplorerApiRegister.getMvsApi(childProfile).allMembers(label, options);
                                 let existing = false;
                                 for (const mem of memResponse.apiResponse.items) {
-                                    existing = await this.checkFilterPattern(mem.member, item.member);
+                                    existing = this.checkFilterPattern(mem.member, item.member);
                                     if (existing) {
                                         child.memberPattern = item.member;
                                         if (!child.contextValue.includes(globals.FILTER_SEARCH)) {
@@ -1011,7 +1011,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         }
     }
 
-    public async checkFilterPattern(dsName: string, itemName: string): Promise<boolean> {
+    public checkFilterPattern(dsName: string, itemName: string): boolean {
         let existing: boolean;
         if (!/(\*?)(\w+)(\*)(\w+)(\*?)/.test(itemName)) {
             if (/^[^*](\w+)[^*]$/.test(itemName)) {
