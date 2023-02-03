@@ -691,7 +691,10 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
         });
 
         jest.spyOn(globalMocks.mockProfileInstance, "createNonSecureProfile").mockImplementation();
-        const expectedValue = "file:/globalPath/.zowe/zowe.config.json".split(path.sep).join(path.posix.sep);
+        const expectedValue =
+            process.platform === "win32"
+                ? "file:\\globalPath\\.zowe\\zowe.config.json"
+                : "file:/globalPath/.zowe/zowe.config.json".split(path.sep).join(path.posix.sep);
 
         await expect(Profiles.getInstance().createZoweSchema(blockMocks.testDatasetTree)).resolves.toBe(expectedValue);
     });
@@ -1179,5 +1182,277 @@ describe("Profiles Unit Tests - function deleteProfile", () => {
         });
 
         await expect(Profiles.getInstance().deleteProfile(datasetTree, ussTree, jobsTree, testNode)).resolves.not.toThrow();
+    });
+});
+
+describe("Profiles Unit Tests - function checkCurrentProfile", () => {
+    const environmentSetup = (globalMocks) => {
+        globalMocks.testProfile.profile.password = null;
+        globalMocks.testProfile.profile.tokenType = "";
+        Object.defineProperty(Profiles.getInstance(), "profilesForValidation", {
+            value: [
+                {
+                    name: "sestest",
+                    message: "",
+                    type: "",
+                    status: "active",
+                    failNotFound: false,
+                },
+            ],
+            configurable: true,
+        });
+        Object.defineProperty(Profiles.getInstance(), "profilesValidationSetting", {
+            value: [
+                {
+                    name: "otherSestest",
+                    setting: false,
+                },
+            ],
+            configurable: true,
+        });
+    };
+
+    it("should show as active in status of profile", async () => {
+        const globalMocks = await createGlobalMocks();
+        environmentSetup(globalMocks);
+        jest.spyOn(Profiles.getInstance(), "validateProfiles").mockReturnValue({ status: "active", name: "sestest" } as any);
+        jest.spyOn(Profiles.getInstance(), "promptCredentials").mockResolvedValue(["sestest", "12345", "base64Auth"]);
+        await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "active" });
+    });
+    it("should show as unverified in status of profile", async () => {
+        const globalMocks = await createGlobalMocks();
+        environmentSetup(globalMocks);
+        jest.spyOn(Profiles.getInstance(), "promptCredentials").mockResolvedValue(undefined);
+        await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "unverified" });
+    });
+    it("should show as inactive in status of profile", async () => {
+        const globalMocks = await createGlobalMocks();
+        await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "inactive" });
+    });
+});
+
+describe("Profiles Unit Tests - function editSession", () => {
+    it("should successfully return the edited session", async () => {
+        const globalMocks = await createGlobalMocks();
+        const testSchema = newTestSchemas();
+        testSchema["encoding"] = {
+            type: "string",
+            optionDefinition: {
+                name: "encoding",
+                aliases: ["ec"],
+                description: "The encoding for download and upload of z/OS data set and USS files.",
+                type: "string",
+            },
+        };
+        testSchema["isTest"] = {
+            type: "boolean",
+            optionDefinition: {
+                name: "isTest",
+                aliases: ["it"],
+                description: "is this a test",
+                type: "boolean",
+            },
+        };
+        testSchema["numberTest"] = {
+            type: "number",
+            optionDefinition: {
+                name: "numberTest",
+                aliases: ["nt"],
+                description: "number test",
+                type: "number",
+            },
+        };
+
+        // mock user inputs for new session info
+        jest.spyOn(Profiles.getInstance(), "loadNamedProfile").mockReturnValue(globalMocks.testProfile);
+        jest.spyOn(Profiles.getInstance(), "getSchema").mockReturnValue(testSchema);
+        jest.spyOn(Profiles.getInstance() as any, "urlInfo").mockResolvedValue({ host: "newTest", port: undefined } as any);
+        jest.spyOn(Profiles.getInstance() as any, "portInfo").mockResolvedValue(4321);
+        jest.spyOn(Profiles.getInstance() as any, "userInfo").mockResolvedValue("newUser");
+        jest.spyOn(Profiles.getInstance() as any, "passwordInfo").mockResolvedValue("newPass");
+        jest.spyOn(Profiles.getInstance() as any, "ruInfo").mockResolvedValue(false);
+        jest.spyOn(Profiles.getInstance() as any, "boolInfo").mockResolvedValue(true);
+        jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("utf-8");
+        jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("4321");
+        jest.spyOn(Gui, "showMessage").mockImplementation();
+
+        jest.spyOn(zowe.ZosmfSession, "createSessCfgFromArgs").mockReturnValue({
+            host: "newTest",
+            port: 4321,
+            user: "newUser",
+            password: "newPass",
+            rejectUnauthorized: false,
+            base64EncodedAuth: "base64Auth",
+        } as any);
+
+        await expect(Profiles.getInstance().editSession(globalMocks.testProfile, "sestest")).resolves.toEqual({
+            name: "sestest",
+            host: "newTest",
+            port: 4321,
+            user: "newUser",
+            password: "newPass",
+            rejectUnauthorized: false,
+            encoding: "utf-8",
+            isTest: true,
+            numberTest: 4321,
+            base64EncodedAuth: "base64Auth",
+        });
+    });
+});
+
+describe("Profiles Unit Tests - function getProfileSetting", () => {
+    it("should retrive the profile with a status of unverified", async () => {
+        const globalMocks = await createGlobalMocks();
+        Object.defineProperty(Profiles.getInstance(), "profilesValidationSetting", {
+            value: [
+                {
+                    name: "sestest",
+                    setting: false,
+                },
+                {
+                    name: "sestest2",
+                    setting: false,
+                },
+            ],
+            configurable: true,
+        });
+        Object.defineProperty(Profiles.getInstance(), "profilesForValidation", {
+            value: [
+                {
+                    name: "sestest",
+                    message: "",
+                    type: "",
+                    status: "active",
+                    failNotFound: false,
+                },
+                {
+                    name: "sestest",
+                    message: "",
+                    type: "",
+                    status: "unverified",
+                    failNotFound: false,
+                },
+            ],
+            configurable: true,
+        });
+
+        await expect(Profiles.getInstance().getProfileSetting(globalMocks.testProfile)).resolves.toEqual({
+            name: "sestest",
+            status: "unverified",
+        });
+    });
+});
+
+describe("Profiles Unit Tests - function disableValidationContext", () => {
+    it("should disable validation context and return updated node", async () => {
+        const globalMocks = await createGlobalMocks();
+        const testNode = new (ZoweTreeNode as any)(
+            "test",
+            vscode.TreeItemCollapsibleState.None,
+            undefined,
+            globalMocks.testSession,
+            globalMocks.testProfile
+        );
+        testNode.contextValue = globals.VALIDATE_SUFFIX + "true";
+        const expectNode = testNode;
+        expectNode.contextValue = globals.VALIDATE_SUFFIX + "false";
+        await expect(Profiles.getInstance().disableValidationContext(testNode)).resolves.toEqual(expectNode);
+    });
+});
+
+describe("Profiles Unit Tests - function enableValidationContext", () => {
+    it("should enable validation context and return updated node", async () => {
+        const globalMocks = await createGlobalMocks();
+        const testNode = new (ZoweTreeNode as any)(
+            "test",
+            vscode.TreeItemCollapsibleState.None,
+            undefined,
+            globalMocks.testSession,
+            globalMocks.testProfile
+        );
+        testNode.contextValue = globals.VALIDATE_SUFFIX + "false";
+        const expectedNode = testNode;
+        expectedNode.contextValue = globals.VALIDATE_SUFFIX + "true";
+        await expect(Profiles.getInstance().enableValidationContext(testNode)).resolves.toEqual(expectedNode);
+    });
+});
+
+describe("Profiles Unit Tests - function ssoLogin", () => {
+    let testNode;
+    let globalMocks;
+    beforeEach(async () => {
+        globalMocks = await createGlobalMocks();
+        testNode = new (ZoweTreeNode as any)(
+            "fake",
+            vscode.TreeItemCollapsibleState.None,
+            undefined,
+            globalMocks.testSession,
+            globalMocks.testProfile
+        );
+        testNode.profile.profile.password = undefined;
+        testNode.profile.profile.user = "fake";
+        Object.defineProperty(Profiles.getInstance(), "allProfiles", {
+            value: [
+                {
+                    name: "fake",
+                },
+            ],
+            configurable: true,
+        });
+        jest.spyOn(Gui, "showMessage").mockImplementation();
+    });
+
+    it("should perform an SSOLogin successfully while fetching the base profile", async () => {
+        jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockReturnValue({
+            getTokenTypeName: () => zowe.imperative.SessConstants.TOKEN_TYPE_APIML,
+            login: () => "ajshdlfkjshdalfjhas",
+        } as never);
+        jest.spyOn(Profiles.getInstance() as any, "loginCredentialPrompt").mockReturnValue(["fake", "12345"]);
+        jest.spyOn(Profiles.getInstance() as any, "updateBaseProfileFileLogin").mockImplementation();
+        await expect(Profiles.getInstance().ssoLogin(testNode, "fake")).resolves.not.toThrow();
+    });
+
+    it("should perform an SSOLogin successfully while fetching from session", async () => {
+        jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockReturnValue({
+            getTokenTypeName: () => "tokenType",
+            login: () => "ajshdlfkjshdalfjhas",
+            getSession: () => globalMocks.testSession,
+        } as never);
+        jest.spyOn(Profiles.getInstance() as any, "loginCredentialPrompt").mockReturnValue(["fake", "12345"]);
+        await expect(Profiles.getInstance().ssoLogin(testNode, "fake")).resolves.not.toThrow();
+    });
+});
+
+describe("Profiles Unit Tests - function updateBaseProfileFileLogin", () => {
+    it("should update the property of mProfileInfo", async () => {
+        const privateProfile = Profiles.getInstance() as any;
+        const globalMocks = await createGlobalMocks();
+        const updatePropertyMock = jest.fn();
+        jest.spyOn(privateProfile, "getProfileInfo").mockReturnValue({
+            isSecured: () => true,
+            updateProperty: updatePropertyMock,
+        });
+        await expect(privateProfile.updateBaseProfileFileLogin(globalMocks.testProfile, globalMocks.testProfile.profile)).resolves.not.toThrow();
+        expect(updatePropertyMock).toBeCalledTimes(2);
+    });
+});
+
+describe("Profiles Unit Tests - function updateBaseProfileFileLogout", () => {
+    it("should update the property of mProfileInfo", async () => {
+        const privateProfile = Profiles.getInstance() as any;
+        const globalMocks = await createGlobalMocks();
+        const updateKnownPropertyMock = jest.fn();
+        jest.spyOn(privateProfile, "getProfileInfo").mockReturnValue({
+            isSecured: () => true,
+            getAllProfiles: () => [
+                {
+                    profName: "sestest",
+                },
+            ],
+            mergeArgsForProfile: jest.fn(),
+            updateKnownProperty: updateKnownPropertyMock,
+        });
+        await expect(privateProfile.updateBaseProfileFileLogout(globalMocks.testProfile, globalMocks.testProfile.profile)).resolves.not.toThrow();
+        expect(updateKnownPropertyMock).toBeCalledTimes(2);
     });
 });
