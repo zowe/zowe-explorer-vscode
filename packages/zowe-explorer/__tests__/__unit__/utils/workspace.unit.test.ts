@@ -10,8 +10,9 @@
  */
 
 import * as vscode from "vscode";
-import { checkTextFileIsOpened, closeOpenedTextFile } from "../../../src/utils/workspace";
+import * as workspaceUtils from "../../../src/utils/workspace";
 import { workspaceUtilMaxEmptyWindowsInTheRow } from "../../../src/config/constants";
+import { resolve } from "path";
 
 function createGlobalMocks() {
     const activeTextEditor = jest.fn();
@@ -50,7 +51,7 @@ describe("Workspace Utils Unit Test - Function checkTextFileIsOpened", () => {
         const targetTextFile = "/doc";
         globalMocks.activeTextEditor.mockReturnValue(null);
 
-        const result = await checkTextFileIsOpened(targetTextFile);
+        const result = await workspaceUtils.checkTextFileIsOpened(targetTextFile);
         expect(result).toBe(false);
         expect(globalMocks.executeCommand.mock.calls.map((call) => call[0])).toEqual(
             Array(workspaceUtilMaxEmptyWindowsInTheRow).fill("workbench.action.nextEditor")
@@ -81,7 +82,7 @@ describe("Workspace Utils Unit Test - Function checkTextFileIsOpened", () => {
         ];
         globalMocks.activeTextEditor.mockImplementation(generateCycledMock(mockDocuments));
 
-        const result = await checkTextFileIsOpened(targetTextFile);
+        const result = await workspaceUtils.checkTextFileIsOpened(targetTextFile);
         expect(result).toBe(true);
         expect(globalMocks.executeCommand.mock.calls.map((call) => call[0])).toEqual([
             "workbench.action.nextEditor",
@@ -114,7 +115,7 @@ describe("Workspace Utils Unit Test - Function checkTextFileIsOpened", () => {
         ];
         globalMocks.activeTextEditor.mockImplementation(generateCycledMock(mockDocuments));
 
-        const result = await checkTextFileIsOpened(targetTextFile);
+        const result = await workspaceUtils.checkTextFileIsOpened(targetTextFile);
         expect(result).toBe(false);
         expect(globalMocks.executeCommand.mock.calls.map((call) => call[0])).toEqual([
             "workbench.action.nextEditor",
@@ -129,7 +130,7 @@ describe("Workspace Utils Unit Test - Function closeOpenedTextFile", () => {
         const targetTextFile = "/doc";
         globalMocks.activeTextEditor.mockReturnValueOnce(null);
 
-        const result = await closeOpenedTextFile(targetTextFile);
+        const result = await workspaceUtils.closeOpenedTextFile(targetTextFile);
         expect(result).toBe(false);
         expect(globalMocks.executeCommand.mock.calls.map((call) => call[0])).toEqual(
             Array(workspaceUtilMaxEmptyWindowsInTheRow).fill("workbench.action.nextEditor")
@@ -160,7 +161,7 @@ describe("Workspace Utils Unit Test - Function closeOpenedTextFile", () => {
         ];
         globalMocks.activeTextEditor.mockImplementation(generateCycledMock(mockDocuments));
 
-        const result = await closeOpenedTextFile(targetTextFile);
+        const result = await workspaceUtils.closeOpenedTextFile(targetTextFile);
         expect(result).toBe(true);
         expect(globalMocks.executeCommand.mock.calls.map((call) => call[0])).toEqual([
             "workbench.action.nextEditor",
@@ -193,12 +194,32 @@ describe("Workspace Utils Unit Test - Function closeOpenedTextFile", () => {
         ];
         globalMocks.activeTextEditor.mockImplementation(generateCycledMock(mockDocuments));
 
-        const result = await closeOpenedTextFile(targetTextFile);
+        const result = await workspaceUtils.closeOpenedTextFile(targetTextFile);
         expect(result).toBe(false);
         expect(globalMocks.executeCommand.mock.calls.map((call) => call[0])).toEqual([
             "workbench.action.nextEditor",
             "workbench.action.nextEditor",
             "workbench.action.nextEditor",
         ]);
+    });
+});
+
+describe("Workspace Utils Unit Tests - function awaitForDocumentBeingSaved", () => {
+    it("should hold for a document to be saved", async () => {
+        let testCount = 0;
+        const testSaveTimer = setInterval(() => {
+            if (testCount > 5) {
+                workspaceUtils.setFileSaved(true);
+                clearInterval(testSaveTimer);
+            }
+            testCount++;
+        });
+        await expect(workspaceUtils.awaitForDocumentBeingSaved()).resolves.not.toThrow();
+    });
+});
+
+describe("Workspace Utils Unit Tests - function handleSaving", () => {
+    it("should save by prioritizing the last ongoing save of a series queued saves", async () => {
+        await expect(workspaceUtils.handleSaving(jest.fn(), "" as any, undefined)).resolves.not.toThrow();
     });
 });
