@@ -12,7 +12,6 @@
 import * as vscode from "vscode";
 import * as workspaceUtils from "../../../src/utils/workspace";
 import { workspaceUtilMaxEmptyWindowsInTheRow } from "../../../src/config/constants";
-import { resolve } from "path";
 
 function createGlobalMocks() {
     const activeTextEditor = jest.fn();
