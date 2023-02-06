@@ -7,6 +7,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ### New features and enhancements
 
 ### Bug fixes
+
 - Prevented creation of duplicate session after executing a favorited search query. [#1029](https://github.com/zowe/vscode-extension-for-zowe/issues/1029)
 
 ## `2.6.0`
