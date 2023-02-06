@@ -184,4 +184,18 @@ describe("AbstractFtpApi", () => {
 
         expect(createConfigFromArgsSpy).toHaveBeenLastCalledWith(ftpProfile);
     });
+
+    it("should close the connection", async () => {
+        const instance = new Dummy(profile);
+        const connectionMock = jest.fn();
+        await instance.releaseConnection({
+            close: connectionMock,
+        });
+        expect(connectionMock).toBeCalledTimes(1);
+    });
+
+    it("should return the profile type of 'zftp'", () => {
+        const instance = new Dummy(profile);
+        expect(instance.getProfileTypeName()).toEqual("zftp");
+    });
 });
