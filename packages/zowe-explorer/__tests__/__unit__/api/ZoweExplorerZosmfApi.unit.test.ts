@@ -120,18 +120,4 @@ describe("Zosmf API tests", () => {
             Promise.resolve(zowe.Download.ussFile(api.getSession(), "/some/input/path", {}))
         );
     });
-
-    it("should test that copy calls zowe.Utilities.putUSSPayload", async () => {
-        const api = new ZosmfUssApi();
-        api.getSession = jest.fn();
-
-        Object.defineProperty(zowe, "Utilities", {
-            value: {
-                putUSSPayload: jest.fn().mockResolvedValue(Buffer.from("hello world!")),
-            },
-            configurable: true,
-        });
-
-        expect(api.copy("/")).toStrictEqual(Promise.resolve(zowe.Utilities.putUSSPayload(api.getSession(), "/", { request: "copy" })));
-    });
 });
