@@ -145,6 +145,8 @@ export namespace Gui {
         return vscode.window.showOpenDialog(options);
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    export function setStatusBarMessage(text: string, hideAfterTimeout: Thenable<any>): vscode.Disposable;
     export function setStatusBarMessage(text: string, hideAfterTimeout: number): vscode.Disposable;
     export function setStatusBarMessage(text: string): vscode.Disposable;
     /**

@@ -153,17 +153,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         const sessNode = this.getSessionNode();
         try {
             const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
-            responses.push(
-                await Gui.withProgress(
-                    {
-                        location: vscode.ProgressLocation.Notification,
-                        title: localize("ZoweUssNode.getList.progress", "Get USS file list command submitted."),
-                    },
-                    () => {
-                        return ZoweExplorerApiRegister.getUssApi(cachedProfile).fileList(this.fullPath);
-                    }
-                )
-            );
+            responses.push(await ZoweExplorerApiRegister.getUssApi(cachedProfile).fileList(this.fullPath));
         } catch (err) {
             await errorHandling(err, this.label.toString(), localize("getChildren.error.response", "Retrieving response from ") + `uss-file-list`);
             await syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getUssApi(profileValue).getSession())(sessNode);
@@ -465,22 +455,16 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                         const fullPath = this.fullPath;
                         const chooseBinary =
                             this.binary || (await ZoweExplorerApiRegister.getUssApi(cachedProfile).isFileTagBinOrAscii(this.fullPath));
-                        const response = await Gui.withProgress(
-                            {
-                                location: vscode.ProgressLocation.Notification,
-                                title: "Opening USS file...",
-                            },
-                            function downloadUSSFile() {
-                                return ZoweExplorerApiRegister.getUssApi(cachedProfile).getContents(fullPath, {
-                                    file: documentFilePath,
-                                    binary: chooseBinary,
-                                    returnEtag: true,
-                                    encoding: cachedProfile.profile.encoding,
-                                    responseTimeout: cachedProfile.profile?.responseTimeout,
-                                });
-                            }
-                        );
 
+                        const statusMsg = Gui.setStatusBarMessage(localize("ussFile.opening", "$(sync~spin) Opening USS file..."));
+                        const response = await ZoweExplorerApiRegister.getUssApi(cachedProfile).getContents(fullPath, {
+                            file: documentFilePath,
+                            binary: chooseBinary,
+                            returnEtag: true,
+                            encoding: cachedProfile.profile.encoding,
+                            responseTimeout: cachedProfile.profile?.responseTimeout,
+                        });
+                        statusMsg.dispose();
                         this.downloaded = true;
                         this.setEtag(response.apiResponse.etag);
                     }

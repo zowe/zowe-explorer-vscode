@@ -31,6 +31,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Removed extra files from the VSIX bundle to reduce download size by 64%. [#2042](https://github.com/zowe/vscode-extension-for-zowe/pull/2042)
 - Surfaced any errors from a dataset Recall/Migrate operation. [#2032](https://github.com/zowe/vscode-extension-for-zowe/issues/2032)
 - Re-implemented regular dataset API call if the dataSetsMatching does not exist. [#2084](https://github.com/zowe/vscode-extension-for-zowe/issues/2084)
+- Removed excess pop-ups when listing/opening USS files, and replaced required pop-ups with status bar items to improve UX. [#2091](https://github.com/zowe/vscode-extension-for-zowe/issues/2091)
 
 ## `2.5.0`
 

@@ -12,7 +12,7 @@
 jest.mock("fs");
 
 import * as zowe from "@zowe/cli";
-import { ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { Gui, ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import * as ussNodeActions from "../../../src/uss/actions";
 import { createUSSTree, createUSSNode, createFavoriteUSSNode } from "../../../__mocks__/mockCreators/uss";
 import {
@@ -53,6 +53,7 @@ function createGlobalMocks() {
         withProgress: jest.fn(),
         writeText: jest.fn(),
         fileList: jest.fn(),
+        setStatusBarMessage: jest.fn().mockReturnValue({ dispose: jest.fn() }),
         showWarningMessage: jest.fn(),
         showErrorMessage: jest.fn(),
         createTreeView: jest.fn(),
@@ -90,6 +91,7 @@ function createGlobalMocks() {
     const profilesForValidation = { status: "active", name: "fake" };
     globals.initLogger(mock);
 
+    Object.defineProperty(Gui, "setStatusBarMessage", { value: globalMocks.setStatusBarMessage, configurable: true });
     Object.defineProperty(vscode.window, "showInputBox", { value: globalMocks.mockShowInputBox, configurable: true });
     Object.defineProperty(vscode.window, "showQuickPick", { value: globalMocks.showQuickPick, configurable: true });
     Object.defineProperty(zowe, "Create", { value: globalMocks.Create, configurable: true });
