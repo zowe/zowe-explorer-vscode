@@ -283,19 +283,5 @@ describe("Test src/dataset/extension", () => {
             const myProvider = await initDatasetProvider({} as any);
             expect(myProvider).toBe(null);
         });
-        // it("zowe.ds.copyDataSet", async () => {
-        //     const testNode: any = { getProfile: jest.fn(), getParent: jest.fn().mockReturnValue({ getLabel: jest.fn() }) };
-        //     const copySpy = jest.spyOn(dsActions, "copyDataSet");
-        //     copySpy.mockImplementation(jest.fn());
-        //     await allCommands["zowe.ds.copyDataSet"](testNode);
-        // });
-        // it("zowe.ds.pasteDataSet", async () => {
-        //     const testNode: any = { getProfile: jest.fn(), getParent: jest.fn().mockReturnValue({ getLabel: jest.fn() }) };
-        //     const copySpy = jest.spyOn(dsActions, "pasteDataSetMembers");
-        //     const refreshSpy = jest.spyOn(dsActions, "refreshDataset");
-        //     copySpy.mockImplementation(jest.fn());
-        //     refreshSpy.mockImplementation(jest.fn());
-        //     await allCommands["zowe.ds.pasteDataSet"](testNode);
-        // });
     });
 });

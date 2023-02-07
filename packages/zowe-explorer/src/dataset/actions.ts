@@ -1589,10 +1589,6 @@ export async function copySequentialDatasets(nodes: ZoweDatasetNode[]) {
 
             const res = await ZoweExplorerApiRegister.getMvsApi(nodes[0].getProfile()).allocateLikeDataSet(sequential, lbl);
             if (res.success) {
-                const uploadOptions: IUploadOptions = {
-                    etag: node?.getEtag(),
-                    returnEtag: true,
-                };
                 await vscode.window.withProgress(
                     {
                         location: vscode.ProgressLocation.Window,
