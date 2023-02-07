@@ -1,5 +1,4 @@
 import { FtpSession } from "../../src/ftpSession";
-import { AbstractFtpApi } from "../../src/ZoweExplorerAbstractFtpApi";
 import { imperative } from "@zowe/cli";
 
 describe("FtpSession Unit Tests - function releaseConnections", () => {

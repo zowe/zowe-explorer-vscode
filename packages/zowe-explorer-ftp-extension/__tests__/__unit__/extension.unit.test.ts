@@ -1,7 +1,7 @@
 import * as extension from "../../src/extension";
 import * as vscode from "vscode";
 import { Gui } from "@zowe/zowe-explorer-api";
-import { ZoweVsCodeExtension, MessageSeverity } from "../../__mocks__/@zowe/zowe-explorer-api";
+import { ZoweVsCodeExtension } from "../../__mocks__/@zowe/zowe-explorer-api";
 
 describe("Extension Unit Tests - function registerFtpApis", () => {
     afterEach(() => {
