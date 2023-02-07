@@ -427,7 +427,7 @@ export async function openPS(node: api.IZoweDatasetTreeNode, previewMember: bool
                     encoding: prof.profile.encoding,
                     responseTimeout: prof.profile?.responseTimeout,
                 });
-                node.setEtag(response.apiResponse.etag);
+                node.setEtag(response?.apiResponse?.etag);
                 statusMsg.dispose();
             }
             const document = await vscode.workspace.openTextDocument(getDocumentFilePath(label, node));

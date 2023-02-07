@@ -117,8 +117,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         }
 
         // Gets the datasets from the pattern or members of the dataset and displays any thrown errors
-        let responses: zowe.IZosFilesResponse[] = [];
-        responses.push(...(await this.getDatasets()));
+        const responses = await this.getDatasets();
         if (responses.length === 0) {
             return undefined;
         }
