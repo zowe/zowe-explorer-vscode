@@ -10,6 +10,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 - Removed excess pop-ups when listing/opening USS files, and replaced required pop-ups with status bar items to improve UX. [#2091](https://github.com/zowe/vscode-extension-for-zowe/issues/2091)
 - Prevented creation of duplicate session after executing a favorited search query. [#1029](https://github.com/zowe/vscode-extension-for-zowe/issues/1029)
+- Resolved an issue where VSCode did not provide all context menu options for a profile node after a multi-select operation. [#2108](https://github.com/zowe/vscode-extension-for-zowe/pull/2108)
 
 ## `2.6.0`
 

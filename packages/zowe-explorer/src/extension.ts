@@ -31,6 +31,7 @@ import * as nls from "vscode-nls";
 import { TsoCommandHandler } from "./command/TsoCommandHandler";
 import { cleanTempDir, moveTempFolder, hideTempFolder } from "./utils/TempFolder";
 import { SettingsConfig } from "./utils/SettingsConfig";
+import { TreeViewUtils } from "./utils/TreeViewUtils";
 import { handleSaving } from "./utils/workspace";
 import { ZoweDatasetNode } from "./dataset/ZoweDatasetNode";
 import * as contextuals from "../src/shared/context";
@@ -403,6 +404,7 @@ function initDatasetProvider(context: vscode.ExtensionContext) {
             for (const select of selectedNodes) {
                 datasetProvider.deleteSession(select);
             }
+            TreeViewUtils.fixVsCodeMultiSelect(datasetProvider);
         })
     );
     context.subscriptions.push(
@@ -539,6 +541,7 @@ function initUSSProvider(context: vscode.ExtensionContext) {
             for (const item of selectedNodes) {
                 ussFileProvider.deleteSession(item);
             }
+            TreeViewUtils.fixVsCodeMultiSelect(ussFileProvider);
         })
     );
     context.subscriptions.push(
