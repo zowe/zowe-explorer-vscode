@@ -79,3 +79,9 @@ export function decodeJobFile(uri: vscode.Uri): [string, zowe.IJobFile] {
     const [session, spool] = JSON.parse(uri.query) as [string, zowe.IJobFile];
     return [session, spool];
 }
+
+export function initializeSpoolProvider(context: vscode.ExtensionContext) {
+    const spoolProvider = new SpoolProvider();
+    const providerRegistration = vscode.Disposable.from(vscode.workspace.registerTextDocumentContentProvider(SpoolProvider.scheme, spoolProvider));
+    context.subscriptions.push(spoolProvider, providerRegistration);
+}

@@ -179,7 +179,7 @@ export async function uploadFile(node: ZoweDatasetNode, doc: vscode.TextDocument
         const datasetName = node.label as string;
         const prof = node.getProfile();
         await ZoweExplorerApiRegister.getMvsApi(prof).putContents(doc.fileName, datasetName, {
-            encoding: prof.profile.encoding,
+            encoding: prof.profile?.encoding,
             responseTimeout: prof.profile?.responseTimeout,
         });
     } catch (e) {
@@ -430,7 +430,7 @@ export async function openPS(node: api.IZoweDatasetTreeNode, previewMember: bool
                         return ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
                             file: documentFilePath,
                             returnEtag: true,
-                            encoding: prof.profile.encoding,
+                            encoding: prof.profile?.encoding,
                             responseTimeout: prof.profile?.responseTimeout,
                         });
                     }
@@ -1047,7 +1047,7 @@ export async function refreshPS(node: api.IZoweDatasetTreeNode) {
         const response = await ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
             file: documentFilePath,
             returnEtag: true,
-            encoding: prof.profile.encoding,
+            encoding: prof.profile?.encoding,
             responseTimeout: prof.profile?.responseTimeout,
         });
         node.setEtag(response.apiResponse.etag);
@@ -1132,6 +1132,17 @@ export async function enterPattern(node: api.IZoweDatasetTreeNode, datasetProvid
 }
 
 /**
+ * Copy data set info
+ *
+ * @export
+ * @deprecated Please use copyDataSets
+ * @param {IZoweNodeType} node - The node to copy
+ */
+export async function copyDataSet(node: api.IZoweNodeType) {
+    return vscode.env.clipboard.writeText(JSON.stringify(dsUtils.getNodeLabels(node)));
+}
+
+/**
  * Copy data sets
  *
  * @export
@@ -1139,7 +1150,7 @@ export async function enterPattern(node: api.IZoweDatasetTreeNode, datasetProvid
  * @param {ZoweDatasetNode[]} nodeList - Multiple selected Nodes to copy
  * @param datasetProvider
  */
-export async function copyDataSet(node, nodeList: ZoweDatasetNode[], datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>) {
+export async function copyDataSets(node, nodeList: ZoweDatasetNode[], datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>) {
     let selectedNodes;
     if (!(node || nodeList)) {
         selectedNodes = datasetProvider.getTreeView().selection;
@@ -1414,7 +1425,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
             },
             () => {
                 const prof = node?.getProfile() ?? profile;
-                if (prof.profile.encoding) {
+                if (prof.profile?.encoding) {
                     uploadOptions.encoding = prof.profile.encoding;
                 }
                 return ZoweExplorerApiRegister.getMvsApi(prof).putContents(doc.fileName, label, {
@@ -1440,13 +1451,10 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
                 const oldDoc = doc;
                 const oldDocText = oldDoc.getText();
                 const prof = node ? node.getProfile() : profile;
-                if (prof.profile.encoding) {
-                    uploadOptions.encoding = prof.profile.encoding;
-                }
                 const downloadResponse = await ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
                     file: doc.fileName,
                     returnEtag: true,
-                    encoding: prof.profile.encoding,
+                    encoding: prof.profile?.encoding,
                     responseTimeout: prof.profile?.responseTimeout,
                 });
                 // re-assign etag, so that it can be used with subsequent requests

@@ -7,6 +7,13 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ### New features and enhancements
 
 - Added feature copy datasets ( pds, sequential, members across pds) with multi select capabilities. [#1150](https://github.com/zowe/vscode-extension-for-zowe/issues/1550)
+
+### Bug fixes
+
+## `2.6.0`
+
+### New features and enhancements
+
 - Added Job search prefix validator [1971](https://github.com/zowe/vscode-extension-for-zowe/issues/1971)
 - Added file association for `zowe.config.json` and `zowe.config.user.json` to automatically detect them as JSON with Comments. [#1997](https://github.com/zowe/vscode-extension-for-zowe/issues/1997)
 - Added the ability to list all datasets, even those with Imperative Errors. [#235](https://github.com/zowe/vscode-extension-for-zowe/issues/235) & [#2036](https://github.com/zowe/vscode-extension-for-zowe/issues/2036)
@@ -14,17 +21,18 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added confirmation message for "Submit Job" feature as an option in extension settings (set to "All jobs" by default). [#998](https://github.com/zowe/vscode-extension-for-zowe/issues/998)
 - Updated UI/UX method calls to use standalone `Gui` module for better usability and maintainability. [#1967](https://github.com/zowe/vscode-extension-for-zowe/issues/1967)
 - Updated error dialog when Zowe config is invalid, with option to "Show Config" within VS Code for diagnostics. [#1986](https://github.com/zowe/vscode-extension-for-zowe/issues/1986)
-- Fixed issue where responseTimeout (in Zowe config) was not provided for supported API calls. [#1907](https://github.com/zowe/vscode-extension-for-zowe/issues/1907)
 
 ### Bug fixes
 
 - Updated check for Theia environment to reduce false positives in different environments. [#2079](https://github.com/zowe/vscode-extension-for-zowe/issues/2079)
+- Fixed issue where responseTimeout (in Zowe config) was not provided for supported API calls. [#1907](https://github.com/zowe/vscode-extension-for-zowe/issues/1907)
 - Fixed issue where "Show Attributes" feature used conflicting colors with light VS Code themes. [#2048](https://github.com/zowe/vscode-extension-for-zowe/issues/2048)
 - Fixed settings not persisting in Theia versions >=1.29.0. [#2065](https://github.com/zowe/vscode-extension-for-zowe/pull/2065)
 - Removed TSLint (as it is deprecated), and replaced all TSLint rules with their ESLint equivalents. [#2030](https://github.com/zowe/vscode-extension-for-zowe/issues/2030)
 - Fixed issue with a success message being returned along with error for Job deletion. [#2075](https://github.com/zowe/vscode-extension-for-zowe/issues/2075)
 - Removed extra files from the VSIX bundle to reduce download size by 64%. [#2042](https://github.com/zowe/vscode-extension-for-zowe/pull/2042)
 - Surfaced any errors from a dataset Recall/Migrate operation. [#2032](https://github.com/zowe/vscode-extension-for-zowe/issues/2032)
+- Re-implemented regular dataset API call if the dataSetsMatching does not exist. [#2084](https://github.com/zowe/vscode-extension-for-zowe/issues/2084)
 
 ## `2.5.0`
 

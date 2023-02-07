@@ -313,7 +313,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
                     file: node.getUSSDocumentFilePath(),
                     binary,
                     returnEtag: true,
-                    encoding: prof.profile.encoding,
+                    encoding: prof.profile?.encoding,
                     responseTimeout: prof.profile?.responseTimeout,
                 });
                 // re-assign etag, so that it can be used with subsequent requests
