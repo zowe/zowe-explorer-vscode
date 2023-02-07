@@ -48,6 +48,12 @@ async function createGlobalMocks() {
         return globalMocks.mockCallback;
     });
 
+    Object.defineProperty(Gui, "setStatusBarMessage", {
+        value: jest.fn().mockReturnValue({
+            dispose: jest.fn(),
+        }),
+        configurable: true,
+    });
     Object.defineProperty(vscode.window, "createTreeView", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.workspace, "getConfiguration", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showInformationMessage", { value: jest.fn(), configurable: true });
@@ -59,6 +65,16 @@ async function createGlobalMocks() {
     Object.defineProperty(vscode.commands, "executeCommand", { value: globalMocks.withProgress, configurable: true });
     Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true });
     Object.defineProperty(Profiles, "getInstance", { value: jest.fn(), configurable: true });
+    Object.defineProperty(zowe, "Download", {
+        value: {
+            ussFile: jest.fn().mockReturnValue({
+                apiResponse: {
+                    etag: "ABC123",
+                },
+            }),
+        },
+        configurable: true,
+    });
     Object.defineProperty(zowe, "Utilities", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe.Utilities, "isFileTagBinOrAscii", { value: jest.fn(), configurable: true });
     Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });

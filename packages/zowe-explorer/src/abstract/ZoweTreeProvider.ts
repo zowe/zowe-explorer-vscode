@@ -260,4 +260,16 @@ export class ZoweTreeProvider {
         this.mHistory.removeSession(revisedLabel);
         this.refresh();
     }
+
+    /**
+     * Expand a node
+     * @param element the node being flipped
+     * @param provider the tree view provider
+     */
+    public async expandSession(element: IZoweTreeNode, provider: IZoweTree<IZoweNodeType>) {
+        await provider.getTreeView().reveal(element, { expand: false });
+        await provider.getTreeView().reveal(element, { expand: true });
+        element.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+        element.dirty = true;
+    }
 }
