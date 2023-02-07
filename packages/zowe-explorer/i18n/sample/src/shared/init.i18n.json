@@ -1,6 +1,4 @@
 {
-  "initialize.log.debug": "Initialized logger from VSCode extension",
-  "initialize.log.error": "Error encountered while activating and initializing logger! ",
   "onDidSaveTextDocument1": "File was saved -- determining whether the file is a USS file or Data set.\n Comparing (case insensitive) ",
   "onDidSaveTextDocument2": " against directory ",
   "onDidSaveTextDocument3": "and",
