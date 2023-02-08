@@ -11,13 +11,13 @@
 
 // This shouldn't be considered redeclared, as its contained within a mock.
 // eslint-disable-next-line no-shadow
-export const enum MessageSeverity {
-    TRACE = 0,
-    DEBUG = 1,
-    INFO = 2,
-    WARN = 3,
-    ERROR = 4,
-    FATAL = 5,
+export class MessageSeverity {
+    public static TRACE = 0;
+    public static DEBUG = 1;
+    public static INFO = 2;
+    public static WARN = 3;
+    public static ERROR = 4;
+    public static FATAL = 5;
 }
 
 export class IZoweLogger {
@@ -46,5 +46,23 @@ export namespace Gui {
 
     export function errorMessage(message: string, options?: Omit<GuiMessageOptions, "severity">): Thenable<string> {
         return undefined;
+    }
+
+    export function warningMessage() {
+        return undefined;
+    }
+}
+
+export namespace ZoweVsCodeExtension {
+    export function getZoweExplorerApi(requiredVersion?: string): any {
+        return {
+            registerUssApi: () => {},
+            registerJesApi: () => {},
+            registerMvsApi: () => {},
+            getExplorerExtenderApi: () => ({
+                initForZowe: () => {},
+                reloadProfiles: () => {},
+            }),
+        };
     }
 }

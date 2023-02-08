@@ -22,6 +22,7 @@ import { Profiles } from "../../src/Profiles";
 import * as path from "path";
 import * as fs from "fs";
 import { getZoweDir, Gui } from "@zowe/zowe-explorer-api";
+import * as profilesUtils from "../../src/utils/ProfilesUtils";
 jest.mock("fs");
 
 const mocked = <T extends (...args: any[]) => any>(fn: T): jest.Mock<ReturnType<T>> => fn as any;
@@ -177,5 +178,32 @@ describe("ZoweExplorerExtender unit tests", () => {
                 }
             }
         }
+    });
+
+    it("should initialize zowe", async () => {
+        const blockMocks = await createBlockMocks();
+        Object.defineProperty(vscode.workspace, "workspaceFolders", {
+            value: [
+                {
+                    uri: {
+                        fsPath: "test",
+                    },
+                },
+            ],
+            configurable: true,
+        });
+        Object.defineProperty(imperative.CliProfileManager, "initialize", {
+            value: jest.fn(),
+            configurable: true,
+        });
+
+        const readProfilesFromDiskSpy = jest.fn();
+        const refreshProfilesQueueAddSpy = jest.spyOn((ZoweExplorerExtender as any).refreshProfilesQueue, "add");
+        jest.spyOn(profilesUtils, "getProfileInfo").mockResolvedValue({
+            readProfilesFromDisk: readProfilesFromDiskSpy,
+        } as any);
+        await expect(blockMocks.instTest.initForZowe("USS", ["" as any])).resolves.not.toThrow();
+        expect(readProfilesFromDiskSpy).toBeCalledTimes(1);
+        expect(refreshProfilesQueueAddSpy).toHaveBeenCalledTimes(1);
     });
 });
