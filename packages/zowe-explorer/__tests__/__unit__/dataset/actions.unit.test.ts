@@ -71,7 +71,6 @@ function createGlobalMocks() {
     newMocks.testFavoritesNode.children.push(newMocks.datasetSessionFavNode);
     newMocks.testDatasetTree = createDatasetTree(newMocks.datasetSessionNode, newMocks.treeView, newMocks.testFavoritesNode);
     newMocks.mvsApi = createMvsApi(newMocks.imperativeProfile);
-    newMocks.mvsApi.getContents = jest.fn().mockReturnValue({ apiResponse: { etag: "TestETAG" } });
     bindMvsApi(newMocks.mvsApi);
 
     Object.defineProperty(vscode.window, "withProgress", { value: jest.fn(), configurable: true });
@@ -288,10 +287,14 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
         mocked(vscode.workspace.openTextDocument).mockResolvedValueOnce({ isDirty: true } as any);
         mocked(zowe.Download.dataSet).mockRejectedValueOnce(Error("not found"));
 
+        const originalGetContents = blockMocks.mvsApi.getContents;
+        blockMocks.mvsApi.getContents = jest.fn().mockRejectedValueOnce(new Error("not found"));
+
         await dsActions.refreshPS(node);
 
         expect(mocked(Gui.showMessage)).toBeCalledWith("Unable to find file: " + node.label + " was probably deleted.");
         expect(mocked(vscode.commands.executeCommand)).not.toBeCalled();
+        blockMocks.mvsApi.getContents = originalGetContents;
     });
     it("Checking failed attempt to refresh PDS Member", async () => {
         globals.defineGlobals("");
@@ -2749,8 +2752,8 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
         globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-
-        mocked(vscode.window.withProgress).mockRejectedValueOnce(Error("testError"));
+        const originalGetContents = blockMocks.mvsApi.getContents;
+        blockMocks.mvsApi.getContents = jest.fn().mockRejectedValueOnce(new Error("testError"));
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const node = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
 
@@ -2761,6 +2764,7 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
         }
 
         expect(mocked(Gui.errorMessage)).toBeCalledWith("testError Error: testError");
+        blockMocks.mvsApi.getContents = originalGetContents;
     });
     it("Checking of opening for PDS Member", async () => {
         globals.defineGlobals("");
