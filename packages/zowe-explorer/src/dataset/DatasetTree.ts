@@ -156,6 +156,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     }
                     finalResponse.push(item);
                 }
+                item.contextValue = contextually.withProfile(item);
             }
             if (finalResponse.length === 0) {
                 return (element.children = [
@@ -288,6 +289,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 localize("initializeFavChildNodeForProfile.error", "Error creating data set favorite node: {0} for profile {1}.", label, profileName)
             );
         }
+        node.contextValue = contextually.withProfile(node);
         return node;
     }
 
@@ -944,6 +946,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                         child.pattern = "";
                         this.refreshElement(child);
                     }
+                    child.contextValue = contextually.withProfile(child);
                 }
                 // set new search patterns for each child of getChildren
                 for (const child of response) {
@@ -1005,6 +1008,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     if (icon) {
                         nonFaveNode.iconPath = icon.path;
                     }
+                    child.contextValue = contextually.withProfile(child);
                 }
             }
             this.addSearchHistory(pattern);
@@ -1199,7 +1203,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             }
             // Creates ZoweDatasetNode to track new session and pushes it to mSessionNodes
             const node = new ZoweDatasetNode(profile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, undefined, undefined, profile);
-            node.contextValue = globals.DS_SESSION_CONTEXT;
+            node.contextValue = globals.DS_SESSION_CONTEXT + (profile.type !== "zosmf" ? ".profile=" + profile.type : "");
             await this.refreshHomeProfileContext(node);
             const icon = getIconByNode(node);
             if (icon) {

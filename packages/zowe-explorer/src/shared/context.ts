@@ -385,6 +385,13 @@ export function asFavorite(node: TreeItem): string {
     return isFavorite(node) ? node.contextValue : node.contextValue + globals.FAV_SUFFIX;
 }
 
+export function withProfile(node: IZoweTreeNode): string {
+    if (node.contextValue?.includes(".profile=")) return node.contextValue;
+    return node.getParent()?.contextValue?.includes(".profile=")
+        ? node.contextValue + ".profile=" + node.getParent()?.contextValue?.split(".profile=")[1] ?? node.contextValue
+        : node.contextValue;
+}
+
 /**
  * Helper function to retrieve the base context of a node
  * @param node
