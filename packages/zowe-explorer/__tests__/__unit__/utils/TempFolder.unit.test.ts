@@ -11,18 +11,28 @@
 
 const ERROR_EXAMPLE = new Error("random fs error");
 import * as fs from "fs";
-jest.mock("fs");
-jest.mock("fs", () => ({
-    existsSync: jest.fn(),
-    mkdirSync: jest.fn(),
-    readdirSync: jest.fn(),
-}));
+import * as fsExtra from "fs-extra";
+import * as path from "path";
 import * as globals from "../../../src/globals";
 import * as ProfileUtils from "../../../src/utils/ProfilesUtils";
 import * as vscode from "vscode";
 import * as TempFolder from "../../../src/utils/TempFolder";
 import { SettingsConfig } from "../../../src/utils/SettingsConfig";
 import { Gui } from "@zowe/zowe-explorer-api";
+
+jest.mock("fs");
+jest.mock("fs", () => ({
+    existsSync: jest.fn(() => true),
+    mkdirSync: jest.fn(),
+    readdirSync: jest.fn(),
+    lstatSync: jest.fn(),
+    unlinkSync: jest.fn(),
+    rmdirSync: jest.fn(),
+}));
+jest.mock("fs-extra");
+jest.mock("fs-extra", () => ({
+    moveSync: jest.fn(),
+}));
 
 describe("TempFolder Unit Tests", () => {
     function createBlockMocks() {
@@ -52,9 +62,24 @@ describe("TempFolder Unit Tests", () => {
         }
     });
 
+    it("moveTempFolder should return if source and destination path are the same", async () => {
+        jest.spyOn(fs, "mkdirSync").mockImplementation();
+        jest.spyOn(path, "join").mockImplementation(() => "testpath123");
+        await expect(TempFolder.moveTempFolder("", "testpath123")).resolves.toEqual(undefined);
+    });
+
+    it("moveTempFolder should run moveSync", async () => {
+        const moveSyncSpy = jest.spyOn(fsExtra, "moveSync");
+        await expect(TempFolder.moveTempFolder("testpath", "testpath123")).resolves.toEqual(undefined);
+        expect(moveSyncSpy).toBeCalledTimes(1);
+        const expectedPath1 = process.platform === "win32" ? "testpath1\\temp" : "testpath1/temp".split(path.sep).join(path.posix.sep);
+        const expectedPath2 = process.platform === "win32" ? "testpath2\\temp" : "testpath2/temp".split(path.sep).join(path.posix.sep);
+        expect(moveSyncSpy).toBeCalledWith(expectedPath1, expectedPath2, { overwrite: true });
+    });
+
     it("cleanDir should throw an error when a filesystem exception occurs", async () => {
         createBlockMocks();
-        jest.spyOn(fs, "readdirSync").mockImplementation((val) => {
+        jest.spyOn(fs, "mkdirSync").mockImplementation((val) => {
             throw new Error("example cleanDir error");
         });
         jest.spyOn(SettingsConfig, "getDirectValue").mockImplementationOnce((val) => true);
@@ -65,5 +90,15 @@ describe("TempFolder Unit Tests", () => {
             expect(globals.LOG.error).toHaveBeenCalledWith(err);
             expect(Gui.showMessage).toHaveBeenCalledWith("Unable to delete temporary folder. example cleanDir error");
         }
+    });
+
+    it("cleanDir should run readDirSync twice", async () => {
+        const readdirSyncSpy = jest.spyOn(fs, "readdirSync").mockReturnValue(["./test1"] as any);
+        jest.spyOn(fs, "lstatSync").mockReturnValue({
+            isFile: () => true,
+        } as any);
+
+        await expect(TempFolder.cleanDir("./sampleDir")).resolves.toEqual(undefined);
+        expect(readdirSyncSpy).toBeCalledTimes(2);
     });
 });

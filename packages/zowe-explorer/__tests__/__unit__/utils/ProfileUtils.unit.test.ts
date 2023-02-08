@@ -154,3 +154,40 @@ describe("ProfileUtils.promptCredentials Unit Tests", () => {
         expect(Gui.showMessage).toHaveBeenCalledWith('"Update Credentials" operation not supported when "autoStore" is false');
     });
 });
+
+describe("ProfileUtils.readConfigFromDisk Unit Tests", () => {
+    it("should readConfigFromDisk", async () => {
+        Object.defineProperty(vscode.workspace, "workspaceFolders", {
+            value: [
+                {
+                    uri: {
+                        fsPath: "./test",
+                    },
+                },
+            ],
+            configurable: true,
+        });
+        const mockReadProfilesFromDisk = jest.fn();
+        jest.spyOn(zowe.imperative, "ProfileInfo").mockResolvedValue({
+            readProfilesFromDisk: mockReadProfilesFromDisk,
+            usingTeamConfig: true,
+            getTeamConfig: () => ({
+                layers: [
+                    {
+                        path: "test",
+                        exists: true,
+                        properties: {
+                            defaults: "test",
+                        },
+                    },
+                ],
+            }),
+        } as never);
+        Object.defineProperty(globals.LOG, "debug", {
+            value: jest.fn(),
+            configurable: true,
+        });
+        await expect(profileUtils.readConfigFromDisk()).resolves.not.toThrow();
+        expect(mockReadProfilesFromDisk).toHaveBeenCalledTimes(1);
+    });
+});
