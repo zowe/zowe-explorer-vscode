@@ -155,15 +155,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                     elementChildren.push(spoolNode);
                 });
             } else {
-                const jobs = await Gui.withProgress(
-                    {
-                        location: vscode.ProgressLocation.Notification,
-                        title: localize("ZoweJobNode.getJobs.jobs", "Get Jobs command submitted."),
-                    },
-                    () => {
-                        return this.getJobs(this._owner, this._prefix, this._searchId, this._jobStatus); // change here
-                    }
-                );
+                const jobs = await this.getJobs(this._owner, this._prefix, this._searchId, this._jobStatus);
                 jobs.forEach((job) => {
                     let nodeTitle: string;
                     if (job.retcode) {
