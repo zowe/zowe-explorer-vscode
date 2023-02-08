@@ -8,6 +8,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Fixed issue with standardization of old v1 settings in Zowe Explorer during activation
+
 ## `2.6.0`
 
 ### New features and enhancements
