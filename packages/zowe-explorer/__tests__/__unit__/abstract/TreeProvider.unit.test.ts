@@ -19,7 +19,7 @@ import {
     createGetConfigMock,
 } from "../../../__mocks__/mockCreators/shared";
 import { createUSSSessionNode } from "../../../__mocks__/mockCreators/uss";
-import { ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { ProfilesCache, ValidProfileEnum, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../src/Profiles";
 import { imperative } from "@zowe/cli";
 import * as globals from "../../../src/globals";
@@ -28,6 +28,7 @@ import { createIJobObject } from "../../../__mocks__/mockCreators/jobs";
 import { Job } from "../../../src/job/ZoweJobNode";
 import { createJobsTree } from "../../../src/job/ZosJobsProvider";
 import { SettingsConfig } from "../../../src/utils/SettingsConfig";
+import { ZoweTreeProvider } from "../../../src/abstract/ZoweTreeProvider";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -46,7 +47,9 @@ async function createGlobalMocks() {
         testSession: createISession(),
         testResponse: createFileResponse({ items: [] }),
         testUSSTree: null,
+        testUSSNode: null,
         testSessionNode: null,
+        testTreeProvider: new ZoweTreeProvider(PersistenceSchemaEnum.USS, null),
         mockGetProfileSetting: jest.fn(),
         mockProfilesForValidation: jest.fn(),
         mockProfilesValidationSetting: jest.fn(),
@@ -132,6 +135,13 @@ async function createGlobalMocks() {
     globalMocks.testUSSTree = await createUSSTree(imperative.Logger.getAppLogger());
     Object.defineProperty(globalMocks.testUSSTree, "refresh", { value: globalMocks.refresh, configurable: true });
     globalMocks.testUSSTree.mSessionNodes.push(globalMocks.testSessionNode);
+    globalMocks.testUSSNode = new ZoweUSSNode(
+        "/u/test",
+        vscode.TreeItemCollapsibleState.Collapsed,
+        globalMocks.testUSSTree.mSessionNodes[0],
+        globalMocks.testSession,
+        null
+    );
     globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.testProfile);
     globalMocks.mockDefaultProfile.mockReturnValue(globalMocks.testProfile);
     globalMocks.mockEditSession.mockReturnValue(globalMocks.testProfile);
@@ -318,5 +328,50 @@ describe("ZoweJobNode unit tests - Function checkCurrentProfile", () => {
 
         await blockMocks.testJobsProvider.checkCurrentProfile(blockMocks.jobNode);
         expect(globalMocks.mockCheckCurrentProfile).toHaveBeenCalled();
+    });
+});
+
+describe("Tree Provider Unit Tests - refreshHomeProfileContext", () => {
+    it("should set tthe node context value to the HOME_SUFFIX global value", async () => {
+        const globalMocks = await createGlobalMocks();
+        globalMocks.mockProfileInfo.usingTeamConfig = true;
+        globalMocks.mockProfileInfo.getOsLocInfo = () => [{ global: true }];
+        await expect(globalMocks.testUSSTree.refreshHomeProfileContext(globalMocks.testUSSNode)).resolves.not.toThrow();
+        expect(globalMocks.testUSSNode.contextValue).toEqual("directory_home");
+    });
+});
+
+describe("Tree Provider Unit Tests - function getTreeType", () => {
+    it("should return the persistence schema of the tree", async () => {
+        const globalMocks = await createGlobalMocks();
+        expect(globalMocks.testUSSTree.getTreeType()).toEqual(globalMocks.testUSSTree.persistenceSchema);
+    });
+});
+
+describe("Tree Provider Unit Tests - function findNonFavoritedNode", () => {
+    it("should return undefined", async () => {
+        const globalMocks = await createGlobalMocks();
+        expect(globalMocks.testTreeProvider.findNonFavoritedNode(globalMocks.testUSSNode)).toEqual(undefined);
+    });
+});
+
+describe("Tree Provider Unit Tests - function findFavoritedNode", () => {
+    it("should return undefined", async () => {
+        const globalMocks = await createGlobalMocks();
+        expect(globalMocks.testTreeProvider.findFavoritedNode(globalMocks.testUSSNode)).toEqual(undefined);
+    });
+});
+
+describe("Tree Provider Unit Tests - function renameFavorite", () => {
+    it("should return undefined", async () => {
+        const globalMocks = await createGlobalMocks();
+        expect(globalMocks.testTreeProvider.renameFavorite(globalMocks.testUSSNode, "test")).toEqual(undefined);
+    });
+});
+
+describe("Tree Provider Unit Tests - function renameNode", () => {
+    it("should return undefined", async () => {
+        const globalMocks = await createGlobalMocks();
+        expect(globalMocks.testTreeProvider.renameNode("test", "test1", "test2")).toEqual(undefined);
     });
 });

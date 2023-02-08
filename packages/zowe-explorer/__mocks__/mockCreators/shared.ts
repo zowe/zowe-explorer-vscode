@@ -33,6 +33,94 @@ export function createPersistentConfig() {
     };
 }
 
+export function createUnsecureTeamConfigMock() {
+    return {
+        $schema: "./zowe.schema.json",
+        profiles: {
+            zosmf: {
+                type: "zosmf",
+                properties: {
+                    port: 443,
+                },
+            },
+            tso: {
+                type: "tso",
+                properties: {
+                    account: "",
+                    codePage: "1047",
+                    logonProcedure: "IZUFPROC",
+                },
+            },
+            ssh: {
+                type: "ssh",
+                properties: {
+                    port: 22,
+                },
+            },
+            base: {
+                type: "base",
+                properties: {
+                    host: "sample.com",
+                    rejectUnauthorized: true,
+                },
+            },
+        },
+        defaults: {
+            zosmf: "zosmf",
+            tso: "tso",
+            ssh: "ssh",
+            base: "base",
+        },
+        autoStore: false,
+    };
+}
+
+export function createTeamConfigMock() {
+    return {
+        $schema: "./zowe.schema.json",
+        profiles: {
+            zosmf: {
+                type: "zosmf",
+                properties: {
+                    port: 443,
+                },
+                secure: [],
+            },
+            tso: {
+                type: "tso",
+                properties: {
+                    account: "",
+                    codePage: "1047",
+                    logonProcedure: "IZUFPROC",
+                },
+                secure: [],
+            },
+            ssh: {
+                type: "ssh",
+                properties: {
+                    port: 22,
+                },
+                secure: [],
+            },
+            base: {
+                type: "base",
+                properties: {
+                    host: "sample.com",
+                    rejectUnauthorized: true,
+                },
+                secure: ["user", "password"],
+            },
+        },
+        defaults: {
+            zosmf: "zosmf",
+            tso: "tso",
+            ssh: "ssh",
+            base: "base",
+        },
+        autoStore: true,
+    };
+}
+
 export function createISession() {
     return new imperative.Session({
         user: "fake",
@@ -382,6 +470,12 @@ export function createConfigInstance() {
 
 export function createConfigLoad() {
     return {
+        configName: "zowe.config.json",
+        api: {
+            layers: {
+                merge: jest.fn(),
+            },
+        },
         layers: [
             {
                 path: "file://globalPath/.zowe/zowe.config.json",
@@ -398,6 +492,8 @@ export function createConfigLoad() {
                 user: true,
             },
         ],
+        setSchema: jest.fn(),
+        save: jest.fn(),
     } as any;
 }
 
