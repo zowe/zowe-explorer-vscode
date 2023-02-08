@@ -386,10 +386,10 @@ export function asFavorite(node: TreeItem): string {
 }
 
 export function withProfile(node: IZoweTreeNode): string {
-    if (node.contextValue?.includes(".profile=")) return node.contextValue;
-    return node.getParent()?.contextValue?.includes(".profile=")
-        ? node.contextValue + ".profile=" + node.getParent()?.contextValue?.split(".profile=")[1] ?? node.contextValue
-        : node.contextValue;
+    if (node?.contextValue?.includes(".profile=")) return node?.contextValue;
+    return node?.getParent()?.contextValue?.includes(".profile=")
+        ? node?.contextValue + ".profile=" + node?.getParent()?.contextValue?.split(".profile=")[1] ?? node?.contextValue
+        : node?.contextValue;
 }
 
 /**

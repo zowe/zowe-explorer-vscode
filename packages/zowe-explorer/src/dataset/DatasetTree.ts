@@ -289,7 +289,9 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 localize("initializeFavChildNodeForProfile.error", "Error creating data set favorite node: {0} for profile {1}.", label, profileName)
             );
         }
-        node.contextValue = contextually.withProfile(node);
+        if (node) {
+            node.contextValue = contextually.withProfile(node);
+        }
         return node;
     }
 
