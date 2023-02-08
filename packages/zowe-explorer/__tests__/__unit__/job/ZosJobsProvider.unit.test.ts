@@ -32,7 +32,7 @@ import {
 import { getIconByNode } from "../../../src/generators/icons";
 import { createJesApi } from "../../../__mocks__/mockCreators/api";
 import * as sessUtils from "../../../src/utils/SessionUtils";
-import { jobPrefixValidator } from "../../../src/shared/utils";
+import { jobStringValidator } from "../../../src/shared/utils";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -773,7 +773,7 @@ describe("ZosJobsProvider unit tests - Function getUserSearchQueryInput", () => 
                 value: "job*",
                 show: true,
                 placeHolder: `Enter job prefix`,
-                validateInput: () => (text) => jobPrefixValidator(text),
+                validateInput: () => (text) => jobStringValidator(text, "prefix"),
             },
             {
                 key: `key`,
@@ -815,7 +815,7 @@ describe("ZosJobsProvider unit tests - Function getPopulatedPickerArray", () => 
                 value: "job*",
                 show: true,
                 placeHolder: `Enter job prefix`,
-                validateInput: () => (text) => jobPrefixValidator(text),
+                validateInput: () => (text) => jobStringValidator(text, "prefix"),
             },
             {
                 key: `job-status`,
@@ -829,11 +829,11 @@ describe("ZosJobsProvider unit tests - Function getPopulatedPickerArray", () => 
     });
 });
 
-describe("Jobs utils unit tests - Function jobPrefixValidator", () => {
+describe("Jobs utils unit tests - Function jobStringValidator", () => {
     it("should return null with correct input", async () => {
-        expect(jobPrefixValidator("job*")).toBeNull();
+        expect(jobStringValidator("job*", "prefix")).toBeNull();
     });
     it("should return invalid string with invalid input", async () => {
-        expect(jobPrefixValidator("job1234567*")).toContain("Invalid");
+        expect(jobStringValidator("job1234567*", "prefix")).toContain("Invalid");
     });
 });
