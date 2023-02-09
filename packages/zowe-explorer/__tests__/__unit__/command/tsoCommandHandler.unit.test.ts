@@ -583,4 +583,21 @@ describe("TsoCommandHandler unit testing", () => {
         expect(showInputBox.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls.length).toBe(0);
     });
+
+    it("tests the selectTsoProfile function", async () => {
+        jest.spyOn(Gui, "showQuickPick").mockReturnValue("test1" as any);
+
+        await expect(
+            (tsoActions as any).selectTsoProfile([
+                {
+                    name: "test1",
+                },
+                {
+                    name: "test2",
+                },
+            ])
+        ).resolves.toEqual({
+            name: "test1",
+        });
+    });
 });

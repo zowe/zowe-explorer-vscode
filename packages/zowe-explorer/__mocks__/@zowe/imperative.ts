@@ -260,6 +260,42 @@ export class ImperativeConfig {
     public cliHome: "./__tests__/.zowe";
 }
 
+export class ConfigSchema {
+    public static buildSchema() {
+        return {};
+    }
+}
+
+export class ConfigBuilder {
+    public static build() {
+        return {
+            $schema: "./zowe.schema.json",
+            profiles: {
+                zosmf: {
+                    type: "zosmf",
+                    properties: {
+                        port: 443,
+                    },
+                    secure: [],
+                },
+                base: {
+                    type: "base",
+                    properties: {
+                        host: "sample.com",
+                        rejectUnauthorized: false,
+                    },
+                    secure: [],
+                },
+            },
+            defaults: {
+                zosmf: "zosmf",
+                base: "base",
+            },
+            autoStore: true,
+        };
+    }
+}
+
 export class CredentialManagerFactory {}
 
 export class DefaultCredentialManager {
