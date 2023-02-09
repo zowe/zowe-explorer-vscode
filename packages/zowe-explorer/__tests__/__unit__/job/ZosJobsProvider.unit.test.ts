@@ -831,9 +831,18 @@ describe("ZosJobsProvider unit tests - Function getPopulatedPickerArray", () => 
 
 describe("Jobs utils unit tests - Function jobStringValidator", () => {
     it("should return null with correct input", async () => {
-        expect(jobStringValidator("job*", "prefix")).toBeNull();
+        const validOpts: [string, "owner" | "prefix"][] = [
+            ["job*", "prefix"],
+            ["owner*", "owner"],
+        ];
+
+        validOpts.forEach((validOpt) => expect(jobStringValidator(validOpt[0], validOpt[1])).toBeNull());
     });
     it("should return invalid string with invalid input", async () => {
-        expect(jobStringValidator("job1234567*", "prefix")).toContain("Invalid");
+        const invalidOpts: [string, "owner" | "prefix"][] = [
+            ["invalidowner", "owner"],
+            ["job1234567*", "prefix"],
+        ];
+        invalidOpts.forEach((invalidOpt) => expect(jobStringValidator(invalidOpt[0], invalidOpt[1])).toContain("Invalid"));
     });
 });
