@@ -808,6 +808,7 @@ describe("ZosJobsProvider unit tests - Function getPopulatedPickerArray", () => 
                 value: "kristina",
                 show: true,
                 placeHolder: `Enter job owner id`,
+                validateInput: (text) => jobStringValidator(text, "owner"),
             },
             {
                 key: `prefix`,
@@ -815,7 +816,7 @@ describe("ZosJobsProvider unit tests - Function getPopulatedPickerArray", () => 
                 value: "job*",
                 show: true,
                 placeHolder: `Enter job prefix`,
-                validateInput: () => (text) => jobStringValidator(text, "prefix"),
+                validateInput: (text) => jobStringValidator(text, "prefix"),
             },
             {
                 key: `job-status`,
