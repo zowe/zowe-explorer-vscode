@@ -1163,23 +1163,19 @@ export async function copyDataSets(node, nodeList: ZoweDatasetNode[], datasetPro
         vscode.window.showErrorMessage(`${"Can't copy multiple dataset with different types"}: ${"Select same types to copy"}`);
         return;
     }
-    if (selectedNodes.length === 1 && selectedNodes[0].contextValue === globals.DS_MEMBER_CONTEXT) {
-        // single member
-        return vscode.env.clipboard.writeText(JSON.stringify(dsUtils.getNodeLabels(selectedNodes[0])));
-    }
-    if (unique.includes(globals.DS_MEMBER_CONTEXT)) {
+    if (contextually.isDsMember(selectedNodes[0])) {
         // multiple member
         const filePaths = [];
         selectedNodes.forEach((el) => {
             filePaths.push(dsUtils.getNodeLabels(el));
         });
-        return vscode.env.clipboard.writeText(JSON.stringify(filePaths));
+        return vscode.env.clipboard.writeText(JSON.stringify(filePaths.length > 1 ? filePaths : filePaths[0]));
     }
-    if (unique.includes(globals.DS_DS_CONTEXT)) {
+    if (contextually.isDs(selectedNodes[0])) {
         await copySequentialDatasets(selectedNodes);
         return refreshDataset(selectedNodes[0].getParent(), datasetProvider);
     }
-    if (unique.includes(globals.DS_PDS_CONTEXT)) {
+    if (contextually.isPds(selectedNodes[0])) {
         await copyPartitionedDatasets(selectedNodes);
         return refreshDataset(selectedNodes[0].getParent(), datasetProvider);
     }
@@ -1586,7 +1582,6 @@ export async function copySequentialDatasets(nodes: ZoweDatasetNode[]) {
             if (!sequential) {
                 return;
             }
-
             const res = await ZoweExplorerApiRegister.getMvsApi(nodes[0].getProfile()).allocateLikeDataSet(sequential, lbl);
             if (res.success) {
                 await vscode.window.withProgress(

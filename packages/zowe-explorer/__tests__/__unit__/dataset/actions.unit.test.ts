@@ -1638,7 +1638,7 @@ describe("Dataset Actions Unit Tests - Function showAttributes", () => {
     });
 });
 
-describe("Dataset Actions Unit Tests - Function copyDataSet", () => {
+describe("Dataset Actions Unit Tests - Function copyDataSets", () => {
     function createBlockMocks() {
         const session = createISession();
         const sessionWithoutCredentials = createISessionWithoutCredentials();
@@ -1693,6 +1693,7 @@ describe("Dataset Actions Unit Tests - Function copyDataSet", () => {
         };
     }
 
+    beforeEach(() => (mockClipboardData = null));
     afterAll(() => jest.restoreAllMocks());
 
     it("Checking copy the info of a member node to the clipboard", async () => {
@@ -1700,21 +1701,19 @@ describe("Dataset Actions Unit Tests - Function copyDataSet", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
-        const node = new ZoweDatasetNode("HLQ.TEST.DELETE.NODE", vscode.TreeItemCollapsibleState.None, blockMocks.pdsSessionNode, null);
+        const node = new ZoweDatasetNode("HLQ.TEST.NODE", vscode.TreeItemCollapsibleState.None, blockMocks.pdsSessionNode, null);
         node.contextValue = globals.DS_MEMBER_CONTEXT;
         const nodeList: ZoweDatasetNode[] = [node];
         await dsActions.copyDataSets(null, nodeList, null);
 
-        expect(clipboard.readText()).toBe(
-            '{"profileName":"sestest","dataSetName":"sestest","memberName":"HLQ.TEST.DELETE.NODE","contextValue":"member"}'
-        );
+        expect(clipboard.readText()).toBe('{"profileName":"sestest","dataSetName":"sestest","memberName":"HLQ.TEST.NODE","contextValue":"member"}');
     });
     it("Testing warning of multiple datasets with different types to be copied", async () => {
         globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-        const Membernode = new ZoweDatasetNode("HLQ.TEST.DELETE.NODE", vscode.TreeItemCollapsibleState.None, blockMocks.pdsSessionNode, null);
-        const pdsNode = new ZoweDatasetNode("HLQ.TEST.DELETE.NODE", vscode.TreeItemCollapsibleState.None, blockMocks.pdsSessionNode, null);
+        const Membernode = new ZoweDatasetNode("HLQ.TEST.NODE", vscode.TreeItemCollapsibleState.None, blockMocks.pdsSessionNode, null);
+        const pdsNode = new ZoweDatasetNode("HLQ.TEST.NODE", vscode.TreeItemCollapsibleState.None, blockMocks.pdsSessionNode, null);
         pdsNode.contextValue = globals.DS_PDS_CONTEXT;
         Membernode.contextValue = globals.DS_MEMBER_CONTEXT;
         const nodeList: ZoweDatasetNode[] = [Membernode, pdsNode];
@@ -1730,27 +1729,40 @@ describe("Dataset Actions Unit Tests - Function copyDataSet", () => {
         await dsActions.copyDataSets(blockMocks.pdsSessionNode, null, blockMocks.testDatasetTree);
         expect(selectedNodeSpy).toBeCalledWith(blockMocks.pdsSessionNode, null);
     });
-    it("Checking copy the label of a favorite node to the clipboard", async () => {
+    it("Checking copy the label of a favorite dataset member to the clipboard", async () => {
         globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-        const node = new ZoweDatasetNode("HLQ.TEST.DELETE.NODE", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
-        node.contextValue = globals.DS_DS_CONTEXT + globals.FAV_SUFFIX;
-        const nodeList: ZoweDatasetNode[] = [node];
-        await dsActions.copyDataSets(null, nodeList, blockMocks.testDatasetTree);
-        expect(clipboard.readText()).toBe(
-            '{"profileName":"sestest","dataSetName":"sestest","memberName":"HLQ.TEST.DELETE.NODE","contextValue":"member"}'
-        );
+        const parent = new ZoweDatasetNode("parent", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.datasetSessionNode, null);
+        const child = new ZoweDatasetNode("child", vscode.TreeItemCollapsibleState.None, parent, null);
+        const contextValue = globals.DS_MEMBER_CONTEXT + globals.FAV_SUFFIX;
+        child.contextValue = contextValue;
+        await dsActions.copyDataSets(child, null, blockMocks.testDatasetTree);
+        expect(clipboard.readText()).toBe(`{"profileName":"sestest","dataSetName":"parent","memberName":"child","contextValue":"${contextValue}"}`);
+    });
+    it("Checking copy the label of a node (with a very complext context value) to the clipboard", async () => {
+        globals.defineGlobals("");
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const parent = new ZoweDatasetNode("parent", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.datasetSessionNode, null);
+        const child = new ZoweDatasetNode("child", vscode.TreeItemCollapsibleState.None, parent, null);
+        const contextValue = globals.DS_MEMBER_CONTEXT + "_this_is_a_very_complex_context_value";
+        child.contextValue = contextValue;
+        await dsActions.copyDataSets(child, null, blockMocks.testDatasetTree);
+        expect(clipboard.readText()).toBe(`{"profileName":"sestest","dataSetName":"parent","memberName":"child","contextValue":"${contextValue}"}`);
     });
     it("Checking copy the label of a member to the clipboard via quickkeys", async () => {
         globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
+        const parent = new ZoweDatasetNode("parent", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.datasetSessionNode, null);
+        const child = new ZoweDatasetNode("child", vscode.TreeItemCollapsibleState.None, parent, null);
+        const selectedNodes = [child];
+        const treeView = createTreeView(selectedNodes);
+        blockMocks.testDatasetTree.getTreeView.mockReturnValueOnce(treeView);
         await dsActions.copyDataSets(null, null, blockMocks.testDatasetTree);
-        expect(clipboard.readText()).toBe(
-            '{"profileName":"sestest","dataSetName":"sestest","memberName":"HLQ.TEST.DELETE.NODE","contextValue":"member"}'
-        );
+        expect(clipboard.readText()).toBe('{"profileName":"sestest","dataSetName":"parent","memberName":"child","contextValue":"member"}');
     });
     it("Checking copy the info of multiple members to the clipboard", async () => {
         globals.defineGlobals("");

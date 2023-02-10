@@ -386,10 +386,14 @@ export function asFavorite(node: TreeItem): string {
 }
 
 export function withProfile(node: IZoweTreeNode): string {
-    if (node?.contextValue?.includes(".profile=")) return node?.contextValue;
-    return node?.getParent()?.contextValue?.includes(".profile=")
-        ? node?.contextValue + ".profile=" + node?.getParent()?.contextValue?.split(".profile=")[1] ?? node?.contextValue
-        : node?.contextValue;
+    if (!node) return;
+    const hasProfile = (n: IZoweTreeNode) => n?.contextValue?.includes(".profile=") ?? false;
+    if (hasProfile(node)) return node.contextValue;
+    if (hasProfile(node.getParent())) {
+        const pContext = node.getParent().contextValue.split(".profile=");
+        return node.contextValue + ".profile=" + pContext[1].split(".")[0] + ".";
+    }
+    return node.contextValue;
 }
 
 /**
