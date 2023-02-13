@@ -25,10 +25,6 @@ nls.config({
 })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
-interface Dictionary<T> {
-    [Key: string]: string;
-}
-
 // Globals
 export let ZOWETEMPFOLDER;
 export let ZOWE_TMP_FOLDER;
@@ -103,7 +99,7 @@ export let PROFILE_SECURITY: string | boolean = ZOWE_CLI_SCM;
 export const JOBS_MAX_PREFIX = 8;
 
 // Dictionary describing translation from old configuration names to new standardized names
-export const configurationDictionary: Dictionary<string> = {
+export const configurationDictionary = {
     "Zowe-Default-Datasets-Binary": SETTINGS_DS_DEFAULT_BINARY,
     "Zowe-Default-Datasets-C": SETTINGS_DS_DEFAULT_C,
     "Zowe-Default-Datasets-Classic": SETTINGS_DS_DEFAULT_CLASSIC,

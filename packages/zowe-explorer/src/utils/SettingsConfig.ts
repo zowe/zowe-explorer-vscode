@@ -110,7 +110,7 @@ export class SettingsConfig {
 
                 const newSetting = globals.configurationDictionary[configuration];
 
-                if (globalValue !== undefined) {
+                if (globalValue !== undefined && newSetting !== undefined) {
                     await SettingsConfig.setDirectValue(newSetting, globalValue);
                     globalIsMigrated = true;
                 }
@@ -141,7 +141,7 @@ export class SettingsConfig {
 
                 const newSetting = globals.configurationDictionary[configuration];
 
-                if (workspaceValue !== undefined) {
+                if (workspaceValue !== undefined && newSetting !== undefined) {
                     await SettingsConfig.setDirectValue(newSetting, workspaceValue, vscode.ConfigurationTarget.Workspace);
                     workspaceIsMigrated = true;
                 }
