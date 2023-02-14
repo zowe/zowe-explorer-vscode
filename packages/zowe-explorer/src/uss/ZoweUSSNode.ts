@@ -419,6 +419,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      */
     public async openUSS(download = false, previewFile: boolean, ussFileProvider?: IZoweTree<IZoweUSSTreeNode>) {
         await ussFileProvider.checkCurrentProfile(this);
+
+        const doubleClicked = Gui.utils.wasDoubleClicked(this, ussFileProvider);
+        const shouldPreview = doubleClicked ? false : previewFile;
         if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID || Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED) {
             try {
                 let label: string;
@@ -473,7 +476,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     ussFileProvider.addFileHistory(`[${this.getProfile().name}]: ${this.fullPath}`);
                     ussFileProvider.getTreeView().reveal(this, { select: true, focus: true, expand: false });
 
-                    await this.initializeFileOpening(documentFilePath, previewFile);
+                    await this.initializeFileOpening(documentFilePath, shouldPreview);
                 }
             } catch (err) {
                 await errorHandling(err, this.mProfileName, err.message);

@@ -11,6 +11,7 @@
 
 import * as vscode from "vscode";
 import { IZoweLogger, MessageSeverity } from "../logger";
+import { IZoweTree, IZoweTreeNode } from "../tree";
 
 export interface GuiMessageOptions<T extends string | vscode.MessageItem> {
     severity?: MessageSeverity;
@@ -276,5 +277,24 @@ export namespace Gui {
         task: (progress: vscode.Progress<{ message?: string; increment?: number }>, token: vscode.CancellationToken) => Thenable<R>
     ): Thenable<R> {
         return vscode.window.withProgress(options, task);
+    }
+
+    export namespace utils {
+        export function wasDoubleClicked<T>(node: IZoweTreeNode, provider: IZoweTree<T>): boolean {
+            const timeOfClick = new Date();
+            if (provider.lastOpened.node === node) {
+                const timeDelta = timeOfClick.getTime() - provider.lastOpened.date?.getTime();
+                provider.lastOpened.date = timeOfClick;
+
+                // Magic number: half of the max possible double click time (per Windows specification)
+                return timeDelta < 2500;
+            }
+
+            provider.lastOpened = {
+                node,
+                date: timeOfClick,
+            };
+            return false;
+        }
     }
 }

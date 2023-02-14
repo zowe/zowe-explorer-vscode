@@ -13,7 +13,7 @@ import * as vscode from "vscode";
 import * as jobUtils from "../job/utils";
 import * as globals from "../globals";
 import { IJob, imperative } from "@zowe/cli";
-import { Gui, ValidProfileEnum, IZoweTree, IZoweJobTreeNode, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
+import { Gui, ValidProfileEnum, IZoweTree, IZoweJobTreeNode, PersistenceSchemaEnum, NodeInteraction } from "@zowe/zowe-explorer-api";
 import { FilterItem, errorHandling } from "../utils/ProfilesUtils";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
@@ -107,6 +107,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
 
     public mSessionNodes: IZoweJobTreeNode[] = [];
     public mFavorites: IZoweJobTreeNode[] = [];
+    public lastOpened: NodeInteraction = {};
     public searchByQuery = new FilterItem({
         text: globals.plusSign + localize("zosJobsProvider.option.prompt.createId", "Create job search filter"),
         menuType: globals.JobPickerTypes.QuerySearch,

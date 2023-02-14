@@ -397,6 +397,9 @@ export async function openPS(node: api.IZoweDatasetTreeNode, previewMember: bool
     if (datasetProvider) {
         await datasetProvider.checkCurrentProfile(node);
     }
+
+    const doubleClicked = api.Gui.utils.wasDoubleClicked(node, datasetProvider);
+    const shouldPreview = doubleClicked ? false : previewMember;
     if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
         try {
             let label: string;
@@ -437,11 +440,7 @@ export async function openPS(node: api.IZoweDatasetTreeNode, previewMember: bool
                 node.setEtag(response.apiResponse.etag);
             }
             const document = await vscode.workspace.openTextDocument(getDocumentFilePath(label, node));
-            if (previewMember === true) {
-                await api.Gui.showTextDocument(document);
-            } else {
-                await api.Gui.showTextDocument(document, { preview: false });
-            }
+            await api.Gui.showTextDocument(document, { preview: shouldPreview });
             if (datasetProvider) {
                 datasetProvider.addFileHistory(`[${node.getProfileName()}]: ${label}`);
             }
