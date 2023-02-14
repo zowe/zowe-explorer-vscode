@@ -38,7 +38,7 @@ jobs:
         id: lerna
         run: echo "version=$(jq -r .version lerna.json)" >> $GITHUB_OUTPUT
 
-      - uses: zowe-actions/octorelease@support-zowe-explorer
+      - uses: zowe-actions/octorelease@master
         id: octorelease
         if: ${{ !contains(github.event.inputs.version || steps.lerna.outputs.version, '-SNAPSHOT') }}
         env:
@@ -61,7 +61,7 @@ jobs:
 
       - name: Create Snapshot Version
         if: steps.octorelease.outcome == 'success'
-        uses: zowe-actions/octorelease/script@support-zowe-explorer
+        uses: zowe-actions/octorelease/script@master
         env:
           VERSION_STRING: "%s-SNAPSHOT"
         with:
