@@ -220,16 +220,14 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
         if (this._tooltip) {
             return this._tooltip;
         }
-        if (this.job !== null) {
+        if (this.job) {
             if (this.job.retcode) {
                 return `${this.job.jobname}(${this.job.jobid}) - ${this.job.retcode}`;
             } else {
                 return `${this.job.jobname}(${this.job.jobid})`;
             }
-        } else if (this.searchId.length > 0) {
-            return `${this.label} - job id: ${this.searchId}`;
         } else {
-            return `${this.label} - owner: ${this.owner} prefix: ${this.prefix}`;
+            return this.label;
         }
     }
 

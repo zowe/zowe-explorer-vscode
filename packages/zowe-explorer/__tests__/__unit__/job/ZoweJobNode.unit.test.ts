@@ -707,3 +707,27 @@ describe("ZosJobsProvider - Function handleEditingMultiJobParameters", () => {
         expect(result).toEqual({ Owner: "zowe", Prefix: "KRI*", JobId: undefined, Status: "ACTIVE" });
     });
 });
+
+describe("ZosJobsProvider - tooltip", () => {
+    it("should return undefined tooltip", async () => {
+        const globalMocks = await createGlobalMocks();
+        globalMocks.testJobsProvider.mSessionNodes[1]._tooltip = undefined;
+        globalMocks.testJobsProvider.mSessionNodes[1].job = undefined;
+        globalMocks.testJobsProvider.mSessionNodes[1].label = undefined;
+        const actualTooltip = globalMocks.testJobsProvider.mSessionNodes[1].tooltip;
+        expect(undefined).toEqual(actualTooltip);
+    });
+    it("should return existing _tooltip", async () => {
+        const globalMocks = await createGlobalMocks();
+        globalMocks.testJobsProvider.mSessionNodes[1]._tooltip = "my_tooltip";
+        const actualTooltip = globalMocks.testJobsProvider.mSessionNodes[1].tooltip;
+        expect("my_tooltip").toEqual(actualTooltip);
+    });
+    it("should return job id tooltip", async () => {
+        const globalMocks = await createGlobalMocks();
+        const job = { jobname: "myJob", jobid: 123, retcode: 345 };
+        globalMocks.testJobsProvider.mSessionNodes[1].job = job;
+        const actualTooltip = globalMocks.testJobsProvider.mSessionNodes[1].tooltip;
+        expect("myJob(123) - 345").toEqual(actualTooltip);
+    });
+});

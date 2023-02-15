@@ -1174,11 +1174,14 @@ export async function copyDataSets(node, nodeList: ZoweDatasetNode[], datasetPro
     if (contextually.isDs(selectedNodes[0])) {
         await copySequentialDatasets(selectedNodes);
         return refreshDataset(selectedNodes[0].getParent(), datasetProvider);
-    }
-    if (contextually.isPds(selectedNodes[0])) {
+    } else if (contextually.isPds(selectedNodes[0])) {
         await copyPartitionedDatasets(selectedNodes);
         return refreshDataset(selectedNodes[0].getParent(), datasetProvider);
     }
+    // else if (contextually.isDirectDs(selectedNodes[0])) {
+    //     await copyDirectDatasets(selectedNodes);
+    //     return refreshDataset(selectedNodes[0].getParent(), datasetProvider);
+    // }
 }
 
 /**
@@ -1302,38 +1305,36 @@ export async function pasteMember(node: api.IZoweDatasetTreeNode, datasetProvide
         }
 
         if (beforeProfileName === profileName) {
+            let replace: shouldReplace;
             if (memberName) {
-                const nodeProfile = node.getProfile();
-                const responseItem: zowe.IZosFilesResponse = await ZoweExplorerApiRegister.getMvsApi(nodeProfile).allMembers(`${dataSetName}`, {
-                    responseTimeout: nodeProfile?.profile?.responseTimeout,
-                });
-                if (responseItem.apiResponse.items.some((singleItem) => singleItem.member === memberName.toUpperCase())) {
-                    throw Error(`${dataSetName}(${memberName}) already exists. You cannot replace a member`);
+                replace = await determineReplacement(node.getProfile(), `${dataSetName}(${memberName})`, "mem");
+            }
+            if (replace !== "cancel") {
+                try {
+                    await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).copyDataSetMember(
+                        { dsn: beforeDataSetName, member: beforeMemberName },
+                        { dsn: dataSetName, member: memberName },
+                        { replace: replace === "replace" }
+                    );
+                } catch (err) {
+                    globals.LOG.error(err);
+                    api.Gui.errorMessage(err.message);
+                    return;
                 }
-            }
-            try {
-                await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).copyDataSetMember(
-                    { dsn: beforeDataSetName, member: beforeMemberName },
-                    { dsn: dataSetName, member: memberName }
-                );
-            } catch (err) {
-                globals.LOG.error(err);
-                api.Gui.errorMessage(err.message);
-                return;
-            }
-            if (memberName) {
-                datasetProvider.refreshElement(node);
-                let node2;
-                if (node.contextValue.includes(globals.FAV_SUFFIX)) {
-                    node2 = datasetProvider.findNonFavoritedNode(node);
+                if (memberName) {
+                    datasetProvider.refreshElement(node);
+                    let node2;
+                    if (node.contextValue.includes(globals.FAV_SUFFIX)) {
+                        node2 = datasetProvider.findNonFavoritedNode(node);
+                    } else {
+                        node2 = datasetProvider.findFavoritedNode(node);
+                    }
+                    if (node2) {
+                        datasetProvider.refreshElement(node2);
+                    }
                 } else {
-                    node2 = datasetProvider.findFavoritedNode(node);
+                    refreshPS(node);
                 }
-                if (node2) {
-                    datasetProvider.refreshElement(node2);
-                }
-            } else {
-                refreshPS(node);
             }
         }
     }
@@ -1578,19 +1579,24 @@ export async function copySequentialDatasets(nodes: ZoweDatasetNode[]) {
                 },
             };
 
-            const sequential = await api.Gui.showInputBox(inputBoxOptions);
-            if (!sequential) {
+            const dsname = await api.Gui.showInputBox(inputBoxOptions);
+            if (!dsname) {
                 return;
             }
-            const res = await ZoweExplorerApiRegister.getMvsApi(nodes[0].getProfile()).allocateLikeDataSet(sequential, lbl);
-            if (res.success) {
-                await vscode.window.withProgress(
+
+            const replace = await determineReplacement(nodes[0].getProfile(), dsname, "ps");
+            let res: zowe.IZosFilesResponse;
+            if (replace === "notFound") {
+                res = await ZoweExplorerApiRegister.getMvsApi(nodes[0].getProfile()).allocateLikeDataSet(dsname, lbl);
+            }
+            if (res?.success || replace !== "cancel") {
+                await api.Gui.withProgress(
                     {
                         location: vscode.ProgressLocation.Window,
                         title: localize("paste.dataSet.InPrg", "Copying File(s)"),
                     },
                     () => {
-                        return ZoweExplorerApiRegister.getMvsApi(nodes[0].getProfile()).copyDataSet(lbl, sequential);
+                        return ZoweExplorerApiRegister.getMvsApi(nodes[0].getProfile()).copyDataSet(lbl, dsname, null, replace === "replace");
                     }
                 );
             }
@@ -1625,12 +1631,16 @@ export async function copyPartitionedDatasets(nodes: ZoweDatasetNode[]) {
                 },
             };
 
-            const partitionedDs = await api.Gui.showInputBox(inputBoxOptions);
-            if (!partitionedDs) {
+            const dsname = await api.Gui.showInputBox(inputBoxOptions);
+            if (!dsname) {
                 return;
             }
-            const res = await ZoweExplorerApiRegister.getMvsApi(nodes[0].getProfile()).allocateLikeDataSet(partitionedDs, lbl);
-            if (res.success) {
+            const replace = await determineReplacement(nodes[0].getProfile(), dsname, "po");
+            let res: zowe.IZosFilesResponse;
+            if (replace === "notFound") {
+                res = await ZoweExplorerApiRegister.getMvsApi(nodes[0].getProfile()).allocateLikeDataSet(dsname, lbl);
+            }
+            if (res?.success || replace !== "cancel") {
                 const uploadOptions: IUploadOptions = {
                     etag: node?.getEtag(),
                     returnEtag: true,
@@ -1651,7 +1661,8 @@ export async function copyPartitionedDatasets(nodes: ZoweDatasetNode[]) {
                         for (const child of children) {
                             ZoweExplorerApiRegister.getMvsApi(node.getProfile()).copyDataSetMember(
                                 { dsn: lbl, member: child.getLabel().toString() },
-                                { dsn: partitionedDs, member: child.getLabel().toString() }
+                                { dsn: dsname, member: child.getLabel().toString() },
+                                { replace: replace === "replace" }
                             );
                         }
                         return Promise.resolve();
@@ -1667,4 +1678,40 @@ export async function copyPartitionedDatasets(nodes: ZoweDatasetNode[]) {
             );
         }
     }
+}
+
+export type replaceDstype = "ps" | "po" | "da" | "mem";
+export type shouldReplace = "replace" | "cancel" | "notFound";
+export async function determineReplacement(nodeProfile: zowe.imperative.IProfileLoaded, name: string, type: replaceDstype): Promise<shouldReplace> {
+    const mvsApi = ZoweExplorerApiRegister.getMvsApi(nodeProfile);
+    const options = { responseTimeout: nodeProfile.profile?.responseTimeout };
+    const stringReplace = localize("copyDataSet.replace.option1", "Replace");
+    const stringCancel = localize("copyDataSet.replace.option2", "Cancel");
+    let q: string = null;
+    let replace = false;
+    if (type === "mem") {
+        const dsname = name.split("(")[0];
+        const member = name.split("(")[1].slice(0, -1);
+        const res = await mvsApi.allMembers(dsname, options);
+        if (res.success && res.apiResponse?.items.some((m) => m.member === member.toUpperCase())) {
+            q = localize("copyDataSet.replace.mem.question", "The dataset member already exists.\nDo you want to replace it?");
+            replace = stringReplace === (await api.Gui.showMessage(q, { items: [stringReplace, stringCancel] }));
+        }
+    } else {
+        const res = await mvsApi.dataSet(name, options);
+        if (res.success && res.apiResponse?.items.length > 0) {
+            // Assume DA
+            q = localize("copyDataSet.replace.da.question", "The direct (DA) dataset already exists.\nDo you want to replace it?");
+            if (type === "ps") {
+                q = localize("copyDataSet.replace.ps.question", "The physical sequential (PS) dataset already exists.\nDo you want to replace it?");
+            } else if (type === "po") {
+                q = localize(
+                    "copyDataSet.replace.po.question",
+                    "The partitioned (PO) dataset already exists.\nDo you want to merge them while replacing any existing members?"
+                );
+            }
+            replace = stringReplace === (await api.Gui.showMessage(q, { items: [stringReplace, stringCancel] }));
+        }
+    }
+    return replace ? "replace" : q === null ? "notFound" : "cancel";
 }
