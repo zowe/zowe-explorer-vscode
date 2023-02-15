@@ -1693,13 +1693,13 @@ export async function determineReplacement(nodeProfile: zowe.imperative.IProfile
         const dsname = name.split("(")[0];
         const member = name.split("(")[1].slice(0, -1);
         const res = await mvsApi.allMembers(dsname, options);
-        if (res.success && res.apiResponse?.items.some((m) => m.member === member.toUpperCase())) {
+        if (res?.success && res.apiResponse?.items.some((m) => m.member === member.toUpperCase())) {
             q = localize("copyDataSet.replace.mem.question", "The dataset member already exists.\nDo you want to replace it?");
             replace = stringReplace === (await api.Gui.showMessage(q, { items: [stringReplace, stringCancel] }));
         }
     } else {
         const res = await mvsApi.dataSet(name, options);
-        if (res.success && res.apiResponse?.items.length > 0) {
+        if (res?.success && res.apiResponse?.items.length > 0) {
             // Assume DA
             q = localize("copyDataSet.replace.da.question", "The direct (DA) dataset already exists.\nDo you want to replace it?");
             if (type === "ps") {
