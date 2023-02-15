@@ -745,7 +745,7 @@ describe("USS Action Unit Tests - copy file / directory", () => {
         // Test toSameSession where one of the files has a diff LPAR
         let isSameSession = UssFileUtils.toSameSession(
             {
-                localPath: "C://some//local//path",
+                localPath: "C:/some/local/path",
                 ussPath: "/z/SOMEUSER/path",
                 baseName: "<ROOT>",
                 children: [],
@@ -759,7 +759,7 @@ describe("USS Action Unit Tests - copy file / directory", () => {
         // Test toSameSession where the LPAR is the same, and the file node has no children
         isSameSession = UssFileUtils.toSameSession(
             {
-                localPath: "C://some//local//path",
+                localPath: "C:/some/local/path",
                 ussPath: "/z/SOMEUSER/path",
                 baseName: "<ROOT>",
                 children: [],
