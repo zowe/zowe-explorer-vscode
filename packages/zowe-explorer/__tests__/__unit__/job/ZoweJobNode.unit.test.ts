@@ -757,6 +757,6 @@ describe("ZosJobsProvider - getJobs", () => {
             }),
         });
         jest.spyOn(Gui, "warningMessage").mockImplementation();
-        await expect((globalMocks.testJobNode as any).getJobs("test", "test", "test", "test")).resolves.not.toThrow();
+        await expect(globalMocks.testJobNode.getJobs("test", "test", "test", "test")).resolves.not.toThrow();
     });
 });
