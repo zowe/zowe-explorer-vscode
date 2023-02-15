@@ -23,10 +23,10 @@ import { PersistenceSchemaEnum } from "../profiles/UserSettings";
  * @template T provide a subtype of vscode.TreeItem
  */
 
-/* 
-    Contains a node that was interacted with,
-    as well as a timestamp for when that interaction occurred.
-*/
+/**
+ *  Contains a node that was recently interacted with,
+ *  as well as a timestamp for when that interaction occurred.
+ */
 export class NodeInteraction {
     public node?: IZoweTreeNode;
     public date?: Date;

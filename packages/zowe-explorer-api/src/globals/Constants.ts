@@ -20,4 +20,4 @@ export const SETTINGS_SCS_DEFAULT = SCS_ZOWE_CLI_V2;
 
 // default double-click speed for Windows
 // (since VScode does not have a double-click event for nodes, we need our own check)
-export const DOUBLE_CLICK_SPEED = 500;
+export const DOUBLE_CLICK_SPEED_MS = 500;

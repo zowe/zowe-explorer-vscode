@@ -134,9 +134,10 @@ describe("Gui unit tests", () => {
     });
 
     it("can set a status bar message w/ a timeout", () => {
-        Gui.setStatusBarMessage("Example status bar message", 500);
+        const EXAMPLE_TIMEOUT_MS = 500;
+        Gui.setStatusBarMessage("Example status bar message", EXAMPLE_TIMEOUT_MS);
 
-        expect(mocks.setStatusBarMessage).toHaveBeenCalledWith("Example status bar message", 500);
+        expect(mocks.setStatusBarMessage).toHaveBeenCalledWith("Example status bar message", EXAMPLE_TIMEOUT_MS);
     });
 
     it("can show a file open dialog", async () => {
