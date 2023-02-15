@@ -84,5 +84,6 @@
   "saveFile.error.saveFailed": "Data set failed to save. Data set may have been deleted on mainframe.",
   "saveFile.response.save.title": "Saving data set...",
   "saveFile.error.ZosmfEtagMismatchError": "Rest API failure with HTTP(S) status 412",
-  "saveFile.error.etagMismatch": "Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict."
+  "saveFile.error.etagMismatch": "Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict.",
+  "saveFile.log.error.save": "Error encountered when saving data set: "
 }
