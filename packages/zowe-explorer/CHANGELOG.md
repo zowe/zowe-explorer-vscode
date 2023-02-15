@@ -12,6 +12,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Prevented creation of duplicate session after executing a favorited search query. [#1029](https://github.com/zowe/vscode-extension-for-zowe/issues/1029)
 - Resolved an issue where VSCode did not provide all context menu options for a profile node after a multi-select operation. [#2108](https://github.com/zowe/vscode-extension-for-zowe/pull/2108)
 - Fixed issue with standardization of old v1 settings in Zowe Explorer during activation. [#1520](https://github.com/zowe/vscode-extension-for-zowe/issues/1520)
+- Fixed bug where a JSON error occurs for job nodes when collapsing or expanding with a single click. [#2121](https://github.com/zowe/vscode-extension-for-zowe/issues/2121)
 
 ## `2.6.0`
 
