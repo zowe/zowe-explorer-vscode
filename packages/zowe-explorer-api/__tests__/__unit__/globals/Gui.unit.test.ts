@@ -9,9 +9,10 @@
  *                                                                                 *
  */
 
-import { Gui } from "../../../src/";
+import { Gui, IZoweTree, IZoweTreeNode } from "../../../src/";
 
 import * as vscode from "vscode";
+import { DOUBLE_CLICK_SPEED_MS } from "../../../src/globals";
 jest.mock("vscode");
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
@@ -148,5 +149,24 @@ describe("Gui unit tests", () => {
     it("can show an input box", async () => {
         await Gui.showInputBox({});
         expect(mocks.showInputBox).toHaveBeenCalled();
+    });
+});
+
+describe("Gui.utils - unit tests", () => {
+    it("returns false when checking if an invalid node was double-clicked", () => {
+        const doubleClicked = Gui.utils.wasDoubleClicked(null as unknown as IZoweTreeNode, { lastOpened: {} } as unknown as IZoweTree<unknown>);
+        expect(doubleClicked).toBe(false);
+    });
+
+    it("returns false when the second click event is after the DOUBLE_CLICK_SPEED_MS window", () => {
+        const mockTime = new Date();
+
+        setTimeout(() => {
+            const doubleClicked = Gui.utils.wasDoubleClicked(
+                null as unknown as IZoweTreeNode,
+                { lastOpened: { node: null, date: mockTime } } as unknown as IZoweTree<unknown>
+            );
+            expect(doubleClicked).toBe(false);
+        }, DOUBLE_CLICK_SPEED_MS * 2);
     });
 });
