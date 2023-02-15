@@ -158,15 +158,23 @@ describe("Gui.utils - unit tests", () => {
         expect(doubleClicked).toBe(false);
     });
 
-    it("returns false when the second click event is after the DOUBLE_CLICK_SPEED_MS window", () => {
+    const testDoubleClickEvent = (timeout: number, intendedResult: boolean): void => {
         const mockTime = new Date();
+        const fakeNode = { label: "fakeLabel" } as unknown as IZoweTreeNode;
 
         setTimeout(() => {
-            const doubleClicked = Gui.utils.wasDoubleClicked(
-                null as unknown as IZoweTreeNode,
-                { lastOpened: { node: null, date: mockTime } } as unknown as IZoweTree<unknown>
-            );
-            expect(doubleClicked).toBe(false);
-        }, DOUBLE_CLICK_SPEED_MS * 2);
+            const doubleClicked = Gui.utils.wasDoubleClicked(fakeNode, {
+                lastOpened: { node: fakeNode, date: mockTime },
+            } as unknown as IZoweTree<unknown>);
+            expect(doubleClicked).toBe(intendedResult);
+        }, timeout);
+    };
+
+    it("returns false when the second click event is after the DOUBLE_CLICK_SPEED_MS window", () => {
+        testDoubleClickEvent(DOUBLE_CLICK_SPEED_MS * 2, false);
+    });
+
+    it("returns true when the second click event is within the DOUBLE_CLICK_SPEED_MS window", () => {
+        testDoubleClickEvent(DOUBLE_CLICK_SPEED_MS / 2, true);
     });
 });
