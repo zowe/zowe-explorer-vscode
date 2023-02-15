@@ -91,6 +91,7 @@ function createGlobalMocks() {
     Object.defineProperty(vscode.window, "showQuickPick", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "createQuickPick", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.commands, "executeCommand", { value: jest.fn(), configurable: true });
+    Object.defineProperty(vscode.workspace, "applyEdit", { value: jest.fn(), configurable: true });
     Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
     Object.defineProperty(globals.LOG, "debug", { value: jest.fn(), configurable: true });
     Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
@@ -970,6 +971,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         await dsActions.saveFile(testDocument, blockMocks.testDatasetTree);
 
         expect(getSessionSpy).toReturnWith(blockMocks.sessionWithoutCredentials);
+        expect(mocked(vscode.workspace.applyEdit)).toHaveBeenCalledTimes(2);
     });
     it("Checking common dataset saving failed attempt due to inability to locate session and profile", async () => {
         globals.defineGlobals("");
@@ -1120,6 +1122,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
 
         expect(mocked(sharedUtils.concatChildNodes)).toBeCalled();
         expect(mocked(Gui.errorMessage)).toBeCalledWith("failed");
+        expect(mocked(vscode.workspace.applyEdit)).toHaveBeenCalledTimes(2);
     });
     it("Checking favorite dataset saving", async () => {
         globals.defineGlobals("");
