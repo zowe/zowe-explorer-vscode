@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import { Gui, ValidProfileEnum } from "@zowe/zowe-explorer-api";
-import { Job } from "../../../src/job/ZoweJobNode";
+import { Job, Spool } from "../../../src/job/ZoweJobNode";
 import {
     createISession,
     createIProfile,
@@ -21,7 +21,7 @@ import {
     createTextDocument,
     createInstanceOfProfile,
 } from "../../../__mocks__/mockCreators/shared";
-import { createIJobFile, createIJobObject, createJobSessionNode, createJobsTree } from "../../../__mocks__/mockCreators/jobs";
+import { createIJobFile, createIJobObject, createJobFavoritesNode, createJobSessionNode, createJobsTree } from "../../../__mocks__/mockCreators/jobs";
 import { createJesApi, bindJesApi } from "../../../__mocks__/mockCreators/api";
 import * as jobActions from "../../../src/job/actions";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
@@ -32,6 +32,7 @@ import { Profiles } from "../../../src/Profiles";
 import * as SpoolProvider from "../../../src/SpoolProvider";
 import * as refreshActions from "../../../src/shared/refresh";
 import { JobSubmitDialogOpts, JOB_SUBMIT_DIALOG_OPTS } from "../../../src/shared/utils";
+import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 
 const activeTextEditorDocument = jest.fn();
 
@@ -739,6 +740,35 @@ describe("Jobs Actions Unit Tests - Function getSpoolContent", () => {
         await jobActions.getSpoolContent(session, spoolFile, anyTimestamp);
 
         expect(mocked(Gui.errorMessage)).toBeCalledWith("Test Error: Test");
+    });
+    it("should fetch the spool content successfully", async () => {
+        const blockMocks = createBlockMocks();
+        const testNode = new Job(
+            "undefined:test - testJob",
+            vscode.TreeItemCollapsibleState.None,
+            createJobFavoritesNode(),
+            createISessionWithoutCredentials(),
+            null,
+            createIProfile()
+        );
+        jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValue({
+            getSpoolFiles: () => [
+                {
+                    stepName: undefined,
+                    ddname: "test",
+                    "record-count": "testJob",
+                    procstep: "testJob",
+                },
+            ],
+        } as any);
+        jest.spyOn(Spool.prototype, "getProfile").mockReturnValue({
+            name: "test",
+        } as any);
+        mocked(SpoolProvider.toUniqueJobFileUri).mockReturnValueOnce(() => blockMocks.mockUri);
+        mocked(vscode.window.showTextDocument).mockImplementationOnce(() => {
+            throw new Error("Test");
+        });
+        await expect(jobActions.getSpoolContentFromMainframe(testNode)).resolves.not.toThrow();
     });
 });
 
