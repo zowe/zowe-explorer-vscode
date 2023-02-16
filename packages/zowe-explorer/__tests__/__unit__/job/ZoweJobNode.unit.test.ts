@@ -16,19 +16,18 @@ import * as zowe from "@zowe/cli";
 import * as globals from "../../../src/globals";
 import { createIJobFile, createIJobObject, createJobSessionNode } from "../../../__mocks__/mockCreators/jobs";
 import { Job } from "../../../src/job/ZoweJobNode";
-import { ValidProfileEnum, IZoweJobTreeNode, ProfilesCache } from "@zowe/zowe-explorer-api";
+import { IZoweJobTreeNode, ProfilesCache, Gui } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import * as sessUtils from "../../../src/utils/SessionUtils";
-import * as utils from "../../../src/utils/ProfilesUtils";
 import {
     createIProfile,
     createISession,
     createInstanceOfProfile,
     createISessionWithoutCredentials,
-    createQuickPickContent,
     createInstanceOfProfileInfo,
 } from "../../../__mocks__/mockCreators/shared";
+import * as contextually from "../../../src/shared/context";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -328,6 +327,22 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
         expect(spoolFiles.length).toBe(1);
         expect(spoolFiles[0].label).toEqual("STEP:STDOUT - 1");
         expect(spoolFiles[0].owner).toEqual("*");
+    });
+
+    it("should return a new job if not owner and is a session", async () => {
+        const globalMocks = await createGlobalMocks();
+        const expectedJob = new Job(
+            "Use the search button to display jobs",
+            vscode.TreeItemCollapsibleState.None,
+            globalMocks.testJobNode,
+            null,
+            null,
+            null
+        );
+
+        globalMocks.testJobNode._owner = null;
+        jest.spyOn(contextually, "isSession").mockReturnValueOnce(true);
+        await expect(globalMocks.testJobNode.getChildren()).resolves.toEqual([expectedJob]);
     });
 });
 
@@ -729,5 +744,19 @@ describe("ZosJobsProvider - tooltip", () => {
         globalMocks.testJobsProvider.mSessionNodes[1].job = job;
         const actualTooltip = globalMocks.testJobsProvider.mSessionNodes[1].tooltip;
         expect("myJob(123) - 345").toEqual(actualTooltip);
+    });
+});
+
+describe("ZosJobsProvider - getJobs", () => {
+    it("should filter duplicate jobs", async () => {
+        const globalMocks = await createGlobalMocks();
+        Object.defineProperty(ZoweExplorerApiRegister, "getJesApi", {
+            value: () => ({
+                getJobsByParameters: false,
+                getJobsByOwnerAndPrefix: () => ["test"],
+            }),
+        });
+        jest.spyOn(Gui, "warningMessage").mockImplementation();
+        await expect(globalMocks.testJobNode.getJobs("test", "test", "test", "test")).resolves.not.toThrow();
     });
 });
