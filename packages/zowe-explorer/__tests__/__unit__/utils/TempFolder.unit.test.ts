@@ -41,6 +41,9 @@ describe("TempFolder Unit Tests", () => {
     });
 
     function createBlockMocks() {
+        const newMocks = {
+            tempPath: "testpath12\\temp",
+        };
         Object.defineProperty(vscode.workspace, "getConfiguration", {
             value: jest.fn(),
             configurable: true,
@@ -53,17 +56,18 @@ describe("TempFolder Unit Tests", () => {
         Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
         Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
         jest.spyOn(ProfileUtils, "errorHandling").mockImplementationOnce(jest.fn());
+        return newMocks;
     }
 
     it("moveTempFolder should run moveSync", async () => {
-        createBlockMocks();
+        const blockMocks = createBlockMocks();
         jest.spyOn(fs, "mkdirSync").mockImplementation();
         jest.spyOn(fs, "existsSync").mockReturnValue(true);
         const moveSyncSpy = jest.spyOn(fsExtra, "moveSync");
         await expect(TempFolder.moveTempFolder("testpath12", "testpath123")).resolves.toEqual(undefined);
         expect(moveSyncSpy).toBeCalledTimes(1);
-        const expectedPath1 = process.platform === "win32" ? "testpath12\\temp" : "testpath12/temp".split(path.sep).join(path.posix.sep);
-        const expectedPath2 = process.platform === "win32" ? "testpath123\\temp" : "testpath123/temp".split(path.sep).join(path.posix.sep);
+        const expectedPath1 = process.platform === "win32" ? blockMocks.tempPath : blockMocks.tempPath.split(path.sep).join(path.posix.sep);
+        const expectedPath2 = process.platform === "win32" ? blockMocks.tempPath : blockMocks.tempPath.split(path.sep).join(path.posix.sep);
         expect(moveSyncSpy).toBeCalledWith(expectedPath1, expectedPath2, { overwrite: true });
     });
 
