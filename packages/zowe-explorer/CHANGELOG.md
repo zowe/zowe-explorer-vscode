@@ -4,8 +4,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ## TBD Release
 
-### New features and enhancements
-
 ### Bug fixes
 
 - Removed excess pop-ups when listing/opening USS files, and replaced required pop-ups with status bar items to improve UX. [#2091](https://github.com/zowe/vscode-extension-for-zowe/issues/2091)
