@@ -31,7 +31,7 @@ import { getIconByNode } from "../generators/icons";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { DatasetTree } from "./DatasetTree";
 import * as contextually from "../shared/context";
-import { setFileSaved } from "../utils/workspace";
+import { markDocumentUnsaved, setFileSaved } from "../utils/workspace";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 
 // Set up localization
@@ -1433,10 +1433,12 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
                 }
             }
         } else {
+            await markDocumentUnsaved(doc);
             api.Gui.errorMessage(uploadResponse.commandResponse);
         }
     } catch (err) {
-        globals.LOG.error(err);
-        api.Gui.errorMessage(err.message);
+        globals.LOG.error(localize("saveFile.log.error.save", "Error encountered when saving data set: ") + JSON.stringify(err));
+        await markDocumentUnsaved(doc);
+        await errorHandling(err, sesName, err.message);
     }
 }
