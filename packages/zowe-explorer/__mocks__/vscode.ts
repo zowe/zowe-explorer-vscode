@@ -305,6 +305,23 @@ export class TreeItem {
     // constructor(resourceUri: Uri, collapsibleState?: TreeItemCollapsibleState);
 }
 
+export enum ConfigurationTarget {
+    /**
+     * Global configuration
+     */
+    Global = 1,
+
+    /**
+     * Workspace configuration
+     */
+    Workspace = 2,
+
+    /**
+     * Workspace folder configuration
+     */
+    WorkspaceFolder = 3,
+}
+
 /**
  * Collapsible state of the tree item
  */

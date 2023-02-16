@@ -11,5 +11,6 @@
   "saveFile.overwriteConfirmation.yes": "Yes",
   "saveFile.overwriteConfirmation.no": "No",
   "uploadContent.cancelled": "Upload cancelled.",
+  "searchJobs.owner.invalid": "Invalid job owner",
   "searchJobs.prefix.invalid": "Invalid job prefix"
 }

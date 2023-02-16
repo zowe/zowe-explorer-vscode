@@ -160,7 +160,6 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                         elementChildren.push(existing);
                     } else {
                         const jobNode = new Job(nodeTitle, vscode.TreeItemCollapsibleState.Collapsed, this, this.session, job, this.getProfile());
-                        jobNode.command = { command: "zowe.zosJobsSelectjob", title: "", arguments: [jobNode] };
                         jobNode.contextValue = globals.JOBS_JOB_CONTEXT;
                         if (job.retcode) {
                             jobNode.contextValue += globals.RC_SUFFIX + job.retcode;
