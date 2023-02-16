@@ -111,8 +111,10 @@ export namespace window {
         return undefined;
     }
 
-    export function setStatusBarMessage(message: string, ...items: string[]): undefined {
-        return undefined;
+    export function setStatusBarMessage(message: string, ...items: string[]): object {
+        return {
+            dispose: () => {},
+        };
     }
 
     /**

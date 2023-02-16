@@ -87,20 +87,12 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
             ];
         }
         if (this.dirty) {
-            let spools: zowe.IJobFile[] = [];
             const elementChildren = [];
             if (contextually.isJob(this)) {
-                spools = await Gui.withProgress(
-                    {
-                        location: vscode.ProgressLocation.Notification,
-                        title: localize("ZoweJobNode.getJobs.spoolfiles", "Get Job Spool files command submitted."),
-                    },
-                    () => {
-                        const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
-                        return ZoweExplorerApiRegister.getJesApi(cachedProfile).getSpoolFiles(this.job.jobname, this.job.jobid);
-                    }
-                );
-                spools = spools
+                const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
+                const spools: zowe.IJobFile[] = (
+                    (await ZoweExplorerApiRegister.getJesApi(cachedProfile).getSpoolFiles(this.job.jobname, this.job.jobid)) ?? []
+                )
                     // filter out all the objects which do not seem to be correct Job File Document types
                     // see an issue #845 for the details
                     .filter((item) => !(item.id === undefined && item.ddname === undefined && item.stepname === undefined));
@@ -155,15 +147,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                     elementChildren.push(spoolNode);
                 });
             } else {
-                const jobs = await Gui.withProgress(
-                    {
-                        location: vscode.ProgressLocation.Notification,
-                        title: localize("ZoweJobNode.getJobs.jobs", "Get Jobs command submitted."),
-                    },
-                    () => {
-                        return this.getJobs(this._owner, this._prefix, this._searchId, this._jobStatus); // change here
-                    }
-                );
+                const jobs = await this.getJobs(this._owner, this._prefix, this._searchId, this._jobStatus);
                 jobs.forEach((job) => {
                     let nodeTitle: string;
                     if (job.retcode) {
