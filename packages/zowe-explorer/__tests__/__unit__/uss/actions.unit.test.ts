@@ -150,6 +150,7 @@ function createGlobalMocks() {
     Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
     Object.defineProperty(globals.LOG, "warn", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true });
+    Object.defineProperty(vscode.workspace, "applyEdit", { value: jest.fn(), configurable: true });
     Object.defineProperty(Profiles, "getInstance", {
         value: jest.fn(() => {
             return {
@@ -477,6 +478,7 @@ describe("USS Action Unit Tests - Function saveUSSFile", () => {
         await ussNodeActions.saveUSSFile(blockMocks.testDoc, blockMocks.testUSSTree);
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(1);
         expect(globalMocks.showErrorMessage.mock.calls[0][0]).toBe("Save failed");
+        expect(mocked(vscode.workspace.applyEdit)).toHaveBeenCalledTimes(2);
     });
 
     it("Tests that saveUSSFile fails when error occurs", async () => {
@@ -491,6 +493,7 @@ describe("USS Action Unit Tests - Function saveUSSFile", () => {
         await ussNodeActions.saveUSSFile(blockMocks.testDoc, blockMocks.testUSSTree);
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(1);
         expect(globalMocks.showErrorMessage.mock.calls[0][0]).toBe("Test Error Error: Test Error");
+        expect(mocked(vscode.workspace.applyEdit)).toHaveBeenCalledTimes(2);
     });
 
     it("Tests that saveUSSFile fails when HTTP error occurs", async () => {
