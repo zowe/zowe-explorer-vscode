@@ -1009,12 +1009,12 @@
           "group": "001_zowe_dsCreate@5"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^(ds|member|pds).*/",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*profile=zftp.*)(ds|member|pds).*/",
           "command": "zowe.ds.copyDataSets",
           "group": "001_zowe_dsCreate@6"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^(session|pds).*/",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*profile=zftp.*)(session|pds).*/",
           "command": "zowe.ds.pasteDataSets",
           "group": "001_zowe_dsCreate@7"
         },
