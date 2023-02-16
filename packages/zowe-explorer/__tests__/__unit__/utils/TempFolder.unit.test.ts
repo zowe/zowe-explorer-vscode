@@ -35,7 +35,18 @@ jest.mock("fs-extra", () => ({
 }));
 
 describe("TempFolder Unit Tests", () => {
+    afterEach(() => {
+        jest.resetAllMocks();
+        jest.clearAllMocks();
+    });
+
     function createBlockMocks() {
+        const newMocks = {
+            winPath: "testpath12\\temp",
+            winPath2: "testpath123\\temp",
+            unixPath: "testpath12/temp",
+            unixPath2: "testpath123/temp",
+        };
         Object.defineProperty(vscode.workspace, "getConfiguration", {
             value: jest.fn(),
             configurable: true,
@@ -48,7 +59,36 @@ describe("TempFolder Unit Tests", () => {
         Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
         Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
         jest.spyOn(ProfileUtils, "errorHandling").mockImplementationOnce(jest.fn());
+        return newMocks;
     }
+
+    it("moveTempFolder should run moveSync", async () => {
+        const blockMocks = createBlockMocks();
+        jest.spyOn(fs, "mkdirSync").mockImplementation();
+        jest.spyOn(fs, "existsSync").mockReturnValue(true);
+        const moveSyncSpy = jest.spyOn(fsExtra, "moveSync");
+        await expect(TempFolder.moveTempFolder("testpath12", "testpath123")).resolves.toEqual(undefined);
+        expect(moveSyncSpy).toBeCalledTimes(1);
+        const expectedPath1 = process.platform === "win32" ? blockMocks.winPath : blockMocks.unixPath.split(path.sep).join(path.posix.sep);
+        const expectedPath2 = process.platform === "win32" ? blockMocks.winPath2 : blockMocks.unixPath2.split(path.sep).join(path.posix.sep);
+        expect(moveSyncSpy).toBeCalledWith(expectedPath1, expectedPath2, { overwrite: true });
+    });
+
+    it("moveTempFolder should catch the error upon running moveSync", async () => {
+        createBlockMocks();
+        jest.spyOn(fs, "mkdirSync").mockImplementation();
+        jest.spyOn(fs, "existsSync").mockReturnValue(true);
+        jest.spyOn(fsExtra, "moveSync").mockImplementation(() => {
+            throw ERROR_EXAMPLE;
+        });
+        const errorMessageSpy = jest.spyOn(Gui, "errorMessage").mockImplementation();
+        const globalsLogErrorSpy = jest.fn();
+        Object.defineProperty(globals.LOG, "error", { value: globalsLogErrorSpy, configurable: true });
+        await expect(TempFolder.moveTempFolder("testpath32", "testpath123")).resolves.toEqual(undefined);
+        expect(errorMessageSpy).toBeCalledTimes(1);
+        expect(globalsLogErrorSpy).toBeCalledTimes(1);
+    });
+
     it("moveTempFolder should throw errors when a filesystem exception occurs", async () => {
         jest.spyOn(fs, "mkdirSync").mockImplementationOnce((val) => {
             throw ERROR_EXAMPLE;
@@ -68,15 +108,6 @@ describe("TempFolder Unit Tests", () => {
         await expect(TempFolder.moveTempFolder("", "testpath123")).resolves.toEqual(undefined);
     });
 
-    it("moveTempFolder should run moveSync", async () => {
-        const moveSyncSpy = jest.spyOn(fsExtra, "moveSync");
-        await expect(TempFolder.moveTempFolder("testpath", "testpath123")).resolves.toEqual(undefined);
-        expect(moveSyncSpy).toBeCalledTimes(1);
-        const expectedPath1 = process.platform === "win32" ? "testpath1\\temp" : "testpath1/temp".split(path.sep).join(path.posix.sep);
-        const expectedPath2 = process.platform === "win32" ? "testpath2\\temp" : "testpath2/temp".split(path.sep).join(path.posix.sep);
-        expect(moveSyncSpy).toBeCalledWith(expectedPath1, expectedPath2, { overwrite: true });
-    });
-
     it("cleanDir should throw an error when a filesystem exception occurs", async () => {
         createBlockMocks();
         jest.spyOn(fs, "mkdirSync").mockImplementation((val) => {
@@ -92,13 +123,21 @@ describe("TempFolder Unit Tests", () => {
         }
     });
 
-    it("cleanDir should run readDirSync twice", async () => {
-        const readdirSyncSpy = jest.spyOn(fs, "readdirSync").mockReturnValue(["./test1"] as any);
+    it("cleanDir should run readDirSync once", async () => {
+        jest.spyOn(fs, "existsSync").mockReturnValue(true);
+        const readdirSyncSpy = jest.spyOn(fs, "readdirSync").mockReturnValue(["./test1", "./test2"] as any);
         jest.spyOn(fs, "lstatSync").mockReturnValue({
             isFile: () => true,
         } as any);
 
         await expect(TempFolder.cleanDir("./sampleDir")).resolves.toEqual(undefined);
-        expect(readdirSyncSpy).toBeCalledTimes(2);
+        expect(readdirSyncSpy).toBeCalledTimes(1);
+    });
+
+    it("hideTempFolder should hide local directory from workspace", async () => {
+        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(true);
+        const setDirectValueSpy = jest.spyOn(SettingsConfig, "setDirectValue").mockImplementation();
+        await expect(TempFolder.hideTempFolder("test")).resolves.not.toThrow();
+        expect(setDirectValueSpy).toBeCalledTimes(1);
     });
 });

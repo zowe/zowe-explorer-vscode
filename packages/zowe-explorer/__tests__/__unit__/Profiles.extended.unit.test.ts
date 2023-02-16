@@ -1593,3 +1593,45 @@ describe("Profiles Unit Tests - function validationArraySetup", () => {
         });
     });
 });
+
+describe("Profiles Unit Tests - function promptToRefreshForProfiles", () => {
+    it("should reload extension", async () => {
+        jest.spyOn(Gui, "showMessage").mockResolvedValueOnce("Refresh Zowe Explorer");
+        Object.defineProperty(globals, "ISTHEIA", {
+            value: true,
+        });
+        const refreshSpy = jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
+        await expect((Profiles.getInstance() as any).promptToRefreshForProfiles("./test")).resolves.not.toThrow();
+        expect(refreshSpy).toBeCalledTimes(1);
+    });
+});
+
+describe("Profiles Unit Tests - function loginCredentialPrompt", () => {
+    afterEach(() => {
+        jest.resetAllMocks();
+        jest.clearAllMocks();
+    });
+
+    it("should show a gui message if there is not a newUser", async () => {
+        const privateProfile = Profiles.getInstance() as any;
+        Object.defineProperty(privateProfile, "userInfo", {
+            value: () => null,
+        });
+        const showMessageSpy = jest.spyOn(Gui, "showMessage").mockImplementation();
+        await expect(privateProfile.loginCredentialPrompt()).resolves.toEqual(undefined);
+        expect(showMessageSpy).toBeCalledTimes(1);
+    });
+
+    it("should show a gui message if there is not a newUser", async () => {
+        const privateProfile = Profiles.getInstance() as any;
+        Object.defineProperty(Profiles, "getInstance", {
+            value: () => ({
+                userInfo: () => "test",
+                passwordInfo: () => null,
+            }),
+        });
+        const showMessageSpy = jest.spyOn(Gui, "showMessage").mockImplementation();
+        await expect(privateProfile.loginCredentialPrompt()).resolves.toEqual(undefined);
+        expect(showMessageSpy).toBeCalledTimes(1);
+    });
+});
