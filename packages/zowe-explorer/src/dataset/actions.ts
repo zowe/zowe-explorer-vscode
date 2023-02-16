@@ -419,22 +419,16 @@ export async function openPS(node: api.IZoweDatasetTreeNode, previewMember: bool
             // if local copy exists, open that instead of pulling from mainframe
             const documentFilePath = getDocumentFilePath(label, node);
             if (!fs.existsSync(documentFilePath)) {
-                const response = await api.Gui.withProgress(
-                    {
-                        location: vscode.ProgressLocation.Notification,
-                        title: "Opening data set...",
-                    },
-                    function downloadDataset() {
-                        const prof = node.getProfile();
-                        return ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
-                            file: documentFilePath,
-                            returnEtag: true,
-                            encoding: prof.profile.encoding,
-                            responseTimeout: prof.profile?.responseTimeout,
-                        });
-                    }
-                );
-                node.setEtag(response.apiResponse.etag);
+                const prof = node.getProfile();
+                const statusMsg = api.Gui.setStatusBarMessage(localize("dataSet.opening", "$(sync~spin) Opening data set..."));
+                const response = await ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
+                    file: documentFilePath,
+                    returnEtag: true,
+                    encoding: prof.profile.encoding,
+                    responseTimeout: prof.profile?.responseTimeout,
+                });
+                node.setEtag(response?.apiResponse?.etag);
+                statusMsg.dispose();
             }
             const document = await vscode.workspace.openTextDocument(getDocumentFilePath(label, node));
             if (previewMember === true) {
