@@ -1837,6 +1837,9 @@ describe("Dataset Actions Unit Tests - Function copyDataSets", () => {
             commandResponse: "",
             apiResponse: {},
         });
+
+        const copyFun = jest.spyOn(dsActions, "copySequentialDatasets").mockImplementation();
+        const refreshFun = jest.spyOn(dsActions, "refreshDataset").mockImplementation();
         mocked(vscode.window.withProgress).mockImplementation((params, fn) => {
             fn();
             return Promise.resolve(params);
@@ -1844,7 +1847,8 @@ describe("Dataset Actions Unit Tests - Function copyDataSets", () => {
         try {
             await dsActions.copyDataSets(child, null, blockMocks.testDatasetTree);
             expect(mocked(vscode.window.showErrorMessage)).not.toHaveBeenCalled();
-            await expect(dsActions.copyDataSets(child, null, blockMocks.testDatasetTree)).toStrictEqual(Promise.resolve());
+            expect(copyFun).toHaveBeenCalled();
+            expect(refreshFun).toHaveBeenCalled();
         } catch (error) {
             // do nth
         }
@@ -1854,12 +1858,6 @@ describe("Dataset Actions Unit Tests - Function copyDataSets", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         const pNode = new ZoweDatasetNode("parent", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
-
-        const parent = new ZoweDatasetNode("parent", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
-        parent.contextValue = globals.DS_PDS_CONTEXT;
-        const child = new ZoweDatasetNode("child", vscode.TreeItemCollapsibleState.None, parent, null);
-        child.contextValue = globals.DS_MEMBER_CONTEXT;
-
         const dsNode = new ZoweDatasetNode(
             "dsNode",
             vscode.TreeItemCollapsibleState.Expanded,
@@ -1890,9 +1888,9 @@ describe("Dataset Actions Unit Tests - Function copyDataSets", () => {
             fn();
             return Promise.resolve(params);
         });
+
         await dsActions.copyDataSets(dsNode, null, blockMocks.testDatasetTree);
         await expect(mocked(Gui.errorMessage)).not.toHaveBeenCalled();
-        await expect(dsActions.copyDataSets(dsNode, null, blockMocks.testDatasetTree)).toStrictEqual(Promise.resolve());
     });
 
     it("Checking fail of copy partitioned datasets", async () => {
@@ -2068,6 +2066,50 @@ describe("Dataset Actions Unit Tests - Function copyDataSets", () => {
         const filePathSpy = jest.spyOn(sharedUtils, "getDocumentFilePath");
         await dsActions.downloadDs(node);
         expect(filePathSpy).toBeCalledWith(label, node);
+    });
+
+    it("Should ask to replace the sequential and partitioned dataset if it already exists", async () => {
+        globals.defineGlobals("");
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        const node = new ZoweDatasetNode("HLQ.TEST.DATASET", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
+
+        const spyListDs = jest.spyOn(blockMocks.mvsApi, "dataSet").mockResolvedValue({
+            success: true,
+            commandResponse: "",
+            apiResponse: {
+                items: [{ name: "HLQ.TEST.DATASET" }],
+            },
+        });
+        mocked(vscode.window.showInputBox).mockResolvedValue("HLQ.TEST.DATASET");
+        const spyAction = jest.fn();
+
+        // SEQUENTIAL
+        mocked(Gui.showMessage).mockResolvedValueOnce("Replace");
+        node.contextValue = globals.DS_DS_CONTEXT;
+        jest.spyOn(dsActions, "copySequentialDatasets").mockImplementationOnce(async (nodes) => {
+            await dsActions._copyProcessor(nodes, "ps", spyAction);
+        });
+        spyAction.mockClear();
+        mocked(Gui.showMessage).mockClear();
+        await dsActions.copySequentialDatasets([node]);
+        expect(spyAction).toHaveBeenCalled();
+        expect(mocked(Gui.showMessage)).toHaveBeenCalled();
+
+        // PARTITIONED
+        mocked(Gui.showMessage).mockResolvedValueOnce("Replace");
+        node.contextValue = globals.DS_PDS_CONTEXT;
+        jest.spyOn(dsActions, "copyPartitionedDatasets").mockImplementationOnce(async (nodes) => {
+            await dsActions._copyProcessor(nodes, "po", spyAction);
+        });
+        spyAction.mockClear();
+        mocked(Gui.showMessage).mockClear();
+        await dsActions.copyPartitionedDatasets([node]);
+        expect(spyAction).toHaveBeenCalled();
+        expect(mocked(Gui.showMessage)).toHaveBeenCalled();
+
+        spyListDs.mockReset().mockClear();
     });
 });
 
@@ -2275,7 +2317,7 @@ describe("Dataset Actions Unit Tests - Function pasteMember", () => {
         expect(copySpy).toHaveBeenCalledWith({ dsn: "HLQ.TEST.BEFORE.NODE" }, { dsn: "HLQ.TEST.TO.NODE", member: "mem1" }, { replace: false });
         expect(blockMocks.testDatasetTree.findFavoritedNode).toHaveBeenCalledWith(node);
     });
-    xit("Should throw an error when pasting to a member that already exists", async () => {
+    it("Should ask to replace the member if it already exists", async () => {
         globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
@@ -2300,10 +2342,11 @@ describe("Dataset Actions Unit Tests - Function pasteMember", () => {
         });
         mocked(vscode.window.showInputBox).mockResolvedValueOnce("mem1");
         clipboard.writeText(JSON.stringify({ dataSetName: "HLQ.TEST.BEFORE.NODE", profileName: "sestest" }));
+        mocked(Gui.showMessage).mockResolvedValueOnce("Cancel");
 
-        await expect(dsActions.pasteMember(node, blockMocks.testDatasetTree)).rejects.toEqual(
-            Error("HLQ.TEST.TO.NODE(mem1) already exists. You cannot replace a member")
-        );
+        await dsActions.pasteMember(node, blockMocks.testDatasetTree);
+
+        expect(mocked(Gui.showMessage)).toHaveBeenCalled();
         expect(copySpy).not.toBeCalled();
     });
     it("Should call zowe.Copy.dataSet when pasting to a favorited partitioned data set", async () => {

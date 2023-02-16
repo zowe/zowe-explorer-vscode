@@ -1567,7 +1567,7 @@ export async function downloadDs(node: ZoweDatasetNode) {
  * @param {ZoweDatasetNode[]} nodes - nodes to be copied
  */
 export async function copySequentialDatasets(nodes: ZoweDatasetNode[]) {
-    await _copyDsProcessor(nodes, async (node: ZoweDatasetNode, dsname: string, replace: shouldReplace) => {
+    await _copyProcessor(nodes, "ps", async (node: ZoweDatasetNode, dsname: string, replace: shouldReplace) => {
         const lbl = node.getLabel().toString();
 
         await api.Gui.withProgress(
@@ -1589,7 +1589,7 @@ export async function copySequentialDatasets(nodes: ZoweDatasetNode[]) {
  * @param {ZoweDatasetNode[]} nodes - nodes to be copied
  */
 export async function copyPartitionedDatasets(nodes: ZoweDatasetNode[]) {
-    await _copyDsProcessor(nodes, async (node: ZoweDatasetNode, dsname: string, replace: shouldReplace) => {
+    await _copyProcessor(nodes, "po", async (node: ZoweDatasetNode, dsname: string, replace: shouldReplace) => {
         const lbl = node.getLabel().toString();
         const uploadOptions: IUploadOptions = {
             etag: node?.getEtag(),
@@ -1659,7 +1659,7 @@ export async function determineReplacement(nodeProfile: zowe.imperative.IProfile
     return replace ? "replace" : returnValueIfNotReplacing;
 }
 
-async function _copyDsProcessor(nodes: ZoweDatasetNode[], action: Function) {
+export async function _copyProcessor(nodes: ZoweDatasetNode[], type: replaceDstype, action: Function) {
     for (const node of nodes) {
         try {
             const lbl = node.getLabel().toString();
@@ -1676,7 +1676,7 @@ async function _copyDsProcessor(nodes: ZoweDatasetNode[], action: Function) {
             if (!dsname) {
                 return;
             }
-            const replace = await determineReplacement(nodes[0].getProfile(), dsname, "po");
+            const replace = await determineReplacement(nodes[0].getProfile(), dsname, type);
             let res: zowe.IZosFilesResponse;
             if (replace === "notFound") {
                 res = await ZoweExplorerApiRegister.getMvsApi(nodes[0].getProfile()).allocateLikeDataSet(dsname, lbl);
