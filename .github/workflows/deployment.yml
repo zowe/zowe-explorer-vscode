@@ -7,6 +7,8 @@ on:
       - maintenance
       - v1-lts
     paths:
+      - .github/release.config.js
+      - .github/workflows/deployment.yml
       - lerna.json
   # workflow_dispatch:
   #   inputs:
