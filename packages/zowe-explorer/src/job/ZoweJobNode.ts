@@ -29,10 +29,10 @@ nls.config({
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
-    public static readonly JobId = "JobId:";
-    public static readonly Owner = "Owner:";
-    public static readonly Prefix = "Prefix:";
-    public static readonly Status = "Status:";
+    public static readonly JobId = "Job ID: ";
+    public static readonly Owner = "Owner: ";
+    public static readonly Prefix = "Prefix: ";
+    public static readonly Status = "Status: ";
 
     public children: IZoweJobTreeNode[] = [];
     public dirty = true;
@@ -54,6 +54,11 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
         this._prefix = "*";
         this._searchId = "";
         this._jobStatus = "*";
+        this.filtered = false;
+
+        if (mParent == null && label !== "Favorites") {
+            this.contextValue = globals.JOBS_SESSION_CONTEXT;
+        }
 
         if (session) {
             this._owner = "*";
@@ -74,7 +79,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
      * @returns {Promise<IZoweJobTreeNode[]>}
      */
     public async getChildren(): Promise<IZoweJobTreeNode[]> {
-        if (!this._owner && contextually.isSession(this)) {
+        if (contextually.isSession(this) && !this.filtered) {
             return [
                 new Job(
                     localize("getChildren.search", "Use the search button to display jobs"),
