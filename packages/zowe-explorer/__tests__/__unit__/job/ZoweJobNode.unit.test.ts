@@ -16,17 +16,15 @@ import * as zowe from "@zowe/cli";
 import * as globals from "../../../src/globals";
 import { createIJobFile, createIJobObject, createJobSessionNode } from "../../../__mocks__/mockCreators/jobs";
 import { Job } from "../../../src/job/ZoweJobNode";
-import { ValidProfileEnum, IZoweJobTreeNode, ProfilesCache } from "@zowe/zowe-explorer-api";
+import { IZoweJobTreeNode, ProfilesCache } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import * as sessUtils from "../../../src/utils/SessionUtils";
-import * as utils from "../../../src/utils/ProfilesUtils";
 import {
     createIProfile,
     createISession,
     createInstanceOfProfile,
     createISessionWithoutCredentials,
-    createQuickPickContent,
     createInstanceOfProfileInfo,
 } from "../../../__mocks__/mockCreators/shared";
 
@@ -300,6 +298,7 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
         await globalMocks.testJobsProvider.addSession("fake");
         globalMocks.testJobsProvider.mSessionNodes[1].searchId = "JOB1234";
         globalMocks.testJobsProvider.mSessionNodes[1].dirty = true;
+        globalMocks.testJobsProvider.mSessionNodes[1].filtered = true;
 
         const jobs = await globalMocks.testJobsProvider.mSessionNodes[1].getChildren();
 
@@ -399,7 +398,7 @@ describe("ZoweJobNode unit tests - Function addFavorite", () => {
         const profileNodeInFavs: IZoweJobTreeNode = globalMocks.testJobsProvider.mFavorites[0];
 
         expect(profileNodeInFavs.children.length).toEqual(1);
-        expect(profileNodeInFavs.children[0].label).toEqual("Owner:myHLQ Prefix:* Status:*");
+        expect(profileNodeInFavs.children[0].label).toEqual("Owner: myHLQ | Prefix: * | Status: *");
         expect(profileNodeInFavs.children[0].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX);
     });
 });
@@ -603,7 +602,7 @@ describe("ZosJobsProvider - Function parseJobSearchQuery", () => {
     });
     it("should parse search criteria without status", async () => {
         const globalMocks = await createGlobalMocks();
-        const actualCriteriaObj = globalMocks.testJobsProvider.parseJobSearchQuery("Owner:zowe Prefix:*");
+        const actualCriteriaObj = globalMocks.testJobsProvider.parseJobSearchQuery("Owner: zowe | Prefix: *");
         const expectedSearchCriteriaObj = {
             Owner: "zowe",
             Prefix: "*",
