@@ -33,13 +33,15 @@ ruleTester.run("no-unmocked-core-modules", rule, {
   invalid: [
     {
       code: "import * as fs from 'fs'; // `fs` must be mocked",
-      options: [{ coreModuleNames: ["fs"], filePathPattern: ".*" }],
       errors: [{ message: "Use jest.mock('fs') to mock a node core module" }],
+      options: [{ coreModuleNames: ["fs"], filePathPattern: ".*" }],
+      output: "import * as fs from 'fs';\njest.mock('fs'); // `fs` must be mocked",
     },
     {
       code: "import * as path from 'path'",
       errors: [{ message: "Use jest.mock('path') to mock a node core module" }],
       options: [{ coreModuleNames: ["path"], filePathPattern: ".*" }],
+      output: "import * as path from 'path'\njest.mock('path');",
     },
   ],
 });

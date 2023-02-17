@@ -1,5 +1,6 @@
 {
   "downloadSpool.select": "Select",
+  "jobActions.openSpoolFile": "$(sync~spin) Opening spool file...",
   "modifyCommand.inputBox.prompt": "Modify Command",
   "jobActions.modifyCommand.response": "Command response: ",
   "jobActions.modifyCommand.apiNonExisting": "Not implemented yet for profile of type: ",
