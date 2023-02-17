@@ -43,7 +43,7 @@ describe("FtpMvsApi", () => {
 
     it("should list datasets.", async () => {
         const response = [
-            { dsname: "IBMUSER.DS1", dsorg: "PO" },
+            { dsname: "IBMUSER.DS1", dsorg: "PO", volume: "MIGRATED" },
             { dsname: "IBMUSER.DS2", dsorg: "PS" },
         ];
         DataSetUtils.listDataSets = jest.fn().mockReturnValue(response);
@@ -132,6 +132,19 @@ describe("FtpMvsApi", () => {
             recfm: "test",
             secondary: 2,
         });
+        expect(result.commandResponse).toContain("Data set created successfully.");
+        expect(DataSetUtils.allocateDataSet).toBeCalledTimes(1);
+        expect(MvsApi.releaseConnection).toBeCalled();
+    });
+
+    it("should create dataset if no options are passed in", async () => {
+        DataSetUtils.allocateDataSet = jest.fn();
+        const DATA_SET_SEQUENTIAL = 4;
+        const mockParams = {
+            dataSetName: "IBMUSER.DS3",
+            dataSetType: DATA_SET_SEQUENTIAL,
+        };
+        const result = await MvsApi.createDataSet(mockParams.dataSetType, mockParams.dataSetName);
         expect(result.commandResponse).toContain("Data set created successfully.");
         expect(DataSetUtils.allocateDataSet).toBeCalledTimes(1);
         expect(MvsApi.releaseConnection).toBeCalled();

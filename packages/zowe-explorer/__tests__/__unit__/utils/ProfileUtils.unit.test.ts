@@ -11,7 +11,6 @@
 
 import * as fs from "fs";
 import * as path from "path";
-import { errorHandling, writeOverridesFile } from "../../../src/utils/ProfilesUtils";
 import { Gui } from "@zowe/zowe-explorer-api";
 import * as globals from "../../../src/globals";
 import * as profileUtils from "../../../src/utils/ProfilesUtils";
@@ -62,7 +61,9 @@ describe("ProfileUtils.writeOverridesFile Unit Tests", () => {
         spyWrite.mockClear();
     });
     it("should have no change to global variable PROFILE_SECURITY and returns", async () => {
-        const fileJson = { overrides: { CredentialManager: "@zowe/cli", testValue: true } };
+        const fileJson = {
+            test: null,
+        };
         jest.spyOn(fs, "readFileSync").mockReturnValueOnce(JSON.stringify(fileJson, null, 2));
         const spy = jest.spyOn(fs, "writeSync");
         profileUtils.writeOverridesFile();
@@ -97,9 +98,60 @@ describe("ProfileUtils.writeOverridesFile Unit Tests", () => {
         const errorDetails = new Error("i haz error");
         const label = "test";
         const moreInfo = "Task failed successfully";
-        await errorHandling(errorDetails, label, moreInfo);
+        await profileUtils.errorHandling(errorDetails, label, moreInfo);
         expect(Gui.errorMessage).toBeCalledWith(`${moreInfo} ` + errorDetails);
         expect(globals.LOG.error).toBeCalledWith(`Error: ${errorDetails.message}\n` + JSON.stringify({ errorDetails, label, moreInfo }));
+    });
+    it("should handle error and open config file", async () => {
+        const errorDetails = {
+            mDetails: {
+                errorCode: 404,
+            },
+            toString: () => "hostname",
+        };
+        const label = "test";
+        const moreInfo = "Task failed successfully";
+        const spyOpenConfigFile = jest.fn();
+        Object.defineProperty(Profiles, "getInstance", {
+            value: () => ({
+                getProfileInfo: () => ({
+                    usingTeamConfig: true,
+                    getAllProfiles: () => [
+                        {
+                            profName: "test",
+                            profLoc: {
+                                osLoc: ["test"],
+                            },
+                        },
+                    ],
+                }),
+                openConfigFile: spyOpenConfigFile,
+            }),
+        });
+        await profileUtils.errorHandling(errorDetails, label, moreInfo);
+        expect(spyOpenConfigFile).toBeCalledTimes(1);
+    });
+    it("should handle error and prompt for authentication", async () => {
+        const errorDetails = {
+            mDetails: {
+                errorCode: 401,
+                additionalDetails: "Token is not valid or expired.",
+            },
+            toString: () => "error",
+        };
+        const label = "test";
+        const moreInfo = "Task failed successfully";
+        jest.spyOn(profileUtils, "isTheia").mockReturnValue(false);
+        const showMessageSpy = jest.spyOn(Gui, "showMessage").mockResolvedValue("selection");
+        const ssoLoginSpy = jest.fn();
+        Object.defineProperty(Profiles, "getInstance", {
+            value: () => ({
+                ssoLogin: ssoLoginSpy,
+            }),
+        });
+        await profileUtils.errorHandling(errorDetails, label, moreInfo);
+        expect(showMessageSpy).toBeCalledTimes(1);
+        expect(ssoLoginSpy).toBeCalledTimes(1);
     });
 });
 
@@ -156,7 +208,7 @@ describe("ProfileUtils.promptCredentials Unit Tests", () => {
 });
 
 describe("ProfileUtils.readConfigFromDisk Unit Tests", () => {
-    it("should readConfigFromDisk", async () => {
+    it("should readConfigFromDisk and log 'Not Available'", async () => {
         Object.defineProperty(vscode.workspace, "workspaceFolders", {
             value: [
                 {
@@ -180,6 +232,11 @@ describe("ProfileUtils.readConfigFromDisk Unit Tests", () => {
                             defaults: "test",
                         },
                     },
+                    {
+                        path: "test",
+                        exists: true,
+                        properties: {},
+                    },
                 ],
             }),
         } as never);
@@ -189,5 +246,38 @@ describe("ProfileUtils.readConfigFromDisk Unit Tests", () => {
         });
         await expect(profileUtils.readConfigFromDisk()).resolves.not.toThrow();
         expect(mockReadProfilesFromDisk).toHaveBeenCalledTimes(1);
+    });
+    it("should readConfigFromDisk and find with defaults", async () => {
+        Object.defineProperty(vscode.workspace, "workspaceFolders", {
+            value: [
+                {
+                    uri: {
+                        fsPath: "./test",
+                    },
+                },
+            ],
+            configurable: true,
+        });
+        const mockReadProfilesFromDisk = jest.fn();
+        jest.spyOn(zowe.imperative, "ProfileInfo").mockResolvedValue({
+            readProfilesFromDisk: mockReadProfilesFromDisk,
+            usingTeamConfig: true,
+            getTeamConfig: () => [],
+        } as never);
+        Object.defineProperty(globals.LOG, "debug", {
+            value: jest.fn(),
+            configurable: true,
+        });
+        await expect(profileUtils.readConfigFromDisk()).resolves.not.toThrow();
+        expect(mockReadProfilesFromDisk).toHaveBeenCalledTimes(1);
+    });
+});
+
+describe("ProfileUtils.filterItem Unit Tests", () => {
+    it("should get label if the filterItem icon exists", () => {
+        const testFilterItem = new profileUtils.FilterItem({
+            icon: "test",
+        } as any);
+        expect(testFilterItem.label).toEqual("test undefined");
     });
 });

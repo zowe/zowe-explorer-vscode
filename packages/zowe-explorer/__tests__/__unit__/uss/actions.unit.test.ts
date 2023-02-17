@@ -12,7 +12,7 @@
 jest.mock("fs");
 
 import * as zowe from "@zowe/cli";
-import { ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { ProfilesCache, ValidProfileEnum, Gui } from "@zowe/zowe-explorer-api";
 import * as ussNodeActions from "../../../src/uss/actions";
 import { UssFileTree, UssFileType, UssFileUtils } from "../../../src/uss/FileStructure";
 import { createUSSTree, createUSSNode, createFavoriteUSSNode } from "../../../__mocks__/mockCreators/uss";
@@ -382,6 +382,19 @@ describe("USS Action Unit Tests - Function deleteFromDisk", () => {
 
         expect(fs.existsSync).toBeCalledTimes(1);
         expect(fs.unlinkSync).toBeCalledTimes(0);
+    });
+
+    it("should catch the error when thrown", () => {
+        const globalsLogWarnSpy = jest.fn();
+        jest.spyOn(fs, "existsSync").mockReturnValue(true);
+        jest.spyOn(fs, "unlinkSync").mockImplementation(() => {
+            throw new Error();
+        });
+        Object.defineProperty(globals.LOG, "warn", {
+            value: globalsLogWarnSpy,
+        });
+        ussNodeActions.deleteFromDisk(null, "some/where/that/does/not/exist");
+        expect(globalsLogWarnSpy).toBeCalledTimes(1);
     });
 });
 
@@ -851,5 +864,40 @@ describe("USS Action Unit Tests - copy file / directory", () => {
         jest.spyOn(ussNodeActions, "copyUssFilesToClipboard").mockResolvedValueOnce();
         ussNodeActions.pasteUssFile(blockMocks.treeNodes.testUSSTree, blockMocks.nodes[0]);
         expect(sharedUtils.getSelectedNodeList(blockMocks.treeNodes.ussNode, blockMocks.treeNodes.ussNodes)).toEqual([blockMocks.treeNodes.ussNode]);
+    });
+});
+
+describe("USS Action Unit Tests - function deleteUSSFilesPrompt", () => {
+    it("should return true", async () => {
+        const nodes = [createUSSNode(createISession(), createIProfile())];
+        jest.spyOn(Gui, "warningMessage").mockReturnValue(Promise.resolve("Cancel"));
+        await expect(ussNodeActions.deleteUSSFilesPrompt(nodes)).resolves.toEqual(true);
+    });
+});
+
+describe("USS Action Unit Tests - function refreshDirectory", () => {
+    const globalMocks = createGlobalMocks();
+    const testUSSTree = createUSSTree(
+        [createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile)],
+        [createUSSNode(globalMocks.testSession, createIProfile())],
+        createTreeView()
+    );
+    const testNode = createUSSNode(createISession(), createIProfile());
+
+    it("should call refreshElement with node passed in", async () => {
+        jest.spyOn(testNode, "getChildren").mockImplementation();
+        const refreshElementSpy = jest.spyOn(testUSSTree, "refreshElement");
+        await expect(ussNodeActions.refreshDirectory(testNode, testUSSTree)).resolves.not.toThrow();
+        expect(refreshElementSpy).toBeCalledTimes(1);
+        expect(refreshElementSpy).toBeCalledWith(testNode);
+    });
+
+    it("should call errorHandling when error is thrown", async () => {
+        jest.spyOn(testNode, "getChildren").mockImplementation(() => {
+            throw new Error();
+        });
+        const errorHandlingSpy = jest.spyOn(utils, "errorHandling").mockImplementation();
+        await expect(ussNodeActions.refreshDirectory(testNode, testUSSTree)).resolves.not.toThrow();
+        expect(errorHandlingSpy).toBeCalledTimes(1);
     });
 });

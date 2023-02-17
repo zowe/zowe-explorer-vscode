@@ -776,6 +776,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             if (icon) {
                 node.iconPath = icon.path;
             }
+            node.label = `${node.getProfileName()} [${searchCriteria}]`;
             labelRefresh(node);
             node.dirty = true;
             this.refreshElement(node);
