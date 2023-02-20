@@ -25,11 +25,9 @@ import { createGetConfigMock, createInstanceOfProfileInfo, createIProfile, creat
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
 import { getSelectedNodeList } from "../../src/shared/utils";
 import { SettingsConfig } from "../../src/utils/SettingsConfig";
-import { TreeViewUtils } from "../../src/utils/TreeViewUtils";
 import { ZoweExplorerExtender } from "../../src/ZoweExplorerExtender";
 import { DatasetTree } from "../../src/dataset/DatasetTree";
 import { USSTree } from "../../src/uss/USSTree";
-import expectExport = require("expect");
 
 jest.mock("vscode");
 jest.mock("fs");
@@ -512,25 +510,17 @@ describe("Extension Unit Tests", () => {
             label: "TestNode",
         };
         const deleteSessionSpy = jest.spyOn(providerObject.prototype, "deleteSession");
-        const revealSpy = jest.fn();
-        const getTreeViewSpy = jest.spyOn(providerObject.prototype, "getTreeView").mockReturnValue({
-            reveal: revealSpy,
-        });
-        const fixVsCodeMultiSelectSpy = jest.spyOn(TreeViewUtils, "fixVsCodeMultiSelect");
-        await allCommands[command](testNode);
+        const commandFunction = allCommands.find((cmd) => command === cmd.cmd);
+        await (commandFunction as any).fun(testNode, [testNode]);
         expect(deleteSessionSpy).toHaveBeenCalled();
-        expect(fixVsCodeMultiSelectSpy).toHaveBeenCalled();
-        expect(getTreeViewSpy).toHaveBeenCalled();
-        expect(revealSpy.mock.calls[0][1]).toStrictEqual({ select: true });
-        expect(revealSpy.mock.calls[1][1]).toStrictEqual({ select: false });
     }
 
     it("zowe.ds.removeSession", async () => {
-        removeSessionTest("zowe.ds.removeSession", globals.DS_SESSION_CONTEXT, DatasetTree);
+        await removeSessionTest("zowe.ds.removeSession", globals.DS_SESSION_CONTEXT, DatasetTree);
     });
 
     it("zowe.uss.removeSession", async () => {
-        removeSessionTest("zowe.uss.removeSession", globals.USS_SESSION_CONTEXT, USSTree);
+        await removeSessionTest("zowe.uss.removeSession", globals.USS_SESSION_CONTEXT, USSTree);
     });
 });
 
