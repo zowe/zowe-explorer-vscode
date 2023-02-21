@@ -175,28 +175,37 @@ describe("Gui unit tests", () => {
 });
 
 describe("Gui.utils - unit tests", () => {
-    it("returns false when checking if an invalid node was double-clicked", () => {
-        const doubleClicked = Gui.utils.wasDoubleClicked(null as unknown as IZoweTreeNode, { lastOpened: {} } as unknown as IZoweTree<unknown>);
-        expect(doubleClicked).toBe(false);
+    beforeEach(() => {
+        jest.useFakeTimers();
     });
 
-    const testDoubleClickEvent = (timeout: number, intendedResult: boolean): void => {
+    afterEach(() => {
+        jest.runOnlyPendingTimers();
+        jest.useRealTimers();
+    });
+
+    it("returns false when checking if an invalid node was double-clicked", () => {
+        const clicked = Gui.utils.wasDoubleClicked(null as unknown as IZoweTreeNode, { lastOpened: {} } as unknown as IZoweTree<unknown>);
+        expect(clicked).toBe(false);
+    });
+
+    const testDoubleClickEvent = (timeout: number, expected: boolean): void => {
         const mockTime = new Date();
         const fakeNode = { label: "fakeLabel" } as unknown as IZoweTreeNode;
 
         setTimeout(() => {
-            const doubleClicked = Gui.utils.wasDoubleClicked(fakeNode, {
+            const wasDoubleClicked = Gui.utils.wasDoubleClicked(fakeNode, {
                 lastOpened: { node: fakeNode, date: mockTime },
             } as unknown as IZoweTree<unknown>);
-            expect(doubleClicked).toBe(intendedResult);
+            expect(wasDoubleClicked).toBe(expected);
         }, timeout);
     };
 
     it("returns false when the second click event is after the DOUBLE_CLICK_SPEED_MS window", () => {
-        testDoubleClickEvent(DOUBLE_CLICK_SPEED_MS * 2, false);
+        testDoubleClickEvent(DOUBLE_CLICK_SPEED_MS * 4, false);
     });
 
     it("returns true when the second click event is within the DOUBLE_CLICK_SPEED_MS window", () => {
-        testDoubleClickEvent(DOUBLE_CLICK_SPEED_MS / 2, true);
+        testDoubleClickEvent(DOUBLE_CLICK_SPEED_MS / 8, true);
     });
 });
