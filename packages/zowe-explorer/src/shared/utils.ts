@@ -335,6 +335,12 @@ export function getSelectedNodeList(node: IZoweTreeNode, nodeList: IZoweTreeNode
  * @param {string} text - prefix text
  * @returns undefined | string
  */
-export function jobPrefixValidator(text: string): any {
-    return text.length > globals.JOBS_MAX_PREFIX ? localize("searchJobs.prefix.invalid", "Invalid job prefix") : null;
+export function jobStringValidator(text: string, localizedParam: "owner" | "prefix"): any {
+    switch (localizedParam) {
+        case "owner":
+            return text.length > globals.JOBS_MAX_PREFIX ? localize("searchJobs.owner.invalid", "Invalid job owner") : null;
+        case "prefix":
+        default:
+            return text.length > globals.JOBS_MAX_PREFIX ? localize("searchJobs.prefix.invalid", "Invalid job prefix") : null;
+    }
 }

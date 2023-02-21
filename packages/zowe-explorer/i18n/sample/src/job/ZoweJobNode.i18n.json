@@ -1,8 +1,6 @@
 {
   "getChildren.search": "Use the search button to display jobs",
-  "ZoweJobNode.getJobs.spoolfiles": "Get Job Spool files command submitted.",
   "getChildren.noSpoolFiles": "There are no JES spool messages to display",
-  "ZoweJobNode.getJobs.jobs": "Get Jobs command submitted.",
   "getJobs.status.not.supported": "Filtering by job status is not yet supported with this profile type. Will show jobs with all statuses.",
   "getChildren.error.response": "Retrieving response from "
 }

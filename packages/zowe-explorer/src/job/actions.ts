@@ -70,6 +70,8 @@ export async function getSpoolContent(session: string, spool: zowe.IJobFile, ref
         await errorHandling(error, session, error.message);
         return;
     }
+
+    const statusMsg = Gui.setStatusBarMessage(localize("jobActions.openSpoolFile", "$(sync~spin) Opening spool file...", this.label as string));
     await profiles.checkCurrentProfile(zosmfProfile);
     if (profiles.validProfile !== ValidProfileEnum.INVALID) {
         const uri = toUniqueJobFileUri(session, spool)(refreshTimestamp.toString());
@@ -80,6 +82,7 @@ export async function getSpoolContent(session: string, spool: zowe.IJobFile, ref
                 vscode.window.activeTextEditor &&
                 vscode.window.activeTextEditor.document.uri?.path === `${spool.jobname}.${spool.jobid}.${spool.ddname}`;
 
+            statusMsg.dispose();
             if (isTextDocActive && String(error.message).includes("Failed to show text document")) {
                 return;
             }
@@ -87,6 +90,7 @@ export async function getSpoolContent(session: string, spool: zowe.IJobFile, ref
             return;
         }
     }
+    statusMsg.dispose();
 }
 
 export async function getSpoolContentFromMainframe(node: IZoweJobTreeNode) {

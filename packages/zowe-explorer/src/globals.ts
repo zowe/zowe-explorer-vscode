@@ -16,7 +16,7 @@ import * as loggerConfig from "../log4jsconfig.json";
 
 // Set up localization
 import * as nls from "vscode-nls";
-import { getZoweDir, ProfilesCache } from "@zowe/zowe-explorer-api";
+import { getZoweDir } from "@zowe/zowe-explorer-api";
 import { SettingsConfig } from "./utils/SettingsConfig";
 
 nls.config({
@@ -99,6 +99,22 @@ export let ACTIVATED = false;
 export let PROFILE_SECURITY: string | boolean = ZOWE_CLI_SCM;
 export let SAVED_PROFILE_CONTENTS = new Uint8Array();
 export const JOBS_MAX_PREFIX = 8;
+
+// Dictionary describing translation from old configuration names to new standardized names
+export const configurationDictionary = {
+    "Zowe-Default-Datasets-Binary": SETTINGS_DS_DEFAULT_BINARY,
+    "Zowe-Default-Datasets-C": SETTINGS_DS_DEFAULT_C,
+    "Zowe-Default-Datasets-Classic": SETTINGS_DS_DEFAULT_CLASSIC,
+    "Zowe-Default-Datasets-PDS": SETTINGS_DS_DEFAULT_PDS,
+    "Zowe-Default-Datasets-PS": SETTINGS_DS_DEFAULT_PS,
+    "Zowe-Temp-Folder-Location": SETTINGS_TEMP_FOLDER_PATH,
+    "Zowe Commands: History": SETTINGS_COMMANDS_HISTORY,
+    "Zowe Commands: Always edit": SETTINGS_COMMANDS_ALWAYS_EDIT,
+    "Zowe-Automatic-Validation": SETTINGS_AUTOMATIC_PROFILE_VALIDATION,
+    "Zowe-DS-Persistent": SETTINGS_DS_HISTORY,
+    "Zowe-USS-Persistent": SETTINGS_USS_HISTORY,
+    "Zowe-Jobs-Persistent": SETTINGS_JOBS_HISTORY,
+};
 
 export enum CreateDataSetTypeWithKeysEnum {
     DATA_SET_BINARY,
