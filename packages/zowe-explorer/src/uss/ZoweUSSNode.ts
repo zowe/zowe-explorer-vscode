@@ -610,22 +610,28 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         return path.join(globals.USS_DIR || "", "/" + this.getSessionNode().getProfileName() + "/", this.fullPath);
     }
 
-    public async pasteFileTree(
-        rootPath: string,
-        tree: UssFileTree,
-        uss: {
-            api: ZoweExplorerApi.IUss;
-            options: IUploadOptions;
+    /**
+     * Pastes a built tree of files and folders into another location on the same LPAR/session.
+     * NOTE: This function only works within the same LPAR or session, as it is a current limitation for the API used.
+     *
+     * @param rootPath The start/root path for pasting the file structure
+     * @param tree The structure of files and folders to paste
+     * @param ussApi The USS API to use for this operation
+     */
+    public async pasteFileTree(rootPath: string, tree: UssFileTree, ussApi: ZoweExplorerApi.IUss) {
+        if (!ussApi.copy || !ussApi.fileList) {
+            return;
         }
-    ) {
-        // Check root path for conflicts before pasting nodes in this path
-        const apiResponse = await uss.api.fileList(rootPath);
+
+        const apiResponse = await ussApi.fileList(rootPath);
         const fileList = apiResponse.apiResponse?.items;
+
+        // Check root path for conflicts before pasting nodes in this path
         const hasFileOfSameName = fileList.find((file) => file.name === tree.baseName) != null;
         const fileName = hasFileOfSameName ? `${tree.baseName} (copy)` : tree.baseName;
         const outputPath = `${rootPath}/${fileName}`;
 
-        await uss.api.copy(outputPath, {
+        await ussApi.copy(outputPath, {
             from: tree.ussPath,
             recursive: tree.type === UssFileType.Directory,
         });
@@ -655,10 +661,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
             if (api.copy && UssFileUtils.toSameSession(fileTreeToPaste, this.getSessionNode().getLabel() as string)) {
                 for (const subnode of fileTreeToPaste.children) {
-                    await this.pasteFileTree(remotePath, subnode, {
-                        api: api,
-                        options: options,
-                    });
+                    await this.pasteFileTree(remotePath, subnode, api);
                 }
             } else {
                 const apiResponse = await api.fileList(remotePath);
