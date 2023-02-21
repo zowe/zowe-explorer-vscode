@@ -6,10 +6,11 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
-- Added `description` variable to `IZoweTreeNode` to prevent compilation errors when updating node descriptions.
 - Added `filtered` variable to `IZoweJobTreeNode` to track whether a job session node has been filtered.
 
 ### Bug fixes
+
+- Added `description` variable to `IZoweTreeNode` to prevent compilation errors when updating node descriptions.
 
 ## `2.6.0`
 
