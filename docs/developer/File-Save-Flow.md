@@ -1,67 +1,149 @@
+## New
+
 ```mermaid
 flowchart TD
     begin(VSCode begins save operation)
-    format(VSCode formatter extensions apply changes to the document)
+    begin-->format
 
-    willSave("`onWillSaveTextDocument` event (1.5s threshold)")
-    enqueueUpload(Add document to upload queue)
-    filesInQueue{{Is a document currently being uploaded?}}
-    awaitMfRequest(Await mainframe response for uploading file)
-    awaitMfRequest -->|Success| checkQueue
-    awaitMfRequest -->|Conflict| downloadRemoteDs
-    awaitMfRequest -->|Failure| throwError
-    checkQueue{{Are there more documents in the upload queue?}}
+    format(VSCode formatter extensions apply changes to the document)
+    format-->isConflict
+
+    didSave{{"`onDidSaveTextDocument` event (No threshold)"}}
+    didSave-->enqueueUpload
+
+    isConflict(VS Code: Is there a conflict with the current save operation and a new save operation?)
+    isConflict-->|Yes| promptConflictResolution
+    isConflict-->|No| saveToDisk
 
     promptConflictResolution{{Compare or overwrite changes?}}
-    downloadRemoteDs(Download contents from MF to compare)
-    downloadRemoteDs-->promptConflictResolution
-    promptConflictResolution -->|Compare| showCompare(Show diff between local and remote file)
+    promptConflictResolution-->|Compare| vscodeDiff
+    promptConflictResolution-->|Overwrite| begin
 
-    resolveConflicts(User picks desired version )
+    vscodeDiff(Show diff between old and new versions of file)
+    vscodeDiff-->userResolvesConflicts
 
-    showCompare-->resolveConflicts
-    resolveConflicts-->begin
-    promptConflictResolution -->|Overwrite| checkIfExists
+    userResolvesConflicts(User chooses desired version of file to upload)
+    userResolvesConflicts-->begin
 
-    filesInQueue -->|Yes| returnEarly[Add to upload queue]
-    filesInQueue -->|No| startQueue[Start processing next document in upload queue]
+    saveToDisk(VS code saves file to disk)
+    saveToDisk-->markAsSaved
 
-    startQueue-->checkDsType
-    checkDsType{{Check data set type}}
-    checkDsType -->|Partitioned| continueUpload
-    checkDsType -->|Sequential| checkIfExists
-    checkIfExists{{Does it exist on the MF?}}
-    continueUpload(Continue to upload)
+    markAsSaved(VS Code marks document as saved)
+    markAsSaved-->didSave
 
-    downloadRemoteDs-->checkQueue
-    checkIfExists -->|Yes| continueUpload(Continue to upload)
-    checkIfExists -->|No| throwError(Display error in Zowe Explorer)
-    throwError-->checkQueue
-
-    continueUpload-->awaitMfRequest
-
-    checkQueue -->|Yes| startQueue
-
-    finish(File is saved to mainframe)
-
-    begin-->format
-    format-->willSave
-    willSave-->enqueueUpload
+    enqueueUpload(Mark document as dirty and add to upload queue)
     enqueueUpload-->filesInQueue
+
+    filesInQueue{{Is a document currently being uploaded?}}
+    filesInQueue -->|Yes| exit(Exit)
+    filesInQueue -->|No| gotoQueue(Process upload queue)
 ```
 
 ```mermaid
 flowchart TD
-    begin(VSCode begins save operation)
-    format(VScode formatter extensions apply changes to the document)
+    iterateUploadQueue(Process next document in upload queue)
+    iterateUploadQueue-->newerSavesInQueue
 
-    willSave(`onWillSaveTextDocument` event)
-    fileInQueue{Is this file in the upload queue?}
-    didSave(`onDidSaveTextDocument` event)
-    finish(File is saved to mainframe)
+    newerSavesInQueue{{Are there newer saves for same document in queue?}}
+    newerSavesInQueue-->|Yes| iterateUploadQueue
+    newerSavesInQueue-->|No| awaitMfRequest
 
-    begin-->format
-    format-->willSave
-    willSave-->didSave
-    didSave-->finish
+    awaitMfRequest(Call Zowe API that uploads file from disk to MF)
+    awaitMfRequest -->|Success| markAsClean
+    awaitMfRequest -->|Conflict| downloadRemoteDs
+    awaitMfRequest -->|Failure| throwError
+
+    markAsClean(Mark document as non-dirty)
+    markAsClean-->checkQueue
+
+    downloadRemoteDs(Download contents from MF to compare)
+    downloadRemoteDs-->updateEditorContents
+
+    updateEditorContents(Update document with MF contents to trigger conflict)
+    updateEditorContents-->checkQueue
+    updateEditorContents-->gotoVsCodeSaveOp
+
+    checkQueue{{Are there more documents in the upload queue?}}
+    checkQueue -->|Yes| iterateUploadQueue
+
+    gotoVsCodeSaveOp(Restart VS Code save operation)
+
+    throwError(Display error in Zowe Explorer)
+    throwError-->iterateUploadQueue
 ```
+
+---
+
+## Legacy
+
+```mermaid
+flowchart TD
+    begin(VSCode begins save operation)
+    begin-->format
+
+    format(VSCode formatter extensions apply changes to the document)
+    format-->willSave
+
+    willSave{{"`onWillSaveTextDocument` event (1.5s threshold)"}}
+    willSave-->|VS Code| isConflict
+    willSave-->|Zowe Explorer| enqueueUpload
+
+    isConflict(Is there a conflict with the current save operation and a new save operation?)
+    isConflict-->|Yes| promptConflictResolution
+    isConflict-->|No| saveToDisk
+
+    promptConflictResolution{{Compare or overwrite changes?}}
+    promptConflictResolution-->|Compare| vscodeDiff
+    promptConflictResolution-->|Overwrite| begin
+
+    vscodeDiff(Show diff between old and new versions of file)
+    vscodeDiff-->userResolvesConflicts
+
+    userResolvesConflicts(User chooses desired version of file to upload)
+    userResolvesConflicts-->begin
+
+    saveToDisk(VS code saves file to disk)
+    saveToDisk-->markAsSaved
+
+    markAsSaved(VS Code marks document as saved)
+
+    enqueueUpload(Add document to upload queue)
+    enqueueUpload-->filesInQueue
+
+    filesInQueue{{Is a document currently being uploaded?}}
+    filesInQueue -->|Yes| exit(Exit)
+    filesInQueue -->|No| gotoQueue(Process upload queue)
+```
+
+```mermaid
+flowchart TD
+    iterateUploadQueue(Process next document in upload queue)
+    iterateUploadQueue-->awaitMfRequest
+
+    awaitMfRequest(Call Zowe API that uploads file from disk to MF)
+    awaitMfRequest -->|Success| checkQueue
+    awaitMfRequest -->|Conflict| downloadRemoteDs
+    awaitMfRequest -->|Failure| markAsDirty
+
+    downloadRemoteDs(Download contents from MF to compare)
+    downloadRemoteDs-->updateEditorContents
+
+    updateEditorContents(Update document with MF contents to trigger conflict)
+    updateEditorContents-->checkQueue
+    updateEditorContents-->gotoVsCodeSaveOp
+
+    checkQueue{{Are there more documents in the upload queue?}}
+    checkQueue -->|Yes| iterateUploadQueue
+
+    gotoVsCodeSaveOp(Restart VS Code save operation)
+
+    markAsDirty(Mark document as dirty)
+    markAsDirty-->throwError
+
+    throwError(Display error in Zowe Explorer)
+    throwError-->iterateUploadQueue
+```
+
+---
+
+TODO: [v3] Revise flowcharts to use `vscode.FileSystemProvider`
