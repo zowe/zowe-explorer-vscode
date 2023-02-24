@@ -742,6 +742,7 @@ describe("Jobs Actions Unit Tests - Function getSpoolContent", () => {
         expect(mocked(Gui.errorMessage)).toBeCalledWith("Test Error: Test");
     });
     it("should fetch the spool content successfully", async () => {
+        createGlobalMocks();
         const blockMocks = createBlockMocks();
         const testNode = new Job(
             "undefined:test - testJob",

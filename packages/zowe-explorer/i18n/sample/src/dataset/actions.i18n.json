@@ -22,6 +22,7 @@
   "openPS.invalidNode": "openPS() called from invalid node.",
   "openPS.error.invalidNode": "openPS() called from invalid node. ",
   "openPS.log.debug.openDataSet": "opening physical sequential data set from label ",
+  "dataSet.opening": "$(sync~spin) Opening data set...",
   "openPS.log.error.openDataSet": "Error encountered when opening data set! ",
   "createFile.dataSetBinary": "Data Set Binary",
   "createFile.dataSetC": "Data Set C",
@@ -95,5 +96,6 @@
   "copyDataSet.replace.ps.question": "The physical sequential (PS) dataset already exists.\nDo you want to replace it?",
   "copyDataSet.replace.po.question": "The partitioned (PO) dataset already exists.\nDo you want to merge them while replacing any existing members?",
   "copyDataSet.log.error": "Error encountered when copy data set! ",
-  "copyDataSet.error": "Unable to copy data set: "
+  "copyDataSet.error": "Unable to copy data set: ",
+  "saveFile.log.error.save": "Error encountered when saving data set: "
 }

@@ -26,6 +26,8 @@ import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
 import { getSelectedNodeList } from "../../src/shared/utils";
 import { SettingsConfig } from "../../src/utils/SettingsConfig";
 import { ZoweExplorerExtender } from "../../src/ZoweExplorerExtender";
+import { DatasetTree } from "../../src/dataset/DatasetTree";
+import { USSTree } from "../../src/uss/USSTree";
 
 jest.mock("vscode");
 jest.mock("fs");
@@ -497,6 +499,27 @@ describe("Extension Unit Tests", () => {
         await extension.deactivate();
         expect(spyCleanTempDir).toHaveBeenCalled();
         expect(globals.ACTIVATED).toBe(false);
+    });
+
+    async function removeSessionTest(command: string, contextValue: string, providerObject: any) {
+        const testNode: any = {
+            contextValue: contextValue,
+            getProfile: jest.fn(),
+            getParent: jest.fn().mockReturnValue({ getLabel: jest.fn() }),
+            label: "TestNode",
+        };
+        const deleteSessionSpy = jest.spyOn(providerObject.prototype, "deleteSession");
+        const commandFunction = allCommands.find((cmd) => command === cmd.cmd);
+        await (commandFunction as any).fun(testNode, [testNode]);
+        expect(deleteSessionSpy).toHaveBeenCalled();
+    }
+
+    it("zowe.ds.removeSession", async () => {
+        await removeSessionTest("zowe.ds.removeSession", globals.DS_SESSION_CONTEXT, DatasetTree);
+    });
+
+    it("zowe.uss.removeSession", async () => {
+        await removeSessionTest("zowe.uss.removeSession", globals.USS_SESSION_CONTEXT, USSTree);
     });
 });
 

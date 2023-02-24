@@ -12,7 +12,7 @@
 jest.mock("fs");
 
 import * as zowe from "@zowe/cli";
-import { ProfilesCache, ValidProfileEnum, Gui } from "@zowe/zowe-explorer-api";
+import { Gui, ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import * as ussNodeActions from "../../../src/uss/actions";
 import { createUSSTree, createUSSNode, createFavoriteUSSNode } from "../../../__mocks__/mockCreators/uss";
 import {
@@ -53,6 +53,7 @@ function createGlobalMocks() {
         withProgress: jest.fn(),
         writeText: jest.fn(),
         fileList: jest.fn(),
+        setStatusBarMessage: jest.fn().mockReturnValue({ dispose: jest.fn() }),
         showWarningMessage: jest.fn(),
         showErrorMessage: jest.fn(),
         createTreeView: jest.fn(),
@@ -90,6 +91,7 @@ function createGlobalMocks() {
     const profilesForValidation = { status: "active", name: "fake" };
     globals.initLogger(mock);
 
+    Object.defineProperty(Gui, "setStatusBarMessage", { value: globalMocks.setStatusBarMessage, configurable: true });
     Object.defineProperty(vscode.window, "showInputBox", { value: globalMocks.mockShowInputBox, configurable: true });
     Object.defineProperty(vscode.window, "showQuickPick", { value: globalMocks.showQuickPick, configurable: true });
     Object.defineProperty(zowe, "Create", { value: globalMocks.Create, configurable: true });
@@ -148,6 +150,7 @@ function createGlobalMocks() {
     Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
     Object.defineProperty(globals.LOG, "warn", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true });
+    Object.defineProperty(vscode.workspace, "applyEdit", { value: jest.fn(), configurable: true });
     Object.defineProperty(Profiles, "getInstance", {
         value: jest.fn(() => {
             return {
@@ -488,6 +491,7 @@ describe("USS Action Unit Tests - Function saveUSSFile", () => {
         await ussNodeActions.saveUSSFile(blockMocks.testDoc, blockMocks.testUSSTree);
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(1);
         expect(globalMocks.showErrorMessage.mock.calls[0][0]).toBe("Save failed");
+        expect(mocked(vscode.workspace.applyEdit)).toHaveBeenCalledTimes(2);
     });
 
     it("Tests that saveUSSFile fails when error occurs", async () => {
@@ -502,6 +506,7 @@ describe("USS Action Unit Tests - Function saveUSSFile", () => {
         await ussNodeActions.saveUSSFile(blockMocks.testDoc, blockMocks.testUSSTree);
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(1);
         expect(globalMocks.showErrorMessage.mock.calls[0][0]).toBe("Test Error Error: Test Error");
+        expect(mocked(vscode.workspace.applyEdit)).toHaveBeenCalledTimes(2);
     });
 
     it("Tests that saveUSSFile fails when HTTP error occurs", async () => {
