@@ -1621,8 +1621,26 @@ export async function copyPartitionedDatasets(nodes: ZoweDatasetNode[]) {
     });
 }
 
+/**
+ * Type of z/os dataset or member intended for replacement
+ * @export
+ */
 export type replaceDstype = "ps" | "po" | "da" | "mem";
+
+/**
+ * String type to determine whether or not the z/os dataset should be replaced
+ * @export
+ */
 export type shouldReplace = "replace" | "cancel" | "notFound";
+
+/**
+ * Helper function to determine whether or not we should replace some z/os content
+ *
+ * @param nodeProfile The node for which we are going to determine replacement
+ * @param name The fully quallified name of the dataset (member included)
+ * @param type The type of z/os dataset (or member) that we should determine whether or not to replace
+ * @returns string that explain whether or not to replace the z/os content
+ */
 export async function determineReplacement(nodeProfile: zowe.imperative.IProfileLoaded, name: string, type: replaceDstype): Promise<shouldReplace> {
     const mvsApi = ZoweExplorerApiRegister.getMvsApi(nodeProfile);
     const options = { responseTimeout: nodeProfile.profile?.responseTimeout };
@@ -1659,7 +1677,19 @@ export async function determineReplacement(nodeProfile: zowe.imperative.IProfile
     return replace ? "replace" : returnValueIfNotReplacing;
 }
 
-export async function _copyProcessor(nodes: ZoweDatasetNode[], type: replaceDstype, action: Function) {
+/**
+ * Helper funciton to process the copy operation on all selected nodes
+ *
+ * @param nodes List of selected nodes to process
+ * @param type Type of replacement that should occur
+ * @param action Function that will perform the actual replacement/copy operation
+ * @returns void - Please don't expect a return value from this method
+ */
+export async function _copyProcessor(
+    nodes: ZoweDatasetNode[],
+    type: replaceDstype,
+    action: (node: ZoweDatasetNode, dsname: string, shouldReplace: shouldReplace) => Promise<void>
+): Promise<void> {
     for (const node of nodes) {
         try {
             const lbl = node.getLabel().toString();

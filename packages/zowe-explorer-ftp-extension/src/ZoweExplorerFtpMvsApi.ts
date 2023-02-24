@@ -394,7 +394,7 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
             input.on("readable", () => {
                 const data = input.read();
                 if (data) {
-                    hash.update(data);
+                    hash.update(data as unknown as crypto.BinaryLike);
                 } else {
                     resolve(`${hash.digest("hex")}`);
                 }

@@ -53,6 +53,7 @@ export function run(): Promise<void> {
                     }
                 });
             } catch (err) {
+                // eslint-disable-next-line no-console
                 console.error(err);
                 e(err);
             }

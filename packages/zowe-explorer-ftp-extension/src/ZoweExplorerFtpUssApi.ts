@@ -262,7 +262,7 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
             input.on("readable", () => {
                 const data = input.read();
                 if (data) {
-                    hash.update(data);
+                    hash.update(data as unknown as crypto.BinaryLike);
                 } else {
                     resolve(`${hash.digest("hex")}`);
                 }

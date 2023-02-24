@@ -37,3 +37,7 @@ rules:
       filePathPattern: ".*\\.unit\\.test\\..*"
 parserOptions:
   sourceType: module
+overrides:
+  - files: "**/__tests__/**"
+    rules:
+      no-magic-numbers: off

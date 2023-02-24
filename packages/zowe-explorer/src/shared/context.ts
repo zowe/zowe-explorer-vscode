@@ -386,9 +386,13 @@ export function asFavorite(node: TreeItem): string {
 }
 
 export function withProfile(node: IZoweTreeNode): string {
-    if (!node) return;
+    if (!node) {
+        return;
+    }
     const hasProfile = (n: IZoweTreeNode) => n?.contextValue?.includes(".profile=") ?? false;
-    if (hasProfile(node)) return node.contextValue;
+    if (hasProfile(node)) {
+        return node.contextValue;
+    }
     if (hasProfile(node.getParent())) {
         const pContext = node.getParent().contextValue.split(".profile=");
         return node.contextValue + ".profile=" + pContext[1].split(".")[0] + ".";
