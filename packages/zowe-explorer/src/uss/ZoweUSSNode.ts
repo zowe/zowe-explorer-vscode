@@ -618,7 +618,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * @param tree The structure of files and folders to paste
      * @param ussApi The USS API to use for this operation
      */
-    public async pasteFileTree(rootPath: string, tree: UssFileTree, ussApi: ZoweExplorerApi.IUss) {
+    public async pasteInSameLpar(rootPath: string, tree: UssFileTree, ussApi: ZoweExplorerApi.IUss) {
         if (!ussApi.copy || !ussApi.fileList) {
             return;
         }
@@ -637,7 +637,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         });
     }
 
-    public async copyUssFile() {
+    public async pasteUssTree() {
         const clipboardContents = await vscode.env.clipboard.readText();
         if (clipboardContents == null || clipboardContents.length < 1) {
             return;
@@ -645,42 +645,54 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
         const prof = this.getProfile();
         const remotePath = this.fullPath;
-        const task: imperative.ITaskWithStatus = {
-            percentComplete: 0,
-            statusMessage: localize("uploadFile.putContents", "Uploading USS file"),
-            stageName: 0,
-        };
-        const options: IUploadOptions = {
-            task,
-            encoding: prof.profile?.encoding,
-            responseTimeout: prof.profile?.responseTimeout,
-        };
         try {
             const api = ZoweExplorerApiRegister.getUssApi(this.profile);
             const fileTreeToPaste: UssFileTree = JSON.parse(await vscode.env.clipboard.readText());
 
             if (api.copy && UssFileUtils.toSameSession(fileTreeToPaste, this.getSessionNode().getLabel() as string)) {
                 for (const subnode of fileTreeToPaste.children) {
-                    await this.pasteFileTree(remotePath, subnode, api);
+                    await this.pasteInSameLpar(remotePath, subnode, api);
                 }
             } else {
+                const task: imperative.ITaskWithStatus = {
+                    percentComplete: 0,
+                    statusMessage: localize("uploadFile.putContents", "Uploading USS files..."),
+                    stageName: 0,
+                };
+                const options: IUploadOptions = {
+                    task,
+                    encoding: prof.profile?.encoding,
+                    responseTimeout: prof.profile?.responseTimeout,
+                };
+
                 const apiResponse = await api.fileList(remotePath);
                 const fileList = apiResponse.apiResponse?.items;
+
                 for (const file of fileTreeToPaste.children) {
+                    const baseName = path.basename(file.localPath);
+                    const alreadyExists = fileList?.find((file) => file.name === baseName) != null;
+
+                    // Merge folders that already exist; append (copy) to files in queue w/ identical names
+                    const fileName = alreadyExists && file.type === UssFileType.File ? `${baseName} (copy)` : baseName;
+
+                    const existsLocally = fs.existsSync(file.localPath);
+                    if (!existsLocally) {
+                        await api.getContents(file.ussPath, {
+                            file: file.type === UssFileType.File ? file.localPath : undefined,
+                            directory: file.type === UssFileType.Directory ? file.localPath : undefined,
+                            binary: file.binary,
+                            returnEtag: true,
+                            encoding: this.profile.profile?.encoding,
+                            responseTimeout: this.profile.profile?.responseTimeout,
+                        });
+                    }
+
                     switch (file.type) {
                         case UssFileType.Directory:
-                            await api.uploadDirectory(file.localPath, remotePath.concat("/", path.basename(file.localPath)), options);
+                            await api.uploadDirectory(file.localPath, remotePath.concat("/", fileName), { ...options, recursive: false });
                             break;
                         case UssFileType.File:
-                            let fname = path.basename(file.localPath);
-                            if (
-                                fileList?.find((file) => {
-                                    return file.name === fname;
-                                })
-                            ) {
-                                fname += " (copy)";
-                            }
-                            await api.putContent(file.localPath, remotePath.concat("/", fname), options);
+                            await api.putContent(file.localPath, remotePath.concat("/", fileName), options);
                             break;
                     }
                 }

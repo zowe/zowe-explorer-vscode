@@ -242,9 +242,8 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
     saveSearch?(ussFileProvider: IZoweTree<IZoweUSSTreeNode>);
     /**
      * uploads selected uss node(s) to from clipboard to mainframe
-     *
      */
-    copyUssFile?();
+    pasteUssTree?();
 }
 
 /**

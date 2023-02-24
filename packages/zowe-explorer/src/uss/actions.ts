@@ -383,7 +383,6 @@ export async function deleteUSSFilesPrompt(nodes: IZoweUSSTreeNode[]): Promise<b
 export async function buildFileStructure(node: IZoweUSSTreeNode): Promise<UssFileTree> {
     if (contextually.isUssDirectory(node)) {
         await refreshChildNodesDirectory(node);
-
         let directory: UssFileTree = {
             localPath: node.getUSSDocumentFilePath(),
             ussPath: node.fullPath,
@@ -403,12 +402,11 @@ export async function buildFileStructure(node: IZoweUSSTreeNode): Promise<UssFil
         }
 
         return directory;
-    } else {
-        await node.refreshUSS();
     }
 
     return {
         children: [],
+        binary: node.binary,
         localPath: node.getUSSDocumentFilePath(),
         ussPath: node.fullPath,
         baseName: node.getLabel() as string,
@@ -479,12 +477,24 @@ export async function refreshChildNodesDirectory(node: IZoweUSSTreeNode) {
     }
 }
 
+/**
+ * @deprecated use `pasteUss`
+ * @param ussFileProvider File provider for USS tree
+ * @param node The node to paste within
+ */
 export async function pasteUssFile(ussFileProvider: IZoweTree<IZoweUSSTreeNode>, node: IZoweUSSTreeNode) {
+    pasteUss(ussFileProvider, node);
+}
+
+/**
+ * Paste copied USS nodes into the selected node.
+ * @param ussFileProvider File provider for USS tree
+ * @param node The node to paste within
+ */
+export async function pasteUss(ussFileProvider: IZoweTree<IZoweUSSTreeNode>, node: IZoweUSSTreeNode) {
     const a = ussFileProvider.getTreeView().selection as IZoweUSSTreeNode[];
-    let selectedNode;
-    if (node) {
-        selectedNode = node;
-    } else {
+    let selectedNode = node;
+    if (!selectedNode) {
         selectedNode = a.length > 0 ? a[0] : (a as unknown as IZoweUSSTreeNode);
     }
 
@@ -494,7 +504,7 @@ export async function pasteUssFile(ussFileProvider: IZoweTree<IZoweUSSTreeNode>,
             title: localize("ZoweUssNode.copyUpload.progress", "Pasting files..."),
         },
         () => {
-            return selectedNode.copyUssFile();
+            return selectedNode.pasteUssTree();
         }
     );
     const nodeToRefresh = node?.contextValue != null && contextually.isUssSession(node) ? selectedNode : selectedNode.getParent();

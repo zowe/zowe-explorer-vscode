@@ -27,6 +27,9 @@ export interface UssFileTree {
     // optional as the root node (for tree building) might not have a base name
     baseName?: string;
 
+    // whether the file is a binary file
+    binary?: boolean;
+
     // Any files/directory trees within this file tree
     children: UssFileTree[];
 

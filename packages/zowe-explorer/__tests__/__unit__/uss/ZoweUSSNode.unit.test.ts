@@ -1546,7 +1546,7 @@ describe("ZoweUSSNode Unit Tests - Function node.initializeFileOpening()", () =>
     });
 });
 
-describe("ZoweUSSNode Unit Tests - Function node.copyUssFile()", () => {
+describe("ZoweUSSNode Unit Tests - Function node.pasteUssTree()", () => {
     function createIProfileFakeEncoding(): zowe.imperative.IProfileLoaded {
         return {
             name: "fakeProfile",
@@ -1620,7 +1620,7 @@ describe("ZoweUSSNode Unit Tests - Function node.copyUssFile()", () => {
             mockUssApi: ZoweExplorerApiRegister.getUssApi(createIProfileFakeEncoding()),
             getUssApiMock: jest.fn(),
             testNode: testNode,
-            pasteFileTreeSpy: jest.spyOn(testNode, "pasteFileTree"),
+            pasteInSameLparSpy: jest.spyOn(testNode, "pasteInSameLpar"),
         };
 
         Object.defineProperty(vscode.env.clipboard, "readText", {
@@ -1652,7 +1652,7 @@ describe("ZoweUSSNode Unit Tests - Function node.copyUssFile()", () => {
         return newMocks;
     }
 
-    it("Tests node.copyUssFile() reads clipboard contents and upload directory & file sucessfully", async () => {
+    it("Tests node.pasteUssTree() reads clipboard contents and upload directory & file sucessfully", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
 
@@ -1662,18 +1662,18 @@ describe("ZoweUSSNode Unit Tests - Function node.copyUssFile()", () => {
 
         // Testing paste within same session (copy API)
         const mockToSameSession = jest.spyOn(UssFileUtils, "toSameSession").mockReturnValueOnce(true);
-        await blockMocks.testNode.copyUssFile();
-        expect(blockMocks.pasteFileTreeSpy).toHaveBeenCalledTimes(1);
+        await blockMocks.testNode.pasteUssTree();
+        expect(blockMocks.pasteInSameLparSpy).toHaveBeenCalledTimes(1);
 
         // Test case w/ copying between two sessions (should fallback to original impl.)
         mockToSameSession.mockReturnValueOnce(false);
-        await blockMocks.testNode.copyUssFile();
+        await blockMocks.testNode.pasteUssTree();
 
         // count should stay the same as the second case uses a different method
-        expect(blockMocks.pasteFileTreeSpy).toHaveBeenCalledTimes(1);
+        expect(blockMocks.pasteInSameLparSpy).toHaveBeenCalledTimes(1);
     });
 
-    it("Tests node.copyUssFile() reads clipboard contents finds same file name on destination directory", async () => {
+    it("Tests node.pasteUssTree() reads clipboard contents finds same file name on destination directory", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
 
@@ -1681,10 +1681,10 @@ describe("ZoweUSSNode Unit Tests - Function node.copyUssFile()", () => {
         jest.spyOn(blockMocks.mockUssApi, "putContent").mockResolvedValueOnce(blockMocks.fileResponseSame);
         jest.spyOn(blockMocks.mockUssApi, "uploadDirectory").mockResolvedValueOnce(blockMocks.fileResponseSame);
 
-        blockMocks.testNode.copyUssFile();
+        blockMocks.testNode.pasteUssTree();
     });
 
-    it("Tests node.copyUssFile() could not retriieve fileList api response", async () => {
+    it("Tests node.pasteUssTree() could not retriieve fileList api response", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
 
@@ -1692,22 +1692,22 @@ describe("ZoweUSSNode Unit Tests - Function node.copyUssFile()", () => {
         jest.spyOn(blockMocks.mockUssApi, "putContent").mockResolvedValueOnce(blockMocks.fileResponseSame);
         jest.spyOn(blockMocks.mockUssApi, "uploadDirectory").mockResolvedValueOnce(blockMocks.fileResponseSame);
 
-        blockMocks.testNode.copyUssFile();
+        blockMocks.testNode.pasteUssTree();
     });
     it("Tests util disposeClipboardContents function correctly free clipboardContents", async () => {
         vscode.env.clipboard.writeText("test");
         ussUtils.disposeClipboardContents();
         expect(vscode.env.clipboard.readText()).toEqual(Promise.resolve({}));
     });
-    it("Tests node.copyUssFile() reads clipboard contents and returns as nothing is copied", async () => {
+    it("Tests node.pasteUssTree() reads clipboard contents and returns as nothing is copied", async () => {
         const globalMocks = await createGlobalMocks();
         globalMocks.readText.mockResolvedValueOnce("");
         const blockMocks = createBlockMocks(globalMocks);
 
-        expect(await blockMocks.testNode.copyUssFile()).toEqual(undefined);
+        expect(await blockMocks.testNode.pasteUssTree()).toEqual(undefined);
     });
 
-    it("Tests node.copyUssFile() reads clipboard contents and fails to upload directory & file", async () => {
+    it("Tests node.pasteUssTree() reads clipboard contents and fails to upload directory & file", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
 
@@ -1715,6 +1715,6 @@ describe("ZoweUSSNode Unit Tests - Function node.copyUssFile()", () => {
         jest.spyOn(blockMocks.mockUssApi, "putContent").mockResolvedValueOnce(blockMocks.fileResponse);
         jest.spyOn(blockMocks.mockUssApi, "uploadDirectory").mockRejectedValueOnce(blockMocks.fileResponse);
 
-        blockMocks.testNode.copyUssFile();
+        blockMocks.testNode.pasteUssTree();
     });
 });

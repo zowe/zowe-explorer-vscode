@@ -154,7 +154,7 @@ export async function initUSSProvider(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.commands.registerCommand("zowe.uss.ssoLogout", async (node: IZoweTreeNode) => ussFileProvider.ssoLogout(node)));
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.uss.pasteUssFile", async (node: IZoweUSSTreeNode) => {
-            ussActions.pasteUssFile(ussFileProvider, node);
+            ussActions.pasteUss(ussFileProvider, node);
         })
     );
     context.subscriptions.push(

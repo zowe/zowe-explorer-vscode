@@ -115,7 +115,32 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
                     throw new Error();
                 }
             }
-            await UssUtils.uploadFile(connection, ussFilePath, transferOptions);
+
+            const isDir = fs.existsSync(inputFilePath) && fs.lstatSync(inputFilePath).isDirectory();
+            if (isDir) {
+                try {
+                    await UssUtils.makeDirectory(connection, ussFilePath);
+                    // eslint-disable-next-line no-empty
+                } catch (_err) {}
+
+                // If the directory already exists, interpret files/folders within the directory
+                const innerFiles = zowe.ZosFilesUtils.getFileListFromPath(inputFilePath, false);
+                for (const file of innerFiles) {
+                    const innerPath = path.join(inputFilePath, file);
+                    const innerUssPath = path.posix.join(ussFilePath, file);
+                    try {
+                        if (fs.lstatSync(innerPath).isDirectory()) {
+                            await this.uploadDirectory(innerPath, innerUssPath, {});
+                        } else {
+                            await UssUtils.uploadFile(connection, innerUssPath, transferOptions);
+                        }
+                        // eslint-disable-next-line no-empty
+                    } catch (_err) {}
+                }
+            } else {
+                await UssUtils.uploadFile(connection, ussFilePath, transferOptions);
+            }
+
             result.success = true;
             if (returnEtag) {
                 const contentsTag = await this.getContentsTag(ussFilePath);
@@ -135,22 +160,13 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         options: IUploadOptions
     ): Promise<zowe.IZosFilesResponse> {
-        let result = this.getDefaultResponse();
-
         // Check if inputDirectory is directory
         if (!zowe.imperative.IO.isDir(inputDirectoryPath)) {
             await Gui.errorMessage("The local directory path provided does not exist.", { logger: ZoweLogger });
             throw new Error();
         }
-        // getting list of files from directory
-        const files = zowe.ZosFilesUtils.getFileListFromPath(inputDirectoryPath, false);
-        // TODO: this solution will not perform very well; rewrite this and putContents methods
-        for (const file of files) {
-            const relativePath = path.relative(inputDirectoryPath, file).replace(/\\/g, "/");
-            const putResult = await this.putContents(file, path.posix.join(ussDirectoryPath, relativePath));
-            result = putResult;
-        }
-        return result;
+
+        return this.putContents(inputDirectoryPath, ussDirectoryPath);
     }
 
     public async create(
