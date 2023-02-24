@@ -393,8 +393,9 @@ export function withProfile(node: IZoweTreeNode): string {
     if (hasProfile(node)) {
         return node.contextValue;
     }
-    if (hasProfile(node.getParent())) {
-        const pContext = node.getParent().contextValue.split(".profile=");
+    const nodeParent = node.getParent();
+    if (hasProfile(nodeParent)) {
+        const pContext = nodeParent.contextValue.split(".profile=");
         return node.contextValue + ".profile=" + pContext[1].split(".")[0] + ".";
     }
     return node.contextValue;
