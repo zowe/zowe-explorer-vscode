@@ -41,7 +41,7 @@ export interface IZoweProviders {
 
 export function registerRefreshCommand(
     context: vscode.ExtensionContext,
-    activate: (context: vscode.ExtensionContext) => Promise<ZoweExplorerApiRegister>,
+    activate: (_context: vscode.ExtensionContext) => Promise<ZoweExplorerApiRegister>,
     deactivate: () => Promise<void>
 ) {
     // set a command to silently reload extension

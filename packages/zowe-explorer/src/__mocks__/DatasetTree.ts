@@ -35,7 +35,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweDatasetNode> {
      * @memberof DatasetTree
      */
     @MockMethod()
-    public getTreeItem(element: ZoweDatasetNode): vscode.TreeItem {
+    public getTreeItem(_element: ZoweDatasetNode): vscode.TreeItem {
         return null;
     }
 
@@ -47,7 +47,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweDatasetNode> {
      * @memberof DatasetTree
      */
     @MockMethod()
-    public getChildren(element?: ZoweDatasetNode): Promise<ZoweDatasetNode[]> {
+    public getChildren(_element?: ZoweDatasetNode): Promise<ZoweDatasetNode[]> {
         return new Promise<ZoweDatasetNode[]>((resolve) => {
             return resolve(null);
         });
@@ -71,26 +71,26 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweDatasetNode> {
      * @memberof DatasetTree
      */
     @MockMethod()
-    public getParent(element: ZoweDatasetNode): vscode.ProviderResult<ZoweDatasetNode> {
+    public getParent(_element: ZoweDatasetNode): vscode.ProviderResult<ZoweDatasetNode> {
         return null;
     }
 
     @MockMethod()
-    public async addSession(sessionName?: string): Promise<void> {
+    public async addSession(_sessionName?: string): Promise<void> {
         return new Promise<void>((resolve) => {
             return resolve();
         });
     }
 
     @MockMethod()
-    public async deleteSession(node?: ZoweDatasetNode): Promise<void> {
+    public async deleteSession(_node?: ZoweDatasetNode): Promise<void> {
         return new Promise<void>((resolve) => {
             return resolve();
         });
     }
 
     @MockMethod()
-    public async removeFavorite(node: ZoweDatasetNode) {
+    public async removeFavorite(_node: ZoweDatasetNode) {
         return new Promise<void>((resolve) => {
             return resolve();
         });

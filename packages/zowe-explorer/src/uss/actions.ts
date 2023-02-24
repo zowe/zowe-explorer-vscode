@@ -237,7 +237,6 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
     const remote = ending.substring(sesName.length).replace(/\\/g, "/");
 
     // get session from session name
-    let documentSession: imperative.Session;
     let binary;
     let node: IZoweUSSTreeNode;
 
@@ -245,7 +244,6 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
         (child) => child.getProfileName() && child.getProfileName() === sesName.trim()
     );
     if (sesNode) {
-        documentSession = sesNode.getSession();
         binary = Object.keys(sesNode.binaryFiles).find((child) => child === remote) !== undefined;
     }
     // Get specific node based on label and parent tree (session / favorites)

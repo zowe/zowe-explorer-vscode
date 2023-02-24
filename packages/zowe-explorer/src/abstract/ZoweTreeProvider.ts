@@ -143,17 +143,17 @@ export class ZoweTreeProvider {
         }
     }
 
-    public findNonFavoritedNode(element: IZoweTreeNode) {
+    public findNonFavoritedNode(_element: IZoweTreeNode) {
         return undefined;
     }
 
-    public findFavoritedNode(element: IZoweTreeNode) {
+    public findFavoritedNode(_element: IZoweTreeNode) {
         return undefined;
     }
-    public renameFavorite(node: IZoweTreeNode, newLabel: string) {
+    public renameFavorite(_node: IZoweTreeNode, _newLabel: string) {
         return undefined;
     }
-    public renameNode(profile: string, beforeDataSetName: string, afterDataSetName: string) {
+    public renameNode(_profile: string, _beforeDataSetName: string, _afterDataSetName: string) {
         return undefined;
     }
 

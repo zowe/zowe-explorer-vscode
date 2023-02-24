@@ -167,25 +167,25 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         return null;
     }
 
-    public open(node: IZoweUSSTreeNode, preview: boolean) {
+    public open(_node: IZoweUSSTreeNode, _preview: boolean) {
         throw new Error("Method not implemented.");
     }
-    public copy(node: IZoweUSSTreeNode) {
+    public copy(_node: IZoweUSSTreeNode) {
         throw new Error("Method not implemented.");
     }
-    public paste(node: IZoweUSSTreeNode) {
+    public paste(_node: IZoweUSSTreeNode) {
         throw new Error("Method not implemented.");
     }
-    public delete(node: IZoweUSSTreeNode) {
+    public delete(_node: IZoweUSSTreeNode) {
         throw new Error("Method not implemented.");
     }
-    public saveFile(document: vscode.TextDocument) {
+    public saveFile(_document: vscode.TextDocument) {
         throw new Error("Method not implemented.");
     }
-    public refreshPS(node: IZoweUSSTreeNode) {
+    public refreshPS(_node: IZoweUSSTreeNode) {
         throw new Error("Method not implemented.");
     }
-    public uploadDialog(node: IZoweUSSTreeNode) {
+    public uploadDialog(_node: IZoweUSSTreeNode) {
         throw new Error("Method not implemented.");
     }
 

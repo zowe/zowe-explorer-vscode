@@ -102,7 +102,7 @@ describe("SpoolProvider Unit Tests", () => {
         const query = jest.fn();
         Object.defineProperty(uriMock, "query", { value: query });
 
-        const uri = spoolprovider.encodeJobFile("sessionName", iJobFile);
+        spoolprovider.encodeJobFile("sessionName", iJobFile);
         expect(mockUri.with.mock.calls.length).toEqual(1);
         expect(mockUri.with.mock.calls[0][0]).toEqual({
             path: "TESTJOB.100.STDOUT",

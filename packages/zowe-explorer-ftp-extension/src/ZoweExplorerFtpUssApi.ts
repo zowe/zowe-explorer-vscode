@@ -49,8 +49,8 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
         return result;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/require-await, require-await
-    public async isFileTagBinOrAscii(ussFilePath: string): Promise<boolean> {
+    // eslint-disable-next-line @typescript-eslint/require-await, require-await
+    public async isFileTagBinOrAscii(_ussFilePath: string): Promise<boolean> {
         return false; // TODO: needs to be implemented checking file type
     }
 
@@ -125,12 +125,7 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
         }
     }
 
-    public async uploadDirectory(
-        inputDirectoryPath: string,
-        ussDirectoryPath: string,
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        options: IUploadOptions
-    ): Promise<zowe.IZosFilesResponse> {
+    public async uploadDirectory(inputDirectoryPath: string, ussDirectoryPath: string, _options: IUploadOptions): Promise<zowe.IZosFilesResponse> {
         let result = this.getDefaultResponse();
 
         // Check if inputDirectory is directory
@@ -149,12 +144,7 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
         return result;
     }
 
-    public async create(
-        ussPath: string,
-        type: string,
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        mode?: string
-    ): Promise<zowe.IZosFilesResponse> {
+    public async create(ussPath: string, type: string, _mode?: string): Promise<zowe.IZosFilesResponse> {
         const result = this.getDefaultResponse();
         let connection;
         try {

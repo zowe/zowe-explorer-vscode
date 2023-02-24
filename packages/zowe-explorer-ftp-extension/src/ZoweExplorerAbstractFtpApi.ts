@@ -82,8 +82,7 @@ export abstract class AbstractFtpApi implements ZoweExplorerApi.ICommon {
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    public logout(session): Promise<void> {
+    public logout(_session): Promise<void> {
         const ftpsession = sessionMap.get(this.profile);
         if (ftpsession !== undefined) {
             ftpsession.releaseConnections();

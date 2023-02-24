@@ -69,6 +69,7 @@
   "refreshPS.file2": " was probably deleted.",
   "enterPattern.log.debug.prompt": "Prompting the user for a data set pattern",
   "enterPattern.inputBox.prompt": "Search Data Sets: use a comma to separate multiple patterns",
+  "copyDataSet.multitype.error": "Cannot perform the copy operation as the datasets selected have different types",
   "hMigrate.requestSent1": "Migration of dataset: ",
   "hMigrate.requestSent2": " requested.",
   "hMigrateDataSet.checkProfile": "Profile is invalid",

@@ -184,14 +184,12 @@ export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    public async getJclForJob(job: zowe.IJob): Promise<string> {
+    public async getJclForJob(_job: zowe.IJob): Promise<string> {
         await Gui.errorMessage("Get jcl is not supported in the FTP extension.", { logger: ZoweLogger });
         throw new Error();
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    public async submitJcl(jcl: string, internalReaderRecfm?: string, internalReaderLrecl?: string): Promise<zowe.IJob> {
+    public async submitJcl(_jcl: string, _internalReaderRecfm?: string, _internalReaderLrecl?: string): Promise<zowe.IJob> {
         await Gui.errorMessage("Submit jcl is not supported in the FTP extension.", { logger: ZoweLogger });
         throw new Error();
     }

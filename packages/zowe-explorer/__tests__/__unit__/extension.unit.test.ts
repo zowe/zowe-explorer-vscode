@@ -431,9 +431,9 @@ describe("Extension Unit Tests", () => {
         globalMocks.mockExistsSync.mockReturnValueOnce(false);
         globalMocks.mockGetConfiguration.mockReturnValue({
             persistence: true,
-            get: (setting: string) => "",
+            get: (_setting: string) => "",
             update: jest.fn(),
-            inspect: (configuration: string) => {
+            inspect: (_configuration: string) => {
                 return {
                     workspaceValue: undefined,
                     globalValue: undefined,
@@ -480,9 +480,9 @@ describe("Extension Unit Tests", () => {
         globalMocks.mockExistsSync.mockReturnValueOnce(false);
         globalMocks.mockGetConfiguration.mockReturnValue({
             persistence: true,
-            get: (setting: string) => "",
+            get: (_setting: string) => "",
             update: jest.fn(),
-            inspect: (configuration: string) => {
+            inspect: (_configuration: string) => {
                 return {
                     workspaceValue: undefined,
                     globalValue: undefined,
@@ -535,9 +535,9 @@ describe("Extension Unit Tests - THEIA", () => {
         globalMocks.mockExistsSync.mockReturnValueOnce(false);
         globalMocks.mockGetConfiguration.mockReturnValue({
             persistence: true,
-            get: (setting: string) => "",
+            get: (_setting: string) => "",
             update: jest.fn(),
-            inspect: (configuration: string) => {
+            inspect: (_configuration: string) => {
                 return {
                     workspaceValue: undefined,
                     globalValue: undefined,

@@ -1153,7 +1153,9 @@ export async function copyDataSets(node, nodeList: ZoweDatasetNode[], datasetPro
 
     const unique = [...new Set(selectedNodes.map((item) => item.contextValue))];
     if (unique.length > 1) {
-        vscode.window.showErrorMessage(`${"Can't copy multiple dataset with different types"}: ${"Select same types to copy"}`);
+        api.Gui.showMessage(
+            localize("copyDataSet.multitype.error", "Cannot perform the copy operation as the datasets selected have different types")
+        );
         return;
     }
     if (contextually.isDsMember(selectedNodes[0])) {
@@ -1683,7 +1685,7 @@ export async function determineReplacement(nodeProfile: zowe.imperative.IProfile
 export async function _copyProcessor(
     nodes: ZoweDatasetNode[],
     type: replaceDstype,
-    action: (node: ZoweDatasetNode, dsname: string, shouldReplace: shouldReplace) => Promise<void>
+    action: (_node: ZoweDatasetNode, _dsname: string, _shouldReplace: shouldReplace) => Promise<void>
 ): Promise<void> {
     for (const node of nodes) {
         try {

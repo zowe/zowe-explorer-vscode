@@ -18,7 +18,7 @@ import { Gui, ValidProfileEnum, IZoweTree, IZoweDatasetTreeNode, PersistenceSche
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { FilterDescriptor, FilterItem, errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
-import { sortTreeItems, getAppName, getDocumentFilePath, labelRefresh } from "../shared/utils";
+import { sortTreeItems, getAppName, getDocumentFilePath } from "../shared/utils";
 import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { getIconById, getIconByNode, IconId, IIconItem } from "../generators/icons";
@@ -98,28 +98,28 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         }
     }
 
-    public open(node: IZoweDatasetTreeNode, preview: boolean) {
+    public open(_node: IZoweDatasetTreeNode, _preview: boolean) {
         throw new Error("Method not implemented.");
     }
-    public copy(node: IZoweDatasetTreeNode) {
+    public copy(_node: IZoweDatasetTreeNode) {
         throw new Error("Method not implemented.");
     }
-    public paste(node: IZoweDatasetTreeNode) {
+    public paste(_node: IZoweDatasetTreeNode) {
         throw new Error("Method not implemented.");
     }
-    public delete(node: IZoweDatasetTreeNode) {
+    public delete(_node: IZoweDatasetTreeNode) {
         throw new Error("Method not implemented.");
     }
-    public saveSearch(node: IZoweDatasetTreeNode) {
+    public saveSearch(_node: IZoweDatasetTreeNode) {
         throw new Error("Method not implemented.");
     }
-    public saveFile(document: vscode.TextDocument) {
+    public saveFile(_document: vscode.TextDocument) {
         throw new Error("Method not implemented.");
     }
-    public refreshPS(node: IZoweDatasetTreeNode) {
+    public refreshPS(_node: IZoweDatasetTreeNode) {
         throw new Error("Method not implemented.");
     }
-    public uploadDialog(node: IZoweDatasetTreeNode) {
+    public uploadDialog(_node: IZoweDatasetTreeNode) {
         throw new Error("Method not implemented.");
     }
     public filterPrompt(node: IZoweDatasetTreeNode) {

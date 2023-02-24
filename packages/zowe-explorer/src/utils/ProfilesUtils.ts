@@ -134,9 +134,9 @@ export function isTheia(): boolean {
  * @param getSessionForProfile is a function to build a valid specific session based on provided profile
  * @param sessionNode is a tree node, containing session information
  */
-type SessionForProfile = (profile: imperative.IProfileLoaded) => imperative.Session;
+type SessionForProfile = (_profile: imperative.IProfileLoaded) => imperative.Session;
 export const syncSessionNode =
-    (profiles: Profiles) =>
+    (_profiles: Profiles) =>
     (getSessionForProfile: SessionForProfile) =>
     async (sessionNode: IZoweTreeNode): Promise<void> => {
         sessionNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
