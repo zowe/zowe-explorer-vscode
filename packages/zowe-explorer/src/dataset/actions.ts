@@ -1173,10 +1173,6 @@ export async function copyDataSets(node, nodeList: ZoweDatasetNode[], datasetPro
         await copyPartitionedDatasets(selectedNodes);
         return refreshDataset(selectedNodes[0].getParent(), datasetProvider);
     }
-    // else if (contextually.isDirectDs(selectedNodes[0])) {
-    //     await copyDirectDatasets(selectedNodes);
-    //     return refreshDataset(selectedNodes[0].getParent(), datasetProvider);
-    // }
 }
 
 /**
@@ -1622,7 +1618,7 @@ export async function copyPartitionedDatasets(nodes: ZoweDatasetNode[]) {
  * Type of z/os dataset or member intended for replacement
  * @export
  */
-export type replaceDstype = "ps" | "po" | "da" | "mem";
+export type replaceDstype = "ps" | "po" | "mem";
 
 /**
  * String type to determine whether or not the z/os dataset should be replaced
@@ -1656,8 +1652,6 @@ export async function determineReplacement(nodeProfile: zowe.imperative.IProfile
     } else {
         const res = await mvsApi.dataSet(name, options);
         if (res?.success && res.apiResponse?.items.length > 0) {
-            // Assume DA
-            q = localize("copyDataSet.replace.da.question", "The direct (DA) dataset already exists.\nDo you want to replace it?");
             if (type === "ps") {
                 q = localize("copyDataSet.replace.ps.question", "The physical sequential (PS) dataset already exists.\nDo you want to replace it?");
             } else if (type === "po") {

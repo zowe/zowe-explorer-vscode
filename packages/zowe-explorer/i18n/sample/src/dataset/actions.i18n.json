@@ -94,7 +94,6 @@
   "copyDataSet.replace.option1": "Replace",
   "copyDataSet.replace.option2": "Cancel",
   "copyDataSet.replace.mem.question": "The dataset member already exists.\nDo you want to replace it?",
-  "copyDataSet.replace.da.question": "The direct (DA) dataset already exists.\nDo you want to replace it?",
   "copyDataSet.replace.ps.question": "The physical sequential (PS) dataset already exists.\nDo you want to replace it?",
   "copyDataSet.replace.po.question": "The partitioned (PO) dataset already exists.\nDo you want to merge them while replacing any existing members?",
   "copyDataSet.log.error": "Error encountered when copy data set! ",
