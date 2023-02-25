@@ -37,7 +37,7 @@ Clone the repository, build a VSIX file, and start working with the extension.
 1. Clone the repository by issuing the following command in your local command-line interface:
 
    ```shell
-   git clone --origin=upstream --branch=main --single-branch https://github.com/zowe/vscode-extension-for-zowe.git
+   git clone https://github.com/zowe/vscode-extension-for-zowe.git
    ```
 
 2. Change directories into the newly-cloned repository:
