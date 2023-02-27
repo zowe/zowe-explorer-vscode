@@ -1,6 +1,5 @@
 {
   "getChildren.error.invalidNode": "Invalid node",
-  "ZoweUssNode.getList.progress": "Get USS file list command submitted.",
   "getChildren.error.response": "Retrieving response from ",
   "getChildren.responses.error.response": "The response from Zowe CLI was not successful",
   "getChildren.responses.open": "Open",
@@ -9,6 +8,7 @@
   "deleteUssNode.itemDeleted": "The item {0} has been deleted.",
   "openUSS.error.invalidNode": "open() called from invalid node.",
   "openUSS.name.exists": "There is already a file with the same name. Please change your OS file system settings if you want to give case sensitive file names",
+  "ussFile.opening": "$(sync~spin) Opening USS file...",
   "refreshUSS.error.invalidNode": "refreshUSS() called from invalid node.",
   "refreshUSS.error.notFound": "not found",
   "refreshUSS.file1": "Unable to find file: ",

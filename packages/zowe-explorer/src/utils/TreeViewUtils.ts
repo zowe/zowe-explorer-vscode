@@ -9,15 +9,17 @@
  *                                                                                 *
  */
 
-// globals
-export const ZOWE_EXPLORER = "Zowe Explorer";
-export const SCS_ZOWE_PLUGIN = "Zowe-Plugin";
-export const SCS_ZOWE_CLI_V2 = "Zowe";
-export const SCS_BRIGHTSIDE = "@brightside/core";
-export const SCS_ZOWE_CLI = "@zowe/cli";
-export const SCS_BROADCOM_PLUGIN = "Broadcom-Plugin";
-export const SETTINGS_SCS_DEFAULT = SCS_ZOWE_CLI_V2;
+import { IZoweTree } from "@zowe/zowe-explorer-api";
 
-// default double-click speed for Windows
-// (since VScode does not have a double-click event for nodes, we need our own check)
-export const DOUBLE_CLICK_SPEED_MS = 500;
+export class TreeViewUtils {
+    /**
+     * Temporary solution to fixing issue with VSCode multi-select bug
+     * (where multi-select is still active after deleting the nodes in previous multi-selection)
+     * @param treeProvider The tree provider to reset multi-selection for
+     */
+    public static async fixVsCodeMultiSelect<T>(treeProvider: IZoweTree<T>): Promise<void> {
+        const treeView = treeProvider.getTreeView();
+        await treeView.reveal(treeProvider.mFavoriteSession, { select: true });
+        await treeView.reveal(treeProvider.mFavoriteSession, { select: false });
+    }
+}

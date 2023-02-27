@@ -19,6 +19,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 ### Bug fixes
 
 - Updated Imperative to fix failure to load schema when there is no profile of that type. [zowe/imperative#916](https://github.com/zowe/imperative/pull/916)
+- Added missing overload for `Gui.setStatusBarMessage` to allow passing `Thenable` objects.
 
 ## `2.5.0`
 

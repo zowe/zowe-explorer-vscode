@@ -11,6 +11,8 @@
 
 import * as vscode from "vscode";
 import { IZoweLogger, MessageSeverity } from "../logger";
+import { IZoweTree, IZoweTreeNode } from "../tree";
+import { DOUBLE_CLICK_SPEED_MS } from "./Constants";
 
 export interface GuiMessageOptions<T extends string | vscode.MessageItem> {
     severity?: MessageSeverity;
@@ -145,6 +147,8 @@ export namespace Gui {
         return vscode.window.showOpenDialog(options);
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    export function setStatusBarMessage(text: string, hideAfterTimeout: Thenable<any>): vscode.Disposable;
     export function setStatusBarMessage(text: string, hideAfterTimeout: number): vscode.Disposable;
     export function setStatusBarMessage(text: string): vscode.Disposable;
     /**
@@ -274,5 +278,33 @@ export namespace Gui {
         task: (progress: vscode.Progress<{ message?: string; increment?: number }>, token: vscode.CancellationToken) => Thenable<R>
     ): Thenable<R> {
         return vscode.window.withProgress(options, task);
+    }
+
+    export namespace utils {
+        /**
+         * Determines whether a node has been double-clicked within a tree view.
+         *
+         * @param node The node that was just clicked
+         * @param provider The tree provider that the node belongs to
+         * @returns Whether the node has been double-clicked.
+         */
+        export function wasDoubleClicked<T>(node: IZoweTreeNode, provider: IZoweTree<T>): boolean {
+            const timeOfClick = new Date();
+            if (provider.lastOpened?.node === node) {
+                const timeDelta = timeOfClick.getTime() - provider.lastOpened.date.getTime();
+                provider.lastOpened.date = timeOfClick;
+
+                // If the time (in ms) between clicks is less than the defined DOUBLE_CLICK_SPEED_MS,
+                // recognize the action as a double-click.
+                return timeDelta <= DOUBLE_CLICK_SPEED_MS;
+            }
+
+            provider.lastOpened = {
+                node,
+                date: timeOfClick,
+            };
+
+            return false;
+        }
     }
 }

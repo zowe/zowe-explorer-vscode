@@ -111,8 +111,10 @@ export namespace window {
         return undefined;
     }
 
-    export function setStatusBarMessage(message: string, ...items: string[]): undefined {
-        return undefined;
+    export function setStatusBarMessage(message: string, ...items: string[]): object {
+        return {
+            dispose: () => {},
+        };
     }
 
     /**
@@ -404,6 +406,10 @@ export namespace workspace {
         return Disposable;
     }
 
+    export function applyEdit() {
+        return true;
+    }
+
     /**
      * ~~The folder that is open in the editor. `undefined` when no folder
      * has been opened.~~
@@ -466,6 +472,15 @@ export interface Clipboard {
      * @returns A thenable that resolves when writing happened.
      */
     writeText(value: string): Thenable<void>;
+}
+
+export class Position {}
+
+export class Range {}
+
+export class WorkspaceEdit {
+    public delete(uri: Uri, range: Range) {}
+    public insert(uri: Uri, position: Position, newText: string) {}
 }
 
 /**

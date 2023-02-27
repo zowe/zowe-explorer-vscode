@@ -49,6 +49,7 @@ async function createGlobalMocks() {
         showInformationMessage: jest.fn(),
         getConfiguration: jest.fn(),
         downloadUSSFile: jest.fn(),
+        setStatusBarMessage: jest.fn().mockReturnValue({ dispose: jest.fn() }),
         showInputBox: jest.fn(),
         mockExecuteCommand: jest.fn(),
         mockLoadNamedProfile: jest.fn(),
@@ -89,6 +90,10 @@ async function createGlobalMocks() {
     globalMocks.getUssApiMock.mockReturnValue(globalMocks.ussApi);
     ZoweExplorerApiRegister.getUssApi = globalMocks.getUssApiMock.bind(ZoweExplorerApiRegister);
 
+    Object.defineProperty(Gui, "setStatusBarMessage", {
+        value: globalMocks.setStatusBarMessage,
+        configurable: true,
+    });
     Object.defineProperty(vscode.workspace, "onDidSaveTextDocument", {
         value: globalMocks.onDidSaveTextDocument,
         configurable: true,
@@ -1068,13 +1073,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
         await node.openUSS(false, true, blockMocks.testUSSTree);
         expect(globalMocks.existsSync.mock.calls.length).toBe(1);
         expect(globalMocks.existsSync.mock.calls[0][0]).toBe(path.join(globals.USS_DIR, "/" + node.mProfileName + "/", node.fullPath));
-        expect(globalMocks.withProgress).toBeCalledWith(
-            {
-                location: vscode.ProgressLocation.Notification,
-                title: "Opening USS file...",
-            },
-            expect.any(Function)
-        );
+        expect(globalMocks.setStatusBarMessage).toBeCalledWith("$(sync~spin) Opening USS file...");
 
         // Tests that correct file is opened in editor
         globalMocks.withProgress(globalMocks.downloadUSSFile);
@@ -1119,14 +1118,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
         await node.openUSS(false, true, blockMocks.testUSSTree);
         expect(globalMocks.existsSync.mock.calls.length).toBe(1);
         expect(globalMocks.existsSync.mock.calls[0][0]).toBe(path.join(globals.USS_DIR, "/" + node.mProfileName + "/", node.fullPath));
-        expect(globalMocks.withProgress).toBeCalledWith(
-            {
-                location: vscode.ProgressLocation.Notification,
-                title: "Opening USS file...",
-            },
-            expect.any(Function)
-        );
-
+        expect(globalMocks.setStatusBarMessage).toBeCalledWith("$(sync~spin) Opening USS file...");
         // Tests that correct file is opened in editor
         globalMocks.withProgress(globalMocks.downloadUSSFile);
         expect(globalMocks.withProgress).toBeCalledWith(globalMocks.downloadUSSFile);
@@ -1276,14 +1268,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
         await node.openUSS(false, true, blockMocks.testUSSTree);
         expect(globalMocks.existsSync.mock.calls.length).toBe(1);
         expect(globalMocks.existsSync.mock.calls[0][0]).toBe(path.join(globals.USS_DIR, "/" + node.getProfileName() + "/", node.fullPath));
-        expect(globalMocks.withProgress).toBeCalledWith(
-            {
-                location: vscode.ProgressLocation.Notification,
-                title: "Opening USS file...",
-            },
-            expect.any(Function)
-        );
-
+        expect(globalMocks.setStatusBarMessage).toBeCalledWith("$(sync~spin) Opening USS file...");
         // Make sure correct file is displayed in the editor
         globalMocks.withProgress(globalMocks.downloadUSSFile);
         expect(globalMocks.openTextDocument.mock.calls.length).toBe(1);

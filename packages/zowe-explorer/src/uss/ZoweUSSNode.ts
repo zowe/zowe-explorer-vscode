@@ -154,17 +154,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         const sessNode = this.getSessionNode();
         try {
             const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
-            responses.push(
-                await Gui.withProgress(
-                    {
-                        location: vscode.ProgressLocation.Notification,
-                        title: localize("ZoweUssNode.getList.progress", "Get USS file list command submitted."),
-                    },
-                    () => {
-                        return ZoweExplorerApiRegister.getUssApi(cachedProfile).fileList(this.fullPath);
-                    }
-                )
-            );
+            responses.push(await ZoweExplorerApiRegister.getUssApi(cachedProfile).fileList(this.fullPath));
         } catch (err) {
             await errorHandling(err, this.label.toString(), localize("getChildren.error.response", "Retrieving response from ") + `uss-file-list`);
             await syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getUssApi(profileValue).getSession())(sessNode);
@@ -430,6 +420,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      */
     public async openUSS(download = false, previewFile: boolean, ussFileProvider?: IZoweTree<IZoweUSSTreeNode>) {
         await ussFileProvider.checkCurrentProfile(this);
+
+        const doubleClicked = Gui.utils.wasDoubleClicked(this, ussFileProvider);
+        const shouldPreview = doubleClicked ? false : previewFile;
         if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID || Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED) {
             try {
                 let label: string;
@@ -466,22 +459,16 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                         const fullPath = this.fullPath;
                         const chooseBinary =
                             this.binary || (await ZoweExplorerApiRegister.getUssApi(cachedProfile).isFileTagBinOrAscii(this.fullPath));
-                        const response = await Gui.withProgress(
-                            {
-                                location: vscode.ProgressLocation.Notification,
-                                title: "Opening USS file...",
-                            },
-                            function downloadUSSFile() {
-                                return ZoweExplorerApiRegister.getUssApi(cachedProfile).getContents(fullPath, {
-                                    file: documentFilePath,
-                                    binary: chooseBinary,
-                                    returnEtag: true,
-                                    encoding: cachedProfile.profile?.encoding,
-                                    responseTimeout: cachedProfile.profile?.responseTimeout,
-                                });
-                            }
-                        );
 
+                        const statusMsg = Gui.setStatusBarMessage(localize("ussFile.opening", "$(sync~spin) Opening USS file..."));
+                        const response = await ZoweExplorerApiRegister.getUssApi(cachedProfile).getContents(fullPath, {
+                            file: documentFilePath,
+                            binary: chooseBinary,
+                            returnEtag: true,
+                            encoding: cachedProfile.profile?.encoding,
+                            responseTimeout: cachedProfile.profile?.responseTimeout,
+                        });
+                        statusMsg.dispose();
                         this.downloaded = true;
                         this.setEtag(response.apiResponse.etag);
                     }
@@ -490,7 +477,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     ussFileProvider.addFileHistory(`[${this.getProfile().name}]: ${this.fullPath}`);
                     ussFileProvider.getTreeView().reveal(this, { select: true, focus: true, expand: false });
 
-                    await this.initializeFileOpening(documentFilePath, previewFile);
+                    await this.initializeFileOpening(documentFilePath, shouldPreview);
                 }
             } catch (err) {
                 await errorHandling(err, this.mProfileName, err.message);

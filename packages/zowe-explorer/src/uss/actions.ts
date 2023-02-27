@@ -21,7 +21,7 @@ import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { isBinaryFileSync } from "isbinaryfile";
 import * as contextually from "../shared/context";
-import { setFileSaved } from "../utils/workspace";
+import { markDocumentUnsaved, setFileSaved } from "../utils/workspace";
 import * as nls from "vscode-nls";
 import { refreshAll } from "../shared/refresh";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
@@ -298,6 +298,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
             setFileSaved(true);
             // this part never runs! zowe.Upload.fileToUSSFile doesn't return success: false, it just throws the error which is caught below!!!!!
         } else {
+            await markDocumentUnsaved(doc);
             Gui.errorMessage(uploadResponse.commandResponse);
         }
     } catch (err) {
@@ -322,7 +323,6 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
                 if (downloadEtag !== etagToUpload) {
                     node.setEtag(downloadEtag);
                 }
-                this.downloaded = true;
 
                 globals.LOG.warn(err);
                 Gui.warningMessage(
@@ -345,6 +345,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
             }
         } else {
             globals.LOG.error(localize("saveUSSFile.log.error.save", "Error encountered when saving USS file: ") + JSON.stringify(err));
+            await markDocumentUnsaved(doc);
             await errorHandling(err, sesName, err.message);
         }
     }
