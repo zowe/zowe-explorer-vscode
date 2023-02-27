@@ -22,6 +22,16 @@ import { PersistenceSchemaEnum } from "../profiles/UserSettings";
  * @extends {vscode.TreeDataProvider<T>}
  * @template T provide a subtype of vscode.TreeItem
  */
+
+/**
+ *  Contains a node that was recently interacted with,
+ *  as well as a timestamp for when that interaction occurred.
+ */
+export class NodeInteraction {
+    public node?: IZoweTreeNode;
+    public date?: Date;
+}
+
 export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
     /**
      * Root session nodes
@@ -36,6 +46,11 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
      * @deprecated should not be visible outside of class
      */
     mFavorites: IZoweTreeNode[];
+
+    /**
+     * Defines the last node that was opened in the editor
+     */
+    lastOpened?: NodeInteraction;
 
     /**
      * Adds a session to the container

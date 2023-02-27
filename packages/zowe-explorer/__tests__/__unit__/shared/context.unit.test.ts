@@ -390,4 +390,8 @@ describe("Context helper tests", () => {
             expect(contextually.isFavorite(treeItem)).toBe(false);
         }
     });
+    it("Test contextValue being returned when calling getBaseContext", () => {
+        treeItem.contextValue = "test";
+        expect(contextually.getBaseContext(treeItem)).toEqual(treeItem.contextValue);
+    });
 });

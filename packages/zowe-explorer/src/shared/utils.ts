@@ -42,7 +42,7 @@ export const JOB_SUBMIT_DIALOG_OPTS = [
 
 export function filterTreeByString(value: string, treeItems: vscode.QuickPickItem[]): vscode.QuickPickItem[] {
     const filteredArray = [];
-    value = value.toUpperCase().replace(".", ".").replace(/\*/g, "(.*)");
+    value = value.toUpperCase().replace(/\*/g, "(.*)");
     const regex = new RegExp(value);
     treeItems.forEach((item) => {
         if (item.label.toUpperCase().match(regex)) {
@@ -219,7 +219,10 @@ export async function uploadContent(
         if (prof.profile.encoding) {
             uploadOptions.encoding = prof.profile.encoding;
         }
-        return ZoweExplorerApiRegister.getMvsApi(prof).putContents(doc.fileName, remotePath, uploadOptions);
+        return ZoweExplorerApiRegister.getMvsApi(prof).putContents(doc.fileName, remotePath, {
+            responseTimeout: prof.profile?.responseTimeout,
+            ...uploadOptions,
+        });
     } else {
         // if new api method exists, use it
         if (ZoweExplorerApiRegister.getUssApi(profile).putContent) {
@@ -233,8 +236,9 @@ export async function uploadContent(
                 localEncoding: null,
                 etag: etagToUpload,
                 returnEtag,
-                encoding: profile.profile.encoding,
+                encoding: profile.profile?.encoding,
                 task,
+                responseTimeout: profile.profile?.responseTimeout,
             };
             const result = ZoweExplorerApiRegister.getUssApi(profile).putContent(doc.fileName, remotePath, options);
             return result;
@@ -331,6 +335,12 @@ export function getSelectedNodeList(node: IZoweTreeNode, nodeList: IZoweTreeNode
  * @param {string} text - prefix text
  * @returns undefined | string
  */
-export function jobPrefixValidator(text: string): any {
-    return text.length > globals.JOBS_MAX_PREFIX ? localize("searchJobs.prefix.invalid", "Invalid job prefix") : null;
+export function jobStringValidator(text: string, localizedParam: "owner" | "prefix"): any {
+    switch (localizedParam) {
+        case "owner":
+            return text.length > globals.JOBS_MAX_PREFIX ? localize("searchJobs.owner.invalid", "Invalid job owner") : null;
+        case "prefix":
+        default:
+            return text.length > globals.JOBS_MAX_PREFIX ? localize("searchJobs.prefix.invalid", "Invalid job prefix") : null;
+    }
 }

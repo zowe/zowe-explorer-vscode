@@ -111,8 +111,10 @@ export namespace window {
         return undefined;
     }
 
-    export function setStatusBarMessage(message: string, ...items: string[]): undefined {
-        return undefined;
+    export function setStatusBarMessage(message: string, ...items: string[]): object {
+        return {
+            dispose: () => {},
+        };
     }
 
     /**
@@ -143,6 +145,10 @@ export namespace window {
          * Note: this option is ignored for non-modal messages.
          */
         isCloseAffordance?: boolean;
+    }
+
+    export function createOutputChannel(name: string, languageId?: string): any {
+        return {};
     }
 }
 export namespace commands {
@@ -303,6 +309,23 @@ export class TreeItem {
     // constructor(resourceUri: Uri, collapsibleState?: TreeItemCollapsibleState);
 }
 
+export enum ConfigurationTarget {
+    /**
+     * Global configuration
+     */
+    Global = 1,
+
+    /**
+     * Workspace configuration
+     */
+    Workspace = 2,
+
+    /**
+     * Workspace folder configuration
+     */
+    WorkspaceFolder = 3,
+}
+
 /**
  * Collapsible state of the tree item
  */
@@ -367,6 +390,7 @@ export namespace workspace {
             inspect: () => {
                 return {};
             },
+            get: () => {},
         };
     }
 
@@ -380,6 +404,10 @@ export namespace workspace {
 
     export function onWillSaveTextDocument(event) {
         return Disposable;
+    }
+
+    export function applyEdit() {
+        return true;
     }
 
     /**
@@ -444,6 +472,15 @@ export interface Clipboard {
      * @returns A thenable that resolves when writing happened.
      */
     writeText(value: string): Thenable<void>;
+}
+
+export class Position {}
+
+export class Range {}
+
+export class WorkspaceEdit {
+    public delete(uri: Uri, range: Range) {}
+    public insert(uri: Uri, position: Position, newText: string) {}
 }
 
 /**

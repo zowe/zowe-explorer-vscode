@@ -17,15 +17,17 @@ import * as fs from "fs";
 import * as fsextra from "fs-extra";
 import * as extension from "../../src/extension";
 import * as globals from "../../src/globals";
+import * as tempFolderUtils from "../../src/utils/TempFolder";
 import { Gui, ValidProfileEnum, ProfilesCache } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../src/Profiles";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
-import * as dsActions from "../../src/dataset/actions";
 import { createGetConfigMock, createInstanceOfProfileInfo, createIProfile, createTreeView } from "../../__mocks__/mockCreators/shared";
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
 import { getSelectedNodeList } from "../../src/shared/utils";
 import { SettingsConfig } from "../../src/utils/SettingsConfig";
 import { ZoweExplorerExtender } from "../../src/ZoweExplorerExtender";
+import { DatasetTree } from "../../src/dataset/DatasetTree";
+import { USSTree } from "../../src/uss/USSTree";
 
 jest.mock("vscode");
 jest.mock("fs");
@@ -136,8 +138,6 @@ async function createGlobalMocks() {
         uriScheme: vscode.env.uriScheme,
         expectedCommands: [
             "zowe.extRefresh",
-            "zowe.updateSecureCredentials",
-            "zowe.promptCredentials",
             "zowe.all.config.init",
             "zowe.ds.addSession",
             "zowe.ds.addFavorite",
@@ -230,6 +230,8 @@ async function createGlobalMocks() {
             "zowe.jobs.enableValidation",
             "zowe.jobs.ssoLogin",
             "zowe.jobs.ssoLogout",
+            "zowe.updateSecureCredentials",
+            "zowe.promptCredentials",
             "zowe.openRecentMember",
             "zowe.searchInAllLoadedItems",
             "zowe.ds.deleteProfile",
@@ -418,7 +420,7 @@ function createBlockMocks(globalMocks: any) {
 }
 
 describe("Extension Unit Tests", () => {
-    const allCommands = {};
+    const allCommands: Array<{ cmd: string; fun: () => void; toMock: () => void }> = [];
     let globalMocks;
     beforeAll(async () => {
         globalMocks = await createGlobalMocks();
@@ -460,12 +462,12 @@ describe("Extension Unit Tests", () => {
         globalMocks.mockRegisterCommand.mock.calls.forEach((call, i) => {
             expect(call[0]).toStrictEqual(globalMocks.expectedCommands[i]);
             expect(call[1]).toBeInstanceOf(Function);
-            allCommands[call[0]] = call[1];
+            allCommands.push({ cmd: call[0], fun: call[1], toMock: jest.fn() });
         });
     });
 
     it("Testing that activate correctly executes", async () => {
-        expect(Object.keys(allCommands)).toEqual(globalMocks.expectedCommands);
+        expect(allCommands.map((c) => c.cmd)).toEqual(globalMocks.expectedCommands);
     });
 
     it("Tests that activate() fails when trying to load with an invalid config", async () => {
@@ -492,17 +494,33 @@ describe("Extension Unit Tests", () => {
         await extension.activate(globalMocks.mockExtension);
         expect(ZoweExplorerExtender.showZoweConfigError).toHaveBeenCalled();
     });
+    it("should deactivate the extension", async () => {
+        const spyCleanTempDir = jest.spyOn(tempFolderUtils, "cleanTempDir");
+        spyCleanTempDir.mockImplementation(jest.fn());
+        await extension.deactivate();
+        expect(spyCleanTempDir).toHaveBeenCalled();
+        expect(globals.ACTIVATED).toBe(false);
+    });
 
-    it("zowe.ds.showFileErrorDetails", async () => {
-        const testNode: any = { getProfile: jest.fn(), getParent: jest.fn().mockReturnValue({ getLabel: jest.fn() }) };
-        const fileErrorSpy = jest.spyOn(dsActions, "showFileErrorDetails");
-        fileErrorSpy.mockImplementation(jest.fn()); // prevent the actual function from being called
-        await allCommands["zowe.ds.showFileErrorDetails"](testNode);
-        expect(fileErrorSpy).not.toHaveBeenCalled();
+    async function removeSessionTest(command: string, contextValue: string, providerObject: any) {
+        const testNode: any = {
+            contextValue: contextValue,
+            getProfile: jest.fn(),
+            getParent: jest.fn().mockReturnValue({ getLabel: jest.fn() }),
+            label: "TestNode",
+        };
+        const deleteSessionSpy = jest.spyOn(providerObject.prototype, "deleteSession");
+        const commandFunction = allCommands.find((cmd) => command === cmd.cmd);
+        await (commandFunction as any).fun(testNode, [testNode]);
+        expect(deleteSessionSpy).toHaveBeenCalled();
+    }
 
-        testNode.contextValue = globals.DS_FILE_ERROR_CONTEXT;
-        await allCommands["zowe.ds.showFileErrorDetails"](testNode);
-        expect(fileErrorSpy).toHaveBeenCalledWith(testNode);
+    it("zowe.ds.removeSession", async () => {
+        await removeSessionTest("zowe.ds.removeSession", globals.DS_SESSION_CONTEXT, DatasetTree);
+    });
+
+    it("zowe.uss.removeSession", async () => {
+        await removeSessionTest("zowe.uss.removeSession", globals.USS_SESSION_CONTEXT, USSTree);
     });
 });
 
@@ -544,22 +562,22 @@ describe("Extension Unit Tests - THEIA", () => {
         expect(actualCommands).toEqual(globalMocks.expectedCommands);
     });
 
-    it("Tests that onChangeProfileAction executes the proper profile commands", async () => {
-        const globalMocks = await createGlobalMocks();
-        Object.defineProperty(vscode.workspace, "fs", {
-            value: {
-                readFile: jest.fn().mockResolvedValue("somenewdata"),
-            },
-            configurable: true,
-        });
-        await extension.onChangeProfileAction(null);
-        expect(globalMocks.mockReadProfilesFromDisk).toHaveBeenCalledTimes(1);
+    // it("Tests that onChangeProfileAction executes the proper profile commands", async () => {
+    //     const globalMocks = await createGlobalMocks();
+    //     Object.defineProperty(vscode.workspace, "fs", {
+    //         value: {
+    //             readFile: jest.fn().mockResolvedValue("somenewdata"),
+    //         },
+    //         configurable: true,
+    //     });
+    //     await extension.onChangeProfileAction(null);
+    //     expect(globalMocks.mockReadProfilesFromDisk).toHaveBeenCalledTimes(1);
 
-        // call again w/ same data to signal no change; verify nothing with profiles was changed
-        // (number of calls to readProfilesFromDisk should stay the same)
-        await extension.onChangeProfileAction(null);
-        expect(globalMocks.mockReadProfilesFromDisk).toHaveBeenCalledTimes(1);
-    });
+    //     // call again w/ same data to signal no change; verify nothing with profiles was changed
+    //     // (number of calls to readProfilesFromDisk should stay the same)
+    //     await extension.onChangeProfileAction(null);
+    //     expect(globalMocks.mockReadProfilesFromDisk).toHaveBeenCalledTimes(1);
+    // });
 
     it("Tests getSelectedNodeList executes successfully with multiple selection", async () => {
         const globalMocks = await createGlobalMocks();

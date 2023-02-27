@@ -9,6 +9,7 @@
  *                                                                                 *
  */
 
+import { PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
 import { removeSession } from "../../../src/utils/SessionUtils";
 import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
@@ -48,5 +49,18 @@ describe("SessionUtils removeSession Unit Tests", () => {
         const originalLength = blockMocks.testDatasetTree.mSessionNodes.length;
         await removeSession(blockMocks.testDatasetTree, "fake");
         expect(blockMocks.testDatasetTree.mSessionNodes.length).toEqual(originalLength);
+    });
+    it("should not run treeProvider.removeFileHistory when job is returned for type", async () => {
+        const blockMocks = createBlockMocks();
+        jest.spyOn(blockMocks.testDatasetTree, "getTreeType").mockReturnValue(PersistenceSchemaEnum.Job);
+        await removeSession(blockMocks.testDatasetTree, "SESTEST");
+        expect(blockMocks.testDatasetTree.removeFileHistory).toBeCalledTimes(0);
+    });
+    it("should run treeProvider.removeFileHistory", async () => {
+        const blockMocks = createBlockMocks();
+        jest.spyOn(blockMocks.testDatasetTree, "getTreeType").mockReturnValue(PersistenceSchemaEnum.USS);
+        jest.spyOn(blockMocks.testDatasetTree, "getFileHistory").mockReturnValue(["[SESTEST]: /u/test/test.txt"]);
+        await removeSession(blockMocks.testDatasetTree, "SESTEST");
+        expect(blockMocks.testDatasetTree.removeFileHistory).toBeCalledTimes(1);
     });
 });

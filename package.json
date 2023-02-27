@@ -1,6 +1,5 @@
 {
   "name": "zowe-explorer",
-  "version": "3.0.0-SNAPSHOT",
   "description": "Monorepo for the Zowe Explorer project.",
   "publisher": "Zowe",
   "author": "Zowe",
@@ -9,11 +8,9 @@
     "url": "https://github.com/zowe/vscode-extension-for-zowe"
   },
   "private": true,
-  "workspaces": {
-    "packages": [
-      "packages/*"
-    ]
-  },
+  "workspaces": [
+    "packages/*"
+  ],
   "engines": {
     "vscode": "^1.53.2"
   },
@@ -50,9 +47,10 @@
   },
   "resolutions": {
     "**/ansi-regex": "^5.0.1",
-    "**/log4js": "6.4.6",
     "**/glob-parent": "^6.0.2",
     "**/gulp-typescript/source-map": "^0.7.4",
+    "**/http-cache-semantics": "^4.1.1",
+    "**/log4js": "6.4.6",
     "**/minimatch": "^3.1.2",
     "**/minimist": "^1.2.6",
     "**/moment": "^2.29.4",

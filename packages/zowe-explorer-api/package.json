@@ -23,7 +23,7 @@
     "build": "yarn clean && tsc -p ./",
     "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
     "test": "yarn test:unit",
-    "lint": "concurrently -n \"_eslint_,prettier\" \"eslint . --ext .ts\" \"prettier --check .\"",
+    "lint": "concurrently -n \"_eslint_,prettier\" \"eslint .\" \"prettier --check .\"",
     "lintErrors": "echo \"zowe-explorer-api: coming soon.\"",
     "pretty": "prettier --write .",
     "clean": "rimraf lib",
@@ -32,12 +32,6 @@
     "package": "yarn license && yarn lint && yarn build && npm pack && node ../../scripts/mv-pack.js zowe-zowe-explorer-api tgz"
   },
   "jest": {
-    "globals": {
-      "ts-jest": {
-        "diagnostics": false,
-        "tsconfig": "tsconfig-tests.json"
-      }
-    },
     "moduleFileExtensions": [
       "js",
       "ts",
@@ -50,12 +44,16 @@
       "<rootDir>/results/unit"
     ],
     "transform": {
-      "^.+\\.(ts|tsx)$": "ts-jest"
+      "^.+\\.tsx?$": [
+        "ts-jest",
+        {
+          "diagnostics": false,
+          "tsconfig": "tsconfig-tests.json"
+        }
+      ]
     },
     "testRegex": "__tests__.*\\.(spec|test)\\.ts$",
     "modulePathIgnorePatterns": [
-      "__tests__/__integration__/",
-      "__tests__/__theia__/",
       "out/"
     ],
     "reporters": [
@@ -74,7 +72,7 @@
     "preset": "ts-jest"
   },
   "jest-html-reporter": {
-    "pageTitle": "Zowe Extension Tests",
+    "pageTitle": "Zowe Explorer API Tests",
     "outputPath": "results/unit/results.html"
   },
   "jest-stare": {

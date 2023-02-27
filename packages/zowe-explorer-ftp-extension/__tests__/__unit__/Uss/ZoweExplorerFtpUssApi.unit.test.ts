@@ -79,17 +79,18 @@ describe("FtpUssApi", () => {
         const localFile = "/tmp/testfile1.txt";
         const response = TestUtils.getSingleLineStream();
         UssUtils.uploadFile = jest.fn().mockReturnValue(response);
-        UssApi.getContents = jest.fn().mockReturnValue({ apiResponse: { etag: "123" } });
+        UssApi.getContents = jest.fn().mockReturnValue({ apiResponse: { etag: "test" } });
         const mockParams = {
             inputFilePath: localFile,
             ussFilePath: "/a/b/c.txt",
-            etag: "123",
+            etag: "test",
             returnEtag: true,
             options: {
                 file: localFile,
             },
         };
-        const result = await UssApi.putContents(mockParams.inputFilePath, mockParams.ussFilePath);
+        const result = await UssApi.putContents(mockParams.inputFilePath, mockParams.ussFilePath, undefined, undefined, "test", true);
+        jest.spyOn(UssApi as any, "getContentsTag").mockReturnValue("test");
         expect(result.commandResponse).toContain("File uploaded successfully.");
         expect(UssUtils.downloadFile).toBeCalledTimes(1);
         expect(UssUtils.uploadFile).toBeCalledTimes(1);
