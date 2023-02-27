@@ -156,18 +156,6 @@ export const syncSessionNode =
         sessionNode.setSessionToChoice(session);
     };
 
-/**
- * @deprecated Use `Gui.resolveQuickPick` instead
- * @param quickpick The quick pick object to resolve
- * @returns a Promise containing the result of the quick pick
- */
-export async function resolveQuickPickHelper(quickpick: vscode.QuickPick<vscode.QuickPickItem>): Promise<vscode.QuickPickItem | undefined> {
-    return new Promise<vscode.QuickPickItem | undefined>((c) => {
-        quickpick.onDidAccept(() => c(quickpick.activeItems[0]));
-        quickpick.onDidHide(() => c(undefined));
-    });
-}
-
 export interface IFilterItem {
     text: string;
     description?: string;

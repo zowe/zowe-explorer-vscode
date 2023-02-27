@@ -119,35 +119,12 @@ export namespace ZoweExplorerApi {
         /**
          * Uploads the file at the given path. Use for Save.
          *
-         * @deprecated
-         * @param {string} inputFilePath
-         * @param {string} ussFilePath
-         * @param {boolean} [binary]
-         *      Indicates if a conversion should be attempted or treated as binary.
-         * @param {string} [localEncoding]
-         *      Optional encoding that can be used by an implementation to overwrite defaults
-         * @param {string} [etag]
-         * @param {boolean} [returnEtag]
-         * @returns {Promise<zowe.IZosFilesResponse>}
-         */
-        putContents(
-            inputFilePath: string,
-            ussFilePath: string,
-            binary?: boolean,
-            localEncoding?: string,
-            etag?: string,
-            returnEtag?: boolean
-        ): Promise<zowe.IZosFilesResponse>;
-
-        /**
-         * Uploads the file at the given path. Use for Save.
-         *
          * @param {string} inputFilePath
          * @param {string} ussFilePath
          * @param {zowe.IUploadOptions} [options]
          * @returns {Promise<zowe.IZosFilesResponse>}
          */
-        putContent?(inputFilePath: string, ussFilePath: string, options?: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse>;
+        putContent(inputFilePath: string, ussFilePath: string, options?: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse>;
 
         /**
          * Uploads directory at the given path.
@@ -347,16 +324,6 @@ export namespace ZoweExplorerApi {
         getJobsByParameters?(params: zowe.IGetJobsParms): Promise<zowe.IJob[]>;
 
         /**
-         * Returns a list of jobs for a specific user and prefix.
-         *
-         * @deprecated Use getJobsByParameters
-         * @param {string} owner
-         * @param {string} prefix
-         * @returns {Promise<zowe.IJob[]>} an array if IJob
-         */
-        getJobsByOwnerAndPrefix(owner: string, prefix: string): Promise<zowe.IJob[]>;
-
-        /**
          * Returns meta-data for one specific job identified by id.
          *
          * @param {string} jobid
@@ -445,17 +412,6 @@ export namespace ZoweExplorerApi {
      * @export
      */
     export interface ICommand extends ICommon {
-        /**
-         * Issues a TSO Command and returns a TsoSend API response.
-         *
-         * @deprecated Use issueTsoCommandWithParms
-         * @param {string} command
-         * @param {string} acctNum
-         * @returns {zowe.IIssueResponse>}
-         * @memberof ICommand
-         */
-        issueTsoCommand?(command: string, acctNum?: string): Promise<zowe.IIssueResponse>;
-
         /**
          * Issues a TSO Command and returns a TsoSend API response.
          *

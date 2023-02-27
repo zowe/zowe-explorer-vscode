@@ -390,7 +390,7 @@ export class ProfilesCache {
 
     /**
      * This returns true or false depending on if SCS plugin is installed. Use isCredentialsSecured().
-     * @deprecated
+     * @deprecated to be removed with v1 support in v3
      * @returns {boolean}
      */
     public isSecureCredentialPluginActive(): boolean {

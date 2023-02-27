@@ -118,26 +118,6 @@ export class ZosmfUssApi extends ZosmfApiCommon implements ZoweExplorerApi.IUss 
         return zowe.Download.ussFile(this.getSession(), inputFilePath, options);
     }
 
-    /**
-     * API method to wrap to the newer `putContent`.
-     * @deprecated
-     */
-    public putContents(
-        inputFilePath: string,
-        ussFilePath: string,
-        binary?: boolean,
-        localEncoding?: string,
-        etag?: string,
-        returnEtag?: boolean
-    ): Promise<zowe.IZosFilesResponse> {
-        return this.putContent(inputFilePath, ussFilePath, {
-            binary,
-            localEncoding,
-            etag,
-            returnEtag,
-        });
-    }
-
     public putContent(inputFilePath: string, ussFilePath: string, options: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse> {
         return zowe.Upload.fileToUssFile(this.getSession(), inputFilePath, ussFilePath, options);
     }

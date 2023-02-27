@@ -166,12 +166,6 @@ describe("ZosmfUssApi", () => {
             args: ["ussPath", {}],
         },
         {
-            name: "putContents",
-            spy: jest.spyOn(zowe.Upload, "fileToUssFile"),
-            args: ["localPath", "ussPath"],
-            transform: (args) => [...args, { binary: undefined, etag: undefined, localEncoding: undefined, returnEtag: undefined }],
-        },
-        {
             name: "putContent",
             spy: jest.spyOn(zowe.Upload, "fileToUssFile"),
             args: ["localPath", "ussPath", {}],
@@ -373,12 +367,6 @@ describe("ZosmfJesApi", () => {
 
 describe("ZosmfCommandApi", () => {
     const commandApis: ITestApi<ZosmfCommandApi>[] = [
-        {
-            name: "issueTsoCommand",
-            spy: jest.spyOn(zowe.IssueTso, "issueTsoCommand"),
-            args: ["ACCT#", "command"],
-            transform: (args) => [args[1], args[0]],
-        },
         {
             name: "issueTsoCommandWithParms",
             spy: jest.spyOn(zowe.IssueTso, "issueTsoCommand"),

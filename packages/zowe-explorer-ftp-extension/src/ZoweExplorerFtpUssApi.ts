@@ -81,16 +81,9 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
         }
     }
 
-    public async putContents(
-        inputFilePath: string,
-        ussFilePath: string,
-        binary?: boolean,
-        localEncoding?: string,
-        etag?: string,
-        returnEtag?: boolean
-    ): Promise<zowe.IZosFilesResponse> {
+    public async putContent(inputFilePath: string, ussFilePath: string, options?: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse> {
         const transferOptions = {
-            transferType: binary ? TRANSFER_TYPE_BINARY : TRANSFER_TYPE_ASCII,
+            transferType: options.binary ? TRANSFER_TYPE_BINARY : TRANSFER_TYPE_ASCII,
             localFile: inputFilePath,
         };
         const result = this.getDefaultResponse();
@@ -102,9 +95,9 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
                 throw new Error();
             }
             // Save-Save with FTP requires loading the file first
-            if (returnEtag && etag) {
+            if (options.returnEtag && options.etag) {
                 const contentsTag = await this.getContentsTag(ussFilePath);
-                if (contentsTag && contentsTag !== etag) {
+                if (contentsTag && contentsTag !== options.etag) {
                     await Gui.errorMessage("Save conflict. Please pull the latest content from mainframe first.", {
                         logger: ZoweLogger,
                     });
@@ -113,7 +106,7 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
             }
             await UssUtils.uploadFile(connection, ussFilePath, transferOptions);
             result.success = true;
-            if (returnEtag) {
+            if (options.returnEtag) {
                 const contentsTag = await this.getContentsTag(ussFilePath);
                 result.apiResponse.etag = contentsTag;
             }
@@ -143,7 +136,7 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
         // TODO: this solution will not perform very well; rewrite this and putContents methods
         for (const file of files) {
             const relativePath = path.relative(inputDirectoryPath, file).replace(/\\/g, "/");
-            const putResult = await this.putContents(file, path.posix.join(ussDirectoryPath, relativePath));
+            const putResult = await this.putContent(file, path.posix.join(ussDirectoryPath, relativePath));
             result = putResult;
         }
         return result;

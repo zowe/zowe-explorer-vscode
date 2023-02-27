@@ -11,7 +11,6 @@
 
 import * as vscode from "vscode";
 import { Gui } from "../../../src/globals/Gui";
-import { MessageSeverity } from "../../../src/logger/IZoweLogger";
 import { IPromptCredentialsOptions, ZoweVsCodeExtension } from "../../../src/vscode";
 
 describe("ZoweVsCodeExtension", () => {
@@ -70,96 +69,6 @@ describe("ZoweVsCodeExtension", () => {
             jest.spyOn(vscode.extensions, "getExtension").mockReturnValueOnce(fakeVsce);
             const zeApi = ZoweVsCodeExtension.getZoweExplorerApi("1.0.2");
             expect(zeApi).toBeUndefined();
-        });
-    });
-
-    describe("deprecated methods", () => {
-        it("showVsCodeMessage should pass on params to Gui module", () => {
-            const showMessageSpy = jest.spyOn(Gui, "showMessage").mockImplementation();
-            ZoweVsCodeExtension.showVsCodeMessage("test", MessageSeverity.INFO, "fakeLogger" as any);
-            expect(showMessageSpy).toHaveBeenCalledWith("test", {
-                severity: MessageSeverity.INFO,
-                logger: "fakeLogger",
-            });
-        });
-
-        it("inputBox should pass on params to Gui module", async () => {
-            const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockImplementation();
-            const inputBoxOptions: vscode.InputBoxOptions = {
-                title: "fakeTitle",
-                value: "fakeValue",
-            };
-            await ZoweVsCodeExtension.inputBox(inputBoxOptions);
-            expect(showInputBoxSpy).toHaveBeenCalledWith(inputBoxOptions);
-        });
-
-        describe("promptCredentials", () => {
-            const promptCredsOptions: IPromptCredentialsOptions = {
-                sessionName: "test",
-            };
-
-            it("should update user and password", async () => {
-                const mockUpdateProperty = jest.fn();
-                jest.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue({
-                    getLoadedProfConfig: jest.fn().mockReturnValue({
-                        profile: {},
-                    }),
-                    getProfileInfo: jest.fn().mockReturnValue({
-                        updateProperty: mockUpdateProperty,
-                    }),
-                });
-                const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce("fakePassword");
-                const profileLoaded: any = await ZoweVsCodeExtension.promptCredentials(promptCredsOptions);
-                expect(profileLoaded.profile.user).toBe("fakeUser");
-                expect(profileLoaded.profile.password).toBe("fakePassword");
-                expect(showInputBoxSpy).toHaveBeenCalledTimes(2);
-                expect(mockUpdateProperty).toHaveBeenCalledTimes(2);
-            });
-
-            it("should do nothing if profile does not exist", async () => {
-                jest.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue({
-                    getLoadedProfConfig: jest.fn().mockReturnValue(undefined),
-                    getProfileInfo: jest.fn(),
-                });
-                const showInputBoxSpy = jest.spyOn(Gui, "showInputBox");
-                const profileLoaded: any = await ZoweVsCodeExtension.promptCredentials(promptCredsOptions);
-                expect(profileLoaded).toBeUndefined();
-                expect(showInputBoxSpy).not.toHaveBeenCalled();
-            });
-
-            it("should do nothing if user input is cancelled", async () => {
-                const mockUpdateProperty = jest.fn();
-                jest.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue({
-                    getLoadedProfConfig: jest.fn().mockReturnValue({
-                        profile: {},
-                    }),
-                    getProfileInfo: jest.fn().mockReturnValue({
-                        updateProperty: mockUpdateProperty,
-                    }),
-                });
-                const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce(undefined);
-                const profileLoaded: any = await ZoweVsCodeExtension.promptCredentials(promptCredsOptions);
-                expect(profileLoaded).toBeUndefined();
-                expect(showInputBoxSpy).toHaveBeenCalledTimes(1);
-                expect(mockUpdateProperty).toHaveBeenCalledTimes(0);
-            });
-
-            it("should do nothing if password input is cancelled", async () => {
-                const mockUpdateProperty = jest.fn();
-                jest.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue({
-                    getLoadedProfConfig: jest.fn().mockReturnValue({
-                        profile: {},
-                    }),
-                    getProfileInfo: jest.fn().mockReturnValue({
-                        updateProperty: mockUpdateProperty,
-                    }),
-                });
-                const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce(undefined);
-                const profileLoaded: any = await ZoweVsCodeExtension.promptCredentials(promptCredsOptions);
-                expect(profileLoaded).toBeUndefined();
-                expect(showInputBoxSpy).toHaveBeenCalledTimes(2);
-                expect(mockUpdateProperty).toHaveBeenCalledTimes(0);
-            });
         });
     });
 

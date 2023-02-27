@@ -40,11 +40,6 @@ export enum MessageSeverity {
 }
 
 /**
- * @deprecated Please use `MessageSeverity` instead
- */
-export type MessageSeverityEnum = MessageSeverity;
-
-/**
  * Creates an instance of the Imperative logger for extenders to use
  *
  * @export
