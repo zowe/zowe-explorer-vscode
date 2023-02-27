@@ -131,12 +131,13 @@ export async function closeOpenedTextFile(path: string) {
     return false;
 }
 
-/**
- * Handle auto/regular save by prioritizing the last ongoing save of a series queued saves
- */
 const savingQueue = [];
 let latestSavedFile: vscode.TextDocument;
 let ongoingSave = false;
+/**
+ * Handle auto/regular save by prioritizing the last ongoing save of a series queued saves
+ * @deprecated Use ZoweSaveManager class instead
+ */
 export async function handleSaving(
     uploadRequest: (document, provider) => Promise<void | string | vscode.MessageItem>,
     savedFile: vscode.TextDocument,

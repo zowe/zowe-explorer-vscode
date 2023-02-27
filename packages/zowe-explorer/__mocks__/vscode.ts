@@ -402,10 +402,6 @@ export namespace workspace {
         };
     }
 
-    export function onWillSaveTextDocument(event) {
-        return Disposable;
-    }
-
     export function applyEdit() {
         return true;
     }
