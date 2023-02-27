@@ -630,7 +630,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 case UssFileType.Directory:
                     if (!existsLocally) {
                         // We will need to build the file structure locally, to pull files down if needed
-                        fs.mkdirSync(uss.tree.localPath);
+                        fs.mkdirSync(uss.tree.localPath, { recursive: true });
                     }
                     // Not all APIs respect the recursive option, so it's best to
                     // recurse within this operation to avoid missing files/folders
