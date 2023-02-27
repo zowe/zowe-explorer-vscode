@@ -626,18 +626,12 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             });
         } else {
             const existsLocally = fs.existsSync(uss.tree.localPath);
-            if (!existsLocally) {
-                await uss.api.getContents(uss.tree.ussPath, {
-                    file: uss.tree.type === UssFileType.File ? uss.tree.localPath : undefined,
-                    directory: uss.tree.type === UssFileType.Directory ? uss.tree.localPath : undefined,
-                    binary: uss.tree.binary,
-                    returnEtag: true,
-                    encoding: this.profile.profile?.encoding,
-                    responseTimeout: this.profile.profile?.responseTimeout,
-                });
-            }
             switch (uss.tree.type) {
                 case UssFileType.Directory:
+                    if (!existsLocally) {
+                        // We will need to build the file structure locally, to pull files down if needed
+                        fs.mkdirSync(uss.tree.localPath);
+                    }
                     // Not all APIs respect the recursive option, so it's best to
                     // recurse within this operation to avoid missing files/folders
                     await uss.api.create(outputPath, "directory");
@@ -648,6 +642,15 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     }
                     break;
                 case UssFileType.File:
+                    if (!existsLocally) {
+                        await uss.api.getContents(uss.tree.ussPath, {
+                            file: uss.tree.localPath,
+                            binary: uss.tree.binary,
+                            returnEtag: true,
+                            encoding: this.profile.profile?.encoding,
+                            responseTimeout: this.profile.profile?.responseTimeout,
+                        });
+                    }
                     await uss.api.putContent(uss.tree.localPath, outputPath, uss.options);
                     break;
             }
