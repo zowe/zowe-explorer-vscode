@@ -115,24 +115,7 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
                     throw new Error();
                 }
             }
-
-            const isDir = fs.existsSync(inputFilePath) && fs.lstatSync(inputFilePath).isDirectory();
-            if (isDir) {
-                try {
-                    await UssUtils.makeDirectory(connection, ussFilePath);
-                } catch (_err) {
-                    // TODO: Ignore the error if the directory already exists
-                }
-
-                // If the directory already exists, interpret files/folders within the directory
-                const innerFiles = zowe.ZosFilesUtils.getFileListFromPath(inputFilePath, false);
-                for (const file of innerFiles) {
-                    const innerUssPath = path.posix.join(ussFilePath, file);
-                    await UssUtils.uploadFile(connection, innerUssPath, transferOptions);
-                }
-            } else {
-                await UssUtils.uploadFile(connection, ussFilePath, transferOptions);
-            }
+            await UssUtils.uploadFile(connection, ussFilePath, transferOptions);
 
             result.success = true;
             if (returnEtag) {
@@ -161,6 +144,7 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
             throw new Error();
         }
 
+        // Make directory before copying inner files
         await this.putContents(inputDirectoryPath, ussDirectoryPath);
 
         // getting list of files from directory
