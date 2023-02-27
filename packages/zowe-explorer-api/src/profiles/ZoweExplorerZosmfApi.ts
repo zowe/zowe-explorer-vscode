@@ -239,10 +239,6 @@ export class ZosmfJesApi extends ZosmfApiCommon implements ZoweExplorerApi.IJes 
         return zowe.GetJobs.getJobsByParameters(this.getSession(), params);
     }
 
-    public getJobsByOwnerAndPrefix(owner: string, prefix: string): Promise<zowe.IJob[]> {
-        return zowe.GetJobs.getJobsByOwnerAndPrefix(this.getSession(), owner, prefix);
-    }
-
     public getJob(jobid: string): Promise<zowe.IJob> {
         return zowe.GetJobs.getJob(this.getSession(), jobid);
     }
@@ -285,10 +281,6 @@ export class ZosmfJesApi extends ZosmfApiCommon implements ZoweExplorerApi.IJes 
  */
 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 export class ZosmfCommandApi extends ZosmfApiCommon implements ZoweExplorerApi.ICommand {
-    public issueTsoCommand(command: string, acctNum: string): Promise<zowe.IIssueResponse> {
-        return zowe.IssueTso.issueTsoCommand(this.getSession(), acctNum, command);
-    }
-
     public issueTsoCommandWithParms(command: string, parms: zowe.IStartTsoParms): Promise<zowe.IIssueResponse> {
         return zowe.IssueTso.issueTsoCommand(this.getSession(), parms.account, command, parms);
     }

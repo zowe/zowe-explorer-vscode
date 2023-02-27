@@ -308,11 +308,6 @@ describe("ZosmfJesApi", () => {
             args: [{}],
         },
         {
-            name: "getJobsByOwnerAndPrefix",
-            spy: jest.spyOn(zowe.GetJobs, "getJobsByOwnerAndPrefix"),
-            args: ["owner", "prefix"],
-        },
-        {
             name: "getJob",
             spy: jest.spyOn(zowe.GetJobs, "getJob"),
             args: ["jobid"],
