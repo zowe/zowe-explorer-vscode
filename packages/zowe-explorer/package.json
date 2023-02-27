@@ -1786,7 +1786,7 @@
   },
   "scripts": {
     "build": "gulp build && yarn license && webpack --mode development",
-    "build:integration": "yarn createTestProfileData && gulp build && yarn license && tsc --build --pretty",
+    "build:integration": "yarn createTestProfileData && gulp build && yarn license && tsc --build --pretty --project tsconfig-tests.json",
     "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
     "test:theia": "mocha ./out/__tests__/__theia__/*.theia.test.js --timeout 50000 --reporter mocha-multi-reporters --reporter-options configFile=.mocharc.json",
     "test": "yarn test:unit",
@@ -1794,7 +1794,7 @@
     "updateStrings": "node ../../scripts/stringUpdateScript.js && prettier --write --loglevel warn ./i18n package.nls*",
     "package": "vsce package --allow-star-activation --yarn && node ../../scripts/mv-pack.js vscode-extension-for-zowe vsix",
     "license": "node ../../scripts/updateLicenses.js",
-    "watch": "yarn createTestProfileData && gulp build && webpack --mode development --watch --info-verbosity verbose",
+    "watch": "gulp build && webpack --mode development --watch --info-verbosity verbose",
     "compile": "tsc -b",
     "compile-web": "webpack --target webworker --entry ./src/web/extension.ts --output-path ./out/src/web",
     "markdown": "markdownlint CHANGELOG.md README.md",
@@ -1877,7 +1877,7 @@
       "^.+\\.(ts|tsx)$": [
         "ts-jest",
         {
-          "tsconfig": "tsconfig.json",
+          "tsconfig": "tsconfig-tests.json",
           "diagnostics": false
         }
       ]
