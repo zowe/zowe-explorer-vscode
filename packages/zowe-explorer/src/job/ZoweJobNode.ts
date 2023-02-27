@@ -50,7 +50,22 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
         public job: zowe.IJob,
         profile: zowe.imperative.IProfileLoaded
     ) {
-        super(label, collapsibleState, mParent, session, profile);
+        let finalLabel = label;
+        // If the node has a parent and the parent is favorited, it is a saved query
+        if (mParent != null && contextually.isFavProfile(mParent) && !label.includes("|")) {
+            finalLabel = "";
+            // Convert old format to new format
+            const opts = label.split(" ");
+            for (let i = 0; i < opts.length; i++) {
+                const opt = opts[i];
+                const [key, val] = opt.split(":");
+                finalLabel += `${key}: ${val}`;
+                if (i != opts.length - 1) {
+                    finalLabel += " | ";
+                }
+            }
+        }
+        super(finalLabel, collapsibleState, mParent, session, profile);
         this._prefix = "*";
         this._searchId = "";
         this._jobStatus = "*";
