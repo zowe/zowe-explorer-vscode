@@ -20,7 +20,7 @@ import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
 import * as globals from "../../../src/globals";
 
 const TIMEOUT = 45000;
-declare var it: Mocha.ITestDefinition;
+declare var it: Mocha.TestFunction;
 // declare var describe: any;
 
 const testProfile: imperative.IProfileLoaded = {
