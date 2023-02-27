@@ -125,7 +125,9 @@ describe("FtpUssApi", () => {
         const response = {};
         UssApi.putContents = jest.fn().mockReturnValue(response);
         await UssApi.uploadDirectory(mockParams.inputDirectoryPath, mockParams.ussDirectoryPath, mockParams.options);
-        expect(UssApi.putContents).toBeCalledTimes(2);
+
+        // Only calling putContents for file
+        expect(UssApi.putContents).toBeCalledTimes(1);
     });
 
     it("should create uss directory.", async () => {

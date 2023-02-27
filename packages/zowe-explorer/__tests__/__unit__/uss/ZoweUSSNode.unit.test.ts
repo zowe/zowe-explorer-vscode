@@ -1620,7 +1620,7 @@ describe("ZoweUSSNode Unit Tests - Function node.pasteUssTree()", () => {
             mockUssApi: ZoweExplorerApiRegister.getUssApi(createIProfileFakeEncoding()),
             getUssApiMock: jest.fn(),
             testNode: testNode,
-            pasteInSameLparSpy: jest.spyOn(testNode, "pasteInSameLpar"),
+            pasteSpy: jest.spyOn(testNode, "paste"),
         };
 
         Object.defineProperty(vscode.env.clipboard, "readText", {
@@ -1663,14 +1663,14 @@ describe("ZoweUSSNode Unit Tests - Function node.pasteUssTree()", () => {
         // Testing paste within same session (copy API)
         const mockToSameSession = jest.spyOn(UssFileUtils, "toSameSession").mockReturnValueOnce(true);
         await blockMocks.testNode.pasteUssTree();
-        expect(blockMocks.pasteInSameLparSpy).toHaveBeenCalledTimes(1);
+        // Only one paste operation is needed since copy API supports recursion out-of-the-box
+        expect(blockMocks.pasteSpy).toHaveBeenCalledTimes(1);
 
-        // Test case w/ copying between two sessions (should fallback to original impl.)
+        // Test case w/ copying between two sessions (should fallback to create/putContent APIs)
         mockToSameSession.mockReturnValueOnce(false);
         await blockMocks.testNode.pasteUssTree();
 
-        // count should stay the same as the second case uses a different method
-        expect(blockMocks.pasteInSameLparSpy).toHaveBeenCalledTimes(1);
+        expect(blockMocks.pasteSpy).toHaveBeenCalledTimes(3);
     });
 
     it("Tests node.pasteUssTree() reads clipboard contents finds same file name on destination directory", async () => {

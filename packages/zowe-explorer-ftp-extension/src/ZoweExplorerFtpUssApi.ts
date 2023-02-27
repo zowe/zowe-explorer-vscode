@@ -120,22 +120,15 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
             if (isDir) {
                 try {
                     await UssUtils.makeDirectory(connection, ussFilePath);
-                    // eslint-disable-next-line no-empty
-                } catch (_err) {}
+                } catch (_err) {
+                    // TODO: Ignore the error if the directory already exists
+                }
 
                 // If the directory already exists, interpret files/folders within the directory
                 const innerFiles = zowe.ZosFilesUtils.getFileListFromPath(inputFilePath, false);
                 for (const file of innerFiles) {
-                    const innerPath = path.join(inputFilePath, file);
                     const innerUssPath = path.posix.join(ussFilePath, file);
-                    try {
-                        if (fs.lstatSync(innerPath).isDirectory()) {
-                            await this.uploadDirectory(innerPath, innerUssPath, {});
-                        } else {
-                            await UssUtils.uploadFile(connection, innerUssPath, transferOptions);
-                        }
-                        // eslint-disable-next-line no-empty
-                    } catch (_err) {}
+                    await UssUtils.uploadFile(connection, innerUssPath, transferOptions);
                 }
             } else {
                 await UssUtils.uploadFile(connection, ussFilePath, transferOptions);

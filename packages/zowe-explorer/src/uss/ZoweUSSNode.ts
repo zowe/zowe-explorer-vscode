@@ -611,32 +611,65 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     }
 
     /**
-     * Pastes a built tree of files and folders into another location on the same LPAR/session.
-     * NOTE: This function only works within the same LPAR or session, as it is a current limitation for the API used.
+     * Pastes a subtree of files and folders into another location.
      *
      * @param rootPath The start/root path for pasting the file structure
      * @param tree The structure of files and folders to paste
      * @param ussApi The USS API to use for this operation
      */
-    public async pasteInSameLpar(rootPath: string, tree: UssFileTree, ussApi: ZoweExplorerApi.IUss) {
-        if (!ussApi.copy || !ussApi.fileList) {
-            return;
+    public async paste(sessionName: string, rootPath: string, uss: { tree: UssFileTree; api: ZoweExplorerApi.IUss; options?: IUploadOptions }) {
+        const hasCopyApi = uss.api.copy != null;
+        const hasPutContentApi = uss.api.putContent != null;
+        if (!uss.api.fileList || (!hasCopyApi && !hasPutContentApi)) {
+            throw new Error(localize("paste.missingApis", "Required API functions for pasting (fileList, copy and/or putContent) were not found."));
         }
 
-        const apiResponse = await ussApi.fileList(rootPath);
+        const apiResponse = await uss.api.fileList(rootPath);
         const fileList = apiResponse.apiResponse?.items;
 
         // Check root path for conflicts before pasting nodes in this path
-        const hasFileOfSameName = fileList.find((file) => file.name === tree.baseName) != null;
-        const fileName = hasFileOfSameName ? `${tree.baseName} (copy)` : tree.baseName;
+        const conflictingPath = fileList.find((file) => file.name === uss.tree.baseName) != null;
+        const fileName = conflictingPath ? `${uss.tree.baseName} (copy)` : uss.tree.baseName;
         const outputPath = `${rootPath}/${fileName}`;
 
-        await ussApi.copy(outputPath, {
-            from: tree.ussPath,
-            recursive: tree.type === UssFileType.Directory,
-        });
+        if (hasCopyApi && UssFileUtils.toSameSession(uss.tree, sessionName)) {
+            await uss.api.copy(outputPath, {
+                from: uss.tree.ussPath,
+                recursive: uss.tree.type === UssFileType.Directory,
+            });
+        } else {
+            const existsLocally = fs.existsSync(uss.tree.localPath);
+            if (!existsLocally) {
+                await uss.api.getContents(uss.tree.ussPath, {
+                    file: uss.tree.type === UssFileType.File ? uss.tree.localPath : undefined,
+                    directory: uss.tree.type === UssFileType.Directory ? uss.tree.localPath : undefined,
+                    binary: uss.tree.binary,
+                    returnEtag: true,
+                    encoding: this.profile.profile?.encoding,
+                    responseTimeout: this.profile.profile?.responseTimeout,
+                });
+            }
+            switch (uss.tree.type) {
+                case UssFileType.Directory:
+                    // Not all APIs respect the recursive option, so it's best to
+                    // recurse within this operation to avoid missing files/folders
+                    await uss.api.create(outputPath, "directory");
+                    if (uss.tree.children) {
+                        for (const child of uss.tree.children) {
+                            this.paste(sessionName, outputPath, { api: uss.api, tree: child, options: uss.options });
+                        }
+                    }
+                    break;
+                case UssFileType.File:
+                    await uss.api.putContent(uss.tree.localPath, outputPath, uss.options);
+                    break;
+            }
+        }
     }
 
+    /**
+     * Initializes paste action for a USS tree
+     */
     public async pasteUssTree() {
         const clipboardContents = await vscode.env.clipboard.readText();
         if (clipboardContents == null || clipboardContents.length < 1) {
@@ -648,54 +681,21 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         try {
             const api = ZoweExplorerApiRegister.getUssApi(this.profile);
             const fileTreeToPaste: UssFileTree = JSON.parse(await vscode.env.clipboard.readText());
+            const sessionName = this.getSessionNode().getLabel() as string;
 
-            if (api.copy && UssFileUtils.toSameSession(fileTreeToPaste, this.getSessionNode().getLabel() as string)) {
-                for (const subnode of fileTreeToPaste.children) {
-                    await this.pasteInSameLpar(remotePath, subnode, api);
-                }
-            } else {
-                const task: imperative.ITaskWithStatus = {
-                    percentComplete: 0,
-                    statusMessage: localize("uploadFile.putContents", "Uploading USS files..."),
-                    stageName: 0,
-                };
-                const options: IUploadOptions = {
-                    task,
-                    encoding: prof.profile?.encoding,
-                    responseTimeout: prof.profile?.responseTimeout,
-                };
+            const task: imperative.ITaskWithStatus = {
+                percentComplete: 0,
+                statusMessage: localize("uploadFile.putContents", "Uploading USS files..."),
+                stageName: 0,
+            };
+            const options: IUploadOptions = {
+                task,
+                encoding: prof.profile?.encoding,
+                responseTimeout: prof.profile?.responseTimeout,
+            };
 
-                const apiResponse = await api.fileList(remotePath);
-                const fileList = apiResponse.apiResponse?.items;
-
-                for (const file of fileTreeToPaste.children) {
-                    const baseName = path.basename(file.localPath);
-                    const alreadyExists = fileList?.find((file) => file.name === baseName) != null;
-
-                    // Merge folders that already exist; append (copy) to files in queue w/ identical names
-                    const fileName = alreadyExists && file.type === UssFileType.File ? `${baseName} (copy)` : baseName;
-
-                    const existsLocally = fs.existsSync(file.localPath);
-                    if (!existsLocally) {
-                        await api.getContents(file.ussPath, {
-                            file: file.type === UssFileType.File ? file.localPath : undefined,
-                            directory: file.type === UssFileType.Directory ? file.localPath : undefined,
-                            binary: file.binary,
-                            returnEtag: true,
-                            encoding: this.profile.profile?.encoding,
-                            responseTimeout: this.profile.profile?.responseTimeout,
-                        });
-                    }
-
-                    switch (file.type) {
-                        case UssFileType.Directory:
-                            await api.uploadDirectory(file.localPath, remotePath.concat("/", fileName), { ...options, recursive: false });
-                            break;
-                        case UssFileType.File:
-                            await api.putContent(file.localPath, remotePath.concat("/", fileName), options);
-                            break;
-                    }
-                }
+            for (const subnode of fileTreeToPaste.children) {
+                await this.paste(sessionName, remotePath, { api, tree: subnode, options });
             }
         } catch (error) {
             await errorHandling(error, this.label.toString(), localize("copyUssFile.error", "Error uploading files"));
