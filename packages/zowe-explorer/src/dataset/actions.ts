@@ -427,7 +427,7 @@ export async function openPS(node: api.IZoweDatasetTreeNode, previewMember: bool
                 const response = await ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
                     file: documentFilePath,
                     returnEtag: true,
-                    encoding: prof.profile.encoding,
+                    encoding: prof.profile?.encoding,
                     responseTimeout: prof.profile?.responseTimeout,
                 });
                 node.setEtag(response?.apiResponse?.etag);
