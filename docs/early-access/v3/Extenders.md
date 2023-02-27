@@ -2,10 +2,10 @@
 
 ## Removal of deprecated APIs from Extensibility API for Zowe Explorer
 
-- Logger type `MessageSeverity` in favor of `MessageSeverityEnum`.
-- `IUss.putContents` in favor of `IUss.putContent`.
-- `IJes.getJobsByOwnerAndPrefix` in favor of `IJes.getJobsByParameters`.
-- `ICommand.issueTsoCommand` in favor of `ICommand.issueTsoCommandWithParms`.
-- `ZoweVsCodeExtension.showVsCodeMessage` in favor of `Gui.showMessage`.
-- `ZoweVsCodeExtension.inputBox` in favor of `Gui.showInputBox`.
-- `ZoweVsCodeExtension.promptCredentials` in favor of `ZoweVsCodeExtension.updateCredentials`.
+- Logger type `MessageSeverity` removed in favor of `MessageSeverityEnum`.
+- `IUss.putContents` removed in favor of `IUss.putContent`.
+- `IJes.getJobsByOwnerAndPrefix` removed in favor of `IJes.getJobsByParameters`.
+- `ICommand.issueTsoCommand` removed in favor of `ICommand.issueTsoCommandWithParms`.
+- `ZoweVsCodeExtension.showVsCodeMessage` removed in favor of `Gui.showMessage`.
+- `ZoweVsCodeExtension.inputBox` removed in favor of `Gui.showInputBox`.
+- `ZoweVsCodeExtension.promptCredentials` removed in favor of `ZoweVsCodeExtension.updateCredentials`.
