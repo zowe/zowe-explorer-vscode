@@ -153,13 +153,25 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         options: IUploadOptions
     ): Promise<zowe.IZosFilesResponse> {
+        let result = this.getDefaultResponse();
+
         // Check if inputDirectory is directory
         if (!zowe.imperative.IO.isDir(inputDirectoryPath)) {
             await Gui.errorMessage("The local directory path provided does not exist.", { logger: ZoweLogger });
             throw new Error();
         }
 
-        return this.putContents(inputDirectoryPath, ussDirectoryPath);
+        await this.putContents(inputDirectoryPath, ussDirectoryPath);
+
+        // getting list of files from directory
+        const files = zowe.ZosFilesUtils.getFileListFromPath(inputDirectoryPath, false);
+        // TODO: this solution will not perform very well; rewrite this and putContents methods
+        for (const file of files) {
+            const relativePath = path.relative(inputDirectoryPath, file).replace(/\\/g, "/");
+            const putResult = await this.putContents(file, path.posix.join(ussDirectoryPath, relativePath));
+            result = putResult;
+        }
+        return result;
     }
 
     public async create(
