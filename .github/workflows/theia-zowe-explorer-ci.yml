@@ -6,6 +6,7 @@ on:
     paths:
       - packages/zowe-explorer/**
       - packages/zowe-explorer-api/**
+      - .github/workflows/theia-zowe-explorer-ci.yml
   pull_request:
     paths:
       - packages/zowe-explorer/**
@@ -47,7 +48,7 @@ jobs:
       - run: ls -la temp/plugins
 
       - name: Start Theia
-        run: docker run --name theia --init -d -p 3000:3000 --user theia -v "${PWD}/temp/plugins/:/home/theia/plugins" t1m0thyj/theia-alpine:latest
+        run: docker run --name theia --init -d -p 3000:3000 --user theia -v "${PWD}/temp/plugins/:/home/theia/plugins" t1m0thyj/theia-alpine:1.34.0
       # NOTE(Kelosky): alternatively, we could run docker via something like this; however, we cannot hot reload
       #                hosted VS Code extensions after theia is started (at least at the time this was written).
       # services:
@@ -75,7 +76,7 @@ jobs:
       - run: yarn workspace vscode-extension-for-zowe test:theia
 
       - name: Upload test results
-        if: success() || failure()      
+        if: success() || failure()
         uses: actions/upload-artifact@v2
         with:
           name: theia-zowe-explorer-results

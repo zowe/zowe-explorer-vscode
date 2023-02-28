@@ -4,9 +4,9 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ## TBD Release
 
-### New features and enhancements
-
 ### Bug fixes
+
+- Updated dependencies for security audits.
 
 ## `2.6.0`
 
