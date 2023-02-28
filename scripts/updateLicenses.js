@@ -1,13 +1,13 @@
 /*
- * This program and the accompanying materials are made available under the terms of the *
- * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
- * https://www.eclipse.org/legal/epl-v20.html                                      *
- *                                                                                 *
- * SPDX-License-Identifier: EPL-2.0                                                *
- *                                                                                 *
- * Copyright Contributors to the Zowe Project.                                     *
- *                                                                                 *
- */
+* This program and the accompanying materials are made available under the terms of the
+* Eclipse Public License v2.0 which accompanies this distribution, and is available at
+* https://www.eclipse.org/legal/epl-v20.html
+*
+* SPDX-License-Identifier: EPL-2.0
+*
+* Copyright Contributors to the Zowe Project.
+*
+*/
 
 const chalk = require("chalk");
 const fs = require("fs");
@@ -17,24 +17,9 @@ require("glob")("{__mocks__,src,__tests__}/**/*.ts", (globErr, filePaths) => {
         throw globErr;
     }
     // turn the license file into a multi line comment
-    const desiredLineLength = 80;
+    const header = fs.readFileSync("../../scripts/LICENSE_HEADER", "utf-8") +
+        require("os").EOL + require("os").EOL;
     let alreadyContainedCopyright = 0;
-    const header =
-        "/*\n" +
-        fs
-            .readFileSync("../../scripts/LICENSE_HEADER")
-            .toString()
-            .split(/\r?\n/g)
-            .map((line) => {
-                const lenAdjust = desiredLineLength - line.length;
-                const pad = Array(lenAdjust < 0 ? 0 : lenAdjust).join(" ");
-                return " * " + line + pad + " *";
-            })
-            .join(require("os").EOL) +
-        require("os").EOL +
-        " */" +
-        require("os").EOL +
-        require("os").EOL;
 
     for (const filePath of filePaths) {
         const file = fs.readFileSync(filePath);
