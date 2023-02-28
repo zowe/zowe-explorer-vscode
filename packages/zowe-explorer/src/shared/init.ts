@@ -23,7 +23,7 @@ import { MvsCommandHandler } from "../command/MvsCommandHandler";
 import { saveFile } from "../dataset/actions";
 import { saveUSSFile } from "../uss/actions";
 import { promptCredentials, writeOverridesFile } from "../utils/ProfilesUtils";
-import { ZoweSaveManager } from "../abstract/ZoweSaveManager";
+import { ZoweSaveQueue } from "../abstract/ZoweSaveQueue";
 
 // Set up localization
 nls.config({
@@ -130,10 +130,10 @@ export async function registerCommonCommands(context: vscode.ExtensionContext, p
                 );
                 if (savedFile.fileName.toUpperCase().indexOf(globals.DS_DIR.toUpperCase()) >= 0) {
                     globals.LOG.debug(localize("activate.didSaveText.isDataSet", "File is a data set-- saving "));
-                    ZoweSaveManager.enqueueSave({ uploadRequest: saveFile, savedFile, fileProvider: providers.ds });
+                    ZoweSaveQueue.push({ uploadRequest: saveFile, savedFile, fileProvider: providers.ds });
                 } else if (savedFile.fileName.toUpperCase().indexOf(globals.USS_DIR.toUpperCase()) >= 0) {
                     globals.LOG.debug(localize("activate.didSaveText.isUSSFile", "File is a USS file -- saving"));
-                    ZoweSaveManager.enqueueSave({ uploadRequest: saveUSSFile, savedFile, fileProvider: providers.uss });
+                    ZoweSaveQueue.push({ uploadRequest: saveUSSFile, savedFile, fileProvider: providers.uss });
                 } else {
                     globals.LOG.debug(
                         localize("activate.didSaveText.file", "File ") +

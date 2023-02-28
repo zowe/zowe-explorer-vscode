@@ -24,7 +24,7 @@ import { initUSSProvider } from "./uss/init";
 import { initJobsProvider } from "./job/init";
 import { IZoweProviders, registerCommonCommands, registerRefreshCommand, watchConfigProfile } from "./shared/init";
 import { initializeZoweLogger } from "./utils/LoggerUtils";
-import { ZoweSaveManager } from "./abstract/ZoweSaveManager";
+import { ZoweSaveQueue } from "./abstract/ZoweSaveQueue";
 
 /**
  * The function that runs when the extension is loaded
@@ -72,7 +72,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
  * @export
  */
 export async function deactivate() {
-    await ZoweSaveManager.waitForQueue();
+    await ZoweSaveQueue.all();
     await cleanTempDir();
     globals.setActivated(false);
 }
