@@ -1564,7 +1564,7 @@ export async function copySequentialDatasets(nodes: ZoweDatasetNode[]) {
         const lbl = node.getLabel().toString();
         const mvsApi = ZoweExplorerApiRegister.getMvsApi(node.getProfile());
         if (mvsApi?.copyDataSet == null) {
-            await api.Gui.errorMessage(localize("copyDataSet.error.notSupported", "This operation is not supported at this time."));
+            await api.Gui.errorMessage(localize("copyDataSet.error.notSupported", "Copying datasets is not supported."));
         } else {
             await api.Gui.withProgress(
                 {
