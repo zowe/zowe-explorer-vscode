@@ -26,11 +26,7 @@ export class ZoweSaveManager {
     public static enqueueSave(request: SaveRequest) {
         this.savingQueue.push({
             ...request,
-            uploadRequest: (document, provider) =>
-                request.uploadRequest(document, provider).then(async () => {
-                    this.pendingUpload = null;
-                    await this.processNext();
-                }),
+            uploadRequest: (document, provider) => request.uploadRequest(document, provider).then(() => this.processNext(true)),
         });
         this.processNext();
     }
@@ -44,20 +40,21 @@ export class ZoweSaveManager {
     private static pendingUpload: Promise<void | string | vscode.MessageItem>;
     private static savingQueue: SaveRequest[] = [];
 
-    private static async processNext() {
-        if (this.pendingUpload != null) {
+    private static async processNext(force = false) {
+        if (this.pendingUpload != null && !force) {
             return;
         }
         const nextRequest = this.savingQueue.shift();
         if (nextRequest == null) {
+            this.pendingUpload = null;
             return;
         }
-        const pendingRequestsForSameFile = this.savingQueue.filter((sr) => sr.savedFile.fileName === nextRequest.savedFile.fileName);
+        const pendingRequestsForSameFile = this.savingQueue.filter(({ savedFile }) => savedFile.fileName === nextRequest.savedFile.fileName);
         if (pendingRequestsForSameFile.length === 0) {
             this.pendingUpload = nextRequest.uploadRequest(nextRequest.savedFile, nextRequest.fileProvider);
             return this.pendingUpload;
         } else {
-            return this.processNext();
+            return this.processNext(true);
         }
     }
 }
