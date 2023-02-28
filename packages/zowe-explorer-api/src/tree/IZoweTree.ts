@@ -12,6 +12,7 @@
 import * as vscode from "vscode";
 import { IZoweTreeNode } from "./IZoweTreeNode";
 import { PersistenceSchemaEnum } from "../profiles/UserSettings";
+import { DeferredPromise } from "../utils/promise";
 
 /**
  * The base interface for Zowe tree browsers that implement the
@@ -54,8 +55,10 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
 
     /**
      * Whether the tree is copying files.
+     *
+     * `await` this promise to wait for the copy operation to complete.
      */
-    isCopying?: boolean;
+    copying?: DeferredPromise;
 
     /**
      * Adds a session to the container

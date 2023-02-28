@@ -13,7 +13,7 @@ import * as globals from "../globals";
 import * as vscode from "vscode";
 import * as ussActions from "./actions";
 import * as refreshActions from "../shared/refresh";
-import { Gui, IZoweUSSTreeNode, IZoweTreeNode, IZoweTree } from "@zowe/zowe-explorer-api";
+import { createDeferredPromise, IZoweUSSTreeNode, IZoweTreeNode, IZoweTree } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import * as contextuals from "../shared/context";
 import { getSelectedNodeList } from "../shared/utils";
@@ -154,9 +154,8 @@ export async function initUSSProvider(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.commands.registerCommand("zowe.uss.ssoLogout", async (node: IZoweTreeNode) => ussFileProvider.ssoLogout(node)));
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.uss.pasteUssFile", async (node: IZoweUSSTreeNode) => {
-            if (ussFileProvider.isCopying) {
-                Gui.warningMessage("Did not paste files: the copy operation is still processing.");
-                return;
+            if (ussFileProvider.copying) {
+                await ussFileProvider.copying.promise;
             }
 
             ussActions.pasteUss(ussFileProvider, node);
@@ -164,9 +163,11 @@ export async function initUSSProvider(context: vscode.ExtensionContext) {
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.uss.copyUssFile", async (node: IZoweUSSTreeNode, nodeList: IZoweUSSTreeNode[]) => {
-            ussFileProvider.isCopying = true;
+            ussFileProvider.copying = createDeferredPromise();
             ussActions.copyUssFiles(node, nodeList, ussFileProvider);
-            ussFileProvider.isCopying = false;
+
+            // Resolve the deferred promise to allow pasting to continue
+            ussFileProvider.copying.resolve(true);
         })
     );
     context.subscriptions.push(
