@@ -823,7 +823,19 @@ describe("USS Action Unit Tests - copy file / directory", () => {
             sessionName: blockMocks.treeNodes.ussNode.getLabel() as string,
             type: UssFileType.Directory,
         };
+
+        const originalFileList = blockMocks.treeNodes.ussApi.fileList;
         blockMocks.treeNodes.ussApi.copy = blockMocks.treeNodes.ussApi.fileList = undefined;
+        try {
+            await blockMocks.nodes[1].paste(rootTree.sessionName, rootTree.ussPath, { tree: rootTree, api: blockMocks.treeNodes.ussApi });
+        } catch (err) {
+            expect(err).toBeDefined();
+            expect(err.message).toBe("Required API functions for pasting (fileList, copy and/or putContent) were not found.");
+        }
+
+        // Test for putContent also being undefined
+        blockMocks.treeNodes.ussApi.fileList = originalFileList;
+        blockMocks.treeNodes.ussApi.putContent = undefined;
         try {
             await blockMocks.nodes[1].paste(rootTree.sessionName, rootTree.ussPath, { tree: rootTree, api: blockMocks.treeNodes.ussApi });
         } catch (err) {

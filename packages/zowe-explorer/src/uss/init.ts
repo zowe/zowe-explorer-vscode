@@ -164,7 +164,7 @@ export async function initUSSProvider(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.uss.copyUssFile", async (node: IZoweUSSTreeNode, nodeList: IZoweUSSTreeNode[]) => {
             ussFileProvider.copying = createDeferredPromise();
-            ussActions.copyUssFiles(node, nodeList, ussFileProvider);
+            await ussActions.copyUssFiles(node, nodeList, ussFileProvider);
 
             // Resolve the deferred promise to allow pasting to continue
             ussFileProvider.copying.resolve();
