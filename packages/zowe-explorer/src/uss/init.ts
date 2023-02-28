@@ -167,7 +167,7 @@ export async function initUSSProvider(context: vscode.ExtensionContext) {
             ussActions.copyUssFiles(node, nodeList, ussFileProvider);
 
             // Resolve the deferred promise to allow pasting to continue
-            ussFileProvider.copying.resolve(true);
+            ussFileProvider.copying.resolve();
         })
     );
     context.subscriptions.push(
