@@ -790,7 +790,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                     node.description = searchCriteria;
                     this.addSearchHistory(searchCriteria);
                     this.refreshElement(node);
-                    labelRefresh(node);
+                    node.dirty = true;
                 }
             } else {
                 if (isExpanded) {
@@ -801,8 +801,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                     this.applySearchLabelToNode(node, jobQueryObj);
                     node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
                 }
-
-                labelRefresh(node);
+                node.dirty = true;
             }
         }
     }
