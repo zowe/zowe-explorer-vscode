@@ -813,6 +813,25 @@ describe("USS Action Unit Tests - copy file / directory", () => {
         });
     });
 
+    it("paste throws an error if required APIs are not available", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        let rootTree: UssFileTree = {
+            children: [],
+            baseName: blockMocks.nodes[1].getLabel() as string,
+            ussPath: "",
+            sessionName: blockMocks.treeNodes.ussNode.getLabel() as string,
+            type: UssFileType.Directory,
+        };
+        blockMocks.treeNodes.ussApi.copy = blockMocks.treeNodes.ussApi.fileList = undefined;
+        try {
+            await blockMocks.nodes[1].paste(rootTree.sessionName, rootTree.ussPath, { tree: rootTree, api: blockMocks.treeNodes.ussApi });
+        } catch (err) {
+            expect(err).toBeDefined();
+            expect(err.message).toBe("Required API functions for pasting (fileList, copy and/or putContent) were not found.");
+        }
+    });
+
     it("tests refreshChildNodesDirectory executed successfully with empty directory", async () => {
         jest.clearAllMocks();
         const globalMocks = createGlobalMocks();
