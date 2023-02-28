@@ -383,7 +383,6 @@ export async function deleteUSSFilesPrompt(nodes: IZoweUSSTreeNode[]): Promise<b
  */
 export async function buildFileStructure(node: IZoweUSSTreeNode): Promise<UssFileTree> {
     if (contextually.isUssDirectory(node)) {
-        await refreshChildNodesDirectory(node);
         let directory: UssFileTree = {
             localPath: node.getUSSDocumentFilePath(),
             ussPath: node.fullPath,
