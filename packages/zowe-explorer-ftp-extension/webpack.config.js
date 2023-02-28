@@ -81,7 +81,7 @@ const config = {
             },
         ],
     },
-    plugins: [new webpack.BannerPlugin(fs.readFileSync("../../scripts/banner.txt", "utf8"))],
+    plugins: [new webpack.BannerPlugin(fs.readFileSync("../../scripts/LICENSE_HEADER", "utf-8"))],
 };
 
 module.exports = config;
