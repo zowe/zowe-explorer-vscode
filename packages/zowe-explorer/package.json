@@ -1785,16 +1785,16 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "yarn createTestProfileData && gulp build && yarn license && yarn lint && webpack --mode production && yarn updateStrings && yarn run compile-web",
-    "build": "yarn createTestProfileData && gulp build && yarn license && webpack --mode development",
-    "build:integration": "yarn createTestProfileData && gulp build && yarn license && tsc --build --pretty",
+    "build": "gulp build && yarn license && webpack --mode development",
+    "build:integration": "yarn createTestProfileData && yarn license && tsc --pretty --project tsconfig-tests.json",
     "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
     "test:theia": "mocha ./out/__tests__/__theia__/*.theia.test.js --timeout 50000 --reporter mocha-multi-reporters --reporter-options configFile=.mocharc.json",
     "test": "yarn test:unit",
-    "updateStrings": "node ../../scripts/stringUpdateScript.js && prettier --write  --loglevel warn ./i18n package.nls*",
+    "vscode:prepublish": "gulp build && webpack --mode production && yarn updateStrings && yarn run compile-web",
+    "updateStrings": "node ../../scripts/stringUpdateScript.js && prettier --write --loglevel warn ./i18n package.nls*",
     "package": "vsce package --allow-star-activation --yarn && node ../../scripts/mv-pack.js vscode-extension-for-zowe vsix",
-    "license": "node ../../scripts/license.js",
-    "watch": "yarn createTestProfileData && gulp build && webpack --mode development --watch --info-verbosity verbose",
+    "license": "node ../../scripts/updateLicenses.js",
+    "watch": "gulp build && webpack --mode development --watch --info-verbosity verbose",
     "compile": "tsc -b",
     "compile-web": "webpack --target webworker --entry ./src/web/extension.ts --output-path ./out/src/web",
     "markdown": "markdownlint CHANGELOG.md README.md",
@@ -1877,7 +1877,7 @@
       "^.+\\.(ts|tsx)$": [
         "ts-jest",
         {
-          "tsconfig": "tsconfig.json",
+          "tsconfig": "tsconfig-tests.json",
           "diagnostics": false
         }
       ]
