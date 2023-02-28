@@ -20,7 +20,7 @@
     "semver": "^7.3.5"
   },
   "scripts": {
-    "build": "yarn clean && tsc -p ./",
+    "build": "yarn clean && tsc -p ./ && yarn license",
     "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
     "test": "yarn test:unit",
     "lint": "concurrently -n \"_eslint_,prettier\" \"eslint .\" \"prettier --check .\"",
@@ -28,8 +28,8 @@
     "pretty": "prettier --write .",
     "clean": "rimraf lib",
     "fresh-clone": "yarn clean && rimraf node_modules",
-    "license": "node ../../scripts/license.js",
-    "package": "yarn license && yarn lint && yarn build && npm pack && node ../../scripts/mv-pack.js zowe-zowe-explorer-api tgz"
+    "license": "node ../../scripts/updateLicenses.js",
+    "package": "yarn build && npm pack && node ../../scripts/mv-pack.js zowe-zowe-explorer-api tgz"
   },
   "jest": {
     "moduleFileExtensions": [
