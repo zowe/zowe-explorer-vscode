@@ -83,7 +83,7 @@ async function createGlobalMocks() {
     };
 
     newMocks.mockProfilesCache = new ProfilesCache(zowe.imperative.Logger.getAppLogger());
-    newMocks.withProgress = jest.fn().mockImplementation((progLocation, callback) => {
+    newMocks.withProgress = jest.fn().mockImplementation((_progLocation, _callback) => {
         return newMocks.mockCallback;
     });
 
@@ -202,6 +202,7 @@ describe("Profiles Unit Test - Function createInstance", () => {
 
     it("should create instance when there is no workspace", async () => {
         mockWorkspaceFolders.mockClear().mockReturnValue(undefined);
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
         const { Profiles: testProfiles } = require("../../src/Profiles");
         jest.spyOn(testProfiles.prototype, "refresh").mockResolvedValueOnce(undefined);
         const profilesInstance = await testProfiles.createInstance(undefined);
@@ -211,6 +212,7 @@ describe("Profiles Unit Test - Function createInstance", () => {
 
     it("should create instance when there is empty workspace", async () => {
         mockWorkspaceFolders.mockClear().mockReturnValue([undefined]);
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
         const { Profiles: testProfiles } = require("../../src/Profiles");
         jest.spyOn(testProfiles.prototype, "refresh").mockResolvedValueOnce(undefined);
         const profilesInstance = await testProfiles.createInstance(undefined);
@@ -224,6 +226,7 @@ describe("Profiles Unit Test - Function createInstance", () => {
                 uri: { fsPath: "fakePath" },
             },
         ]);
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
         const { Profiles: testProfiles } = require("../../src/Profiles");
         jest.spyOn(testProfiles.prototype, "refresh").mockResolvedValueOnce(undefined);
         const profilesInstance = await testProfiles.createInstance(undefined);
@@ -343,7 +346,7 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        const mockSaveProfile = jest.spyOn(ProfilesCache.prototype as any, "saveProfile").mockImplementationOnce(async (values, name, type) => {
+        const mockSaveProfile = jest.spyOn(ProfilesCache.prototype as any, "saveProfile").mockImplementationOnce(async (_values, _name, _type) => {
             throw new Error("saveProfile error");
         });
         const mockShowZoweConfigError = jest.spyOn(ZoweExplorerExtender, "showZoweConfigError").mockImplementation();

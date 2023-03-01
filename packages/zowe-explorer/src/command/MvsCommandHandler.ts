@@ -13,7 +13,6 @@ import * as vscode from "vscode";
 import { imperative } from "@zowe/cli";
 import * as globals from "../globals";
 import { ValidProfileEnum, IZoweTreeNode, Gui } from "@zowe/zowe-explorer-api";
-import { PersistentFilters } from "../PersistentFilters";
 import { Profiles } from "../Profiles";
 import { FilterDescriptor, FilterItem, errorHandling } from "../utils/ProfilesUtils";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";

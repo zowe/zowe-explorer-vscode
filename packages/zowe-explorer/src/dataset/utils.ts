@@ -22,9 +22,13 @@ export function getProfileAndDataSetName(node: IZoweNodeType) {
 
 export function getNodeLabels(node: IZoweNodeType) {
     if (node.contextValue.includes(globals.DS_MEMBER_CONTEXT)) {
-        return { ...getProfileAndDataSetName(node.getParent()), memberName: node.getLabel() };
+        return {
+            ...getProfileAndDataSetName(node.getParent()),
+            memberName: node.getLabel(),
+            contextValue: node.contextValue,
+        };
     } else {
-        return { ...getProfileAndDataSetName(node), memberName: undefined };
+        return { ...getProfileAndDataSetName(node), memberName: undefined, contextValue: node.contextValue };
     }
 }
 export function validateDataSetName(dsName: string): boolean {

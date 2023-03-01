@@ -213,7 +213,6 @@ describe("USSTree Integration Tests", async () => {
      *************************************************************************************************************/
     it("Tests the addSession() function by adding a default, deleting, then adding a passed session", async () => {
         let len = testTree.mSessionNodes.length;
-        const log = new imperative.Logger(undefined);
         await testTree.addSession();
         expect(testTree.mSessionNodes.length).toBeGreaterThanOrEqual(len + 1);
         len = testTree.mSessionNodes.length;
