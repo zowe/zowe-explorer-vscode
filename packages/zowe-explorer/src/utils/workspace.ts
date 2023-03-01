@@ -136,7 +136,7 @@ let latestSavedFile: vscode.TextDocument;
 let ongoingSave = false;
 /**
  * Handle auto/regular save by prioritizing the last ongoing save of a series queued saves
- * @deprecated Use ZoweSaveManager class instead
+ * @deprecated Use ZoweSaveQueue class instead
  */
 export async function handleSaving(
     uploadRequest: (document, provider) => Promise<void | string | vscode.MessageItem>,

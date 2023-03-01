@@ -1,12 +1,12 @@
-/*
- * This program and the accompanying materials are made available under the terms of the *
- * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
- * https://www.eclipse.org/legal/epl-v20.html                                      *
- *                                                                                 *
- * SPDX-License-Identifier: EPL-2.0                                                *
- *                                                                                 *
- * Copyright Contributors to the Zowe Project.                                     *
- *                                                                                 *
+/**
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Copyright Contributors to the Zowe Project.
+ *
  */
 
 import * as path from "path";
@@ -86,13 +86,15 @@ export class ZoweSaveQueue {
     private static async processNext() {
         const nextRequest = this.savingQueue.shift();
         if (nextRequest == null) {
-            this.ongoingSave?.resolve();
-            this.ongoingSave = null;
+            if (this.ongoingSave != null) {
+                this.ongoingSave.resolve();
+                this.ongoingSave = null;
+            }
             return;
         }
-        const pendingRequestsForSameFile = this.savingQueue.filter(({ savedFile }) => savedFile.fileName === nextRequest.savedFile.fileName);
-        if (pendingRequestsForSameFile.length === 0) {
-            this.ongoingSave = this.ongoingSave ?? createDeferredPromise();
+        this.ongoingSave = this.ongoingSave ?? createDeferredPromise();
+        const pendingSavesForSameFile = this.savingQueue.filter(({ savedFile }) => savedFile.fileName === nextRequest.savedFile.fileName);
+        if (pendingSavesForSameFile.length === 0) {
             try {
                 await nextRequest.uploadRequest(nextRequest.savedFile, nextRequest.fileProvider);
             } catch (err) {
@@ -100,8 +102,8 @@ export class ZoweSaveQueue {
                 await markDocumentUnsaved(nextRequest.savedFile);
                 await Gui.errorMessage(
                     localize(
-                        "processNext.error.saveFailed",
-                        "Failed to upload changes to {0}: {1}",
+                        "processNext.error.uploadFailed",
+                        "Failed to upload changes for {0}: {1}",
                         this.buildFileHyperlink(nextRequest.savedFile),
                         err.message
                     )
