@@ -382,6 +382,8 @@ export class EventEmitter<T> {
  * the editor-process so that they should be always used instead of nodejs-equivalents.
  */
 export namespace workspace {
+    export function onDidSaveTextDocument<T>(listener: (e: T) => any, thisArgs?: any, disposables?: Disposable[]) {}
+
     export function getConfiguration(configuration: string) {
         return {
             update: () => {

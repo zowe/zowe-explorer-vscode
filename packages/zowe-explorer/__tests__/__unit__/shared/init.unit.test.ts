@@ -24,12 +24,13 @@ import { TsoCommandHandler } from "../../../src/command/TsoCommandHandler";
 import { MvsCommandHandler } from "../../../src/command/MvsCommandHandler";
 import { saveFile } from "../../../src/dataset/actions";
 import { saveUSSFile } from "../../../src/uss/actions";
+import { ZoweSaveQueue } from "../../../src/abstract/ZoweSaveQueue";
 
 describe("Test src/shared/extension", () => {
     describe("registerCommonCommands", () => {
         const executeCommand = { fun: jest.fn() };
         const testGlobals = {
-            LOG: { debug: jest.fn() },
+            LOG: { debug: jest.fn(), error: jest.fn() },
             DS_DIR: "DS_DIR",
             USS_DIR: "USS_DIR",
         };
@@ -102,23 +103,45 @@ describe("Test src/shared/extension", () => {
                 mock: [{ spy: jest.spyOn(sharedActions, "searchInAllLoadedItems"), arg: ["ds", "uss"] }],
             },
             {
-                name: "onWillSaveTextDocument:1",
-                parm: [{ document: { isDirty: false, fileName: "_" } }],
+                name: "onDidSaveTextDocument:1",
+                parm: [{ isDirty: false, fileName: "_", uri: vscode.Uri.parse("") }],
                 mock: [],
             },
             {
-                name: "onWillSaveTextDocument:2",
-                parm: [{ document: { isDirty: true, fileName: "DS_DIR" } }],
-                mock: [{ spy: jest.spyOn(workspaceUtils, "handleSaving"), arg: [saveFile, { isDirty: true, fileName: "DS_DIR" }, "ds"] }],
+                name: "onDidSaveTextDocument:2",
+                parm: [{ fileName: "DS_DIR", isDirty: true, uri: vscode.Uri.parse("") }],
+                mock: [
+                    {
+                        spy: jest.spyOn(ZoweSaveQueue, "push"),
+                        arg: [
+                            {
+                                fileProvider: "ds",
+                                savedFile: { fileName: "DS_DIR", uri: vscode.Uri.parse(""), isDirty: true },
+                                uploadRequest: saveFile,
+                            },
+                        ],
+                    },
+                ],
             },
             {
-                name: "onWillSaveTextDocument:3",
-                parm: [{ document: { isDirty: true, fileName: "USS_DIR" } }],
-                mock: [{ spy: jest.spyOn(workspaceUtils, "handleSaving"), arg: [saveUSSFile, { isDirty: true, fileName: "USS_DIR" }, "uss"] }],
+                name: "onDidSaveTextDocument:3",
+                parm: [{ fileName: "USS_DIR", isDirty: true, uri: vscode.Uri.parse("") }],
+                mock: [
+                    {
+                        spy: jest.spyOn(ZoweSaveQueue, "push"),
+                        arg: [
+                            {
+                                fileProvider: "uss",
+                                savedFile: { fileName: "USS_DIR", isDirty: true, uri: vscode.Uri.parse("") },
+                                uploadRequest: saveUSSFile,
+                            },
+                        ],
+                    },
+                ],
             },
             {
-                name: "onWillSaveTextDocument:4",
-                parm: [{ document: { isDirty: true, fileName: "NOT_DATASET" } }],
+                name: "onDidSaveTextDocument:4",
+                parm: [{ isDirty: true, fileName: "NOT_DATASET" }],
                 mock: [],
             },
             {
@@ -164,8 +187,8 @@ describe("Test src/shared/extension", () => {
             const onDidChangeConfiguration = (fun: () => void) => {
                 return { onDidChangeConfiguration: fun };
             };
-            const onWillSaveTextDocument = (fun: () => void) => {
-                return { onWillSaveTextDocument: fun };
+            const onDidSaveTextDocument = (fun: () => void) => {
+                return { onDidSaveTextDocument: fun };
             };
             Object.defineProperty(vscode.commands, "registerCommand", { value: registerCommand });
             Object.defineProperty(vscode.workspace, "onDidChangeConfiguration", { value: onDidChangeConfiguration });
@@ -175,7 +198,7 @@ describe("Test src/shared/extension", () => {
             Object.defineProperty(globals, "LOG", { value: testGlobals.LOG });
             Object.defineProperty(globals, "DS_DIR", { value: testGlobals.DS_DIR });
             Object.defineProperty(globals, "USS_DIR", { value: testGlobals.USS_DIR });
-            Object.defineProperty(vscode.workspace, "onWillSaveTextDocument", { value: onWillSaveTextDocument });
+            Object.defineProperty(vscode.workspace, "onDidSaveTextDocument", { value: onDidSaveTextDocument });
 
             spyOnSubscriptions(commands);
             await sharedExtension.registerCommonCommands(test.context, test.value.providers);
