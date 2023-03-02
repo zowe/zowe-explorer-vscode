@@ -10,7 +10,6 @@
  */
 
 import * as vscode from "vscode";
-import * as jobUtils from "../job/utils";
 import * as globals from "../globals";
 import { IJob, imperative } from "@zowe/cli";
 import { Gui, ValidProfileEnum, IZoweTree, IZoweJobTreeNode, PersistenceSchemaEnum, NodeInteraction } from "@zowe/zowe-explorer-api";
@@ -136,16 +135,16 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         });
     }
 
-    public rename(node: IZoweJobTreeNode) {
+    public rename(_node: IZoweJobTreeNode) {
         throw new Error("Method not implemented.");
     }
-    public open(node: IZoweJobTreeNode, preview: boolean) {
+    public open(_node: IZoweJobTreeNode, _preview: boolean) {
         throw new Error("Method not implemented.");
     }
-    public copy(node: IZoweJobTreeNode) {
+    public copy(_node: IZoweJobTreeNode) {
         throw new Error("Method not implemented.");
     }
-    public paste(node: IZoweJobTreeNode) {
+    public paste(_node: IZoweJobTreeNode) {
         throw new Error("Method not implemented.");
     }
 
@@ -158,13 +157,13 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         node.contextValue = contextually.asFavorite(node);
         return node;
     }
-    public saveFile(document: vscode.TextDocument) {
+    public saveFile(_document: vscode.TextDocument) {
         throw new Error("Method not implemented.");
     }
-    public refreshPS(node: IZoweJobTreeNode) {
+    public refreshPS(_node: IZoweJobTreeNode) {
         throw new Error("Method not implemented.");
     }
-    public uploadDialog(node: IZoweJobTreeNode) {
+    public uploadDialog(_node: IZoweJobTreeNode) {
         throw new Error("Method not implemented.");
     }
     public filterPrompt(node: IZoweJobTreeNode) {
@@ -849,7 +848,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         return revisedCriteria.trim();
     }
 
-    public async addFileHistory(criteria: string) {
+    public async addFileHistory(_criteria: string) {
         throw new Error("Method not implemented.");
     }
 

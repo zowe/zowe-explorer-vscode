@@ -138,7 +138,7 @@ const savingQueue = [];
 let latestSavedFile: vscode.TextDocument;
 let ongoingSave = false;
 export async function handleSaving(
-    uploadRequest: (document, provider) => Promise<void | string | vscode.MessageItem>,
+    uploadRequest: (_document, _provider) => Promise<void | string | vscode.MessageItem>,
     savedFile: vscode.TextDocument,
     fileProvider: IZoweTree<IZoweUSSTreeNode | IZoweDatasetTreeNode>
 ): Promise<void> {
