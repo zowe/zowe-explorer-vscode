@@ -339,6 +339,17 @@ export namespace ZoweExplorerApi {
          * @returns {Promise<zowe.IZosFilesResponse>}
          */
         dataSetsMatchingPattern?(filter: string[], options?: zowe.IDsmListOptions): Promise<zowe.IZosFilesResponse>;
+
+        /**
+         * Copies a dataSet.
+         *
+         * @param {string} fromDataSetName
+         * @param {string} toDataSetName
+         * @param {string?} enq possible values : {SHR, SHRW, EXCLU}
+         * @param {boolean?} replace
+         * @returns {Promise<zowe.IZosFilesResponse>}
+         */
+        copyDataSet?(fromDataSetName: string, toDataSetName: string, enq?: string, replace?: boolean): Promise<zowe.IZosFilesResponse>;
     }
 
     /**

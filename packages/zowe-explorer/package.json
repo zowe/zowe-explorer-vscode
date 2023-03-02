@@ -101,6 +101,18 @@
         "key": "ctrl+v",
         "mac": "cmd+v",
         "when": "focusedView == zowe.uss.explorer || viewItem =~ /^(directory.*|ussSession.*)/ && !listSupportsMultiselect"
+      },
+      {
+        "command": "zowe.ds.copyDataSets",
+        "key": "ctrl+c",
+        "mac": "cmd+c",
+        "when": "focusedView == zowe.ds.explorer"
+      },
+      {
+        "command": "zowe.ds.pasteDataSets",
+        "key": "ctrl+v",
+        "mac": "cmd+v",
+        "when": "focusedView == zowe.ds.explorer"
       }
     ],
     "commands": [
@@ -274,13 +286,8 @@
         "category": "Zowe Explorer"
       },
       {
-        "command": "zowe.ds.copyMember",
-        "title": "%copyMember%",
-        "category": "Zowe Explorer"
-      },
-      {
-        "command": "zowe.ds.copyDataSet",
-        "title": "%copyDataSet%",
+        "command": "zowe.ds.copyDataSets",
+        "title": "%copyFile%",
         "category": "Zowe Explorer"
       },
       {
@@ -299,7 +306,7 @@
         "category": "Zowe Explorer"
       },
       {
-        "command": "zowe.ds.pasteMember",
+        "command": "zowe.ds.pasteDataSets",
         "title": "%paste%",
         "category": "Zowe Explorer"
       },
@@ -1002,18 +1009,13 @@
           "group": "001_zowe_dsCreate@5"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^member.*/  && !listMultiSelection",
-          "command": "zowe.ds.copyMember",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*profile=zftp.*)(ds|member|pds).*/",
+          "command": "zowe.ds.copyDataSets",
           "group": "001_zowe_dsCreate@6"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^ds.*/ && !listMultiSelection",
-          "command": "zowe.ds.copyDataSet",
-          "group": "001_zowe_dsCreate@6"
-        },
-        {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^pds.*/ && !listMultiSelection",
-          "command": "zowe.ds.pasteMember",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*profile=zftp.*)(session|pds).*/",
+          "command": "zowe.ds.pasteDataSets",
           "group": "001_zowe_dsCreate@7"
         },
         {
@@ -1290,7 +1292,7 @@
           "when": "never"
         },
         {
-          "command": "zowe.ds.copyDataSet",
+          "command": "zowe.ds.copyDataSets",
           "when": "never"
         },
         {
@@ -1310,11 +1312,7 @@
           "when": "never"
         },
         {
-          "command": "zowe.ds.copyMember",
-          "when": "never"
-        },
-        {
-          "command": "zowe.ds.pasteMember",
+          "command": "zowe.ds.pasteDataSets",
           "when": "never"
         },
         {

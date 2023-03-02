@@ -425,16 +425,12 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         const shouldPreview = doubleClicked ? false : previewFile;
         if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID || Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED) {
             try {
-                let label: string;
                 switch (true) {
                     // For opening favorited and non-favorited files
                     case this.getParent().contextValue === globals.FAV_PROFILE_CONTEXT:
                     case contextually.isUssSession(this.getParent()):
-                        label = this.label as string;
-                        break;
                     // Handle file path for files in directories and favorited directories
                     case contextually.isUssDirectory(this.getParent()):
-                        label = this.fullPath;
                         break;
                     default:
                         Gui.errorMessage(localize("openUSS.error.invalidNode", "open() called from invalid node."));

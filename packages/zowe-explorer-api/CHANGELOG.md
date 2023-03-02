@@ -6,6 +6,8 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
+- Added copy datasets APIs. [#1550] (https://github.com/zowe/vscode-extension-for-zowe/issues/1550)
+
 ### Bug fixes
 
 ## `2.6.0`
