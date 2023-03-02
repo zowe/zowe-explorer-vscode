@@ -28,10 +28,10 @@ nls.config({
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
-    public static readonly JobId = "JobId:";
-    public static readonly Owner = "Owner:";
-    public static readonly Prefix = "Prefix:";
-    public static readonly Status = "Status:";
+    public static readonly JobId = "Job ID: ";
+    public static readonly Owner = "Owner: ";
+    public static readonly Prefix = "Prefix: ";
+    public static readonly Status = "Status: ";
 
     public children: IZoweJobTreeNode[] = [];
     public dirty = true;
@@ -49,10 +49,30 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
         public job: zowe.IJob,
         profile: zowe.imperative.IProfileLoaded
     ) {
-        super(label, collapsibleState, mParent, session, profile);
+        let finalLabel = label;
+        // If the node has a parent and the parent is favorited, it is a saved query
+        if (mParent != null && contextually.isFavProfile(mParent) && !label.includes("|")) {
+            finalLabel = "";
+            // Convert old format to new format
+            const opts = label.split(" ");
+            for (let i = 0; i < opts.length; i++) {
+                const opt = opts[i];
+                const [key, val] = opt.split(":");
+                finalLabel += `${key}: ${val}`;
+                if (i != opts.length - 1) {
+                    finalLabel += " | ";
+                }
+            }
+        }
+        super(finalLabel, collapsibleState, mParent, session, profile);
         this._prefix = "*";
         this._searchId = "";
         this._jobStatus = "*";
+        this.filtered = false;
+
+        if (mParent == null && label !== "Favorites") {
+            this.contextValue = globals.JOBS_SESSION_CONTEXT;
+        }
 
         if (session) {
             this._owner = "*";
@@ -73,7 +93,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
      * @returns {Promise<IZoweJobTreeNode[]>}
      */
     public async getChildren(): Promise<IZoweJobTreeNode[]> {
-        if (!this._owner && contextually.isSession(this)) {
+        if (contextually.isSession(this) && !this.filtered) {
             return [
                 new Job(
                     localize("getChildren.search", "Use the search button to display jobs"),

@@ -169,6 +169,15 @@ export function isFavorite(node: TreeItem): boolean {
 }
 
 /**
+ * Helper function which identifies if the node is a favorited profile
+ * @param node
+ * @return true if a favorited profile, false otherwise
+ */
+export function isFavProfile(node: TreeItem): boolean {
+    return new RegExp(globals.FAV_PROFILE_CONTEXT).test(node.contextValue);
+}
+
+/**
  * Helper function which identifies if the node is a favorite root
  * or search
  * @param node
