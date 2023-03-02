@@ -15,7 +15,6 @@ type ResolveFn = (value?: unknown) => void;
 
 export type DeferredPromise = {
     promise: Promise<unknown>;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     reject: RejectFn;
     resolve: ResolveFn;
 };

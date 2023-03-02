@@ -56,10 +56,6 @@ export class UssFileUtils {
             return false;
         }
 
-        const result =
-            fileTree.children.length <= 0
-                ? true
-                : fileTree.children.reduce((prev, curr) => prev && UssFileUtils.toSameSession(curr, destSessionName), true);
-        return result;
+        return fileTree.children.every((node) => UssFileUtils.toSameSession(node, destSessionName));
     }
 }
