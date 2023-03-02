@@ -611,8 +611,19 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         const fileList = apiResponse.apiResponse?.items;
 
         // Check root path for conflicts before pasting nodes in this path
-        const conflictingPath = fileList.find((file) => file.name === uss.tree.baseName) != null;
-        const fileName = conflictingPath ? `${uss.tree.baseName} (copy)` : uss.tree.baseName;
+        let fileName = uss.tree.baseName;
+        if (fileList.find((file) => file.name === fileName) != null) {
+            // If file names match, build the copy suffix
+            let dupCount = 1;
+            const extension = path.extname(uss.tree.baseName);
+            const baseNameForFile = path.parse(uss.tree.baseName)?.name;
+            let dupName = `${baseNameForFile} (${dupCount})${extension}`;
+            while (fileList.find((file) => file.name === dupName) != null) {
+                dupCount++;
+                dupName = `${baseNameForFile} (${dupCount})${extension}`;
+            }
+            fileName = dupName;
+        }
         const outputPath = `${rootPath}/${fileName}`;
 
         if (hasCopyApi && UssFileUtils.toSameSession(uss.tree, sessionName)) {
