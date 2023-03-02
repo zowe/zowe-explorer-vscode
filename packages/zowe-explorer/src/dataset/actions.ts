@@ -1316,7 +1316,8 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
     const profile = Profiles.getInstance().loadNamedProfile(sesName);
     if (!profile) {
         globals.LOG.error(localize("saveFile.log.error.session", "Couldn't locate session when saving data set!"));
-        return api.Gui.errorMessage(localize("saveFile.log.error.session", "Couldn't locate session when saving data set!"));
+        await api.Gui.errorMessage(localize("saveFile.log.error.session", "Couldn't locate session when saving data set!"));
+        return;
     }
 
     // get session from session name
@@ -1338,9 +1339,10 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
         // Checks if file still exists on server
         const response = await ZoweExplorerApiRegister.getMvsApi(profile).dataSet(dsname, { responseTimeout: profile.profile?.responseTimeout });
         if (!response.apiResponse.items.length) {
-            return api.Gui.errorMessage(
+            await api.Gui.errorMessage(
                 localize("saveFile.error.saveFailed", "Data set failed to save. Data set may have been deleted or renamed on mainframe.")
             );
+            return;
         }
     } catch (err) {
         await errorHandling(err, sesName, err.message);

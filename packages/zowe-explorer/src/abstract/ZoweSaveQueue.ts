@@ -24,33 +24,9 @@ nls.config({
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 interface SaveRequest {
-    uploadRequest: (document, provider) => Promise<void | string | vscode.MessageItem>;
+    uploadRequest: (document, provider) => Promise<void>;
     savedFile: vscode.TextDocument;
     fileProvider: IZoweTree<IZoweUSSTreeNode | IZoweDatasetTreeNode>;
-}
-
-// TODO Use deferred promise implementation from PR #2082
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type RejectFn = (reason?: any) => void;
-type ResolveFn = (val?: unknown) => void;
-
-type DeferredPromise = {
-    promise: Promise<unknown>;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    reject: RejectFn;
-    resolve: ResolveFn;
-};
-
-/**
- * Create a deferred promise that can be resolved or rejected at any point.
- * @returns The promise object alongside its resolve/reject functions.
- */
-function createDeferredPromise(): DeferredPromise {
-    let resolve: ResolveFn, reject: RejectFn;
-    const promise = new Promise((res, rej) => {
-        [resolve, reject] = [res, rej];
-    });
-    return { promise, reject, resolve };
 }
 
 /**
@@ -65,19 +41,17 @@ export class ZoweSaveQueue {
      */
     public static push(request: SaveRequest) {
         this.savingQueue.push(request);
-        if (this.ongoingSave == null) {
-            this.processNext();
-        }
+        this.ongoingSave = this.all().then(this.processNext.bind(this));
     }
 
     /**
      * Wait for all items in the queue to be processed.
      */
     public static async all() {
-        await this.ongoingSave?.promise;
+        await this.ongoingSave;
     }
 
-    private static ongoingSave: DeferredPromise | null;
+    private static ongoingSave = Promise.resolve();
     private static savingQueue: SaveRequest[] = [];
 
     /**
@@ -85,32 +59,24 @@ export class ZoweSaveQueue {
      */
     private static async processNext() {
         const nextRequest = this.savingQueue.shift();
-        if (nextRequest == null) {
-            if (this.ongoingSave != null) {
-                this.ongoingSave.resolve();
-                this.ongoingSave = null;
-            }
+        if (nextRequest == null || this.savingQueue.some(({ savedFile }) => savedFile.fileName === nextRequest.savedFile.fileName)) {
             return;
         }
-        this.ongoingSave = this.ongoingSave ?? createDeferredPromise();
-        const pendingSavesForSameFile = this.savingQueue.filter(({ savedFile }) => savedFile.fileName === nextRequest.savedFile.fileName);
-        if (pendingSavesForSameFile.length === 0) {
-            try {
-                await nextRequest.uploadRequest(nextRequest.savedFile, nextRequest.fileProvider);
-            } catch (err) {
-                globals.LOG.error(err);
-                await markDocumentUnsaved(nextRequest.savedFile);
-                await Gui.errorMessage(
-                    localize(
-                        "processNext.error.uploadFailed",
-                        "Failed to upload changes for {0}: {1}",
-                        this.buildFileHyperlink(nextRequest.savedFile),
-                        err.message
-                    )
-                );
-            }
+
+        try {
+            await nextRequest.uploadRequest(nextRequest.savedFile, nextRequest.fileProvider);
+        } catch (err) {
+            globals.LOG.error(err);
+            await markDocumentUnsaved(nextRequest.savedFile);
+            await Gui.errorMessage(
+                localize(
+                    "processNext.error.uploadFailed",
+                    "Failed to upload changes for {0}: {1}",
+                    this.buildFileHyperlink(nextRequest.savedFile),
+                    err.message
+                )
+            );
         }
-        this.processNext();
     }
 
     /**
