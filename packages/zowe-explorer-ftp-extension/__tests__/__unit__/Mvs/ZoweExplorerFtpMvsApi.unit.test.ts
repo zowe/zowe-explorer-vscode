@@ -1,12 +1,12 @@
-/*
- * This program and the accompanying materials are made available under the terms of the *
- * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
- * https://www.eclipse.org/legal/epl-v20.html                                      *
- *                                                                                 *
- * SPDX-License-Identifier: EPL-2.0                                                *
- *                                                                                 *
- * Copyright Contributors to the Zowe Project.                                     *
- *                                                                                 *
+/**
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Copyright Contributors to the Zowe Project.
+ *
  */
 
 /* eslint-disable @typescript-eslint/unbound-method */
@@ -207,6 +207,16 @@ describe("FtpMvsApi", () => {
         expect(result.commandResponse).toContain("Delete completed successfully.");
         expect(DataSetUtils.deleteDataSet).toBeCalledTimes(1);
         expect(MvsApi.releaseConnection).toBeCalled();
+    });
+
+    it("should give error copy datasets.", async () => {
+        try {
+            await MvsApi.copyDataSet(null, null);
+        } catch (error) {
+            // do nth
+        }
+        const copySpy = jest.spyOn(Gui, "errorMessage");
+        expect(copySpy).toHaveBeenCalled();
     });
 
     it("should throw an error when hMigrateDataSet is called", async () => {

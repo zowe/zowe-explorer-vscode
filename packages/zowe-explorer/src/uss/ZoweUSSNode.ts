@@ -1,12 +1,12 @@
-/*
- * This program and the accompanying materials are made available under the terms of the *
- * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
- * https://www.eclipse.org/legal/epl-v20.html                                      *
- *                                                                                 *
- * SPDX-License-Identifier: EPL-2.0                                                *
- *                                                                                 *
- * Copyright Contributors to the Zowe Project.                                     *
- *                                                                                 *
+/**
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Copyright Contributors to the Zowe Project.
+ *
  */
 
 import { imperative, IUploadOptions, IZosFilesResponse } from "@zowe/cli";
@@ -424,16 +424,12 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         const shouldPreview = doubleClicked ? false : previewFile;
         if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID || Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED) {
             try {
-                let label: string;
                 switch (true) {
                     // For opening favorited and non-favorited files
                     case this.getParent().contextValue === globals.FAV_PROFILE_CONTEXT:
                     case contextually.isUssSession(this.getParent()):
-                        label = this.label as string;
-                        break;
                     // Handle file path for files in directories and favorited directories
                     case contextually.isUssDirectory(this.getParent()):
-                        label = this.fullPath;
                         break;
                     default:
                         Gui.errorMessage(localize("openUSS.error.invalidNode", "open() called from invalid node."));
@@ -464,7 +460,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                             file: documentFilePath,
                             binary: chooseBinary,
                             returnEtag: true,
-                            encoding: cachedProfile.profile.encoding,
+                            encoding: cachedProfile.profile?.encoding,
                             responseTimeout: cachedProfile.profile?.responseTimeout,
                         });
                         statusMsg.dispose();

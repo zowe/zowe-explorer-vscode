@@ -25,10 +25,6 @@
     "src/**/*.ts",
     // Needed in production for vscode-nls localization to work:
     "./node_modules/vscode/vscode.d.ts",
-    "./node_modules/vscode/lib/*",
-    // Needed for integration tests to work:
-    "__tests__",
-    "resources/testProfileData.example.ts",
-    "resources/testProfileData.ts"
+    "./node_modules/vscode/lib/*"
   ]
 }

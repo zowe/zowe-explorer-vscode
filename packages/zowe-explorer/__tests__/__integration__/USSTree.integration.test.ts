@@ -1,12 +1,12 @@
-/*
- * This program and the accompanying materials are made available under the terms of the *
- * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
- * https://www.eclipse.org/legal/epl-v20.html                                      *
- *                                                                                 *
- * SPDX-License-Identifier: EPL-2.0                                                *
- *                                                                                 *
- * Copyright Contributors to the Zowe Project.                                     *
- *                                                                                 *
+/**
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Copyright Contributors to the Zowe Project.
+ *
  */
 
 import { imperative, ZosmfSession } from "@zowe/cli";
@@ -213,7 +213,6 @@ describe("USSTree Integration Tests", async () => {
      *************************************************************************************************************/
     it("Tests the addSession() function by adding a default, deleting, then adding a passed session", async () => {
         let len = testTree.mSessionNodes.length;
-        const log = new imperative.Logger(undefined);
         await testTree.addSession();
         expect(testTree.mSessionNodes.length).toBeGreaterThanOrEqual(len + 1);
         len = testTree.mSessionNodes.length;

@@ -1,12 +1,12 @@
-/*
- * This program and the accompanying materials are made available under the terms of the *
- * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
- * https://www.eclipse.org/legal/epl-v20.html                                      *
- *                                                                                 *
- * SPDX-License-Identifier: EPL-2.0                                                *
- *                                                                                 *
- * Copyright Contributors to the Zowe Project.                                     *
- *                                                                                 *
+/**
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Copyright Contributors to the Zowe Project.
+ *
  */
 
 import { IZoweDatasetTreeNode, IZoweTree, IZoweUSSTreeNode } from "@zowe/zowe-explorer-api";
@@ -138,7 +138,7 @@ const savingQueue = [];
 let latestSavedFile: vscode.TextDocument;
 let ongoingSave = false;
 export async function handleSaving(
-    uploadRequest: (document, provider) => Promise<void | string | vscode.MessageItem>,
+    uploadRequest: (_document, _provider) => Promise<void | string | vscode.MessageItem>,
     savedFile: vscode.TextDocument,
     fileProvider: IZoweTree<IZoweUSSTreeNode | IZoweDatasetTreeNode>
 ): Promise<void> {

@@ -62,7 +62,7 @@ Now install the extension to VS Code.
 
 You can now use the extension.
 
-For more information on how to run tests for the extension, see [Developer's ReadMe](https://github.com/zowe/vscode-extension-for-zowe/blob/main/docs/Developer's%20ReadMe.md).
+For more information on how to run tests for the extension, see [Developer's ReadMe](https://github.com/zowe/vscode-extension-for-zowe/blob/main/docs/README-Developer.md).
 
 ## Available Documentation
 

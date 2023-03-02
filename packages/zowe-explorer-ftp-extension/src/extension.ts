@@ -1,12 +1,12 @@
-/*
- * This program and the accompanying materials are made available under the terms of the *
- * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
- * https://www.eclipse.org/legal/epl-v20.html                                      *
- *                                                                                 *
- * SPDX-License-Identifier: EPL-2.0                                                *
- *                                                                                 *
- * Copyright Contributors to the Zowe Project.                                     *
- *                                                                                 *
+/**
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Copyright Contributors to the Zowe Project.
+ *
  */
 
 import * as vscode from "vscode";
@@ -21,13 +21,11 @@ import { FtpSession } from "./ftpSession";
 
 export const ZoweLogger = new IZoweLogger("Zowe Explorer FTP Extension", path.join(__dirname, "..", ".."));
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function activate(context: vscode.ExtensionContext): void {
+export function activate(_context: vscode.ExtensionContext): void {
     void registerFtpApis();
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function deactivate(context: vscode.ExtensionContext): void {
+export function deactivate(_context: vscode.ExtensionContext): void {
     sessionMap.forEach((session) => session.releaseConnections());
     sessionMap.clear();
 }

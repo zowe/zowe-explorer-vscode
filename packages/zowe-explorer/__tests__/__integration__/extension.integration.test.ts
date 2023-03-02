@@ -1,12 +1,12 @@
-/*
- * This program and the accompanying materials are made available under the terms of the *
- * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
- * https://www.eclipse.org/legal/epl-v20.html                                      *
- *                                                                                 *
- * SPDX-License-Identifier: EPL-2.0                                                *
- *                                                                                 *
- * Copyright Contributors to the Zowe Project.                                     *
- *                                                                                 *
+/**
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Copyright Contributors to the Zowe Project.
+ *
  */
 
 import * as zowe from "@zowe/cli";
@@ -455,8 +455,9 @@ describe("Extension Integration Tests", async () => {
                     try {
                         const fromNode = new ZoweDatasetNode(fromDataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
                         const toNode = new ZoweDatasetNode(toDataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
+                        const nodeList: ZoweDatasetNode[] = [fromNode];
+                        await dsActions.copyDataSets(nodeList, null, null);
 
-                        await dsActions.copyDataSet(fromNode);
                         await dsActions.pasteMember(toNode, testTree);
 
                         contents = await zowe.Get.dataSet(sessionNode.getSession(), fromDataSetName);
@@ -496,7 +497,6 @@ describe("Extension Integration Tests", async () => {
 
                         const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
                         inputBoxStub.returns(toMemberName);
-
                         await dsActions.copyDataSet(fromNode);
                         await dsActions.pasteMember(parentNode, testTree);
 
@@ -546,8 +546,8 @@ describe("Extension Integration Tests", async () => {
 
                         const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
                         inputBoxStub.returns(toMemberName);
-
-                        await dsActions.copyDataSet(fromNode);
+                        const nodeList: ZoweDatasetNode[] = [fromNode];
+                        await dsActions.copyDataSets(nodeList, null, null);
                         await dsActions.pasteMember(toNode, testTree);
 
                         contents = await zowe.Get.dataSet(sessionNode.getSession(), `${toDataSetName}(${toMemberName})`);
@@ -597,8 +597,8 @@ describe("Extension Integration Tests", async () => {
                         fromParentNode.contextValue = globals.DS_PDS_CONTEXT;
                         fromMemberNode.contextValue = globals.DS_MEMBER_CONTEXT;
                         toNode.contextValue = globals.DS_DS_CONTEXT;
-
-                        await dsActions.copyDataSet(fromMemberNode);
+                        const nodeList: ZoweDatasetNode[] = [fromMemberNode];
+                        await dsActions.copyDataSets(nodeList, null, null);
                         await dsActions.pasteMember(toNode, testTree);
 
                         contents = await zowe.Get.dataSet(sessionNode.getSession(), toDataSetName);
