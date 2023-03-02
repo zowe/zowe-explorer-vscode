@@ -502,7 +502,7 @@ export async function pasteUss(ussFileProvider: IZoweTree<IZoweUSSTreeNode>, nod
             title: localize("ZoweUssNode.copyUpload.progress", "Pasting files..."),
         },
         () => {
-            return (selectedNode.pasteUssTree ?? selectedNode.copyUssFile)();
+            return selectedNode.pasteUssTree ? selectedNode.pasteUssTree() : selectedNode.copyUssFile();
         }
     );
     const nodeToRefresh = node?.contextValue != null && contextually.isUssSession(node) ? selectedNode : selectedNode.getParent();
