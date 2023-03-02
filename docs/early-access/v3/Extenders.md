@@ -9,4 +9,3 @@
 - `ZoweVsCodeExtension.showVsCodeMessage` removed in favor of `Gui.showMessage`.
 - `ZoweVsCodeExtension.inputBox` removed in favor of `Gui.showInputBox`.
 - `ZoweVsCodeExtension.promptCredentials` removed in favor of `ZoweVsCodeExtension.updateCredentials`.
-- `IZoweUSSTreeNode.refreshAndReopen` removed in favor of `IZoweUSSTreeNode.reopen`.
