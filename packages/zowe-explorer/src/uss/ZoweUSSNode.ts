@@ -697,8 +697,8 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         } catch (error) {
             await errorHandling(error, this.label.toString(), localize("copyUssFile.error", "Error uploading files"));
         }
-        disposeClipboardContents();
     }
+
     private returnmProfileName(): string {
         return this.mProfileName;
     }
