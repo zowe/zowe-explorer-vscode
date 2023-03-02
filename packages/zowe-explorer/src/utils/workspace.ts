@@ -1,12 +1,12 @@
-/*
- * This program and the accompanying materials are made available under the terms of the *
- * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
- * https://www.eclipse.org/legal/epl-v20.html                                      *
- *                                                                                 *
- * SPDX-License-Identifier: EPL-2.0                                                *
- *                                                                                 *
- * Copyright Contributors to the Zowe Project.                                     *
- *                                                                                 *
+/**
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Copyright Contributors to the Zowe Project.
+ *
  */
 
 import { IZoweDatasetTreeNode, IZoweTree, IZoweUSSTreeNode } from "@zowe/zowe-explorer-api";
@@ -155,4 +155,18 @@ export async function handleSaving(
         await uploadRequest(latestSavedFile, fileProvider);
     }
     ongoingSave = false;
+}
+
+/**
+ * Mark a text document as dirty (unsaved) if contents failed to upload.
+ * Based on https://stackoverflow.com/questions/74224108
+ */
+export async function markDocumentUnsaved(document: vscode.TextDocument) {
+    const edits = new vscode.WorkspaceEdit();
+    edits.insert(document.uri, new vscode.Position(0, 0), " ");
+    await vscode.workspace.applyEdit(edits);
+
+    const edits2 = new vscode.WorkspaceEdit();
+    edits2.delete(document.uri, new vscode.Range(new vscode.Position(0, 0), new vscode.Position(0, 1)));
+    await vscode.workspace.applyEdit(edits2);
 }

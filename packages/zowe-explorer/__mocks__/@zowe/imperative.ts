@@ -1,12 +1,12 @@
-/*
- * This program and the accompanying materials are made available under the terms of the *
- * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
- * https://www.eclipse.org/legal/epl-v20.html                                      *
- *                                                                                 *
- * SPDX-License-Identifier: EPL-2.0                                                *
- *                                                                                 *
- * Copyright Contributors to the Zowe Project.                                     *
- *                                                                                 *
+/**
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Copyright Contributors to the Zowe Project.
+ *
  */
 
 /**
@@ -258,6 +258,42 @@ export class ImperativeConfig {
         envVariablePrefix: "ZOWE",
     };
     public cliHome: "./__tests__/.zowe";
+}
+
+export class ConfigSchema {
+    public static buildSchema() {
+        return {};
+    }
+}
+
+export class ConfigBuilder {
+    public static build() {
+        return {
+            $schema: "./zowe.schema.json",
+            profiles: {
+                zosmf: {
+                    type: "zosmf",
+                    properties: {
+                        port: 443,
+                    },
+                    secure: [],
+                },
+                base: {
+                    type: "base",
+                    properties: {
+                        host: "sample.com",
+                        rejectUnauthorized: false,
+                    },
+                    secure: [],
+                },
+            },
+            defaults: {
+                zosmf: "zosmf",
+                base: "base",
+            },
+            autoStore: true,
+        };
+    }
 }
 
 export class CredentialManagerFactory {}

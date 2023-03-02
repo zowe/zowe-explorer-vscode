@@ -1,12 +1,12 @@
-/*
- * This program and the accompanying materials are made available under the terms of the *
- * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
- * https://www.eclipse.org/legal/epl-v20.html                                      *
- *                                                                                 *
- * SPDX-License-Identifier: EPL-2.0                                                *
- *                                                                                 *
- * Copyright Contributors to the Zowe Project.                                     *
- *                                                                                 *
+/**
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Copyright Contributors to the Zowe Project.
+ *
  */
 
 import * as vscode from "vscode";
@@ -14,7 +14,7 @@ import * as nls from "vscode-nls";
 
 import * as globals from "../globals";
 import * as dsActions from "./actions";
-import { Gui, ValidProfileEnum, IZoweTree, IZoweDatasetTreeNode, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
+import { Gui, ValidProfileEnum, IZoweTree, IZoweDatasetTreeNode, PersistenceSchemaEnum, NodeInteraction } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { FilterDescriptor, FilterItem, errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
@@ -64,6 +64,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
 
     public mSessionNodes: IZoweDatasetTreeNode[] = [];
     public mFavorites: IZoweDatasetTreeNode[] = [];
+    public lastOpened: NodeInteraction = {};
     // public memberPattern: IZoweDatasetTreeNode[] = [];
     private treeView: vscode.TreeView<IZoweDatasetTreeNode>;
 
@@ -717,12 +718,12 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
 
             // Check if current filter includes the new node
             const matchedFilters = currentFilters.filter((filter) => {
-                const regex = new RegExp(filter.trim().replace(`*`, "") + "$");
+                const regex = new RegExp(filter.trim().replace(/\*/g, "") + "$");
                 return regex.test(newFilter);
             });
 
             if (matchedFilters.length === 0) {
-                // remove the last segement with a dot of the name for the new filter
+                // remove the last segment with a dot of the name for the new filter
                 theFilter = `${node.pattern},${newFilter}`;
             } else {
                 theFilter = node.pattern;
@@ -869,6 +870,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     Gui.showMessage(localize("datasetFilterPrompt.enterPattern", "You must enter a pattern."));
                     return;
                 }
+                this.expandSession(node, this);
             } else {
                 // executing search from saved search in favorites
                 pattern = node.getLabel() as string;
@@ -880,12 +882,14 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     nonFaveNode.getSession().ISession.password = node.getSession().ISession.password;
                     nonFaveNode.getSession().ISession.base64EncodedAuth = node.getSession().ISession.base64EncodedAuth;
                 }
+                this.expandSession(nonFaveNode, this);
             }
             // looking for members in pattern
-            labelRefresh(node);
             node.children = [];
             node.dirty = true;
-            await syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getMvsApi(profileValue).getSession())(node);
+            await syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getMvsApi(profileValue).getSession())(
+                nonFaveNode
+            );
             let dataSet: IDataSet;
             const dsSets = [];
             const dsNames = pattern.split(",");
@@ -957,7 +961,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                             if (!child.pattern) {
                                 for (const each of dsn) {
                                     let inc = false;
-                                    inc = await this.checkFilterPattern(name[index], each);
+                                    inc = this.checkFilterPattern(name[index], each);
                                     if (inc) {
                                         child.pattern = item.dsn;
                                         includes = true;
@@ -969,13 +973,15 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                                 }
                             }
                             if (includes && child.contextValue.includes("pds")) {
+                                const childProfile = child.getProfile();
                                 const options: IListOptions = {};
                                 options.pattern = item.memberPattern;
                                 options.attributes = true;
-                                const memResponse = await ZoweExplorerApiRegister.getMvsApi(child.getProfile()).allMembers(label, options);
+                                options.responseTimeout = childProfile.profile?.responseTimeout;
+                                const memResponse = await ZoweExplorerApiRegister.getMvsApi(childProfile).allMembers(label, options);
                                 let existing = false;
                                 for (const mem of memResponse.apiResponse.items) {
-                                    existing = await this.checkFilterPattern(mem.member, item.member);
+                                    existing = this.checkFilterPattern(mem.member, item.member);
                                     if (existing) {
                                         child.memberPattern = item.member;
                                         if (!child.contextValue.includes(globals.FILTER_SEARCH)) {
@@ -997,7 +1003,6 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                             }
                         }
                     }
-                    nonFaveNode.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
                     nonFaveNode.dirty = true;
                     const icon = getIconByNode(nonFaveNode);
                     if (icon) {
@@ -1009,7 +1014,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         }
     }
 
-    public async checkFilterPattern(dsName: string, itemName: string): Promise<boolean> {
+    public checkFilterPattern(dsName: string, itemName: string): boolean {
         let existing: boolean;
         if (!/(\*?)(\w+)(\*)(\w+)(\*?)/.test(itemName)) {
             if (/^[^*](\w+)[^*]$/.test(itemName)) {

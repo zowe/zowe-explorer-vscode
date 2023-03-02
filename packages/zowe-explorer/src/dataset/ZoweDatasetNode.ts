@@ -1,12 +1,12 @@
-/*
- * This program and the accompanying materials are made available under the terms of the *
- * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
- * https://www.eclipse.org/legal/epl-v20.html                                      *
- *                                                                                 *
- * SPDX-License-Identifier: EPL-2.0                                                *
- *                                                                                 *
- * Copyright Contributors to the Zowe Project.                                     *
- *                                                                                 *
+/**
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Copyright Contributors to the Zowe Project.
+ *
  */
 
 import * as zowe from "@zowe/cli";
@@ -117,17 +117,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         }
 
         // Gets the datasets from the pattern or members of the dataset and displays any thrown errors
-        let responses: zowe.IZosFilesResponse[] = [];
-        responses = await Gui.withProgress(
-            {
-                location: vscode.ProgressLocation.Notification,
-                title: localize("getChildren.getDatasets.progress", "Get Dataset list command submitted."),
-            },
-            () => {
-                return this.getDatasets();
-            }
-        );
-
+        const responses = await this.getDatasets();
         if (responses.length === 0) {
             return undefined;
         }
@@ -278,33 +268,35 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         const responses: zowe.IZosFilesResponse[] = [];
         try {
             const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
-            const options: zowe.IListOptions = {};
-            options.attributes = true;
-            let label: string;
+            const options: zowe.IListOptions = {
+                attributes: true,
+                responseTimeout: cachedProfile.profile.responseTimeout,
+            };
             if (contextually.isSessionNotFav(this)) {
-                responses.push(
-                    await ZoweExplorerApiRegister.getMvsApi(cachedProfile).dataSetsMatchingPattern(
-                        // remove duplicate patterns
-                        [
-                            ...new Set(
-                                this.pattern
-                                    .toUpperCase()
-                                    .split(",")
-                                    .map((p) => p.trim())
-                            ),
-                        ]
-                    )
-                );
+                const dsPatterns = [
+                    ...new Set(
+                        this.pattern
+                            .toUpperCase()
+                            .split(",")
+                            .map((p) => p.trim())
+                    ),
+                ];
+                const mvsApi = ZoweExplorerApiRegister.getMvsApi(cachedProfile);
+                if (mvsApi.dataSetsMatchingPattern) {
+                    responses.push(await mvsApi.dataSetsMatchingPattern(dsPatterns));
+                } else {
+                    for (const dsp of dsPatterns) {
+                        responses.push(await mvsApi.dataSet(dsp));
+                    }
+                }
             } else if (this.memberPattern) {
                 this.memberPattern = this.memberPattern.toUpperCase();
                 for (const memPattern of this.memberPattern.split(",")) {
                     options.pattern = memPattern;
-                    label = this.label as string;
-                    responses.push(await ZoweExplorerApiRegister.getMvsApi(cachedProfile).allMembers(label, options));
+                    responses.push(await ZoweExplorerApiRegister.getMvsApi(cachedProfile).allMembers(this.label as string, options));
                 }
             } else {
-                label = this.label as string;
-                responses.push(await ZoweExplorerApiRegister.getMvsApi(cachedProfile).allMembers(label, options));
+                responses.push(await ZoweExplorerApiRegister.getMvsApi(cachedProfile).allMembers(this.label as string, options));
             }
         } catch (err) {
             await errorHandling(err, this.label.toString(), localize("getChildren.error.response", "Retrieving response from ") + `zowe.List`);

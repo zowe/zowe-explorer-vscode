@@ -1,17 +1,18 @@
-/*
- * This program and the accompanying materials are made available under the terms of the *
- * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
- * https://www.eclipse.org/legal/epl-v20.html                                      *
- *                                                                                 *
- * SPDX-License-Identifier: EPL-2.0                                                *
- *                                                                                 *
- * Copyright Contributors to the Zowe Project.                                     *
- *                                                                                 *
+/**
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Copyright Contributors to the Zowe Project.
+ *
  */
 
-import { Gui } from "../../../src/";
+import { Gui, IZoweTree, IZoweTreeNode } from "../../../src/";
 
 import * as vscode from "vscode";
+import { DOUBLE_CLICK_SPEED_MS } from "../../../src/globals";
 jest.mock("vscode");
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
@@ -134,9 +135,10 @@ describe("Gui unit tests", () => {
     });
 
     it("can set a status bar message w/ a timeout", () => {
-        Gui.setStatusBarMessage("Example status bar message", 500);
+        const EXAMPLE_TIMEOUT_MS = 500;
+        Gui.setStatusBarMessage("Example status bar message", EXAMPLE_TIMEOUT_MS);
 
-        expect(mocks.setStatusBarMessage).toHaveBeenCalledWith("Example status bar message", 500);
+        expect(mocks.setStatusBarMessage).toHaveBeenCalledWith("Example status bar message", EXAMPLE_TIMEOUT_MS);
     });
 
     it("can show a file open dialog", async () => {
@@ -147,5 +149,63 @@ describe("Gui unit tests", () => {
     it("can show an input box", async () => {
         await Gui.showInputBox({});
         expect(mocks.showInputBox).toHaveBeenCalled();
+    });
+
+    it("can resolve a quick pick when accepted", async () => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+        const mockDidAccept = jest.fn((callback: any) => callback());
+        await Gui.resolveQuickPick({
+            activeItems: ["test"],
+            onDidAccept: mockDidAccept,
+            onDidHide: jest.fn(),
+        } as any);
+        expect(mockDidAccept).toHaveBeenCalledTimes(1);
+    });
+
+    it("can resolve a quick pick when hidden", async () => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+        const mockDidHide = jest.fn((callback: any) => callback());
+        await Gui.resolveQuickPick({
+            activeItems: ["test"],
+            onDidAccept: jest.fn(),
+            onDidHide: mockDidHide,
+        } as any);
+        expect(mockDidHide).toHaveBeenCalledTimes(1);
+    });
+});
+
+describe("Gui.utils - unit tests", () => {
+    beforeEach(() => {
+        jest.useFakeTimers();
+    });
+
+    afterEach(() => {
+        jest.runOnlyPendingTimers();
+        jest.useRealTimers();
+    });
+
+    it("returns false when checking if an invalid node was double-clicked", () => {
+        const clicked = Gui.utils.wasDoubleClicked(null as unknown as IZoweTreeNode, { lastOpened: {} } as unknown as IZoweTree<unknown>);
+        expect(clicked).toBe(false);
+    });
+
+    const testDoubleClickEvent = (timeout: number, expected: boolean): void => {
+        const mockTime = new Date();
+        const fakeNode = { label: "fakeLabel" } as unknown as IZoweTreeNode;
+
+        setTimeout(() => {
+            const wasDoubleClicked = Gui.utils.wasDoubleClicked(fakeNode, {
+                lastOpened: { node: fakeNode, date: mockTime },
+            } as unknown as IZoweTree<unknown>);
+            expect(wasDoubleClicked).toBe(expected);
+        }, timeout);
+    };
+
+    it("returns false when the second click event is after the DOUBLE_CLICK_SPEED_MS window", () => {
+        testDoubleClickEvent(DOUBLE_CLICK_SPEED_MS * 4, false);
+    });
+
+    it("returns true when the second click event is within the DOUBLE_CLICK_SPEED_MS window", () => {
+        testDoubleClickEvent(DOUBLE_CLICK_SPEED_MS / 8, true);
     });
 });

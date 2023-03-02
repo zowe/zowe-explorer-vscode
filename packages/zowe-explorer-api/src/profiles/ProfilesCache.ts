@@ -1,12 +1,12 @@
-/*
- * This program and the accompanying materials are made available under the terms of the *
- * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
- * https://www.eclipse.org/legal/epl-v20.html                                      *
- *                                                                                 *
- * SPDX-License-Identifier: EPL-2.0                                                *
- *                                                                                 *
- * Copyright Contributors to the Zowe Project.                                     *
- *                                                                                 *
+/**
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Copyright Contributors to the Zowe Project.
+ *
  */
 
 import * as path from "path";
@@ -84,7 +84,7 @@ export class ProfilesCache {
      */
     public loadNamedProfile(name: string, type?: string): zowe.imperative.IProfileLoaded {
         for (const profile of this.allProfiles) {
-            if (profile.name === name && (type ? profile.type === type : true)) {
+            if (profile.name === name && (!type || profile.type === type)) {
                 return profile;
             }
         }
@@ -124,7 +124,7 @@ export class ProfilesCache {
      * Gets default Profile attributes from imperative
      *
      * @param {ProfileInfo} mProfileInfo
-     * @param {string} profileType Type of Profile, optional
+     * @param {string} profileType Type of Profile
      *
      * @returns {IProfAttrs}
      */
@@ -147,7 +147,7 @@ export class ProfilesCache {
      * Used for extenders to register with Zowe Explorer that do not need their
      * profile type in the existing MVS, USS, and JES
      *
-     * @param {string} profileTypeName Type of Profile, defaults to "zosmf" if nothing passed.
+     * @param {string} profileTypeName Type of Profile
      *
      * @returns {void}
      */
@@ -188,9 +188,7 @@ export class ProfilesCache {
             }
             // check for proper merging of apiml tokens
             this.checkMergingConfigAllProfiles();
-            while (this.profilesForValidation.length > 0) {
-                this.profilesForValidation.pop();
-            }
+            this.profilesForValidation = [];
         } catch (error) {
             this.log.error(error as string);
         }
@@ -214,11 +212,12 @@ export class ProfilesCache {
         }
 
         if (newUrl.includes(":443")) {
-            validationResult.port = 443;
+            validationResult.port = zowe.imperative.AbstractSession.DEFAULT_HTTPS_PORT;
         } else {
             validationResult.port = Number(url.port);
         }
 
+        validationResult.protocol = url.protocol.slice(0, -1);
         validationResult.host = url.hostname;
         validationResult.valid = true;
         return validationResult;
@@ -258,10 +257,9 @@ export class ProfilesCache {
      * @returns string[]
      */
     public async getNamesForType(type: string): Promise<string[]> {
-        const profilesForType = await this.fetchAllProfilesByType(type);
-        return profilesForType.map((profile) => {
-            return profile.name;
-        });
+        const mProfileInfo = await this.getProfileInfo();
+        const profilesForType = mProfileInfo.getAllProfiles(type);
+        return profilesForType.map((profAttrs) => profAttrs.profName);
     }
 
     /**
@@ -304,7 +302,7 @@ export class ProfilesCache {
      * @param name profile name
      * @returns IProfileLoaded
      */
-    public async directLoad(type: string, name: string): Promise<zowe.imperative.IProfileLoaded> {
+    public async directLoad(type: string, name: string): Promise<zowe.imperative.IProfileLoaded | undefined> {
         const profsOfType = await this.fetchAllProfilesByType(type);
         if (profsOfType && profsOfType.length > 0) {
             for (const profile of profsOfType) {
@@ -316,14 +314,13 @@ export class ProfilesCache {
         return;
     }
 
-    public async getProfileFromConfig(profileName: string): Promise<zowe.imperative.IProfAttrs> {
+    public async getProfileFromConfig(profileName: string): Promise<zowe.imperative.IProfAttrs | undefined> {
         const mProfileInfo = await this.getProfileInfo();
-        const configAllProfiles = mProfileInfo.getAllProfiles().filter((temp) => temp.profLoc.osLoc.length !== 0);
-        const currentProfile = configAllProfiles.filter((temprofile) => temprofile.profName === profileName)[0];
-        return currentProfile;
+        const configAllProfiles = mProfileInfo.getAllProfiles().filter((prof) => prof.profLoc.osLoc.length !== 0);
+        return configAllProfiles.find((prof) => prof.profName === profileName);
     }
 
-    public async getLoadedProfConfig(profileName: string): Promise<zowe.imperative.IProfileLoaded> {
+    public async getLoadedProfConfig(profileName: string): Promise<zowe.imperative.IProfileLoaded | undefined> {
         const mProfileInfo = await this.getProfileInfo();
         const currentProfile = await this.getProfileFromConfig(profileName);
         if (currentProfile == null) return undefined;
@@ -337,7 +334,7 @@ export class ProfilesCache {
      * @param type string, profile type
      * @returns zowe.imperative.CliProfileManager
      */
-    public getCliProfileManager(type: string): zowe.imperative.CliProfileManager {
+    public getCliProfileManager(type: string): zowe.imperative.CliProfileManager | undefined {
         let profileManager = this.profileManagerByType.get(type);
         if (!profileManager) {
             try {
@@ -358,7 +355,7 @@ export class ProfilesCache {
     }
 
     // This will retrieve the saved base profile in the allProfiles array
-    public getBaseProfile(): zowe.imperative.IProfileLoaded {
+    public getBaseProfile(): zowe.imperative.IProfileLoaded | undefined {
         let baseProfile: zowe.imperative.IProfileLoaded;
         for (const baseP of this.allProfiles) {
             if (baseP.type === "base") {
@@ -369,9 +366,10 @@ export class ProfilesCache {
     }
 
     // This will retrieve the base profile from imperative
-    public async fetchBaseProfile(): Promise<zowe.imperative.IProfileLoaded> {
+    public async fetchBaseProfile(): Promise<zowe.imperative.IProfileLoaded | undefined> {
         const mProfileInfo = await this.getProfileInfo();
         const baseProfileAttrs = mProfileInfo.getDefaultProfile("base");
+        if (baseProfileAttrs == null) return undefined;
         const profAttr = this.getMergedAttrs(mProfileInfo, baseProfileAttrs);
         return this.getProfileLoaded(baseProfileAttrs.profName, baseProfileAttrs.profType, profAttr);
     }
@@ -387,6 +385,7 @@ export class ProfilesCache {
         } catch (error) {
             this.log.error(error as string);
         }
+        return true;
     }
 
     /**
@@ -397,15 +396,15 @@ export class ProfilesCache {
     public isSecureCredentialPluginActive(): boolean {
         let imperativeIsSecure = false;
         try {
-            const fileName = path.join(getZoweDir(), "settings", "zowe.imperative.json");
+            const fileName = path.join(getZoweDir(), "settings", "imperative.json");
             let settings: Record<string, unknown>;
             if (fs.existsSync(fileName)) {
                 settings = JSON.parse(fs.readFileSync(fileName, "utf-8")) as Record<string, unknown>;
             }
             if (settings) {
                 const baseValue = settings.overrides as Record<string, unknown>;
-                const value1 = baseValue.CredentialManager;
-                const value2 = baseValue["credential-manager"];
+                const value1 = baseValue?.CredentialManager;
+                const value2 = baseValue?.["credential-manager"];
                 imperativeIsSecure = (typeof value1 === "string" && value1.length > 0) || (typeof value2 === "string" && value2.length > 0);
             }
         } catch (error) {
@@ -425,12 +424,8 @@ export class ProfilesCache {
     }
 
     // used by Zowe Explorer for v1 profiles
-    protected async deleteProfileOnDisk(ProfileInfo: zowe.imperative.IProfileLoaded): Promise<void> {
-        await this.getCliProfileManager(ProfileInfo.type).delete({
-            profile: ProfileInfo,
-            name: ProfileInfo.name,
-            type: ProfileInfo.type,
-        });
+    protected async deleteProfileOnDisk(profileInfo: zowe.imperative.IProfileLoaded): Promise<void> {
+        await this.getCliProfileManager(profileInfo.type).delete({ name: profileInfo.name });
     }
 
     // used by Zowe Explorer for v1 profiles
@@ -453,14 +448,7 @@ export class ProfilesCache {
                 const allProfilesByType: zowe.imperative.IProfileLoaded[] = [];
                 const profByType = this.profilesByType.get(type);
                 profByType.forEach((profile) => {
-                    if (
-                        baseProfile?.profile?.host &&
-                        baseProfile?.profile?.port &&
-                        profile?.profile?.host &&
-                        profile?.profile?.port &&
-                        (baseProfile?.profile.host !== profile?.profile.host || baseProfile?.profile.port !== profile?.profile.port) &&
-                        profile?.profile.tokenType === "apimlAuthenticationToken"
-                    ) {
+                    if (this.shouldRemoveTokenFromProfile(profile, baseProfile)) {
                         profile.profile.tokenType = undefined;
                         profile.profile.tokenValue = undefined;
                         // update default profile of type if changed
@@ -474,7 +462,7 @@ export class ProfilesCache {
                 this.profilesByType.set(type, allProfilesByType);
             } catch (error) {
                 // do nothing, skip if profile type is not included in config file
-                this.log.warn(error as string);
+                this.log.debug(error as string);
             }
         });
         this.allProfiles = [];
@@ -484,14 +472,7 @@ export class ProfilesCache {
     // check correct merging of a single profile
     protected checkMergingConfigSingleProfile(profile: zowe.imperative.IProfileLoaded): zowe.imperative.IProfileLoaded {
         const baseProfile = this.defaultProfileByType.get("base");
-        if (
-            baseProfile?.profile?.host &&
-            baseProfile?.profile?.port &&
-            profile?.profile?.host &&
-            profile?.profile?.port &&
-            (baseProfile?.profile.host !== profile?.profile.host || baseProfile?.profile.port !== profile?.profile.port) &&
-            profile?.profile.tokenType === "apimlAuthenticationToken"
-        ) {
+        if (this.shouldRemoveTokenFromProfile(profile, baseProfile)) {
             profile.profile.tokenType = undefined;
             profile.profile.tokenValue = undefined;
         }
@@ -516,5 +497,16 @@ export class ProfilesCache {
         const externalTypeArray: string[] = Array.from(this.allExternalTypes);
         const allTypes = registeredTypes.concat(externalTypeArray.filter((exType) => registeredTypes.every((type) => type !== exType)));
         return allTypes;
+    }
+
+    private shouldRemoveTokenFromProfile(profile: zowe.imperative.IProfileLoaded, baseProfile: zowe.imperative.IProfileLoaded): boolean {
+        return (
+            baseProfile?.profile?.host &&
+            baseProfile?.profile?.port &&
+            profile?.profile?.host &&
+            profile?.profile?.port &&
+            (baseProfile?.profile.host !== profile?.profile.host || baseProfile?.profile.port !== profile?.profile.port) &&
+            profile?.profile.tokenType === zowe.imperative.SessConstants.TOKEN_TYPE_APIML
+        );
     }
 }

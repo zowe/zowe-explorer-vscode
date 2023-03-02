@@ -1,12 +1,12 @@
-/*
- * This program and the accompanying materials are made available under the terms of the *
- * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
- * https://www.eclipse.org/legal/epl-v20.html                                      *
- *                                                                                 *
- * SPDX-License-Identifier: EPL-2.0                                                *
- *                                                                                 *
- * Copyright Contributors to the Zowe Project.                                     *
- *                                                                                 *
+/**
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Copyright Contributors to the Zowe Project.
+ *
  */
 
 /* eslint-disable @typescript-eslint/unbound-method */
@@ -43,7 +43,7 @@ describe("FtpMvsApi", () => {
 
     it("should list datasets.", async () => {
         const response = [
-            { dsname: "IBMUSER.DS1", dsorg: "PO" },
+            { dsname: "IBMUSER.DS1", dsorg: "PO", volume: "MIGRATED" },
             { dsname: "IBMUSER.DS2", dsorg: "PS" },
         ];
         DataSetUtils.listDataSets = jest.fn().mockReturnValue(response);
@@ -96,15 +96,18 @@ describe("FtpMvsApi", () => {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-call
         fs.writeFileSync(localFile, "hello");
         const response = TestUtils.getSingleLineStream();
-        const response2 = [{ dsname: "IBMUSER.DS2", dsorg: "PS" }];
+        const response2 = [{ dsname: "IBMUSER.DS2", dsorg: "PS", lrecl: 2 }];
         DataSetUtils.listDataSets = jest.fn().mockReturnValue(response2);
         DataSetUtils.uploadDataSet = jest.fn().mockReturnValue(response);
         MvsApi.getContents = jest.fn().mockReturnValue({ apiResponse: { etag: "123" } });
         const mockParams = {
             inputFilePath: localFile,
-            dataSetName: "IBMUSER.DS2",
-            options: { encoding: "" },
+            dataSetName: "   (IBMUSER).DS2",
+            options: { encoding: "", returnEtag: true, etag: "utf8" },
         };
+        jest.spyOn(MvsApi as any, "getContentsTag").mockReturnValue(undefined);
+        jest.spyOn(fs, "readFileSync").mockReturnValue("test");
+        jest.spyOn(Gui, "warningMessage").mockImplementation();
         const result = await MvsApi.putContents(mockParams.inputFilePath, mockParams.dataSetName, mockParams.options);
         expect(result.commandResponse).toContain("Data set uploaded successfully.");
         expect(DataSetUtils.listDataSets).toBeCalledTimes(1);
@@ -113,6 +116,28 @@ describe("FtpMvsApi", () => {
     });
 
     it("should create dataset.", async () => {
+        DataSetUtils.allocateDataSet = jest.fn();
+        const DATA_SET_SEQUENTIAL = 4;
+        const mockParams = {
+            dataSetName: "IBMUSER.DS3",
+            dataSetType: DATA_SET_SEQUENTIAL,
+        };
+        const result = await MvsApi.createDataSet(mockParams.dataSetType, mockParams.dataSetName, {
+            alcunit: "test",
+            blksize: 3,
+            dirblk: 4,
+            dsorg: "test",
+            lrecl: 1,
+            primary: 3,
+            recfm: "test",
+            secondary: 2,
+        });
+        expect(result.commandResponse).toContain("Data set created successfully.");
+        expect(DataSetUtils.allocateDataSet).toBeCalledTimes(1);
+        expect(MvsApi.releaseConnection).toBeCalled();
+    });
+
+    it("should create dataset if no options are passed in", async () => {
         DataSetUtils.allocateDataSet = jest.fn();
         const DATA_SET_SEQUENTIAL = 4;
         const mockParams = {
@@ -182,5 +207,25 @@ describe("FtpMvsApi", () => {
         expect(result.commandResponse).toContain("Delete completed successfully.");
         expect(DataSetUtils.deleteDataSet).toBeCalledTimes(1);
         expect(MvsApi.releaseConnection).toBeCalled();
+    });
+
+    it("should throw an error when hMigrateDataSet is called", async () => {
+        jest.spyOn(Gui, "errorMessage").mockImplementation();
+        await expect(MvsApi.hMigrateDataSet("test")).rejects.toThrowError();
+    });
+
+    it("should throw an error when hRecallDataSet is called", async () => {
+        jest.spyOn(Gui, "errorMessage").mockImplementation();
+        await expect(MvsApi.hRecallDataSet("test")).rejects.toThrowError();
+    });
+
+    it("should throw an error when allocateLikeDataset is called", async () => {
+        jest.spyOn(Gui, "errorMessage").mockImplementation();
+        await expect(MvsApi.allocateLikeDataSet("test", "test2")).rejects.toThrowError();
+    });
+
+    it("should throw an error when copyDataSetMember is called", async () => {
+        jest.spyOn(Gui, "errorMessage").mockImplementation();
+        await expect(MvsApi.copyDataSetMember({} as any, {} as any)).rejects.toThrowError();
     });
 });

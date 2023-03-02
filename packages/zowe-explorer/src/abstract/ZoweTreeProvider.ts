@@ -1,12 +1,12 @@
-/*
- * This program and the accompanying materials are made available under the terms of the *
- * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
- * https://www.eclipse.org/legal/epl-v20.html                                      *
- *                                                                                 *
- * SPDX-License-Identifier: EPL-2.0                                                *
- *                                                                                 *
- * Copyright Contributors to the Zowe Project.                                     *
- *                                                                                 *
+/**
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Copyright Contributors to the Zowe Project.
+ *
  */
 
 import * as vscode from "vscode";
@@ -259,5 +259,17 @@ export class ZoweTreeProvider {
     protected deleteSessionByLabel(revisedLabel: string) {
         this.mHistory.removeSession(revisedLabel);
         this.refresh();
+    }
+
+    /**
+     * Expand a node
+     * @param element the node being flipped
+     * @param provider the tree view provider
+     */
+    public async expandSession(element: IZoweTreeNode, provider: IZoweTree<IZoweNodeType>) {
+        await provider.getTreeView().reveal(element, { expand: false });
+        await provider.getTreeView().reveal(element, { expand: true });
+        element.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+        element.dirty = true;
     }
 }

@@ -1,16 +1,16 @@
-/*
- * This program and the accompanying materials are made available under the terms of the *
- * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
- * https://www.eclipse.org/legal/epl-v20.html                                      *
- *                                                                                 *
- * SPDX-License-Identifier: EPL-2.0                                                *
- *                                                                                 *
- * Copyright Contributors to the Zowe Project.                                     *
- *                                                                                 *
+/**
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Copyright Contributors to the Zowe Project.
+ *
  */
 
-import * as vscode from "vscode";
 import * as globals from "../globals";
+import * as vscode from "vscode";
 import * as nls from "vscode-nls";
 import { Gui } from "@zowe/zowe-explorer-api";
 
@@ -67,21 +67,6 @@ export class SettingsConfig {
             await SettingsConfig.standardizeGlobalSettings();
         }
     }
-    // Dictionary describing translation from old configuration names to new standardized names
-    private static configurationDictionary = {
-        "Zowe-Default-Datasets-Binary": globals.SETTINGS_DS_DEFAULT_BINARY,
-        "Zowe-Default-Datasets-C": globals.SETTINGS_DS_DEFAULT_C,
-        "Zowe-Default-Datasets-Classic": globals.SETTINGS_DS_DEFAULT_CLASSIC,
-        "Zowe-Default-Datasets-PDS": globals.SETTINGS_DS_DEFAULT_PDS,
-        "Zowe-Default-Datasets-PS": globals.SETTINGS_DS_DEFAULT_PS,
-        "Zowe-Temp-Folder-Location": globals.SETTINGS_TEMP_FOLDER_PATH,
-        "Zowe Commands: History": globals.SETTINGS_COMMANDS_HISTORY,
-        "Zowe Commands: Always edit": globals.SETTINGS_COMMANDS_ALWAYS_EDIT,
-        "Zowe-Automatic-Validation": globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION,
-        "Zowe-DS-Persistent": globals.SETTINGS_DS_HISTORY,
-        "Zowe-USS-Persistent": globals.SETTINGS_USS_HISTORY,
-        "Zowe-Jobs-Persistent": globals.SETTINGS_JOBS_HISTORY,
-    };
 
     private static get configurations() {
         return vscode.workspace.getConfiguration();
@@ -123,9 +108,9 @@ export class SettingsConfig {
                     globalValue = globalValue ? globalValue.folderPath : globalValue;
                 }
 
-                const newSetting = SettingsConfig.configurationDictionary[configuration];
+                const newSetting = globals.configurationDictionary[configuration];
 
-                if (globalValue !== undefined) {
+                if (globalValue !== undefined && newSetting !== undefined) {
                     await SettingsConfig.setDirectValue(newSetting, globalValue);
                     globalIsMigrated = true;
                 }
@@ -154,9 +139,9 @@ export class SettingsConfig {
                     workspaceValue = workspaceValue ? workspaceValue.folderPath : workspaceValue;
                 }
 
-                const newSetting = SettingsConfig.configurationDictionary[configuration];
+                const newSetting = globals.configurationDictionary[configuration];
 
-                if (workspaceValue !== undefined) {
+                if (workspaceValue !== undefined && newSetting !== undefined) {
                     await SettingsConfig.setDirectValue(newSetting, workspaceValue, vscode.ConfigurationTarget.Workspace);
                     workspaceIsMigrated = true;
                 }

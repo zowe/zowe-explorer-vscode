@@ -1,24 +1,24 @@
-/*
- * This program and the accompanying materials are made available under the terms of the *
- * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
- * https://www.eclipse.org/legal/epl-v20.html                                      *
- *                                                                                 *
- * SPDX-License-Identifier: EPL-2.0                                                *
- *                                                                                 *
- * Copyright Contributors to the Zowe Project.                                     *
- *                                                                                 *
+/**
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Copyright Contributors to the Zowe Project.
+ *
  */
 
 import * as vscode from "vscode";
 import * as jobUtils from "../job/utils";
 import * as globals from "../globals";
 import { IJob, imperative } from "@zowe/cli";
-import { Gui, ValidProfileEnum, IZoweTree, IZoweJobTreeNode, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
+import { Gui, ValidProfileEnum, IZoweTree, IZoweJobTreeNode, PersistenceSchemaEnum, NodeInteraction } from "@zowe/zowe-explorer-api";
 import { FilterItem, errorHandling } from "../utils/ProfilesUtils";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Job } from "./ZoweJobNode";
-import { getAppName, sortTreeItems, labelRefresh, jobPrefixValidator } from "../shared/utils";
+import { getAppName, sortTreeItems, labelRefresh, jobStringValidator } from "../shared/utils";
 import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
 import { getIconByNode } from "../generators/icons";
 import * as contextually from "../shared/context";
@@ -84,9 +84,10 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         {
             key: `owner`,
             label: `Job Owner`,
-            value: undefined,
+            value: "",
             show: true,
             placeHolder: localize("searchJobs.owner.id", `Enter job owner id`),
+            validateInput: (text) => jobStringValidator(text, "owner"),
         },
         {
             key: `prefix`,
@@ -94,7 +95,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             value: "*",
             show: true,
             placeHolder: localize("searchJobs.prefix", `Enter job prefix`),
-            validateInput: (text) => jobPrefixValidator(text),
+            validateInput: (text) => jobStringValidator(text, "prefix"),
         },
         {
             key: `job-status`,
@@ -107,6 +108,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
 
     public mSessionNodes: IZoweJobTreeNode[] = [];
     public mFavorites: IZoweJobTreeNode[] = [];
+    public lastOpened: NodeInteraction = {};
     public searchByQuery = new FilterItem({
         text: globals.plusSign + localize("zosJobsProvider.option.prompt.createId", "Create job search filter"),
         menuType: globals.JobPickerTypes.QuerySearch,
@@ -776,6 +778,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             if (icon) {
                 node.iconPath = icon.path;
             }
+            node.label = `${node.getProfileName()} [${searchCriteria}]`;
             labelRefresh(node);
             node.dirty = true;
             this.refreshElement(node);
@@ -858,6 +861,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             return;
         }
         const pattern = choice.label;
+
         switch (pattern) {
             case ZosJobsProvider.chooseJobStatusLabel:
                 const statusChoice = await this.setJobStatus(node);
@@ -878,21 +882,24 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 this.resetJobProperties(jobProperties);
                 return Promise.resolve(searchCriteriaObj);
             default:
-                const options: vscode.InputBoxOptions = {
-                    value: jobProperties.find((prop) => prop.label === pattern).value,
-                    placeHolder: jobProperties.find((prop) => prop.label === pattern).placeHolder,
-                    validateInput: (text) => {
-                        return jobProperties.find((prop) => prop.label === pattern)?.validateInput(text);
-                    },
-                };
-                jobProperties.find((prop) => prop.label === pattern).value = await Gui.showInputBox(options);
+                let property = jobProperties.find((prop) => prop.label === pattern);
+                if (property != null) {
+                    const options: vscode.InputBoxOptions = {
+                        value: property.value,
+                        placeHolder: property.placeHolder,
+                        validateInput: (text) => {
+                            return property.validateInput(text);
+                        },
+                    };
+                    property.value = await Gui.showInputBox(options);
+                }
         }
         return Promise.resolve(this.handleEditingMultiJobParameters(jobProperties, node));
     }
     private resetJobProperties(jobProperties: IJobPickerOption[]) {
         jobProperties.forEach((prop) => {
             if (prop.key === "owner") {
-                prop.value = undefined;
+                prop.value = "";
             }
             if (prop.key === "prefix") {
                 prop.value = "*";

@@ -1,12 +1,12 @@
-/*
- * This program and the accompanying materials are made available under the terms of the *
- * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
- * https://www.eclipse.org/legal/epl-v20.html                                      *
- *                                                                                 *
- * SPDX-License-Identifier: EPL-2.0                                                *
- *                                                                                 *
- * Copyright Contributors to the Zowe Project.                                     *
- *                                                                                 *
+/**
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Copyright Contributors to the Zowe Project.
+ *
  */
 
 import * as vscode from "vscode";
@@ -22,6 +22,16 @@ import { PersistenceSchemaEnum } from "../profiles/UserSettings";
  * @extends {vscode.TreeDataProvider<T>}
  * @template T provide a subtype of vscode.TreeItem
  */
+
+/**
+ *  Contains a node that was recently interacted with,
+ *  as well as a timestamp for when that interaction occurred.
+ */
+export class NodeInteraction {
+    public node?: IZoweTreeNode;
+    public date?: Date;
+}
+
 export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
     /**
      * Root session nodes
@@ -36,6 +46,11 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
      * @deprecated should not be visible outside of class
      */
     mFavorites: IZoweTreeNode[];
+
+    /**
+     * Defines the last node that was opened in the editor
+     */
+    lastOpened?: NodeInteraction;
 
     /**
      * Adds a session to the container

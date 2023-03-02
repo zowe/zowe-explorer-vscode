@@ -1,12 +1,12 @@
-/*
- * This program and the accompanying materials are made available under the terms of the *
- * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
- * https://www.eclipse.org/legal/epl-v20.html                                      *
- *                                                                                 *
- * SPDX-License-Identifier: EPL-2.0                                                *
- *                                                                                 *
- * Copyright Contributors to the Zowe Project.                                     *
- *                                                                                 *
+/**
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Copyright Contributors to the Zowe Project.
+ *
  */
 
 import { Gui, IZoweUSSTreeNode, ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
@@ -87,6 +87,12 @@ async function createGlobalMocks() {
     globalMocks.mockProfilesInstance.getBaseProfile.mockResolvedValue(globalMocks.testBaseProfile);
     globalMocks.mockProfilesInstance.loadNamedProfile.mockReturnValue(globalMocks.testProfile);
     globalMocks.mockProfilesInstance.allProfiles = [globalMocks.testProfile, { name: "firstName" }, { name: "secondName" }];
+    Object.defineProperty(Gui, "setStatusBarMessage", {
+        value: jest.fn().mockReturnValue({
+            dispose: jest.fn(),
+        }),
+        configurable: true,
+    });
     Object.defineProperty(vscode.window, "showWarningMessage", {
         value: globalMocks.mockShowWarningMessage,
         configurable: true,
@@ -113,6 +119,16 @@ async function createGlobalMocks() {
     Object.defineProperty(zowe, "ZosmfSession", { value: globalMocks.ZosmfSession, configurable: true });
     Object.defineProperty(globalMocks.filters, "getFilters", { value: globalMocks.getFilters, configurable: true });
     Object.defineProperty(vscode.window, "createQuickPick", { value: globalMocks.createQuickPick, configurable: true });
+    Object.defineProperty(zowe, "Download", {
+        value: {
+            ussFile: jest.fn().mockReturnValueOnce({
+                apiResponse: {
+                    etag: "ABC123",
+                },
+            }),
+        },
+        configurable: true,
+    });
     Object.defineProperty(zowe, "Utilities", { value: globalMocks.Utilities, configurable: true });
     Object.defineProperty(zowe.Utilities, "isFileTagBinOrAscii", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showErrorMessage", {
@@ -1302,14 +1318,14 @@ describe("USSTree Unit Tests - Function USSTree.getChildren()", () => {
     it("Testing that getChildren() returns correct ZoweUSSNodes when passed element of type ZoweUSSNode<session>", async () => {
         const globalMocks = await createGlobalMocks();
 
-        const testDir = new ZoweUSSNode("testDir", vscode.TreeItemCollapsibleState.Collapsed, globalMocks.testTree.mSessionNodes[1], null, "test");
+        const testDir = new ZoweUSSNode("aDir", vscode.TreeItemCollapsibleState.Collapsed, globalMocks.testTree.mSessionNodes[1], null, "test");
         globalMocks.testTree.mSessionNodes[1].children.push(testDir);
         const mockApiResponseItems = {
             items: [
                 {
                     mode: "d",
                     mSessionName: "sestest",
-                    name: "testDir",
+                    name: "aDir",
                 },
             ],
         };
@@ -1357,7 +1373,7 @@ describe("USSTree Unit Tests - Function USSTree.getChildren()", () => {
         globalMocks.withProgress.mockReturnValue(mockApiResponseWithItems);
 
         const dirChildren = await globalMocks.testTree.getChildren(directory);
-        expect(dirChildren[0].label).toEqual(sampleChildren[0].label);
+        expect(dirChildren[1].label).toEqual(sampleChildren[0].label);
     });
     it("Testing that getChildren() gets profile-loaded favorites for profile node in Favorites section", async () => {
         const globalMocks = await createGlobalMocks();

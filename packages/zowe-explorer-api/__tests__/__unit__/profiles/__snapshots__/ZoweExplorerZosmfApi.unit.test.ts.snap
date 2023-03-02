@@ -1,0 +1,5 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ZosmfUssApi constants should be unchanged 1`] = `"zosmf"`;
+
+exports[`ZosmfUssApi constants should be unchanged 2`] = `"apimlAuthenticationToken"`;

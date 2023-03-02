@@ -1,12 +1,12 @@
-/*
- * This program and the accompanying materials are made available under the terms of the *
- * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
- * https://www.eclipse.org/legal/epl-v20.html                                      *
- *                                                                                 *
- * SPDX-License-Identifier: EPL-2.0                                                *
- *                                                                                 *
- * Copyright Contributors to the Zowe Project.                                     *
- *                                                                                 *
+/**
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Copyright Contributors to the Zowe Project.
+ *
  */
 
 jest.mock("@zowe/cli");
@@ -32,7 +32,7 @@ import {
 import { getIconByNode } from "../../../src/generators/icons";
 import { createJesApi } from "../../../__mocks__/mockCreators/api";
 import * as sessUtils from "../../../src/utils/SessionUtils";
-import { jobPrefixValidator } from "../../../src/shared/utils";
+import { jobStringValidator } from "../../../src/shared/utils";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -773,7 +773,7 @@ describe("ZosJobsProvider unit tests - Function getUserSearchQueryInput", () => 
                 value: "job*",
                 show: true,
                 placeHolder: `Enter job prefix`,
-                validateInput: () => (text) => jobPrefixValidator(text),
+                validateInput: () => (text) => jobStringValidator(text, "prefix"),
             },
             {
                 key: `key`,
@@ -808,6 +808,7 @@ describe("ZosJobsProvider unit tests - Function getPopulatedPickerArray", () => 
                 value: "kristina",
                 show: true,
                 placeHolder: `Enter job owner id`,
+                validateInput: (text) => jobStringValidator(text, "owner"),
             },
             {
                 key: `prefix`,
@@ -815,7 +816,7 @@ describe("ZosJobsProvider unit tests - Function getPopulatedPickerArray", () => 
                 value: "job*",
                 show: true,
                 placeHolder: `Enter job prefix`,
-                validateInput: () => (text) => jobPrefixValidator(text),
+                validateInput: (text) => jobStringValidator(text, "prefix"),
             },
             {
                 key: `job-status`,
@@ -829,11 +830,20 @@ describe("ZosJobsProvider unit tests - Function getPopulatedPickerArray", () => 
     });
 });
 
-describe("Jobs utils unit tests - Function jobPrefixValidator", () => {
+describe("Jobs utils unit tests - Function jobStringValidator", () => {
     it("should return null with correct input", async () => {
-        expect(jobPrefixValidator("job*")).toBeNull();
+        const validOpts: [string, "owner" | "prefix"][] = [
+            ["job*", "prefix"],
+            ["owner*", "owner"],
+        ];
+
+        validOpts.forEach((validOpt) => expect(jobStringValidator(validOpt[0], validOpt[1])).toBeNull());
     });
     it("should return invalid string with invalid input", async () => {
-        expect(jobPrefixValidator("job1234567*")).toContain("Invalid");
+        const invalidOpts: [string, "owner" | "prefix"][] = [
+            ["invalidowner", "owner"],
+            ["job1234567*", "prefix"],
+        ];
+        invalidOpts.forEach((invalidOpt) => expect(jobStringValidator(invalidOpt[0], invalidOpt[1])).toContain("Invalid"));
     });
 });

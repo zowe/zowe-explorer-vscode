@@ -1,15 +1,15 @@
-// @ts-nocheck
-/*
- * This program and the accompanying materials are made available under the terms of the *
- * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
- * https://www.eclipse.org/legal/epl-v20.html                                      *
- *                                                                                 *
- * SPDX-License-Identifier: EPL-2.0                                                *
- *                                                                                 *
- * Copyright Contributors to the Zowe Project.                                     *
- *                                                                                 *
+/**
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Copyright Contributors to the Zowe Project.
+ *
  */
 
+// @ts-nocheck
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import * as globals from "../globals";
@@ -87,20 +87,12 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
             ];
         }
         if (this.dirty) {
-            let spools: zowe.IJobFile[] = [];
             const elementChildren = [];
             if (contextually.isJob(this)) {
-                spools = await Gui.withProgress(
-                    {
-                        location: vscode.ProgressLocation.Notification,
-                        title: localize("ZoweJobNode.getJobs.spoolfiles", "Get Job Spool files command submitted."),
-                    },
-                    () => {
-                        const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
-                        return ZoweExplorerApiRegister.getJesApi(cachedProfile).getSpoolFiles(this.job.jobname, this.job.jobid);
-                    }
-                );
-                spools = spools
+                const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
+                const spools: zowe.IJobFile[] = (
+                    (await ZoweExplorerApiRegister.getJesApi(cachedProfile).getSpoolFiles(this.job.jobname, this.job.jobid)) ?? []
+                )
                     // filter out all the objects which do not seem to be correct Job File Document types
                     // see an issue #845 for the details
                     .filter((item) => !(item.id === undefined && item.ddname === undefined && item.stepname === undefined));
@@ -155,15 +147,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                     elementChildren.push(spoolNode);
                 });
             } else {
-                const jobs = await Gui.withProgress(
-                    {
-                        location: vscode.ProgressLocation.Notification,
-                        title: localize("ZoweJobNode.getJobs.jobs", "Get Jobs command submitted."),
-                    },
-                    () => {
-                        return this.getJobs(this._owner, this._prefix, this._searchId, this._jobStatus); // change here
-                    }
-                );
+                const jobs = await this.getJobs(this._owner, this._prefix, this._searchId, this._jobStatus);
                 jobs.forEach((job) => {
                     let nodeTitle: string;
                     if (job.retcode) {
@@ -176,7 +160,6 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                         elementChildren.push(existing);
                     } else {
                         const jobNode = new Job(nodeTitle, vscode.TreeItemCollapsibleState.Collapsed, this, this.session, job, this.getProfile());
-                        jobNode.command = { command: "zowe.zosJobsSelectjob", title: "", arguments: [jobNode] };
                         jobNode.contextValue = globals.JOBS_JOB_CONTEXT;
                         if (job.retcode) {
                             jobNode.contextValue += globals.RC_SUFFIX + job.retcode;
@@ -220,16 +203,14 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
         if (this._tooltip) {
             return this._tooltip;
         }
-        if (this.job !== null) {
+        if (this.job) {
             if (this.job.retcode) {
                 return `${this.job.jobname}(${this.job.jobid}) - ${this.job.retcode}`;
             } else {
                 return `${this.job.jobname}(${this.job.jobid})`;
             }
-        } else if (this.searchId.length > 0) {
-            return `${this.label} - job id: ${this.searchId}`;
         } else {
-            return `${this.label} - owner: ${this.owner} prefix: ${this.prefix}`;
+            return this.label;
         }
     }
 
