@@ -53,13 +53,13 @@ export const toUniqueJobFileUri =
     };
 
 /**
- * Helper function for {@link toUniqueJobFileUri}
+ * Helper function called by {@link toUniqueJobFileUri}
  * Encode the information needed to get the Spool content.
  *
  * @param profileName The name of the Zowe profile to use to get the Spool Content
  * @param spool The IJobFile to get the spool content for.
  */
-function encodeJobFile(profileName: string, spool: zowe.IJobFile): vscode.Uri {
+export function encodeJobFile(profileName: string, spool: zowe.IJobFile): vscode.Uri {
     const query = JSON.stringify([profileName, spool]);
     return vscode.Uri.parse("").with({
         scheme: SpoolProvider.scheme,
