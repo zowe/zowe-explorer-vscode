@@ -56,6 +56,28 @@ describe("ZoweSaveQueue - unit tests", () => {
         expect(globalMocks.processNextSpy).not.toHaveBeenCalled();
     });
 
+    it("skips save in processNext if newer save is queued for the same document", async () => {
+        globalMocks.processNextSpy.mockClear();
+        const uploadRequest = jest.fn().mockImplementation(async () => {});
+
+        for (let i = 0; i < 3; i++) {
+            ZoweSaveQueue.push({
+                fileProvider: globalMocks.trees.uss,
+                uploadRequest,
+                savedFile: {
+                    isDirty: true,
+                    uri: vscode.Uri.parse(`${i % 2}`),
+                    fileName: `testFile-${i % 2}`,
+                } as vscode.TextDocument,
+            });
+        }
+
+        await ZoweSaveQueue.all();
+        // 3 save requests should be processed and 1 should be skipped
+        expect(globalMocks.processNextSpy).toHaveBeenCalledTimes(3);
+        expect(uploadRequest).toHaveBeenCalledTimes(2);
+    });
+
     it("throws an error in processNext if uploadRequest fails for one of the queued saves", async () => {
         globalMocks.processNextSpy.mockClear();
         const FAILING_FILE = {
