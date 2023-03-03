@@ -9,7 +9,7 @@
  *
  */
 
-import { Gui } from "@zowe/zowe-explorer-api";
+import { Gui, MessageSeverity } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
 import * as nls from "vscode-nls";
 import * as globals from "../globals";
@@ -23,13 +23,15 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export class ZoweLogger {
     private static zoweExplOutput: vscode.OutputChannel;
+    private static messageSeverity: string[] = ["INFO", "DEBUG", "ERROR"];
 
     public static async initializeZoweLogger(context: vscode.ExtensionContext): Promise<void> {
         try {
             const logFileLocation = globals.initLogger(context);
-            this.initOutputLogger(logFileLocation);
+            this.initOutputLogger();
             const packageInfo = context.extension.packageJSON;
             this.zoweExplOutput.appendLine(`${packageInfo.displayName} ${packageInfo.version}`);
+            this.zoweExplOutput.appendLine(`This log file can be found at ${logFileLocation}`);
             const initMessage = localize("initialize.log.debug", "Initialized logger for Zowe Explorer");
             this.logInfo(initMessage);
         } catch (err) {
@@ -40,31 +42,27 @@ export class ZoweLogger {
     }
 
     public static async logInfo(message: string): Promise<void> {
-        const datedMsg = this.setMessage(message, "INFO");
         globals.LOG.info(message);
-        this.zoweExplOutput.appendLine(datedMsg);
-    }
-
-    public static async logError(error: any): Promise<void> {
-        const datedError = this.setMessage(error, "ERROR");
-        globals.LOG.error(error);
-        this.zoweExplOutput.appendLine(datedError);
+        this.zoweExplOutput.appendLine(this.setMessage(message, this.messageSeverity[0]));
     }
 
     public static async logDebug(message: string): Promise<void> {
-        const datedMsg = this.setMessage(message, "DEBUG");
         globals.LOG.debug(message);
-        this.zoweExplOutput.appendLine(datedMsg);
+        this.zoweExplOutput.appendLine(this.setMessage(message, this.messageSeverity[1]));
+    }
+
+    public static async logError(error: any): Promise<void> {
+        globals.LOG.error(error);
+        this.zoweExplOutput.appendLine(this.setMessage(error, this.messageSeverity[2]));
     }
 
     public static disposeOutputLogger(): void {
         this.zoweExplOutput.dispose();
     }
 
-    private static initOutputLogger(logLocation: string): void {
+    private static initOutputLogger(): void {
         this.zoweExplOutput = Gui.createOutputChannel(localize("zoweExplorer.outputchannel.title", "Zowe Explorer"));
         this.zoweExplOutput.show();
-        this.zoweExplOutput.appendLine(`This log file can be found at ${logLocation}`);
     }
 
     private static getDate(): string {
