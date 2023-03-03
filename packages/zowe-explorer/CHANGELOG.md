@@ -6,9 +6,11 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
-- Added Job search label to the Jobs tree. Label will show current search query [2062](https://github.com/zowe/vscode-extension-for-zowe/pull/2064).
+- Added Job search label to the Jobs tree. Label will show current search query. [#2062](https://github.com/zowe/vscode-extension-for-zowe/pull/2064)
 
 ### Bug fixes
+
+- Fixed issues where document changes may fail to upload if the environment has a slow filesystem or mainframe connection, or when VS Code exits during an upload operation. [#1948](https://github.com/zowe/vscode-extension-for-zowe/issues/1948)
 
 ## `2.6.1`
 
