@@ -15,7 +15,7 @@ import { getZoweDir } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import { Profiles } from "./Profiles";
-import { initializeZoweProfiles } from "./utils/ProfilesUtils";
+import { initializeZoweProfiles, initializeZoweTempFolder } from "./utils/ProfilesUtils";
 import { initializeSpoolProvider } from "./SpoolProvider";
 import { cleanTempDir, hideTempFolder } from "./utils/TempFolder";
 import { SettingsConfig } from "./utils/SettingsConfig";
@@ -23,7 +23,7 @@ import { initDatasetProvider } from "./dataset/init";
 import { initUSSProvider } from "./uss/init";
 import { initJobsProvider } from "./job/init";
 import { IZoweProviders, registerCommonCommands, registerRefreshCommand, watchConfigProfile } from "./shared/init";
-import { initializeZoweLogger } from "./utils/LoggerUtils";
+import { ZoweLogger } from "./utils/LoggerUtils";
 
 /**
  * The function that runs when the extension is loaded
@@ -41,8 +41,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
 
     hideTempFolder(getZoweDir());
 
-    await initializeZoweLogger(context);
+    await ZoweLogger.initializeZoweLogger(context);
     await initializeZoweProfiles();
+    initializeZoweTempFolder();
 
     // Initialize profile manager
     await Profiles.createInstance(globals.LOG);
@@ -72,5 +73,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
  */
 export async function deactivate() {
     await cleanTempDir();
+    ZoweLogger.disposeOutputLogger();
     globals.setActivated(false);
 }

@@ -20,6 +20,7 @@ import { Profiles } from "../Profiles";
 import * as nls from "vscode-nls";
 import { imperative, getImperativeConfig } from "@zowe/cli";
 import { ZoweExplorerExtender } from "../ZoweExplorerExtender";
+import { ZoweLogger } from "./LoggerUtils";
 
 // Set up localization
 nls.config({
@@ -254,7 +255,7 @@ export async function readConfigFromDisk() {
         }
         if (mProfileInfo.usingTeamConfig) {
             globals.setConfigPath(rootPath);
-            globals.LOG.debug('Zowe Explorer is using the team configuration file "%s"', mProfileInfo.getTeamConfig().configName);
+            ZoweLogger.logDebug(`Zowe Explorer is using the team configuration file "${mProfileInfo.getTeamConfig().configName}"`);
             const layers = mProfileInfo.getTeamConfig().layers || [];
             const layerSummary = layers.map(
                 (config: imperative.IConfigLayer) =>
@@ -264,9 +265,10 @@ export async function readConfigFromDisk() {
                             : "Not available"
                     } `
             );
-            globals.LOG.debug("Summary of team configuration files considered for Zowe Explorer: %s", JSON.stringify(layerSummary));
+            ZoweLogger.logDebug(`Summary of team configuration files considered for Zowe Explorer: ${JSON.stringify(layerSummary)}`);
         }
     } catch (error) {
+        ZoweLogger.logError(error);
         throw new Error(error);
     }
 }
@@ -274,7 +276,9 @@ export async function readConfigFromDisk() {
 export async function promptCredentials(node: IZoweTreeNode) {
     const mProfileInfo = await Profiles.getInstance().getProfileInfo();
     if (mProfileInfo.usingTeamConfig && !mProfileInfo.getTeamConfig().properties.autoStore) {
-        Gui.showMessage(localize("zowe.promptCredentials.notSupported", '"Update Credentials" operation not supported when "autoStore" is false'));
+        const msg = localize("zowe.promptCredentials.notSupported", '"Update Credentials" operation not supported when "autoStore" is false');
+        ZoweLogger.logInfo(msg);
+        Gui.showMessage(msg);
         return;
     }
     let profileName: string;
@@ -298,7 +302,9 @@ export async function promptCredentials(node: IZoweTreeNode) {
     const creds = await Profiles.getInstance().promptCredentials(profileName, true);
 
     if (creds != null) {
-        Gui.showMessage(localize("promptCredentials.updatedCredentials", "Credentials for {0} were successfully updated", profileName));
+        const successMsg = localize("promptCredentials.updatedCredentials", "Credentials for {0} were successfully updated", profileName);
+        ZoweLogger.logInfo(successMsg);
+        Gui.showMessage(successMsg);
     }
 }
 
@@ -327,6 +333,7 @@ export async function initializeZoweFolder(): Promise<void> {
             profileRootDirectory: path.join(zoweDir, "profiles"),
         });
     }
+    ZoweLogger.logInfo(localize("initializeZoweFolder.success", "Zowe Folder successfully initialized."));
 }
 
 export function writeOverridesFile() {
@@ -365,15 +372,24 @@ export async function initializeZoweProfiles(): Promise<void> {
     try {
         await initializeZoweFolder();
         await readConfigFromDisk();
+        ZoweLogger.logInfo(localize("initializeZoweProfiles.success", "Zowe Profiles initialized successfully."));
     } catch (err) {
-        globals.LOG.error(err);
+        ZoweLogger.logError(err);
         ZoweExplorerExtender.showZoweConfigError(err.message);
     }
+}
 
-    if (!fs.existsSync(globals.ZOWETEMPFOLDER)) {
-        fs.mkdirSync(globals.ZOWETEMPFOLDER);
-        fs.mkdirSync(globals.ZOWE_TMP_FOLDER);
-        fs.mkdirSync(globals.USS_DIR);
-        fs.mkdirSync(globals.DS_DIR);
+export function initializeZoweTempFolder(): void {
+    try {
+        if (!fs.existsSync(globals.ZOWETEMPFOLDER)) {
+            fs.mkdirSync(globals.ZOWETEMPFOLDER);
+            fs.mkdirSync(globals.ZOWE_TMP_FOLDER);
+            fs.mkdirSync(globals.USS_DIR);
+            fs.mkdirSync(globals.DS_DIR);
+            ZoweLogger.logInfo(localize("initializeZoweTempFolder.success", "Zowe Temp folder initialized successfully."));
+        }
+    } catch (err) {
+        ZoweLogger.logError(err);
+        ZoweExplorerExtender.showZoweConfigError(err.message);
     }
 }
