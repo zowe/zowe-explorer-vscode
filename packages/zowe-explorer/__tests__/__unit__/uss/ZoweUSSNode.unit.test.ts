@@ -1081,7 +1081,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
         expect(globalMocks.openTextDocument.mock.calls.length).toBe(1);
         expect(globalMocks.openTextDocument.mock.calls[0][0]).toBe(node.getUSSDocumentFilePath());
         expect(globalMocks.mockShowTextDocument.mock.calls.length).toBe(1);
-        expect(globalMocks.mockShowTextDocument.mock.calls[0][0]).toBe("test.doc");
+        expect(globalMocks.mockShowTextDocument.mock.calls[0][0]).toStrictEqual("test.doc");
     });
 
     it("Tests that node.openUSS() is executed successfully with Unverified profile", async () => {
@@ -1125,7 +1125,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
         expect(globalMocks.openTextDocument.mock.calls.length).toBe(1);
         expect(globalMocks.openTextDocument.mock.calls[0][0]).toBe(node.getUSSDocumentFilePath());
         expect(globalMocks.mockShowTextDocument.mock.calls.length).toBe(1);
-        expect(globalMocks.mockShowTextDocument.mock.calls[0][0]).toBe("test.doc");
+        expect(globalMocks.mockShowTextDocument.mock.calls[0][0]).toStrictEqual("test.doc");
     });
 
     it("Tests that node.openUSS() fails when an error is thrown", async () => {
@@ -1274,7 +1274,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
         expect(globalMocks.openTextDocument.mock.calls.length).toBe(1);
         expect(globalMocks.openTextDocument.mock.calls[0][0]).toBe(node.getUSSDocumentFilePath());
         expect(globalMocks.mockShowTextDocument.mock.calls.length).toBe(1);
-        expect(globalMocks.mockShowTextDocument.mock.calls[0][0]).toBe("test.doc");
+        expect(globalMocks.mockShowTextDocument.mock.calls[0][0]).toStrictEqual("test.doc");
     });
 
     it("Tests that node.openUSS() fails when passed an invalid node", async () => {
@@ -1432,9 +1432,8 @@ describe("ZoweUSSNode Unit Tests - Function node.initializeFileOpening()", () =>
     it("Tests that node.initializeFileOpening() successfully handles binary files that should be re-downloaded", async () => {
         const globalMocks = await createGlobalMocks();
 
-        const errorSelection = "Re-download" as unknown as vscode.MessageItem;
         jest.spyOn(vscode.workspace, "openTextDocument").mockRejectedValue("Test error!");
-        jest.spyOn(vscode.window, "showErrorMessage").mockResolvedValue(errorSelection);
+        jest.spyOn(Gui, "errorMessage").mockResolvedValue("Re-download");
 
         // Creating a test node
         const rootNode = new ZoweUSSNode(
@@ -1461,7 +1460,7 @@ describe("ZoweUSSNode Unit Tests - Function node.initializeFileOpening()", () =>
         testNode.fullPath = "test/node";
 
         await testNode.initializeFileOpening(testNode.fullPath);
-        expect(globalMocks.mockExecuteCommand).toBeCalledWith("zowe.uss.binary", testNode);
+        expect(globalMocks.mockExecuteCommand).toHaveBeenCalledWith("zowe.uss.binary", testNode);
     });
 
     it("Tests that node.initializeFileOpening() successfully handles text files that should be previewed", async () => {
@@ -1678,6 +1677,33 @@ describe("ZoweUSSNode Unit Tests - Function node.pasteUssTree()", () => {
 
         await blockMocks.testNode.pasteUssTree();
         expect(blockMocks.pasteSpy).toHaveBeenCalled();
+    });
+
+    it("paste renames duplicate files before copying when needed", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        blockMocks.pasteSpy.mockClear();
+
+        const example_tree = {
+            baseName: "testFile",
+            ussPath: "/path/testFile",
+            type: UssFileType.File,
+            children: [],
+        };
+
+        blockMocks.testNode.fullPath = "/path/testFile";
+
+        jest.spyOn(blockMocks.mockUssApi, "fileList").mockResolvedValueOnce(blockMocks.fileResponse);
+        const copyMock = jest.spyOn(blockMocks.mockUssApi, "copy").mockResolvedValueOnce(blockMocks.fileResponse);
+
+        // Testing paste within same session (copy API)
+        jest.spyOn(UssFileUtils, "toSameSession").mockReturnValueOnce(true);
+        await blockMocks.testNode.paste("example_session", "/path", { tree: example_tree, api: blockMocks.mockUssApi });
+
+        expect(copyMock).toHaveBeenCalledWith("/path/testFile (1)", {
+            from: "/path/testFile",
+            recursive: false,
+        });
     });
 
     it("Tests node.pasteUssTree() reads clipboard contents finds same file name on destination directory", async () => {
