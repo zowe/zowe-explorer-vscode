@@ -12,5 +12,6 @@
   "createNewConnection.undefined.passWord": "Operation Cancelled",
   "promptCredentials.updatedCredentials": "Credentials for {0} were successfully updated",
   "initializeZoweFolder.success": "Zowe Folder successfully initialized.",
-  "initializeZoweProfiles.success": "Zowe Profiles initialized successfully."
+  "initializeZoweProfiles.success": "Zowe Profiles initialized successfully.",
+  "initializeZoweTempFolder.success": "Zowe Temp folder initialized successfully."
 }

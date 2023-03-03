@@ -308,7 +308,7 @@ export function setConfigPath(configPath: string | undefined): void {
  * Initializes Imperative Logger
  * @param context The extension context
  */
-export function initLogger(context: vscode.ExtensionContext) {
+export function initLogger(context: vscode.ExtensionContext): string {
     for (const appenderName of Object.keys(loggerConfig.log4jsConfig.appenders)) {
         loggerConfig.log4jsConfig.appenders[appenderName].filename = path.join(
             context.extensionPath,
@@ -317,6 +317,7 @@ export function initLogger(context: vscode.ExtensionContext) {
     }
     imperative.Logger.initLogger(loggerConfig);
     this.LOG = imperative.Logger.getAppLogger();
+    return loggerConfig.log4jsConfig.appenders.app.filename;
 }
 
 export function setActivated(value: boolean) {
