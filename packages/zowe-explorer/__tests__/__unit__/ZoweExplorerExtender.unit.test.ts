@@ -25,8 +25,6 @@ import { getZoweDir, Gui } from "@zowe/zowe-explorer-api";
 import * as profilesUtils from "../../src/utils/ProfilesUtils";
 jest.mock("fs");
 
-const mocked = <T extends (...args: any[]) => any>(fn: T): jest.Mock<ReturnType<T>> => fn as any;
-
 describe("ZoweExplorerExtender unit tests", () => {
     async function createBlockMocks() {
         const newMocks = {
@@ -152,9 +150,9 @@ describe("ZoweExplorerExtender unit tests", () => {
             },
         ];
         for (const userInput of userInputs) {
-            blockMocks.mockErrorMessage.mockImplementationOnce((msg, ...items) => Promise.resolve(userInput.choice));
+            blockMocks.mockErrorMessage.mockImplementationOnce((_msg, ..._items) => Promise.resolve(userInput.choice));
             if (userInput.fileChecks.length > 1) {
-                userInput.mockExistsSync((path) => false);
+                userInput.mockExistsSync((_path) => false);
             }
             await ZoweExplorerExtender.showZoweConfigError(userInput.configError);
             expect(blockMocks.mockErrorMessage).toHaveBeenCalledWith(

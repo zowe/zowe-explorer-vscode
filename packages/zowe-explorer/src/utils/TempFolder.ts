@@ -12,7 +12,6 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as globals from "../globals";
-import * as vscode from "vscode";
 import { moveSync } from "fs-extra";
 import * as nls from "vscode-nls";
 import { errorHandling } from "../utils/ProfilesUtils";

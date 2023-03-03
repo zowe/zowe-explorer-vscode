@@ -132,9 +132,20 @@ export async function initDatasetProvider(context: vscode.ExtensionContext) {
         })
     );
     context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.renameDataSet", (node) => datasetProvider.rename(node)));
-    context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.copyMember", (node) => dsActions.copyDataSet(node)));
-    context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.copyDataSet", (node) => dsActions.copyDataSet(node)));
-    context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.pasteMember", (node) => dsActions.pasteMember(node, datasetProvider)));
+    context.subscriptions.push(
+        vscode.commands.registerCommand("zowe.ds.copyDataSets", async (node, nodeList) => {
+            dsActions.copyDataSets(node, nodeList, datasetProvider);
+        })
+    );
+    context.subscriptions.push(
+        vscode.commands.registerCommand("zowe.ds.pasteDataSets", async (node: ZoweDatasetNode) => {
+            if (!node) {
+                node = datasetProvider.getTreeView().selection[0] as ZoweDatasetNode;
+            }
+            dsActions.pasteDataSetMembers(datasetProvider, node);
+            dsActions.refreshDataset(node.getParent(), datasetProvider);
+        })
+    );
     context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.renameDataSetMember", (node) => datasetProvider.rename(node)));
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.hMigrateDataSet", async (node, nodeList) => {

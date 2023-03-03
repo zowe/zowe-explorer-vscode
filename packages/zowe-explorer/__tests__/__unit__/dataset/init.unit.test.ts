@@ -26,7 +26,7 @@ describe("Test src/dataset/extension", () => {
         let spyCreateDatasetTree;
         const test: ITestContext = {
             context: { subscriptions: [] },
-            value: { label: "test" },
+            value: { label: "test", getParent: () => "test" },
             _: { _: "_" },
         };
         const dsProvider: { [key: string]: jest.Mock } = {
@@ -42,6 +42,7 @@ describe("Test src/dataset/extension", () => {
             ssoLogin: jest.fn(),
             ssoLogout: jest.fn(),
             onDidChangeConfiguration: jest.fn(),
+            getTreeView: jest.fn(),
         };
         const commands: IJestIt[] = [
             {
@@ -173,16 +174,24 @@ describe("Test src/dataset/extension", () => {
                 mock: [{ spy: jest.spyOn(dsProvider, "rename"), arg: [test.value] }],
             },
             {
-                name: "zowe.ds.copyMember",
-                mock: [{ spy: jest.spyOn(dsActions, "copyDataSet"), arg: [test.value] }],
+                name: "zowe.ds.copyDataSets",
+                mock: [{ spy: jest.spyOn(dsActions, "copyDataSets"), arg: [test.value, undefined, dsProvider] }],
             },
             {
-                name: "zowe.ds.copyDataSet",
-                mock: [{ spy: jest.spyOn(dsActions, "copyDataSet"), arg: [test.value] }],
+                name: "zowe.ds.pasteDataSets:1",
+                parm: [false],
+                mock: [
+                    { spy: jest.spyOn(dsProvider, "getTreeView"), arg: [], ret: { selection: [test.value] } },
+                    { spy: jest.spyOn(dsActions, "pasteDataSetMembers"), arg: [dsProvider, test.value] },
+                    { spy: jest.spyOn(dsActions, "refreshDataset"), arg: ["test", dsProvider] },
+                ],
             },
             {
-                name: "zowe.ds.pasteMember",
-                mock: [{ spy: jest.spyOn(dsActions, "pasteMember"), arg: [test.value, dsProvider] }],
+                name: "zowe.ds.pasteDataSets:2",
+                mock: [
+                    { spy: jest.spyOn(dsActions, "pasteDataSetMembers"), arg: [dsProvider, test.value] },
+                    { spy: jest.spyOn(dsActions, "refreshDataset"), arg: ["test", dsProvider] },
+                ],
             },
             {
                 name: "zowe.ds.renameDataSetMember",

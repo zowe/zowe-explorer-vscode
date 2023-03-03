@@ -139,7 +139,7 @@ let ongoingSave = false;
  * @deprecated Use ZoweSaveQueue class instead
  */
 export async function handleSaving(
-    uploadRequest: (document, provider) => Promise<void | string | vscode.MessageItem>,
+    uploadRequest: (_document, _provider) => Promise<void | string | vscode.MessageItem>,
     savedFile: vscode.TextDocument,
     fileProvider: IZoweTree<IZoweUSSTreeNode | IZoweDatasetTreeNode>
 ): Promise<void> {

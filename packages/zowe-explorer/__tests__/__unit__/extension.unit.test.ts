@@ -165,9 +165,8 @@ async function createGlobalMocks() {
             "zowe.ds.submitMember",
             "zowe.ds.showAttributes",
             "zowe.ds.renameDataSet",
-            "zowe.ds.copyMember",
-            "zowe.ds.copyDataSet",
-            "zowe.ds.pasteMember",
+            "zowe.ds.copyDataSets",
+            "zowe.ds.pasteDataSets",
             "zowe.ds.renameDataSetMember",
             "zowe.ds.hMigrateDataSet",
             "zowe.ds.hRecallDataSet",
@@ -433,9 +432,9 @@ describe("Extension Unit Tests", () => {
         globalMocks.mockExistsSync.mockReturnValueOnce(false);
         globalMocks.mockGetConfiguration.mockReturnValue({
             persistence: true,
-            get: (setting: string) => "",
+            get: (_setting: string) => "",
             update: jest.fn(),
-            inspect: (configuration: string) => {
+            inspect: (_configuration: string) => {
                 return {
                     workspaceValue: undefined,
                     globalValue: undefined,
@@ -482,9 +481,9 @@ describe("Extension Unit Tests", () => {
         globalMocks.mockExistsSync.mockReturnValueOnce(false);
         globalMocks.mockGetConfiguration.mockReturnValue({
             persistence: true,
-            get: (setting: string) => "",
+            get: (_setting: string) => "",
             update: jest.fn(),
-            inspect: (configuration: string) => {
+            inspect: (_configuration: string) => {
                 return {
                     workspaceValue: undefined,
                     globalValue: undefined,
@@ -541,9 +540,9 @@ describe("Extension Unit Tests - THEIA", () => {
         globalMocks.mockExistsSync.mockReturnValueOnce(false);
         globalMocks.mockGetConfiguration.mockReturnValue({
             persistence: true,
-            get: (setting: string) => "",
+            get: (_setting: string) => "",
             update: jest.fn(),
-            inspect: (configuration: string) => {
+            inspect: (_configuration: string) => {
                 return {
                     workspaceValue: undefined,
                     globalValue: undefined,

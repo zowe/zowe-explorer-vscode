@@ -10,7 +10,6 @@
  */
 
 import * as vscode from "vscode";
-import * as jobUtils from "../job/utils";
 import * as globals from "../globals";
 import { IJob, imperative } from "@zowe/cli";
 import { Gui, ValidProfileEnum, IZoweTree, IZoweJobTreeNode, PersistenceSchemaEnum, NodeInteraction } from "@zowe/zowe-explorer-api";
@@ -136,16 +135,16 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         });
     }
 
-    public rename(node: IZoweJobTreeNode) {
+    public rename(_node: IZoweJobTreeNode) {
         throw new Error("Method not implemented.");
     }
-    public open(node: IZoweJobTreeNode, preview: boolean) {
+    public open(_node: IZoweJobTreeNode, _preview: boolean) {
         throw new Error("Method not implemented.");
     }
-    public copy(node: IZoweJobTreeNode) {
+    public copy(_node: IZoweJobTreeNode) {
         throw new Error("Method not implemented.");
     }
-    public paste(node: IZoweJobTreeNode) {
+    public paste(_node: IZoweJobTreeNode) {
         throw new Error("Method not implemented.");
     }
 
@@ -158,13 +157,13 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         node.contextValue = contextually.asFavorite(node);
         return node;
     }
-    public saveFile(document: vscode.TextDocument) {
+    public saveFile(_document: vscode.TextDocument) {
         throw new Error("Method not implemented.");
     }
-    public refreshPS(node: IZoweJobTreeNode) {
+    public refreshPS(_node: IZoweJobTreeNode) {
         throw new Error("Method not implemented.");
     }
-    public uploadDialog(node: IZoweJobTreeNode) {
+    public uploadDialog(_node: IZoweJobTreeNode) {
         throw new Error("Method not implemented.");
     }
     public filterPrompt(node: IZoweJobTreeNode) {
@@ -311,11 +310,15 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      */
     public createProfileNodeForFavs(profileName: string): Job {
         const favProfileNode = new Job(profileName, vscode.TreeItemCollapsibleState.Collapsed, this.mFavoriteSession, null, null, null);
-        favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
+
+        // Fake context value to pull correct icon
+        favProfileNode.contextValue = globals.JOBS_SESSION_CONTEXT + globals.HOME_SUFFIX;
         const icon = getIconByNode(favProfileNode);
         if (icon) {
             favProfileNode.iconPath = icon.path;
         }
+        favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
+
         this.mFavorites.push(favProfileNode);
         return favProfileNode;
     }
@@ -473,6 +476,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         if (profileNodeInFavorites === undefined) {
             // If favorite node for profile doesn't exist yet, create a new one for it
             profileNodeInFavorites = this.createProfileNodeForFavs(profileName);
+            profileNodeInFavorites.iconPath = node.iconPath;
         }
         if (contextually.isSession(node)) {
             // Favorite a search/session
@@ -710,15 +714,18 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         if (!searchCriteria) {
             return searchCriteriaObj;
         }
-        const searchOptionArray = searchCriteria.split(" ");
-        searchOptionArray.forEach((searchOption) => {
-            const keyValue = searchOption.split(":");
-            const key = keyValue[0]?.trim();
-            const value = keyValue[1]?.trim();
-            try {
-                searchCriteriaObj[key] = value;
-            } catch (e) {}
-        });
+        let searchOptionArray = searchCriteria.split(/\s\|\s|(?<!:)\s/);
+        if (searchOptionArray != null) {
+            searchOptionArray = searchOptionArray.filter((val) => val?.includes(":")).map((val) => (val.startsWith(":") ? val.substring(1) : val));
+            searchOptionArray.forEach((searchOption) => {
+                const keyValue = searchOption.split(":");
+                const key = keyValue[0]?.trim();
+                const value = keyValue[1]?.trim();
+                try {
+                    searchCriteriaObj[key] = value;
+                } catch (e) {}
+            });
+        }
         return searchCriteriaObj;
     }
 
@@ -744,7 +751,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         const session = node.getProfileName();
         const faveNode = node;
         await this.addSession(session);
-        node = this.mSessionNodes.find((tempNode) => tempNode.label.toString() === session);
+        node = this.mSessionNodes.find((tempNode) => tempNode.label?.toString() === session);
         if (!node.getSession().ISession.user || !node.getSession().ISession.password) {
             node.getSession().ISession.user = faveNode.getSession().ISession.user;
             node.getSession().ISession.password = faveNode.getSession().ISession.password;
@@ -763,26 +770,38 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         await this.checkCurrentProfile(node);
         let searchCriteria: string = "";
         if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID || !contextually.isValidationEnabled(node)) {
-            if (contextually.isSessionNotFav(node)) {
-                searchCriteria = await this.applyRegularSessionSearchLabel(node);
-            } else {
-                searchCriteria = await this.applySavedFavoritesSearchLabel(node);
-                const jobQueryObj = this.parseJobSearchQuery(searchCriteria);
-                this.applySearchLabelToNode(node, jobQueryObj);
-            }
-            if (!searchCriteria) {
-                return undefined;
-            }
-            node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+            const isSessionNotFav = contextually.isSessionNotFav(node);
+            const isExpanded = node.collapsibleState === vscode.TreeItemCollapsibleState.Expanded;
+
+            node.filtered = true;
+
             const icon = getIconByNode(node);
             if (icon) {
                 node.iconPath = icon.path;
             }
-            node.label = `${node.getProfileName()} [${searchCriteria}]`;
-            labelRefresh(node);
-            node.dirty = true;
-            this.refreshElement(node);
-            this.addSearchHistory(searchCriteria);
+
+            if (isSessionNotFav) {
+                searchCriteria = await this.applyRegularSessionSearchLabel(node);
+                node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+
+                if (searchCriteria != null) {
+                    node.label = node.getProfileName();
+                    node.description = searchCriteria;
+                    this.addSearchHistory(searchCriteria);
+                    this.refreshElement(node);
+                    node.dirty = true;
+                }
+            } else {
+                if (isExpanded) {
+                    node.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+                } else {
+                    searchCriteria = await this.applySavedFavoritesSearchLabel(node);
+                    const jobQueryObj = this.parseJobSearchQuery(searchCriteria);
+                    this.applySearchLabelToNode(node, jobQueryObj);
+                    node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+                }
+                node.dirty = true;
+            }
         }
     }
 
@@ -817,18 +836,19 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         }
         let revisedCriteria = "";
         if (owner) {
-            revisedCriteria = Job.Owner + owner.trim() + " ";
+            revisedCriteria = Job.Owner + owner.trim() + " | ";
         }
         if (prefix) {
-            revisedCriteria += Job.Prefix + prefix.trim() + " ";
+            revisedCriteria += Job.Prefix + prefix.trim() + " | ";
         }
         if (status) {
             revisedCriteria += Job.Status + status.trim();
         }
+
         return revisedCriteria.trim();
     }
 
-    public async addFileHistory(criteria: string) {
+    public async addFileHistory(_criteria: string) {
         throw new Error("Method not implemented.");
     }
 
