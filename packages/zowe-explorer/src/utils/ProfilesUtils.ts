@@ -46,7 +46,7 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
         "errorHandling.invalid.token",
         "Your connection is no longer active. Please log in to an authentication service to restore the connection."
     );
-    globals.LOG.error(`${errorDetails}\n` + JSON.stringify({ errorDetails, label, moreInfo }));
+    ZoweLogger.logError(`${errorDetails}\n` + JSON.stringify({ errorDetails, label, moreInfo }));
 
     if (errorDetails.mDetails !== undefined) {
         httpErrCode = errorDetails.mDetails.errorCode;
@@ -149,7 +149,7 @@ export const syncSessionNode =
         try {
             profile = Profiles.getInstance().loadNamedProfile(profileName, profileType);
         } catch (e) {
-            globals.LOG.warn(e);
+            ZoweLogger.logWarn(e);
             return;
         }
         sessionNode.setProfileToChoice(profile);
@@ -255,7 +255,7 @@ export async function readConfigFromDisk() {
         }
         if (mProfileInfo.usingTeamConfig) {
             globals.setConfigPath(rootPath);
-            ZoweLogger.logDebug(`Zowe Explorer is using the team configuration file "${mProfileInfo.getTeamConfig().configName}"`);
+            ZoweLogger.logInfo(`Zowe Explorer is using the team configuration file "${mProfileInfo.getTeamConfig().configName}"`);
             const layers = mProfileInfo.getTeamConfig().layers || [];
             const layerSummary = layers.map(
                 (config: imperative.IConfigLayer) =>

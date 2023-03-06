@@ -73,6 +73,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
  */
 export async function deactivate() {
     await cleanTempDir();
-    ZoweLogger.disposeOutputLogger();
+    ZoweLogger.disposeZoweLogger();
     globals.setActivated(false);
 }

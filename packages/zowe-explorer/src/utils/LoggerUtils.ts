@@ -9,6 +9,8 @@
  *
  */
 
+/* eslint-disable no-magic-numbers */
+
 import { Gui, MessageSeverity } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
 import * as nls from "vscode-nls";
@@ -23,7 +25,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export class ZoweLogger {
     private static zoweExplOutput: vscode.OutputChannel;
-    private static messageSeverity: string[] = ["INFO", "DEBUG", "ERROR"];
+    private static messageSeverityStrings: string[] = ["TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"];
 
     public static async initializeZoweLogger(context: vscode.ExtensionContext): Promise<void> {
         try {
@@ -31,9 +33,9 @@ export class ZoweLogger {
             this.initOutputLogger();
             const packageInfo = context.extension.packageJSON;
             this.zoweExplOutput.appendLine(`${packageInfo.displayName} ${packageInfo.version}`);
-            this.zoweExplOutput.appendLine(`This log file can be found at ${logFileLocation}`);
-            const initMessage = localize("initialize.log.debug", "Initialized logger for Zowe Explorer");
-            this.logInfo(initMessage);
+            this.zoweExplOutput.appendLine(localize("initialize.log.location", "This log file can be found at ") + logFileLocation);
+            const initMessage = localize("initialize.log.info", "Initialized logger for Zowe Explorer");
+            this.writeLogMessage(initMessage, MessageSeverity.INFO);
         } catch (err) {
             globals.LOG.error(err);
             const errorMessage = localize("initialize.log.error", "Error encountered while activating and initializing logger! ");
@@ -41,23 +43,62 @@ export class ZoweLogger {
         }
     }
 
-    public static async logInfo(message: string): Promise<void> {
-        globals.LOG.info(message);
-        this.zoweExplOutput.appendLine(this.setMessage(message, this.messageSeverity[0]));
+    public static async logTrace(message: string): Promise<void> {
+        await this.writeLogMessage(message, MessageSeverity.TRACE);
     }
 
     public static async logDebug(message: string): Promise<void> {
-        globals.LOG.debug(message);
-        this.zoweExplOutput.appendLine(this.setMessage(message, this.messageSeverity[1]));
+        await this.writeLogMessage(message, MessageSeverity.DEBUG);
     }
 
-    public static async logError(error: any): Promise<void> {
-        globals.LOG.error(error);
-        this.zoweExplOutput.appendLine(this.setMessage(error, this.messageSeverity[2]));
+    public static async logInfo(message: string): Promise<void> {
+        await this.writeLogMessage(message, MessageSeverity.INFO);
     }
 
-    public static disposeOutputLogger(): void {
+    public static async logWarn(message: string): Promise<void> {
+        await this.writeLogMessage(message, MessageSeverity.WARN);
+    }
+
+    public static async logError(message: string): Promise<void> {
+        await this.writeLogMessage(message, MessageSeverity.ERROR);
+    }
+
+    public static async logFatal(message: string): Promise<void> {
+        await this.writeLogMessage(message, MessageSeverity.FATAL);
+    }
+
+    public static disposeZoweLogger(): void {
         this.zoweExplOutput.dispose();
+    }
+
+    private static async writeLogMessage(message: string, severity: MessageSeverity): Promise<void> {
+        switch (severity) {
+            case 0: {
+                globals.LOG.trace(message);
+                break;
+            }
+            case 1: {
+                globals.LOG.debug(message);
+                break;
+            }
+            case 2: {
+                globals.LOG.info(message);
+                break;
+            }
+            case 3: {
+                globals.LOG.warn(message);
+                break;
+            }
+            case 4: {
+                globals.LOG.error(message);
+                break;
+            }
+            case 5: {
+                globals.LOG.fatal(message);
+                break;
+            }
+        }
+        this.zoweExplOutput.appendLine(this.setMessage(message, this.messageSeverityStrings[severity]));
     }
 
     private static initOutputLogger(): void {
