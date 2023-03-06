@@ -34,6 +34,7 @@ import { getProfileInfo, getProfile } from "./utils/ProfilesUtils";
 
 // Set up localization
 import * as nls from "vscode-nls";
+import { ZoweLogger } from "./utils/LoggerUtils";
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
@@ -175,7 +176,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
             }
             usingTeamConfig = mProfileInfo.usingTeamConfig;
         } catch (error) {
-            globals.LOG.warn(error);
+            ZoweLogger.logWarn(error);
             if (error.toString().includes("Error parsing JSON")) {
                 usingTeamConfig = true;
             }
