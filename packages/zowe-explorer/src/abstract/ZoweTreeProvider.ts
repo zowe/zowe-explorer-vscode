@@ -202,14 +202,6 @@ export class ZoweTreeProvider {
                         " is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct."
                     )
             );
-            this.log.debug(
-                localize("validateProfiles.invalid1", "Profile Name ") +
-                    node.getProfileName() +
-                    localize(
-                        "validateProfiles.invalid2",
-                        " is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct."
-                    )
-            );
         } else if (profileStatus.status === "active") {
             if (
                 contextually.isSessionNotFav(node) &&
