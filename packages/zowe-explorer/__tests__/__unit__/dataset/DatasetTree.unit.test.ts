@@ -151,6 +151,14 @@ function createGlobalMocks() {
         value: jest.fn(),
         configurable: true,
     });
+    Object.defineProperty(ZoweLogger, "logDebug", {
+        value: jest.fn(),
+        configurable: true,
+    });
+    Object.defineProperty(ZoweLogger, "logWarn", {
+        value: jest.fn(),
+        configurable: true,
+    });
 
     return globalMocks;
 }

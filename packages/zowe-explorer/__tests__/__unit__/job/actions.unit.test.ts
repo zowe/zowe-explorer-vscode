@@ -78,6 +78,10 @@ function createGlobalMocks() {
         value: jest.fn(),
         configurable: true,
     });
+    Object.defineProperty(ZoweLogger, "logDebug", {
+        value: jest.fn(),
+        configurable: true,
+    });
 }
 
 // Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/master/src/util/testing.ts
@@ -431,7 +435,7 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         await dsActions.submitJcl(blockMocks.testDatasetTree);
 
         expect(submitJclSpy).not.toBeCalled();
-        expect(mocked(globals.LOG.error)).toBeCalled();
+        expect(mocked(ZoweLogger.logError)).toBeCalled();
     });
 });
 

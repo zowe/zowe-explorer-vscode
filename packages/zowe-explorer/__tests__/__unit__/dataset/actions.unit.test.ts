@@ -124,6 +124,10 @@ function createGlobalMocks() {
         value: jest.fn(),
         configurable: true,
     });
+    Object.defineProperty(ZoweLogger, "logDebug", {
+        value: jest.fn(),
+        configurable: true,
+    });
     mocked(Profiles.getInstance).mockReturnValue(newMocks.profileInstance);
 
     return newMocks;
@@ -2652,7 +2656,7 @@ describe("Dataset Actions Unit Tests - Function showFileErrorDetails", () => {
         );
 
         const spyRecall = jest.spyOn(blockMocks.mvsApi, "hRecallDataSet");
-        const spyLogError = mocked(globals.LOG.error);
+        const spyLogError = mocked(ZoweLogger.logError);
 
         // succeeded at recalling the dataset
         spyRecall.mockResolvedValueOnce({ success: true } as any);

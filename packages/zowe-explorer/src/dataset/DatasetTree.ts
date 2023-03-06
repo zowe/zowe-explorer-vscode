@@ -29,6 +29,7 @@ import { closeOpenedTextFile } from "../utils/workspace";
 import { IDataSet, IListOptions, imperative } from "@zowe/cli";
 import { validateDataSetName, validateMemberName } from "./utils";
 import { SettingsConfig } from "../utils/SettingsConfig";
+import { ZoweLogger } from "../utils/LoggerUtils";
 
 // Set up localization
 nls.config({
@@ -216,10 +217,10 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      */
     public async initializeFavorites(log: imperative.Logger) {
         this.log = log;
-        this.log.debug(localize("initializeFavorites.log.debug", "Initializing profiles with data set favorites."));
+        ZoweLogger.logDebug(localize("initializeFavorites.log.debug", "Initializing profiles with data set favorites."));
         const lines: string[] = this.mHistory.readFavorites();
         if (lines.length === 0) {
-            this.log.debug(localize("initializeFavorites.no.favorites", "No data set favorites found."));
+            ZoweLogger.logDebug(localize("initializeFavorites.no.favorites", "No data set favorites found."));
             return;
         }
         // Line validation
@@ -227,7 +228,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         const favoriteSearchPattern = /^\[.+\]\:\s.*\{session}$/;
         for (const line of lines) {
             if (!(favoriteDataSetPattern.test(line) || favoriteSearchPattern.test(line))) {
-                this.log.warn(
+                ZoweLogger.logWarn(
                     localize("initializeFavorites.invalidDsFavorite1", "Invalid Data Sets favorite: {0}.", line) +
                         localize(
                             "initializeFavorites.invalidDsFavorite2",
@@ -306,7 +307,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         let profile: imperative.IProfileLoaded;
         let session: imperative.Session;
         this.log = log;
-        this.log.debug(localize("loadProfilesForFavorites.log.debug", "Loading profile: {0} for data set favorites", profileName));
+        ZoweLogger.logDebug(localize("loadProfilesForFavorites.log.debug", "Loading profile: {0} for data set favorites", profileName));
         // Load profile for parent profile node in this.mFavorites array
         if (!parentNode.getProfile() || !parentNode.getSession()) {
             // If no profile/session yet, then add session and profile to parent profile node in this.mFavorites array:
@@ -329,7 +330,6 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     ];
                 }
             } catch (error) {
-                this.log.error(error);
                 const errMessage: string =
                     localize(
                         "loadProfilesForFavorites.error.profile1",
@@ -342,6 +342,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                         " from the Favorites section of Zowe Explorer's Data Sets view. Would you like to do this now? ",
                         getAppName(globals.ISTHEIA)
                     );
+                ZoweLogger.logError(errMessage + error);
                 const btnLabelRemove = localize("loadProfilesForFavorites.error.buttonRemove", "Remove");
                 Gui.errorMessage(errMessage, {
                     items: [btnLabelRemove],
@@ -434,7 +435,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 } catch (error) {
                     // catch and log error of no default,
                     // if not type passed getDefaultProfile assumes zosmf
-                    this.log.warn(error);
+                    ZoweLogger.logWarn(error);
                 }
             }
         }
@@ -796,7 +797,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     }
 
     public async getAllLoadedItems() {
-        this.log.debug(localize("enterPattern.log.debug.prompt", "Prompting the user to choose a member from the filtered list"));
+        ZoweLogger.logDebug(localize("enterPattern.log.debug.prompt", "Prompting the user to choose a member from the filtered list"));
         const loadedItems: IZoweDatasetTreeNode[] = [];
         const sessions = await this.getChildren();
 
@@ -821,7 +822,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     }
 
     public async datasetFilterPrompt(node: IZoweDatasetTreeNode) {
-        this.log.debug(localize("enterPattern.log.debug.prompt", "Prompting the user for a data set pattern"));
+        ZoweLogger.logDebug(localize("enterPattern.log.debug.prompt", "Prompting the user for a data set pattern"));
         let pattern: string;
         await this.checkCurrentProfile(node);
         let nonFaveNode;
@@ -1101,14 +1102,13 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         const beforeFullPath = getDocumentFilePath(`${dataSetName}(${node.getLabel().toString()})`, node);
         const closedOpenedInstance = await closeOpenedTextFile(beforeFullPath);
 
-        this.log.debug(localize("renameDataSet.log.debug", "Renaming data set ") + afterMemberName);
+        ZoweLogger.logDebug(localize("renameDataSet.log.debug", "Renaming data set ") + afterMemberName);
         if (afterMemberName && afterMemberName !== beforeMemberName) {
             try {
                 await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).renameDataSetMember(dataSetName, beforeMemberName, afterMemberName);
                 node.label = afterMemberName;
                 node.tooltip = afterMemberName;
             } catch (err) {
-                this.log.error(localize("renameDataSet.log.error", "Error encountered when renaming data set! ") + JSON.stringify(err));
                 await errorHandling(err, dataSetName, localize("renameDataSet.error", "Unable to rename data set: ") + err.message);
                 throw err;
             }
@@ -1153,7 +1153,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         const beforeFullPath = getDocumentFilePath(node.getLabel() as string, node);
         const closedOpenedInstance = await closeOpenedTextFile(beforeFullPath);
 
-        this.log.debug(localize("renameDataSet.log.debug", "Renaming data set ") + afterDataSetName);
+        ZoweLogger.logDebug(localize("renameDataSet.log.debug", "Renaming data set ") + afterDataSetName);
         if (afterDataSetName && afterDataSetName !== beforeDataSetName) {
             try {
                 await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).renameDataSet(beforeDataSetName, afterDataSetName);
@@ -1178,7 +1178,6 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     vscode.commands.executeCommand("zowe.ds.ZoweNode.openPS", node);
                 }
             } catch (err) {
-                this.log.error(localize("renameDataSet.log.error", "Error encountered when renaming data set! ") + JSON.stringify(err));
                 await errorHandling(err, node.label.toString(), localize("renameDataSet.error", "Unable to rename data set: ") + err.message);
                 throw err;
             }
@@ -1201,7 +1200,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 session = await ZoweExplorerApiRegister.getMvsApi(profile).getSession();
             } catch (err) {
                 if (err.toString().includes("hostname")) {
-                    this.log.error(err);
+                    ZoweLogger.logError(err);
                 } else {
                     await errorHandling(err, profile.name);
                 }
