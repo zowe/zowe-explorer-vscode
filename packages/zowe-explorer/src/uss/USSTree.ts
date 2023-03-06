@@ -613,6 +613,9 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             }
             // update the treeview with the new path
             sessionNode.description = sanitizedPath;
+            if (!contextually.isFilterFolder(sessionNode)) {
+                sessionNode.contextValue += `_${globals.FILTER_SEARCH}`;
+            }
             this.expandSession(sessionNode, this);
             sessionNode.dirty = true;
             this.addSearchHistory(sanitizedPath);
