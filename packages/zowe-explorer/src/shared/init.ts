@@ -24,6 +24,7 @@ import { handleSaving } from "../utils/workspace";
 import { saveFile } from "../dataset/actions";
 import { saveUSSFile } from "../uss/actions";
 import { promptCredentials, writeOverridesFile } from "../utils/ProfilesUtils";
+import { ZoweLogger } from "../utils/LoggerUtils";
 
 // Set up localization
 nls.config({
@@ -55,7 +56,7 @@ export function registerRefreshCommand(
                     try {
                         await sub.dispose();
                     } catch (e) {
-                        globals.LOG.error(e);
+                        ZoweLogger.logError(e);
                     }
                 }
                 await activate(context);
@@ -117,7 +118,7 @@ export async function registerCommonCommands(context: vscode.ExtensionContext, p
         );
         context.subscriptions.push(
             vscode.workspace.onWillSaveTextDocument(async (savedFile) => {
-                globals.LOG.debug(
+                ZoweLogger.logDebug(
                     localize(
                         "onDidSaveTextDocument1",
                         "File was saved -- determining whether the file is a USS file or Data set.\n Comparing (case insensitive) "
@@ -129,19 +130,19 @@ export async function registerCommonCommands(context: vscode.ExtensionContext, p
                         globals.USS_DIR
                 );
                 if (!savedFile.document.isDirty) {
-                    globals.LOG.debug(
+                    ZoweLogger.logDebug(
                         localize("activate.didSaveText.file", "File ") +
                             savedFile.document.fileName +
                             localize("activate.didSaveText.notDirty", " is not a dirty file ")
                     );
                 } else if (savedFile.document.fileName.toUpperCase().indexOf(globals.DS_DIR.toUpperCase()) >= 0) {
-                    globals.LOG.debug(localize("activate.didSaveText.isDataSet", "File is a data set-- saving "));
+                    ZoweLogger.logDebug(localize("activate.didSaveText.isDataSet", "File is a data set-- saving "));
                     await handleSaving(saveFile, savedFile.document, providers.ds);
                 } else if (savedFile.document.fileName.toUpperCase().indexOf(globals.USS_DIR.toUpperCase()) >= 0) {
-                    globals.LOG.debug(localize("activate.didSaveText.isUSSFile", "File is a USS file -- saving"));
+                    ZoweLogger.logDebug(localize("activate.didSaveText.isUSSFile", "File is a USS file -- saving"));
                     await handleSaving(saveUSSFile, savedFile.document, providers.uss);
                 } else {
-                    globals.LOG.debug(
+                    ZoweLogger.logDebug(
                         localize("activate.didSaveText.file", "File ") +
                             savedFile.document.fileName +
                             localize("activate.didSaveText.notDataSet", " is not a data set or USS file ")
