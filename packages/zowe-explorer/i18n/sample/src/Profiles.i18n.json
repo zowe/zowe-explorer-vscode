@@ -41,6 +41,7 @@
   "deleteProfile.noSelected": "Operation Cancelled",
   "Profiles.validateProfiles.validationProgress": "Validating {0} Profile.",
   "Profiles.validateProfiles.validationCancelled": "Validating {0} was cancelled.",
+  "validateProfiles.error": "Validate Error - Invalid Profile: ",
   "ssoAuth.noBase": "This profile does not support token authentication.",
   "ssoLogin.unableToLogin": "Unable to log in. ",
   "ssoLogin.successful": "Login to authentication service was successful.",
