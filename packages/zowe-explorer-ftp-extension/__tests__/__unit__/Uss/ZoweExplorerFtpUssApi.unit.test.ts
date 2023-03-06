@@ -75,6 +75,16 @@ describe("FtpUssApi", () => {
         expect(response._readableState.buffer.head.data.toString()).toContain("Hello world");
     });
 
+    const mockUssFileParams = {
+        inputFilePath: "/tmp/testfile1.txt",
+        ussFilePath: "/a/b/c.txt",
+        etag: "123",
+        returnEtag: true,
+        options: {
+            file: "/tmp/testfile1.txt",
+        },
+    };
+
     it("should upload uss files.", async () => {
         const localFile = "/tmp/testfile1.txt";
         const response = TestUtils.getSingleLineStream();
@@ -97,6 +107,12 @@ describe("FtpUssApi", () => {
         expect(UssApi.releaseConnection).toBeCalled();
     });
 
+    it("should call putContents when calling putContent", async () => {
+        const putContentsMock = jest.spyOn(UssApi, "putContents").mockImplementation();
+        await UssApi.putContent(mockUssFileParams.inputFilePath, mockUssFileParams.ussFilePath);
+        expect(putContentsMock).toHaveBeenCalled();
+    });
+
     it("should upload uss directory.", async () => {
         const localpath = "/tmp";
         const files = ["file1", "file2"];
@@ -109,7 +125,9 @@ describe("FtpUssApi", () => {
         const response = {};
         UssApi.putContents = jest.fn().mockReturnValue(response);
         await UssApi.uploadDirectory(mockParams.inputDirectoryPath, mockParams.ussDirectoryPath, mockParams.options);
-        expect(UssApi.putContents).toBeCalledTimes(2);
+
+        // One call to make the folder, one call per file
+        expect(UssApi.putContents).toBeCalledTimes(3);
     });
 
     it("should create uss directory.", async () => {
@@ -178,5 +196,9 @@ describe("FtpUssApi", () => {
         expect(result.commandResponse).toContain("Rename completed.");
         expect(UssUtils.renameFile).toBeCalledTimes(1);
         expect(UssApi.releaseConnection).toBeCalled();
+    });
+
+    it("should receive false from isFileTagBinOrAscii as it is not implemented in the FTP extension.", async () => {
+        expect(await UssApi.isFileTagBinOrAscii("")).toBe(false);
     });
 });

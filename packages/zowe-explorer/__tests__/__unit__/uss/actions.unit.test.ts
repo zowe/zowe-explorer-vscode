@@ -14,6 +14,7 @@ jest.mock("fs");
 import * as zowe from "@zowe/cli";
 import { Gui, ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import * as ussNodeActions from "../../../src/uss/actions";
+import { UssFileTree, UssFileType, UssFileUtils } from "../../../src/uss/FileStructure";
 import { createUSSTree, createUSSNode, createFavoriteUSSNode } from "../../../__mocks__/mockCreators/uss";
 import {
     createIProfile,
@@ -744,6 +745,7 @@ describe("USS Action Unit Tests - copy file / directory", () => {
             ussApi: createUssApi(globalMocks.testProfile),
             ussNodes: null,
         };
+
         newMocks.treeNodes.testUSSTree = createUSSTree(
             [createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile)],
             [newMocks.treeNodes.ussNode],
@@ -756,14 +758,95 @@ describe("USS Action Unit Tests - copy file / directory", () => {
     it("Copy file(s), Directory(s) paths into clipboard", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
-
+        const fileStructure = JSON.stringify(await ussNodeActions.ussFileStructure(blockMocks.nodes));
         await ussNodeActions.copyUssFilesToClipboard(blockMocks.nodes);
 
-        expect(globalMocks.writeText).toBeCalledWith(
-            blockMocks.nodes[0].getUSSDocumentFilePath() + "," + blockMocks.nodes[1].getUSSDocumentFilePath() + "/"
+        expect(globalMocks.writeText).toBeCalledWith(fileStructure);
+    });
+
+    it("Has the proper responses for toSameSession in UssFileUtils", async () => {
+        // Test toSameSession where one of the files has a diff LPAR
+        let isSameSession = UssFileUtils.toSameSession(
+            {
+                localPath: "C:/some/local/path",
+                ussPath: "/z/SOMEUSER/path",
+                baseName: "<ROOT>",
+                children: [],
+                sessionName: "session1",
+                type: UssFileType.Directory,
+            },
+            "diffSessionLPAR"
         );
-        expect(blockMocks.nodes[0].refreshUSS).toBeCalled();
-        expect(blockMocks.nodes[1].refreshUSS).toHaveBeenCalledTimes(0);
+        expect(isSameSession).toBe(false);
+
+        // Test toSameSession where the LPAR is the same, and the file node has no children
+        isSameSession = UssFileUtils.toSameSession(
+            {
+                localPath: "C:/some/local/path",
+                ussPath: "/z/SOMEUSER/path",
+                baseName: "<ROOT>",
+                children: [],
+                sessionName: "session1",
+                type: UssFileType.Directory,
+            },
+            "session1"
+        );
+        expect(isSameSession).toBe(true);
+    });
+
+    it("paste calls relevant USS API functions", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        let rootTree: UssFileTree = {
+            children: [],
+            baseName: blockMocks.nodes[1].getLabel() as string,
+            ussPath: "",
+            sessionName: blockMocks.treeNodes.ussNode.getLabel() as string,
+            type: UssFileType.Directory,
+        };
+        blockMocks.treeNodes.ussApi.fileList = jest.fn().mockResolvedValue({
+            apiResponse: {
+                items: [blockMocks.nodes[0].getLabel() as string, blockMocks.nodes[1].getLabel() as string],
+            },
+        });
+        blockMocks.treeNodes.ussApi.copy = jest.fn();
+        await blockMocks.nodes[1].paste(rootTree.sessionName, rootTree.ussPath, { tree: rootTree, api: blockMocks.treeNodes.ussApi });
+        expect(blockMocks.treeNodes.ussApi.fileList).toHaveBeenCalled();
+        expect(blockMocks.treeNodes.ussApi.copy).toHaveBeenCalledWith(`/${blockMocks.nodes[1].getLabel()}`, {
+            from: "",
+            recursive: true,
+        });
+    });
+
+    it("paste throws an error if required APIs are not available", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        let rootTree: UssFileTree = {
+            children: [],
+            baseName: blockMocks.nodes[1].getLabel() as string,
+            ussPath: "",
+            sessionName: blockMocks.treeNodes.ussNode.getLabel() as string,
+            type: UssFileType.Directory,
+        };
+
+        const originalFileList = blockMocks.treeNodes.ussApi.fileList;
+        blockMocks.treeNodes.ussApi.copy = blockMocks.treeNodes.ussApi.fileList = undefined;
+        try {
+            await blockMocks.nodes[1].paste(rootTree.sessionName, rootTree.ussPath, { tree: rootTree, api: blockMocks.treeNodes.ussApi });
+        } catch (err) {
+            expect(err).toBeDefined();
+            expect(err.message).toBe("Required API functions for pasting (fileList, copy and/or putContent) were not found.");
+        }
+
+        // Test for putContent also being undefined
+        blockMocks.treeNodes.ussApi.fileList = originalFileList;
+        blockMocks.treeNodes.ussApi.putContent = undefined;
+        try {
+            await blockMocks.nodes[1].paste(rootTree.sessionName, rootTree.ussPath, { tree: rootTree, api: blockMocks.treeNodes.ussApi });
+        } catch (err) {
+            expect(err).toBeDefined();
+            expect(err.message).toBe("Required API functions for pasting (fileList, copy and/or putContent) were not found.");
+        }
     });
 
     it("tests refreshChildNodesDirectory executed successfully with empty directory", async () => {

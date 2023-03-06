@@ -102,4 +102,22 @@ describe("Zosmf API tests", () => {
             encoding: "285",
         });
     });
+
+    it("should test that getContents calls zowe.Download.ussFile", async () => {
+        const api = new ZosmfUssApi();
+        api.getSession = jest.fn();
+
+        Object.defineProperty(zowe, "Download", {
+            value: {
+                ussFile: jest.fn().mockResolvedValue({
+                    shouldMatch: true,
+                }),
+            },
+            configurable: true,
+        });
+
+        expect(api.getContents("/some/input/path", {})).toStrictEqual(
+            Promise.resolve(zowe.Download.ussFile(api.getSession(), "/some/input/path", {}))
+        );
+    });
 });

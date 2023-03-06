@@ -17,3 +17,11 @@ export function join(...paths: string[]): string {
 export function normalize(p: string): string {
     return p;
 }
+
+export function extname(file: string): string {
+    return "";
+}
+
+export function parse(file: string) {
+    return { name: file };
+}
