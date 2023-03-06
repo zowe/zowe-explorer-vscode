@@ -550,7 +550,8 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
         expect(mocked(Gui.warningMessage)).toBeCalledWith(
-            `Are you sure you want to delete the following 1 item(s)?\nThis will permanently remove these data sets and/or members from your system.\n\n ${blockMocks.testFavoritedNode.getLabel()}`,
+            `Are you sure you want to delete the following 1 item(s)?\nThis will permanently remove these data sets and/or members from your ` +
+                `system.\n\n ${blockMocks.testFavoritedNode.getLabel()}`,
             { items: ["Delete"], vsCodeOpts: { modal: true } }
         );
     });
@@ -567,7 +568,8 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
         expect(mocked(Gui.warningMessage)).toBeCalledWith(
-            `Are you sure you want to delete the following 1 item(s)?\nThis will permanently remove these data sets and/or members from your system.\n\n ${blockMocks.testFavoritedNode.getLabel()}(${blockMocks.testFavMemberNode.getLabel()})`,
+            `Are you sure you want to delete the following 1 item(s)?\nThis will permanently remove these data sets and/or members from your ` +
+                `system.\n\n ${blockMocks.testFavoritedNode.getLabel()}(${blockMocks.testFavMemberNode.getLabel()})`,
             { items: ["Delete"], vsCodeOpts: { modal: true } }
         );
     });
@@ -1642,7 +1644,8 @@ describe("Dataset Actions Unit Tests - Function showAttributes", () => {
             Error("No matching names found for query: AUSER.A1557332.A996850.TEST1")
         );
         expect(mocked(Gui.errorMessage)).toBeCalledWith(
-            "Unable to list attributes: No matching names found for query: AUSER.A1557332.A996850.TEST1 Error: No matching names found for query: AUSER.A1557332.A996850.TEST1"
+            "Unable to list attributes: No matching names found for query: AUSER.A1557332.A996850.TEST1 Error: No matching names found for query: " +
+                "AUSER.A1557332.A996850.TEST1"
         );
         expect(mocked(vscode.window.createWebviewPanel)).not.toBeCalled();
     });
@@ -1781,7 +1784,10 @@ describe("Dataset Actions Unit Tests - Function copyDataSets", () => {
         const nodeList: ZoweDatasetNode[] = [blockMocks.memberChild, blockMocks.memberChild];
         await dsActions.copyDataSets(null, nodeList, blockMocks.testDatasetTree);
         expect(clipboard.readText()).toBe(
-            '[{"profileName":"sestest","dataSetName":"parent","memberName":"child","contextValue":"member"},{"profileName":"sestest","dataSetName":"parent","memberName":"child","contextValue":"member"}]'
+            JSON.stringify([
+                { profileName: "sestest", dataSetName: "parent", memberName: "child", contextValue: "member" },
+                { profileName: "sestest", dataSetName: "parent", memberName: "child", contextValue: "member" },
+            ])
         );
     });
     it("Checking copy of sequential datasets with empty new datasetname", async () => {

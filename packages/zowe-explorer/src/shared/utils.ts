@@ -274,11 +274,12 @@ export async function willForceUpload(
             )
         );
     }
+    // Don't wait for prompt to return since this would block the save queue
     Gui.infoMessage(localize("saveFile.info.confirmUpload", "Would you like to overwrite the remote file?"), {
         items: [localize("saveFile.overwriteConfirmation.yes", "Yes"), localize("saveFile.overwriteConfirmation.no", "No")],
     }).then(async (selection) => {
         if (selection === localize("saveFile.overwriteConfirmation.yes", "Yes")) {
-            const uploadResponse = Gui.withProgress(
+            const uploadResponse = await Gui.withProgress(
                 {
                     location: vscode.ProgressLocation.Notification,
                     title,
@@ -287,14 +288,12 @@ export async function willForceUpload(
                     return uploadContent(node, doc, remotePath, profile, binary, null, returnEtag);
                 }
             );
-            uploadResponse.then((response) => {
-                if (response.success) {
-                    Gui.showMessage(response.commandResponse);
-                    if (node) {
-                        node.setEtag(response.apiResponse[0].etag);
-                    }
+            if (uploadResponse.success) {
+                Gui.showMessage(uploadResponse.commandResponse);
+                if (node) {
+                    node.setEtag(uploadResponse.apiResponse[0].etag);
                 }
-            });
+            }
         } else {
             Gui.showMessage(localize("uploadContent.cancelled", "Upload cancelled."));
             await markFileAsDirty(doc);

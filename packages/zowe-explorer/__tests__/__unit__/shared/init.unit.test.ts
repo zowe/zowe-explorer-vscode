@@ -14,7 +14,6 @@ import * as globals from "../../../src/globals";
 import * as refreshActions from "../../../src/shared/refresh";
 import * as sharedActions from "../../../src/shared/actions";
 import * as sharedExtension from "../../../src/shared/init";
-import * as workspaceUtils from "../../../src/utils/workspace";
 import { Profiles } from "../../../src/Profiles";
 import * as profileUtils from "../../../src/utils/ProfilesUtils";
 import * as tempFolder from "../../../src/utils/TempFolder";

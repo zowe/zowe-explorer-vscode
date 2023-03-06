@@ -11,7 +11,7 @@
 
 import * as path from "path";
 import * as vscode from "vscode";
-import { Gui, IZoweDatasetTreeNode, IZoweTree, IZoweUSSTreeNode } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweTree, IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import * as globals from "../globals";
 import { markDocumentUnsaved } from "../utils/workspace";
 
@@ -24,9 +24,9 @@ nls.config({
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 interface SaveRequest {
-    uploadRequest: (document, provider) => Promise<void>;
+    uploadRequest: (document: SaveRequest["savedFile"], provider: SaveRequest["fileProvider"]) => Promise<void>;
     savedFile: vscode.TextDocument;
-    fileProvider: IZoweTree<IZoweUSSTreeNode | IZoweDatasetTreeNode>;
+    fileProvider: IZoweTree<IZoweTreeNode>;
 }
 
 /**
