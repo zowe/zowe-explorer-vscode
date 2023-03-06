@@ -118,7 +118,7 @@ export async function registerCommonCommands(context: vscode.ExtensionContext, p
         );
         context.subscriptions.push(
             vscode.workspace.onWillSaveTextDocument(async (savedFile) => {
-                ZoweLogger.logDebug(
+                ZoweLogger.logTrace(
                     localize(
                         "onDidSaveTextDocument1",
                         "File was saved -- determining whether the file is a USS file or Data set.\n Comparing (case insensitive) "
@@ -130,7 +130,7 @@ export async function registerCommonCommands(context: vscode.ExtensionContext, p
                         globals.USS_DIR
                 );
                 if (!savedFile.document.isDirty) {
-                    ZoweLogger.logDebug(
+                    ZoweLogger.logTrace(
                         localize("activate.didSaveText.file", "File ") +
                             savedFile.document.fileName +
                             localize("activate.didSaveText.notDirty", " is not a dirty file ")
@@ -142,7 +142,7 @@ export async function registerCommonCommands(context: vscode.ExtensionContext, p
                     ZoweLogger.logDebug(localize("activate.didSaveText.isUSSFile", "File is a USS file -- saving"));
                     await handleSaving(saveUSSFile, savedFile.document, providers.uss);
                 } else {
-                    ZoweLogger.logDebug(
+                    ZoweLogger.logTrace(
                         localize("activate.didSaveText.file", "File ") +
                             savedFile.document.fileName +
                             localize("activate.didSaveText.notDataSet", " is not a data set or USS file ")

@@ -98,7 +98,10 @@ export class ZoweLogger {
                 break;
             }
         }
-        this.zoweExplOutput.appendLine(this.setMessage(message, this.messageSeverityStrings[severity]));
+        const logSetting = this.getLogSetting();
+        if (+MessageSeverity[logSetting] <= +severity) {
+            this.zoweExplOutput.appendLine(this.setMessage(message, this.messageSeverityStrings[severity]));
+        }
     }
 
     private static initOutputLogger(): void {
@@ -120,5 +123,11 @@ export class ZoweLogger {
 
     private static setMessage(msg: string, level: string): string {
         return `[${this.getDate()} ${this.getTime()}] [${level}] ${msg}`;
+    }
+
+    private static getLogSetting() {
+        let logSetting = vscode.workspace.getConfiguration().get("zowe.logger");
+        // if logSetting is undefined, it will be the default value; DEBUG
+        return logSetting ? logSetting : "DEBUG";
     }
 }
