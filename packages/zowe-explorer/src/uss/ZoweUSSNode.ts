@@ -19,11 +19,12 @@ import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
 import { getIconByNode } from "../generators/icons/index";
-import { disposeClipboardContents, fileExistsCaseSensitveSync, injectAdditionalDataToTooltip } from "../uss/utils";
+import { fileExistsCaseSensitveSync, injectAdditionalDataToTooltip } from "../uss/utils";
 import * as contextually from "../shared/context";
 import { closeOpenedTextFile } from "../utils/workspace";
 import * as nls from "vscode-nls";
 import { UssFileTree, UssFileType, UssFileUtils } from "./FileStructure";
+import { ZoweLogger } from "../utils/LoggerUtils";
 
 // Set up localization
 nls.config({
@@ -348,7 +349,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 }
             } catch (err) {}
         } catch (err) {
-            globals.LOG.error(err);
+            ZoweLogger.logError(err);
             Gui.errorMessage(localize("deleteUSSNode.error.node", "Unable to delete node: ") + err.message);
             throw err;
         }
@@ -538,7 +539,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             }
         } catch (err) {
             if (err.message.includes(localize("refreshUSS.error.notFound", "not found"))) {
-                globals.LOG.warn(err);
+                ZoweLogger.logWarn(err);
                 Gui.showMessage(
                     localize("refreshUSS.file1", "Unable to find file: ") + label + localize("refreshUSS.file2", " was probably deleted.")
                 );
@@ -556,7 +557,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             try {
                 document = await vscode.workspace.openTextDocument(documentPath);
             } catch (err) {
-                globals.LOG.warn(err);
+                ZoweLogger.logWarn(err);
                 openingTextFailed = true;
             }
 

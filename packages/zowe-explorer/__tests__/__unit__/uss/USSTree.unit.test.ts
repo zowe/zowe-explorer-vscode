@@ -162,6 +162,10 @@ async function createGlobalMocks() {
         value: jest.fn(),
         configurable: true,
     });
+    Object.defineProperty(ZoweLogger, "logDebug", {
+        value: jest.fn(),
+        configurable: true,
+    });
 
     globalMocks.withProgress.mockImplementation((progLocation, callback) => callback());
     globalMocks.withProgress.mockReturnValue(globalMocks.testResponse);

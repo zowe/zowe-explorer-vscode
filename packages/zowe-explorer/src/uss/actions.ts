@@ -27,6 +27,7 @@ import { refreshAll } from "../shared/refresh";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 import { fileExistsCaseSensitveSync } from "./utils";
 import { UssFileTree, UssFileType } from "./FileStructure";
+import { ZoweLogger } from "../utils/LoggerUtils";
 
 // Set up localization
 nls.config({
@@ -129,7 +130,7 @@ export async function deleteFromDisk(node: IZoweUSSTreeNode, filePath: string) {
             fs.unlinkSync(filePath);
         }
     } catch (err) {
-        globals.LOG.warn(err);
+        ZoweLogger.logWarn(err);
     }
 }
 
@@ -231,7 +232,7 @@ export async function changeFileType(node: IZoweUSSTreeNode, binary: boolean, us
  * @param {vscode.TextDocument} doc - TextDocument that is being saved
  */
 export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZoweTree<IZoweUSSTreeNode>) {
-    globals.LOG.debug(localize("saveUSSFile.log.debug.saveRequest", "save requested for USS file ") + doc.fileName);
+    ZoweLogger.logDebug(localize("saveUSSFile.log.debug.saveRequest", "save requested for USS file ") + doc.fileName);
     const start = path.join(globals.USS_DIR + path.sep).length;
     const ending = doc.fileName.substring(start);
     const sesName = ending.substring(0, ending.indexOf(path.sep));
@@ -322,7 +323,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
                     node.setEtag(downloadEtag);
                 }
 
-                globals.LOG.warn(err);
+                ZoweLogger.logWarn(err);
                 Gui.warningMessage(
                     localize(
                         "saveFile.error.etagMismatch",
@@ -342,7 +343,6 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
                 }
             }
         } else {
-            globals.LOG.error(localize("saveUSSFile.log.error.save", "Error encountered when saving USS file: ") + JSON.stringify(err));
             await markDocumentUnsaved(doc);
             await errorHandling(err, sesName, err.message);
         }
@@ -366,7 +366,7 @@ export async function deleteUSSFilesPrompt(nodes: IZoweUSSTreeNode[]): Promise<b
         vsCodeOpts: { modal: true },
     }).then((selection) => {
         if (!selection || selection === "Cancel") {
-            globals.LOG.debug(localize("deleteUssPrompt.confirmation.cancel.log.debug", "Delete action was canceled."));
+            ZoweLogger.logDebug(localize("deleteUssPrompt.confirmation.cancel.log.debug", "Delete action was canceled."));
             cancelled = true;
         }
     });

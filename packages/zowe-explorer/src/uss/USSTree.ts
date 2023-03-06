@@ -26,6 +26,7 @@ import * as contextually from "../shared/context";
 import * as nls from "vscode-nls";
 import { resetValidationSettings } from "../shared/actions";
 import { SettingsConfig } from "../utils/SettingsConfig";
+import { ZoweLogger } from "../utils/LoggerUtils";
 
 // Set up localization
 nls.config({
@@ -333,7 +334,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 } catch (error) {
                     // catch and log error of no default,
                     // if not type passed getDefaultProfile assumes zosmf
-                    this.log.warn(error);
+                    ZoweLogger.logWarn(error);
                 }
             }
         }
@@ -497,7 +498,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      */
     public async getAllLoadedItems() {
         if (this.log) {
-            this.log.debug(localize("enterPattern.log.debug.prompt", "Prompting the user to choose a member from the filtered list"));
+            ZoweLogger.logDebug(localize("enterPattern.log.debug.prompt", "Prompting the user to choose a member from the filtered list"));
         }
         const loadedNodes: IZoweUSSTreeNode[] = [];
         const sessions = await this.getChildren();
@@ -535,7 +536,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      */
     public async filterPrompt(node: IZoweUSSTreeNode) {
         if (this.log) {
-            this.log.debug(localize("filterPrompt.log.debug.promptUSSPath", "Prompting the user for a USS path"));
+            ZoweLogger.logDebug(localize("filterPrompt.log.debug.promptUSSPath", "Prompting the user for a USS path"));
         }
         await this.checkCurrentProfile(node);
         if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID || !contextually.isValidationEnabled(node)) {
@@ -663,10 +664,10 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      */
     public async initializeFavorites(log: imperative.Logger) {
         this.log = log;
-        this.log.debug(localize("initializeFavorites.log.debug", "Initializing profiles with USS favorites."));
+        ZoweLogger.logDebug(localize("initializeFavorites.log.debug", "Initializing profiles with USS favorites."));
         const lines: string[] = this.mHistory.readFavorites();
         if (lines.length === 0) {
-            this.log.debug(localize("initializeFavorites.no.favorites", "No USS favorites found."));
+            ZoweLogger.logDebug(localize("initializeFavorites.no.favorites", "No USS favorites found."));
             return;
         }
         lines.forEach(async (line) => {
@@ -732,7 +733,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         let profile: imperative.IProfileLoaded;
         let session: imperative.Session;
         this.log = log;
-        this.log.debug(localize("loadProfilesForFavorites.log.debug", "Loading profile: {0} for USS favorites", profileName));
+        ZoweLogger.logDebug(localize("loadProfilesForFavorites.log.debug", "Loading profile: {0} for USS favorites", profileName));
         // Load profile for parent profile node in this.mFavorites array
         if (!parentNode.getProfile() || !parentNode.getSession()) {
             // If no profile/session yet, then add session and profile to parent profile node in this.mFavorites array:
@@ -759,7 +760,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                     return [infoNode];
                 }
             } catch (error) {
-                this.log.error(error);
+                ZoweLogger.logError(error);
                 const errMessage: string =
                     localize(
                         "initializeUSSFavorites.error.profile1",
@@ -884,7 +885,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 session = await ZoweExplorerApiRegister.getUssApi(profile).getSession();
             } catch (err) {
                 if (err.toString().includes("hostname")) {
-                    this.log.error(err);
+                    ZoweLogger.logError(err);
                 } else {
                     await errorHandling(err, profile.name);
                 }

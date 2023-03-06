@@ -178,6 +178,14 @@ function createGlobalMocks() {
         value: jest.fn(),
         configurable: true,
     });
+    Object.defineProperty(ZoweLogger, "logWarn", {
+        value: jest.fn(),
+        configurable: true,
+    });
+    Object.defineProperty(ZoweLogger, "logDebug", {
+        value: jest.fn(),
+        configurable: true,
+    });
 
     return globalMocks;
 }
@@ -398,7 +406,7 @@ describe("USS Action Unit Tests - Function deleteFromDisk", () => {
         jest.spyOn(fs, "unlinkSync").mockImplementation(() => {
             throw new Error();
         });
-        Object.defineProperty(globals.LOG, "warn", {
+        Object.defineProperty(ZoweLogger, "logWarn", {
             value: globalsLogWarnSpy,
         });
         ussNodeActions.deleteFromDisk(null, "some/where/that/does/not/exist");
