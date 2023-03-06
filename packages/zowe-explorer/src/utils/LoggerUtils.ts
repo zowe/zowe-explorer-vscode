@@ -35,9 +35,9 @@ export class ZoweLogger {
             this.zoweExplOutput.appendLine(`${packageInfo.displayName} ${packageInfo.version}`);
             this.zoweExplOutput.appendLine(localize("initialize.log.location", "This log file can be found at ") + logFileLocation);
             const initMessage = localize("initialize.log.info", "Initialized logger for Zowe Explorer");
-            this.writeLogMessage(initMessage, MessageSeverity.INFO);
+            this.logInfo(initMessage);
         } catch (err) {
-            globals.LOG.error(err);
+            globals.LOG?.error(err);
             const errorMessage = localize("initialize.log.error", "Error encountered while activating and initializing logger! ");
             await Gui.errorMessage(`${errorMessage}: ${err?.message}`);
         }

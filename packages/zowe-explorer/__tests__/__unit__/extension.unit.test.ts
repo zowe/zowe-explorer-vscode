@@ -28,6 +28,7 @@ import { SettingsConfig } from "../../src/utils/SettingsConfig";
 import { ZoweExplorerExtender } from "../../src/ZoweExplorerExtender";
 import { DatasetTree } from "../../src/dataset/DatasetTree";
 import { USSTree } from "../../src/uss/USSTree";
+import { ZoweLogger } from "../../src/utils/LoggerUtils";
 
 jest.mock("vscode");
 jest.mock("fs");
@@ -366,6 +367,7 @@ async function createGlobalMocks() {
     });
     Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
     Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
+    Object.defineProperty(globals.LOG, "debug", { value: jest.fn(), configurable: true });
 
     // Create a mocked extension context
     const mockExtensionCreator = jest.fn(
@@ -373,9 +375,29 @@ async function createGlobalMocks() {
             ({
                 subscriptions: [],
                 extensionPath: path.join(__dirname, ".."),
-            } as vscode.ExtensionContext)
+                extension: {
+                    packageJSON: {
+                        packageInfo: "Zowe Explorer",
+                        version: "2.x.x",
+                    },
+                },
+            } as unknown as vscode.ExtensionContext)
     );
     globalMocks.mockExtension = new mockExtensionCreator();
+
+    Object.defineProperty(ZoweLogger, "initializeZoweLogger", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "logError", {
+        value: jest.fn(),
+        configurable: true,
+    });
+    Object.defineProperty(ZoweLogger, "logInfo", {
+        value: jest.fn(),
+        configurable: true,
+    });
+    Object.defineProperty(ZoweLogger, "logWarn", {
+        value: jest.fn(),
+        configurable: true,
+    });
 
     globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.testProfile);
     globalMocks.mockCreateSessCfgFromArgs.mockReturnValue(globalMocks.testSession.ISession);

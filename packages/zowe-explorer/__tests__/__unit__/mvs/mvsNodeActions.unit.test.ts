@@ -14,6 +14,7 @@ import * as dsActions from "../../../src/dataset/actions";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import { imperative } from "@zowe/cli";
 import * as globals from "../../../src/globals";
+import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 
 const mockRefresh = jest.fn();
 const showOpenDialog = jest.fn();
@@ -28,6 +29,10 @@ Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: tr
 Object.defineProperty(vscode.window, "showOpenDialog", { value: showOpenDialog });
 Object.defineProperty(vscode.window, "showInformationMessage", { value: showInformationMessage });
 Object.defineProperty(vscode.workspace, "openTextDocument", { value: openTextDocument });
+Object.defineProperty(ZoweLogger, "logError", {
+    value: jest.fn(),
+    configurable: true,
+});
 const DatasetTree = jest.fn().mockImplementation(() => {
     return {
         mSessionNodes: [],

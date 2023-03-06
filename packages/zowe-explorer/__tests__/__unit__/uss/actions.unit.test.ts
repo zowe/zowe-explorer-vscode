@@ -36,6 +36,7 @@ import * as isbinaryfile from "isbinaryfile";
 import * as fs from "fs";
 import { createUssApi, bindUssApi } from "../../../__mocks__/mockCreators/api";
 import * as refreshActions from "../../../src/shared/refresh";
+import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 
 function createGlobalMocks() {
     const globalMocks = {
@@ -171,6 +172,10 @@ function createGlobalMocks() {
         value: jest.fn(() => {
             return { value: globalMocks.mockProfileInfo, configurable: true };
         }),
+    });
+    Object.defineProperty(ZoweLogger, "logError", {
+        value: jest.fn(),
+        configurable: true,
     });
 
     return globalMocks;

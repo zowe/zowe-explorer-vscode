@@ -17,6 +17,7 @@ import * as globals from "../../../src/globals";
 import * as utils from "../../../src/utils/ProfilesUtils";
 import { imperative } from "@zowe/cli";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
+import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 
 describe("mvsCommandActions unit testing", () => {
     const showErrorMessage = jest.fn();
@@ -50,6 +51,10 @@ describe("mvsCommandActions unit testing", () => {
                 defaultProfile: { name: "firstName" },
             };
         }),
+    });
+    Object.defineProperty(ZoweLogger, "logError", {
+        value: jest.fn(),
+        configurable: true,
     });
 
     const ProgressLocation = jest.fn().mockImplementation(() => {

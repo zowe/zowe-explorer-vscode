@@ -29,6 +29,7 @@ import { Job } from "../../../src/job/ZoweJobNode";
 import { createJobsTree } from "../../../src/job/ZosJobsProvider";
 import { SettingsConfig } from "../../../src/utils/SettingsConfig";
 import { ZoweTreeProvider } from "../../../src/abstract/ZoweTreeProvider";
+import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -126,6 +127,10 @@ async function createGlobalMocks() {
         value: createGetConfigMock({
             "zowe.automaticProfileValidation": true,
         }),
+    });
+    Object.defineProperty(ZoweLogger, "logError", {
+        value: jest.fn(),
+        configurable: true,
     });
 
     globalMocks.mockAffects.mockReturnValue(true);

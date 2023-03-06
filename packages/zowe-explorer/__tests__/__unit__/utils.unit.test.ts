@@ -16,6 +16,7 @@ import * as utils from "../../src/utils/ProfilesUtils";
 import * as globals from "../../src/globals";
 import { createInstanceOfProfile, createInstanceOfProfileInfo, createIProfile, createValidIProfile } from "../../__mocks__/mockCreators/shared";
 import { Profiles } from "../../src/Profiles";
+import { ZoweLogger } from "../../src/utils/LoggerUtils";
 
 function createGlobalMocks() {
     const globalMocks = {
@@ -50,6 +51,10 @@ function createGlobalMocks() {
         value: jest.fn(() => {
             return { value: globalMocks.mockProfileInfo, configurable: true };
         }),
+    });
+    Object.defineProperty(ZoweLogger, "logError", {
+        value: jest.fn(),
+        configurable: true,
     });
 
     return {

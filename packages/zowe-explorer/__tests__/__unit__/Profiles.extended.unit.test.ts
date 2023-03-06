@@ -37,6 +37,7 @@ import { createUSSNode, createUSSSessionNode, createUSSTree } from "../../__mock
 import { createIJobObject, createJobsTree } from "../../__mocks__/mockCreators/jobs";
 import * as path from "path";
 import { SettingsConfig } from "../../src/utils/SettingsConfig";
+import { ZoweLogger } from "../../src/utils/LoggerUtils";
 
 jest.mock("child_process");
 jest.mock("fs");
@@ -161,6 +162,10 @@ async function createGlobalMocks() {
     });
     Object.defineProperty(vscode.window, "showTextDocument", {
         value: () => {},
+        configurable: true,
+    });
+    Object.defineProperty(ZoweLogger, "logError", {
+        value: jest.fn(),
         configurable: true,
     });
 

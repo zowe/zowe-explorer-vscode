@@ -40,6 +40,7 @@ import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
 
 import { getNodeLabels } from "../../../src/dataset/utils";
+import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 
 // Missing the definition of path module, because I need the original logic for tests
 jest.mock("fs");
@@ -119,6 +120,10 @@ function createGlobalMocks() {
     Object.defineProperty(vscode, "ProgressLocation", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "createWebviewPanel", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.env, "clipboard", { value: clipboard, configurable: true });
+    Object.defineProperty(ZoweLogger, "logError", {
+        value: jest.fn(),
+        configurable: true,
+    });
     mocked(Profiles.getInstance).mockReturnValue(newMocks.profileInstance);
 
     return newMocks;
@@ -3296,7 +3301,7 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
             blockMocks.imperativeProfile
         );
         const showErrorMessageSpy = jest.spyOn(Gui, "errorMessage");
-        const logErrorSpy = jest.spyOn(globals.LOG, "error");
+        const logErrorSpy = jest.spyOn(ZoweLogger, "logError");
 
         try {
             await dsActions.openPS(node, true, blockMocks.testDatasetTree);
@@ -3305,7 +3310,7 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
         }
 
         expect(showErrorMessageSpy).toBeCalledWith("openPS() called from invalid node.");
-        expect(logErrorSpy).toBeCalledTimes(2);
+        expect(logErrorSpy).toBeCalledTimes(1);
     });
 });
 

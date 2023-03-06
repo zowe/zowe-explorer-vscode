@@ -17,6 +17,7 @@ import * as profileUtils from "../../../src/utils/ProfilesUtils";
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import { Profiles } from "../../../src/Profiles";
+import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 
 jest.mock("fs");
 jest.mock("vscode");
@@ -45,6 +46,18 @@ describe("ProfileUtils.writeOverridesFile Unit Tests", () => {
         Object.defineProperty(Gui, "errorMessage", { value: jest.fn(), configurable: true });
         Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
         Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
+        Object.defineProperty(ZoweLogger, "logError", {
+            value: jest.fn(),
+            configurable: true,
+        });
+        Object.defineProperty(ZoweLogger, "logInfo", {
+            value: jest.fn(),
+            configurable: true,
+        });
+        Object.defineProperty(ZoweLogger, "logDebug", {
+            value: jest.fn(),
+            configurable: true,
+        });
         return newMocks;
     }
     it("should have file exist", async () => {
@@ -100,7 +113,7 @@ describe("ProfileUtils.writeOverridesFile Unit Tests", () => {
         const moreInfo = "Task failed successfully";
         await profileUtils.errorHandling(errorDetails, label, moreInfo);
         expect(Gui.errorMessage).toBeCalledWith(`${moreInfo} ` + errorDetails);
-        expect(globals.LOG.error).toBeCalledWith(`Error: ${errorDetails.message}\n` + JSON.stringify({ errorDetails, label, moreInfo }));
+        expect(ZoweLogger.logError).toBeCalledWith(`Error: ${errorDetails.message}\n` + JSON.stringify({ errorDetails, label, moreInfo }));
     });
     it("should handle error and open config file", async () => {
         const errorDetails = {

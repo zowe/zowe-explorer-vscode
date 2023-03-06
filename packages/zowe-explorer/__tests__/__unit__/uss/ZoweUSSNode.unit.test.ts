@@ -30,6 +30,7 @@ import * as path from "path";
 import * as workspaceUtils from "../../../src/utils/workspace";
 import * as globals from "../../../src/globals";
 import * as ussUtils from "../../../src/uss/utils";
+import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 jest.mock("fs");
 jest.mock("path");
 
@@ -167,7 +168,10 @@ async function createGlobalMocks() {
     });
     Object.defineProperty(vscode.env.clipboard, "readText", { value: globalMocks.readText, configurable: true });
     Object.defineProperty(path, "basename", { value: globalMocks.basePath, configurable: true });
-
+    Object.defineProperty(ZoweLogger, "logError", {
+        value: jest.fn(),
+        configurable: true,
+    });
     return globalMocks;
 }
 
