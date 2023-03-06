@@ -19,6 +19,7 @@ import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import * as nls from "vscode-nls";
 import { ZoweCommandProvider } from "../abstract/ZoweCommandProvider";
 import { SettingsConfig } from "../utils/SettingsConfig";
+import { ZoweLogger } from "../utils/LoggerUtils";
 
 // Set up localization
 nls.config({
@@ -124,7 +125,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
             }
         } catch (error) {
             if (error.toString().includes("non-existing")) {
-                globals.LOG.error(error);
+                ZoweLogger.logError(error);
                 Gui.errorMessage(localize("issueMvsCommand.apiNonExisting", "Not implemented yet for profile of type: ") + profile.type);
             } else {
                 await errorHandling(error.toString(), profile.name, error.message.toString());

@@ -19,6 +19,7 @@ import { errorHandling, FilterDescriptor, FilterItem } from "../utils/ProfilesUt
 import { ZoweCommandProvider } from "../abstract/ZoweCommandProvider";
 import { IStartTsoParms, imperative } from "@zowe/cli";
 import { SettingsConfig } from "../utils/SettingsConfig";
+import { ZoweLogger } from "../utils/LoggerUtils";
 
 // Set up localization
 nls.config({
@@ -131,7 +132,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
             }
         } catch (error) {
             if (error.toString().includes("non-existing")) {
-                globals.LOG.error(error);
+                ZoweLogger.logError(error);
                 Gui.errorMessage(localize("issueTsoCommand.apiNonExisting", "Not implemented yet for profile of type: ") + profile.type);
             } else {
                 await errorHandling(error.toString(), profile.name, error.message.toString());
@@ -243,7 +244,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
             this.history.addSearchHistory(command);
         } catch (error) {
             if (error.toString().includes("account number")) {
-                globals.LOG.error(error);
+                ZoweLogger.logError(error);
                 Gui.errorMessage(localize("issueTsoCommand.accountNumberNotSupplied", "Error: No account number was supplied."));
             } else {
                 await errorHandling(error.toString(), profile.name, error.message.toString());
