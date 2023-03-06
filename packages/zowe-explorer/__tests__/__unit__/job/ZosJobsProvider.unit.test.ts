@@ -14,7 +14,6 @@ import { createJobsTree, ZosJobsProvider } from "../../../src/job/ZosJobsProvide
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import * as globals from "../../../src/globals";
-import * as jobUtils from "../../../src/job/utils";
 import * as utils from "../../../src/utils/ProfilesUtils";
 import { Gui, IZoweJobTreeNode, ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { createIJobFile, createIJobObject, createJobFavoritesNode, createJobSessionNode, MockJobDetail } from "../../../__mocks__/mockCreators/jobs";
@@ -33,6 +32,7 @@ import { getIconByNode } from "../../../src/generators/icons";
 import { createJesApi } from "../../../__mocks__/mockCreators/api";
 import * as sessUtils from "../../../src/utils/SessionUtils";
 import { jobStringValidator } from "../../../src/shared/utils";
+import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -156,6 +156,18 @@ async function createGlobalMocks() {
 
     Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
     Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "logError", {
+        value: jest.fn(),
+        configurable: true,
+    });
+    Object.defineProperty(ZoweLogger, "logDebug", {
+        value: jest.fn(),
+        configurable: true,
+    });
+    Object.defineProperty(ZoweLogger, "logWarn", {
+        value: jest.fn(),
+        configurable: true,
+    });
     globalMocks.createTreeView.mockReturnValue("testTreeView");
     globalMocks.testSessionNode = createJobSessionNode(globalMocks.testSession, globalMocks.testProfile);
     globalMocks.mockGetJob.mockReturnValue(globalMocks.testIJob);
@@ -401,7 +413,7 @@ describe("ZosJobsProvider unit tests - Function loadProfilesForFavorites", () =>
         const favProfileNode = new Job("badTestProfile", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.jobFavoritesNode, null, null, null);
         favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
         testTree.mFavorites.push(favProfileNode);
-        const showErrorMessageSpy = jest.spyOn(vscode.window, "showErrorMessage");
+        const showErrorMessageSpy = jest.spyOn(Gui, "errorMessage");
 
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
@@ -424,7 +436,7 @@ describe("ZosJobsProvider unit tests - Function loadProfilesForFavorites", () =>
             }),
             configurable: true,
         });
-        mocked(vscode.window.showErrorMessage).mockResolvedValueOnce({ title: "Remove" });
+        mocked(Gui.errorMessage).mockResolvedValueOnce({ title: "Remove" });
         await testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
         expect(showErrorMessageSpy).toBeCalledTimes(1);
         showErrorMessageSpy.mockClear();
@@ -664,7 +676,7 @@ describe("ZosJobsProvider unit tests - Function getUserJobsMenuChoice", () => {
     let globalMocks;
     beforeEach(async () => {
         globalMocks = await createGlobalMocks();
-        showInformationMessage = jest.spyOn(vscode.window, "showInformationMessage");
+        showInformationMessage = jest.spyOn(Gui, "showMessage");
         globalMocks.mockCreateQuickPick.mockReturnValue({
             show: () => Promise.resolve(undefined),
             hide: () => Promise.resolve(undefined),
@@ -678,6 +690,7 @@ describe("ZosJobsProvider unit tests - Function getUserJobsMenuChoice", () => {
         const result = await globalMocks.testJobsProvider.getUserJobsMenuChoice();
         expect(result).toEqual(undefined);
         expect(showInformationMessage).toHaveBeenCalled();
+        showInformationMessage.mockClear();
     });
     it("should return user menu choice and not show vscode warning", async () => {
         const menuItem = new utils.FilterItem({ text: "searchById" });
@@ -685,6 +698,7 @@ describe("ZosJobsProvider unit tests - Function getUserJobsMenuChoice", () => {
         const result = await globalMocks.testJobsProvider.getUserJobsMenuChoice();
         expect(result).toEqual(menuItem);
         expect(showInformationMessage).not.toHaveBeenCalled();
+        showInformationMessage.mockClear();
     });
 });
 

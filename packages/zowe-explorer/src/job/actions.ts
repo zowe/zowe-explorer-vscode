@@ -18,7 +18,7 @@ import { Gui, ValidProfileEnum, IZoweTree, IZoweJobTreeNode } from "@zowe/zowe-e
 import { Job, Spool } from "./ZoweJobNode";
 import * as nls from "vscode-nls";
 import { toUniqueJobFileUri } from "../SpoolProvider";
-import * as globals from "../globals";
+import { ZoweLogger } from "../utils/LoggerUtils";
 
 // Set up localization
 nls.config({
@@ -222,7 +222,7 @@ export async function modifyCommand(job: Job) {
         }
     } catch (error) {
         if (error.toString().includes("non-existing")) {
-            globals.LOG.error(error);
+            ZoweLogger.logError(error);
             Gui.errorMessage(
                 localize("jobActions.modifyCommand.apiNonExisting", "Not implemented yet for profile of type: ") + job.getProfile().type
             );
@@ -246,7 +246,7 @@ export async function stopCommand(job: Job) {
         }
     } catch (error) {
         if (error.toString().includes("non-existing")) {
-            globals.LOG.error(error);
+            ZoweLogger.logError(error);
             Gui.errorMessage(localize("jobActions.stopCommand.apiNonExisting", "Not implemented yet for profile of type: ") + job.getProfile().type);
         } else {
             await errorHandling(error.toString(), job.getProfile().name, error.message.toString());
@@ -322,7 +322,7 @@ async function deleteSingleJob(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZ
         vsCodeOpts: { modal: true },
     });
     if (!result || result === "Cancel") {
-        globals.LOG.debug(localize("deleteJobPrompt.confirmation.cancel.log.debug", "Delete action was canceled."));
+        ZoweLogger.logDebug(localize("deleteJobPrompt.confirmation.cancel.log.debug", "Delete action was canceled."));
         Gui.showMessage(localize("deleteJobPrompt.deleteCancelled", "Delete action was cancelled."));
         return;
     }
@@ -351,7 +351,7 @@ async function deleteMultipleJobs(jobs: ReadonlyArray<IZoweJobTreeNode>, jobsPro
         vsCodeOpts: { modal: true },
     });
     if (!deleteChoice || deleteChoice === "Cancel") {
-        globals.LOG.debug(localize("deleteJobPrompt.confirmation.cancel.log.debug", "Delete action was canceled."));
+        ZoweLogger.logDebug(localize("deleteJobPrompt.confirmation.cancel.log.debug", "Delete action was canceled."));
         Gui.showMessage(localize("deleteJobPrompt.deleteCancelled", "Delete action was cancelled."));
         return;
     }
@@ -361,7 +361,7 @@ async function deleteMultipleJobs(jobs: ReadonlyArray<IZoweJobTreeNode>, jobsPro
                 await jobsProvider.delete(job);
                 return job;
             } catch (error) {
-                globals.LOG.error(error);
+                ZoweLogger.logError(error);
                 return error;
             }
         })

@@ -28,6 +28,7 @@ import {
     createInstanceOfProfileInfo,
 } from "../../../__mocks__/mockCreators/shared";
 import * as contextually from "../../../src/shared/context";
+import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -135,6 +136,18 @@ async function createGlobalMocks() {
     });
     Object.defineProperty(sessUtils, "removeSession", {
         value: jest.fn().mockImplementationOnce(() => Promise.resolve()),
+        configurable: true,
+    });
+    Object.defineProperty(ZoweLogger, "logError", {
+        value: jest.fn(),
+        configurable: true,
+    });
+    Object.defineProperty(ZoweLogger, "logDebug", {
+        value: jest.fn(),
+        configurable: true,
+    });
+    Object.defineProperty(ZoweLogger, "logWarn", {
+        value: jest.fn(),
         configurable: true,
     });
 

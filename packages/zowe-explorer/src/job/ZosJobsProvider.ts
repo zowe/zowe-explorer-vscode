@@ -17,14 +17,15 @@ import { FilterItem, errorHandling } from "../utils/ProfilesUtils";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Job } from "./ZoweJobNode";
-import { getAppName, sortTreeItems, labelRefresh, jobStringValidator } from "../shared/utils";
+import { getAppName, sortTreeItems, jobStringValidator } from "../shared/utils";
 import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
 import { getIconByNode } from "../generators/icons";
 import * as contextually from "../shared/context";
 import { resetValidationSettings } from "../shared/actions";
 import { SettingsConfig } from "../utils/SettingsConfig";
-
+import { ZoweLogger } from "../utils/LoggerUtils";
 import * as nls from "vscode-nls";
+
 // Set up localization
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
@@ -250,7 +251,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 } catch (error) {
                     // catch and log error of no default,
                     // if not type passed getDefaultProfile assumes zosmf
-                    this.log.warn(error);
+                    ZoweLogger.logWarn(error);
                 }
             }
         }
@@ -329,10 +330,10 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      */
     public async initializeJobsTree(log: imperative.Logger) {
         this.log = log;
-        this.log.debug(localize("initializeJobsTree.log.debug", "Initializing profiles with jobs favorites."));
+        ZoweLogger.logDebug(localize("initializeJobsTree.log.debug", "Initializing profiles with jobs favorites."));
         const lines: string[] = this.mHistory.readFavorites();
         if (lines.length === 0) {
-            this.log.debug(localize("initializeJobsTree.no.favorites", "No jobs favorites found."));
+            ZoweLogger.logDebug(localize("initializeJobsTree.no.favorites", "No jobs favorites found."));
             return;
         }
         // Parse line
@@ -390,7 +391,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         let profile: imperative.IProfileLoaded;
         let session: imperative.Session;
         this.log = log;
-        this.log.debug(localize("loadProfilesForFavorites.log.debug", "Loading profile: {0} for jobs favorites", profileName));
+        ZoweLogger.logDebug(localize("loadProfilesForFavorites.log.debug", "Loading profile: {0} for jobs favorites", profileName));
         // Load profile for parent profile node in this.mFavorites array
         if (!parentNode.getProfile() || !parentNode.getSession()) {
             try {
@@ -414,7 +415,6 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                     ];
                 }
             } catch (error) {
-                this.log.error(error);
                 const errMessage: string =
                     localize(
                         "initializeJobsFavorites.error.profile1",
@@ -427,6 +427,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                         " from the Favorites section of Zowe Explorer's Jobs view. Would you like to do this now? ",
                         getAppName(globals.ISTHEIA)
                     );
+                ZoweLogger.logError(errMessage + error);
                 const btnLabelRemove = localize("initializeJobsFavorites.error.buttonRemove", "Remove");
                 Gui.errorMessage(errMessage, {
                     items: [btnLabelRemove],
@@ -967,7 +968,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 session = await ZoweExplorerApiRegister.getJesApi(profile).getSession();
             } catch (err) {
                 if (err.toString().includes("hostname")) {
-                    this.log.error(err);
+                    ZoweLogger.logError(err);
                 } else {
                     await errorHandling(err, profile.name);
                 }
