@@ -569,8 +569,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     { items: [yesResponse, noResponse] }
                 );
 
-                console.log(response);
-
                 if (response === yesResponse) {
                     await vscode.commands.executeCommand("zowe.uss.binary", this);
                 }
