@@ -30,12 +30,13 @@ import {
     getFullPath,
     getZoweDir,
 } from "@zowe/zowe-explorer-api";
-import { errorHandling, FilterDescriptor, FilterItem, resolveQuickPickHelper, readConfigFromDisk } from "./utils/ProfilesUtils";
+import { errorHandling, FilterDescriptor, FilterItem, readConfigFromDisk } from "./utils/ProfilesUtils";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import * as globals from "./globals";
 import * as nls from "vscode-nls";
 import { SettingsConfig } from "./utils/SettingsConfig";
+import { ZoweLogger } from "./utils/LoggerUtils";
 
 // Set up localization
 nls.config({
@@ -285,7 +286,7 @@ export class Profiles extends ProfilesCache {
                 );
             }
         } catch (err) {
-            this.log.warn(err);
+            ZoweLogger.logWarn(err);
         }
         // Set Options according to profile management in use
 
@@ -306,7 +307,7 @@ export class Profiles extends ProfilesCache {
                 items.push(new FilterItem({ text: pName, icon: this.getProfileIcon(osLocInfo)[0] }));
             }
         } catch (err) {
-            this.log.warn(err);
+            ZoweLogger.logWarn(err);
         }
 
         const quickpick = Gui.createQuickPick();
@@ -365,7 +366,7 @@ export class Profiles extends ProfilesCache {
             try {
                 config = await this.getProfileInfo();
             } catch (error) {
-                this.log.error(error);
+                ZoweLogger.logError(error);
                 ZoweExplorerExtender.showZoweConfigError(error.message);
             }
             if (config.usingTeamConfig) {
@@ -392,7 +393,7 @@ export class Profiles extends ProfilesCache {
                     return;
                 }
                 chosenProfile = profileName.trim();
-                this.log.debug(localize("addSession.log.debug.createNewProfile", "User created a new profile"));
+                ZoweLogger.logDebug(localize("addSession.log.debug.createNewProfile", "User created a new profile"));
                 try {
                     newprofile = await Profiles.getInstance().createNewConnection(chosenProfile);
                 } catch (error) {
@@ -409,10 +410,10 @@ export class Profiles extends ProfilesCache {
                 }
             }
         } else if (chosenProfile) {
-            this.log.debug(localize("createZoweSession.log.debug.selectProfile", "User selected profile ") + chosenProfile);
+            ZoweLogger.logDebug(localize("createZoweSession.log.debug.selectProfile", "User selected profile ") + chosenProfile);
             await zoweFileProvider.addSession(chosenProfile);
         } else {
-            this.log.debug(localize("createZoweSession.log.debug.cancelledSelection", "User cancelled profile selection"));
+            ZoweLogger.logDebug(localize("createZoweSession.log.debug.cancelledSelection", "User cancelled profile selection"));
         }
     }
 
@@ -649,7 +650,7 @@ export class Profiles extends ProfilesCache {
             await this.promptToRefreshForProfiles(rootPath);
             return path.join(rootPath, configName);
         } catch (err) {
-            this.log.error(err);
+            ZoweLogger.logError(err);
             ZoweExplorerExtender.showZoweConfigError(err.message);
         }
     }
@@ -1110,8 +1111,8 @@ export class Profiles extends ProfilesCache {
                         break;
                 }
             } catch (error) {
+                ZoweLogger.logDebug(localize("validateProfiles.error", "Validate Error - Invalid Profile: ") + theProfile.name);
                 await errorHandling(error, theProfile.name);
-                this.log.debug("Validate Error - Invalid Profile: " + error);
                 filteredProfile = {
                     status: "inactive",
                     name: theProfile.name,
@@ -1143,7 +1144,7 @@ export class Profiles extends ProfilesCache {
         try {
             loginTokenType = await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).getTokenTypeName();
         } catch (error) {
-            this.log.info(error);
+            ZoweLogger.logInfo(error);
             Gui.showMessage(localize("ssoAuth.noBase", "This profile does not support token authentication."));
             return;
         }
@@ -1169,7 +1170,7 @@ export class Profiles extends ProfilesCache {
                     profile: { ...node.getProfile().profile, ...session },
                 });
             } catch (error) {
-                this.log.error(error);
+                ZoweLogger.logError(error);
                 Gui.errorMessage(localize("ssoLogin.unableToLogin", "Unable to log in. ") + error.message);
                 return;
             }
@@ -1203,7 +1204,7 @@ export class Profiles extends ProfilesCache {
                         profile: { ...node.getProfile().profile, ...updBaseProfile },
                     });
                 } catch (error) {
-                    this.log.error(error);
+                    ZoweLogger.logError(error);
                     Gui.errorMessage(localize("ssoLogin.unableToLogin", "Unable to log in. ") + error.message);
                     return;
                 }
@@ -1243,7 +1244,7 @@ export class Profiles extends ProfilesCache {
             }
             Gui.showMessage(localize("ssoLogout.successful", "Logout from authentication service was successful."));
         } catch (error) {
-            this.log.error(error);
+            ZoweLogger.logError(error);
             Gui.errorMessage(localize("ssoLogout.unableToLogout", "Unable to log out. ") + error.message);
             return;
         }
@@ -1388,7 +1389,7 @@ export class Profiles extends ProfilesCache {
 
     private async deletePrompt(deletedProfile: zowe.imperative.IProfileLoaded) {
         const profileName = deletedProfile.name;
-        this.log.debug(localize("deleteProfile.log.debug", "Deleting profile ") + profileName);
+        ZoweLogger.logDebug(localize("deleteProfile.log.debug", "Deleting profile ") + profileName);
         const quickPickOptions: vscode.QuickPickOptions = {
             placeHolder: localize("deleteProfile.quickPickOption", "Delete {0}? This will permanently remove it from your system.", profileName),
             ignoreFocusOut: true,
@@ -1401,14 +1402,14 @@ export class Profiles extends ProfilesCache {
                 quickPickOptions
             )) !== localize("deleteProfile.showQuickPick.delete", "Delete")
         ) {
-            this.log.debug(localize("deleteProfile.showQuickPick.log.debug", "User picked Cancel. Cancelling delete of profile"));
+            ZoweLogger.logDebug(localize("deleteProfile.showQuickPick.log.debug", "User picked Cancel. Cancelling delete of profile"));
             return;
         }
 
         try {
             await this.deleteProfileOnDisk(deletedProfile);
         } catch (error) {
-            this.log.error(localize("deleteProfile.delete.log.error", "Error encountered when deleting profile! ") + JSON.stringify(error));
+            ZoweLogger.logError(localize("deleteProfile.delete.log.error", "Error encountered when deleting profile! ") + JSON.stringify(error));
             await errorHandling(error, profileName, error.message);
             throw error;
         }
@@ -1710,7 +1711,7 @@ export class Profiles extends ProfilesCache {
         try {
             this.getCliProfileManager(this.loadedProfile.type).update(updateParms);
         } catch (error) {
-            this.log.error(error);
+            ZoweLogger.logError(error);
             Gui.errorMessage(error.message);
         }
     }

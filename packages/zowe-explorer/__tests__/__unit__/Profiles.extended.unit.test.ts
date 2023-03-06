@@ -107,12 +107,10 @@ async function createGlobalMocks() {
     });
     Object.defineProperty(globals, "LOG", { value: newMocks.mockLog, configurable: true });
     Object.defineProperty(vscode.window, "createInputBox", { value: newMocks.mockCreateInputBox, configurable: true });
-    Object.defineProperty(globals.LOG, "debug", { value: newMocks.mockDebug, configurable: true });
     Object.defineProperty(zowe.ZosmfSession, "createSessCfgFromArgs", {
         value: newMocks.mockCreateSessCfgFromArgs,
         configurable: true,
     });
-    Object.defineProperty(globals.LOG, "error", { value: newMocks.mockError, configurable: true });
     Object.defineProperty(globals, "ISTHEIA", { get: () => false, configurable: true });
     Object.defineProperty(vscode.window, "createTreeView", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.workspace, "getConfiguration", {
@@ -162,6 +160,18 @@ async function createGlobalMocks() {
     });
     Object.defineProperty(vscode.window, "showTextDocument", {
         value: () => {},
+        configurable: true,
+    });
+    Object.defineProperty(ZoweLogger, "logDebug", {
+        value: jest.fn(),
+        configurable: true,
+    });
+    Object.defineProperty(ZoweLogger, "logInfo", {
+        value: jest.fn(),
+        configurable: true,
+    });
+    Object.defineProperty(ZoweLogger, "logWarn", {
+        value: jest.fn(),
         configurable: true,
     });
     Object.defineProperty(ZoweLogger, "logError", {

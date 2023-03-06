@@ -518,6 +518,10 @@ describe("Extension Unit Tests", () => {
     it("should deactivate the extension", async () => {
         const spyCleanTempDir = jest.spyOn(tempFolderUtils, "cleanTempDir");
         spyCleanTempDir.mockImplementation(jest.fn());
+        Object.defineProperty(ZoweLogger, "disposeZoweLogger", {
+            value: jest.fn(),
+            configurable: true,
+        });
         await extension.deactivate();
         expect(spyCleanTempDir).toHaveBeenCalled();
         expect(globals.ACTIVATED).toBe(false);
