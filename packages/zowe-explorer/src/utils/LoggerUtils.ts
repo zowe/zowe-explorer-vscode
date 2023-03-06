@@ -126,7 +126,7 @@ export class ZoweLogger {
     }
 
     private static getLogSetting() {
-        let logSetting = vscode.workspace.getConfiguration().get("zowe.logger");
+        let logSetting: string = vscode.workspace.getConfiguration().get("zowe.logger");
         // if logSetting is undefined, it will be the default value; DEBUG
         return logSetting ? logSetting : "DEBUG";
     }
