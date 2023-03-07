@@ -43,3 +43,4 @@ overrides:
   - files: "**/__tests__/**"
     rules:
       no-magic-numbers: off
+      "@typescript-eslint/no-unused-vars": off

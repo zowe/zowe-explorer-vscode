@@ -83,7 +83,7 @@
   "saveFile.log.error.session": "Couldn't locate session when saving data set!",
   "saveFile.log.debug.missingSessionNode": "couldn't find session node",
   "saveFile.log.debug.saving": "Saving file ",
-  "saveFile.error.saveFailed": "Data set failed to save. Data set may have been deleted on mainframe.",
+  "saveFile.error.saveFailed": "Data set failed to save. Data set may have been deleted or renamed on mainframe.",
   "saveFile.response.save.title": "Saving data set...",
   "saveFile.error.ZosmfEtagMismatchError": "Rest API failure with HTTP(S) status 412",
   "saveFile.error.etagMismatch": "Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict.",

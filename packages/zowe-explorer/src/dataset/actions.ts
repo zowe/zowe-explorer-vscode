@@ -1337,7 +1337,7 @@ export async function pasteMember(node: api.IZoweDatasetTreeNode, datasetProvide
  * @export
  * @param {vscode.TextDocument} doc - TextDocument that is being saved
  */
-export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>) {
+export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>): Promise<void> {
     // Check if file is a data set, instead of some other file
     globals.LOG.debug(localize("saveFile.log.debug.request", "requested to save data set: ") + doc.fileName);
     const docPath = path.join(doc.fileName, "..");
@@ -1356,7 +1356,8 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
     const profile = Profiles.getInstance().loadNamedProfile(sesName);
     if (!profile) {
         globals.LOG.error(localize("saveFile.log.error.session", "Couldn't locate session when saving data set!"));
-        return api.Gui.errorMessage(localize("saveFile.log.error.session", "Couldn't locate session when saving data set!"));
+        await api.Gui.errorMessage(localize("saveFile.log.error.session", "Couldn't locate session when saving data set!"));
+        return;
     }
 
     // get session from session name
@@ -1373,18 +1374,18 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
     );
     label = label.toUpperCase().trim();
     globals.LOG.debug(localize("saveFile.log.debug.saving", "Saving file ") + label);
-    if (!label.includes("(")) {
-        try {
-            // Checks if file still exists on server
-            const response = await ZoweExplorerApiRegister.getMvsApi(profile).dataSet(label, { responseTimeout: profile.profile?.responseTimeout });
-            if (!response.apiResponse.items.length) {
-                return api.Gui.errorMessage(
-                    localize("saveFile.error.saveFailed", "Data set failed to save. Data set may have been deleted on mainframe.")
-                );
-            }
-        } catch (err) {
-            await errorHandling(err, sesName, err.message);
+    const dsname = label.includes("(") ? label.slice(0, label.indexOf("(")) : label;
+    try {
+        // Checks if file still exists on server
+        const response = await ZoweExplorerApiRegister.getMvsApi(profile).dataSet(dsname, { responseTimeout: profile.profile?.responseTimeout });
+        if (!response.apiResponse.items.length) {
+            await api.Gui.errorMessage(
+                localize("saveFile.error.saveFailed", "Data set failed to save. Data set may have been deleted or renamed on mainframe.")
+            );
+            return;
         }
+    } catch (err) {
+        await errorHandling(err, sesName, err.message);
     }
     // Get specific node based on label and parent tree (session / favorites)
     const nodes: api.IZoweNodeType[] = concatChildNodes(sesNode ? [sesNode] : datasetProvider.mSessionNodes);
