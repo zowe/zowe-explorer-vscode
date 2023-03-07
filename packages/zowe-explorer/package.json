@@ -829,7 +829,7 @@
           "group": "001_zowe_ussCreate@4"
         },
         {
-          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)(textFile.*|binaryFile.*|directory.*)/",
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)(textFile.*|binaryFile.*|directory.*|ussSession.*_isFilterSearch)/",
           "command": "zowe.uss.pasteUssFile",
           "group": "001_zowe_ussCreate@5"
         },

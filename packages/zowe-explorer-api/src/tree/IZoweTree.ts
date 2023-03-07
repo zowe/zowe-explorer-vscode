@@ -53,6 +53,13 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
     lastOpened?: NodeInteraction;
 
     /**
+     * Whether the tree is copying files.
+     *
+     * `await` this promise to wait for the copy operation to complete.
+     */
+    copying?: Promise<unknown>;
+
+    /**
      * Adds a session to the container
      * @param sessionName
      * @param type e.g. zosmf

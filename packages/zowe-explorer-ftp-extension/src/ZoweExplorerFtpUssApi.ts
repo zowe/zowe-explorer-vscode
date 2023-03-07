@@ -81,6 +81,31 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
         }
     }
 
+    /**
+     * Upload a file (located at the input path) to the destination path.
+     * @param inputFilePath The input file path
+     * @param ussFilePath The destination file path on USS
+     * @param options Any options for the upload
+     *
+     * @returns A file response containing the results of the operation.
+     */
+    public putContent(inputFilePath: string, ussFilePath: string, options?: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse> {
+        return this.putContents(inputFilePath, ussFilePath, options?.binary, options?.localEncoding, options?.etag, options?.returnEtag);
+    }
+
+    /**
+     * Upload a file (located at the input path) to the destination path.
+     *
+     * @deprecated in favor of `putContent`
+     * @param inputFilePath The input file path
+     * @param ussFilePath The destination file path on USS
+     * @param binary Whether the contents are binary
+     * @param localEncoding The local encoding for the file
+     * @param etag The e-tag associated with the file on the mainframe (optional)
+     * @param returnEtag Whether to return the e-tag after uploading the file
+     *
+     * @returns A file response containing the results of the operation.
+     */
     public async putContents(
         inputFilePath: string,
         ussFilePath: string,
@@ -112,6 +137,7 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
                 }
             }
             await UssUtils.uploadFile(connection, ussFilePath, transferOptions);
+
             result.success = true;
             if (returnEtag) {
                 const contentsTag = await this.getContentsTag(ussFilePath);
@@ -133,12 +159,16 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
             await Gui.errorMessage("The local directory path provided does not exist.", { logger: ZoweLogger });
             throw new Error();
         }
+
+        // Make directory before copying inner files
+        await this.putContent(inputDirectoryPath, ussDirectoryPath);
+
         // getting list of files from directory
         const files = zowe.ZosFilesUtils.getFileListFromPath(inputDirectoryPath, false);
         // TODO: this solution will not perform very well; rewrite this and putContents methods
         for (const file of files) {
             const relativePath = path.relative(inputDirectoryPath, file).replace(/\\/g, "/");
-            const putResult = await this.putContents(file, path.posix.join(ussDirectoryPath, relativePath));
+            const putResult = await this.putContent(file, path.posix.join(ussDirectoryPath, relativePath));
             result = putResult;
         }
         return result;
