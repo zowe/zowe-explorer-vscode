@@ -34,6 +34,7 @@ export class ZoweLogger {
             const packageInfo = context.extension.packageJSON;
             this.zoweExplOutput.appendLine(`${packageInfo.displayName} ${packageInfo.version}`);
             this.zoweExplOutput.appendLine(localize("initialize.log.location", "This log file can be found at ") + logFileLocation);
+            this.zoweExplOutput.appendLine(localize("initialize.log.level", "Zowe Explorer log level: ") + this.getLogSetting());
             const initMessage = localize("initialize.log.info", "Initialized logger for Zowe Explorer");
             this.logInfo(initMessage);
         } catch (err) {

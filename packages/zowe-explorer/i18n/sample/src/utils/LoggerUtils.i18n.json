@@ -1,5 +1,6 @@
 {
   "initialize.log.location": "This log file can be found at ",
+  "initialize.log.level": "Zowe Explorer log level: ",
   "initialize.log.info": "Initialized logger for Zowe Explorer",
   "initialize.log.error": "Error encountered while activating and initializing logger! ",
   "zoweExplorer.outputchannel.title": "Zowe Explorer"
