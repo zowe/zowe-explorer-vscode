@@ -179,6 +179,9 @@ describe("Test src/shared/extension", () => {
             Object.defineProperty(vscode.workspace, "onWillSaveTextDocument", { value: onWillSaveTextDocument });
             Object.defineProperty(ZoweLogger, "logError", { value: jest.fn(), configurable: true });
             Object.defineProperty(ZoweLogger, "logDebug", { value: jest.fn(), configurable: true });
+            Object.defineProperty(ZoweLogger, "logWarn", { value: jest.fn(), configurable: true });
+            Object.defineProperty(ZoweLogger, "logInfo", { value: jest.fn(), configurable: true });
+            Object.defineProperty(ZoweLogger, "logTrace", { value: jest.fn(), configurable: true });
 
             spyOnSubscriptions(commands);
             await sharedExtension.registerCommonCommands(test.context, test.value.providers);
