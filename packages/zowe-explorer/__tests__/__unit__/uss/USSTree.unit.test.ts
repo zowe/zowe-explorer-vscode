@@ -258,8 +258,8 @@ describe("USSTree Unit Tests - Function USSTree.createProfileNodeForFavs()", () 
             undefined
         );
         expectedFavProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
-        const icons = require("../../../src/generators/icons");
-        const folderIcon = require("../../../src/generators/icons/items/folder").default;
+        const icons = await import("../../../src/generators/icons");
+        const folderIcon = (await import("../../../src/generators/icons/items/folder")).default;
         const savedIconsProperty = Object.getOwnPropertyDescriptor(icons, "getIconByNode");
         Object.defineProperty(icons, "getIconByNode", {
             value: jest.fn(() => {

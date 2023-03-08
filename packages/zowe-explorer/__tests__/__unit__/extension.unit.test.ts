@@ -29,6 +29,7 @@ import { ZoweExplorerExtender } from "../../src/ZoweExplorerExtender";
 import { DatasetTree } from "../../src/dataset/DatasetTree";
 import { USSTree } from "../../src/uss/USSTree";
 import { ZoweLogger } from "../../src/utils/LoggerUtils";
+import { ZoweSaveQueue } from "../../src/abstract/ZoweSaveQueue";
 
 jest.mock("vscode");
 jest.mock("fs");
@@ -509,6 +510,7 @@ describe("Extension Unit Tests", () => {
         expect(ZoweExplorerExtender.showZoweConfigError).toHaveBeenCalled();
     });
     it("should deactivate the extension", async () => {
+        const spyAwaitAllSaves = jest.spyOn(ZoweSaveQueue, "all");
         const spyCleanTempDir = jest.spyOn(tempFolderUtils, "cleanTempDir");
         spyCleanTempDir.mockImplementation(jest.fn());
         Object.defineProperty(ZoweLogger, "disposeZoweLogger", {
@@ -516,7 +518,10 @@ describe("Extension Unit Tests", () => {
             configurable: true,
         });
         await extension.deactivate();
+        expect(spyAwaitAllSaves).toHaveBeenCalled();
         expect(spyCleanTempDir).toHaveBeenCalled();
+        // Test that upload operations complete before cleaning temp dir
+        expect(spyAwaitAllSaves.mock.invocationCallOrder[0]).toBeLessThan(spyCleanTempDir.mock.invocationCallOrder[0]);
         expect(globals.ACTIVATED).toBe(false);
     });
 
