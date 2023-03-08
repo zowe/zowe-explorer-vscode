@@ -46,18 +46,11 @@ describe("ProfileUtils.writeOverridesFile Unit Tests", () => {
         Object.defineProperty(Gui, "errorMessage", { value: jest.fn(), configurable: true });
         Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
         Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
-        Object.defineProperty(ZoweLogger, "logError", {
-            value: jest.fn(),
-            configurable: true,
-        });
-        Object.defineProperty(ZoweLogger, "logInfo", {
-            value: jest.fn(),
-            configurable: true,
-        });
-        Object.defineProperty(ZoweLogger, "logDebug", {
-            value: jest.fn(),
-            configurable: true,
-        });
+        Object.defineProperty(ZoweLogger, "logError", { value: jest.fn(), configurable: true });
+        Object.defineProperty(ZoweLogger, "logDebug", { value: jest.fn(), configurable: true });
+        Object.defineProperty(ZoweLogger, "logWarn", { value: jest.fn(), configurable: true });
+        Object.defineProperty(ZoweLogger, "logInfo", { value: jest.fn(), configurable: true });
+        Object.defineProperty(ZoweLogger, "logTrace", { value: jest.fn(), configurable: true });
         return newMocks;
     }
     it("should have file exist", async () => {

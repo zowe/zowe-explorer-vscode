@@ -38,18 +38,14 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
 
     // Determine the runtime framework to support special behavior for Theia
     globals.defineGlobals(tempPath);
-
-    hideTempFolder(getZoweDir());
-
     await ZoweLogger.initializeZoweLogger(context);
+    hideTempFolder(getZoweDir());
     await initializeZoweProfiles();
     initializeZoweTempFolder();
 
     // Initialize profile manager
     await Profiles.createInstance(globals.LOG);
-
     registerRefreshCommand(context, activate, deactivate);
-
     initializeSpoolProvider(context);
 
     const providers: IZoweProviders = {
@@ -59,7 +55,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     };
 
     await registerCommonCommands(context, providers);
-
     ZoweExplorerExtender.createInstance(providers.ds, providers.uss, providers.job);
     await SettingsConfig.standardizeSettings();
     await watchConfigProfile(context, providers);

@@ -59,10 +59,8 @@ describe("TempFolder Unit Tests", () => {
         Object.defineProperty(Gui, "showMessage", { value: jest.fn() });
         Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
         Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
-        Object.defineProperty(ZoweLogger, "logError", {
-            value: jest.fn(),
-            configurable: true,
-        });
+        Object.defineProperty(ZoweLogger, "logError", { value: jest.fn(), configurable: true });
+        Object.defineProperty(ZoweLogger, "logTrace", { value: jest.fn(), configurable: true });
         jest.spyOn(ProfileUtils, "errorHandling").mockImplementationOnce(jest.fn());
         return newMocks;
     }

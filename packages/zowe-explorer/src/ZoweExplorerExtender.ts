@@ -31,10 +31,10 @@ import {
 import { Profiles } from "./Profiles";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { getProfileInfo, getProfile } from "./utils/ProfilesUtils";
+import { ZoweLogger } from "./utils/LoggerUtils";
 
 // Set up localization
 import * as nls from "vscode-nls";
-import { ZoweLogger } from "./utils/LoggerUtils";
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 

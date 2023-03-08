@@ -128,18 +128,10 @@ async function createGlobalMocks() {
             "zowe.automaticProfileValidation": true,
         }),
     });
-    Object.defineProperty(ZoweLogger, "logError", {
-        value: jest.fn(),
-        configurable: true,
-    });
-    Object.defineProperty(ZoweLogger, "logDebug", {
-        value: jest.fn(),
-        configurable: true,
-    });
-    Object.defineProperty(ZoweLogger, "logWarn", {
-        value: jest.fn(),
-        configurable: true,
-    });
+    Object.defineProperty(ZoweLogger, "logError", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "logDebug", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "logWarn", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "logTrace", { value: jest.fn(), configurable: true });
 
     globalMocks.mockAffects.mockReturnValue(true);
     globalMocks.withProgress.mockImplementation((progLocation, callback) => callback());

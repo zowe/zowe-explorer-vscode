@@ -30,6 +30,7 @@ import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
 import { ProfilesCache } from "@zowe/zowe-explorer-api";
+import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 
 jest.mock("path");
 
@@ -43,6 +44,7 @@ async function createGlobalMocks() {
     };
     newMocks.mockProfilesCache = new ProfilesCache(imperative.Logger.getAppLogger());
     newMocks.mockProfileInstance = createInstanceOfProfile(createIProfile());
+    Object.defineProperty(ZoweLogger, "logTrace", { value: jest.fn(), configurable: true });
     Object.defineProperty(Profiles, "CreateInstance", {
         value: () => newMocks.mockProfileInstance,
         configurable: true,

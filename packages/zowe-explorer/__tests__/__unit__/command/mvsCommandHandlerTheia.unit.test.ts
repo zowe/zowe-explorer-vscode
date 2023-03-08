@@ -52,10 +52,8 @@ describe("mvsCommandActions unit testing", () => {
             };
         }),
     });
-    Object.defineProperty(ZoweLogger, "logError", {
-        value: jest.fn(),
-        configurable: true,
-    });
+    Object.defineProperty(ZoweLogger, "logError", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "logTrace", { value: jest.fn(), configurable: true });
 
     const ProgressLocation = jest.fn().mockImplementation(() => {
         return {

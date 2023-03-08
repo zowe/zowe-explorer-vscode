@@ -26,6 +26,7 @@ import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/
 import * as globals from "../../../src/globals";
 import * as sessUtils from "../../../src/utils/SessionUtils";
 import { SettingsConfig } from "../../../src/utils/SettingsConfig";
+import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 
 function createGlobalMocks() {
     const globalMocks = {
@@ -43,6 +44,7 @@ function createGlobalMocks() {
     globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.testProfile);
     const profilesForValidation = { status: "active", name: "fake" };
     Object.defineProperty(vscode.window, "createTreeView", { value: globalMocks.createTreeView, configurable: true });
+    Object.defineProperty(ZoweLogger, "logTrace", { value: jest.fn(), configurable: true });
     Object.defineProperty(Profiles, "getInstance", {
         value: jest.fn(() => {
             return {

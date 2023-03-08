@@ -20,8 +20,10 @@ import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import * as contextuals from "../shared/context";
 import { getSelectedNodeList } from "../shared/utils";
 import { initSubscribers } from "../shared/init";
+import { ZoweLogger } from "../utils/LoggerUtils";
 
 export async function initDatasetProvider(context: vscode.ExtensionContext) {
+    ZoweLogger.logTrace("init.initDatasetProvider");
     const datasetProvider: IZoweTree<IZoweDatasetTreeNode> = await createDatasetTree(globals.LOG);
     if (datasetProvider == null) {
         return null;

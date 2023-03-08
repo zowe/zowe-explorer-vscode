@@ -386,22 +386,11 @@ async function createGlobalMocks() {
     globalMocks.mockExtension = new mockExtensionCreator();
 
     Object.defineProperty(ZoweLogger, "initializeZoweLogger", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "logError", {
-        value: jest.fn(),
-        configurable: true,
-    });
-    Object.defineProperty(ZoweLogger, "logInfo", {
-        value: jest.fn(),
-        configurable: true,
-    });
-    Object.defineProperty(ZoweLogger, "logWarn", {
-        value: jest.fn(),
-        configurable: true,
-    });
-    Object.defineProperty(ZoweLogger, "logDebug", {
-        value: jest.fn(),
-        configurable: true,
-    });
+    Object.defineProperty(ZoweLogger, "logError", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "logDebug", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "logWarn", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "logInfo", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "logTrace", { value: jest.fn(), configurable: true });
 
     globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.testProfile);
     globalMocks.mockCreateSessCfgFromArgs.mockReturnValue(globalMocks.testSession.ISession);

@@ -169,14 +169,10 @@ async function createGlobalMocks() {
     });
     Object.defineProperty(vscode.env.clipboard, "readText", { value: globalMocks.readText, configurable: true });
     Object.defineProperty(path, "basename", { value: globalMocks.basePath, configurable: true });
-    Object.defineProperty(ZoweLogger, "logError", {
-        value: jest.fn(),
-        configurable: true,
-    });
-    Object.defineProperty(ZoweLogger, "logWarn", {
-        value: jest.fn(),
-        configurable: true,
-    });
+    Object.defineProperty(ZoweLogger, "logError", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "logDebug", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "logWarn", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "logTrace", { value: jest.fn(), configurable: true });
     return globalMocks;
 }
 

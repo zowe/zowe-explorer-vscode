@@ -32,6 +32,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 //  * @param currentTempPath temp path settings value after updated by user
 //  */
 export async function moveTempFolder(previousTempPath: string, currentTempPath: string) {
+    ZoweLogger.logTrace("TempFolder.moveTempFolder");
     // Re-define globals with updated path
     globals.defineGlobals(currentTempPath);
 
@@ -78,6 +79,7 @@ export async function moveTempFolder(previousTempPath: string, currentTempPath: 
  * @param directory path to directory to be deleted
  */
 export async function cleanDir(directory) {
+    ZoweLogger.logTrace("TempFolder.cleanDir");
     if (!fs.existsSync(directory)) {
         return;
     }
@@ -99,6 +101,7 @@ export async function cleanDir(directory) {
  * @export
  */
 export async function cleanTempDir() {
+    ZoweLogger.logTrace("TempFolder.cleanTempDir");
     // Get temp folder cleanup preference from settings
     const preferencesTempCleanupEnabled: boolean = SettingsConfig.getDirectValue(globals.SETTINGS_TEMP_FOLDER_CLEANUP);
     // logger hasn't necessarily been initialized yet, don't use the `log` in this function
@@ -119,6 +122,7 @@ export async function cleanTempDir() {
  * @export
  */
 export async function hideTempFolder(zoweDir: string) {
+    ZoweLogger.logTrace("TempFolder.hideTempFolder");
     if (SettingsConfig.getDirectValue<boolean>(globals.SETTINGS_TEMP_FOLDER_HIDE)) {
         await SettingsConfig.setDirectValue("files.exclude", { [zoweDir]: true, [globals.ZOWETEMPFOLDER]: true });
     }

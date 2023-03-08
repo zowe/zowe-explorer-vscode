@@ -107,7 +107,6 @@ export class ZoweLogger {
 
     private static initOutputLogger(): void {
         this.zoweExplOutput = Gui.createOutputChannel(localize("zoweExplorer.outputchannel.title", "Zowe Explorer"));
-        this.zoweExplOutput.show();
     }
 
     private static getDate(): string {

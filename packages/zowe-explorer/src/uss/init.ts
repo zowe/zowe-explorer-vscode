@@ -19,8 +19,10 @@ import * as contextuals from "../shared/context";
 import { getSelectedNodeList } from "../shared/utils";
 import { createUSSTree } from "./USSTree";
 import { initSubscribers } from "../shared/init";
+import { ZoweLogger } from "../utils/LoggerUtils";
 
 export async function initUSSProvider(context: vscode.ExtensionContext) {
+    ZoweLogger.logTrace("init.initUSSProvider");
     const ussFileProvider: IZoweTree<IZoweUSSTreeNode> = await createUSSTree(globals.LOG);
     if (ussFileProvider == null) {
         return null;

@@ -6,5 +6,9 @@
   "activate.didSaveText.notDirty": " is not a dirty file ",
   "activate.didSaveText.isDataSet": "File is a data set-- saving ",
   "activate.didSaveText.isUSSFile": "File is a USS file -- saving",
-  "activate.didSaveText.notDataSet": " is not a data set or USS file "
+  "activate.didSaveText.notDataSet": " is not a data set or USS file ",
+  "watchConfigProfile.theia": "Team config file watcher is disabled in Theia environment.",
+  "watchConfigProfile.create": "Team config file created, refreshing Zowe Expkorer.",
+  "watchConfigProfile.delete": "Team config file deleted, refreshing Zowe Expkorer.",
+  "watchConfigProfile.update": "Team config file updated."
 }

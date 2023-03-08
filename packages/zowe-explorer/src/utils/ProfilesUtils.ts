@@ -140,6 +140,7 @@ export const syncSessionNode =
     (_profiles: Profiles) =>
     (getSessionForProfile: SessionForProfile) =>
     async (sessionNode: IZoweTreeNode): Promise<void> => {
+        ZoweLogger.logTrace("ProfilesUtils.syncSessionNode");
         sessionNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
 
         const profileType = sessionNode.getProfile().type;
@@ -212,6 +213,7 @@ export class FilterDescriptor implements vscode.QuickPickItem {
  * Function to update the node profile information
  */
 export async function setProfile(node: IZoweTreeNode, profile: imperative.IProfile) {
+    ZoweLogger.logTrace("ProfilesUtils.setProfile");
     node.getProfile().profile = profile;
 }
 
@@ -219,6 +221,7 @@ export async function setProfile(node: IZoweTreeNode, profile: imperative.IProfi
  * Function to update the node session information
  */
 export async function setSession(node: IZoweTreeNode, combinedSessionProfile: imperative.IProfile) {
+    ZoweLogger.logTrace("ProfilesUtils.setSession");
     const sessionNode = node.getSession();
     for (const prop of Object.keys(combinedSessionProfile)) {
         if (prop === "host") {
@@ -230,6 +233,7 @@ export async function setSession(node: IZoweTreeNode, combinedSessionProfile: im
 }
 
 export async function getProfileInfo(envTheia: boolean): Promise<imperative.ProfileInfo> {
+    ZoweLogger.logTrace("ProfilesUtils.getProfileInfo");
     const mProfileInfo = new imperative.ProfileInfo("zowe", {
         requireKeytar: () => getSecurityModules("keytar", envTheia),
     });
@@ -237,6 +241,7 @@ export async function getProfileInfo(envTheia: boolean): Promise<imperative.Prof
 }
 
 export function getProfile(node: vscode.TreeItem) {
+    ZoweLogger.logTrace("ProfilesUtils.getProfile");
     if (node instanceof ZoweTreeNode) {
         return (node as ZoweTreeNode).getProfile();
     }
@@ -244,6 +249,7 @@ export function getProfile(node: vscode.TreeItem) {
 }
 
 export async function readConfigFromDisk() {
+    ZoweLogger.logTrace("ProfilesUtils.readConfigFromDisk");
     let rootPath: string;
     try {
         const mProfileInfo = await getProfileInfo(globals.ISTHEIA);
@@ -274,10 +280,11 @@ export async function readConfigFromDisk() {
 }
 
 export async function promptCredentials(node: IZoweTreeNode) {
+    ZoweLogger.logTrace("ProfilesUtils.promptCredentials");
     const mProfileInfo = await Profiles.getInstance().getProfileInfo();
     if (mProfileInfo.usingTeamConfig && !mProfileInfo.getTeamConfig().properties.autoStore) {
         const msg = localize("zowe.promptCredentials.notSupported", '"Update Credentials" operation not supported when "autoStore" is false');
-        ZoweLogger.logInfo(msg);
+        ZoweLogger.logWarn(msg);
         Gui.showMessage(msg);
         return;
     }
@@ -309,6 +316,7 @@ export async function promptCredentials(node: IZoweTreeNode) {
 }
 
 export async function initializeZoweFolder(): Promise<void> {
+    ZoweLogger.logTrace("ProfilesUtils.initializeZoweFolder");
     // ensure the Secure Credentials Enabled value is read
     // set globals.PROFILE_SECURITY value accordingly
     await globals.setGlobalSecurityValue();
@@ -337,6 +345,7 @@ export async function initializeZoweFolder(): Promise<void> {
 }
 
 export function writeOverridesFile() {
+    ZoweLogger.logTrace("ProfilesUtils.writeOverridesFile");
     let fd: number;
     let fileContent: string;
     const settingsFile = path.join(getZoweDir(), "settings", "imperative.json");
@@ -369,6 +378,7 @@ export function writeOverridesFile() {
 }
 
 export async function initializeZoweProfiles(): Promise<void> {
+    ZoweLogger.logTrace("ProfilesUtils.initializeZoweProfiles");
     try {
         await initializeZoweFolder();
         await readConfigFromDisk();
@@ -380,6 +390,7 @@ export async function initializeZoweProfiles(): Promise<void> {
 }
 
 export function initializeZoweTempFolder(): void {
+    ZoweLogger.logTrace("ProfilesUtils.initializeZoweTempFolder");
     try {
         if (!fs.existsSync(globals.ZOWETEMPFOLDER)) {
             fs.mkdirSync(globals.ZOWETEMPFOLDER);

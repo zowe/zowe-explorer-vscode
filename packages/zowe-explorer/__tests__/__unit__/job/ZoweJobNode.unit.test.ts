@@ -138,18 +138,10 @@ async function createGlobalMocks() {
         value: jest.fn().mockImplementationOnce(() => Promise.resolve()),
         configurable: true,
     });
-    Object.defineProperty(ZoweLogger, "logError", {
-        value: jest.fn(),
-        configurable: true,
-    });
-    Object.defineProperty(ZoweLogger, "logDebug", {
-        value: jest.fn(),
-        configurable: true,
-    });
-    Object.defineProperty(ZoweLogger, "logWarn", {
-        value: jest.fn(),
-        configurable: true,
-    });
+    Object.defineProperty(ZoweLogger, "logError", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "logDebug", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "logWarn", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "logTrace", { value: jest.fn(), configurable: true });
 
     // Profile instance mocks
     globalMocks.mockProfileInstance = createInstanceOfProfile(globalMocks.testProfile);

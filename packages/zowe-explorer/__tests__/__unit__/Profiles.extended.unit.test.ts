@@ -123,6 +123,11 @@ async function createGlobalMocks() {
     });
     Object.defineProperty(vscode, "ProgressLocation", { value: newMocks.ProgressLocation, configurable: true });
     Object.defineProperty(vscode.window, "withProgress", { value: newMocks.withProgress, configurable: true });
+    Object.defineProperty(ZoweLogger, "logError", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "logDebug", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "logWarn", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "logInfo", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "logTrace", { value: jest.fn(), configurable: true });
 
     newMocks.mockProfileInstance = new Profiles(newMocks.log);
     Object.defineProperty(Profiles, "CreateInstance", {
@@ -160,22 +165,6 @@ async function createGlobalMocks() {
     });
     Object.defineProperty(vscode.window, "showTextDocument", {
         value: () => {},
-        configurable: true,
-    });
-    Object.defineProperty(ZoweLogger, "logDebug", {
-        value: jest.fn(),
-        configurable: true,
-    });
-    Object.defineProperty(ZoweLogger, "logInfo", {
-        value: jest.fn(),
-        configurable: true,
-    });
-    Object.defineProperty(ZoweLogger, "logWarn", {
-        value: jest.fn(),
-        configurable: true,
-    });
-    Object.defineProperty(ZoweLogger, "logError", {
-        value: jest.fn(),
         configurable: true,
     });
 
