@@ -2,7 +2,7 @@
 
 ## Removal of deprecated APIs from Extensibility API for Zowe Explorer
 
-- Logger type `MessageSeverity` removed in favor of `MessageSeverityEnum`.
+- Logger type `MessageSeverityEnum` removed in favor of `MessageSeverity`.
 - `IUss.putContents` removed in favor of `IUss.putContent`.
 - `IJes.getJobsByOwnerAndPrefix` removed in favor of `IJes.getJobsByParameters`.
 - `ICommand.issueTsoCommand` removed in favor of `ICommand.issueTsoCommandWithParms`.

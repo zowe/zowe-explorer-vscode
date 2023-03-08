@@ -90,8 +90,6 @@ describe("FtpUssApi", () => {
             },
         };
         const result = await UssApi.putContent(mockParams.inputFilePath, mockParams.ussFilePath, {
-            binary: undefined,
-            localEncoding: undefined,
             etag: "test",
             returnEtag: true,
         });
