@@ -22,7 +22,7 @@ export class KeytarApi {
     public async activateKeytar(initialized: boolean, isTheia: boolean): Promise<void> {
         const log = imperative.Logger.getAppLogger();
         const profiles = new ProfilesCache(log, vscode.workspace.workspaceFolders?.[0]?.uri.fsPath);
-        const isSecure = profiles.isCredentialsSecured();
+        const isSecure = await profiles.isCredentialsSecured();
         if (isSecure) {
             const keytar = KeytarCredentialManager.getSecurityModules("keytar", isTheia);
             if (!initialized && keytar) {
