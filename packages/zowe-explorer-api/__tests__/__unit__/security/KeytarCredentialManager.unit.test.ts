@@ -172,7 +172,7 @@ describe("KeytarCredentialManager", () => {
         it("should load credentials successfully", async () => {
             const credMgr = new KeytarCredentialManager(globals.SETTINGS_SCS_DEFAULT, fakeDisplayName);
             KeytarCredentialManager.keytar.getPassword.mockReturnValueOnce(null).mockReturnValueOnce("secret");
-            const password = await (credMgr as any).loadCredentials("test") as string;
+            const password = (await (credMgr as any).loadCredentials("test")) as string;
             expect(password).toBe("secret");
             expect(KeytarCredentialManager.keytar.getPassword).toHaveBeenCalledTimes(2);
         });
@@ -182,7 +182,7 @@ describe("KeytarCredentialManager", () => {
             KeytarCredentialManager.keytar.getPassword.mockImplementation((service: string, account: string) => {
                 return account.endsWith("_user") ? "secret" : null;
             });
-            const password = await (credMgr as any).loadCredentials("test_username") as string;
+            const password = (await (credMgr as any).loadCredentials("test_username")) as string;
             expect(password).toBe("secret");
             expect(KeytarCredentialManager.keytar.getPassword).toHaveBeenCalledTimes(2);
         });
@@ -192,7 +192,7 @@ describe("KeytarCredentialManager", () => {
             KeytarCredentialManager.keytar.getPassword.mockImplementation((service: string, account: string): Promise<string | null> => {
                 return Promise.resolve(account.endsWith("_password") ? "secret" : null);
             });
-            const password = await (credMgr as any).loadCredentials("test_pass") as string;
+            const password = (await (credMgr as any).loadCredentials("test_pass")) as string;
             expect(password).toBe("secret");
             expect(KeytarCredentialManager.keytar.getPassword).toHaveBeenCalledTimes(2);
         });
@@ -212,7 +212,7 @@ describe("KeytarCredentialManager", () => {
         it("should not load missing credentials if optional", async () => {
             const credMgr = new KeytarCredentialManager(globals.SETTINGS_SCS_DEFAULT, fakeDisplayName);
             KeytarCredentialManager.keytar.getPassword.mockReturnValue(null);
-            const password = await (credMgr as any).loadCredentials("test", true) as string;
+            const password = (await (credMgr as any).loadCredentials("test", true)) as string;
             expect(password).toBe(null);
             expect(KeytarCredentialManager.keytar.getPassword).toHaveBeenCalledTimes(5);
         });

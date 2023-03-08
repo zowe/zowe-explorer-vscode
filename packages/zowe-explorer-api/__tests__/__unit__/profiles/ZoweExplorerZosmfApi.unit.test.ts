@@ -30,7 +30,7 @@ type ITestProfile = {
     rejectUnauthorized: boolean;
     user?: string;
     password?: string;
-}
+};
 
 const fakeProfile: ITestProfile = {
     host: "example.com",

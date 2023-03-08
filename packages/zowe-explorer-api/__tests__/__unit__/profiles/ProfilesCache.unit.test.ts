@@ -98,7 +98,7 @@ function createProfInfoMock(profiles: Partial<zowe.imperative.IProfileLoaded>[])
                 })),
         getDefaultProfile: (profType: string) => {
             const profile: any = profiles.find((prof) => prof.type === profType);
-            return profile && { profName: profile.name, profType: profile.type, profLoc: { osLoc: "fakePath" } };
+            return profile && { profName: profile.name as string, profType: profile.type as string, profLoc: { osLoc: "fakePath" } };
         },
         mergeArgsForProfile: (profAttrs: zowe.imperative.IProfAttrs) => {
             const profile: Partial<zowe.imperative.IProfileLoaded> | undefined = profiles.find(
@@ -139,38 +139,39 @@ describe("ProfilesCache", () => {
 
     it("loadNamedProfile should find profiles by name and type", () => {
         const profCache = new ProfilesCache(fakeLogger as any);
-        profCache.allProfiles = [lpar1Profile as any, zftpProfile as any];
+        profCache.allProfiles = [lpar1Profile as zowe.imperative.IProfileLoaded, zftpProfile as zowe.imperative.IProfileLoaded];
         expect(profCache.loadNamedProfile("lpar1").type).toBe("zosmf");
         expect(profCache.loadNamedProfile("lpar2", "zftp").type).toBe("zftp");
     });
 
     it("loadNamedProfile should fail to find non-existent profile", () => {
         const profCache = new ProfilesCache(fakeLogger as any);
-        profCache.allProfiles = [lpar1Profile as any];
-        let caughtError;
+        profCache.allProfiles = [lpar1Profile as zowe.imperative.IProfileLoaded];
         try {
             profCache.loadNamedProfile("lpar2");
+            fail('loadNamedProfile("lpar2") should have thrown an exception here.');
         } catch (error) {
-            caughtError = error;
+            expect(error).toBeDefined();
+            expect(error.message).toContain("Could not find profile");
         }
-        expect(caughtError.message).toContain("Could not find profile");
     });
 
     it("loadNamedProfile should fail to find invalid profile", () => {
         const profCache = new ProfilesCache(fakeLogger as any);
-        profCache.allProfiles = [lpar1Profile as any];
-        let caughtError;
+        profCache.allProfiles = [lpar1Profile as zowe.imperative.IProfileLoaded];
+
         try {
             profCache.loadNamedProfile("lpar1", "zftp");
+            fail('loadNamedProfile("lpar1", "zftp") should have thrown an exception here.');
         } catch (error) {
-            caughtError = error;
+            expect(error).toBeDefined();
+            expect(error.message).toContain("Could not find profile");
         }
-        expect(caughtError.message).toContain("Could not find profile");
     });
 
     it("updateProfilesArrays should process profile properties and defaults", () => {
         const profCache = new ProfilesCache(fakeLogger as any);
-        profCache.allProfiles = [lpar1Profile as any];
+        profCache.allProfiles = [lpar1Profile as zowe.imperative.IProfileLoaded];
         (profCache as any).defaultProfileByType = new Map([["zosmf", { ...profCache.allProfiles[0] }]]);
         expect(profCache.allProfiles[0].profile).toMatchObject(lpar1Profile.profile);
         profCache.updateProfilesArrays({
@@ -386,13 +387,13 @@ describe("ProfilesCache", () => {
 
     it("getBaseProfile should find base profile if one exists", () => {
         const profCache = new ProfilesCache(fakeLogger as any);
-        profCache.allProfiles = [{ name: "my_base", type: "base" } as any];
+        profCache.allProfiles = [{ name: "my_base", type: "base" } as zowe.imperative.IProfileLoaded];
         expect(profCache.getBaseProfile()?.type).toBe("base");
     });
 
     it("getBaseProfile should return undefined if base profile not found", () => {
         const profCache = new ProfilesCache(fakeLogger as any);
-        profCache.allProfiles = [{ name: "lpar1", type: "zosmf" } as any];
+        profCache.allProfiles = [{ name: "lpar1", type: "zosmf" } as zowe.imperative.IProfileLoaded];
         expect(profCache.getBaseProfile()).toBeUndefined();
     });
 
@@ -432,7 +433,7 @@ describe("ProfilesCache", () => {
                 configurations: [
                     {
                         type: "zosmf",
-                        schema: fakeSchema,
+                        schema: fakeSchema as object,
                     },
                 ],
             } as any);
@@ -446,7 +447,7 @@ describe("ProfilesCache", () => {
                 configurations: [
                     {
                         type: "zosmf",
-                        schema: fakeSchema,
+                        schema: fakeSchema as object,
                     },
                 ],
             } as any);

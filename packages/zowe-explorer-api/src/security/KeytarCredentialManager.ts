@@ -24,11 +24,11 @@ declare const __webpack_require__: typeof require;
 declare const __non_webpack_require__: typeof require;
 
 export type KeytarModule = {
-    deletePassword: (service: string, account: string) => Promise<boolean>,
-    findPassword: (service: string, account: string) => Promise<string | null>,
-    findCredentials: (name: string) => Promise<{ account: string; password: string }[]>,
-    getPassword: (service: string, account: string) => Promise<string | null>,
-    setPassword: (service: string, account: string, password: string) => Promise<void>,
+    deletePassword: (service: string, account: string) => Promise<boolean>;
+    findPassword: (service: string, account: string) => Promise<string | null>;
+    findCredentials: (name: string) => Promise<{ account: string; password: string }[]>;
+    getPassword: (service: string, account: string) => Promise<string | null>;
+    setPassword: (service: string, account: string, password: string) => Promise<void>;
 };
 
 /**
