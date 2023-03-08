@@ -1590,12 +1590,12 @@ export async function copyPartitionedDatasets(nodes: ZoweDatasetNode[]) {
     await _copyProcessor(nodes, "po", async (node: ZoweDatasetNode, dsname: string, replace: shouldReplace) => {
         const lbl = node.getLabel().toString();
         const uploadOptions: IUploadOptions = {
-            etag: node?.getEtag(),
+            etag: node.getEtag(),
             returnEtag: true,
         };
 
         const children = await node.getChildren();
-        const prof = node?.getProfile();
+        const prof = node.getProfile();
         if (prof.profile.encoding) {
             uploadOptions.encoding = prof.profile.encoding;
         }
