@@ -10,6 +10,7 @@
  */
 
 import * as zowe from "@zowe/cli";
+import { IZosmfInfoResponse } from "@zowe/cli";
 import { ZoweExplorerApi } from "../../../src/profiles/ZoweExplorerApi";
 import { ZosmfCommandApi, ZosmfJesApi, ZosmfMvsApi, ZosmfUssApi } from "../../../src/profiles/ZoweExplorerZosmfApi";
 
@@ -22,7 +23,16 @@ type ITestApi<T> = {
     };
 }[keyof T];
 
-const fakeProfile: { [key: string]: string | number | boolean } = {
+type ITestProfile = {
+    host: string;
+    port: number;
+    basePath: string;
+    rejectUnauthorized: boolean;
+    user?: string;
+    password?: string;
+}
+
+const fakeProfile: ITestProfile = {
     host: "example.com",
     port: 443,
     basePath: "/api/v1",
@@ -81,7 +91,7 @@ describe("ZosmfUssApi", () => {
     });
 
     it("getSession should build session from profile with token", () => {
-        const fakeProfileWithToken: any = {
+        const fakeProfileWithToken = {
             ...fakeProfile,
             tokenType: zowe.imperative.SessConstants.TOKEN_TYPE_JWT,
             tokenValue: "fakeToken",
@@ -104,7 +114,7 @@ describe("ZosmfUssApi", () => {
 
     it("getSession should log error when it fails", () => {
         const zosmfApi = new ZosmfUssApi({} as any);
-        const loggerSpy = jest.spyOn(zowe.imperative.Logger.prototype, "error").mockReturnValue(undefined);
+        const loggerSpy = jest.spyOn(zowe.imperative.Logger.prototype, "error").mockReturnValue("");
         const session = zosmfApi.getSession();
         expect(session).toBeUndefined();
         expect(loggerSpy).toHaveBeenCalledTimes(1);
@@ -120,7 +130,7 @@ describe("ZosmfUssApi", () => {
 
     it("getStatus should validate inactive profile", async () => {
         const zosmfApi = new ZosmfUssApi();
-        const checkStatusSpy = jest.spyOn(zowe.CheckStatus, "getZosmfInfo").mockResolvedValue(undefined);
+        const checkStatusSpy = jest.spyOn(zowe.CheckStatus, "getZosmfInfo").mockResolvedValue(undefined as unknown as IZosmfInfoResponse);
         const status = await zosmfApi.getStatus({ profile: fakeProfile } as any, "zosmf");
         expect(status).toBe("inactive");
         expect(checkStatusSpy).toHaveBeenCalledTimes(1);
@@ -146,8 +156,8 @@ describe("ZosmfUssApi", () => {
 
     it("login and logout should call APIML endpoints", async () => {
         const zosmfApi = new ZosmfUssApi();
-        const loginSpy = jest.spyOn(zowe.Login, "apimlLogin").mockResolvedValue(undefined);
-        const logoutSpy = jest.spyOn(zowe.Logout, "apimlLogout").mockResolvedValue(undefined);
+        const loginSpy = jest.spyOn(zowe.Login, "apimlLogin").mockResolvedValue("");
+        const logoutSpy = jest.spyOn(zowe.Logout, "apimlLogout").mockResolvedValue();
 
         await zosmfApi.login(fakeSession);
         expect(loginSpy).toHaveBeenCalledWith(fakeSession);

@@ -23,6 +23,14 @@ import * as globals from "../globals";
 declare const __webpack_require__: typeof require;
 declare const __non_webpack_require__: typeof require;
 
+export type KeytarModule = {
+    deletePassword: (service: string, account: string) => Promise<boolean>,
+    findPassword: (service: string, account: string) => Promise<string | null>,
+    findCredentials: (name: string) => Promise<{ account: string; password: string }[]>,
+    getPassword: (service: string, account: string) => Promise<string | null>,
+    setPassword: (service: string, account: string, password: string) => Promise<void>,
+};
+
 /**
  * Keytar - Securely store user credentials in the system keychain
  *
@@ -36,7 +44,7 @@ export class KeytarCredentialManager extends imperative.AbstractCredentialManage
      * @public
      */
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    public static keytar: any;
+    public static keytar: KeytarModule;
 
     /**
      * Combined list of services that credentials may be stored under

@@ -101,9 +101,15 @@ function createProfInfoMock(profiles: Partial<zowe.imperative.IProfileLoaded>[])
             return profile && { profName: profile.name, profType: profile.type, profLoc: { osLoc: "fakePath" } };
         },
         mergeArgsForProfile: (profAttrs: zowe.imperative.IProfAttrs) => {
-            const profile: any = profiles.find((prof) => prof.name === profAttrs.profName && prof.type === profAttrs.profType);
+            const profile: Partial<zowe.imperative.IProfileLoaded> | undefined = profiles.find(
+                (prof) => prof.name === profAttrs.profName && prof.type === profAttrs.profType
+            );
+            if (profile === undefined) {
+                return { knownArgs: [] };
+            }
+
             return {
-                knownArgs: Object.entries(profile.profile).map(([k, v]) => ({ argName: k, argValue: v })),
+                knownArgs: Object.entries(profile.profile as object).map(([k, v]) => ({ argName: k, argValue: v as unknown })),
             };
         },
     } as any;

@@ -1,27 +1,61 @@
-root: true
-parser: "@typescript-eslint/parser"
-plugins:
-  - "@typescript-eslint"
-  - zowe-explorer
+extends:
+  - eslint:recommended
+  - plugin:@typescript-eslint/recommended-requiring-type-checking
+  - prettier
 env:
   node: true
   es6: true
+overrides:
+  - files: "**/__tests__/**"
+    rules:
+      no-magic-numbers: off
+      # "@typescript-eslint/no-unsafe-assignment": off
+      "@typescript-eslint/no-unsafe-call": off
+      "@typescript-eslint/no-unsafe-member-access": off
+      "@typescript-eslint/no-unsafe-argument": off
+parser: "@typescript-eslint/parser"
+parserOptions:
+  ecmaVersion: 6
+  sourceType: module
+plugins:
+  - "@typescript-eslint"
+  - zowe-explorer
 rules:
+  # rule disabled below: requires parserServices to be defined
+  "@typescript-eslint/await-thenable": off
   "@typescript-eslint/consistent-type-assertions": warn
-  "@typescript-eslint/no-namespace": warn
+  "@typescript-eslint/explicit-function-return-type": error
+  "@typescript-eslint/explicit-member-accessibility": error
+  # "@typescript-eslint/member-ordering": warn
+  # rules below require parserServices to be defined
+  # "@typescript-eslint/no-floating-promises": off
+  # "@typescript-eslint/no-implied-eval": off
+  # "@typescript-eslint/no-misused-promises": off
+  # "@typescript-eslint/no-namespace": off
+  # "@typescript-eslint/no-unnecessary-type-assertion": off
+  "@typescript-eslint/no-shadow": error
+  "@typescript-eslint/no-unused-expressions": error
   "@typescript-eslint/no-var-requires": warn
-  no-unused-expressions: off
-  "@typescript-eslint/no-unused-expressions": warn
-  no-unused-vars: off
-  "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }]
+  array-callback-return: error
+  # complexity: off
+  constructor-super: error
   curly: warn
+  getter-return: error
   max-len:
     - warn
     - code: 150
-  no-console: warn
-  no-duplicate-case: warn
-  no-duplicate-imports: warn
+  "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }]
+  # no-array-constructor: off
+  no-console: error
+  no-const-assign: error
+  no-dupe-keys: error
+  no-duplicate-case: error
+  no-duplicate-imports: error
   no-extra-bind: warn
+  no-extra-semi: error
+  # no-func-assign: error
+  no-implicit-globals: error
+  # no-import-assign: error
   no-irregular-whitespace: warn
   no-magic-numbers:
     - warn
@@ -29,7 +63,15 @@ rules:
   no-multiple-empty-lines: warn
   no-return-await: warn
   no-sequences: warn
+  no-shadow: off
   no-sparse-arrays: warn
+  # no-this-before-super: error
+  # no-undef: warn
+  no-unreachable: error
+  no-unsafe-negation: error
+  no-unused-expressions: off
+  no-unused-vars: off
+  # prefer-const: warn
   prefer-object-spread: warn
   space-in-parens: warn
   zowe-explorer/no-unmocked-core-modules:
@@ -37,9 +79,4 @@ rules:
     - coreModuleNames:
         - fs
       filePathPattern: ".*\\.unit\\.test\\..*"
-parserOptions:
-  sourceType: module
-overrides:
-  - files: "**/__tests__/**"
-    rules:
-      no-magic-numbers: off
+root: true

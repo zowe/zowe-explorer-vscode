@@ -323,7 +323,9 @@ export class ProfilesCache {
     public async getLoadedProfConfig(profileName: string): Promise<zowe.imperative.IProfileLoaded | undefined> {
         const mProfileInfo = await this.getProfileInfo();
         const currentProfile = await this.getProfileFromConfig(profileName);
-        if (currentProfile == null) return undefined;
+        if (currentProfile == null) {
+            return undefined;
+        }
         const profile = this.getMergedAttrs(mProfileInfo, currentProfile);
         return this.getProfileLoaded(currentProfile.profName, currentProfile.profType, profile);
     }
@@ -369,7 +371,7 @@ export class ProfilesCache {
     public async fetchBaseProfile(): Promise<zowe.imperative.IProfileLoaded | undefined> {
         const mProfileInfo = await this.getProfileInfo();
         const baseProfileAttrs = mProfileInfo.getDefaultProfile("base");
-        if (baseProfileAttrs == null) return undefined;
+        if (baseProfileAttrs == null) {return undefined;}
         const profAttr = this.getMergedAttrs(mProfileInfo, baseProfileAttrs);
         return this.getProfileLoaded(baseProfileAttrs.profName, baseProfileAttrs.profType, profAttr);
     }

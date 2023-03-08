@@ -25,7 +25,7 @@ describe("KeytarApi", () => {
 
     it("should initialize Imperative credential manager", async () => {
         isCredsSecuredSpy.mockReturnValueOnce(true);
-        (getSecurityModulesSpy as any).mockReturnValueOnce(true);
+        getSecurityModulesSpy.mockReturnValueOnce({} as NodeModule);
         credMgrInitializeSpy.mockResolvedValueOnce();
         await new KeytarApi(undefined as any).activateKeytar(false, false);
         expect(isCredsSecuredSpy).toBeCalledTimes(1);
@@ -43,7 +43,7 @@ describe("KeytarApi", () => {
 
     it("should do nothing if API has already been initialized", async () => {
         isCredsSecuredSpy.mockReturnValueOnce(true);
-        (getSecurityModulesSpy as any).mockReturnValueOnce(true);
+        getSecurityModulesSpy.mockReturnValueOnce({} as NodeModule);
         await new KeytarApi(undefined as any).activateKeytar(true, false);
         expect(isCredsSecuredSpy).toBeCalledTimes(1);
         expect(getSecurityModulesSpy).toBeCalledTimes(1);
@@ -52,7 +52,7 @@ describe("KeytarApi", () => {
 
     it("should do nothing if Keytar module is missing", async () => {
         isCredsSecuredSpy.mockReturnValueOnce(true);
-        (getSecurityModulesSpy as any).mockReturnValueOnce(false);
+        getSecurityModulesSpy.mockReturnValueOnce(undefined);
         await new KeytarApi(undefined as any).activateKeytar(false, false);
         expect(isCredsSecuredSpy).toBeCalledTimes(1);
         expect(getSecurityModulesSpy).toBeCalledTimes(1);

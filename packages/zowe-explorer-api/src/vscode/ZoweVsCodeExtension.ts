@@ -74,7 +74,9 @@ export class ZoweVsCodeExtension {
      */
     public static async promptCredentials(options: IPromptCredentialsOptions): Promise<imperative.IProfileLoaded> {
         const loadProfile = await this.profilesCache.getLoadedProfConfig(options.sessionName.trim());
-        if (loadProfile == null) return undefined;
+        if (loadProfile == null) {
+            return undefined;
+        }
         const loadSession = loadProfile.profile as imperative.ISession;
 
         const creds = await ZoweVsCodeExtension.promptUserPass({ session: loadSession, ...options });
@@ -137,7 +139,10 @@ export class ZoweVsCodeExtension {
     private static async saveCredentials(profile: imperative.IProfileLoaded): Promise<boolean> {
         let save = false;
         const saveButton = "Save Credentials";
-        const message = `Save entered credentials in plain text for future use with profile ${profile.name}?\nSaving credentials will update the local information file.`;
+        const message = [
+            `Save entered credentials in plain text for future use with profile ${profile.name}?`,
+            "Saving credentials will update the local information file.",
+        ].join("\n");
         await Gui.showMessage(message, { items: [saveButton], vsCodeOpts: { modal: true } }).then((selection) => {
             if (selection) {
                 save = true;

@@ -1,28 +1,5 @@
-parser: "@typescript-eslint/parser"
 parserOptions:
   ecmaVersion: 6
   sourceType: module
   project:
     - "./tsconfig.json"
-plugins:
-  - "@typescript-eslint"
-extends:
-  - eslint:recommended
-  - plugin:@typescript-eslint/recommended
-  - plugin:@typescript-eslint/recommended-requiring-type-checking
-  - prettier
-rules:
-  "@typescript-eslint/no-namespace": off
-  "@typescript-eslint/explicit-function-return-type": error
-  "@typescript-eslint/explicit-member-accessibility": error
-  "@typescript-eslint/member-ordering": warn
-  "@typescript-eslint/no-unsafe-argument": warn
-  camelcase: error
-  no-console: error
-  array-callback-return: error
-  complexity:
-    - error
-    - max: 15
-  no-implicit-globals: error
-  require-await: error
-  no-shadow: error

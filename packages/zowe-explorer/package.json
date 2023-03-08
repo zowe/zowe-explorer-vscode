@@ -1802,7 +1802,6 @@
     "lint:tests": "eslint --format stylish __tests__/**/*.ts",
     "clean": "gulp clean",
     "fresh-clone": "yarn clean && rimraf node_modules",
-    "lintErrors": "echo \"zowe-explorer: lintErrors coming soon with eslint.\"",
     "pretty": "prettier --write .",
     "createTestProfileData": "ts-node ./scripts/createTestProfileData.ts",
     "createDemoNodes": "ts-node ./scripts/createDemoNodes.ts"

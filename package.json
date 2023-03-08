@@ -62,7 +62,6 @@
     "fresh-clone": "yarn workspaces run fresh-clone && rimraf node_modules",
     "prepare": "husky install && yarn build",
     "lint": "yarn workspaces run lint",
-    "lintErrors": "yarn workspaces run lintErrors",
     "pretty": "prettier --write .",
     "build": "yarn workspaces run build",
     "test": "yarn workspaces run test",

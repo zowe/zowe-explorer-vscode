@@ -153,7 +153,7 @@ describe("Gui unit tests", () => {
 
     it("can resolve a quick pick when accepted", async () => {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-        const mockDidAccept = jest.fn((callback: any) => callback());
+        const mockDidAccept = jest.fn((callback: Function) => callback());
         await Gui.resolveQuickPick({
             activeItems: ["test"],
             onDidAccept: mockDidAccept,
@@ -164,7 +164,7 @@ describe("Gui unit tests", () => {
 
     it("can resolve a quick pick when hidden", async () => {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-        const mockDidHide = jest.fn((callback: any) => callback());
+        const mockDidHide = jest.fn((callback: Function) => callback());
         await Gui.resolveQuickPick({
             activeItems: ["test"],
             onDidAccept: jest.fn(),
