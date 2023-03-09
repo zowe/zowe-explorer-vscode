@@ -29,10 +29,8 @@ Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: tr
 Object.defineProperty(vscode.window, "showOpenDialog", { value: showOpenDialog });
 Object.defineProperty(vscode.window, "showInformationMessage", { value: showInformationMessage });
 Object.defineProperty(vscode.workspace, "openTextDocument", { value: openTextDocument });
-Object.defineProperty(ZoweLogger, "logError", {
-    value: jest.fn(),
-    configurable: true,
-});
+Object.defineProperty(ZoweLogger, "logError", { value: jest.fn(), configurable: true });
+Object.defineProperty(ZoweLogger, "logTrace", { value: jest.fn(), configurable: true });
 const DatasetTree = jest.fn().mockImplementation(() => {
     return {
         mSessionNodes: [],

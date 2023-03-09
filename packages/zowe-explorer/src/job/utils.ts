@@ -9,9 +9,11 @@
  *
  */
 
+import { ZoweLogger } from "../utils/LoggerUtils";
 import { FilterItem } from "../utils/ProfilesUtils";
 
 export async function resolveQuickPickHelper(quickpick): Promise<FilterItem | undefined> {
+    ZoweLogger.logTrace("job.utils.resolveQuickPickHelper called.");
     return new Promise<FilterItem | undefined>((c) => {
         quickpick.onDidAccept(() => c(quickpick.activeItems[0]));
         quickpick.onDidHide(() => c(undefined));

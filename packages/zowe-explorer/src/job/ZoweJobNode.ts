@@ -21,6 +21,7 @@ import * as contextually from "../shared/context";
 
 import * as nls from "vscode-nls";
 import { Profiles } from "../Profiles";
+import { ZoweLogger } from "../utils/LoggerUtils";
 // Set up localization
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
@@ -94,6 +95,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
      * @returns {Promise<IZoweJobTreeNode[]>}
      */
     public async getChildren(): Promise<IZoweJobTreeNode[]> {
+        ZoweLogger.logTrace("ZoweJobNode.getChildren called.");
         if (contextually.isSession(this) && !this.filtered) {
             return [
                 new Job(
@@ -210,6 +212,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
     }
 
     public getSessionNode(): IZoweJobTreeNode {
+        ZoweLogger.logTrace("ZoweJobNode.getSessionNode called.");
         return this.getParent() ? this.getParent().getSessionNode() : this;
     }
 
@@ -283,6 +286,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
     }
 
     private statusNotSupportedMsg(status: string) {
+        ZoweLogger.logTrace("ZoweJobNode.statusNotSupportedMsg called.");
         if (status !== "*") {
             Gui.warningMessage(
                 localize(
@@ -294,6 +298,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
     }
 
     private async getJobs(owner: string, prefix: string, searchId: string, status: string): Promise<zowe.IJob[]> {
+        ZoweLogger.logTrace("ZoweJobNode.getJobs called.");
         let jobsInternal: zowe.IJob[] = [];
         const sessNode = this.getSessionNode();
         const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());

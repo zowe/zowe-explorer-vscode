@@ -49,6 +49,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  *
  */
 export async function allocateLike(datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>, node?: api.IZoweDatasetTreeNode) {
+    ZoweLogger.logTrace("dataset.actions.allocateLike called.");
     let profile: zowe.imperative.IProfileLoaded;
     let likeDSName: string;
     let currSession: api.IZoweDatasetTreeNode;
@@ -139,6 +140,7 @@ export async function allocateLike(datasetProvider: api.IZoweTree<api.IZoweDatas
 }
 
 export async function uploadDialog(node: ZoweDatasetNode, datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>) {
+    ZoweLogger.logTrace("dataset.actions.uploadDialog called.");
     const fileOpenOptions = {
         canSelectFiles: true,
         openLabel: "Upload File",
@@ -175,6 +177,7 @@ export async function uploadDialog(node: ZoweDatasetNode, datasetProvider: api.I
 }
 
 export async function uploadFile(node: ZoweDatasetNode, doc: vscode.TextDocument) {
+    ZoweLogger.logTrace("dataset.actions.uploadFile called.");
     try {
         const datasetName = node.label as string;
         const prof = node.getProfile();
@@ -195,6 +198,7 @@ export async function uploadFile(node: ZoweDatasetNode, doc: vscode.TextDocument
  * @param {DatasetTree} datasetProvider - the tree which contains the nodes
  */
 export async function deleteDatasetPrompt(datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>, node?: api.IZoweDatasetTreeNode) {
+    ZoweLogger.logTrace("dataset.actions.deleteDatasetPrompt called.");
     let nodes: api.IZoweDatasetTreeNode[];
     const treeView = datasetProvider.getTreeView();
     let selectedNodes = treeView.selection;
@@ -350,6 +354,7 @@ export async function deleteDatasetPrompt(datasetProvider: api.IZoweTree<api.IZo
  * @param {DatasetTree} datasetProvider - the tree which contains the nodes
  */
 export async function createMember(parent: api.IZoweDatasetTreeNode, datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>) {
+    ZoweLogger.logTrace("dataset.actions.createMember called.");
     const options: vscode.InputBoxOptions = {
         placeHolder: localize("createMember.inputBox.placeholder", "Name of Member"),
         validateInput: (text) => {
@@ -394,6 +399,7 @@ export async function createMember(parent: api.IZoweDatasetTreeNode, datasetProv
  * @param {IZoweDatasetTreeNode} node
  */
 export async function openPS(node: api.IZoweDatasetTreeNode, previewMember: boolean, datasetProvider?: api.IZoweTree<api.IZoweDatasetTreeNode>) {
+    ZoweLogger.logTrace("dataset.actions.openPS called.");
     if (datasetProvider) {
         await datasetProvider.checkCurrentProfile(node);
     }
@@ -446,6 +452,7 @@ export async function openPS(node: api.IZoweDatasetTreeNode, previewMember: bool
 }
 
 export function getDataSetTypeAndOptions(type: string) {
+    ZoweLogger.logTrace("dataset.actions.getDataSetTypeAndOptions called.");
     let typeEnum;
     let createOptions;
     switch (type) {
@@ -486,6 +493,7 @@ export function getDataSetTypeAndOptions(type: string) {
  * @param {DatasetTree} datasetProvider - the tree which contains the nodes
  */
 export async function createFile(node: api.IZoweDatasetTreeNode, datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>) {
+    ZoweLogger.logTrace("dataset.actions.createFile called.");
     let dsName: string;
     let typeEnum: number;
     let propertiesFromDsType: any;
@@ -638,6 +646,7 @@ export async function createFile(node: api.IZoweDatasetTreeNode, datasetProvider
 }
 
 async function handleUserSelection(newDSProperties, dsType): Promise<string> {
+    ZoweLogger.logTrace("dataset.actions.handleUserSelection called.");
     // Create the array of items in the quickpick list
     const qpItems = [];
     qpItems.push(new FilterItem({ text: ` + Allocate Data Set`, show: true }));
@@ -691,6 +700,7 @@ async function handleUserSelection(newDSProperties, dsType): Promise<string> {
  * @param {DatasetTree} datasetProvider - the tree which contains the nodes
  */
 export async function showAttributes(node: api.IZoweDatasetTreeNode, datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>) {
+    ZoweLogger.logTrace("dataset.actions.showAttributes called.");
     await datasetProvider.checkCurrentProfile(node);
     if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
         const label = node.label as string;
@@ -766,6 +776,7 @@ export async function showAttributes(node: api.IZoweDatasetTreeNode, datasetProv
  */
 // This function does not appear to currently be made available in the UI
 export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>) {
+    ZoweLogger.logTrace("dataset.actions.submitJcl called.");
     if (!vscode.window.activeTextEditor) {
         api.Gui.errorMessage(localize("submitJcl.noDocumentOpen", "No editor with a document that could be submitted as JCL is currently open."));
         return;
@@ -837,6 +848,7 @@ export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetT
  * @returns Whether the job submission should continue.
  */
 async function confirmJobSubmission(node: api.IZoweTreeNode, ownsJob: boolean): Promise<boolean> {
+    ZoweLogger.logTrace("dataset.actions.confirmJobSubmission called.");
     const showConfirmationDialog = async () => {
         const selection = await api.Gui.warningMessage(
             localize("submitMember.confirm", "Are you sure you want to submit the following job?\n\n{0}", node.getLabel().toString()),
@@ -878,6 +890,7 @@ async function confirmJobSubmission(node: api.IZoweTreeNode, ownsJob: boolean): 
  * @param node The dataset member
  */
 export async function submitMember(node: api.IZoweTreeNode) {
+    ZoweLogger.logTrace("dataset.actions.submitMember called.");
     let label: string;
     let sesName: string;
     let sessProfile: zowe.imperative.IProfileLoaded;
@@ -931,6 +944,7 @@ export async function submitMember(node: api.IZoweTreeNode) {
  * @param {IZoweTree<IZoweDatasetTreeNode>} datasetProvider - the tree which contains the nodes
  */
 export async function deleteDataset(node: api.IZoweTreeNode, datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>) {
+    ZoweLogger.logTrace("dataset.actions.deleteDataset called.");
     let label = "";
     let fav = false;
 
@@ -1015,6 +1029,7 @@ export async function deleteDataset(node: api.IZoweTreeNode, datasetProvider: ap
  */
 // This is not a UI refresh.
 export async function refreshPS(node: api.IZoweDatasetTreeNode) {
+    ZoweLogger.logTrace("dataset.actions.refreshPS called.");
     let label: string;
     try {
         switch (true) {
@@ -1065,6 +1080,7 @@ export async function refreshPS(node: api.IZoweDatasetTreeNode) {
  * @param datasetProvider
  */
 export async function refreshDataset(node: api.IZoweDatasetTreeNode, datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>) {
+    ZoweLogger.logTrace("dataset.actions.refreshDataset called.");
     try {
         await node.getChildren();
         datasetProvider.refreshElement(node);
@@ -1082,6 +1098,7 @@ export async function refreshDataset(node: api.IZoweDatasetTreeNode, datasetProv
  */
 // This function does not appear to be called by anything except unit and integration tests.
 export async function enterPattern(node: api.IZoweDatasetTreeNode, datasetProvider: DatasetTree) {
+    ZoweLogger.logTrace("dataset.actions.enterPattern called.");
     if (globals.LOG) {
         globals.LOG.debug(localize("enterPattern.log.debug.prompt", "Prompting the user for a data set pattern"));
     }
@@ -1128,6 +1145,7 @@ export async function enterPattern(node: api.IZoweDatasetTreeNode, datasetProvid
  * @param {IZoweNodeType} node - The node to copy
  */
 export async function copyDataSet(node: api.IZoweNodeType) {
+    ZoweLogger.logTrace("dataset.actions.copyDataSet called.");
     return vscode.env.clipboard.writeText(JSON.stringify(dsUtils.getNodeLabels(node)));
 }
 
@@ -1140,6 +1158,7 @@ export async function copyDataSet(node: api.IZoweNodeType) {
  * @param datasetProvider
  */
 export async function copyDataSets(node, nodeList: ZoweDatasetNode[], datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>) {
+    ZoweLogger.logTrace("dataset.actions.copyDataSets called.");
     let selectedNodes;
     if (!(node || nodeList)) {
         selectedNodes = datasetProvider.getTreeView().selection;
@@ -1178,6 +1197,7 @@ export async function copyDataSets(node, nodeList: ZoweDatasetNode[], datasetPro
  * @param {IZoweDatasetTreeNode} node - The node to migrate
  */
 export async function hMigrateDataSet(node: ZoweDatasetNode) {
+    ZoweLogger.logTrace("dataset.actions.hMigrateDataSet called.");
     await Profiles.getInstance().checkCurrentProfile(node.getProfile());
     if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
         const { dataSetName } = dsUtils.getNodeLabels(node);
@@ -1205,6 +1225,7 @@ export async function hMigrateDataSet(node: ZoweDatasetNode) {
  * @param {IZoweDatasetTreeNode} node - The node to recall
  */
 export async function hRecallDataSet(node: ZoweDatasetNode) {
+    ZoweLogger.logTrace("dataset.actions.hRecallDataSet called.");
     await Profiles.getInstance().checkCurrentProfile(node.getProfile());
     if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
         const { dataSetName } = dsUtils.getNodeLabels(node);
@@ -1232,6 +1253,7 @@ export async function hRecallDataSet(node: ZoweDatasetNode) {
  * @param {IZoweDatasetTreeNode} node - The node to get details from
  */
 export async function showFileErrorDetails(node: ZoweDatasetNode) {
+    ZoweLogger.logTrace("dataset.actions.showFileErrorDetails called.");
     await Profiles.getInstance().checkCurrentProfile(node.getProfile());
     if (Profiles.getInstance().validProfile === api.ValidProfileEnum.INVALID) {
         api.Gui.errorMessage(localize("hMigrateDataSet.checkProfile", "Profile is invalid"));
@@ -1260,6 +1282,7 @@ export async function showFileErrorDetails(node: ZoweDatasetNode) {
  * @param {DatasetTree} datasetProvider - the tree which contains the nodes
  */
 export async function pasteMember(node: api.IZoweDatasetTreeNode, datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>) {
+    ZoweLogger.logTrace("dataset.actions.pasteMember called.");
     const { profileName, dataSetName } = dsUtils.getNodeLabels(node);
     let memberName;
     let beforeDataSetName;
@@ -1334,6 +1357,7 @@ export async function pasteMember(node: api.IZoweDatasetTreeNode, datasetProvide
  * @param {vscode.TextDocument} doc - TextDocument that is being saved
  */
 export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>): Promise<void> {
+    ZoweLogger.logTrace("dataset.actions.saveFile called.");
     // Check if file is a data set, instead of some other file
     ZoweLogger.logDebug(localize("saveFile.log.debug.request", "requested to save data set: ") + doc.fileName);
     const docPath = path.join(doc.fileName, "..");
@@ -1484,6 +1508,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
  * @param {DatasetTree} datasetProvider - the tree which contains the nodes
  */
 export async function pasteDataSetMembers(datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>, node: ZoweDatasetNode) {
+    ZoweLogger.logTrace("dataset.actions.pasteDataSetMembers called.");
     let clipboardContent;
     try {
         clipboardContent = JSON.parse(await vscode.env.clipboard.readText());
@@ -1527,6 +1552,7 @@ export async function pasteDataSetMembers(datasetProvider: api.IZoweTree<api.IZo
  * @param {ZoweDatasetNode} node - node to be downloaded
  */
 export async function downloadDs(node: ZoweDatasetNode) {
+    ZoweLogger.logTrace("dataset.actions.downloadDs called.");
     const profile = node.getProfile();
     let lbl: string;
     switch (true) {
@@ -1557,6 +1583,7 @@ export async function downloadDs(node: ZoweDatasetNode) {
  * @param {ZoweDatasetNode[]} nodes - nodes to be copied
  */
 export async function copySequentialDatasets(nodes: ZoweDatasetNode[]) {
+    ZoweLogger.logTrace("dataset.actions.copySequentialDatasets called.");
     await _copyProcessor(nodes, "ps", async (node: ZoweDatasetNode, dsname: string, replace: shouldReplace) => {
         const lbl = node.getLabel().toString();
         const mvsApi = ZoweExplorerApiRegister.getMvsApi(node.getProfile());
@@ -1583,6 +1610,7 @@ export async function copySequentialDatasets(nodes: ZoweDatasetNode[]) {
  * @param {ZoweDatasetNode[]} nodes - nodes to be copied
  */
 export async function copyPartitionedDatasets(nodes: ZoweDatasetNode[]) {
+    ZoweLogger.logTrace("dataset.actions.copyPartitionedDatasets called.");
     await _copyProcessor(nodes, "po", async (node: ZoweDatasetNode, dsname: string, replace: shouldReplace) => {
         const lbl = node.getLabel().toString();
         const uploadOptions: IUploadOptions = {
@@ -1636,6 +1664,7 @@ export type shouldReplace = "replace" | "cancel" | "notFound";
  * @returns string that explain whether or not to replace the z/os content
  */
 export async function determineReplacement(nodeProfile: zowe.imperative.IProfileLoaded, name: string, type: replaceDstype): Promise<shouldReplace> {
+    ZoweLogger.logTrace("dataset.actions.determineReplacement called.");
     const mvsApi = ZoweExplorerApiRegister.getMvsApi(nodeProfile);
     const options = { responseTimeout: nodeProfile.profile?.responseTimeout };
     const stringReplace = localize("copyDataSet.replace.option1", "Replace");
@@ -1682,6 +1711,7 @@ export async function _copyProcessor(
     type: replaceDstype,
     action: (_node: ZoweDatasetNode, _dsname: string, _shouldReplace: shouldReplace) => Promise<void>
 ): Promise<void> {
+    ZoweLogger.logTrace("dataset.actions._copyProcessor called.");
     for (const node of nodes) {
         try {
             const lbl = node.getLabel().toString();
