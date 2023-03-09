@@ -2,9 +2,8 @@
   "onDidSaveTextDocument1": "File was saved -- determining whether the file is a USS file or Data set.\n Comparing (case insensitive) ",
   "onDidSaveTextDocument2": " against directory ",
   "onDidSaveTextDocument3": "and",
-  "activate.didSaveText.file": "File ",
-  "activate.didSaveText.notDirty": " is not a dirty file ",
   "activate.didSaveText.isDataSet": "File is a data set-- saving ",
   "activate.didSaveText.isUSSFile": "File is a USS file -- saving",
+  "activate.didSaveText.file": "File ",
   "activate.didSaveText.notDataSet": " is not a data set or USS file "
 }

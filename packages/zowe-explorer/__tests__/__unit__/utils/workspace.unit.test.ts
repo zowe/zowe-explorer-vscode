@@ -216,9 +216,3 @@ describe("Workspace Utils Unit Tests - function awaitForDocumentBeingSaved", () 
         await expect(workspaceUtils.awaitForDocumentBeingSaved()).resolves.not.toThrow();
     });
 });
-
-describe("Workspace Utils Unit Tests - function handleSaving", () => {
-    it("should save by prioritizing the last ongoing save of a series queued saves", async () => {
-        await expect(workspaceUtils.handleSaving(jest.fn(), "" as any, undefined)).resolves.not.toThrow();
-    });
-});
