@@ -20,7 +20,7 @@ jobs:
           days-before-issue-close: 90
           exempt-all-assignees: true
           exempt-all-milestones: true
-          exempt-issue-labels: "community-upvoted, for-review, keep, security, third-party, Epic, bug"
+          exempt-issue-labels: "bug, priority-critical, priority-high, Epic, community-upvoted, for-review, keep, security"
           stale-issue-label: "pending closure"
           stale-issue-message: >
             This issue has been automatically marked as stale because it has not had
