@@ -65,6 +65,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
      * @param command the command string (optional) user is prompted if not supplied
      */
     public async issueMvsCommand(session?: imperative.Session, command?: string, node?: IZoweTreeNode) {
+        ZoweLogger.logTrace("MvsCommandHandler.issueMvsCommand called.");
         let profile: imperative.IProfileLoaded;
         if (node) {
             await this.checkCurrentProfile(node);
@@ -134,6 +135,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
     }
 
     private async getQuickPick(hostname: string) {
+        ZoweLogger.logTrace("MvsCommandHandler.getQuickPick called.");
         let response = "";
         const alwaysEdit: boolean = SettingsConfig.getDirectValue(globals.SETTINGS_COMMANDS_ALWAYS_EDIT);
         if (this.history.getSearchHistory().length > 0) {
@@ -203,6 +205,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
      * @param command the command string
      */
     private async issueCommand(profile: imperative.IProfileLoaded, command: string) {
+        ZoweLogger.logTrace("MvsCommandHandler.issueCommand called.");
         try {
             if (command) {
                 // If the user has started their command with a / then remove it

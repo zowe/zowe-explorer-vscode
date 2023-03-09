@@ -18,6 +18,7 @@ import { Profiles } from "../Profiles";
 import { errorHandling } from "../utils/ProfilesUtils";
 import { PersistentFilters } from "../PersistentFilters";
 import * as nls from "vscode-nls";
+import { ZoweLogger } from "../utils/LoggerUtils";
 
 // Set up localization
 nls.config({
@@ -45,6 +46,7 @@ export class ZoweCommandProvider {
      *
      */
     public async refreshElement(element: IZoweTreeNode): Promise<void> {
+        ZoweLogger.logTrace("ZoweCommandProvider.refreshElement called.");
         element.dirty = true;
         this.mOnDidChangeTreeData.fire(element);
     }
@@ -54,10 +56,12 @@ export class ZoweCommandProvider {
      *
      */
     public async refresh(): Promise<void> {
+        ZoweLogger.logTrace("ZoweCommandProvider.refresh called.");
         this.mOnDidChangeTreeData.fire();
     }
 
     public async checkCurrentProfile(node: IZoweTreeNode) {
+        ZoweLogger.logTrace("ZoweCommandProvider.checkCurrentProfile called.");
         const profile = node.getProfile();
         const profileStatus = await Profiles.getInstance().checkCurrentProfile(profile);
         if (profileStatus.status === "inactive") {

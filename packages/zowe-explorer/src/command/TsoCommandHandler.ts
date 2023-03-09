@@ -65,6 +65,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
      * @param command the command string (optional) user is prompted if not supplied
      */
     public async issueTsoCommand(session?: imperative.Session, command?: string, node?: IZoweTreeNode) {
+        ZoweLogger.logTrace("TsoCommandHandler.issueTsoCommand called.");
         let profile: imperative.IProfileLoaded;
         if (node) {
             await this.checkCurrentProfile(node);
@@ -141,6 +142,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
     }
 
     private async getQuickPick(hostname: string) {
+        ZoweLogger.logTrace("TsoCommandHandler.getQuickPick called.");
         let response = "";
         const alwaysEdit: boolean = SettingsConfig.getDirectValue(globals.SETTINGS_COMMANDS_ALWAYS_EDIT);
         if (this.history.getSearchHistory().length > 0) {
@@ -210,6 +212,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
      * @param tsoParams parameters (from TSO profile, when used)
      */
     private async issueCommand(command: string, profile: imperative.IProfileLoaded, tsoParams?: IStartTsoParms) {
+        ZoweLogger.logTrace("TsoCommandHandler.issueCommand called.");
         try {
             if (command) {
                 // If the user has started their command with a / then remove it
@@ -253,6 +256,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
     }
 
     private async selectTsoProfile(tsoProfiles: imperative.IProfileLoaded[] = []): Promise<imperative.IProfileLoaded> {
+        ZoweLogger.logTrace("TsoCommandHandler.selectTsoProfile called.");
         let tsoProfile: imperative.IProfileLoaded;
         if (tsoProfiles.length > 1) {
             const tsoProfileNamesList = tsoProfiles.map((temprofile) => {
@@ -283,6 +287,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
      * @returns Promise<IStartTsoParms>
      */
     private async getTsoParams(): Promise<IStartTsoParms> {
+        ZoweLogger.logTrace("TsoCommandHandler.getTsoParams called.");
         const profileInfo = await Profiles.getInstance().getProfileInfo();
         const tsoParms: IStartTsoParms = {};
 

@@ -16,6 +16,7 @@ import * as workspaceUtils from "../../../src/utils/workspace";
 import { Gui } from "@zowe/zowe-explorer-api";
 import * as globals from "../../../src/globals";
 import * as vscode from "vscode";
+import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 
 describe("ZoweSaveQueue - unit tests", () => {
     const createGlobalMocks = () => {
@@ -29,12 +30,9 @@ describe("ZoweSaveQueue - unit tests", () => {
             },
         };
 
-        Object.defineProperty(globals, "LOG", {
-            value: {
-                debug: jest.fn(),
-                error: jest.fn(),
-            },
-        });
+        Object.defineProperty(ZoweLogger, "logError", { value: jest.fn(), configurable: true });
+        Object.defineProperty(ZoweLogger, "logTrace", { value: jest.fn(), configurable: true });
+        Object.defineProperty(ZoweLogger, "logDebug", { value: jest.fn(), configurable: true });
 
         return globalMocks;
     };
@@ -112,7 +110,7 @@ describe("ZoweSaveQueue - unit tests", () => {
             await ZoweSaveQueue.all();
             fail("ZoweSaveQueue.all should fail here");
         } catch (err) {
-            expect(globals.LOG.error).toHaveBeenCalledWith(EXAMPLE_ERROR);
+            expect(ZoweLogger.logError).toHaveBeenCalledWith(EXAMPLE_ERROR);
             expect(globalMocks.markDocumentUnsavedSpy).toHaveBeenCalledWith(FAILING_FILE);
             expect(globalMocks.errorMessageSpy).toHaveBeenCalledWith(
                 'Failed to upload changes for [failingFile](command:vscode.open?["/some/failing/path"]): Example error'

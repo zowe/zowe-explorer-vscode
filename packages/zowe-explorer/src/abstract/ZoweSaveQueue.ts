@@ -12,8 +12,8 @@
 import * as path from "path";
 import * as vscode from "vscode";
 import { Gui, IZoweTree, IZoweTreeNode } from "@zowe/zowe-explorer-api";
-import * as globals from "../globals";
 import { markDocumentUnsaved } from "../utils/workspace";
+import { ZoweLogger } from "../utils/LoggerUtils";
 
 // Set up localization
 import * as nls from "vscode-nls";
@@ -40,6 +40,7 @@ export class ZoweSaveQueue {
      * operations.
      */
     public static push(request: SaveRequest) {
+        ZoweLogger.logTrace("ZoweSaveQueue.push called.");
         this.savingQueue.push(request);
         this.ongoingSave = this.all().then(this.processNext.bind(this));
     }
@@ -48,6 +49,7 @@ export class ZoweSaveQueue {
      * Wait for all items in the queue to be processed.
      */
     public static async all() {
+        ZoweLogger.logTrace("ZoweSaveQueue.all called.");
         await this.ongoingSave;
     }
 
@@ -58,6 +60,7 @@ export class ZoweSaveQueue {
      * Iterate over the queue and process next item until it is empty.
      */
     private static async processNext() {
+        ZoweLogger.logTrace("ZoweSaveQueue.processNext called.");
         const nextRequest = this.savingQueue.shift();
         if (nextRequest == null || this.savingQueue.some(({ savedFile }) => savedFile.fileName === nextRequest.savedFile.fileName)) {
             return;
@@ -66,7 +69,7 @@ export class ZoweSaveQueue {
         try {
             await nextRequest.uploadRequest(nextRequest.savedFile, nextRequest.fileProvider);
         } catch (err) {
-            globals.LOG.error(err);
+            ZoweLogger.logError(err);
             await markDocumentUnsaved(nextRequest.savedFile);
             await Gui.errorMessage(
                 localize(
@@ -83,6 +86,7 @@ export class ZoweSaveQueue {
      * Generate hyperlink for document to show in VS Code message.
      */
     private static buildFileHyperlink(document: vscode.TextDocument) {
+        ZoweLogger.logTrace("ZoweSaveQueue.buildFileHyperlink called.");
         const encodedUrl = JSON.stringify([document.uri.toString()]);
         return `[${path.basename(document.fileName)}](command:vscode.open?${encodedUrl})`;
     }

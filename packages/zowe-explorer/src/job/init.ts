@@ -23,7 +23,7 @@ import { initSubscribers } from "../shared/init";
 import { ZoweLogger } from "../utils/LoggerUtils";
 
 export async function initJobsProvider(context: vscode.ExtensionContext) {
-    ZoweLogger.logTrace("init.initJobsProvider");
+    ZoweLogger.logTrace("init.initJobsProvider called.");
     const jobsProvider: IZoweTree<IZoweJobTreeNode> = await createJobsTree(globals.LOG);
     if (jobsProvider == null) {
         return null;
