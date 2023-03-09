@@ -79,7 +79,9 @@ describe("IZoweLogger", () => {
             fail("Imperative message w/ invalid severity should throw an exception.");
         } catch (error) {
             expect(error).toBeDefined();
-            expect(error.message).toMatch(/^Cannot read propert(y|ies)/);
+            if (error instanceof Error) {
+                expect(error.message).toMatch(/^Cannot read propert(y|ies)/);
+            }
         }
     });
 });

@@ -12,7 +12,7 @@ overrides:
       # "@typescript-eslint/no-unsafe-assignment": off
       "@typescript-eslint/no-unsafe-call": off
       "@typescript-eslint/no-unsafe-member-access": off
-      "@typescript-eslint/no-unsafe-argument": off
+      # "@typescript-eslint/no-unsafe-argument": off
 parser: "@typescript-eslint/parser"
 parserOptions:
   ecmaVersion: 6
@@ -44,7 +44,6 @@ rules:
   max-len:
     - warn
     - code: 150
-  "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }]
   # no-array-constructor: off
   no-console: error
   no-const-assign: error
@@ -71,6 +70,7 @@ rules:
   no-unsafe-negation: error
   no-unused-expressions: off
   no-unused-vars: off
+  "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }]
   # prefer-const: warn
   prefer-object-spread: warn
   space-in-parens: warn

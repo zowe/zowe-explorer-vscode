@@ -100,7 +100,10 @@ export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
                     // eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-unsafe-call
                     return files.map((file: ISpoolFile) => {
                         return {
-                            /* it’s prepared for the potential change in zftp api, renaming stepname to stepName, procstep to procStep, ddname to ddName. */
+                            /**
+                             * prepared for the potential change in zftp api:
+                             * renaming stepname to stepName, procstep to procStep, ddname to ddName.
+                             **/
                             jobid: jobid,
                             jobname: jobname,
                             "byte-count": file.byteCount,

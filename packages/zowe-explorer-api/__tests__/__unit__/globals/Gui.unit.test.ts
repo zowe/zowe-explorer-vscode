@@ -158,7 +158,7 @@ describe("Gui unit tests", () => {
             activeItems: ["test"],
             onDidAccept: mockDidAccept,
             onDidHide: jest.fn(),
-        } as any);
+        } as unknown as vscode.QuickPick<vscode.QuickPickItem>);
         expect(mockDidAccept).toHaveBeenCalledTimes(1);
     });
 
@@ -169,7 +169,7 @@ describe("Gui unit tests", () => {
             activeItems: ["test"],
             onDidAccept: jest.fn(),
             onDidHide: mockDidHide,
-        } as any);
+        } as unknown as vscode.QuickPick<vscode.QuickPickItem>);
         expect(mockDidHide).toHaveBeenCalledTimes(1);
     });
 });
