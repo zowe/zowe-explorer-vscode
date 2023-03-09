@@ -612,7 +612,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
         // Check root path for conflicts before pasting nodes in this path
         let fileName = uss.tree.baseName;
-        if (fileList.find((file) => file.name === fileName) != null) {
+        if (fileList?.find((file) => file.name === fileName) != null) {
             // If file names match, build the copy suffix
             let dupCount = 1;
             const extension = path.extname(uss.tree.baseName);
