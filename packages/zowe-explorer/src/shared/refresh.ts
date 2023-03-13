@@ -26,7 +26,7 @@ import { SettingsConfig } from "../utils/SettingsConfig";
  *
  * @param {IZoweTree} treeProvider
  */
-export async function refreshAll(treeProvider: IZoweTree<IZoweTreeNode>) {
+export async function refreshAll(treeProvider: IZoweTree<IZoweTreeNode>): Promise<void> {
     await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
     treeProvider.mSessionNodes.forEach(async (sessNode) => {
         const profiles = await Profiles.getInstance().fetchAllProfiles();

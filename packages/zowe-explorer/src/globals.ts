@@ -276,7 +276,7 @@ export const plusSign = "\uFF0B ";
  * Defines all global variables
  * @param tempPath File path for temporary folder defined in preferences
  */
-export function defineGlobals(tempPath: string | undefined) {
+export function defineGlobals(tempPath: string | undefined): void {
     // check if Theia environment
     const appName = vscode.env.appName;
     const uriScheme = vscode.env.uriScheme;
@@ -308,7 +308,7 @@ export function setConfigPath(configPath: string | undefined): void {
  * Initializes Imperative Logger
  * @param context The extension context
  */
-export function initLogger(context: vscode.ExtensionContext) {
+export function initLogger(context: vscode.ExtensionContext): void {
     for (const appenderName of Object.keys(loggerConfig.log4jsConfig.appenders)) {
         loggerConfig.log4jsConfig.appenders[appenderName].filename = path.join(
             context.extensionPath,
@@ -319,15 +319,15 @@ export function initLogger(context: vscode.ExtensionContext) {
     this.LOG = imperative.Logger.getAppLogger();
 }
 
-export function setActivated(value: boolean) {
+export function setActivated(value: boolean): void {
     ACTIVATED = value;
 }
 
-export function setSavedProfileContents(value: Uint8Array) {
+export function setSavedProfileContents(value: Uint8Array): void {
     SAVED_PROFILE_CONTENTS = value;
 }
 
-export async function setGlobalSecurityValue() {
+export async function setGlobalSecurityValue(): Promise<void> {
     if (this.ISTHEIA) {
         PROFILE_SECURITY = false;
         await SettingsConfig.setDirectValue(this.SETTINGS_SECURE_CREDENTIALS_ENABLED, false, vscode.ConfigurationTarget.Global);

@@ -31,7 +31,10 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  * Search for matching items loaded in data set or USS tree
  *
  */
-export async function searchInAllLoadedItems(datasetProvider?: IZoweTree<IZoweDatasetTreeNode>, ussFileProvider?: IZoweTree<IZoweUSSTreeNode>) {
+export async function searchInAllLoadedItems(
+    datasetProvider?: IZoweTree<IZoweDatasetTreeNode>,
+    ussFileProvider?: IZoweTree<IZoweUSSTreeNode>
+): Promise<void> {
     let pattern: string;
     const items: IZoweNodeType[] = [];
     const qpItems = [];
@@ -152,7 +155,7 @@ export async function searchInAllLoadedItems(datasetProvider?: IZoweTree<IZoweDa
     }
 }
 
-export async function openRecentMemberPrompt(datasetTree: IZoweTree<IZoweDatasetTreeNode>, ussTree: IZoweTree<IZoweUSSTreeNode>) {
+export async function openRecentMemberPrompt(datasetTree: IZoweTree<IZoweDatasetTreeNode>, ussTree: IZoweTree<IZoweUSSTreeNode>): Promise<void> {
     if (globals.LOG) {
         globals.LOG.debug(localize("enterPattern.log.debug.prompt", "Prompting the user to choose a recent member for editing"));
     }
@@ -213,7 +216,7 @@ export async function openRecentMemberPrompt(datasetTree: IZoweTree<IZoweDataset
     }
 }
 
-export async function returnIconState(node: IZoweNodeType) {
+export async function returnIconState(node: IZoweNodeType): Promise<IZoweNodeType> {
     const activePathClosed = getIconById(IconId.sessionActive);
     const activePathOpen = getIconById(IconId.sessionActiveOpen);
     const inactivePathClosed = getIconById(IconId.sessionInactive); // So far, we only ever reference the closed inactive icon, not the open one
@@ -226,7 +229,7 @@ export async function returnIconState(node: IZoweNodeType) {
     return node;
 }
 
-export async function resetValidationSettings(node: IZoweNodeType, setting: boolean) {
+export async function resetValidationSettings(node: IZoweNodeType, setting: boolean): Promise<IZoweNodeType> {
     if (setting) {
         await Profiles.getInstance().enableValidationContext(node);
         // Ensure validation status is also reset

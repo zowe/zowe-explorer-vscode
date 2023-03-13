@@ -21,7 +21,7 @@ import { Job } from "./ZoweJobNode";
 import { getSelectedNodeList } from "../shared/utils";
 import { initSubscribers } from "../shared/init";
 
-export async function initJobsProvider(context: vscode.ExtensionContext) {
+export async function initJobsProvider(context: vscode.ExtensionContext): Promise<IZoweTree<IZoweJobTreeNode>> {
     const jobsProvider: IZoweTree<IZoweJobTreeNode> = await createJobsTree(globals.LOG);
     if (jobsProvider == null) {
         return null;

@@ -68,16 +68,16 @@ export class SettingsConfig {
         }
     }
 
-    private static get configurations() {
+    private static get configurations(): vscode.WorkspaceConfiguration {
         return vscode.workspace.getConfiguration();
     }
 
-    private static get zoweOldConfigurations() {
+    private static get zoweOldConfigurations(): string[] {
         return Object.keys(SettingsConfig.configurations).filter((key) => key.match(new RegExp("Zowe-*|Zowe\\s*", "g")));
     }
 
-    private static get currentVersionNumber() {
-        return vscode.extensions.getExtension("zowe.vscode-extension-for-zowe").packageJSON.version;
+    private static get currentVersionNumber(): unknown {
+        return vscode.extensions.getExtension("zowe.vscode-extension-for-zowe").packageJSON.version as unknown;
     }
 
     private static async promptReload(): Promise<void> {

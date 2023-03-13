@@ -1,5 +1,8 @@
+ignorePatterns: ["scripts/*", "__mocks__", "__tests__"]
+parser: "@typescript-eslint/parser"
 parserOptions:
   ecmaVersion: 6
   sourceType: module
   project:
-    - "./tsconfig.json"
+    - "tsconfig.json"
+    - "tsconfig-tests.json"

@@ -43,7 +43,7 @@ export function registerRefreshCommand(
     context: vscode.ExtensionContext,
     activate: (_context: vscode.ExtensionContext) => Promise<ZoweExplorerApiRegister>,
     deactivate: () => Promise<void>
-) {
+): void {
     // set a command to silently reload extension
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.extRefresh", async () => {
@@ -64,7 +64,7 @@ export function registerRefreshCommand(
     );
 }
 
-export async function registerCommonCommands(context: vscode.ExtensionContext, providers: IZoweProviders) {
+export async function registerCommonCommands(context: vscode.ExtensionContext, providers: IZoweProviders): Promise<void> {
     // Update imperative.json to false only when VS Code setting is set to false
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.updateSecureCredentials", async () => {
@@ -186,7 +186,7 @@ export async function registerCommonCommands(context: vscode.ExtensionContext, p
     }
 }
 
-export async function watchConfigProfile(context: vscode.ExtensionContext, providers: IZoweProviders) {
+export async function watchConfigProfile(context: vscode.ExtensionContext, providers: IZoweProviders): Promise<any> {
     if (globals.ISTHEIA) {
         return undefined;
     }
@@ -224,7 +224,7 @@ export async function watchConfigProfile(context: vscode.ExtensionContext, provi
     });
 }
 
-export function initSubscribers(context: vscode.ExtensionContext, theProvider: IZoweTree<IZoweTreeNode>) {
+export function initSubscribers(context: vscode.ExtensionContext, theProvider: IZoweTree<IZoweTreeNode>): void {
     const theTreeView = theProvider.getTreeView();
     context.subscriptions.push(theTreeView);
     if (!globals.ISTHEIA) {

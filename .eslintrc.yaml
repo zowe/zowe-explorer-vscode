@@ -9,30 +9,23 @@ overrides:
   - files: "**/__tests__/**"
     rules:
       no-magic-numbers: off
-      # "@typescript-eslint/no-unsafe-assignment": off
-      "@typescript-eslint/no-unsafe-call": off
-      "@typescript-eslint/no-unsafe-member-access": off
-      # "@typescript-eslint/no-unsafe-argument": off
 parser: "@typescript-eslint/parser"
-parserOptions:
-  ecmaVersion: 6
-  sourceType: module
 plugins:
   - "@typescript-eslint"
   - zowe-explorer
 rules:
-  # rule disabled below: requires parserServices to be defined
   "@typescript-eslint/await-thenable": off
   "@typescript-eslint/consistent-type-assertions": warn
   "@typescript-eslint/explicit-function-return-type": error
   "@typescript-eslint/explicit-member-accessibility": error
-  # "@typescript-eslint/member-ordering": warn
-  # rules below require parserServices to be defined
-  # "@typescript-eslint/no-floating-promises": off
-  # "@typescript-eslint/no-implied-eval": off
-  # "@typescript-eslint/no-misused-promises": off
-  # "@typescript-eslint/no-namespace": off
-  # "@typescript-eslint/no-unnecessary-type-assertion": off
+
+  # There are several errors falling under these rules; resolve
+  "@typescript-eslint/no-floating-promises": off
+  "@typescript-eslint/no-unsafe-assignment": off
+  "@typescript-eslint/no-unsafe-argument": off
+  "@typescript-eslint/no-unsafe-call": off
+  "@typescript-eslint/no-unsafe-member-access": off
+
   "@typescript-eslint/no-shadow": error
   "@typescript-eslint/no-unused-expressions": error
   "@typescript-eslint/no-var-requires": warn
@@ -79,4 +72,6 @@ rules:
     - coreModuleNames:
         - fs
       filePathPattern: ".*\\.unit\\.test\\..*"
+parserOptions:
+  sourceType: module
 root: true

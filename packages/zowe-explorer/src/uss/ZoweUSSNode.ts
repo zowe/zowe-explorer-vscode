@@ -231,7 +231,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             .map((labels) => elementChildren[labels]));
     }
 
-    public setBinary(binary: boolean) {
+    public setBinary(binary: boolean): void {
         this.binary = binary;
         if (this.binary) {
             this.contextValue = globals.DS_BINARY_FILE_CONTEXT;
@@ -287,7 +287,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * Helper method to change the UI node names in one go
      * @param newFullPath string
      */
-    public async rename(newFullPath: string) {
+    public async rename(newFullPath: string): Promise<boolean> {
         const currentFilePath = this.getUSSDocumentFilePath();
         const hasClosedInstance = await closeOpenedTextFile(currentFilePath);
         this.fullPath = newFullPath;
@@ -309,7 +309,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * Reopens a file if it was closed (e.g. while it was being renamed).
      * @param hasClosedInstance
      */
-    public async reopen(hasClosedInstance = false) {
+    public async reopen(hasClosedInstance = false): Promise<void> {
         if (!this.isFolder && (hasClosedInstance || (this.binary && this.downloaded))) {
             await vscode.commands.executeCommand("zowe.uss.ZoweUSSNode.open", this);
         }
@@ -320,7 +320,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * @param hasClosedInstance
      * @deprecated To be removed by version 2.0. Use reopen instead.
      */
-    public async refreshAndReopen(hasClosedInstance = false) {
+    public async refreshAndReopen(hasClosedInstance = false): Promise<void> {
         this.reopen(hasClosedInstance);
     }
 
@@ -328,12 +328,12 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * Helper method which sets an icon of node and initiates reloading of tree
      * @param iconPath
      */
-    public setIcon(iconPath: { light: string; dark: string }) {
+    public setIcon(iconPath: { light: string; dark: string }): void {
         this.iconPath = iconPath;
         vscode.commands.executeCommand("zowe.uss.refreshUSSInTree", this);
     }
 
-    public async deleteUSSNode(ussFileProvider: IZoweTree<IZoweUSSTreeNode>, filePath: string, cancelled: boolean = false) {
+    public async deleteUSSNode(ussFileProvider: IZoweTree<IZoweUSSTreeNode>, filePath: string, cancelled: boolean = false): Promise<void> {
         const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
         if (cancelled) {
             Gui.showMessage(localize("deleteUssPrompt.deleteCancelled", "Delete action was cancelled."));
@@ -418,7 +418,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      *
      * @param {IZoweTreeNode} node
      */
-    public async openUSS(download = false, previewFile: boolean, ussFileProvider?: IZoweTree<IZoweUSSTreeNode>) {
+    public async openUSS(download = false, previewFile: boolean, ussFileProvider?: IZoweTree<IZoweUSSTreeNode>): Promise<void> {
         await ussFileProvider.checkCurrentProfile(this);
 
         const doubleClicked = Gui.utils.wasDoubleClicked(this, ussFileProvider);
@@ -488,7 +488,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * @param {ZoweUSSNode} node - The node which represents the file
      */
     // This is not a UI refresh.
-    public async refreshUSS() {
+    public async refreshUSS(): Promise<void> {
         let label;
         switch (true) {
             case contextually.isUssDirectory(this.getParent()):
@@ -548,7 +548,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         }
     }
 
-    public async initializeFileOpening(documentPath: string, previewFile?: boolean) {
+    public async initializeFileOpening(documentPath: string, previewFile?: boolean): Promise<void> {
         let document;
         let openingTextFailed = false;
 
@@ -589,7 +589,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * Returns the local file path for the ZoweUSSNode
      *
      */
-    public getUSSDocumentFilePath() {
+    public getUSSDocumentFilePath(): string {
         return path.join(globals.USS_DIR || "", "/" + this.getSessionNode().getProfileName() + "/", this.fullPath);
     }
 
@@ -600,7 +600,11 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * @param tree The structure of files and folders to paste
      * @param ussApi The USS API to use for this operation
      */
-    public async paste(sessionName: string, rootPath: string, uss: { tree: UssFileTree; api: ZoweExplorerApi.IUss; options?: IUploadOptions }) {
+    public async paste(
+        sessionName: string,
+        rootPath: string,
+        uss: { tree: UssFileTree; api: ZoweExplorerApi.IUss; options?: IUploadOptions }
+    ): Promise<void> {
         const hasCopyApi = uss.api.copy != null;
         const hasPutContentApi = uss.api.putContent != null;
         if (!uss.api.fileList || (!hasCopyApi && !hasPutContentApi)) {
@@ -667,7 +671,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     /**
      * Initializes paste action for a USS tree
      */
-    public async pasteUssTree() {
+    public async pasteUssTree(): Promise<void> {
         const clipboardContents = await vscode.env.clipboard.readText();
         if (clipboardContents == null || clipboardContents.length < 1) {
             return;
@@ -712,7 +716,7 @@ let saveListener = null;
  * @param wipeOutTime {number}
  */
 // eslint-disable-next-line no-magic-numbers
-export function attachRecentSaveListener(wipeOutTime = 500) {
+export function attachRecentSaveListener(wipeOutTime: number = 500): void {
     if (saveListener) {
         saveListener.dispose();
     }
@@ -731,14 +735,14 @@ export function attachRecentSaveListener(wipeOutTime = 500) {
  *
  * @returns {boolean}
  */
-export function getRecentSaveStatus() {
+export function getRecentSaveStatus(): boolean {
     return wasSavedRecently;
 }
 
 /**
  * Helper function which disposes recent save listener
  */
-export function disposeRecentSaveListener() {
+export function disposeRecentSaveListener(): void {
     if (saveListener) {
         saveListener.dispose();
     }

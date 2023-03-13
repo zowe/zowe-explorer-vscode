@@ -16,6 +16,7 @@
     "test": "jest",
     "build": "echo \"eslint-plugin: nothing to build.\"",
     "lint": "echo \"eslint-plugin: nothing to lint.\"",
+    "lint:html": "echo \"eslint-plugin: nothing to lint.\"",
     "pretty": "echo \"eslint-plugin: nothing to pretty.\"",
     "package": "echo \"eslint-plugin: nothing to package.\""
   },

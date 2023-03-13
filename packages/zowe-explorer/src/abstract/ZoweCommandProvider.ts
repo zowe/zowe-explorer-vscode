@@ -60,7 +60,7 @@ export class ZoweCommandProvider {
         this.mOnDidChangeTreeData.fire();
     }
 
-    public async checkCurrentProfile(node: IZoweTreeNode) {
+    public async checkCurrentProfile(node: IZoweTreeNode): Promise<void> {
         const profile = node.getProfile();
         const profileStatus = await Profiles.getInstance().checkCurrentProfile(profile);
         if (profileStatus.status === "inactive") {

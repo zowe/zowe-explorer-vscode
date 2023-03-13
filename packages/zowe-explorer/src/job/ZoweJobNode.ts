@@ -244,7 +244,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
         }
     }
 
-    get owner() {
+    get owner(): string {
         return this._owner;
     }
 
@@ -254,7 +254,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
         }
     }
 
-    get status() {
+    get status(): string {
         return this._jobStatus;
     }
 
@@ -268,7 +268,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
         }
     }
 
-    get prefix() {
+    get prefix(): string {
         return this._prefix;
     }
 
@@ -278,11 +278,11 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
         }
     }
 
-    public get searchId() {
+    public get searchId(): string {
         return this._searchId;
     }
 
-    private statusNotSupportedMsg(status: string) {
+    private statusNotSupportedMsg(status: string): void {
         if (status !== "*") {
             Gui.warningMessage(
                 localize(

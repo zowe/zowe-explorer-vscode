@@ -40,7 +40,12 @@ export interface IMessageItem {
 
 const items = [require("./items/dataset"), require("./items/datasetMember")].map((item) => item.default) as IMessageItem[];
 
-function mergeMessages(generic: { [index: string]: string }, specific: { [index: string]: string }) {
+function mergeMessages(
+    generic: { [index: string]: string },
+    specific: { [index: string]: string }
+): {
+    [index: string]: string;
+} {
     if (generic) {
         const result = { ...generic };
 

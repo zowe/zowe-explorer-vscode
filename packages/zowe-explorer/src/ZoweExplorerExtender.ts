@@ -51,7 +51,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
      *
      * @param errorDetails Details of the error (to be parsed for config name and path)
      */
-    public static async showZoweConfigError(errorDetails: string) {
+    public static async showZoweConfigError(errorDetails: string): Promise<void> {
         vscode.window
             .showErrorMessage(
                 localize("initialize.profiles.error", 'Error encountered when loading your Zowe config. Click "Show Config" for more details.'),
@@ -151,7 +151,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
      * @param {string} profileType
      * @param {imperative.ICommandProfileTypeConfiguration[]} profileTypeConfigurations
      */
-    public async initForZowe(profileType: string, profileTypeConfigurations?: zowe.imperative.ICommandProfileTypeConfiguration[]) {
+    public async initForZowe(profileType: string, profileTypeConfigurations?: zowe.imperative.ICommandProfileTypeConfiguration[]): Promise<void> {
         // Ensure that when a user has not installed the profile type's CLI plugin
         // and/or created a profile that the profile directory in ~/.zowe/profiles
         // will be created with the appropriate meta data. If not called the user will

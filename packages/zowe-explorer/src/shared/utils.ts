@@ -57,7 +57,10 @@ export function filterTreeByString(value: string, treeItems: vscode.QuickPickIte
  * @param iconFileName {string} Name of icon file with extension
  * @returns {object}
  */
-export function getIconPathInResources(iconFileName: string) {
+export function getIconPathInResources(iconFileName: string): {
+    light: string;
+    dark: string;
+} {
     return {
         light: path.join(globals.ROOTPATH, "resources", "light", iconFileName),
         dark: path.join(globals.ROOTPATH, "resources", "dark", iconFileName),
@@ -67,7 +70,7 @@ export function getIconPathInResources(iconFileName: string) {
 /*************************************************************************************************************
  * Returns array of all subnodes of given node
  *************************************************************************************************************/
-export function concatChildNodes(nodes: IZoweNodeType[]) {
+export function concatChildNodes(nodes: IZoweNodeType[]): IZoweNodeType[] {
     let allNodes = new Array<IZoweNodeType>();
 
     for (const node of nodes) {
@@ -86,7 +89,7 @@ export function labelRefresh(node: vscode.TreeItem): void {
     node.label = node.label.toString().endsWith(" ") ? node.label.toString().substring(0, node.label.toString().length - 1) : node.label + " ";
 }
 
-export function sortTreeItems(favorites: vscode.TreeItem[], specificContext) {
+export function sortTreeItems(favorites: vscode.TreeItem[], specificContext): void {
     favorites.sort((a, b) => {
         if (a.contextValue === specificContext) {
             if (b.contextValue === specificContext) {
@@ -104,7 +107,7 @@ export function sortTreeItems(favorites: vscode.TreeItem[], specificContext) {
 /*************************************************************************************************************
  * Determine IDE name to display based on app environment
  *************************************************************************************************************/
-export function getAppName(isTheia: boolean) {
+export function getAppName(isTheia: boolean): "Theia" | "VS Code" {
     return isTheia ? "Theia" : "VS Code";
 }
 
@@ -115,7 +118,7 @@ export function getAppName(isTheia: boolean) {
  * @param {string} label - If node is a member, label includes the name of the PDS
  * @param {IZoweTreeNode} node
  */
-export function getDocumentFilePath(label: string, node: IZoweTreeNode) {
+export function getDocumentFilePath(label: string, node: IZoweTreeNode): string {
     const dsDir = globals.DS_DIR;
     const profName = node.getProfileName();
     const suffix = appendSuffix(label);

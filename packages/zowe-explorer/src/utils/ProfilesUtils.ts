@@ -34,7 +34,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  * @param {label} - additional information such as profile name, credentials, messageID etc
  * @param {moreInfo} - additional/customized error messages
  *************************************************************************************************************/
-export async function errorHandling(errorDetails: any, label?: string, moreInfo?: string) {
+export async function errorHandling(errorDetails: any, label?: string, moreInfo?: string): Promise<void> {
     let httpErrCode = null;
     const errMsg = localize(
         "errorHandling.invalid.credentials",
@@ -210,14 +210,14 @@ export class FilterDescriptor implements vscode.QuickPickItem {
 /**
  * Function to update the node profile information
  */
-export async function setProfile(node: IZoweTreeNode, profile: imperative.IProfile) {
+export async function setProfile(node: IZoweTreeNode, profile: imperative.IProfile): Promise<void> {
     node.getProfile().profile = profile;
 }
 
 /**
  * Function to update the node session information
  */
-export async function setSession(node: IZoweTreeNode, combinedSessionProfile: imperative.IProfile) {
+export async function setSession(node: IZoweTreeNode, combinedSessionProfile: imperative.IProfile): Promise<void> {
     const sessionNode = node.getSession();
     for (const prop of Object.keys(combinedSessionProfile)) {
         if (prop === "host") {
@@ -235,14 +235,14 @@ export async function getProfileInfo(envTheia: boolean): Promise<imperative.Prof
     return mProfileInfo;
 }
 
-export function getProfile(node: vscode.TreeItem) {
+export function getProfile(node: vscode.TreeItem): imperative.IProfileLoaded {
     if (node instanceof ZoweTreeNode) {
         return (node as ZoweTreeNode).getProfile();
     }
     throw new Error(localize("getProfile.notTreeItem", "Tree Item is not a Zowe Explorer item."));
 }
 
-export async function readConfigFromDisk() {
+export async function readConfigFromDisk(): Promise<void> {
     let rootPath: string;
     try {
         const mProfileInfo = await getProfileInfo(globals.ISTHEIA);
@@ -271,7 +271,7 @@ export async function readConfigFromDisk() {
     }
 }
 
-export async function promptCredentials(node: IZoweTreeNode) {
+export async function promptCredentials(node: IZoweTreeNode): Promise<void> {
     const mProfileInfo = await Profiles.getInstance().getProfileInfo();
     if (mProfileInfo.usingTeamConfig && !mProfileInfo.getTeamConfig().properties.autoStore) {
         Gui.showMessage(localize("zowe.promptCredentials.notSupported", '"Update Credentials" operation not supported when "autoStore" is false'));
@@ -329,7 +329,7 @@ export async function initializeZoweFolder(): Promise<void> {
     }
 }
 
-export function writeOverridesFile() {
+export function writeOverridesFile(): void {
     let fd: number;
     let fileContent: string;
     const settingsFile = path.join(getZoweDir(), "settings", "imperative.json");

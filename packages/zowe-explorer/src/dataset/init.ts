@@ -21,7 +21,7 @@ import * as contextuals from "../shared/context";
 import { getSelectedNodeList } from "../shared/utils";
 import { initSubscribers } from "../shared/init";
 
-export async function initDatasetProvider(context: vscode.ExtensionContext) {
+export async function initDatasetProvider(context: vscode.ExtensionContext): Promise<IZoweTree<IZoweDatasetTreeNode>> {
     const datasetProvider: IZoweTree<IZoweDatasetTreeNode> = await createDatasetTree(globals.LOG);
     if (datasetProvider == null) {
         return null;

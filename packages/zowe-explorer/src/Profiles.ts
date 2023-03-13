@@ -81,7 +81,7 @@ export class Profiles extends ProfilesCache {
         return this.mProfileInfo;
     }
 
-    public async checkCurrentProfile(theProfile: zowe.imperative.IProfileLoaded) {
+    public async checkCurrentProfile(theProfile: zowe.imperative.IProfileLoaded): Promise<IProfileValidation> {
         let profileStatus: IProfileValidation;
         if (!theProfile.profile.tokenType && (!theProfile.profile.user || !theProfile.profile.password)) {
             // The profile will need to be reactivated, so remove it from profilesForValidation
@@ -166,7 +166,7 @@ export class Profiles extends ProfilesCache {
         return node;
     }
 
-    public async disableValidationContext(node: IZoweNodeType) {
+    public async disableValidationContext(node: IZoweNodeType): Promise<IZoweNodeType> {
         const theProfile: zowe.imperative.IProfileLoaded = node.getProfile();
         this.validationArraySetup(theProfile, false);
         if (node.contextValue.includes(`${globals.VALIDATE_SUFFIX}true`)) {
@@ -188,7 +188,7 @@ export class Profiles extends ProfilesCache {
         return node;
     }
 
-    public async enableValidationContext(node: IZoweNodeType) {
+    public async enableValidationContext(node: IZoweNodeType): Promise<IZoweNodeType> {
         const theProfile: zowe.imperative.IProfileLoaded = node.getProfile();
         this.validationArraySetup(theProfile, true);
         if (node.contextValue.includes(`${globals.VALIDATE_SUFFIX}false`)) {
@@ -251,7 +251,7 @@ export class Profiles extends ProfilesCache {
      * @export
      * @param {USSTree} zoweFileProvider - either the USS, MVS, JES tree
      */
-    public async createZoweSession(zoweFileProvider: IZoweTree<IZoweTreeNode>) {
+    public async createZoweSession(zoweFileProvider: IZoweTree<IZoweTreeNode>): Promise<void> {
         let profileNamesList: string[] = [];
         try {
             const allProfiles = Profiles.getInstance().allProfiles;
@@ -654,7 +654,7 @@ export class Profiles extends ProfilesCache {
         }
     }
 
-    public async editZoweConfigFile() {
+    public async editZoweConfigFile(): Promise<void> {
         const existingLayers = await this.getConfigLayers();
         if (existingLayers.length === 1) {
             await this.openConfigFile(existingLayers[0].path);
@@ -875,7 +875,7 @@ export class Profiles extends ProfilesCache {
         return returnValue;
     }
 
-    public async getDeleteProfile() {
+    public async getDeleteProfile(): Promise<zowe.imperative.IProfileLoaded> {
         const allProfiles: zowe.imperative.IProfileLoaded[] = this.allProfiles;
         const profileNamesList = allProfiles.map((temprofile) => {
             return temprofile.name;
@@ -906,7 +906,7 @@ export class Profiles extends ProfilesCache {
         ussTree: IZoweTree<IZoweUSSTreeNode>,
         jobsProvider: IZoweTree<IZoweJobTreeNode>,
         node?: IZoweNodeType
-    ) {
+    ): Promise<void> {
         let deleteLabel: string;
         let deletedProfile: zowe.imperative.IProfileLoaded;
         if (!node) {
@@ -1045,7 +1045,7 @@ export class Profiles extends ProfilesCache {
         }
     }
 
-    public async validateProfiles(theProfile: zowe.imperative.IProfileLoaded) {
+    public async validateProfiles(theProfile: zowe.imperative.IProfileLoaded): Promise<IProfileValidation> {
         let filteredProfile: IProfileValidation;
         let profileStatus;
         const getSessStatus = await ZoweExplorerApiRegister.getInstance().getCommonApi(theProfile);
@@ -1249,7 +1249,7 @@ export class Profiles extends ProfilesCache {
         }
     }
 
-    public async openConfigFile(filePath: string) {
+    public async openConfigFile(filePath: string): Promise<void> {
         const document = await vscode.workspace.openTextDocument(filePath);
         await Gui.showTextDocument(document);
     }
@@ -1279,7 +1279,7 @@ export class Profiles extends ProfilesCache {
         return;
     }
 
-    private async checkExistingConfig(filePath: string) {
+    private async checkExistingConfig(filePath: string): Promise<string> {
         let found = false;
         let location: string;
         const existingLayers = await this.getConfigLayers();
@@ -1324,7 +1324,7 @@ export class Profiles extends ProfilesCache {
         return existingLayers;
     }
 
-    private async promptToRefreshForProfiles(rootPath: string) {
+    private async promptToRefreshForProfiles(rootPath: string): Promise<void> {
         if (globals.ISTHEIA) {
             const reloadButton = localize("createZoweSchema.reload.button", "Refresh Zowe Explorer");
             const infoMsg = localize(
@@ -1338,7 +1338,6 @@ export class Profiles extends ProfilesCache {
                 }
             });
         }
-        return undefined;
     }
 
     private getProfileIcon(osLocInfo: zowe.imperative.IProfLocOsLoc[]): string[] {
@@ -1353,7 +1352,7 @@ export class Profiles extends ProfilesCache {
         return ret;
     }
 
-    private async updateBaseProfileFileLogin(profile: zowe.imperative.IProfileLoaded, updProfile: zowe.imperative.IProfile) {
+    private async updateBaseProfileFileLogin(profile: zowe.imperative.IProfileLoaded, updProfile: zowe.imperative.IProfile): Promise<void> {
         const upd = { profileName: profile.name, profileType: profile.type };
         const mProfileInfo = await this.getProfileInfo();
         const setSecure = mProfileInfo.isSecured();
@@ -1361,7 +1360,7 @@ export class Profiles extends ProfilesCache {
         await mProfileInfo.updateProperty({ ...upd, property: "tokenValue", value: updProfile.tokenValue, setSecure });
     }
 
-    private async updateBaseProfileFileLogout(profile: zowe.imperative.IProfileLoaded) {
+    private async updateBaseProfileFileLogout(profile: zowe.imperative.IProfileLoaded): Promise<void> {
         const mProfileInfo = await this.getProfileInfo();
         const setSecure = mProfileInfo.isSecured();
         const prof = mProfileInfo.getAllProfiles(profile.type).find((p) => p.profName === profile.name);
@@ -1386,7 +1385,7 @@ export class Profiles extends ProfilesCache {
         return [newUser, newPass];
     }
 
-    private async deletePrompt(deletedProfile: zowe.imperative.IProfileLoaded) {
+    private async deletePrompt(deletedProfile: zowe.imperative.IProfileLoaded): Promise<string> {
         const profileName = deletedProfile.name;
         this.log.debug(localize("deleteProfile.log.debug", "Deleting profile ") + profileName);
         const quickPickOptions: vscode.QuickPickOptions = {
@@ -1464,7 +1463,7 @@ export class Profiles extends ProfilesCache {
         return url;
     }
 
-    private async portInfo(input: string, schema: {}) {
+    private async portInfo(input: string, schema: {}): Promise<number> {
         let options: vscode.InputBoxOptions;
         let port: number;
         if (schema[input].optionDefinition.hasOwnProperty("defaultValue")) {
@@ -1488,7 +1487,7 @@ export class Profiles extends ProfilesCache {
         return port;
     }
 
-    private async userInfo(input?) {
+    private async userInfo(input?: string): Promise<string> {
         let userName: string;
 
         if (input) {
@@ -1510,7 +1509,7 @@ export class Profiles extends ProfilesCache {
         return userName.trim();
     }
 
-    private async passwordInfo(input?) {
+    private async passwordInfo(input?: string): Promise<string> {
         let passWord: string;
 
         if (input) {
@@ -1534,7 +1533,7 @@ export class Profiles extends ProfilesCache {
         return passWord.trim();
     }
 
-    private async ruInfo(input?) {
+    private async ruInfo(input?: boolean): Promise<boolean> {
         let rejectUnauthorize: boolean;
         let placeholder: string;
         let selectRU: string[];
@@ -1577,7 +1576,7 @@ export class Profiles extends ProfilesCache {
         return rejectUnauthorize;
     }
 
-    private async boolInfo(input: string, schema: {}) {
+    private async boolInfo(input: string, schema: {}): Promise<boolean> {
         let isTrue: boolean;
         const description: string = schema[input].optionDefinition.description.toString();
         const quickPickBooleanOptions: vscode.QuickPickOptions = {
@@ -1655,7 +1654,7 @@ export class Profiles extends ProfilesCache {
      * @returns
      */
 
-    private async updateProfile(updProfileInfo, rePrompt?: boolean) {
+    private async updateProfile(updProfileInfo, rePrompt?: boolean): Promise<void> {
         if (zowe.imperative.ImperativeConfig.instance.config?.exists) {
             return;
         }

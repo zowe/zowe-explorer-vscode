@@ -30,7 +30,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 //  * @param previousTempPath temp path settings value before updated by user
 //  * @param currentTempPath temp path settings value after updated by user
 //  */
-export async function moveTempFolder(previousTempPath: string, currentTempPath: string) {
+export async function moveTempFolder(previousTempPath: string, currentTempPath: string): Promise<void> {
     // Re-define globals with updated path
     globals.defineGlobals(currentTempPath);
 
@@ -48,7 +48,9 @@ export async function moveTempFolder(previousTempPath: string, currentTempPath: 
         fs.mkdirSync(globals.DS_DIR);
     } catch (err) {
         globals.LOG.error(localize("moveTempFolder.error", "Error encountered when creating temporary folder! ") + JSON.stringify(err));
-        await errorHandling(err, null, localize("moveTempFolder.error", "Error encountered when creating temporary folder! ") + err.message);
+        if (err instanceof Error) {
+            await errorHandling(err, null, `${localize("moveTempFolder.error", "Error encountered when creating temporary folder! ")}${err.message}`);
+        }
     }
     const previousTemp = path.join(previousTempPath, "temp");
     try {
@@ -77,7 +79,7 @@ export async function moveTempFolder(previousTempPath: string, currentTempPath: 
  *
  * @param directory path to directory to be deleted
  */
-export async function cleanDir(directory) {
+export function cleanDir(directory: string): void {
     if (!fs.existsSync(directory)) {
         return;
     }
@@ -98,7 +100,7 @@ export async function cleanDir(directory) {
  *
  * @export
  */
-export async function cleanTempDir() {
+export function cleanTempDir(): Promise<void> {
     // Get temp folder cleanup preference from settings
     const preferencesTempCleanupEnabled: boolean = SettingsConfig.getDirectValue(globals.SETTINGS_TEMP_FOLDER_CLEANUP);
     // logger hasn't necessarily been initialized yet, don't use the `log` in this function
@@ -106,10 +108,12 @@ export async function cleanTempDir() {
         return;
     }
     try {
-        await cleanDir(globals.ZOWETEMPFOLDER);
+        cleanDir(globals.ZOWETEMPFOLDER);
     } catch (err) {
         globals.LOG.error(err);
-        Gui.errorMessage(localize("deactivate.error", "Unable to delete temporary folder. ") + err);
+        if (err instanceof Error) {
+            Gui.errorMessage(`${localize("deactivate.error", "Unable to delete temporary folder. ")}${err.message}`);
+        }
     }
 }
 
@@ -118,7 +122,7 @@ export async function cleanTempDir() {
  *
  * @export
  */
-export async function hideTempFolder(zoweDir: string) {
+export async function hideTempFolder(zoweDir: string): Promise<void> {
     if (SettingsConfig.getDirectValue<boolean>(globals.SETTINGS_TEMP_FOLDER_HIDE)) {
         await SettingsConfig.setDirectValue("files.exclude", { [zoweDir]: true, [globals.ZOWETEMPFOLDER]: true });
     }
