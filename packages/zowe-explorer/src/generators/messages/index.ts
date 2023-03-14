@@ -47,17 +47,11 @@ function mergeMessages(
     [index: string]: string;
 } {
     if (generic) {
-        const result = { ...generic };
-
         if (specific) {
-            for (const key in specific) {
-                if (specific.hasOwnProperty(key)) {
-                    result[key] = specific[key];
-                }
-            }
+            return { ...generic, ...specific };
         }
 
-        return result;
+        return generic;
     }
 
     return specific;
@@ -67,7 +61,7 @@ export function getMessageById(id: MessageCategoryId, type: MessageContentType):
     const targetItem = items.find((item) => item.id === id);
 
     if (targetItem) {
-        const messages = mergeMessages(targetItem.generic && targetItem.generic.messages, targetItem.messages);
+        const messages = mergeMessages(targetItem.generic?.messages, targetItem.messages);
         return messages[type] || null;
     }
 
@@ -76,7 +70,7 @@ export function getMessageById(id: MessageCategoryId, type: MessageContentType):
 
 export function getMessageByNode(node: CombinedNode, type: MessageContentType): string {
     const targetItems = items.filter((item) => item.check(node));
-    let targetItem;
+    let targetItem: IMessageItem;
 
     if (targetItems.some((item) => item.type === MessageHierarchyType.specific)) {
         targetItem = targetItems.filter((item) => item.type === MessageHierarchyType.specific).pop();
@@ -85,7 +79,7 @@ export function getMessageByNode(node: CombinedNode, type: MessageContentType): 
     }
 
     if (targetItem) {
-        const messages = mergeMessages(targetItem.generic && targetItem.generic.messages, targetItem.messages);
+        const messages = mergeMessages(targetItem.generic?.messages, targetItem.messages);
         return messages[type] || null;
     }
 

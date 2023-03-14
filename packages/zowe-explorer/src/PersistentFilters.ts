@@ -30,7 +30,7 @@ export class PersistentFilters {
     private mFileHistory: string[] = [];
     private mSessions: string[] = [];
 
-    constructor(schema: string, private maxSearchHistory = globals.MAX_SEARCH_HISTORY, private maxFileHistory = globals.MAX_FILE_HISTORY) {
+    public constructor(schema: string, private maxSearchHistory = globals.MAX_SEARCH_HISTORY, private maxFileHistory = globals.MAX_FILE_HISTORY) {
         this.schema = schema;
         this.initialize();
     }
@@ -51,7 +51,7 @@ export class PersistentFilters {
      *
      * @param {string} criteria - a line of search criteria
      */
-    public async addSearchHistory(criteria: string): Promise<void> {
+    public addSearchHistory(criteria: string): void {
         if (criteria) {
             // Remove any entries that match
             this.mSearchHistory = this.mSearchHistory.filter((element) => {
@@ -81,7 +81,7 @@ export class PersistentFilters {
      *
      * @param {string} criteria - a line of search criteria
      */
-    public async addFileHistory(criteria: string): Promise<void> {
+    public addFileHistory(criteria: string): void {
         if (criteria) {
             criteria = criteria.toUpperCase();
             // Remove any entries that match
@@ -109,7 +109,7 @@ export class PersistentFilters {
      *
      * @param {string} criteria - a session name
      */
-    public async addSession(criteria: string): Promise<void> {
+    public addSession(criteria: string): void {
         // Remove any entries that match
         this.mSessions = this.mSessions.filter((element) => {
             return element.trim() !== criteria.trim();
@@ -148,7 +148,7 @@ export class PersistentFilters {
     /* Remove functions, for removing one item from the persistent arrays
     /*********************************************************************************************************************************************/
 
-    public async removeSession(name: string): Promise<void> {
+    public removeSession(name: string): void {
         // Remove any entries that match
         this.mSessions = this.mSessions.filter((element) => {
             return element.trim() !== name.trim();
@@ -173,17 +173,17 @@ export class PersistentFilters {
     /* Reset functions, for resetting the persistent array to empty (in the extension and in settings.json)
     /*********************************************************************************************************************************************/
 
-    public async resetSearchHistory(): Promise<void> {
+    public resetSearchHistory(): void {
         this.mSearchHistory = [];
         this.updateSearchHistory();
     }
 
-    public async resetSessions(): Promise<void> {
+    public resetSessions(): void {
         this.mSessions = [];
         this.updateSessions();
     }
 
-    public async resetFileHistory(): Promise<void> {
+    public resetFileHistory(): void {
         this.mFileHistory = [];
         this.updateFileHistory();
     }
@@ -228,7 +228,7 @@ export class PersistentFilters {
         }
     }
 
-    private async initialize(): Promise<void> {
+    private initialize(): void {
         let searchHistoryLines: string[];
         let sessionLines: string[];
         let fileHistoryLines: string[];

@@ -41,7 +41,7 @@ export const JOB_SUBMIT_DIALOG_OPTS = [
 ];
 
 export function filterTreeByString(value: string, treeItems: vscode.QuickPickItem[]): vscode.QuickPickItem[] {
-    const filteredArray = [];
+    const filteredArray: vscode.QuickPickItem[] = [];
     value = value.toUpperCase().replace(/\*/g, "(.*)");
     const regex = new RegExp(value);
     treeItems.forEach((item) => {
@@ -86,7 +86,9 @@ export function concatChildNodes(nodes: IZoweNodeType[]): IZoweNodeType[] {
  * @param {TreeItem} node - the node element
  */
 export function labelRefresh(node: vscode.TreeItem): void {
-    node.label = node.label.toString().endsWith(" ") ? node.label.toString().substring(0, node.label.toString().length - 1) : node.label + " ";
+    node.label = node.label.toString().endsWith(" ")
+        ? node.label.toString().substring(0, node.label.toString().length - 1)
+        : `${node.label.toString()} `;
 }
 
 export function sortTreeItems(favorites: vscode.TreeItem[], specificContext): void {
@@ -193,7 +195,7 @@ export function checkIfChildPath(parentPath: string, childPath: string): boolean
  * @returns void
  */
 
-export async function markFileAsDirty(doc: vscode.TextDocument): Promise<void> {
+export function markFileAsDirty(doc: vscode.TextDocument): void {
     const docText = doc.getText();
     const startPosition = new vscode.Position(0, 0);
     const endPosition = new vscode.Position(doc.lineCount, 0);
@@ -254,14 +256,14 @@ export async function uploadContent(
 /**
  * Function that will forcefully upload a file and won't check for matching Etag
  */
-export async function willForceUpload(
+export function willForceUpload(
     node: IZoweDatasetTreeNode | IZoweUSSTreeNode,
     doc: vscode.TextDocument,
     remotePath: string,
     profile?: imperative.IProfileLoaded,
     binary?: boolean,
     returnEtag?: boolean
-): Promise<void> {
+): void {
     // setup to handle both cases (dataset & USS)
     let title: string;
     if (isZoweDatasetTreeNode(node)) {
@@ -299,7 +301,7 @@ export async function willForceUpload(
             }
         } else {
             Gui.showMessage(localize("uploadContent.cancelled", "Upload cancelled."));
-            await markFileAsDirty(doc);
+            markFileAsDirty(doc);
         }
     });
 }
@@ -333,7 +335,7 @@ export function getSelectedNodeList(node: IZoweTreeNode, nodeList: IZoweTreeNode
  * @param {string} text - prefix text
  * @returns undefined | string
  */
-export function jobStringValidator(text: string, localizedParam: "owner" | "prefix"): any {
+export function jobStringValidator(text: string, localizedParam: "owner" | "prefix"): string | null {
     switch (localizedParam) {
         case "owner":
             return text.length > globals.JOBS_MAX_PREFIX ? localize("searchJobs.owner.invalid", "Invalid job owner") : null;

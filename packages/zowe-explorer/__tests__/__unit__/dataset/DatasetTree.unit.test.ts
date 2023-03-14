@@ -2540,7 +2540,6 @@ describe("Dataset Tree Unit Tests - Function initializeFavorites", () => {
                 readFavorites: () => ["[SAMPLE]: SAMPLE.{session}", "*SAMPLE", "SAMPLE*"],
             },
         });
-
-        await expect(testTree.initializeFavorites(log)).resolves.not.toThrow();
+        expect(() => testTree.initializeFavorites(log)).not.toThrow();
     });
 });

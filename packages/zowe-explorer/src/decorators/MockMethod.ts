@@ -38,8 +38,8 @@ export function MockMethod(): (target: any, key: string, descriptor: PropertyDes
 
         const originalMethod = descriptor.value;
 
-        descriptor.value = jest.fn(function () {
-            originalMethod.apply(this, arguments);
+        descriptor.value = jest.fn((...args) => {
+            originalMethod.apply(this, args);
         });
 
         return descriptor;

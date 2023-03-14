@@ -282,7 +282,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
      */
     private async getTsoParams(): Promise<IStartTsoParms> {
         const profileInfo = await Profiles.getInstance().getProfileInfo();
-        const tsoParms: IStartTsoParms = {};
+        let tsoParms: IStartTsoParms = {};
 
         // Keys in the IStartTsoParms interface
         // TODO(zFernand0): Request the CLI squad that all interfaces are also exported as values that we can iterate
@@ -297,7 +297,15 @@ export class TsoCommandHandler extends ZoweCommandProvider {
             }
         }
         if (tsoProfile) {
-            iStartTso.forEach((p) => (tsoParms[p] = tsoProfile.profile[p]));
+            tsoParms = {
+                ...iStartTso.reduce((obj, parm) => {
+                    const newObj = obj;
+                    newObj[parm] = tsoProfile.profile[parm];
+
+                    return newObj;
+                }, {}),
+            };
+            //iStartTso.forEach((p) => (tsoParms[p] = tsoProfile.profile[p]));
         }
 
         if (tsoParms.account == null || tsoParms.account === "") {

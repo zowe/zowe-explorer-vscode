@@ -52,7 +52,7 @@ interface IJobPickerOption {
     value: string;
     show: boolean;
     placeHolder: string;
-    validateInput?;
+    validateInput?: vscode.InputBoxOptions["validateInput"];
 }
 
 /**
@@ -86,7 +86,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             value: "",
             show: true,
             placeHolder: localize("searchJobs.owner.id", `Enter job owner id`),
-            validateInput: (text) => jobStringValidator(text, "owner"),
+            validateInput: (text: string): string | null => jobStringValidator(text, "owner"),
         },
         {
             key: `prefix`,
@@ -94,7 +94,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             value: "*",
             show: true,
             placeHolder: localize("searchJobs.prefix", `Enter job prefix`),
-            validateInput: (text) => jobStringValidator(text, "prefix"),
+            validateInput: (text: string): string | null => jobStringValidator(text, "prefix"),
         },
         {
             key: `job-status`,
@@ -335,8 +335,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             this.log.debug(localize("initializeJobsTree.no.favorites", "No jobs favorites found."));
             return;
         }
-        // Parse line
-        lines.forEach(async (line) => {
+        for (const line of lines) {
             const profileName = line.substring(1, line.lastIndexOf("]"));
             const favLabel = line.substring(line.indexOf(":") + 1, line.indexOf("{")).trim();
             const favContextValue = line.substring(line.indexOf("{") + 1, line.lastIndexOf("}"));
@@ -349,7 +348,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             // Initialize and attach favorited item nodes under their respective profile node in Favorrites
             const favChildNodeForProfile = await this.initializeFavChildNodeForProfile(favLabel, favContextValue, profileNodeInFavorites);
             profileNodeInFavorites.children.push(favChildNodeForProfile);
-        });
+        }
     }
 
     /**
@@ -360,7 +359,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      * @param parentNode The profile node in this.mFavorites that the favorite belongs to
      * @returns IZoweJobTreeNode
      */
-    public async initializeFavChildNodeForProfile(label: string, contextValue: string, parentNode: IZoweJobTreeNode): Promise<Job> {
+    public initializeFavChildNodeForProfile(label: string, contextValue: string, parentNode: IZoweJobTreeNode): Job {
         let favJob: Job;
         if (contextValue.startsWith(globals.JOBS_JOB_CONTEXT)) {
             favJob = new Job(label, vscode.TreeItemCollapsibleState.Collapsed, parentNode, null, new JobDetail(label), null);
@@ -544,7 +543,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         return;
     }
 
-    public async updateFavorites(): Promise<void> {
+    public updateFavorites(): void {
         const favoritesArray = [];
         this.mFavorites.forEach((profileNode) => {
             profileNode.children.forEach((fav) => {
@@ -552,7 +551,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                     "[" +
                     profileNode.label.toString() +
                     "]: " +
-                    fav.label +
+                    fav.label.toString() +
                     "{" +
                     (contextually.isFavoriteJob(fav) ? globals.JOBS_JOB_CONTEXT : globals.JOBS_SESSION_CONTEXT) +
                     "}";
@@ -664,7 +663,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
     }
 
     public async applyRegularSessionSearchLabel(node: IZoweJobTreeNode): Promise<string | undefined> {
-        let searchCriteria;
+        let searchCriteria: string;
         const choice = await this.getUserJobsMenuChoice();
         const searchCriteriaObj = await this.getUserSearchQueryInput(choice, node);
 
@@ -723,7 +722,9 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 const value = keyValue[1]?.trim();
                 try {
                     searchCriteriaObj[key] = value;
-                } catch (e) {}
+                } catch (e) {
+                    // capture and ignore errors
+                }
             });
         }
         return searchCriteriaObj;
@@ -848,13 +849,14 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         return revisedCriteria.trim();
     }
 
-    public async addFileHistory(_criteria: string): Promise<void> {
+    public addFileHistory(_criteria: string): void {
         throw new Error("Method not implemented.");
     }
 
     private async setJobStatus(node: IZoweJobTreeNode): Promise<IJobStatusOption> {
-        const apiExists = ZoweExplorerApiRegister.getJesApi(node.getProfile()).getJobsByParameters;
-        const jobStatusSelection = apiExists ? globals.JOB_STATUS : globals.JOB_STATUS_UNSUPPORTED;
+        const jobStatusSelection = ZoweExplorerApiRegister.getJesApi(node.getProfile()).getJobsByParameters
+            ? globals.JOB_STATUS
+            : globals.JOB_STATUS_UNSUPPORTED;
         let choice = await Gui.showQuickPick(jobStatusSelection);
         if (!choice) {
             choice = globals.JOB_STATUS.find((status) => status.label === "*");
@@ -862,7 +864,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         return choice;
     }
 
-    private async handleEditingMultiJobParameters(jobProperties: IJobPickerOption[], node: IZoweJobTreeNode) {
+    private async handleEditingMultiJobParameters(jobProperties: IJobPickerOption[], node: IZoweJobTreeNode): Promise<any> {
         const editableItems: FilterItem[] = [];
         editableItems.push(new FilterItem({ text: ZosJobsProvider.submitJobQueryLabel, show: true }));
         jobProperties.forEach((prop) => {
@@ -884,8 +886,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
 
         switch (pattern) {
             case ZosJobsProvider.chooseJobStatusLabel:
-                const statusChoice = await this.setJobStatus(node);
-                jobProperties.find((prop) => prop.key === "job-status").value = statusChoice.label;
+                jobProperties.find((prop) => prop.key === "job-status").value = (await this.setJobStatus(node)).label;
                 break;
             case ZosJobsProvider.submitJobQueryLabel:
                 node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
@@ -1006,7 +1007,7 @@ class JobDetail implements IJob {
     public "phase-name": string;
     public "reason-not-running"?: string;
 
-    constructor(combined: string) {
+    public constructor(combined: string) {
         this.jobname = combined.substring(0, combined.indexOf("("));
         this.jobid = combined.substring(combined.indexOf("(") + 1, combined.indexOf(")"));
     }

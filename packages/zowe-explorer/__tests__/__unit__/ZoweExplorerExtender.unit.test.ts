@@ -197,7 +197,7 @@ describe("ZoweExplorerExtender unit tests", () => {
 
         const readProfilesFromDiskSpy = jest.fn();
         const refreshProfilesQueueAddSpy = jest.spyOn((ZoweExplorerExtender as any).refreshProfilesQueue, "add");
-        jest.spyOn(profilesUtils, "getProfileInfo").mockResolvedValue({
+        jest.spyOn(profilesUtils, "getProfileInfo").mockReturnValue({
             readProfilesFromDisk: readProfilesFromDiskSpy,
         } as any);
         await expect(blockMocks.instTest.initForZowe("USS", ["" as any])).resolves.not.toThrow();

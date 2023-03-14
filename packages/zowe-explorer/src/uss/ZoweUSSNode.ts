@@ -63,7 +63,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * @param {boolean} binary - Indictaes if this is a text or binary file
      * @param {String} mProfileName - Profile to which the node belongs to
      */
-    constructor(
+    public constructor(
         label: string,
         collapsibleState: vscode.TreeItemCollapsibleState,
         mParent: IZoweUSSTreeNode,
@@ -157,7 +157,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             responses.push(await ZoweExplorerApiRegister.getUssApi(cachedProfile).fileList(this.fullPath));
         } catch (err) {
             await errorHandling(err, this.label.toString(), localize("getChildren.error.response", "Retrieving response from ") + `uss-file-list`);
-            await syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getUssApi(profileValue).getSession())(sessNode);
+            syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getUssApi(profileValue).getSession())(sessNode);
         }
         // push nodes to an object with property names to avoid duplicates
         const elementChildren = {};
@@ -192,7 +192,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     } else {
                         // Creates a ZoweUSSNode for a file
                         let temp;
-                        if (this.getSessionNode().binaryFiles.hasOwnProperty(this.fullPath + "/" + item.name)) {
+                        if (`${this.fullPath}/${item.name as string}` in this.getSessionNode().binaryFiles) {
                             temp = new ZoweUSSNode(
                                 item.name,
                                 vscode.TreeItemCollapsibleState.None,
@@ -321,7 +321,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * @deprecated To be removed by version 2.0. Use reopen instead.
      */
     public async refreshAndReopen(hasClosedInstance = false): Promise<void> {
-        this.reopen(hasClosedInstance);
+        await this.reopen(hasClosedInstance);
     }
 
     /**
@@ -346,10 +346,14 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 if (fs.existsSync(filePath)) {
                     fs.unlinkSync(filePath);
                 }
-            } catch (err) {}
+            } catch (err) {
+                // ignore error as the path likely doesn't exist
+            }
         } catch (err) {
             globals.LOG.error(err);
-            Gui.errorMessage(localize("deleteUSSNode.error.node", "Unable to delete node: ") + err.message);
+            if (err instanceof Error) {
+                Gui.errorMessage(localize("deleteUSSNode.error.node", "Unable to delete node: ") + err.message);
+            }
             throw err;
         }
 
@@ -357,7 +361,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
         // Remove node from the USS Favorites tree
         ussFileProvider.removeFavorite(this);
-        ussFileProvider.removeFileHistory(`[${this.getProfileName()}]: ${this.parentPath}/${this.label}`);
+        ussFileProvider.removeFileHistory(`[${this.getProfileName()}]: ${this.parentPath}/${this.label.toString()}`);
         ussFileProvider.refresh();
     }
 
@@ -428,7 +432,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 switch (true) {
                     // For opening favorited and non-favorited files
                     case this.getParent().contextValue === globals.FAV_PROFILE_CONTEXT:
+                        break;
                     case contextually.isUssSession(this.getParent()):
+                        break;
                     // Handle file path for files in directories and favorited directories
                     case contextually.isUssDirectory(this.getParent()):
                         break;
@@ -489,7 +495,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      */
     // This is not a UI refresh.
     public async refreshUSS(): Promise<void> {
-        let label;
+        let label: string;
         switch (true) {
             case contextually.isUssDirectory(this.getParent()):
                 label = this.fullPath;
@@ -497,7 +503,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             // For favorited and non-favorited files
             case this.getParent().contextValue === globals.FAV_PROFILE_CONTEXT:
             case contextually.isUssSession(this.getParent()):
-                label = this.label;
+                label = this.label.toString();
                 break;
             default:
                 Gui.errorMessage(localize("refreshUSS.error.invalidNode", "refreshUSS() called from invalid node."));
@@ -537,8 +543,8 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 await this.initializeFileOpening(ussDocumentFilePath, true);
             }
         } catch (err) {
-            if (err.message.includes(localize("refreshUSS.error.notFound", "not found"))) {
-                globals.LOG.warn(err);
+            if (err instanceof Error && err.message.includes(localize("refreshUSS.error.notFound", "not found"))) {
+                globals.LOG.warn(err.message);
                 Gui.showMessage(
                     localize("refreshUSS.file1", "Unable to find file: ") + label + localize("refreshUSS.file2", " was probably deleted.")
                 );

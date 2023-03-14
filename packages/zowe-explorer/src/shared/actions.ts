@@ -41,7 +41,7 @@ export async function searchInAllLoadedItems(
     const quickpick = Gui.createQuickPick();
     quickpick.placeholder = localize("searchHistory.options.prompt", "Enter a filter");
     quickpick.ignoreFocusOut = true;
-    quickpick.onDidChangeValue(async (value) => {
+    quickpick.onDidChangeValue((value) => {
         if (value) {
             quickpick.items = filterTreeByString(value, qpItems);
         } else {
@@ -216,7 +216,7 @@ export async function openRecentMemberPrompt(datasetTree: IZoweTree<IZoweDataset
     }
 }
 
-export async function returnIconState(node: IZoweNodeType): Promise<IZoweNodeType> {
+export function returnIconState(node: IZoweNodeType): IZoweNodeType {
     const activePathClosed = getIconById(IconId.sessionActive);
     const activePathOpen = getIconById(IconId.sessionActiveOpen);
     const inactivePathClosed = getIconById(IconId.sessionInactive); // So far, we only ever reference the closed inactive icon, not the open one
@@ -229,13 +229,13 @@ export async function returnIconState(node: IZoweNodeType): Promise<IZoweNodeTyp
     return node;
 }
 
-export async function resetValidationSettings(node: IZoweNodeType, setting: boolean): Promise<IZoweNodeType> {
+export function resetValidationSettings(node: IZoweNodeType, setting: boolean): IZoweNodeType {
     if (setting) {
-        await Profiles.getInstance().enableValidationContext(node);
+        Profiles.getInstance().enableValidationContext(node);
         // Ensure validation status is also reset
         node.contextValue = node.contextValue.replace(/(_Active)/g, "").replace(/(_Inactive)/g, "");
     } else {
-        await Profiles.getInstance().disableValidationContext(node);
+        Profiles.getInstance().disableValidationContext(node);
     }
     return node;
 }

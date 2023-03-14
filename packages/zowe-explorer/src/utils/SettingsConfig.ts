@@ -100,7 +100,7 @@ export class SettingsConfig {
 
         // Standardize global settings when old Zowe settings were found
         if (SettingsConfig.zoweOldConfigurations.length > 0) {
-            SettingsConfig.zoweOldConfigurations.forEach(async (configuration) => {
+            for (const configuration of SettingsConfig.zoweOldConfigurations) {
                 let globalValue: any = SettingsConfig.configurations.inspect(configuration).globalValue;
 
                 // Adjust fetching of value due to schema change
@@ -114,7 +114,7 @@ export class SettingsConfig {
                     await SettingsConfig.setDirectValue(newSetting, globalValue);
                     globalIsMigrated = true;
                 }
-            });
+            }
         }
 
         if (globalIsMigrated) {

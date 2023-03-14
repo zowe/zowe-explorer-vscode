@@ -38,7 +38,7 @@ export class ZoweTreeProvider {
     protected log: imperative.Logger = imperative.Logger.getAppLogger();
     protected validProfile: number = -1;
 
-    constructor(protected persistenceSchema: PersistenceSchemaEnum, public mFavoriteSession: IZoweTreeNode) {
+    public constructor(protected persistenceSchema: PersistenceSchemaEnum, public mFavoriteSession: IZoweTreeNode) {
         this.mHistory = new PersistentFilters(this.persistenceSchema);
     }
 
@@ -103,7 +103,7 @@ export class ZoweTreeProvider {
      * @param element the node being flipped
      * @param isOpen the intended state of the the tree view provider, true or false
      */
-    public async flipState(element: IZoweTreeNode, isOpen: boolean = false): Promise<void> {
+    public flipState(element: IZoweTreeNode, isOpen: boolean = false): void {
         element.collapsibleState = isOpen ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed;
         const icon = getIconByNode(element);
         if (icon) {
@@ -136,24 +136,24 @@ export class ZoweTreeProvider {
         return this.persistenceSchema;
     }
 
-    public async addSearchHistory(criteria: string): Promise<void> {
+    public addSearchHistory(criteria: string): void {
         if (criteria) {
             this.mHistory.addSearchHistory(criteria);
             this.refresh();
         }
     }
 
-    public findNonFavoritedNode(_element: IZoweTreeNode) {
+    public findNonFavoritedNode(_element: IZoweTreeNode): any {
         return undefined;
     }
 
-    public findFavoritedNode(_element: IZoweTreeNode) {
+    public findFavoritedNode(_element: IZoweTreeNode): any {
         return undefined;
     }
-    public renameFavorite(_node: IZoweTreeNode, _newLabel: string) {
+    public renameFavorite(_node: IZoweTreeNode, _newLabel: string): any {
         return undefined;
     }
-    public renameNode(_profile: string, _beforeDataSetName: string, _afterDataSetName: string) {
+    public renameNode(_profile: string, _beforeDataSetName: string, _afterDataSetName: string): any {
         return undefined;
     }
 
@@ -163,9 +163,9 @@ export class ZoweTreeProvider {
         const EditSession = await Profiles.getInstance().editSession(profile, profileName);
         if (EditSession) {
             node.getProfile().profile = EditSession as imperative.IProfile;
-            await setProfile(node, EditSession as imperative.IProfile);
+            setProfile(node, EditSession as imperative.IProfile);
             if (await node.getSession()) {
-                await setSession(node, EditSession as imperative.ISession);
+                setSession(node, EditSession as imperative.ISession);
             } else {
                 zoweFileProvider.deleteSession(node.getSessionNode());
                 this.mHistory.addSession(node.label as string);

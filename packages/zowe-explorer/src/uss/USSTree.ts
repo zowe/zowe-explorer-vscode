@@ -62,7 +62,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
     public lastOpened: NodeInteraction = {};
     private treeView: vscode.TreeView<IZoweUSSTreeNode>;
 
-    constructor() {
+    public constructor() {
         super(
             USSTree.persistenceSchema,
             new ZoweUSSNode(localize("Favorites", "Favorites"), vscode.TreeItemCollapsibleState.Collapsed, null, null, null)
@@ -151,7 +151,9 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 await originalNode.reopen(hasClosedTab);
                 this.updateFavorites();
             } catch (err) {
-                await errorHandling(err, originalNode.mProfileName, localize("renameUSS.error", "Unable to rename node: ") + err.message);
+                if (err instanceof Error) {
+                    await errorHandling(err, originalNode.mProfileName, `${localize("renameUSS.error", "Unable to rename node: ")}${err.message}`);
+                }
                 throw err;
             }
         }
@@ -236,7 +238,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      * @param oldNamePath
      * @param newNamePath
      */
-    public async renameUSSNode(node: IZoweUSSTreeNode, newNamePath: string): Promise<void> {
+    public renameUSSNode(node: IZoweUSSTreeNode, newNamePath: string): void {
         const matchingNode: IZoweUSSTreeNode = this.findNonFavoritedNode(node);
         if (matchingNode) {
             matchingNode.rename(newNamePath);
@@ -437,7 +439,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         return;
     }
 
-    public async updateFavorites(): Promise<void> {
+    public updateFavorites(): void {
         const favoritesArray = [];
         this.mFavorites.forEach((profileNode) => {
             profileNode.children.forEach((fav) => {
@@ -507,7 +509,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             if (!session.contextValue.includes(globals.FAVORITE_CONTEXT)) {
                 const nodes = await session.getChildren();
 
-                const checkForChildren = async (nodeToCheck: IZoweUSSTreeNode) => {
+                const checkForChildren = async (nodeToCheck: IZoweUSSTreeNode): Promise<void> => {
                     const children = nodeToCheck.children;
                     if (children.length !== 0) {
                         for (const child of children) {
@@ -603,7 +605,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 }
             }
             // Get session for sessionNode
-            await syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getUssApi(profileValue).getSession())(node);
+            syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getUssApi(profileValue).getSession())(node);
             // Sanitization: Replace multiple forward slashes with just one forward slash
             const sanitizedPath = remotepath.replace(/\/+/g, "/").replace(/(\/*)$/, "");
             sessionNode.tooltip = sessionNode.fullPath = sanitizedPath;
@@ -669,7 +671,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             this.log.debug(localize("initializeFavorites.no.favorites", "No USS favorites found."));
             return;
         }
-        lines.forEach(async (line) => {
+        for (const line of lines) {
             const profileName = line.substring(1, line.lastIndexOf("]"));
             const favLabel = line.substring(line.indexOf(":") + 1, line.indexOf("{")).trim();
             // The profile node used for grouping respective favorited items. (Undefined if not created yet.)
@@ -681,7 +683,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             // Initialize and attach favorited item nodes under their respective profile node in Favorrites
             const favChildNodeForProfile = await this.initializeFavChildNodeForProfile(favLabel, line, profileNodeInFavorites);
             profileNodeInFavorites.children.push(favChildNodeForProfile);
-        });
+        }
     }
 
     /**
@@ -692,9 +694,9 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      * @param parentNode The profile node in this.mFavorites that the favorite belongs to
      * @returns IZoweUssTreeNode
      */
-    public async initializeFavChildNodeForProfile(label: string, line: string, parentNode: IZoweUSSTreeNode): Promise<ZoweUSSNode> {
-        const favoriteSearchPattern = /^\[.+\]\:\s.*\{ussSession\}$/;
-        const directorySearchPattern = /^\[.+\]\:\s.*\{directory\}$/;
+    public initializeFavChildNodeForProfile(label: string, line: string, parentNode: IZoweUSSTreeNode): ZoweUSSNode {
+        const favoriteSearchPattern = /^\[.+\]:\s.*\{ussSession\}$/;
+        const directorySearchPattern = /^\[.+\]:\s.*\{directory\}$/;
         let node: ZoweUSSNode;
         if (directorySearchPattern.test(line)) {
             node = new ZoweUSSNode(label, vscode.TreeItemCollapsibleState.Collapsed, parentNode, null, "", false, null);
@@ -804,7 +806,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         return updatedFavsForProfile;
     }
 
-    public async addFileHistory(criteria: string): Promise<void> {
+    public addFileHistory(criteria: string): void {
         this.mHistory.addFileHistory(criteria);
         this.refresh();
     }

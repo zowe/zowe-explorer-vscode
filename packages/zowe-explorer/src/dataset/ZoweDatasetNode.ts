@@ -49,7 +49,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      * @param {ZoweDatasetNode} mParent
      * @param {Session} session
      */
-    constructor(
+    public constructor(
         label: string,
         collapsibleState: vscode.TreeItemCollapsibleState,
         mParent: IZoweDatasetTreeNode,
@@ -124,10 +124,10 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
         // push nodes to an object with property names to avoid duplicates
         const elementChildren = {};
-        responses.forEach(async (response) => {
+        for (const response of responses) {
             // Throws reject if the Zowe command does not throw an error but does not succeed
             if (!response.success) {
-                errorHandling(localize("getChildren.responses.error", "The response from Zowe CLI was not successful"));
+                await errorHandling(localize("getChildren.responses.error", "The response from Zowe CLI was not successful"));
                 return;
             }
 
@@ -222,11 +222,11 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     elementChildren[temp.label.toString()] = temp;
                 }
             }
-        });
+        }
 
         this.dirty = false;
         if (Object.keys(elementChildren).length === 0) {
-            return (this.children = [
+            this.children = [
                 new ZoweDatasetNode(
                     localize("getChildren.noDataset", "No datasets found"),
                     vscode.TreeItemCollapsibleState.None,
@@ -234,12 +234,14 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     null,
                     globals.INFORMATION_CONTEXT
                 ),
-            ]);
+            ]
         } else {
-            return (this.children = Object.keys(elementChildren)
+            this.children = Object.keys(elementChildren)
                 .sort()
-                .map((labels) => elementChildren[labels]));
+                .map((labels) => elementChildren[labels])
         }
+
+        return this.children;
     }
 
     public getSessionNode(): IZoweDatasetTreeNode {
@@ -300,7 +302,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             }
         } catch (err) {
             await errorHandling(err, this.label.toString(), localize("getChildren.error.response", "Retrieving response from ") + `zowe.List`);
-            await syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getMvsApi(profileValue).getSession())(sessNode);
+            syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getMvsApi(profileValue).getSession())(sessNode);
         }
         return responses;
     }

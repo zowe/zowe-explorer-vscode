@@ -51,7 +51,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
      *
      * @param errorDetails Details of the error (to be parsed for config name and path)
      */
-    public static async showZoweConfigError(errorDetails: string): Promise<void> {
+    public static showZoweConfigError(errorDetails: string): void {
         vscode.window
             .showErrorMessage(
                 localize("initialize.profiles.error", 'Error encountered when loading your Zowe config. Click "Show Config" for more details.'),
@@ -64,8 +64,8 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
 
                 // Parse the v2 config path, or a v1 config path depending on the error message
                 const configMatch = errorDetails.includes("Error parsing JSON in the file")
-                    ? errorDetails.match(/Error parsing JSON in the file \'(.+?)\'/)
-                    : errorDetails.match(/Error reading profile file \(\"(.+?)\"\)/);
+                    ? errorDetails.match(/Error parsing JSON in the file '(.+?)'/)
+                    : errorDetails.match(/Error reading profile file \("(.+?)"\)/);
 
                 let configPath = configMatch != null ? configMatch[1] : null;
                 // If configPath is null, build a v2 config location based on the error details
@@ -166,7 +166,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
          */
         let usingTeamConfig: boolean;
         try {
-            const mProfileInfo = await getProfileInfo(globals.ISTHEIA);
+            const mProfileInfo = getProfileInfo(globals.ISTHEIA);
             if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0]) {
                 const rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
                 await mProfileInfo.readProfilesFromDisk({ homeDir: zoweDir, projectDir: getFullPath(rootPath) });

@@ -29,8 +29,8 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 export let SETTINGS_TEMP_FOLDER_LOCATION;
 export let ZOWETEMPFOLDER;
 export let ZOWE_TMP_FOLDER;
-export let USS_DIR;
-export let DS_DIR;
+export let USS_DIR: string;
+export let DS_DIR: string;
 export let CONFIG_PATH; // set during activate
 export let ISTHEIA: boolean = false; // set during activate
 export let LOG: imperative.Logger;
@@ -93,7 +93,9 @@ export const EXTENDER_CONFIG: imperative.ICommandProfileTypeConfiguration[] = []
 export const ZOWE_CLI_SCM = "@zowe/cli";
 export const MAX_DATASET_LENGTH = 44;
 export const MAX_MEMBER_LENGTH = 8;
+// eslint-disable-next-line no-useless-escape
 export const DS_NAME_REGEX_CHECK = /^[a-zA-Z#@\$][a-zA-Z0-9#@\$\-]{0,7}(\.[a-zA-Z#@\$][a-zA-Z0-9#@\$\-]{0,7})*$/;
+// eslint-disable-next-line no-useless-escape
 export const MEMBER_NAME_REGEX_CHECK = /^[a-zA-Z#@\$][a-zA-Z0-9#@\$]{0,7}$/;
 export let ACTIVATED = false;
 export let PROFILE_SECURITY: string | boolean = ZOWE_CLI_SCM;
@@ -284,7 +286,7 @@ export function defineGlobals(tempPath: string | undefined): void {
         ((appName && appName.toLowerCase().includes("theia")) || (uriScheme && uriScheme.toLowerCase().includes("theia"))) &&
         vscode.env.uiKind === vscode.UIKind.Web
     ) {
-        this.ISTHEIA = true;
+        ISTHEIA = true;
     }
 
     SETTINGS_TEMP_FOLDER_LOCATION = tempPath;
@@ -328,7 +330,7 @@ export function setSavedProfileContents(value: Uint8Array): void {
 }
 
 export async function setGlobalSecurityValue(): Promise<void> {
-    if (this.ISTHEIA) {
+    if (ISTHEIA) {
         PROFILE_SECURITY = false;
         await SettingsConfig.setDirectValue(this.SETTINGS_SECURE_CREDENTIALS_ENABLED, false, vscode.ConfigurationTarget.Global);
         return;

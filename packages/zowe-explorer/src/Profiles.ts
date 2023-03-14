@@ -85,11 +85,14 @@ export class Profiles extends ProfilesCache {
         let profileStatus: IProfileValidation;
         if (!theProfile.profile.tokenType && (!theProfile.profile.user || !theProfile.profile.password)) {
             // The profile will need to be reactivated, so remove it from profilesForValidation
-            this.profilesForValidation.filter((profile, index) => {
-                if (profile.name === theProfile.name && profile.status !== "unverified") {
-                    this.profilesForValidation.splice(index, 1);
-                }
-            });
+            this.profilesForValidation = this.profilesForValidation.filter(
+                (profile) => profile.status === "unverified" && profile.name !== theProfile.name
+            );
+            // this.profilesForValidation.filter((profile, index) => {
+            //     if (profile.name === theProfile.name && profile.status !== "unverified") {
+            //         this.profilesForValidation.splice(index, 1);
+            //     }
+            // });
             let values: string[];
             try {
                 values = await Profiles.getInstance().promptCredentials(theProfile.name);
@@ -132,7 +135,7 @@ export class Profiles extends ProfilesCache {
     public async getProfileSetting(theProfile: zowe.imperative.IProfileLoaded): Promise<IProfileValidation> {
         let profileStatus: IProfileValidation;
         let found: boolean = false;
-        this.profilesValidationSetting.filter(async (instance) => {
+        this.profilesValidationSetting.filter((instance) => {
             if (instance.name === theProfile.name && instance.setting === false) {
                 profileStatus = {
                     status: "unverified",
@@ -161,12 +164,12 @@ export class Profiles extends ProfilesCache {
         return profileStatus;
     }
 
-    public async disableValidation(node: IZoweNodeType): Promise<IZoweNodeType> {
+    public disableValidation(node: IZoweNodeType): IZoweNodeType {
         this.disableValidationContext(node);
         return node;
     }
 
-    public async disableValidationContext(node: IZoweNodeType): Promise<IZoweNodeType> {
+    public disableValidationContext(node: IZoweNodeType): IZoweNodeType {
         const theProfile: zowe.imperative.IProfileLoaded = node.getProfile();
         this.validationArraySetup(theProfile, false);
         if (node.contextValue.includes(`${globals.VALIDATE_SUFFIX}true`)) {
@@ -183,12 +186,12 @@ export class Profiles extends ProfilesCache {
         return node;
     }
 
-    public async enableValidation(node: IZoweNodeType): Promise<IZoweNodeType> {
+    public enableValidation(node: IZoweNodeType): IZoweNodeType {
         this.enableValidationContext(node);
         return node;
     }
 
-    public async enableValidationContext(node: IZoweNodeType): Promise<IZoweNodeType> {
+    public enableValidationContext(node: IZoweNodeType): IZoweNodeType {
         const theProfile: zowe.imperative.IProfileLoaded = node.getProfile();
         this.validationArraySetup(theProfile, true);
         if (node.contextValue.includes(`${globals.VALIDATE_SUFFIX}false`)) {
@@ -203,7 +206,7 @@ export class Profiles extends ProfilesCache {
         return node;
     }
 
-    public async validationArraySetup(theProfile: zowe.imperative.IProfileLoaded, validationSetting: boolean): Promise<IValidationSetting> {
+    public validationArraySetup(theProfile: zowe.imperative.IProfileLoaded, validationSetting: boolean): IValidationSetting {
         let found: boolean = false;
         let profileSetting: IValidationSetting;
         if (this.profilesValidationSetting.length > 0) {
@@ -256,33 +259,31 @@ export class Profiles extends ProfilesCache {
         try {
             const allProfiles = Profiles.getInstance().allProfiles;
             if (allProfiles) {
-                // Get all profiles
-                profileNamesList = allProfiles.map((profile) => {
-                    return profile.name;
-                });
-                // Filter to list of the APIs available for current tree explorer
-                profileNamesList = profileNamesList.filter((profileName) => {
-                    const profile = Profiles.getInstance().loadNamedProfile(profileName);
-                    if (profile) {
-                        if (zoweFileProvider.getTreeType() === PersistenceSchemaEnum.USS) {
-                            const ussProfileTypes = ZoweExplorerApiRegister.getInstance().registeredUssApiTypes();
-                            return ussProfileTypes.includes(profile.type);
+                // Get all profiles and filter to list of the APIs available for current tree explorer
+                profileNamesList = allProfiles
+                    .map((profile) => profile.name)
+                    .filter((profileName) => {
+                        const profile = Profiles.getInstance().loadNamedProfile(profileName);
+                        if (profile) {
+                            if (zoweFileProvider.getTreeType() === PersistenceSchemaEnum.USS) {
+                                const ussProfileTypes = ZoweExplorerApiRegister.getInstance().registeredUssApiTypes();
+                                return ussProfileTypes.includes(profile.type);
+                            }
+                            if (zoweFileProvider.getTreeType() === PersistenceSchemaEnum.Dataset) {
+                                const mvsProfileTypes = ZoweExplorerApiRegister.getInstance().registeredMvsApiTypes();
+                                return mvsProfileTypes.includes(profile.type);
+                            }
+                            if (zoweFileProvider.getTreeType() === PersistenceSchemaEnum.Job) {
+                                const jesProfileTypes = ZoweExplorerApiRegister.getInstance().registeredJesApiTypes();
+                                return jesProfileTypes.includes(profile.type);
+                            }
                         }
-                        if (zoweFileProvider.getTreeType() === PersistenceSchemaEnum.Dataset) {
-                            const mvsProfileTypes = ZoweExplorerApiRegister.getInstance().registeredMvsApiTypes();
-                            return mvsProfileTypes.includes(profile.type);
-                        }
-                        if (zoweFileProvider.getTreeType() === PersistenceSchemaEnum.Job) {
-                            const jesProfileTypes = ZoweExplorerApiRegister.getInstance().registeredJesApiTypes();
-                            return jesProfileTypes.includes(profile.type);
-                        }
-                    }
-                });
-                profileNamesList = profileNamesList.filter(
-                    (profileName) =>
-                        // Find all cases where a profile is not already displayed
-                        !zoweFileProvider.mSessionNodes?.find((sessionNode) => sessionNode.getProfileName() === profileName)
-                );
+                    })
+                    .filter(
+                        (profileName) =>
+                            // Find all cases where a profile is not already displayed
+                            !zoweFileProvider.mSessionNodes?.find((sessionNode) => sessionNode.getProfileName() === profileName)
+                    );
             }
         } catch (err) {
             this.log.warn(err);
@@ -496,12 +497,10 @@ export class Profiles extends ProfilesCache {
                 case "tokenValue":
                     break;
                 default:
-                    let options: vscode.InputBoxOptions;
-                    const response = await this.checkType(schema[value].type);
+                    const response = this.checkType(schema[value].type);
                     switch (response) {
                         case "number":
-                            options = await this.optionsValue(value, schema, editSession[value]);
-                            const updValue = await Gui.showInputBox(options);
+                            const updValue = await Gui.showInputBox(this.optionsValue(value, schema, editSession[value]));
                             if (!Number.isNaN(Number(updValue))) {
                                 updSchemaValues[value] = Number(updValue);
                             } else {
@@ -509,7 +508,7 @@ export class Profiles extends ProfilesCache {
                                     case updValue === undefined:
                                         Gui.showMessage(localize("editConnection.number", "Operation Cancelled"));
                                         return undefined;
-                                    case schema[value].optionDefinition.hasOwnProperty("defaultValue"):
+                                    case "defaultValue" in schema[value].optionDefinition:
                                         updSchemaValues[value] = schema[value].optionDefinition.defaultValue;
                                         break;
                                     default:
@@ -528,8 +527,7 @@ export class Profiles extends ProfilesCache {
                             updSchemaValues[value] = updIsTrue;
                             break;
                         default:
-                            options = await this.optionsValue(value, schema, editSession[value]);
-                            const updDefValue = await Gui.showInputBox(options);
+                            const updDefValue = await Gui.showInputBox(this.optionsValue(value, schema, editSession[value]));
                             if (updDefValue === undefined) {
                                 Gui.showMessage(localize("editConnection.default", "Operation Cancelled"));
                                 return undefined;
@@ -775,10 +773,10 @@ export class Profiles extends ProfilesCache {
                     break;
                 default:
                     let options: vscode.InputBoxOptions;
-                    const response = await this.checkType(schema[value].type);
+                    const response = this.checkType(schema[value].type);
                     switch (response) {
                         case "number":
-                            options = await this.optionsValue(value, schema);
+                            options = this.optionsValue(value, schema);
                             const enteredValue = Number(await Gui.showInputBox(options));
                             if (!Number.isNaN(Number(enteredValue))) {
                                 if ((value === "encoding" || value === "responseTimeout") && enteredValue === 0) {
@@ -787,7 +785,7 @@ export class Profiles extends ProfilesCache {
                                     schemaValues[value] = Number(enteredValue);
                                 }
                             } else {
-                                if (schema[value].optionDefinition.hasOwnProperty("defaultValue")) {
+                                if ("defaultValue" in schema[value].optionDefinition) {
                                     schemaValues[value] = schema[value].optionDefinition.defaultValue;
                                 } else {
                                     delete schemaValues[value];
@@ -804,7 +802,7 @@ export class Profiles extends ProfilesCache {
                             schemaValues[value] = isTrue;
                             break;
                         default:
-                            options = await this.optionsValue(value, schema);
+                            options = this.optionsValue(value, schema);
                             const defValue = await Gui.showInputBox(options);
                             if (defValue === undefined) {
                                 Gui.showMessage(localize("createNewConnection.default", "Operation Cancelled"));
@@ -1466,7 +1464,7 @@ export class Profiles extends ProfilesCache {
     private async portInfo(input: string, schema: {}): Promise<number> {
         let options: vscode.InputBoxOptions;
         let port: number;
-        if (schema[input].optionDefinition.hasOwnProperty("defaultValue")) {
+        if ("defaultValue" in schema[input].optionDefinition) {
             options = {
                 prompt: schema[input].optionDefinition.description.toString(),
                 value: schema[input].optionDefinition.defaultValue.toString(),
@@ -1479,7 +1477,7 @@ export class Profiles extends ProfilesCache {
         }
         port = Number(await Gui.showInputBox(options));
 
-        if (port === 0 && schema[input].optionDefinition.hasOwnProperty("defaultValue")) {
+        if (port === 0 && "defaultValue" in schema[input].optionDefinition) {
             port = Number(schema[input].optionDefinition.defaultValue.toString());
         } else {
             return port;
@@ -1596,7 +1594,7 @@ export class Profiles extends ProfilesCache {
         return isTrue;
     }
 
-    private async optionsValue(value: string, schema: {}, input?: string): Promise<vscode.InputBoxOptions> {
+    private optionsValue(value: string, schema: {}, input?: string): vscode.InputBoxOptions {
         let options: vscode.InputBoxOptions;
         const description: string = schema[value].optionDefinition.description.toString();
         let editValue: any;
@@ -1607,7 +1605,7 @@ export class Profiles extends ProfilesCache {
                 prompt: description,
                 value: editValue,
             };
-        } else if (schema[value].optionDefinition.hasOwnProperty("defaultValue")) {
+        } else if ("defaultValue" in schema[value].optionDefinition) {
             options = {
                 prompt: description,
                 value: schema[value].optionDefinition.defaultValue,
@@ -1621,7 +1619,7 @@ export class Profiles extends ProfilesCache {
         return options;
     }
 
-    private async checkType(input?): Promise<string> {
+    private checkType(input?): string {
         const isTrue = Array.isArray(input);
         let test: string;
         let index: number;

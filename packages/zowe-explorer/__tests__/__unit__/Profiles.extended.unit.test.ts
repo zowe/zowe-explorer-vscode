@@ -851,7 +851,7 @@ describe("Profiles Unit Tests - function optionsValue", () => {
                 },
             },
         };
-        await expect(privateProfile.optionsValue("rejectUnauthorized", mockSchema)).resolves.toEqual(expectedValue);
+        await expect(privateProfile.optionsValue("rejectUnauthorized", mockSchema)).toEqual(expectedValue);
     });
     it("should return the value from default value if available", async () => {
         const privateProfile = Profiles.getInstance() as any;
@@ -867,7 +867,7 @@ describe("Profiles Unit Tests - function optionsValue", () => {
                 },
             },
         };
-        await expect(privateProfile.optionsValue("rejectUnauthorized", mockSchema)).resolves.toEqual(expectedValue);
+        await expect(privateProfile.optionsValue("rejectUnauthorized", mockSchema)).toEqual(expectedValue);
     });
     it("should return the value from input if passed in", async () => {
         const privateProfile = Profiles.getInstance() as any;
@@ -882,7 +882,7 @@ describe("Profiles Unit Tests - function optionsValue", () => {
                 },
             },
         };
-        await expect(privateProfile.optionsValue("rejectUnauthorized", mockSchema, "inputTest")).resolves.toEqual(expectedValue);
+        await expect(privateProfile.optionsValue("rejectUnauthorized", mockSchema, "inputTest")).toEqual(expectedValue);
     });
 });
 
@@ -890,21 +890,21 @@ describe("Profiles Unit Tests - function checkType", () => {
     it("should return a string representing the type: 'string'", async () => {
         const privateProfile = Profiles.getInstance() as any;
         const mockInput = ["string", 1, {}];
-        await expect(privateProfile.checkType(mockInput)).resolves.toEqual("string");
+        await expect(privateProfile.checkType(mockInput)).toEqual("string");
     });
     it("should return a string representing the type: 'boolean'", async () => {
         const privateProfile = Profiles.getInstance() as any;
         const mockInput = [false, 1, "boolean"];
-        await expect(privateProfile.checkType(mockInput)).resolves.toEqual("boolean");
+        await expect(privateProfile.checkType(mockInput)).toEqual("boolean");
     });
     it("should return a string representing the type: 'number'", async () => {
         const privateProfile = Profiles.getInstance() as any;
         const mockInput = [false, "number", {}];
-        await expect(privateProfile.checkType(mockInput)).resolves.toEqual("number");
+        await expect(privateProfile.checkType(mockInput)).toEqual("number");
     });
     it("should return undefined if no input was passed in", async () => {
         const privateProfile = Profiles.getInstance() as any;
-        await expect(privateProfile.checkType()).resolves.toEqual(undefined);
+        await expect(privateProfile.checkType()).toEqual(undefined);
     });
 });
 
@@ -1440,7 +1440,7 @@ describe("Profiles Unit Tests - function disableValidationContext", () => {
         testNode.contextValue = globals.VALIDATE_SUFFIX + "true";
         const expectNode = testNode;
         expectNode.contextValue = globals.VALIDATE_SUFFIX + "false";
-        await expect(Profiles.getInstance().disableValidationContext(testNode)).resolves.toEqual(expectNode);
+        await expect(Profiles.getInstance().disableValidationContext(testNode)).toEqual(expectNode);
     });
 });
 
@@ -1457,7 +1457,7 @@ describe("Profiles Unit Tests - function enableValidationContext", () => {
         testNode.contextValue = globals.VALIDATE_SUFFIX + "false";
         const expectedNode = testNode;
         expectedNode.contextValue = globals.VALIDATE_SUFFIX + "true";
-        await expect(Profiles.getInstance().enableValidationContext(testNode)).resolves.toEqual(expectedNode);
+        await expect(Profiles.getInstance().enableValidationContext(testNode)).toEqual(expectedNode);
     });
 });
 
@@ -1590,7 +1590,7 @@ describe("Profiles Unit Tests - function validationArraySetup", () => {
                 },
             ],
         });
-        expect(Profiles.getInstance().validationArraySetup(globalMocks.testProfile, true)).resolves.toEqual({
+        expect(Profiles.getInstance().validationArraySetup(globalMocks.testProfile, true)).toEqual({
             name: globalMocks.testProfile.name,
             setting: true,
         });

@@ -117,7 +117,9 @@ export async function allocateLike(datasetProvider: api.IZoweTree<api.IZoweDatas
             await ZoweExplorerApiRegister.getMvsApi(profile).allocateLikeDataSet(newDSName.toUpperCase(), likeDSName);
         } catch (err) {
             globals.LOG.error(localize("createDataSet.log.error", "Error encountered when creating data set! ") + JSON.stringify(err));
-            await errorHandling(err, newDSName, localize("createDataSet.error", "Unable to create data set: ") + err.message);
+            if (err instanceof Error) {
+                await errorHandling(err, newDSName, localize("createDataSet.error", "Unable to create data set: ") + err.message);
+            }
             throw err;
         }
     }
@@ -127,7 +129,7 @@ export async function allocateLike(datasetProvider: api.IZoweTree<api.IZoweDatas
         currSession = datasetProvider.mSessionNodes.find((thisSession) => thisSession.label.toString().trim() === profile.name);
     }
 
-    const theFilter = await datasetProvider.createFilterString(newDSName, currSession);
+    const theFilter = datasetProvider.createFilterString(newDSName, currSession);
     currSession.tooltip = currSession.pattern = theFilter.toUpperCase();
     datasetProvider.addSearchHistory(theFilter);
     datasetProvider.refresh();
@@ -367,7 +369,9 @@ export async function createMember(parent: api.IZoweDatasetTreeNode, datasetProv
             });
         } catch (err) {
             globals.LOG.error(localize("createMember.log.error", "Error encountered when creating member! ") + JSON.stringify(err));
-            await errorHandling(err, label, localize("createMember.error", "Unable to create member: ") + err.message);
+            if (err instanceof Error) {
+                await errorHandling(err, label, localize("createMember.error", "Unable to create member: ") + err.message);
+            }
             throw err;
         }
         parent.dirty = true;
@@ -516,7 +520,7 @@ export async function createFile(node: api.IZoweDatasetTreeNode, datasetProvider
     ];
     const stepThreeChoices = [localize("createFile.allocate", " + Allocate Data Set"), localize("createFile.editAttributes", "Edit Attributes")];
     // Make a nice new mutable array for the DS properties
-    let newDSProperties = JSON.parse(JSON.stringify(globals.DATA_SET_PROPERTIES));
+    const newDSProperties = JSON.parse(JSON.stringify(globals.DATA_SET_PROPERTIES));
 
     datasetProvider.checkCurrentProfile(node);
     if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
@@ -615,7 +619,7 @@ export async function createFile(node: api.IZoweDatasetTreeNode, datasetProvider
             });
             node.dirty = true;
 
-            const theFilter = await datasetProvider.createFilterString(dsName, node);
+            const theFilter = datasetProvider.createFilterString(dsName, node);
             datasetProvider.addSearchHistory(theFilter);
             datasetProvider.refresh();
 
@@ -637,11 +641,13 @@ export async function createFile(node: api.IZoweDatasetTreeNode, datasetProvider
             }
         } catch (err) {
             globals.LOG.error(localize("createDataSet.error", "Error encountered when creating data set! ") + JSON.stringify(err));
-            await errorHandling(
-                err,
-                node.getProfileName(),
-                localize("createDataSet.error", "Error encountered when creating data set! ") + err.message
-            );
+            if (err instanceof Error) {
+                await errorHandling(
+                    err,
+                    node.getProfileName(),
+                    localize("createDataSet.error", "Error encountered when creating data set! ") + err.message
+                );
+            }
             throw err as Error;
         }
     }
@@ -671,10 +677,17 @@ async function handleUserSelection(newDSProperties, dsType): Promise<string> {
 
     // Show quickpick and store the user's input
     quickpick.show();
-    let pattern: string;
     const choice2 = await api.Gui.resolveQuickPick(quickpick);
-    pattern = choice2.label;
+    const pattern = choice2.label;
     quickpick.dispose();
+
+    const showPatternOptions = async () => {
+        const options: vscode.InputBoxOptions = {
+            value: newDSProperties.find((prop) => prop.label === pattern).value,
+            placeHolder: newDSProperties.find((prop) => prop.label === pattern).placeHolder,
+        };
+        newDSProperties.find((prop) => prop.label === pattern).value = await api.Gui.showInputBox(options);
+    };
 
     if (pattern) {
         // Parse pattern for selected attribute
@@ -682,11 +695,7 @@ async function handleUserSelection(newDSProperties, dsType): Promise<string> {
             case " + Allocate Data Set":
                 return new Promise((resolve) => resolve(` + Allocate Data Set`));
             default:
-                const options: vscode.InputBoxOptions = {
-                    value: newDSProperties.find((prop) => prop.label === pattern).value,
-                    placeHolder: newDSProperties.find((prop) => prop.label === pattern).placeHolder,
-                };
-                newDSProperties.find((prop) => prop.label === pattern).value = await api.Gui.showInputBox(options);
+                await showPatternOptions();
                 break;
         }
         return Promise.resolve(handleUserSelection(newDSProperties, dsType));
@@ -732,7 +741,9 @@ export async function showAttributes(node: api.IZoweDatasetTreeNode, datasetProv
             }
         } catch (err) {
             globals.LOG.error(localize("showAttributes.log.error", "Error encountered when listing attributes! ") + JSON.stringify(err));
-            await errorHandling(err, node.getProfileName(), localize("showAttributes.error", "Unable to list attributes: ") + err.message);
+            if (err instanceof Error) {
+                await errorHandling(err, node.getProfileName(), localize("showAttributes.error", "Unable to list attributes: ") + err.message);
+            }
             throw err;
         }
 
@@ -832,7 +843,9 @@ export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetT
             const setJobCmd = `command:zowe.jobs.setJobSpool?${encodeURIComponent(JSON.stringify(args))}`;
             api.Gui.showMessage(localize("submitJcl.jobSubmitted", "Job submitted ") + `[${job.jobid}](${setJobCmd})`);
         } catch (error) {
-            await errorHandling(error, sessProfileName, localize("submitJcl.jobSubmissionFailed", "Job submission failed\n") + error.message);
+            if (error instanceof Error) {
+                await errorHandling(error, sessProfileName, localize("submitJcl.jobSubmissionFailed", "Job submission failed\n") + error.message);
+            }
         }
     } else {
         api.Gui.errorMessage(localize("submitJcl.checkProfile", "Profile is invalid"));
@@ -848,7 +861,7 @@ export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetT
  * @returns Whether the job submission should continue.
  */
 async function confirmJobSubmission(node: api.IZoweTreeNode, ownsJob: boolean): Promise<boolean> {
-    const showConfirmationDialog = async () => {
+    const showConfirmationDialog = async (): Promise<boolean> => {
         const selection = await api.Gui.warningMessage(
             localize("submitMember.confirm", "Are you sure you want to submit the following job?\n\n{0}", node.getLabel().toString()),
             { items: [{ title: "Submit" }], vsCodeOpts: { modal: true } }
@@ -929,7 +942,9 @@ export async function submitMember(node: api.IZoweTreeNode): Promise<void> {
             const setJobCmd = `command:zowe.jobs.setJobSpool?${encodeURIComponent(JSON.stringify(args))}`;
             api.Gui.showMessage(localize("submitMember.jobSubmitted", "Job submitted ") + `[${job.jobid}](${setJobCmd})`);
         } catch (error) {
-            await errorHandling(error, sesName, localize("submitMember.jobSubmissionFailed", "Job submission failed\n") + error.message);
+            if (error instanceof Error) {
+                await errorHandling(error, sesName, localize("submitMember.jobSubmissionFailed", "Job submission failed\n") + error.message);
+            }
         }
     }
 }
@@ -1151,11 +1166,11 @@ export async function copyDataSet(node: api.IZoweNodeType): Promise<void> {
  * @param datasetProvider
  */
 export async function copyDataSets(node, nodeList: ZoweDatasetNode[], datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>): Promise<void> {
-    let selectedNodes;
+    let selectedNodes: ZoweDatasetNode[] = [];
     if (!(node || nodeList)) {
-        selectedNodes = datasetProvider.getTreeView().selection;
+        selectedNodes = datasetProvider.getTreeView().selection as ZoweDatasetNode[];
     } else {
-        selectedNodes = getSelectedNodeList(node, nodeList);
+        selectedNodes = getSelectedNodeList(node, nodeList) as ZoweDatasetNode[];
     }
 
     const unique = [...new Set(selectedNodes.map((item) => item.contextValue))];
@@ -1272,10 +1287,10 @@ export async function showFileErrorDetails(node: ZoweDatasetNode): Promise<void>
  */
 export async function pasteMember(node: api.IZoweDatasetTreeNode, datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>): Promise<void> {
     const { profileName, dataSetName } = dsUtils.getNodeLabels(node);
-    let memberName;
-    let beforeDataSetName;
-    let beforeProfileName;
-    let beforeMemberName;
+    let memberName: string;
+    let beforeDataSetName: string;
+    let beforeProfileName: string;
+    let beforeMemberName: string;
 
     await Profiles.getInstance().checkCurrentProfile(node.getProfile());
     if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
@@ -1442,7 +1457,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
             uploadResponse.commandResponse.includes(localize("saveFile.error.ZosmfEtagMismatchError", "Rest API failure with HTTP(S) status 412"))
         ) {
             if (globals.ISTHEIA) {
-                await willForceUpload(node, doc, label, node ? node.getProfile() : profile);
+                willForceUpload(node, doc, label, node ? node.getProfile() : profile);
             } else {
                 const oldDoc = doc;
                 const oldDocText = oldDoc.getText();
@@ -1719,11 +1734,13 @@ export async function _copyProcessor(
             }
         } catch (error) {
             globals.LOG.error(localize("copyDataSet.log.error", "Error encountered when copy data set! ") + JSON.stringify(error));
-            await errorHandling(
-                error,
-                dsUtils.getNodeLabels(node).dataSetName,
-                localize("copyDataSet.error", "Unable to copy data set: ") + error.message
-            );
+            if (error instanceof Error) {
+                await errorHandling(
+                    error,
+                    dsUtils.getNodeLabels(node).dataSetName,
+                    localize("copyDataSet.error", "Unable to copy data set: ") + error.message
+                );
+            }
         }
     }
 }

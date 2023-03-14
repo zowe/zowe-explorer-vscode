@@ -138,7 +138,7 @@ type SessionForProfile = (_profile: imperative.IProfileLoaded) => imperative.Ses
 export const syncSessionNode =
     (_profiles: Profiles) =>
     (getSessionForProfile: SessionForProfile) =>
-    async (sessionNode: IZoweTreeNode): Promise<void> => {
+    (sessionNode: IZoweTreeNode): void => {
         sessionNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
 
         const profileType = sessionNode.getProfile().type;
@@ -177,32 +177,32 @@ export interface IFilterItem {
 }
 
 export class FilterItem implements vscode.QuickPickItem {
-    constructor(public filterItem: IFilterItem) {}
-    get label(): string {
+    public constructor(public filterItem: IFilterItem) {}
+    public get label(): string {
         const icon = this.filterItem.icon ? this.filterItem.icon + " " : null;
         return (icon ?? "") + this.filterItem.text;
     }
-    get description(): string {
+    public get description(): string {
         if (this.filterItem.description) {
             return this.filterItem.description;
         } else {
             return "";
         }
     }
-    get alwaysShow(): boolean {
+    public get alwaysShow(): boolean {
         return this.filterItem.show;
     }
 }
 
 export class FilterDescriptor implements vscode.QuickPickItem {
-    constructor(private text: string) {}
-    get label(): string {
+    public constructor(private text: string) {}
+    public get label(): string {
         return this.text;
     }
-    get description(): string {
+    public get description(): string {
         return "";
     }
-    get alwaysShow(): boolean {
+    public get alwaysShow(): boolean {
         return true;
     }
 }
@@ -210,14 +210,14 @@ export class FilterDescriptor implements vscode.QuickPickItem {
 /**
  * Function to update the node profile information
  */
-export async function setProfile(node: IZoweTreeNode, profile: imperative.IProfile): Promise<void> {
+export function setProfile(node: IZoweTreeNode, profile: imperative.IProfile): void {
     node.getProfile().profile = profile;
 }
 
 /**
  * Function to update the node session information
  */
-export async function setSession(node: IZoweTreeNode, combinedSessionProfile: imperative.IProfile): Promise<void> {
+export function setSession(node: IZoweTreeNode, combinedSessionProfile: imperative.IProfile): void {
     const sessionNode = node.getSession();
     for (const prop of Object.keys(combinedSessionProfile)) {
         if (prop === "host") {
@@ -228,7 +228,7 @@ export async function setSession(node: IZoweTreeNode, combinedSessionProfile: im
     }
 }
 
-export async function getProfileInfo(envTheia: boolean): Promise<imperative.ProfileInfo> {
+export function getProfileInfo(envTheia: boolean): imperative.ProfileInfo {
     const mProfileInfo = new imperative.ProfileInfo("zowe", {
         requireKeytar: () => getSecurityModules("keytar", envTheia),
     });
