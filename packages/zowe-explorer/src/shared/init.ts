@@ -45,7 +45,7 @@ export function registerRefreshCommand(
     activate: (_context: vscode.ExtensionContext) => Promise<ZoweExplorerApiRegister>,
     deactivate: () => Promise<void>
 ) {
-    ZoweLogger.logTrace("init.registerRefreshCommand called.");
+    ZoweLogger.logTrace("shared.init.registerRefreshCommand called.");
     // set a command to silently reload extension
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.extRefresh", async () => {
@@ -67,7 +67,7 @@ export function registerRefreshCommand(
 }
 
 export async function registerCommonCommands(context: vscode.ExtensionContext, providers: IZoweProviders) {
-    ZoweLogger.logTrace("init.registerCommonCommands called.");
+    ZoweLogger.logTrace("shared.init.registerCommonCommands called.");
     // Update imperative.json to false only when VS Code setting is set to false
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.updateSecureCredentials", async () => {
@@ -193,7 +193,7 @@ export async function registerCommonCommands(context: vscode.ExtensionContext, p
 }
 
 export async function watchConfigProfile(context: vscode.ExtensionContext, providers: IZoweProviders) {
-    ZoweLogger.logTrace("init.watchConfigProfile called.");
+    ZoweLogger.logTrace("shared.init.watchConfigProfile called.");
     if (globals.ISTHEIA) {
         ZoweLogger.logWarn(localize("watchConfigProfile.theia", "Team config file watcher is disabled in Theia environment."));
         return undefined;
@@ -236,7 +236,7 @@ export async function watchConfigProfile(context: vscode.ExtensionContext, provi
 }
 
 export function initSubscribers(context: vscode.ExtensionContext, theProvider: IZoweTree<IZoweTreeNode>) {
-    ZoweLogger.logTrace("init.initSubscribers called.");
+    ZoweLogger.logTrace("shared.init.initSubscribers called.");
     const theTreeView = theProvider.getTreeView();
     context.subscriptions.push(theTreeView);
     if (!globals.ISTHEIA) {

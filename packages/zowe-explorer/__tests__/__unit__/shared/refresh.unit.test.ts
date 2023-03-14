@@ -80,13 +80,13 @@ function createGlobalMocks() {
             "zowe.automaticProfileValidation": true,
         }),
     });
-    Object.defineProperty(globals, "LOG", { value: globalMocks.mockLog, configurable: true });
-    Object.defineProperty(globals.LOG, "debug", { value: globalMocks.mockDebug, configurable: true });
-    Object.defineProperty(globals.LOG, "error", { value: globalMocks.mockError, configurable: true });
     Object.defineProperty(sessUtils, "removeSession", {
         value: jest.fn().mockImplementationOnce(() => Promise.resolve()),
         configurable: true,
     });
+    Object.defineProperty(ZoweLogger, "logError", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "logDebug", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "logTrace", { value: jest.fn(), configurable: true });
 
     return globalMocks;
 }

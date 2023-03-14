@@ -19,6 +19,7 @@ import * as contextually from "../shared/context";
 import * as globals from "../globals";
 import { removeSession } from "../utils/SessionUtils";
 import { SettingsConfig } from "../utils/SettingsConfig";
+import { ZoweLogger } from "../utils/LoggerUtils";
 
 /**
  * View (DATA SETS, JOBS, USS) refresh button
@@ -27,6 +28,7 @@ import { SettingsConfig } from "../utils/SettingsConfig";
  * @param {IZoweTree} treeProvider
  */
 export async function refreshAll(treeProvider: IZoweTree<IZoweTreeNode>) {
+    ZoweLogger.logTrace("refresh.refreshAll called.");
     await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
     treeProvider.mSessionNodes.forEach(async (sessNode) => {
         const profiles = await Profiles.getInstance().fetchAllProfiles();

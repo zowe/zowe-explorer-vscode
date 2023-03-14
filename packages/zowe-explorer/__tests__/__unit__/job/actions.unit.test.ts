@@ -64,9 +64,6 @@ function createGlobalMocks() {
         get: activeTextEditorDocument,
         configurable: true,
     });
-    Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
-    Object.defineProperty(globals.LOG, "debug", { value: jest.fn(), configurable: true });
-    Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
     Object.defineProperty(Profiles, "getInstance", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode, "Uri", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.Uri, "parse", { value: jest.fn(), configurable: true });
